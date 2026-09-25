@@ -1,14 +1,15 @@
 // server/entity_wire_cache.ts: the per-entity wire-fragment cache shapes and
-// their three pure helpers. This branch and the release each extracted the
-// same block out of server/game.ts (this branch to pay for the freeholds
-// owner-key join stamp, the release as a ratchet extraction), byte-identical;
-// the v0.44.0 re-sync collapsed the two onto the release's module and this
-// suite followed it, so it guards the module at its OWN seam: the
-// fresh-variant literal (every version counter at its "never built" sentinel,
-// every fragment empty, and a new object per call so two timer-wire arms never
-// alias), and the two JSON splicers, whose whole point is to assemble a record
-// byte-identical to a JSON.stringify of the merged object without paying for
-// that stringify on the broadcast hot path. The game.ts side is pinned too: the
+// their three pure helpers. This branch and the release each extracted this
+// block out of server/game.ts (this branch four names, to pay for the
+// freeholds owner-key join stamp; the release a superset, those four plus
+// EntityWireCache and EntityWireView, as a ratchet extraction), with the
+// shared bodies byte-identical; the v0.44.0 re-sync collapsed the two onto
+// the release's module and this suite followed it, so it guards the module
+// at its OWN seam: the fresh-variant literal (every version counter at its
+// "never built" sentinel, every fragment empty, and a new object per call so
+// two timer-wire arms never alias), and the two JSON splicers, whose whole
+// point is to assemble a record byte-identical to a JSON.stringify of the
+// merged object without paying for that stringify on the broadcast hot path. The game.ts side is pinned too: the
 // coordinator imports every name and declares none of them any more, so a
 // merge resolution that re-inlines a copy, or restores the retired twin
 // module, reds here by name.

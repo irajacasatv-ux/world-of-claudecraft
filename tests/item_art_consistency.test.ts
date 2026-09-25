@@ -868,9 +868,9 @@ describe('item-art consistency accepted-art provenance', () => {
     // PR #3781 reconcile's two disjoint reins item definitions
     // (reins_goblin_rocket_sled, reins_rallycart_rxt) add two more: 1,322.
     // The independent Hearth Key addition brings the live count to 1,323.
-    // Warfare Season 2 (the release, after that) adds the Valestrider's reins and
-    // 139 honor items (27 five-piece spec sets plus four weapons,
-    // content/pvp_honor_season2.ts): 1,323 + 1 + 139 = 1,463.
+    // The release then adds the Viridian Valestrider's reins (its own mount) and
+    // Warfare Season 2's 139 honor items (27 five-piece spec sets plus four
+    // weapons, content/pvp_honor_season2.ts): 1,323 + 1 + 139 = 1,463.
     expect(Object.keys(ITEMS)).toHaveLength(1463);
     expect(Object.values(verdict.auditScope.groups).reduce((sum, count) => sum + count, 0)).toBe(
       1255,
@@ -1536,11 +1536,12 @@ describe('item-art consistency accepted-art provenance', () => {
     for (const id of ownerIds) ownerCountById.set(id, (ownerCountById.get(id) ?? 0) + 1);
 
     const violations: string[] = [];
-    // Matches the mapping-owner sum above: 43 entries + 755 prior-generated
+    // Matches the mapping-owner sum above: 44 entries + 759 prior-generated
     // batch ids + 274 historical-audit batch ids + 165 Masterwrought-completion
     // batch ids + 46 Crucible-professions + 8 vendor + 13 crafted ids + 1 Hearth
-    // Key id + the Valestrider's reins + 4 Warfare Season 2 weapons = 1310. The
-    // 755 prior-generated ids already include the OSSBrain reins.
+    // Key id = 1310. The 44 entries include the Valestrider's reins (43 before
+    // it); the 759 prior-generated ids include the OSSBrain reins and the four
+    // Warfare Season 2 weapons (755 before them).
     if (ownerIds.length !== 1310)
       violations.push(`mapping owner count: ${ownerIds.length} != 1310`);
     if (fileIds.length !== 1310) violations.push(`shipping WebP count: ${fileIds.length} != 1310`);

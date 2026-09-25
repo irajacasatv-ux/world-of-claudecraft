@@ -2601,9 +2601,11 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
     // RE-BASED at the Freeholds re-sync of release/v0.44.0 (ed69f62ef7) by the
     // release's own two moves: +22 for the Viridian Valestrider's reins id
     // (inside the devMountReleaseDelta isolation, now 71) and +13,496 for the
-    // Warfare Season 2 honor stock, so 213,581 becomes 227,099 and every
-    // absolute figure in the isolation chain above moves by the same 13,518;
-    // same standing rule, same 381 width: 226,719..227,100.
+    // Warfare Season 2 honor stock, so 213,581 becomes 227,099. Every absolute
+    // figure in the isolation chain above that still carries the reins id
+    // moves by the same 13,518; the states stripped of it first
+    // (preReleaseCounterfactual and the forge-row deltas) move by 13,496 alone.
+    // Same standing rule, same 381 width: 226,719..227,100.
     expect(bytes, reMint).toBeGreaterThan(226719);
     expect(bytes, reMint).toBeLessThan(227100);
 
@@ -2612,8 +2614,9 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
     // minted against (historical: that is the figure the threshold's own 32-KiB
     // step was derived from, not this arm's measurement). The previous
     // 163,840-byte threshold warned on this legal modeled state. Measured here,
-    // the combined fixture is 227,099 bytes, 2,277 below the threshold (the
-    // Warfare Season 2 stock took 13,496 of the 15,795 it had).
+    // the combined fixture is 227,099 bytes, 2,277 below the threshold (of the
+    // 15,795 it had, the Warfare Season 2 stock took 13,496 and the
+    // Valestrider's reins id 22).
     // A content change must be attributed and the narrow band re-measured,
     // never widened. This is warning-only; save-path tests prove oversized
     // saves stay whole.
