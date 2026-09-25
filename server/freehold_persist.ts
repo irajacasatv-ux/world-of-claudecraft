@@ -1081,6 +1081,7 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
         hearthReadyAtMs: hearth.readyAtMs,
         hearthRevision: hearth.revision,
         hold: null,
+        besideLiveRecord: false,
       };
     }
 
@@ -1166,6 +1167,7 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
         hearthReadyAtMs: hearth.readyAtMs,
         hearthRevision: hearth.revision,
         hold: null,
+        besideLiveRecord: false,
       };
     }
 
@@ -1259,8 +1261,7 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
     const ownerKey = freeholdOwnerKeyForAccount(accountId);
     const entry = entries.get(ownerKey);
     // A second character of the same account is joining: the live record is the
-    // truth. Both answers are MARKED, and the install honours the mark alone (a
-    // fresh account's answer here otherwise reads as an absent row).
+    // truth, so both answers are MARKED and the install puts nothing in.
     if (ports.hasLive(ownerKey)) {
       if (entry?.loaded) {
         entry.accountId = accountId;
@@ -1270,14 +1271,14 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
         // of a handshake; without this reset a handshake wider than one sweep
         // interval loses its entry anyway and the session is write-blocked.
         entry.orphanPasses = 0;
-        return { ...snapshotOf(entry, null), besideLiveRecord: true };
+        return snapshotOf(entry, null, true);
       }
-      // The live record is still the truth and must not be overwritten by a
-      // read, so the answer below carries no state either way. But WITHOUT the
-      // read this entry never learns its plot id or its durable revision, and
-      // an entry that never loaded is write-blocked for the whole session: the
-      // owner would play, furnish, and have every edit discarded at logout with
-      // nothing reported. So read, then answer with no state.
+      // The live record is still the truth, so the answer carries no state and
+      // is MARKED (defensive here: no pinned order goes stale through it, and
+      // the mark costs a write-blocked session if one ever did). WITHOUT the read
+      // this entry never learns its plot id or durable revision, and an entry
+      // that never loaded is write-blocked for the whole session, every edit
+      // discarded at logout. So read, then answer with no state.
       const loaded = await beginLoad(accountId, ownerKey);
       const touched = entries.get(ownerKey);
       if (touched) touched.orphanPasses = 0;
@@ -1304,7 +1305,7 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
       // releases it there, and only when the live record actually carries it;
       // see offerCapture for the five handshake exits that make releasing here
       // a lost-save path of its own.
-      return snapshotOf(entry, blocked(entry) ? null : offerCapture(entry));
+      return snapshotOf(entry, blocked(entry) ? null : offerCapture(entry), false);
     }
     const loaded = await beginLoad(accountId, ownerKey);
     const touched = entries.get(ownerKey);
@@ -2018,14 +2019,13 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
       // THE CONFIRMATION HALF of the capture handover, and it confirms THIS
       // DOCUMENT rather than the existence of some record.
       //
-      // A bare presence test was not enough. installLoadedFreehold has four
-      // early returns (no bag, a hold, a null state, a bag that lost its shape)
-      // and loadFreehold is load-once on top of that, while retain runs on
-      // every join and knows none of it. The reachable case is the same-account
-      // character swap: preload's already-live arm never offers the capture at
-      // all, the install returns early, and the record retain sees belongs to
-      // the PREVIOUS session, which removePlayer is explicitly allowed to evict
-      // afterwards. The capture was dropped over edits that reached nothing.
+      // A bare presence test was not enough: installLoadedFreehold puts nothing
+      // in for several answer shapes and loadFreehold is load-once on top, while
+      // retain runs on every join and knows none of it. The reachable case is the
+      // same-account character swap: preload's already-live arm never offers the
+      // capture, the install puts nothing in, and the record retain sees belongs
+      // to the PREVIOUS session, which removePlayer is explicitly allowed to
+      // evict. The capture was dropped over edits that reached nothing.
       //
       // Comparing the live revision to the captured one fails CLOSED: a skipped
       // install leaves the revision where it was, so the capture survives to

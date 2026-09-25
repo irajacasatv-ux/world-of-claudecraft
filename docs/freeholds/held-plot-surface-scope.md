@@ -23,6 +23,16 @@ this release has is an operator watching the `held` gauge.
 Every capacity item in section 8a makes a hold more reachable, so this and they
 are one obligation.
 
+THE SAME PLAYER EXPERIENCE WITH NO HOLD AT ALL, added 2026-09-25. A join that
+lands just after the same account's previous session was evicted (a quick relog
+onto another character while the old leave is slow) installs nothing, because
+its answer was read beside the old record, and `addPlayer` seeds the same empty
+default. The store then refuses that record at the seal or the insert refusal
+and quiesces the entry: no `kind` is booked, so a surface keyed on the hold kinds
+alone never sees this group. The surface owes it too, keyed on the entry being
+write-blocked rather than on a hold. The ledger's harness-fidelity section has
+the order and its cost.
+
 ## The rule this design is built under
 
 `src/sim/` and `server/` are LANGUAGE-AGNOSTIC. Neither may emit English prose

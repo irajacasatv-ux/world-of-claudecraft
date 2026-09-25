@@ -144,6 +144,7 @@ function setup() {
       state: null,
       hearthReadyAtMs: 0,
       hearthRevision: '0',
+      besideLiveRecord: false,
       hold: {
         kind: 'unadmitted' as const,
         detail: 'test host holds no persistence store',
@@ -1336,6 +1337,7 @@ describe('createWsAuth: durable freehold stamp', () => {
     hearthReadyAtMs: 1_700_000_000_000,
     hearthRevision: '3',
     hold: null,
+    besideLiveRecord: false,
   };
 
   it('reads the durable plot once, keyed by account, and stamps it into the join meta', async () => {

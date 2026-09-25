@@ -90,10 +90,12 @@ export interface FreeholdRecoveryHold {
   readonly durableRev: string;
 }
 
-/** One account's durable answer, as the join path consumes it. `state` null
- *  with `hold` null means NO durable row exists: the caller keeps the default
- *  record the sim seeds, and this store persists it under the freshly minted
- *  plot id. `hold` non-null means install nothing and write nothing. */
+/** One account's durable answer, as the join path consumes it. `hold` non-null
+ *  means install nothing and write nothing. `state` null means the answer
+ *  carries no document: with `durableRev` null and `besideLiveRecord` false
+ *  that is NO durable row (the install puts in a default under `plotId`, which
+ *  this store persists), and otherwise it is an answer that must put nothing
+ *  in at all. */
 export interface LoadedFreehold {
   readonly accountId: number;
   readonly plotIndex: number;
@@ -105,17 +107,21 @@ export interface LoadedFreehold {
   readonly hearthRevision: string;
   readonly hold: FreeholdRecoveryHold | null;
   /**
-   * Set ONLY by preload's already-live arm: this answer was read BESIDE a live
-   * record, which is the truth, so it carries no state and the install must put
-   * nothing in, whatever the other fields say. They are not enough on their
-   * own: for a fresh account whose first insert has not landed, this answer is
-   * also revision-null and hold-null, which is exactly how an absent row reads.
-   * The handshake awaits the lease and the character read between its preload
-   * and its join, so the record it was read beside can be evicted in between,
-   * and the install then used to put an EMPTY default in under the account's
+   * TRUE only on preload's already-live arm: this answer was read BESIDE a live
+   * record, which is the truth, so it carries no state and the install puts no
+   * record in, whatever the other fields say (the Hearth clock, a separate and
+   * forward-only durable fact, still merges). The other fields are not enough
+   * on their own: for a fresh account whose first insert has not landed, this
+   * answer is also revision-null and hold-null, exactly how an absent row
+   * reads. The handshake awaits the lease and the character read between its
+   * preload and its join, so the record it was read beside can be evicted in
+   * between, and the install then put an EMPTY default in under the account's
    * real name: the eleventh path to an empty Inn Room over a real house.
+   *
+   * REQUIRED, and the install acts only on a positive `false`, so a constructor
+   * or projection that loses the field fails CLOSED rather than reopening it.
    */
-  readonly besideLiveRecord?: true;
+  readonly besideLiveRecord: boolean;
 }
 
 /** The durable revision a recovery hold reports when there is no row to name
@@ -155,6 +161,7 @@ export function freeholdBudgetRefusal(
     state: null,
     hearthReadyAtMs: hearth.readyAtMs,
     hearthRevision: hearth.revision,
+    besideLiveRecord: false,
     hold: {
       kind: 'no_budget',
       detail,
@@ -189,6 +196,8 @@ export interface FreeholdEntrySnapshot {
 export function freeholdSnapshotOf(
   entry: FreeholdEntrySnapshot,
   state: PersistedFreehold | null,
+  /** True from the already-live arm only; see `besideLiveRecord`. */
+  besideLiveRecord: boolean,
 ): LoadedFreehold {
   return {
     accountId: entry.accountId,
@@ -199,6 +208,7 @@ export function freeholdSnapshotOf(
     hearthReadyAtMs: entry.hearthReadyAtMs,
     hearthRevision: entry.hearthRevision,
     hold: entry.hold,
+    besideLiveRecord,
   };
 }
 
@@ -239,5 +249,6 @@ export function freeholdHoldAnswer(
     hearthReadyAtMs: hearth.readyAtMs,
     hearthRevision: hearth.revision,
     hold,
+    besideLiveRecord: false,
   };
 }

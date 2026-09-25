@@ -188,7 +188,10 @@ carries an opaque plot id only.
   THE PLOT IDENTITY DIVERGES BY HOST, accepted and recorded rather than fixed.
   ONLINE, `server/freehold_install.ts` installs a default carrying the identity
   the store minted on the ABSENT arm of a durable load, so an online record
-  answers to a unique id from its FIRST session. OFFLINE AND HEADLESS there is no
+  answers to a unique id from its FIRST session, except a record seeded where no
+  answer could be installed (a hold, or an answer read beside a record that was
+  evicted before the join), which carries the stand-in and is write-blocked by
+  the store's refusals. OFFLINE AND HEADLESS there is no
   store and no minter, so every record on those hosts carries the one literal
   stand-in `PENDING_FREEHOLD_PLOT_ID` forever, and two offline records are
   therefore indistinguishable by `plotId`. That is harmless while the id is

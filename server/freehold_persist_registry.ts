@@ -58,6 +58,7 @@ export function freeholdPreloadUnavailable(accountId: number, detail: string): L
     // share a value, and spelling either as a literal here is how a later reader
     // learns they are one.
     hearthRevision: ABSENT_HEARTH_REVISION,
+    besideLiveRecord: false,
     hold: {
       kind: 'unadmitted',
       detail,

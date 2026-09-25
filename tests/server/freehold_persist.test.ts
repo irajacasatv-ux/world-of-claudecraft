@@ -642,17 +642,30 @@ function rowRemembered(initial: FreeholdRow | null = null): {
   advance: (patch: Partial<FreeholdRow>) => void;
 } {
   let row: FreeholdRow | null = initial;
+  // ONE ACCOUNT'S database: a read or a write for another account is a case
+  // bug, not a row it may share.
+  let owner = initial?.accountId ?? null;
+  const mine = (accountId: number): void => {
+    if (owner === null) owner = accountId;
+    if (accountId !== owner) throw new Error(`rowRemembered holds account ${owner} only`);
+  };
   return {
-    readRow: async (): Promise<FreeholdRowLoad> =>
-      row ? { kind: 'row', row } : { kind: 'absent' },
-    advance: (patch: Partial<FreeholdRow>): void => {
+    readRow: async (accountId: number): Promise<FreeholdRowLoad> => {
+      mine(accountId);
+      return row ? { kind: 'row', row } : { kind: 'absent' };
+    },
+    // Another realm's write: the CONTENT moves and the durable revision with it.
+    // Never the name or the fence directly, which no write sets.
+    advance: (patch: Partial<Omit<FreeholdRow, 'plotId' | 'durableRev' | 'accountId'>>): void => {
       if (row === null) throw new Error('no row to write forward');
       row = { ...row, ...patch, durableRev: String(Number(row.durableRev) + 1) };
     },
     // The compare-and-swap fence upsertFreehold enforces, so a writer this
     // database would refuse is refused here too: an insert over an existing row
-    // and an update against a moved or missing one.
+    // and an update against a moved or missing one. An UPDATE sets only the
+    // columns FREEHOLD_CAS_UPDATE_SQL sets, so the row keeps its name.
     writeRow: async (input: FreeholdUpsert): Promise<FreeholdUpsertResult> => {
+      mine(input.accountId);
       if (input.expectedDurableRev === null && row !== null) {
         return { kind: 'stale', durableRev: row.durableRev };
       }
@@ -665,16 +678,25 @@ function rowRemembered(initial: FreeholdRow | null = null): {
         return { kind: 'stale', durableRev: row.durableRev };
       }
       const durableRev = String(Number(row?.durableRev ?? '0') + 1);
-      row = rowFixture({
-        plotId: input.plotId,
+      const content = {
         tier: input.tier,
         layout: JSON.parse(input.layoutJson),
         trophies: JSON.parse(input.trophiesJson),
         condition: input.condition,
         visitPolicy: input.visitPolicy,
         wireRev: String(input.wireRev),
+        schemaVersion: input.schemaVersion,
         durableRev,
-      });
+      };
+      row =
+        row === null
+          ? rowFixture({
+              ...content,
+              accountId: input.accountId,
+              plotIndex: input.plotIndex,
+              plotId: input.plotId,
+            })
+          : { ...row, ...content };
       return { kind: input.expectedDurableRev === null ? 'inserted' : 'updated', durableRev };
     },
   };
@@ -735,8 +757,11 @@ describe('the harness models only a liveness state the server can produce', () =
     await h.leave();
     expect(h.writes.map((write) => write.wireRev)).toEqual([6]);
     expect(read(h)).toEqual({ has: false, doc: null, rev: null, name: null });
-    // A rejoin reads the row the leave wrote, and all four agree on THAT.
+    // A rejoin reads the row the leave wrote (a READ, not a replay: the clean
+    // entry was collected), and all four agree on THAT.
+    h.calls.length = 0;
     h.join(await h.store.preload(ACCOUNT_ID));
+    expect(h.calls.filter((call) => call === 'readRow')).toHaveLength(1);
     const rejoined = read(h);
     expect(rejoined.has).toBe(true);
     expect(rejoined.name).toBe(ROW_PLOT_ID);
@@ -820,10 +845,15 @@ describe('the harness models only a liveness state the server can produce', () =
     // sabotage case above clears before it could be seen: the harness has to be
     // on the list the gate reads, and the gate's reader has to return what was
     // recorded.
+    // ANY harness: the violation is planted in the SECOND of two, so a reader
+    // that looked at the first alone would miss it.
+    const first = harness();
     const h = harness();
+    expect(liveHarnesses).toContain(first);
     expect(liveHarnesses).toContain(h);
     h.ports.liveRev = () => 5;
     h.ports.hasLive(OWNER_KEY);
+    expect(first.livenessViolations).toEqual([]);
     expect(auditViolations()).toEqual([
       `${OWNER_KEY}: hasLive false, serialize null, liveRev 5, livePlotId null`,
     ]);
@@ -850,8 +880,19 @@ describe('the harness models only a liveness state the server can produce', () =
       expect(wrapper, port).toContain('audit(ownerKey)');
     }
     // And the gate fails on what the audit reader returns.
-    const gate = self.slice(self.indexOf('afterEach(async () => {'));
-    expect(gate.slice(0, gate.indexOf('\n});'))).toContain('const violations = auditViolations();');
+    // And the gate, IN ORDER: drain, read, clear, fail. Any one missing or
+    // moved (clearing before reading, a softened matcher) lets a recorded
+    // violation pass.
+    const opens = self.indexOf('afterEach(async () => {');
+    const gate = self.slice(opens, self.indexOf('\n});', opens));
+    const steps = [
+      'await tick(30);',
+      'const violations = auditViolations();',
+      'liveHarnesses.length = 0;',
+      "expect(violations, 'a liveness read disagreed with the live map').toEqual([]);",
+    ].map((step) => gate.indexOf(step));
+    for (const at of steps) expect(at).toBeGreaterThan(-1);
+    expect([...steps].sort((a, b) => a - b)).toEqual(steps);
   });
 
   it('removes a player only after its leave flush, as GameServer.leave orders them', async () => {
@@ -2328,11 +2369,12 @@ describe('reference counting and eviction', () => {
     const gate = deferred<FreeholdUpsertResult>();
     const h = await loadedStore({ writeRow: async () => await gate.promise });
     h.store.markDirty(OWNER_KEY);
-    // The linkdead swap: the new character's handshake reads while the old
-    // session is still in the world, then its join fires the old session's leave
-    // FIRST (whose flush starts and parks on the held write) and retains on the
-    // same tick, so the new reference lands under the SAME owner key before the
-    // old one is released.
+    // A LEAVE ALREADY IN FLIGHT: the old session logs out and its flush starts
+    // and parks on the held write (leave() drops the session from the roster at
+    // once, so a new character may join), and the new character's join lands
+    // under the SAME owner key before the old reference is released. The
+    // linkdead swap, where the join lands before the old flush even starts, is
+    // the next case.
     const answer = await h.store.preload(ACCOUNT_ID);
     const leaving = h.leave();
     h.join(answer);
@@ -2342,6 +2384,30 @@ describe('reference counting and eviction', () => {
     expect(h.store.stats().entries).toBe(1);
 
     // The surviving entry is still a working writer for the new session.
+    h.store.markDirty(OWNER_KEY);
+    h.store.save(OWNER_KEY);
+    await tick(30);
+    expect(h.writeCount()).toBe(2);
+  });
+
+  it('survives the linkdead swap, where the new retain lands before the old flush starts', async () => {
+    // GameServer.join fires the linkdead session's leave and then binds on the
+    // same tick, and leave() awaits its settlement before the housing flush, so
+    // the new reference is taken FIRST and the old flush, with a write owed,
+    // runs after it.
+    const gate = deferred<FreeholdUpsertResult>();
+    const h = await loadedStore({ writeRow: async () => await gate.promise });
+    h.store.markDirty(OWNER_KEY);
+    const answer = await h.store.preload(ACCOUNT_ID);
+    h.join(answer);
+    const leaving = h.leave();
+    await tick(10);
+    expect(h.store.stats().running).toBe(1);
+    gate.resolve({ kind: 'updated', durableRev: '2' });
+    await leaving;
+    await tick(30);
+    expect(h.store.stats().entries).toBe(1);
+    expect(h.record()).toBeDefined();
     h.store.markDirty(OWNER_KEY);
     h.store.save(OWNER_KEY);
     await tick(30);
@@ -2493,7 +2559,7 @@ describe('a durable answer no repeat can fix stops the writes', () => {
       '  async function preloadWithin(',
     );
     expect(replay).toContain(
-      'return snapshotOf(entry, blocked(entry) ? null : offerCapture(entry));',
+      'return snapshotOf(entry, blocked(entry) ? null : offerCapture(entry), false);',
     );
   });
 });
@@ -2783,7 +2849,7 @@ describe('a join that lands after the eviction installs nothing from an answer r
     // collected, and removePlayer evicts.
     await h.leave();
     expect(h.writeCount()).toBe(1);
-    expect(h.writes[0].layoutJson).not.toBe('[]');
+    expect(h.writes[0].layoutJson).toBe(JSON.stringify(persistedFixture().layout));
     expect(h.record()).toBeUndefined();
     // The next character joins on the answer it read. Its retain re-reads the
     // row the owner just committed.
@@ -2832,6 +2898,76 @@ describe('a join that lands after the eviction installs nothing from an answer r
     expect(h.writeCount()).toBe(0);
     expect(h.store.stats().quiesced).toBe(1);
     expect(h.errors.some((line) => line.includes('write refused (unnamed)'))).toBe(true);
+    // WHAT IT COSTS, pinned as it behaves: the capture held this fresh
+    // account's whole first house, and it reaches NO row. The refusal keeps an
+    // empty row from being created under the account's real name; it does not
+    // keep the house. The joining session is write-blocked on the empty
+    // stand-in for its session. Recovering the house is the ruling owed in
+    // docs/freeholds/qa/persistence-2026-09-08/findings.md (harness-fidelity
+    // section).
+    expect(h.store.stats().leaveCaptures).toBe(0);
+  });
+
+  // THE TWELFTH PATH, found by the fresh read of the eleventh path's fix and
+  // PINNED AS IT BEHAVES, so the fix flips these rather than being discovered:
+  // the ruling it needs is owed (the ledger's harness-fidelity section). The
+  // mark covers an answer read BESIDE a live record, but the hazard is an
+  // answer that went STALE between the handshake's preload and its join, and
+  // an answer read with NOTHING live goes stale the same way when another
+  // session of the account joins, commits and is evicted inside that window.
+  it('KNOWN DEFECT, the twelfth path: a stale ABSENT answer empties a house committed during the handshake', async () => {
+    const h = harness({ ...rowRemembered() });
+    // Y's handshake reads with nothing live: the absent arm, unmarked.
+    const answer = await h.store.preload(ACCOUNT_ID);
+    expect(answer.besideLiveRecord).toBe(false);
+    // X, another session of the account, joins, furnishes and leaves inside
+    // Y's lease and character-read window: the house is inserted at wire
+    // revision three, the entry collected, the record evicted.
+    await h.login();
+    h.edit(OWNER_KEY, furnishedEdit(3));
+    await h.leave();
+    expect(h.writeCount()).toBe(1);
+    // Y joins on its stale answer and edits past the committed revision.
+    h.join(answer);
+    await tick(30);
+    h.edit(OWNER_KEY, { rev: 4 });
+    h.store.saveAllDirty();
+    await tick(30);
+    // THE DEFECT: an EMPTY document compare-and-swapped over the house, with
+    // no quiesce and no error line.
+    expect(h.writeCount()).toBe(2);
+    expect(h.writes[1].plotId).toBe(MINTED_PLOT_ID);
+    expect(h.writes[1].wireRev).toBe(4);
+    expect(h.writes[1].layoutJson).toBe('[]');
+    expect(h.store.stats().quiesced).toBe(0);
+    expect(h.errors).toEqual([]);
+  });
+
+  it('KNOWN DEFECT, the twelfth path: a stale ROW answer installs an older house over one committed since', async () => {
+    const table = { placementId: 2, itemId: 'oak_table', x: 0, y: 0, z: 0, yaw: 0 };
+    const h = harness({ ...rowRemembered(rowFixture()) });
+    // Y's handshake reads the row at revision five.
+    const answer = await h.store.preload(ACCOUNT_ID);
+    // X places a table, commits at revision eight, and leaves.
+    await h.login();
+    h.edit(OWNER_KEY, { layout: [...persistedFixture().layout, table], rev: 8 });
+    await h.leave();
+    expect(h.writes[0].layoutJson).toContain('oak_table');
+    // Y joins on its stale answer: the install puts revision FIVE in.
+    h.join(answer);
+    await tick(30);
+    expect(h.record()?.rev).toBe(5);
+    // Refused while it sits below eight; once Y edits past it, nothing can see
+    // that this record is older than the row.
+    h.edit(OWNER_KEY, { rev: 9 });
+    h.store.saveAllDirty();
+    await tick(30);
+    // THE DEFECT: the table X committed is overwritten, silently.
+    expect(h.writeCount()).toBe(2);
+    expect(h.writes[1].wireRev).toBe(9);
+    expect(h.writes[1].layoutJson).not.toContain('oak_table');
+    expect(h.store.stats().quiesced).toBe(0);
+    expect(h.errors).toEqual([]);
   });
 
   it('still lets the next character write when the old record is still live at its join', async () => {
@@ -3336,9 +3472,12 @@ describe('a leaving session never loses its last edits to a queue', () => {
     // WHAT IT COSTS, pinned as it behaves and recorded in the ledger rather
     // than hidden: the capture held the leaver's revision-six edits, a refused
     // write leaves the entry blocked and so owing nothing, and settle releases
-    // the capture with it. Those edits reach no row. Recovering them needs the
-    // join to ask the store again after the eviction, which is a design
-    // question, not a harness one.
+    // the capture with it. Those edits reach no row. The joining session also
+    // plays on the empty stand-in, write-blocked for its whole session, while
+    // the row keeps the house. Recovering the edits needs the join to ask the
+    // store again after the eviction, which is a design question, not a harness
+    // one: the ruling owed in docs/freeholds/qa/persistence-2026-09-08/findings.md
+    // (harness-fidelity section).
     let granted = 0;
     const permit = deferred<{ release(): void } | null>();
     const h = await loadedStore({
@@ -3383,7 +3522,7 @@ describe('a leaving session never loses its last edits to a queue', () => {
     h.store.save(OWNER_KEY);
     await tick(30);
     expect(h.writeCount()).toBe(1);
-    expect(h.writes[0].layoutJson).not.toBe('[]');
+    expect(h.writes[0].layoutJson).toBe(JSON.stringify(persistedFixture().layout));
 
     // Evicted, then a rejoin seeds an empty default under the stand-in name.
     // The row already holds this account's furnishings.
@@ -3503,7 +3642,7 @@ describe('a leaving session never loses its last edits to a queue', () => {
     await tick(30);
     expect(h.writeCount()).toBe(1);
     expect(h.writes[0].wireRev).toBe(7);
-    expect(h.writes[0].layoutJson).not.toBe('[]');
+    expect(h.writes[0].layoutJson).toBe(JSON.stringify(persistedFixture().layout));
 
     // The fresh default, then ONE edit on top of it: not pristine any more.
     await h.rejoinOverEviction();
@@ -3627,6 +3766,10 @@ describe('a leaving session never loses its last edits to a queue', () => {
     let granted = 0;
     const h = await loadedStore({
       ...rowRemembered(),
+      // The LEAVE write's permit is refused at once. Production answers null
+      // only after the permit wait, well after the two-second leave deadline;
+      // compressed here on purpose, because either way the entry still owes the
+      // write when removePlayer evicts, which is all this case needs.
       acquirePermit: async () => {
         granted += 1;
         return granted === 3 ? null : { release: () => {} };
@@ -3639,7 +3782,7 @@ describe('a leaving session never loses its last edits to a queue', () => {
     h.store.saveAllDirty();
     await tick(30);
     expect(h.writeCount()).toBe(1);
-    expect(h.writes[0].layoutJson).not.toBe('[]');
+    expect(h.writes[0].layoutJson).toBe(JSON.stringify(persistedFixture().layout));
     expect(h.writes[0].plotId).toBe('plot:minted1');
 
     // One more edit, then the rejoin over the eviction: reseeded without an
@@ -3669,6 +3812,10 @@ describe('a leaving session never loses its last edits to a queue', () => {
     let granted = 0;
     const h = await loadedStore({
       ...rowRemembered(),
+      // The LEAVE write's permit is refused at once. Production answers null
+      // only after the permit wait, well after the two-second leave deadline;
+      // compressed here on purpose, because either way the entry still owes the
+      // write when removePlayer evicts, which is all this case needs.
       acquirePermit: async () => {
         granted += 1;
         return granted === 3 ? null : { release: () => {} };
@@ -4827,9 +4974,10 @@ describe('the WHOLE preload is capped against the login budget', () => {
     expect(replay.durableRev).toBe('7');
     expect(replay.plotId).toBe(ROW_PLOT_ID);
     // AND ITS STATE, which that arm cannot show: the join seeded the stand-in
-    // over this account, and the seal refuses it by NAME, which it can do only
-    // against a state the read filled in. An entry left with no state would
-    // compare nothing and let the empty default through.
+    // over this account, and the seal refuses it, which it can do only against
+    // a state the read filled in: every arm of it compares against that state,
+    // and an entry left with none would compare nothing and let the empty
+    // default through.
     h.store.saveAllDirty();
     await tick(30);
     expect(h.writeCount()).toBe(0);
@@ -5251,6 +5399,19 @@ describe('stats', () => {
     // can ride in on either side.
     expect(stats.loadFailuresByKind).toEqual({ no_permit: 1 });
     for (const [kind, count] of Object.entries(stats.loadFailuresByKind)) {
+      // A LITERAL list, so a vocabulary that grew would have to be read here
+      // before it could ride out on this scrape.
+      expect([
+        'unsupported',
+        'malformed',
+        'oversize',
+        'unadmitted',
+        'read_threw',
+        'cap_full',
+        'no_permit',
+        'no_budget',
+        'unnamed_record',
+      ]).toContain(kind);
       expect(FREEHOLD_LOAD_FAILURE_KINDS as readonly string[]).toContain(kind);
       expect(typeof count).toBe('number');
     }
@@ -5289,6 +5450,7 @@ describe('installLoadedFreehold', () => {
     hearthReadyAtMs: 0,
     hearthRevision: '0',
     hold: null,
+    besideLiveRecord: false,
     ...overrides,
   });
 
@@ -5361,13 +5523,29 @@ describe('installLoadedFreehold', () => {
     expect(ctx.freeholds.size).toBe(0);
     // The clock is a separate durable fact and still lands.
     expect(ctx.freeholdKeyReadyAtMs.get(OWNER_KEY)).toBe(90_000);
-    // The same answer WITHOUT the mark is a genuine absent row and installs.
+    // The same answer marked FALSE is a genuine absent row and installs.
     installLoadedFreehold(
       ctx,
       ACCOUNT_ID,
       loadedFixture({ state: null, durableRev: null, plotId: MINTED_PLOT_ID }),
     );
     expect(ctx.freeholds.get(OWNER_KEY)?.plotId).toBe(MINTED_PLOT_ID);
+  });
+
+  it('puts no record in from a bag that LOST the mark, so the mark fails closed', () => {
+    // The install acts on a positive `false` only. A projection or a new
+    // constructor that dropped the field must not reopen the eleventh path by
+    // reading as an absent row.
+    const ctx = fakeCtx();
+    const { besideLiveRecord: _dropped, ...unmarked } = loadedFixture({
+      state: null,
+      durableRev: null,
+      plotId: MINTED_PLOT_ID,
+      hearthReadyAtMs: 90_000,
+    });
+    installLoadedFreehold(ctx, ACCOUNT_ID, unmarked as unknown as LoadedFreehold);
+    expect(ctx.freeholds.size).toBe(0);
+    expect(ctx.freeholdKeyReadyAtMs.get(OWNER_KEY)).toBe(90_000);
   });
 
   it('installs NOTHING over a record that is already live, whatever it carries', () => {
@@ -5585,6 +5763,7 @@ describe('installLoadedFreehold', () => {
       hearthReadyAtMs: 9_000,
       hearthRevision: '3',
       hold: null,
+      besideLiveRecord: false,
     });
     expect(ctx.freeholds.size).toBe(0);
     expect(ctx.freeholdKeyReadyAtMs.size).toBe(0);
@@ -5599,6 +5778,7 @@ describe('installLoadedFreehold', () => {
       hearthReadyAtMs: 9_000,
       hearthRevision: '3',
       hold: null,
+      besideLiveRecord: false,
     });
     expect(lit.freeholdKeyReadyAtMs.get(OWNER_KEY)).toBe(9_000);
   });
@@ -6651,6 +6831,7 @@ describe('the gaps a mutation pass over the store found', () => {
       hearthReadyAtMs: 5_000,
       hearthRevision: '3',
       hold: null,
+      besideLiveRecord: false,
     });
     expect(ctx.freeholds.size).toBe(0);
     expect(ctx.freeholdKeyReadyAtMs.size).toBe(0);
@@ -6664,6 +6845,7 @@ describe('the gaps a mutation pass over the store found', () => {
       hearthReadyAtMs: 5_000,
       hearthRevision: '3',
       hold: null,
+      besideLiveRecord: false,
     });
     expect(ctx.freeholds.size).toBe(1);
   });

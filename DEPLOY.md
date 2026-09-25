@@ -846,7 +846,11 @@ For off-box safety, sync the directory to S3 occasionally:
   rather than alone: `stale_writes` is the fence (on a single-realm deployment
   that should be impossible, and on a multi-realm one it means two processes are
   writing the same rows), and the rest of `write_failures` is the write seal, the
-  writable-implies-readable refusal, and a run of thrown writes. `held` counts
+  writable-implies-readable refusal, and a run of thrown writes. The seal and
+  the insert refusal also fire, with no `held` entry at all, when a login's join
+  lands just after the same account's previous session was evicted (a quick
+  relog onto another character while the old leave is slow): that session plays
+  on the empty default, write-blocked until it logs out. `held` counts
   entries under ANY recovery hold, DATA or CAPACITY: read
   `woc_freehold_load_failures_total` by `kind` to tell a row this build cannot
   read from a login storm that filled the admission cap. TWO CAVEATS on reading

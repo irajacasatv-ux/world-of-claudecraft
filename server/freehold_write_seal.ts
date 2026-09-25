@@ -5,9 +5,9 @@
 // Room), and it is out here rather than inside the store's runWrite because it
 // is PURE: three fields in, one boolean out, no ports, no entry map, no clock.
 //
-// EIGHT distinct paths to violating that invariant have been found in this
-// subsystem, and four separate rounds each tried to close the last of them by
-// adding a clause to this expression. It lives in its own file so the next
+// Many distinct paths to violating that invariant have been found in this
+// subsystem (the persistence findings ledger counts them), and four separate
+// rounds each tried to close the latest by adding a clause to this expression. It lives in its own file so the next
 // reader can drive every arm of it from a Vitest with three literals instead of
 // building a store, and so a change to it is a change to a named module rather
 // than a line inside a nine-hundred-line coordinator method.
@@ -122,7 +122,12 @@ export function seedWouldLandOnRealRow(
   // increments its revision (the coupling is pinned by a source scan in
   // tests/freehold_module.test.ts), and every install this store offers a
   // rejoin carries at least the revision the entry last committed, so a
-  // live record BELOW that has to be a different record.
+  // live record BELOW that has to be a different record. THAT PREMISE HAS A
+  // KNOWN HOLE: an answer read before another session of the same account
+  // committed and was evicted, then installed at the join, carries an OLDER
+  // revision, and once the returning player edits past the committed one no
+  // arm here can see it (the twelfth path, pinned as it behaves in
+  // tests/server/freehold_persist.test.ts; a ruling is owed).
   //
   // UN-GATED FROM THE STAND-IN, and that is the companion the install fix owes.
   // It used to be checked only under the stand-in identity, on the reasoning
