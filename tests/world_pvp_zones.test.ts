@@ -66,7 +66,8 @@ describe('worldPvpZonePolicyOf / worldPvpZonePolicyAt', () => {
   it('the instance plane and the space past the map edge are contested, never a zone', () => {
     // zoneAt would clamp both of these onto a real overworld zone; the policy
     // lookup uses the strict containment so an arena floor or a dungeon can
-    // never inherit a free-for-all or a sanctuary.
+    // never inherit an overworld zone's free-for-all or sanctuary (a freehold
+    // room's own sanctuary is tests/freehold_world_pvp_sanctuary.test.ts).
     expect(worldPvpZonePolicyAt(INSTANCE_X_BASE, 0)).toBe('contested');
     expect(worldPvpZonePolicyAt(INSTANCE_X_BASE + 500, 1500)).toBe('contested');
     expect(worldPvpZonePolicyAt(0, WORLD_MAX_Z + 100)).toBe('contested');

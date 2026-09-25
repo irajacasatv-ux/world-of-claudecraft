@@ -17,12 +17,15 @@
 // floors) reads as 'contested' rather than as whichever overworld zone the
 // clamping zoneAt would misreport: an instance is under its own mode's rules
 // (world_pvp.ts inInstancedPvp) and the open-world policy must never leak in.
+// The one instance family with a rule of its own here is a freehold room (an
+// owner-claimed DungeonDef, `claimKey: 'owner'`): a home is never World PvP
+// ground, so its band reads as a sanctuary (tests/freehold_world_pvp_sanctuary).
 //
 // Pure and host-agnostic: the sim's hostility arm, the renderer's nameplate
 // colour and the HUD's target frame all read the same verdict for the same
 // coordinates. No SimContext, no rng, no clock.
 
-import { ZONES, zoneContaining } from '../data';
+import { dungeonAt, ZONES, zoneContaining } from '../data';
 import type { ZoneDef } from '../types';
 import type { WorldPvpZonePolicy } from './world_pvp_rules';
 
@@ -32,8 +35,9 @@ export function worldPvpZonePolicyOf(zone: ZoneDef | null | undefined): WorldPvp
   return zone?.worldPvp ?? 'contested';
 }
 
-/** The policy at a world position. */
+/** The policy at a world position; a freehold room's band is a sanctuary. */
 export function worldPvpZonePolicyAt(x: number, z: number): WorldPvpZonePolicy {
+  if (dungeonAt(x)?.claimKey === 'owner') return 'sanctuary';
   return worldPvpZonePolicyOf(zoneContaining(x, z));
 }
 
