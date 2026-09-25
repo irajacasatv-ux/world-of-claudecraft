@@ -2384,3 +2384,192 @@ bind table; the check is hardening against a foreign store).
    is x86_64): `softwareupdate --install-rosetta --agree-to-license`, then re-run
    `node scripts/gate_select.mjs` armed to close the `sfx:check` step and the 22 audio
    tests, which every branch on this machine now fails the same way.
+
+## THE RE-SYNC OF RELEASE/V0.44.0 AT ED69F62EF7, 2026-09-25
+
+Everything in this section is local; nothing was pushed. Commits `484cb61a46..HEAD`.
+
+### THE TWO RULINGS THIS SYNC CARRIES (Fernando, 2026-09-25)
+
+1. The chosen gate-site margins stand ("do what's best for the feature and project"), so
+   the gate stays at `(-38.65,-103.75)`. Open item 6 of the list above is CLOSED.
+2. Rosetta is installed: `/usr/bin/arch -x86_64 /usr/bin/true` exits 0 on this host (checked
+   at the start of this sync). Open item 7 closes with the armed gate below.
+
+### THE MERGE
+
+`release/v0.44.0` had moved 120 commits past `fc86d90234` and is still the version-newest
+`origin/release/**` (the `resolveSelectBase` rule), at `ed69f62ef7`: the World PvP flag,
+King of the Hill, Warfare Season 2, frame presets and HUD layout editing, the Viridian
+Valestrider, the Thundercall rework and Nythraxis fixes. Merge `484cb61a46` takes it. No
+patch, lockfile or `package.json` moved, so no reinstall was owed.
+
+Sixty-four paths conflicted; every one was resolved by hand against both parents:
+
+- Sources were unions, each read against both parents: the World PvP facet beside the
+  housing facet in `src/world_api.ts`; the boot config's two new fields; `pvp_flag` and the
+  hill dev arm beside `/dev freehold <tier>` in the help line; the furnishing refusal ahead
+  of the release's class-lock in `canEquipItem`; the spectator guard ahead of the furnishing
+  predicate on all three action bar paths; the housing and frame-preset catalog blocks
+  (the release's hunk shared the housing block's closing brace, restored by hand).
+- Two double extractions collapsed onto the release's module: the per-entity wire cache
+  (`server/entity_wire_variant.ts` retired onto `server/entity_wire_cache.ts`, its suite
+  moved to `tests/server/entity_wire_cache.test.ts` with a pin that the twin stays retired),
+  and the release's `WPVP_WIRE_INTERVAL_TICKS` moved into this branch's
+  `server/wire_cadence.ts`. `sim.ts` keeps this branch's quartermaster extraction
+  (`reserved_surface_npc_bootstrap.ts`) and takes the release's new pvp imports; `hud.ts`
+  drops the mouseover import the release moved to the focus-target controller.
+- Reliquary page order: the release's `conquerors_vanguard_gallery` comes BEFORE this
+  branch's unreleased Hearth pages, which stay at the true tail.
+- The release's `ru_RU.ts` ships a broken `hudChrome.noticeboard.officerEntry` (an
+  unrelated frame-help paragraph appended to `{name} ({rank})`, from `bca0c1eb07`). The
+  merge keeps this branch's correct value; the release still ships the broken one, owed
+  upstream.
+- Generated artifacts were regenerated (`i18n:gen`, `wiki:content`), the Eastbrook polish
+  provenance was re-minted by its own script (the release moved `renderer.ts`), and the
+  shard table took the release side, to be re-carried.
+- Every re-pinned count was measured on the merged tree. THREE were same-delta traps, lines
+  both parents moved by the same amount so git merged them silently: the art-subject hotbar
+  inventory (both at 102, merged 103), the tick profiler's base lap names (both at 35,
+  merged 37) and the IWorld facet count (both at 34, merged 35). The full armed suite on
+  the merged tree also caught two composition reds, folded into the merge: the
+  reconnect-hook fixture lacked the release's `focusTargets` member, and the lap-name pin.
+- Monolith rows re-pinned to the exact merged counts, none raised past either parent:
+  `hud.ts` 18097, `sim.ts` 11598, `main.ts` 11144, `server/game.ts` 9762 (later lowered to
+  9758), `online.ts` 5490.
+- Item art: 1310 catalogued owners and 1328 live definitions, re-measured by
+  `node scripts/item_art_audit.mjs --verify-only`; the blob chain moved by the release's
+  13,518 bytes (22 for the Valestrider's reins id, 13,496 for the Warfare Season 2 stock).
+
+### WHAT DID NOT NEED A RE-MINT
+
+- The terrain corpus (`tests/terrain_height_parity.test.ts`) and every parity golden,
+  `freehold_claim` included, are byte-identical on the merged tree: the release touched
+  no input they read, so neither was re-minted.
+
+### THE AUDIT (release-merge-audit, four fresh lanes)
+
+Four read-only lanes read `484cb61a46`: sim and server overlaps, client overlaps, test pins,
+and planning-doc premises. Applied, each with a test where the change is code:
+
+- `080881ef1c`: World PvP made every freehold room fightable ground (the instance plane
+  reads as contested), so two flagged characters in one room could kill each other. A home
+  is now a sanctuary in `worldPvpZonePolicyAt`, the one lookup the sim hostility arm and
+  the client verdict share.
+- `964c6fa2e9`: the release's Vitality rule switched honor gear's health bonus off across
+  the instance plane, so walking through the gate flipped max health. Owner rooms keep it.
+- `194040139f`: `FurnishingItemDef` bars `classLocked` and `requiredClass` (type-level pin).
+- `0590197d8d`: the jail table's header, left in `game.ts` when the table moved to
+  `server/freehold_wire.ts`, moved beside it; `game.ts` lowered 9762 to 9758.
+- `3e2125763a`: five pin comments corrected; `20f699cd85`: the premise lane's doc
+  corrections (homes as sanctuaries in the visit, guild and ward phases; the Fenbridge
+  gate on contested ground; the phase 17 ledger re-plan; the release's `rift_regions.ts`
+  extraction; stale anchors; the dead PR #3872 sync arm).
+
+Recorded, not applied: `/pvp on` works while jailed and the `social` self-wire bucket label
+omits `wpvp` and `hill` (both the release's own code, not the merge's); the King of the
+Hill ring has no prewarm entry (release-side); an unused `targetPortraitKey` import and the
+focus frames' missing /pvp arm (release-side).
+
+### THE CAPTURE EVIDENCE: A RE-SHOOT, AND WHY A RE-HASH WAS WRONG
+
+The merge moved eight of the 67 sealed inputs. A per-input reading found none that could
+move a frame at the harness defaults, and a re-hash was committed on that basis. A probe of
+the after leg REFUTED it before anything cited it: the release's frame presets work
+(`bca0c1eb07`, in the UNSEALED `src/ui/movable_frame.ts`) removed the unit frame's corner
+move toggle, visible in every sealed after frame. The re-hash commit was withdrawn and the
+whole set re-shot at `1910fd578c` (`d6f4a78277`), after the audit's fixes had landed so no
+sealed input would move under it. All 18 frames were read by eye; the numbers are in
+`docs/freeholds/interiors-implementation-evidence.md`, last section. LESSON: the seal is a
+curated list and misses the generic HUD, so a re-hash judgement needs a probe compared
+against the sealed frames, never the per-input argument alone.
+
+### THE SHARD WEIGHTS
+
+The merge took the release's table, which dropped this branch's carried rows and lacks the
+release's unharvested suites (coverage 0.8949 against the 0.918 floor). 482 rows were
+carried at the median of three local runs armed against Postgres (`2626e851b0`), plus one
+suite added after the carry (`c7c2494b8e`): 4571 rows.
+
+### THE FRESH READS
+
+A fresh reviewer read the merge resolution and every fix up to `20f699cd85`: nothing
+blocking, every hand resolution keeps both parents' intent, the two sim fixes cover every
+consumer of the lookups they change, and each pin fails on its mutant. Its findings, all
+applied in `1e8616202d..1910fd578c`: the three inlined owner-room checks became one helper,
+`isOwnerClaimRoomAt` beside `dungeonAt` (the rule of three); the sanctuary suite now pins
+the self readout, the arrival notice and the aid rule too; the pvp module guide and the
+Warfare design doc record both exceptions; the jail header was scoped; and doc precision
+(set membership derives from the ledger only for sets whose members are all catalogued
+relics; the Vanguard page's items, not the page, are class-locked; the literal room pins;
+the kill switch; the dependency-block step; a lighting gate; the blob gotcha).
+
+A second fresh reader read that round: nothing blocking; three should-fix (the jail
+header's Dungeon Finder premise was false, finder formation never teleports; phase 18 said
+the zone pass stops on a disabled realm, when it runs and only skips its notices; the
+refactor moved the sealed `dungeons.ts`, which the re-shoot at `1910fd578c` already
+covered) and nits (six STEP 0 lines had lost their verb, long lines, the helper test's
+band centres, the notice channel, `RUNTIME_MOUNTED_FRAME_IDS`, blob units, one suite
+missing from the weights table). All applied in `e6f79ea3e7..afdcbff1c1`, the band-edge
+and notice pins mutation-checked.
+
+A third fresh reader read THAT round: nothing blocking; two should-fix, both applied in
+`91eb7de70f..b2b85e9b1b`. The Cottage's east band edge rounds into an empty band, so it
+could not kill the `<= 300` mutant its comment named; the shared Inn/Cottage edge now
+does, proven with the Inn probe removed. The jail header pointed at a ledger entry not yet
+written; it now names this file, and this section is the entry. Its nits (a Warfare
+paragraph half-quoted and unwrapped, two long lines, ragged wraps, the blob gotcha's
+sources) were applied too, and the reflow was verified token for token.
+
+### THE GATE
+
+The first armed run, at `afdcbff1c1`, failed at its dependency-sync preflight: an audit
+lane had left a self-referential `node_modules/node_modules` symlink, so `npm ls` read
+every package as missing. The link was removed and the gate re-run on a quiet machine:
+`GATE_EXIT=0`, ALL 12 STEPS GREEN, `sfx:check` included (Rosetta runs the bundled x86_64
+ffprobe), the planner falling back to the full suite on a 1,807-path diff: 4,587 files
+passed and 1 skipped, 68,686 tests passed with 2 expected failures and 28 skips, the 22
+audio tests among the passes; browser regressions 56 files and 483 tests; the malware gate
+9,977 files and 0 high. OPEN ITEM 7 IS CLOSED. The browser step rewrote 21 PNGs under
+`docs/screenshots/` (none in the re-shot set); they were restored, not committed. The
+final code tip `b2b85e9b1b` was gated again: `GATE_EXIT=0`, all 12 steps green, with the
+same full-suite and browser counts. `npx tsc --noEmit` exit 0; `npm run ci:changed` after
+the last commit is the final entry of this session.
+
+### RECORDED FOR THE RELEASE OWNER OR A LATER PHASE, EACH WITH ITS REASON
+
+- The Dungeon Finder queue (`df_queue`) is not in the jail table on either parent. Finder
+  formation only builds a party and never teleports, and the jail sweep re-cages a
+  prisoner, so the most it allows is holding a group seat, as an accepted party invite
+  does. For the release owner.
+- The broken `ru_RU` `hudChrome.noticeboard.officerEntry` above, for the release owner.
+- The two compositions (a home is a sanctuary; Vitality stays on in a home) change modules
+  the Warfare and World PvP owner holds. Both follow the owner's own wording ("never in
+  dungeons or raids; it works in other contexts"; the open-world policy "must never leak"
+  into an instance) and both are one line to reverse, but that owner should confirm them.
+- The World PvP copy (`hudChrome.worldPvp.groundSanctuary` and the guide) names only two
+  sanctuaries; homes join it when housing lights (a tracked gate in `state.md`), because
+  the live copy must not advertise an unlit feature.
+- Duels are still allowed in a room (pre-existing; phase 18 owns the decision). The
+  Fenbridge gate stands on contested ground (a ruling owed before 25a builds). Whether the
+  class-locked Warfare Season 2 sets and the personal pages are trophy sources is a ruling
+  owed at the phase 17 re-plan.
+- The maximal character blob has 2,277 bytes of headroom left under its warn threshold; the
+  next content wave forces a threshold decision (a `state.md` gotcha).
+- One stray self-referential symlink (`node_modules/node_modules`), left by an audit lane's
+  export, made the gate's dependency preflight read every package as missing on the first
+  gate run. It was removed and the gate re-run. LESSON: an audit lane that symlinks
+  `node_modules` into an export must not write through it; check for stray links before a
+  gate.
+
+### STILL OPEN, IN ORDER
+
+1. THE 07 HARNESS-FIDELITY REWRITE, which is why 07's QA verdict is still FAIL (ROUND
+   SEVENTEEN).
+2. `Sim.addPlayer` is not atomic, and the release widened it again: beside
+   `seedAccountLedgerSelf`, the restore path now also runs `loadHonorState` and
+   `loadWorldPvpState`, the latter writing the shared `ctx.worldPvpBooks.nextDisarmAt`.
+3. D85: the release's account ledger is cross-realm against dark realms (a ruling).
+4. The phase 17 re-plan onto the account ledger, now also owing the trophy-source ruling
+   above.
+5. A new release sync, if `release/**` moves again.

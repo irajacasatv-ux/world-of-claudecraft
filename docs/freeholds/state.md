@@ -32,6 +32,11 @@ Only what the next session needs. Update at the end of every phase and QA.
   `190329610f`, both audited. Everything they left owed is done and recorded in
   [the ledger](qa/persistence-2026-09-08/findings.md), THE OWED LIST WORKED THROUGH.
   Nothing has been pushed.
+- Current sync (2026-09-25, closed): `origin/release/v0.44.0` at `ed69f62ef7` (still the
+  version-newest release branch) in merge `484cb61a46`: 120 commits, 64 conflicts by hand,
+  audited by four lanes and read fresh three times. Recorded in
+  [the ledger](qa/persistence-2026-09-08/findings.md), THE RE-SYNC OF RELEASE/V0.44.0 AT
+  ED69F62EF7. Nothing has been pushed.
 - Push policy: the branch stays local until Fernando says to push. Pushes go to `origin`,
   never a fork. A PR is opened only by a wave close phase (20, 27, 33, 39 and 44: one PR
   per wave under D12, owned for every wave), after the whole-feature matrix, and only
@@ -42,6 +47,22 @@ Only what the next session needs. Update at the end of every phase and QA.
   from a session.
 
 ## Current phase
+
+**THE V0.44.0 RE-SYNC IS CLOSED, 2026-09-25, LOCAL.** Merge `484cb61a46` takes
+`origin/release/v0.44.0` at `ed69f62ef7` (World PvP, King of the Hill, Warfare Season 2,
+frame presets). Homes are World PvP sanctuaries and keep honor gear health; the capture
+set was re-shot and re-sealed at `1910fd578c`; 483 shard rows carried; the armed gate is
+green on all 12 steps, `sfx:check` and the audio tests included. FERNANDO RULED on
+2026-09-25: the chosen gate-site margins stand, so the gate stays at `(-38.65,-103.75)`
+(item 6 below is CLOSED), and Rosetta is installed (`/usr/bin/arch -x86_64 /usr/bin/true`
+passes; item 7 below is CLOSED by that green gate). Open, in order: (1) the 07 harness
+rewrite; (2) `Sim.addPlayer` atomicity, widened again (the restore path now also runs
+`loadHonorState` and `loadWorldPvpState`); (3) D85, the cross-realm account ledger against
+dark realms (a ruling); (4) the phase 17 re-plan onto the account ledger, now also owing a
+ruling on whether the class-locked Warfare Season 2 sets and the personal pages are trophy
+sources; (5) a new release sync if `release/**` moves. Owed before 25a builds: a ruling on
+the Fenbridge gate's contested ground. Detail: [the ledger](qa/persistence-2026-09-08/findings.md),
+THE RE-SYNC OF RELEASE/V0.44.0 AT ED69F62EF7.
 
 **THE V0.44.0 SYNC IS CLOSED, 2026-09-23, LOCAL.** The gate stands at
 `(-38.65,-103.75)` clear of every press, draws and picks on a lit host, and the capture
@@ -54,7 +75,8 @@ rewrite; (2) `Sim.addPlayer` atomicity, widened by `seedAccountLedgerSelf`; (3) 
 on the cross-realm account ledger against dark realms (D85); (4) the phase 17 re-plan onto
 the account ledger; (5) a new release sync if `release/**` moves; (6) FERNANDO: confirm the
 chosen margins that placed the gate at `(-38.65,-103.75)` rather than the nearer
-`(-37,-103.5)`; (7) install Rosetta (or gate elsewhere) to run the gate as written.
+`(-37,-103.5)` (CLOSED 2026-09-25: the margins stand); (7) install Rosetta (or gate
+elsewhere) to run the gate as written (CLOSED 2026-09-25: installed, gate green).
 
 07 (bounded persistence and stable plot identity) is **BUILT, local, and its paired
 QA FAILED**, 2026-09-10, AND THE FOUR RULINGS HAVE SINCE BEEN EXECUTED, which is
