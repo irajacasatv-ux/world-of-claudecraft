@@ -903,6 +903,34 @@ describe('the harness models only a liveness state the server can produce', () =
     expect(h.record()).toBeUndefined();
   });
 
+  it('keeps a row database to what upsertFreehold does: one account, and an update keeps the name', async () => {
+    const db = rowRemembered();
+    const insert = {
+      accountId: ACCOUNT_ID,
+      plotIndex: 0,
+      plotId: MINTED_PLOT_ID,
+      tier: 'inn_room',
+      layoutJson: '[]',
+      trophiesJson: '[]',
+      condition: 100,
+      visitPolicy: 'closed',
+      wireRev: 0,
+      schemaVersion: 1,
+      expectedDurableRev: null,
+    };
+    expect(await db.writeRow(insert)).toEqual({ kind: 'inserted', durableRev: '1' });
+    // An insert over the row it made is the stale answer, not a second row.
+    expect(await db.writeRow(insert)).toEqual({ kind: 'stale', durableRev: '1' });
+    // The compare-and-swap UPDATE never sets plot_id, so the row keeps its name.
+    expect(
+      await db.writeRow({ ...insert, plotId: 'plot:another', wireRev: 1, expectedDurableRev: '1' }),
+    ).toEqual({ kind: 'updated', durableRev: '2' });
+    const read = await db.readRow(ACCOUNT_ID);
+    expect(read.kind === 'row' ? read.row.plotId : null).toBe(MINTED_PLOT_ID);
+    // And it is one account's row: another account is a case bug.
+    await expect(db.readRow(OTHER_ACCOUNT_ID)).rejects.toThrow(/holds account/);
+  });
+
   it('hands a case a COPY of the record, so the map moves only through edits', async () => {
     const h = await loadedStore();
     const copy = h.record();
