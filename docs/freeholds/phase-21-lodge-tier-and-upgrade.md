@@ -311,7 +311,8 @@ src/world_api.ts, the parity goldens):
   frozen save key), `freehold_lodge` DungeonDef appended at the verified next free index in dungeons.ts (record the index in the implementation ledger) (spawns [],
   guideVisible false, absent from FINDER_ACTIVITIES, claimKey 'owner': the room keeps
   `claimKey: 'owner'` and so the World PvP sanctuary, state.md "Non-negotiables"),
-  LODGE_LAYOUT beside COTTAGE_LAYOUT in src/sim/content/freehold/layouts.ts (D23) with rooms, doors, decor with measured r, eight plinth anchors,
+  LODGE_LAYOUT beside COTTAGE_LAYOUT in src/sim/content/freehold/layouts.ts (D23) with
+  rooms, doors, decor with measured r, eight plinth anchors,
   two amenity anchors, the hearth anchor, its lift function, and the six touch points;
   the Lodge's first room reuses COTTAGE_LAYOUT's cell grid, door position, plinth anchor
   ids 1 to 4 and amenity anchor 1 verbatim and the second room adds plinths 5 to 8 and

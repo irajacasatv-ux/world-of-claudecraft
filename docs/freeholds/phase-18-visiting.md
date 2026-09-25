@@ -308,7 +308,8 @@ sixth deliverable):
   player arriving from free-for-all ground hears the free-for-all leave line
   (WORLD_PVP_FFA_LEAVE_LINE) instead; a walk in through the Eastbrook gate (sanctuary to
   sanctuary) hears neither, and neither fires on a realm whose World PvP switch is off
-  (`ctx.worldPvpDisabled`, the zone pass does not run). The D41 arrival flow (phases 09 and 19) should expect either
+  (`ctx.worldPvpDisabled`: the pass still runs, for Vitality, but skips its crossing
+  notices). The D41 arrival flow (phases 09 and 19) should expect either
   line beside its own welcome, and no housing code emits or suppresses it.
 
 INVARIANTS THIS PHASE MUST KEEP:
@@ -338,8 +339,9 @@ INVARIANTS THIS PHASE MUST KEEP:
 - HUD frame coverage: every new HUD surface (the visit prompt, the Visitors tab host,
   any who-is-home line) states its classification in tests/hud_frame_coverage.test.ts
   (a HUD_FRAME_SPECS row in src/ui/interface_unlock_core.ts, the default; a
-  `.window.panel`; or a reasoned FRAME_EXEMPT or SELF_GOVERNED entry, with any root it
-  touches listed in UI_ROOT_TOUCHERS; the src/ui/hud/housing/gate_prompt_controller.ts
+  `.window.panel`; or a reasoned FRAME_EXEMPT or SELF_GOVERNED entry; a frame row minted
+  at runtime is also listed in RUNTIME_MOUNTED_FRAME_IDS, and the module that mounts it
+  on the `#ui` root is listed in UI_ROOT_TOUCHERS, which names files; the src/ui/hud/housing/gate_prompt_controller.ts
   UI_ROOT_TOUCHERS row is the precedent). The release's frame presets
   (src/ui/frame_presets_core.ts), frame menus and reset keys now ride a HUD_FRAME_SPECS
   row, so a standing surface registered there inherits them.

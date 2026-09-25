@@ -218,13 +218,15 @@ Spawn one Explore agent to read and summarize:
   `slain:*` marks, mount possession, the live `RELIQUARY_SET_MEMBERS` armor sets (the
   set ids), the complete promised family inventory: every row of content-manifest.md
   "Specialized trophy model inventory for 23" whose owner column names 23 (the guild
-  first-clear and project rows belong to 31 and 32a/40), with mounts derived from MOUNTS and MOUNT_KEYS under the availability
+  first-clear and project rows belong to 31 and 32a/40), with mounts derived from MOUNTS
+  and MOUNT_KEYS under the availability
   filter rather than any fixed mount count, the realm-rare marks, the live
   `RELIQUARY_SET_MEMBERS` sets (derive, never a literal) and the profession specimens
 - Warfare Season 2 (v0.44.0 re-sync): the Vanguard Gallery page's items are
   class-locked, so the page sits outside completion (`excludeFromCompletion:
   'personal'`, docs/design/reliquary.md), and the VANGUARD_ITEM_SETS
-  (src/sim/content/vanguard_item_sets.ts, spread into ITEM_SETS) are class-locked. Whether class-locked sets and personal pages (Vanguard, plus the
+  (src/sim/content/vanguard_item_sets.ts, spread into ITEM_SETS) are class-locked. Whether
+  class-locked sets and personal pages (Vanguard, plus the
   existing Riftbound and Forgebreaker pages) are trophy sources is a RULING OWED at the
   phase 17 re-plan; this file follows that ruling, never its own
 - The Perfected legendary: src/sim/types.ts (the `perfected` stamp, the promotion, the

@@ -277,7 +277,9 @@ STEP 5 - ACCEPTANCE CRITERIA:
 - [ ] Disposable-PG final-slot/opposite-move races preserve every membership and item; indexed bounded candidates and stable lock order pass recorded plans and contention checks.
 - [ ] Opaque plot descriptors round-trip/re-send on resume, preserve malformed prior state, and produce identical colliders/exteriors on both hosts; current ACL governs every door.
 - [ ] Final exterior art, LOW fairness and desktop/compact/tablet ward/door/busy screenshots meet ux-spec; no live-program events or retired scene leaks; the `housing-ward` target (ward-square, ward-exterior, ward-roster, ward-busy-cap, ward-door, ward-move-review) and the ward key rows are registered and both manifests regenerated in this phase's commits (D92).
-- [ ] A flagged owner and a flagged ward neighbour in the same ward are not hostile, through the real sim hostility arm and the client verdict (src/ui/pvp_hostile_core.ts): the ward is a World PvP sanctuary (tests/freehold_world_pvp_sanctuary.test.ts).
+- [ ] A flagged owner and a flagged ward neighbour in the same ward are not hostile,
+  through the real sim hostility arm and the client verdict (src/ui/pvp_hostile_core.ts):
+  the ward is a World PvP sanctuary (tests/freehold_world_pvp_sanctuary.test.ts).
 - [ ] All validation, actual-surface reviews, fresh fix review and contribution gate pass.
 
 STEP 6 - DOC UPDATES + MEMORY:

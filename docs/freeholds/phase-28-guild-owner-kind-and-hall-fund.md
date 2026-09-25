@@ -443,7 +443,8 @@ STEP 5 - ACCEPTANCE CRITERIA (do not mark complete until all check):
   exclusion pin stays green.
 - [ ] Two flagged players in the Meeting Hall (two members, or a member and a flagged
   public-policy guest) are not hostile, through the real sim hostility arm and the
-  client verdict (src/ui/pvp_hostile_core.ts): the hall is a World PvP sanctuary like every
+  client verdict (src/ui/pvp_hostile_core.ts): the hall is a World PvP sanctuary like
+  every
   owner-claimed room (tests/freehold_world_pvp_sanctuary.test.ts).
 - [ ] All STEP 3 suites green; the reviewers confirm ALL findings, including nits, are resolved and freshly reviewed; the ceilings did not
   rise; state.md records the verified implementation facts and accepted artifact rows.

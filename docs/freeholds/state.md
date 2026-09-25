@@ -1365,7 +1365,8 @@ ambiguous commits, real PostgreSQL participants and exact no-leak capacity total
   are unchanged, and every busy arm binds only to source activation or credit capture.
 - Never sell power: no amenity or furnishing changes a combat, progression, gathering, or
   drop number; the only buff in a house is a feast's Well Fed.
-- A home is never World PvP ground: `worldPvpZonePolicyAt` (src/sim/pvp/world_pvp_zones.ts)
+- A home is never World PvP ground: `worldPvpZonePolicyAt`
+  (src/sim/pvp/world_pvp_zones.ts)
   answers sanctuary for any owner-claimed room (`claimKey: 'owner'`), so the sim hostility
   arm and the client verdict (src/ui/pvp_hostile_core.ts) agree
   (tests/freehold_world_pvp_sanctuary.test.ts). Every new room def keeps
@@ -2002,10 +2003,11 @@ message is performed in this documentation session.
 
 ## Gotchas (read before the matching phase)
 
-- Character blob headroom (v0.44.0 re-sync): the maximal character blob in
-  tests/professions_blob_growth.test.ts measures 227,099 bytes against
-  `CHARACTER_BLOB_WARN_BYTES` 229,376, so 2,277 bytes remain (Warfare Season 2 took
-  13,496 of the 15,795 there were, the Valestrider's reins id 22). The next housing
+- Character blob headroom (figures as measured at the v0.44.0 re-sync; the live ones are
+  in the comments of tests/professions_blob_growth.test.ts): the maximal character blob
+  measured 227,099 bytes against `CHARACTER_BLOB_WARN_BYTES` 229,376, so 2,277 bytes
+  remained (Warfare Season 2 took 13,496 bytes of the 15,795 there were, the
+  Valestrider's reins id 22 bytes). The next housing
   content wave that grows the blob (trophies, more furnishings or Reliquary pages)
   forces a threshold decision; attribute and measure it, never widen the band.
 - Reliquary page order: pages the release appends go BEFORE the unreleased Hearth
@@ -2086,9 +2088,11 @@ message is performed in this documentation session.
   `src/main.ts` 11384. Every later phase re-reads the pins; 02's furnishing kind touches
   `src/sim/types.ts`, not a monolith, but any `sim.ts` merge line still owes an extraction.
 - Locked during 01 (engineering, no product change): (a) the offline flag is gated like
-  its two sibling live-world flags, `freeholdsEnabled: world === undefined` in `src/main.ts`
+  its two sibling live-world flags, `freeholdsEnabled: world === undefined` in
+  `src/main.ts`
   (since moved to `src/game/offline_world_config.ts` `offlineWorldConfig`, which
-  `src/main.ts` calls), so the stock offline world is lit (D3) while custom editor play-test maps and the editor
+  `src/main.ts` calls), so the stock offline world is lit (D3) while custom editor
+  play-test maps and the editor
   viewport (`src/editor/3d/viewport.ts`) boot dark; the headless env passes `true`.
   (b) `SimConfig.freeholdsEnabled` on a realm is a BOOT SNAPSHOT of `FREEHOLDS_ENABLED`
   (a running realm needs a restart); only the wire predicate and the status route read the

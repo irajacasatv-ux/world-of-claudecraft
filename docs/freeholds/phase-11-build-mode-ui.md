@@ -690,8 +690,9 @@ INVARIANTS THIS PHASE MUST KEEP:
 - HUD frame coverage: every new HUD surface (the palette, the strip, the capacity meter,
   any build companion) states its classification in tests/hud_frame_coverage.test.ts
   (a HUD_FRAME_SPECS row in src/ui/interface_unlock_core.ts, the default; a
-  `.window.panel`; or a reasoned FRAME_EXEMPT or SELF_GOVERNED entry, with any root it
-  touches listed in UI_ROOT_TOUCHERS; the src/ui/hud/housing/gate_prompt_controller.ts
+  `.window.panel`; or a reasoned FRAME_EXEMPT or SELF_GOVERNED entry; a frame row minted
+  at runtime is also listed in RUNTIME_MOUNTED_FRAME_IDS, and the module that mounts it
+  on the `#ui` root is listed in UI_ROOT_TOUCHERS, which names files; the src/ui/hud/housing/gate_prompt_controller.ts
   UI_ROOT_TOUCHERS row is the precedent). The release's frame presets
   (src/ui/frame_presets_core.ts), frame menus and reset keys now ride a HUD_FRAME_SPECS
   row, so a standing surface registered there inherits them.

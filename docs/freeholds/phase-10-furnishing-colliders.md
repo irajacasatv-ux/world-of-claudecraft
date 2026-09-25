@@ -12,7 +12,8 @@ placed-furnishing colliders per claim and per accepted layout change on the serv
 from the descriptor on the client, and pins that a placed table blocks movement
 identically on both hosts.
 
-Correction, 2026-09-25 (stale since the first v0.44.0 sync, `ffa7ac5ffb`): this file first planned to MOVE the region
+Correction, 2026-09-25 (stale since the first v0.44.0 sync, `ffa7ac5ffb`): this file first
+planned to MOVE the region
 block out of colliders.ts into a new src/sim/runtime_collider_regions.ts. The release
 had already moved it into src/sim/rift_regions.ts, so there is no block left to move
 and the colliders.ts ceiling that move lowered is not this phase's payment. The steps
@@ -151,7 +152,8 @@ last:
   ceiling, tests/runtime_collider_regions.test.ts (an equivalence pin: for a
   published rift floor every movement, sight, and pathing answer is byte-identical
   before and after the generalisation, driven between thresholds, not at extremes; a
-  can-fail call counter proving exactly one candidate-origin derivation per freehold lookup
+  can-fail call counter proving exactly one candidate-origin derivation per freehold
+  lookup
   with all 24 slots of indices 15 and 16 claimed; the five rift suites unchanged and
   green).
 - Agent SIM: src/sim/freehold/colliders.ts (publishFreeholdColliders(ctx, inst, record)

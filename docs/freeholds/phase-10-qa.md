@@ -3,7 +3,8 @@
 Audits `phase-10-furnishing-colliders.md`. Verdict goes in `progress.md` (row "10 QA").
 The next implementation phase never starts before this file has run.
 
-Correction, 2026-09-25 (stale since the first v0.44.0 sync, `ffa7ac5ffb`): the release already extracted the region
+Correction, 2026-09-25 (stale since the first v0.44.0 sync, `ffa7ac5ffb`): the release
+already extracted the region
 block out of `src/sim/colliders.ts` into `src/sim/rift_regions.ts` (colliders.ts
 re-exports its publish/token verbs), so the audited change generalises that module in
 place or renames it; there is no colliders.ts block to compare, and that ceiling is
@@ -21,13 +22,15 @@ block for effort and fan-out; this prompt names no model.
 Goal: audit the Phase 10 diff for correctness against every deliverable and acceptance
 criterion in docs/freeholds/progress.md "10 Furnishing colliders", missing tests, dead
 code, the move-not-rewrite generalisation of src/sim/rift_regions.ts, determinism of
-the collider set, both hosts colliding identically, no per-tick publish, and the monolith ratchet; fix what the
+the collider set, both hosts colliding identically, no per-tick publish, and the monolith
+ratchet; fix what the
 audit finds; record a verdict.
 
 STEP 0 - PRE-FLIGHT:
 - Work in the packet worktree named in docs/freeholds/state.md, on branch
   feature/freeholds. Verify `git status` is clean; if not, ask the user.
-- Sync the base per state.md "Worktree, base, and merge-forward" (merge the newest origin/release/**; release-merge-audit after a
+- Sync the base per state.md "Worktree, base, and merge-forward" (merge the newest
+  origin/release/**; release-merge-audit after a
   non-empty merge; pnpm install --frozen-lockfile if patches/ moved).
 - Memory scan: MEMORY.md, the test-pin traps catalog, the forward-walk-inherits-reverse-gate
   entry, "review the review-fix round", "apply ALL findings".
@@ -49,7 +52,8 @@ Spawn one Explore agent to read and summarize:
   tests/monolith_budget.test.ts
 The agent returns: the promised-versus-delivered table per deliverable, the registry
 diff (any rift line that changed beyond an import path or a name alias), every reader
-site re-pointed at the generalised lookup and any left behind, every test added with what it
+site re-pointed at the generalised lookup and any left behind, every test added with what
+it
 asserts, the publish and clear call sites on both hosts, and any TODO, unused import, or
 alias that nothing calls.
 
@@ -58,7 +62,8 @@ file and replying with the path plus a short summary; prompt each for COVERAGE: 
 every issue including low-severity and uncertain ones; ranking happens later):
 - CORRECTNESS: every deliverable and acceptance criterion actually met; the
   generalisation is move-not-rewrite (the rift bodies match; the rift aliases forward
-  with identical signatures; the O(1) candidate-origin derivation survives for the rift band); the
+  with identical signatures; the O(1) candidate-origin derivation survives for the rift
+  band); the
   freehold candidate origin derives from the claim's true instanceOriginOf and never
   from a clamp that maps a neighbouring slot; every reader (movement, sight, pathing)
   dispatches through the one lookup; publish fires on claim, on every accepted change,
@@ -88,7 +93,8 @@ every issue including low-severity and uncertain ones; ranking happens later):
   token; a row at a room edge; a rug with r: 0 beside a table with r above 0).
 - DEAD CODE AND HYGIENE: unused imports and types, leftover TODOs, a rift-named helper
   left in the registry module or colliders.ts beside its alias, the architecture import
-  invariant, the word "phase" in any code, comment, or commit message, em dashes or emojis, generated files
+  invariant, the word "phase" in any code, comment, or commit message, em dashes or
+  emojis, generated files
   hand-edited, src/sim/CLAUDE.md and src/sim/freehold/CLAUDE.md rows for the new
   modules, the colliders.ts ceiling not raised and, if the diff added a line there,
   lowered by an extraction (the release's region move is not this change's payment).

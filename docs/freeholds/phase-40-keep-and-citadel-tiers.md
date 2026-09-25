@@ -44,7 +44,8 @@ Spawn one Explore agent to read and summarize:
 - src/sim/content/freehold/tiers.ts, charters.ts, dungeons.ts, trophies.ts (the ladder
   through Phase 32; free indices), src/sim/content/freehold/layouts.ts (the Manor and
   Bastion layouts, D23) and src/sim/dungeon_layout.ts (DAWNHOLD_STAIR_LIFT and authoredLiftAt consumer
-  model), src/sim/rift/authored.ts (authoredLiftAt, AuthoredRoom, AuthoredLedge), src/sim/interior_collider_sets.ts (STATIC_INTERIOR_COLLIDERS),
+  model), src/sim/rift/authored.ts (authoredLiftAt, AuthoredRoom, AuthoredLedge),
+  src/sim/interior_collider_sets.ts (STATIC_INTERIOR_COLLIDERS),
   src/sim/world.ts (groundHeight interior arms), src/render/dungeon.ts (the variant
   union; whether an open-sky room exists in any kit), src/render/point_light_budget.ts
 - src/sim/freehold/build_project.ts (Phase 32), the Phase 21 upgrade gate module,

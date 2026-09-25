@@ -165,7 +165,8 @@ Spawn one Explore agent to read and summarize:
   (the deed and page name lookups the tooltip reuses), scripts/wiki/build_content.mjs
   (what the wiki regen reads), root CLAUDE.md "New game content" bullet
 The agent returns: the exact ownership reads for each source kind and the character bundle
-(accountReliquaryOwnership) and the bounded account projection needed for all alts; the join retro insertion
+(accountReliquaryOwnership) and the bounded account projection needed for all alts; the
+join retro insertion
 point and the first-entry hook; the plinth slot rules and how a plinth row differs from
 a furnishing row in the layout; the fhold and descriptor extension points; the tooltip
 core recipe and where the composer dispatches; the deeds count pins that will move and
@@ -185,7 +186,8 @@ Deliverables (at most five):
    Warfare Season 2 (v0.44.0 re-sync): the Vanguard Gallery page's items are
    class-locked, so the page sits outside completion (`excludeFromCompletion:
    'personal'`, docs/design/reliquary.md), and the VANGUARD_ITEM_SETS
-   (src/sim/content/vanguard_item_sets.ts, spread into ITEM_SETS) are class-locked. Whether class-locked sets (a requireSet source) and personal pages (a
+   (src/sim/content/vanguard_item_sets.ts, spread into ITEM_SETS) are class-locked.
+   Whether class-locked sets (a requireSet source) and personal pages (a
    requirePage source: Vanguard, plus the existing Riftbound and Forgebreaker pages) are
    trophy sources is a RULING OWED at this file's re-plan.
    Every qualifying source has a truthful generic family display in Wave A; 23 adds
@@ -355,7 +357,8 @@ Deliverables (at most five):
    `AccountEarner.day` in src/sim/account_ledger.ts; replayed historical finds are NULL,
    unknown); trophies-provenance-unknown stages a historical source with no known day
    (a replayed find), never a faked date. Re-run strict
-   wire/parity/content/guide/ownership pins and bounded PG account hydration evidence. Add the exact housing-trophies
+   wire/parity/content/guide/ownership pins and bounded PG account hydration evidence. Add
+   the exact housing-trophies
    helper entry below with desktop/compact/tablet owned/unearned/unknown/public
    provenance and placement captures. Dispatch architecture, content,
    cross-platform, frontend, render, privacy, migration, server-hot-path and

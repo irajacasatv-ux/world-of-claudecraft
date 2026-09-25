@@ -289,7 +289,8 @@ Deliverables (at most five):
    `AccountEarner.day` in src/sim/account_ledger.ts; replayed historical finds are NULL,
    unknown); trophies-provenance-unknown stages a historical source with no known day
    (a replayed find), never a faked date. Re-run strict
-   wire/parity/content/guide/ownership pins and bounded PG account hydration evidence. Add the exact housing-trophies
+   wire/parity/content/guide/ownership pins and bounded PG account hydration evidence. Add
+   the exact housing-trophies
    helper entry below with desktop/compact/tablet owned/unearned/unknown/public
    provenance and placement captures. Dispatch architecture, content,
    cross-platform, frontend, render, privacy, migration, server-hot-path and

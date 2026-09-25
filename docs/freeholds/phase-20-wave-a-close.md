@@ -142,7 +142,8 @@ Spawn one Explore agent to read and summarize:
   scripts/pr_shot_targets.mjs (the housing targets Phases 11, 16, 17 and 18 added);
   docs/prd/woc/freehold-service-contract.md (Phase 15); .claude/skills/ci-triage/SKILL.md
 - The wave diff: `git log --oneline <base>..HEAD` and `git diff <base>..HEAD --stat`
-  where <base> is the merge-base with the base branch (the newest origin/release/**); every test file the wave added
+  where <base> is the merge-base with the base branch (the newest origin/release/**);
+  every test file the wave added
   (`git diff <base>..HEAD --name-only -- tests/`); the docs/screenshots/ directory
 - The matrix row anchors: tests/world_api_parity.test.ts, tests/env_protocol.test.ts,
   tests/freehold_determinism.test.ts, tests/freehold_command_chain_online.test.ts,
