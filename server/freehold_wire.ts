@@ -84,8 +84,10 @@ export function refusedFreeholdCommand(frame: unknown, env?: NodeJS.ProcessEnv):
 // entries, starting or accepting a duel, and Unstuck. Leave/abort commands stay
 // allowed, and the door-gated dungeon/delve entries are listed as explicit
 // policy. NOT listed, on both parents before this branch moved the table here:
-// the Dungeon Finder queue (`df_queue`), whose proposal can pop a prisoner into
-// a dungeon; recorded in the freeholds ledger for the release owner.
+// the Dungeon Finder queue (`df_queue`). Finder formation only builds a party
+// and never teleports, and the jail sweep re-cages a prisoner, so the most it
+// allows is holding a group seat (as an accepted party invite does); recorded
+// in the freeholds persistence ledger for the release owner.
 const JAILED_BLOCKED_COMMANDS = new Set<string>([
   'arena_queue',
   'bg_queue',
