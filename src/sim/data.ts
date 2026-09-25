@@ -1124,6 +1124,13 @@ export function dungeonAt(x: number): DungeonDef | null {
   return dungeonByIndex(Math.round((x - (INSTANCE_X_BASE + 900)) / 600));
 }
 
+/** Is this far-off position inside a freehold room, an owner-claimed instance
+ *  (`claimKey: 'owner'`)? One x-band read through dungeonAt. The instance
+ *  claim lookup, the World PvP ground and the honor Vitality context ask it. */
+export function isOwnerClaimRoomAt(x: number): boolean {
+  return dungeonAt(x)?.claimKey === 'owner';
+}
+
 export function isDungeonEntryTransition(fromX: number, toX: number): boolean {
   const destination = dungeonAt(toX);
   return destination !== null && dungeonAt(fromX)?.id !== destination.id;

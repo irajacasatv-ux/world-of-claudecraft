@@ -15,7 +15,7 @@
 //
 // Host-agnostic: no rng, no wall clock; runs on the world PvP pass cadence.
 
-import { DUNGEON_X_THRESHOLD, dungeonAt } from '../data';
+import { DUNGEON_X_THRESHOLD, isOwnerClaimRoomAt } from '../data';
 import type { SimContext } from '../sim_context';
 import type { Entity } from '../types';
 
@@ -23,7 +23,7 @@ import type { Entity } from '../types';
 export function pvpVitalityAppliesTo(ctx: SimContext, e: Entity): boolean {
   if (e.kind !== 'player') return false;
   if (ctx.bgMatches.has(e.id) || ctx.arenaMatches.has(e.id)) return true;
-  return e.pos.x <= DUNGEON_X_THRESHOLD || dungeonAt(e.pos.x)?.claimKey === 'owner';
+  return e.pos.x <= DUNGEON_X_THRESHOLD || isOwnerClaimRoomAt(e.pos.x);
 }
 
 /** Flip each player's Vitality switch to match their context, recalculating

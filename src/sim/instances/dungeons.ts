@@ -25,6 +25,7 @@ import {
   INSTANCE_SLOT_COUNT,
   instanceOrigin,
   instanceSlotForZ,
+  isOwnerClaimRoomAt,
   MOBS,
   NPCS,
 } from '../data';
@@ -232,7 +233,7 @@ export function instanceOriginOf(inst: InstanceSlot): { x: number; z: number } {
 // corpses can be bound without trusting a stale body in a recycled slot.
 export function instanceClaimIdAt(ctx: SimContext, pos: Vec3): number | null {
   if (pos.x <= DUNGEON_X_THRESHOLD) return null;
-  if (dungeonAt(pos.x)?.claimKey === 'owner') return claimedInstanceAt(ctx, pos)?.exitId ?? null;
+  if (isOwnerClaimRoomAt(pos.x)) return claimedInstanceAt(ctx, pos)?.exitId ?? null;
   for (const inst of ctx.instances) {
     if (inst.partyKey === null || inst.exitId === null) continue;
     if (instanceClaimContains(inst, pos)) return inst.exitId;
