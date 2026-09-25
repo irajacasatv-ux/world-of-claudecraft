@@ -321,3 +321,61 @@ npx vitest run tests/freehold_capture_contract.test.ts --maxWorkers=2
 
 The after-leg server ran with `ALLOW_DEV_COMMANDS=1` on loopback, for the Cottage grant
 only (a local dev server; never production).
+
+## The 2026-09-25 re-shoot (after the re-sync of `release/v0.44.0` at `ed69f62ef7`)
+
+All 18 images, their sidecars, both producer manifests and the performance record were
+shot again on 2026-09-25, and the receipt was regenerated over them. The 2026-09-23 set
+above is superseded and kept as history.
+
+Why a re-shoot and not a re-hash: merge `484cb61a46` changed eight of the 67 sealed
+inputs (`renderer.ts`, `nameplate_painter.ts`, `action_bar_controller.ts`,
+`pr_shot_targets.mjs`, and `base.css`, `components.css`, `hud.mobile.css`, `tokens.css`),
+and a per-input reading found none that could move a frame at the harness defaults (the
+hill ring builds nothing without a standing hill, the PvP nameplate tag needs a raised
+flag, the new rules style windows no frame shows, the pet socket token reaches only a pet
+bar a warrior lacks, the rest are cursors, spectator guards and new capture targets). A
+probe of the after leg at `0590197d8d` (into the gitignored `tmp/`, not committed)
+REFUTED that reading: the player unit frame's corner move toggle, present in every
+sealed after frame, is gone. The release's frame presets work (`bca0c1eb07`) stopped
+building it in `src/ui/movable_frame.ts`, an UNSEALED input. So the seal cannot be
+trusted to say when a frame moves, and a re-hash judgement needs a probe compared
+against the sealed frames. The re-hash commit that briefly held the eight digests was
+withdrawn before anything cited it.
+
+What the set was shot against: one chain at `1910fd578c` with a clean tree (the fixes
+of the re-sync audit and its fresh reads included, `src/sim/instances/dungeons.ts`
+among them): the nine after frames from this worktree's loopback Vite on 5173
+(`ALLOW_DEV_COMMANDS=1` on that local dev server only, for the Cottage grant), then the
+GPU performance tour, then the nine before frames from the frozen baseline checkout
+(`654071354172b3e252cfc03a1e85efde2daddaa6`) on 5174, driven by this worktree's harness.
+The receipt ran at `1910fd578c` with a clean tree and seals the same 67 inputs, 17 of
+them harness files; `tests/freehold_capture_contract.test.ts` passed 102 of 102.
+
+Measured, from the committed records:
+
+- **After gate frames** (compact, desktop, tablet): 0.41, 0.16 and 0.44 yd from the
+  stance, facing 0.07 to 0.09 rad off pi, camera input yaw 0.024, 0.032 and 0.039 rad
+  off the facing; the prompt, focus on the selected tab and the arch met by the probe.
+- **After room frames:** the Inn Room at `(119200,-1254)` and the Cottage at
+  `(119800,-1254)` on every variant, facing 0, camera yaw exactly 0.
+- **Before frames:** 0.04 to 0.43 yd from the stance, turned 0.07 to 0.09 rad off pi,
+  camera yaw 0.022 to 0.059 rad off the facing, no prompt, three settle passes each.
+- **Diagnostics:** after 29, before 130; no target failure and no page exception.
+- **Performance** (`bench_freehold_interiors`, real GPU, headed, low preset): `errors`
+  and `budgetFailures` empty on both profiles.
+
+  | Profile | Inn rendered frames / draw calls | Cottage rendered frames / draw calls |
+  |---|---:|---:|
+  | Desktop | 146 / 33 | 146 / 28 |
+  | Mobile | 145 / 33 | 146 / 28 |
+
+  Island to gate reveal: 16,594.5 ms on desktop and 16,794.2 ms on mobile, with the
+  live-program, attach-watchdog, gate-timeout and reveal-watchdog counters still at 0
+  and touch-unproven at the 1 it held before the window.
+- **Visual review:** all 18 images were read by eye. The arch stands at its site beside a
+  legible prompt in the three after gate frames, with the selected tab outlined; the unit
+  frame no longer carries the corner move toggle. The Inn Room shows its bed and hearth
+  and the Cottage its hearth, from the arrival point facing north; the desktop Cottage
+  chat shows the town leave line. The before frames show the empty lawn between the two
+  cottages. No overlay covers any frame.

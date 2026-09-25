@@ -28,13 +28,13 @@
   "camera": {
     "position": [
       119800,
-      5.774798727392512,
+      5.774798727392497,
       -1265.3908250169893
     ],
     "quaternion": [
       0,
       0.9872272833756269,
-      0.15931820661424573,
+      0.1593182066142457,
       0
     ],
     "inputYaw": 0
@@ -97,6 +97,14 @@
     "playerFrameHeight": 15,
     "targetFrameWidth": 278,
     "targetFrameHeight": 15,
+    "petFrameWidth": 278,
+    "petFrameHeight": 15,
+    "focusTarget1Width": 240,
+    "focusTarget1Height": 15,
+    "focusTarget2Width": 240,
+    "focusTarget2Height": 15,
+    "focusTarget3Width": 240,
+    "focusTarget3Height": 15,
     "playerFrameHealthText": 3,
     "targetFrameHealthText": 3,
     "partyFrameStyle": 0,
@@ -181,11 +189,15 @@
     "showSecondaryActionBar": false,
     "showThirdActionBar": false,
     "combineActionBars": false,
+    "combineTrackerFrames": false,
+    "combineAuraFrames": false,
     "hideUnusedActionSlots": false,
     "waterRipples": false,
     "showTargetOfTarget": false,
+    "moveTargetOfTargetIndependently": false,
     "showTargetSwingTimer": false,
     "showPetFrame": true,
+    "showEmptyFocusFrames": false,
     "showDailyRewardsChest": true,
     "confirmVendorSell": true,
     "forceHighPerfGpu": true,

@@ -27,17 +27,17 @@
   "rendererTier": "low",
   "camera": {
     "position": [
-      -41.137654895435745,
-      5.281406241137797,
-      -91.06070703840146
+      -41.47569081710395,
+      5.2837314086845595,
+      -91.01150936755393
     ],
     "quaternion": [
-      -0.1590512015889462,
-      0.05713169681499832,
-      0.009219882422891998,
-      0.9855727665983165
+      -0.15913340746683396,
+      0.047536089150627805,
+      0.007671348432589231,
+      0.9860821615207751
     ],
-    "inputYaw": -3.025786222195064
+    "inputYaw": -3.0452531821982047
   },
   "settings": {
     "cameraSpeed": 0.7,
@@ -97,6 +97,14 @@
     "playerFrameHeight": 15,
     "targetFrameWidth": 278,
     "targetFrameHeight": 15,
+    "petFrameWidth": 278,
+    "petFrameHeight": 15,
+    "focusTarget1Width": 240,
+    "focusTarget1Height": 15,
+    "focusTarget2Width": 240,
+    "focusTarget2Height": 15,
+    "focusTarget3Width": 240,
+    "focusTarget3Height": 15,
     "playerFrameHealthText": 3,
     "targetFrameHealthText": 3,
     "partyFrameStyle": 0,
@@ -181,11 +189,15 @@
     "showSecondaryActionBar": false,
     "showThirdActionBar": false,
     "combineActionBars": false,
+    "combineTrackerFrames": false,
+    "combineAuraFrames": false,
     "hideUnusedActionSlots": false,
     "waterRipples": false,
     "showTargetOfTarget": false,
+    "moveTargetOfTargetIndependently": false,
     "showTargetSwingTimer": false,
     "showPetFrame": true,
+    "showEmptyFocusFrames": false,
     "showDailyRewardsChest": true,
     "confirmVendorSell": true,
     "forceHighPerfGpu": true,
@@ -198,9 +210,9 @@
   },
   "player": {
     "pos": {
-      "x": -42.45381632752226,
-      "y": -0.4933933085599429,
-      "z": -102.37494380081567
+      "x": -42.57132805752952,
+      "y": -0.49107213494727137,
+      "z": -102.34880831211011
     },
     "facing": -3.0691148575128553,
     "entrySeq": 0
@@ -259,8 +271,8 @@
     "points": [
       {
         "label": "plinth-left",
-        "sx": 495.3860719389297,
-        "sy": 218.6476377719181,
+        "sx": 497.65737404111263,
+        "sy": 218.15964779946182,
         "onScreen": true,
         "archAtPoint": true,
         "occludedBy": null,
@@ -268,8 +280,8 @@
       },
       {
         "label": "plinth-right",
-        "sx": 587.2564864325619,
-        "sy": 222.45317124605086,
+        "sx": 588.663477578812,
+        "sy": 221.28765221969158,
         "onScreen": true,
         "archAtPoint": true,
         "occludedBy": null,
@@ -277,8 +289,8 @@
       },
       {
         "label": "keystone",
-        "sx": 550.0908298991966,
-        "sy": 126.86812604289236,
+        "sx": 552.1563594557107,
+        "sy": 126.64389926174076,
         "onScreen": true,
         "archAtPoint": true,
         "occludedBy": null,
