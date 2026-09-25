@@ -124,13 +124,15 @@ export function seedWouldLandOnRealRow(
   // tests/freehold_module.test.ts), and every install this store offers a
   // rejoin carries at least the revision the entry last committed, so a
   // live record BELOW that has to be a different record. THAT PREMISE HAS A
-  // KNOWN HOLE: an answer read before another session of the same account
-  // committed and was evicted, then installed at the join, carries an OLDER
-  // revision. The first sweep after that join still refuses it here, but a
-  // returning player who edits past the committed revision inside that one
-  // autosave interval carries it above, and then no arm here can see it (the
-  // twelfth path, pinned as it behaves in tests/server/freehold_persist.test.ts
-  // with its window; a ruling is owed).
+  // KNOWN HOLE, the twelfth path: an answer read before another session of the
+  // same account edited and was evicted, then installed at the join, carries
+  // an OLDER house. While that session's leave write is still waiting, the
+  // write itself carries the stale record and no arm here refuses it. Once it
+  // has committed, the first write that holds a permit and samples the record
+  // below the committed revision is refused here, but a returning player who
+  // reaches the committed revision before that write carries it past every arm
+  // (pinned as it behaves in tests/server/freehold_persist.test.ts; a ruling is
+  // owed).
   //
   // UN-GATED FROM THE STAND-IN, and that is the companion the install fix owes.
   // It used to be checked only under the stand-in identity, on the reasoning

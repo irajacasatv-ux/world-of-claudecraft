@@ -40,6 +40,15 @@ being write-blocked rather than on a hold, and a ruling on recovering the
 capture is owed first (the ledger's harness-fidelity section has the order, the
 cost and the ruling).
 
+THE SAME GROUP SEES AN OLDER HOUSE TOO, not only the empty default. The seal
+also refuses, with no hold, a record installed from an answer that went stale
+during the handshake (another session of the account edited and left inside it),
+and a superseded leave capture offered to a rejoin as the install source. Those
+players see an older house, write-blocked, so copy that assumes an empty house
+would be as wrong as copy that assumes an intact one. Some orders of the stale
+answer are refused by nothing and write silently (the twelfth path); no surface
+can see those, and the ruling owed on it decides whether any remain.
+
 ## The rule this design is built under
 
 `src/sim/` and `server/` are LANGUAGE-AGNOSTIC. Neither may emit English prose
