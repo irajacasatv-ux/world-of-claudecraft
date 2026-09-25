@@ -24,6 +24,7 @@ import type {
 import type { FreeholdHearthLoad } from '../../server/freehold_hearth_db';
 import { readLoginDurables } from '../../server/freehold_hearth_load';
 import { installLoadedFreehold } from '../../server/freehold_install';
+import { freeholdLivenessPorts } from '../../server/freehold_liveness';
 import {
   createFreeholdPersistStore,
   FREEHOLD_PERSIST_DRAIN_MAX_ACTIVE_WRITES,
@@ -47,8 +48,10 @@ import {
 } from '../../server/freehold_persist';
 import {
   freeholdPersistIdle,
+  freeholdPreloadUnavailable,
   registerFreeholdPersistStore,
 } from '../../server/freehold_persist_registry';
+import { bindFreeholdOnJoin, flushFreeholdBinding } from '../../server/freehold_session_binding';
 import { seedWouldLandOnRealRow } from '../../server/freehold_write_seal';
 import { createKeyedSerialWriter } from '../../server/serial_writer';
 import {
@@ -66,7 +69,9 @@ import {
   ensureFreeholdRecord,
   evictFreehold,
   PENDING_FREEHOLD_PLOT_ID,
+  seedFreeholdOnJoin,
 } from '../../src/sim/freehold/state';
+import type { FreeholdState } from '../../src/sim/freehold/types';
 import type { SimContext } from '../../src/sim/sim_context';
 import { methodBody } from '../helpers/method_body';
 import { stripComments } from '../helpers/strip_comments';
@@ -173,15 +178,14 @@ interface HarnessOptions {
   rowLoad?: FreeholdRowLoad;
   readHearth?: (accountId: number) => Promise<FreeholdHearthLoad>;
   hearthLoad?: FreeholdHearthLoad;
-  normalized?: FreeholdLoadResult;
-  serialize?: (ownerKey: string) => PersistedFreehold | null;
+  /** What the normalizer answers for a row. A FUNCTION for the cases whose row
+   *  moves under the entry, which is what another realm's write does. */
+  normalized?: FreeholdLoadResult | (() => FreeholdLoadResult);
   writeRow?: (input: FreeholdUpsert) => Promise<FreeholdUpsertResult>;
-  hasLive?: (ownerKey: string) => boolean;
-  enabled?: () => boolean;
-  /** Override the LIVE record's plot identity, for the cases that model a
-   *  record the store did not install: a fresh seed standing where a loaded
-   *  house used to be. */
-  livePlotId?: string | ((ownerKey: string) => string);
+  /** A DARK realm. One flag on the one context, exactly as the composition root
+   *  binds it: the store's `enabled` port reads it and the sim's record
+   *  inserters honour it, so a dark harness can hold no live record either. */
+  dark?: boolean;
   acquirePermit?: (signal: AbortSignal) => Promise<{ release(): void } | null>;
   enqueue?: <T>(key: string, signal: AbortSignal, write: () => Promise<T>) => Promise<T>;
   /** The COMBINED login port, which the real server binds and the two-port pair
@@ -192,7 +196,21 @@ interface HarnessOptions {
   /** Override the deadline scheduler, for the one case that models a host whose
    *  timers refuse to arm. */
   scheduleDeadline?: FreeholdPersistPorts['scheduleDeadline'];
+  /** Called on each serialize the STORE makes, for the one case that advances
+   *  the clock inside the codec bracket. It observes; it cannot change the
+   *  answer, which comes from the live map like every other liveness read. */
+  onSerialize?: () => void;
 }
+
+// NO LIVENESS OVERRIDE, BY CONSTRUCTION. The bag above has no member that can
+// answer `hasLive`, `serialize`, `liveRev` or `livePlotId`, and this line fails
+// `tsc` if one is ever added back: every liveness answer comes from the one
+// live map below, or the harness is modelling a sim that does not exist.
+const NO_LIVENESS_OVERRIDE: [
+  Extract<keyof HarnessOptions, 'hasLive' | 'serialize' | 'liveRev' | 'livePlotId'>,
+] extends [never]
+  ? true
+  : false = true;
 
 interface DeadlineJob {
   readonly ms: number;
@@ -200,6 +218,15 @@ interface DeadlineJob {
   cancelled: boolean;
   fired: boolean;
 }
+
+/** A sanctioned edit of a live record: content only, never its identity. */
+type RecordEdit = Partial<
+  Pick<PersistedFreehold, 'tier' | 'layout' | 'trophies' | 'condition' | 'visitPolicy' | 'rev'>
+>;
+
+/** Every harness built by the running case, so `afterEach` can hold each one to
+ *  the liveness audit. */
+const liveHarnesses: Array<{ readonly livenessViolations: readonly string[] }> = [];
 
 function harness(options: HarnessOptions = {}) {
   const calls: string[] = [];
@@ -209,73 +236,37 @@ function harness(options: HarnessOptions = {}) {
   const deadlines: DeadlineJob[] = [];
   const permitSignals: AbortSignal[] = [];
   const ownedBytesSeen: number[] = [];
-  // The LIVE record's plot identity, modelled the way the server maintains it:
-  // a row load installs the row's state (so the record carries the row's id),
-  // and a fresh account seeds the pending stand-in and KEEPS IT for the whole
-  // session, because nothing writes an identity into the sim. An earlier
-  // version of this comment said a committed write stamps the minted id onto
-  // the record; that stamp was deleted, and the comment outliving it is what
-  // hid a live defect (a fresh account whose entry re-read its own row was
-  // quiesced for its whole session) behind a harness that looked faithful.
-  // Without this the harness would serialize documents whose identity the real
-  // sim could never produce, and the store's seal would fire on fixtures rather
-  // than on the race it guards.
+  // THE ONE LIVE MAP, which is the whole model. Production derives all four
+  // liveness reads (`hasLive`, `serialize`, `liveRev`, `livePlotId`) from
+  // `ctx.freeholds` through `freeholdLivenessPorts`, and so does this harness,
+  // through the SAME function over a real SimContext map. A record is therefore
+  // live for all four reads or for none of them, which the old port bag could
+  // not promise: it defaulted `hasLive` to false while `serialize` still handed
+  // the writer a document, so cases modelled a liveness state no realm can
+  // produce (ROUND SEVENTEEN, Q3).
   //
-  // KNOWN GAP in the bag below, now bounded rather than merely stated. By
-  // default `hasLive()` answers false while `serialize()` still returns a
-  // document, so most cases run on a liveness state the server cannot produce
-  // (it reads one map for both).
-  //
-  // ITS EXACT SCOPE, measured rather than feared. Only ONE production decision
-  // reads `hasLive`: preload's already-live arm. `liveRev` and `serialize` are
-  // the other two liveness reads and this bag keeps them mutually consistent,
-  // because both derive from the case's own `serialize`. So the divergence
-  // reaches exactly one branch, and only on a SECOND preload, since the first
-  // legitimately runs before addPlayer seeds anything. Four cases pass `hasLive`
-  // and do exercise that arm, both sub-arms. Five model a rejoin through the
-  // combination the server cannot produce; each conclusion still holds for the
-  // production sub-case it describes, and what the gap costs is DISCRIMINATION,
-  // not correctness: none of those five can notice a regression in the
-  // already-live arm.
-  //
-  // DERIVING hasLive FROM serialize WAS TRIED AND REVERTED. It is the right
-  // shape and it reds four cases that model a COLD join with the default
-  // document, which would have to be rewritten to keep saying what they say.
-  // That is a suite-wide change, not a fix, and it is recorded here rather than
-  // taken at the end of an audit.
-  // THE POST-FIX MODEL. A row load installs the row's state, so the record
-  // carries the row's id; an ABSENT load mints one and installLoadedFreehold now
-  // installs a default carrying it, so the record carries the MINTED id from the
-  // first session rather than the stand-in. The stand-in is what a record seeded
-  // WITHOUT an install carries (addPlayer's ensureFreeholdRecord after an
-  // eviction), which is the case every seal test overrides `livePlotId` to model.
-  //
-  // PER OWNER, because a realm's records are. The default used to answer the
-  // LAST id minted by anyone, so a case driving two accounts handed the first
-  // owner's record the second owner's identity: a state no realm can produce,
-  // and one the write path's insert refusal correctly rejects.
-  //
-  // ATTRIBUTED THROUGH THE ACCOUNT WHOSE ROW READ IS IN FLIGHT, and that is
-  // exact FOR SEQUENTIAL LOADS ONLY, which is what every case here drives.
-  // `mintingFor` is one variable set when a read starts and read when the mint
-  // happens, which is after both that load's reads resolve, so two loads for
-  // DIFFERENT accounts overlapping would attribute the first one's mint to the
-  // second. That is the same defect this replaced, one level up. No case reaches
-  // it (the concurrent multi-account cases pin `livePlotId` to a constant), so
-  // it is stated rather than closed: a case that interleaves two accounts'
-  // reads owes a per-account attribution first.
-  const livePlotIdNow = (ownerKey: string): string => {
-    if (typeof options.livePlotId === 'function') return options.livePlotId(ownerKey);
-    if (options.livePlotId !== undefined) return options.livePlotId;
-    if (options.rowLoad?.kind === 'row') return options.rowLoad.row.plotId;
-    return mintedByOwner.get(ownerKey) ?? PENDING_FREEHOLD_PLOT_ID;
-  };
+  // THE TWO MOMENTS A LOGIN HAS, and nothing between them. At PRELOAD no record
+  // exists for a fresh login, because the handshake reads before the join. At
+  // the JOIN the durable answer is installed and addPlayer seeds, in production
+  // order, through the production functions (`bindFreeholdOnJoin`, then
+  // `seedFreeholdOnJoin`). A record leaves the map only through `removePlayer`,
+  // at the last session out, as `releaseFreeholdOnLeave` evicts it, and its
+  // content moves only through `edit`, which models a sanctioned mutator: it
+  // needs a live record, never touches the identity, and never moves the
+  // revision backwards. There is no other way to change the map, so there is no
+  // way to build a record the sim could not hold.
+  const ctx = fakeCtx(!options.dark);
+  const live = freeholdLivenessPorts(() => ctx);
+  // Sessions per owner key, which is the fact `releaseFreeholdOnLeave` walks the
+  // roster for: the record is evicted only when the LAST session sharing the key
+  // leaves.
+  const sessions = new Map<string, number>();
+  let nextEntityId = 1;
+  const livenessViolations: string[] = [];
+  let auditing = false;
   const fifo = createKeyedSerialWriter<string>();
   let nowMs = 10_000;
   let minted = 0;
-  /** The owner whose row read is in flight, so a mint can be attributed. */
-  let mintingFor = '';
-  const mintedByOwner = new Map<string, string>();
 
   const readRow =
     options.readRow ??
@@ -286,13 +277,37 @@ function harness(options: HarnessOptions = {}) {
   const writeRow =
     options.writeRow ??
     (async (): Promise<FreeholdUpsertResult> => ({ kind: 'inserted', durableRev: '1' }));
-  const serialize = options.serialize ?? ((): PersistedFreehold | null => persistedFixture());
+
+  /** THE AUDIT, run at every liveness read the store makes. It asks all four
+   *  PORTS (not the map behind them), so a port that stopped reading the map is
+   *  caught at the first read that disagrees, wherever in the suite that is. A
+   *  throw here would be swallowed by the store's own guards, so a disagreement
+   *  is RECORDED and `afterEach` fails the case that reached it. */
+  const audit = (ownerKey: string): void => {
+    if (auditing) return;
+    auditing = true;
+    try {
+      const has = ports.hasLive(ownerKey);
+      const doc = ports.serialize(ownerKey);
+      const rev = ports.liveRev(ownerKey);
+      const name = ports.livePlotId(ownerKey);
+      const agree = has
+        ? doc !== null && rev === doc.rev && name === doc.plotId
+        : doc === null && rev === null && name === null;
+      if (!agree) {
+        livenessViolations.push(
+          `${ownerKey}: hasLive ${has}, serialize ${doc === null ? 'null' : `rev ${doc.rev} ${doc.plotId}`}, liveRev ${rev}, livePlotId ${name}`,
+        );
+      }
+    } finally {
+      auditing = false;
+    }
+  };
 
   const ports: FreeholdPersistPorts = {
     async readRow(accountId: number, maxOwnedBytes: number): Promise<FreeholdRowLoad> {
       calls.push('readRow');
       ownedBytesSeen.push(maxOwnedBytes);
-      mintingFor = `account:${accountId}`;
       return await readRow(accountId, maxOwnedBytes);
     },
     async readHearth(accountId: number): Promise<FreeholdHearthLoad> {
@@ -324,48 +339,41 @@ function harness(options: HarnessOptions = {}) {
     },
     normalize(): FreeholdLoadResult {
       calls.push('normalize');
-      return options.normalized ?? { kind: 'loaded', state: persistedFixture(), repaired: [] };
+      const normalized =
+        typeof options.normalized === 'function' ? options.normalized() : options.normalized;
+      return normalized ?? { kind: 'loaded', state: persistedFixture(), repaired: [] };
     },
     serialize(ownerKey: string): PersistedFreehold | null {
-      calls.push('serialize');
-      const doc = serialize(ownerKey);
-      // The identity is the LIVE RECORD's, never the fixture's: a case that
-      // wants to model a mismatched record says so by overriding the port.
-      return doc === null ? null : { ...doc, plotId: livePlotIdNow(ownerKey) };
+      if (!auditing) {
+        calls.push('serialize');
+        options.onSerialize?.();
+      }
+      const doc = live.serialize(ownerKey);
+      audit(ownerKey);
+      return doc;
     },
     livePlotId(ownerKey: string): string | null {
-      // BOUND TO hasLive, STRICTLY, because production reads both off ONE map
-      // (`deps.sim.ctx.freeholds.get(ownerKey)`): no record means no identity,
-      // and a harness that answered an identity for an owner it also says is
-      // not live models a state the server cannot produce. The looser form,
-      // which only consulted hasLive when a case supplied one, left the
-      // identity-adoption arm covered by exactly that impossible state.
-      //
-      // The default is FALSE, like hasLive's, so a case that wants a live
-      // identity says `hasLive: () => true` and means it.
-      if (!(options.hasLive ? options.hasLive(ownerKey) : false)) return null;
-      return serialize(ownerKey) === null ? null : livePlotIdNow(ownerKey);
+      const name = live.livePlotId(ownerKey);
+      audit(ownerKey);
+      return name;
     },
     liveRev(ownerKey: string): number | null {
-      calls.push('liveRev');
-      // The cheap probe answers from the SAME record serialize() would clone,
-      // so a test that moves the fixture's revision moves both. It also agrees
-      // with hasLive, because in the server both read one map: a case that says
-      // nothing is live must not be handed a revision.
-      if (options.hasLive && !options.hasLive(ownerKey)) return null;
-      return serialize(ownerKey)?.rev ?? null;
+      if (!auditing) calls.push('liveRev');
+      const rev = live.liveRev(ownerKey);
+      audit(ownerKey);
+      return rev;
     },
     hasLive(ownerKey: string): boolean {
-      return options.hasLive ? options.hasLive(ownerKey) : false;
+      const has = live.hasLive(ownerKey);
+      audit(ownerKey);
+      return has;
     },
     enabled(): boolean {
-      return options.enabled ? options.enabled() : true;
+      return ctx.freeholdsEnabled;
     },
     mintPlotId(): string {
       minted += 1;
-      const id = `plot:minted${minted}`;
-      if (mintingFor !== '') mintedByOwner.set(mintingFor, id);
-      return id;
+      return `plot:minted${minted}`;
     },
     async acquirePermit(signal: AbortSignal): Promise<{ release(): void } | null> {
       calls.push('permit');
@@ -415,9 +423,49 @@ function harness(options: HarnessOptions = {}) {
   };
 
   const store = createFreeholdPersistStore(ports);
-  return {
-    store,
+  // THE JOIN IS THE ONLY RETAIN. Production takes a session reference in exactly
+  // one place, `bindFreeholdOnJoin`, between the install and addPlayer's seed, so
+  // on a lit realm a retained entry always has a live record beside it. A case
+  // that retained directly would model a session in the world with no record at
+  // all, which is the second moment missing, so the store handed to cases refuses
+  // it and `join` is the way in.
+  const caseStore: FreeholdPersistStore = {
+    ...store,
+    retain(): void {
+      throw new Error('a session reference is taken by h.join, never by a bare retain');
+    },
+  };
+
+  /** THE SECOND MOMENT: GameServer.join's order, through its own functions.
+   *  The durable answer is installed and the session retained, then addPlayer
+   *  seeds the default if nothing is live yet. */
+  const join = (loaded: LoadedFreehold | undefined, accountId = ACCOUNT_ID): string => {
+    const ownerKey = bindFreeholdOnJoin(store, ctx, accountId, loaded);
+    seedFreeholdOnJoin(ctx, { entityId: nextEntityId++ }, ownerKey);
+    sessions.set(ownerKey, (sessions.get(ownerKey) ?? 0) + 1);
+    return ownerKey;
+  };
+
+  /** removePlayer's half of a leave: `releaseFreeholdOnLeave` evicts the record
+   *  only when the LAST session sharing the owner key is gone. */
+  const removePlayer = (ownerKey = OWNER_KEY): void => {
+    const remaining = (sessions.get(ownerKey) ?? 0) - 1;
+    if (remaining < 0) throw new Error(`no session of ${ownerKey} is in the world`);
+    if (remaining > 0) {
+      sessions.set(ownerKey, remaining);
+      return;
+    }
+    sessions.delete(ownerKey);
+    evictFreehold(ctx, ownerKey);
+  };
+
+  const h = {
+    store: caseStore,
+    /** The store WITHOUT the join guard, for the one case that drives retain's
+     *  own argument check, which reads no liveness at all. */
+    rawStore: store,
     ports,
+    ctx,
     calls,
     writes,
     warnings,
@@ -425,6 +473,86 @@ function harness(options: HarnessOptions = {}) {
     deadlines,
     permitSignals,
     ownedBytesSeen,
+    livenessViolations,
+    join,
+    removePlayer,
+    /** A whole login: the handshake's preload, then the join. */
+    async login(accountId = ACCOUNT_ID): Promise<LoadedFreehold> {
+      const loaded = await store.preload(accountId);
+      join(loaded, accountId);
+      return loaded;
+    },
+    /** GameServer.leave's order: flush while the record is still live, then
+     *  removePlayer. */
+    async leave(ownerKey = OWNER_KEY): Promise<void> {
+      await flushFreeholdBinding(store, ownerKey);
+      removePlayer(ownerKey);
+    },
+    /**
+     * A REJOIN THAT LANDS AFTER THE EVICTION, which is the only order in which a
+     * store entry can face a record it did not install. The returning session's
+     * handshake reads while the previous session's record is still live, so
+     * preload's already-live arm answers with no state; the previous session
+     * then leaves and removePlayer evicts; and the join installs nothing, so
+     * addPlayer seeds the STAND-IN. If the leave collected the entry, retain's
+     * repair reload re-reads the row, and the tick lets that read land.
+     */
+    async rejoinOverEviction(accountId = ACCOUNT_ID): Promise<LoadedFreehold> {
+      const ownerKey = `account:${accountId}`;
+      const answer = await store.preload(accountId);
+      await flushFreeholdBinding(store, ownerKey);
+      removePlayer(ownerKey);
+      join(answer, accountId);
+      await tick(30);
+      return answer;
+    },
+    /**
+     * A SECOND SESSION THAT JOINS BEFORE THE FIRST ONE'S REMOVAL, which is how
+     * one realm's entry comes to know MORE than the record beside it. The first
+     * session leaves: its flush finds the entry clean and collects it, and its
+     * removePlayer has not run yet. The next handshake lands in that window,
+     * finds the record live, and re-reads the row through preload's already-live
+     * arm, so the new entry learns whatever the row holds NOW (another realm
+     * sharing this database may have written it forward). It joins before the
+     * first session's removePlayer, which is then not the last one out, so the
+     * record the first session left behind stays.
+     */
+    async rejoinBeforeRemoval(accountId = ACCOUNT_ID): Promise<LoadedFreehold> {
+      const ownerKey = `account:${accountId}`;
+      await flushFreeholdBinding(store, ownerKey);
+      const answer = await store.preload(accountId);
+      join(answer, accountId);
+      removePlayer(ownerKey);
+      return answer;
+    },
+    /** The live record, for a case that reads it. */
+    record(ownerKey = OWNER_KEY): FreeholdState | undefined {
+      return ctx.freeholds.get(ownerKey);
+    },
+    /**
+     * A SANCTIONED EDIT: what a mutator does to a live record. It needs one (no
+     * mutator reaches an owner with no record), it never touches the identity
+     * (nothing in the sim writes an identity), and it moves the revision
+     * FORWARDS, by one unless the case names how far, because every mutator
+     * increments. A record below a revision the entry committed is still
+     * reachable, but only the way production reaches it: through a join.
+     */
+    edit(ownerKey: string, patch: RecordEdit = {}): void {
+      const state = ctx.freeholds.get(ownerKey);
+      if (!state) throw new Error(`no live record for ${ownerKey} to edit`);
+      const rev = patch.rev ?? state.rev + 1;
+      if (rev <= state.rev) {
+        throw new Error(`an edit moves the revision forwards, not ${state.rev} to ${rev}`);
+      }
+      if (patch.tier !== undefined) state.tier = patch.tier as FreeholdState['tier'];
+      if (patch.layout !== undefined) state.layout = patch.layout.map((row) => ({ ...row }));
+      if (patch.trophies !== undefined) state.trophies = patch.trophies.map((row) => ({ ...row }));
+      if (patch.condition !== undefined) state.condition = patch.condition;
+      if (patch.visitPolicy !== undefined) {
+        state.visitPolicy = patch.visitPolicy as FreeholdState['visitPolicy'];
+      }
+      state.rev = rev;
+    },
     setNow(ms: number): void {
       nowMs = ms;
     },
@@ -439,17 +567,79 @@ function harness(options: HarnessOptions = {}) {
       return true;
     },
   };
+  liveHarnesses.push(h);
+  return h;
 }
 
 type Harness = ReturnType<typeof harness>;
 
-/** Load an account and leave the store with one loaded, unheld entry. */
+/** A whole login, leaving the store with one loaded, retained entry and the
+ *  record the join put in the sim. */
 async function loadedStore(options: HarnessOptions = {}): Promise<Harness> {
   const h = harness(options);
-  h.store.retain(OWNER_KEY);
-  await h.store.preload(ACCOUNT_ID);
+  await h.login();
   h.calls.length = 0;
   return h;
+}
+
+/** The furnished house `persistedFixture` describes, as a sanctioned edit. */
+function furnishedEdit(rev: number): RecordEdit {
+  const house = persistedFixture({ rev });
+  return {
+    tier: house.tier,
+    layout: house.layout,
+    trophies: house.trophies,
+    condition: house.condition,
+    visitPolicy: house.visitPolicy,
+    rev,
+  };
+}
+
+/**
+ * A ROW THAT EXISTS ONCE IT IS INSERTED, for the cases whose entry re-reads an
+ * account it created. A fixed `rowLoad` cannot change, so a re-read after the
+ * insert would find nothing and mint a second identity for an account that
+ * already has a row, which no database can answer. Every write is kept as the
+ * row it would leave, the durable revision counts up from one, and a read
+ * normalizes that row back to the document that was written.
+ */
+function rowRemembered(): Pick<HarnessOptions, 'readRow' | 'normalized' | 'writeRow'> {
+  let row: FreeholdRow | null = null;
+  return {
+    readRow: async (): Promise<FreeholdRowLoad> =>
+      row ? { kind: 'row', row } : { kind: 'absent' },
+    normalized: (): FreeholdLoadResult =>
+      row
+        ? {
+            kind: 'loaded',
+            state: {
+              version: row.schemaVersion,
+              plotId: row.plotId,
+              tier: row.tier,
+              layout: row.layout as PersistedFreehold['layout'],
+              trophies: row.trophies as PersistedFreehold['trophies'],
+              condition: row.condition,
+              visitPolicy: row.visitPolicy,
+              rev: Number(row.wireRev),
+            },
+            repaired: [],
+          }
+        : { kind: 'absent' },
+    writeRow: async (input: FreeholdUpsert): Promise<FreeholdUpsertResult> => {
+      const durableRev = String(Number(row?.durableRev ?? '0') + 1);
+      row = rowFixture({
+        plotId: input.plotId,
+        tier: input.tier,
+        layout: JSON.parse(input.layoutJson),
+        trophies: JSON.parse(input.trophiesJson),
+        condition: input.condition,
+        visitPolicy: input.visitPolicy,
+        wireRev: String(input.wireRev),
+        durableRev,
+      });
+      return { kind: input.expectedDurableRev === null ? 'inserted' : 'updated', durableRev };
+    },
+  };
 }
 
 function fakeCtx(freeholdsEnabled = true): SimContext {
@@ -462,6 +652,130 @@ function fakeCtx(freeholdsEnabled = true): SimContext {
 
 afterEach(() => {
   registerFreeholdPersistStore(null);
+  // EVERY liveness read any case made agreed with the other three at that
+  // instant. See `audit` in the harness.
+  const violations = liveHarnesses.flatMap((h) => h.livenessViolations);
+  liveHarnesses.length = 0;
+  expect(violations, 'a liveness read disagreed with the live map').toEqual([]);
+  expect(NO_LIVENESS_OVERRIDE).toBe(true);
+});
+
+describe('the harness models only a liveness state the server can produce', () => {
+  // ROUND SEVENTEEN, Q3, and the reason 07's QA verdict failed: the old port
+  // bag answered `hasLive` false by default while `serialize` still handed the
+  // writer a document, so cases modelled a state no realm can produce. These
+  // cases pin the rebuilt harness, not the store: a harness that can report no
+  // record to one liveness read and a record to another reds here, and the
+  // per-read audit in `afterEach` reds whichever case reached it.
+  const read = (h: Harness) => ({
+    has: h.ports.hasLive(OWNER_KEY),
+    doc: h.ports.serialize(OWNER_KEY),
+    rev: h.ports.liveRev(OWNER_KEY),
+    name: h.ports.livePlotId(OWNER_KEY),
+  });
+
+  it('answers all four liveness reads from ONE live map, at both moments of a login', async () => {
+    const h = harness({ rowLoad: { kind: 'row', row: rowFixture() } });
+    // THE FIRST MOMENT: the handshake has read and nothing is live.
+    const answer = await h.store.preload(ACCOUNT_ID);
+    expect(read(h)).toEqual({ has: false, doc: null, rev: null, name: null });
+    // THE SECOND: the join installed the row's house, and all four agree on it.
+    h.join(answer);
+    const joined = read(h);
+    expect(joined.has).toBe(true);
+    expect(joined.doc?.plotId).toBe(ROW_PLOT_ID);
+    expect(joined.doc?.rev).toBe(5);
+    expect(joined.rev).toBe(5);
+    expect(joined.name).toBe(ROW_PLOT_ID);
+    // A sanctioned edit moves the document and the revision together.
+    h.edit(OWNER_KEY, { rev: 6 });
+    expect(read(h).rev).toBe(6);
+    expect(read(h).doc?.rev).toBe(6);
+    // The last session out takes the record with it, from all four at once.
+    h.removePlayer();
+    expect(read(h)).toEqual({ has: false, doc: null, rev: null, name: null });
+    // A rejoin replays what the entry knows, and all four agree on it again.
+    h.join(await h.store.preload(ACCOUNT_ID));
+    const rejoined = read(h);
+    expect(rejoined.has).toBe(true);
+    expect(rejoined.name).toBe(ROW_PLOT_ID);
+    expect(rejoined.doc?.plotId).toBe(ROW_PLOT_ID);
+    expect(rejoined.rev).toBe(rejoined.doc?.rev);
+    expect(h.livenessViolations).toEqual([]);
+  });
+
+  it('keeps each owner its own record, so one owner is never live through another', async () => {
+    const h = harness({ rowLoad: { kind: 'absent' } });
+    await h.login(ACCOUNT_ID);
+    const other = h.ports;
+    expect(other.hasLive(OTHER_OWNER_KEY)).toBe(false);
+    expect(other.serialize(OTHER_OWNER_KEY)).toBeNull();
+    expect(other.liveRev(OTHER_OWNER_KEY)).toBeNull();
+    expect(other.livePlotId(OTHER_OWNER_KEY)).toBeNull();
+    await h.login(OTHER_ACCOUNT_ID);
+    // Each installed under its OWN minted name, in login order.
+    expect(h.ports.livePlotId(OWNER_KEY)).toBe('plot:minted1');
+    expect(h.ports.livePlotId(OTHER_OWNER_KEY)).toBe('plot:minted2');
+  });
+
+  // The audit is what makes every OTHER case a probe of this property, so it is
+  // proved non-vacuous here: each liveness port in turn is made to disagree with
+  // the map in exactly the way the old bag could, and the store's own reads
+  // must record it. The violations are then cleared, because they were planted.
+  const sabotaged: ReadonlyArray<{
+    readonly port: 'hasLive' | 'serialize' | 'liveRev' | 'livePlotId';
+    readonly withRecord: boolean;
+    readonly plant: (h: Harness) => void;
+  }> = [
+    // The old bag's default, beside a record that IS live.
+    { port: 'hasLive', withRecord: true, plant: (h) => (h.ports.hasLive = () => false) },
+    // The old bag's default document, with no record at all.
+    {
+      port: 'serialize',
+      withRecord: false,
+      plant: (h) => (h.ports.serialize = () => persistedFixture()),
+    },
+    { port: 'liveRev', withRecord: false, plant: (h) => (h.ports.liveRev = () => 5) },
+    {
+      port: 'livePlotId',
+      withRecord: false,
+      plant: (h) => (h.ports.livePlotId = () => ROW_PLOT_ID),
+    },
+  ];
+  for (const { port, withRecord, plant } of sabotaged) {
+    it(`records the store's first read that finds ${port} disagreeing with the map`, async () => {
+      const h = harness({ rowLoad: { kind: 'row', row: rowFixture() } });
+      if (withRecord) await h.login();
+      else await h.store.preload(ACCOUNT_ID);
+      expect(h.livenessViolations).toEqual([]);
+      plant(h);
+      h.store.markDirty(OWNER_KEY);
+      h.store.saveAllDirty();
+      await tick(30);
+      expect(h.livenessViolations.length, port).toBeGreaterThan(0);
+      h.livenessViolations.length = 0;
+    });
+  }
+
+  it('takes a session reference only through the join, never a bare retain', async () => {
+    const h = harness();
+    await h.store.preload(ACCOUNT_ID);
+    expect(() => h.store.retain(OWNER_KEY, ACCOUNT_ID)).toThrow(/h\.join/);
+    expect(() => h.store.retain(OWNER_KEY)).toThrow(/h\.join/);
+    expect(h.record()).toBeUndefined();
+  });
+
+  it('edits only a live record, never its identity, and never backwards', async () => {
+    const h = harness({ rowLoad: { kind: 'row', row: rowFixture() } });
+    expect(() => h.edit(OWNER_KEY, { rev: 1 })).toThrow(/no live record/);
+    await h.login();
+    expect(() => h.edit(OWNER_KEY, { rev: 5 })).toThrow(/forwards/);
+    expect(() => h.edit(OWNER_KEY, { rev: 4 })).toThrow(/forwards/);
+    h.edit(OWNER_KEY, { tier: 'cottage' });
+    expect(h.record()?.rev).toBe(6);
+    expect(h.record()?.tier).toBe('cottage');
+    expect(h.record()?.plotId).toBe(ROW_PLOT_ID);
+  });
 });
 
 describe('freehold persist constants', () => {
@@ -529,9 +843,8 @@ describe('freehold persist constants', () => {
     const loadDeadline = timeoutMsOf(signals[0]);
 
     gate.resolve({ release: () => {} });
-    await loading;
+    h.join(await loading);
     h.store.markDirty(OWNER_KEY);
-    h.store.retain(OWNER_KEY);
     h.store.save(OWNER_KEY);
     await tick(20);
     expect(signals.length).toBeGreaterThan(1);
@@ -642,9 +955,11 @@ describe('preload admission', () => {
     // settled promise instead of reading. Counted on the READ, not on the plot
     // id: the id used to be the proxy here and it no longer distinguishes the
     // two, because a recreated entry now ADOPTS the live record's identity
-    // rather than minting a second one (see below).
-    h.store.retain(OWNER_KEY);
-    await h.store.flushAndRelease(OWNER_KEY);
+    // rather than minting a second one (see below). Dropped the way a handshake
+    // that never joins is dropped, by two sweeps, because a retain is a join and
+    // a join would leave a record live.
+    h.store.saveAllDirty();
+    h.store.saveAllDirty();
     expect(h.store.stats().entries).toBe(0);
     const third = await h.store.preload(ACCOUNT_ID);
     expect(h.store.stats().loads).toBe(2);
@@ -664,23 +979,33 @@ describe('preload admission', () => {
     // life of that session, which the write seal then reads as two different
     // records and quiesces the account over.
     //
-    // A LIVE RECORD IS THE PRECONDITION, so hasLive says so: production reads
-    // the identity and the liveness off ONE map, and an entry that finds no
-    // record has nothing to adopt.
-    // ROW_PLOT_ID rather than MINTED_PLOT_ID, deliberately: MINTED_PLOT_ID is the
-    // same literal the harness's FIRST mint produces, so adopting it and minting
-    // it are indistinguishable and the assertion below would be vacuous.
-    const h = harness({
-      rowLoad: { kind: 'absent' },
-      hasLive: () => true,
-      livePlotId: ROW_PLOT_ID,
-    });
-    const loaded = await h.store.preload(ACCOUNT_ID);
-    expect(loaded.plotId).toBe(ROW_PLOT_ID);
-    // AND NOTHING WAS MINTED. The harness's mint is monotonic and its first
-    // answer is plot:minted1, which is what an unconditional mint would show.
-    expect(loaded.plotId).not.toBe('plot:minted1');
+    // A LIVE RECORD IS THE PRECONDITION, and it is built the way production
+    // builds it: the handshake mints `plot:minted1`, a handshake wider than two
+    // sweeps loses its unretained entry, and the join then installs the answer
+    // (so the record answers to `plot:minted1`) before its retain recreates the
+    // entry and re-reads. That re-read finds the record live and the row still
+    // absent, which is exactly where a second mint would happen.
+    const h = harness({ rowLoad: { kind: 'absent' } });
+    const answer = await h.store.preload(ACCOUNT_ID);
+    expect(answer.plotId).toBe('plot:minted1');
+    h.store.saveAllDirty();
+    h.store.saveAllDirty();
+    expect(h.store.stats().entries).toBe(0);
+    h.join(answer);
+    await tick(30);
+    expect(h.store.stats().loads).toBe(2);
+    expect(h.record()?.plotId).toBe('plot:minted1');
+    // AND NOTHING WAS MINTED TWICE: the row is created under the record's own
+    // name. A second mint would name the entry `plot:minted2`, and the insert
+    // refusal would then refuse the write outright, so the write below is only
+    // reachable through the adoption.
+    h.store.markDirty(OWNER_KEY);
+    h.store.save(OWNER_KEY);
+    await tick(30);
+    expect(h.writeCount()).toBe(1);
+    expect(h.writes[0]?.plotId).toBe('plot:minted1');
     expect(h.store.stats().loadFailures).toBe(0);
+    expect(h.store.stats().quiesced).toBe(0);
   });
 
   it('REFUSES to name a row for a record it did not install', async () => {
@@ -695,12 +1020,22 @@ describe('preload admission', () => {
     //
     // Both new arms produce this state: an admission hold whose entry ruling 2
     // now leaves re-readable, and the whole-preload cap's in-flight read landing
-    // behind its refusal. It is refused once, here, rather than in each.
+    // behind its refusal. It is refused once, here, rather than in each. The
+    // first arm is the one built here, through the join: the handshake's read is
+    // refused a permit, the join installs nothing on the hold, its retain re-reads
+    // the unloaded entry, and addPlayer seeds the stand-in before that read lands.
+    let permits = 0;
     const h = harness({
       rowLoad: { kind: 'absent' },
-      hasLive: () => true,
-      livePlotId: PENDING_FREEHOLD_PLOT_ID,
+      acquirePermit: async () => (++permits === 1 ? null : { release: () => {} }),
     });
+    const refused = await h.store.preload(ACCOUNT_ID);
+    expect(refused.hold?.kind).toBe('no_permit');
+    h.join(refused);
+    await tick(30);
+    expect(h.record()?.plotId).toBe(PENDING_FREEHOLD_PLOT_ID);
+    expect(h.store.stats().loadFailuresByKind).toEqual({ no_permit: 1, unnamed_record: 1 });
+    // What the entry now answers, read through a sibling character's handshake.
     const loaded = await h.store.preload(ACCOUNT_ID);
     expect(loaded.hold?.kind).toBe('unnamed_record');
     expect(loaded.state).toBeNull();
@@ -723,7 +1058,16 @@ describe('preload admission', () => {
     // revision, and an entry that never loaded is write-blocked for the whole
     // session, so the owner would play, furnish, and have every edit silently
     // discarded at logout.
-    const h = harness({ hasLive: () => true, rowLoad: { kind: 'row', row: rowFixture() } });
+    //
+    // The state is the leave window: the first session's flush has collected
+    // its clean entry and its removePlayer has not run yet, so the record is
+    // live and the entry is gone when the next handshake reads.
+    const h = harness({ rowLoad: { kind: 'row', row: rowFixture() } });
+    await h.login();
+    await h.store.flushAndRelease(OWNER_KEY);
+    expect(h.store.stats().entries).toBe(0);
+    expect(h.record()?.plotId).toBe(ROW_PLOT_ID);
+    h.calls.length = 0;
     const loaded = await h.store.preload(ACCOUNT_ID);
     expect(h.calls).toContain('readRow');
     expect(loaded.state).toBeNull();
@@ -735,16 +1079,11 @@ describe('preload admission', () => {
 
   it('short circuits with zero database work once the entry has already loaded', async () => {
     // The other half: the read happens ONCE. A third character joining the same
-    // account must not re-read the row.
-    let liveNow = false;
-    const h = harness({
-      rowLoad: { kind: 'row', row: rowFixture() },
-      hasLive: () => liveNow,
-    });
-    h.store.retain(OWNER_KEY);
-    await h.store.preload(ACCOUNT_ID);
+    // account must not re-read the row. The first character is in the world, so
+    // its record is live and its entry loaded.
+    const h = harness({ rowLoad: { kind: 'row', row: rowFixture() } });
+    await h.login();
     h.calls.length = 0;
-    liveNow = true;
     const again = await h.store.preload(ACCOUNT_ID);
     expect(h.calls).toEqual([]);
     expect(again.state).toBeNull();
@@ -752,15 +1091,16 @@ describe('preload admission', () => {
   });
 
   it('does read the row when nothing is live (the other arm of the short circuit)', async () => {
-    const h = harness({ hasLive: () => false });
+    const h = harness();
     await h.store.preload(ACCOUNT_ID);
     expect(h.calls).toContain('readRow');
     expect(h.store.stats().loads).toBe(1);
   });
 
   it('replays what the entry knows on a rejoin, without a second read or a second mint', async () => {
+    // The first handshake reads and dies before its join (so no record and no
+    // reference), and the retry lands inside the orphan grace.
     const h = harness({ rowLoad: { kind: 'row', row: rowFixture() } });
-    h.store.retain(OWNER_KEY);
     const first = await h.store.preload(ACCOUNT_ID);
     const again = await h.store.preload(ACCOUNT_ID);
     expect(h.calls.filter((call) => call === 'readRow')).toHaveLength(1);
@@ -777,7 +1117,7 @@ describe('preload admission', () => {
       rowLoad: { kind: 'row', row: rowFixture() },
       hearthLoad: { kind: 'state', state: { readyAtMs: '1700000000000', revision: '4' } },
     });
-    h.store.retain(OWNER_KEY);
+    // A handshake that died before its join, then a retry: the replay arm.
     const first = await h.store.preload(ACCOUNT_ID);
     expect(first.hearthReadyAtMs).toBe(1_700_000_000_000);
 
@@ -788,16 +1128,16 @@ describe('preload admission', () => {
   });
 
   it('replays the hearth clock on the already-live arm too', async () => {
-    let liveNow = false;
+    // A second character's handshake while the first is in the world.
     const h = harness({
       rowLoad: { kind: 'row', row: rowFixture() },
       hearthLoad: { kind: 'state', state: { readyAtMs: '1700000000000', revision: '4' } },
-      hasLive: () => liveNow,
     });
-    h.store.retain(OWNER_KEY);
-    await h.store.preload(ACCOUNT_ID);
-    liveNow = true;
+    await h.login();
+    h.calls.length = 0;
     const second = await h.store.preload(ACCOUNT_ID);
+    // The ALREADY-LIVE arm, and no read: the replay arm would answer a state.
+    expect(h.calls).toEqual([]);
     // No state, because the live record is the truth; but the clock is a
     // separate durable fact and this arm must not report it cold.
     expect(second.state).toBeNull();
@@ -1027,7 +1367,6 @@ describe('preload classification', () => {
   for (const holdCase of holdCases) {
     it(`holds ${holdCase.name} and writes nothing for it`, async () => {
       const h = harness(holdCase.options);
-      h.store.retain(OWNER_KEY);
       const loaded = await h.store.preload(ACCOUNT_ID);
       expect(loaded.hold?.kind).toBe(holdCase.kind);
       expect(loaded.hold?.detail).toContain(holdCase.detail);
@@ -1042,12 +1381,16 @@ describe('preload classification', () => {
       const refusedOnDisk = preGate?.kind === 'oversize' && preGate.detoastRefused;
       expect(h.store.stats().preGateRefusals).toBe(refusedOnDisk ? 1 : 0);
 
-      // Every write door, tried in turn. The absence of a writeRow call is the
-      // assertion: the durable row keeps the owner's possessions.
+      // The join goes ahead on the hold: nothing is installed, addPlayer seeds
+      // the stand-in, and the session holds a reference. Every write door is
+      // then tried in turn, the leave included. The absence of a writeRow call
+      // is the assertion: the durable row keeps the owner's possessions.
+      h.join(loaded);
+      expect(h.record()?.plotId).toBe(PENDING_FREEHOLD_PLOT_ID);
       h.store.markDirty(OWNER_KEY);
       h.store.save(OWNER_KEY);
       h.store.saveAllDirty();
-      await h.store.flushAndRelease(OWNER_KEY);
+      await h.leave();
       await tick();
       expect(h.writeCount()).toBe(0);
       expect(h.writes).toEqual([]);
@@ -1069,7 +1412,6 @@ describe('preload classification', () => {
         detail: 'plot plot:secret-name-9f3a for account 918273 is stranded',
       },
     });
-    h.store.retain(OWNER_KEY);
     const loaded = await h.store.preload(ACCOUNT_ID);
     expect(loaded.hold?.kind).toBe('unadmitted');
     expect(loaded.hold?.detail).toBe('unclassified');
@@ -1086,13 +1428,37 @@ describe('preload classification', () => {
   });
 
   it('blocks writes for an entry whose load has not landed yet', async () => {
-    const h = harness();
-    h.store.retain(OWNER_KEY);
+    // A joined session whose entry is NOT loaded, which production reaches one
+    // way: a handshake wider than two sweeps loses its unretained entry, and the
+    // join's retain recreates it unloaded and re-reads. That read is held open
+    // here, so every write door is tried against an entry with a live record, a
+    // reference and no durable knowledge at all.
+    let gate: Deferred<FreeholdRowLoad> | null = null;
+    const h = harness({
+      readRow: async () => (gate ? await gate.promise : { kind: 'absent' }),
+    });
+    const answer = await h.store.preload(ACCOUNT_ID);
+    h.store.saveAllDirty();
+    h.store.saveAllDirty();
+    expect(h.store.stats().entries).toBe(0);
+    gate = deferred<FreeholdRowLoad>();
+    h.join(answer);
+    await tick();
+    expect(h.store.stats().entries).toBe(1);
+    expect(h.store.stats().loaded).toBe(0);
+    expect(h.record()).toBeDefined();
     h.store.markDirty(OWNER_KEY);
     h.store.save(OWNER_KEY);
     h.store.saveAllDirty();
     await tick();
     expect(h.writeCount()).toBe(0);
+    // The contrast, so the block is not a stopped writer: once the read lands
+    // the same entry writes.
+    gate.resolve({ kind: 'absent' });
+    await tick(30);
+    h.store.save(OWNER_KEY);
+    await tick(30);
+    expect(h.writeCount()).toBe(1);
   });
 });
 
@@ -1207,17 +1573,25 @@ describe('write coalescing', () => {
   });
 
   it('skips the write entirely when the owner holds no live record', async () => {
-    const h = await loadedStore({ serialize: () => null });
+    // A LOADED entry with no record beside it is the handshake that read and
+    // died before its join: the first moment, and nothing after it.
+    const h = harness();
+    await h.store.preload(ACCOUNT_ID);
+    expect(h.record()).toBeUndefined();
+    h.calls.length = 0;
     h.store.markDirty(OWNER_KEY);
     h.store.save(OWNER_KEY);
     await tick(30);
     expect(h.calls).toContain('serialize');
     expect(h.writeCount()).toBe(0);
     expect(h.store.stats().running).toBe(0);
+    expect(h.store.stats().writesWithoutRecord).toBe(1);
   });
 
   it('writes when the record IS live (the other arm of the null-serialize skip)', async () => {
-    const h = await loadedStore({ serialize: () => persistedFixture() });
+    // The same entry after its join, with the session's furnishing on the record.
+    const h = await loadedStore();
+    h.edit(OWNER_KEY, furnishedEdit(5));
     h.store.markDirty(OWNER_KEY);
     h.store.save(OWNER_KEY);
     await tick(30);
@@ -1253,11 +1627,9 @@ describe('the periodic sweep detects a moved record without a markDirty call', (
   // development grant reaches the record THROUGH it, so a tier change made
   // with no server-side hook must still reach the row on the next sweep.
   it('arms a write when the live revision has left the last written one behind', async () => {
-    let rev = 7;
     const h = await loadedStore({
       rowLoad: { kind: 'row', row: rowFixture() },
       normalized: { kind: 'loaded', state: persistedFixture({ rev: 7 }), repaired: [] },
-      serialize: () => persistedFixture({ rev }),
       writeRow: async () => ({ kind: 'updated', durableRev: '2' }),
     });
     // Nothing moved: the sweep writes nothing at all.
@@ -1266,7 +1638,7 @@ describe('the periodic sweep detects a moved record without a markDirty call', (
     expect(h.writeCount()).toBe(0);
 
     // The one sanctioned writer bumped the revision. No markDirty was called.
-    rev = 8;
+    h.edit(OWNER_KEY, { rev: 8 });
     h.store.saveAllDirty();
     await tick(30);
     expect(h.writeCount()).toBe(1);
@@ -1288,8 +1660,8 @@ describe('the periodic sweep detects a moved record without a markDirty call', (
     const h = await loadedStore({
       rowLoad: { kind: 'row', row: rowFixture() },
       normalized: { kind: 'loaded', state: persistedFixture({ rev: 7 }), repaired: [] },
-      serialize: () => persistedFixture({ rev: 7 }),
     });
+    expect(h.record()?.rev).toBe(7);
     h.store.saveAllDirty();
     await tick(30);
     expect(h.calls.filter((call) => call === 'liveRev')).toHaveLength(1);
@@ -1308,14 +1680,24 @@ describe('the periodic sweep detects a moved record without a markDirty call', (
     // from, and writing it walks the client-facing wire counter backwards
     // permanently, which is what the loader's own wire_rev_shape hold refuses
     // on the read side.
-    let rev = 7;
+    //
+    // THE STATE, built the only way one realm can reach it: the record is at
+    // revision six, another realm writes the row forward to seven, and this
+    // realm's entry re-reads it through preload's already-live arm while the
+    // record stays. See `rejoinBeforeRemoval`.
+    let rowRev = 6;
     const h = await loadedStore({
       rowLoad: { kind: 'row', row: rowFixture() },
-      normalized: { kind: 'loaded', state: persistedFixture({ rev: 7 }), repaired: [] },
-      serialize: () => persistedFixture({ rev }),
+      normalized: () => ({
+        kind: 'loaded',
+        state: persistedFixture({ rev: rowRev }),
+        repaired: [],
+      }),
       writeRow: async () => ({ kind: 'updated', durableRev: '2' }),
     });
-    rev = 6;
+    rowRev = 7;
+    await h.rejoinBeforeRemoval();
+    expect(h.record()?.rev).toBe(6);
     h.store.saveAllDirty();
     await tick(30);
     // ARMED: without the backwards arm of the probe nothing would have been
@@ -1339,8 +1721,11 @@ describe('the periodic sweep detects a moved record without a markDirty call', (
         detoastRefused: false,
         diskBytes: 200_000,
       },
-      serialize: () => persistedFixture({ rev: 999 }),
     });
+    // The join seeded the stand-in on the hold, and the session then moved it a
+    // long way: a probe that ran would see that.
+    h.edit(OWNER_KEY, { rev: 999 });
+    h.calls.length = 0;
     h.store.saveAllDirty();
     await tick(30);
     expect(h.writeCount()).toBe(0);
@@ -1354,16 +1739,18 @@ describe('the periodic sweep detects a moved record without a markDirty call', (
   it('persists the seeded default on the first sweep when no durable row existed', async () => {
     // An ABSENT row is the one arm where the sim's own free Inn Room record IS
     // the truth: 05 seeds it, and this store writes it out under a freshly
-    // generated identity without ever creating a second default.
-    const h = await loadedStore({
-      rowLoad: { kind: 'absent' },
-      serialize: () => persistedFixture({ rev: 0 }),
-    });
+    // generated identity without ever creating a second default. The join
+    // installed that default carrying the minted identity, at revision zero.
+    const h = await loadedStore({ rowLoad: { kind: 'absent' } });
+    expect(h.record()?.rev).toBe(0);
+    expect(h.record()?.layout).toEqual([]);
     h.store.saveAllDirty();
     await tick(30);
     expect(h.writeCount()).toBe(1);
     // Insert-only: there is no durable revision to compare against yet.
     expect(h.writes[0].expectedDurableRev).toBeNull();
+    expect(h.writes[0].plotId).toBe('plot:minted1');
+    expect(h.writes[0].wireRev).toBe(0);
   });
 
   it('treats a record that vanished from the live map as nothing to write', async () => {
@@ -1373,10 +1760,16 @@ describe('the periodic sweep detects a moved record without a markDirty call', (
     // serializeFreehold answers null when the owner holds no live record, and
     // the contract is to SKIP: a default written over a real row destroys the
     // owner's furnishings, and nothing in this realm holds a second copy.
-    const h = await loadedStore({ serialize: () => null });
-    h.store.saveAllDirty();
+    //
+    // A LOADED ENTRY WITH NO RECORD is a handshake that read and never joined;
+    // a retained entry always has its record beside it on a lit realm. ONE pass,
+    // because the second would collect the unretained entry and prove nothing.
+    const h = harness();
+    await h.store.preload(ACCOUNT_ID);
+    expect(h.record()).toBeUndefined();
     h.store.saveAllDirty();
     await tick(30);
+    expect(h.store.stats().entries).toBe(1);
     expect(h.writeCount()).toBe(0);
     // The sweep did not even ARM one: without the null-revision guard the entry
     // would be marked dirty on every pass and each armed write would reach the
@@ -1411,10 +1804,8 @@ describe('the FIFO and the permit', () => {
         };
       },
     });
-    h.store.retain(OWNER_KEY);
-    h.store.retain(OTHER_OWNER_KEY);
-    await h.store.preload(ACCOUNT_ID);
-    await h.store.preload(OTHER_ACCOUNT_ID);
+    await h.login(ACCOUNT_ID);
+    await h.login(OTHER_ACCOUNT_ID);
     h.store.markDirty(OWNER_KEY);
     h.store.markDirty(OTHER_OWNER_KEY);
     h.store.saveAllDirty();
@@ -1434,8 +1825,7 @@ describe('the FIFO and the permit', () => {
         return null;
       },
     });
-    h.store.retain(OWNER_KEY);
-    await h.store.preload(ACCOUNT_ID);
+    await h.login();
     h.store.markDirty(OWNER_KEY);
     h.store.save(OWNER_KEY);
     await tick(30);
@@ -1523,19 +1913,17 @@ describe('one edit is one durable write, however many arms land on it', () => {
   /** A loaded store whose single write is held open, so every case can arm
    *  again while the first write is genuinely still running. */
   async function heldWriteStore() {
-    let rev = 7;
     const gate = deferred<FreeholdUpsertResult>();
     const h = await loadedStore({
       rowLoad: { kind: 'row', row: rowFixture() },
       normalized: { kind: 'loaded', state: persistedFixture({ rev: 7 }), repaired: [] },
-      serialize: () => persistedFixture({ rev }),
       writeRow: async () => await gate.promise,
     });
     return {
       h,
       gate,
       edit(next: number): void {
-        rev = next;
+        h.edit(OWNER_KEY, { rev: next });
       },
     };
   }
@@ -1627,13 +2015,22 @@ describe('the save path refuses what the load path would refuse', () => {
     });
   }
 
+  /** A loaded owner whose session then edits its record into `persisted`. */
   async function refusingStore(persisted: PersistedFreehold) {
-    return await loadedStore({
+    const h = await loadedStore({
       rowLoad: { kind: 'row', row: rowFixture() },
       normalized: { kind: 'loaded', state: persistedFixture({ rev: 7 }), repaired: [] },
-      serialize: () => persisted,
       writeRow: async () => ({ kind: 'updated', durableRev: '8' }),
     });
+    h.edit(OWNER_KEY, {
+      tier: persisted.tier,
+      layout: persisted.layout,
+      trophies: persisted.trophies,
+      condition: persisted.condition,
+      visitPolicy: persisted.visitPolicy,
+      rev: persisted.rev,
+    });
+    return h;
   }
 
   it('is not vacuous: the oversize fixture really is over the byte ceiling with legal row counts', () => {
@@ -1740,14 +2137,17 @@ describe('reference counting and eviction', () => {
   it('drops the entry when references, running and pending are all clear', async () => {
     const h = await loadedStore();
     expect(h.store.stats().entries).toBe(1);
-    await h.store.flushAndRelease(OWNER_KEY);
+    await h.leave();
     expect(h.store.stats().entries).toBe(0);
   });
 
   it('keeps the entry while a reference survives (references alone)', async () => {
+    // A second character of the same account joins, so one leave leaves one
+    // reference, and the shared record stays with it.
     const h = await loadedStore();
-    h.store.retain(OWNER_KEY);
-    await h.store.flushAndRelease(OWNER_KEY);
+    h.join(await h.store.preload(ACCOUNT_ID));
+    await h.leave();
+    expect(h.record()).toBeDefined();
     expect(h.store.stats().entries).toBe(1);
     expect(h.store.stats().running).toBe(0);
     expect(h.store.stats().pending).toBe(0);
@@ -1785,10 +2185,13 @@ describe('reference counting and eviction', () => {
     const gate = deferred<FreeholdUpsertResult>();
     const h = await loadedStore({ writeRow: async () => await gate.promise });
     h.store.markDirty(OWNER_KEY);
-    const leaving = h.store.flushAndRelease(OWNER_KEY);
-    // The joining session lands under the SAME owner key before the leaver's
-    // flush settles.
-    h.store.retain(OWNER_KEY);
+    // The new character's handshake reads while the old session is still in the
+    // world, then its join fires the old session's leave and joins on the same
+    // tick, so it lands under the SAME owner key before the leaver's flush
+    // settles.
+    const answer = await h.store.preload(ACCOUNT_ID);
+    const leaving = h.leave();
+    h.join(answer);
     gate.resolve({ kind: 'updated', durableRev: '2' });
     await leaving;
     await tick(30);
@@ -1805,7 +2208,7 @@ describe('reference counting and eviction', () => {
     const gate = deferred<FreeholdUpsertResult>();
     const h = await loadedStore({ writeRow: async () => await gate.promise });
     h.store.markDirty(OWNER_KEY);
-    const leaving = h.store.flushAndRelease(OWNER_KEY);
+    const leaving = h.leave();
     gate.resolve({ kind: 'updated', durableRev: '2' });
     await leaving;
     expect(h.store.stats().entries).toBe(0);
@@ -1818,9 +2221,9 @@ describe('reference counting and eviction', () => {
     const h = await loadedStore({
       rowLoad: { kind: 'row', row: rowFixture() },
       normalized: { kind: 'loaded', state: persistedFixture({ rev: 5 }), repaired: [] },
-      serialize: () => persistedFixture({ rev: 5 }),
     });
-    await h.store.flushAndRelease(OWNER_KEY);
+    expect(h.record()?.rev).toBe(5);
+    await h.leave();
     await tick();
     expect(h.writeCount()).toBe(0);
   });
@@ -1829,15 +2232,13 @@ describe('reference counting and eviction', () => {
     // THE LAST WINDOW. A tier change made between the final sweep and the
     // logout bumps only the record's revision; a leave path testing markDirty
     // alone would drop it, and there is no next sweep to catch it.
-    let rev = 5;
     const h = await loadedStore({
       rowLoad: { kind: 'row', row: rowFixture() },
       normalized: { kind: 'loaded', state: persistedFixture({ rev: 5 }), repaired: [] },
-      serialize: () => persistedFixture({ rev }),
       writeRow: async () => ({ kind: 'updated', durableRev: '8' }),
     });
-    rev = 6;
-    await h.store.flushAndRelease(OWNER_KEY);
+    h.edit(OWNER_KEY, { rev: 6 });
+    await h.leave();
     await tick(20);
     expect(h.writeCount()).toBe(1);
     expect(h.writes[0].wireRev).toBe(6);
@@ -1850,24 +2251,22 @@ describe('a durable answer no repeat can fix stops the writes', () => {
     // can change it. A thrown write might be a connection blip, so it gets a
     // few chances; without any bound a row this realm genuinely cannot write is
     // retried on every sweep for the life of the process.
-    let rev = 7;
     const h = await loadedStore({
       rowLoad: { kind: 'row', row: rowFixture() },
       normalized: { kind: 'loaded', state: persistedFixture({ rev: 7 }), repaired: [] },
-      serialize: () => persistedFixture({ rev }),
       writeRow: async () => {
         throw new Error('connection terminated unexpectedly');
       },
     });
     for (let attempt = 1; attempt < FREEHOLD_PERSIST_MAX_WRITE_ERRORS; attempt++) {
-      rev += 1;
+      h.edit(OWNER_KEY);
       h.store.saveAllDirty();
       await tick(30);
       expect(h.writeCount()).toBe(attempt);
       // Still trying: the entry is not quiesced yet.
       expect(h.store.stats().quiesced).toBe(0);
     }
-    rev += 1;
+    h.edit(OWNER_KEY);
     h.store.saveAllDirty();
     await tick(30);
     expect(h.writeCount()).toBe(FREEHOLD_PERSIST_MAX_WRITE_ERRORS);
@@ -1875,7 +2274,7 @@ describe('a durable answer no repeat can fix stops the writes', () => {
 
     // And it really stops: every later sweep costs nothing.
     for (let i = 0; i < 5; i++) {
-      rev += 1;
+      h.edit(OWNER_KEY);
       h.store.saveAllDirty();
       await tick(30);
     }
@@ -1885,32 +2284,31 @@ describe('a durable answer no repeat can fix stops the writes', () => {
   it('resets the error run on a commit, so a blip never accumulates across a session', async () => {
     // Without the reset, three unrelated blips spread over hours would quiesce
     // a perfectly healthy owner.
-    let rev = 7;
     let fail = true;
     const h = await loadedStore({
       rowLoad: { kind: 'row', row: rowFixture() },
       normalized: { kind: 'loaded', state: persistedFixture({ rev: 7 }), repaired: [] },
-      serialize: () => persistedFixture({ rev }),
-      writeRow: async () => {
+      writeRow: async (input) => {
         if (fail) throw new Error('connection terminated unexpectedly');
-        return { kind: 'updated', durableRev: String(rev) };
+        return { kind: 'updated', durableRev: String(input.wireRev) };
       },
     });
     for (let i = 0; i < FREEHOLD_PERSIST_MAX_WRITE_ERRORS - 1; i++) {
-      rev += 1;
+      h.edit(OWNER_KEY);
       h.store.saveAllDirty();
       await tick(30);
     }
     fail = false;
-    rev += 1;
+    h.edit(OWNER_KEY);
     h.store.saveAllDirty();
     await tick(30);
     expect(h.store.stats().quiesced).toBe(0);
+    expect(h.store.stats().writes).toBe(1);
 
     // The run is back to zero: two more throws still do not quiesce.
     fail = true;
     for (let i = 0; i < FREEHOLD_PERSIST_MAX_WRITE_ERRORS - 1; i++) {
-      rev += 1;
+      h.edit(OWNER_KEY);
       h.store.saveAllDirty();
       await tick(30);
     }
@@ -1922,6 +2320,15 @@ describe('a durable answer no repeat can fix stops the writes', () => {
     // is known to be stale: the durable revision moved under this realm, which
     // is what the fence exists to detect. Replaying it on a rejoin would
     // install a house another writer has already replaced.
+    //
+    // WHERE THIS CAN BE REACHED, stated because it is narrower than the title.
+    // A quiesced entry is BLOCKED, so it owes no work and is collected the
+    // moment its last session releases it; one realm therefore never holds a
+    // quiesced entry with no record beside it, and preload's REPLAY arm cannot
+    // be handed one. The reachable rejoin is a second character joining while
+    // the owner is still in the world, which takes the ALREADY-LIVE arm. That is
+    // what this drives, and the replay arm's own guard, which is defence in
+    // depth for the same fact, is pinned on the source beside it.
     const h = await loadedStore({
       rowLoad: { kind: 'row', row: rowFixture() },
       writeRow: async () => ({ kind: 'stale', durableRev: '99' }),
@@ -1935,6 +2342,13 @@ describe('a durable answer no repeat can fix stops the writes', () => {
     expect(again.state).toBeNull();
     // And no second read went out: the entry is still loaded, just untrusted.
     expect(h.calls.filter((call) => call === 'readRow')).toHaveLength(0);
+    const replay = methodBody(
+      stripComments(readFileSync(SOURCE_PATH, 'utf8')),
+      '  async function preloadWithin(',
+    );
+    expect(replay).toContain(
+      'return snapshotOf(entry, blocked(entry) ? null : offerCapture(entry));',
+    );
   });
 });
 
@@ -1946,11 +2360,17 @@ describe('the coalescer, the drain and the age report at their stated edges', ()
     // which refuses the write; this case pins that the probe SAW it, which is
     // the half a `<=` mutant kills.
     return (async () => {
-      let rev = 8;
+      // The backwards state is built through `rejoinBeforeRemoval`: another
+      // realm writes the row forward and this realm's entry re-reads it while
+      // the record stays where it was.
+      let rowRev = 7;
       const h = await loadedStore({
         rowLoad: { kind: 'row', row: rowFixture() },
-        normalized: { kind: 'loaded', state: persistedFixture({ rev: 8 }), repaired: [] },
-        serialize: () => persistedFixture({ rev }),
+        normalized: () => ({
+          kind: 'loaded',
+          state: persistedFixture({ rev: rowRev }),
+          repaired: [],
+        }),
         writeRow: async () => ({ kind: 'updated', durableRev: '9' }),
       });
       h.store.saveAllDirty();
@@ -1958,7 +2378,9 @@ describe('the coalescer, the drain and the age report at their stated edges', ()
       expect(h.writeCount()).toBe(0);
       expect(h.store.stats().writeFailures).toBe(0);
 
-      rev = 7;
+      rowRev = 8;
+      await h.rejoinBeforeRemoval();
+      expect(h.record()?.rev).toBe(7);
       h.store.saveAllDirty();
       await tick(30);
       // NOT written, but SEEN: a `<=` probe books no failure at all here.
@@ -1971,8 +2393,7 @@ describe('the coalescer, the drain and the age report at their stated edges', ()
   it('reports the OLDEST dirty age, not the newest or the last one seen', () => {
     return (async () => {
       const h = await loadedStore();
-      h.store.retain(OTHER_OWNER_KEY);
-      await h.store.preload(OTHER_ACCOUNT_ID);
+      await h.login(OTHER_ACCOUNT_ID);
 
       h.setNow(20_000);
       h.store.markDirty(OWNER_KEY);
@@ -2046,23 +2467,17 @@ describe('a write may only carry the record this entry actually loaded', () => {
   // session's removePlayer finally evicts.
 
   it('refuses to write a freshly seeded default over a row with a durable revision', async () => {
-    const seeded = persistedFixture({
-      plotId: PENDING_FREEHOLD_PLOT_ID,
-      tier: 'inn_room',
-      layout: [],
-      trophies: [],
-      rev: 0,
-    });
     const h = await loadedStore({
       rowLoad: { kind: 'row', row: rowFixture() },
       normalized: { kind: 'loaded', state: persistedFixture({ rev: 9 }), repaired: [] },
-      // The live record is a FRESH SEED, not the house the entry loaded: this
-      // is the state a rejoin lands in when the old session's removePlayer
-      // evicts after the new session's read.
-      livePlotId: PENDING_FREEHOLD_PLOT_ID,
-      serialize: () => seeded,
       writeRow: async () => ({ kind: 'updated', durableRev: '8' }),
     });
+    // The window above, in production order: the live record becomes a FRESH
+    // SEED rather than the house the entry knows.
+    await h.rejoinOverEviction();
+    expect(h.record()?.plotId).toBe(PENDING_FREEHOLD_PLOT_ID);
+    expect(h.record()?.rev).toBe(0);
+    expect(h.record()?.layout).toEqual([]);
     h.store.saveAllDirty();
     await tick(30);
     // The absence of the write IS the assertion.
@@ -2073,17 +2488,26 @@ describe('a write may only carry the record this entry actually loaded', () => {
   });
 
   it('refuses a live record whose plot identity is not the one it loaded', async () => {
-    const foreign = persistedFixture({ plotId: 'plot:someoneelse', rev: 9 });
+    // THE ONE OTHER IDENTITY a record under this owner key can carry is the
+    // stand-in a reseed gives it: nothing in the sim writes an identity, and an
+    // install names a record after this account's own row. So the foreign name
+    // here is the stand-in, and the returning session then furnishes it back to
+    // the entry's own content at a revision ahead of the entry's, so the NAME is
+    // the only thing that differs and the name arm is the only one that can
+    // refuse.
     const h = await loadedStore({
       rowLoad: { kind: 'row', row: rowFixture() },
       normalized: { kind: 'loaded', state: persistedFixture({ rev: 5 }), repaired: [] },
-      livePlotId: 'plot:someoneelse',
-      serialize: () => foreign,
       writeRow: async () => ({ kind: 'updated', durableRev: '8' }),
     });
+    await h.rejoinOverEviction();
+    h.edit(OWNER_KEY, furnishedEdit(9));
+    expect(h.record()?.plotId).toBe(PENDING_FREEHOLD_PLOT_ID);
     h.store.saveAllDirty();
     await tick(30);
     expect(h.writeCount()).toBe(0);
+    expect(h.store.stats().quiesced).toBe(1);
+    expect(h.errors[0]).toContain('identity');
   });
 
   it('builds the document AS SENT once, and refuses THAT (source pin)', () => {
@@ -2133,50 +2557,51 @@ describe('a write may only carry the record this entry actually loaded', () => {
     const h = await loadedStore({
       rowLoad: { kind: 'row', row: rowFixture() },
       normalized: { kind: 'loaded', state: persistedFixture({ rev: 5 }), repaired: [] },
-      serialize: () => persistedFixture({ rev: 6 }),
       writeRow: async () => ({ kind: 'updated', durableRev: '8' }),
     });
+    h.edit(OWNER_KEY, { rev: 6 });
     h.store.saveAllDirty();
     await tick(30);
     expect(h.writeCount()).toBe(1);
+    expect(h.writes[0].wireRev).toBe(6);
     expect(h.store.stats().quiesced).toBe(0);
   });
 
   it('keeps writing after the FIRST insert for an account that had no row', async () => {
     // The regression this seal could most easily cause. After the insert the
-    // entry has a durable revision, and the live record is still the sim's
-    // seeded default, so a seal that keyed on the unassigned plot id alone
-    // would quiesce every account on its SECOND save, forever.
-    let rev = 1;
+    // entry has a durable revision, and the live record is still the empty
+    // default the join installed, so a seal that treated an empty default as a
+    // seed would quiesce every account on its SECOND save, forever.
     const h = await loadedStore({
       rowLoad: { kind: 'absent' },
-      serialize: () =>
-        persistedFixture({ plotId: PENDING_FREEHOLD_PLOT_ID, layout: [], trophies: [], rev }),
       writeRow: async (input) => ({
         kind: input.expectedDurableRev === null ? 'inserted' : 'updated',
         durableRev: '1',
       }),
     });
+    h.edit(OWNER_KEY, { rev: 1 });
     h.store.markDirty(OWNER_KEY);
     h.store.save(OWNER_KEY);
     await tick(30);
     expect(h.writeCount()).toBe(1);
+    expect(h.writes[0].expectedDurableRev).toBeNull();
 
-    rev = 2;
+    h.edit(OWNER_KEY, { rev: 2 });
     h.store.saveAllDirty();
     await tick(30);
     expect(h.store.stats().quiesced).toBe(0);
     expect(h.writeCount()).toBe(2);
+    expect(h.writes[1].expectedDurableRev).toBe('1');
+    expect(h.record()?.layout).toEqual([]);
   });
 
   it('still writes a seeded default when there is NO durable row to lose', async () => {
-    // The first write for an account that has never written is the seeded
-    // default, under a freshly minted identity, and it is insert-only. The seal
-    // must not block the one case where writing a default is the whole point.
+    // The first write for an account that has never written is the default
+    // the join installed, under a freshly minted identity, and it is
+    // insert-only. The seal must not block the one case where writing a default
+    // is the whole point.
     const h = await loadedStore({
       rowLoad: { kind: 'absent' },
-      serialize: () =>
-        persistedFixture({ plotId: PENDING_FREEHOLD_PLOT_ID, layout: [], trophies: [], rev: 1 }),
       writeRow: async () => ({ kind: 'inserted', durableRev: '1' }),
     });
     h.store.markDirty(OWNER_KEY);
@@ -2184,6 +2609,9 @@ describe('a write may only carry the record this entry actually loaded', () => {
     await tick(30);
     expect(h.writeCount()).toBe(1);
     expect(h.writes[0].expectedDurableRev).toBeNull();
+    expect(h.writes[0].plotId).toBe('plot:minted1');
+    expect(h.writes[0].layoutJson).toBe('[]');
+    expect(h.writes[0].trophiesJson).toBe('[]');
   });
 });
 
@@ -2202,16 +2630,14 @@ describe('a leaving session may borrow the write reserve', () => {
     });
     for (let i = 0; i < FREEHOLD_PERSIST_MAX_ACTIVE_WRITES; i++) {
       const key = `account:${OTHER_ACCOUNT_ID + i}`;
-      h.store.retain(key, OTHER_ACCOUNT_ID + i);
-      await h.store.preload(OTHER_ACCOUNT_ID + i);
+      await h.login(OTHER_ACCOUNT_ID + i);
       h.store.markDirty(key);
       h.store.save(key);
     }
     await tick(20);
     expect(h.store.stats().running).toBe(FREEHOLD_PERSIST_MAX_ACTIVE_WRITES);
 
-    h.store.retain(OWNER_KEY, ACCOUNT_ID);
-    await h.store.preload(ACCOUNT_ID);
+    await h.login();
     h.store.markDirty(OWNER_KEY);
     void h.store.flushAndRelease(OWNER_KEY);
     await tick(20);
@@ -2238,14 +2664,12 @@ describe('a leaving session may borrow the write reserve', () => {
     const saturated = FREEHOLD_PERSIST_MAX_ACTIVE_WRITES + FREEHOLD_PERSIST_LEAVE_WRITE_RESERVE;
     for (let i = 0; i < saturated; i++) {
       const key = `account:${OTHER_ACCOUNT_ID + i}`;
-      h.store.retain(key, OTHER_ACCOUNT_ID + i);
-      await h.store.preload(OTHER_ACCOUNT_ID + i);
+      await h.login(OTHER_ACCOUNT_ID + i);
       h.store.markDirty(key);
       h.store.save(key);
     }
     await tick(20);
-    h.store.retain(OWNER_KEY, ACCOUNT_ID);
-    await h.store.preload(ACCOUNT_ID);
+    await h.login();
     h.store.markDirty(OWNER_KEY);
 
     let released = false;
@@ -2275,11 +2699,11 @@ describe('a leaving session may borrow the write reserve', () => {
     const h = await loadedStore({
       rowLoad: { kind: 'row', row: rowFixture() },
       normalized: { kind: 'loaded', state: persistedFixture({ rev: 5 }), repaired: [] },
-      serialize: () => persistedFixture({ rev: 6 }),
       writeRow: async () => await gate.promise,
     });
+    h.edit(OWNER_KEY, { rev: 6 });
     expect(h.store.stats().leaveCaptures).toBe(0);
-    void h.store.flushAndRelease(OWNER_KEY);
+    void h.leave();
     await tick(10);
     expect(h.store.stats().leaveCaptures).toBe(1);
     gate.resolve({ kind: 'updated', durableRev: '6' });
@@ -2294,21 +2718,22 @@ describe('a leaving session may borrow the write reserve', () => {
     // holds ONE document and used to count TWO, so the series ratcheted upward
     // and never came back down. Two leaves, one write held open across both.
     const gate = deferred<FreeholdUpsertResult>();
-    let rev = 6;
     const h = await loadedStore({
       rowLoad: { kind: 'row', row: rowFixture() },
       normalized: { kind: 'loaded', state: persistedFixture({ rev: 5 }), repaired: [] },
-      serialize: () => persistedFixture({ rev }),
       writeRow: async () => await gate.promise,
     });
-    h.store.retain(OWNER_KEY, ACCOUNT_ID);
-    void h.store.flushAndRelease(OWNER_KEY);
+    // Two characters of the one account are in the world, sharing one record.
+    h.join(await h.store.preload(ACCOUNT_ID));
+    h.edit(OWNER_KEY, { rev: 6 });
+    void h.leave();
     await tick(10);
     expect(h.store.stats().leaveCaptures).toBe(1);
 
-    // The same owner leaves again while the first write is still on the gate.
-    rev = 7;
-    void h.store.flushAndRelease(OWNER_KEY);
+    // The same owner edits and leaves again while the first write is still on
+    // the gate.
+    h.edit(OWNER_KEY, { rev: 7 });
+    void h.leave();
     await tick(10);
     // ONE document is retained, so the gauge reads one. Counting the two
     // captures rather than the one retained document is what made it ratchet.
@@ -2328,27 +2753,31 @@ describe('a leaving session may borrow the write reserve', () => {
     // when the record is already evicted by the time the write runs, which is
     // exactly what the capture exists for.
     const gate = deferred<FreeholdUpsertResult>();
-    let rev = 6;
-    let live = true;
     const h = await loadedStore({
       rowLoad: { kind: 'row', row: rowFixture() },
       normalized: { kind: 'loaded', state: persistedFixture({ rev: 5 }), repaired: [] },
-      hasLive: () => live,
-      serialize: () => (live ? persistedFixture({ rev }) : null),
       writeRow: async () => await gate.promise,
     });
-    h.store.retain(OWNER_KEY, ACCOUNT_ID);
-    void h.store.flushAndRelease(OWNER_KEY);
+    // Two characters of the one account are in the world, sharing one record.
+    h.join(await h.store.preload(ACCOUNT_ID));
+    h.edit(OWNER_KEY, { rev: 6 });
+    const first = h.leave();
     await tick(10);
     expect(h.store.stats().leaveCaptures).toBe(1);
 
     // The same owner edits again and leaves again, still behind the held write.
-    rev = 7;
-    void h.store.flushAndRelease(OWNER_KEY);
+    h.edit(OWNER_KEY, { rev: 7 });
+    const second = h.leave();
     await tick(10);
-    // The record is gone by the time the write runs, so the capture is the only
-    // document there is.
-    live = false;
+    // Both leaves stop WAITING at their deadlines, so both removePlayers run and
+    // the last one evicts: the record is gone by the time the write carrying the
+    // second session's edits runs, and the capture is the only document there is.
+    for (const job of h.deadlines) {
+      if (job.ms === FREEHOLD_PERSIST_LEAVE_FLUSH_MS && !job.cancelled && !job.fired) job.fire();
+    }
+    await first;
+    await second;
+    expect(h.record()).toBeUndefined();
     gate.resolve({ kind: 'updated', durableRev: '9' });
     await tick(60);
     h.store.saveAllDirty();
@@ -2423,20 +2852,20 @@ describe('a leaving session never loses its last edits to a queue', () => {
   // the local cap, or whose flush deadline expires, would run after eviction
   // and write nothing at all. The document is captured before the wait.
 
-  /** A store whose live record DISAPPEARS the moment the leave returns, which
-   *  is exactly what removePlayer does right after flushAndRelease. */
+  /** A loaded owner with one unwritten edit, whose record DISAPPEARS when the
+   *  case says so, which is exactly what removePlayer does right after the
+   *  leave's flush returns. */
   async function leavingStore(writeRow: () => Promise<FreeholdUpsertResult>) {
-    let evicted = false;
     const h = await loadedStore({
       rowLoad: { kind: 'row', row: rowFixture() },
       normalized: { kind: 'loaded', state: persistedFixture({ rev: 5 }), repaired: [] },
-      serialize: () => (evicted ? null : persistedFixture({ rev: 6 })),
       writeRow,
     });
+    h.edit(OWNER_KEY, { rev: 6 });
     return {
       h,
       evict: () => {
-        evicted = true;
+        h.removePlayer();
       },
     };
   }
@@ -2466,26 +2895,28 @@ describe('a leaving session never loses its last edits to a queue', () => {
     // happens to be gone at the moment its write runs. The live record always
     // wins, so nothing stale can shadow an edit, but the capture must still not
     // survive its own write.
-    let evicted = false;
+    //
+    // A SECOND CHARACTER OF THE ACCOUNT STAYS IN THE WORLD, which is what makes
+    // this decisive: the entry keeps a reference, so it is never deleted and
+    // the delete sites' own release cannot stand in for settle's. Only settle
+    // can bring the gauge back to zero here. (The earlier form evicted the
+    // record while that second reference was still held, which no realm can do:
+    // a session in the world keeps its record live.)
     const h = await loadedStore({
       rowLoad: { kind: 'row', row: rowFixture() },
       normalized: { kind: 'loaded', state: persistedFixture({ rev: 5 }), repaired: [] },
-      serialize: () => (evicted ? null : persistedFixture({ rev: 6 })),
       writeRow: async () => ({ kind: 'updated', durableRev: '6' }),
     });
-    h.store.retain(OWNER_KEY, ACCOUNT_ID);
-    await h.store.flushAndRelease(OWNER_KEY);
+    h.join(await h.store.preload(ACCOUNT_ID));
+    h.edit(OWNER_KEY, { rev: 6 });
+    await h.leave();
     await tick(30);
     expect(h.writeCount()).toBe(1);
-
-    // The record is gone and the entry is dirty again. With the capture
-    // correctly cleared there is nothing to send, and the store SAYS so.
-    evicted = true;
-    h.store.markDirty(OWNER_KEY);
-    h.store.save(OWNER_KEY);
-    await tick(30);
-    expect(h.writeCount()).toBe(1);
-    expect(h.store.stats().writesWithoutRecord).toBe(1);
+    expect(h.writes[0].wireRev).toBe(6);
+    expect(h.store.stats().entries).toBe(1);
+    expect(h.record()).toBeDefined();
+    // Released by SETTLE, with the entry still resident.
+    expect(h.store.stats().leaveCaptures).toBe(0);
   });
 
   it('keeps the capture when a write FAILED without quiescing', async () => {
@@ -2496,11 +2927,9 @@ describe('a leaving session never loses its last edits to a queue', () => {
     // saturation is what produces BOTH that timeout and the deferral the
     // capture exists for, so these two arms sit next to each other.
     let granted = 0;
-    let evicted = false;
     const h = await loadedStore({
       rowLoad: { kind: 'row', row: rowFixture() },
       normalized: { kind: 'loaded', state: persistedFixture({ rev: 5 }), repaired: [] },
-      serialize: () => (evicted ? null : persistedFixture({ rev: 6 })),
       acquirePermit: async () => {
         granted += 1;
         // The load gets its permit; the FIRST write does not; later ones do.
@@ -2508,15 +2937,17 @@ describe('a leaving session never loses its last edits to a queue', () => {
       },
       writeRow: async () => ({ kind: 'updated', durableRev: '6' }),
     });
-    await h.store.flushAndRelease(OWNER_KEY);
+    h.edit(OWNER_KEY, { rev: 6 });
+    // The whole leave: the flush, then removePlayer evicts the record.
+    await h.leave();
     await tick(30);
+    expect(h.record()).toBeUndefined();
     expect(h.writeCount()).toBe(0);
     expect(h.store.stats().writeFailures).toBe(1);
     // Still dirty, still unblocked, and STILL HOLDING its document.
     expect(h.store.stats().dirty).toBe(1);
     expect(h.store.stats().leaveCaptures).toBe(1);
 
-    evicted = true;
     h.store.saveAllDirty();
     await tick(30);
     expect(h.writeCount()).toBe(1);
@@ -2539,7 +2970,6 @@ describe('a leaving session never loses its last edits to a queue', () => {
     const h = await loadedStore({
       rowLoad: { kind: 'row', row: rowFixture() },
       normalized: { kind: 'loaded', state: persistedFixture({ rev: 5 }), repaired: [] },
-      serialize: () => persistedFixture({ rev: 6, condition: 42 }),
       // The load takes its permit; the leave write is refused one, which is
       // what leaves the capture outstanding.
       acquirePermit: async () => {
@@ -2547,11 +2977,14 @@ describe('a leaving session never loses its last edits to a queue', () => {
         return granted === 1 ? { release: () => {} } : null;
       },
     });
-    await h.store.flushAndRelease(OWNER_KEY);
+    h.edit(OWNER_KEY, { rev: 6, condition: 42 });
+    await h.leave();
     await tick(20);
-    // The write was refused a permit, so the capture is still outstanding.
+    // The write was refused a permit, so the capture is still outstanding, and
+    // the record is gone with the last session.
     expect(h.writeCount()).toBe(0);
     expect(h.store.stats().leaveCaptures).toBe(1);
+    expect(h.record()).toBeUndefined();
 
     const rejoin = await h.store.preload(ACCOUNT_ID);
     expect(rejoin.state?.rev).toBe(6);
@@ -2572,53 +3005,32 @@ describe('a leaving session never loses its last edits to a queue', () => {
     //
     // What is left is worth keeping on its own: a brand-new account's write
     // lands from the CAPTURE after removePlayer has evicted the record, which
-    // is the whole reason the capture is taken before the wait.
-    let live = true;
+    // is the whole reason the capture is taken before the wait. The record is
+    // the one the join installed, carrying the MINTED name, and the session
+    // furnished it before leaving.
     let granted = 0;
-    let inserted = false;
     const permit = deferred<{ release(): void } | null>();
     const h = await loadedStore({
-      // THE ROW APPEARS ONCE IT IS INSERTED. A readRow pinned to `absent`
-      // modelled a state the database cannot be in: the store re-read the same
-      // account after a confirmed insert, found nothing, fenced insert-only a
-      // second time and minted a SECOND identity for one account. With
-      // `entry.durableRev` null on that second write the seal is structurally
-      // disarmed, so the case could never reach the arm it is named for.
-      readRow: async (): Promise<FreeholdRowLoad> =>
-        inserted
-          ? { kind: 'row', row: rowFixture({ plotId: MINTED_PLOT_ID, wireRev: '6' }) }
-          : { kind: 'absent' },
-      normalized: {
-        kind: 'loaded',
-        state: persistedFixture({ plotId: MINTED_PLOT_ID, rev: 6 }),
-        repaired: [],
-      },
-      // THE MINTED NAME, not the stand-in. A record that is live while its own
-      // load is still running carries whatever the install gave it, and after
-      // the identity fix that is the minted id. A record carrying the STAND-IN
-      // at this point would be one seeded WITHOUT an install, which the absent
-      // arm now refuses to name a row for at all.
-      livePlotId: MINTED_PLOT_ID,
-      serialize: () => (live ? persistedFixture({ rev: 6 }) : null),
-      hasLive: () => live,
+      ...rowRemembered(),
       acquirePermit: async () => {
         granted += 1;
         return granted === 1 ? { release: () => {} } : await permit.promise;
       },
-      writeRow: async (input) => {
-        inserted = true;
-        return {
-          kind: input.expectedDurableRev === null ? 'inserted' : 'updated',
-          durableRev: '1',
-        };
-      },
     });
-    void h.store.flushAndRelease(OWNER_KEY);
+    h.edit(OWNER_KEY, furnishedEdit(6));
+    expect(h.record()?.plotId).toBe(MINTED_PLOT_ID);
+    // The leave's flush captures and arms, then stops WAITING at its deadline,
+    // and removePlayer evicts before the permit ever lands.
+    const leaving = h.leave();
     await tick(10);
-    live = false;
+    const deadline = h.deadlines.find((job) => job.ms === FREEHOLD_PERSIST_LEAVE_FLUSH_MS);
+    deadline?.fire();
+    await leaving;
+    expect(h.record()).toBeUndefined();
     permit.resolve({ release: () => {} });
     await tick(30);
     expect(h.writeCount()).toBe(1);
+    expect(h.writes[0].plotId).toBe(MINTED_PLOT_ID);
 
     // The write carried the CAPTURE, not a null serialize: the record was gone
     // before the permit landed, so without it this write would have reached the
@@ -2633,40 +3045,39 @@ describe('a leaving session never loses its last edits to a queue', () => {
     // The mirror, and the hazard the seal exists for. Here the record that
     // exists at commit time is a FRESH SEED of a row that already holds a
     // house, so writing it would put an empty Inn Room over real furnishings.
-    let live = true;
-    let seeded = false;
+    //
+    // IN PRODUCTION ORDER. The returning session's handshake reads while the
+    // leaver is still in the world, so the answer carries no state; the leave
+    // captures, stops waiting at its deadline, and removePlayer evicts; the
+    // captured write lands; and only then does the returning session join,
+    // install nothing, and seed a default.
     let granted = 0;
     const permit = deferred<{ release(): void } | null>();
     const h = await loadedStore({
       rowLoad: { kind: 'row', row: rowFixture() },
       normalized: { kind: 'loaded', state: persistedFixture({ rev: 5 }), repaired: [] },
-      serialize: () =>
-        !live
-          ? null
-          : seeded
-            ? persistedFixture({ plotId: PENDING_FREEHOLD_PLOT_ID, layout: [], rev: 0 })
-            : persistedFixture({ rev: 6 }),
-      hasLive: () => live,
-      // The record's identity follows the record: the real house while it is
-      // the real house, the stand-in once a default has been seeded over it.
-      livePlotId: () => (seeded ? PENDING_FREEHOLD_PLOT_ID : ROW_PLOT_ID),
       acquirePermit: async () => {
         granted += 1;
         return granted === 1 ? { release: () => {} } : await permit.promise;
       },
       writeRow: async () => ({ kind: 'updated', durableRev: '8' }),
     });
-    void h.store.flushAndRelease(OWNER_KEY);
+    h.edit(OWNER_KEY, { rev: 6 });
+    const returning = await h.store.preload(ACCOUNT_ID);
+    expect(returning.state).toBeNull();
+    const leaving = h.leave();
     await tick(10);
-    live = false;
+    h.deadlines.find((job) => job.ms === FREEHOLD_PERSIST_LEAVE_FLUSH_MS)?.fire();
+    await leaving;
+    expect(h.record()).toBeUndefined();
     permit.resolve({ release: () => {} });
     await tick(30);
     expect(h.writeCount()).toBe(1);
+    expect(h.writes[0].wireRev).toBe(6);
 
     // A join seeds a DEFAULT rather than adopting anything, and holds the entry.
-    live = true;
-    seeded = true;
-    h.store.retain(OWNER_KEY, ACCOUNT_ID);
+    h.join(returning);
+    expect(h.record()?.plotId).toBe(PENDING_FREEHOLD_PLOT_ID);
     // The entry was collected when its write settled clean, so retain re-reads
     // it; the sweep must run after that read lands.
     await tick(30);
@@ -2690,28 +3101,18 @@ describe('a leaving session never loses its last edits to a queue', () => {
     // level is the outcome, that a reseed over a furnished account is refused
     // and the owner quiesces. The pristine arm itself is driven with literals in
     // tests/server/freehold_write_seal.test.ts, which needs no store.
-    let seeded = false;
-    const h = await loadedStore({
-      rowLoad: { kind: 'absent' },
-      livePlotId: () => (seeded ? PENDING_FREEHOLD_PLOT_ID : MINTED_PLOT_ID),
-      serialize: () =>
-        seeded
-          ? persistedFixture({ layout: [], trophies: [], rev: 0 })
-          : persistedFixture({ rev: 4 }),
-      writeRow: async (input) => ({
-        kind: input.expectedDurableRev === null ? 'inserted' : 'updated',
-        durableRev: '1',
-      }),
-    });
+    const h = await loadedStore({ ...rowRemembered() });
+    h.edit(OWNER_KEY, furnishedEdit(4));
     h.store.markDirty(OWNER_KEY);
     h.store.save(OWNER_KEY);
     await tick(30);
     expect(h.writeCount()).toBe(1);
     expect(h.writes[0].layoutJson).not.toBe('[]');
 
-    // Evicted, then a rejoin seeds an empty default under the SAME stand-in
-    // name. The row already holds this account's furnishings.
-    seeded = true;
+    // Evicted, then a rejoin seeds an empty default under the stand-in name.
+    // The row already holds this account's furnishings.
+    await h.rejoinOverEviction();
+    expect(h.record()?.plotId).toBe(PENDING_FREEHOLD_PLOT_ID);
     h.store.saveAllDirty();
     await tick(30);
     // The absence of a second write IS the assertion.
@@ -2726,23 +3127,17 @@ describe('a leaving session never loses its last edits to a queue', () => {
     // moved its record without placing anything (a tier grant bumps the revision
     // and touches no row) is still protected from a reseed. The dimension itself
     // is driven in tests/server/freehold_write_seal.test.ts.
-    let seeded = false;
-    const h = await loadedStore({
-      rowLoad: { kind: 'absent' },
-      livePlotId: () => (seeded ? PENDING_FREEHOLD_PLOT_ID : MINTED_PLOT_ID),
-      serialize: () => persistedFixture({ layout: [], trophies: [], rev: seeded ? 0 : 3 }),
-      writeRow: async (input) => ({
-        kind: input.expectedDurableRev === null ? 'inserted' : 'updated',
-        durableRev: '1',
-      }),
-    });
+    const h = await loadedStore({ ...rowRemembered() });
+    h.edit(OWNER_KEY, { rev: 3 });
     h.store.markDirty(OWNER_KEY);
     h.store.save(OWNER_KEY);
     await tick(30);
     expect(h.writeCount()).toBe(1);
     expect(h.writes[0].wireRev).toBe(3);
+    expect(h.writes[0].layoutJson).toBe('[]');
 
-    seeded = true;
+    await h.rejoinOverEviction();
+    expect(h.record()?.plotId).toBe(PENDING_FREEHOLD_PLOT_ID);
     h.store.saveAllDirty();
     await tick(30);
     expect(h.writeCount()).toBe(1);
@@ -2762,17 +3157,12 @@ describe('a leaving session never loses its last edits to a queue', () => {
     // leaves it at six, not at zero. A revision BELOW the entry's last committed
     // one is now refused for every entry class, so the old fixture proved the
     // claim through a state the sim cannot reach.
-    let emptied = false;
     const h = await loadedStore({
       rowLoad: { kind: 'row', row: rowFixture() },
       normalized: { kind: 'loaded', state: persistedFixture({ rev: 5 }), repaired: [] },
-      serialize: () =>
-        emptied
-          ? persistedFixture({ layout: [], trophies: [], rev: 6 })
-          : persistedFixture({ rev: 5 }),
       writeRow: async () => ({ kind: 'updated', durableRev: '8' }),
     });
-    emptied = true;
+    h.edit(OWNER_KEY, { layout: [], trophies: [], rev: 6 });
     h.store.saveAllDirty();
     await tick(30);
     expect(h.writeCount()).toBe(1);
@@ -2788,16 +3178,18 @@ describe('a leaving session never loses its last edits to a queue', () => {
     // controls, and the reason it is not deleted, is that neither the identity
     // arm nor the insert refusal fires on an account whose own empty record is
     // exactly what it committed: writing it loses nothing, and refusing would
-    // quiesce a healthy owner for no gain.
+    // quiesce a healthy owner for no gain. The record is the empty default the
+    // join installed, at revision zero, under its minted name.
     const h = await loadedStore({
       rowLoad: { kind: 'absent' },
-      livePlotId: MINTED_PLOT_ID,
-      serialize: () => persistedFixture({ layout: [], trophies: [], rev: 0 }),
       writeRow: async (input) => ({
         kind: input.expectedDurableRev === null ? 'inserted' : 'updated',
         durableRev: '1',
       }),
     });
+    expect(h.record()?.plotId).toBe(MINTED_PLOT_ID);
+    expect(h.record()?.rev).toBe(0);
+    expect(h.record()?.layout).toEqual([]);
     h.store.markDirty(OWNER_KEY);
     h.store.save(OWNER_KEY);
     await tick(30);
@@ -2823,20 +3215,8 @@ describe('a leaving session never loses its last edits to a queue', () => {
     // is pinned on its own, with literals and its own mutants, in
     // tests/server/freehold_write_seal.test.ts; what this case proves is the
     // outcome, that a touched reseed never lands on the row.
-    let seeded = false;
-    const h = await loadedStore({
-      rowLoad: { kind: 'absent' },
-      livePlotId: () => (seeded ? PENDING_FREEHOLD_PLOT_ID : MINTED_PLOT_ID),
-      serialize: () =>
-        seeded
-          ? // The fresh default, then ONE edit on top of it: not pristine any more.
-            persistedFixture({ tier: 'cottage', layout: [], trophies: [], rev: 1 })
-          : persistedFixture({ tier: 'cottage', rev: 7 }),
-      writeRow: async (input) => ({
-        kind: input.expectedDurableRev === null ? 'inserted' : 'updated',
-        durableRev: '2',
-      }),
-    });
+    const h = await loadedStore({ ...rowRemembered() });
+    h.edit(OWNER_KEY, { ...furnishedEdit(7), tier: 'cottage' });
     h.store.markDirty(OWNER_KEY);
     h.store.save(OWNER_KEY);
     await tick(30);
@@ -2844,7 +3224,11 @@ describe('a leaving session never loses its last edits to a queue', () => {
     expect(h.writes[0].wireRev).toBe(7);
     expect(h.writes[0].layoutJson).not.toBe('[]');
 
-    seeded = true;
+    // The fresh default, then ONE edit on top of it: not pristine any more.
+    await h.rejoinOverEviction();
+    h.edit(OWNER_KEY, { tier: 'cottage' });
+    expect(h.record()?.plotId).toBe(PENDING_FREEHOLD_PLOT_ID);
+    expect(h.record()?.rev).toBe(1);
     h.store.saveAllDirty();
     await tick(30);
     // The absence of a second write IS the assertion: without it the row would
@@ -2861,15 +3245,26 @@ describe('a leaving session never loses its last edits to a queue', () => {
     // discriminator has to be strictly-below rather than not-above: an entry
     // that committed seven and is handed a record back at seven is looking at
     // its own document, not at a different record.
-    let rev = 7;
+    //
+    // THE REPLAY ITSELF, in production order: the owner leaves with the house
+    // at seven committed, the clean entry is collected and removePlayer evicts,
+    // and the rejoin's handshake reads the row back, so the join installs a
+    // record AT seven, the revision the entry knows. That is the restart W1
+    // describes, reached through the read a rejoin after a clean leave makes.
     const h = await loadedStore({
       rowLoad: { kind: 'row', row: rowFixture({ wireRev: '7' }) },
       normalized: { kind: 'loaded', state: persistedFixture({ rev: 7 }), repaired: [] },
-      serialize: () => persistedFixture({ rev }),
       writeRow: async () => ({ kind: 'updated', durableRev: '9' }),
     });
-    // The replay itself: same revision, so the probe sees no movement and only
-    // an explicit mark arms it. It must be WRITTEN, not refused.
+    await h.leave();
+    expect(h.record()).toBeUndefined();
+    expect(h.store.stats().entries).toBe(0);
+    const replay = await h.store.preload(ACCOUNT_ID);
+    h.join(replay);
+    expect(h.record()?.rev).toBe(7);
+    expect(h.record()?.plotId).toBe(ROW_PLOT_ID);
+    // Same revision, so the probe sees no movement and only an explicit mark
+    // arms it. It must be WRITTEN, not refused.
     h.store.markDirty(OWNER_KEY);
     h.store.saveAllDirty();
     await tick(30);
@@ -2879,7 +3274,7 @@ describe('a leaving session never loses its last edits to a queue', () => {
 
     // And the ordinary case after it: the returning player edits, the revision
     // climbs, and the write lands.
-    rev = 8;
+    h.edit(OWNER_KEY, { rev: 8 });
     h.store.saveAllDirty();
     await tick(30);
     expect(h.writeCount()).toBe(2);
@@ -2897,14 +3292,20 @@ describe('a leaving session never loses its last edits to a queue', () => {
     // case is the same-account character swap: the record the store sees belongs
     // to the previous session, carries the SAME real plot name, and sits below
     // the revision this entry committed.
-    let rev = 7;
+    //
+    // BUILT the way one realm reaches it: the record sits at six, another realm
+    // sharing this database writes the row forward to seven, and this realm's
+    // entry re-reads it through preload's already-live arm while the record
+    // stays (`rejoinBeforeRemoval`). The SAME real name throughout, so the name
+    // comparison cannot be what refuses this and only the revision can.
+    let rowRev = 6;
     const h = await loadedStore({
-      rowLoad: { kind: 'row', row: rowFixture({ wireRev: '7' }) },
-      normalized: { kind: 'loaded', state: persistedFixture({ rev: 7 }), repaired: [] },
-      // The SAME real name throughout, so the name comparison cannot be what
-      // refuses this and only the revision can.
-      livePlotId: ROW_PLOT_ID,
-      serialize: () => persistedFixture({ rev }),
+      rowLoad: { kind: 'row', row: rowFixture({ wireRev: '6' }) },
+      normalized: () => ({
+        kind: 'loaded',
+        state: persistedFixture({ rev: rowRev }),
+        repaired: [],
+      }),
       writeRow: async () => ({ kind: 'updated', durableRev: '9' }),
     });
     h.store.markDirty(OWNER_KEY);
@@ -2912,7 +3313,10 @@ describe('a leaving session never loses its last edits to a queue', () => {
     await tick(30);
     expect(h.writeCount()).toBe(1);
 
-    rev = 6;
+    rowRev = 7;
+    await h.rejoinBeforeRemoval();
+    expect(h.record()?.rev).toBe(6);
+    expect(h.record()?.plotId).toBe(ROW_PLOT_ID);
     h.store.saveAllDirty();
     await tick(30);
     expect(h.writeCount()).toBe(1);
@@ -2938,37 +3342,23 @@ describe('a leaving session never loses its last edits to a queue', () => {
     // first session and a RESEED (ensureFreeholdRecord after an eviction, which
     // has no install in front of it) carries the stand-in. The two differ, and
     // the name comparison fires.
-    let seeded = false;
-    const house = persistedFixture({ tier: 'cottage', condition: 91, rev: 7 });
-    const h = await loadedStore({
-      rowLoad: { kind: 'absent' },
-      // The record's identity: the MINTED one while it is the installed record,
-      // the stand-in once it has been reseeded without an install.
-      livePlotId: () => (seeded ? PENDING_FREEHOLD_PLOT_ID : 'plot:minted1'),
-      serialize: () =>
-        seeded
-          ? // The reseeded default, edited past the entry's committed revision.
-            persistedFixture({
-              tier: 'inn_room',
-              layout: [],
-              trophies: [],
-              condition: 100,
-              visitPolicy: 'closed',
-              rev: 9,
-            })
-          : house,
-      writeRow: async (input) => ({
-        kind: input.expectedDurableRev === null ? 'inserted' : 'updated',
-        durableRev: '2',
-      }),
-    });
+    const h = await loadedStore({ ...rowRemembered() });
+    // The installed record carries the MINTED name, and the session builds a
+    // house on it.
+    expect(h.record()?.plotId).toBe('plot:minted1');
+    h.edit(OWNER_KEY, { ...furnishedEdit(7), tier: 'cottage', condition: 91 });
     h.store.saveAllDirty();
     await tick(30);
     expect(h.writeCount()).toBe(1);
     expect(h.writes[0].layoutJson).not.toBe('[]');
     expect(h.writes[0].plotId).toBe('plot:minted1');
 
-    seeded = true;
+    // Reseeded without an install, then edited past the entry's committed
+    // revision: the stand-in name, the empty default, revision nine.
+    await h.rejoinOverEviction();
+    h.edit(OWNER_KEY, { rev: 9 });
+    expect(h.record()?.plotId).toBe(PENDING_FREEHOLD_PLOT_ID);
+    expect(h.record()?.layout).toEqual([]);
     h.store.saveAllDirty();
     await tick(30);
     // NO SECOND WRITE. The row keeps the house, and the owner is write-blocked
@@ -2983,29 +3373,14 @@ describe('a leaving session never loses its last edits to a queue', () => {
     // `>`. Kept separate so a future change that only moves a boundary is still
     // caught: this one is refused by the NAME, with both revisions equal, so it
     // reaches the seal through a different arm than the case above.
-    let seeded = false;
-    const h = await loadedStore({
-      rowLoad: { kind: 'absent' },
-      livePlotId: () => (seeded ? PENDING_FREEHOLD_PLOT_ID : 'plot:minted1'),
-      serialize: () =>
-        seeded
-          ? persistedFixture({
-              tier: 'inn_room',
-              layout: [],
-              trophies: [],
-              condition: 100,
-              visitPolicy: 'closed',
-              rev: 7,
-            })
-          : persistedFixture({ tier: 'cottage', condition: 91, rev: 7 }),
-      writeRow: async (input) => ({
-        kind: input.expectedDurableRev === null ? 'inserted' : 'updated',
-        durableRev: '2',
-      }),
-    });
+    const h = await loadedStore({ ...rowRemembered() });
+    h.edit(OWNER_KEY, { ...furnishedEdit(7), tier: 'cottage', condition: 91 });
     h.store.saveAllDirty();
     await tick(30);
-    seeded = true;
+    expect(h.writeCount()).toBe(1);
+    await h.rejoinOverEviction();
+    h.edit(OWNER_KEY, { rev: 7 });
+    expect(h.record()?.plotId).toBe(PENDING_FREEHOLD_PLOT_ID);
     h.store.markDirty(OWNER_KEY);
     h.store.saveAllDirty();
     await tick(30);
@@ -3020,7 +3395,6 @@ describe('a leaving session never loses its last edits to a queue', () => {
     // general. Identical shape, one difference: this entry loaded a ROW, so its
     // cached name is the row's and the seeded default's stand-in differs from
     // it. The name comparison fires and the house survives.
-    let seeded = false;
     const h = await loadedStore({
       rowLoad: { kind: 'row', row: rowFixture({ wireRev: '7' }) },
       normalized: {
@@ -3028,21 +3402,11 @@ describe('a leaving session never loses its last edits to a queue', () => {
         state: persistedFixture({ tier: 'cottage', condition: 91, rev: 7 }),
         repaired: [],
       },
-      livePlotId: () => (seeded ? PENDING_FREEHOLD_PLOT_ID : ROW_PLOT_ID),
-      serialize: () =>
-        seeded
-          ? persistedFixture({
-              tier: 'inn_room',
-              layout: [],
-              trophies: [],
-              condition: 100,
-              visitPolicy: 'closed',
-              rev: 9,
-            })
-          : persistedFixture({ tier: 'cottage', condition: 91, rev: 7 }),
       writeRow: async () => ({ kind: 'updated', durableRev: '8' }),
     });
-    seeded = true;
+    await h.rejoinOverEviction();
+    h.edit(OWNER_KEY, { rev: 9 });
+    expect(h.record()?.plotId).toBe(PENDING_FREEHOLD_PLOT_ID);
     h.store.saveAllDirty();
     await tick(30);
     expect(h.writeCount()).toBe(0);
@@ -3068,47 +3432,22 @@ describe('a leaving session never loses its last edits to a queue', () => {
     // was reverted. The fix is at the source instead: the record is installed
     // carrying the minted identity, so the re-read entry and the live record
     // agree and there is nothing for the seal to refuse.
-    let inserted = false;
-    let rev = 4;
-    const h = harness({
-      readRow: async (): Promise<FreeholdRowLoad> =>
-        inserted
-          ? { kind: 'row', row: rowFixture({ plotId: MINTED_PLOT_ID, wireRev: String(rev) }) }
-          : { kind: 'absent' },
-      normalized: {
-        kind: 'loaded',
-        state: persistedFixture({ plotId: MINTED_PLOT_ID, rev: 4 }),
-        repaired: [],
-      },
-      // The record installed on the absent arm carries the id the store minted,
-      // which is what the harness's mint returns first.
-      livePlotId: MINTED_PLOT_ID,
-      hasLive: () => true,
-      serialize: () => persistedFixture({ rev }),
-      writeRow: async (input) => {
-        inserted = true;
-        return {
-          kind: input.expectedDurableRev === null ? 'inserted' : 'updated',
-          durableRev: '1',
-        };
-      },
-    });
-    h.store.retain(OWNER_KEY, ACCOUNT_ID);
-    await h.store.preload(ACCOUNT_ID);
+    const h = harness({ ...rowRemembered() });
+    await h.login();
+    h.edit(OWNER_KEY, furnishedEdit(4));
     h.store.saveAllDirty();
     await tick(30);
     expect(h.writeCount()).toBe(1);
     expect(h.writes[0].plotId).toBe(MINTED_PLOT_ID);
 
-    await h.store.flushAndRelease(OWNER_KEY);
-    h.store.saveAllDirty();
-    h.store.saveAllDirty();
-    expect(h.store.stats().entries).toBe(0);
-    h.store.retain(OWNER_KEY, ACCOUNT_ID);
-    await h.store.preload(ACCOUNT_ID);
-    await tick(30);
+    // The entry is dropped and RE-READ from the row it just inserted while the
+    // record it installed stays live: a second character's handshake lands in
+    // the first one's leave window and joins before its removal.
+    await h.rejoinBeforeRemoval();
+    expect(h.store.stats().loads).toBe(2);
+    expect(h.record()?.plotId).toBe(MINTED_PLOT_ID);
 
-    rev = 9;
+    h.edit(OWNER_KEY, { rev: 9 });
     h.store.saveAllDirty();
     await tick(30);
     // A SECOND WRITE LANDS, carrying the session's later edit, and nothing is
@@ -3132,7 +3471,6 @@ describe('a leaving session never loses its last edits to a queue', () => {
     // stand-in. Mutating the pristine arm away leaves this case green. That is
     // recorded rather than dressed up, and the arm's own comment says why it is
     // still kept.
-    let seeded = false;
     const h = await loadedStore({
       rowLoad: { kind: 'row', row: rowFixture({ wireRev: '0', tier: 'manor' }) },
       normalized: {
@@ -3142,11 +3480,11 @@ describe('a leaving session never loses its last edits to a queue', () => {
         state: persistedFixture({ tier: 'manor', layout: [], trophies: [], rev: 0 }),
         repaired: [],
       },
-      livePlotId: () => (seeded ? PENDING_FREEHOLD_PLOT_ID : ROW_PLOT_ID),
-      serialize: () => persistedFixture({ tier: 'inn_room', layout: [], trophies: [], rev: 0 }),
       writeRow: async () => ({ kind: 'updated', durableRev: '8' }),
     });
-    seeded = true;
+    await h.rejoinOverEviction();
+    expect(h.record()?.plotId).toBe(PENDING_FREEHOLD_PLOT_ID);
+    expect(h.record()?.tier).toBe('inn_room');
     h.store.markDirty(OWNER_KEY);
     h.store.save(OWNER_KEY);
     await tick(30);
@@ -3163,20 +3501,19 @@ describe('a leaving session never loses its last edits to a queue', () => {
     // revision has not regressed, the record is not pristine, and the empty
     // tier-0 default lands on the house. `entry.state.rev + 1` edits is all it
     // takes, so this is two or three furnishings once that writer exists.
-    let seeded = false;
     const h = await loadedStore({
       rowLoad: { kind: 'row', row: rowFixture({ wireRev: '2' }) },
       normalized: { kind: 'loaded', state: persistedFixture({ rev: 2 }), repaired: [] },
-      // The live record is a FRESH SEED that has since been edited three times,
-      // so its revision is above the entry's and its content is still empty.
-      livePlotId: () => (seeded ? PENDING_FREEHOLD_PLOT_ID : ROW_PLOT_ID),
-      serialize: () =>
-        seeded
-          ? persistedFixture({ layout: [], trophies: [], rev: 3 })
-          : persistedFixture({ rev: 2 }),
       writeRow: async () => ({ kind: 'updated', durableRev: '8' }),
     });
-    seeded = true;
+    // The live record becomes a FRESH SEED that is then edited three times, so
+    // its revision is above the entry's and its content is still empty.
+    await h.rejoinOverEviction();
+    h.edit(OWNER_KEY);
+    h.edit(OWNER_KEY);
+    h.edit(OWNER_KEY);
+    expect(h.record()?.rev).toBe(3);
+    expect(h.record()?.layout).toEqual([]);
     h.store.saveAllDirty();
     await tick(30);
     // The absence of the write IS the assertion: the row keeps the house.
@@ -3194,20 +3531,19 @@ describe('a leaving session never loses its last edits to a queue', () => {
     // fixture carried the STAND-IN when it was written, which is the state the
     // install fix removed; it carries the installed name now, and the title says
     // so rather than describing a record no online host produces.
-    let rev = 3;
     const h = await loadedStore({
       rowLoad: { kind: 'absent' },
-      livePlotId: MINTED_PLOT_ID,
-      serialize: () => persistedFixture({ rev }),
       writeRow: async (input) => ({
         kind: input.expectedDurableRev === null ? 'inserted' : 'updated',
-        durableRev: String(rev),
+        durableRev: String(input.wireRev),
       }),
     });
+    expect(h.record()?.plotId).toBe(MINTED_PLOT_ID);
+    h.edit(OWNER_KEY, furnishedEdit(3));
     for (const next of [4, 5, 6]) {
       h.store.saveAllDirty();
       await tick(30);
-      rev = next;
+      h.edit(OWNER_KEY, { rev: next });
     }
     h.store.saveAllDirty();
     await tick(30);
@@ -3223,14 +3559,9 @@ describe('a leaving session never loses its last edits to a queue', () => {
     // sharpest: a reconnect after a dropped socket is the very event that
     // produced the capture. Releasing at the read lost the edits outright.
     let granted = 0;
-    let live = true;
     const h = await loadedStore({
       rowLoad: { kind: 'row', row: rowFixture() },
       normalized: { kind: 'loaded', state: persistedFixture({ rev: 5 }), repaired: [] },
-      serialize: () => persistedFixture({ rev: 6 }),
-      // Live while the session is leaving (which is what lets the capture be
-      // taken), then gone, which is what removePlayer does right after.
-      hasLive: () => live,
       // The load takes a permit, the LEAVE write is refused one (which is what
       // leaves the capture outstanding), and the sweep after it gets one.
       acquirePermit: async () => {
@@ -3239,11 +3570,13 @@ describe('a leaving session never loses its last edits to a queue', () => {
       },
       writeRow: async () => ({ kind: 'updated', durableRev: '8' }),
     });
-    await h.store.flushAndRelease(OWNER_KEY);
+    h.edit(OWNER_KEY, { rev: 6 });
+    // The whole leave: the capture is taken while the record is live, and
+    // removePlayer evicts it the instant the flush returns.
+    await h.leave();
     await tick(20);
     expect(h.store.stats().leaveCaptures).toBe(1);
-    // removePlayer evicts the record the instant the leave returns.
-    live = false;
+    expect(h.record()).toBeUndefined();
 
     // The handshake reads, then dies before the join.
     await h.store.preload(ACCOUNT_ID);
@@ -3264,66 +3597,96 @@ describe('a leaving session never loses its last edits to a queue', () => {
     // the same-account character swap, where the record retain sees belongs to
     // the PREVIOUS session and removePlayer is explicitly allowed to evict it
     // afterwards. Comparing revisions fails closed instead.
-    let live = true;
-    let liveRev = 5;
-    let granted = 0;
-    const h = await loadedStore({
-      rowLoad: { kind: 'row', row: rowFixture() },
-      normalized: { kind: 'loaded', state: persistedFixture({ rev: 5 }), repaired: [] },
-      serialize: () => persistedFixture({ rev: liveRev }),
-      hasLive: () => live,
-      acquirePermit: async () => {
-        granted += 1;
-        return granted === 1 ? { release: () => {} } : null;
-      },
-    });
-    liveRev = 6;
-    await h.store.flushAndRelease(OWNER_KEY);
-    await tick(20);
-    expect(h.store.stats().leaveCaptures).toBe(1);
-    live = false;
+    //
+    // THREE JOINS, each in its own world, because each is a different moment
+    // and no one sequence reaches all three. In every one the owner edits to
+    // revision six and leaves, the leave write is refused a permit, and the
+    // capture is left outstanding.
+    const capturedLeaver = async (): Promise<Harness> => {
+      let granted = 0;
+      const h = await loadedStore({
+        rowLoad: { kind: 'row', row: rowFixture() },
+        normalized: { kind: 'loaded', state: persistedFixture({ rev: 5 }), repaired: [] },
+        acquirePermit: async () => {
+          granted += 1;
+          return granted === 1 ? { release: () => {} } : null;
+        },
+      });
+      h.edit(OWNER_KEY, { rev: 6 });
+      return h;
+    };
 
-    // No record at all: nothing to confirm.
-    h.store.retain(OWNER_KEY, ACCOUNT_ID);
-    expect(h.store.stats().leaveCaptures).toBe(1);
+    // NO RECORD AT ALL when the join retains: the returning session's handshake
+    // read while the owner was still in the world, so its answer carries no
+    // state, the install puts nothing in, and addPlayer's seed comes after the
+    // retain. Nothing to confirm.
+    const bare = await capturedLeaver();
+    const returning = await bare.store.preload(ACCOUNT_ID);
+    await bare.leave();
+    expect(bare.store.stats().leaveCaptures).toBe(1);
+    expect(bare.record()).toBeUndefined();
+    bare.join(returning);
+    expect(bare.store.stats().leaveCaptures).toBe(1);
 
-    // A record exists but is NOT the offered document: the same-account swap,
-    // where the install was skipped and this record is the other session's.
-    live = true;
-    liveRev = 5;
-    h.store.retain(OWNER_KEY, ACCOUNT_ID);
-    expect(h.store.stats().leaveCaptures).toBe(1);
+    // A RECORD THAT IS NOT THE OFFERED DOCUMENT: two characters are in the
+    // world, one leaves, and the one that stayed edits on before a third joins.
+    // The record the third retains against is the other sessions' own, at a
+    // revision the capture does not carry.
+    const sibling = await capturedLeaver();
+    sibling.join(await sibling.store.preload(ACCOUNT_ID));
+    await sibling.leave();
+    expect(sibling.store.stats().leaveCaptures).toBe(1);
+    sibling.edit(OWNER_KEY, { rev: 7 });
+    sibling.join(await sibling.store.preload(ACCOUNT_ID));
+    expect(sibling.store.stats().leaveCaptures).toBe(1);
 
-    // ...and now it genuinely carries those edits.
-    liveRev = 6;
-    h.store.retain(OWNER_KEY, ACCOUNT_ID);
-    expect(h.store.stats().leaveCaptures).toBe(0);
+    // ...and a record that genuinely carries those edits: the rejoin replays the
+    // capture and the join installs it.
+    const carried = await capturedLeaver();
+    await carried.leave();
+    const rejoin = await carried.store.preload(ACCOUNT_ID);
+    expect(rejoin.state?.rev).toBe(6);
+    expect(carried.store.stats().leaveCaptures).toBe(1);
+    carried.join(rejoin);
+    expect(carried.record()?.rev).toBe(6);
+    expect(carried.store.stats().leaveCaptures).toBe(0);
   });
 
-  it('writes the LIVE record, never a capture, once a record exists again', async () => {
-    // The mirror of the case above. After a rejoin the live record is the only
-    // authority; writing a capture over it would put the row out of step with
-    // the house the player is standing in, and the next sweep would undo it.
-    let liveRev = 6;
+  it('writes the LIVE record, never a capture, whenever a record exists', async () => {
+    // The mirror of the case above. While a record exists the live record is
+    // the only authority; writing a capture over it would put the row out of
+    // step with the house the player is standing in, and the next sweep would
+    // undo it.
+    //
+    // RETITLED from "once a record exists again". A record that comes back after
+    // an eviction arrives through a join, and that join either installs the
+    // capture (so retain releases it and nothing competes) or installs nothing
+    // (so the record is a seed and the seal refuses it). The reachable state in
+    // which a live record and a capture meet at a write is a record that never
+    // left: a second character of the account stays in the world.
     let granted = 0;
     const permit = deferred<{ release(): void } | null>();
     const h = await loadedStore({
       rowLoad: { kind: 'row', row: rowFixture() },
       normalized: { kind: 'loaded', state: persistedFixture({ rev: 5 }), repaired: [] },
-      serialize: () => persistedFixture({ rev: liveRev }),
       acquirePermit: async () => {
         granted += 1;
         return granted === 1 ? { release: () => {} } : await permit.promise;
       },
       writeRow: async () => ({ kind: 'updated', durableRev: '9' }),
     });
-    void h.store.flushAndRelease(OWNER_KEY);
+    h.join(await h.store.preload(ACCOUNT_ID));
+    h.edit(OWNER_KEY, { rev: 6 });
+    const leaving = h.leave();
     await tick(10);
     expect(h.writeCount()).toBe(0);
+    expect(h.store.stats().leaveCaptures).toBe(1);
 
-    // The rejoining session edits, so the live record is ahead of the capture.
-    liveRev = 15;
+    // The character that stayed edits on, so the live record is ahead of the
+    // capture when the write finally samples.
+    h.edit(OWNER_KEY, { rev: 15 });
     permit.resolve({ release: () => {} });
+    await leaving;
     await tick(40);
     expect(h.writeCount()).toBe(1);
     expect(h.writes[0].wireRev).toBe(15);
@@ -3346,24 +3709,39 @@ describe('a leaving session never loses its last edits to a queue', () => {
   // assertion it does not make is worse than no case.
 
   it('never lets a captured document shadow a later live edit', async () => {
-    // A live record always wins. If the capture could outrank it, a rejoining
-    // session's edits would be silently replaced by the previous session's.
-    let rev = 6;
+    // A live record always wins. If the capture could outrank it, a remaining
+    // session's edits would be silently replaced by the leaving session's.
+    //
+    // THE CAPTURE IS STILL OUTSTANDING when the later write samples, which the
+    // earlier form of this case never arranged: its leave write landed and
+    // settle released the capture before the second write existed, so a
+    // capture-first read could not have been seen. Here the leave write is
+    // REFUSED a permit, so the capture survives, dirty, beside a record that a
+    // second character keeps in the world and then edits past it.
+    let granted = 0;
     const h = await loadedStore({
       rowLoad: { kind: 'row', row: rowFixture() },
       normalized: { kind: 'loaded', state: persistedFixture({ rev: 5 }), repaired: [] },
-      serialize: () => persistedFixture({ rev }),
+      acquirePermit: async () => {
+        granted += 1;
+        return granted === 2 ? null : { release: () => {} };
+      },
       writeRow: async () => ({ kind: 'updated', durableRev: '9' }),
     });
-    h.store.retain(OWNER_KEY);
-    await h.store.flushAndRelease(OWNER_KEY);
+    h.join(await h.store.preload(ACCOUNT_ID));
+    h.edit(OWNER_KEY, { rev: 6 });
+    await h.leave();
     await tick(30);
-    expect(h.writes.at(-1)?.wireRev).toBe(6);
+    expect(h.writeCount()).toBe(0);
+    expect(h.store.stats().leaveCaptures).toBe(1);
 
-    rev = 7;
+    h.edit(OWNER_KEY, { rev: 7 });
     h.store.saveAllDirty();
     await tick(30);
+    expect(h.writeCount()).toBe(1);
     expect(h.writes.at(-1)?.wireRev).toBe(7);
+    // And the capture goes with the write that superseded it.
+    expect(h.store.stats().leaveCaptures).toBe(0);
   });
 });
 
@@ -3381,8 +3759,9 @@ describe('the store refuses what it cannot represent, rather than repairing it',
     expect(loaded.hold?.kind).toBe('malformed');
     expect(loaded.hold?.detail).toBe('wire_rev_shape');
     expect(loaded.state).toBeNull();
-    // Held, so no write can go out and the row keeps its revision.
-    h.store.retain(OWNER_KEY, ACCOUNT_ID);
+    // Held, so no write can go out and the row keeps its revision, however the
+    // join goes on to seed the record.
+    h.join(loaded);
     h.store.markDirty(OWNER_KEY);
     h.store.save(OWNER_KEY);
     h.store.saveAllDirty();
@@ -3442,11 +3821,9 @@ describe('the store refuses what it cannot represent, rather than repairing it',
 
 describe('a run of thrown writes is a RUN, bounded in time', () => {
   it('does not quiesce on blips spread further apart than the window', async () => {
-    let rev = 7;
     const h = await loadedStore({
       rowLoad: { kind: 'row', row: rowFixture() },
       normalized: { kind: 'loaded', state: persistedFixture({ rev: 7 }), repaired: [] },
-      serialize: () => persistedFixture({ rev }),
       writeRow: async () => {
         throw new Error('connection terminated unexpectedly');
       },
@@ -3455,7 +3832,7 @@ describe('a run of thrown writes is a RUN, bounded in time', () => {
     // window this is three strikes and a permanently quiesced owner; with it
     // each is a fresh event.
     for (let i = 0; i < FREEHOLD_PERSIST_MAX_WRITE_ERRORS + 2; i++) {
-      rev += 1;
+      h.edit(OWNER_KEY);
       h.setNow(10_000 + i * (FREEHOLD_PERSIST_WRITE_ERROR_WINDOW_MS + 1));
       h.store.saveAllDirty();
       await tick(30);
@@ -3465,17 +3842,15 @@ describe('a run of thrown writes is a RUN, bounded in time', () => {
   });
 
   it('still quiesces on a run INSIDE the window, so the window is not an escape', async () => {
-    let rev = 7;
     const h = await loadedStore({
       rowLoad: { kind: 'row', row: rowFixture() },
       normalized: { kind: 'loaded', state: persistedFixture({ rev: 7 }), repaired: [] },
-      serialize: () => persistedFixture({ rev }),
       writeRow: async () => {
         throw new Error('connection terminated unexpectedly');
       },
     });
     for (let i = 0; i < FREEHOLD_PERSIST_MAX_WRITE_ERRORS; i++) {
-      rev += 1;
+      h.edit(OWNER_KEY);
       h.setNow(10_000 + i * 1_000);
       h.store.saveAllDirty();
       await tick(30);
@@ -3534,8 +3909,7 @@ describe('nothing removes an entry that still owes a durable write', () => {
         return granted === 1 ? { release: () => {} } : null;
       },
     });
-    h.store.retain(OWNER_KEY, ACCOUNT_ID);
-    await h.store.preload(ACCOUNT_ID);
+    await h.login();
     h.store.markDirty(OWNER_KEY);
     h.store.save(OWNER_KEY);
     await tick(30);
@@ -3544,7 +3918,10 @@ describe('nothing removes an entry that still owes a durable write', () => {
     expect(h.writeCount()).toBe(0);
     expect(h.store.stats().running).toBe(0);
     expect(h.store.stats().dirty).toBe(1);
-    await h.store.flushAndRelease(OWNER_KEY);
+    // The whole leave, so the six sweeps below run with the reference gone AND
+    // the record gone, which is what six sweeps after a logout look like.
+    await h.leave();
+    expect(h.record()).toBeUndefined();
     for (let i = 0; i < 6; i++) h.store.saveAllDirty();
     await tick(20);
     expect(h.store.stats().entries).toBe(1);
@@ -3557,13 +3934,24 @@ describe('nothing removes an entry that still owes a durable write', () => {
     // "entry went missing under a live session" class that retain's reload
     // exists to repair. Both removal paths have to know that, which is why the
     // guard lives in the shared predicate rather than in one of them.
-    const gate = deferred<FreeholdRowLoad>();
-    const h = harness({ readRow: async () => await gate.promise });
-    h.store.retain(OWNER_KEY, ACCOUNT_ID);
-    const loading = h.store.preload(ACCOUNT_ID);
+    //
+    // A session holds that read open the way production does: its handshake
+    // was wider than two sweeps, so the join's retain recreated the entry and
+    // re-read it, and the session leaves before that read lands.
+    let gate: Deferred<FreeholdRowLoad> | null = null;
+    const h = harness({
+      readRow: async () => (gate ? await gate.promise : { kind: 'row', row: rowFixture() }),
+    });
+    const answer = await h.store.preload(ACCOUNT_ID);
+    h.store.saveAllDirty();
+    h.store.saveAllDirty();
+    expect(h.store.stats().entries).toBe(0);
+    gate = deferred<FreeholdRowLoad>();
+    h.join(answer);
     await tick(10);
+    expect(h.store.stats().loaded).toBe(0);
     // The session goes away while the read is still out.
-    await h.store.flushAndRelease(OWNER_KEY);
+    await h.leave();
     expect(h.store.stats().entries).toBe(1);
     // ...and the sweep leaves it alone too, for the same reason.
     h.store.saveAllDirty();
@@ -3572,7 +3960,6 @@ describe('nothing removes an entry that still owes a durable write', () => {
     expect(h.store.stats().entries).toBe(1);
 
     gate.resolve({ kind: 'row', row: rowFixture() });
-    await loading;
     await tick(20);
     expect(h.store.stats().loaded).toBe(1);
   });
@@ -3584,13 +3971,12 @@ describe('nothing removes an entry that still owes a durable write', () => {
       rowLoad: { kind: 'row', row: rowFixture() },
       writeRow: async () => ({ kind: 'stale', durableRev: '99' }),
     });
-    h.store.retain(OWNER_KEY, ACCOUNT_ID);
-    await h.store.preload(ACCOUNT_ID);
+    await h.login();
     h.store.markDirty(OWNER_KEY);
     h.store.save(OWNER_KEY);
     await tick(30);
     expect(h.store.stats().quiesced).toBe(1);
-    await h.store.flushAndRelease(OWNER_KEY);
+    await h.leave();
     expect(h.store.stats().entries).toBe(0);
   });
 });
@@ -3603,36 +3989,40 @@ describe('a re-armed write inherits the leaving capture', () => {
     // If the capture were cleared at the top of settle, that re-armed write
     // would run past eviction with nothing to send and the session's last edit
     // would be gone, silently.
-    let rev = 6;
-    let evicted = false;
+    //
+    // THE ORDER THE TITLE NAMES, which the earlier form did not reach: it let
+    // the running write commit before the eviction, so the re-armed write
+    // sampled the LIVE record and the capture was never what it carried. Here
+    // the leave stops waiting at its deadline and removePlayer evicts FIRST,
+    // and only then does the running write commit, so the re-arm genuinely
+    // runs after eviction and the capture is the only document it can carry.
     const gates: Array<Deferred<FreeholdUpsertResult>> = [];
     const h = await loadedStore({
       rowLoad: { kind: 'row', row: rowFixture() },
       normalized: { kind: 'loaded', state: persistedFixture({ rev: 5 }), repaired: [] },
-      serialize: () => (evicted ? null : persistedFixture({ rev })),
       writeRow: async () => {
         const gate = deferred<FreeholdUpsertResult>();
         gates.push(gate);
         return await gate.promise;
       },
     });
+    h.edit(OWNER_KEY, { rev: 6 });
     h.store.markDirty(OWNER_KEY);
     h.store.save(OWNER_KEY);
     await tick(20);
     expect(h.writeCount()).toBe(1);
 
     // A later edit while that write is out, then the leave.
-    rev = 7;
+    h.edit(OWNER_KEY, { rev: 7 });
     h.store.markDirty(OWNER_KEY);
     h.store.save(OWNER_KEY);
-    const leaving = h.store.flushAndRelease(OWNER_KEY);
+    const leaving = h.leave();
     await tick(5);
-    gates[0].resolve({ kind: 'updated', durableRev: '6' });
-    await tick(10);
     const deadline = h.deadlines.find((job) => job.ms === FREEHOLD_PERSIST_LEAVE_FLUSH_MS);
     deadline?.fire();
     await leaving;
-    evicted = true;
+    expect(h.record()).toBeUndefined();
+    gates[0].resolve({ kind: 'updated', durableRev: '6' });
     await tick(20);
     for (let round = 0; round < 20 && gates.length > 1; round++) {
       for (const gate of gates.splice(1)) gate.resolve({ kind: 'updated', durableRev: '7' });
@@ -3652,13 +4042,14 @@ describe('an entry that went missing under a live session is re-read, not left b
     // makes would be discarded at logout, which is precisely the outcome the
     // store exists to prevent.
     const h = harness({ rowLoad: { kind: 'row', row: rowFixture() } });
-    await h.store.preload(ACCOUNT_ID);
+    const answer = await h.store.preload(ACCOUNT_ID);
     // Two sweeps collect the never-retained entry, exactly as designed.
     h.store.saveAllDirty();
     h.store.saveAllDirty();
     expect(h.store.stats().entries).toBe(0);
 
-    h.store.retain(OWNER_KEY, ACCOUNT_ID);
+    // The join installs the answer and its retain finds no entry.
+    h.join(answer);
     await tick(20);
     // Loaded again, and therefore able to write.
     expect(h.store.stats().entries).toBe(1);
@@ -3674,11 +4065,16 @@ describe('an entry that went missing under a live session is re-read, not left b
     // so this reload would otherwise be the one durable read a realm with
     // housing disabled still issues, once per join, for a feature it does not
     // serve. A dark realm must touch the database not at all.
-    const h = harness({ rowLoad: { kind: 'row', row: rowFixture() }, enabled: () => false });
-    h.store.retain(OWNER_KEY, ACCOUNT_ID);
+    //
+    // The join on a dark realm carries the answer server/main.ts gives it
+    // without touching the store, and the sim's inserters honour the same flag,
+    // so no record is seeded either.
+    const h = harness({ rowLoad: { kind: 'row', row: rowFixture() }, dark: true });
+    h.join(freeholdPreloadUnavailable(ACCOUNT_ID, 'housing is disabled on this realm'));
     await tick(20);
     expect(h.calls).toEqual([]);
     expect(h.store.stats().loads).toBe(0);
+    expect(h.record()).toBeUndefined();
     // The entry still exists and is still write-blocked, which is what a dark
     // realm's store costs: one map entry per online account, removed on leave.
     // It is NOT loaded, and the two are separate measures precisely so an
@@ -3690,11 +4086,12 @@ describe('an entry that went missing under a live session is re-read, not left b
 
   it('costs no extra read on an ordinary join, where the entry IS loaded', async () => {
     const h = harness({ rowLoad: { kind: 'row', row: rowFixture() } });
-    await h.store.preload(ACCOUNT_ID);
+    const answer = await h.store.preload(ACCOUNT_ID);
     h.calls.length = 0;
-    h.store.retain(OWNER_KEY, ACCOUNT_ID);
+    h.join(answer);
     await tick(20);
     expect(h.calls).toEqual([]);
+    expect(h.record()?.plotId).toBe(ROW_PLOT_ID);
   });
 });
 
@@ -3758,29 +4155,24 @@ describe('the local write admission cap', () => {
   // owner, each with its own abort timer, and every other named producer would
   // sit behind them. The surplus waits here instead.
 
-  /** `count` loaded owners in ONE store, each with its own key. */
+  /** `count` owners in the world in ONE store, each with its own key and its
+   *  own record. */
   async function manyOwners(count: number, writeRow: () => Promise<FreeholdUpsertResult>) {
-    const h = harness({
-      rowLoad: { kind: 'row', row: rowFixture() },
-      writeRow,
-      serialize: (ownerKey: string) => persistedFixture({ rev: revs.get(ownerKey) ?? 5 }),
-    });
-    const revs = new Map<string, number>();
+    const h = harness({ rowLoad: { kind: 'row', row: rowFixture() }, writeRow });
+    const keys: string[] = [];
     for (let i = 0; i < count; i++) {
       const account = ACCOUNT_ID + i;
-      const key = `account:${account}`;
-      revs.set(key, 5);
-      h.store.retain(key);
-      await h.store.preload(account);
+      keys.push(`account:${account}`);
+      await h.login(account);
     }
-    return { h, revs };
+    return { h, keys };
   }
 
   it('never runs more than the cap at once, and drains everything anyway', async () => {
     const gates: Array<Deferred<FreeholdUpsertResult>> = [];
     let peak = 0;
     let inFlight = 0;
-    const { h, revs } = await manyOwners(40, async () => {
+    const { h, keys } = await manyOwners(40, async () => {
       inFlight++;
       peak = Math.max(peak, inFlight);
       const gate = deferred<FreeholdUpsertResult>();
@@ -3789,8 +4181,8 @@ describe('the local write admission cap', () => {
       inFlight--;
       return result;
     });
-    for (const key of revs.keys()) {
-      revs.set(key, 6);
+    for (const key of keys) {
+      h.edit(key, { rev: 6 });
       h.store.markDirty(key);
       h.store.save(key);
     }
@@ -3812,11 +4204,11 @@ describe('the local write admission cap', () => {
     // would lose the edit forever; the whole reason deferring is safe is that
     // the entry keeps owing the write.
     const gate = deferred<FreeholdUpsertResult>();
-    const { h, revs } = await manyOwners(FREEHOLD_PERSIST_MAX_ACTIVE_WRITES + 3, async () => {
+    const { h, keys } = await manyOwners(FREEHOLD_PERSIST_MAX_ACTIVE_WRITES + 3, async () => {
       return await gate.promise;
     });
-    for (const key of revs.keys()) {
-      revs.set(key, 6);
+    for (const key of keys) {
+      h.edit(key, { rev: 6 });
       h.store.markDirty(key);
       h.store.save(key);
     }
@@ -3837,13 +4229,13 @@ describe('the local write admission cap', () => {
     // a same-state filter and no behaviour test can isolate it; it is kept
     // because the two conditions are only equal by today's arithmetic.
     const gates: Array<Deferred<FreeholdUpsertResult>> = [];
-    const { h, revs } = await manyOwners(FREEHOLD_PERSIST_MAX_ACTIVE_WRITES + 2, async () => {
+    const { h, keys } = await manyOwners(FREEHOLD_PERSIST_MAX_ACTIVE_WRITES + 2, async () => {
       const gate = deferred<FreeholdUpsertResult>();
       gates.push(gate);
       return await gate.promise;
     });
-    for (const key of revs.keys()) {
-      revs.set(key, 6);
+    for (const key of keys) {
+      h.edit(key, { rev: 6 });
       h.store.markDirty(key);
       h.store.save(key);
     }
@@ -3892,10 +4284,10 @@ describe('an abandoned preload does not leak an entry', () => {
     // before game.join calls retain, and an entry removed in that window would
     // be replaced by a fresh UNLOADED one that can never write.
     const h = harness({ rowLoad: { kind: 'row', row: rowFixture() } });
-    await h.store.preload(ACCOUNT_ID);
+    const answer = await h.store.preload(ACCOUNT_ID);
     sweep(h, 1);
     expect(h.store.stats().entries).toBe(1);
-    h.store.retain(OWNER_KEY);
+    h.join(answer);
     sweep(h, FREEHOLD_PERSIST_ORPHAN_SWEEP_PASSES + 2);
     expect(h.store.stats().entries).toBe(1);
   });
@@ -3929,10 +4321,9 @@ describe('an abandoned preload does not leak an entry', () => {
     // arm the cases above could pass on a store that had quietly moved every
     // eviction onto a thirty-second delay.
     const h = harness({ rowLoad: { kind: 'row', row: rowFixture() } });
-    await h.store.preload(ACCOUNT_ID);
-    h.store.retain(OWNER_KEY);
+    await h.login();
     expect(h.store.stats().entries).toBe(1);
-    await h.store.flushAndRelease(OWNER_KEY);
+    await h.leave();
     expect(h.store.stats().entries).toBe(0);
   });
 });
@@ -3977,10 +4368,6 @@ describe('the two admission caps sum past the shared gate, and that is the accep
           releaseReads.push(() => resolve({ kind: 'row', row: rowFixture() }));
         }),
       normalized: { kind: 'loaded', state: persistedFixture({ rev: 5 }), repaired: [] },
-      // These entries load a ROW, so their live records carry the row's
-      // identity; the harness cannot infer that from a readRow FUNCTION the way
-      // it does from a rowLoad value.
-      livePlotId: ROW_PLOT_ID,
       acquirePermit: async (signal) => {
         const permit = await gate.acquire(signal);
         if (permit === null) return null;
@@ -4000,11 +4387,10 @@ describe('the two admission caps sum past the shared gate, and that is the accep
       const accountId = OTHER_ACCOUNT_ID + i;
       const key = `account:${accountId}`;
       writers.push(key);
-      h.store.retain(key, accountId);
       const loading = h.store.preload(accountId);
       await tick(10);
       releaseReads.shift()?.();
-      await loading;
+      h.join(await loading, accountId);
       h.store.markDirty(key);
     }
     h.store.saveAllDirty();
@@ -4103,11 +4489,17 @@ describe('the WHOLE preload is capped against the login budget', () => {
       readRow: async () => await gate.promise,
       normalized: { kind: 'loaded', state: persistedFixture({ rev: 5 }), repaired: [] },
     });
-    h.store.retain(OWNER_KEY, ACCOUNT_ID);
     const loading = h.store.preload(ACCOUNT_ID);
     await tick(20);
     fireBudget(h);
-    expect((await loading).hold?.kind).toBe('no_budget');
+    const refused = await loading;
+    expect(refused.hold?.kind).toBe('no_budget');
+    // The login goes ahead on the refusal: the join installs nothing and its
+    // retain gives the entry a reference. Its repair read rides the SAME
+    // single-flight slot, so no second read goes out.
+    h.join(refused);
+    await tick(10);
+    expect(h.calls.filter((call) => call === 'readRow')).toHaveLength(1);
     // NOTHING WRITTEN ON THE ENTRY AT ALL, which is three separate facts: no
     // hold, no `loaded`, and no failure booked against the entry. Asserting the
     // hold alone left a refusal that stamped `loaded` green, and a stamped
@@ -4116,15 +4508,19 @@ describe('the WHOLE preload is capped against the login budget', () => {
     expect(h.store.stats().loaded).toBe(0);
     expect(h.store.stats().entries).toBe(1);
 
-    // The read lands afterwards and the entry becomes writable, exactly as it
-    // would have if the login had waited.
+    // The read lands afterwards and the entry becomes loaded and unheld,
+    // exactly as it would have if the login had waited, and it knows the ROW:
+    // its durable revision and its name. (A second character's handshake reads
+    // that back through the already-live arm, which is why the answer carries no
+    // state: the join above seeded the record the refusal left it.)
     gate.resolve({ kind: 'row', row: rowFixture() });
     await tick(30);
     expect(h.store.stats().loaded).toBe(1);
     expect(h.store.stats().held).toBe(0);
     const replay = await h.store.preload(ACCOUNT_ID);
     expect(replay.hold).toBeNull();
-    expect(replay.state?.rev).toBe(5);
+    expect(replay.durableRev).toBe('7');
+    expect(replay.plotId).toBe(ROW_PLOT_ID);
   });
 
   it('creates NO row for a record the refused login is about to seed', async () => {
@@ -4147,29 +4543,26 @@ describe('the WHOLE preload is capped against the login budget', () => {
     // that a row is created under a name its record can never learn, and the
     // guard that delivers that is order-independent.
     const gate = deferred<FreeholdRowLoad>();
-    let seeded = false;
-    const h = harness({
-      readRow: async () => await gate.promise,
-      hasLive: () => seeded,
-      livePlotId: PENDING_FREEHOLD_PLOT_ID,
-    });
+    const h = harness({ readRow: async () => await gate.promise });
     const loading = h.store.preload(ACCOUNT_ID);
     await tick(20);
     fireBudget(h);
-    expect((await loading).hold?.kind).toBe('no_budget');
+    const refused = await loading;
+    expect(refused.hold?.kind).toBe('no_budget');
 
     // The read lands while the handshake is still below the budget refusal and
     // above the seed. NOTHING is live yet, so the load-side test cannot fire.
     gate.resolve({ kind: 'absent' });
     await tick(30);
+    expect(h.record()).toBeUndefined();
     const replay = await h.store.preload(ACCOUNT_ID);
     expect(replay.hold).toBeNull();
     expect(replay.plotId).toBe(MINTED_PLOT_ID);
 
     // Only now does the join reach addPlayer, and it seeds the STAND-IN because
     // installLoadedFreehold returned early on the no_budget hold.
-    seeded = true;
-    h.store.retain(OWNER_KEY, ACCOUNT_ID);
+    h.join(refused);
+    expect(h.record()?.plotId).toBe(PENDING_FREEHOLD_PLOT_ID);
 
     // Two sweeps, because a guard that refuses once is satisfied by a constant.
     h.store.saveAllDirty();
@@ -4199,20 +4592,15 @@ describe('the WHOLE preload is capped against the login budget', () => {
     // account fully logging out clears it; an earlier version of this case said
     // "one session", which is stronger than the code supports.
     const gate = deferred<FreeholdRowLoad>();
-    let seeded = false;
-    const h = harness({
-      readRow: async () => await gate.promise,
-      hasLive: () => seeded,
-      livePlotId: PENDING_FREEHOLD_PLOT_ID,
-    });
+    const h = harness({ readRow: async () => await gate.promise });
     const loading = h.store.preload(ACCOUNT_ID);
     await tick(20);
     fireBudget(h);
-    expect((await loading).hold?.kind).toBe('no_budget');
+    const refused = await loading;
+    expect(refused.hold?.kind).toBe('no_budget');
     gate.resolve({ kind: 'absent' });
     await tick(30);
-    seeded = true;
-    h.store.retain(OWNER_KEY, ACCOUNT_ID);
+    h.join(refused);
     h.store.saveAllDirty();
     await tick(40);
     expect(h.store.stats().quiesced).toBe(1);
@@ -4222,8 +4610,8 @@ describe('the WHOLE preload is capped against the login budget', () => {
     // flush runs while the record is still live and `removePlayer` evicts it
     // afterwards. A quiesced entry is BLOCKED, so its dirty clause stops counting
     // and it owes nothing: both removal paths may collect it.
-    await h.store.flushAndRelease(OWNER_KEY);
-    seeded = false;
+    await h.leave();
+    expect(h.record()).toBeUndefined();
     h.store.saveAllDirty();
     h.store.saveAllDirty();
     await tick(30);
@@ -4251,12 +4639,7 @@ describe('the WHOLE preload is capped against the login budget', () => {
     // and it is exact rather than conservative because classify runs inside the
     // load promise, before any surviving waiter's own race has resolved.
     const gate = deferred<FreeholdRowLoad>();
-    let seeded = false;
-    const h = harness({
-      readRow: async () => await gate.promise,
-      hasLive: () => seeded,
-      livePlotId: PENDING_FREEHOLD_PLOT_ID,
-    });
+    const h = harness({ readRow: async () => await gate.promise });
     const first = h.store.preload(ACCOUNT_ID);
     const second = h.store.preload(ACCOUNT_ID);
     await tick(20);
@@ -4266,7 +4649,8 @@ describe('the WHOLE preload is capped against the login budget', () => {
     );
     expect(armed.length).toBe(2);
     armed[0]?.fire();
-    expect((await first).hold?.kind).toBe('no_budget');
+    const refused = await first;
+    expect(refused.hold?.kind).toBe('no_budget');
 
     gate.resolve({ kind: 'absent' });
     const answer = await second;
@@ -4284,8 +4668,12 @@ describe('the WHOLE preload is capped against the login budget', () => {
     // write_failures 0 and quiesced 0, after which applyWriteResult caches the
     // record's stand-in and the seal's name comparison is inert by value
     // equality for the life of that entry.
-    seeded = true;
-    h.store.retain(OWNER_KEY, ACCOUNT_ID);
+    //
+    // BOTH JOINS, in that order: the refused one seeds, the sibling's install
+    // is discarded by load-once, and two sessions now share the stand-in.
+    h.join(refused);
+    h.join(answer);
+    expect(h.record()?.plotId).toBe(PENDING_FREEHOLD_PLOT_ID);
     h.store.saveAllDirty();
     await tick(40);
     // NO ROW IS CREATED, which is the thing that cannot be undone. The refusal
@@ -4319,8 +4707,9 @@ describe('the WHOLE preload is capped against the login budget', () => {
     gate.resolve({ kind: 'absent' });
     await tick(30);
 
-    // A FRESH entry, as the next login builds after the held one is collected.
-    await h.store.flushAndRelease(OWNER_KEY);
+    // A FRESH entry, as the next login builds once the first one's is gone:
+    // the refused handshake never joined, so two sweeps collect what its read
+    // left behind.
     h.store.saveAllDirty();
     h.store.saveAllDirty();
     await tick(30);
@@ -4431,11 +4820,11 @@ describe('the bounded drain', () => {
     const h = await loadedStore({
       rowLoad: { kind: 'row', row: rowFixture() },
       normalized: { kind: 'loaded', state: persistedFixture({ rev: 5 }), repaired: [] },
-      // The record moved. Nothing called markDirty, which is exactly the
-      // production shape: markDirty has no production caller.
-      serialize: () => persistedFixture({ rev: 6 }),
       writeRow: async () => ({ kind: 'updated', durableRev: '8' }),
     });
+    // The record moved. Nothing called markDirty, which is exactly the
+    // production shape: markDirty has no production caller.
+    h.edit(OWNER_KEY, { rev: 6 });
     expect(h.store.stats().dirty).toBe(0);
     await expect(h.store.idle(5_000)).resolves.toBe(true);
     expect(h.writeCount()).toBe(1);
@@ -4661,12 +5050,15 @@ describe('installLoadedFreehold', () => {
   });
 
   it('COUPLES the install to the seal: a reseed over an INSTALLED identity is refused', () => {
-    // THE COUPLING THE THREE FLIPPED SEAL CASES DO NOT HAVE. Each of those sets
-    // the live identity by fixture, so reverting the install arm leaves all
-    // three green and the eighth path's whole regression protection is one unit
-    // case in another describe. This one derives BOTH identities from the real
-    // sim: the record the install created, and the record ensureFreeholdRecord
-    // seeds after an eviction. Revert the install and it reds on the first line.
+    // THE COUPLING AT UNIT SCALE. The three flipped seal cases used to set the
+    // live identity by fixture, so reverting the install arm left all three
+    // green and this was the eighth path's whole regression protection. Since
+    // the harness was rebuilt on one live map they reach their records through
+    // the real install and the real seed too; this stays as the statement of
+    // the coupling with nothing but the sim in it: BOTH identities come from the
+    // real sim, the record the install created and the record
+    // ensureFreeholdRecord seeds after an eviction. Revert the install and it
+    // reds on the first line.
     const ctx = fakeCtx();
     installLoadedFreehold(
       ctx,
@@ -5204,8 +5596,9 @@ describe('the combined login port, which is what the server actually binds', () 
     const loaded = await h.store.preload(ACCOUNT_ID);
     expect(loaded.hold?.kind).toBe('read_threw');
     expect(loaded.state).toBeNull();
-    // WRITE-BLOCKED for the session, which is invariant 1.
-    h.store.retain(OWNER_KEY, ACCOUNT_ID);
+    // WRITE-BLOCKED for the session, which is invariant 1. The join's retain
+    // re-reads the unloaded entry and the port throws again.
+    h.join(loaded);
     h.store.markDirty(OWNER_KEY);
     h.store.save(OWNER_KEY);
     await tick(20);
@@ -5494,7 +5887,6 @@ describe('the gaps a mutation pass over the store found', () => {
       acquirePermit: async () => (refuse ? null : { release: () => {} }),
       rowLoad: { kind: 'row', row: rowFixture() },
     });
-    h.store.retain(OWNER_KEY, ACCOUNT_ID);
     const loaded = await h.store.preload(ACCOUNT_ID);
     expect(loaded.hold?.kind).toBe('no_permit');
     // NOT loaded, and held. The gauge tells an operator how many entries can
@@ -5510,10 +5902,11 @@ describe('the gaps a mutation pass over the store found', () => {
     await tick(30);
     expect(h.writeCount()).toBe(0);
 
-    // AND RE-READ on the next join, rather than replaying the refusal.
+    // AND RE-READ on the join, rather than replaying the refusal: the join the
+    // refused handshake goes on to make, whose retain finds the entry unloaded.
     refuse = false;
     h.calls.length = 0;
-    h.store.retain(OWNER_KEY, ACCOUNT_ID);
+    h.join(loaded);
     await tick(30);
     expect(h.calls).toContain('readRow');
     expect(h.store.stats().loaded).toBe(1);
@@ -5536,12 +5929,11 @@ describe('the gaps a mutation pass over the store found', () => {
         diskBytes: 200_000,
       },
     });
-    h.store.retain(OWNER_KEY, ACCOUNT_ID);
     const loaded = await h.store.preload(ACCOUNT_ID);
     expect(loaded.hold?.kind).toBe('oversize');
     expect(h.store.stats().loaded).toBe(1);
     h.calls.length = 0;
-    h.store.retain(OWNER_KEY, ACCOUNT_ID);
+    h.join(loaded);
     await tick(20);
     expect(h.calls).toEqual([]);
   });
@@ -5556,10 +5948,8 @@ describe('the gaps a mutation pass over the store found', () => {
     // reserved slots never reached the genuine leavers queued behind it. That is
     // the starvation the reserve was rebuilt to end.
     const gates: Array<Deferred<FreeholdUpsertResult>> = [];
-    let rejoinerLive = false;
     const h = harness({
       rowLoad: { kind: 'row', row: rowFixture() },
-      hasLive: (key) => key === OWNER_KEY && rejoinerLive,
       writeRow: async () => {
         const gate = deferred<FreeholdUpsertResult>();
         gates.push(gate);
@@ -5567,8 +5957,7 @@ describe('the gaps a mutation pass over the store found', () => {
       },
     });
     const dirtyLeaver = async (key: string, accountId: number): Promise<void> => {
-      h.store.retain(key, accountId);
-      await h.store.preload(accountId);
+      await h.login(accountId);
       h.store.markDirty(key);
       void h.store.flushAndRelease(key);
       await tick(20);
@@ -5577,8 +5966,7 @@ describe('the gaps a mutation pass over the store found', () => {
     // whole reserve, so every later leaver has to come through the pump.
     for (let i = 0; i < FREEHOLD_PERSIST_MAX_ACTIVE_WRITES + 4; i++) {
       const key = `account:${OTHER_ACCOUNT_ID + i}`;
-      h.store.retain(key, OTHER_ACCOUNT_ID + i);
-      await h.store.preload(OTHER_ACCOUNT_ID + i);
+      await h.login(OTHER_ACCOUNT_ID + i);
       h.store.markDirty(key);
       h.store.save(key);
     }
@@ -5590,7 +5978,8 @@ describe('the gaps a mutation pass over the store found', () => {
     expect(h.store.stats().activeWrites).toBe(leavingCap);
 
     // THE REJOINER. It leaves dirty, is deferred with a capture, and comes
-    // straight back: its live record now carries the captured revision, so
+    // straight back inside its own leave window, before its removePlayer: the
+    // record is still the one it left, which carries the captured revision, so
     // retain hands the capture back.
     // Counted as a DELTA: the two reserve leavers above are still holding their
     // own captures, because a capture is released when its write settles and
@@ -5598,8 +5987,7 @@ describe('the gaps a mutation pass over the store found', () => {
     const heldBefore = h.store.stats().leaveCaptures;
     await dirtyLeaver(OWNER_KEY, ACCOUNT_ID);
     expect(h.store.stats().leaveCaptures).toBe(heldBefore + 1);
-    rejoinerLive = true;
-    h.store.retain(OWNER_KEY, ACCOUNT_ID);
+    h.join(await h.store.preload(ACCOUNT_ID));
     expect(h.store.stats().leaveCaptures).toBe(heldBefore);
 
     // A GENUINE leaver behind it, also deferred and still holding its capture.
@@ -5646,8 +6034,7 @@ describe('the gaps a mutation pass over the store found', () => {
     });
     const leaver = async (offset: number): Promise<void> => {
       const key = `account:${OTHER_ACCOUNT_ID + offset}`;
-      h.store.retain(key, OTHER_ACCOUNT_ID + offset);
-      await h.store.preload(OTHER_ACCOUNT_ID + offset);
+      await h.login(OTHER_ACCOUNT_ID + offset);
       h.store.markDirty(key);
       void h.store.flushAndRelease(key);
       await tick(20);
@@ -5655,8 +6042,7 @@ describe('the gaps a mutation pass over the store found', () => {
     // Four background writes fill the ordinary cap and four more queue behind it.
     for (let i = 0; i < FREEHOLD_PERSIST_MAX_ACTIVE_WRITES + 4; i++) {
       const key = `account:${OTHER_ACCOUNT_ID + i}`;
-      h.store.retain(key, OTHER_ACCOUNT_ID + i);
-      await h.store.preload(OTHER_ACCOUNT_ID + i);
+      await h.login(OTHER_ACCOUNT_ID + i);
       h.store.markDirty(key);
       h.store.save(key);
     }
@@ -5670,8 +6056,7 @@ describe('the gaps a mutation pass over the store found', () => {
     expect(h.store.stats().activeWrites).toBe(leavingCap);
 
     // The third leaver has no reserve left and is DEFERRED.
-    h.store.retain(OWNER_KEY, ACCOUNT_ID);
-    await h.store.preload(ACCOUNT_ID);
+    await h.login();
     h.store.markDirty(OWNER_KEY);
     let released = false;
     const leaving = h.store.flushAndRelease(OWNER_KEY).then(() => {
@@ -5717,8 +6102,7 @@ describe('the gaps a mutation pass over the store found', () => {
     const owners = FREEHOLD_PERSIST_DRAIN_MAX_ACTIVE_WRITES + 3;
     for (let i = 0; i < owners; i++) {
       const key = `account:${OTHER_ACCOUNT_ID + i}`;
-      h.store.retain(key, OTHER_ACCOUNT_ID + i);
-      await h.store.preload(OTHER_ACCOUNT_ID + i);
+      await h.login(OTHER_ACCOUNT_ID + i);
       h.store.markDirty(key);
     }
     // NOT armed before the drain: the drain arms them itself, so the cap in
@@ -5744,36 +6128,19 @@ describe('the gaps a mutation pass over the store found', () => {
     // The clock is advanced INSIDE each bracket, so both totals are exact
     // advances rather than whatever a real clock happened to do: 40 ms inside
     // the codec (the serialize call sits in it) and 700 ms inside the statement.
+    // The three document sizes are the session's own edits to its record: the
+    // installed house first, then emptied, then furnished with twelve chairs.
     let h!: Harness;
-    let docSize: 'small' | 'first' | 'large' = 'first';
-    const sized = (): PersistedFreehold =>
-      docSize === 'small'
-        ? persistedFixture({ layout: [], trophies: [] })
-        : docSize === 'large'
-          ? persistedFixture({
-              layout: Array.from({ length: 12 }, (_, i) => ({
-                placementId: i + 1,
-                itemId: 'oak_chair',
-                x: 1.5,
-                y: 0,
-                z: -2.25,
-                yaw: 0,
-              })),
-            })
-          : persistedFixture();
     h = harness({
       rowLoad: { kind: 'row', row: rowFixture() },
-      serialize: () => {
-        h.setNow(10_040);
-        return sized();
-      },
+      // The clock advances INSIDE the codec bracket, where the store serializes.
+      onSerialize: () => h.setNow(10_040),
       writeRow: async () => {
         h.setNow(10_740);
         return { kind: 'updated', durableRev: '9' };
       },
     });
-    h.store.retain(OWNER_KEY, ACCOUNT_ID);
-    await h.store.preload(ACCOUNT_ID);
+    await h.login();
     h.setNow(10_000);
     const afterLoad = h.store.stats();
     h.store.markDirty(OWNER_KEY);
@@ -5795,7 +6162,7 @@ describe('the gaps a mutation pass over the store found', () => {
     const first = after.maxWriteBytes;
     expect(first).toBeGreaterThan(0);
 
-    docSize = 'small';
+    h.edit(OWNER_KEY, { layout: [], trophies: [] });
     h.store.markDirty(OWNER_KEY);
     h.store.save(OWNER_KEY);
     await tick(30);
@@ -5806,7 +6173,17 @@ describe('the gaps a mutation pass over the store found', () => {
     // A last-sample gauge would read `smaller` here.
     expect(twice.maxWriteBytes).toBe(first);
 
-    docSize = 'large';
+    h.edit(OWNER_KEY, {
+      layout: Array.from({ length: 12 }, (_, i) => ({
+        placementId: i + 1,
+        itemId: 'oak_chair',
+        x: 1.5,
+        y: 0,
+        z: -2.25,
+        yaw: 0,
+      })),
+      trophies: persistedFixture().trophies,
+    });
     h.store.markDirty(OWNER_KEY);
     h.store.save(OWNER_KEY);
     await tick(30);
@@ -5824,11 +6201,13 @@ describe('the gaps a mutation pass over the store found', () => {
     // record, and GameServer.leave always flushes while the record is still
     // live. So it is driven through the ports directly, which is what the
     // furnishing writer will make ordinary.
-    const h = await loadedStore({
-      rowLoad: { kind: 'row', row: rowFixture() },
-      hasLive: () => false,
-      serialize: () => null,
-    });
+    //
+    // THE STATE: a loaded entry with no record and no capture, which is a
+    // handshake that read and never joined. A joined session always has its
+    // record beside it on a lit realm.
+    const h = harness({ rowLoad: { kind: 'row', row: rowFixture() } });
+    await h.store.preload(ACCOUNT_ID);
+    expect(h.record()).toBeUndefined();
     h.store.markDirty(OWNER_KEY);
     h.store.save(OWNER_KEY);
     await tick(30);
@@ -5840,20 +6219,23 @@ describe('the gaps a mutation pass over the store found', () => {
     // dirty, every later sweep re-arms the same empty write and spends a permit
     // on it, and owesWork keeps the entry resident for the life of the process.
     expect(h.store.stats().dirty).toBe(0);
+    // Nothing is owed and nothing is referenced, so the settle that found
+    // nothing to send collects the entry on the spot, rather than keeping it
+    // resident to re-arm the same empty write.
+    expect(h.store.stats().entries).toBe(0);
     h.store.saveAllDirty();
     h.store.saveAllDirty();
     await tick(30);
     expect(h.store.stats().writesWithoutRecord).toBe(1);
-    // Nothing is owed, nothing is referenced: the entry is collectable again.
-    await h.store.flushAndRelease(OWNER_KEY);
-    expect(h.store.stats().entries).toBe(0);
   });
 
   it('refuses an owner key and an account id that name different accounts', async () => {
     const h = harness();
-    expect(() => h.store.retain('account:1', ACCOUNT_ID)).toThrow(/different accounts/);
+    // The RAW store: this is retain's own argument check, and it reads no
+    // liveness, so the join guard the harness puts on `store` does not apply.
+    expect(() => h.rawStore.retain('account:1', ACCOUNT_ID)).toThrow(/different accounts/);
     // The matching pair is admitted, so the guard is not a stopped door.
-    expect(() => h.store.retain(OWNER_KEY, ACCOUNT_ID)).not.toThrow();
+    expect(() => h.rawStore.retain(OWNER_KEY, ACCOUNT_ID)).not.toThrow();
   });
 
   it('installs nothing from an answer that names a different account', () => {
