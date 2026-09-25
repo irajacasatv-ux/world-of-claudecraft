@@ -23,15 +23,22 @@ this release has is an operator watching the `held` gauge.
 Every capacity item in section 8a makes a hold more reachable, so this and they
 are one obligation.
 
-THE SAME PLAYER EXPERIENCE WITH NO HOLD AT ALL, added 2026-09-25. A join that
-lands just after the same account's previous session was evicted (a quick relog
-onto another character while the old leave is slow) installs nothing, because
-its answer was read beside the old record, and `addPlayer` seeds the same empty
-default. The store then refuses that record at the seal or the insert refusal
-and quiesces the entry: no `kind` is booked, so a surface keyed on the hold kinds
-alone never sees this group. The surface owes it too, keyed on the entry being
-write-blocked rather than on a hold. The ledger's harness-fidelity section has
-the order and its cost.
+THE SAME EMPTY HOUSE WITH NO HOLD AT ALL, and a worse loss, added 2026-09-25. A
+join that lands just after the same account's previous session was evicted (a
+quick relog onto another character while the old leave is slow, or a linkdead
+session's grace expiring while a new handshake is in flight) installs nothing,
+because its answer was read beside the old record, and `addPlayer` seeds the
+same empty default. The store then refuses that record at the seal or the insert
+refusal and quiesces the entry: no `kind` is booked, so a surface keyed on the
+hold kinds alone never sees this group. THE PREMISE ABOVE DOES NOT HOLD FOR IT:
+a leave capture still waiting to be written when the join lands is released
+unwritten, so the leaver's last edits reach no row, and for an account whose
+first insert had not landed there is no row at all and the whole first house is
+gone. Copy that carries the hold's premise, that the real row sits intact on
+disk, would be false here. The surface owes this group too, keyed on the entry
+being write-blocked rather than on a hold, and a ruling on recovering the
+capture is owed first (the ledger's harness-fidelity section has the order, the
+cost and the ruling).
 
 ## The rule this design is built under
 

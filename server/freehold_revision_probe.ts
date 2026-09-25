@@ -14,11 +14,12 @@
 // row, deliberately, and that rule is RETIRED rather than quietly dropped: a
 // live revision below the entry's last committed one means the live record is
 // not the record that commit came from, since every install a rejoin is offered
-// carries at least the committed revision and every sanctioned mutator only
-// increments. Writing it would also walk the client-facing wire counter
-// backwards permanently, which is the exact harm the loader's own
-// wire_rev_shape hold exists to prevent on the read side. So the probe arms and
-// the seal refuses.
+// carries at least the committed revision (bar one known hole, the twelfth
+// path in server/freehold_write_seal.ts, which this probe's first sweep after
+// the join still catches) and every sanctioned mutator only increments.
+// Writing it would also walk the client-facing wire counter backwards
+// permanently, which is the exact harm the loader's own wire_rev_shape hold
+// exists to prevent on the read side. So the probe arms and the seal refuses.
 
 /** What the probe needs about the entry standing behind a live record. Declared
  *  structurally rather than importing the store's entry type, the same way

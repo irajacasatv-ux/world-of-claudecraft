@@ -841,16 +841,25 @@ For off-box safety, sync the directory to S3 occasionally:
   background permit with no document to send and issued no statement at all,
   which is the terminal state of every way this store has ever lost a save; it
   should be flat at zero, and any sustained increase means edits are being
-  dropped silently. `quiesced` has FIVE producers and only one of them is the
-  compare-and-swap fence, so read it against `stale_writes` and `write_failures`
-  rather than alone: `stale_writes` is the fence (on a single-realm deployment
-  that should be impossible, and on a multi-realm one it means two processes are
-  writing the same rows), and the rest of `write_failures` is the write seal, the
-  writable-implies-readable refusal, and a run of thrown writes. The seal and
-  the insert refusal also fire, with no `held` entry at all, when a login's join
-  lands just after the same account's previous session was evicted (a quick
-  relog onto another character while the old leave is slow): that session plays
-  on the empty default, write-blocked until it logs out. `held` counts
+  dropped silently. `quiesced` has one producer per refusal no retry can fix
+  (a stale compare-and-swap, a missing or conflicting row, the write seal, the
+  unnamed-insert refusal, the writable-implies-readable refusal, and a run of
+  thrown writes) and only the first is the fence, so read it against
+  `stale_writes` and `write_failures` rather than alone: `stale_writes` is the
+  fence (on a single-realm deployment that should be impossible, and on a
+  multi-realm one it means two processes are writing the same rows), and
+  `write_failures` counts every other refused or failed write: a missing or
+  conflicting row, the write seal, the unnamed-insert refusal, the
+  writable-implies-readable refusal, a write that got no background permit, and
+  each write that threw or could not be queued. The seal and the insert refusal
+  also fire, with no `held` entry at all, when a login's join lands just after
+  the same account's previous session was evicted (a quick relog onto another
+  character while the old leave is slow, or a linkdead session's grace expiring
+  while a new handshake is in flight): that session plays on the empty default,
+  write-blocked until it logs out, AND a leave capture still waiting to be
+  written when it joined is released unwritten, so the leaver's last edits reach
+  no row (for an account whose first insert had not landed, that is the whole
+  house). `held` counts
   entries under ANY recovery hold, DATA or CAPACITY: read
   `woc_freehold_load_failures_total` by `kind` to tell a row this build cannot
   read from a login storm that filled the admission cap. TWO CAVEATS on reading

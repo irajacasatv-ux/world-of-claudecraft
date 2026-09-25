@@ -418,11 +418,11 @@ export interface FreeholdPersistStats {
    *  background permit and a thrown read are the others, and they mean opposite
    *  things to an operator. Read `loadFailuresByKind` to tell them apart. */
   readonly held: number;
-  /** Entries quiesced by an answer no repeat of the same payload can fix. FIVE
-   *  producers, and only the first is the compare-and-swap fence: a stale CAS, a
-   *  missing or conflicting row, the write seal refusing a record that is not
-   *  the one this entry loaded, the writable-implies-readable refusal, and a run
-   *  of thrown writes inside the error window. Read it against `staleWrites` and
+  /** Entries quiesced by an answer no repeat of the same payload can fix. Only
+   *  the first producer is the compare-and-swap fence: a stale CAS, a missing or
+   *  conflicting row, the seal refusing a record this entry did not load, the
+   *  unnamed-insert refusal, the writable-implies-readable refusal, and a run of
+   *  thrown writes inside the error window. Read it against `staleWrites` and
    *  `writeFailures` rather than alone, because only `staleWrites` means a
    *  second writer is touching these rows. Kept apart from `held` because the
    *  two are counted independently and must never be summed. */

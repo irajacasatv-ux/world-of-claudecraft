@@ -7,10 +7,11 @@
 //
 // Many distinct paths to violating that invariant have been found in this
 // subsystem (the persistence findings ledger counts them), and four separate
-// rounds each tried to close the latest by adding a clause to this expression. It lives in its own file so the next
-// reader can drive every arm of it from a Vitest with three literals instead of
-// building a store, and so a change to it is a change to a named module rather
-// than a line inside a nine-hundred-line coordinator method.
+// rounds each tried to close the latest by adding a clause to this expression.
+// It lives in its own file so the next reader can drive every arm of it from a
+// Vitest with three literals instead of building a store, and so a change to it
+// is a change to a named module rather than a line inside a nine-hundred-line
+// coordinator method.
 
 import type { PersistedFreehold } from '../src/sim/freehold/persisted';
 import { PENDING_FREEHOLD_PLOT_ID } from '../src/sim/freehold/state';
@@ -125,9 +126,11 @@ export function seedWouldLandOnRealRow(
   // live record BELOW that has to be a different record. THAT PREMISE HAS A
   // KNOWN HOLE: an answer read before another session of the same account
   // committed and was evicted, then installed at the join, carries an OLDER
-  // revision, and once the returning player edits past the committed one no
-  // arm here can see it (the twelfth path, pinned as it behaves in
-  // tests/server/freehold_persist.test.ts; a ruling is owed).
+  // revision. The first sweep after that join still refuses it here, but a
+  // returning player who edits past the committed revision inside that one
+  // autosave interval carries it above, and then no arm here can see it (the
+  // twelfth path, pinned as it behaves in tests/server/freehold_persist.test.ts
+  // with its window; a ruling is owed).
   //
   // UN-GATED FROM THE STAND-IN, and that is the companion the install fix owes.
   // It used to be checked only under the stand-in identity, on the reasoning
@@ -144,7 +147,8 @@ export function seedWouldLandOnRealRow(
   // replay RESTARTS the record's revision from the last committed value. This
   // compares the LIVE record with the entry's own last COMMITTED document, which
   // is one timeline: every install this store offers a rejoin carries at least
-  // the committed revision, and every sanctioned mutator only increments.
+  // the committed revision (bar the twelfth path's known hole above), and every
+  // sanctioned mutator only increments.
   //
   // WHAT IT NEWLY REFUSES, named rather than discovered: a leave capture
   // strictly older than the last committed write, offered to a rejoin as the

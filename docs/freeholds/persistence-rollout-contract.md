@@ -705,17 +705,20 @@ identity when there is one.
 
 FOUR EXISTING PINS FLIPPED, not the two that were anticipated. Two of them
 encoded a rule that a record carrying a REAL plot name goes backwards onto the
-row deliberately. That rule is RETIRED rather than dropped: a live revision below
-the entry's last committed one means the live record is not the record that
-commit came from, since every install a rejoin is offered carries at least the
-committed revision (with one known hole, the twelfth path: an answer read before
-another session committed and was evicted carries an older one; see the findings
-ledger's harness-fidelity section) and every sanctioned mutator only increments, and writing it
-would walk the client-facing wire counter backwards permanently, which is the
-exact harm the loader's own `wire_rev_shape` hold refuses on the read side. What
-it newly refuses is a superseded leave capture offered to a rejoin as the install
-source: refusing loses nothing, the row survives, and it books a write failure
-and quiesces an entry that is about to be collected anyway.
+row deliberately. That rule is RETIRED rather than dropped: a live revision
+below the entry's last committed one means the live record is not the record
+that commit came from, since every install a rejoin is offered carries at least
+the committed revision (with one known hole, the twelfth path: an answer read
+before another session committed and was evicted carries an older one, which the
+first sweep after the join still refuses, so it lands only if the returning
+player edits past the committed revision inside that one autosave interval; see
+the findings ledger's harness-fidelity section) and every sanctioned mutator
+only increments, and writing it would walk the client-facing wire counter
+backwards permanently, which is the exact harm the loader's own `wire_rev_shape`
+hold refuses on the read side. What it newly refuses is a superseded leave
+capture offered to a rejoin as the install source: refusing loses nothing, the
+row survives, and it books a write failure and quiesces an entry that is about
+to be collected anyway.
 
 OFFLINE AND HEADLESS PLOT IDENTITY: THE DIVERGENCE IS ACCEPTED AND DOCUMENTED.
 Online records now answer to a unique minted identity from their first session.
