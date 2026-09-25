@@ -1745,7 +1745,10 @@ const MONOLITHS: MonolithRow[] = [
     // server/entity_wire_cache.ts) and both dropped the one-use delay() helper,
     // so those shared deletions count once; the merge collapsed the twin onto
     // the release's module (tests/server/entity_wire_cache.test.ts).
-    ceiling: 9762,
+    // LOWERED 9762 -> 9758 by the re-sync audit: the jail table's header, left
+    // above KNOWN_COMMANDS when the table moved to server/freehold_wire.ts, now
+    // sits beside the table. Exact count, zero slack.
+    ceiling: 9758,
     seam: 'a sibling server module; see the hot-path seams in server/CLAUDE.md',
   },
   {

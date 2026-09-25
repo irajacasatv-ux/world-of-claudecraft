@@ -79,6 +79,11 @@ export function refusedFreeholdCommand(frame: unknown, env?: NodeJS.ProcessEnv):
   );
 }
 
+// Commands a jailed session may not send: everything that queues into or enters
+// instanced content (ranked arena in every format, battlegrounds, the card
+// table, dungeons, the crypt, delves, a freehold room) plus starting or
+// accepting a duel and Unstuck; leave/abort commands stay allowed and the
+// door-gated dungeon/delve entries are listed as explicit policy.
 const JAILED_BLOCKED_COMMANDS = new Set<string>([
   'arena_queue',
   'bg_queue',

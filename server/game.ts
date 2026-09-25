@@ -774,10 +774,6 @@ function isPickAction(value: unknown): value is PickAction {
 // a steady source of GC pressure, when a crowd gathers. The small/dynamic fields
 // (position, resource, target, party HP, cooldowns, ...) still diff every tick.
 const HEAVY_SELF_REFRESH_TICKS = 40; // ~2 s backstop; staggered per session so refreshes don't synchronize into a spike
-// Commands a jailed session may not send: everything that queues into or enters
-// instanced content (ranked arena in every format, the Vale Cup, dungeons,
-// delves) plus starting or accepting a duel; leave/abort commands stay allowed
-// and the door-gated dungeon/delve entries are listed as explicit policy.
 // Runtime membership for the dispatched command vocabulary (the CommandName
 // union as data): a KNOWN command draws its lane token before the switch; an
 // unknown cmd draws in the default arm AFTER its protocol-anomaly observation (R5).
