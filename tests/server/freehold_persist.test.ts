@@ -625,7 +625,21 @@ function rowRemembered(): Pick<HarnessOptions, 'readRow' | 'normalized' | 'write
             repaired: [],
           }
         : { kind: 'absent' },
+    // The compare-and-swap fence upsertFreehold enforces, so a writer this
+    // database would refuse is refused here too: an insert over an existing row
+    // and an update against a moved or missing one.
     writeRow: async (input: FreeholdUpsert): Promise<FreeholdUpsertResult> => {
+      if (input.expectedDurableRev === null && row !== null) {
+        return { kind: 'stale', durableRev: row.durableRev };
+      }
+      if (input.expectedDurableRev !== null && row === null) return { kind: 'missing' };
+      if (
+        input.expectedDurableRev !== null &&
+        row !== null &&
+        input.expectedDurableRev !== row.durableRev
+      ) {
+        return { kind: 'stale', durableRev: row.durableRev };
+      }
       const durableRev = String(Number(row?.durableRev ?? '0') + 1);
       row = rowFixture({
         plotId: input.plotId,
@@ -2612,6 +2626,103 @@ describe('a write may only carry the record this entry actually loaded', () => {
     expect(h.writes[0].plotId).toBe('plot:minted1');
     expect(h.writes[0].layoutJson).toBe('[]');
     expect(h.writes[0].trophiesJson).toBe('[]');
+  });
+});
+
+describe('a join that lands after the eviction installs nothing from an answer read beside the old record', () => {
+  // THE ELEVENTH PATH, found by the fresh read of the harness rewrite and
+  // reproduced here before the fix. Preload's already-live arm answers with no
+  // state because the record beside it is the truth, and for a FRESH account
+  // whose first insert has not landed that answer is also durable-revision-null
+  // and hold-null: exactly the shape the install's absent arm reads as "no row,
+  // install a default under this name". The handshake awaits the lease and the
+  // character read between its preload and its join, so the previous session
+  // can finish leaving in between; removePlayer evicts, and the join then
+  // installed an EMPTY default under the account's real minted name. Neither
+  // the name comparison nor the stand-in arm can see that record for what it is.
+
+  it('never writes the empty default it installed over the house the leaver committed', async () => {
+    const h = harness({ ...rowRemembered() });
+    await h.login();
+    h.edit(OWNER_KEY, furnishedEdit(3));
+    // The next character's handshake reads while the owner is still in the
+    // world, before the first insert: the answer names the row nothing has
+    // created yet.
+    const answer = await h.store.preload(ACCOUNT_ID);
+    expect(answer.state).toBeNull();
+    expect(answer.durableRev).toBeNull();
+    expect(answer.hold).toBeNull();
+    // The owner leaves: the flush inserts the house, the clean entry is
+    // collected, and removePlayer evicts.
+    await h.leave();
+    expect(h.writeCount()).toBe(1);
+    expect(h.writes[0].layoutJson).not.toBe('[]');
+    expect(h.record()).toBeUndefined();
+    // The next character joins on the answer it read. Its retain re-reads the
+    // row the owner just committed.
+    h.join(answer);
+    await tick(30);
+    // It edits past the committed revision before the next sweep, which is what
+    // defeated every revision-shaped arm of the seal.
+    h.edit(OWNER_KEY, { rev: 4 });
+    h.store.saveAllDirty();
+    await tick(30);
+    // The absence of a second write IS the assertion: the row keeps the house.
+    expect(h.writeCount()).toBe(1);
+    expect(h.record()?.plotId).toBe(PENDING_FREEHOLD_PLOT_ID);
+    expect(h.store.stats().quiesced).toBe(1);
+    expect(h.errors.some((line) => line.includes('write refused (identity)'))).toBe(true);
+  });
+
+  it("creates no row for an empty default when the leaver's write had not landed", async () => {
+    // The same order with the leave write still waiting on its permit: the join
+    // must not put a record in that the pending write would then carry to a
+    // brand-new row under the account's real name. The refusal is LOUD, which is
+    // what separates it from the silent insert this used to be.
+    let granted = 0;
+    const permit = deferred<{ release(): void } | null>();
+    const h = harness({
+      ...rowRemembered(),
+      acquirePermit: async () => {
+        granted += 1;
+        return granted === 1 ? { release: () => {} } : await permit.promise;
+      },
+    });
+    await h.login();
+    h.edit(OWNER_KEY, furnishedEdit(3));
+    const answer = await h.store.preload(ACCOUNT_ID);
+    const leaving = h.leave();
+    await tick(10);
+    h.deadlines.find((job) => job.ms === FREEHOLD_PERSIST_LEAVE_FLUSH_MS)?.fire();
+    await leaving;
+    expect(h.record()).toBeUndefined();
+    expect(h.store.stats().leaveCaptures).toBe(1);
+    h.join(answer);
+    expect(h.record()?.plotId).toBe(PENDING_FREEHOLD_PLOT_ID);
+    permit.resolve({ release: () => {} });
+    await tick(40);
+    expect(h.writes.some((write) => write.layoutJson === '[]')).toBe(false);
+    expect(h.writeCount()).toBe(0);
+    expect(h.store.stats().quiesced).toBe(1);
+    expect(h.errors.some((line) => line.includes('write refused (unnamed)'))).toBe(true);
+  });
+
+  it('still lets the next character write when the old record is still live at its join', async () => {
+    // The contrast, so the fix is not a stopped writer: the ordinary two-character
+    // overlap, where the record the answer was read beside is still the one in
+    // the world when the join lands.
+    const h = harness({ ...rowRemembered() });
+    await h.login();
+    h.edit(OWNER_KEY, furnishedEdit(3));
+    h.join(await h.store.preload(ACCOUNT_ID));
+    await h.leave();
+    expect(h.record()?.plotId).toBe(MINTED_PLOT_ID);
+    h.edit(OWNER_KEY, { rev: 4 });
+    h.store.saveAllDirty();
+    await tick(30);
+    expect(h.writeCount()).toBe(2);
+    expect(h.writes[1].wireRev).toBe(4);
+    expect(h.store.stats().quiesced).toBe(0);
   });
 });
 
@@ -5013,6 +5124,35 @@ describe('installLoadedFreehold', () => {
     expect(record?.visitPolicy).toBe('closed');
     expect(record?.rev).toBe(0);
     expect(record?.ownerKey).toBe(OWNER_KEY);
+  });
+
+  it('installs nothing from an answer read BESIDE a live record, even one shaped like an absent row', () => {
+    // The eleventh path's install half. The already-live arm's answer for a
+    // fresh account is revision-null, state-null and hold-null, and once the
+    // record it was read beside is evicted the absent arm would install an empty
+    // default under the account's real name. The mark alone decides it.
+    const ctx = fakeCtx();
+    installLoadedFreehold(
+      ctx,
+      ACCOUNT_ID,
+      loadedFixture({
+        state: null,
+        durableRev: null,
+        plotId: MINTED_PLOT_ID,
+        hearthReadyAtMs: 90_000,
+        besideLiveRecord: true,
+      }),
+    );
+    expect(ctx.freeholds.size).toBe(0);
+    // The clock is a separate durable fact and still lands.
+    expect(ctx.freeholdKeyReadyAtMs.get(OWNER_KEY)).toBe(90_000);
+    // The same answer WITHOUT the mark is a genuine absent row and installs.
+    installLoadedFreehold(
+      ctx,
+      ACCOUNT_ID,
+      loadedFixture({ state: null, durableRev: null, plotId: MINTED_PLOT_ID }),
+    );
+    expect(ctx.freeholds.get(OWNER_KEY)?.plotId).toBe(MINTED_PLOT_ID);
   });
 
   it('installs NOTHING over a record that is already live, whatever it carries', () => {

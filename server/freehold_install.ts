@@ -58,6 +58,13 @@ export function installLoadedFreehold(
   if (typeof loaded.hearthReadyAtMs === 'number') {
     mergeFreeholdKeyReadyAt(ctx, ownerKey, loaded.hearthReadyAtMs);
   }
+  // AN ANSWER READ BESIDE A LIVE RECORD INSTALLS NOTHING, and it is checked
+  // before the absent arm because it can look exactly like one: see
+  // `besideLiveRecord`. While that record is still live nothing would install
+  // anyway (load-once); once it has been evicted, putting nothing in leaves
+  // addPlayer to seed the stand-in, which the seal and the insert refusal both
+  // refuse, the outcome a row account already had in the same order.
+  if (loaded.besideLiveRecord === true) return;
   // THE ABSENT ARM: no hold, no state, no durable row. The sim's default record
   // IS the truth for this account, but the store has already MINTED the identity
   // the row it is about to insert will carry, and nothing else ever teaches a

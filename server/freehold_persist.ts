@@ -1258,9 +1258,9 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
   async function preloadWithin(accountId: number): Promise<LoadedFreehold> {
     const ownerKey = freeholdOwnerKeyForAccount(accountId);
     const entry = entries.get(ownerKey);
-    // A second character of the same account is joining: the live record is
-    // the truth and there is nothing to read. state null so the caller
-    // installs nothing over it.
+    // A second character of the same account is joining: the live record is the
+    // truth. Both answers are MARKED, and the install honours the mark alone (a
+    // fresh account's answer here otherwise reads as an absent row).
     if (ports.hasLive(ownerKey)) {
       if (entry?.loaded) {
         entry.accountId = accountId;
@@ -1270,7 +1270,7 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
         // of a handshake; without this reset a handshake wider than one sweep
         // interval loses its entry anyway and the session is write-blocked.
         entry.orphanPasses = 0;
-        return snapshotOf(entry, null);
+        return { ...snapshotOf(entry, null), besideLiveRecord: true };
       }
       // The live record is still the truth and must not be overwritten by a
       // read, so the answer below carries no state either way. But WITHOUT the
@@ -1281,7 +1281,7 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
       const loaded = await beginLoad(accountId, ownerKey);
       const touched = entries.get(ownerKey);
       if (touched) touched.orphanPasses = 0;
-      return { ...loaded, state: null };
+      return { ...loaded, state: null, besideLiveRecord: true };
     }
     // Load-once, like loadFreehold: a re-preload replays what the entry knows
     // (so a rejoin after the sim evicted the record re-installs the real

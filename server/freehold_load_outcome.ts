@@ -104,6 +104,18 @@ export interface LoadedFreehold {
   readonly hearthReadyAtMs: number;
   readonly hearthRevision: string;
   readonly hold: FreeholdRecoveryHold | null;
+  /**
+   * Set ONLY by preload's already-live arm: this answer was read BESIDE a live
+   * record, which is the truth, so it carries no state and the install must put
+   * nothing in, whatever the other fields say. They are not enough on their
+   * own: for a fresh account whose first insert has not landed, this answer is
+   * also revision-null and hold-null, which is exactly how an absent row reads.
+   * The handshake awaits the lease and the character read between its preload
+   * and its join, so the record it was read beside can be evicted in between,
+   * and the install then used to put an EMPTY default in under the account's
+   * real name: the eleventh path to an empty Inn Room over a real house.
+   */
+  readonly besideLiveRecord?: true;
 }
 
 /** The durable revision a recovery hold reports when there is no row to name
