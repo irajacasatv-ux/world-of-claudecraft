@@ -60,6 +60,10 @@ describe('freeholdLivenessPorts', () => {
     const ctx = liveCtx();
     const ports = freeholdLivenessPorts(() => ctx);
     loadFreehold(ctx, OWNER_KEY, defaultFreeholdState(OWNER_KEY, PENDING_FREEHOLD_PLOT_ID));
+    // A STAND-IN is a live record like any other: the identity read names it
+    // rather than answering null.
+    expect(ports.livePlotId(OWNER_KEY)).toBe(PENDING_FREEHOLD_PLOT_ID);
+    expect(ports.hasLive(OWNER_KEY)).toBe(true);
     const record = ctx.freeholds.get(OWNER_KEY);
     if (!record) throw new Error('the record was not loaded');
     record.rev = 3;
