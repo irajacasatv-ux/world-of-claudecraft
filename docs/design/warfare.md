@@ -77,8 +77,9 @@ capped at +80 percent (`PVP_VITALITY_RATING_PER_PCT`, `PVP_VITALITY_CAP`; raised
 
 Where it applies (`src/sim/pvp/vitality.ts`, safest-first): anywhere on the
 instance plane (dungeons, raids, delves, rift floors, any instance added later)
-it is OFF, unless the player is in a battleground or arena match; everywhere else
-(the open world) it is ON. It is decided on the world PvP pass twice a second,
+it is OFF, unless the player is in a battleground or arena match or in a freehold
+room (a home, neither dungeon nor raid, so the owner rule's "other contexts"
+keeps it ON there); everywhere else (the open world) it is ON. It is decided on the world PvP pass twice a second,
 also on a realm whose world PvP switch is off, and a player whose state flips is
 recalculated once with the health fraction preserved, so a switch never gains or
 loses health.
@@ -426,7 +427,9 @@ the blow already on its way. Raising it needs `WORLD_PVP_MIN_LEVEL` (10).
 Three kinds of ground, declared per zone as `ZoneDef.worldPvp` (data-as-code in
 `src/sim/content/`) and resolved by `worldPvpZonePolicyAt` through the strict
 rectangle containment, so the instance plane reads as contested rather than as
-whichever overworld zone a clamping lookup would misreport:
+whichever overworld zone a clamping lookup would misreport (the one exception is
+a freehold room, an owner-claimed instance, which reads as a sanctuary because a
+home is never World PvP ground):
 
 - `'sanctuary'`: no world PvP at all, flagged or not, under EITHER player. The
   Proving Shore (`content/proving_shore.ts`) and Eastbrook Vale

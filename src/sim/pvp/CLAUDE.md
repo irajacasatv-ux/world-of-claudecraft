@@ -23,7 +23,9 @@ ratings.
   hostile-player damage multiplier, and WARFARE Vitality's health fraction
   (`pvpVitalityFromRating`). It must stay pure and deterministic.
 - `vitality.ts` decides WHERE Vitality applies (never on the instance plane
-  outside a battleground or arena match) and flips `Entity.pvpVitalityActive`,
+  outside a battleground or arena match, except a freehold room, a home, where
+  it stays on: `isOwnerClaimRoomAt` in `data.ts`, pinned by
+  `tests/freehold_pvp_vitality.test.ts`) and flips `Entity.pvpVitalityActive`,
   recalculating only players whose state changed; `entity.ts` applies the
   fraction to maxHp. Pinned by the `WARFARE Vitality` block in `tests/honor.test.ts`.
 - `honor_persist.ts` owns the persisted form of the honor ledger and its daily
@@ -51,7 +53,10 @@ ratings.
   the Amberfall, the map's top row); everything else is the mutual-flag rule. The lookup is the strict
   rectangle containment (`zoneContaining`, never the clamping `zoneAt`), so the
   instance plane reads as contested and the open-world policy cannot leak into a
-  dungeon, delve, arena or battleground floor. Pure and host-agnostic: the sim's
+  dungeon, delve, arena or battleground floor. One instance family is a
+  sanctuary of its own: a freehold room (`isOwnerClaimRoomAt`, pinned by
+  `tests/freehold_world_pvp_sanctuary.test.ts`), because a home is never World
+  PvP ground. Pure and host-agnostic: the sim's
   hostility arm, the nameplate colour and the target frame read the same verdict
   for the same coordinates.
 - `world_pvp.ts` owns the World PvP SYSTEM behind the `SimContext` seam: the
