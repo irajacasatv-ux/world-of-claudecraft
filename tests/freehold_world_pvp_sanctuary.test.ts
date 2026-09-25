@@ -147,13 +147,17 @@ describe('the other readers of the ground agree inside a room', () => {
     const { sim, a } = flaggedPair();
     for (let i = 0; i < 20; i++) sim.tick();
     standAt(a, roomSpot(OWNER_ROOMS[0]));
-    const heard: string[] = [];
-    for (let i = 0; i < 20; i++) {
+    const logs: string[] = [];
+    const errors: string[] = [];
+    for (let i = 0; i < 40; i++) {
       for (const ev of sim.tick() as SimEvent[]) {
-        if ((ev.type === 'log' || ev.type === 'error') && ev.pid === a.id) heard.push(ev.text);
+        if (ev.type === 'log' && ev.pid === a.id) logs.push(ev.text);
+        if (ev.type === 'error' && ev.pid === a.id) errors.push(ev.text);
       }
     }
-    expect(heard).toContain(WORLD_PVP_SANCTUARY_LINE);
+    // A log line (the notice channel), exactly once per crossing, never an error.
+    expect(logs.filter((text) => text === WORLD_PVP_SANCTUARY_LINE)).toHaveLength(1);
+    expect(errors).not.toContain(WORLD_PVP_SANCTUARY_LINE);
   });
 
   it('aid given inside a room never flags the healer; the same aid outside does', () => {

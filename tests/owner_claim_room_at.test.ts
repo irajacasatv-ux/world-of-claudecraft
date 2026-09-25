@@ -2,8 +2,9 @@
 // freehold room", shared by the instance claim lookup, the World PvP ground
 // and the honor Vitality context. It answers from the x band alone, like
 // dungeonAt, so it must hold across every slot of both owner rooms, anywhere
-// inside a room's band, and nowhere else: not a party dungeon, not the band
-// edges past a room, and never the overworld.
+// inside a room's band (to 299 yd either side of its origin), and nowhere else:
+// not at the 300 yd band edge where the lookup flips, not a party dungeon, not
+// the neighbouring bands, and never the overworld.
 import { describe, expect, it } from 'vitest';
 import {
   DUNGEON_LIST,
@@ -38,6 +39,10 @@ describe('isOwnerClaimRoomAt', () => {
     // One band west of the Inn Room and one band east of the Cottage.
     expect(isOwnerClaimRoomAt(inn - 600)).toBe(false);
     expect(isOwnerClaimRoomAt(cottage + 600)).toBe(false);
+    // The exact band edges, where dungeonAt's `< 300` overflow check flips: the
+    // outer edges read false (a `<= 300` mutant answers true at both).
+    expect(isOwnerClaimRoomAt(inn - 300)).toBe(false);
+    expect(isOwnerClaimRoomAt(cottage + 300)).toBe(false);
   });
 
   it('is false on the overworld and at the instance threshold', () => {
