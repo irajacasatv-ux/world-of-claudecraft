@@ -39,9 +39,14 @@ describe('isOwnerClaimRoomAt', () => {
     // One band west of the Inn Room and one band east of the Cottage.
     expect(isOwnerClaimRoomAt(inn - 600)).toBe(false);
     expect(isOwnerClaimRoomAt(cottage + 600)).toBe(false);
-    // The exact band edges, where dungeonAt's `< 300` overflow check flips: the
-    // outer edges read false (a `<= 300` mutant answers true at both).
+    // The exact band edges, where dungeonAt's `< 300` overflow check decides:
+    // Math.round sends a .5 band index up, so the Inn Room's west edge and the
+    // shared Inn/Cottage edge each resolve to an owner room at distance 300,
+    // and a `<= 300` mutant answers true at both. The Cottage's east edge falls
+    // into index 17, which no dungeon holds, so it reads false either way until
+    // a later tier appends there; it stays as the guard for that day.
     expect(isOwnerClaimRoomAt(inn - 300)).toBe(false);
+    expect(isOwnerClaimRoomAt(inn + 300)).toBe(false);
     expect(isOwnerClaimRoomAt(cottage + 300)).toBe(false);
   });
 
