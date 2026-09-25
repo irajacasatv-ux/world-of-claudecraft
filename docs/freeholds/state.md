@@ -49,7 +49,7 @@ Only what the next session needs. Update at the end of every phase and QA.
 ## Current phase
 
 **THE 07 HARNESS-FIDELITY REWRITE IS DONE, 2026-09-25, LOCAL, AND 07 STAYS FAIL ON A
-TWELFTH PATH IT FOUND.** The work is `37e6ae6624..3bdf1aa229` plus its records; the base
+TWELFTH PATH IT FOUND.** The work is `37e6ae6624..a0e9fff2bc` plus its records; the base
 did not move. The store's four liveness reads now come from ONE live map through
 `server/freehold_liveness.ts` in production and in the harness alike, a per-read audit
 fails any case that sees them disagree, and 125 cases changed or were added onto orders
@@ -61,20 +61,22 @@ live goes stale when another session of the account edits and is evicted inside 
 handshake. While that session's capture is still unwritten (its leave write waiting,
 refused a permit, thrown once, or deferred), the store's next write carries the stale
 record (an empty row for a fresh account, the older house for a row account) with no
-edit and no window; once it has committed, a joiner who reaches the committed revision
-before a write samples the record overwrites the newer house. Every order found is
-pinned as KNOWN DEFECT (a held login's loss of the waiting capture as a KNOWN COST), and
-A RULING IS OWED (recommended: the join re-asks the store after the lease and character
-read, in one synchronous step with the install, which also keeps the leaver's edits; a
-fail-closed staleness check would only make the losses loud). Five fresh reads, every
-finding applied or recorded; 218 mutants plus one type-level, every changed pin killed;
-the armed gate green on all 12 steps at `3bdf1aa229`. Open, in order: (1) the
-twelfth-path ruling; (2) `Sim.addPlayer` atomicity; (3) D85, the cross-realm account
-ledger against dark realms (a ruling); (4) the phase 17 re-plan onto the account ledger,
-with the trophy-source ruling; (5) a new release sync if `release/**` moves. Owed before
-25a builds: the Fenbridge ruling. Detail: [the
-ledger](qa/persistence-2026-09-08/findings.md), THE HARNESS-FIDELITY REWRITE, AND THE
-TWO PATHS IT FOUND.
+edit and no window, unless the leaver committed mid-session, when the leaver's later
+edits are lost loudly or, if the joiner reaches that commit first, silently; once the
+capture has committed, a joiner who reaches the committed revision before a write
+samples the record overwrites the newer house. Every arm found is pinned as KNOWN DEFECT
+or KNOWN COST (the deferred write in the unwritten order only; a held login's loss of
+the capture for two hold kinds), and A RULING IS OWED (recommended: the join re-asks the
+store after the lease and character read and validates the answer against the entry at
+install time, which also keeps the leaver's edits; a fail-closed staleness check would
+only make the losses loud). Six fresh reads, every finding applied or recorded; 218
+mutants plus one type-level, every changed pin killed; the armed gate green on all 12
+steps at `a0e9fff2bc`. Open, in order: (1) the twelfth-path ruling; (2) `Sim.addPlayer`
+atomicity; (3) D85, the cross-realm account ledger against dark realms (a ruling); (4)
+the phase 17 re-plan onto the account ledger, with the trophy-source ruling; (5) a new
+release sync if `release/**` moves. Owed before 25a builds: the Fenbridge ruling.
+Detail: [the ledger](qa/persistence-2026-09-08/findings.md), THE HARNESS-FIDELITY
+REWRITE, AND THE TWO PATHS IT FOUND.
 
 **THE V0.44.0 RE-SYNC IS CLOSED, 2026-09-25, LOCAL.** Merge `484cb61a46` takes
 `origin/release/v0.44.0` at `ed69f62ef7` (World PvP, King of the Hill, Warfare Season 2,
@@ -102,15 +104,16 @@ audio tests, which fail only because this macOS 27 host has no Rosetta for the b
 x86_64 ffprobe. Four coverage reviewers and three fresh reads of the fix rounds found no
 blocking defect; every finding is applied or recorded with its reason in [the
 ledger](qa/persistence-2026-09-08/findings.md), THE OWED LIST WORKED THROUGH. 07's
-verdict is still FAIL, on the open harness-fidelity rewrite below (DONE 2026-09-25; 07
-now stays FAIL on the twelfth path, see above), and the next session starts there. Open,
-in order: (1) the 07 harness rewrite (DONE 2026-09-25, see above); (2) `Sim.addPlayer`
-atomicity, widened by `seedAccountLedgerSelf`; (3) a ruling on the cross-realm account
-ledger against dark realms (D85); (4) the phase 17 re-plan onto the account ledger; (5)
-a new release sync if `release/**` moves; (6) FERNANDO: confirm the chosen margins that
-placed the gate at `(-38.65,-103.75)` rather than the nearer `(-37,-103.5)` (CLOSED
-2026-09-25: the margins stand); (7) install Rosetta (or gate elsewhere) to run the gate
-as written (CLOSED 2026-09-25: installed, gate green).
+verdict was then still FAIL, on the harness-fidelity rewrite the round-seventeen
+paragraph below describes (since DONE, 2026-09-25: 07 now stays FAIL on the twelfth
+path, per the first paragraph of this section). Open, in order: (1) the 07 harness
+rewrite (DONE 2026-09-25, see above); (2) `Sim.addPlayer` atomicity, widened by
+`seedAccountLedgerSelf`; (3) a ruling on the cross-realm account ledger against dark
+realms (D85); (4) the phase 17 re-plan onto the account ledger; (5) a new release sync
+if `release/**` moves; (6) FERNANDO: confirm the chosen margins that placed the gate at
+`(-38.65,-103.75)` rather than the nearer `(-37,-103.5)` (CLOSED 2026-09-25: the margins
+stand); (7) install Rosetta (or gate elsewhere) to run the gate as written (CLOSED
+2026-09-25: installed, gate green).
 
 07 (bounded persistence and stable plot identity) is **BUILT, local, and its paired
 QA FAILED**, 2026-09-10, AND THE FOUR RULINGS HAVE SINCE BEEN EXECUTED, which is

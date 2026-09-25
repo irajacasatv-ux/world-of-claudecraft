@@ -2584,7 +2584,7 @@ the last commit is the final entry of this session.
 ## THE HARNESS-FIDELITY REWRITE, AND THE TWO PATHS IT FOUND, 2026-09-25
 
 Everything in this section is local; nothing was pushed. The work is
-`37e6ae6624..3bdf1aa229` (the commits from `a8301e8798` on), plus the records commit
+`37e6ae6624..a0e9fff2bc` (the commits from `a8301e8798` on), plus the records commit
 that follows it. The base did not move: `git fetch --prune origin` found
 `origin/release/v0.44.0` still at `ed69f62ef7`, the version-newest release branch and
 already merged, so no sync was owed.
@@ -2728,28 +2728,36 @@ it.
   install a rejoin is offered carries at least the committed revision; the seal, the
   probe, the contract and the phase 07 QA plan now state the hole beside the premise.
 - TWO ORDERS, both MEASURED and pinned as KNOWN DEFECT cases that a fix flips.
-  - THE UNWRITTEN ORDER (found by the fourth fresh read, widened by the fifth): the other
-    session's capture is still UNWRITTEN when the join lands, so the store still holds it.
-    Its leave write may be waiting on a permit (the leave deadline is shorter than the
-    permit wait, so `removePlayer` evicts first), refused a permit, thrown once, or
-    deferred behind the active-write cap; the last three keep the entry dirty, so the join
-    can land a whole sweep interval later, and longer if the failures repeat. The join
-    installs the stale answer, `retain` keeps the capture (the record does not carry it),
-    and when the store's next write samples, the live record outranks the capture. NO EDIT
-    IS NEEDED AND THERE IS NO WINDOW. A fresh account gets an EMPTY row inserted under its
-    minted name at wire revision 0; a row account gets its OLDER house written back (the
-    other session's revision-8 table never reaches the row). No quiesce, no failure, no
-    error line; the capture is released. Pinned: the waiting write for both account
-    shapes, the refused permit and the single throw for a fresh account, and a further
-    arm: a joiner who LEAVES before the write samples, whose own leave flush replaces the
-    capture with its stale record. That arm matters to the fix: a mutant that makes the
-    write prefer the capture flips every other unwritten-order pin and leaves this one
-    standing.
-  - A KNOWN COST in the same order, loud rather than silent: a login HELD on capacity
-    while nothing was live (`no_permit`, `cap_full`, `no_budget`) that joins after the
-    other session's eviction installs nothing, the stand-in is seeded, and the waiting
-    write is refused on it (`write refused (identity)`, quiesced). The row keeps its older
-    house and the leaver's edits are lost. Pinned.
+  - THE UNWRITTEN ORDER (found by the fourth fresh read, widened by the fifth and sixth):
+    the other session's capture is still UNWRITTEN when the join lands, so the store still
+    holds it. Its leave write may be waiting on a permit (the leave deadline is shorter
+    than the permit wait, so `removePlayer` evicts first), refused a permit or thrown once
+    (either keeps the entry dirty, so the join can land a whole sweep interval later, and
+    longer if the failures repeat), or deferred behind the active-write cap (launched the
+    moment a slot frees). The join installs the stale answer, `retain` keeps the capture
+    (the record does not carry it), and when the store's next write samples, the live
+    record outranks the capture. When the leaver committed NOTHING during its session, NO
+    EDIT IS NEEDED AND THERE IS NO WINDOW: a fresh account gets an EMPTY row inserted under
+    its minted name at wire revision 0; a row account gets its OLDER house written back
+    (the other session's revision-8 table never reaches the row). No quiesce, no failure,
+    no error line; the capture is released. When the leaver DID commit mid-session, the
+    stale record sits below that commit: the seal refuses the write and the leaver's later
+    edits are lost, LOUDLY, unless the joiner reaches that commit's revision before the
+    write samples, and then the stale house is written over the committed one too,
+    silently. Pinned: the waiting write for both account shapes; the refused permit, the
+    single throw and the deferred write for a fresh account; the mid-session commit, loud
+    and silent, for both shapes; and a further arm: a joiner who LEAVES before the write
+    samples, whose own leave flush replaces the capture with its stale record. That arm
+    matters to the fix: a mutant that makes the write prefer the capture flips every other
+    unwritten-order pin and leaves this one standing.
+  - A KNOWN COST in the same order, loud rather than silent: a login HELD while nothing
+    was live (on capacity, `no_permit`, `cap_full` or `no_budget`, or on a thrown read,
+    `read_threw`, the likeliest hold in the very stall that slows a handshake) that joins
+    after the other session's eviction installs nothing, the stand-in is seeded, and the
+    store's next write is refused on it: by the seal (`write refused (identity)`) over a
+    row, by the insert refusal (`write refused (unnamed)`) before one exists; quiesced
+    either way. The leaver's unwritten capture is released, however its write failed.
+    Pinned for `no_permit` and `read_threw` on both account shapes.
   - THE COMMITTED ORDER: the other session's write has committed. A stale absent answer
     installs an empty default under the minted name, and a joiner who edits past the
     committed revision gets an EMPTY document compare-and-swapped over the house (expected
@@ -2812,8 +2820,8 @@ it.
   mutant equivalent; state.md and progress.md claimed a gate and reads the tip had not
   had; the no-hold write-blocked group missed the players who see an OLDER house (the
   refused twelfth-path install and a superseded capture). Nine nits: a round-two
-  attribution, a commit range that dropped its first commit and named a moving `HEAD`
-  and a pinned `AUTOSAVE_SECONDS` value, a wrong test path, the phase 07 QA plan still
+  attribution, a commit range that dropped its first commit and named a moving `HEAD`,
+  a pinned `AUTOSAVE_SECONDS` value, a wrong test path, the phase 07 QA plan still
   stating the old premise, count wording, a stale "two KNOWN DEFECT cases above"
   comment, overlong ledger lines, a second after-hook the gate pin could not see, and
   older open lists in state.md not marked done. All applied in `fce2a91990`,
@@ -2835,11 +2843,29 @@ it.
   survivor; the older state.md open lists still read open and ran long, as did lines in
   the phase 07 QA plan and one test comment; this read's own summary dropped the pinned
   `AUTOSAVE_SECONDS` value; the refusal window's base is retain's reload plus an
-  interval; and the boundary pins covered only row accounts. All applied in `0d5c2a726b`,
+  interval; and the boundary pins covered only row accounts. All applied in `0d5c2a726b`
+  (whose title, "pin every unwritten-capture order", overstated it: the deferred and
+  mid-session arms were pinned only after the sixth read),
   `3bdf1aa229` and this section; each widened order and the held cost was reproduced
   before it was pinned. PROCESS NOTE: the reader briefly copied files from the tip into a
   directory in the session scratchpad and deleted it, against its read-only brief; the
   repository was untouched, and the tree was confirmed clean.
+- THE SIXTH READ covered `8cf04d3cd9..6df31d838a`: nothing blocking, all five new pins
+  decisive and producible, the 218 and 68,729 counts and every range confirmed. Four
+  should-fix: a leaver that COMMITTED mid-session reaches the same loss, loudly or (if
+  the joiner reaches that commit first) silently, and was neither named nor pinned; option
+  (b)'s "one synchronous step" cannot hold in the committed order, where the re-ask is a
+  durable read a sibling session can outrun, so the answer has to be validated against
+  the entry at install time; the deferred form was pinned in neither order although
+  state.md, progress.md, a commit title and two comments said or implied every order
+  was; the held-login cost left out `read_threw`, the fresh account's `unnamed` refusal,
+  and the non-waiting captures, and read as pinned for every kind. Seven nits: the second
+  leave mutant also kills the re-capture case; a mutant was named for the unmutated
+  behaviour; two checks in the joiner-leaves-first case could not fail; an older state.md
+  line still read "open ... below ... see above"; three inline table literals beside the
+  new `TABLE`; a fourth-read nit list that parsed wrongly; and the deferred form's timing.
+  All applied in `6f2269c552`, `190b9b0b0f`, `a0e9fff2bc` and this section, each new arm
+  reproduced before it was pinned.
 
 ### THE MUTATION PASS
 
@@ -2871,10 +2897,15 @@ restores through `git checkout` with retries, and asserts a clean tree.
   the unloaded arm's mark is now KILLED by `926e280977`'s pin (deleting the override leaves
   the load's own `false`, so it was never equivalent).
 - The fifth read's fixes: one new mutant (a second leave keeping the first capture, which
-  flips only the joiner-leaves-first pin) and five re-run against the new pins, each new
-  pin killed by at least one: the capture outranking the record, settle keeping a refused
-  write's capture, a refused permit that quiesces, a probe that calls an equal revision
-  moved, and a seal that refuses an equal revision.
+  flips the joiner-leaves-first pin and the re-capture case beside it) and five re-run
+  against the new pins, each new pin killed by at least one: the capture outranking the
+  record, settle never releasing a capture, a refused permit that quiesces, a probe that
+  calls an equal revision moved, and a seal that refuses an equal revision.
+- The sixth read's fixes: four re-run against the new pins, each killed by at least one:
+  the capture outranking the record (the deferred pin, both mid-session arms, all four
+  held costs), a seal that refuses an equal revision (the deferred pin and the silent
+  mid-session arm), the seal's regressed arm off (the loud mid-session arm), and settle
+  never releasing a capture (the loud mid-session arm and the held costs).
 - One mutant is killed without an assertion: the re-arm-on-failure mutant loops forever
   and crashes the vitest worker, so the suite goes red.
 
@@ -2887,27 +2918,31 @@ all 12 steps green, the planner falling back to the full suite, at `e94732535e`,
 failures and 28 skips; browser regressions 56 files and 483 tests) and at `9102e3d50d`
 (68,717 tests, the rest the same). And at `40a34720ef`, the last code commit: 68,721
 tests, the rest the same. And at `3bdf1aa229`, the last code commit of the fifth read's
-fixes: 68,729 tests, the rest the same. The browser step rewrote 21 PNGs under
-`docs/screenshots/` each time; they were restored, not committed.
+fixes: 68,729 tests, the rest the same. And at `a0e9fff2bc`, the last code commit of the
+sixth read's fixes: 68,737 tests, the rest the same. The browser step rewrote 21 PNGs
+under `docs/screenshots/` each time; they were restored, not committed.
 
 ### STILL OPEN, IN ORDER
 
-1. THE TWELFTH PATH (a ruling), and with it every capture a join after the eviction loses
-   (the eleventh path's cost, the stale capacity hold). Two shapes. (a) A fail-closed
-   staleness check at the join: the install refuses any answer the store has since
-   superseded, counting an OUTSTANDING CAPTURE as well as a commit. It turns every silent
-   loss LOUD but keeps none of the leaver's edits: the stand-in is seeded, the waiting
-   write is refused on it and settle releases the capture, so a row account ends with the
-   same row as today's defect and a fresh account still loses its first house; it also
-   write-blocks the healthy slow-handshake path. (b) The join re-asks the store for its
-   answer after the lease and character read. It keeps the edits: the entry is loaded
-   and holds the capture, so the replay arm offers it (recovering the eleventh path's
-   cost and the held login's too). Its constraints: the re-ask and the install must be
-   ONE synchronous step (or the install must re-check liveness), because an answer from
-   the already-live arm followed by the eviction reopens the eleventh path's cost; and in
-   the committed order the entry is collected, so the re-ask is a durable read that
-   capacity can refuse (a write-blocked session, not a loss). It changes the join
-   contract. RECOMMENDED: (b). 07's verdict stays FAIL until one is taken.
+1. THE TWELFTH PATH (a ruling), and with it every capture a join after the eviction
+   loses (the eleventh path's cost, the stale capacity hold). Two shapes. (a) A
+   fail-closed staleness check at the join: the install refuses any answer the store has
+   since superseded, counting an OUTSTANDING CAPTURE as well as a commit. It turns every
+   silent loss LOUD but keeps none of the leaver's edits: the stand-in is seeded, the
+   waiting write is refused on it and settle releases the capture, so a row account ends
+   with the same row as today's defect and a fresh account still loses its first house;
+   it also write-blocks the healthy slow-handshake path. (b) The join re-asks the store
+   for its answer after the lease and character read. It keeps the edits: the entry is
+   loaded and holds the capture, so the replay arm offers it (recovering the eleventh
+   path's cost and the held login's too). Its constraint: the answer the join installs
+   has to be VALIDATED AGAINST THE ENTRY AT INSTALL TIME (re-ask until a synchronous
+   replay serves it, or check a committed revision or generation), not merely re-asked.
+   An answer from the already-live arm followed by the eviction reopens the eleventh
+   path's cost, and in the committed order the entry is collected, so the re-ask is a
+   durable read during which a sibling session can join, commit and be evicted again,
+   which a liveness re-check cannot see; that read can also be refused on capacity (a
+   write-blocked session, not a loss). It changes the join contract. RECOMMENDED: (b).
+   07's verdict stays FAIL until one is taken.
 2. `Sim.addPlayer` atomicity (unchanged from the last section).
 3. D85, the cross-realm account ledger against dark realms (a ruling).
 4. The phase 17 re-plan onto the account ledger, with the trophy-source ruling.
