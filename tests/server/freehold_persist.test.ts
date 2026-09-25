@@ -3383,7 +3383,7 @@ describe('a join that lands after the eviction installs nothing from an answer r
 
   for (const kind of ['no_permit', 'read_threw'] as const) {
     for (const shape of ['ABSENT', 'ROW'] as const) {
-      it(`KNOWN COST, a stale ${kind} HOLD on a ${shape} account: the leaver's waiting capture is released unwritten when the held session joins after the eviction`, async () => {
+      it(`KNOWN COST, a stale ${kind} HOLD on ${shape === 'ABSENT' ? 'an' : 'a'} ${shape} account: the leaver's waiting capture is released unwritten when the held session joins after the eviction`, async () => {
         // Not a silent overwrite but the same lost edits: Y's handshake is held
         // while nothing is live (refused a permit, or its read threw), X loads,
         // edits and leaves with its write waiting, X is evicted, and Y joins on
