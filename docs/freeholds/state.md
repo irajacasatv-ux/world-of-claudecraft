@@ -48,6 +48,29 @@ Only what the next session needs. Update at the end of every phase and QA.
 
 ## Current phase
 
+**THE 07 HARNESS-FIDELITY REWRITE IS DONE, 2026-09-25, LOCAL, AND 07 STAYS FAIL ON A
+TWELFTH PATH IT FOUND.** Commits `a8301e8798..HEAD` on `37e6ae6624`; the base did not
+move. The store's four liveness reads now come from ONE live map through
+`server/freehold_liveness.ts` in production and in the harness alike, a per-read audit
+fails any case that sees them disagree, and 125 cases were rewritten onto orders a realm
+can produce, none weakened (ROUND SEVENTEEN's Q3 is CLOSED). The rewrite's first fresh
+read found an ELEVENTH path the old harness could not produce (a join after the old
+record's eviction installed an empty default under the real minted name), fixed
+fail-closed at the install. The read of that fix found a TWELFTH: an answer read with
+nothing live goes stale when another session of the account commits and is evicted
+inside the handshake, which can empty or roll back a house if the joiner edits past the
+committed revision within one autosave interval. It is pinned as KNOWN DEFECT with its
+window, and A RULING IS OWED (a fail-closed staleness check at the join, or the join
+re-asking the store). Every fix round was read fresh, every finding applied or recorded;
+212 mutants plus one type-level, every changed pin killed; the armed gate green on all
+12 steps. Open, in order: (1) the twelfth-path ruling, which also decides whether a
+leave capture lost to a join after the eviction can be recovered; (2) `Sim.addPlayer`
+atomicity; (3) D85, the cross-realm account ledger against dark realms (a ruling); (4)
+the phase 17 re-plan onto the account ledger, with the trophy-source ruling; (5) a new
+release sync if `release/**` moves. Owed before 25a builds: the Fenbridge ruling.
+Detail: [the ledger](qa/persistence-2026-09-08/findings.md), THE HARNESS-FIDELITY
+REWRITE, AND THE TWO PATHS IT FOUND.
+
 **THE V0.44.0 RE-SYNC IS CLOSED, 2026-09-25, LOCAL.** Merge `484cb61a46` takes
 `origin/release/v0.44.0` at `ed69f62ef7` (World PvP, King of the Hill, Warfare Season 2,
 frame presets). Homes are World PvP sanctuaries and keep honor gear health; the capture
@@ -116,8 +139,10 @@ record, which `loadFreehold` then discards as load-once. The invariant is closed
 ORDER-INDEPENDENTLY now, at the instant the row would be created, and the
 ordering machinery is retired rather than repaired a third time.
 
-A read of THAT fix found no eleventh path and no healthy account write-blocked by
-it, which is the first clean answer this store's identity logic has returned, and
+(Superseded 2026-09-25: the harness-fidelity rewrite's first fresh read found an
+eleventh path the old harness could not produce, and the read of its fix a twelfth; see
+Current phase above.) A read of THAT fix found no eleventh path and no healthy account
+write-blocked by it, which is the first clean answer this store's identity logic has returned, and
 four claims to weaken: three of the repaired seal cases refuse through a different
 arm than their comments named, and the new refusal costs one LOGOUT rather than
 one session, because a sibling character still online keeps the poisoned record
@@ -142,7 +167,8 @@ test time. RUN FOUR, on a quiet machine, settles it: `GATE_EXIT=0`, ALL 12 STEPS
 GREEN, with the browser step passing 52 files and 443 tests. The gate is green at
 this tip and nothing about it is outstanding.
 
-THE VERDICT IS STILL FAIL, and now on an OPEN DEFECT rather than on the record:
+(The harness defect below is CLOSED 2026-09-25; see Current phase above.) THE VERDICT IS
+STILL FAIL, and now on an OPEN DEFECT rather than on the record:
 the store's test harness lets `serialize` and `liveRev` contradict `hasLive`, so
 cases can still model a liveness state the server cannot produce. Part of it was
 closed here (the five seal cases that did so, and the global mint identity), but
