@@ -2583,8 +2583,9 @@ the last commit is the final entry of this session.
 
 ## THE HARNESS-FIDELITY REWRITE, AND THE TWO PATHS IT FOUND, 2026-09-25
 
-Everything in this section is local; nothing was pushed. Commits `a8301e8798..HEAD` on
-top of `37e6ae6624`. The base did not move: `git fetch --prune origin` found
+Everything in this section is local; nothing was pushed. The work is
+`37e6ae6624..40a34720ef` (the commits from `a8301e8798` on), plus the records commit
+that follows it. The base did not move: `git fetch --prune origin` found
 `origin/release/v0.44.0` still at `ed69f62ef7`, the version-newest release branch and
 already merged, so no sync was owed.
 
@@ -2610,9 +2611,10 @@ the harness:
   `expectTypeOf` proves it and `tsc` enforces it.
 - A per-read AUDIT asks all four ports at every liveness read the store makes and records
   any disagreement; `afterEach` drains, reads, clears and fails the case that reached one.
-  The gate is pinned WHOLE by its source text, the audit reader is proven to read every
-  harness (the violation is planted in the middle of three), and each of the four
-  sabotage directions is pinned to its exact first violation string.
+  The gate is pinned WHOLE by its source text and as the file's only after-hook, the
+  audit reader is proven to read every harness (the violation is planted in the middle
+  of three), and each of the four sabotage directions is pinned to its exact first
+  violation string.
 - A row lives in a database (`rowRemembered`): it exists once inserted, the durable
   revision counts up as the column does, the compare-and-swap refuses what
   `upsertFreehold` refuses, an update keeps the name, and it serves one account. A
@@ -2623,10 +2625,10 @@ the harness:
 WHAT WENT RED, measured before any case was touched: with the old options ignored at run
 time, 75 of 211 cases failed, the wiring source pin among them. Removing the options
 surfaced 67 compile sites. Converting every bare retain into a join (a retained session
-with no record is a state the second moment rules out) reached further. In all, 125 cases
-changed or were added. No case was rewritten to go green by asserting less; where a claim
-could only be reached through a state no realm produces, the case now reaches it through
-a producible order, or says plainly what it can no longer show.
+with no record is a state the second moment rules out) reached further. In all, 125
+cases changed or were added. No case was rewritten to go green by asserting less; where a
+claim could only be reached through a state no realm produces, the case now reaches it
+through a producible order, or says plainly what it can no longer show.
 
 ### THE CASES, AND WHY EACH ONE CHANGED
 
@@ -2634,83 +2636,86 @@ Grouped by the producible path each now takes.
 
 - PRELOAD ADMISSION. Concurrent preloads collapse on an entry dropped by two sweeps (a
   handshake that never joined), not by a bare retain and flush. ADOPTS the live identity:
-  preload mints, two sweeps collect the unretained entry, the join installs the answer and
-  its retain re-reads, and the row is created under the first mint. REFUSES to name a row
-  for a record it did not install: the handshake is refused a permit, the join installs
-  nothing, retain re-reads, and the seed lands first. The already-live arm is reached in
-  the leave window (the first session's flush collected its clean entry, its removePlayer
-  has not run) and by a second character while the first is in the world; both now assert
-  the join mark. The replay arms are reached by a handshake that died before its join.
+  preload mints, two sweeps collect the unretained entry, the join installs the answer
+  and its retain re-reads, and the row is created under the first mint. REFUSES to name a
+  row for a record it did not install: the handshake is refused a permit, the join
+  installs nothing, retain re-reads, and the seed lands first. The already-live arm is
+  reached in the leave window (the first session's flush collected its clean entry, its
+  removePlayer has not run) and by a second character while the first is in the world;
+  both now assert the join mark. The replay arms are reached by a handshake that died
+  before its join.
 - CLASSIFICATION, THE SWEEP, THE FIFO. The eight hold cases join on the hold, seed the
   stand-in, and try every write door, the whole leave included. The not-yet-loaded write
   block is a join whose retain recreated the collected entry and re-reads, with the read
   held open. "No live record" is a handshake that read and never joined, now asserting
   `writesWithoutRecord`. "Live record" cases use the joined record and edits. The
-  BACKWARDS probe is built with `rejoinBeforeRemoval` (another realm advances the row; this
-  realm's entry re-reads it through the already-live arm while the record stays). The
-  seeded-default write asserts its name and wire revision.
+  BACKWARDS probe is built with `rejoinBeforeRemoval` (another realm advances the row;
+  this realm's entry re-reads it through the already-live arm while the record stays).
+  The seeded-default write asserts its name and wire revision.
 - COALESCING, REFCOUNTS, ERROR RUNS. Held and refusing stores are driven by edits.
   Reference cases use whole leaves and a second character joining. The same-account swap
   reads the new character's handshake while the old one is in the world, then leaves and
   joins on one tick. "Never replays a quiesced entry": the reachable rejoin is a second
   character (the already-live arm); the replay arm's blocked guard is pinned on source
   beside it, because one realm never holds a quiesced entry with no record.
-- THE SEAL. The seeded-default refusal uses `rejoinOverEviction`. The foreign-identity case
-  uses the only foreign identity a record can carry, the stand-in, furnished back to the
-  entry's content at a revision ahead, so only the name differs. The write-allowed cases
-  (the loaded record, the first insert, no durable row) use the installed default and
-  assert both fences, identity and content.
-- THE LEAVE RESERVE AND THE CAPTURE. Leavers and captures come from logins, edits and whole
-  leaves; the second-leave cases use two characters whose leaves both stop at their
-  deadlines, so the record is evicted before the second write. "Drops the capture once its
-  write settled" keeps a second character resident so only settle can release; its old
-  second half (evicting while a sibling is in the world) was not producible and is dropped
-  with the reason in place. The capture-versus-record cases were rebuilt in production
-  order (the returning handshake reads while the leaver is in the world; the leave; the
-  captured write; the join seeds; retain re-reads). The five reseed cases use
-  `rowRemembered`, `rejoinOverEviction` and edits. "Releases the capture only when the live
-  record CARRIES it" builds three worlds, one per moment. "Writes the LIVE record, never a
-  capture" was retitled from "once a record exists again", because a second character
-  keeping the record is the only reachable meeting of the two at a write. "Never lets a
-  captured document shadow a later live edit" refuses the leave write so the capture is
-  still outstanding when the later write samples.
+- THE SEAL. The seeded-default refusal uses `rejoinOverEviction`. The foreign-identity
+  case uses the only foreign identity a record can carry, the stand-in, furnished back to
+  the entry's content at a revision ahead, so only the name differs. The write-allowed
+  cases (the loaded record, the first insert, no durable row) use the installed default
+  and assert both fences, identity and content.
+- THE LEAVE RESERVE AND THE CAPTURE. Leavers and captures come from logins, edits and
+  whole leaves; the second-leave cases use two characters whose leaves both stop at their
+  deadlines, so the record is evicted before the second write. "Drops the capture once
+  its write settled" keeps a second character resident so only settle can release; its
+  old second half (evicting while a sibling is in the world) was not producible and is
+  dropped with the reason in place. The capture-versus-record cases were rebuilt in
+  production order (the returning handshake reads while the leaver is in the world; the
+  leave; the captured write; the join seeds; retain re-reads). The five reseed cases use
+  `rowRemembered`, `rejoinOverEviction` and edits. "Releases the capture only when the
+  live record CARRIES it" builds three worlds, one per moment. "Writes the LIVE record,
+  never a capture" was retitled from "once a record exists again", because a second
+  character keeping the record is the only reachable meeting of the two at a write.
+  "Never lets a captured document shadow a later live edit" refuses the leave write so
+  the capture is still outstanding when the later write samples.
 - THE REST. The re-arm-after-eviction case lets the leave stop at its deadline and evicts
   BEFORE the running write commits (the old form let it commit first, so the re-arm read
   the live record). The dark realm answers what `main.ts` answers. The many-owner cases
   log in each owner with its own row. The abandoned-read cases join in the order the
-  pipeline runs them. The codec case measures through the `onSerialize` observer and three
-  edits. "Stops owing a write" is a handshake that never joined, collected by settle
+  pipeline runs them. The codec case measures through the `onSerialize` observer and
+  three edits. "Stops owing a write" is a handshake that never joined, collected by settle
   itself. The wiring pin was rewritten for the extraction.
 
 ### THE ELEVENTH PATH, FOUND BY THE FIRST FRESH READ
 
-- R1 BLOCKING (identity), and the one invariant. Preload's already-live arm answers with no
-  state, because the record beside it is the truth. For a FRESH account whose first insert
-  has not landed, that answer is also durable-revision-null and hold-null, which is how an
-  absent row reads to the install's absent arm. The handshake awaits the lease and the
-  character read between its preload and its join, so the previous session can finish
-  leaving and `removePlayer` can evict in between; the join then installed an EMPTY
-  default under the account's real minted name.
-- MEASURED against the real store before the fix, in two orders. With the leave write still
-  pending: an empty row INSERTED under the minted name at wire revision 0, the leaver's
-  furnished capture discarded, `quiesced` 0, `write_failures` 0, no error line. With the
-  leave write committed: the house inserted at wire revision 3, then an EMPTY document
-  compare-and-swapped over it at wire revision 4, with no quiesce and no error line.
+- R1 BLOCKING (identity), and the one invariant. Preload's already-live arm answers with
+  no state, because the record beside it is the truth. For a FRESH account whose first
+  insert has not landed, that answer is also durable-revision-null and hold-null, which is
+  how an absent row reads to the install's absent arm. The handshake awaits the lease and
+  the character read between its preload and its join, so the previous session can
+  finish leaving and `removePlayer` can evict in between; the join then installed an
+  EMPTY default under the account's real minted name.
+- MEASURED against the real store before the fix, in two orders. With the leave write
+  still pending: an empty row INSERTED under the minted name at wire revision 0, the
+  leaver's furnished capture discarded, `quiesced` 0, `write_failures` 0, no error line.
+  With the leave write committed: the house inserted at wire revision 3, then an EMPTY
+  document compare-and-swapped over it at wire revision 4, with no quiesce and no error
+  line.
 - The rewrite is what found it: the old port bag could not produce the order.
-- FIXED in `05e89583c2` and made fail-closed in `607049fe3c`. The already-live arm marks both
-  of its answers (`besideLiveRecord`, now a REQUIRED field every constructor states), and
-  `installLoadedFreehold` puts a record in only on a positive `false`, after the clock
-  merge. The seed then puts the stand-in down, and the seal or the insert refusal refuses
-  it, the outcome a row account already had in the same order.
+- FIXED in `05e89583c2` and made fail-closed in `607049fe3c`. The already-live arm marks
+  both of its answers (`besideLiveRecord`, now a REQUIRED field every constructor
+  states), and `installLoadedFreehold` puts a record in only on a positive `false`, after
+  the clock merge. The seed then puts the stand-in down, and the seal or the insert
+  refusal refuses it, the outcome a row account already had in the same order.
 
-WHAT THE FIX COSTS, stated rather than hidden and pinned as it behaves: the joining session
-plays on the empty stand-in, write-blocked for the session; and a leaver's capture still
-waiting when the join lands is released unwritten, so the leaver's last edits reach no
-row. For a fresh account that capture is the whole first house, and there is no row to
-fall back to. It is reached by a quick relog onto another character while the old leave
-is slow, or by a linkdead session's grace expiring while a new handshake is in flight.
-Recovering the capture needs the join to ask the store again after the eviction: a
-RULING IS OWED (below). DEPLOY.md and `held-plot-surface-scope.md` now state it.
+WHAT THE FIX COSTS, stated rather than hidden and pinned as it behaves: the joining
+session plays on the empty stand-in, write-blocked for the session; and a leaver's
+capture still waiting when the join lands is released unwritten, so the leaver's last
+edits reach no row. For a fresh account that capture is the whole first house, and there
+is no row to fall back to. It is reached by a quick relog onto another character while
+the old leave is slow, or by a linkdead session's grace expiring while a new handshake is
+in flight. Recovering the capture needs the join to ask the store again after the
+eviction: a RULING IS OWED (below). DEPLOY.md and `held-plot-surface-scope.md` now state
+it.
 
 ### THE TWELFTH PATH, FOUND BY THE READ OF THAT FIX, AND ESCALATED
 
@@ -2718,100 +2723,141 @@ RULING IS OWED (below). DEPLOY.md and `held-plot-surface-scope.md` now state it.
   read, but the hazard is whether the answer went STALE before the join. An answer read
   with NOTHING live goes stale the same way when another session of the same account (a
   second character, which `planJoin` does not count until it joins, or a GM) joins,
-  commits and is evicted inside the handshake's lease and character-read window.
-- MEASURED, and pinned as KNOWN DEFECT cases that a fix flips: a stale ABSENT answer
-  installs an empty default under the minted name, and if the joiner edits past the
-  committed revision before the first sweep, an EMPTY document is compare-and-swapped over
-  the house (expected durable revision '1', wire revision 4, the row read back empty),
-  with no quiesce and no error line. A stale ROW answer installs the older house, and the
-  same edit overwrites the newer one (wire revision 9, the table the other session placed
-  gone), silently.
-- ITS WINDOW, pinned by two cases so the ruling is taken on the real exposure: the sweep's
-  probe arms on ANY difference from the committed revision, and the seal refuses a record
-  below it for the session. So the silent overwrite needs the joiner to edit past the
-  committed revision inside ONE autosave interval (`AUTOSAVE_SECONDS`, 30) after the join;
-  a sweep that comes first write-blocks the session and the row keeps the house.
-- It also breaks the premise the seal's `revisionRegressed` and the probe rest on, that
-  every install a rejoin is offered carries at least the committed revision. The seal, the
-  probe, the contract and this ledger now state the hole beside the premise.
+  edits and is evicted inside the handshake's lease and character-read window. It also
+  breaks the premise the seal's `revisionRegressed` and the probe rest on, that every
+  install a rejoin is offered carries at least the committed revision; the seal, the
+  probe, the contract and the phase 07 QA plan now state the hole beside the premise.
+- TWO ORDERS, both MEASURED and pinned as KNOWN DEFECT cases that a fix flips.
+  - THE WAITING ORDER (found by the fourth fresh read): the other session's leave write is
+    still waiting on its permit when the leave deadline lets `removePlayer` evict, so the
+    store still holds its capture. The join installs the stale answer, `retain` keeps the
+    capture (the record does not carry it), and when that waiting write samples, the live
+    record outranks the capture. NO EDIT IS NEEDED AND THERE IS NO WINDOW. A fresh account
+    gets an EMPTY row inserted under its minted name at wire revision 0; a row account gets
+    its OLDER house written back (the other session's revision-8 table never reaches the
+    row). No quiesce, no failure, no error line; the capture is released.
+  - THE COMMITTED ORDER: the other session's write has committed. A stale absent answer
+    installs an empty default under the minted name, and a joiner who edits past the
+    committed revision gets an EMPTY document compare-and-swapped over the house (expected
+    durable revision '1', wire revision 4, the row read back empty); a stale row answer
+    overwrites the newer house the same way (wire revision 9). Silent.
+- WHAT REFUSES THE COMMITTED ORDER, and why it is not a bound. The sweep's probe arms on
+  ANY difference from the committed revision, and the seal refuses a record strictly below
+  it and quiesces the entry for the session (two cases pin it, and the row then keeps the
+  house). So the overwrite needs the joiner to REACH the committed revision before the
+  first write that holds a permit samples the record: one `AUTOSAVE_SECONDS` interval when
+  the pool is not saturated. It is not a time bound: a write refused a permit books a
+  failure without quiescing, so the next sweep re-arms and the window grows (pinned); a
+  write deferred past the active-write cap grows it the same way; and a joiner at EXACTLY
+  the committed revision is neither written nor refused, after which any later edit
+  overwrites with no bound at all (pinned).
 - WHY IT IS NOT FIXED HERE: every fix is a design choice with a cost the task did not
   authorize (below). The task's rule is to stop and ask for a genuine design ruling.
 
 ### THE FRESH READS, AND WHAT EACH ROUND FOUND
 
-- ROUND ONE read `37e6ae6624..ddeefdcb19`: a producibility reviewer, a pin-decisiveness
-  auditor, and six slice auditors tracing every changed case through production. It found
-  the eleventh path (above); the audit gate itself unpinned; a harness whose rows no
-  database could produce (a fixed row that could not remember an insert, and a normalizer
-  answer detached from the row it came from); an unguarded `removePlayer`; `record()`
-  handing out the live record; producibility claims overstated in several comments;
-  several cases vacuous, mis-titled, or on a different arm than named; and nits. All applied in `05e89583c2` and
-  `67a9dfc37c`.
-- ROUND TWO read `ddeefdcb19..e94732535e` (coverage) and, separately, the eleventh path's
-  fix `05e89583c2`. The first found nothing blocking: six should-fix (a swap comment the
-  body did not build, a one-line gate pin, a one-harness audit case, the row double's
-  update renaming the row and serving any account, the refusal's cost half-stated, a
-  vocabulary check compared with itself) and nits. The second found the twelfth path, the
-  mark failing open (an optional field), the unloaded-entry mark unpinned, and stale docs.
-  Applied in `e94732535e`, `607049fe3c` and `08c09640e0`; the twelfth path escalated.
-- ROUND THREE read `e94732535e..08c09640e0`: no production bug. Five should-fix: this
-  section did not exist yet (every new pointer dangled); the vocabulary pin was still
+- THE FIRST READ covered `37e6ae6624..ddeefdcb19`: a producibility reviewer, a
+  pin-decisiveness auditor, and six slice auditors tracing every changed case through
+  production. It found the eleventh path (above); the audit gate itself unpinned; a
+  harness whose rows no database could produce (a fixed row that could not remember an
+  insert, and a normalizer answer detached from the row it came from); an unguarded
+  `removePlayer`; `record()` handing out the live record; producibility claims overstated
+  in several comments; several cases vacuous, mis-titled, or on a different arm than
+  named; and nits. All applied in `05e89583c2` and `67a9dfc37c`. The first mutation pass
+  over those fixes then found every account handed the one fixture row, pinned in
+  `e94732535e`.
+- THE SECOND READ was two readers. A coverage audit of `ddeefdcb19..e94732535e` found
+  nothing blocking: six should-fix (a swap comment the body did not build, a one-line gate
+  pin, a one-harness audit case, the row double's update renaming the row and serving any
+  account, the refusal's cost half-stated, a vocabulary check compared with itself) and
+  nits. A read of the eleventh path's fix `05e89583c2` found the twelfth path's committed
+  order, the mark failing open (an optional field), the unloaded-entry mark unpinned, and
+  stale docs. Applied in `607049fe3c` and `08c09640e0`; the twelfth path escalated.
+- THE THIRD READ covered `e94732535e..08c09640e0`: no production bug. Five should-fix:
+  this section did not exist yet (every new pointer dangled); the vocabulary pin was still
   vacuous (a literal list tested only against the one kind observed); the twelfth-path
-  statements left out the window; DEPLOY.md and the scope doc understated the relog cost;
-  two premises still stated without the hole. Nine nits: the audit planted where a
+  statements left out what refuses it; DEPLOY.md and the scope doc understated the relog
+  cost; two premises still stated without the hole. Nine nits: the audit planted where a
   last-harness reader survives; the unloaded-entry mark unpinned; the row double's account
   guard undriven, its advance type widened back, and a double's throw swallowed by the
   store; the twelfth-path pins not exact; three test doubles missing the required mark
-  behind casts; the stand-in case list incomplete; the linkdead order missing; long lines;
-  the gate pin blind to an early return or a guard. All applied in `926e280977`,
-  `21641d9af8` and this section. Outside the diff: the file's `AbortSignal.timeout` patch
+  behind casts; the stand-in case list incomplete; the linkdead order missing; long
+  lines; the gate pin blind to an early return or a guard. All applied in `926e280977`,
+  `21641d9af8` and `9102e3d50d`. Outside the diff: the file's `AbortSignal.timeout` patch
   claimed an `afterEach` restore that never ran (now restored in `afterAll`), and
-  `tests/game_metrics.test.ts` says "the four fixed kinds" where the vocabulary has nine,
-  which is RECORDED, not applied: that suite is not this task's.
+  `tests/server/http/game_metrics.test.ts` says "the four fixed kinds" where the
+  vocabulary has nine, which is RECORDED, not applied: that suite is not this task's.
+- THE FOURTH READ covered `08c09640e0..9102e3d50d`: ONE BLOCKING, the twelfth path's
+  WAITING order (above), which the round had described as bounded to one sweep with an
+  edit needed. Five should-fix: the window off by one (reaching the committed revision is
+  enough, not passing it); one autosave interval is not a bound (a refused permit and the
+  active-write cap extend it); this section called a killed mutant equivalent; state.md
+  and progress.md claimed a gate and reads the tip had not had; the no-hold write-blocked
+  group missed the players who see an OLDER house (the refused twelfth-path install and a
+  superseded capture). Nine nits: a round-two attribution, a commit range that dropped its
+  first commit and named a moving `HEAD`, a wrong test path, the phase 07 QA plan still
+  stating the old premise, count wording, a stale "two KNOWN DEFECT cases above" comment,
+  overlong ledger lines, a second after-hook the gate pin could not see, and older open
+  lists in state.md not marked done. All applied in `fce2a91990`, `40a34720ef` and this
+  section: both waiting orders, the exact-revision boundary and the refused permit are
+  pinned as KNOWN DEFECT, every statement of the window is rewritten to what actually
+  refuses it, and the ruling's options below are re-stated against the waiting order.
 
 ### THE MUTATION PASS
 
 Every changed pin was run against a mutant of what it claims, on committed trees, by a
-runner that applies one mutant, runs both suites with JSON output, restores through
-`git checkout` with retries, and asserts a clean tree.
+runner that applies one mutant, runs the store and liveness suites with JSON output,
+restores through `git checkout` with retries, and asserts a clean tree.
 
 - The rewrite itself: 75 mutants against a control of 224 passing.
-- The first read's fixes: 114 mutants against a control of 235; every one of the 125 touched cases is
-  killed by its claim's mutant. One harness mutant SURVIVED first (every account handed
-  the one fixture row), which is what `e94732535e`'s one-row-per-account pin was written
-  for; it is killed since.
-- The second read's fixes: 10 mutants over the fail-closed mark, the install's arms, the gate and the
-  row double, plus four earlier ones re-run on the new tree. Two row-double mutants (an
-  update that renames the row, a row serving any account) SURVIVED first, which is what
-  `08c09640e0`'s row-database pin was written for; both are killed since.
-- The third read's fixes: 13 mutants plus one type-level mutant, all killed, each on its claimed case:
-  a grown fail-kind vocabulary, both already-live arms unmarked, a first-only and a
-  last-only audit reader, an early return and a guarded matcher in the gate, the bug gate
-  removed, an unrecorded or unguarded double, a row that keeps its layout, the seal's
-  regressed arm off, and a forward-only probe. `tsc` kills a widened `advance`.
-- Recorded, not killable: removing the unloaded arm's mark outright is now EQUIVALENT (the
-  install reads a missing mark as beside, fail-closed, and `tsc` refuses the missing
-  field). The re-arm-on-failure mutant loops forever and crashes the vitest worker, so
-  the suite goes red: it is killed, but by the crash rather than an assertion.
+- The first read's fixes: 114 mutants against a control of 235; every one of the 125
+  touched cases is killed by its claim's mutant. One harness mutant SURVIVED first (every
+  account handed the one fixture row), which is what `e94732535e`'s one-row-per-account
+  pin was written for; it is killed since.
+- The second read's fixes: 10 mutants over the fail-closed mark, the install's arms, the
+  gate and the row double, plus four earlier ones re-run on the new tree. Two row-double
+  mutants (an update that renames the row, a row serving any account) SURVIVED first,
+  which is what `08c09640e0`'s row-database pin was written for; both are killed since.
+- The third read's fixes: 13 mutants plus one type-level mutant, all killed, each on its
+  claimed case: a grown fail-kind vocabulary, both already-live arms unmarked, a
+  first-only and a last-only audit reader, an early return and a guarded matcher in the
+  gate, the bug gate removed, an unrecorded or unguarded double, a row that keeps its
+  layout, the seal's regressed arm off, and a forward-only probe. `tsc` kills a widened
+  `advance`.
+- The fourth read's fixes: 5 mutants, all killed on their claimed case: the capture
+  outranking the live record at the write (flips both waiting-order pins), a probe that
+  calls an equal revision moved (flips the boundary pin), a refused permit that quiesces
+  (flips the refused-permit pin), a second after-hook that clears the bug list (the gate
+  pin), and a seal that refuses an equal revision. The round-two survivor that deleted the
+  unloaded arm's mark is now KILLED by `926e280977`'s pin (deleting the override leaves the
+  load's own `false`, so it was never equivalent).
+- One mutant is killed without an assertion: the re-arm-on-failure mutant loops forever
+  and crashes the vitest worker, so the suite goes red.
 
 ### THE GATE
 
-The armed gate ran with `TEST_DATABASE_URL` taken from the main checkout's `DATABASE_URL`
-alone, proven first with one pg suite. At `e94732535e`: `GATE_EXIT=0`, all 12 steps green.
-At `08c09640e0`: `GATE_EXIT=0`, all 12 steps green, the planner falling back to the full
-suite: 4,588 files passed and 1 skipped, 68,715 tests passed with 2 expected failures and
-28 skips; browser regressions 56 files and 483 tests. The browser step rewrote 21 PNGs under
-`docs/screenshots/`; they were restored, not committed, both times.
+The armed gate ran with `TEST_DATABASE_URL` taken from the main checkout's
+`DATABASE_URL` alone, the arm proven first with one pg suite each time. `GATE_EXIT=0`,
+all 12 steps green, the planner falling back to the full suite, at `e94732535e`, at
+`08c09640e0` (4,588 files passed and 1 skipped; 68,715 tests passed with 2 expected
+failures and 28 skips; browser regressions 56 files and 483 tests) and at `9102e3d50d`
+(68,717 tests, the rest the same). And at `40a34720ef`, the last code commit: 68,721
+tests, the rest the same. The browser step rewrote 21 PNGs under `docs/screenshots/`
+each time; they were restored, not committed.
 
 ### STILL OPEN, IN ORDER
 
-1. THE TWELFTH PATH (a ruling), and with it the capture a join after the eviction loses.
-   Two shapes: (a) a join-time staleness check that fails closed (the install refuses an
-   answer older than the store's entry), which is cheap but write-blocks the healthy
-   slow-handshake path too; (b) the join re-asks the store for its answer after the lease
-   and character read, which is lossless (it also recovers a waiting capture) but changes
-   the join contract. 07's verdict stays FAIL until one is taken.
+1. THE TWELFTH PATH (a ruling), and with it the capture a join after the eviction loses
+   (the eleventh path's cost). Two shapes. (a) A fail-closed staleness check at the join:
+   the install refuses any answer the store has since superseded, which has to count an
+   OUTSTANDING CAPTURE as well as a commit, or the waiting order stays open; cheap, but it
+   write-blocks the healthy slow-handshake path too and recovers nothing. (b) The join
+   re-asks the store for its answer after the lease and character read: lossless (the
+   replay arm offers the waiting capture, so it also recovers the eleventh path's lost
+   edits) but it changes the join contract. RECOMMENDED: (b). 07's verdict stays FAIL until
+   one is taken.
 2. `Sim.addPlayer` atomicity (unchanged from the last section).
 3. D85, the cross-realm account ledger against dark realms (a ruling).
 4. The phase 17 re-plan onto the account ledger, with the trophy-source ruling.
-5. A new release sync if `release/**` moves. The Fenbridge ruling is owed before 25a builds.
+5. A new release sync if `release/**` moves. The Fenbridge ruling is owed before 25a
+   builds.
