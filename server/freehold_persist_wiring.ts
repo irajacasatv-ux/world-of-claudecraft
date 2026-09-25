@@ -8,8 +8,7 @@
 // changed nothing in the factory; a reviewer showed it had silently dropped the
 // statement bound off the two-port fallback, which is restored below.
 import { FREEHOLD_TIER_IDS } from '../src/sim/content/freehold';
-import { normalizeFreehold, persistedFreeholdFromState } from '../src/sim/freehold/persisted';
-import { serializeFreehold } from '../src/sim/freehold/state';
+import { normalizeFreehold } from '../src/sim/freehold/persisted';
 import { FREEHOLD_VISIT_POLICIES } from '../src/sim/freehold/types';
 import type { SimContext } from '../src/sim/sim_context';
 import { pool, runWithStatementTimeout } from './db';
@@ -21,6 +20,7 @@ import {
 } from './freehold_db';
 import { loadFreeholdHearth } from './freehold_hearth_db';
 import { readLoginDurables } from './freehold_hearth_load';
+import { freeholdLivenessPorts } from './freehold_liveness';
 import {
   createFreeholdPersistStore,
   FREEHOLD_PERSIST_LOGIN_STATEMENT_TIMEOUT_MS,
@@ -112,14 +112,10 @@ export function createGameFreeholdPersistStore(deps: {
     // accepts it come to disagree.
     normalize: (raw) => normalizeFreehold(raw, REALM_IDENTITY_SETS),
     identitySets: () => REALM_IDENTITY_SETS,
-    serialize: (ownerKey) => {
-      const state = serializeFreehold(deps.sim.ctx, ownerKey);
-      return state === null ? null : persistedFreeholdFromState(state);
-    },
-    hasLive: (ownerKey) => deps.sim.ctx.freeholds.has(ownerKey),
+    // All four liveness reads over the ONE live map, through the function the
+    // store's suite binds too, so the two cannot model different sims.
+    ...freeholdLivenessPorts(() => deps.sim.ctx),
     enabled: () => deps.sim.ctx.freeholdsEnabled,
-    liveRev: (ownerKey) => deps.sim.ctx.freeholds.get(ownerKey)?.rev ?? null,
-    livePlotId: (ownerKey) => deps.sim.ctx.freeholds.get(ownerKey)?.plotId ?? null,
     mintPlotId: () => mintFreeholdPlotId(),
     // No gate means no admission control on this host, not an unbounded wait.
     acquirePermit: gate

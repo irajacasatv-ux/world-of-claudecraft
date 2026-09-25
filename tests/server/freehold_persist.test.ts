@@ -5285,20 +5285,22 @@ describe('the composition root that binds the combined port (source pins)', () =
     expect(durables).not.toContain('loadFreeholdHearth(pool');
   });
 
-  it('binds the two LIVE-RECORD probes to the sim map, not to a constant', () => {
-    // A SURVIVING MUTANT closed. Replacing this binding with `() => null` left
-    // every case in this file green, because they all supply their own port: the
-    // store's behaviour is covered and the BINDING is not, which is the whole
-    // reason this describe block exists. The probe is what keeps a recreated
-    // entry from minting a SECOND identity for a row the live record already
-    // answers to, so a binding that answers null silently restores that defect
-    // on the one host nothing here executes.
-    const live = binding('livePlotId', 'mintPlotId').replace(/\s+/g, ' ');
-    expect(live).toContain('deps.sim.ctx.freeholds.get(ownerKey)?.plotId ?? null');
-    // Beside its sibling, which the same mutation class reaches: both read the
-    // SAME map, so a case that moves one record moves both probes.
-    const rev = binding('liveRev', 'livePlotId').replace(/\s+/g, ' ');
-    expect(rev).toContain('deps.sim.ctx.freeholds.get(ownerKey)?.rev ?? null');
+  it('binds all four LIVE-RECORD reads through the function this suite drives', () => {
+    // A SURVIVING MUTANT closed this once: replacing the identity probe's
+    // binding with `() => null` left every case green, because every case
+    // supplied its own port and the BINDING was never executed. The four reads
+    // are now ONE function, `freeholdLivenessPorts`, which the harness above
+    // binds over its own live map, so every case in this file executes the
+    // composition root's liveness answers; its own suite,
+    // tests/server/freehold_liveness.test.ts, drives each read against a real
+    // map. What is left to pin here is that the root really spreads it, over
+    // the live sim context, and binds no liveness port of its own beside it.
+    const flat = WIRING.replace(/\s+/g, ' ');
+    expect(flat).toContain('...freeholdLivenessPorts(() => deps.sim.ctx),');
+    // A port written after the spread would override it silently.
+    for (const port of ['hasLive:', 'serialize:', 'liveRev:', 'livePlotId:']) {
+      expect(WIRING, port).not.toContain(port);
+    }
   });
 
   it('EXECUTES the login policy: both reads answer, the clock lands with the row', async () => {
