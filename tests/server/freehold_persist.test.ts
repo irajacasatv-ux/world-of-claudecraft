@@ -919,6 +919,9 @@ describe('the harness models only a liveness state the server can produce', () =
         '});',
       ].join(' '),
     );
+    // And it is the file's ONLY after-hook: vitest runs after-hooks in stack
+    // order, so a second one could clear either list before this one reads it.
+    expect(self.match(/^\s*afterEach\(/gm)).toHaveLength(1);
   });
 
   it('removes a player only after its leave flush, as GameServer.leave orders them', async () => {
@@ -2986,7 +2989,10 @@ describe('a join that lands after the eviction installs nothing from an answer r
   // mark covers an answer read BESIDE a live record, but the hazard is an
   // answer that went STALE between the handshake's preload and its join, and
   // an answer read with NOTHING live goes stale the same way when another
-  // session of the account joins, commits and is evicted inside that window.
+  // session of the account joins, edits and is evicted inside that window.
+  // Two orders: the other session's leave write has COMMITTED when the join
+  // lands (the first two cases), or it is still WAITING (the next two), and
+  // the waiting order needs no edit from the joiner at all.
   it('KNOWN DEFECT, the twelfth path: a stale ABSENT answer empties a house committed during the handshake', async () => {
     const db = rowRemembered();
     const h = harness({ ...db });
@@ -3001,9 +3007,9 @@ describe('a join that lands after the eviction installs nothing from an answer r
     await h.leave();
     expect(h.writeCount()).toBe(1);
     expect(h.writes[0].layoutJson).toBe(JSON.stringify(persistedFixture().layout));
-    // Y joins on its stale answer and edits past the committed revision BEFORE
-    // the first sweep after its join (the window case below is the sweep that
-    // comes first).
+    // Y joins on its stale answer and edits past the committed revision before
+    // the first permitted write samples it (the refusal cases below are that
+    // write coming first).
     h.join(answer);
     await tick(30);
     h.edit(OWNER_KEY, { rev: 4 });
@@ -3038,9 +3044,9 @@ describe('a join that lands after the eviction installs nothing from an answer r
     h.join(answer);
     await tick(30);
     expect(h.record()?.rev).toBe(5);
-    // A sweep that finds it below eight refuses it (the window case below).
-    // Edited past eight BEFORE that sweep, nothing can see that this record is
-    // older than the row.
+    // A permitted write that samples it below eight refuses it (the refusal
+    // cases below). Brought to eight or past before that write, nothing can see
+    // that this record is older than the row.
     h.edit(OWNER_KEY, { rev: 9 });
     h.store.saveAllDirty();
     await tick(30);
@@ -3058,15 +3064,172 @@ describe('a join that lands after the eviction installs nothing from an answer r
     ]);
   });
 
-  // WHAT BOUNDS THE TWELFTH PATH, pinned so the ruling is taken on its real
-  // exposure. The sweep's probe arms on ANY difference from the revision the
-  // entry committed, and the seal refuses a record below it and quiesces the
-  // entry for the session. So the silent overwrite above needs the joiner to
-  // edit past the committed revision before the first sweep after its join
-  // (one autosave interval); a sweep that comes first write-blocks the session
-  // and the row keeps the house, which is the eleventh path's cost, not a loss.
+  it('KNOWN DEFECT, the twelfth path: a stale ABSENT answer inserts an EMPTY row while the leave write waits, with no edit at all', async () => {
+    // The WAITING order. X's leave write is still waiting on its permit when
+    // the leave deadline lets removePlayer evict, so the store still holds the
+    // capture; Y's install then puts the empty default in under the minted
+    // name, retain keeps the capture (the record does not carry it), and when
+    // X's write finally samples, the live record outranks the capture. Nothing
+    // refuses it: no durable row yet, and the same name.
+    let granted = 0;
+    const permit = deferred<{ release(): void } | null>();
+    const db = rowRemembered();
+    const h = harness({
+      ...db,
+      acquirePermit: async () => {
+        granted += 1;
+        return granted === 1 ? { release: () => {} } : await permit.promise;
+      },
+    });
+    const answer = await h.store.preload(ACCOUNT_ID);
+    expect(answer.besideLiveRecord).toBe(false);
+    await h.login();
+    h.edit(OWNER_KEY, furnishedEdit(3));
+    const leaving = h.leave();
+    await tick(10);
+    h.deadlines.find((job) => job.ms === FREEHOLD_PERSIST_LEAVE_FLUSH_MS)?.fire();
+    await leaving;
+    expect(h.record()).toBeUndefined();
+    expect(h.store.stats().leaveCaptures).toBe(1);
+    h.join(answer);
+    expect(h.record()?.plotId).toBe(MINTED_PLOT_ID);
+    permit.resolve({ release: () => {} });
+    await tick(40);
+    // THE DEFECT: X's whole first house is gone and an empty row stands in its
+    // place, with no quiesce, no failure and no error line.
+    expect(h.writeCount()).toBe(1);
+    expect(h.writes[0].plotId).toBe(MINTED_PLOT_ID);
+    expect(h.writes[0].expectedDurableRev).toBeNull();
+    expect(h.writes[0].wireRev).toBe(0);
+    expect(h.writes[0].layoutJson).toBe('[]');
+    expect(h.store.stats().quiesced).toBe(0);
+    expect(h.store.stats().writeFailures).toBe(0);
+    expect(h.store.stats().leaveCaptures).toBe(0);
+    expect(h.errors).toEqual([]);
+    const row = await db.readRow(ACCOUNT_ID);
+    expect(row.kind === 'row' ? [row.row.layout, row.row.wireRev] : null).toEqual([[], '0']);
+  });
+
+  it('KNOWN DEFECT, the twelfth path: a stale ROW answer writes the OLDER house back while the leave write waits, with no edit at all', async () => {
+    const table = { placementId: 2, itemId: 'oak_table', x: 0, y: 0, z: 0, yaw: 0 };
+    let granted = 0;
+    const permit = deferred<{ release(): void } | null>();
+    const db = rowRemembered(rowFixture());
+    const h = harness({
+      ...db,
+      acquirePermit: async () => {
+        granted += 1;
+        return granted === 1 ? { release: () => {} } : await permit.promise;
+      },
+    });
+    const answer = await h.store.preload(ACCOUNT_ID);
+    await h.login();
+    h.edit(OWNER_KEY, { layout: [...persistedFixture().layout, table], rev: 8 });
+    const leaving = h.leave();
+    await tick(10);
+    h.deadlines.find((job) => job.ms === FREEHOLD_PERSIST_LEAVE_FLUSH_MS)?.fire();
+    await leaving;
+    expect(h.store.stats().leaveCaptures).toBe(1);
+    h.join(answer);
+    expect(h.record()?.rev).toBe(5);
+    permit.resolve({ release: () => {} });
+    await tick(40);
+    // THE DEFECT: the write X's leave was waiting on carries Y's older house,
+    // so the table X placed never reaches the row, silently.
+    expect(h.writeCount()).toBe(1);
+    expect(h.writes[0].wireRev).toBe(5);
+    expect(h.writes[0].expectedDurableRev).toBe('7');
+    expect(h.writes[0].layoutJson).toBe(JSON.stringify(rowFixture().layout));
+    expect(h.store.stats().quiesced).toBe(0);
+    expect(h.store.stats().writeFailures).toBe(0);
+    expect(h.store.stats().leaveCaptures).toBe(0);
+    expect(h.errors).toEqual([]);
+    const row = await db.readRow(ACCOUNT_ID);
+    expect(row.kind === 'row' ? [row.row.layout, row.row.wireRev] : null).toEqual([
+      rowFixture().layout,
+      '5',
+    ]);
+  });
+
+  it('KNOWN DEFECT, the twelfth path: a stale ROW answer brought EXACTLY to the committed revision passes unseen, and any later edit overwrites', async () => {
+    // The committed order's boundary. The probe calls a record at the
+    // committed revision unmoved and the seal's regressed test is strict, so a
+    // joiner who reaches the committed revision before a write samples it is
+    // neither written nor refused, and nothing bounds when the overwrite comes.
+    const table = { placementId: 2, itemId: 'oak_table', x: 0, y: 0, z: 0, yaw: 0 };
+    const db = rowRemembered(rowFixture());
+    const h = harness({ ...db });
+    const answer = await h.store.preload(ACCOUNT_ID);
+    await h.login();
+    h.edit(OWNER_KEY, { layout: [...persistedFixture().layout, table], rev: 8 });
+    await h.leave();
+    h.join(answer);
+    await tick(30);
+    h.edit(OWNER_KEY, { rev: 8 });
+    h.store.saveAllDirty();
+    await tick(30);
+    expect(h.writeCount()).toBe(1);
+    expect(h.store.stats().quiesced).toBe(0);
+    expect(h.errors).toEqual([]);
+    h.edit(OWNER_KEY, { rev: 9 });
+    h.store.saveAllDirty();
+    await tick(30);
+    expect(h.writeCount()).toBe(2);
+    expect(h.writes[1].wireRev).toBe(9);
+    expect(h.writes[1].layoutJson).toBe(JSON.stringify(rowFixture().layout));
+    expect(h.store.stats().quiesced).toBe(0);
+    expect(h.errors).toEqual([]);
+  });
+
+  it('KNOWN DEFECT, the twelfth path: a write refused a permit leaves the stale record below unrefused, so the window is not one interval', async () => {
+    // The committed order under saturation, which is when a slow handshake is
+    // likeliest. The seal only runs once a write holds a permit, and a write
+    // that gets none books a failure without quiescing, so the next sweep
+    // re-arms and the joiner has another interval to edit past.
+    const table = { placementId: 2, itemId: 'oak_table', x: 0, y: 0, z: 0, yaw: 0 };
+    let refuseNext = false;
+    const db = rowRemembered(rowFixture());
+    const h = harness({
+      ...db,
+      acquirePermit: async () => {
+        if (!refuseNext) return { release: () => {} };
+        refuseNext = false;
+        return null;
+      },
+    });
+    const answer = await h.store.preload(ACCOUNT_ID);
+    await h.login();
+    h.edit(OWNER_KEY, { layout: [...persistedFixture().layout, table], rev: 8 });
+    await h.leave();
+    h.join(answer);
+    await tick(30);
+    expect(h.record()?.rev).toBe(5);
+    refuseNext = true;
+    h.store.saveAllDirty();
+    await tick(30);
+    expect(h.writeCount()).toBe(1);
+    expect(h.store.stats().writeFailures).toBe(1);
+    expect(h.store.stats().quiesced).toBe(0);
+    h.edit(OWNER_KEY, { rev: 9 });
+    h.store.saveAllDirty();
+    await tick(30);
+    expect(h.writeCount()).toBe(2);
+    expect(h.writes[1].wireRev).toBe(9);
+    expect(h.writes[1].layoutJson).toBe(JSON.stringify(rowFixture().layout));
+    expect(h.store.stats().quiesced).toBe(0);
+  });
+
+  // WHAT REFUSES IT, pinned so the ruling is taken on its real exposure, and
+  // why that is not a bound. In the COMMITTED order the sweep's probe arms on
+  // ANY difference from the revision the entry committed, and the seal refuses
+  // a record strictly below it and quiesces the entry for the session: the
+  // cases below. So the overwrite needs the joiner to reach the committed
+  // revision before the first write that holds a permit samples the record
+  // (one autosave interval when the pool is not saturated; a refused permit or
+  // a deferred write extends it, and reaching the revision exactly leaves no
+  // bound at all, both pinned above). The WAITING order has no window.
   for (const shape of ['ABSENT', 'ROW'] as const) {
-    it(`bounds the twelfth path to one sweep: a stale ${shape} answer swept before the joiner edits past the committed revision is refused`, async () => {
+    it(`refuses a stale ${shape} answer still below the committed revision when the first permitted write samples it, for the session`, async () => {
       const db = rowRemembered(shape === 'ROW' ? rowFixture() : null);
       const h = harness({ ...db });
       const answer = await h.store.preload(ACCOUNT_ID);
@@ -3974,9 +4137,9 @@ describe('a leaving session never loses its last edits to a queue', () => {
   });
 
   it('REFUSES the same reseed for a ROW-LOADED entry, which is why this is about the MINT', async () => {
-    // The contrast arm, and the reason the two KNOWN DEFECT cases above are
-    // about the entry that minted its own row rather than about the seal in
-    // general. Identical shape, one difference: this entry loaded a ROW, so its
+    // The contrast arm, and the reason the two MINTED-account reseed cases
+    // above are about the entry that minted its own row rather than about the
+    // seal in general. Identical shape, one difference: this entry loaded a ROW, so its
     // cached name is the row's and the seeded default's stand-in differs from
     // it. The name comparison fires and the house survives.
     const h = await loadedStore({
