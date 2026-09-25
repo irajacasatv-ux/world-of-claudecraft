@@ -161,6 +161,7 @@ function setup() {
       state: null,
       hearthReadyAtMs: 0,
       hearthRevision: '0',
+      besideLiveRecord: false,
       hold: {
         kind: 'unadmitted' as const,
         detail: 'test host holds no persistence store',

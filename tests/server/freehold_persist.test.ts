@@ -13,7 +13,7 @@
 //    write actually committed.
 
 import { readdirSync, readFileSync } from 'node:fs';
-import { afterEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
+import { afterAll, afterEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
 import { createBackgroundDbGate } from '../../server/background_db_gate';
 import type {
   FreeholdRow,
@@ -126,15 +126,19 @@ function timeoutMsOf(signal: AbortSignal): number {
 }
 
 /** Every AbortSignal.timeout this file's subject creates, with its deadline.
- *  Patched once, restored in afterEach, so the store keeps using the real API
- *  and the test only observes it. */
+ *  Patched once for the file and restored in afterAll, so the store keeps using
+ *  the real API and the test only observes it. */
 const signalDeadlines = new WeakMap<AbortSignal, number>();
+const originalAbortTimeout = AbortSignal.timeout;
 const realAbortTimeout = AbortSignal.timeout.bind(AbortSignal);
 AbortSignal.timeout = ((ms: number) => {
   const signal = realAbortTimeout(ms);
   signalDeadlines.set(signal, ms);
   return signal;
 }) as typeof AbortSignal.timeout;
+afterAll(() => {
+  AbortSignal.timeout = originalAbortTimeout;
+});
 
 /** Let the microtask queue settle. The keyed FIFO defers each start by a
  *  microtask, and a write hop is queue, permit, serialize, write. */
@@ -227,6 +231,12 @@ const liveHarnesses: Array<{ readonly livenessViolations: readonly string[] }> =
 function auditViolations(): string[] {
   return liveHarnesses.flatMap((h) => h.livenessViolations);
 }
+
+/** A CASE BUG a harness double refused, recorded as it throws. The double runs
+ *  inside the store, whose own catches would turn the throw into store
+ *  behaviour (a `read_threw` hold, a counted thrown write), so the case could
+ *  pass on the wrong reason; `afterEach` fails it instead. */
+const caseBugs: string[] = [];
 
 function harness(options: HarnessOptions = {}) {
   const calls: string[] = [];
@@ -627,6 +637,10 @@ function furnishedEdit(rev: number): RecordEdit {
   };
 }
 
+/** What another realm's write may move on a row: the content, never the name,
+ *  the fence or the account, which no write sets directly. */
+type RowAdvance = Partial<Omit<FreeholdRow, 'plotId' | 'durableRev' | 'accountId'>>;
+
 /**
  * A ROW THAT LIVES IN A DATABASE: it exists once it is inserted, every write is
  * kept as the row it would leave, the durable revision counts up exactly as the
@@ -639,7 +653,7 @@ function furnishedEdit(rev: number): RecordEdit {
 function rowRemembered(initial: FreeholdRow | null = null): {
   readRow: (accountId: number) => Promise<FreeholdRowLoad>;
   writeRow: (input: FreeholdUpsert) => Promise<FreeholdUpsertResult>;
-  advance: (patch: Partial<FreeholdRow>) => void;
+  advance: (patch: RowAdvance) => void;
 } {
   let row: FreeholdRow | null = initial;
   // ONE ACCOUNT'S database: a read or a write for another account is a case
@@ -647,7 +661,10 @@ function rowRemembered(initial: FreeholdRow | null = null): {
   let owner = initial?.accountId ?? null;
   const mine = (accountId: number): void => {
     if (owner === null) owner = accountId;
-    if (accountId !== owner) throw new Error(`rowRemembered holds account ${owner} only`);
+    if (accountId === owner) return;
+    const bug = `rowRemembered holds account ${owner} only, not ${accountId}`;
+    caseBugs.push(bug);
+    throw new Error(bug);
   };
   return {
     readRow: async (accountId: number): Promise<FreeholdRowLoad> => {
@@ -656,7 +673,7 @@ function rowRemembered(initial: FreeholdRow | null = null): {
     },
     // Another realm's write: the CONTENT moves and the durable revision with it.
     // Never the name or the fence directly, which no write sets.
-    advance: (patch: Partial<Omit<FreeholdRow, 'plotId' | 'durableRev' | 'accountId'>>): void => {
+    advance: (patch: RowAdvance): void => {
       if (row === null) throw new Error('no row to write forward');
       row = { ...row, ...patch, durableRev: String(Number(row.durableRev) + 1) };
     },
@@ -713,12 +730,15 @@ function fakeCtx(freeholdsEnabled = true): SimContext {
 afterEach(async () => {
   registerFreeholdPersistStore(null);
   // EVERY liveness read any case made agreed with the other three at that
-  // instant. See `audit` in the harness. Drained first, so a read the case left
-  // in flight (a repair reload, an ungated write) is audited too.
+  // instant (see `audit` in the harness), and no double refused a case bug the
+  // store would have swallowed. Drained first, so a read the case left in
+  // flight (a repair reload, an ungated write) is audited too.
   await tick(30);
   const violations = auditViolations();
   liveHarnesses.length = 0;
+  const bugs = caseBugs.splice(0);
   expect(violations, 'a liveness read disagreed with the live map').toEqual([]);
+  expect(bugs, 'a harness double refused what the case asked of it').toEqual([]);
 });
 
 describe('the harness models only a liveness state the server can produce', () => {
@@ -845,15 +865,16 @@ describe('the harness models only a liveness state the server can produce', () =
     // sabotage case above clears before it could be seen: the harness has to be
     // on the list the gate reads, and the gate's reader has to return what was
     // recorded.
-    // ANY harness: the violation is planted in the SECOND of two, so a reader
-    // that looked at the first alone would miss it.
+    // ANY harness: the violation is planted in the MIDDLE of three, so a
+    // reader that looked at the first alone, or at the last, would miss it.
     const first = harness();
     const h = harness();
-    expect(liveHarnesses).toContain(first);
-    expect(liveHarnesses).toContain(h);
+    const last = harness();
+    for (const each of [first, h, last]) expect(liveHarnesses).toContain(each);
     h.ports.liveRev = () => 5;
     h.ports.hasLive(OWNER_KEY);
     expect(first.livenessViolations).toEqual([]);
+    expect(last.livenessViolations).toEqual([]);
     expect(auditViolations()).toEqual([
       `${OWNER_KEY}: hasLive false, serialize null, liveRev 5, livePlotId null`,
     ]);
@@ -879,20 +900,25 @@ describe('the harness models only a liveness state the server can produce', () =
       expect(wrapper, port).toContain(`live.${port}(ownerKey)`);
       expect(wrapper, port).toContain('audit(ownerKey)');
     }
-    // And the gate fails on what the audit reader returns.
-    // And the gate, IN ORDER: drain, read, clear, fail. Any one missing or
-    // moved (clearing before reading, a softened matcher) lets a recorded
-    // violation pass.
+    // And the gate, WHOLE and in order: drain, read, clear, fail, and nothing
+    // else. A step missing or moved (clearing before reading, a softened
+    // matcher), an early return, or a guard around a matcher lets a recorded
+    // violation or case bug pass, and each changes this text.
     const opens = self.indexOf('afterEach(async () => {');
-    const gate = self.slice(opens, self.indexOf('\n});', opens));
-    const steps = [
-      'await tick(30);',
-      'const violations = auditViolations();',
-      'liveHarnesses.length = 0;',
-      "expect(violations, 'a liveness read disagreed with the live map').toEqual([]);",
-    ].map((step) => gate.indexOf(step));
-    for (const at of steps) expect(at).toBeGreaterThan(-1);
-    expect([...steps].sort((a, b) => a - b)).toEqual(steps);
+    const gate = self.slice(opens, self.indexOf('\n});', opens) + 4);
+    expect(gate.replace(/\s+/g, ' ')).toBe(
+      [
+        'afterEach(async () => {',
+        'registerFreeholdPersistStore(null);',
+        'await tick(30);',
+        'const violations = auditViolations();',
+        'liveHarnesses.length = 0;',
+        'const bugs = caseBugs.splice(0);',
+        "expect(violations, 'a liveness read disagreed with the live map').toEqual([]);",
+        "expect(bugs, 'a harness double refused what the case asked of it').toEqual([]);",
+        '});',
+      ].join(' '),
+    );
   });
 
   it('removes a player only after its leave flush, as GameServer.leave orders them', async () => {
@@ -927,8 +953,21 @@ describe('the harness models only a liveness state the server can produce', () =
     ).toEqual({ kind: 'updated', durableRev: '2' });
     const read = await db.readRow(ACCOUNT_ID);
     expect(read.kind === 'row' ? read.row.plotId : null).toBe(MINTED_PLOT_ID);
-    // And it is one account's row: another account is a case bug.
+    // And it is one account's row: another account is a case bug, on either
+    // side, and recorded where afterEach fails it, since inside the store a
+    // throw would read as a hold or a thrown write.
     await expect(db.readRow(OTHER_ACCOUNT_ID)).rejects.toThrow(/holds account/);
+    await expect(db.writeRow({ ...insert, accountId: OTHER_ACCOUNT_ID })).rejects.toThrow(
+      /holds account/,
+    );
+    const bug = `rowRemembered holds account ${ACCOUNT_ID} only, not ${OTHER_ACCOUNT_ID}`;
+    expect(caseBugs).toEqual([bug, bug]);
+    caseBugs.length = 0;
+    // Another realm's write moves the content, never the name, the fence or the
+    // account: `tsc` enforces it, and the check below is inert at run time.
+    expectTypeOf<
+      Extract<keyof Parameters<typeof db.advance>[0], 'plotId' | 'durableRev' | 'accountId'>
+    >().toBeNever();
   });
 
   it('hands a case a COPY of the record, so the map moves only through edits', async () => {
@@ -1259,6 +1298,9 @@ describe('preload admission', () => {
     // Learned, so the session can write: identity and fence both present.
     expect(loaded.plotId).toBe(ROW_PLOT_ID);
     expect(loaded.durableRev).toBe('7');
+    // And marked, so a join that lands after the record is evicted installs
+    // nothing from it.
+    expect(loaded.besideLiveRecord).toBe(true);
   });
 
   it('short circuits with zero database work once the entry has already loaded', async () => {
@@ -1272,6 +1314,7 @@ describe('preload admission', () => {
     expect(h.calls).toEqual([]);
     expect(again.state).toBeNull();
     expect(again.durableRev).toBe('7');
+    expect(again.besideLiveRecord).toBe(true);
   });
 
   it('does read the row when nothing is live (the other arm of the short circuit)', async () => {
@@ -1336,6 +1379,7 @@ describe('preload admission', () => {
     // No state, because the live record is the truth; but the clock is a
     // separate durable fact and this arm must not report it cold.
     expect(second.state).toBeNull();
+    expect(second.besideLiveRecord).toBe(true);
     expect(second.hearthReadyAtMs).toBe(1_700_000_000_000);
     expect(second.hearthRevision).toBe('4');
   });
@@ -2944,7 +2988,8 @@ describe('a join that lands after the eviction installs nothing from an answer r
   // an answer read with NOTHING live goes stale the same way when another
   // session of the account joins, commits and is evicted inside that window.
   it('KNOWN DEFECT, the twelfth path: a stale ABSENT answer empties a house committed during the handshake', async () => {
-    const h = harness({ ...rowRemembered() });
+    const db = rowRemembered();
+    const h = harness({ ...db });
     // Y's handshake reads with nothing live: the absent arm, unmarked.
     const answer = await h.store.preload(ACCOUNT_ID);
     expect(answer.besideLiveRecord).toBe(false);
@@ -2955,7 +3000,10 @@ describe('a join that lands after the eviction installs nothing from an answer r
     h.edit(OWNER_KEY, furnishedEdit(3));
     await h.leave();
     expect(h.writeCount()).toBe(1);
-    // Y joins on its stale answer and edits past the committed revision.
+    expect(h.writes[0].layoutJson).toBe(JSON.stringify(persistedFixture().layout));
+    // Y joins on its stale answer and edits past the committed revision BEFORE
+    // the first sweep after its join (the window case below is the sweep that
+    // comes first).
     h.join(answer);
     await tick(30);
     h.edit(OWNER_KEY, { rev: 4 });
@@ -2965,38 +3013,97 @@ describe('a join that lands after the eviction installs nothing from an answer r
     // no quiesce and no error line.
     expect(h.writeCount()).toBe(2);
     expect(h.writes[1].plotId).toBe(MINTED_PLOT_ID);
+    expect(h.writes[1].expectedDurableRev).toBe('1');
     expect(h.writes[1].wireRev).toBe(4);
     expect(h.writes[1].layoutJson).toBe('[]');
     expect(h.store.stats().quiesced).toBe(0);
     expect(h.errors).toEqual([]);
+    // And the row now holds the empty house.
+    const row = await db.readRow(ACCOUNT_ID);
+    expect(row.kind === 'row' ? [row.row.layout, row.row.wireRev] : null).toEqual([[], '4']);
   });
 
   it('KNOWN DEFECT, the twelfth path: a stale ROW answer installs an older house over one committed since', async () => {
     const table = { placementId: 2, itemId: 'oak_table', x: 0, y: 0, z: 0, yaw: 0 };
-    const h = harness({ ...rowRemembered(rowFixture()) });
+    const db = rowRemembered(rowFixture());
+    const h = harness({ ...db });
     // Y's handshake reads the row at revision five.
     const answer = await h.store.preload(ACCOUNT_ID);
     // X places a table, commits at revision eight, and leaves.
     await h.login();
     h.edit(OWNER_KEY, { layout: [...persistedFixture().layout, table], rev: 8 });
     await h.leave();
-    expect(h.writes[0].layoutJson).toContain('oak_table');
+    expect(h.writes[0].layoutJson).toBe(JSON.stringify([...persistedFixture().layout, table]));
     // Y joins on its stale answer: the install puts revision FIVE in.
     h.join(answer);
     await tick(30);
     expect(h.record()?.rev).toBe(5);
-    // Refused while it sits below eight; once Y edits past it, nothing can see
-    // that this record is older than the row.
+    // A sweep that finds it below eight refuses it (the window case below).
+    // Edited past eight BEFORE that sweep, nothing can see that this record is
+    // older than the row.
     h.edit(OWNER_KEY, { rev: 9 });
     h.store.saveAllDirty();
     await tick(30);
-    // THE DEFECT: the table X committed is overwritten, silently.
+    // THE DEFECT: the table X committed is overwritten, silently, by the older
+    // house Y's answer carried.
     expect(h.writeCount()).toBe(2);
     expect(h.writes[1].wireRev).toBe(9);
-    expect(h.writes[1].layoutJson).not.toContain('oak_table');
+    expect(h.writes[1].layoutJson).toBe(JSON.stringify(rowFixture().layout));
     expect(h.store.stats().quiesced).toBe(0);
     expect(h.errors).toEqual([]);
+    const row = await db.readRow(ACCOUNT_ID);
+    expect(row.kind === 'row' ? [row.row.layout, row.row.wireRev] : null).toEqual([
+      rowFixture().layout,
+      '9',
+    ]);
   });
+
+  // WHAT BOUNDS THE TWELFTH PATH, pinned so the ruling is taken on its real
+  // exposure. The sweep's probe arms on ANY difference from the revision the
+  // entry committed, and the seal refuses a record below it and quiesces the
+  // entry for the session. So the silent overwrite above needs the joiner to
+  // edit past the committed revision before the first sweep after its join
+  // (one autosave interval); a sweep that comes first write-blocks the session
+  // and the row keeps the house, which is the eleventh path's cost, not a loss.
+  for (const shape of ['ABSENT', 'ROW'] as const) {
+    it(`bounds the twelfth path to one sweep: a stale ${shape} answer swept before the joiner edits past the committed revision is refused`, async () => {
+      const db = rowRemembered(shape === 'ROW' ? rowFixture() : null);
+      const h = harness({ ...db });
+      const answer = await h.store.preload(ACCOUNT_ID);
+      await h.login();
+      const committed = shape === 'ROW' ? 8 : 3;
+      // X's house differs from anything Y's answer carries, so the read-back
+      // below can tell them apart.
+      const table = { placementId: 2, itemId: 'oak_table', x: 0, y: 0, z: 0, yaw: 0 };
+      h.edit(OWNER_KEY, {
+        ...furnishedEdit(committed),
+        layout: [...persistedFixture().layout, table],
+      });
+      await h.leave();
+      const house = h.writes[0].layoutJson;
+      expect(house).toContain('oak_table');
+      h.join(answer);
+      await tick(30);
+      const installed = h.record()?.rev ?? Number.NaN;
+      expect(installed).toBeLessThan(committed - 1);
+      // Y edits, but not past what X committed, and the sweep lands.
+      h.edit(OWNER_KEY, { rev: installed + 1 });
+      h.store.saveAllDirty();
+      await tick(30);
+      expect(h.writeCount()).toBe(1);
+      expect(h.store.stats().quiesced).toBe(1);
+      expect(h.errors).toHaveLength(1);
+      expect(h.errors[0]).toContain('write refused (identity)');
+      // Refused for the session: an edit past the committed revision after
+      // that sweep goes out no more.
+      h.edit(OWNER_KEY, { rev: committed + 1 });
+      h.store.saveAllDirty();
+      await tick(30);
+      expect(h.writeCount()).toBe(1);
+      const row = await db.readRow(ACCOUNT_ID);
+      expect(row.kind === 'row' ? JSON.stringify(row.row.layout) : null).toBe(house);
+    });
+  }
 
   it('still lets the next character write when the old record is still live at its join', async () => {
     // The contrast, so the fix is not a stopped writer: the ordinary two-character
@@ -5426,21 +5533,22 @@ describe('stats', () => {
     // kinds from a closed vocabulary and its values are counts, so no identity
     // can ride in on either side.
     expect(stats.loadFailuresByKind).toEqual({ no_permit: 1 });
+    // A LITERAL list, held EQUAL to the vocabulary, so a kind that grew would
+    // have to be read here before it could ride out on this scrape.
+    const kinds = [
+      'unsupported',
+      'malformed',
+      'oversize',
+      'unadmitted',
+      'read_threw',
+      'cap_full',
+      'no_permit',
+      'no_budget',
+      'unnamed_record',
+    ];
+    expect([...FREEHOLD_LOAD_FAILURE_KINDS].sort()).toEqual([...kinds].sort());
     for (const [kind, count] of Object.entries(stats.loadFailuresByKind)) {
-      // A LITERAL list, so a vocabulary that grew would have to be read here
-      // before it could ride out on this scrape.
-      expect([
-        'unsupported',
-        'malformed',
-        'oversize',
-        'unadmitted',
-        'read_threw',
-        'cap_full',
-        'no_permit',
-        'no_budget',
-        'unnamed_record',
-      ]).toContain(kind);
-      expect(FREEHOLD_LOAD_FAILURE_KINDS as readonly string[]).toContain(kind);
+      expect(kinds).toContain(kind);
       expect(typeof count).toBe('number');
     }
   });
