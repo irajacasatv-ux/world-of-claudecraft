@@ -126,13 +126,13 @@ export function seedWouldLandOnRealRow(
   // live record BELOW that has to be a different record. THAT PREMISE HAS A
   // KNOWN HOLE, the twelfth path: an answer read before another session of the
   // same account edited and was evicted, then installed at the join, carries
-  // an OLDER house. While that session's leave write is still waiting, the
-  // write itself carries the stale record and no arm here refuses it. Once it
-  // has committed, the first write that holds a permit and samples the record
-  // below the committed revision is refused here, but a returning player who
-  // reaches the committed revision before that write carries it past every arm
-  // (pinned as it behaves in tests/server/freehold_persist.test.ts; a ruling is
-  // owed).
+  // an OLDER house. While that session's capture is still unwritten (its
+  // leave write waiting, refused a permit, thrown once, or deferred), the
+  // store's next write carries the stale record and no arm here refuses it.
+  // Once it has committed, a write that samples the record STRICTLY below the
+  // committed revision is refused here, but a returning player who reaches
+  // that revision before a write samples it carries it past every arm (pinned
+  // as it behaves in tests/server/freehold_persist.test.ts; a ruling is owed).
   //
   // UN-GATED FROM THE STAND-IN, and that is the companion the install fix owes.
   // It used to be checked only under the stand-in identity, on the reasoning

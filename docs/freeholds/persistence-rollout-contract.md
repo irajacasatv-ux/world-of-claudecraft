@@ -709,16 +709,17 @@ row deliberately. That rule is RETIRED rather than dropped: a live revision
 below the entry's last committed one means the live record is not the record
 that commit came from, since every install a rejoin is offered carries at least
 the committed revision (with one known hole, the twelfth path: an answer read
-before another session edited and was evicted carries an older house, which a
-leave write still waiting when the join lands writes silently, and which, after
-that write commits, is refused only if the first permitted write samples it
-below the committed revision; see the findings ledger's harness-fidelity
-section) and every sanctioned mutator only increments, and writing it would walk
-the client-facing wire counter backwards permanently, which is the exact harm
-the loader's own `wire_rev_shape` hold refuses on the read side. What it newly
-refuses is a superseded leave capture offered to a rejoin as the install source:
-refusing loses nothing, the row survives, and it books a write failure and
-quiesces an entry that is about to be collected anyway.
+before another session edited and was evicted carries an older house, which the
+store's next write carries silently while that session's capture is still
+unwritten, and which, once that capture has committed, is refused only by a
+write that samples it strictly below the committed revision; see the findings
+ledger's harness-fidelity section) and every sanctioned mutator only increments,
+and writing it would walk the client-facing wire counter backwards permanently,
+which is the exact harm the loader's own `wire_rev_shape` hold refuses on the
+read side. What it newly refuses is a superseded leave capture offered to a
+rejoin as the install source: refusing loses nothing, the row survives, and it
+books a write failure and quiesces an entry that is about to be collected
+anyway.
 
 OFFLINE AND HEADLESS PLOT IDENTITY: THE DIVERGENCE IS ACCEPTED AND DOCUMENTED.
 Online records now answer to a unique minted identity from their first session.

@@ -862,10 +862,13 @@ For off-box safety, sync the directory to S3 occasionally:
   house). The seal also refuses, again with no `held` entry, a record installed
   from an answer that went stale during the handshake (another session of the
   account edited and left inside it) and a superseded leave capture offered to a
-  rejoin: that player sees an OLDER house, not the empty default. And some
-  orders of the stale answer write with NO refusal and no counter at all (the
-  findings ledger's twelfth path, a ruling owed), so a flat `quiesced` is not
-  proof that no house was lost. `held` counts
+  rejoin: that player sees an OLDER house (for a fresh account, the empty
+  default under its own name). A login held on capacity that joins after the
+  same account's other session was evicted likewise releases that session's
+  waiting capture unwritten, refused loudly. And some orders of the stale answer
+  write with NO refusal and no counter at all (the findings ledger's twelfth
+  path, a ruling owed), so a flat `quiesced` is not proof that no house was
+  lost. `held` counts
   entries under ANY recovery hold, DATA or CAPACITY: read
   `woc_freehold_load_failures_total` by `kind` to tell a row this build cannot
   read from a login storm that filled the admission cap. TWO CAVEATS on reading

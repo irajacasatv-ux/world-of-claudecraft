@@ -155,16 +155,17 @@ the budget: three of the last ten rounds turned a "cannot be reached" into a liv
   moment it is narrowed. Round nine narrowed it, which is how they mattered.
 - A record carrying a REAL plot name still goes backwards onto the row, deliberately;
   only a stand-in-named record is refused on a regressed revision.
-  THIS RULING IS RETIRED at the rulings round, and it is the one the list above asked
-  a later reader to try to break. Un-gating `revisionRegressed` reverses it, and it
-  should be reversed: a live revision below the entry's last committed one means the
-  live record is not the record that commit came from, since every install a rejoin is
+  THIS RULING IS RETIRED at the rulings round, and it is the one the list above asked a
+  later reader to try to break. Un-gating `revisionRegressed` reverses it, and it should
+  be reversed: a live revision below the entry's last committed one means the live
+  record is not the record that commit came from, since every install a rejoin is
   offered carries at least the committed revision (bar one known hole found 2026-09-25,
-  the twelfth path: an answer read before another session edited and was evicted
-  carries an older house; see the findings ledger's harness-fidelity section) and
-  every sanctioned mutator only increments, and writing it walks the client-facing wire counter backwards
-  permanently, which is exactly the harm the loader's own `wire_rev_shape` hold refuses
-  on the read side. Two behaviour pins encoded the old rule and both flipped.
+  the twelfth path: an answer read before another session edited and was evicted carries
+  an older house; see the findings ledger's harness-fidelity section) and every
+  sanctioned mutator only increments, and writing it walks the client-facing wire
+  counter backwards permanently, which is exactly the harm the loader's own
+  `wire_rev_shape` hold refuses on the read side. Two behaviour pins encoded the old
+  rule and both flipped.
 
 ### Starter Prompt
 ```
