@@ -346,7 +346,9 @@ describe('furnishing definition and inventory', () => {
       | 'materialsOnly'
       | 'teachesRiding'
       | 'set'
-      | 'masterwrought';
+      | 'masterwrought'
+      | 'requiredClass'
+      | 'classLocked';
     type IsNever<T> = [T] extends [never] ? true : false;
     const barred: { [K in PowerField]: IsNever<NonNullable<FurnishingItemDef[K]>> } = {
       armorType: true,
@@ -374,6 +376,8 @@ describe('furnishing definition and inventory', () => {
       teachesRiding: true,
       set: true,
       masterwrought: true,
+      requiredClass: true,
+      classLocked: true,
     };
     // @ts-expect-error only floor support is authored by this item contract
     const surface: Placement['surface'] = 'wall';

@@ -1465,6 +1465,9 @@ export interface FurnishingItemDef extends BaseItemDef {
   teachesRiding?: never;
   set?: never;
   masterwrought?: never;
+  // Class gating is gear-only (canEquipItem refuses every furnishing first).
+  requiredClass?: never;
+  classLocked?: never;
 }
 
 // FOOD. Its own kind-scoped def for exactly one reason: `wellFed` lives HERE
