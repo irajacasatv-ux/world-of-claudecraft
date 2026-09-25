@@ -87,7 +87,7 @@ export function refusedFreeholdCommand(frame: unknown, env?: NodeJS.ProcessEnv):
 // the Dungeon Finder queue (`df_queue`). Finder formation only builds a party
 // and never teleports, and the jail sweep re-cages a prisoner, so the most it
 // allows is holding a group seat (as an accepted party invite does); recorded
-// in the freeholds persistence ledger for the release owner.
+// for the release owner in docs/freeholds/qa/persistence-2026-09-08/findings.md.
 const JAILED_BLOCKED_COMMANDS = new Set<string>([
   'arena_queue',
   'bg_queue',
