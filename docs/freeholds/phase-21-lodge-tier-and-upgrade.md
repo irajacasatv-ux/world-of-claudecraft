@@ -237,9 +237,8 @@ STEP 0 - PRE-FLIGHT:
   (/Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds), on branch
   feature/freeholds. Verify `git status` is clean; if not, ask the user (a concurrent
   session may share this checkout).
-- Sync the base: `git fetch origin --prune`. While PR #3872 (feature/masterwrought) is
-  OPEN, merge its fresh head: `git merge origin/feature/masterwrought`. If it has MERGED,
-  discover the newest release branch (`git branch -r | grep 'origin/release/' | sort -V |
+- Sync the base: `git fetch origin --prune`. PR #3872 has merged, so discover the newest
+  release branch (`git branch -r | grep 'origin/release/' | sort -V |
   tail -1`), compare with `git rev-list --left-right --count HEAD...origin/release/<newest>`,
   merge it, and delete the dependency block from state.md. After any non-empty merge run
   the release-merge-audit skill; `pnpm install --frozen-lockfile` if the merge touched
@@ -261,8 +260,8 @@ Spawn one Explore agent to read and summarize:
   layoutColliders, DUNGEON_WALL_HW); src/sim/rift/authored.ts (AuthoredRoom, roomAt,
   inAnyRoom, authoredColliders); the six Cottage touch points (the interior union in
   src/sim/types.ts, the groundHeight arm in src/sim/world.ts, STATIC_INTERIOR_COLLIDERS
-  in src/sim/colliders.ts, the variant in src/render/dungeon.ts, the dressing under
-  src/render/freehold/, the DungeonDef)
+  in src/sim/interior_collider_sets.ts, the variant in src/render/dungeon.ts, the
+  dressing under src/render/freehold/, the DungeonDef)
 - src/sim/freehold/ (types.ts, state.ts, instance.ts, layout_core.ts, placement.ts,
   grant.ts, ledger.ts, condition_core.ts, index.ts, CLAUDE.md) and src/sim/sim_context.ts
 - src/sim/professions/reagent_sources.ts (planReagentSourceDraw, countMinusPlanned),
@@ -310,8 +309,9 @@ src/world_api.ts, the parity goldens):
 - Agent CONTENT-LAYOUT: the `lodge` row in src/sim/content/freehold/tiers.ts (rooms 2,
   decor budget 120, plinths 8, amenity slots 2, upkeep flag; deep-frozen; the id is a
   frozen save key), `freehold_lodge` DungeonDef appended at the verified next free index in dungeons.ts (record the index in the implementation ledger) (spawns [],
-  guideVisible false, absent from FINDER_ACTIVITIES, claimKey 'owner'), LODGE_LAYOUT
-  beside COTTAGE_LAYOUT in src/sim/content/freehold/layouts.ts (D23) with rooms, doors, decor with measured r, eight plinth anchors,
+  guideVisible false, absent from FINDER_ACTIVITIES, claimKey 'owner': the room keeps
+  `claimKey: 'owner'` and so the World PvP sanctuary, state.md "Non-negotiables"),
+  LODGE_LAYOUT beside COTTAGE_LAYOUT in src/sim/content/freehold/layouts.ts (D23) with rooms, doors, decor with measured r, eight plinth anchors,
   two amenity anchors, the hearth anchor, its lift function, and the six touch points;
   the Lodge's first room reuses COTTAGE_LAYOUT's cell grid, door position, plinth anchor
   ids 1 to 4 and amenity anchor 1 verbatim and the second room adds plinths 5 to 8 and

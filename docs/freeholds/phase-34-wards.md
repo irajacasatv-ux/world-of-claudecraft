@@ -18,9 +18,8 @@ STEP 0 - PRE-FLIGHT:
   (/Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds), on branch
   feature/freeholds. Verify `git status` is clean; if not, ask the user (a concurrent
   session may share this checkout).
-- Sync the base: `git fetch origin --prune`. While PR #3872 (feature/masterwrought) is
-  OPEN, merge its fresh head: `git merge origin/feature/masterwrought`. If it has MERGED,
-  discover the newest release branch (`git branch -r | grep 'origin/release/' | sort -V |
+- Sync the base: `git fetch origin --prune`. PR #3872 has merged, so discover the newest
+  release branch (`git branch -r | grep 'origin/release/' | sort -V |
   tail -1`), compare with `git rev-list --left-right --count HEAD...origin/release/<newest>`,
   merge it, and delete the dependency block from state.md. After any non-empty merge run
   the release-merge-audit skill; `pnpm install --frozen-lockfile` if the merge touched
@@ -48,8 +47,9 @@ Spawn one Explore agent to read and summarize:
   instanceSlotForZ, the x bands),
   src/sim/content/freehold/dungeons.ts (the indices in use), src/sim/freehold/instance.ts
   (claim, rehydrate, the freeholdState descriptor), src/sim/rift/runs.ts
-  (riftStateEventFor, the resume re-send), src/sim/colliders.ts (setRiftRegion,
-  clearRiftRegion, the Phase 10 generalised registry)
+  (riftStateEventFor, the resume re-send), src/sim/rift_regions.ts (setRiftRegion,
+  clearRiftRegion, re-exported from src/sim/colliders.ts; the registry Phase 10
+  generalises in place or renames)
 - server/freehold_db.ts (account_freeholds, the rev compare-and-swap), server/freehold_wire.ts,
   server/cached_read.ts (createCachedRead), server/realm_readout_memo.ts, server/game.ts
   (the riftState re-send after hello; grep riftStateEventFor), server/heavy_self.ts
@@ -97,9 +97,10 @@ The coordinator alone edits shared parity/command/snapshot/monolith pins after w
 finish. Workers receive only the context report and owned files, preserve others' edits,
 and return full reports to the scratchpad with a path and short summary.
 1. Ward geometry and descriptor: add planned freehold_ward DungeonDef with spawns: [],
-   guideVisible: false, claimKey: 'owner', outside FINDER_ACTIVITIES. Implement pure
-   NEW src/sim/freehold/ward_core.ts with opaque public plotId rows, square/door
-   coordinates, tier and
+   guideVisible: false, claimKey: 'owner', outside FINDER_ACTIVITIES (the room keeps
+   `claimKey: 'owner'` and so the World PvP sanctuary, state.md "Non-negotiables").
+   Implement pure NEW src/sim/freehold/ward_core.ts with opaque public plotId rows,
+   square/door coordinates, tier and
    cosmetic style IDs, measured bounds and deterministic anchor selection. Internal
    account/guild owner keys never appear in viewer wire. One global fenced ward claim
    ward:<wardId> uses existing pool admission/reaping; no per-tick subsystem.
@@ -276,6 +277,7 @@ STEP 5 - ACCEPTANCE CRITERIA:
 - [ ] Disposable-PG final-slot/opposite-move races preserve every membership and item; indexed bounded candidates and stable lock order pass recorded plans and contention checks.
 - [ ] Opaque plot descriptors round-trip/re-send on resume, preserve malformed prior state, and produce identical colliders/exteriors on both hosts; current ACL governs every door.
 - [ ] Final exterior art, LOW fairness and desktop/compact/tablet ward/door/busy screenshots meet ux-spec; no live-program events or retired scene leaks; the `housing-ward` target (ward-square, ward-exterior, ward-roster, ward-busy-cap, ward-door, ward-move-review) and the ward key rows are registered and both manifests regenerated in this phase's commits (D92).
+- [ ] A flagged owner and a flagged ward neighbour in the same ward are not hostile, through the real sim hostility arm and the client verdict (src/ui/pvp_hostile_core.ts): the ward is a World PvP sanctuary (tests/freehold_world_pvp_sanctuary.test.ts).
 - [ ] All validation, actual-surface reviews, fresh fix review and contribution gate pass.
 
 STEP 6 - DOC UPDATES + MEMORY:

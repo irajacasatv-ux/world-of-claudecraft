@@ -32,7 +32,7 @@ STEP 0 - PRE-FLIGHT:
 - Work in the packet worktree named in docs/freeholds/state.md, on branch
   feature/freeholds. Verify `git status` is clean; if not, ask the user.
 - Sync the base per state.md "Worktree, base, and merge-forward" (merge
-  origin/feature/masterwrought while PR #3872 is open, else the newest origin/release/**;
+  the newest origin/release/**;
   release-merge-audit after a non-empty merge; pnpm install --frozen-lockfile if
   patches/ moved).
 - Memory scan: MEMORY.md, the test-pin traps catalog, the Postgres and server/tests
@@ -94,7 +94,7 @@ Deliverables (at most five):
    Preserve 07a's real legacy transaction touch set/relative locks, bank-ledger
    classifier before guild replay and existing storage/custody tail. Use its reviewed
    housing composition hook before COMMIT with the concrete participant manifest and
-   disposable-PG proof. runFencedCharacterUpdate from
+   disposable-PG proof. runFencedCharacterSave from
    server/character_save_statement.ts owns pre-lock/nonce fencing; beginCharacterSaveTx
    supplies deadlines, not that fence. Never replace this with an unchecked InitPlan
    or an invented generic account/character/guild/receipt lock hierarchy.

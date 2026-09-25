@@ -127,7 +127,7 @@ STEP 0 - PRE-FLIGHT:
 - Use the packet worktree and wave B branch recorded in state.md. Run git status
   --short; if dirty, stop and ask before edits. Preserve unrelated work.
 - git fetch origin --prune, then sync per state.md "Worktree, base, and merge-forward":
-  origin/feature/masterwrought while PR #3872 is open, otherwise newest origin/release/**
+  the newest origin/release/**
   and remove the dependency block after merge. Run release-merge-audit after a nonempty
   merge and pnpm install --frozen-lockfile if patches/ moved. Never use main.
 - Read root and applicable local CLAUDE.md in full, then state.md "Gotchas (read before
@@ -188,6 +188,12 @@ STEP 2 - EXECUTE WITH EXPLICIT OWNERSHIP:
   interact prompt (own homes/friend name), never proximity auto-teleport. Preserve
   the specific entry gate for leave/ejection in session metadata, excluded from saves
   and parity sampling as appropriate; test Eastbrook versus Fenbridge round trips.
+  The candidate's World PvP policy is read with `worldPvpZonePolicyAt`
+  (src/sim/pvp/world_pvp_zones.ts). Mirefen Marsh is contested (src/sim/content/zone2.ts
+  carries no `worldPvp` field), unlike Eastbrook Vale's sanctuary
+  (src/sim/content/zone1.ts), so a Fenbridge exit or a D51 ejection lands a still-flagged
+  player on contested ground. RULING OWED from Fernando before 25a builds: accept that,
+  or route safety ejections to the Eastbrook sanctuary gate.
 - CLIENT/CONTENT owner: Steward prepay picker/summary shows the selectable batch up to
   the shipped cap (four weeks until the default is raised, twelve after) and exact
   source-mode cost, loading/refusal/reconnect state and

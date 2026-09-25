@@ -37,15 +37,21 @@ myFarmPlots or choose an arbitrary primary character.
 
 Reuse the NEW 17-owned shared account-source boundary:
 server/freehold_account_sources_db.ts::loadFreeholdAccountCharacterSourcePage and
-server/freehold_account_sources.ts::createFreeholdAccountSourceLoader. This file adds
-fixed versioned static farmPlots and farming-proficiency extraction to that projection,
-including the existing legacy skill fallback semantics. Keep hidden survival/yield data
-server-side only where the existing projectFarmPlots status derivation needs it. Do not
-call listCharactersAllRealms or SELECT whole character state. Keyset pages by character
-id, scoped to the account; measure the candidate (account_id, id) access index, exact
-rows/bytes/query limits and multi-realm character cardinality in MEASURE-BOUNDS. The
-existing per-realm character cap is not an account-global cap. No SQL runs per growth
-step, render frame, descriptor snapshot, visitor or farm bed.
+server/freehold_account_sources.ts::createFreeholdAccountSourceLoader (premise changed
+at the v0.44.0 sync: the release's account ledger, src/sim/account_ledger.ts, now
+carries most of these sources; re-planned in phase-17-trophies.md item 2). This file
+adds fixed versioned static farmPlots and farming-proficiency extraction to that
+projection, including the existing legacy skill fallback semantics. 24 keeps this farm
+source seam even if the 17 re-plan drops or narrows its loader: farm plots and farming
+proficiency are not in the ledger (it records deed and item/mark/mount relic earners
+only), so if 17 ships no loader, 24 owns the same bounded account-scoped farm source
+boundary itself. Keep hidden survival/yield data server-side only where the existing
+projectFarmPlots status derivation needs it. Do not call listCharactersAllRealms or
+SELECT whole character state. Keyset pages by character id, scoped to the account;
+measure the candidate (account_id, id) access index, exact rows/bytes/query limits and
+multi-realm character cardinality in MEASURE-BOUNDS. The existing per-realm character
+cap is not an account-global cap. No SQL runs per growth step, render frame, descriptor
+snapshot, visitor or farm bed.
 
 Aggregate with internal (sourceCharacterId, bedId) identity so two owner alts with the
 same bed ID remain distinct. A currently authoritative, generation-fenced local Sim
@@ -201,8 +207,7 @@ finds; record a verdict.
 STEP 0 - PRE-FLIGHT:
 - Work in the packet worktree named in docs/freeholds/state.md, on the branch state.md
   records for wave B. Verify `git status` is clean; if not, ask the user.
-- Sync the base per state.md "Worktree, base, and merge-forward" (merge origin/feature/masterwrought
-  while PR #3872 is open, else the newest origin/release/**; release-merge-audit after a
+- Sync the base per state.md "Worktree, base, and merge-forward" (merge the newest origin/release/**; release-merge-audit after a
   non-empty merge; pnpm install --frozen-lockfile if patches/ moved).
 - Memory scan: MEMORY.md, the test-pin traps catalog, "review the review-fix round",
   "apply ALL findings", the farming calendar model entries.

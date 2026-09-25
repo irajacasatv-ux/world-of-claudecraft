@@ -120,9 +120,8 @@ STEP 0 - PRE-FLIGHT:
   (/Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds), on branch
   feature/freeholds. Verify `git status` is clean; if not, ask the user (a concurrent
   session may share this checkout).
-- Sync the base: `git fetch origin --prune`. While PR #3872 (feature/masterwrought) is
-  OPEN, merge its fresh head: `git merge origin/feature/masterwrought`. If it has MERGED,
-  discover the newest release branch (`git branch -r | grep 'origin/release/' | sort -V |
+- Sync the base: `git fetch origin --prune`. PR #3872 has merged, so discover the newest
+  release branch (`git branch -r | grep 'origin/release/' | sort -V |
   tail -1`), compare with `git rev-list --left-right --count HEAD...origin/release/<newest>`,
   merge it, and delete the dependency block from state.md. After any non-empty merge run
   the release-merge-audit skill; `pnpm install --frozen-lockfile` if the merge touched
@@ -143,8 +142,7 @@ Spawn one Explore agent to read and summarize:
   scripts/pr_shot_targets.mjs (the housing targets Phases 11, 16, 17 and 18 added);
   docs/prd/woc/freehold-service-contract.md (Phase 15); .claude/skills/ci-triage/SKILL.md
 - The wave diff: `git log --oneline <base>..HEAD` and `git diff <base>..HEAD --stat`
-  where <base> is the merge-base with the base branch (origin/feature/masterwrought while
-  PR #3872 is open, else the newest origin/release/**); every test file the wave added
+  where <base> is the merge-base with the base branch (the newest origin/release/**); every test file the wave added
   (`git diff <base>..HEAD --name-only -- tests/`); the docs/screenshots/ directory
 - The matrix row anchors: tests/world_api_parity.test.ts, tests/env_protocol.test.ts,
   tests/freehold_determinism.test.ts, tests/freehold_command_chain_online.test.ts,

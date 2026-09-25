@@ -101,9 +101,8 @@ STEP 0 - PRE-FLIGHT:
   (/Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds), on branch
   feature/freeholds. Verify `git status` is clean; if not, ask the user (a concurrent
   session may share this checkout).
-- Sync the base: `git fetch origin --prune`. While PR #3872 (feature/masterwrought) is
-  OPEN, merge its fresh head: `git merge origin/feature/masterwrought`. If it has MERGED,
-  discover the newest release branch (`git branch -r | grep 'origin/release/' | sort -V |
+- Sync the base: `git fetch origin --prune`. PR #3872 has merged, so discover the newest
+  release branch (`git branch -r | grep 'origin/release/' | sort -V |
   tail -1`), compare with `git rev-list --left-right --count HEAD...origin/release/<newest>`,
   merge it, and delete the dependency block from state.md. After any non-empty merge run
   the release-merge-audit skill; `pnpm install --frozen-lockfile` if the merge touched
@@ -124,7 +123,7 @@ Spawn one Explore agent to read and summarize:
   DEED_ORDER, the Homesteader rows Phase 03 opened, prog_legendmaker, prog_farming_100,
   the raid and dungeon clear deeds, the armor-set collection deeds, the curator rank
   deeds), src/sim/deeds_completion.ts
-- src/sim/reliquary.ts (characterReliquaryOwnership and ReliquaryOwnershipSurfaces:
+- src/sim/reliquary.ts (accountReliquaryOwnership and ReliquaryOwnershipSurfaces:
   itemsDiscovered, marks, ownedMounts, deedsEarned; pageCompletion; illuminatedPages;
   CURATOR_RANK_DEFS and curatorRankFromOwned; the sync* precedents that draw no rng),
   src/sim/content/reliquary.ts (RELIQUARY_PAGES and the shelf ids), src/sim/mounts.ts
@@ -134,7 +133,8 @@ Spawn one Explore agent to read and summarize:
   craftedBy is the signer-derived tool-slot stamp in src/sim/professions/tools.ts, not
   an instance field, and Maker's Bond is the boundTo trade lock, not the signature
 - server/db.ts account_weapon_cosmetics (account_id, skin_ids, loadout: the weapon-skin
-  account row), server/game.ts (the per-account weaponSkinIds merge) and
+  account row), server/account_cosmetics_db.ts (the per-account weaponSkinIds merge,
+  AccountCosmetics, loaded at join in server/ws_auth.ts) and
   server/claudium.ts noteWeaponSkinGrants (the skin grant path)
 - src/world_api.ts (COMMAND_NAMES, COMMAND_FACETS, the IWorldHousing facet as 01 to 11
   left it), tests/world_api_parity.test.ts, tests/command_schema.test.ts,
@@ -144,8 +144,9 @@ Spawn one Explore agent to read and summarize:
 - server/db.ts (listCharactersAllRealms is a full-state source to avoid), the existing
   account/character keyset and concurrent-index seams, shared admission/cache budgets,
   source-change/save/create/delete/session hooks and their literal pins
-- the join retro block in src/sim/sim.ts (grep seedItemDiscovery, retroFallbackGrants,
-  evaluateDeedsFor with retro true) and the first-entry hook in
+- the join retro in src/sim/deeds_restore.ts `runBookOfDeedsJoinRetro` (seedItemDiscovery,
+  retroFallbackGrants, evaluateDeedsFor with retro true, seedAccountLedgerSelf), called
+  from Sim.addPlayer, and the first-entry hook in
   src/sim/freehold/instance.ts (Phase 05)
 - src/sim/freehold/ as Phases 01 to 16 left it (types.ts: the trophies field on the
   record from Phase 07; layout_core.ts: the plinth slot rules from Phase 08;
@@ -164,7 +165,7 @@ Spawn one Explore agent to read and summarize:
   (the deed and page name lookups the tooltip reuses), scripts/wiki/build_content.mjs
   (what the wiki regen reads), root CLAUDE.md "New game content" bullet
 The agent returns: the exact ownership reads for each source kind and the character bundle
-(characterReliquaryOwnership) and the bounded account projection needed for all alts; the join retro block insertion
+(accountReliquaryOwnership) and the bounded account projection needed for all alts; the join retro insertion
 point and the first-entry hook; the plinth slot rules and how a plinth row differs from
 a furnishing row in the layout; the fhold and descriptor extension points; the tooltip
 core recipe and where the composer dispatches; the deeds count pins that will move and
@@ -181,6 +182,12 @@ Deliverables (at most five):
    individual Reliquary relic/item discovery, completed page, slain:* mark, owned
    mount, set, curator rank, title-awarding deed, weapon-skin source and Perfected
    source. Sweep actual source definitions rather than a remembered family list.
+   Warfare Season 2 (v0.44.0 re-sync): the Vanguard Gallery page is class-locked, so it
+   sits outside completion ('personal', docs/design/reliquary.md), and its 27
+   VANGUARD_ITEM_SETS (src/sim/content/vanguard_item_sets.ts, spread into ITEM_SETS) are
+   class-locked. Whether class-locked sets (a requireSet source) and personal pages (a
+   requirePage source: Vanguard, plus the existing Riftbound and Forgebreaker pages) are
+   trophy sources is a RULING OWED at this file's re-plan.
    Every qualifying source has a truthful generic family display in Wave A; 23 adds
    bespoke Legend Stand, real weapon/armor/mount forms and silver/gilded finishes.
    No single discovered relic silently requires full-page completion. Add explicit
@@ -199,7 +206,11 @@ Deliverables (at most five):
    account's live siblings. Building `ctx.freeholdAccountSources` as written would stand
    a second projection beside it with a different load policy and keying. Owed before
    this phase starts: re-plan these sources onto the ledger and scope a new loader to
-   only what the ledger lacks (Perfected, weapon skins, sets, curator rank, titles).
+   only what the ledger lacks: Perfected copies and current possession across the
+   account's characters. The rest already arrives: weapon skins with
+   `AccountCosmetics.weaponSkinIds` at join (server/account_cosmetics_db.ts, loaded in
+   server/ws_auth.ts); titles (deed rewards), Curator rank and set membership derive
+   from `meta.accountLedger` and `accountReliquaryOwnership` (src/sim/reliquary.ts).
    trophy_eligibility.ts is pure
    over bounded authoritative account projections, not only the entering character.
    trophies.ts syncs after join retro, on first entry and through batched source-change
@@ -336,10 +347,12 @@ Deliverables (at most five):
    unknown date, hidden spoiler, provenance privacy, three/four-plinth limits,
    no-item routes, the raw-command forgery arm (unearned, unknown and other-account
    trophy ids) and the account weapon-skin fixture. The trophies-provenance-known
-   capture stages a deed source (deedsEarned is the only source that carries a known
-   original day today); trophies-provenance-unknown stages a non-deed historical
-   source, never a faked date. Re-run strict wire/parity/content/guide/ownership
-   pins and bounded PG account hydration evidence. Add the exact housing-trophies
+   capture stages a deed source (deed rows and any relic/mark/mount ledger row with a
+   non-null `found_at` carry a known day: server/account_ledger_db.ts,
+   `AccountEarner.day` in src/sim/account_ledger.ts; replayed historical finds are NULL,
+   unknown); trophies-provenance-unknown stages a historical source with no known day
+   (a replayed find), never a faked date. Re-run strict
+   wire/parity/content/guide/ownership pins and bounded PG account hydration evidence. Add the exact housing-trophies
    helper entry below with desktop/compact/tablet owned/unearned/unknown/public
    provenance and placement captures. Dispatch architecture, content,
    cross-platform, frontend, render, privacy, migration, server-hot-path and
@@ -354,7 +367,8 @@ character-ID keyset pages. Select only the exact trophy source fields admitted b
 source manifest; 24 extends that same projection with normalized farm state and source
 farming proficiency. Weapon-skin ownership is an account row, not a character field:
 the loader reads account_weapon_cosmetics.skin_ids (server/db.ts) through the existing
-per-account weaponSkinIds merge in server/game.ts, the skin grant path
+per-account weaponSkinIds merge in server/account_cosmetics_db.ts (loaded at join in
+server/ws_auth.ts), the skin grant path
 (server/claudium.ts noteWeaponSkinGrants) is its invalidation hook, and
 src/sim/reliquary.ts resolves weapon_skin relics through opts.weaponSkins, never a
 PlayerMeta field. No caller-supplied JSON paths, whole-character-state SELECT or

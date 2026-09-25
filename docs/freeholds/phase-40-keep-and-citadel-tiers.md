@@ -18,9 +18,8 @@ STEP 0 - PRE-FLIGHT:
   (/Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds), on branch
   feature/freeholds. Verify `git status` is clean; if not, ask the user (a concurrent
   session may share this checkout).
-- Sync the base: `git fetch origin --prune`. While PR #3872 (feature/masterwrought) is
-  OPEN, merge its fresh head: `git merge origin/feature/masterwrought`. If it has MERGED,
-  discover the newest release branch (`git branch -r | grep 'origin/release/' | sort -V |
+- Sync the base: `git fetch origin --prune`. PR #3872 has merged, so discover the newest
+  release branch (`git branch -r | grep 'origin/release/' | sort -V |
   tail -1`), compare with `git rev-list --left-right --count HEAD...origin/release/<newest>`,
   merge it, and delete the dependency block from state.md. After any non-empty merge run
   the release-merge-audit skill; `pnpm install --frozen-lockfile` if the merge touched
@@ -45,7 +44,7 @@ Spawn one Explore agent to read and summarize:
 - src/sim/content/freehold/tiers.ts, charters.ts, dungeons.ts, trophies.ts (the ladder
   through Phase 32; free indices), src/sim/content/freehold/layouts.ts (the Manor and
   Bastion layouts, D23) and src/sim/dungeon_layout.ts (DAWNHOLD_STAIR_LIFT and authoredLiftAt consumer
-  model), src/sim/rift/authored.ts (authoredLiftAt, AuthoredRoom, AuthoredLedge), src/sim/colliders.ts (STATIC_INTERIOR_COLLIDERS),
+  model), src/sim/rift/authored.ts (authoredLiftAt, AuthoredRoom, AuthoredLedge), src/sim/interior_collider_sets.ts (STATIC_INTERIOR_COLLIDERS),
   src/sim/world.ts (groundHeight interior arms), src/render/dungeon.ts (the variant
   union; whether an open-sky room exists in any kit), src/render/point_light_budget.ts
 - src/sim/freehold/build_project.ts (Phase 32), the Phase 21 upgrade gate module,
@@ -101,19 +100,26 @@ finish. Workers receive only the context report and owned files, preserve others
 and return full reports to the scratchpad with a path and short summary.
 1. Content/layout family: four tier/SKU rows, KEEP_LAYOUT/CITADEL_LAYOUT and guild
    dressed twins, DungeonDefs, courtyard/tower lifts, colliders/groundHeight and ward
-   shell rows. Preserve state targets: Keep/Fortress 4 rooms plus courtyard, 300 decor,
-   22 plinths, 4 amenities; Citadels 5 plus courtyard/tower, 420 decor, 32 plinths,
-   6 amenities; the tiers.ts visitor-cap column that 26's visitorCapFor(tier) reads
-   carries Keep 20 and Citadel 24 (state.md Content numbers, fresh literal pins).
-   Bills use approved fine materials plus produce, no protected inputs. Exact
-   quantities/source derivation enter the CAL-UPGRADE workbook artifact and the service
-   SKUs enter the CAL-SERVICE catalog (its signature is a release gate); all inputs
-   remain obtainable/tradable without requiring a profession. Content author owns
-   Homesteader/project trophy/source/wiki/name obligations; Homesteader rows append at
-   the END of src/sim/content/deeds.ts and tests/deeds_content.test.ts re-pins
+   shell rows. Every new room def keeps `claimKey: 'owner'` and so the World PvP
+   sanctuary (state.md "Non-negotiables"). Preserve state targets: Keep/Fortress 4 rooms
+   plus courtyard, 300 decor, 22 plinths, 4 amenities; Citadels 5 plus courtyard/tower,
+   420 decor, 32 plinths, 6 amenities; the tiers.ts visitor-cap column that 26's
+   visitorCapFor(tier) reads carries Keep 20 and Citadel 24 (state.md Content numbers,
+   fresh literal pins). Bills use approved fine materials plus produce, no protected
+   inputs. Exact quantities/source derivation enter the CAL-UPGRADE workbook artifact
+   and the service SKUs enter the CAL-SERVICE catalog (its signature is a release gate);
+   all inputs remain obtainable/tradable without requiring a profession. Content author
+   owns Homesteader/project trophy/source/wiki/name obligations; Homesteader rows append
+   at the END of src/sim/content/deeds.ts and tests/deeds_content.test.ts re-pins
    DEED_ORDER.length by re-measuring, never by reordering.
 2. Prestige predicate: a small read-only core implements the exact personal OR and
    owning-guild source allowlist above. Use account-union materialization/event refresh
+   (premise changed at the v0.44.0 sync: the release's account ledger,
+   src/sim/account_ledger.ts, now carries most of these sources; re-planned in
+   phase-17-trophies.md item 2. `meta.accountLedger.deeds`, loaded at join by
+   server/account_ledger_db.ts, and server/account_ledger_service.ts
+   `AccountLedgerService`, which fans a new deed earn out to live siblings, already
+   provide this account deed union and its refresh: read them, never a second union)
    and recorded guild history, no hot-path SQL scan, forged current-membership retro
    credit or bought bypass. Both tiers share the same qualification; prior tier,
    approved project and payment still required. Record sticky qualification; later

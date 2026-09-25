@@ -3,6 +3,12 @@
 Audits `phase-10-furnishing-colliders.md`. Verdict goes in `progress.md` (row "10 QA").
 The next implementation phase never starts before this file has run.
 
+Correction, 2026-09-25 (v0.44.0 re-sync): the release already extracted the region
+block out of `src/sim/colliders.ts` into `src/sim/rift_regions.ts` (colliders.ts
+re-exports its publish/token verbs), so the audited change generalises that module in
+place or renames it; there is no colliders.ts block to compare, and that ceiling is
+not the change's payment. The audit steps below are corrected to match.
+
 ### Starter Prompt
 ```
 This is Phase 10 (QA) of the Freeholds and Guildhalls feature: audit the furnishing
@@ -14,15 +20,14 @@ block for effort and fan-out; this prompt names no model.
 
 Goal: audit the Phase 10 diff for correctness against every deliverable and acceptance
 criterion in docs/freeholds/progress.md "10 Furnishing colliders", missing tests, dead
-code, the move-not-rewrite extraction, determinism of the collider set, both hosts
-colliding identically, no per-tick publish, and the monolith ratchet; fix what the
+code, the move-not-rewrite generalisation of src/sim/rift_regions.ts, determinism of
+the collider set, both hosts colliding identically, no per-tick publish, and the monolith ratchet; fix what the
 audit finds; record a verdict.
 
 STEP 0 - PRE-FLIGHT:
 - Work in the packet worktree named in docs/freeholds/state.md, on branch
   feature/freeholds. Verify `git status` is clean; if not, ask the user.
-- Sync the base per state.md "Worktree, base, and merge-forward" (merge origin/feature/masterwrought
-  while PR #3872 is open, else the newest origin/release/**; release-merge-audit after a
+- Sync the base per state.md "Worktree, base, and merge-forward" (merge the newest origin/release/**; release-merge-audit after a
   non-empty merge; pnpm install --frozen-lockfile if patches/ moved).
 - Memory scan: MEMORY.md, the test-pin traps catalog, the forward-walk-inherits-reverse-gate
   entry, "review the review-fix round", "apply ALL findings".
@@ -33,8 +38,8 @@ Spawn one Explore agent to read and summarize:
   row), docs/freeholds/phase-10-furnishing-colliders.md (what was promised)
 - the Phase 10 diff: `git log --oneline <phase-start>..HEAD` and
   `git diff <phase-start>..HEAD --stat`, then the full diff of every touched file (the
-  commits named in progress.md row 10); for the extraction commit, a side-by-side of the
-  moved region block against its pre-move text in colliders.ts
+  commits named in progress.md row 10); for the registry commit, a side-by-side of
+  src/sim/rift_regions.ts (or its renamed successor) against its pre-change text
 - the pins the diff claims: tests/runtime_collider_regions.test.ts,
   tests/freehold_colliders.test.ts, tests/freehold_collision_region_online.test.ts, the
   five rift suites (tests/rift_collider_cells.test.ts,
@@ -42,18 +47,18 @@ Spawn one Explore agent to read and summarize:
   tests/rift_wall_solidity.test.ts, tests/rift_wall_swept_collision.test.ts) with
   `git diff <phase-start>..HEAD -- tests/rift_*` expected EMPTY, tests/sim_context.test.ts,
   tests/monolith_budget.test.ts
-The agent returns: the promised-versus-delivered table per deliverable, the moved block
-diff (any line that changed beyond an import path or a name alias), every reader site
-re-pointed at the generalised lookup and any left behind, every test added with what it
+The agent returns: the promised-versus-delivered table per deliverable, the registry
+diff (any rift line that changed beyond an import path or a name alias), every reader
+site re-pointed at the generalised lookup and any left behind, every test added with what it
 asserts, the publish and clear call sites on both hosts, and any TODO, unused import, or
 alias that nothing calls.
 
 STEP 2 - AUDIT (parallel Agent fan-out, three auditors, each writing its report to a
 file and replying with the path plus a short summary; prompt each for COVERAGE: report
 every issue including low-severity and uncertain ones; ranking happens later):
-- CORRECTNESS: every deliverable and acceptance criterion actually met; the extraction
-  is move-not-rewrite (the moved bodies match; the rift aliases forward with identical
-  signatures; the O(1) candidate-origin derivation survives for the rift band); the
+- CORRECTNESS: every deliverable and acceptance criterion actually met; the
+  generalisation is move-not-rewrite (the rift bodies match; the rift aliases forward
+  with identical signatures; the O(1) candidate-origin derivation survives for the rift band); the
   freehold candidate origin derives from the claim's true instanceOriginOf and never
   from a clamp that maps a neighbouring slot; every reader (movement, sight, pathing)
   dispatches through the one lookup; publish fires on claim, on every accepted change,
@@ -82,10 +87,11 @@ every issue including low-severity and uncertain ones; ranking happens later):
   or a token; a stale region or token after free; a stale clear with an earlier claim
   token; a row at a room edge; a rug with r: 0 beside a table with r above 0).
 - DEAD CODE AND HYGIENE: unused imports and types, leftover TODOs, a rift-named helper
-  left in colliders.ts beside its alias, the architecture import invariant, the word
-  "phase" in any code, comment, or commit message, em dashes or emojis, generated files
+  left in the registry module or colliders.ts beside its alias, the architecture import
+  invariant, the word "phase" in any code, comment, or commit message, em dashes or emojis, generated files
   hand-edited, src/sim/CLAUDE.md and src/sim/freehold/CLAUDE.md rows for the new
-  modules, the colliders.ts ceiling lowered and not raised.
+  modules, the colliders.ts ceiling not raised and, if the diff added a line there,
+  lowered by an extraction (the release's region move is not this change's payment).
 Then the dispatch reviewers per docs/freeholds/implementation-plan.md for the surfaces
 the diff touched (architecture-reviewer, cross-platform-sync, privacy-security-review,
 server-hot-path-reviewer for the per-claim registry read on the movement, sight and

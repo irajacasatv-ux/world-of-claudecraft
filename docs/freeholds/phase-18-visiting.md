@@ -112,9 +112,8 @@ STEP 0 - PRE-FLIGHT:
   (/Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds), on branch
   feature/freeholds. Verify `git status` is clean; if not, ask the user (a concurrent
   session may share this checkout).
-- Sync the base: `git fetch origin --prune`. While PR #3872 (feature/masterwrought) is
-  OPEN, merge its fresh head: `git merge origin/feature/masterwrought`. If it has MERGED,
-  discover the newest release branch (`git branch -r | grep 'origin/release/' | sort -V |
+- Sync the base: `git fetch origin --prune`. PR #3872 has merged, so discover the newest
+  release branch (`git branch -r | grep 'origin/release/' | sort -V |
   tail -1`), compare with `git rev-list --left-right --count HEAD...origin/release/<newest>`,
   merge it, and delete the dependency block from state.md. After any non-empty merge run
   the release-merge-audit skill; `pnpm install --frozen-lockfile` if the merge touched
@@ -131,8 +130,10 @@ Spawn one Explore agent to read and summarize:
 - docs/freeholds/state.md, docs/freeholds/progress.md (only "18 Visiting"), and this
   file
 - src/sim/freehold/instance.ts (Phase 05: freeholdKeyFor, the owner-keyed enterDungeon
-  path, the freeholdDenied reasons already appended: no_freehold, locked, cooldown,
-  visitors_full, not_friend, dead, combat), src/sim/freehold/placement.ts and
+  path, the emitters of the freeholdDenied reasons already appended; the append-only
+  reason union itself lives on the freeholdDenied SimEvent in src/sim/types.ts:
+  no_freehold, locked, cooldown, visitors_full, not_friend, dead, combat, busy,
+  instanced, match), src/sim/freehold/placement.ts and
   amenities.ts and ledger.ts (the owner-only gate each command already carries),
   src/sim/freehold/state.ts and types.ts (the visit_policy field from Phase 07),
   src/sim/instances/dungeons.ts (enterDungeon, the module-private instanceClaimContains
@@ -151,7 +152,8 @@ Spawn one Explore agent to read and summarize:
   the session (session.blockedIds and the ignore predicate in routeEvents),
   server/freehold_wire.ts (dispatchFreeholdCommand: where a visitor enter and
   set_visit_policy arrive), server/heavy_self.ts (HEAVY_SELF_EVENTS),
-  JAILED_BLOCKED_COMMANDS in server/game.ts (freehold_enter already listed by Phase 05),
+  JAILED_BLOCKED_COMMANDS in server/freehold_wire.ts (freehold_enter already listed by
+  Phase 05),
   the command lane in dispatchMessage (classifyMsgLane: the rate limit a visit attempt
   inherits)
 - server/game.ts routeEvents and server/event_frame.ts (pid-scoped delivery;
@@ -293,6 +295,21 @@ Deliverables (at most five):
    privacy-security-review, server-hot-path-reviewer, migration-safety, before/final
    database-performance-reviewer, test-coverage-auditor and qa-checklist.
 
+Also owned here (found at the v0.44.0 re-sync; it rides deliverables 1 and 5, not a
+sixth deliverable):
+- Duels in a home. A room is a World PvP sanctuary (state.md "Non-negotiables"), but
+  duels are still allowed inside a room: src/sim/social/duel.ts refuses only in the
+  Nythraxis arena (pre-existing, not housing code). This phase decides whether an owner
+  and a guest may duel in a home and pins the decision through the real duel request
+  and accept arms.
+- Arrival lines that are not housing emits. A flagged player arriving home from
+  contested ground hears the release's "This is a sanctuary: World PvP is off here."
+  (WORLD_PVP_SANCTUARY_LINE in src/sim/pvp/world_pvp.ts, from its zone pass); any
+  player arriving from free-for-all ground hears the free-for-all leave line
+  (WORLD_PVP_FFA_LEAVE_LINE) instead; a walk in through the Eastbrook gate (sanctuary to
+  sanctuary) hears neither. The D41 arrival flow (phases 09 and 19) should expect either
+  line beside its own welcome, and no housing code emits or suppresses it.
+
 INVARIANTS THIS PHASE MUST KEEP:
 - Server authority: the friend fact is the named owner character's outgoing friend
   list read by the server (D76: whoFriended(visitor) or listFriends(owner) in the
@@ -317,6 +334,13 @@ INVARIANTS THIS PHASE MUST KEEP:
   admission and cancellation bound work, events are pid-scoped.
 - Distribution: visiting is gated by the server entitlement (flag plus entitlement)
   read through the housing facet, never a HudFeatures row (D91).
+- HUD frame coverage: every new HUD surface (the visit prompt, the Visitors tab host,
+  any who-is-home line) states its classification in tests/hud_frame_coverage.test.ts
+  (a HUD_FRAME_SPECS row in src/ui/interface_unlock_core.ts, or a UI_ROOT_TOUCHERS or
+  FRAME_EXEMPT entry with its reason; the src/ui/hud/housing/gate_prompt_controller.ts
+  UI_ROOT_TOUCHERS row is the precedent). The release's frame presets
+  (src/ui/frame_presets_core.ts), frame menus and reset keys now ride a HUD_FRAME_SPECS
+  row, so a standing surface registered there inherits them.
 - i18n: the policy in docs/freeholds/implementation-plan.md; every deny and arrival is a
   text-free id-carrying SimEvent (D10); names cross as values.
 - Monolith: sim.ts, game.ts, and online.ts use the current verified
@@ -349,6 +373,7 @@ The QA session inspects those reports and dispatches a fresh review of every fix
   tests/dungeons.test.ts tests/dungeon_instance_disconnect_reset.test.ts
   tests/server/freehold_wire.test.ts tests/server/heavy_self.test.ts
   tests/hud_update_drive.test.ts tests/mobile_window_coverage.test.ts
+  tests/hud_frame_coverage.test.ts tests/freehold_world_pvp_sanctuary.test.ts
   tests/social_system.test.ts tests/localization_fixes.test.ts`; `npm run i18n:gen`
   then `npx vitest run tests/i18n_completeness.test.ts`; regenerate both UX manifests
   (docs/freeholds/ux-key-manifest.json and ux-shot-manifest.json) per state.md "UX
@@ -414,6 +439,10 @@ STEP 5 - ACCEPTANCE CRITERIA (do not mark complete until all check):
   fresh Sim starts at the friends default (pinned, D16); the RL ACTIONS pin is unchanged.
 - [ ] The two-session online test passes; sim.ts, game.ts, online.ts ceilings are not
   higher than before.
+- [ ] A flagged owner and a flagged guest in the same room are not hostile, through the
+  real sim hostility arm and the client verdict (src/ui/pvp_hostile_core.ts); the room
+  is a World PvP sanctuary (tests/freehold_world_pvp_sanctuary.test.ts), and the duel
+  decision above is pinned.
 - [ ] Both UX manifests are regenerated in this change with every cited count updated
   (the housing-visiting registration reaches the 339-variant wave A milestone) and the
   exact comparison passes (D92).

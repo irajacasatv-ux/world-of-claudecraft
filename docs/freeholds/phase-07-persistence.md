@@ -19,7 +19,7 @@ STEP 0 - PRE-FLIGHT:
 - Work in /Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds on
   feature/freeholds. Verify git status is clean; otherwise ask the user.
 - Sync per state.md "Worktree, base, and merge-forward": git fetch origin --prune;
-  while PR #3872 is open merge origin/feature/masterwrought; once merged use the newest
+  use the newest
   origin/release/** and remove the dependency block. Run release-merge-audit after any
   non-empty merge and pnpm install --frozen-lockfile when patches/ moved.
 - Memory scan: MEMORY.md, freeholds entry, test-pin traps, apply ALL findings, and

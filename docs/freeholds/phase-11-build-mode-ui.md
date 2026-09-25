@@ -374,8 +374,9 @@ in use."; denied.amenityFull = "Every amenity slot is in use."; denied.wrongSurf
 no longer available."; denied.childrenPresent = "Move the furnishings on this piece
 before removing it.".
 
-Keybind labels (options window rows through src/ui/options_window.ts
-BIND_CATEGORY_LABEL_KEYS and BIND_ACTION_LABEL_KEYS; hud_chrome catalog rows in the
+Keybind labels (the BIND_CATEGORY_LABEL_KEYS and BIND_ACTION_LABEL_KEYS maps live in
+src/ui/keybind_action_names_core.ts, which src/ui/options_window.ts, the keyboard
+overview and the rebind prompts read; hud_chrome catalog rows in the
 existing hudChrome.keybinds.* family beside categoryPet and dive, NOT housing rows of
 ux-key-manifest.json; title case as the sibling rows):
 hudChrome.keybinds.categoryHousing = "Housing"; hudChrome.keybinds.toggleBuildMode =
@@ -415,9 +416,8 @@ STEP 0 - PRE-FLIGHT:
   (/Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds), on branch
   feature/freeholds. Verify `git status` is clean; if not, ask the user (a concurrent
   session may share this checkout).
-- Sync the base: `git fetch origin --prune`. While PR #3872 (feature/masterwrought) is
-  OPEN, merge its fresh head: `git merge origin/feature/masterwrought`. If it has MERGED,
-  discover the newest release branch (`git branch -r | grep 'origin/release/' | sort -V |
+- Sync the base: `git fetch origin --prune`. PR #3872 has merged, so discover the newest
+  release branch (`git branch -r | grep 'origin/release/' | sort -V |
   tail -1`), compare with `git rev-list --left-right --count HEAD...origin/release/<newest>`,
   merge it, and delete the dependency block from state.md. After any non-empty merge run
   the release-merge-audit skill; `pnpm install --frozen-lockfile` if the merge touched
@@ -579,7 +579,9 @@ Deliverables (at most five):
    First Escape cancels selected placement, next exits build mode and restores focus;
    another gameplay UI action cancels active placement before opening its surface.
    NEW src/ui/hud/housing/build_input_core.ts classifies ordinary blocking window,
-   housing palette focus, housing placement or normal world. The controller and
+   the release's HUD layout edit mode (src/ui/interface_unlock.ts; the frame menu takes
+   the right-click in edit mode, src/ui/frame_context_menu.ts), housing palette focus,
+   housing placement or normal world. The controller and
    build_mode_wiring.ts compose this scoped input arbitration into BOTH the HUD
    window-open projection and gamepad pointer-mode/activeRoot consumers. Existing
    dpad_focus_nav prioritizes .window.panel; data-pad-nav-root alone is not an exception.
@@ -685,6 +687,13 @@ INVARIANTS THIS PHASE MUST KEEP:
 - Pure core plus thin painter; family reuse before bespoke (GroundAimController,
   ActionBarPainter, the bags grid); tap mode shared, never per menu; every polled or
   per-frame painter registered in hud_update_drive and HOT_PAINTERS.
+- HUD frame coverage: every new HUD surface (the palette, the strip, the capacity meter,
+  any build companion) states its classification in tests/hud_frame_coverage.test.ts
+  (a HUD_FRAME_SPECS row in src/ui/interface_unlock_core.ts, or a UI_ROOT_TOUCHERS or
+  FRAME_EXEMPT entry with its reason; the src/ui/hud/housing/gate_prompt_controller.ts
+  UI_ROOT_TOUCHERS row is the precedent). The release's frame presets
+  (src/ui/frame_presets_core.ts), frame menus and reset keys now ride a HUD_FRAME_SPECS
+  row, so a standing surface registered there inherits them.
 - Monolith ratchet: src/ui/hud.ts and src/main.ts sit at ZERO slack; every delegate or
   wiring line is paid for by an extraction, then LOWER the ceiling; main.ts is a
   firewall (one call into the wiring sibling).
@@ -714,6 +723,7 @@ test-coverage-auditor, qa-checklist.
   tests/architecture.test.ts tests/hud_update_drive.test.ts tests/hud_perf_budget.test.ts
   tests/mobile_window_coverage.test.ts tests/mobile_window_transform.test.ts
   tests/mobile_window_layout.test.ts tests/language_fanout_registry.test.ts
+  tests/hud_frame_coverage.test.ts
   tests/renderer_compile_gate.test.ts tests/monolith_budget.test.ts`; `npm run i18n:gen`
   then `npx vitest run tests/i18n_completeness.test.ts tests/localization_fixes.test.ts`.
 - With `npm run dev` running: `node scripts/pr_screenshots.mjs` (desktop, compact,

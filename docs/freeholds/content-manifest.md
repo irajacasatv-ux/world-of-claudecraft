@@ -162,7 +162,11 @@ harvest, or teach Farming. Kitchen Garden projection in 24 is separate from thes
 inert owned copies. It extends 17's NEW
 `server/freehold_account_sources_db.ts::loadFreeholdAccountCharacterSourcePage` and
 `server/freehold_account_sources.ts::createFreeholdAccountSourceLoader` to aggregate
-the account owner's farm sources through the same bounded cache and invalidation.
+the account owner's farm sources through the same bounded cache and invalidation
+(premise changed at the v0.44.0 sync: the release's account ledger,
+`src/sim/account_ledger.ts`, now carries most of these sources; re-planned in
+`phase-17-trophies.md` item 2; farm plots are not in the ledger, so 24 keeps its farm
+source seam even if 17 drops its loader).
 Only a current-generation local authoritative farm-and-skill slice is live; it
 replaces the whole corresponding saved slice, including a confirmed empty slice.
 Remote/nonlocal committed snapshots remain explicitly saved even when the host
@@ -184,6 +188,12 @@ catalog count is a ceiling. In particular the inspected mount catalog has more t
 the packet's former six-mount shorthand; derive the inventory from `MOUNTS` and
 `MOUNT_KEYS`, filter with actual acquisition/visibility policy and test the result.
 
+Account ownership in the rows below (premise changed at the v0.44.0 sync: the
+release's account ledger, `src/sim/account_ledger.ts`, now carries most of these
+sources, as deed, relic, mark and mount earners with character and day; re-planned in
+`phase-17-trophies.md` item 2). Weapon skins arrive as account cosmetics at join, not
+through the ledger.
+
 A canonical source key combines source kind and immutable source ID, including
 required difficulty where applicable. Multiple Reliquary pages referring to the same
 source do not mint duplicate trophy unlocks. Trophy IDs are NEW records of the form
@@ -199,12 +209,12 @@ gets a truthful generic display in Wave A even if its bespoke model arrives in 2
 |---|---|---|---|---|
 | Deed, including progression/chronicle/title reward | `src/sim/content/deeds.ts::DEEDS`, account deed ownership | Framed achievement plaque | 23 source-specific banner, statue or sheaf | Actual deed ID, source character/day when known; title must be owned, not merely catalogued. |
 | Individual discovered item | `ReliquaryRelicDef` kind `item`, existing discovery evidence | Item relief plaque with truthful localized item identity | 23 weapon rack or item/armor display | A discovered relic does not require whole-page illumination; possession-sensitive actual copy display is a separate condition. |
-| Illuminated Reliquary page | `src/sim/reliquary.ts`, exported `ReliquaryState` member `illuminatedPages`; exported synchronization function `syncIlluminatedPages` | Book-and-page plaque | 23 collection display | Actual page ID and completion evidence; the existing character-state member is not standalone account-wide proof, and planned account aggregation cannot invent a date. |
+| Illuminated Reliquary page | `src/sim/reliquary.ts`, exported `ReliquaryState` member `illuminatedPages`; exported synchronization function `syncIlluminatedPages` | Book-and-page plaque | 23 collection display | Actual page ID and completion evidence; `syncIlluminatedPages` (`src/sim/reliquary.ts`) now completes pages over the account union (`accountReliquaryOwnership`), so the character-state member records account-wide completion, but it carries no date and account aggregation cannot invent one. Pages marked `excludeFromCompletion: 'personal'` are the existing Riftbound and Forgebreaker pages and the Warfare Season 2 Vanguard Gallery, which is class-locked, so it sits outside completion ('personal'). Whether a personal page is a trophy source is a RULING OWED at the 17 re-plan. |
 | Rare kill/other mark | Catalogued `mark` and `slain:*` evidence | Inscribed source medallion on freestanding plaque | 19 qualified head family; 23 further silhouettes | Actual qualifying mark; a new account gets no mounted head without proof. |
 | Mount | Catalogued `mount` and account mount ownership | Paddock marker on a floor-supported display | 23 cosmetic actual mount appearance/paddock | Owning a marker grants no mount, speed or duplicate reins; respect unavailable/developer source policy. |
 | Weapon skin | Catalogued `weapon_skin` and account skin ownership | Weapon-appearance relief plaque | 23 actual cosmetic appearance rack | Display only an owned skin, no weapon item mint or purchase advertisement. |
 | Title | Catalogued `title` and associated owned deed | Title plaque | 23 banner | Localized title from actual deed reward, sanitized public source character. |
-| Armor set | Live set entries and corresponding discovered members | Stand plaque showing actual discovered pieces | 23 piece-by-piece stand | Never imply complete set from one item; unowned pieces remain absent/undiscovered as appropriate. |
+| Armor set | Live set entries and corresponding discovered members | Stand plaque showing actual discovered pieces | 23 piece-by-piece stand | Never imply complete set from one item; unowned pieces remain absent/undiscovered as appropriate. The live entries include the 27 class-locked Warfare Season 2 `VANGUARD_ITEM_SETS` (`src/sim/content/vanguard_item_sets.ts`, spread into `ITEM_SETS`); whether a class-locked set is a trophy source is a RULING OWED at the 17 re-plan. |
 | Profession specimen | `professions_specimens` item/mark sources | Specimen plaque | 23 specimen cabinet | Display truthful obtained specimen; do not substitute ordinary material for rare proof. |
 | Curator rank | Existing curator-rank deeds in `src/sim/content/deeds.ts::DEEDS`, with actual account deed ownership | Rank plaque with the localized source rank | 23 rank display refinement | Enumerate the live rank-deed source set; do not infer a completed rank from current page count or invent its date. |
 | Named Perfected legendary | `src/sim/professions/perfecting.ts` and exact current copy payload | Named-work plaque | 23 Legend Stand | `perfected`, legendary promotion and actual chosen name required. If the exact copy leaves authorized account custody, keep unlock and provenance, darken live-copy display. The Legend Stand copy reference is the stable subset (owning character id, itemId, instance.name, instance.signer, perfected, rolled.quality legendary), never itemCopyPin, which hashes the whole payload. The known source day is the owning character's prog_legendmaker deed day (deedsEarned, a utcDay stamp); no promotion day exists on the copy, so a copy without that deed day uses the unknown-day discriminator. |

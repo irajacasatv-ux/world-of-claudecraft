@@ -152,8 +152,7 @@ this prompt names no model. Goal: full COVERAGE, apply every finding and review 
 STEP 0 - PRE-FLIGHT:
 Use the packet worktree and recorded wave C branch. git status --short must be
 clean before edits; otherwise stop and ask. Sync per state.md "Worktree, base, and
-merge-forward" with git fetch origin --prune, merge origin/feature/masterwrought while
-PR #3872 is open or newest origin/release/** after merge. Run release-merge-audit after
+merge-forward" with git fetch origin --prune, merge the newest origin/release/**. Run release-merge-audit after
 nonempty merge; pnpm install --frozen-lockfile if patches/ moved. Read applicable root/
 local guidance. Scan MEMORY.md, packet memory, test-pin traps, apply ALL findings and
 review the review-fix round.

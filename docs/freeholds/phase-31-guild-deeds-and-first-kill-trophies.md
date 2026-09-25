@@ -330,7 +330,7 @@ not elect the durable first clear, change source order or authorize an unlock.
 07a atomically commits the source claim with that carrier's actual save effects through
 prepareFreeholdOperation/applyFreeholdOperation. Preserve each ordinary/carried save arm,
 legacy transaction participants, lock ordering and statement/workload budgets. Not all
-save arms already use runFencedCharacterUpdate; never add an unbudgeted prelock by claiming
+save arms already use runFencedCharacterSave; never add an unbudgeted prelock by claiming
 otherwise. Other recipients keep independent saves; no all-party reward transaction or
 stronger precommit character-reward durability is promised. No extra receipt or save queue.
 
@@ -481,9 +481,8 @@ STEP 0 - PRE-FLIGHT:
   (/Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds), on branch
   feature/freeholds. Verify `git status` is clean; if not, ask the user (a concurrent
   session may share this checkout).
-- Sync the base: `git fetch origin --prune`. While PR #3872 (feature/masterwrought) is
-  OPEN, merge its fresh head: `git merge origin/feature/masterwrought`. If it has MERGED,
-  discover the newest release branch (`git branch -r | grep 'origin/release/' | sort -V |
+- Sync the base: `git fetch origin --prune`. PR #3872 has merged, so discover the newest
+  release branch (`git branch -r | grep 'origin/release/' | sort -V |
   tail -1`), compare with `git rev-list --left-right --count HEAD...origin/release/<newest>`,
   merge it, and delete the dependency block from state.md. After any non-empty merge run
   the release-merge-audit skill; `pnpm install --frozen-lockfile` if the merge touched

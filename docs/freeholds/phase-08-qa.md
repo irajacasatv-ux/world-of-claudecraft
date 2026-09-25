@@ -16,7 +16,7 @@ STEP 0 - PRE-FLIGHT:
 - Work in /Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds on
   feature/freeholds. Verify git status is clean; otherwise ask the user.
 - Follow state.md "Worktree, base, and merge-forward": fetch origin --prune; merge the
-  current feature/masterwrought while PR #3872 is open, otherwise newest release/**;
+  the newest release/**;
   release-merge-audit after non-empty merge and frozen install if patches/ moved.
 - Read root/directory CLAUDE.md. Memory scan: MEMORY.md, freeholds entry, test-pin traps,
   apply ALL findings, review the review-fix round. Preserve unrelated work.

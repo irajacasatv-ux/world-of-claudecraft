@@ -90,7 +90,7 @@ src/styles/components.css and src/ui/perf_ornament_svg.ts are not a dependency.
 | Text/muted | #f0ebd8 / #998d6a | #fff4d9 / #c4b590 through shared theme variables | UX current and adopted colors |
 | Display/UI/reading fonts | Existing --font-display remains Cinzel; all remaining font roles use shipped shared tokens | Alegreya 700 / Alegreya Sans 400,500,700 / Alegreya 400; labels Alegreya Sans SC 700; Cinzel only brand/shell | UX typography |
 | Type size/line height | Existing shared window and control selectors | Window title 17/22px, panel title 15/20px, button 14/17px, body 14/19px, metadata 12/15px; body floor 12px | UX typography |
-| Spacing and scale | --spacing-xs 4px, --spacing-sm 8px, --spacing-md 16px, --spacing-lg 24px; existing --ui-scale | Same spacing; shell pad 12px, body pad 12 to 16px; only one scale at authored scale 1 | UX shared spacing and scale |
+| Spacing and scale | --spacing-xs 4px, --spacing-sm 8px, --spacing-md 16px, --spacing-lg 24px; existing --ui-scale | Same spacing; shell pad 12px, body pad 12 to 16px; only one scale at authored scale 1. The release widened UI scale to 0.75 to 2 (`UI_SCALE_MIN`/`UI_SCALE_MAX`, src/ui/ui_scale.ts), so compact-viewport fit checks cover that whole range, not only scale 1 | UX shared spacing and scale |
 | Header/close/tabs | Actual .window.panel shared shell and controls | Header 44px, icon 24 to 28px, close 34px with expanded touch target; tabs 32px visually with full touch target | UX window and item geometry |
 | Item cells/radius | Bags-family cells, --radius-sm 4px and --radius-md 8px | Cells 48px with 4px gap; --radius-slot 5px, --radius-button 7px, --radius-window 10px | UX window and item geometry |
 | Touch | Existing body.mobile-touch, safe-area and input rules | Every target at least 40x40px; visible input, select and textarea text at least 16px | UX touch targets; UX typography |
@@ -399,7 +399,11 @@ internal fields and authority watermarks never enter player text or public rows.
 The account source reader is shared. File 17 owns NEW
 server/freehold_account_sources_db.ts::loadFreeholdAccountCharacterSourcePage and
 server/freehold_account_sources.ts::createFreeholdAccountSourceLoader; file 24
-extends its static farm extraction, bounded cache, admission and invalidation.
+extends its static farm extraction, bounded cache, admission and invalidation
+(premise changed at the v0.44.0 sync: the release's account ledger,
+src/sim/account_ledger.ts, now carries most of these sources; re-planned in
+phase-17-trophies.md item 2; farm plots are not in the ledger, so 24 keeps its farm
+source seam even if 17 drops its loader).
 There is no separate HUD poller. The internal account union distinguishes
 character and bed, but the public Kitchen Garden projection explicitly selects
 only opaque visualId, bedId, cropId, stage, status and truthful sourceFreshness.

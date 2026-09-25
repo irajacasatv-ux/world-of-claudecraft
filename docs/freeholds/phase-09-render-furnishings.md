@@ -193,9 +193,8 @@ STEP 0 - PRE-FLIGHT:
   (/Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds), on branch
   feature/freeholds. Verify `git status` is clean; if not, ask the user (a concurrent
   session may share this checkout).
-- Sync the base: `git fetch origin --prune`. While PR #3872 (feature/masterwrought) is
-  OPEN, merge its fresh head: `git merge origin/feature/masterwrought`. If it has MERGED,
-  discover the newest release branch (`git branch -r | grep 'origin/release/' | sort -V |
+- Sync the base: `git fetch origin --prune`. PR #3872 has merged, so discover the newest
+  release branch (`git branch -r | grep 'origin/release/' | sort -V |
   tail -1`), compare with `git rev-list --left-right --count HEAD...origin/release/<newest>`,
   merge it, and delete the dependency block from state.md. After any non-empty merge run
   the release-merge-audit skill; `pnpm install --frozen-lockfile` if the merge touched
@@ -408,6 +407,12 @@ ARRIVAL PRESENTATION AND CAPTURE REFINEMENTS (approved D41 / R15):
   honors interfaceSfx/mute and its NEW catalog/manifest/gain/speed authoring. Positional
   door/body sound stays on the existing positional graph. No new AudioContext or housing
   music system; text still appears when muted, clip missing or AudioContext blocked.
+- Expect a release line beside the welcome (v0.44.0 re-sync): a room is a World PvP
+  sanctuary, so a flagged player arriving home from contested ground hears "This is a
+  sanctuary: World PvP is off here." (WORLD_PVP_SANCTUARY_LINE, src/sim/pvp/world_pvp.ts),
+  and a player arriving from free-for-all ground hears the free-for-all leave line.
+  Neither is a housing emit; the arrival flow neither suppresses nor duplicates it
+  (phase-18-visiting.md records the rule).
 - The screenshot API is one capture/one image. Every baseline/transient/theme/motion/
   input/distribution/light case maps to a unique target+variant identity in ux-spec's
   expanded manifest; do not hide side shots inside a capture callback. 09 owns NEW

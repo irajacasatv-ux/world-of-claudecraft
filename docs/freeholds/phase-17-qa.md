@@ -94,8 +94,7 @@ STEP 0 - PRE-FLIGHT:
 - Work in the packet worktree named in docs/freeholds/state.md, on branch
   feature/freeholds. Verify `git status` is clean; if not, ask the user.
 - Sync the base per state.md "Worktree, base, and merge-forward" (merge
-  origin/feature/masterwrought while PR #3872 is open, else the newest
-  origin/release/**; release-merge-audit after a non-empty merge; pnpm install
+  the newest origin/release/**; release-merge-audit after a non-empty merge; pnpm install
   --frozen-lockfile if patches/ moved).
 - Memory scan: MEMORY.md, the test-pin traps catalog, the content and pins/content
   gotcha clusters, "review the review-fix round", "apply ALL findings".
@@ -146,7 +145,10 @@ Deliverables (at most five):
    no ITEMS, price, drop, buff, bag, mail, trade, bank or market path. Homesteader deeds,
    wiki/guide and fingerprint obligations land together; trophy records get no
    Reliquary item page.
-2. Shared account sources, eligibility and truthful provenance. trophy_eligibility.ts is pure
+2. Shared account sources, eligibility and truthful provenance (premise changed at the
+   v0.44.0 sync: the release's account ledger, src/sim/account_ledger.ts, now carries
+   most of these sources; re-planned in phase-17-trophies.md item 2, so audit the
+   re-planned contract, not this copy, where they differ). trophy_eligibility.ts is pure
    over bounded authoritative account projections, not only the entering character.
    trophies.ts syncs after join retro, on first entry and through batched source-change
    invalidation while already home, with zero per-tick scan and zero Rng. Persist
@@ -282,10 +284,12 @@ Deliverables (at most five):
    unknown date, hidden spoiler, provenance privacy, three/four-plinth limits,
    no-item routes, the raw-command forgery arm (unearned, unknown and other-account
    trophy ids) and the account weapon-skin fixture. The trophies-provenance-known
-   capture stages a deed source (deedsEarned is the only source that carries a known
-   original day today); trophies-provenance-unknown stages a non-deed historical
-   source, never a faked date. Re-run strict wire/parity/content/guide/ownership
-   pins and bounded PG account hydration evidence. Add the exact housing-trophies
+   capture stages a deed source (deed rows and any relic/mark/mount ledger row with a
+   non-null `found_at` carry a known day: server/account_ledger_db.ts,
+   `AccountEarner.day` in src/sim/account_ledger.ts; replayed historical finds are NULL,
+   unknown); trophies-provenance-unknown stages a historical source with no known day
+   (a replayed find), never a faked date. Re-run strict
+   wire/parity/content/guide/ownership pins and bounded PG account hydration evidence. Add the exact housing-trophies
    helper entry below with desktop/compact/tablet owned/unearned/unknown/public
    provenance and placement captures. Dispatch architecture, content,
    cross-platform, frontend, render, privacy, migration, server-hot-path and
@@ -293,6 +297,9 @@ Deliverables (at most five):
 
 
 SHARED ACCOUNT SOURCE CONTRACT (deliverable 2; proof belongs to deliverable 5):
+(Premise changed at the v0.44.0 sync: the release's account ledger,
+src/sim/account_ledger.ts, now carries most of these sources; re-planned in
+phase-17-trophies.md item 2.)
 17 owns NEW server/freehold_account_sources_db.ts::loadFreeholdAccountCharacterSourcePage
 and server/freehold_account_sources.ts::createFreeholdAccountSourceLoader. The DB
 module owns fixed, versioned, statically selected source projections and account-scoped
@@ -300,7 +307,8 @@ character-ID keyset pages. Select only the exact trophy source fields admitted b
 source manifest; 24 extends that same projection with normalized farm state and source
 farming proficiency. Weapon-skin ownership is an account row, not a character field:
 the loader reads account_weapon_cosmetics.skin_ids (server/db.ts) through the existing
-per-account weaponSkinIds merge in server/game.ts, the skin grant path
+per-account weaponSkinIds merge in server/account_cosmetics_db.ts (loaded at join in
+server/ws_auth.ts), the skin grant path
 (server/claudium.ts noteWeaponSkinGrants) is its invalidation hook, and
 src/sim/reliquary.ts resolves weapon_skin relics through opts.weaponSkins, never a
 PlayerMeta field. No caller-supplied JSON paths, whole-character-state SELECT or

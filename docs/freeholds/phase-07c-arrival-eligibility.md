@@ -19,7 +19,7 @@ STEP 0 - PRE-FLIGHT:
 - Work in /Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds on
   feature/freeholds. Verify git status is clean; otherwise ask the user.
 - Sync per state.md "Worktree, base, and merge-forward": git fetch origin --prune;
-  while PR #3872 is open merge origin/feature/masterwrought; once merged use the newest
+  use the newest
   origin/release/** and remove the dependency block. Run release-merge-audit after any
   non-empty merge and pnpm install --frozen-lockfile when patches/ moved.
 - Memory scan: MEMORY.md, freeholds entry, test-pin traps, apply ALL findings, and
@@ -38,7 +38,7 @@ STEP 1 - LOAD CONTEXT (through agents, never planning docs or coordinators direc
     server/main.ts shutdown wiring,
     server/linkdead.ts::planJoin and the async server/ws_auth.ts authentication shell.
     Verify actual symbols from state facts; auth/analytics are not gameplay presence.
-  - EXISTING server/character_save_statement.ts::runFencedCharacterUpdate,
+  - EXISTING server/character_save_statement.ts::runFencedCharacterSave,
     server/character_save_transaction.ts::beginCharacterSaveTx, server/serial_writer.ts,
     server/background_db_gate.ts, server/raid_reset.ts and server/realm.ts.
   - PRIOR 07 plot load/preservation and 07a transaction/claim/operation foundation.

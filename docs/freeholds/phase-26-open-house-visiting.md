@@ -210,9 +210,8 @@ STEP 0 - PRE-FLIGHT:
   (/Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds), on branch
   feature/freeholds. Verify `git status` is clean; if not, ask the user (a concurrent
   session may share this checkout).
-- Sync the base: `git fetch origin --prune`. While PR #3872 (feature/masterwrought) is
-  OPEN, merge its fresh head: `git merge origin/feature/masterwrought`. If it has MERGED,
-  discover the newest release branch (`git branch -r | grep 'origin/release/' | sort -V |
+- Sync the base: `git fetch origin --prune`. PR #3872 has merged, so discover the newest
+  release branch (`git branch -r | grep 'origin/release/' | sort -V |
   tail -1`), compare with `git rev-list --left-right --count HEAD...origin/release/<newest>`,
   merge it, and delete the dependency block from state.md. After any non-empty merge run
   the release-merge-audit skill; `pnpm install --frozen-lockfile` if the merge touched
@@ -436,6 +435,10 @@ STEP 5 - ACCEPTANCE CRITERIA (do not mark complete until all check):
   every new string resolves through a visit.* key named in STEP 2 and both UX manifests
   are regenerated with the cited counts updated (D92); screenshots committed; the
   mobile sheet decision recorded.
+- [ ] A flagged owner and a flagged guild or public guest in the same room are not
+  hostile, through the real sim hostility arm and the client verdict
+  (src/ui/pvp_hostile_core.ts): the room stays a World PvP sanctuary under every new
+  policy (state.md "Non-negotiables"; tests/freehold_world_pvp_sanctuary.test.ts).
 - [ ] All STEP 3 suites green; the reviewers confirm ALL findings, including nits, are resolved and freshly reviewed; the ceilings did not
   rise.
 

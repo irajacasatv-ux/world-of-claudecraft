@@ -184,9 +184,8 @@ STEP 0 - PRE-FLIGHT:
   (/Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds), on branch
   feature/freeholds. Verify `git status` is clean; if not, ask the user (a concurrent
   session may share this checkout).
-- Sync the base: `git fetch origin --prune`. While PR #3872 (feature/masterwrought) is
-  OPEN, merge its fresh head: `git merge origin/feature/masterwrought`. If it has MERGED,
-  discover the newest release branch (`git branch -r | grep 'origin/release/' | sort -V |
+- Sync the base: `git fetch origin --prune`. PR #3872 has merged, so discover the newest
+  release branch (`git branch -r | grep 'origin/release/' | sort -V |
   tail -1`), compare with `git rev-list --left-right --count HEAD...origin/release/<newest>`,
   merge it, and delete the dependency block from state.md. After any non-empty merge run
   the release-merge-audit skill; `pnpm install --frozen-lockfile` if the merge touched
@@ -213,15 +212,21 @@ Spawn one Explore agent to read and summarize:
   inscription), dgn_rift and dgn_rift_s_rank, the dungeonClears triggers for normal
   and heroic clears, every boss and world-boss deed; DEED_ORDER), src/sim/deeds.ts
   (deedsEarned as the per-character utcDay stamp of each deed day, deedStats),
-  src/sim/reliquary.ts (characterReliquaryOwnership,
+  src/sim/reliquary.ts (accountReliquaryOwnership,
   illuminatedPages, the Harvestmaster page id), src/sim/content/reliquary.ts
 - The rift S-rank record (grep the S-rank mark or stamp under src/sim/rift/), the
-  `slain:*` marks, mount possession, the seven armor sets (the set ids), the complete promised
-  family inventory: every row of content-manifest.md "Specialized trophy model inventory
-  for 23" whose owner column names 23 (the guild first-clear and project rows belong to
-  31 and 32a/40), with mounts derived from MOUNTS and MOUNT_KEYS under the availability
-  filter rather than any fixed mount count, the realm-rare marks, the seven armor sets in
-  RELIQUARY_SET_MEMBERS and the profession specimens
+  `slain:*` marks, mount possession, the live `RELIQUARY_SET_MEMBERS` armor sets (the
+  set ids), the complete promised family inventory: every row of content-manifest.md
+  "Specialized trophy model inventory for 23" whose owner column names 23 (the guild
+  first-clear and project rows belong to 31 and 32a/40), with mounts derived from MOUNTS and MOUNT_KEYS under the availability
+  filter rather than any fixed mount count, the realm-rare marks, the live
+  `RELIQUARY_SET_MEMBERS` sets (derive, never a literal) and the profession specimens
+- Warfare Season 2 (v0.44.0 re-sync): the Vanguard Gallery page is class-locked, so it
+  sits outside completion ('personal', docs/design/reliquary.md), and its 27
+  VANGUARD_ITEM_SETS (src/sim/content/vanguard_item_sets.ts, spread into ITEM_SETS) are
+  class-locked. Whether class-locked sets and personal pages (Vanguard, plus the
+  existing Riftbound and Forgebreaker pages) are trophy sources is a RULING OWED at the
+  phase 17 re-plan; this file follows that ruling, never its own
 - The Perfected legendary: src/sim/types.ts (the `perfected` stamp, the promotion, the
   player-chosen name field, the crafter signature `ItemInstancePayload.signer`),
   src/sim/professions/perfecting.ts (read only: the diff touches nothing under

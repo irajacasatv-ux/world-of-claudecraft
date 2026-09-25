@@ -19,7 +19,7 @@ STEP 0 - PRE-FLIGHT:
 - Work in /Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds on
   feature/freeholds. Verify git status is clean; otherwise ask the user.
 - Sync per state.md "Worktree, base, and merge-forward": git fetch origin --prune;
-  while PR #3872 is open merge origin/feature/masterwrought; once merged use the newest
+  use the newest
   origin/release/** and remove the dependency block. Run release-merge-audit after any
   non-empty merge and pnpm install --frozen-lockfile when patches/ moved.
 - Memory scan: MEMORY.md, freeholds entry, test-pin traps, apply ALL findings, and
@@ -33,7 +33,7 @@ STEP 1 - LOAD CONTEXT (through agents, never planning docs or coordinators direc
   readers/writers, pin sites, known failure behavior and a promised-versus-tree table:
   - PRIOR 07 server/freehold_db.ts and freehold_persist.ts, src/sim/freehold/state.ts.
   - EXISTING server/character_save_transaction.ts::beginCharacterSaveTx (deadline owner),
-    server/character_save_statement.ts::runFencedCharacterUpdate and
+    server/character_save_statement.ts::runFencedCharacterSave and
     server/db.ts save composition (read through the Explore agent),
     server/bank_ledger_batch_db.ts, server/guild_bank_receipt_db.ts,
     server/storage_purchase_db.ts, server/serial_writer.ts, server/background_db_gate.ts,
@@ -74,7 +74,7 @@ Deliverables (at most five):
    transfers with housing effects in ONE bounded character-save transaction. Acquire
    character FIFO before plot/shared-resource serialization and admission; no queue wait
    holds a DB client. Pre-lock and nonce-fence character rows using the actual
-   runFencedCharacterUpdate path, not the InitPlan-prone unchecked save helper. Preserve
+   runFencedCharacterSave path, not the InitPlan-prone unchecked save helper. Preserve
    all legacy save participants' relative lock order. Append a named housing composition hook after the legacy effects and before COMMIT.
    Its exact new-participant lock order is a producing implementation artifact: author
    the touch-set manifest before coding, obtain database/persistence/security acceptance,

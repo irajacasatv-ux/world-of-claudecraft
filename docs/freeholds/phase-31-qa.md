@@ -327,7 +327,7 @@ not elect the durable first clear, change source order or authorize an unlock.
 07a atomically commits the source claim with that carrier's actual save effects through
 prepareFreeholdOperation/applyFreeholdOperation. Preserve each ordinary/carried save arm,
 legacy transaction participants, lock ordering and statement/workload budgets. Not all
-save arms already use runFencedCharacterUpdate; never add an unbudgeted prelock by claiming
+save arms already use runFencedCharacterSave; never add an unbudgeted prelock by claiming
 otherwise. Other recipients keep independent saves; no all-party reward transaction or
 stronger precommit character-reward durability is promised. No extra receipt or save queue.
 
@@ -473,8 +473,7 @@ STEP 0 - PRE-FLIGHT:
 - Work in the packet worktree named in docs/freeholds/state.md, on branch
   feature/freeholds (or the stacked wave branch state.md records). Verify `git status`
   is clean; if not, ask the user.
-- Sync the base per state.md "Worktree, base, and merge-forward" (merge origin/feature/masterwrought
-  while PR #3872 is open, else the newest origin/release/**; release-merge-audit after a
+- Sync the base per state.md "Worktree, base, and merge-forward" (merge the newest origin/release/**; release-merge-audit after a
   non-empty merge; pnpm install --frozen-lockfile if patches/ moved).
 - Memory scan: MEMORY.md, the test-pin traps catalog, "review the review-fix round",
   "apply ALL findings".

@@ -152,7 +152,7 @@ STEP 0 - PRE-FLIGHT:
 - Use the packet worktree and wave C branch recorded in state.md. Run git status
   --short; if dirty, stop and ask before edits. Preserve unrelated work.
 - git fetch origin --prune, then sync per state.md "Worktree, base, and merge-forward":
-  origin/feature/masterwrought while PR #3872 is open, otherwise newest origin/release/**
+  the newest origin/release/**
   and remove the dependency block after merge. Run release-merge-audit after a nonempty
   merge and pnpm install --frozen-lockfile if patches/ moved. Never use main.
 - Read root and applicable local CLAUDE.md in full; read state.md Gotchas (the matching
@@ -194,7 +194,9 @@ STEP 2 - EXECUTE WITH EXPLICIT OWNERSHIP:
   row standing until then (D77); never an invented literal.
   Use next verified free DungeonDef indexes, record them before touching consumers;
   no guessed index literal. Layouts and lifts remain content, with the six interior
-  integration seams, empty spawns, owner claim, guideVisible false and no Finder row.
+  integration seams, empty spawns, owner claim, guideVisible false and no Finder row
+  (each room keeps `claimKey: 'owner'` and so the World PvP sanctuary, state.md
+  "Non-negotiables").
   This file completes exact tier/bill/fee-ID rows in content-manifest.md and derived
   quantities/rounding/reference/approval rows in content-numbers-workbook.md. Eligible
   gather-tier-three node fine materials and separately sourced tier-four crop produce retain the exclusion firewall
