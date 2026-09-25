@@ -4484,6 +4484,9 @@ describe('the local write admission cap', () => {
     expect(peak).toBe(FREEHOLD_PERSIST_MAX_ACTIVE_WRITES);
     expect(h.writeCount()).toBe(40);
     expect(h.store.stats().dirty).toBe(0);
+    // Forty accounts, forty rows under forty names: the unique plot_id index
+    // would refuse any two sharing one.
+    expect(new Set(h.writes.map((write) => write.plotId)).size).toBe(40);
   });
 
   it('leaves a deferred owner DIRTY, so the next sweep still owes it a write', async () => {
