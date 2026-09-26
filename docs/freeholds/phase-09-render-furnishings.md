@@ -289,6 +289,12 @@ The LIGHT+GHOST owner adds blocked outline, footprint hatch/cross and keyed reas
 never red color alone. Reduced motion uses a static outline, with identical actionable
 bounds/validity/selected item information at every preset. No per-frame allocations occur
 when unchanged, and no cosmetic budget elides the ghost or its blocked explanation.
+The ghost's footprint is a floor mesh, so it takes its renderOrder from the floor VFX
+ladder (`floorVfxRenderOrder` in `src/render/floor_vfx_layer.ts`, from the release's
+floor ladder, PR 4113), never a bare integer, and joins the band registry in
+`tests/floor_vfx_layer.test.ts`. The ground-aim reticle it copies now sits on the
+ladder's reticle band, whose pieces are additive; a normal-blended hatch picks its band
+there, deliberately.
 
 Add NEW src/game/freehold_arrival.ts through existing src/game/teleport_camera.ts and
 src/render/camera_director_core.ts seams. Add the NEW 'hearthView' member to
