@@ -8,8 +8,9 @@ Status (2026-09-08): implementation complete and ready within the requested scop
 This receipt does not sign the separate follow-on QA packet or later delivery gates.
 
 The capture set, the performance record and the seals were RE-SHOT on 2026-09-23, after
-the `release/v0.44.0` sync and the gate move; the current record is the last section,
-"The 2026-09-23 re-shoot". Capture and performance statements before it are history.
+the `release/v0.44.0` sync and the gate move, and again on 2026-09-25, after its re-sync;
+the current record is "The 2026-09-25 re-shoot", with the re-hash that follows it.
+Capture and performance statements before those two sections are history.
 
 ## Delivered behavior
 
@@ -379,3 +380,32 @@ Measured, from the committed records:
   and the Cottage its hearth, from the arrival point facing north; the desktop Cottage
   chat shows the town leave line. The before frames show the empty lawn between the two
   cottages. No overlay covers any frame.
+
+## The 2026-09-26 re-hash (after the sync of `release/v0.44.0` at `9dbc47938a`)
+
+The 2026-09-25 set above is still the current capture set. Merge `b627c4ad32` took the
+release's floor VFX ladder (PR 4113), which moved two of the 67 sealed inputs:
+`src/render/renderer.ts` (the click marker and the ground-aim ring onto the ladder's
+player band) and `scripts/pr_shot_targets.mjs` (one new, unrelated capture target). Its
+unsealed moves put floor effects on bands; the ground band keeps order 1, so blob
+shadows, torch pools and the other world marks keep the order they drew with.
+
+The decision was taken on a probe, not on that reading. The after leg was shot at
+`b627c4ad32` from a frozen detached worktree (Vite on a spare port, the same harness and
+defaults) into the session scratchpad, not committed, and compared with the sealed after
+frames:
+
+- **Room frames:** the three Inn Room frames differ from the sealed ones on 0.100, 0.092
+  and 0.056 percent of pixels (desktop, compact, tablet), the level two runs of an
+  unchanged tree reach.
+- **Gate frames:** read side by side by eye. Every HUD element (chat, unit frame, action
+  bar, prompt with its selected tab, minimap, menu column, touch controls) is present and
+  in place; the frames differ in the wall-clock time of day (the HUD clock and the sky)
+  and the stance's camera yaw, which vary run to run.
+- **Not probed:** the three Cottage frames. Their grant needs the loopback game server,
+  which the probe did not run; they draw the same room renderer, HUD and floor bands the
+  Inn Room frames do.
+
+So the two digests were re-minted in `acceptance.json`, every occurrence (the producer
+list carries `pr_shot_targets.mjs` twice), the `9f72819c58` precedent; no frame, sidecar
+or manifest changed, and `tests/freehold_capture_contract.test.ts` passes 102 of 102.

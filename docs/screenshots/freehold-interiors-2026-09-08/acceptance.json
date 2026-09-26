@@ -13,7 +13,7 @@
       },
       {
         "path": "scripts/pr_shot_targets.mjs",
-        "sha256": "483528437326b9538d252326952ca686d8a23aa1c036d8204aaefc6e539529d7"
+        "sha256": "a26a876365fe15bc8166c6b5ac835ac054743d63b4066dad3b0161649f9c8c92"
       },
       {
         "path": "scripts/pr_screenshots.mjs",
@@ -123,7 +123,7 @@
   "sourceInputs": [
     {
       "path": "src/render/renderer.ts",
-      "sha256": "331feed2ae31524d792485297a0b29dc1e10ecfa7466b2ca838550fd3a64bed7"
+      "sha256": "b0330cd1fba3d0e384a10e734c0f50ff39e5b749395832f86e95d487404c5754"
     },
     {
       "path": "src/render/dungeon.ts",
@@ -231,7 +231,7 @@
     },
     {
       "path": "scripts/pr_shot_targets.mjs",
-      "sha256": "483528437326b9538d252326952ca686d8a23aa1c036d8204aaefc6e539529d7"
+      "sha256": "a26a876365fe15bc8166c6b5ac835ac054743d63b4066dad3b0161649f9c8c92"
     },
     {
       "path": "scripts/pr_screenshots.mjs",
