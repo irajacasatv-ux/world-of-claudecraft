@@ -1399,8 +1399,11 @@ const ACCEPTED_POLISH_V2_METADATA_SHA256 =
   // merged renderer leaf matches neither parent. No capture was retaken.
   // Re-minted for the merge of feature/world-pvp-flag (the PR 4146 review round) into feature/king-of-the-hill: the
   // merged renderer leaf matches neither parent. No capture was retaken.
+  // Re-minted for the merge of release/v0.44.0 (PR 4200) into feature/vfx-floor-layering: the
+  // merged renderer leaf matches neither parent. No capture was retaken.
   // Re-minted for the Freeholds re-sync of release/v0.44.0 at ed69f62ef7: the merged renderer leaf matches neither parent. No capture was retaken.
-  '668126f40a4f5a546d79ba10081609e2eb80dcfcc245287471cea56114bb3efc';
+  // Re-minted for the Freeholds sync of release/v0.44.0 at 9dbc47938a: the merged renderer leaf matches neither parent. No capture was retaken.
+  '31d23071af830bd316eaaaa72f1af55c3270b505a3e08dc0e5362875629fc437';
 const ACCEPTED_POLISH_V2_COMPOSITE_PROVENANCE =
   // Re-minted for the Frame Rate Limit: the renderer leaf gained the chosen-cadence feeds (frame load readings, governor signals). No capture was retaken.
   // Re-minted for the Eastbrook handoff merge with release/v0.43.0: the merged renderer leaf and the moved NPC layout match neither parent. No capture was retaken.
@@ -1423,8 +1426,11 @@ const ACCEPTED_POLISH_V2_COMPOSITE_PROVENANCE =
   // merged renderer leaf matches neither parent. No capture was retaken.
   // Re-minted for the merge of feature/world-pvp-flag (the PR 4146 review round) into feature/king-of-the-hill: the
   // merged renderer leaf matches neither parent. No capture was retaken.
+  // Re-minted for the merge of release/v0.44.0 (PR 4200) into feature/vfx-floor-layering: the
+  // merged renderer leaf matches neither parent. No capture was retaken.
   // Re-minted for the Freeholds re-sync of release/v0.44.0 at ed69f62ef7: the merged renderer leaf matches neither parent. No capture was retaken.
-  'd4e4b68da4b8583a26f5c3bb3a58ac21710e480b52eff46e9ee8f89ec6f44675';
+  // Re-minted for the Freeholds sync of release/v0.44.0 at 9dbc47938a: the merged renderer leaf matches neither parent. No capture was retaken.
+  '8ce6b2303609141a66b2fff48e9a40fa6c7f4c6b23c0d705646386b770749aa8';
 const ACCEPTED_POLISH_V2_METADATA = readJsonFile<CaptureMetadata>(ACCEPTED_POLISH_V2_METADATA_PATH);
 const ACCEPTED_POLISH_V2_PROVENANCE = ACCEPTED_POLISH_V2_METADATA.polishProvenance;
 const ACCEPTED_POLISH_V2_TOWN_CONTRACT = ACCEPTED_POLISH_V2_METADATA.records[0]?.townContract;
@@ -2821,9 +2827,13 @@ describe('Eastbrook polish performance and contact evidence', () => {
       // capture was retaken.
       // feature/world-pvp-flag (review round) merge into feature/king-of-the-hill: recomputed LAST again over the re-swept evidence. No
       // capture was retaken.
+      // release/v0.44.0 (PR 4200) merge into feature/vfx-floor-layering: recomputed LAST again over the re-swept evidence. No
+      // capture was retaken.
       // Freeholds re-sync of release/v0.44.0 at ed69f62ef7: recomputed LAST again
       // over the re-swept evidence. No capture was retaken.
-    ).toBe('ab6dcc6d2d4430f2d3d48125d6107649d81f27d370c721458807437a4d653da1');
+      // Freeholds sync of release/v0.44.0 at 9dbc47938a: recomputed LAST again
+      // over the re-swept evidence. No capture was retaken.
+    ).toBe('84e71f9624e94872c8e303e5de497eb762ef6ab1e554f81830c6ab0234be9e7b');
   });
 
   it('binds every historical after record to its accepted source and asset provenance', () => {

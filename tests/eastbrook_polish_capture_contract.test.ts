@@ -705,8 +705,11 @@ const PINNED_POLISH_COMPOSITE_FINGERPRINT =
   // merged renderer leaf matches neither parent. No capture was retaken.
   // Re-minted for the merge of feature/world-pvp-flag (the PR 4146 review round) into feature/king-of-the-hill: the
   // merged renderer leaf matches neither parent. No capture was retaken.
+  // Re-minted for the merge of release/v0.44.0 (PR 4200) into feature/vfx-floor-layering: the
+  // merged renderer leaf matches neither parent. No capture was retaken.
   // Re-minted for the Freeholds re-sync of release/v0.44.0 at ed69f62ef7: the merged renderer leaf matches neither parent. No capture was retaken.
-  'd4e4b68da4b8583a26f5c3bb3a58ac21710e480b52eff46e9ee8f89ec6f44675';
+  // Re-minted for the Freeholds sync of release/v0.44.0 at 9dbc47938a: the merged renderer leaf matches neither parent. No capture was retaken.
+  '8ce6b2303609141a66b2fff48e9a40fa6c7f4c6b23c0d705646386b770749aa8';
 
 function validPolishAttributionTargets(): AttributionTargetFixture[] {
   return [
