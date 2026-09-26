@@ -2985,3 +2985,160 @@ rewrote 21 PNGs under `docs/screenshots/` each time; they were restored, not com
 4. The phase 17 re-plan onto the account ledger, with the trophy-source ruling.
 5. A new release sync if `release/**` moves. The Fenbridge ruling is owed before 25a
    builds.
+
+## RULING (B) FOR THE TWELFTH PATH, 2026-09-26
+
+Everything in this section is local; nothing was pushed. The ruling is Fernando's, of
+2026-09-25: option (b), "we want this to be perfect". This section was written in two
+parts: THE SYNC and THE DESIGN before any code of the fix, the rest after.
+
+### THE SYNC FIRST
+
+`git fetch --prune origin` found `origin/release/v0.44.0`, still the version-newest
+release branch, moved past `ed69f62ef7` to `9dbc47938a`: ten render-only commits, the
+floor VFX ladder (PR 4113). Merge `b627c4ad32` takes it. No patch, lockfile or
+`package.json` moved.
+
+- Six paths conflicted, all Eastbrook polish provenance: the four evidence seals and the
+  three pinned literals in the two polish suites. `renderer.ts` auto-merged, so the
+  provenance was re-minted by its own script over the merged bytes, with both parents'
+  comment history kept.
+- The other three overlaps (`renderer.ts`, `scripts/pr_shot_targets.mjs`,
+  `tests/architecture.test.ts`) carry exactly the release's delta: the merge's diff over
+  the branch parent hashes the same as the release's own diff over `ed69f62ef7`.
+  `renderer.ts` stays at 12782 lines, its exact ceiling.
+- The release moved two of the 67 sealed capture inputs (`renderer.ts` and
+  `pr_shot_targets.mjs`). A probe of the after leg from a frozen worktree at the merge
+  (the protocol [[capture-rehash-needs-a-probe-frame]] set) found the room frames at the
+  unchanged-tree level and every HUD element in place, so the two digests were
+  re-hashed (`75bc308552`) rather than the set re-shot;
+  `docs/freeholds/interiors-implementation-evidence.md` has the numbers.
+- The release-merge audit: no route, WS command or injected helper in the delta; the
+  ladder's own source scan (`tests/floor_vfx_layer.test.ts`) passes over the branch's
+  render files, which set no floor renderOrder; no `server/db` mock arrived; no catalog
+  or content moved. ONE PREMISE corrected (`5eb2aa01d1`): Phase 09's placement ghost is a
+  floor mesh and now takes its order from the ladder, whose reticle band holds the
+  ground-aim reticle the plan copies.
+- Owed to the final gate: the release's new `tests/floor_vfx_layer.test.ts` has no row in
+  the shard weights table, so it rides the one carry this change runs for its own new
+  suites.
+
+### THE DESIGN (written before any code)
+
+THE HAZARD, restated in one line: the answer a join installs was read before an await
+the handshake cannot close, and another session of the account can edit, leave and be
+evicted inside it. Every KNOWN DEFECT and KNOWN COST in the harness-fidelity section is
+that one hazard met in a different order.
+
+THE TRUTH AT INSTALL TIME IS THE STORE'S ENTRY, when one is loaded, and the argument is
+three facts about this store rather than a new mechanism:
+1. every commit this process makes to the account lands in `entry.state`
+   (`applyWriteResult`);
+2. every leave whose write has not committed is held as `entry.leaveDocument` (the
+   capture), taken while the record was still live, and it outranks the committed state
+   (`offerCapture`);
+3. an entry is collected only when it owes no work (`owesWork`: nothing running,
+   pending, deferred, in flight, or dirty and unblocked), and nothing writes without a
+   loaded entry. So once the entry is gone, the durable row holds every edit this
+   process made, and a capture never outlives its entry.
+A loaded entry at the moment of the install has therefore seen every edit this process
+made to the account; with no loaded entry, the durable row has.
+
+THE BUILD, three parts:
+1. THE RE-ASK. The handshake's fresh arm keeps its first ask where it is (before the
+   lease, so the durable read stays out of the lease-held window in the common case) and
+   asks again AFTER the lease and the character read, as the last await before
+   `game.join`, through the same `freeholdForAccount` port. The re-ask is `preload`:
+   with the entry loaded it is a replay (no I/O); with the entry collected it is a
+   durable read under the same bounds as any login (the admission cap, the 5,000 ms
+   permit wait, the 10,000 ms whole-preload budget). A thrown re-ask falls back to the
+   first answer; the resume arm reads nothing, as before.
+2. THE VALIDATION, a NEW SYNCHRONOUS STORE CALL at the install:
+   `answerForInstall(ownerKey, accountId, asked)`, called by `bindFreeholdOnJoin` before
+   `installLoadedFreehold` and `retain`, all one synchronous run inside `GameServer.join`.
+   Its decision is a pure function in a new module, `server/freehold_join_answer.ts`
+   (the store is at its monolith ceiling, and the decision is the heart of the fix):
+   - no answer (`undefined`: a caller with no handshake, or both asks threw): install
+     nothing, as today;
+   - an answer that is not an object or names another account: handed back unchanged,
+     so the install's own guards refuse it, as today;
+   - a LOADED ENTRY: the entry's answer NOW, whatever was asked: its identity, durable
+     revision, hold and clock, and as its document the capture if one is held, else the
+     last committed state, and none while the entry is blocked. This is what counts the
+     outstanding capture rather than a committed revision, and it is preload's replay
+     arm, taken at install time instead of before an await;
+   - no loaded entry and a HOLD asked: the hold, which installs nothing, as today;
+   - no loaded entry and a non-hold answer: WITHHELD. The entry that produced the
+     answer has gone, so nothing in the store can vouch for it: no record is put in (the
+     clock still merges), the sim seeds the stand-in, and the seal or the insert refusal
+     write-blocks the session, loudly. No capture can be lost here (fact 3).
+   A LIVE RECORD NEEDS NO ARM of its own: the install is load-once, so nothing installs
+   beside a live record whatever the answer says, and deriving from the entry while a
+   record is live is a no-op.
+3. THE MARK. `besideLiveRecord` stays, RENAMED `recordWithheld` because its meaning
+   widens: it is now what the WITHHELD verdict uses to put no record in while the
+   clock still merges, so the install's positive-false check becomes load-bearing
+   rather than defense in depth. Preload's already-live arm keeps setting it on its
+   own answers, as defense in depth for a raw preload answer handed to the install;
+   no production join installs one any more, which the mutation pass is to show.
+
+WHAT HAPPENS TO THE CAPTURE after the install: the installed record carries it, so
+`retain`'s confirmation releases it (the live revision equals the capture's), and the
+write that was owed (waiting, deferred, refused a permit, thrown once, or the next
+sweep's) samples the live record, which carries the leaver's edits plus any the joiner
+made since. A joiner who leaves first captures that same record.
+
+EVERY ORDER IT MUST HANDLE, with the outcome expected:
+- HEALTHY PATHS, unchanged in outcome: a first login (absent: the default under the
+  minted name); a clean rejoin (the row); a second character while the first is in the
+  world (load-once, the record is shared); a dark realm (no read at either ask, no
+  record); a terminal data hold (installs nothing); the Hearth clock (merged forward from
+  the answer installed). A CAPACITY hold at the first ask now gets a second chance at
+  the re-ask, under the same caps.
+- THE UNWRITTEN ORDER, both account shapes, in every form the ledger lists (the leave
+  write waiting on a permit, refused one, thrown once, deferred behind the write cap, and
+  the joiner leaving before it samples): the re-ask replays the entry, the capture is
+  installed, and the leaver's house reaches the row; the joiner can write on top of it.
+- THE KNOWN-COMMIT SPLIT (a mid-session or an earlier-session commit above the stale
+  revision), loud and silent, waiting and not: the capture sits above that commit, so
+  the seal has nothing to refuse and the leaver's later edits land.
+- THE COMMITTED ORDER, both shapes, with the exact-revision, armed-write,
+  refused-permit and deferred escapes: the leaver's commit collected the entry, so the
+  re-ask is a durable read and the committed house is installed at the committed
+  revision; a joiner edit past it is the joiner's edit on that house, and nothing stale
+  reaches the row.
+- THE HELD LOGINS (`no_permit`, `read_threw`, `cap_full`, `no_budget`) meeting a waiting
+  capture: the leaver's own login loaded the entry, so the re-ask replays it, as the
+  unwritten order.
+- THE ELEVENTH PATH (the already-live arm, then the eviction), both of its forms: the
+  committed form re-reads and installs the house; the waiting form installs the
+  capture. The joiner can write; the cost the eleventh-path fix recorded is recovered.
+- THE NEW CALL'S OWN FAILURE MODES:
+  - A CAPACITY REFUSAL OF THE DURABLE RE-ASK: no loaded entry means no capture anywhere
+    (fact 3), so the hold installs nothing, the stand-in is seeded, the repair reload
+    loads the entry, and the first write is refused (identity over a row, unnamed before
+    one), quiesced and loud; the committed house stays on the row.
+  - THE SIBLING OUTRUNNING THE DURABLE RE-ASK: a re-ask that started beside a live
+    record (the already-live arm with no loaded entry) whose record is evicted during the
+    read answers marked, and the install derives the loaded entry instead, so the joiner
+    gets the house. A sibling that joins during the read collapses onto the same
+    single-flight read, so it cannot commit before this join installs.
+  - A CONCURRENT EVICTION BETWEEN THE RE-ASK AND THE INSTALL (in production one
+    microtask hop, which the store does not rely on): a leaver that still owes its write
+    keeps the entry loaded, so the capture is installed; a leaver whose write committed
+    and whose entry was collected meets the WITHHELD verdict, and the session is
+    write-blocked, loudly, with the committed house kept.
+- CROSS-REALM WRITES are unchanged: the compare-and-swap fence quiesces them.
+
+WHAT IT COSTS: a durable read inside the lease-held window when the entry was collected
+between the two asks (the committed order, or the orphan sweep on a slow handshake) or
+when the first ask was held on capacity; worst case, a handshake's housing time is two
+whole-preload budgets instead of one. The healthy path pays one replay and no I/O.
+
+THE HARNESS FOLLOWS PRODUCTION: `login()` asks, re-asks and joins; a new
+`joinAfterReask` is the fresh arm's tail; `rejoinOverEviction`, whose order (a join on an
+answer read before the eviction, with no re-ask) no longer exists, becomes the one order
+that still seats a stand-in beside an entry that knows the row: a re-ask refused a
+permit after the eviction, then the repair reload. Every KNOWN DEFECT and KNOWN COST pin
+flips to the fixed behaviour; every arm the harness-fidelity section left unpinned is
+pinned; the new call's failure modes are pinned; each against its mutant.
