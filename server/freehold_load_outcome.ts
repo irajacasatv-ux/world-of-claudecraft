@@ -92,7 +92,7 @@ export interface FreeholdRecoveryHold {
 
 /** One account's durable answer, as the join path consumes it. `hold` non-null
  *  means install nothing and write nothing. `state` null means the answer
- *  carries no document: with `durableRev` null and `besideLiveRecord` false
+ *  carries no document: with `durableRev` null and `recordWithheld` false
  *  that is NO durable row (the install puts in a default under `plotId`, which
  *  this store persists), and otherwise it is an answer that must put nothing
  *  in at all. */
@@ -107,21 +107,25 @@ export interface LoadedFreehold {
   readonly hearthRevision: string;
   readonly hold: FreeholdRecoveryHold | null;
   /**
-   * TRUE only on preload's already-live arm: this answer was read BESIDE a live
-   * record, which is the truth, so it carries no state and the install puts no
-   * record in, whatever the other fields say (the Hearth clock, a separate and
-   * forward-only durable fact, still merges). The other fields are not enough
-   * on their own: for a fresh account whose first insert has not landed, this
-   * answer is also revision-null and hold-null, exactly how an absent row
-   * reads. The handshake awaits the lease and the character read between its
-   * preload and its join, so the record it was read beside can be evicted in
-   * between, and the install then put an EMPTY default in under the account's
-   * real name: the eleventh path to an empty Inn Room over a real house.
+   * TRUE when the install must put NO record in, whatever the other fields say
+   * (the Hearth clock, a separate and forward-only durable fact, still merges).
+   * The other fields are not enough on their own: an answer for a fresh account
+   * whose first insert has not landed is revision-null and hold-null, exactly
+   * how an absent row reads, and the install puts an empty default in for that.
+   * Two producers, and only these:
+   * - preload's already-live arm: the answer was read BESIDE a live record,
+   *   which is the truth. Named `besideLiveRecord` until ruling (b) widened it;
+   *   an answer installed after that record's eviction put an EMPTY default in
+   *   under the account's real name, the eleventh path.
+   * - the join's WITHHELD verdict (server/freehold_join_answer.ts): no loaded
+   *   entry vouches for the answer at install time, because the entry it came
+   *   from has gone. No production join installs a raw preload answer any more,
+   *   so this second producer is the one the install's check stands on.
    *
    * REQUIRED, and the install acts only on a positive `false`, so a constructor
    * or projection that loses the field fails CLOSED rather than reopening it.
    */
-  readonly besideLiveRecord: boolean;
+  readonly recordWithheld: boolean;
 }
 
 /** The durable revision a recovery hold reports when there is no row to name
@@ -161,7 +165,7 @@ export function freeholdBudgetRefusal(
     state: null,
     hearthReadyAtMs: hearth.readyAtMs,
     hearthRevision: hearth.revision,
-    besideLiveRecord: false,
+    recordWithheld: false,
     hold: {
       kind: 'no_budget',
       detail,
@@ -196,8 +200,8 @@ export interface FreeholdEntrySnapshot {
 export function freeholdSnapshotOf(
   entry: FreeholdEntrySnapshot,
   state: PersistedFreehold | null,
-  /** True from the already-live arm only; see `besideLiveRecord`. */
-  besideLiveRecord: boolean,
+  /** True from the already-live arm only; see `recordWithheld`. */
+  recordWithheld: boolean,
 ): LoadedFreehold {
   return {
     accountId: entry.accountId,
@@ -208,7 +212,7 @@ export function freeholdSnapshotOf(
     hearthReadyAtMs: entry.hearthReadyAtMs,
     hearthRevision: entry.hearthRevision,
     hold: entry.hold,
-    besideLiveRecord,
+    recordWithheld,
   };
 }
 
@@ -249,6 +253,6 @@ export function freeholdHoldAnswer(
     hearthReadyAtMs: hearth.readyAtMs,
     hearthRevision: hearth.revision,
     hold,
-    besideLiveRecord: false,
+    recordWithheld: false,
   };
 }

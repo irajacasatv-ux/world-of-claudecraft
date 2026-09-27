@@ -56,6 +56,7 @@ import {
   PENDING_FREEHOLD_PLOT_ID,
 } from '../src/sim/freehold/state';
 import type { SimContext } from '../src/sim/sim_context';
+import { boundedDatabaseError } from './freehold_bounded_error';
 import {
   FREEHOLD_PRIMARY_PLOT_INDEX,
   type FreeholdRowLoad,
@@ -69,6 +70,7 @@ import {
   type FreeholdHearthReading,
   normalizeHearthLoad,
 } from './freehold_hearth_load';
+import { freeholdJoinAnswer } from './freehold_join_answer';
 import {
   FREEHOLD_ABSENT_DURABLE_REV,
   type FreeholdRecoveryHold,
@@ -79,6 +81,7 @@ import {
   freeholdSnapshotOf as snapshotOf,
 } from './freehold_load_outcome';
 import { freeholdRevisionMoved } from './freehold_revision_probe';
+import { representableRev, rowDocument } from './freehold_row_document';
 import { freeholdOwnerKeyForAccount } from './freehold_wire';
 import { insertWouldMintAnUnnamedRow, seedWouldLandOnRealRow } from './freehold_write_seal';
 
@@ -477,6 +480,14 @@ export interface FreeholdPersistStore {
   /** The account id lets the store re-read a row whose entry went away between
    *  the handshake's preload and this call. */
   retain(ownerKey: string, accountId?: number): void;
+  /** SYNCHRONOUS, at the join's install and before its retain: the answer to put
+   *  in, decided against this account's entry NOW rather than when the handshake
+   *  asked (ruling (b) for the twelfth path; server/freehold_join_answer.ts). */
+  answerForInstall(
+    ownerKey: string,
+    accountId: number,
+    asked: LoadedFreehold | undefined,
+  ): LoadedFreehold | undefined;
   /** Close intake, flush what is already dirty, and drain to a finite
    *  deadline. True when drained, false at the deadline. Never throws. */
   idle(deadlineMs: number): Promise<boolean>;
@@ -569,34 +580,6 @@ interface FreeholdPersistEntry {
    *  flush return instantly under a mass disconnect, spending none of its
    *  budget and leaving the entry resident. */
   settleWaiters: Array<() => void>;
-}
-
-/**
- * The ONE diagnostic channel that would otherwise bypass the classification
- * bound. `ports.error(message, err)` prints whatever it is handed, and a
- * PostgreSQL error object is not a bounded value: a 23514 or 23502 puts
- * `Failing row contains (...)` in `detail`, and a 23505 puts the conflicting
- * key value there. On a write path that is an account id and row content in a
- * console, which is exactly what src/sim/freehold/load_report.ts exists to
- * prevent.
- *
- * Applied ONLY where a pg error can actually arrive: the row read, the hearth
- * read and the write. A throw out of this module's own code is a programming
- * bug whose stack is the useful part, and bounding it there would hide the line.
- *
- * `message` is kept because it is what makes a line readable, and it is NOT a
- * pure classification: a few SQLSTATEs embed a parameter in it. Every parameter
- * this module sends is JSON it generated itself, so nothing player-authored can
- * ride out that way today; it is the field to watch if that ever changes.
- */
-function boundedDatabaseError(err: unknown): Record<string, unknown> {
-  if (typeof err !== 'object' || err === null) return { message: String(err) };
-  const source = err as { code?: unknown; constraint?: unknown; message?: unknown };
-  return {
-    code: typeof source.code === 'string' ? source.code : undefined,
-    constraint: typeof source.constraint === 'string' ? source.constraint : undefined,
-    message: typeof source.message === 'string' ? source.message : undefined,
-  };
 }
 
 export function createFreeholdPersistStore(ports: FreeholdPersistPorts): FreeholdPersistStore {
@@ -940,43 +923,6 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
     }
   }
 
-  /** The wire revision arrives as EXACT bigint text, because a bigint that has
-   *  already been through a JS number is a value nothing can trust. The
-   *  persisted document holds a number, so the narrowing has to happen
-   *  somewhere; it happens HERE, once, and its caller HOLDS the row rather than
-   *  handing a broken value onward.
-   *
-   *  Holding is the point. normalizeFreehold REPAIRS an out-of-range `rev` to
-   *  zero and still answers `loaded`, so a row whose wire_rev has outgrown a JS
-   *  number would come back writable at revision zero and the next save would
-   *  write that zero over the larger stored value: the client-facing counter
-   *  would go backwards, permanently, on a row nothing was wrong with. */
-  const representableRev = (text: string): boolean => Number.isSafeInteger(Number(text));
-
-  // The durable row is turned back into the document normalizeFreehold admits.
-  // The row reader owns the column shapes; this is the one place the two meet.
-  function rowDocument(row: {
-    schemaVersion: number;
-    plotId: string;
-    tier: string;
-    layout: unknown;
-    trophies: unknown;
-    condition: number;
-    visitPolicy: string;
-    wireRev: string;
-  }): unknown {
-    return {
-      version: row.schemaVersion,
-      plotId: row.plotId,
-      tier: row.tier,
-      layout: row.layout,
-      trophies: row.trophies,
-      condition: row.condition,
-      visitPolicy: row.visitPolicy,
-      rev: Number(row.wireRev),
-    };
-  }
-
   async function classify(accountId: number, ownerKey: string): Promise<LoadedFreehold> {
     // One permit covers both reads, so they run in sequence: two concurrent
     // queries would be two pool checkouts against one admission.
@@ -1009,13 +955,13 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
       // produce.
       //
       // PER ENTRY IS NOT PER OWNER, which is why the live record is consulted
-      // first. An entry the orphan sweep collects between a preload and its
-      // retain is recreated empty by `retain`, and its repair reload lands here
-      // again with a row that is still absent; minting there gives the ROW a
-      // second identity while the record installed from the first one keeps
-      // answering to the first, for the life of that session. The record's
-      // identity is the one every consumer already sees and the one the wire
-      // echoes back, so the row adopts it.
+      // first. An entry collected while its record is still live (a blocked
+      // entry released by its session's leave, before that session's
+      // removePlayer) is recreated by the next handshake's read beside that
+      // record with a row that is still absent; minting there gives the ROW a
+      // second identity while the record keeps answering to the first. The
+      // record's identity is the one every consumer already sees and the one the
+      // wire echoes back, so the row adopts it.
       //
       // A STAND-IN IS NOT AN IDENTITY TO ADOPT, AND IT IS NOT ONE TO MINT OVER
       // EITHER. A live record carrying the stand-in was seeded WITHOUT an
@@ -1040,19 +986,15 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
       // builds a fresh entry whose install runs before the seed, and it is named
       // from the start.
       //
-      // AND IT IS NOT TOTAL, which is stated here rather than left for the next
-      // reader to find the hard way: this test reads the LIVE RECORD, so it can
-      // only fire once something has been SEEDED, and two orderings put the mint
-      // before the seed. A login refused on the whole-preload budget leaves its
-      // read in flight by design and that read can land before `addPlayer` runs;
-      // and a sibling character of the same account riding the same
-      // single-flight read can carry the mint past this point while the refused
-      // login seeds first. Both were reproduced against the real store. What
-      // makes the invariant total is the ORDER-INDEPENDENT half, in
-      // `insertWouldMintAnUnnamedRow`: the identity is compared at the moment the
-      // row would be created, where no ordering can matter. This arm stays
-      // because refusing at LOAD time is cheaper and diagnoses better, never
-      // because it is sufficient.
+      // AND IT IS NOT TOTAL: this test reads the LIVE RECORD, so it fires only
+      // once something has been SEEDED. Two orderings used to put the mint
+      // before the seed (a budget-refused login's read landing before its
+      // `addPlayer`, and a sibling riding the same read), and ruling (b) closes
+      // both at the install: the join installs from the entry that read filled,
+      // so the record carries the minted name. What makes the invariant total
+      // whatever the order is still `insertWouldMintAnUnnamedRow`, which compares
+      // the identity at the moment the row would be created; this arm stays
+      // because refusing at LOAD time is cheaper and diagnoses better.
       const liveName = ports.livePlotId(ownerKey);
       if (liveName === PENDING_FREEHOLD_PLOT_ID) {
         return holdResult(
@@ -1081,7 +1023,7 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
         hearthReadyAtMs: hearth.readyAtMs,
         hearthRevision: hearth.revision,
         hold: null,
-        besideLiveRecord: false,
+        recordWithheld: false,
       };
     }
 
@@ -1167,7 +1109,7 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
         hearthReadyAtMs: hearth.readyAtMs,
         hearthRevision: hearth.revision,
         hold: null,
-        besideLiveRecord: false,
+        recordWithheld: false,
       };
     }
 
@@ -1261,7 +1203,9 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
     const ownerKey = freeholdOwnerKeyForAccount(accountId);
     const entry = entries.get(ownerKey);
     // A second character of the same account is joining: the live record is the
-    // truth, so both answers are MARKED and the install puts nothing in.
+    // truth, so both answers are MARKED to put nothing in. The join no longer
+    // installs this answer as asked (answerForInstall decides at install time),
+    // so the mark is defense in depth for a raw consumer of it.
     if (ports.hasLive(ownerKey)) {
       if (entry?.loaded) {
         entry.accountId = accountId;
@@ -1274,15 +1218,14 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
         return snapshotOf(entry, null, true);
       }
       // The live record is still the truth, so the answer carries no state and
-      // is MARKED (defensive here: no pinned order goes stale through it, and
-      // the mark costs a write-blocked session if one ever did). WITHOUT the read
-      // this entry never learns its plot id or durable revision, and an entry
-      // that never loaded is write-blocked for the whole session, every edit
-      // discarded at logout. So read, then answer with no state.
+      // is MARKED. WITHOUT the read this entry never learns its plot id or
+      // durable revision, and an entry that never loaded is write-blocked for the
+      // whole session, every edit discarded at logout. So read, then answer with
+      // no state.
       const loaded = await beginLoad(accountId, ownerKey);
       const touched = entries.get(ownerKey);
       if (touched) touched.orphanPasses = 0;
-      return { ...loaded, state: null, besideLiveRecord: true };
+      return { ...loaded, state: null, recordWithheld: true };
     }
     // Load-once, like loadFreehold: a re-preload replays what the entry knows
     // (so a rejoin after the sim evicted the record re-installs the real
@@ -1305,7 +1248,7 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
       // releases it there, and only when the live record actually carries it;
       // see offerCapture for the five handshake exits that make releasing here
       // a lost-save path of its own.
-      return snapshotOf(entry, blocked(entry) ? null : offerCapture(entry), false);
+      return replayAnswer(entry);
     }
     const loaded = await beginLoad(accountId, ownerKey);
     const touched = entries.get(ownerKey);
@@ -1637,6 +1580,12 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
    */
   function offerCapture(entry: FreeholdPersistEntry): PersistedFreehold | null {
     return entry.leaveDocument ?? entry.state;
+  }
+
+  /** A loaded entry's answer at this instant: preload's replay arm, and the
+   *  join's validation at install time, one expression so the two cannot drift. */
+  function replayAnswer(entry: FreeholdPersistEntry): LoadedFreehold {
+    return snapshotOf(entry, blocked(entry) ? null : offerCapture(entry), false);
   }
 
   /** Wake anything waiting for this entry to stop owing a write. */
@@ -2021,11 +1970,10 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
       //
       // A bare presence test was not enough: installLoadedFreehold puts nothing
       // in for several answer shapes and loadFreehold is load-once on top, while
-      // retain runs on every join and knows none of it. The reachable case is the
-      // same-account character swap: preload's already-live arm never offers the
-      // capture, the install puts nothing in, and the record retain sees belongs
-      // to the PREVIOUS session, which removePlayer is explicitly allowed to
-      // evict. The capture was dropped over edits that reached nothing.
+      // retain runs on every join and knows none of it. The reachable case is a
+      // second character joining while another session of the account is still
+      // in the world: the install is a load-once no-op, and the record retain
+      // sees belongs to that session, which may have edited past the capture.
       //
       // Comparing the live revision to the captured one fails CLOSED: a skipped
       // install leaves the revision where it was, so the capture survives to
@@ -2051,27 +1999,36 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
       if (entry.leaveDocument !== null && ports.liveRev(ownerKey) === entry.leaveDocument.rev) {
         releaseCapture(entry);
       }
-      // AN UNLOADED ENTRY HERE IS A LOST ONE. retain runs at the end of a
-      // handshake whose preload already ran, so the store should have a loaded
-      // entry for this owner. If it does not, something removed it in between:
-      // the orphan sweep after a slow handshake, or a leave for another
-      // character of the same account. Yielding a `loaded: false` entry would
-      // write-block the session for its whole life, with no hold, no counter
-      // and no log, and every edit the player makes would be discarded at
-      // logout. So re-read instead. The read is single-flight and load-once, so
-      // a normal join, where the entry IS loaded, costs nothing.
-      // ...but never on a DARK realm. The join path's own preload is gated on
-      // the housing flag in server/main.ts, so this reload would otherwise be
-      // the one durable read a realm with housing disabled still issues, once
-      // per join, for a feature it does not serve.
-      // The RESULT is discarded on purpose: the joining session already has
-      // whatever its own handshake read, and this read exists to make the ENTRY
-      // able to write, not to change what the player was handed. It rides the
-      // same single-flight slot and the same admission cap of four as any other
-      // load, so a storm of them cannot outrun the gate.
+      // AN UNLOADED ENTRY HERE FOLLOWS A JOIN THAT INSTALLED NOTHING: the join
+      // installs from any loaded entry (answerForInstall), so only a hold or a
+      // withheld answer reaches this, and the session is on the stand-in. Left
+      // unloaded, the entry would block every write with no hold of its own, no
+      // refusal and no line, so the session's discarded edits would be
+      // invisible. So re-read: the entry learns the row and the seal refuses the
+      // stand-in, counted and logged (or classify holds it, `unnamed_record`).
+      // Single-flight and load-once, so a normal join costs nothing. Never on a
+      // DARK realm: the handshake's reads are gated on the housing flag in
+      // server/main.ts, and a realm with housing off must issue none. The
+      // RESULT is discarded: the install was decided already, and this read
+      // rides the same single-flight slot and admission cap as any other load.
       if (!entry.loaded && accountId > 0 && ports.enabled()) {
         void preload(accountId).catch(() => undefined);
       }
+    },
+
+    // THE JOIN'S VALIDATION, and SYNCHRONOUS on purpose: preload is async even on
+    // its replay arms, and a sibling session's removePlayer can land in any await
+    // gap, so the answer is decided in the same run as the install it feeds.
+    answerForInstall(ownerKey, accountId, asked) {
+      const entry = entries.get(ownerKey);
+      const current = entry?.loaded ? replayAnswer(entry) : null;
+      const decided = freeholdJoinAnswer(accountId, asked, current);
+      if (decided.verdict === 'withheld') {
+        ports.warn(
+          `freehold plot index ${decided.answer?.plotIndex} join answer withheld: the entry it was read from went away before the install, so no record is put in and the session is write-blocked`,
+        );
+      }
+      return decided.answer;
     },
 
     idle(deadlineMs: number): Promise<boolean> {

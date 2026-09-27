@@ -21,20 +21,25 @@ import { freeholdOwnerKeyForAccount } from './freehold_wire';
 /** The store surface this binding needs. Narrower than FreeholdPersistStore on
  *  purpose: a binding that could `save` or `idle` would be a second coordinator. */
 export interface FreeholdBindingStore {
+  answerForInstall: FreeholdPersistStore['answerForInstall'];
   retain: FreeholdPersistStore['retain'];
   flushAndRelease: FreeholdPersistStore['flushAndRelease'];
 }
 
 /**
- * Install the account's durable answer and take the join's reference, in that
- * order and synchronously.
+ * Validate the account's durable answer against the store, install it and take
+ * the join's reference, in that order and synchronously.
  *
- * THE ORDER IS THE POINT. The durable record goes in through the ONE load path
- * BEFORE addPlayer's seed: `loadFreehold` and `ensureFreeholdRecord` are both
- * load-once, so a load after the seed is a silent no-op that discards the
- * owner's real plot. The retain is synchronous so a same-account character swap,
- * where the previous session's leave is fire-and-forget, cannot drop the entry
- * under the new session between the two.
+ * THE ORDER IS THE POINT. The answer the handshake carries was read before an
+ * await, and another session of the account can edit, leave and be evicted in
+ * it (the twelfth path), so the store decides what to install NOW, from its
+ * entry, capture included (ruling (b)). The durable record then goes in through
+ * the ONE load path BEFORE addPlayer's seed: `loadFreehold` and
+ * `ensureFreeholdRecord` are both load-once, so a load after the seed is a silent
+ * no-op that discards the owner's real plot. All of it is synchronous, so no
+ * sibling's removePlayer lands between the decision and the install, and a
+ * same-account character swap, where the previous session's leave is
+ * fire-and-forget, cannot drop the entry under the new session before the retain.
  *
  * Returns the owner key so the caller computes it ONCE. `freeholdOwnerKeyForAccount`
  * throws on a non-positive account id, and a caller that recomputed it during
@@ -47,7 +52,7 @@ export function bindFreeholdOnJoin(
   loaded: LoadedFreehold | undefined,
 ): string {
   const ownerKey = freeholdOwnerKeyForAccount(accountId);
-  installLoadedFreehold(ctx, accountId, loaded);
+  installLoadedFreehold(ctx, accountId, store.answerForInstall(ownerKey, accountId, loaded));
   store.retain(ownerKey, accountId);
   return ownerKey;
 }

@@ -123,20 +123,15 @@ export function seedWouldLandOnRealRow(
   // increments its revision (the coupling is pinned by a source scan in
   // tests/freehold_module.test.ts), and every install this store offers a
   // rejoin carries at least the revision the entry last committed, so a
-  // live record BELOW that has to be a different record. THAT PREMISE HAS A
-  // KNOWN HOLE, the twelfth path: an answer read before another session of the
-  // same account edited and was evicted, then installed at the join, carries
-  // an OLDER house. While that session's capture is still unwritten (its
-  // leave write waiting, refused a permit, thrown once, or deferred), the
-  // store's next write carries the stale record, and no arm here refuses it
-  // unless the entry knows a commit above the stale revision (the leaver's own
-  // mid-session save, or an earlier session's that the leaver's read learned):
-  // then a record below that commit is refused (and the leaver's later edits
-  // are lost, loudly) and one the joiner brings up to it is written, silently. Once the capture has committed, a
-  // write that samples the record STRICTLY below the committed revision is
-  // refused here, but a returning player who reaches that revision before a
-  // write samples it carries it past every arm (pinned as it behaves in
-  // tests/server/freehold_persist.test.ts; a ruling is owed).
+  // live record BELOW that has to be a different record. THAT PREMISE HAD A
+  // HOLE, the twelfth path: an answer read before another session of the same
+  // account edited and was evicted, installed at the join, carried an OLDER
+  // house, and some of its orders passed every arm here. RULING (B) CLOSED IT
+  // at the install rather than here: the join installs the store's answer at
+  // install time (its loaded entry, the capture included, or a durable re-read
+  // when the entry was collected), and a join nothing can vouch for installs
+  // no record, so the stand-in meets the name comparison (see the findings
+  // ledger, "RULING (B) FOR THE TWELFTH PATH").
   //
   // UN-GATED FROM THE STAND-IN, and that is the companion the install fix owes.
   // It used to be checked only under the stand-in identity, on the reasoning
@@ -153,8 +148,8 @@ export function seedWouldLandOnRealRow(
   // replay RESTARTS the record's revision from the last committed value. This
   // compares the LIVE record with the entry's own last COMMITTED document, which
   // is one timeline: every install this store offers a rejoin carries at least
-  // the committed revision (bar the twelfth path's known hole above), and every
-  // sanctioned mutator only increments.
+  // the committed revision (since ruling (b) closed the twelfth path above), and
+  // every sanctioned mutator only increments.
   //
   // WHAT IT NEWLY REFUSES, named rather than discovered: a leave capture
   // strictly older than the last committed write, offered to a rejoin as the

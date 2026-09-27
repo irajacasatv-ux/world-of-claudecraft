@@ -280,6 +280,10 @@ function harness(options: HarnessOptions = {}) {
   const fifo = createKeyedSerialWriter<string>();
   let nowMs = 10_000;
   let minted = 0;
+  // Permits the next acquires are refused, ahead of any case option: the one
+  // order that still seats a stand-in beside an entry that knows the row is a
+  // re-ask refused on capacity (`rejoinOverEviction`).
+  let refusePermits = 0;
 
   // Leave flushes not yet followed by their removePlayer, per owner key.
   const flushesOwed = new Map<string, number>();
@@ -401,6 +405,10 @@ function harness(options: HarnessOptions = {}) {
     async acquirePermit(signal: AbortSignal): Promise<{ release(): void } | null> {
       calls.push('permit');
       permitSignals.push(signal);
+      if (refusePermits > 0) {
+        refusePermits -= 1;
+        return null;
+      }
       if (options.acquirePermit) return await options.acquirePermit(signal);
       return {
         release(): void {
@@ -468,8 +476,14 @@ function harness(options: HarnessOptions = {}) {
   };
 
   /** THE SECOND MOMENT: GameServer.join's order, through its own functions.
-   *  The durable answer is installed and the session retained, then addPlayer
-   *  seeds the default if nothing is live yet.
+   *  The store decides the answer at install time, it is installed and the
+   *  session retained, then addPlayer seeds the default if nothing is live yet.
+   *
+   *  The answer a production join is handed is the handshake's RE-ASK, made
+   *  after the lease and the character read with nothing awaited between it and
+   *  the join (`joinAfterReask`, and `login` for a whole handshake). A case that
+   *  awaits something between its re-ask and this call is modelling the store's
+   *  defensive arm for that one await, on purpose, and says so.
    *
    *  TWO SESSIONS OF ONE ACCOUNT are in the world together only briefly in
    *  production, because MAX_ACTIVE_SESSIONS_PER_ACCOUNT is one: the linkdead
@@ -514,11 +528,18 @@ function harness(options: HarnessOptions = {}) {
     livenessViolations,
     join,
     removePlayer,
-    /** A whole login: the handshake's preload, then the join. */
+    /** A whole login: the handshake's first ask (before the lease), its
+     *  re-ask (after the character read), then the join. Answers the re-ask. */
     async login(accountId = ACCOUNT_ID): Promise<LoadedFreehold> {
-      const loaded = await store.preload(accountId);
-      join(loaded, accountId);
-      return loaded;
+      await store.preload(accountId);
+      return await h.joinAfterReask(accountId);
+    },
+    /** The fresh arm's tail, for a case whose first ask came earlier: the
+     *  re-ask, then the join with nothing awaited between. Answers the re-ask. */
+    async joinAfterReask(accountId = ACCOUNT_ID): Promise<LoadedFreehold> {
+      const atJoin = await store.preload(accountId);
+      join(atJoin, accountId);
+      return atJoin;
     },
     /** GameServer.leave's order: flush while the record is still live, then
      *  removePlayer. */
@@ -527,24 +548,31 @@ function harness(options: HarnessOptions = {}) {
       removePlayer(ownerKey);
     },
     /**
-     * A REJOIN THAT LANDS AFTER THE EVICTION, one of the orders in which a store
-     * entry faces a record it did not install (a hold at the join and
-     * `rejoinBeforeRemoval` are others). The returning session's handshake
-     * reads while the previous session's record is still live, so preload's
-     * already-live arm answers with no state and marks it so; the previous
-     * session then leaves and removePlayer evicts; and the join installs
-     * nothing, so addPlayer seeds the STAND-IN. If the leave collected the
-     * entry, retain's repair reload re-reads the row, and the tick lets that
-     * read land.
+     * A REJOIN THAT LANDS AFTER THE EVICTION ON A RE-ASK REFUSED A PERMIT, the
+     * order that still seats a STAND-IN beside an entry that knows the row
+     * (`rejoinBeforeRemoval` is another way an entry faces a record it did not
+     * install). The returning session's handshake first asks while the previous
+     * session's record is still live; the previous session leaves CLEAN, so its
+     * flush collects the entry, and removePlayer evicts; the re-ask is then a
+     * durable read, refused a permit, so the join installs nothing and addPlayer
+     * seeds the stand-in; retain's repair reload re-reads the row, and the tick
+     * lets that read land. Before ruling (b) the join installed nothing here with
+     * no refusal at all, because it trusted the first answer; that order is gone.
      */
     async rejoinOverEviction(accountId = ACCOUNT_ID): Promise<LoadedFreehold> {
       const ownerKey = `account:${accountId}`;
-      const answer = await store.preload(accountId);
+      await store.preload(accountId);
       await flushFreeholdBinding(caseStore, ownerKey);
       removePlayer(ownerKey);
-      join(answer, accountId);
+      refusePermits = 1;
+      const atJoin = await store.preload(accountId);
+      if (refusePermits !== 0) {
+        refusePermits = 0;
+        throw new Error('rejoinOverEviction needs a clean leave that collects the entry');
+      }
+      join(atJoin, accountId);
       await tick(30);
-      return answer;
+      return atJoin;
     },
     /**
      * A SECOND SESSION THAT JOINS BEFORE THE FIRST ONE'S REMOVAL, which is how
@@ -560,8 +588,8 @@ function harness(options: HarnessOptions = {}) {
     async rejoinBeforeRemoval(accountId = ACCOUNT_ID): Promise<LoadedFreehold> {
       const ownerKey = `account:${accountId}`;
       await flushFreeholdBinding(caseStore, ownerKey);
-      const answer = await store.preload(accountId);
-      join(answer, accountId);
+      await store.preload(accountId);
+      const answer = await h.joinAfterReask(accountId);
       removePlayer(ownerKey);
       return answer;
     },
@@ -597,6 +625,11 @@ function harness(options: HarnessOptions = {}) {
     },
     setNow(ms: number): void {
       nowMs = ms;
+    },
+    /** Refuse the next `count` permit acquires, ahead of any case option: a
+     *  saturated background gate for exactly the reads or writes a case names. */
+    refuseNextPermits(count: number): void {
+      refusePermits = count;
     },
     writeCount(): number {
       return calls.filter((call) => call === 'writeRow').length;
@@ -784,7 +817,7 @@ describe('the harness models only a liveness state the server can produce', () =
     // A rejoin reads the row the leave wrote (a READ, not a replay: the clean
     // entry was collected), and all four agree on THAT.
     h.calls.length = 0;
-    h.join(await h.store.preload(ACCOUNT_ID));
+    await h.joinAfterReask();
     expect(h.calls.filter((call) => call === 'readRow')).toHaveLength(1);
     const rejoined = read(h);
     expect(rejoined.has).toBe(true);
@@ -1202,40 +1235,52 @@ describe('preload admission', () => {
   });
 
   it('ADOPTS the live record identity rather than minting a second one for the row', async () => {
-    // ONE IDENTITY PER OWNER, not per entry. The mint is per ENTRY, and an entry
-    // the orphan sweep collects between a preload and its retain is recreated
-    // empty: minting again there gives the ROW a second identity while the
-    // record installed from the first one keeps answering to the first, for the
-    // life of that session, which the write seal then reads as two different
-    // records and quiesces the account over.
+    // ONE IDENTITY PER OWNER, not per entry. The mint is per ENTRY, and an
+    // entry that re-reads an ABSENT row while a record already answers to a
+    // minted name would give the ROW a second identity; the insert refusal would
+    // then read the record and the row as two names and quiesce the account.
     //
-    // A LIVE RECORD IS THE PRECONDITION, and it is built the way production
-    // builds it: the handshake mints `plot:minted1`, a handshake wider than two
-    // sweeps loses its unretained entry, and the join then installs the answer
-    // (so the record answers to `plot:minted1`) before its retain recreates the
-    // entry and re-reads. That re-read finds the record live and the row still
-    // absent, which is exactly where a second mint would happen.
-    const h = harness({ rowLoad: { kind: 'absent' } });
-    const answer = await h.store.preload(ACCOUNT_ID);
-    expect(answer.plotId).toBe('plot:minted1');
+    // A LIVE RECORD UNDER A MINTED NAME, NO ROW AND NO ENTRY is the precondition,
+    // and under ruling (b) one order still reaches it: a join installs from any
+    // loaded entry, so the entry has to be COLLECTED while its record stays live.
+    // The first session's first insert is refused for good (a conflict answer
+    // quiesces), so the row stays absent and the blocked entry owes nothing; its
+    // leave collects the entry, and before its removePlayer the second
+    // character's handshake reads beside the record through preload's
+    // already-live arm (`rejoinBeforeRemoval`). That read finds the record live
+    // and the row still absent, which is exactly where a second mint would happen.
+    let conflict = true;
+    const db = rowRemembered();
+    const h = harness({
+      readRow: db.readRow,
+      writeRow: async (input) => {
+        if (!conflict) return await db.writeRow(input);
+        conflict = false;
+        return { kind: 'conflict', detail: 'the row is owned by another account' };
+      },
+    });
+    await h.login();
+    expect(h.record()?.plotId).toBe('plot:minted1');
+    h.edit(OWNER_KEY, furnishedEdit(3));
     h.store.saveAllDirty();
-    h.store.saveAllDirty();
-    expect(h.store.stats().entries).toBe(0);
-    h.join(answer);
     await tick(30);
+    expect(h.store.stats().quiesced).toBe(1);
+    await h.rejoinBeforeRemoval();
     expect(h.store.stats().loads).toBe(2);
     expect(h.record()?.plotId).toBe('plot:minted1');
     // AND NOTHING WAS MINTED TWICE: the row is created under the record's own
     // name. A second mint would name the entry `plot:minted2`, and the insert
     // refusal would then refuse the write outright, so the write below is only
     // reachable through the adoption.
-    h.store.markDirty(OWNER_KEY);
-    h.store.save(OWNER_KEY);
+    h.edit(OWNER_KEY, { rev: 4 });
+    h.store.saveAllDirty();
     await tick(30);
-    expect(h.writeCount()).toBe(1);
-    expect(h.writes[0]?.plotId).toBe('plot:minted1');
-    expect(h.store.stats().loadFailures).toBe(0);
+    expect(h.writeCount()).toBe(2);
+    expect(h.writes[1]?.plotId).toBe('plot:minted1');
+    expect(h.writes[1]?.expectedDurableRev).toBeNull();
     expect(h.store.stats().quiesced).toBe(0);
+    const row = await db.readRow(ACCOUNT_ID);
+    expect(row.kind === 'row' ? row.row.plotId : row.kind).toBe('plot:minted1');
   });
 
   it('REFUSES to name a row for a record it did not install', async () => {
@@ -1307,7 +1352,7 @@ describe('preload admission', () => {
     expect(loaded.durableRev).toBe('7');
     // And marked, so a join that lands after the record is evicted installs
     // nothing from it.
-    expect(loaded.besideLiveRecord).toBe(true);
+    expect(loaded.recordWithheld).toBe(true);
   });
 
   it('short circuits with zero database work once the entry has already loaded', async () => {
@@ -1321,7 +1366,7 @@ describe('preload admission', () => {
     expect(h.calls).toEqual([]);
     expect(again.state).toBeNull();
     expect(again.durableRev).toBe('7');
-    expect(again.besideLiveRecord).toBe(true);
+    expect(again.recordWithheld).toBe(true);
   });
 
   it('does read the row when nothing is live (the other arm of the short circuit)', async () => {
@@ -1386,7 +1431,7 @@ describe('preload admission', () => {
     // No state, because the live record is the truth; but the clock is a
     // separate durable fact and this arm must not report it cold.
     expect(second.state).toBeNull();
-    expect(second.besideLiveRecord).toBe(true);
+    expect(second.recordWithheld).toBe(true);
     expect(second.hearthReadyAtMs).toBe(1_700_000_000_000);
     expect(second.hearthRevision).toBe('4');
   });
@@ -1681,38 +1726,50 @@ describe('preload classification', () => {
   });
 
   it('blocks writes for an entry whose load has not landed yet', async () => {
-    // A joined session whose entry is NOT loaded, reached here the way a slow
-    // handshake reaches it (an admission hold at the join is another): the
-    // unretained entry is lost to two sweeps, and the join's retain recreates it
-    // unloaded and re-reads. That read is held open, so the three write doors a
-    // session has open (a mark, a save, a sweep) are tried against an entry with
-    // a live record, a reference and no durable knowledge at all.
+    // A joined session whose entry is NOT loaded. Under ruling (b) a join
+    // installs from any loaded entry, so this is reached only after a join that
+    // installed nothing: the next character's handshake asks beside the owner's
+    // live record, the owner leaves clean (the entry is collected, the record
+    // evicted), and the handshake's re-ask, now a durable read, is refused a
+    // permit. The join installs nothing on that hold, the stand-in is seeded,
+    // and the retain re-reads the unloaded entry. That read is held open, so the
+    // three write doors a session has open (a mark, a save, a sweep) are tried
+    // against an entry with a live record, a reference and no durable knowledge.
     let gate: Deferred<FreeholdRowLoad> | null = null;
     const h = harness({
-      readRow: async () => (gate ? await gate.promise : { kind: 'absent' }),
+      readRow: async () => (gate ? await gate.promise : { kind: 'row', row: rowFixture() }),
     });
-    const answer = await h.store.preload(ACCOUNT_ID);
-    h.store.saveAllDirty();
-    h.store.saveAllDirty();
+    await h.login();
+    await h.store.preload(ACCOUNT_ID);
+    await h.leave();
     expect(h.store.stats().entries).toBe(0);
     gate = deferred<FreeholdRowLoad>();
-    h.join(answer);
+    h.refuseNextPermits(1);
+    const atJoin = await h.joinAfterReask();
+    expect(atJoin.hold?.kind).toBe('no_permit');
     await tick();
     expect(h.store.stats().entries).toBe(1);
     expect(h.store.stats().loaded).toBe(0);
-    expect(h.record()).toBeDefined();
+    expect(h.record()?.plotId).toBe(PENDING_FREEHOLD_PLOT_ID);
+    h.calls.length = 0;
     h.store.markDirty(OWNER_KEY);
     h.store.save(OWNER_KEY);
     h.store.saveAllDirty();
     await tick();
+    // Refused at the door: nothing was even queued.
+    expect(h.calls).not.toContain('enqueue');
     expect(h.writeCount()).toBe(0);
-    // The contrast, so the block is not a stopped writer: once the read lands
-    // the same entry writes.
-    gate.resolve({ kind: 'absent' });
+    // The contrast, so the block is the unloaded entry and not a stopped writer:
+    // once the read lands the door opens, the write is queued, and what refuses
+    // the stand-in then is the seal, loudly, with the row kept.
+    gate.resolve({ kind: 'row', row: rowFixture() });
     await tick(30);
+    expect(h.store.stats().loaded).toBe(1);
     h.store.save(OWNER_KEY);
     await tick(30);
-    expect(h.writeCount()).toBe(1);
+    expect(h.calls).toContain('enqueue');
+    expect(h.writeCount()).toBe(0);
+    expect(h.errors.filter((line) => line.includes('write refused (identity)'))).toHaveLength(1);
   });
 });
 
@@ -2408,7 +2465,7 @@ describe('reference counting and eviction', () => {
     // A second character of the same account joins, so one leave leaves one
     // reference, and the shared record stays with it.
     const h = await loadedStore();
-    h.join(await h.store.preload(ACCOUNT_ID));
+    await h.joinAfterReask();
     await h.leave();
     expect(h.record()).toBeDefined();
     expect(h.store.stats().entries).toBe(1);
@@ -2453,10 +2510,11 @@ describe('reference counting and eviction', () => {
     // once, so a new character may join), and the new character's join lands
     // under the SAME owner key before the old reference is released. The
     // linkdead swap, where the join lands before the old flush even starts, is
-    // the next case.
-    const answer = await h.store.preload(ACCOUNT_ID);
+    // the next case. The new character's first ask came while the old session
+    // was in the world; its re-ask and join come after the leave began.
+    await h.store.preload(ACCOUNT_ID);
     const leaving = h.leave();
-    h.join(answer);
+    await h.joinAfterReask();
     gate.resolve({ kind: 'updated', durableRev: '2' });
     await leaving;
     await tick(30);
@@ -2633,12 +2691,18 @@ describe('a durable answer no repeat can fix stops the writes', () => {
     // quiesced, so the two lines above are not the replay claim.
     const healthy = await loadedStore({ rowLoad: { kind: 'row', row: rowFixture() } });
     expect((await healthy.store.preload(ACCOUNT_ID)).state).toBeNull();
-    const replay = methodBody(
-      stripComments(readFileSync(SOURCE_PATH, 'utf8')),
-      '  async function preloadWithin(',
+    // The guard lives in ONE expression, and both readers of a loaded entry take
+    // it: preload's replay arm and, since ruling (b), the join's validation at
+    // install time, which is what every production join installs.
+    const source = stripComments(readFileSync(SOURCE_PATH, 'utf8'));
+    expect(methodBody(source, '  async function preloadWithin(')).toContain(
+      'return replayAnswer(entry);',
     );
-    expect(replay).toContain(
+    expect(methodBody(source, '  function replayAnswer(')).toContain(
       'return snapshotOf(entry, blocked(entry) ? null : offerCapture(entry), false);',
+    );
+    expect(methodBody(source, '    answerForInstall(')).toContain(
+      'const current = entry?.loaded ? replayAnswer(entry) : null;',
     );
   });
 });
@@ -2901,717 +2965,773 @@ describe('a write may only carry the record this entry actually loaded', () => {
   });
 });
 
-describe('a join that lands after the eviction installs nothing from an answer read beside the old record', () => {
-  // THE ELEVENTH PATH, found by the fresh read of the harness rewrite and
-  // reproduced here before the fix. Preload's already-live arm answers with no
-  // state because the record beside it is the truth, and for a FRESH account
-  // whose first insert has not landed that answer is also durable-revision-null
-  // and hold-null: exactly the shape the install's absent arm reads as "no row,
-  // install a default under this name". The handshake awaits the lease and the
-  // character read between its preload and its join, so the previous session
-  // can finish leaving in between; removePlayer evicts, and the join then
-  // installed an EMPTY default under the account's real minted name. Neither
-  // the name comparison nor the stand-in arm can see that record for what it is.
+describe('a join installs the store answer at install time, never one that went stale in its handshake', () => {
+  // RULING (B) FOR THE TWELFTH PATH (Fernando, 2026-09-25), and the eleventh
+  // path's cost with it. The answer a handshake reads before its lease and its
+  // character read can go STALE inside those awaits: another session of the
+  // account joins, edits, leaves and is evicted there. Installed as asked, it
+  // wrote an empty or older house over the real one (silently in most orders)
+  // or lost the leaving session's unwritten edits (loudly in the rest), and
+  // every one of those orders was pinned below as a KNOWN DEFECT or KNOWN COST.
+  // The fix has two halves and both are driven here through production code:
+  // the handshake RE-ASKS after the character read (`joinAfterReask`), and the
+  // join decides what to install from the store's entry AT INSTALL TIME, capture
+  // included (`answerForInstall`, server/freehold_join_answer.ts). Every pin
+  // that was a KNOWN DEFECT or KNOWN COST now asserts the fixed behaviour: the
+  // leaver's edits land, the joiner installs the current house and can write,
+  // and nothing stale reaches the row.
 
-  it('never writes the empty default it installed over the house the leaver committed', async () => {
-    const h = harness({ ...rowRemembered() });
-    await h.login();
-    h.edit(OWNER_KEY, furnishedEdit(3));
-    // The next character's handshake reads while the owner is still in the
-    // world, before the first insert: the answer names the row nothing has
-    // created yet.
-    const answer = await h.store.preload(ACCOUNT_ID);
-    expect(answer.state).toBeNull();
-    expect(answer.durableRev).toBeNull();
-    expect(answer.hold).toBeNull();
-    // The owner leaves: the flush inserts the house, the clean entry is
-    // collected, and removePlayer evicts.
-    await h.leave();
-    expect(h.writeCount()).toBe(1);
-    expect(h.writes[0].layoutJson).toBe(JSON.stringify(persistedFixture().layout));
-    expect(h.record()).toBeUndefined();
-    // The next character joins on the answer it read. Its retain re-reads the
-    // row the owner just committed.
-    h.join(answer);
-    await tick(30);
-    // It edits past the committed revision before the next sweep, which is what
-    // defeated every revision-shaped arm of the seal.
-    h.edit(OWNER_KEY, { rev: 4 });
-    h.store.saveAllDirty();
-    await tick(30);
-    // The absence of a second write IS the assertion: the row keeps the house.
-    expect(h.writeCount()).toBe(1);
-    expect(h.record()?.plotId).toBe(PENDING_FREEHOLD_PLOT_ID);
-    expect(h.store.stats().quiesced).toBe(1);
-    expect(h.errors.some((line) => line.includes('write refused (identity)'))).toBe(true);
-  });
-
-  it("creates no row for an empty default when the leaver's write had not landed", async () => {
-    // The same order with the leave write still waiting on its permit: the join
-    // must not put a record in that the pending write would then carry to a
-    // brand-new row under the account's real name. The refusal is LOUD, which is
-    // what separates it from the silent insert this used to be.
-    let granted = 0;
-    const permit = deferred<{ release(): void } | null>();
-    const h = harness({
-      ...rowRemembered(),
-      acquirePermit: async () => {
-        granted += 1;
-        return granted === 1 ? { release: () => {} } : await permit.promise;
-      },
-    });
-    await h.login();
-    h.edit(OWNER_KEY, furnishedEdit(3));
-    const answer = await h.store.preload(ACCOUNT_ID);
-    const leaving = h.leave();
-    await tick(10);
-    h.deadlines.find((job) => job.ms === FREEHOLD_PERSIST_LEAVE_FLUSH_MS)?.fire();
-    await leaving;
-    expect(h.record()).toBeUndefined();
-    expect(h.store.stats().leaveCaptures).toBe(1);
-    h.join(answer);
-    expect(h.record()?.plotId).toBe(PENDING_FREEHOLD_PLOT_ID);
-    permit.resolve({ release: () => {} });
-    await tick(40);
-    expect(h.writes.some((write) => write.layoutJson === '[]')).toBe(false);
-    expect(h.writeCount()).toBe(0);
-    expect(h.store.stats().quiesced).toBe(1);
-    expect(h.errors.some((line) => line.includes('write refused (unnamed)'))).toBe(true);
-    // WHAT IT COSTS, pinned as it behaves: the capture held this fresh
-    // account's whole first house, and it reaches NO row. The refusal keeps an
-    // empty row from being created under the account's real name; it does not
-    // keep the house. The joining session is write-blocked on the empty
-    // stand-in for its session. Recovering the house is the ruling owed in
-    // docs/freeholds/qa/persistence-2026-09-08/findings.md (harness-fidelity
-    // section).
-    expect(h.store.stats().leaveCaptures).toBe(0);
-  });
-
-  // THE TWELFTH PATH, found by the fresh read of the eleventh path's fix and
-  // PINNED AS IT BEHAVES, so the fix flips these rather than being discovered:
-  // the ruling it needs is owed (the ledger's harness-fidelity section). The
-  // mark covers an answer read BESIDE a live record, but the hazard is an
-  // answer that went STALE between the handshake's preload and its join, and
-  // an answer read with NOTHING live goes stale the same way when another
-  // session of the account joins, edits and is evicted inside that window.
-  // Two orders: the other session's leave write has COMMITTED when the join
-  // lands (the first two cases, and the looped committed-order cases further
-  // down), or its capture is still UNWRITTEN (the write waiting on a permit,
-  // refused one, thrown once, or deferred behind the write cap: the cases
-  // between). The unwritten order needs no edit from the joiner at all when the
-  // leaver committed nothing during its session.
-  it('KNOWN DEFECT, the twelfth path: a stale ABSENT answer empties a house committed during the handshake', async () => {
-    const db = rowRemembered();
-    const h = harness({ ...db });
-    // Y's handshake reads with nothing live: the absent arm, unmarked.
-    const answer = await h.store.preload(ACCOUNT_ID);
-    expect(answer.besideLiveRecord).toBe(false);
-    // X, another session of the account, joins, furnishes and leaves inside
-    // Y's lease and character-read window: the house is inserted at wire
-    // revision three, the entry collected, the record evicted.
-    await h.login();
-    h.edit(OWNER_KEY, furnishedEdit(3));
-    await h.leave();
-    expect(h.writeCount()).toBe(1);
-    expect(h.writes[0].layoutJson).toBe(JSON.stringify(persistedFixture().layout));
-    // Y joins on its stale answer and edits past the committed revision before
-    // the first permitted write samples it (the refusal cases below are that
-    // write coming first).
-    h.join(answer);
-    await tick(30);
-    h.edit(OWNER_KEY, { rev: 4 });
-    h.store.saveAllDirty();
-    await tick(30);
-    // THE DEFECT: an EMPTY document compare-and-swapped over the house, with
-    // no quiesce and no error line.
-    expect(h.writeCount()).toBe(2);
-    expect(h.writes[1].plotId).toBe(MINTED_PLOT_ID);
-    expect(h.writes[1].expectedDurableRev).toBe('1');
-    expect(h.writes[1].wireRev).toBe(4);
-    expect(h.writes[1].layoutJson).toBe('[]');
-    expect(h.store.stats().quiesced).toBe(0);
-    expect(h.errors).toEqual([]);
-    // And the row now holds the empty house.
-    const row = await db.readRow(ACCOUNT_ID);
-    expect(row.kind === 'row' ? [row.row.layout, row.row.wireRev] : null).toEqual([[], '4']);
-  });
-
-  it('KNOWN DEFECT, the twelfth path: a stale ROW answer installs an older house over one committed since', async () => {
-    const db = rowRemembered(rowFixture());
-    const h = harness({ ...db });
-    // Y's handshake reads the row at revision five.
-    const answer = await h.store.preload(ACCOUNT_ID);
-    // X places a table, commits at revision eight, and leaves.
-    await h.login();
-    h.edit(OWNER_KEY, { layout: [...persistedFixture().layout, TABLE], rev: 8 });
-    await h.leave();
-    expect(h.writes[0].layoutJson).toBe(JSON.stringify([...persistedFixture().layout, TABLE]));
-    // Y joins on its stale answer: the install puts revision FIVE in.
-    h.join(answer);
-    await tick(30);
-    expect(h.record()?.rev).toBe(5);
-    // A permitted write that samples it below eight refuses it (the refusal
-    // cases below). Brought to eight or past before that write, nothing can see
-    // that this record is older than the row.
-    h.edit(OWNER_KEY, { rev: 9 });
-    h.store.saveAllDirty();
-    await tick(30);
-    // THE DEFECT: the table X committed is overwritten, silently, by the older
-    // house Y's answer carried.
-    expect(h.writeCount()).toBe(2);
-    expect(h.writes[1].wireRev).toBe(9);
-    expect(h.writes[1].layoutJson).toBe(JSON.stringify(rowFixture().layout));
-    expect(h.store.stats().quiesced).toBe(0);
-    expect(h.errors).toEqual([]);
-    const row = await db.readRow(ACCOUNT_ID);
-    expect(row.kind === 'row' ? [row.row.layout, row.row.wireRev] : null).toEqual([
-      rowFixture().layout,
-      '9',
-    ]);
-  });
-
-  it('KNOWN DEFECT, the twelfth path: a stale ABSENT answer inserts an EMPTY row while the leave write waits, with no edit at all', async () => {
-    // The WAITING order. X's leave write is still waiting on its permit when
-    // the leave deadline lets removePlayer evict, so the store still holds the
-    // capture; Y's install then puts the empty default in under the minted
-    // name, retain keeps the capture (the record does not carry it), and when
-    // X's write finally samples, the live record outranks the capture. Nothing
-    // refuses it: no durable row yet, and the same name.
-    let granted = 0;
-    const permit = deferred<{ release(): void } | null>();
-    const db = rowRemembered();
-    const h = harness({
-      ...db,
-      acquirePermit: async () => {
-        granted += 1;
-        return granted === 1 ? { release: () => {} } : await permit.promise;
-      },
-    });
-    const answer = await h.store.preload(ACCOUNT_ID);
-    expect(answer.besideLiveRecord).toBe(false);
-    await h.login();
-    h.edit(OWNER_KEY, furnishedEdit(3));
-    const leaving = h.leave();
-    await tick(10);
-    h.deadlines.find((job) => job.ms === FREEHOLD_PERSIST_LEAVE_FLUSH_MS)?.fire();
-    await leaving;
-    expect(h.record()).toBeUndefined();
-    expect(h.store.stats().leaveCaptures).toBe(1);
-    h.join(answer);
-    expect(h.record()?.plotId).toBe(MINTED_PLOT_ID);
-    permit.resolve({ release: () => {} });
-    await tick(40);
-    // THE DEFECT: X's whole first house is gone and an empty row stands in its
-    // place, with no quiesce, no failure and no error line.
-    expect(h.writeCount()).toBe(1);
-    expect(h.writes[0].plotId).toBe(MINTED_PLOT_ID);
-    expect(h.writes[0].expectedDurableRev).toBeNull();
-    expect(h.writes[0].wireRev).toBe(0);
-    expect(h.writes[0].layoutJson).toBe('[]');
-    expect(h.store.stats().quiesced).toBe(0);
-    expect(h.store.stats().writeFailures).toBe(0);
-    expect(h.store.stats().leaveCaptures).toBe(0);
-    expect(h.errors).toEqual([]);
-    const row = await db.readRow(ACCOUNT_ID);
-    expect(row.kind === 'row' ? [row.row.layout, row.row.wireRev] : null).toEqual([[], '0']);
-  });
-
-  it('KNOWN DEFECT, the twelfth path: a stale ROW answer writes the OLDER house back while the leave write waits, with no edit at all', async () => {
-    let granted = 0;
-    const permit = deferred<{ release(): void } | null>();
-    const db = rowRemembered(rowFixture());
-    const h = harness({
-      ...db,
-      acquirePermit: async () => {
-        granted += 1;
-        return granted === 1 ? { release: () => {} } : await permit.promise;
-      },
-    });
-    const answer = await h.store.preload(ACCOUNT_ID);
-    await h.login();
-    h.edit(OWNER_KEY, { layout: [...persistedFixture().layout, TABLE], rev: 8 });
-    const leaving = h.leave();
-    await tick(10);
-    h.deadlines.find((job) => job.ms === FREEHOLD_PERSIST_LEAVE_FLUSH_MS)?.fire();
-    await leaving;
-    expect(h.store.stats().leaveCaptures).toBe(1);
-    h.join(answer);
-    expect(h.record()?.rev).toBe(5);
-    permit.resolve({ release: () => {} });
-    await tick(40);
-    // THE DEFECT: the write X's leave was waiting on carries Y's older house,
-    // so the table X placed never reaches the row, silently.
-    expect(h.writeCount()).toBe(1);
-    expect(h.writes[0].wireRev).toBe(5);
-    expect(h.writes[0].expectedDurableRev).toBe('7');
-    expect(h.writes[0].layoutJson).toBe(JSON.stringify(rowFixture().layout));
-    expect(h.store.stats().quiesced).toBe(0);
-    expect(h.store.stats().writeFailures).toBe(0);
-    expect(h.store.stats().leaveCaptures).toBe(0);
-    expect(h.errors).toEqual([]);
-    const row = await db.readRow(ACCOUNT_ID);
-    expect(row.kind === 'row' ? [row.row.layout, row.row.wireRev] : null).toEqual([
-      rowFixture().layout,
-      '5',
-    ]);
-  });
-
-  it('KNOWN DEFECT, the twelfth path: a joiner on a stale ABSENT answer who LEAVES before the waiting write samples replaces the capture with its own', async () => {
-    // Another arm of the unwritten order: Y's own leave flush takes a capture
-    // of Y's stale record in place of X's, and X's waiting write then carries
-    // it.
-    let granted = 0;
-    const permit = deferred<{ release(): void } | null>();
-    const db = rowRemembered();
-    const h = harness({
-      ...db,
-      acquirePermit: async () => {
-        granted += 1;
-        return granted === 1 ? { release: () => {} } : await permit.promise;
-      },
-    });
-    const answer = await h.store.preload(ACCOUNT_ID);
-    await h.login();
-    h.edit(OWNER_KEY, furnishedEdit(3));
-    const leaving = h.leave();
-    await tick(10);
-    h.deadlines.find((job) => job.ms === FREEHOLD_PERSIST_LEAVE_FLUSH_MS)?.fire();
-    await leaving;
-    h.join(answer);
-    const yLeaving = h.leave();
-    await tick(10);
-    for (const job of h.deadlines) {
-      if (job.ms === FREEHOLD_PERSIST_LEAVE_FLUSH_MS && !job.fired && !job.cancelled) {
-        job.fired = true;
-        job.fire();
-      }
-    }
-    await yLeaving;
-    expect(h.record()).toBeUndefined();
-    expect(h.store.stats().leaveCaptures).toBe(1);
-    permit.resolve({ release: () => {} });
-    await tick(40);
-    expect(h.writeCount()).toBe(1);
-    expect(h.writes[0].plotId).toBe(MINTED_PLOT_ID);
-    expect(h.writes[0].wireRev).toBe(0);
-    expect(h.writes[0].layoutJson).toBe('[]');
-    // No quiesce or capture count here: both sessions have left, so settle
-    // collects the entry whatever it holds. The write, the row and the silence
-    // are the assertions.
-    expect(h.errors).toEqual([]);
-    const row = await db.readRow(ACCOUNT_ID);
-    expect(row.kind === 'row' ? [row.row.layout, row.row.wireRev] : null).toEqual([[], '0']);
-  });
-
-  it('KNOWN DEFECT, the twelfth path: a leave write DEFERRED behind the write cap launches after the join and carries a stale ABSENT answer', async () => {
-    // The unwritten order's deferred form. Other owners' writes hold every
-    // slot, the leave reserve included, so the leave write never launches
-    // before removePlayer evicts; the pump launches it the moment a slot frees,
-    // which here is after the join, and it samples the stale record.
-    const gates: Array<Deferred<FreeholdUpsertResult>> = [];
-    const db = rowRemembered();
-    const h = harness({
-      readRow: async (accountId) =>
-        accountId === ACCOUNT_ID
-          ? db.readRow(accountId)
-          : { kind: 'row', row: rowFixture({ accountId, plotId: `plot:row${accountId}` }) },
-      writeRow: async (input) => {
-        if (input.accountId === ACCOUNT_ID) return db.writeRow(input);
-        const gate = deferred<FreeholdUpsertResult>();
-        gates.push(gate);
-        return await gate.promise;
-      },
-    });
-    const answer = await h.store.preload(ACCOUNT_ID);
-    await h.login();
-    h.edit(OWNER_KEY, furnishedEdit(3));
-    // The ordinary cap fills with background writes, the reserve with leavers.
-    for (let i = 0; i < FREEHOLD_PERSIST_MAX_ACTIVE_WRITES; i++) {
-      const key = `account:${OTHER_ACCOUNT_ID + i}`;
-      await h.login(OTHER_ACCOUNT_ID + i);
-      h.store.markDirty(key);
-      h.store.save(key);
-    }
-    for (let i = 0; i < FREEHOLD_PERSIST_LEAVE_WRITE_RESERVE; i++) {
-      const key = `account:${OTHER_ACCOUNT_ID + 500 + i}`;
-      await h.login(OTHER_ACCOUNT_ID + 500 + i);
-      h.store.markDirty(key);
-      void h.store.flushAndRelease(key);
-      await tick(20);
-    }
-    const leavingCap = FREEHOLD_PERSIST_MAX_ACTIVE_WRITES + FREEHOLD_PERSIST_LEAVE_WRITE_RESERVE;
-    expect(h.store.stats().activeWrites).toBe(leavingCap);
-    const capturesBefore = h.store.stats().leaveCaptures;
-    const leaving = h.leave();
-    await tick(10);
-    expect(h.store.stats().deferredWrites).toBeGreaterThan(0);
-    expect(h.store.stats().leaveCaptures).toBe(capturesBefore + 1);
-    h.deadlines
-      .filter((job) => job.ms === FREEHOLD_PERSIST_LEAVE_FLUSH_MS)
-      .at(-1)
-      ?.fire();
-    await leaving;
-    expect(h.record()).toBeUndefined();
-    expect(h.writes.some((write) => write.accountId === ACCOUNT_ID)).toBe(false);
-    h.join(answer);
-    await tick(30);
-    // One slot frees and the leave reserve admits the deferred leaver, which
-    // now samples Y.
-    gates[0].resolve({ kind: 'updated', durableRev: '9' });
-    await tick(40);
-    const mine = h.writes.filter((write) => write.accountId === ACCOUNT_ID);
-    expect(mine).toHaveLength(1);
-    expect(mine[0].plotId).toBe(MINTED_PLOT_ID);
-    expect(mine[0].wireRev).toBe(0);
-    expect(mine[0].layoutJson).toBe('[]');
-    expect(h.store.stats().quiesced).toBe(0);
-    expect(h.errors).toEqual([]);
-    const row = await db.readRow(ACCOUNT_ID);
-    expect(row.kind === 'row' ? [row.row.layout, row.row.wireRev] : null).toEqual([[], '0']);
-    for (const gate of gates.splice(0)) gate.resolve({ kind: 'updated', durableRev: '9' });
-    await tick(60);
-    for (const gate of gates.splice(0)) gate.resolve({ kind: 'updated', durableRev: '9' });
-    await tick(60);
-  });
-
-  // The unwritten order when the store's entry KNOWS A COMMIT above the stale
-  // record: the leaver committed during its own session, or an EARLIER session
-  // of the account committed and left before the leaver logged in (the
-  // leaver's fresh read learned it). What decides it is that commit, not who
-  // made it. The seal refuses the waiting write (a loud loss of the leaver's
-  // later edits) unless the joiner reaches that revision before the write
-  // samples, and then the stale house is written over the committed one too,
-  // silently.
+  /** The furnished house a session places over what the stale answer holds. */
+  const HOUSE_LAYOUT = [...persistedFixture().layout, TABLE];
   const SHELF = { ...TABLE, placementId: 3, x: 1 };
-  for (const source of ['MID-SESSION', 'EARLIER-SESSION'] as const) {
-    for (const shape of ['ABSENT', 'ROW'] as const) {
-      for (const joinerEdits of [false, true]) {
-        const title = joinerEdits
-          ? `KNOWN DEFECT, the twelfth path: a joiner who reaches ${source === 'MID-SESSION' ? 'a' : 'an'} ${source} commit before the waiting write samples writes a stale ${shape} answer over it`
-          : `KNOWN COST, the twelfth path: a stale ${shape} answer below ${source === 'MID-SESSION' ? 'a' : 'an'} ${source} commit loses the leaver's later edits, loudly`;
-        it(title, async () => {
-          let hold = false;
-          const permit = deferred<{ release(): void } | null>();
-          const db = rowRemembered(shape === 'ROW' ? rowFixture() : null);
-          const h = harness({
-            ...db,
-            acquirePermit: async () => (hold ? await permit.promise : { release: () => {} }),
-          });
-          const answer = await h.store.preload(ACCOUNT_ID);
-          await h.login();
-          const mid = shape === 'ROW' ? 6 : 1;
-          const midLayout = [...persistedFixture().layout, TABLE];
-          h.edit(OWNER_KEY, { layout: midLayout, rev: mid });
-          if (source === 'MID-SESSION') {
-            h.store.saveAllDirty();
-            await tick(30);
-          } else {
-            // An earlier session commits and leaves, and the leaver logs in on a
-            // fresh read of that commit.
-            await h.leave();
-            await h.login();
-            expect(h.record()?.rev).toBe(mid);
-          }
-          expect(h.writeCount()).toBe(1);
-          h.edit(OWNER_KEY, { layout: [...midLayout, SHELF], rev: mid + 2 });
-          hold = true;
-          const leaving = h.leave();
-          await tick(10);
-          h.deadlines
-            .find(
-              (job) => job.ms === FREEHOLD_PERSIST_LEAVE_FLUSH_MS && !job.fired && !job.cancelled,
-            )
-            ?.fire();
-          await leaving;
-          h.join(answer);
-          await tick(30);
-          const stale = shape === 'ROW' ? JSON.stringify(rowFixture().layout) : '[]';
-          if (joinerEdits) h.edit(OWNER_KEY, { rev: mid });
-          permit.resolve({ release: () => {} });
-          await tick(40);
-          const row = await db.readRow(ACCOUNT_ID);
-          const kept =
-            row.kind === 'row' ? [JSON.stringify(row.row.layout), row.row.wireRev] : null;
-          if (joinerEdits) {
-            expect(h.writeCount()).toBe(2);
-            expect(h.writes[1].wireRev).toBe(mid);
-            expect(h.writes[1].layoutJson).toBe(stale);
-            expect(h.store.stats().quiesced).toBe(0);
-            expect(h.errors).toEqual([]);
-            expect(kept).toEqual([stale, String(mid)]);
-          } else {
-            expect(h.writeCount()).toBe(1);
-            expect(h.store.stats().quiesced).toBe(1);
-            expect(h.errors).toHaveLength(1);
-            expect(h.errors[0]).toContain('write refused (identity)');
-            expect(h.store.stats().leaveCaptures).toBe(0);
-            expect(kept).toEqual([JSON.stringify(midLayout), String(mid)]);
-          }
-        });
-      }
-    }
-  }
+  /** The stale answer's own layout, per account shape. */
+  const staleLayout = (shape: 'ABSENT' | 'ROW'): string =>
+    shape === 'ROW' ? JSON.stringify(rowFixture().layout) : '[]';
 
-  for (const how of ['REFUSED A PERMIT', 'THREW ONCE'] as const) {
-    it(`KNOWN DEFECT, the twelfth path: a leave write that ${how} keeps the capture, and the next sweep writes a stale ABSENT answer over it`, async () => {
-      // The unwritten order's widest part: a leave write that failed without
-      // quiescing keeps the entry dirty and the capture held, so the join can
-      // land up to a whole sweep interval later, and the re-armed write then
-      // samples the stale record.
-      let failNext = false;
-      const db = rowRemembered();
-      const h = harness({
-        ...db,
-        acquirePermit: async () => {
-          if (how !== 'REFUSED A PERMIT' || !failNext) return { release: () => {} };
-          failNext = false;
+  /** Every leave-write deadline still armed, fired: the leave stops WAITING. */
+  const expireLeaves = (h: Harness): void => {
+    for (const job of h.deadlines) {
+      if (job.ms === FREEHOLD_PERSIST_LEAVE_FLUSH_MS && !job.fired && !job.cancelled) job.fire();
+    }
+  };
+  /** Every login budget still armed, fired: that ask answers `no_budget`. */
+  const expireBudgets = (h: Harness): void => {
+    for (const job of h.deadlines) {
+      if (job.ms === FREEHOLD_PERSIST_LOGIN_BUDGET_MS && !job.fired && !job.cancelled) job.fire();
+    }
+  };
+  /** A whole leave that may stop at its deadline, as GameServer.leave does. */
+  async function leaveWithinDeadline(h: Harness): Promise<void> {
+    const leaving = h.leave();
+    await tick(10);
+    expireLeaves(h);
+    await leaving;
+  }
+  const mine = (h: Harness) => h.writes.filter((write) => write.accountId === ACCOUNT_ID);
+  const rowOf = async (db: ReturnType<typeof rowRemembered>) => {
+    const row = await db.readRow(ACCOUNT_ID);
+    return row.kind === 'row' ? [JSON.stringify(row.row.layout), row.row.wireRev] : row.kind;
+  };
+  const refusals = (h: Harness) => h.errors.filter((line) => line.includes('write refused'));
+
+  type UnwrittenForm = 'WAITING' | 'REFUSED A PERMIT' | 'THREW ONCE' | 'DEFERRED';
+  type KnownCommit = 'NONE' | 'MID-SESSION' | 'EARLIER-SESSION';
+  type FirstAsk = 'ANSWERED' | 'no_permit' | 'read_threw' | 'cap_full' | 'no_budget';
+
+  /**
+   * THE UNWRITTEN ORDER, in production order and every form the ledger lists.
+   * Y's handshake asks first (`firstAsk`: answered, or held on each kind); X,
+   * another session of the same account, logs in, edits (above a commit the
+   * store already knows when `known` says so) and leaves with its write still
+   * owed (`form`), and is evicted; then Y re-asks and joins. `drive` runs the
+   * write X owes.
+   */
+  async function unwrittenOrder(
+    shape: 'ABSENT' | 'ROW',
+    form: UnwrittenForm,
+    known: KnownCommit,
+    firstAsk: FirstAsk = 'ANSWERED',
+  ) {
+    const db = rowRemembered(shape === 'ROW' ? rowFixture() : null);
+    let holdPermits = false;
+    const permit = deferred<{ release(): void } | null>();
+    let refuseNextPermit = false;
+    let throwNextWrite = false;
+    let throwNextRead = false;
+    let gateMyRead: Deferred<void> | null = null;
+    const otherReads: Array<() => void> = [];
+    const otherWrites: Array<Deferred<FreeholdUpsertResult>> = [];
+    const h = harness({
+      readRow: async (accountId) => {
+        if (accountId !== ACCOUNT_ID) {
+          await new Promise<void>((resolve) => otherReads.push(resolve));
+          return { kind: 'row', row: rowFixture({ accountId, plotId: `plot:row${accountId}` }) };
+        }
+        if (throwNextRead) {
+          throwNextRead = false;
+          throw new Error('connection reset');
+        }
+        if (gateMyRead) {
+          const gate = gateMyRead;
+          gateMyRead = null;
+          await gate.promise;
+        }
+        return await db.readRow(accountId);
+      },
+      acquirePermit: async () => {
+        if (refuseNextPermit) {
+          refuseNextPermit = false;
           return null;
-        },
-        writeRow: async (input) => {
-          if (how === 'THREW ONCE' && failNext) {
-            failNext = false;
-            throw new Error('connection reset');
-          }
-          return db.writeRow(input);
-        },
-      });
-      const answer = await h.store.preload(ACCOUNT_ID);
-      await h.login();
-      h.edit(OWNER_KEY, furnishedEdit(3));
-      failNext = true;
+        }
+        return holdPermits ? await permit.promise : { release: () => {} };
+      },
+      writeRow: async (input) => {
+        if (input.accountId !== ACCOUNT_ID) {
+          const gate = deferred<FreeholdUpsertResult>();
+          otherWrites.push(gate);
+          return await gate.promise;
+        }
+        if (throwNextWrite) {
+          throwNextWrite = false;
+          throw new Error('connection reset');
+        }
+        return await db.writeRow(input);
+      },
+    });
+    const releaseOtherReads = async (): Promise<void> => {
+      while (otherReads.length > 0) {
+        otherReads.shift()?.();
+        await tick(10);
+      }
+    };
+
+    // Y's FIRST ASK, before its lease, with nothing live.
+    let yFirst: LoadedFreehold;
+    if (firstAsk === 'cap_full') {
+      for (let i = 0; i < FREEHOLD_PERSIST_MAX_ACTIVE_LOADS; i++) {
+        void h.store.preload(OTHER_ACCOUNT_ID + 1000 + i);
+      }
+      await tick(10);
+      yFirst = await h.store.preload(ACCOUNT_ID);
+      await releaseOtherReads();
+    } else if (firstAsk === 'no_budget') {
+      gateMyRead = deferred<void>();
+      const gate = gateMyRead;
+      const asking = h.store.preload(ACCOUNT_ID);
+      await tick(10);
+      expireBudgets(h);
+      yFirst = await asking;
+      // The read outlives the refusal, and lands before X's login needs it.
+      gate.resolve();
+      await tick(30);
+    } else {
+      refuseNextPermit = firstAsk === 'no_permit';
+      throwNextRead = firstAsk === 'read_threw';
+      yFirst = await h.store.preload(ACCOUNT_ID);
+    }
+    expect(yFirst.hold?.kind ?? 'ANSWERED').toBe(firstAsk);
+
+    // X's session, with a commit the store knows when `known` says so.
+    const mid = shape === 'ROW' ? 6 : 1;
+    await h.login();
+    if (known !== 'NONE') {
+      h.edit(OWNER_KEY, { ...furnishedEdit(mid), layout: HOUSE_LAYOUT });
+      if (known === 'MID-SESSION') {
+        h.store.saveAllDirty();
+        await tick(30);
+      } else {
+        await h.leave();
+        await h.login();
+        expect(h.record()?.rev).toBe(mid);
+      }
+      expect(mine(h)).toHaveLength(1);
+    }
+    const final =
+      known === 'NONE'
+        ? { layout: HOUSE_LAYOUT, rev: shape === 'ROW' ? 8 : 3 }
+        : { layout: [...HOUSE_LAYOUT, SHELF], rev: mid + 2 };
+    h.edit(OWNER_KEY, { ...furnishedEdit(final.rev), layout: final.layout });
+    const rowBefore = await rowOf(db);
+
+    // X LEAVES WITH ITS WRITE OWED, in the form named, and is evicted.
+    if (form === 'DEFERRED') {
+      // Other owners' writes hold every slot, the leave reserve included.
+      for (let i = 0; i < FREEHOLD_PERSIST_MAX_ACTIVE_WRITES; i++) {
+        const accountId = OTHER_ACCOUNT_ID + i;
+        const loading = h.login(accountId);
+        await tick(10);
+        await releaseOtherReads();
+        await loading;
+        h.store.markDirty(`account:${accountId}`);
+        h.store.save(`account:${accountId}`);
+      }
+      for (let i = 0; i < FREEHOLD_PERSIST_LEAVE_WRITE_RESERVE; i++) {
+        const accountId = OTHER_ACCOUNT_ID + 500 + i;
+        const loading = h.login(accountId);
+        await tick(10);
+        await releaseOtherReads();
+        await loading;
+        h.store.markDirty(`account:${accountId}`);
+        void h.store.flushAndRelease(`account:${accountId}`);
+        await tick(20);
+      }
+      expect(h.store.stats().activeWrites).toBe(
+        FREEHOLD_PERSIST_MAX_ACTIVE_WRITES + FREEHOLD_PERSIST_LEAVE_WRITE_RESERVE,
+      );
+    }
+    // Counted from here: the reserve leavers above hold captures of their own.
+    const capturesBefore = h.store.stats().leaveCaptures;
+    if (form === 'DEFERRED') {
+      await leaveWithinDeadline(h);
+      expect(h.store.stats().deferredWrites).toBeGreaterThan(0);
+    } else if (form === 'WAITING') {
+      holdPermits = true;
+      await leaveWithinDeadline(h);
+    } else {
+      refuseNextPermit = form === 'REFUSED A PERMIT';
+      throwNextWrite = form === 'THREW ONCE';
       await h.leave();
-      expect(failNext).toBe(false);
-      expect(h.record()).toBeUndefined();
-      expect(h.store.stats().leaveCaptures).toBe(1);
+      expect(refuseNextPermit || throwNextWrite).toBe(false);
       expect(h.store.stats().writeFailures).toBe(1);
       expect(h.store.stats().quiesced).toBe(0);
-      h.join(answer);
-      await tick(30);
-      h.store.saveAllDirty();
+    }
+    expect(h.record()).toBeUndefined();
+    // Owed, not written: the row is as it was (a thrown attempt was sent and
+    // never landed).
+    expect(await rowOf(db)).toEqual(rowBefore);
+    expect(h.store.stats().leaveCaptures).toBe(capturesBefore + 1);
+    const writesBefore = mine(h).length;
+
+    // Y RE-ASKS AND JOINS: the capture is what goes in, and retain releases it
+    // because the record now carries it.
+    await h.joinAfterReask();
+    expect(h.record()?.plotId).toBe(shape === 'ROW' ? ROW_PLOT_ID : MINTED_PLOT_ID);
+    expect(h.record()?.rev).toBe(final.rev);
+    expect(h.record()?.layout).toEqual(final.layout);
+    expect(h.store.stats().leaveCaptures).toBe(capturesBefore);
+
+    /** Run the write X owes: its permit arrives, the next sweep re-arms it, or
+     *  the slots it is deferred behind free up. */
+    const drive = async (): Promise<void> => {
+      if (form === 'WAITING') permit.resolve({ release: () => {} });
+      else if (form === 'DEFERRED') {
+        for (let i = 0; i < otherWrites.length && mine(h).length === writesBefore; i++) {
+          otherWrites[i].resolve({ kind: 'updated', durableRev: '9' });
+          await tick(30);
+        }
+      } else h.store.saveAllDirty();
       await tick(40);
-      // THE DEFECT: the house the capture held never reaches the row, and an
-      // empty one does, with nothing refused.
-      expect(h.writes.at(-1)?.layoutJson).toBe('[]');
-      expect(h.store.stats().quiesced).toBe(0);
-      expect(h.store.stats().leaveCaptures).toBe(0);
-      expect(h.errors.filter((line) => line.includes('write refused'))).toEqual([]);
-      const row = await db.readRow(ACCOUNT_ID);
-      expect(row.kind === 'row' ? [row.row.layout, row.row.wireRev] : null).toEqual([[], '0']);
-    });
+    };
+    return { h, db, final, drive, writesBefore, capturesBefore };
   }
 
-  for (const kind of ['no_permit', 'read_threw'] as const) {
-    for (const shape of ['ABSENT', 'ROW'] as const) {
-      it(`KNOWN COST, a stale ${kind} HOLD on ${shape === 'ABSENT' ? 'an' : 'a'} ${shape} account: the leaver's waiting capture is released unwritten when the held session joins after the eviction`, async () => {
-        // Not a silent overwrite but the same lost edits: Y's handshake is held
-        // while nothing is live (refused a permit, or its read threw), X loads,
-        // edits and leaves with its write waiting, X is evicted, and Y joins on
-        // its hold. The hold installs nothing, the stand-in is seeded, and X's
-        // write is refused on it: by the seal over a row, by the insert
-        // refusal before one exists.
-        let calls = 0;
-        let throwNext = kind === 'read_threw';
-        const permit = deferred<{ release(): void } | null>();
-        const db = rowRemembered(shape === 'ROW' ? rowFixture() : null);
-        const h = harness({
-          ...db,
-          readRow: async (accountId) => {
-            if (throwNext) {
-              throwNext = false;
-              throw new Error('connection reset');
-            }
-            return db.readRow(accountId);
-          },
-          acquirePermit: async () => {
-            calls += 1;
-            if (calls === 1 && kind === 'no_permit') return null;
-            if (calls <= 2) return { release: () => {} };
-            return await permit.promise;
-          },
+  /** The row X's final house must reach, at the revision the last write carried. */
+  async function expectLanded(
+    run: Awaited<ReturnType<typeof unwrittenOrder>>,
+    wireRev: number,
+  ): Promise<void> {
+    const { h, db, final, writesBefore } = run;
+    const written = mine(h).slice(writesBefore);
+    expect(written.length).toBeGreaterThan(0);
+    expect(written.at(-1)?.layoutJson).toBe(JSON.stringify(final.layout));
+    expect(written.at(-1)?.wireRev).toBe(wireRev);
+    expect(await rowOf(db)).toEqual([JSON.stringify(final.layout), String(wireRev)]);
+    expect(refusals(h)).toEqual([]);
+    expect(h.store.stats().quiesced).toBe(0);
+    expect(h.store.stats().leaveCaptures).toBe(run.capturesBefore);
+  }
+
+  /** And the joiner can write on top of it, for the rest of its session. */
+  async function expectJoinerWrites(run: Awaited<ReturnType<typeof unwrittenOrder>>) {
+    const { h, db, final } = run;
+    const next = (h.record()?.rev ?? Number.NaN) + 1;
+    h.edit(OWNER_KEY, { rev: next });
+    h.store.saveAllDirty();
+    await tick(40);
+    expect(mine(h).at(-1)?.wireRev).toBe(next);
+    expect(await rowOf(db)).toEqual([JSON.stringify(final.layout), String(next)]);
+    expect(h.store.stats().quiesced).toBe(0);
+  }
+
+  // THE UNWRITTEN ORDER: every form, both account shapes, with and without a
+  // commit the store already knows. Before ruling (b) these wrote the stale
+  // record with no edit and no window (KNOWN DEFECT) or, below a known commit,
+  // lost the leaver's later edits loudly (KNOWN COST).
+  for (const known of ['NONE', 'MID-SESSION', 'EARLIER-SESSION'] as const) {
+    for (const form of ['WAITING', 'REFUSED A PERMIT', 'THREW ONCE', 'DEFERRED'] as const) {
+      for (const shape of ['ABSENT', 'ROW'] as const) {
+        const commit = known === 'NONE' ? 'no known commit' : `a known ${known} commit`;
+        it(`the unwritten order (${form}, ${shape}, ${commit}): the leaver's edits land and the joiner writes on top`, async () => {
+          const run = await unwrittenOrder(shape, form, known);
+          await run.drive();
+          await expectLanded(run, run.final.rev);
+          await expectJoinerWrites(run);
         });
-        const answer = await h.store.preload(ACCOUNT_ID);
-        expect(answer.hold?.kind).toBe(kind);
-        await h.login();
-        const house = [...persistedFixture().layout, TABLE];
-        h.edit(OWNER_KEY, { ...furnishedEdit(8), layout: house });
-        const leaving = h.leave();
-        await tick(10);
-        h.deadlines.find((job) => job.ms === FREEHOLD_PERSIST_LEAVE_FLUSH_MS)?.fire();
-        await leaving;
-        expect(h.store.stats().leaveCaptures).toBe(1);
-        h.join(answer);
-        expect(h.record()?.plotId).toBe(PENDING_FREEHOLD_PLOT_ID);
-        permit.resolve({ release: () => {} });
-        await tick(40);
-        expect(h.writeCount()).toBe(0);
-        expect(h.store.stats().quiesced).toBe(1);
-        const refusal = shape === 'ROW' ? 'write refused (identity)' : 'write refused (unnamed)';
-        expect(h.errors.filter((line) => line.includes('write refused'))).toEqual([
-          expect.stringContaining(refusal),
-        ]);
-        expect(h.store.stats().leaveCaptures).toBe(0);
-        const row = await db.readRow(ACCOUNT_ID);
-        expect(row.kind === 'row' ? [row.row.layout, row.row.wireRev] : row.kind).toEqual(
-          shape === 'ROW' ? [rowFixture().layout, '5'] : 'absent',
-        );
+      }
+    }
+  }
+
+  // The old SILENT arms: the joiner edits before the owed write samples. The
+  // write then carries the leaver's house with the joiner's edit on it, never
+  // the stale house brought up to a committed revision.
+  for (const known of ['NONE', 'MID-SESSION', 'EARLIER-SESSION'] as const) {
+    for (const shape of ['ABSENT', 'ROW'] as const) {
+      it(`a joiner that edits before the waiting write samples (${shape}, ${known} commit) writes on top of the leaver's house`, async () => {
+        const run = await unwrittenOrder(shape, 'WAITING', known);
+        run.h.edit(OWNER_KEY, { rev: run.final.rev + 1 });
+        await run.drive();
+        await expectLanded(run, run.final.rev + 1);
       });
     }
   }
 
-  // The COMMITTED order's shapes, shared by the cases below: X commits a house
-  // carrying a table over what Y's stale answer holds, and Y joins on it.
-  const staleShapes = {
-    ABSENT: { row: () => null, committed: 3, installed: 0, layoutJson: () => '[]' },
-    ROW: {
-      row: () => rowFixture(),
-      committed: 8,
-      installed: 5,
-      layoutJson: () => JSON.stringify(rowFixture().layout),
-    },
-  };
-  async function staleJoinAfterCommit(shape: 'ABSENT' | 'ROW', options: HarnessOptions = {}) {
-    const stale = staleShapes[shape];
-    const db = rowRemembered(stale.row());
+  // THE JOINER LEAVES FIRST, before the owed write samples: its own leave
+  // captures the record that now carries the leaver's house. The one arm a
+  // write that simply preferred the capture would have left standing.
+  for (const form of ['WAITING', 'REFUSED A PERMIT', 'THREW ONCE', 'DEFERRED'] as const) {
+    for (const shape of ['ABSENT', 'ROW'] as const) {
+      it(`a joiner that leaves before the owed write (${form}, ${shape}) still hands the leaver's house to the row`, async () => {
+        const run = await unwrittenOrder(shape, form, 'NONE');
+        await leaveWithinDeadline(run.h);
+        expect(run.h.record()).toBeUndefined();
+        await run.drive();
+        await expectLanded(run, run.final.rev);
+      });
+    }
+  }
+
+  // THE HELD LOGINS: Y's first ask was refused (on capacity, a thrown read, or
+  // the whole-preload budget) while nothing was live. X's own login loaded the
+  // entry, so Y's re-ask replays it. Before ruling (b) the hold installed
+  // nothing, the stand-in was seeded, and X's capture was refused on it and
+  // released (KNOWN COST).
+  for (const firstAsk of ['no_permit', 'read_threw', 'cap_full', 'no_budget'] as const) {
+    for (const form of ['WAITING', 'REFUSED A PERMIT', 'THREW ONCE', 'DEFERRED'] as const) {
+      for (const shape of ['ABSENT', 'ROW'] as const) {
+        it(`a ${firstAsk} hold at the first ask (${form}, ${shape}) no longer costs the leaver's capture`, async () => {
+          const run = await unwrittenOrder(shape, form, 'NONE', firstAsk);
+          await run.drive();
+          await expectLanded(run, run.final.rev);
+          await expectJoinerWrites(run);
+        });
+      }
+    }
+  }
+
+  /**
+   * THE COMMITTED ORDER: X's write COMMITTED and its clean entry was collected,
+   * so Y's re-ask is a durable read of the house X committed. Before ruling (b)
+   * Y installed its stale answer, and a joiner who reached the committed
+   * revision before a write sampled it overwrote the house (KNOWN DEFECT: the
+   * edit past it, the exact revision, a write armed below, a refused permit).
+   */
+  async function committedOrder(shape: 'ABSENT' | 'ROW', options: HarnessOptions = {}) {
+    const db = rowRemembered(shape === 'ROW' ? rowFixture() : null);
     const h = harness({ ...db, ...options });
-    const answer = await h.store.preload(ACCOUNT_ID);
+    await h.store.preload(ACCOUNT_ID);
     await h.login();
-    h.edit(OWNER_KEY, {
-      ...furnishedEdit(stale.committed),
-      layout: [...persistedFixture().layout, TABLE],
-    });
+    const committed = shape === 'ROW' ? 8 : 3;
+    h.edit(OWNER_KEY, { ...furnishedEdit(committed), layout: HOUSE_LAYOUT });
     await h.leave();
     expect(h.writeCount()).toBe(1);
-    h.join(answer);
-    await tick(30);
-    expect(h.record()?.rev).toBe(stale.installed);
-    return { h, db, committed: stale.committed, layoutJson: stale.layoutJson() };
+    expect(h.store.stats().entries).toBe(0);
+    const readsBefore = h.calls.filter((call) => call === 'readRow').length;
+    await h.joinAfterReask();
+    // THE RE-ASK READ IT, and the join installed exactly what X committed,
+    // never a record below it.
+    expect(h.calls.filter((call) => call === 'readRow')).toHaveLength(readsBefore + 1);
+    expect(h.record()?.rev).toBe(committed);
+    expect(h.record()?.layout).toEqual(HOUSE_LAYOUT);
+    expect(h.record()?.plotId).toBe(shape === 'ROW' ? ROW_PLOT_ID : MINTED_PLOT_ID);
+    return { h, db, committed, house: JSON.stringify(HOUSE_LAYOUT) };
   }
 
   for (const shape of ['ABSENT', 'ROW'] as const) {
-    it(`KNOWN DEFECT, the twelfth path: a stale ${shape} answer brought EXACTLY to the committed revision passes unseen, and any later edit overwrites`, async () => {
-      // The committed order's boundary. The probe calls a record at the
-      // committed revision unmoved, so with no write armed a joiner who reaches
-      // it is neither written nor refused, and nothing bounds when the
-      // overwrite comes.
-      const { h, committed, layoutJson } = await staleJoinAfterCommit(shape);
-      h.edit(OWNER_KEY, { rev: committed });
+    it(`the committed order (${shape}): installs the committed house, and a joiner edit writes on top of it`, async () => {
+      const { h, db, committed, house } = await committedOrder(shape);
+      // At exactly the committed revision nothing is owed.
       h.store.saveAllDirty();
       await tick(30);
       expect(h.writeCount()).toBe(1);
-      expect(h.store.stats().quiesced).toBe(0);
-      expect(h.errors).toEqual([]);
       h.edit(OWNER_KEY, { rev: committed + 1 });
       h.store.saveAllDirty();
       await tick(30);
       expect(h.writeCount()).toBe(2);
+      expect(h.writes[1].layoutJson).toBe(house);
       expect(h.writes[1].wireRev).toBe(committed + 1);
-      expect(h.writes[1].layoutJson).toBe(layoutJson);
+      expect(h.writes[1].expectedDurableRev).toBe(shape === 'ROW' ? '8' : '1');
+      expect(await rowOf(db)).toEqual([house, String(committed + 1)]);
       expect(h.store.stats().quiesced).toBe(0);
       expect(h.errors).toEqual([]);
     });
 
-    it(`KNOWN DEFECT, the twelfth path: a write armed while a stale ${shape} record sat below writes it once the joiner reaches the committed revision`, async () => {
-      // The seal refuses only STRICTLY below the committed revision, so a write
-      // armed while the record sat below, which samples it after the joiner
-      // has reached that revision, writes the older house with the wire
-      // counter unmoved.
-      let hold = false;
-      const permit = deferred<{ release(): void } | null>();
-      const { h, committed, layoutJson } = await staleJoinAfterCommit(shape, {
-        acquirePermit: async () => (hold ? await permit.promise : { release: () => {} }),
-      });
-      hold = true;
-      h.store.saveAllDirty();
-      await tick(10);
-      h.edit(OWNER_KEY, { rev: committed });
-      permit.resolve({ release: () => {} });
-      await tick(40);
-      expect(h.writeCount()).toBe(2);
-      expect(h.writes[1].wireRev).toBe(committed);
-      expect(h.writes[1].layoutJson).toBe(layoutJson);
-      expect(h.store.stats().quiesced).toBe(0);
-      expect(h.errors).toEqual([]);
-    });
-
-    it(`KNOWN DEFECT, the twelfth path: a write refused a permit leaves a stale ${shape} record below unrefused, so the window is not one interval`, async () => {
-      // The committed order under saturation, which is when a slow handshake
-      // is likeliest. The seal only runs once a write holds a permit, and a
-      // write that gets none books a failure without quiescing, so the next
-      // sweep re-arms and the joiner has another interval to edit past.
+    it(`the committed order (${shape}): a write refused a permit re-arms and still carries the committed house`, async () => {
       let refuseNext = false;
-      const { h, committed, layoutJson } = await staleJoinAfterCommit(shape, {
+      const { h, db, committed, house } = await committedOrder(shape, {
         acquirePermit: async () => {
           if (!refuseNext) return { release: () => {} };
           refuseNext = false;
           return null;
         },
       });
+      h.edit(OWNER_KEY, { rev: committed + 1 });
       refuseNext = true;
       h.store.saveAllDirty();
       await tick(30);
       expect(h.writeCount()).toBe(1);
       expect(h.store.stats().writeFailures).toBe(1);
-      expect(h.store.stats().quiesced).toBe(0);
-      h.edit(OWNER_KEY, { rev: committed + 1 });
+      h.edit(OWNER_KEY, { rev: committed + 2 });
       h.store.saveAllDirty();
       await tick(30);
       expect(h.writeCount()).toBe(2);
-      expect(h.writes[1].wireRev).toBe(committed + 1);
-      expect(h.writes[1].layoutJson).toBe(layoutJson);
+      expect(h.writes[1].layoutJson).toBe(house);
+      expect(await rowOf(db)).toEqual([house, String(committed + 2)]);
       expect(h.store.stats().quiesced).toBe(0);
+    });
+
+    it(`the committed order (${shape}): a write armed on the committed house samples the joiner's later edit with it`, async () => {
+      let hold = false;
+      const permit = deferred<{ release(): void } | null>();
+      const { h, db, committed, house } = await committedOrder(shape, {
+        acquirePermit: async () => (hold ? await permit.promise : { release: () => {} }),
+      });
+      hold = true;
+      h.edit(OWNER_KEY, { rev: committed + 1 });
+      h.store.saveAllDirty();
+      await tick(10);
+      h.edit(OWNER_KEY, { rev: committed + 2 });
+      permit.resolve({ release: () => {} });
+      await tick(40);
+      expect(h.writes.at(-1)?.layoutJson).toBe(house);
+      expect(h.writes.at(-1)?.wireRev).toBe(committed + 2);
+      expect(await rowOf(db)).toEqual([house, String(committed + 2)]);
+      expect(h.store.stats().quiesced).toBe(0);
+    });
+
+    it(`the committed order (${shape}): a write DEFERRED behind the write cap carries the committed house`, async () => {
+      // The widening the ledger left unpinned in this order.
+      const gates: Array<Deferred<FreeholdUpsertResult>> = [];
+      const db = rowRemembered(shape === 'ROW' ? rowFixture() : null);
+      const { h, committed, house } = await committedOrder(shape, {
+        readRow: async (accountId) =>
+          accountId === ACCOUNT_ID
+            ? db.readRow(accountId)
+            : { kind: 'row', row: rowFixture({ accountId, plotId: `plot:row${accountId}` }) },
+        writeRow: async (input) => {
+          if (input.accountId === ACCOUNT_ID) return await db.writeRow(input);
+          const gate = deferred<FreeholdUpsertResult>();
+          gates.push(gate);
+          return await gate.promise;
+        },
+      });
+      for (let i = 0; i < FREEHOLD_PERSIST_MAX_ACTIVE_WRITES; i++) {
+        await h.login(OTHER_ACCOUNT_ID + i);
+        h.store.markDirty(`account:${OTHER_ACCOUNT_ID + i}`);
+        h.store.save(`account:${OTHER_ACCOUNT_ID + i}`);
+      }
+      h.edit(OWNER_KEY, { rev: committed + 1 });
+      h.store.saveAllDirty();
+      await tick(20);
+      expect(h.store.stats().deferredWrites).toBe(1);
+      h.edit(OWNER_KEY, { rev: committed + 2 });
+      gates[0].resolve({ kind: 'updated', durableRev: '9' });
+      await tick(40);
+      const ours = h.writes.filter((write) => write.accountId === ACCOUNT_ID);
+      expect(ours).toHaveLength(2);
+      expect(ours[1].layoutJson).toBe(house);
+      expect(ours[1].wireRev).toBe(committed + 2);
+      expect(await rowOf(db)).toEqual([house, String(committed + 2)]);
+      expect(h.store.stats().quiesced).toBe(0);
+      for (const gate of gates.splice(0)) gate.resolve({ kind: 'updated', durableRev: '9' });
+      await tick(60);
     });
   }
 
-  // WHAT REFUSES IT, pinned so the ruling is taken on its real exposure, and
-  // why that is not a bound. In the COMMITTED order the sweep's probe arms on
-  // ANY difference from the revision the entry committed except equality, and
-  // the seal refuses a record STRICTLY below it and quiesces the entry for the
-  // session: the cases below. So the overwrite needs the joiner to reach the
-  // committed revision before the first write that holds a permit samples the
-  // record (after retain's reload lands, one autosave interval when the pool is
-  // not saturated; a refused permit extends it and a write armed below that
-  // samples at the committed revision writes it, both pinned above, as is a
-  // record left at the revision exactly with no write armed; a write deferred
-  // behind the cap extends it too, unpinned in this order). The UNWRITTEN
-  // order has no window unless the leaver committed during its session.
-  for (const shape of ['ABSENT', 'ROW'] as const) {
-    it(`refuses a stale ${shape} answer still below the committed revision when the first permitted write samples it, for the session`, async () => {
-      const db = rowRemembered(shape === 'ROW' ? rowFixture() : null);
-      const h = harness({ ...db });
-      const answer = await h.store.preload(ACCOUNT_ID);
-      await h.login();
-      const committed = shape === 'ROW' ? 8 : 3;
-      // X's house differs from anything Y's answer carries, so the read-back
-      // below can tell them apart.
-      h.edit(OWNER_KEY, {
-        ...furnishedEdit(committed),
-        layout: [...persistedFixture().layout, TABLE],
+  // THE ELEVENTH PATH, both forms, recovered. Y's first ask is read BESIDE X's
+  // live record (preload's already-live arm, marked to put nothing in), and X
+  // leaves and is evicted before Y joins. The eleventh path's fix put nothing in
+  // and cost Y a write-blocked session and X's waiting capture; the re-ask and
+  // the install-time answer recover both.
+  it('the eleventh path, committed: installs the house the leaver committed, and the joiner writes on top', async () => {
+    const db = rowRemembered();
+    const h = harness({ ...db });
+    await h.login();
+    h.edit(OWNER_KEY, furnishedEdit(3));
+    const beside = await h.store.preload(ACCOUNT_ID);
+    expect(beside.recordWithheld).toBe(true);
+    await h.leave();
+    expect(h.writeCount()).toBe(1);
+    expect(h.record()).toBeUndefined();
+    await h.joinAfterReask();
+    expect(h.record()?.plotId).toBe(MINTED_PLOT_ID);
+    expect(h.record()?.layout).toEqual(persistedFixture().layout);
+    h.edit(OWNER_KEY, { rev: 4 });
+    h.store.saveAllDirty();
+    await tick(30);
+    expect(h.writeCount()).toBe(2);
+    expect(h.writes[1].layoutJson).toBe(JSON.stringify(persistedFixture().layout));
+    expect(h.writes[1].wireRev).toBe(4);
+    expect(h.store.stats().quiesced).toBe(0);
+    expect(h.errors).toEqual([]);
+  });
+
+  it("the eleventh path, waiting: installs the leaver's capture, which then reaches the row", async () => {
+    let granted = 0;
+    const permit = deferred<{ release(): void } | null>();
+    const db = rowRemembered();
+    const h = harness({
+      ...db,
+      acquirePermit: async () => {
+        granted += 1;
+        return granted === 1 ? { release: () => {} } : await permit.promise;
+      },
+    });
+    await h.login();
+    h.edit(OWNER_KEY, furnishedEdit(3));
+    await h.store.preload(ACCOUNT_ID);
+    await leaveWithinDeadline(h);
+    expect(h.record()).toBeUndefined();
+    expect(h.store.stats().leaveCaptures).toBe(1);
+    await h.joinAfterReask();
+    expect(h.record()?.plotId).toBe(MINTED_PLOT_ID);
+    expect(h.record()?.rev).toBe(3);
+    expect(h.store.stats().leaveCaptures).toBe(0);
+    permit.resolve({ release: () => {} });
+    await tick(40);
+    expect(h.writeCount()).toBe(1);
+    expect(h.writes[0].plotId).toBe(MINTED_PLOT_ID);
+    expect(h.writes[0].expectedDurableRev).toBeNull();
+    expect(h.writes[0].layoutJson).toBe(JSON.stringify(persistedFixture().layout));
+    expect(h.store.stats().quiesced).toBe(0);
+    expect(h.errors).toEqual([]);
+    h.edit(OWNER_KEY, { rev: 4 });
+    h.store.saveAllDirty();
+    await tick(30);
+    expect(h.writeCount()).toBe(2);
+    expect(h.writes[1].expectedDurableRev).toBe('1');
+  });
+
+  // THE NEW CALL'S OWN FAILURE MODES.
+
+  /** A committed house on the row, its entry collected and its record evicted,
+   *  with the next character's first ask made beside it: the state every
+   *  durable re-ask below starts from. */
+  async function afterCommittedLeave(
+    db: ReturnType<typeof rowRemembered>,
+    options: HarnessOptions = {},
+  ) {
+    const h = harness({ ...db, ...options });
+    await h.login();
+    h.edit(OWNER_KEY, { ...furnishedEdit(8), layout: HOUSE_LAYOUT });
+    await h.store.preload(ACCOUNT_ID);
+    await h.leave();
+    expect(h.store.stats().entries).toBe(0);
+    expect(h.store.stats().leaveCaptures).toBe(0);
+    return { h, house: JSON.stringify(HOUSE_LAYOUT) };
+  }
+
+  for (const kind of ['no_permit', 'read_threw', 'cap_full', 'no_budget'] as const) {
+    it(`a durable re-ask refused on capacity (${kind}) leaves a write-blocked session, never a loss`, async () => {
+      // No loaded entry means no capture anywhere: a capture lives only on a
+      // loaded entry, and an entry is collected only when it owes nothing. So
+      // the refused re-ask installs nothing, the stand-in is seeded, retain's
+      // repair reload loads the row, and the joiner's first write is refused on
+      // it, loudly. The committed house stays on the row.
+      let throwNext = false;
+      let gate: Deferred<void> | null = null;
+      const others: Array<() => void> = [];
+      const db = rowRemembered(rowFixture());
+      const { h, house } = await afterCommittedLeave(db, {
+        readRow: async (accountId) => {
+          if (accountId !== ACCOUNT_ID) {
+            await new Promise<void>((resolve) => others.push(resolve));
+            return { kind: 'row', row: rowFixture({ accountId, plotId: `plot:row${accountId}` }) };
+          }
+          if (throwNext) {
+            throwNext = false;
+            throw new Error('connection reset');
+          }
+          if (gate) {
+            const open = gate;
+            gate = null;
+            await open.promise;
+          }
+          return await db.readRow(accountId);
+        },
+        writeRow: db.writeRow,
       });
-      await h.leave();
-      const house = h.writes[0].layoutJson;
-      expect(house).toContain('oak_table');
-      h.join(answer);
-      await tick(30);
-      const installed = h.record()?.rev ?? Number.NaN;
-      expect(installed).toBeLessThan(committed - 1);
-      // Y edits, but not past what X committed, and the sweep lands.
-      h.edit(OWNER_KEY, { rev: installed + 1 });
+      let atJoin: LoadedFreehold;
+      if (kind === 'no_permit') {
+        h.refuseNextPermits(1);
+        atJoin = await h.joinAfterReask();
+      } else if (kind === 'read_threw') {
+        throwNext = true;
+        atJoin = await h.joinAfterReask();
+      } else if (kind === 'cap_full') {
+        for (let i = 0; i < FREEHOLD_PERSIST_MAX_ACTIVE_LOADS; i++) {
+          void h.store.preload(OTHER_ACCOUNT_ID + i);
+        }
+        await tick(10);
+        atJoin = await h.joinAfterReask();
+        while (others.length > 0) others.shift()?.();
+      } else {
+        gate = deferred<void>();
+        const open = gate;
+        const reasking = h.store.preload(ACCOUNT_ID);
+        await tick(10);
+        expireBudgets(h);
+        atJoin = await reasking;
+        h.join(atJoin);
+        open.resolve();
+      }
+      expect(atJoin.hold?.kind).toBe(kind);
+      await tick(40);
+      expect(h.record()?.plotId).toBe(PENDING_FREEHOLD_PLOT_ID);
+      h.edit(OWNER_KEY, { rev: 9 });
       h.store.saveAllDirty();
-      await tick(30);
+      await tick(40);
       expect(h.writeCount()).toBe(1);
-      expect(h.store.stats().quiesced).toBe(1);
-      expect(h.errors).toHaveLength(1);
-      expect(h.errors[0]).toContain('write refused (identity)');
-      // Refused for the session: an edit past the committed revision after
-      // that sweep goes out no more.
-      h.edit(OWNER_KEY, { rev: committed + 1 });
-      h.store.saveAllDirty();
-      await tick(30);
-      expect(h.writeCount()).toBe(1);
-      const row = await db.readRow(ACCOUNT_ID);
-      expect(row.kind === 'row' ? JSON.stringify(row.row.layout) : null).toBe(house);
+      expect(await rowOf(db)).toEqual([house, '8']);
+      if (kind === 'cap_full') {
+        // The cap was still full when the join's retain re-read, so that read
+        // was refused too: the entry stays unloaded and write-blocked, counted
+        // by kind rather than refused at the seal.
+        expect(h.store.stats().held).toBe(1);
+        expect(h.store.stats().loadFailuresByKind.cap_full).toBe(2);
+        expect(refusals(h)).toEqual([]);
+      } else {
+        expect(h.store.stats().quiesced).toBe(1);
+        expect(refusals(h)).toEqual([expect.stringContaining('write refused (identity)')]);
+      }
     });
   }
+
+  it('the sibling that outruns the durable re-ask: a record evicted during the read leaves the entry, and the join installs it', async () => {
+    // The re-ask starts BESIDE a live record whose entry is not loaded (a
+    // sibling seated on the stand-in by a refused login), so preload's
+    // already-live arm reads and answers MARKED. The sibling finishes leaving
+    // while that read is out. A liveness re-check at the join cannot tell that
+    // mark is stale; the install-time answer can, because the read loaded the
+    // entry.
+    let gate: Deferred<void> | null = null;
+    const db = rowRemembered(rowFixture());
+    const h = harness({
+      readRow: async (accountId) => {
+        if (gate) {
+          const open = gate;
+          gate = null;
+          await open.promise;
+        }
+        return await db.readRow(accountId);
+      },
+      writeRow: db.writeRow,
+    });
+    // The sibling: both its asks and its retain's reload are refused, so it
+    // plays on the stand-in with an unloaded entry. Y's first ask, beside it, is
+    // refused too, so the entry stays unloaded.
+    h.refuseNextPermits(4);
+    await h.store.preload(ACCOUNT_ID);
+    await h.joinAfterReask();
+    await tick(30);
+    expect(h.record()?.plotId).toBe(PENDING_FREEHOLD_PLOT_ID);
+    expect(h.store.stats().loaded).toBe(0);
+    expect((await h.store.preload(ACCOUNT_ID)).hold?.kind).toBe('no_permit');
+    // The sibling's leave: blocked, its flush writes nothing and collects the
+    // entry, and its removePlayer has not run.
+    await flushFreeholdBinding(h.store, OWNER_KEY);
+    expect(h.store.stats().entries).toBe(0);
+    // Y's re-ask reads beside the still-live stand-in; the read is held open
+    // while the sibling is evicted.
+    gate = deferred<void>();
+    const open = gate;
+    const reasking = h.store.preload(ACCOUNT_ID);
+    await tick(10);
+    h.removePlayer();
+    expect(h.record()).toBeUndefined();
+    open.resolve();
+    const atJoin = await reasking;
+    expect(atJoin.recordWithheld).toBe(true);
+    h.join(atJoin);
+    expect(h.record()?.plotId).toBe(ROW_PLOT_ID);
+    expect(h.record()?.rev).toBe(5);
+    h.edit(OWNER_KEY, { rev: 6 });
+    h.store.saveAllDirty();
+    await tick(30);
+    expect(h.writeCount()).toBe(1);
+    expect(h.writes[0].layoutJson).toBe(JSON.stringify(rowFixture().layout));
+    expect(h.store.stats().quiesced).toBe(0);
+  });
+
+  it('a sibling that joins during the durable re-ask shares its one read, so nothing commits ahead of the install', async () => {
+    let gate: Deferred<void> | null = null;
+    const db = rowRemembered(rowFixture());
+    const { h, house } = await afterCommittedLeave(db, {
+      readRow: async (accountId) => {
+        if (gate) {
+          const open = gate;
+          gate = null;
+          await open.promise;
+        }
+        return await db.readRow(accountId);
+      },
+      writeRow: db.writeRow,
+    });
+    gate = deferred<void>();
+    const open = gate;
+    const readsBefore = h.calls.filter((call) => call === 'readRow').length;
+    const yReask = h.store.preload(ACCOUNT_ID);
+    const siblingFirstAsk = h.store.preload(ACCOUNT_ID);
+    await tick(10);
+    expect(h.calls.filter((call) => call === 'readRow')).toHaveLength(readsBefore + 1);
+    // Nothing can write for this account while the read is out: no entry is
+    // loaded, and nothing writes without one.
+    h.store.saveAllDirty();
+    await tick(10);
+    expect(h.writeCount()).toBe(1);
+    open.resolve();
+    h.join(await yReask);
+    await siblingFirstAsk;
+    await h.joinAfterReask();
+    expect(h.calls.filter((call) => call === 'readRow')).toHaveLength(readsBefore + 1);
+    expect(h.record()?.layout).toEqual(HOUSE_LAYOUT);
+    expect(h.record()?.rev).toBe(8);
+    expect(h.writeCount()).toBe(1);
+    expect(await rowOf(db)).toEqual([house, '8']);
+  });
+
+  it('a leaver evicted between the re-ask and the install, still owing its write, has its capture installed', async () => {
+    // The one await the re-ask itself is. In production it is a single
+    // microtask hop to the join, which the store does not rely on: the join
+    // decides from the entry at install time. Here the other session's whole
+    // leave lands inside it.
+    let hold = false;
+    const permit = deferred<{ release(): void } | null>();
+    const db = rowRemembered(rowFixture());
+    const h = harness({
+      ...db,
+      acquirePermit: async () => (hold ? await permit.promise : { release: () => {} }),
+    });
+    await h.login();
+    h.edit(OWNER_KEY, { ...furnishedEdit(8), layout: HOUSE_LAYOUT });
+    await h.store.preload(ACCOUNT_ID);
+    const atJoin = await h.store.preload(ACCOUNT_ID);
+    expect(atJoin.recordWithheld).toBe(true);
+    hold = true;
+    await leaveWithinDeadline(h);
+    expect(h.record()).toBeUndefined();
+    h.join(atJoin);
+    expect(h.record()?.layout).toEqual(HOUSE_LAYOUT);
+    expect(h.record()?.rev).toBe(8);
+    permit.resolve({ release: () => {} });
+    await tick(40);
+    expect(h.writeCount()).toBe(1);
+    expect(h.writes[0].layoutJson).toBe(JSON.stringify(HOUSE_LAYOUT));
+    expect(await rowOf(db)).toEqual([JSON.stringify(HOUSE_LAYOUT), '8']);
+    expect(h.store.stats().quiesced).toBe(0);
+  });
+
+  it('a leaver evicted between the re-ask and the install, its write committed and its entry collected, is WITHHELD: write-blocked, never a loss', async () => {
+    const db = rowRemembered(rowFixture());
+    const h = harness({ ...db });
+    await h.login();
+    h.edit(OWNER_KEY, { ...furnishedEdit(8), layout: HOUSE_LAYOUT });
+    await h.store.preload(ACCOUNT_ID);
+    const atJoin = await h.store.preload(ACCOUNT_ID);
+    await h.leave();
+    expect(h.store.stats().entries).toBe(0);
+    h.join(atJoin);
+    // Nothing vouches for the answer, so nothing went in: the stand-in.
+    expect(h.record()?.plotId).toBe(PENDING_FREEHOLD_PLOT_ID);
+    expect(h.warnings.filter((line) => line.includes('join answer withheld'))).toHaveLength(1);
+    await tick(30);
+    h.edit(OWNER_KEY, { rev: 9 });
+    h.store.saveAllDirty();
+    await tick(30);
+    expect(h.writeCount()).toBe(1);
+    expect(h.store.stats().quiesced).toBe(1);
+    expect(refusals(h)).toEqual([expect.stringContaining('write refused (identity)')]);
+    expect(await rowOf(db)).toEqual([JSON.stringify(HOUSE_LAYOUT), '8']);
+  });
 
   it('still lets the next character write when the old record is still live at its join', async () => {
     // The contrast, so the fix is not a stopped writer: the ordinary two-character
@@ -3620,7 +3740,7 @@ describe('a join that lands after the eviction installs nothing from an answer r
     const h = harness({ ...rowRemembered() });
     await h.login();
     h.edit(OWNER_KEY, furnishedEdit(3));
-    h.join(await h.store.preload(ACCOUNT_ID));
+    await h.joinAfterReask();
     await h.leave();
     expect(h.record()?.plotId).toBe(MINTED_PLOT_ID);
     h.edit(OWNER_KEY, { rev: 4 });
@@ -3745,7 +3865,7 @@ describe('a leaving session may borrow the write reserve', () => {
       writeRow: async () => await gate.promise,
     });
     // Two characters of the one account are in the world, sharing one record.
-    h.join(await h.store.preload(ACCOUNT_ID));
+    await h.joinAfterReask();
     h.edit(OWNER_KEY, { rev: 6 });
     void h.leave();
     await tick(10);
@@ -3779,7 +3899,7 @@ describe('a leaving session may borrow the write reserve', () => {
       writeRow: async () => await gate.promise,
     });
     // Two characters of the one account are in the world, sharing one record.
-    h.join(await h.store.preload(ACCOUNT_ID));
+    await h.joinAfterReask();
     h.edit(OWNER_KEY, { rev: 6 });
     const first = h.leave();
     await tick(10);
@@ -3922,7 +4042,7 @@ describe('a leaving session never loses its last edits to a queue', () => {
       rowLoad: { kind: 'row', row: rowFixture() },
       writeRow: async () => ({ kind: 'updated', durableRev: '6' }),
     });
-    h.join(await h.store.preload(ACCOUNT_ID));
+    await h.joinAfterReask();
     h.edit(OWNER_KEY, { rev: 6 });
     await h.leave();
     await tick(30);
@@ -4055,32 +4175,30 @@ describe('a leaving session never loses its last edits to a queue', () => {
   });
 
   it('still refuses a record seeded after the captured write has landed', async () => {
-    // RETITLED from "seeded while the write was in flight", which this body
-    // never did: the seed comes after the captured write commits. The in-flight
-    // order is the next case.
+    // The mirror, and the hazard the seal exists for: the record that exists at
+    // the next write is a FRESH SEED of a row that already holds a house, so
+    // writing it would put an empty Inn Room over real furnishings.
     //
-    // The mirror, and the hazard the seal exists for. Here the record that
-    // exists at the next write is a FRESH SEED of a row that already holds a
-    // house, so writing it would put an empty Inn Room over real furnishings.
-    //
-    // IN PRODUCTION ORDER. The returning session's handshake reads while the
-    // leaver is still in the world, so the answer carries no state; the leave
+    // IN PRODUCTION ORDER, and under ruling (b) there is ONE: the returning
+    // session's handshake asks while the leaver is still in the world; the leave
     // captures, stops waiting at its deadline, and removePlayer evicts; the
-    // captured write lands; and only then does the returning session join,
-    // install nothing, and seed a default.
+    // captured write lands and the clean entry is collected; and the returning
+    // session's re-ask, now a durable read, is REFUSED A PERMIT, so the join
+    // installs nothing and the stand-in is seeded. (A re-ask that reads installs
+    // the house the capture wrote: the committed-order pins in the ruling (b)
+    // block.)
     let granted = 0;
     const permit = deferred<{ release(): void } | null>();
+    const db = rowRemembered(rowFixture());
     const h = await loadedStore({
-      rowLoad: { kind: 'row', row: rowFixture() },
+      ...db,
       acquirePermit: async () => {
         granted += 1;
         return granted === 1 ? { release: () => {} } : await permit.promise;
       },
-      writeRow: async () => ({ kind: 'updated', durableRev: '8' }),
     });
     h.edit(OWNER_KEY, { rev: 6 });
-    const returning = await h.store.preload(ACCOUNT_ID);
-    expect(returning.state).toBeNull();
+    await h.store.preload(ACCOUNT_ID);
     const leaving = h.leave();
     await tick(10);
     h.deadlines.find((job) => job.ms === FREEHOLD_PERSIST_LEAVE_FLUSH_MS)?.fire();
@@ -4090,12 +4208,12 @@ describe('a leaving session never loses its last edits to a queue', () => {
     await tick(30);
     expect(h.writeCount()).toBe(1);
     expect(h.writes[0].wireRev).toBe(6);
+    expect(h.store.stats().entries).toBe(0);
 
-    // A join seeds a DEFAULT rather than adopting anything, and holds the entry.
-    h.join(returning);
+    h.refuseNextPermits(1);
+    expect((await h.joinAfterReask()).hold?.kind).toBe('no_permit');
     expect(h.record()?.plotId).toBe(PENDING_FREEHOLD_PLOT_ID);
-    // The entry was collected when its write settled clean, so retain re-reads
-    // it; the sweep must run after that read lands.
+    // retain re-reads the unloaded entry; the sweep must run after that read.
     await tick(30);
     h.store.saveAllDirty();
     await tick(30);
@@ -4104,48 +4222,48 @@ describe('a leaving session never loses its last edits to a queue', () => {
     expect(h.store.stats().quiesced).toBe(1);
     expect(h.store.stats().entries).toBe(1);
     expect(h.store.stats().dirty).toBe(1);
+    const row = await db.readRow(ACCOUNT_ID);
+    expect(row.kind === 'row' ? row.row.wireRev : row.kind).toBe('6');
   });
 
-  it('refuses a record seeded WHILE the captured write waits, and says what it costs', async () => {
+  it('installs the capture for a rejoin that lands WHILE the captured write waits, so the write carries it', async () => {
     // The order the old title named: the returning session joins BEFORE the
     // captured write gets its permit, so when the write samples, a live record
-    // exists again and it outranks the capture. That record is the seed, and
-    // the seal refuses it: the row keeps the house the entry committed.
-    //
-    // WHAT IT COSTS, pinned as it behaves and recorded in the ledger rather
-    // than hidden: the capture held the leaver's revision-six edits, a refused
-    // write leaves the entry blocked and so owing nothing, and settle releases
-    // the capture with it. Those edits reach no row. The joining session also
-    // plays on the empty stand-in, write-blocked for its whole session, while
-    // the row keeps the house. Recovering the edits needs the join to ask the
-    // store again after the eviction, which is a design question, not a harness
-    // one: the ruling owed in docs/freeholds/qa/persistence-2026-09-08/findings.md
-    // (harness-fidelity section).
+    // exists again and it outranks the capture. Before ruling (b) that record
+    // was the stand-in, the seal refused it, and settle released the capture
+    // with the leaver's revision-six edits unwritten, the cost this case pinned.
+    // Now the re-ask replays the entry that still owes the write, the join
+    // installs the capture, retain releases it because the record carries it,
+    // and the write samples the record, which is the capture.
     let granted = 0;
     const permit = deferred<{ release(): void } | null>();
+    const db = rowRemembered(rowFixture());
     const h = await loadedStore({
-      rowLoad: { kind: 'row', row: rowFixture() },
+      ...db,
       acquirePermit: async () => {
         granted += 1;
         return granted === 1 ? { release: () => {} } : await permit.promise;
       },
-      writeRow: async () => ({ kind: 'updated', durableRev: '8' }),
     });
     h.edit(OWNER_KEY, { rev: 6 });
-    const returning = await h.store.preload(ACCOUNT_ID);
+    await h.store.preload(ACCOUNT_ID);
     const leaving = h.leave();
     await tick(10);
     h.deadlines.find((job) => job.ms === FREEHOLD_PERSIST_LEAVE_FLUSH_MS)?.fire();
     await leaving;
     expect(h.store.stats().leaveCaptures).toBe(1);
-    h.join(returning);
-    expect(h.record()?.plotId).toBe(PENDING_FREEHOLD_PLOT_ID);
+    await h.joinAfterReask();
+    expect(h.record()?.plotId).toBe(ROW_PLOT_ID);
+    expect(h.record()?.rev).toBe(6);
+    expect(h.store.stats().leaveCaptures).toBe(0);
     permit.resolve({ release: () => {} });
     await tick(40);
-    expect(h.writeCount()).toBe(0);
-    expect(h.store.stats().quiesced).toBe(1);
-    expect(h.errors.some((line) => line.includes('write refused (identity)'))).toBe(true);
-    expect(h.store.stats().leaveCaptures).toBe(0);
+    expect(h.writeCount()).toBe(1);
+    expect(h.writes[0].wireRev).toBe(6);
+    expect(h.store.stats().quiesced).toBe(0);
+    expect(h.errors).toEqual([]);
+    const row = await db.readRow(ACCOUNT_ID);
+    expect(row.kind === 'row' ? row.row.wireRev : row.kind).toBe('6');
   });
 
   it('refuses a reseeded default over a FRESH account that has since furnished', async () => {
@@ -4401,23 +4519,16 @@ describe('a leaving session never loses its last edits to a queue', () => {
     // has no install in front of it) carries the stand-in. The two differ, and
     // the name comparison fires.
     //
-    // THE MINTING ENTRY ITSELF faces the reseed, which is what the case is
-    // about: the identity it compares is the one `applyWriteResult` cached at
-    // its own commit. So the leave's write is refused a permit, and the entry,
-    // still owing it, outlives the eviction instead of being collected and
-    // re-read from the row (one load, asserted).
-    let granted = 0;
-    const h = await loadedStore({
-      ...rowRemembered(),
-      // The LEAVE write's permit is refused at once. Production answers null
-      // only after the permit wait, well after the two-second leave deadline;
-      // compressed here on purpose, because either way the entry still owes the
-      // write when removePlayer evicts, which is all this case needs.
-      acquirePermit: async () => {
-        granted += 1;
-        return granted === 3 ? null : { release: () => {} };
-      },
-    });
+    // WHICH ENTRY FACES THE RESEED CHANGED WITH RULING (B). This used to keep the
+    // minting entry itself alive past the eviction (its leave write refused a
+    // permit) and reseed beside it; the join now installs from any loaded entry,
+    // so that entry hands the rejoin its capture and no reseed happens. The one
+    // producible reseed is a rejoin whose re-ask is refused on capacity after a
+    // CLEAN leave collected the minting entry (`rejoinOverEviction`), so the
+    // entry facing it is a RE-READ of the row this account minted: its cached
+    // name is that minted name, read back (two loads, asserted), and the name
+    // comparison is what refuses.
+    const h = await loadedStore({ ...rowRemembered() });
     // The installed record carries the MINTED name, and the session builds a
     // house on it.
     expect(h.record()?.plotId).toBe('plot:minted1');
@@ -4428,11 +4539,10 @@ describe('a leaving session never loses its last edits to a queue', () => {
     expect(h.writes[0].layoutJson).toBe(JSON.stringify(persistedFixture().layout));
     expect(h.writes[0].plotId).toBe('plot:minted1');
 
-    // One more edit, then the rejoin over the eviction: reseeded without an
-    // install, and edited past the entry's committed revision to nine.
-    h.edit(OWNER_KEY, { rev: 8 });
+    // The rejoin over the eviction: reseeded without an install, and edited past
+    // the entry's committed revision to nine.
     await h.rejoinOverEviction();
-    expect(h.store.stats().loads).toBe(1);
+    expect(h.store.stats().loads).toBe(3);
     h.edit(OWNER_KEY, { rev: 9 });
     expect(h.record()?.plotId).toBe(PENDING_FREEHOLD_PLOT_ID);
     expect(h.record()?.layout).toEqual([]);
@@ -4451,28 +4561,18 @@ describe('a leaving session never loses its last edits to a queue', () => {
     // caught. It is refused through the SAME name arm as the case above, with
     // the revisions EQUAL this time, so a change that let an equal-revision
     // reseed through the revision arms would still meet the name comparison
-    // here. The minting entry itself faces it, as above (one load).
-    let granted = 0;
-    const h = await loadedStore({
-      ...rowRemembered(),
-      // The LEAVE write's permit is refused at once. Production answers null
-      // only after the permit wait, well after the two-second leave deadline;
-      // compressed here on purpose, because either way the entry still owes the
-      // write when removePlayer evicts, which is all this case needs.
-      acquirePermit: async () => {
-        granted += 1;
-        return granted === 3 ? null : { release: () => {} };
-      },
-    });
+    // here. The entry facing it is the re-read one, as above.
+    const h = await loadedStore({ ...rowRemembered() });
     h.edit(OWNER_KEY, { ...furnishedEdit(7), tier: 'cottage', condition: 91 });
     h.store.saveAllDirty();
     await tick(30);
     expect(h.writeCount()).toBe(1);
-    h.store.markDirty(OWNER_KEY);
     await h.rejoinOverEviction();
-    expect(h.store.stats().loads).toBe(1);
+    expect(h.store.stats().loads).toBe(3);
     h.edit(OWNER_KEY, { rev: 7 });
     expect(h.record()?.plotId).toBe(PENDING_FREEHOLD_PLOT_ID);
+    // At EQUAL revisions the probe sees no movement, so the write is asked for
+    // explicitly: the claim is what the seal does once one samples.
     h.store.markDirty(OWNER_KEY);
     h.store.saveAllDirty();
     await tick(30);
@@ -4681,10 +4781,18 @@ describe('a leaving session never loses its last edits to a queue', () => {
     // the PREVIOUS session and removePlayer is explicitly allowed to evict it
     // afterwards. Comparing revisions fails closed instead.
     //
-    // THREE JOINS, each in its own world, because each is a different moment
-    // and no one sequence reaches all three. In every one the owner edits to
-    // revision six and leaves, the leave write is refused a permit, and the
-    // capture is left outstanding.
+    // TWO JOINS, each in its own world, because each is a different moment and
+    // no one sequence reaches both. In each the owner edits to revision six and
+    // leaves, the leave write is refused a permit, and the capture is left
+    // outstanding.
+    //
+    // A THIRD MOMENT IS GONE WITH RULING (B): a retain that meets NO record, or
+    // the stand-in, while a capture is outstanding. A capture lives only on a
+    // loaded, unblocked entry and the join now installs from any loaded entry,
+    // so the join that follows a capture installs it. The world that built it
+    // joined on an answer read before the eviction, with no re-ask. What it
+    // killed (a retain that releases whatever is live, or always) the first
+    // world below still kills.
     const capturedLeaver = async (): Promise<Harness> => {
       let granted = 0;
       const h = await loadedStore({
@@ -4698,39 +4806,23 @@ describe('a leaving session never loses its last edits to a queue', () => {
       return h;
     };
 
-    // NO RECORD AT ALL when the join retains: the returning session's handshake
-    // read while the owner was still in the world, so its answer carries no
-    // state, the install puts nothing in, and addPlayer's seed comes after the
-    // retain. Nothing to confirm.
-    const bare = await capturedLeaver();
-    const returning = await bare.store.preload(ACCOUNT_ID);
-    await bare.leave();
-    expect(bare.store.stats().leaveCaptures).toBe(1);
-    expect(bare.record()).toBeUndefined();
-    bare.join(returning);
-    expect(bare.store.stats().leaveCaptures).toBe(1);
-    // ...and a record BELOW the capture: the stand-in that join seeded, which a
-    // further character's retain now meets at revision zero.
-    expect(bare.record()?.rev).toBe(0);
-    bare.join(await bare.store.preload(ACCOUNT_ID));
-    expect(bare.store.stats().leaveCaptures).toBe(1);
-
     // A RECORD THAT IS NOT THE OFFERED DOCUMENT: two characters are in the
     // world, one leaves, and the one that stayed edits on before a third joins.
     // The record the third retains against is the other sessions' own, at a
     // revision the capture does not carry.
     const sibling = await capturedLeaver();
-    sibling.join(await sibling.store.preload(ACCOUNT_ID));
+    await sibling.joinAfterReask();
     await sibling.leave();
     expect(sibling.store.stats().leaveCaptures).toBe(1);
     sibling.edit(OWNER_KEY, { rev: 7 });
-    sibling.join(await sibling.store.preload(ACCOUNT_ID));
+    await sibling.joinAfterReask();
     expect(sibling.store.stats().leaveCaptures).toBe(1);
 
     // ...and a record that genuinely carries those edits: the rejoin replays the
     // capture and the join installs it.
     const carried = await capturedLeaver();
     await carried.leave();
+    await carried.store.preload(ACCOUNT_ID);
     const rejoin = await carried.store.preload(ACCOUNT_ID);
     expect(rejoin.state?.rev).toBe(6);
     expect(carried.store.stats().leaveCaptures).toBe(1);
@@ -4746,10 +4838,9 @@ describe('a leaving session never loses its last edits to a queue', () => {
     // undo it.
     //
     // RETITLED from "once a record exists again". A record that comes back after
-    // an eviction arrives through a join, and that join either installs the
-    // capture (so retain releases it and nothing competes) or installs nothing
-    // (an answer read beside the old record, or a hold, so the record is a seed
-    // and the seal refuses it: see the in-flight seed case above). The state in
+    // an eviction arrives through a join, and that join installs the capture
+    // (ruling (b): the join installs from the entry that holds it), so retain
+    // releases it and nothing competes. The state in
     // which a live record and a capture meet at a write is a record that never
     // left: the linkdead swap, where the new character is in the world while
     // the old one leaves.
@@ -4763,7 +4854,7 @@ describe('a leaving session never loses its last edits to a queue', () => {
       },
       writeRow: async () => ({ kind: 'updated', durableRev: '9' }),
     });
-    h.join(await h.store.preload(ACCOUNT_ID));
+    await h.joinAfterReask();
     h.edit(OWNER_KEY, { rev: 6 });
     const leaving = h.leave();
     await tick(10);
@@ -4808,7 +4899,7 @@ describe('a leaving session never loses its last edits to a queue', () => {
       },
       writeRow: async () => ({ kind: 'updated', durableRev: '9' }),
     });
-    h.join(await h.store.preload(ACCOUNT_ID));
+    await h.joinAfterReask();
     h.edit(OWNER_KEY, { rev: 6 });
     await h.leave();
     await tick(30);
@@ -5013,19 +5104,22 @@ describe('nothing removes an entry that still owes a durable write', () => {
     // exists to repair. Both removal paths have to know that, which is why the
     // guard lives in the shared predicate rather than in one of them.
     //
-    // A session holds that read open the way production does: its handshake
-    // was wider than two sweeps, so the join's retain recreated the entry and
-    // re-read it, and the session leaves before that read lands.
+    // A session holds that read open the way production does under ruling (b):
+    // its handshake's re-ask was refused a permit after the owner's clean leave
+    // collected the entry, so the join installed nothing and its retain
+    // recreated the entry and re-read it, and the session leaves before that
+    // read lands.
     let gate: Deferred<FreeholdRowLoad> | null = null;
     const h = harness({
       readRow: async () => (gate ? await gate.promise : { kind: 'row', row: rowFixture() }),
     });
-    const answer = await h.store.preload(ACCOUNT_ID);
-    h.store.saveAllDirty();
-    h.store.saveAllDirty();
+    await h.login();
+    await h.store.preload(ACCOUNT_ID);
+    await h.leave();
     expect(h.store.stats().entries).toBe(0);
     gate = deferred<FreeholdRowLoad>();
-    h.join(answer);
+    h.refuseNextPermits(1);
+    await h.joinAfterReask();
     await tick(10);
     expect(h.store.stats().loaded).toBe(0);
     // The session goes away while the read is still out.
@@ -5109,32 +5203,50 @@ describe('a re-armed write inherits the leaving capture', () => {
   });
 });
 
-describe('an entry that went missing under a live session is re-read, not left blocked', () => {
-  it('re-reads when retain finds no loaded entry, instead of yielding a blocked one', async () => {
-    // retain runs at the END of a handshake whose preload already ran, so a
-    // missing entry means something removed it in between: the orphan sweep
-    // after a slow handshake, or a leave for another character of the same
-    // account. Yielding an unloaded entry would write-block the session for its
-    // whole life with no hold, no counter and no log, and every edit the player
-    // makes would be discarded at logout, which is precisely the outcome the
-    // store exists to prevent.
+describe('an entry that went missing before the join is re-read, never left silently blocked', () => {
+  it("re-reads at the handshake's re-ask when the entry was lost to the sweep, so the join installs the row", async () => {
+    // A handshake wider than two sweeps loses its never-retained entry, exactly
+    // as designed. Ruling (b) re-asks after the character read, so the store
+    // reads the row again there and the join installs it: the session is loaded
+    // and writes. (Before the re-ask the join's own retain did this read, after
+    // the install had already been decided.)
     const h = harness({ rowLoad: { kind: 'row', row: rowFixture() } });
-    const answer = await h.store.preload(ACCOUNT_ID);
-    // Two sweeps collect the never-retained entry, exactly as designed.
+    await h.store.preload(ACCOUNT_ID);
     h.store.saveAllDirty();
     h.store.saveAllDirty();
     expect(h.store.stats().entries).toBe(0);
-
-    // The join installs the answer and its retain finds no entry.
-    h.join(answer);
-    await tick(20);
-    // Loaded again, and therefore able to write.
-    expect(h.store.stats().entries).toBe(1);
+    h.calls.length = 0;
+    await h.joinAfterReask();
+    expect(h.calls.filter((call) => call === 'readRow')).toHaveLength(1);
+    expect(h.record()?.plotId).toBe(ROW_PLOT_ID);
     h.store.markDirty(OWNER_KEY);
     h.store.save(OWNER_KEY);
     await tick(30);
     expect(h.writeCount()).toBe(1);
     expect(h.writes[0].expectedDurableRev).toBe('7');
+  });
+
+  it('re-reads when retain finds no loaded entry, so the block on the stand-in is loud, not silent', async () => {
+    // Under ruling (b) retain finds no loaded entry only after a join that
+    // installed NOTHING (a hold, or a withheld answer), because the join
+    // installs from any loaded entry. The session is on the stand-in either way
+    // and must never write over the row. What retain's re-read buys is that the
+    // block is DIAGNOSED: the entry learns the row, the seal refuses the
+    // stand-in with a counted, logged refusal. Without it the unloaded entry
+    // blocks every write with no hold of its own, no refusal and no line, and
+    // the loss of the session's edits is invisible. Reached here by a re-ask
+    // refused a permit after a clean leave (`rejoinOverEviction`).
+    const h = await loadedStore({ rowLoad: { kind: 'row', row: rowFixture() } });
+    await h.rejoinOverEviction();
+    expect(h.record()?.plotId).toBe(PENDING_FREEHOLD_PLOT_ID);
+    expect(h.store.stats().entries).toBe(1);
+    expect(h.store.stats().loaded).toBe(1);
+    h.edit(OWNER_KEY, { rev: 6 });
+    h.store.saveAllDirty();
+    await tick(30);
+    expect(h.writeCount()).toBe(0);
+    expect(h.store.stats().quiesced).toBe(1);
+    expect(h.errors.filter((line) => line.includes('write refused (identity)'))).toHaveLength(1);
   });
 
   it('issues NO read at all on a dark realm, however the entry got lost', async () => {
@@ -5361,13 +5473,17 @@ describe('an abandoned preload does not leak an entry', () => {
 
   it('does not collect on the first pass, so a join between preload and retain is safe', async () => {
     // The mark pass is the whole reason this is two passes: preload resolves
-    // before game.join calls retain, and an entry removed in that window would
-    // be replaced by a fresh UNLOADED one that can never write.
+    // before game.join calls retain, and an entry removed in that window costs
+    // the handshake's re-ask a second durable read (and, were that refused, the
+    // session its house). One pass leaves it, so the re-ask replays it.
     const h = harness({ rowLoad: { kind: 'row', row: rowFixture() } });
-    const answer = await h.store.preload(ACCOUNT_ID);
+    await h.store.preload(ACCOUNT_ID);
     sweep(h, 1);
     expect(h.store.stats().entries).toBe(1);
-    h.join(answer);
+    h.calls.length = 0;
+    await h.joinAfterReask();
+    expect(h.calls).not.toContain('readRow');
+    expect(h.record()?.plotId).toBe(ROW_PLOT_ID);
     sweep(h, FREEHOLD_PERSIST_ORPHAN_SWEEP_PASSES + 2);
     expect(h.store.stats().entries).toBe(1);
   });
@@ -5584,18 +5700,24 @@ describe('the WHOLE preload is capped against the login budget', () => {
     fireBudget(h);
     const refused = await loading;
     expect(refused.hold?.kind).toBe('no_budget');
-    // The login goes ahead on the refusal: the join installs nothing and its
-    // retain CREATES the entry, with a reference. Its repair read rides the SAME
-    // single-flight slot, so no second read goes out, and it arms a budget of
-    // its own, which runs out too: the refusal now meets an entry that EXISTS,
-    // which is the state this claim is about.
-    h.join(refused);
+    // The handshake's RE-ASK rides the same single-flight read and runs out of
+    // budget too, and the login goes ahead on that refusal: the join installs
+    // nothing and its retain CREATES the entry, with a reference. Its repair
+    // read rides the SAME slot, so no second read goes out, and it arms a
+    // budget of its own, which runs out as well: the refusal now meets an entry
+    // that EXISTS, which is the state this claim is about.
+    const reasking = h.store.preload(ACCOUNT_ID);
+    await tick(10);
+    fireBudget(h);
+    const atJoin = await reasking;
+    expect(atJoin.hold?.kind).toBe('no_budget');
+    h.join(atJoin);
     await tick(10);
     expect(h.calls.filter((call) => call === 'readRow')).toHaveLength(1);
     expect(h.store.stats().entries).toBe(1);
     fireBudget(h);
     await tick(10);
-    expect(h.store.stats().loadFailuresByKind).toEqual({ no_budget: 2 });
+    expect(h.store.stats().loadFailuresByKind).toEqual({ no_budget: 3 });
     // NOTHING WRITTEN ON THE ENTRY AT ALL, which is three separate facts: no
     // hold, no `loaded`, and no failure booked against the entry. Asserting the
     // hold alone left a refusal that stamped `loaded` green, and a stamped
@@ -5628,58 +5750,77 @@ describe('the WHOLE preload is capped against the login budget', () => {
     expect(h.errors.some((line) => line.includes('write refused (identity)'))).toBe(true);
   });
 
-  it('creates NO row for a record the refused login is about to seed', async () => {
-    // THE NINTH PATH, reproduced against the store before it was closed. The
-    // load-side ordering refusal reads the LIVE RECORD, so it can only fire once
-    // something has been seeded. This refusal leaves its read in flight by
-    // design, and the handshake still has a lease acquire and a character reload
-    // to run on the same saturated pool: the read lands in THAT window, before
-    // addPlayer seeds anything, so livePlotId answers null rather than the
-    // stand-in and the absent arm mints.
+  it('names the record for a refused login whose read lands before its re-ask, and writes under that name', async () => {
+    // THE NINTH PATH, reproduced against the store before it was closed, and now
+    // closed a level higher. The whole-preload cap refuses the login and leaves
+    // its read in flight, and the handshake still has a lease acquire and a
+    // character reload to run: the read lands in THAT window, before anything is
+    // seeded, so the absent arm mints. Before ruling (b) the join then installed
+    // nothing on the refusal and addPlayer seeded the STAND-IN beside an entry
+    // holding the minted name, which the order-independent insert refusal
+    // (server/freehold_write_seal.ts) refused, write-blocking the session.
     //
-    // What that produced, measured: entry loaded and unheld holding
-    // `plot:minted1`, a row INSERTED under that name, writeFailures 0 and
-    // quiesced 0, while the record addPlayer seeded a moment later carried the
-    // stand-in. applyWriteResult then caches the RECORD's stand-in, so the
-    // seal's name comparison is inert BY VALUE EQUALITY for the life of that
-    // entry, which is the eighth path arrived at from a third side.
-    //
-    // IT IS PINNED ON THE OUTCOME, not on the mechanism: what must not happen is
-    // that a row is created under a name its record can never learn, and the
-    // guard that delivers that is order-independent.
+    // THE RE-ASK now replays the entry the late read filled, and the join
+    // installs from it: the record carries the minted name from the first
+    // session, and its first write inserts the row under that name. The insert
+    // refusal stays, as defense in depth for an order no join now produces (its
+    // literals are pinned in tests/server/freehold_write_seal.test.ts).
     const gate = deferred<FreeholdRowLoad>();
-    const h = harness({ readRow: async () => await gate.promise });
+    let gated = true;
+    const h = harness({
+      readRow: async () => (gated ? await gate.promise : { kind: 'absent' }),
+      writeRow: async () => ({ kind: 'inserted', durableRev: '1' }),
+    });
     const loading = h.store.preload(ACCOUNT_ID);
     await tick(20);
     fireBudget(h);
     const refused = await loading;
     expect(refused.hold?.kind).toBe('no_budget');
-
-    // The read lands while the handshake is still below the budget refusal and
-    // above the seed. NOTHING is live yet, so the load-side test cannot fire.
+    gated = false;
     gate.resolve({ kind: 'absent' });
     await tick(30);
     expect(h.record()).toBeUndefined();
-    const replay = await h.store.preload(ACCOUNT_ID);
-    expect(replay.hold).toBeNull();
-    expect(replay.plotId).toBe(MINTED_PLOT_ID);
+    const atJoin = await h.joinAfterReask();
+    expect(atJoin.hold).toBeNull();
+    expect(h.record()?.plotId).toBe(MINTED_PLOT_ID);
+    h.store.saveAllDirty();
+    await tick(40);
+    expect(h.writeCount()).toBe(1);
+    expect(h.writes[0].plotId).toBe(MINTED_PLOT_ID);
+    expect(h.writes[0].expectedDurableRev).toBeNull();
+    expect(h.store.stats().quiesced).toBe(0);
+    expect(h.errors).toEqual([]);
+  });
 
-    // Only now does the join reach addPlayer, and it seeds the STAND-IN because
-    // installLoadedFreehold returned early on the no_budget hold.
-    h.join(refused);
+  it('refuses to name a row, loudly and once, when BOTH asks overrun and the read lands after the seed', async () => {
+    // The order that still seats the stand-in: the re-ask runs out of budget
+    // too, the join installs nothing, and the read lands after addPlayer seeded.
+    // The absent arm then sees the stand-in and takes the terminal
+    // `unnamed_record` hold, so no row is created under a name the record can
+    // never learn. Two sweeps, because a guard that refuses once is satisfied
+    // by a constant.
+    const gate = deferred<FreeholdRowLoad>();
+    const h = harness({ readRow: async () => await gate.promise });
+    const loading = h.store.preload(ACCOUNT_ID);
+    await tick(20);
+    fireBudget(h);
+    expect((await loading).hold?.kind).toBe('no_budget');
+    const reasking = h.store.preload(ACCOUNT_ID);
+    await tick(10);
+    fireBudget(h);
+    const atJoin = await reasking;
+    expect(atJoin.hold?.kind).toBe('no_budget');
+    h.join(atJoin);
     expect(h.record()?.plotId).toBe(PENDING_FREEHOLD_PLOT_ID);
-
-    // Two sweeps, because a guard that refuses once is satisfied by a constant.
+    gate.resolve({ kind: 'absent' });
+    await tick(30);
     h.store.saveAllDirty();
     await tick(40);
     h.store.saveAllDirty();
     await tick(40);
     expect(h.writeCount()).toBe(0);
-    expect(h.store.stats().quiesced).toBe(1);
-    expect(h.errors.some((line) => line.includes('refused (unnamed)'))).toBe(true);
-    // ONE line, not one per sweep: an operator log that repeats every thirty
-    // seconds for the life of a process is noise, not a diagnosis.
-    expect(h.errors.filter((line) => line.includes('refused (unnamed)'))).toHaveLength(1);
+    expect(h.store.stats().loadFailuresByKind.unnamed_record).toBe(1);
+    expect(h.warnings.filter((line) => line.includes('unnamed_record'))).toHaveLength(1);
   });
 
   it('costs one LOGOUT, not an account: the refused entry is collected and re-reads clean', async () => {
@@ -5696,24 +5837,34 @@ describe('the WHOLE preload is capped against the login budget', () => {
     // TERMINAL `unnamed_record` hold again. Bounded, never unbounded, because the
     // account fully logging out clears it; an earlier version of this case said
     // "one session", which is stronger than the code supports.
-    const gate = deferred<FreeholdRowLoad>();
-    const h = harness({ readRow: async () => await gate.promise });
+    // Reached, under ruling (b), by the case above's order: both asks overrun
+    // and the read lands after the seed, so the entry takes the terminal
+    // `unnamed_record` hold.
+    let gate: Deferred<FreeholdRowLoad> | null = deferred<FreeholdRowLoad>();
+    const h = harness({
+      readRow: async () => (gate ? await gate.promise : { kind: 'absent' }),
+    });
+    const open = gate;
     const loading = h.store.preload(ACCOUNT_ID);
     await tick(20);
     fireBudget(h);
-    const refused = await loading;
-    expect(refused.hold?.kind).toBe('no_budget');
-    gate.resolve({ kind: 'absent' });
+    expect((await loading).hold?.kind).toBe('no_budget');
+    const reasking = h.store.preload(ACCOUNT_ID);
+    await tick(10);
+    fireBudget(h);
+    h.join(await reasking);
+    gate = null;
+    open.resolve({ kind: 'absent' });
     await tick(30);
-    h.join(refused);
     h.store.saveAllDirty();
     await tick(40);
-    expect(h.store.stats().quiesced).toBe(1);
+    expect(h.store.stats().held).toBe(1);
+    expect(h.store.stats().loadFailuresByKind.unnamed_record).toBe(1);
     expect(h.writeCount()).toBe(0);
 
     // The LAST session of the account leaves, in production order: the leave
     // flush runs while the record is still live and `removePlayer` evicts it
-    // afterwards. A quiesced entry is BLOCKED, so its dirty clause stops counting
+    // afterwards. A held entry is BLOCKED, so its dirty clause stops counting
     // and it owes nothing: both removal paths may collect it.
     await h.leave();
     expect(h.record()).toBeUndefined();
@@ -5731,6 +5882,7 @@ describe('the WHOLE preload is capped against the login budget', () => {
     expect(second.state).toBeNull();
     expect(second.durableRev).toBeNull();
     expect(second.plotId).not.toBe('');
+    expect(h.store.stats().held).toBe(0);
     expect(h.store.stats().quiesced).toBe(0);
   });
 
@@ -5764,29 +5916,27 @@ describe('the WHOLE preload is capped against the login budget', () => {
 
     // AND THE MINT IS NOT WHERE THIS CASE STOPS, which is the defect its first
     // version had. Asserting the mint and going home is what let the TENTH path
-    // through: the REFUSED login reaches addPlayer first, because it stopped
-    // waiting earlier and is always ahead in the pipeline, and seeds the
-    // stand-in; the sibling's own install is then silently discarded by
-    // loadFreehold's load-once guard, and the entry is left writable holding a
-    // name its record can never learn. Reproduced against the store before the
-    // insert refusal existed: a row inserted under plot:minted1 with
-    // write_failures 0 and quiesced 0, after which applyWriteResult caches the
-    // record's stand-in and the seal's name comparison is inert by value
-    // equality for the life of that entry.
+    // through: the REFUSED login reached addPlayer first, because it stopped
+    // waiting earlier and is always ahead in the pipeline, and seeded the
+    // stand-in; the sibling's own install was then discarded by load-once, and
+    // the entry was left writable holding a name its record could never learn
+    // (closed then by the order-independent insert refusal, which write-blocked
+    // both sessions).
     //
-    // BOTH JOINS, in that order: the refused one seeds, the sibling's install
-    // is discarded by load-once, and two sessions now share the stand-in.
-    h.join(refused);
-    h.join(answer);
-    expect(h.record()?.plotId).toBe(PENDING_FREEHOLD_PLOT_ID);
+    // BOTH JOINS, the refused one first, now each after its re-ask: the refused
+    // login's re-ask replays the entry the shared read filled, so its join names
+    // the record, and the sibling's install is the no-op load-once makes it.
+    // One name, one row.
+    h.join(await h.store.preload(ACCOUNT_ID));
+    await h.joinAfterReask();
+    expect(h.record()?.plotId).toBe(MINTED_PLOT_ID);
     h.store.saveAllDirty();
     await tick(40);
-    // NO ROW IS CREATED, which is the thing that cannot be undone. The refusal
-    // is order-independent, so which login reached the sim first cannot matter.
-    expect(h.writeCount()).toBe(0);
-    expect(h.store.stats().writeFailures).toBe(1);
-    expect(h.store.stats().quiesced).toBe(1);
-    expect(h.errors.some((line) => line.includes('refused (unnamed)'))).toBe(true);
+    expect(h.writeCount()).toBe(1);
+    expect(h.writes[0].plotId).toBe(MINTED_PLOT_ID);
+    expect(h.store.stats().writeFailures).toBe(0);
+    expect(h.store.stats().quiesced).toBe(0);
+    expect(refused.hold?.kind).toBe('no_budget');
   });
 
   it('still names a row for a login that WAITED for its own read', async () => {
@@ -5866,12 +6016,14 @@ describe('the bounded drain', () => {
     // AND NOTHING WAS LEFT ARMED. A deadline that fires after its own work has
     // settled is how a cancelled timer becomes a false not-drained answer.
     expect(h.deadlines.every((job) => job.cancelled || job.fired)).toBe(true);
-    // The preload's cap is the other one, cancelled the moment the load landed.
+    // The preload's cap is the other kind, one per ask (the handshake asks
+    // before the lease and again before the join), each cancelled the moment
+    // its answer landed.
     const budgetDeadlines = h.deadlines.filter(
       (job) => job.ms === FREEHOLD_PERSIST_LOGIN_BUDGET_MS,
     );
-    expect(budgetDeadlines).toHaveLength(1);
-    expect(budgetDeadlines[0]?.cancelled).toBe(true);
+    expect(budgetDeadlines).toHaveLength(2);
+    expect(budgetDeadlines.every((job) => job.cancelled && !job.fired)).toBe(true);
   });
 
   it('flushes what is dirty before it waits', async () => {
@@ -6094,7 +6246,7 @@ describe('installLoadedFreehold', () => {
     hearthReadyAtMs: 0,
     hearthRevision: '0',
     hold: null,
-    besideLiveRecord: false,
+    recordWithheld: false,
     ...overrides,
   });
 
@@ -6161,7 +6313,7 @@ describe('installLoadedFreehold', () => {
         durableRev: null,
         plotId: MINTED_PLOT_ID,
         hearthReadyAtMs: 90_000,
-        besideLiveRecord: true,
+        recordWithheld: true,
       }),
     );
     expect(ctx.freeholds.size).toBe(0);
@@ -6181,7 +6333,7 @@ describe('installLoadedFreehold', () => {
     // constructor that dropped the field must not reopen the eleventh path by
     // reading as an absent row.
     const ctx = fakeCtx();
-    const { besideLiveRecord: _dropped, ...unmarked } = loadedFixture({
+    const { recordWithheld: _dropped, ...unmarked } = loadedFixture({
       state: null,
       durableRev: null,
       plotId: MINTED_PLOT_ID,
@@ -6407,7 +6559,7 @@ describe('installLoadedFreehold', () => {
       hearthReadyAtMs: 9_000,
       hearthRevision: '3',
       hold: null,
-      besideLiveRecord: false,
+      recordWithheld: false,
     });
     expect(ctx.freeholds.size).toBe(0);
     expect(ctx.freeholdKeyReadyAtMs.size).toBe(0);
@@ -6422,7 +6574,7 @@ describe('installLoadedFreehold', () => {
       hearthReadyAtMs: 9_000,
       hearthRevision: '3',
       hold: null,
-      besideLiveRecord: false,
+      recordWithheld: false,
     });
     expect(lit.freeholdKeyReadyAtMs.get(OWNER_KEY)).toBe(9_000);
   });
@@ -6460,8 +6612,8 @@ describe('the coordinator side of the wiring (source pins)', () => {
     // leaves them standing in an empty Inn Room, which the next sweep would
     // then write over their furnishings. This ordering is the whole guard.
     // BOTH HALVES, in the two files they now live in. The coordinator binds
-    // before the seed; the binding module does install-then-retain inside that
-    // one call. Splitting the assertion is what keeps it decisive after the
+    // before the seed; the binding module does validate-install-retain inside
+    // that one call. Splitting the assertion is what keeps it decisive after the
     // extraction: an ordering pin on the coordinator alone would pass however
     // the binding module ordered its two statements.
     const body = methodBody(GAME, '  join(');
@@ -6475,11 +6627,16 @@ describe('the coordinator side of the wiring (source pins)', () => {
     // session) can never drop the entry under the arriving one. It carries the
     // account id, which is what lets the store re-read a row whose entry went
     // away between the handshake's preload and here.
+    // What goes in is the store's answer AT INSTALL TIME (ruling (b)), decided
+    // in the same synchronous run, never the handshake's answer as it arrived.
     const binding = stripComments(readFileSync('server/freehold_session_binding.ts', 'utf8'));
-    const install = binding.indexOf('installLoadedFreehold(ctx, accountId, loaded)');
+    const install = binding.indexOf(
+      'installLoadedFreehold(ctx, accountId, store.answerForInstall(ownerKey, accountId, loaded))',
+    );
     const retain = binding.indexOf('store.retain(ownerKey, accountId)');
     expect(install).toBeGreaterThan(-1);
     expect(retain).toBeGreaterThan(install);
+    expect(binding.split('installLoadedFreehold(').length - 1, 'one install').toBe(1);
     // And it is SYNCHRONOUS: an async binding would let the seed land first.
     expect(binding).not.toContain('export async function bindFreeholdOnJoin');
   });
@@ -7108,11 +7265,12 @@ describe('the gaps a mutation pass over the store found', () => {
     await tick(30);
     expect(h.writeCount()).toBe(0);
 
-    // AND RE-READ on the join, rather than replaying the refusal: the join the
-    // refused handshake goes on to make, whose retain finds the entry unloaded.
+    // AND RE-READ at the handshake's re-ask, rather than replaying the refusal:
+    // the entry is unloaded, so the re-ask reads, and the join installs the row.
     refuse = false;
     h.calls.length = 0;
-    h.join(loaded);
+    await h.joinAfterReask();
+    expect(h.record()?.plotId).toBe(ROW_PLOT_ID);
     await tick(30);
     expect(h.calls).toContain('readRow');
     expect(h.store.stats().loaded).toBe(1);
@@ -7193,7 +7351,7 @@ describe('the gaps a mutation pass over the store found', () => {
     const heldBefore = h.store.stats().leaveCaptures;
     await dirtyLeaver(OWNER_KEY, ACCOUNT_ID);
     expect(h.store.stats().leaveCaptures).toBe(heldBefore + 1);
-    h.join(await h.store.preload(ACCOUNT_ID));
+    await h.joinAfterReask();
     expect(h.store.stats().leaveCaptures).toBe(heldBefore);
 
     // A GENUINE leaver behind it, also deferred and still holding its capture.
@@ -7475,7 +7633,7 @@ describe('the gaps a mutation pass over the store found', () => {
       hearthReadyAtMs: 5_000,
       hearthRevision: '3',
       hold: null,
-      besideLiveRecord: false,
+      recordWithheld: false,
     });
     expect(ctx.freeholds.size).toBe(0);
     expect(ctx.freeholdKeyReadyAtMs.size).toBe(0);
@@ -7489,7 +7647,7 @@ describe('the gaps a mutation pass over the store found', () => {
       hearthReadyAtMs: 5_000,
       hearthRevision: '3',
       hold: null,
-      besideLiveRecord: false,
+      recordWithheld: false,
     });
     expect(ctx.freeholds.size).toBe(1);
   });

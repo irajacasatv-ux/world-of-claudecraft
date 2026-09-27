@@ -14,10 +14,9 @@
 // row, deliberately, and that rule is RETIRED rather than quietly dropped: a
 // live revision below the entry's last committed one means the live record is
 // not the record that commit came from, since every install a rejoin is offered
-// carries at least the committed revision (bar one known hole, the twelfth
-// path in server/freehold_write_seal.ts: this probe misses such a stale record
-// only AT the committed revision, and the seal refuses it only while it sits
-// below) and every sanctioned mutator only increments.
+// carries at least the committed revision (the twelfth path's stale answer,
+// which broke that premise, is closed at the install by ruling (b); see
+// server/freehold_write_seal.ts) and every sanctioned mutator only increments.
 // Writing it would also walk the client-facing wire counter backwards
 // permanently, which is the exact harm the loader's own wire_rev_shape hold
 // exists to prevent on the read side. So the probe arms and the seal refuses.

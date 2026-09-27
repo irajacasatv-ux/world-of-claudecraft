@@ -20,6 +20,7 @@ import { createWsAuth, type WsAuthDeps } from '../../server/ws_auth';
 import { bufferHandshakeMessages } from '../../server/ws_buffer';
 import { freshAccountLedger } from '../../src/sim/account_ledger';
 import { DUNGEON_ENTRY_FACING_WIRE_VERSION, ONLINE_WORLD_AUTH_TYPE } from '../../src/world_api';
+import { stripComments } from '../helpers/strip_comments';
 
 // A fake socket: real EventEmitter wiring (on/once/off/emit) so the handshake
 // buffer and the post-join ws.on('message'|'close'|'error') handlers work, plus
@@ -144,7 +145,7 @@ function setup() {
       state: null,
       hearthReadyAtMs: 0,
       hearthRevision: '0',
-      besideLiveRecord: false,
+      recordWithheld: false,
       hold: {
         kind: 'unadmitted' as const,
         detail: 'test host holds no persistence store',
@@ -1337,27 +1338,42 @@ describe('createWsAuth: durable freehold stamp', () => {
     hearthReadyAtMs: 1_700_000_000_000,
     hearthRevision: '3',
     hold: null,
-    besideLiveRecord: false,
+    recordWithheld: false,
   };
 
-  it('reads the durable plot once, keyed by account, and stamps it into the join meta', async () => {
+  // The answer the store gives the RE-ASK: distinct from `loadedAnswer` in the
+  // one field a stale answer differs in, so the join meta can say which ask it
+  // carries.
+  const reaskedAnswer = {
+    ...loadedAnswer,
+    durableRev: '6',
+    state: { ...loadedAnswer.state, rev: 14 },
+  };
+
+  it('asks twice, keyed by account, and stamps the RE-ASK into the join meta', async () => {
+    // Ruling (b) for the twelfth path: the first answer can go stale inside the
+    // lease and the character read, so the join carries the second.
     const { ws, game, deps, req } = setup();
-    deps.freeholdForAccount = vi.fn(async () => loadedAnswer);
+    deps.freeholdForAccount = vi
+      .fn()
+      .mockResolvedValueOnce(loadedAnswer)
+      .mockResolvedValueOnce(reaskedAnswer);
     const { authenticateWebSocket } = createWsAuth(deps);
     await authenticateWebSocket(asWs(ws), authRaw(), req);
 
-    expect(deps.freeholdForAccount).toHaveBeenCalledTimes(1);
-    expect(deps.freeholdForAccount).toHaveBeenCalledWith(1);
+    expect(deps.freeholdForAccount).toHaveBeenCalledTimes(2);
+    expect((deps.freeholdForAccount as any).mock.calls).toEqual([[1], [1]]);
     const joinMeta = (game.join as any).mock.calls[0][7] as { freehold?: unknown };
-    expect(joinMeta.freehold).toEqual(loadedAnswer);
+    expect(joinMeta.freehold).toEqual(reaskedAnswer);
   });
 
-  it('reads the durable plot BEFORE the character lease is acquired', async () => {
-    // The lease-held window is the thing being kept tight: a durable read
-    // inside it would hold another session out of the character for the whole
-    // of a background-gate wait.
+  it('asks BEFORE the character lease, and asks again AFTER the character read, before the join', async () => {
+    // The first ask keeps the durable read out of the lease-held window in the
+    // common case (a durable read inside it would hold another session out of
+    // the character for the whole of a background-gate wait); the re-ask is a
+    // replay then, and a read only when the store's entry was collected.
     const order: string[] = [];
-    const { ws, deps, req } = setup();
+    const { ws, game, deps, req } = setup();
     deps.freeholdForAccount = vi.fn(async () => {
       order.push('freehold');
       return loadedAnswer;
@@ -1366,9 +1382,56 @@ describe('createWsAuth: durable freehold stamp', () => {
       order.push('lease');
       return true;
     });
+    const read = deps.getCharacter;
+    deps.getCharacter = vi.fn(async (...args: Parameters<typeof read>) => {
+      order.push('character');
+      return await read(...args);
+    });
+    const join = game.join;
+    game.join = vi.fn((...args: Parameters<typeof join>) => {
+      order.push('join');
+      return join(...args);
+    }) as typeof join;
     const { authenticateWebSocket } = createWsAuth(deps);
     await authenticateWebSocket(asWs(ws), authRaw(), req);
-    expect(order).toEqual(['freehold', 'lease']);
+    expect(order).toEqual(['character', 'freehold', 'lease', 'character', 'freehold', 'join']);
+  });
+
+  it('awaits nothing between the re-ask and the join (source pin)', () => {
+    // The join validates its answer against the store at install time, which
+    // covers the one await the re-ask itself is; a second await here would open
+    // a window the store has to cover too, for no gain.
+    const source = stripComments(
+      fs.readFileSync(path.resolve(process.cwd(), 'server/ws_auth.ts'), 'utf8'),
+    );
+    const reask = source.indexOf('freeholdAtJoin = await freeholdForAccount(accountId);');
+    const join = source.indexOf('result = game.join(', reask);
+    expect(reask).toBeGreaterThan(0);
+    expect(join).toBeGreaterThan(reask);
+    const between = source.slice(reask + 'freeholdAtJoin = await'.length, join);
+    expect(between).not.toMatch(/\bawait\b/);
+    expect(source.slice(join, source.indexOf('});', join))).toContain('freehold: freeholdAtJoin,');
+  });
+
+  it('keeps the FIRST answer when the re-ask throws', async () => {
+    const errors = vi.spyOn(console, 'error').mockImplementation(() => {});
+    try {
+      const { ws, game, deps, req } = setup();
+      deps.freeholdForAccount = vi
+        .fn()
+        .mockResolvedValueOnce(loadedAnswer)
+        .mockRejectedValueOnce(new Error('durable housing re-ask failed'));
+      const { authenticateWebSocket } = createWsAuth(deps);
+      await authenticateWebSocket(asWs(ws), authRaw(), req);
+
+      expect(game.join).toHaveBeenCalledTimes(1);
+      const joinMeta = (game.join as any).mock.calls[0][7] as { freehold?: unknown };
+      expect(joinMeta.freehold).toEqual(loadedAnswer);
+      expect(errors).toHaveBeenCalledTimes(1);
+      expect(String(errors.mock.calls[0][0])).toContain('re-ask');
+    } finally {
+      errors.mockRestore();
+    }
   });
 
   it('never reads the durable plot on the resume arm', async () => {
@@ -1403,7 +1466,9 @@ describe('createWsAuth: durable freehold stamp', () => {
       expect(
         ws.send.mock.calls.map((call: unknown[]) => JSON.parse(String(call[0])).t as string),
       ).not.toContain('error');
-      expect(errors).toHaveBeenCalledTimes(1);
+      // Both asks threw, and each said so.
+      expect(deps.freeholdForAccount).toHaveBeenCalledTimes(2);
+      expect(errors).toHaveBeenCalledTimes(2);
     } finally {
       errors.mockRestore();
     }

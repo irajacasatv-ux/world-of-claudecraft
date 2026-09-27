@@ -20,8 +20,10 @@ import { freeholdOwnerKeyForAccount } from './freehold_wire';
  * loadFreehold is load-once, so a call made after the seed is silently
  * discarded and the owner's real plot never reaches the live map. A held load
  * installs nothing (invariant 1: install nothing, write nothing), and neither
- * does an answer read beside a live record; an absent load installs a default
- * carrying the minted identity, and a loaded one installs its document.
+ * does an answer marked `recordWithheld`; an absent load installs a default
+ * carrying the minted identity, and a loaded one installs its document. What
+ * the join hands it is the store's answer at install time (answerForInstall,
+ * ruling (b)), never the handshake's answer as it arrived.
  */
 export function installLoadedFreehold(
   ctx: SimContext,
@@ -59,20 +61,17 @@ export function installLoadedFreehold(
   if (typeof loaded.hearthReadyAtMs === 'number') {
     mergeFreeholdKeyReadyAt(ctx, ownerKey, loaded.hearthReadyAtMs);
   }
-  // AN ANSWER READ BESIDE A LIVE RECORD PUTS NO RECORD IN, and it is checked
-  // before the absent arm because it can look exactly like one: see
-  // `besideLiveRecord`. It acts only on a positive `false`, so a bag that lost
-  // the field fails closed. While that record is still live nothing would
-  // install anyway (load-once). Once it has been evicted, putting nothing in
-  // leaves addPlayer to seed the stand-in, which the insert refusal (no row
-  // yet) or the seal (a row) refuses, the outcome a row account already had in
-  // the same order. WHAT THAT COSTS, stated rather than hidden: the joining
-  // session plays on the empty stand-in, write-blocked for the session, and a
-  // leaver's capture still waiting when it joined is released unwritten. A
-  // join that re-asks the store after the eviction would keep both; that is a
-  // ruling owed (see the persistence findings ledger, the harness-fidelity
-  // section).
-  if (loaded.besideLiveRecord !== false) return;
+  // A WITHHELD ANSWER PUTS NO RECORD IN, and it is checked before the absent
+  // arm because it can look exactly like one: see `recordWithheld`. It acts
+  // only on a positive `false`, so a bag that lost the field fails closed. The
+  // join's WITHHELD verdict stands on it: no loaded entry vouches for that
+  // answer, so addPlayer seeds the stand-in, which the insert refusal (no row
+  // yet) or the seal (a row) refuses, write-blocking the session; no capture
+  // can be lost there, because a capture never outlives its entry. The eleventh
+  // path's cost this arm used to carry (a joiner write-blocked and a waiting
+  // capture released) is gone: the join now installs from the entry that holds
+  // the capture.
+  if (loaded.recordWithheld !== false) return;
   // THE ABSENT ARM: no hold, no state, no durable row. The sim's default record
   // IS the truth for this account, but the store has already MINTED the identity
   // the row it is about to insert will carry, and nothing else ever teaches a

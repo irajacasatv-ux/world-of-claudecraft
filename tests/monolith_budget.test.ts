@@ -1812,8 +1812,15 @@ const MONOLITHS: MonolithRow[] = [
     // created, so the waiter registry and its sampling came out entirely rather
     // than being repaired a third time. Removing a mechanism is the cheapest way
     // to pay a ratchet and the only one that also removes its failure modes.
+    // LOWERED, 2193 -> 2150, by ruling (b) for the twelfth path: the join's
+    // install-time answer is its own pure module (server/freehold_join_answer.ts)
+    // behind a short synchronous store method, and it was paid for by moving the
+    // database-error bound (server/freehold_bounded_error.ts) and the row
+    // document with its revision narrowing (server/freehold_row_document.ts) out
+    // whole, each with a suite of its own, and by tightening retain's comments.
+    // Exact count, zero slack.
     file: 'server/freehold_persist.ts',
-    ceiling: 2193,
+    ceiling: 2150,
     seam: 'a sibling server module behind the store ports; see server/CLAUDE.md',
   },
   {

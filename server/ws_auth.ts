@@ -158,10 +158,12 @@ export interface WsAuthDeps {
   ) => Promise<{ bonusSlots: number; sources: BankBonusSource[] }>;
   // The account's durable freehold plot and its shared Hearth clock, read on
   // the FRESH-JOIN arm only (a resume keeps the live record, which is the
-  // truth). Bounded and single-flight inside the persistence store, and it
-  // never rejects: an admission refusal or an unreadable row comes back as a
-  // write-blocked hold, so a database problem costs the player their housing
-  // for that session rather than the handshake.
+  // truth), TWICE: once before the lease and again after the character read,
+  // as the last await before the join (ruling (b) for the twelfth path). Bounded
+  // and single-flight inside the persistence store, and it never rejects: an
+  // admission refusal or an unreadable row comes back as a write-blocked hold,
+  // so a database problem costs the player their housing for that session
+  // rather than the handshake.
   freeholdForAccount: (accountId: number) => Promise<LoadedFreehold>;
 }
 
@@ -559,6 +561,22 @@ export function createWsAuth(deps: WsAuthDeps): WsAuthHandlers {
               leaseNonce = undefined;
               throw err;
             }
+            // THE RE-ASK (ruling (b) for the twelfth path): the first answer was
+            // read before the lease and the character read, and another session
+            // of this account can join, edit, leave and be evicted inside those
+            // awaits. Asked again here, as the LAST await before the join: a
+            // replay with no I/O while the store's entry is loaded, a durable read
+            // under the same bounds when the entry was collected (the other
+            // session committed and left). The join then decides what to install
+            // from the store's entry at install time, synchronously, so the one
+            // await this leaves is covered there. A thrown re-ask keeps the first
+            // answer, on the same reasoning as the catch above.
+            let freeholdAtJoin = freehold;
+            try {
+              freeholdAtJoin = await freeholdForAccount(accountId);
+            } catch (err) {
+              console.error('freehold durable re-ask failed; joining on the first answer:', err);
+            }
             const moderation = chatModerationHydration.resolve(freshModeration);
             result = game.join(
               ws,
@@ -576,7 +594,7 @@ export function createWsAuth(deps: WsAuthDeps): WsAuthHandlers {
                 hotbarLayout: queuedHotbarLayout ?? admittedCharacter.hotbar_layout ?? null,
                 leaseNonce,
                 bankBonus,
-                freehold,
+                freehold: freeholdAtJoin,
                 mutedUntil: moderation.mutedUntil,
                 reason: moderation.reason,
                 chatStrikes: moderation.strikes,
