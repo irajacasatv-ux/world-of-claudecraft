@@ -32,7 +32,14 @@ Only what the next session needs. Update at the end of every phase and QA.
   `190329610f`, both audited. Everything they left owed is done and recorded in
   [the ledger](qa/persistence-2026-09-08/findings.md), THE OWED LIST WORKED THROUGH.
   Nothing has been pushed.
-- Current sync (2026-09-26, closed): `origin/release/v0.44.0` at `9dbc47938a` (the floor
+- Current sync (2026-09-26, second, closed): `origin/release/v0.44.0` at `09639d4ae9`
+  (548 commits: the Eastbrook ferry, the Wanted board, custom guild ranks, partial buys,
+  the market History tab) in merge `8a330b3489`: 43 conflicts by hand against both
+  parents, audited by four lanes, twelve sealed capture inputs re-hashed on a probe
+  (`284adcb7be`), the premises it moved recorded below as G1 to G7. Recorded in [the
+  ledger](qa/persistence-2026-09-08/findings.md), RULING (B) FINISHED, AND 07
+  RE-JUDGED. Nothing has been pushed.
+- Earlier sync (2026-09-26, closed): `origin/release/v0.44.0` at `9dbc47938a` (the floor
   VFX ladder) in merge `b627c4ad32`: six provenance conflicts re-minted, audited, two
   sealed capture inputs re-hashed on a probe (`75bc308552`). Recorded in [the
   ledger](qa/persistence-2026-09-08/findings.md), RULING (B) FOR THE TWELFTH PATH, THE
@@ -53,6 +60,30 @@ Only what the next session needs. Update at the end of every phase and QA.
 
 ## Current phase
 
+**RULING (B) IS FINISHED AND 07 IS RE-JUDGED, 2026-09-26, LOCAL: THE TWELFTH PATH IS
+CLOSED, AND 07 STAYS FAIL ON THREE PRE-EXISTING CAPTURE-LOSS ORDERS, A RULING OWED.** A
+second sync came first (merge `8a330b3489`, `release/v0.44.0` at `09639d4ae9`, audited,
+premises G1 to G7 recorded below). Then the owed list: the three targeted mutants, the four
+docs (`fb1de750cb`), five reviewers (one blocking, fixed as ONE housing budget per
+handshake in `59a9bfd1b5`), the shard carry, six fresh reads to nothing blocking, 44
+mutants (43 killed, one recorded survivor), and the armed gate green on all 12 steps at
+`ec2d4be98d` and again at `a1fb50db45`. The re-judgement: only genuine absence resolves to the
+tier-0 Inn Room and no committed edit is lost, but a captured edit is still lost, loudly
+and keeping the row, in three orders ruling (b) did not touch: a run of thrown writes
+quiesces a leaver's entry, another realm's commit fences a leave write stale, and the
+shutdown drain's deadline ends owed captures with the process. The first two are pinned as
+KNOWN COST (`e43478015c`). THE RULING OWED (Fernando): keep a capture past a thrown-run
+quiesce and retry it once per error window (recommended), or accept the run as the
+bounded-retry cost; carry the cross-realm fence to 07a as the contract plans; accept the
+drain's deadline as the orderly exit's bound. Open, in order: (1) that ruling; (2) the
+test-suite audit's ranked findings, with Fernando; (3) `Sim.addPlayer` atomicity, now
+also over the restore path's `loadGatheringSettings`; (4) D85 (a ruling); (5) the phase 17
+re-plan with the trophy-source ruling (G3); (6) G1 before 28 and G2 when housing lights
+online; (7) a new release sync if `release/**` moves. Owed before 25a builds: the
+Fenbridge ruling. Detail: [the ledger](qa/persistence-2026-09-08/findings.md), RULING (B)
+FINISHED, AND 07 RE-JUDGED.
+
+(Superseded 2026-09-26 by the paragraph above: the owed list below is done.)
 **RULING (B) FOR THE TWELFTH PATH IS BUILT, 2026-09-26, LOCAL; ITS REVIEW, GATE AND THE 07
 RE-JUDGEMENT ARE OWED, SO 07 STAYS FAIL FOR NOW.** A sync came first: merge `b627c4ad32`
 takes `origin/release/v0.44.0` at `9dbc47938a` (the floor VFX ladder), audited, two sealed

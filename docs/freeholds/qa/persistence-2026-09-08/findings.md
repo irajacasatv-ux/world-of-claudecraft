@@ -3249,6 +3249,9 @@ KILLED (tests failed out of 419):
 
 ### STATUS AT THIS HANDOFF (2026-09-26), AND WHAT IS OWED, IN ORDER
 
+(ALL DONE later on 2026-09-26, the four docs at `fb1de750cb`: see RULING (B) FINISHED, AND
+07 RE-JUDGED below.)
+
 The fix is built and committed (`b77421251a`); nothing was pushed. The armed Postgres
 suite ran 16 of 16 at the fix. NOT YET DONE, for the next session:
 
@@ -3270,3 +3273,332 @@ suite ran 16 of 16 at the fix. NOT YET DONE, for the next session:
    browser step rewrites), `npm run ci:changed` after the last commit.
 6. Fresh reads of the whole change and every fix round until nothing blocking.
 7. Re-judge 07 on the record, then the progress row, state.md and the memory handoff.
+
+## RULING (B) FINISHED, AND 07 RE-JUDGED, 2026-09-26
+
+The owed list of STATUS AT THIS HANDOFF above, worked through on `2af5f917c0..b3a0848781`,
+LOCAL: nothing pushed, no PR. The worktree has no `.env`; Postgres was armed by passing
+`TEST_DATABASE_URL` alone (the main checkout's `DATABASE_URL` line, never sourced), and
+`tests/server/freehold_db.pg.test.ts` ran 16 of 16, none skipped, before every long run.
+
+### THE SYNC FIRST
+
+- `origin/release/v0.44.0` had moved past `9dbc47938a` to `09639d4ae9` (548 commits: the
+  Eastbrook ferry, the Wanted board's buy orders, custom guild ranks, partial buys, the
+  market History tab). Merge `8a330b3489`, a real merge, 43 conflicts by hand against both
+  parents. The `effective_stats` double extraction collapses onto the release's
+  `src/sim/effective_stats.ts`. The branch's furnishing guards follow the stat model into
+  `src/ui/char_stat_model_core.ts` (the release removed `hud.statModel`) and the feast
+  resolver into `feastItemIdAtSlot`, where the release's new resolver would otherwise
+  have made a furnishing slot's feast refusal silent.
+- Re-measured on the merged tree: the deeds parent-preservation digests against both
+  parents; the Eastbrook polish seal re-minted (the renderer leaf and its four literals);
+  the terrain corpus with the release body as its byte prefix, validated on linux/amd64
+  in Docker; every monolith row at its exact merged count, none raised past either
+  parent; the shard table as the union of the release rows and the branch's carried
+  rows; `pnpm install --frozen-lockfile`; i18n, the guide and the manifests regenerated.
+- THE AUDIT (release-merge-audit, four fresh lanes, commits only): 1 blocking, 10
+  should-fix, 14 nits.
+  - Premises (1 blocking, 8 should-fix, 7 nits). The blocking one: the release's custom
+    guild ranks make the Officer title a stamped bank tier, so guildhall authority keyed
+    on it is a false premise. Recorded as G1, A RULING OWED BEFORE 28, with G2 to G7, in
+    state.md "Premises the 2026-09-26 sync moved" (`351ab7aadd`), with a pointer from
+    every plan that states one (`d18e0443b7`, after the fresh read of the sync found the
+    first pass incomplete). S5 is CLOSED BY THE RELEASE: the ru_RU
+    `hudChrome.noticeboard.officerEntry` row this ledger held for the release owner reads
+    `{name} ({rank})` at `09639d4ae9`.
+  - Sim (1 should-fix, 3 nits): the Wanted board's buy orders and the partial buy had no
+    furnishing pin, and the order paths tested the quest kind by hand. Fixed in
+    `1b2cb05fde`: orders refuse through `isStorableItemKind`, with pins for the definition
+    locks, plain-only fills, one copy per slot and the release's exit facing on a freehold
+    leave.
+  - UI and render (1 should-fix, 3 nits): the character-select Exchange panel forwarded a
+    raw item copy, and two merged combinations were unpinned. Fixed in `5bbab44e72`.
+  - Server (1 nit, pre-existing): a jail comment named a constant the branch had moved;
+    it now points at `refusedJailedTravelCommand`.
+- THE SEALED CAPTURE INPUTS. The merge moved twelve (CSS among them). A probe of the
+  after leg from a frozen detached worktree on a spare Vite port found the room frames at
+  the unchanged-tree level and every HUD element in place on the gate frames, so the
+  digests were RE-HASHED (`284adcb7be`) rather than the set re-shot; the numbers are in
+  `docs/freeholds/interiors-implementation-evidence.md`, "The second 2026-09-26
+  re-hash". The probe worktree was removed. `199d80e64d` moved one more sealed input (the
+  release's two new capture scripts cleared the spawn greeting with its skip control,
+  which the branch's greeting guard refuses; both now decline through
+  `GREETING_DECLINE`), re-hashed with it since no freehold leg runs the changed line.
+
+### THE OWED LIST, IN ORDER
+
+1. THE THREE TARGETED MUTANTS, through a scratch runner that applies one mutant, runs the
+   suites with JSON output, restores through `git checkout`, asserts a clean tree, and
+   proves a control run first (433 tests, 0 failed). Each killed: the seal's name arm off
+   (the `no_budget` refusal of the durable re-ask) by 14 tests; single flight off in
+   `beginLoad` (the sibling sharing one durable read) by 5; a stopped writer (the healthy
+   two-character contrast) by 15.
+2. THE FOUR DOCS (`fb1de750cb`): DEPLOY.md, `held-plot-surface-scope.md`,
+   `persistence-rollout-contract.md` and `phase-07-qa.md` state the twelfth path closed
+   and what stays write-blocked: a durable re-ask refused on capacity (loud at the seal;
+   `cap_full` quiet there but counted by kind) and the WITHHELD race (loud), neither a
+   loss. A fifth, `src/sim/freehold/CLAUDE.md`, followed in `d1e50ea339`.
+3. THE FIVE REVIEWERS on `22d883d3c2..fb1de750cb`, commits only, in parallel: 1 blocking,
+   11 should-fix, 14 nits.
+   - server-hot-path-reviewer (1 blocking, 2 should-fix, 2 nits). BLOCKING: each ask
+     armed the whole 10,000 ms budget and its own permit wait, so a degraded login could
+     spend 20 s on housing, the second half inside the character-lease window and past
+     the client's 10 s entry watchdog: the linkdead-ghost outcome the whole-preload cap
+     had closed. Its should-fix pair: three capacity lines per refused login in a storm,
+     and no signal for the re-ask or the verdicts.
+   - database-performance-reviewer (2 should-fix, 1 nit): the same doubled budget, the
+     same missing signal, and DEPLOY's refusal-counting paragraph.
+   - qa-checklist (4 should-fix, 4 nits): the contract and DEPLOY on the re-ask's cost,
+     the fifth doc, and the handoff records still listing the four docs as owed.
+   - test-coverage-auditor (3 should-fix, 5 nits): the only store-level WITHHELD pin
+     handed the join a MARKED answer, so it could not tell WITHHELD from installing the
+     stale answer; nothing pinned that only WITHHELD warns.
+   - privacy-security-review (2 nits, 2 info): two comments understated when the re-ask
+     reads and how many console sites the housing path has.
+   ALL APPLIED in `59a9bfd1b5` and `d1e50ea339`: ONE HOUSING BUDGET PER HANDSHAKE (the
+   re-ask gets what the first ask left, `freeholdReaskBudgetMs` in the new
+   `server/freehold_login_bounds.ts`); `reasks`, `reask_reads`, `reask_ms` and one
+   `join_<verdict>` measure per verdict on `woc_freehold_persist_total`; capacity-kind
+   hold lines limited to one per kind per 10 s with a held-back count
+   (`server/freehold_capacity_warn.ts`); a join with no answer installs a loaded entry;
+   the ABSENT withheld case through the store; a negative warning assertion on every
+   held join. Three extractions paid for it (`server/freehold_login_bounds.ts`,
+   `server/freehold_persist_stats.ts`, `server/freehold_capacity_warn.ts`), and the
+   store's ceiling went 2150 to 2058. NOT TAKEN, with the reason: the hot-path lane's
+   second half, a re-ask that never waits for a permit. Its wait now sits inside what the
+   first ask left, so the pair never passes one budget, and a capacity-held first ask is
+   where ruling (b)'s second chance pays.
+4. THE SHARD CARRY (`4e56f16a32`, its own chore commit, armed, on a quiet machine): 84
+   walked suites had no weight row after the sync, the release's new suites
+   (`floor_vfx_layer` among them) and this branch's join answer, bounded error, row
+   document, liveness, login bounds and capacity warn suites. Each weight is the median
+   of three armed runs.
+5. THE GATE, ARMED (`TEST_DATABASE_URL` alone, the arm proved 16 of 16 before each run;
+   uptime checked and no stray `node_modules/node_modules`; the planner fell back to the
+   full suite every time, on a 1,826-path diff against the release).
+   - Run 1 at `b21ad2cdb4` FAILED at the changed-files biome step: the branch's ru_RU
+     housing rows, double-quoted and unwrapped, visible once the sync made the file
+     changed against the release. Formatting only, every value byte-identical
+     (`b5b2c580ac`).
+   - Run 2 at `d18e0443b7` was green up to vitest, which FAILED on one file, 4 of 70,841
+     tests: the branch-only `tests/renderer_zone_dependency_lifecycle.test.ts` rig had no
+     stub for the three roots the release's new cast first-reads boot entry gathers when
+     `prewarmInitialScene` builds its manifest (`this.abilityVfxFx.ccBandDrawable is not
+     a function`). A merge-integration red that neither parent carries and only the full
+     suite could see; the three roots are stubbed as null, which links nothing
+     (`31ef80a911`).
+   - Run 3 at `ec2d4be98d`: PASS, all 12 steps green. 4,737 files and 70,846 tests passed
+     (2 expected-fail, 28 skipped), the browser suite 62 files and 533 tests.
+   - Run 4 at `a1fb50db45`, after two more fresh-read rounds: PASS, all 12 steps green,
+     the same counts (those rounds changed assertions, comments and docs and added no
+     case).
+   The PNGs the browser step rewrites under `docs/screenshots` were restored after every
+   run.
+6. THE FRESH READS, each by a reader that read commits only, executed nothing and wrote
+   no file; every truncated report was asked for verbatim.
+   - fresh-rb, the ruling and its review round (`22d883d3c2..d1e50ea339`): 0 blocking, 3
+     should-fix, 9 nits. `join_entry` counted every healthy join, so it could not show
+     the fix firing; nothing at store level pinned that DATA-kind lines skip the
+     limiter; the harness's budget-refused re-asks did not re-ask like production. The
+     nits: the rowless refusal shape (held as `unnamed_record`), the `refused` arm
+     ignoring a loaded entry, the unlimited `read_threw` error line, two vacuous verdict
+     pins, the budget's wall-clock and scheduler caveats, the withheld line beside a live
+     record, the verdict counters initialised through a cast, and the stand-in producer
+     list. ALL APPLIED in `f17d8982bc` and `e22cbb371e`: a `superseded` verdict now marks
+     the loaded entry installed in place of a stale ask (so `join_superseded`, not
+     `join_entry`, is the fix changing an install); a loaded entry answers a broken or
+     foreign ask too; the first ask is timed on `performance.now`; `reask_reads` skips a
+     cap refusal; a live record skips the withheld line; the counters are derived from
+     the verdict vocabulary; the harness re-asks like production. It also named, as
+     pre-existing and not introduced, the capture loss judged below.
+   - fresh-sync, the sync and its fix commits (`8a330b3489..284adcb7be`): 1 blocking, 2
+     should-fix, 6 nits. BLOCKING: the parity golden `freehold_claim.json` was never
+     re-minted for the release's exit facing (`leaveDungeon` now sets the door's facing,
+     so the two claim players carry facing pi after they leave). Re-minted in
+     `2fdd37a76b`: only the six facing values and the seven state digests they move. The
+     rest applied in `10ce32c693` (the release's `wieldsDagger` read a forged
+     furnishing's dagger flag, lighting Backstab on the bar while the cast gate refused
+     it; the character-select strip gained its pin) and `d18e0443b7` (G1 and G2 pointers
+     and wording).
+   - fresh-fixes, every fix-round commit from `4e56f16a32` to `d18e0443b7`: 0 blocking,
+     1 should-fix, 7 nits, and one earlier problem outside the rounds. Its report was cut
+     at the fourth nit and its resend was stopped by a safety classifier, so the rest
+     never arrived. What did arrive was applied in `ec2d4be98d`: `join_superseded`
+     counted a second character beside a live record and every login of a DATA-held
+     account, neither of which changes an install (the verdict now takes the live record
+     and compares hold kinds); a re-ask read is booked when it settles, now documented,
+     and the already-live arm's cap exclusion is pinned; the WITHHELD docs overclaimed
+     (a join beside a live record shares it and warns nothing); the match's account
+     clause was unpinned; two harness re-asks did not run on production's budget.
+   - fresh-fixes2, a second reader over the same commits plus the three after gate 2
+     (`31ef80a911`, `e43478015c`, `ec2d4be98d`), for the part the first never
+     delivered: 0 blocking, 2 should-fix, 6 nits. Its resend of the tail was stopped
+     the same way, so the rest of N3 to N6 and its clean list never arrived. Applied in
+     `ee183a3bfd`: the stale pin's comment cited the `quiesced` gauge, which reads zero
+     once the entry is collected; the pins' title read as the whole list of capture
+     releases (every arm that quiesces an entry while a capture is owed releases it: the
+     seal's identity and unnamed refusals, the write ceilings, a `missing` row, a
+     `conflict`, and the shutdown drain's deadline, now named beside the pins); one row
+     assertion could not fail and is replaced by proving the loss through the next login;
+     three withheld claims were still unqualified; the `live` parameter's doc.
+   - fresh-fixes3, a third reader for the part the second never delivered, under a
+     short-report limit: 0 blocking, 2 should-fix, 5 nits, all delivered (only its clean
+     list was cut). Applied in `a1fb50db45` and `e5a4f705b3`: DEPLOY, the join-answer
+     header and the surface scope still said a collected entry leaves every edit on the
+     row, which the KNOWN COST orders contradict; "every join beside a live record counts
+     entry" holds only over a loaded entry; the header's "no install changes anything"
+     (the Hearth clock still merges); the live verdict was pinned only with a marked ask;
+     `join_held` was undescribed; a 113-column DEPLOY line; and the harness turn ran
+     BEFORE the Svelte testing library's unmount, because Vitest runs the afterEach hooks
+     before the beforeEach cleanups (confirmed in the runner source), so the turn now
+     runs from the case's `onTestFinished`, after both. Retained heap is unchanged on the
+     three measured suites (359, 418 and 454 MB at file end) and on three admin Svelte
+     suites (136, 91 and 69 MB, which never leaked).
+   - fresh-final, over `ee183a3bfd`, `e5a4f705b3` and `a1fb50db45`: 0 blocking, 1
+     should-fix, 5 nits, so the loop ends here. Applied in `b3a0848781`: the new
+     row-completeness parentheticals left out the shutdown drain's deadline, and "those two
+     orders" read as the two seating orders; DEPLOY and the surface scope cited the
+     re-judgement before its record existed, so they now point at the pinned describe;
+     `join_held` also counts a DATA hold whose entry was collected in the withheld race's
+     window; the two `quiesced` assertions after `entries` 0 could not fail on their own
+     and are dropped (and `ee183a3bfd`'s body overclaims: only the thrown-write pin proves
+     the loss through the next login, the stale pin proves it through the row); the live
+     loop asserts the answer as well as the verdict; two antecedents named. That round
+     changes docs, comments and test assertions only, verified by its suites, the twenty
+     suites that read these docs, `npx tsc --noEmit` and `npm run ci:changed` after the
+     last commit.
+7. THE MUTATION PASS. Every new or changed pin went through the same runner, one mutant
+   at a time, each batch behind its own control run (433, 528, 451, 201, 351 and 475
+   tests, 0 failed; the merge audit's pins ran on their own suites; the last round's
+   control was 369): 44 mutants, the three targeted ones included, 43 killed. The one
+   survivor is recorded: `fill_counts_instanced` (an order fill counting instanced
+   copies) is defense in depth behind the fill's plain-copy gate, whose own mutant
+   (`fill_gates_off`) the same suite kills by 4.
+
+### THE TEST-SUITE AUDIT, READ-ONLY, BESIDE IT
+
+One general-purpose agent measured `tests/` (per-file wall time, peak RSS, config, leaks)
+from a detached worktree at `2af5f917c0`, never during an armed gate, editing nothing.
+Its ranked findings went to Fernando for a decision; no test was deleted or rewritten on
+its say-so. The one exception the brief allows landed as its own commit: a harness leak
+in `tests/jsdom_local_storage_setup.ts` (DOM-environment files kept every case's DOM tree
+reachable until the file ended, because cases ran back to back with no event-loop turn),
+fixed in `b21ad2cdb4` by one `afterEach` that yields a real macrotask in DOM-env files.
+Retained heap after a forced GC at each file's end, before and after:
+`loot_explorer_window_focus` 1,862 to 353 MB, `reliquary_window_behavior` 1,243 to 418
+MB, `daily_rewards_store_behavior` 946 to 454 MB; peak RSS 2,267 to 2,084, 1,613 to 1,531
+and 1,559 to 1,547 MB. A later fresh read moved the turn to the case's `onTestFinished`
+(`e5a4f705b3`), so it also follows the Svelte testing library's unmount; re-measured
+there at 359, 418 and 454 MB, and three admin Svelte suites unchanged at 136, 91 and 69
+MB (they never leaked). The leak A patch (`@vitest/spy`), the global Svelte setup and
+worker sizing are harness decisions left with Fernando, not leaks this session fixes.
+
+### THE 07 RE-JUDGEMENT
+
+VERDICT: FAIL, ON THREE NAMED ORDERS, NONE OF THEM THE TWELFTH PATH, AND NONE INTRODUCED
+BY RULING (B). The twelfth path is CLOSED: every KNOWN DEFECT and KNOWN COST pin
+it carried asserts the fixed behaviour, every mutant over the fix and its rounds is killed
+but the one recorded survivor, five reviewers and six fresh reads found nothing blocking
+once their rounds were applied, and the armed gate is green (item 5 above). Judged against
+the criterion as the brief states it:
+
+- ONLY A GENUINELY ABSENT ROW RESOLVES TO THE FREE TIER-0 INN ROOM: HOLDS, read as this
+  packet has always read it (state.md, PRESERVATION IS THE INVARIANT): no order writes a
+  default over a row, or inserts one under an account's minted name while the row exists.
+  The orders that still SEAT the stand-in for a session keep the row intact on disk and are
+  write-blocked, loudly or counted by kind: a durable re-ask refused on capacity, the
+  WITHHELD race with nothing live, and the rest of the stand-in producers
+  `src/sim/freehold/CLAUDE.md` lists. What they owe is the player-facing surface C23
+  scopes, not a fix to the store.
+- NO COMMITTED EDIT IS LOST: HOLDS. The committed order's stale overwrite is gone (the join
+  installs the loaded entry, or nothing), and every refusal left keeps the row as it
+  stands.
+- NO CAPTURED EDIT IS LOST: FAILS, in exactly three orders, all loud, all keeping the row.
+  The first two are the ones a realm reaches while it runs, pinned as KNOWN COST at
+  `e43478015c` (scoped in `ee183a3bfd`), each pin killed by the mutant that would keep the
+  capture (control 351, 0 failed; 2, 3 and 5 failures):
+  1. THE THROWN-WRITE RUN, one realm. A leaver's capture whose write throws
+     `FREEHOLD_PERSIST_MAX_WRITE_ERRORS` times inside `FREEHOLD_PERSIST_WRITE_ERROR_WINDOW_MS`
+     (three in five minutes: the leave flush and the next two 30 s sweeps, so a database
+     fault that lasts about a minute) quiesces the entry. A quiesced entry owes no work, so
+     settle releases the capture and the entry is collected with it; the leaver's last
+     edits reach no row. Loud: a `write failed` error line per throw and one `quiesced
+     after 3 thrown writes`. Present since N13 bounded the retry (`bd22f1aa78`), windowed
+     by X12.
+  2. THE CROSS-REALM FENCE, the contract's activation gate ("ONE ACCOUNT ONLINE ON TWO
+     REALMS HAS ONE OF THEM WRITE-BLOCKED, SILENTLY"). When another realm commits the
+     account's row first, this realm's leave write meets the compare-and-swap fence, is
+     diagnosed stale and quiesces, and the capture goes the same way. The other realm's
+     house stands, which is the fence doing its job; this realm's last edits are gone,
+     with one warn line and `stale_writes`. The contract places the cure at 07a's mutation
+     boundary.
+  3. THE SHUTDOWN DRAIN'S DEADLINE. An orderly shutdown waits
+     `FREEHOLD_PERSIST_SHUTDOWN_DRAIN_MS` (10 s) for the writes owed; a capture still owed
+     then ends with the process, with one error line from `server/main.ts` ("freehold
+     persistence drain did not complete ... edits may be unwritten"). The same database
+     fault as (1), met at exit; the drain's own case ("answers false at its deadline
+     without throwing") pins the bound.
+
+Every other arm that quiesces an entry while a capture is owed releases it the same way,
+and none of them loses an edit the criterion protects: the seal's identity and unnamed
+refusals fire only for a session already write-blocked (its capture is a stand-in's), a
+legal record fits the write ceilings (the maximal one is measured), a `missing` row is
+the account's row deleted, and a `conflict` is a minted plot id colliding. A process that
+dies without draining (a crash, a kill) loses the captures it holds in memory, as any
+write-behind buffer does; that is outside the criterion.
+
+WHAT CLOSES 07 IS A RULING (Fernando), not more work of this session's kind. For the
+thrown-write run: (i) keep a capture past a THROWN-run quiesce, with the entry kept,
+write-blocked for new edits, retrying the capture once per error window (one statement
+per owner per five minutes) and releasing it only on a commit or on an answer no repeat
+can change, a rejoin installing it meanwhile; its cost is a retained document that
+outlives its sessions while the database is down, counted under `leave_captures`; or
+(ii) accept the run as the bounded-retry cost and restate the criterion as "no captured
+edit is lost while the database answers". For the fence: carry it as the activation gate
+07a closes, as the contract already plans, or pull a cross-realm claim forward. For the
+drain's deadline: accept it as the orderly exit's bound (a process that exits cannot
+keep a document in memory), or give captures a durable spool, a new mechanism.
+RECOMMENDED: (i); the fence carried to 07a; the drain's deadline accepted. 07 would then
+re-judge PASS once (i) is built, with the fence and the deadline recorded as named
+gates.
+
+### RECORDED, NOT FIXED HERE, EACH WITH ITS REASON
+
+- The renderer's catch-arm prewarm generation check (the UI audit's N1): the merge
+  asserts only after `runStartedPrewarmEntry`, so a shutdown that makes a prewarm entry
+  throw logs one warning and calls fail-soft progress hooks on a retired generation.
+  ACCEPTED as the release's shape; a change belongs in the release's own module.
+- `answerForInstall` trusts its caller's owner key and account pairing (the security
+  review's info note). Its one caller derives the key from the account id; an optional
+  derivation inside the store is a hardening for a second caller, not a fix.
+- The dated `furnishing-item-kind` late-after market-collect evidence (the UI audit's
+  S1): after the merge the sale rows render on the History tab, where the code guard
+  moved and its test is repointed, so the behaviour is held and the dated frames are
+  stale. Their capture rig no longer exists, and Q20 in that review still says
+  "Collect". Owed to the next furnishing evidence pass (a re-shoot on
+  `data-tab="history"`), not to this ruling.
+- Older dated evidence shows pre-release HUD chrome (the unit-frame plaque padding, the
+  five stat groups, the mobile debuff strip). Dated records, not seals; only the sealed
+  set is re-proved at a sync.
+- The three capture-loss orders named in the re-judgement above, and the three rulings
+  G1, G2 and G3.
+
+### STILL OPEN, IN ORDER
+
+1. THE 07 RULING above: the thrown-write run, the cross-realm fence and the drain's
+   deadline. 07's verdict stays FAIL until it is given and, for (i), built, reviewed and
+   gated.
+2. The test-suite audit's ranked findings, with Fernando for a decision (no pin is
+   removed on an audit's say-so), and its three harness questions: leak A
+   (`@vitest/spy` keeps every spied object in its registry; a pnpm patch or test
+   rewrites), the global Svelte setup's cost, and worker sizing.
+3. `Sim.addPlayer` atomicity, now also over the restore path's `loadGatheringSettings`
+   (`src/sim/professions/gathering_settings_persist.ts`, the release's pending Town Focus
+   re-spec) beside `seedAccountLedgerSelf`, `loadHonorState` and `loadWorldPvpState`.
+4. D85, the cross-realm account ledger against dark realms (a ruling).
+5. The phase 17 re-plan onto the account ledger, with the trophy-source ruling (G3).
+6. G1 before 28 builds (guildhall authority as a rank permission); G2 when housing lights
+   online (the ferry and the Hearth Key).
+7. A new release sync if `release/**` moves. The Fenbridge ruling is owed before 25a
+   builds.
