@@ -246,7 +246,8 @@ The recurring causes, each measured on this suite:
   every file pays for it before its first case.
 - A determinism check reuses its first run (the parity gate records a scenario twice, not three
   times).
-- Locally the long-sims lane files are opt-in (`WOC_LANE_SUITES=1`, or name the file).
+- In a bare local run the long-sims lane files are opt-in (`WOC_LANE_SUITES=1`, or name the
+  file); both gates opt in on every vitest leg.
 
 Tombstone pins (a case that only asserts a removed thing stays removed) retire once the removal
 is old and a live assertion covers the same ground, deleted with a coverage proof; do not add new

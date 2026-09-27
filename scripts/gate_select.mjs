@@ -63,7 +63,7 @@ import {
   I18N_RELEASE_TIER_SUITES,
   PRE_VITEST_STEP_NAME,
 } from './lib/gate_steps.mjs';
-import { localLaneExclusions } from './lib/lane_suite_scope.mjs';
+import { laneSuitesOptInEnv } from './lib/lane_suite_scope.mjs';
 
 const shell = process.platform === 'win32';
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -166,16 +166,6 @@ console.log(
 );
 console.log(`[gate:select] mode=${plan.mode} (${plan.reason})`);
 console.log(`[gate:select] workers=${workers}`);
-// Said out loud, never silent: a local run leaves the long-sims lane files out
-// unless they are named or opted in (lib/lane_suite_scope.mjs); CI runs them in
-// its lane jobs on every PR.
-const laneSkipped = localLaneExclusions({ env: process.env, argv: ['vitest', 'run'] });
-if (laneSkipped.length > 0) {
-  console.log(
-    `[gate:select] ${laneSkipped.length} long-sims lane file(s) skipped locally unless a leg ` +
-      'names them; CI runs them in its lane jobs. WOC_LANE_SUITES=1 includes them here.',
-  );
-}
 
 const branch = git('git', ['branch', '--show-current']).stdout?.trim() ?? '';
 const releaseTier = branch.startsWith('release/');
@@ -247,6 +237,11 @@ if (releaseTier) {
     hint: 'release-tier i18n is red until every locale is filled: run the i18n-locale-fill workflow (docs/i18n-scaling/translation-workflow.md). It does NOT indicate a code regression.',
   });
 }
+
+// A gate never drops a long-sims lane file: a bare local vitest run leaves them
+// out (lib/lane_suite_scope.mjs), so every leg here opts back in, the full-suite
+// fallbacks and the merged leg's related side included.
+for (const step of vitestSteps) step.env = { ...laneSuitesOptInEnv(), ...(step.env ?? {}) };
 
 const anchor = steps.findIndex((s) => s.name === PRE_VITEST_STEP_NAME);
 steps.splice(anchor >= 0 ? anchor + 1 : steps.length, 0, ...vitestSteps);

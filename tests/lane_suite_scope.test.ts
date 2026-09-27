@@ -1,9 +1,11 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it, vi } from 'vitest';
 import { CI_LONG_SUITES } from '../scripts/lib/ci_shard_plan.mjs';
 import { buildFullGateSteps } from '../scripts/lib/gate_steps.mjs';
 import {
   laneSuitesOptInEnv,
   localLaneExclusions,
+  normalizeVitestFilter,
   vitestFilterArgs,
 } from '../scripts/lib/lane_suite_scope.mjs';
 
@@ -19,13 +21,35 @@ describe('local lane-suite scope', () => {
     expect(CI_LONG_SUITES.length).toBeGreaterThan(0);
   });
 
-  it('drops nothing under CI or with the opt-in', () => {
-    expect(localLaneExclusions({ env: { CI: 'true' }, argv: argv('run') })).toEqual([]);
+  it('drops nothing under any CI value or any opt-in value but empty or 0', () => {
+    for (const ci of ['true', '1', '']) {
+      expect(localLaneExclusions({ env: { CI: ci }, argv: argv('run') }), ci).toEqual([]);
+    }
     expect(localLaneExclusions({ env: laneSuitesOptInEnv(), argv: argv('run') })).toEqual([]);
-    // Only the exact opt-in value counts.
-    expect(
-      localLaneExclusions({ env: { WOC_LANE_SUITES: 'true' }, argv: argv('run') }),
-    ).toHaveLength(CI_LONG_SUITES.length);
+    for (const on of ['1', 'true', 'yes']) {
+      expect(localLaneExclusions({ env: { WOC_LANE_SUITES: on }, argv: argv('run') })).toEqual([]);
+    }
+    for (const off of ['', '0']) {
+      expect(
+        localLaneExclusions({ env: { WOC_LANE_SUITES: off }, argv: argv('run') }),
+        off,
+      ).toHaveLength(CI_LONG_SUITES.length);
+    }
+  });
+
+  it('matches a named file the way vitest does: case, a leading ./, an absolute path', () => {
+    const [first] = CI_LONG_SUITES;
+    const root = '/repo';
+    const kept = (...args: string[]) =>
+      CI_LONG_SUITES.filter(
+        (f) => !localLaneExclusions({ env: {}, argv: argv(...args), root }).includes(f),
+      );
+    expect(kept('run', `./${first}`)).toEqual([first]);
+    expect(kept('run', `${root}/${first}`)).toEqual([first]);
+    expect(kept('run', first.toUpperCase())).toEqual([first]);
+    expect(kept('run', './tests/a.test.ts', `./${first}`)).toEqual([first]);
+    expect(normalizeVitestFilter(`${root}/tests/X.test.ts`, root)).toBe('tests/x.test.ts');
+    expect(normalizeVitestFilter('.\\tests\\x.test.ts', root)).toBe('tests/x.test.ts');
   });
 
   it('keeps a lane file the run names, by vitest substring filter', () => {
@@ -67,6 +91,22 @@ describe('local lane-suite scope', () => {
     if (!process.env.CI && process.env.WOC_LANE_SUITES !== '1') {
       expect(expected).toEqual([...CI_LONG_SUITES]);
     }
+  });
+
+  it('keeps gate_select from dropping a lane file on any vitest leg', () => {
+    // Every vitest leg, the full-suite fallbacks and the merged related leg
+    // included, carries the opt-in; the loop runs before the legs are spliced in.
+    const source = readFileSync(new URL('../scripts/gate_select.mjs', import.meta.url), 'utf8');
+    const optIn = source.indexOf(
+      'for (const step of vitestSteps) step.env = { ...laneSuitesOptInEnv(), ...(step.env ?? {}) };',
+    );
+    const splice = source.indexOf(
+      'steps.splice(anchor >= 0 ? anchor + 1 : steps.length, 0, ...vitestSteps);',
+    );
+    expect(optIn).toBeGreaterThan(-1);
+    expect(splice).toBeGreaterThan(optIn);
+    expect(source.slice(optIn, splice)).not.toMatch(/vitestSteps\.push\(/);
+    expect(source.slice(splice)).not.toMatch(/vitestSteps\.push\(/);
   });
 
   it('keeps the full merge bar CI-equivalent', () => {

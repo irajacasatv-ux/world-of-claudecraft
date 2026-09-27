@@ -334,11 +334,14 @@ lane). The latency win is concentrated in FULL mode: most lane files are
 graph-visible, so on a sim-heavy selective PR the merged leg's related side pulls them back into a
 shard exactly as the old related legs did before the lane, and only the blind members (plus any lane
 test the PR itself changed) ride the lanes.
-Locally the lane files are opt-in (`scripts/lib/lane_suite_scope.mjs`, applied through
-vite.config.ts `test.exclude`): a bare `npm test` or a `gate_select` leg leaves them out
-and says so, a run that names one keeps it, `WOC_LANE_SUITES=1` keeps them all, and `npm run
-gate` sets that flag on its full-suite step so the merge bar stays CI-equivalent. Under
-`CI` nothing is dropped. The lanes reproduce locally with
+In a bare local run the lane files are opt-in (`scripts/lib/lane_suite_scope.mjs`,
+applied through vite.config.ts `test.exclude`): a bare `npm test` or `npx vitest run` leaves
+them out, a run that names one keeps it (vitest's own filter rule: case-insensitive, a leading
+`./` stripped, an absolute path made repo-relative), and `WOC_LANE_SUITES` set to anything but
+empty or `0` keeps them all. Both local gates set it on every vitest leg (`npm run gate`'s full
+suite, and each `gate_select` leg, its full-suite fallbacks and the merged leg's related side
+included), so a gate never drops a lane file. Under any `CI` value nothing is dropped. The
+lanes reproduce locally with
 `node scripts/ci_shard_test.mjs --lane=long-sims-a --plan-only` (and `-b`), printing the
 same `[ci-shard]` audit lines as the shards. `release-gate` is deliberately not
 lane-split: `release/**` pushes keep the full suite in their 8 shards; a push to `main`

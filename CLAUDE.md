@@ -56,7 +56,8 @@ the nested `npm run` forms below are the package.json script names.
 - `npm run server`: esbuild-bundle + run the authoritative server on :8787.
 - `npm test`: Vitest. **Prefer a single file while iterating:** `npx vitest run tests/sim.test.ts`.
   Locally the long-sims lane files (`CI_LONG_SUITES`, which CI runs in its lane jobs) are
-  opt-in: name the file or set `WOC_LANE_SUITES=1`; `npm run gate` sets it for you.
+  opt-in in a bare run: name the file or set `WOC_LANE_SUITES=1`; both gates set it on every
+  vitest leg, so neither drops one.
 - `node scripts/gate_select.mjs`: **the pre-merge gate.** Same step list as `npm run gate`
   (nothing dropped) with one substitution: the full vitest run becomes ONE merged
   `vitest related` invocation (the always-run floor rides it as self-selecting seeds,
