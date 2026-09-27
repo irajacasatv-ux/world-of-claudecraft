@@ -8442,6 +8442,7 @@ describe('a run of thrown writes keeps its edits and retries them once per windo
     // clock due. Launched straight from its settle it would run past the cap.
     const { h, hung } = await hangingPosture(TEN_ACCOUNTS);
     for (const account of [700_020, 700_021]) await h.login(account);
+    const scheduledBefore = h.deadlines.length;
     const drained = h.store.idle(FREEHOLD_PERSIST_SHUTDOWN_DRAIN_MS);
     await tick(30);
     expect(hung).toHaveLength(FREEHOLD_PERSIST_DRAIN_MAX_ACTIVE_WRITES);
@@ -8469,9 +8470,44 @@ describe('a run of thrown writes keeps its edits and retries them once per windo
         FREEHOLD_PERSIST_DRAIN_MAX_ACTIVE_WRITES + FREEHOLD_PERSIST_LEAVE_WRITE_RESERVE - 1,
       deferredRetries: TEN_ACCOUNTS.length - FREEHOLD_PERSIST_DRAIN_MAX_ACTIVE_WRITES + 1,
     });
-    // Unwind: every leave stops waiting at its deadline, and the drain at its own.
-    for (const job of h.deadlines) if (!job.fired && !job.cancelled) job.fire();
+    // Unwind: every leave stops waiting at its deadline, and the drain at its own
+    // (only the jobs this case scheduled, never the logins' budgets).
+    for (const job of h.deadlines.slice(scheduledBefore)) {
+      if (!job.fired && !job.cancelled) job.fire();
+    }
     await Promise.all(leaves);
+    await drained;
+    for (const gate of hung.splice(0)) gate.reject(new Error('connection terminated unexpectedly'));
+    await tick(60);
+  });
+
+  it("re-queues a retry's settle re-arm BEHIND a waiting ordinary write", async () => {
+    // A drain whose cap retries fill, with a healthy owner's write waiting: a
+    // retry that throws again with an edit pending must not take back the slot
+    // it freed ahead of that write.
+    const { h, hung } = await hangingPosture(TEN_ACCOUNTS);
+    const HEALTHY = 700_030;
+    await h.login(HEALTHY);
+    h.edit(`account:${HEALTHY}`, { rev: 8 });
+    const scheduledBefore = h.deadlines.length;
+    const drained = h.store.idle(FREEHOLD_PERSIST_SHUTDOWN_DRAIN_MS);
+    await tick(30);
+    expect(hung).toHaveLength(FREEHOLD_PERSIST_DRAIN_MAX_ACTIVE_WRITES);
+    expect(h.store.stats().deferredWrites).toBe(1);
+    // The first owner's running retry gets an edit it cannot carry, then throws.
+    h.edit(OWNER_KEY, { rev: 9 });
+    const leaving = h.leave(OWNER_KEY);
+    await tick(10);
+    expect(h.store.stats().pending).toBe(1);
+    hung[0].reject(new Error('connection terminated unexpectedly'));
+    await tick(60);
+    // The freed slot went to the healthy owner; the retry waits its turn.
+    expect(h.writes.at(-1)?.accountId).toBe(HEALTHY);
+    expect(h.store.stats().deferredWrites).toBe(0);
+    for (const job of h.deadlines.slice(scheduledBefore)) {
+      if (!job.fired && !job.cancelled) job.fire();
+    }
+    await leaving;
     await drained;
     for (const gate of hung.splice(0)) gate.reject(new Error('connection terminated unexpectedly'));
     await tick(60);

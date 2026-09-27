@@ -1353,15 +1353,14 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
     entry.pending = false;
     if (rearm && live(entry) && !blocked(entry) && retryDue(entry)) {
       if (entry.retryAtMs === 0) {
-        // Straight back into the slot this write just freed, so a re-arm is
-        // never pushed behind the deferred set it was already ahead of; a retry
-        // slot this write freed is offered to a waiting retry at once.
+        // Straight back into the slot it freed (never behind the deferred set it
+        // was ahead of); a freed RETRY slot goes to a waiting retry at once.
         launch(entry);
         if (freedRetrySlot) pumpDeferredWrites();
         return;
       }
-      // A retry re-arms through the sub-cap like any other, never around it.
-      arm(entry);
+      // Re-queued for the pump below: ordinary writes first, retries oldest first.
+      deferredRetries.add(entry);
     }
     releaseSettleWaiters(entry);
     // Cleared HERE and not above, so a RE-ARMED write inherits the capture: a
@@ -1409,8 +1408,8 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
           const onClock = entry.retryAtMs > 0;
           const outcome = noteThrownWrite(entry, ports.nowMs(), freeholdThrownWriteIsAnswer(err));
           if (outcome === 'retrying' && (intake || openDrains > 0)) {
-            // A throw ON the clock is one line per sweep (or per drain), not per
-            // owner; past the last drain no sweep follows, so it logs its own.
+            // One line per sweep (or drain), not per owner; with intake closed and no
+            // drain open a sweep may never come, so it logs its own.
             retryThrows++;
             lastRetryError = boundedDatabaseError(err);
           } else {
@@ -1749,8 +1748,8 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
               // Treating it that way returned a mass disconnect's every logout in
               // milliseconds, spending none of the budget the deadline exists to
               // bound and leaving every entry resident.
-              // A leaver on the retry clock is never waited on here, launched or
-              // deferred: its capture is kept (owesWork), and the clock owns it.
+              // A retry waiting in the clock's own set is not waited on (owesWork keeps
+              // its capture); a RUNNING one is, to the flush's deadline, like any.
               if (chain === null && !deferredWrites.has(entry)) break;
               const settled =
                 chain?.catch(() => undefined) ??
@@ -1883,6 +1882,7 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
         // A throwing port must not leave the clock's drain exception open for
         // the life of the store, nor make a drain that "never throws" throw.
         openDrains--;
+        reportRetryThrows();
         ports.error('freehold drain could not arm its writes:', err);
         return Promise.resolve(false);
       }
