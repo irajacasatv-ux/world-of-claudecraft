@@ -41,6 +41,13 @@ describe('vitest worker sizing', () => {
     expect((await loadTestConfig()).maxWorkers).toBe(5);
     vi.stubEnv('GATE_MAX_WORKERS', '3');
     expect((await loadTestConfig()).maxWorkers).toBe(3);
+    // And the tier cap, with no override: the config reads the whole host
+    // sizing, not the one env var.
+    vi.stubEnv('GATE_MAX_WORKERS', undefined);
+    vi.stubEnv('GATE_WORKER_TIER', 'low');
+    const low = (await loadTestConfig()).maxWorkers ?? 0;
+    expect(low).toBeGreaterThanOrEqual(1);
+    expect(low).toBeLessThanOrEqual(2);
   });
 
   it('budgets 1.5 GiB of memory per worker, under the 2 GiB heap cap', () => {

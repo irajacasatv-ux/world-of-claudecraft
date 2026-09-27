@@ -61,11 +61,20 @@ describe('releasedSpyOn', () => {
 
   it('keeps no hold on that object once its case finished, though the vi.fn stays registered', async () => {
     await collectGarbage();
+    // The case before this one ran and left its WeakRef (a filtered or reordered
+    // run would leave null, and a null deref would pass for the wrong reason).
+    expect(dropped).not.toBeNull();
     expect(dropped?.deref()).toBeUndefined();
     // The released mock was reset: no recorded call and no recorded `this`.
     expect(registered?.mock.calls).toEqual([]);
     expect(registered?.mock.contexts).toEqual([]);
     expect(() => registered?.()).toThrow(/ran after its test finished/);
+  });
+
+  it('refuses to stub a key that is already stubbed', () => {
+    const target = { twice: (value: number) => value * 2 };
+    releasedSpyOn(target, 'twice');
+    expect(() => releasedSpyOn(target, 'twice')).toThrow(/already stubbed/);
   });
 
   it('refuses a key that is not a method', () => {

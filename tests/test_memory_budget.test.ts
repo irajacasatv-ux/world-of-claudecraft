@@ -101,6 +101,13 @@ describe('memoryBudgetProblems', () => {
       'tests/b.test.ts: retainedMb must be a positive integer',
       'src/c.ts: not a tests/**/*.test.ts path',
     ]);
+    // A zero budget, and a ceiling that is not a positive integer.
+    expect(
+      memoryBudgetProblems({ ceilingMb: 1024, files: { 'tests/d.test.ts': { retainedMb: 0 } } }),
+    ).toEqual(['tests/d.test.ts: retainedMb must be a positive integer']);
+    expect(memoryBudgetProblems({ ceilingMb: 0, files: {} })).toEqual([
+      'ceilingMb must be a positive integer, got 0',
+    ]);
   });
 
   it('finds nothing wrong with the committed budgets, and every budgeted file exists', () => {
@@ -140,5 +147,24 @@ describe('the probe wiring', () => {
     expect(test.execArgv).toEqual(['--max-old-space-size=2048', '--expose-gc']);
     expect(test.maxWorkers).toBe(1);
     expect(test.fileParallelism).toBe(false);
+  });
+});
+
+describe('the probe measures after every other cleanup', () => {
+  // vitest runs onTestFinished callbacks last-registered first, so the probe setup,
+  // FIRST in vitest.memory.config.ts setupFiles, registers first and measures last,
+  // after the other setups' cleanups (the DOM files' event-loop turn among them).
+  const order: string[] = [];
+  it('registers two finish callbacks', ({ onTestFinished }) => {
+    onTestFinished(() => {
+      order.push('registered first');
+    });
+    onTestFinished(() => {
+      order.push('registered second');
+    });
+  });
+
+  it('ran them last-registered first', () => {
+    expect(order).toEqual(['registered second', 'registered first']);
   });
 });

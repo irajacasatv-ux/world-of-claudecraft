@@ -78,13 +78,18 @@ describe('the @vitest/spy restore patch', () => {
       target.method(1);
       other.mockRestore();
       vi.spyOn(freshTarget(), 'method');
+      // Positive control: the watch does see this realm's Map, so a zero below
+      // is the spy library's silence, not a blind spy.
+      const control = new Map<number, number>();
+      control.set(1, 1);
+      control.delete(1);
       sets = mapSet.mock.calls.length;
       deletes = mapDelete.mock.calls.length;
     } finally {
       vi.restoreAllMocks();
     }
-    expect(sets).toBe(0);
-    expect(deletes).toBe(0);
+    expect(sets).toBe(1);
+    expect(deletes).toBe(1);
   });
 
   it('a restored spy leaves the registry, and a plain or unrestored mock stays in it', () => {

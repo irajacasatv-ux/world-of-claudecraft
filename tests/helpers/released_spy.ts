@@ -42,6 +42,11 @@ export function releasedSpyOn<T extends object, K extends MethodKey<T>>(
   if (typeof original !== 'function') {
     throw new TypeError(`releasedSpyOn: ${String(key)} is not a method`);
   }
+  // A second stub over a live one would restore in callback order, which is not
+  // a contract; one stub per key per case, reuse the first.
+  if (vi.isMockFunction(original)) {
+    throw new TypeError(`releasedSpyOn: ${String(key)} is already stubbed in this case`);
+  }
   const own = Object.getOwnPropertyDescriptor(target, key);
   const held: Held = { fn: original as Procedure };
   const stub = vi.fn(callThrough(held, String(key)));
