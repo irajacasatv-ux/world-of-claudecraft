@@ -8435,6 +8435,48 @@ describe('a run of thrown writes keeps its edits and retries them once per windo
     await tick(60);
   });
 
+  it('re-arms a retry from its own settle through the sub-cap, never past a full cap', async () => {
+    // The one state where it shows: a drain whose cap two ORDINARY leavers have
+    // borrowed past (a leaver may take the reserve; a retry never does), and a
+    // retry with an edit pending that throws again while the drain keeps every
+    // clock due. Launched straight from its settle it would run past the cap.
+    const { h, hung } = await hangingPosture(TEN_ACCOUNTS);
+    for (const account of [700_020, 700_021]) await h.login(account);
+    const drained = h.store.idle(FREEHOLD_PERSIST_SHUTDOWN_DRAIN_MS);
+    await tick(30);
+    expect(hung).toHaveLength(FREEHOLD_PERSIST_DRAIN_MAX_ACTIVE_WRITES);
+    // An edit the first owner's running retry cannot carry, then its leave: the
+    // flush marks it pending on the running write.
+    h.edit(OWNER_KEY, { rev: 9 });
+    const leaves = [h.leave(OWNER_KEY)];
+    await tick(10);
+    expect(h.store.stats().pending).toBe(1);
+    // Two ordinary leavers borrow the leave reserve past the drain's cap.
+    for (const account of [700_020, 700_021]) {
+      h.edit(`account:${account}`, { rev: 8 });
+      leaves.push(h.leave(`account:${account}`));
+      await tick(10);
+    }
+    expect(h.store.stats().activeWrites).toBe(
+      FREEHOLD_PERSIST_DRAIN_MAX_ACTIVE_WRITES + FREEHOLD_PERSIST_LEAVE_WRITE_RESERVE,
+    );
+    // The first owner's retry throws: its re-arm waits for a slot rather than
+    // taking one past the cap.
+    hung[0].reject(new Error('connection terminated unexpectedly'));
+    await tick(60);
+    expect(h.store.stats()).toMatchObject({
+      activeWrites:
+        FREEHOLD_PERSIST_DRAIN_MAX_ACTIVE_WRITES + FREEHOLD_PERSIST_LEAVE_WRITE_RESERVE - 1,
+      deferredRetries: TEN_ACCOUNTS.length - FREEHOLD_PERSIST_DRAIN_MAX_ACTIVE_WRITES + 1,
+    });
+    // Unwind: every leave stops waiting at its deadline, and the drain at its own.
+    for (const job of h.deadlines) if (!job.fired && !job.cancelled) job.fire();
+    await Promise.all(leaves);
+    await drained;
+    for (const gate of hung.splice(0)) gate.reject(new Error('connection terminated unexpectedly'));
+    await tick(60);
+  });
+
   it('closes the clock exception again when a drain cannot arm its writes', async () => {
     // A throwing port inside idle() must neither throw out of a drain that never
     // throws nor leave every clock due for the life of the store.
