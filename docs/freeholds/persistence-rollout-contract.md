@@ -367,8 +367,9 @@ put the owner on a RETRY CLOCK: its entry, its unwritten edits and any leave cap
 no write is armed for it until the clock is due, and the periodic sweep then issues ONE
 statement, AT MOST one per owner per window. Retries hold at most
 `FREEHOLD_PERSIST_RETRY_WRITE_CAP` (two) of the store's write slots and are pumped after
-ordinary writes, so a slow fault stretches their cadence rather than starving healthy
-owners. A commit clears the clock; an answer no repeat can change (the fence's stale, a
+ordinary writes (their backlog is its own `deferred_retries` measure), so a slow fault
+stretches their cadence rather than starving healthy owners; the shutdown drain lifts that
+sub-cap to its own whole cap, since nothing else then competes. A commit clears the clock; an answer no repeat can change (the fence's stale, a
 missing or conflicting row, the seal, a ceiling, or a thrown refusal of the document
 itself: a data or constraint SQLSTATE, or the writer's own branded structural refusal,
 `FreeholdUpsertRefused`) quiesces as before. A player who returns meanwhile gets the kept
@@ -383,8 +384,8 @@ realm's online count: a WRITE-ONLY fault (a revoked permission, a column missing
 code deployed ahead of its migration, lock or statement timeouts on the housing table, a
 failing trigger) lets logins carry on, so it grows with every owner who edits a house until
 an operator acts. `retrying` names the set and `retrying_offline` its memory share. A
-RESTART DURING THE FAULT gives every such owner one last attempt inside the drain above,
-never after it, and the edits that still throw end with the process: that is the drain's
+RESTART DURING THE FAULT gives every such owner one last attempt inside the drain above, at
+the drain's full cap and never after it, and the edits that still throw end with the process: that is the drain's
 accepted bound (R3), logged as the drain's one line. So a housing operator alerts on a
 sustained `retrying` and treats it as an outage to end before any planned restart, never
 as a data incident.

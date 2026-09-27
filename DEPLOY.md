@@ -939,9 +939,12 @@ For off-box safety, sync the directory to S3 occasionally:
   write slots and wait behind ordinary writes, so with a large `retrying` set and
   a slow fault the cadence stretches past five minutes (`write_retries` then
   rises slower than `retrying` per five minutes); the store keeps serving
-  healthy owners either way. Throws on the clock print ONE summary line per sweep
-  ("freehold retry clock: N retry writes threw since the last sweep"), not one
-  per owner. A player who returns meanwhile gets the kept house and plays on;
+  healthy owners either way. Retries waiting on those two slots are
+  `deferred_retries`, kept apart from `deferred_writes` so an outage never reads
+  as healthy owners saturating the store's cap. Throws on the clock print ONE
+  summary line per sweep ("freehold retry clock: N retry writes threw since the
+  last sweep"), not one per owner, until the shutdown drain has finished, after
+  which no sweep follows and each throw logs its own line. A player who returns meanwhile gets the kept house and plays on;
   their edits ride the next retry. What it costs is MEMORY: an owner on the
   clock with no session left (`retrying_offline`) holds up to TWO full records
   a quiesce used to free (its committed state and its leave capture), measured at
@@ -953,8 +956,8 @@ For off-box safety, sync the directory to S3 occasionally:
   house until an operator acts: alert on a sustained `retrying`, and read
   `retrying_offline` for the memory. It is a database OUTAGE to fix, never a
   data incident, and a restart during it gives each held owner ONE last attempt
-  inside the 10 s drain (never after it) before the edits end with the process
-  (the drain's warn line names it).
+  inside the 10 s drain, at the drain's full write cap (never after it), before
+  the edits end with the process (the drain's warn line names it).
   `deferred_writes` and `permit_wait_ms` are
   the two LEADING indicators of the capacity gates section 8a carries: a
   deferred set that does not return to zero between sweeps means the store's own
