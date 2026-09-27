@@ -609,8 +609,9 @@ jobs:
         with:
           # Blobless sparse checkout (the sparse-checkout input implies
           # filter=blob:none in actions/checkout): docs/screenshots is
-          # about 1.2 GB of committed PR evidence (after the 2026-09-27 prune) the test jobs never read except
-          # the referenced subtrees below, and the measured checkout pathology
+          # about 1.2 GB of committed PR evidence (after the 2026-09-27 prune)
+          # the test jobs never read except the referenced subtrees below, and
+          # the measured checkout pathology
           # (run 31741012359: lane A spent 11m21s fetching before an 8m25s
           # test step) scales with the blob payload. Non-cone patterns,
           # last match wins: everything in, screenshot DIRECTORIES out (the

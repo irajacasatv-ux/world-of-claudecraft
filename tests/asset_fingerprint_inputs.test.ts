@@ -32,12 +32,21 @@ async function sourceLists(file: string): Promise<[string, readonly string[]][]>
     string,
     unknown
   >;
-  return Object.entries(mod).filter(
-    (entry): entry is [string, readonly string[]] =>
-      /_SOURCE_FILES$/.test(entry[0]) &&
-      Array.isArray(entry[1]) &&
-      entry[1].every((item) => typeof item === 'string'),
-  );
+  const lists = Object.entries(mod).filter(([name]) => /_SOURCE_FILES$/.test(name));
+  for (const [name, list] of lists) {
+    // A malformed list fails here rather than leaving the scan.
+    expect(
+      Array.isArray(list) && list.every((item) => typeof item === 'string'),
+      `${file} ${name}`,
+    ).toBe(true);
+  }
+  return lists as [string, readonly string[]][];
+}
+
+// The forbidden inputs in one list, matched after normalization so `./pnpm-lock.yaml`
+// or `scripts/../package.json` cannot slip past.
+function forbiddenInputs(list: readonly string[]): string[] {
+  return list.filter((input) => FORBIDDEN.includes(path.posix.normalize(input)));
 }
 
 describe('asset fingerprint inputs', () => {
@@ -53,12 +62,21 @@ describe('asset fingerprint inputs', () => {
     const offenders: string[] = [];
     for (const file of modules) {
       for (const [name, list] of await sourceLists(file)) {
-        for (const input of list) {
-          if (FORBIDDEN.includes(input)) offenders.push(`${file} ${name}: ${input}`);
-        }
+        for (const input of forbiddenInputs(list)) offenders.push(`${file} ${name}: ${input}`);
       }
     }
     expect(offenders).toEqual([]);
+  });
+
+  it('flags each forbidden input however it is spelled (positive control)', () => {
+    expect(
+      forbiddenInputs([
+        'scripts/assets/build_assets.mjs',
+        './pnpm-lock.yaml',
+        'scripts/../package.json',
+        'package.json',
+      ]),
+    ).toEqual(['./pnpm-lock.yaml', 'scripts/../package.json', 'package.json']);
   });
 
   it('scans only through the shared walker', () => {

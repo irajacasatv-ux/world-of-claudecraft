@@ -18,11 +18,26 @@ const suites = tsFilesUnder(browserRoot).map(({ file, full }) => ({
 }));
 
 // The suites that capture through their own flag, each named with the flag that
-// gates it. A new direct `page.screenshot(` anywhere else fails below.
+// gates it. A screenshot call anywhere else fails below.
 const GATED_SUITES: Record<string, string> = {
   'rewards_sidebar.browser.test.ts': 'import.meta.env.VITE_REWARDS_CAPTURE',
   'freehold_gate_input.browser.test.ts': 'import.meta.env.VITE_FREEHOLD_PRESENTATION_CAPTURE',
 };
+
+// Every screenshot call, however the receiver is spelled or spaced.
+function screenshotCalls(code: string): number[] {
+  return [...code.matchAll(/\.screenshot\s*\(/g)].map((m) => m.index ?? -1);
+}
+
+// The index of the brace closing the one opened at `openAt`.
+function matchingBrace(code: string, openAt: number): number {
+  let depth = 0;
+  for (let i = openAt; i < code.length; i++) {
+    if (code[i] === '{') depth++;
+    else if (code[i] === '}' && --depth === 0) return i;
+  }
+  throw new Error('unbalanced braces');
+}
 
 describe('browser evidence capture', () => {
   it('sees the browser suites', () => {
@@ -31,26 +46,36 @@ describe('browser evidence capture', () => {
 
   it('writes a screenshot only through the flagged helper or a flag-gated suite', () => {
     const direct = suites
-      .filter(({ code }) => code.includes('page.screenshot('))
+      .filter(({ code }) => screenshotCalls(code).length > 0)
       .map(({ file }) => file)
       .sort();
     expect(direct).toEqual(['_evidence.ts', ...Object.keys(GATED_SUITES)].sort());
     for (const [file, flag] of Object.entries(GATED_SUITES)) {
-      const suite = suites.find((s) => s.file === file);
-      expect(suite?.code, file).toContain(flag);
+      const code = suites.find((s) => s.file === file)?.code ?? '';
+      const calls = screenshotCalls(code);
+      // One capture per gated suite, and its flag is read before it.
+      expect(calls, file).toHaveLength(1);
+      const flagAt = code.indexOf(flag);
+      expect(flagAt, file).toBeGreaterThanOrEqual(0);
+      expect(flagAt, file).toBeLessThan(calls[0]);
     }
   });
 
-  it('captures in the helper only under VITE_EVIDENCE_CAPTURE=1', () => {
+  it('captures in the helper only inside the VITE_EVIDENCE_CAPTURE=1 branch', () => {
     const helper = suites.find(({ file }) => file === '_evidence.ts')?.code ?? '';
-    const gate = helper.indexOf("if (import.meta.env.VITE_EVIDENCE_CAPTURE === '1') {");
-    const shot = helper.indexOf('page.screenshot(');
-    expect(gate).toBeGreaterThanOrEqual(0);
-    // The one screenshot call sits inside that branch, which returns before the
-    // paint-only fallback.
-    expect(shot).toBeGreaterThan(gate);
-    expect(helper.indexOf('return;', shot)).toBeLessThan(helper.indexOf('requestAnimationFrame'));
-    expect(helper.split('page.screenshot(').length - 1).toBe(1);
+    const gate = "if (import.meta.env.VITE_EVIDENCE_CAPTURE === '1') {";
+    const open = helper.indexOf(gate);
+    expect(open).toBeGreaterThanOrEqual(0);
+    const bodyStart = open + gate.length;
+    const bodyEnd = matchingBrace(helper, bodyStart - 1);
+    const body = helper.slice(bodyStart, bodyEnd);
+    const outside = helper.slice(0, bodyStart) + helper.slice(bodyEnd);
+    // The one capture sits inside the branch and the branch returns after it, so
+    // the paint-only fallback below can never be followed by a capture.
+    expect(screenshotCalls(body)).toHaveLength(1);
+    expect(body.indexOf('return;')).toBeGreaterThan(screenshotCalls(body)[0]);
+    expect(screenshotCalls(outside)).toHaveLength(0);
+    expect(outside).toContain('requestAnimationFrame');
   });
 
   it('scans only through the shared walker', () => {

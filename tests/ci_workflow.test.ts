@@ -306,9 +306,9 @@ describe('CI workflow parity', () => {
   it('sparse-checkout on the test jobs covers every referenced screenshot subtree', () => {
     // The five sparse test-job checkouts (pr-gate, both long-sims lanes,
     // release-gate, release-i18n) exclude docs/screenshots DIRECTORIES
-    // (about 1.2 GB of committed PR evidence after the 2026-09-27 prune; the measured 11m21s checkout
-    // pathology scales with the blob payload) except every subtree the repo
-    // actually references. The coupling corpus is EVERY tracked
+    // (about 1.2 GB of committed PR evidence after the 2026-09-27 prune; the
+    // measured 11m21s checkout pathology scales with the blob payload) except
+    // every subtree the repo actually references. The coupling corpus is EVERY tracked
     // reference-carrying file outside docs/screenshots, enumerated from the
     // git index rather than a curated root list: a test-literal-only
     // coupling shipped and missed two acceptance manifests on its first CI
@@ -488,11 +488,11 @@ describe('CI workflow parity', () => {
         const match = line.match(/^docs\/screenshots\/([A-Za-z0-9._-]+)\//);
         if (match) indexDirs.add(match[1]);
       }
-      // 126 tracked screenshot subtrees after the 2026-09-27 prune removed 412
-      // that nothing referenced (444 at the release/v0.44.0 sync, 2026-09-22).
+      // 127 tracked screenshot subtrees after the 2026-09-27 prune removed 411
+      // that nothing referenced (538 before it).
       // Keep this floor near that measured count so truncated discovery cannot
       // silently satisfy the exact reference/cone coupling below.
-      expect(indexDirs.size).toBeGreaterThanOrEqual(126);
+      expect(indexDirs.size).toBeGreaterThanOrEqual(127);
     }
     // The guard's own file is excluded from the corpus: its SPARSE_CONE
     // literal above names every cone subtree, so counting it would satisfy

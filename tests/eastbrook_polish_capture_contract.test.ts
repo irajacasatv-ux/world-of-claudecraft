@@ -338,6 +338,12 @@ describe('Eastbrook polish capture contract', () => {
       leaves.map((leaf, i) => [leaf, i.toString(16).repeat(64)]),
     ) as Record<(typeof leaves)[number], string>;
     const provenance = deriveEastbrookPolishCompositeProvenance(inputs);
+    // A literal over SYNTHETIC inputs pins the derivation itself (field order,
+    // separators), which the frozen capture metadata depends on; it moves only when
+    // the derivation does, never with the live tree.
+    expect(provenance.fingerprint).toBe(
+      '3f8688a3005c982d23f9f6948669c475aa4e4030b123bf1716179d992c8a09f5',
+    );
     expect(deriveEastbrookPolishCompositeProvenance(inputs).fingerprint).toBe(
       provenance.fingerprint,
     );

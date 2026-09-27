@@ -51,7 +51,6 @@ interface AssetContract {
   byteCeiling: number;
   serviceCues: readonly string[];
   sockets: readonly SocketContract[];
-  evidenceSha256?: Readonly<Record<string, string>>;
 }
 
 const ASSETS: readonly AssetContract[] = [
@@ -82,14 +81,6 @@ const ASSETS: readonly AssetContract[] = [
         position: [0.72, 1.4199999682016868, 2.441280326460385],
       },
     ],
-    evidenceSha256: {
-      'procedural-contact.png': '5e59fb1ae4d4e5e1249de34aaceb7835a8b2575850c7b8b466f7131d08fbd1fb',
-      'raw-contact.png': '473914c3a15dcc3ef157e583b063fe8655cafd8061cbb4a43c95481805665fca',
-      'optimized-contact.png': 'b44b6ad51a4cde1e44ed7b6b502348603dcc794c52c00fea4992dfeb3850cea2',
-      'optimized-audit-contact.png':
-        'af672d33ac1401e3caab5ade81486339feb665b67c5a11e7fbcaa31ce8c9bf9d',
-      'comparison.png': '4855a7af798326287af5f8969595a86ee048e56e8959ff85a04ae6e4ce2c3eaf',
-    },
   },
   {
     id: 'smithy',

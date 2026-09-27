@@ -15,8 +15,6 @@
 //     the same idea, and exactly one of the two drives any given mount.
 //   - `rickshaw_mount` owns the rolling wheels and the puller that walks in the
 //     shafts.
-// The four-wheel suspension, lamps and piped exhaust that served the retired
-// Rallycart RXT were deleted with its assets on 2026-09-27.
 
 import type * as THREE from 'three';
 import type { AnimState, CharacterVisual } from './characters/visual';
