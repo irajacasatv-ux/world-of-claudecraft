@@ -1065,8 +1065,9 @@ const MONOLITHS: MonolithRow[] = [
     // merged tree measures 12675 (this branch 12677, the release 12680). Exact merged
     // count, zero slack.
     // LOWERED 12675 -> 12659 on 2026-09-27: the retired Rallycart's wheeled-vehicle
-    // branch (suspension, lamps, piped exhaust, engine phase) was deleted as unused.
-    ceiling: 12659,
+    // branch (suspension, lamps, piped exhaust, engine phase) was deleted as unused,
+    // then to 12658 with two imports nothing read (MountBeacon, floorVfxRenderOrder).
+    ceiling: 12658,
     seam: 'a new src/render/<thing>.ts module the renderer calls (src/render/CLAUDE.md)',
   },
   {

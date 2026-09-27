@@ -352,7 +352,7 @@ import {
 import { type FireballTravelVisual, syncFireballTravelVisual } from './fireball_travel_visual';
 import { buildFish, type FishView } from './fish';
 import { FishingBobberVisual } from './fishing_bobber';
-import { applyFloorVfxLayer, floorVfxRenderOrder } from './floor_vfx_layer';
+import { applyFloorVfxLayer } from './floor_vfx_layer';
 import { applyFogScenePreset, resolveFogScene } from './fog_scene_state';
 import {
   buildFoliage,
@@ -474,7 +474,6 @@ import { collectObjectTextures } from './material_texture_slots';
 import { meteorLandingBurst } from './meteor_landing_burst';
 import { buildMobNightGlow, type MobNightGlowView } from './mob_night_glow';
 import { buildMotes, type MotesView } from './motes';
-import { MountBeacon } from './mount_beacon';
 import type { MountGlows } from './mount_glow';
 import type { MountLamps } from './mount_lamps';
 import {
