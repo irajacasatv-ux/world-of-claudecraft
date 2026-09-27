@@ -17,11 +17,8 @@
       ]
     },
     "overlays": {
-      "dismissedOverlays": [
-        "tutorial-card",
-        "tutorial-greeting:guidance-off"
-      ],
-      "passes": 4
+      "dismissedOverlays": [],
+      "passes": 3
     }
   },
   "viewport": {
@@ -34,17 +31,17 @@
   "rendererTier": "low",
   "camera": {
     "position": [
-      -41.38985638411806,
-      5.2757706275228085,
-      -91.27523244012451
+      -43.281062110544624,
+      5.275159054617127,
+      -91.28399805335897
     ],
     "quaternion": [
-      -0.15910097897350994,
-      0.0515357850921575,
-      0.008316817206738096,
-      0.9858812159160734
+      -0.15926017330509162,
+      -0.02664394678158014,
+      -0.004299785763469062,
+      0.9868676755984669
     ],
-    "inputYaw": -3.0371400691404418
+    "inputYaw": -3.195576539191551
   },
   "settings": {
     "cameraSpeed": 0.7,
@@ -70,7 +67,9 @@
     "characterDetail": 1,
     "dynamicLights": 1,
     "particleEffects": 1,
+    "ghostFade": 1,
     "cameraFov": 60,
+    "actionCamShoulder": 1,
     "cameraZoom": 12,
     "renderScale": 1,
     "fullscreen": 1,
@@ -153,7 +152,9 @@
     "groundReticle": true,
     "aurasOnPlayerFrame": false,
     "auraBarBelowFrame": false,
+    "targetAurasBelowFrame": false,
     "alwaysShowAllBuffs": false,
+    "showAuraCaster": false,
     "mouseoverCast": true,
     "partyFrameShowResource": true,
     "partyFrameShowAbsorbs": true,
@@ -162,6 +163,7 @@
     "partyFrameShowSelf": false,
     "reduceMotion": false,
     "highContrastText": false,
+    "colorblindMode": false,
     "frostedPanels": false,
     "compactChat": false,
     "showFps": false,
@@ -191,6 +193,7 @@
     "deedTrackerCollapsed": false,
     "reliquaryTrackerCollapsed": false,
     "recipeTrackerCollapsed": false,
+    "mapAtlasSidebarCollapsed": false,
     "showReliquaryTracker": true,
     "showItemLevel": false,
     "showSecondaryActionBar": false,
@@ -200,6 +203,7 @@
     "combineAuraFrames": false,
     "hideUnusedActionSlots": false,
     "waterRipples": false,
+    "actionCam": false,
     "showTargetOfTarget": false,
     "moveTargetOfTargetIndependently": false,
     "showTargetSwingTimer": false,
@@ -217,11 +221,11 @@
   },
   "player": {
     "pos": {
-      "x": -42.57749277463164,
-      "y": -0.4990281294580115,
-      "z": -102.60394205486257
+      "x": -42.66645414523885,
+      "y": -0.4996403886114872,
+      "z": -102.65805135207458
     },
-    "facing": -3.0691148575128553,
+    "facing": 3.0569908169872413,
     "entrySeq": 0
   },
   "promptVisible": true,
@@ -278,8 +282,8 @@
     "points": [
       {
         "label": "plinth-left",
-        "sx": 937.8453687412256,
-        "sy": 493.80426864365865,
+        "sx": 930.202992558567,
+        "sy": 487.23193226791165,
         "onScreen": true,
         "archAtPoint": true,
         "occludedBy": null,
@@ -287,8 +291,8 @@
       },
       {
         "label": "plinth-right",
-        "sx": 1146.3087205523311,
-        "sy": 501.7056388957915,
+        "sx": 1122.1476870807114,
+        "sy": 483.46668162264143,
         "onScreen": true,
         "archAtPoint": true,
         "occludedBy": null,
@@ -296,8 +300,8 @@
       },
       {
         "label": "keystone",
-        "sx": 1062.9428240091534,
-        "sy": 285.0977323085216,
+        "sx": 1046.7981308044114,
+        "sy": 280.96245435698086,
         "onScreen": true,
         "archAtPoint": true,
         "occludedBy": null,

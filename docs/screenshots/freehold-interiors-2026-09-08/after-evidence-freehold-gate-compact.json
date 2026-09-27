@@ -27,17 +27,17 @@
   "rendererTier": "low",
   "camera": {
     "position": [
-      -41.47569081710395,
-      5.2837314086845595,
-      -91.01150936755393
+      -41.180080685275826,
+      5.29212841821756,
+      -90.7677983734314
     ],
     "quaternion": [
-      -0.15913340746683396,
-      0.047536089150627805,
-      0.007671348432589231,
-      0.9860821615207751
+      -0.1590279309751374,
+      0.05956715080770444,
+      0.009612914674880334,
+      0.9854285684847341
     ],
-    "inputYaw": -3.0452531821982047
+    "inputYaw": -3.0208436527307776
   },
   "settings": {
     "cameraSpeed": 0.7,
@@ -63,7 +63,9 @@
     "characterDetail": 1,
     "dynamicLights": 1,
     "particleEffects": 1,
+    "ghostFade": 1,
     "cameraFov": 60,
+    "actionCamShoulder": 1,
     "cameraZoom": 12,
     "renderScale": 1,
     "fullscreen": 1,
@@ -146,7 +148,9 @@
     "groundReticle": true,
     "aurasOnPlayerFrame": false,
     "auraBarBelowFrame": false,
+    "targetAurasBelowFrame": false,
     "alwaysShowAllBuffs": false,
+    "showAuraCaster": false,
     "mouseoverCast": true,
     "partyFrameShowResource": true,
     "partyFrameShowAbsorbs": true,
@@ -155,6 +159,7 @@
     "partyFrameShowSelf": false,
     "reduceMotion": false,
     "highContrastText": false,
+    "colorblindMode": false,
     "frostedPanels": false,
     "compactChat": false,
     "showFps": false,
@@ -184,6 +189,7 @@
     "deedTrackerCollapsed": false,
     "reliquaryTrackerCollapsed": false,
     "recipeTrackerCollapsed": false,
+    "mapAtlasSidebarCollapsed": false,
     "showReliquaryTracker": true,
     "showItemLevel": false,
     "showSecondaryActionBar": false,
@@ -193,6 +199,7 @@
     "combineAuraFrames": false,
     "hideUnusedActionSlots": false,
     "waterRipples": false,
+    "actionCam": false,
     "showTargetOfTarget": false,
     "moveTargetOfTargetIndependently": false,
     "showTargetSwingTimer": false,
@@ -210,9 +217,9 @@
   },
   "player": {
     "pos": {
-      "x": -42.57132805752952,
-      "y": -0.49107213494727137,
-      "z": -102.34880831211011
+      "x": -42.55210485411782,
+      "y": -0.48267564367556987,
+      "z": -102.07486368329845
     },
     "facing": -3.0691148575128553,
     "entrySeq": 0
@@ -271,8 +278,8 @@
     "points": [
       {
         "label": "plinth-left",
-        "sx": 497.65737404111263,
-        "sy": 218.15964779946182,
+        "sx": 497.80379231336696,
+        "sy": 216.36627238549494,
         "onScreen": true,
         "archAtPoint": true,
         "occludedBy": null,
@@ -280,8 +287,8 @@
       },
       {
         "label": "plinth-right",
-        "sx": 588.663477578812,
-        "sy": 221.28765221969158,
+        "sx": 588.0459919894481,
+        "sy": 220.19255381665602,
         "onScreen": true,
         "archAtPoint": true,
         "occludedBy": null,
@@ -289,8 +296,8 @@
       },
       {
         "label": "keystone",
-        "sx": 552.1563594557107,
-        "sy": 126.64389926174076,
+        "sx": 551.6390095383106,
+        "sy": 126.33239094408732,
         "onScreen": true,
         "archAtPoint": true,
         "occludedBy": null,

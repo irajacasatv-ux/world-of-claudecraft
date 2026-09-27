@@ -8,9 +8,10 @@ Status (2026-09-08): implementation complete and ready within the requested scop
 This receipt does not sign the separate follow-on QA packet or later delivery gates.
 
 The capture set, the performance record and the seals were RE-SHOT on 2026-09-23, after
-the `release/v0.44.0` sync and the gate move, and again on 2026-09-25, after its re-sync;
-the current record is "The 2026-09-25 re-shoot", with the re-hash that follows it.
-Capture and performance statements before those two sections are history.
+the `release/v0.44.0` sync and the gate move, again on 2026-09-25, after its re-sync, and
+again on 2026-09-26, after its sync at `aaff789813`; the current record is "The 2026-09-26
+re-shoot" at the end of this record. Capture and performance statements before that
+section are history.
 
 ## Delivered behavior
 
@@ -455,3 +456,120 @@ declines through `GREETING_DECLINE` like every other target. The change sits ins
 target's own `capture` function; the three freehold targets live in
 `scripts/lib/pr_shot_freeholds.mjs` and never call it, so no freehold leg runs a changed
 line. `tests/freehold_capture_contract.test.ts` passes 102 of 102.
+
+## The 2026-09-26 re-shoot (after the sync of `release/v0.44.0` at `aaff789813`)
+
+All 18 images, their sidecars, both producer manifests and the performance record were
+shot again on the night of 2026-09-26 (the chain ran past midnight), and the receipt was
+regenerated over them. The 2026-09-25 set and the two re-hashes of it above are
+superseded and kept as history.
+
+Why a re-shoot and not a re-hash: merge `dd7f954501` (267 release commits) moved 17 of
+the 67 sealed inputs (`renderer.ts`, `entity_labels.ts`, `nameplate_painter.ts`,
+`zone_prewarm_groups.ts` and `ground_object.ts` under `src/render/`; `eastbrook_layout.ts`,
+`world.ts` and `world_object_bootstrap.ts` under `src/sim/`; `components.css`,
+`hud.mobile.css` and `tokens.css`; `action_bar_controller.ts`; `nearby_interaction_core.ts`,
+`interactions.ts` and `offline_world_config.ts` under `src/game/`; `pr_shot_targets.mjs`
+and `pr_screenshots.mjs`), and the audit fix `554b9631cb` moved `renderer.ts` and
+`ground_object.ts` again. The decision was taken on a probe. The after leg was shot on the
+merged tree from a frozen worktree (Vite on the spare port 5183, into the session
+scratchpad, not committed), and a control shot the same leg on the pre-merge branch tree
+(Vite on 5184), so that a release change could be told from run-to-run variation. Neither
+ran the dev grant, so the three Cottage frames were not probed:
+
+- **Room frames:** the Inn Room frames matched the sealed ones at the level run-to-run
+  variation reaches.
+- **Gate frames:** every merged-tree gate frame draws a release NPC that neither the
+  control nor the sealed frames have, Cham Pete, the weekly emissary
+  (`WEEKLY_EMISSARY_NPC_DEF` in `src/sim/content/weekly_quests.ts`, an UNSEALED input) at
+  `(-52,-108)`, left of the stance, and the minimap carries new star markers. A frame's
+  content changed, so no digest could be re-minted.
+
+What the set was shot against: one chain from a frozen detached worktree at `e89b62487c`
+with a clean tree and its own `pnpm install --frozen-lockfile --prefer-offline` (no linked
+`node_modules`), so nothing could reload mid-run:
+
+- The nine after frames from that worktree's loopback Vite on 5173
+  (`ALLOW_DEV_COMMANDS=1` on that local dev server only, for the Cottage grant).
+- The GPU performance tour against the same server.
+- The nine before frames from the frozen baseline checkout
+  (`654071354172b3e252cfc03a1e85efde2daddaa6`, not moved) on 5174, without the flag and
+  driven by the frozen worktree's harness. The before frames predate the release, so they
+  lack Cham Pete and the new minimap markers; that is expected. The baseline's
+  `node_modules` is a link to this worktree's `node_modules`, as it has been since
+  2026-09-08, so the before leg runs the baseline's application source on the
+  dependencies installed here; Vite rebuilt its dependency cache on start because that
+  install changed at the sync.
+- Nothing listened on 8787, so API requests answered 502, as in every earlier set.
+
+The receipt ran in the frozen worktree at `e89b62487c` with a clean tree (so
+`sourceIdentity.current.root` names that scratchpad worktree, removed afterwards) and seals
+the same 67 inputs, 17 of them harness files. After the copy into this worktree,
+`tests/freehold_capture_contract.test.ts` passed 102 of 102 and
+`tests/pr_shot_targets.test.ts` 69 of 69.
+
+Measured, from the committed records:
+
+- **After gate frames** (desktop, compact, tablet): 0.09, 0.68 and 0.35 yd from the
+  stance (compact inside the 0.7 yd tolerance by 0.02), facing 0.07 to 0.09 rad off pi,
+  camera input yaw 0.031, 0.048 and 0.023 rad off the facing. Focus on `gate-own-tab`, five
+  controls all on top, and the arch met at all three probe points with nothing in front
+  and no DOM paint over them.
+- **After room frames:** the Inn Room at `(119200,-1254)` and the Cottage at
+  `(119800,-1254)` on every variant, facing 0, camera yaw exactly 0.
+- **Before frames:** 0.08 to 0.68 yd from the stance, turned 0.07 to 0.09 rad off pi,
+  camera yaw 0.024 to 0.047 rad off the facing, no prompt, three or four settle passes each.
+- **Diagnostics:** after 28, all local API HTTP 502 responses; before 130, which is 102
+  inherited preload messages and 28 local API HTTP 502 responses (the before manifest is
+  byte-identical to the one it replaces). No target failure and no page exception.
+- **Performance** (`bench_freehold_interiors`, real GPU, headed, low preset): `errors`
+  and `budgetFailures` empty on both profiles, and `freeholdInteriorPerfFailures` finds
+  nothing.
+
+  | Profile | Inn rendered frames / draw calls | Cottage rendered frames / draw calls |
+  |---|---:|---:|
+  | Desktop | 146 / 33 | 140 / 28 |
+  | Mobile | 146 / 33 | 146 / 28 |
+
+  - **Island to gate reveal:** 17,108.0 ms on desktop and 16,759.5 ms on mobile. The
+    live-program, attach-watchdog, gate-timeout and reveal-watchdog counters stood at 0
+    and did not move; touch-unproven stood at 2 on desktop and 1 on mobile before the
+    window and did not move. Recorded but not enforced: the reveal soft-deadline counter
+    stood at 9 on desktop and 8 on mobile before the window (0 in the 2026-09-25 record)
+    and did not move within it; submit-stop stayed 0.
+  - **Later windows:** the live-program, attach-watchdog and gate-timeout counters did not
+    move from the reveal to the inn entry, through either room sample, or from the inn
+    sample's end to the Cottage entry.
+- **Visual review:** all 18 images were read by eye, each against its sealed predecessor.
+  - The three after gate frames show the arch at its site beside a legible prompt with the
+    My Home tab selected and outlined, and the HUD in place (chat on desktop, the unit
+    frame, the action bar or the touch controls, the minimap with its compass and clock,
+    the menu column). Cham Pete stands left of the stance on desktop and tablet; on
+    compact he stands behind the prompt, where only his label shows faintly through the
+    panel. The new star markers are on every minimap.
+  - The Inn Room shows its bed and hearth and the Cottage its hearth, from the arrival
+    point facing north; the desktop Cottage chat shows the dev tier line and the town
+    leave line. Against the sealed frames the six room frames differ on 0.17 to 0.31
+    percent of pixels, in the player's idle pose, the HUD clock and its day dial (the
+    clock reads wall time), with a scatter of edge pixels.
+  - The before frames show the empty lawn between the two cottages and no prompt.
+  - No loading screen, tutorial card, greeting or other overlay covers any frame.
+
+What was not changed: no harness, source, test or receipt input list; the baseline
+checkout (its commit, its harness copies and its `node_modules` link); the earlier sections
+of this record, kept as history. The frozen worktree was removed after the copy.
+
+The chain's commands, in order, from the frozen worktree (`<diff>` names only
+`src/ui/hud/housing/gate_prompt_painter.ts`, which selects exactly the three freehold
+targets; `SHOTS_DIR` is under the gitignored `tmp/`):
+
+```sh
+ALLOW_DEV_COMMANDS=1 node_modules/.bin/vite --host 127.0.0.1 --port 5173 --strictPort
+GAME_URL=http://127.0.0.1:5173 DIFF_FILE=<diff> SHOTS_DIR=tmp/fh_capture/after NAV_TIMEOUT_MS=180000 ENTRY_SELECTOR_TIMEOUT_MS=180000 node scripts/pr_screenshots.mjs
+GAME_URL=http://127.0.0.1:5173 PERF_SCENARIO=bench_freehold_interiors PERF_GPU=1 PERF_PRESET=low PERF_OUT=tmp/fh_capture/performance.json node scripts/perf_tour.mjs
+# in codex-freeholds06-before, without the flag:
+node_modules/.bin/vite --host 127.0.0.1 --port 5174 --strictPort
+PR_SHOTS_FREEHOLD_BASELINE=1 GAME_URL=http://127.0.0.1:5174 DIFF_FILE=<diff> SHOTS_DIR=tmp/fh_capture/before NAV_TIMEOUT_MS=180000 ENTRY_SELECTOR_TIMEOUT_MS=180000 node scripts/pr_screenshots.mjs
+node scripts/freehold_capture_receipt.mjs --before tmp/fh_capture/before --after tmp/fh_capture/after --performance tmp/fh_capture/performance.json --output docs/screenshots/freehold-interiors-2026-09-08 --baseline-root <codex-freeholds06-before> --baseline-url http://127.0.0.1:5174
+npx vitest run tests/freehold_capture_contract.test.ts tests/pr_shot_targets.test.ts --maxWorkers=2
+```

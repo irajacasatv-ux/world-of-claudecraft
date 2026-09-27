@@ -27,9 +27,9 @@
   "rendererTier": "low",
   "camera": {
     "position": [
-      119199.99999950963,
-      5.77479628385993,
-      -1265.3908305388393
+      119200.00000020917,
+      5.774788361877276,
+      -1265.3908277382184
     ],
     "quaternion": [
       0,
@@ -63,7 +63,9 @@
     "characterDetail": 1,
     "dynamicLights": 1,
     "particleEffects": 1,
+    "ghostFade": 1,
     "cameraFov": 60,
+    "actionCamShoulder": 1,
     "cameraZoom": 12,
     "renderScale": 1,
     "fullscreen": 1,
@@ -146,7 +148,9 @@
     "groundReticle": true,
     "aurasOnPlayerFrame": false,
     "auraBarBelowFrame": false,
+    "targetAurasBelowFrame": false,
     "alwaysShowAllBuffs": false,
+    "showAuraCaster": false,
     "mouseoverCast": true,
     "partyFrameShowResource": true,
     "partyFrameShowAbsorbs": true,
@@ -155,6 +159,7 @@
     "partyFrameShowSelf": false,
     "reduceMotion": false,
     "highContrastText": false,
+    "colorblindMode": false,
     "frostedPanels": false,
     "compactChat": false,
     "showFps": false,
@@ -184,6 +189,7 @@
     "deedTrackerCollapsed": false,
     "reliquaryTrackerCollapsed": false,
     "recipeTrackerCollapsed": false,
+    "mapAtlasSidebarCollapsed": false,
     "showReliquaryTracker": true,
     "showItemLevel": false,
     "showSecondaryActionBar": false,
@@ -193,6 +199,7 @@
     "combineAuraFrames": false,
     "hideUnusedActionSlots": false,
     "waterRipples": false,
+    "actionCam": false,
     "showTargetOfTarget": false,
     "moveTargetOfTargetIndependently": false,
     "showTargetSwingTimer": false,
