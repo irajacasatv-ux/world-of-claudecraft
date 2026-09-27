@@ -53,8 +53,10 @@ describe('local lane-suite scope', () => {
     // vitest resolves the filter too (.. and // collapse) and drops a :line suffix.
     expect(kept('run', `tests/../${first}`)).toEqual([first]);
     expect(kept('run', `${first}:12`)).toEqual([first]);
-    // A filter naming the root itself names every file.
-    expect(kept('run', '.')).toEqual([...CI_LONG_SUITES]);
+    // A filter naming the root itself, however spelled, names every file.
+    for (const rootFilter of [root, `${root}/`, 'tests/..', './']) {
+      expect(kept('run', rootFilter), rootFilter).toEqual([...CI_LONG_SUITES]);
+    }
     expect(normalizeVitestFilter(`${root}/tests/X.test.ts`, root)).toContain('tests/x.test.ts');
     expect(normalizeVitestFilter('.\\tests\\x.test.ts', root)).toContain('tests/x.test.ts');
   });
@@ -132,6 +134,13 @@ describe('local lane-suite scope', () => {
     );
     expect(shadow).toContain('env: { ...process.env, ...laneSuitesOptInEnv() }');
     expect(shadow.match(/'vitest'/g)).toHaveLength(1);
+  });
+
+  it('gives the release-tier gate leg the opt-in beside its tier flag', () => {
+    const tier = buildFullGateSteps(4, { releaseTier: true, repoRoot: '/repo' }).find(
+      (s) => s.name === 'vitest (release-tier i18n)',
+    );
+    expect(tier?.env).toMatchObject({ ...laneSuitesOptInEnv(), I18N_RELEASE_TIER: '1' });
   });
 
   it('keeps the full merge bar CI-equivalent', () => {

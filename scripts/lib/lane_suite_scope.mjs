@@ -103,7 +103,9 @@ export function normalizeVitestFilter(filter, root) {
   let raw = bare.replaceAll('\\', '/');
   while (raw.startsWith('./')) raw = raw.slice(2);
   const resolved = path.relative(root, path.resolve(root, bare)).replaceAll('\\', '/');
-  return [...new Set([raw.toLowerCase(), resolved.toLowerCase()])].filter((form) => form !== '');
+  // An empty form is the root itself (`.`, an absolute root, `tests/..`): it is a
+  // substring of every path, so it keeps every lane file, as vitest would run them.
+  return [...new Set([raw.toLowerCase(), resolved.toLowerCase()])];
 }
 
 /**
@@ -115,9 +117,5 @@ export function localLaneExclusions({ env, argv, root = process.cwd() }) {
   const optIn = env.WOC_LANE_SUITES;
   if (optIn !== undefined && optIn !== '' && optIn !== '0') return [];
   const forms = vitestFilterArgs(argv).flatMap((filter) => normalizeVitestFilter(filter, root));
-  // A filter that resolves to the root itself (an empty form) names every file.
-  if (vitestFilterArgs(argv).some((filter) => normalizeVitestFilter(filter, root).length === 0)) {
-    return [];
-  }
   return CI_LONG_SUITES.filter((file) => !forms.some((form) => file.toLowerCase().includes(form)));
 }

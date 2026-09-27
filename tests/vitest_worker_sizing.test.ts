@@ -41,13 +41,26 @@ describe('vitest worker sizing', () => {
     expect((await loadTestConfig()).maxWorkers).toBe(5);
     vi.stubEnv('GATE_MAX_WORKERS', '3');
     expect((await loadTestConfig()).maxWorkers).toBe(3);
-    // And the tier cap, with no override: the config reads the whole host
-    // sizing, not the one env var.
-    vi.stubEnv('GATE_MAX_WORKERS', undefined);
-    const uncapped = (await loadTestConfig()).maxWorkers ?? 0;
-    vi.stubEnv('GATE_WORKER_TIER', 'low');
-    // Exactly the low tier's cap over this same host's own sizing.
-    expect((await loadTestConfig()).maxWorkers).toBe(Math.min(2, uncapped));
+  });
+
+  it('reads the whole host sizing, the tier cap included, from a fixed host', async () => {
+    // A mocked host (6 cores, 64 GiB free; the darwin sensor only ever widens
+    // free memory), so the numbers are exact on any machine: half the cores
+    // uncapped, then the low tier's cap under it.
+    vi.doMock('node:os', async (importOriginal) => {
+      const actual = await importOriginal<typeof import('node:os')>();
+      const host = { ...actual, availableParallelism: () => 6, freemem: () => 64 * 1024 * MIB };
+      return { ...host, default: host };
+    });
+    try {
+      vi.stubEnv('GATE_MAX_WORKERS', undefined);
+      vi.stubEnv('GATE_WORKER_TIER', undefined);
+      expect((await loadTestConfig()).maxWorkers).toBe(3);
+      vi.stubEnv('GATE_WORKER_TIER', 'low');
+      expect((await loadTestConfig()).maxWorkers).toBe(2);
+    } finally {
+      vi.doUnmock('node:os');
+    }
   });
 
   it('budgets 1.5 GiB of memory per worker, under the 2 GiB heap cap', () => {
