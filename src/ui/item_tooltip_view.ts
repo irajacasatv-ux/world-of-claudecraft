@@ -19,13 +19,11 @@ import type { MaterialComposition } from '../sim/material_sources';
 import { CONSUME_DURATION, type ItemDef, type ItemInstancePayload } from '../sim/types';
 import type { IWorld } from '../world_api';
 import { bagSlotsLineKey } from './bags_view';
-import { formatCount } from './count_format';
 import { questObjectiveLabel, questTitle } from './entity_display_core';
 import { classDisplayName, itemDisplayName, itemSetBonusField, tEntity } from './entity_i18n';
 import { esc } from './esc';
 import { gatherToolTooltipLines } from './gather_tool_tooltip';
-import { furnishingItemTooltip } from './hud/housing/furnishing_tooltip';
-import { hearthKeyTooltipLines } from './hud/housing/hearth_key_tooltip';
+import { furnishingItemTooltip, hearthKeyTooltipLines } from './hud/housing';
 import { cookingCatchHintKey } from './hud/professions/cooking_catch_hint_view';
 import { elixirTooltipLines } from './hud/professions/elixir_tooltip_view';
 import { feastTooltipLines } from './hud/professions/feast_tooltip_view';
@@ -68,6 +66,7 @@ import {
   questItemTooltipModel,
   questItemTooltipRelatedKey,
 } from './quest_item_tooltip_view';
+import { questProgressText } from './quest_progress_text';
 import { itemLevelReadout } from './rift_band_tooltip';
 import { stackSizeTooltipLine } from './stack_size_tooltip_view';
 import { toolEffectTooltipLines } from './tool_effect_tooltip';
@@ -440,14 +439,6 @@ function itemCompareBlock(
     (equipped, worn) => itemTooltipHtml(equipped, deps, false, worn),
     instance,
   );
-}
-
-export function questProgressText(label: string, current: number, total: number): string {
-  return t('questUi.detail.objectiveProgress', {
-    label,
-    current: formatCount(current),
-    total: formatCount(total),
-  });
 }
 
 /** Pure quest-item tooltip model for one def, or null for non-quest kinds. */

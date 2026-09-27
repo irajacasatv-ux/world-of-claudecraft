@@ -15,23 +15,11 @@
 // line, tt-green a benefit, tt-red an unmet gate or a refusal). A builder that
 // needs a fifth role adds it here, never a fifth private copy.
 //
-// THIS MODULE OWNS TooltipLineClass FOR THE WHOLE FAMILY, both mechanisms.
-// The sibling DOM path (tooltip_line.ts createTooltipLine, createElement plus
-// textContent) NARROWS this union with Extract rather than declaring its own,
-// because for one commit the two modules exported the same name with DIFFERENT
-// members and an author got whichever the autoimport picked. Widening here
-// widens what that path may narrow FROM; it never silently widens the path
-// itself, which names its own subset.
-//
-// WHICH MECHANISM A NEW CALLER PICKS is the return type, not a preference.
-// Take this builder when the caller is composing a markup string (the
-// item-card path, where the four consumers above live), and tooltip_line.ts
-// createTooltipLine when it appends an element to a live node. Neither is the
-// safe one and neither is deprecated: the text is escaped here and set with
-// textContent there. Recorded because the sibling module used to state a
-// preference for its own path that the tree had long since contradicted, and
-// retiring that preference (qr-19-tooltip-line-doctrine, 2026-09-01) is only
-// useful if something says how to choose instead.
+// THIS MODULE OWNS TooltipLineClass and is the one tooltip line mechanism: a
+// composed markup string with the text escaped. The createElement sibling
+// (tooltip_line.ts) was deleted on 2026-09-27 once nothing called it; a caller
+// that appends to a live node sets the returned markup on its container, or
+// mints its own element with textContent, never a second copy of this union.
 
 import { esc } from './esc';
 

@@ -1,8 +1,10 @@
 //
 // Raw cooking catch purpose line: pure key table (every RAW_COOKING_CATCH_IDS
-// member shares one key) plus createElement paint (tt-desc + textContent, no
-// innerHTML). Integration: the composed item card (itemTooltipHtml) shows
-// the cooking line and never a restore-health / foodHp line.
+// member shares one key), painted as one escaped tt-desc line by the composed
+// item card through the shared markup-string builder (tooltipLine in
+// src/ui/tooltip_line_core.ts); no DOM node is created on this path.
+// Integration: the composed item card (itemTooltipHtml) shows the cooking line
+// and never a restore-health / foodHp line.
 
 import { describe, expect, it } from 'vitest';
 import { RAW_COOKING_CATCH_IDS } from '../src/sim/content/items';

@@ -1,11 +1,25 @@
-// Localized presentation for questProgress events. Current events identify the
-// objective and numbers structurally, so localization never depends on matching
-// an English content label. The text parser remains only for rolling compatibility
-// with an older server that does not yet send the structured fields.
+// Localized quest progress text. questProgressText is the objective progress
+// line ("Wolves slain: 3/10") the quest dialog, the mob tooltip and the quest
+// item card share. questProgressEventText presents questProgress
+// events: current events identify the objective and numbers structurally, so
+// localization never depends on matching an English content label. The text
+// parser remains only for rolling compatibility with an older server that does
+// not yet send the structured fields.
 
 import { QUESTS } from '../sim/data';
+import { formatCount } from './count_format';
 import { tEntity } from './entity_i18n';
 import { formatNumber, t } from './i18n';
+
+/** One objective's progress line: its localized label with the current and
+ *  total counts as whole numbers in the viewer's locale. */
+export function questProgressText(label: string, current: number, total: number): string {
+  return t('questUi.detail.objectiveProgress', {
+    label,
+    current: formatCount(current),
+    total: formatCount(total),
+  });
+}
 
 export interface QuestProgressEventInput {
   questId: string;

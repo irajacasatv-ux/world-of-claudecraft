@@ -9,7 +9,8 @@
 // count). The Show Item Level setting is off unless a case turns it on, the
 // value an unset option read gave the old rig. A case that exercises another
 // read (the craft identity, the quest log, worn instances, the party-trade
-// clock) passes it through `world`, or hands in a real Sim.
+// clock) passes it through `world`, or hands in a real world: the card over a
+// real Sim and a snapshot-fed ClientWorld is tests/item_tooltip_view_parity.test.ts.
 import type { ItemTooltipDeps, ItemTooltipWorld } from '../../src/ui/item_tooltip_view';
 
 export interface ItemTooltipFixture {

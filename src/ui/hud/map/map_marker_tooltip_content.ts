@@ -21,6 +21,7 @@ import type {
   MapWorldQuestMarker,
 } from '../../map_window_view';
 import { questMarkerTooltipTag } from '../../quest_marker_tags';
+import { questProgressText } from '../../quest_progress_text';
 import {
   worldQuestDef,
   worldQuestDisplayName,
@@ -48,14 +49,6 @@ function questObjectiveLabel(questId: string, objectiveIndex: number): string {
 
 function questNumber(value: number): string {
   return formatNumber(value, { maximumFractionDigits: 0 });
-}
-
-function questProgressText(label: string, current: number, total: number): string {
-  return t('questUi.detail.objectiveProgress', {
-    label,
-    current: questNumber(current),
-    total: questNumber(total),
-  });
 }
 
 export class MapMarkerTooltipContent {

@@ -4,9 +4,10 @@
 // rift_band_tooltip, item_kind_line, the *_tooltip_view suites and their
 // method-scoped source pins); this suite pins the seam itself: the deps
 // contract (the Show Item Level thunk is read lazily, only where the readout is
-// eligible, and the comparison renders the worn card through the SAME deps),
-// the shared quest progress text, and the Hud half of the seam (the thin
-// delegator hands its own world and the right setting key through).
+// eligible, and the comparison renders the worn card through the SAME deps)
+// and the Hud half of the seam (the thin delegator hands its own world and the
+// right setting key through). The card over the two REAL hosts, a Sim and a
+// snapshot-fed ClientWorld, is tests/item_tooltip_view_parity.test.ts.
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
@@ -14,7 +15,7 @@ import { ITEMS } from '../src/sim/data';
 import type { ItemInstancePayload } from '../src/sim/types';
 import { t } from '../src/ui/i18n';
 import { itemNumber } from '../src/ui/item_instance_tooltip';
-import { itemTooltipHtml, questProgressText } from '../src/ui/item_tooltip_view';
+import { itemTooltipHtml } from '../src/ui/item_tooltip_view';
 import { itemLevelReadout } from '../src/ui/rift_band_tooltip';
 import { itemTooltipDeps } from './helpers/item_tooltip_deps';
 
@@ -78,14 +79,6 @@ describe('itemTooltipHtml deps contract', () => {
     expect(showItemLevel).toHaveBeenCalledTimes(1);
     expect(without).not.toContain(t('hudChrome.options.itemLevelLine', { level: '11' }));
     expect(withCompare.startsWith(without)).toBe(true);
-  });
-});
-
-describe('questProgressText', () => {
-  it('formats an objective label with its current and total counts', () => {
-    expect(questProgressText('Wolves slain', 3, 10)).toBe(
-      t('questUi.detail.objectiveProgress', { label: 'Wolves slain', current: '3', total: '10' }),
-    );
   });
 });
 

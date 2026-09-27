@@ -602,8 +602,8 @@ const MONOLITHS: MonolithRow[] = [
     // BannerSlot (banner_slot.ts) and the celebration painters and drain observer,
     // then 16963 -> 16597 with nine one-file cores (loot text i18n, ability tooltip,
     // emote wheel, doom meter input, touch drop, form sync, crafting probe,
-    // reliquary tracker frame, window reflow).
-    ceiling: 16597,
+    // reliquary tracker frame, window reflow), then to 16595 in its review round.
+    ceiling: 16595,
     seam: 'pure view core + thin painter on PainterHost (src/ui/CLAUDE.md)',
   },
   {

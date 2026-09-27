@@ -7,6 +7,12 @@
 // (chatPane in ./chat_log_deps.ts), so the chat appender and the content
 // tables it reads load only where a case needs them. The Book of Deeds and
 // Reliquary windows are vi.fn doubles a case asserts on.
+//
+// A TRANSCRIPTION, so it is held to the real wiring elsewhere:
+// tests/hud_coordinator_delegators.test.ts drives Hud.celebrationHost,
+// showBanner and showCelebrationBanner on a bare Hud.prototype, requires the
+// host member set to match this one, and compares what this rig's slot paints
+// with what the real #banner slot paints, checkpoint by checkpoint.
 import { type Mock, vi } from 'vitest';
 import { BannerSlot, type BannerVariant, celebrationBannerArgs } from '../../src/ui/banner_slot';
 import type { DeedUnlockHost } from '../../src/ui/deed_unlock_painter';

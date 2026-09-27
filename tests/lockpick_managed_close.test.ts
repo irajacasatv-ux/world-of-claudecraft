@@ -16,10 +16,11 @@
 // `hud.closeAll()` directly, with no DOM event for that capture handler to intercept.
 //
 // So the routing cases drive `closeAll()` (not a synthetic key event) over a REAL controller
-// and a REAL window, and pin that the two dismissal paths produce the same observable teardown.
-// The latch cases drive `LockpickController.requestClose()`, the one method the managed-window
-// arm calls (`requestClose()` then `hideTooltip()`, nothing else), directly: they pin the
-// controller's own withdraw / hedge / close rules, which need no Hud around them.
+// and a REAL window, and pin that the two dismissal paths produce the same observable teardown,
+// plus one end-to-end latch case (three closeAll calls: what a repeat sweep sees returned).
+// The other latch cases drive `LockpickController.requestClose()`, the one method the
+// managed-window arm calls (`requestClose()` then `hideTooltip()`, nothing else), directly:
+// they pin the controller's own withdraw / hedge / close rules, which need no Hud around them.
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { SimEvent } from '../src/sim/types';
@@ -237,6 +238,32 @@ describe('lockpick panel: Hud.closeAll (the gamepad escape path)', () => {
       h.depsHideTooltip,
       'close() has not run, so the controller owed no hide',
     ).not.toHaveBeenCalled();
+  });
+
+  it('three closeAll calls in a row: withdraw, re-send and close, then nothing, never a wedge', () => {
+    // The end-to-end form of the latch cases below, through the Hud this time.
+    // SkinEventController.open() sweeps `for (i < 20 && closeTop())` and closeTop IS
+    // closeAll, so what the sweep sees is closeAll's RETURN: true while the panel is
+    // still up to close, then false once it has left the scan. A managed arm that
+    // reported false on the re-send call would stop the sweep with the windows
+    // underneath still open; one that kept reporting true would spin it. Three calls,
+    // not two: the third proves the panel actually left the scan, not merely that it
+    // stopped aborting.
+    const h = harness(LIVE);
+    h.controller.openBoard();
+
+    expect(h.hud.closeAll(), 'first: withdraw').toBe(true);
+    expect(h.abort).toHaveBeenCalledTimes(1);
+    expect(h.panel.style.display).toBe('block');
+
+    expect(h.hud.closeAll(), 'second: re-send, then close').toBe(true);
+    expect(h.abort).toHaveBeenCalledTimes(2);
+    expect(h.panel.style.display).toBe('none');
+    expect(h.release).toHaveBeenCalledWith(true);
+    expect(h.hud.topmostOpenWindow(), 'the sweep can move on').not.toBe(h.panel);
+
+    expect(h.hud.closeAll(), 'third: nothing left for this harness to close').toBe(false);
+    expect(h.abort, 'and no third abort on the way out').toHaveBeenCalledTimes(2);
   });
 
   it('produces the same teardown as the Escape key, live board and ante selector alike', () => {

@@ -255,8 +255,15 @@ describe('active-world noticeboard service', () => {
     // exactly once, handed the board's own id (the guild board picks its
     // default category from it), and neither the listings popup nor the glider
     // rankings fire. No banner or log line exists on the path at all: the
-    // source pin above holds the Hud arm to the one call. The Hud-level pid
-    // gate over personal events is coordinator territory, pinned elsewhere.
+    // source pin above holds the Hud arm to the one call. The Hud-level half
+    // is coordinator territory, driven through the real Hud.handleEvents with
+    // this same noticeboard event in tests/hud_coordinator_delegators.test.ts:
+    // the renderer.handleEvent pass-through (and the arm opening the board) in
+    // "hands the viewer's own and pid-less events to the renderer, and runs
+    // their arm", the pid gate in "drops another player's personal event
+    // before the renderer or any arm sees it". The gate is also held by
+    // tests/harvest_preference_hud.test.ts ("never opens for a foreign pid
+    // event, not spectating").
     const popup = { show: vi.fn() };
     const rankings = { openGliderRankings: vi.fn() };
     const openGuildBoard = vi.fn();

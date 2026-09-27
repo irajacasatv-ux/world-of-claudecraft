@@ -6,7 +6,8 @@
 // token splice with quality-colored item links), the #chat-live announce, the
 // 200-line trim and the follow-the-bottom scroll. Hud keeps log / logNodes /
 // appendLog as delegators and hands its live state in through
-// ChatLogAppendDeps, built per line.
+// ChatLogAppendDeps, built once on the first line and reused (its closures
+// read the live state per call).
 //
 // A DOM module (registered in UI_DOM_MODULES, tests/architecture.test.ts): it
 // mints nodes on `document`, reads the wall clock for the timestamp prefix and

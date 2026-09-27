@@ -21,7 +21,11 @@ import {
   recipePatternTooltipLines,
 } from '../src/ui/hud/professions/recipe_pattern_tooltip_view';
 import { toolEffectStandaloneTooltip, toolEffectTooltipLines } from '../src/ui/tool_effect_tooltip';
-import { tooltipLine } from '../src/ui/tooltip_line_core';
+import {
+  type TooltipLineClass,
+  type TooltipLineModifier,
+  tooltipLine,
+} from '../src/ui/tooltip_line_core';
 import { expectScansOnlyThroughSharedWalkers } from './helpers/scan_guard_self_audit';
 import { tsFilesUnder } from './helpers/ts_files_under';
 
@@ -207,6 +211,41 @@ describe('tooltipLine: the one shared line builder', () => {
     expect(tooltipLine('tt-desc', "Gatherer's <b>Cache</b> & co")).toBe(
       '<div class="tt-desc">Gatherer&#39;s &lt;b&gt;Cache&lt;/b&gt; &amp; co</div>',
     );
+  });
+
+  it('every TooltipLineClass role round-trips through the real builder', () => {
+    // Exhaustive Records, the tests/wellfed.test.ts shape: tsc refuses a Record
+    // that misses a member of the union (TS2741) or names one it lacks
+    // (TS2353), so a role added to or dropped from the core's union reds the
+    // typecheck here. vitest transpiles without type-checking, so the loop is
+    // the half that answers at runtime: each shipped role renders as itself.
+    const roles: Record<TooltipLineClass, true> = {
+      'tt-sub': true,
+      'tt-desc': true,
+      'tt-green': true,
+      'tt-red': true,
+    };
+    expect(Object.keys(roles).sort()).toEqual(['tt-desc', 'tt-green', 'tt-red', 'tt-sub']);
+    for (const cls of Object.keys(roles) as TooltipLineClass[]) {
+      expect(tooltipLine(cls, 'x'), cls).toBe(`<div class="${cls}">x</div>`);
+    }
+  });
+
+  it('stacks the optional modifier on the base class, and omits it when absent', () => {
+    const modifiers: Record<TooltipLineModifier, true> = { 'tt-material-use': true };
+    expect(Object.keys(modifiers)).toEqual(['tt-material-use']);
+    for (const modifier of Object.keys(modifiers) as TooltipLineModifier[]) {
+      for (const cls of ['tt-sub', 'tt-desc', 'tt-green', 'tt-red'] as const) {
+        // With: the base and the modifier joined by exactly one space, base first.
+        expect(tooltipLine(cls, 'Used by <Cooking>', modifier), `${cls} ${modifier}`).toBe(
+          `<div class="${cls} ${modifier}">Used by &lt;Cooking&gt;</div>`,
+        );
+        // Without (omitted, or explicitly undefined): the bare base class, no
+        // trailing space, byte-identical to the two-argument form.
+        expect(tooltipLine(cls, 'x', undefined)).toBe(`<div class="${cls}">x</div>`);
+        expect(tooltipLine(cls, 'x', undefined)).toBe(tooltipLine(cls, 'x'));
+      }
+    }
   });
 });
 

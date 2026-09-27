@@ -32,6 +32,7 @@ import { formatNumber, t } from '../../i18n';
 import { itemNameColor } from '../../item_name_color';
 import type { PainterHostPresentation } from '../../painter_host';
 import { questMapLocation } from '../../quest_map_location_core';
+import { questProgressText } from '../../quest_progress_text';
 import { QuestTrackingState, sharedQuestTracking } from '../../quest_tracking_core';
 import { svgIcon } from '../../ui_icons';
 import { buildQuestLogView, type QuestDetailModel } from './questlog_view';
@@ -253,7 +254,7 @@ export class QuestLogWindow {
     html += d.objectives
       .map(
         (o) =>
-          `<div class="qd-obj${o.done ? ' done' : ''}"><span>${esc(this.questProgressText(questObjectiveLabel(d.questId, o.index), o.count, o.required))}</span><span class="ui-bar qd-progress"><span class="ui-bar-fill" style="width:${o.required > 0 ? Math.min(100, (o.count / o.required) * 100) : o.done ? 100 : 0}%"></span></span></div>`,
+          `<div class="qd-obj${o.done ? ' done' : ''}"><span>${esc(questProgressText(questObjectiveLabel(d.questId, o.index), o.count, o.required))}</span><span class="ui-bar qd-progress"><span class="ui-bar-fill" style="width:${o.required > 0 ? Math.min(100, (o.count / o.required) * 100) : o.done ? 100 : 0}%"></span></span></div>`,
       )
       .join('');
     html += `<div class="qd-text ql-detail-text">${esc(questNarrative(d.questId, 'text', playerName))}</div>`;
@@ -335,14 +336,6 @@ export class QuestLogWindow {
 
   private questNumber(value: number): string {
     return formatNumber(value, { maximumFractionDigits: 0 });
-  }
-
-  private questProgressText(label: string, current: number, total: number): string {
-    return t('questUi.detail.objectiveProgress', {
-      label,
-      current: this.questNumber(current),
-      total: this.questNumber(total),
-    });
   }
 
   private questSuggestedPlayersHtml(count?: number): string {

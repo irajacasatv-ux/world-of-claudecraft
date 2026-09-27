@@ -3,7 +3,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { audio } from '../src/game/audio';
 import type { SimEvent } from '../src/sim/types';
-import { BannerSlot } from '../src/ui/banner_slot';
 import { ErrorToastController } from '../src/ui/error_toast_controller';
 import { heldLootWarningText } from '../src/ui/held_loot_warning_view';
 import { Hud } from '../src/ui/hud';
@@ -13,7 +12,11 @@ const heldText = 'Your bags are full; [[i:greyjaw_hide_boots]] is waiting on the
 
 function rig() {
   const el = document.createElement('div');
+  // The #banner element the Hud's lazy slot (banner_slot.ts) resolves on its
+  // first banner, as the drain tail's celebration observer builds itself.
   const bannerEl = document.createElement('div');
+  bannerEl.id = 'banner';
+  document.body.append(bannerEl);
   const hud = Object.assign(Object.create(Hud.prototype), {
     sim: {
       playerId: 7,
@@ -28,9 +31,6 @@ function rig() {
     isNythraxisEvent: vi.fn(() => false),
     lootRolls: { closeForItem: vi.fn() },
     errorToast: new ErrorToastController(el),
-    // The #banner slot's live half (banner_slot.ts), the field Hud builds;
-    // the drain tail's celebration observer builds itself lazily.
-    bannerSlot: new BannerSlot(bannerEl),
     log: vi.fn(),
   });
   return { el, bannerEl, hud, send: (events: SimEvent[]) => hud.handleEvents(events) };

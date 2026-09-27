@@ -36,7 +36,9 @@ export function chatLogDeps(
 }
 
 /** A chat pane with the Hud fields its node lines read, and Hud.logNodes over
- *  it (the node-body system line log() appends: timestamped, 'system'). */
+ *  it (the node-body system line log() appends: timestamped, 'system'). The
+ *  transcription is compared with the real Hud.logNodes' output in
+ *  tests/hud_coordinator_delegators.test.ts. */
 export interface ChatPane {
   readonly chatLogEl: HTMLElement;
   /** The Show Timestamps option (a 24h clock when on), read per line. */

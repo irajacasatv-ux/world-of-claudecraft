@@ -1,5 +1,16 @@
 import { describe, expect, it } from 'vitest';
-import { questProgressEventText } from '../src/ui/quest_progress_text';
+import { t } from '../src/ui/i18n';
+import { questProgressEventText, questProgressText } from '../src/ui/quest_progress_text';
+
+describe('questProgressText', () => {
+  it('formats an objective label with its current and total counts', () => {
+    expect(questProgressText('Wolves slain', 3, 10)).toBe(
+      t('questUi.detail.objectiveProgress', { label: 'Wolves slain', current: '3', total: '10' }),
+    );
+    // Whole numbers in the viewer's locale: grouped, never a fraction digit.
+    expect(questProgressText('Wolves slain', 1234.4, 2000)).toBe('Wolves slain: 1,234/2,000');
+  });
+});
 
 describe('questProgress event localization', () => {
   it('uses the structured objective identity and values instead of parsing English text', () => {

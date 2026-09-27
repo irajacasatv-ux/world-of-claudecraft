@@ -70,7 +70,6 @@ import {
   ITEM_SETS,
   ITEMS,
   MOBS,
-  NPCS,
   QUESTS,
   WORLD_MAX_X,
   WORLD_MAX_Z,
@@ -584,7 +583,7 @@ import { InteriorMapController } from './interior_map_controller';
 import { ItemDragState } from './item_drag_state';
 import { itemSetMemberCounts } from './item_set_tooltip_view';
 import { itemSlotLabel as itemSlotName } from './item_slot_labels';
-import { itemTooltipHtml, questProgressText } from './item_tooltip_view';
+import { itemTooltipHtml } from './item_tooltip_view';
 import { keeperReviveConfirm, keeperReviveDialogue } from './keeper_revive_dialog_core';
 import { bindActionDisplayName } from './keybind_action_names_core';
 import { knownItemDef, ownEntry } from './known_item';
@@ -719,6 +718,7 @@ import {
 import { maskProfanity } from './profanity';
 import { createPromptTimeoutBar, PROMPT_TIMEOUT_MS } from './prompt_dialog';
 import { isPvpHostilePlayer, isPvpHostileTargetId } from './pvp_hostile_core';
+import { questProgressText } from './quest_progress_text';
 import { RaidBossGuideWindow, raidBossGuideContextFallback } from './raid_boss_guide_window';
 import { raidCalloutKey } from './raid_callout';
 import { formatLockoutDuration, raidLockoutDisplayName } from './raid_lockout_format';
@@ -777,11 +777,7 @@ import { TalentsWindow } from './talents_window';
 import { targetAuraSourceName } from './target_auras_view';
 import { TargetAurasWindow } from './target_auras_window';
 import { TargetDiscordController } from './target_discord_controller';
-import {
-  fillTargetFrameDescriptor,
-  fillTargetOfTargetDescriptor,
-  targetPortraitKey,
-} from './target_frame_descriptor';
+import { fillTargetFrameDescriptor, fillTargetOfTargetDescriptor } from './target_frame_descriptor';
 import { targetOfTargetId } from './target_of_target';
 import { targetPortraitSourceId, targetPortraitUrl } from './target_portrait_view';
 import { targetRankView, targetUsesEliteFrame } from './target_rank_view';
@@ -1275,7 +1271,7 @@ export class Hud {
   private emoteWheelSlots: OverheadEmoteId[] = [];
   private emoteWheelEl: HTMLDivElement | null = null;
   private emoteWheelPinned = false;
-  private chatLogEl = $('#chatlog');
+  private readonly chatLogEl = $('#chatlog');
   private lastVoicedYell: VoicedYellState | null = null;
   // Classic "Show Timestamps" interface option — off by default, persisted to
   // localStorage. New chat lines get a bracketed wall-clock prefix when on.
@@ -1330,9 +1326,6 @@ export class Hud {
   // every close path (closeContextMenu + item activation).
   private ctxMenuOpener: HTMLElement | null = null;
   private errorToast = new ErrorToastController($('#error-msg'));
-  // The shared #banner slot (banner_slot.ts): the element, its timers, the
-  // R38 queue and the unstuck source; showBanner delegates to it.
-  private readonly bannerSlot = new BannerSlot($('#banner'));
   // The WoW-style quest-progress flash (quest_progress_banner.ts): yellow
   // top-center lines fed by the questProgress event, aria-hidden decoration
   // (the chat log + live region carry the announced copy).
@@ -1645,11 +1638,14 @@ export class Hud {
   // ONE bridge for the Hud's lifetime, like every other window's: a per-open
   // one has a null handle every time, so it orphans the previous trap.
   private readonly reportWindowFocus = this.windowFocus('#report-window');
-  // The drain tail's STATE-driven celebrations (craft tier-ups, skill
-  // level-ups, faction tiers) and their snapshots between drains
-  // (hud/professions/celebration_drain_observer.ts). Lazily created, the
-  // banner queue's old precedent: several handleEvents rigs build a bare Hud
-  // prototype (Object.create) whose field initializers never ran.
+  // The #banner slot (banner_slot.ts, showBanner's target) and the drain tail's
+  // state-driven celebrations (hud/professions/celebration_drain_observer.ts), both
+  // lazy: several rigs build a bare Hud prototype whose field initializers never ran.
+  private bannerSlotState: BannerSlot | undefined;
+  private get bannerSlot(): BannerSlot {
+    this.bannerSlotState ??= new BannerSlot($('#banner'));
+    return this.bannerSlotState;
+  }
   private celebrationDrainState: CelebrationDrainObserver | undefined;
   private get celebrationDrain(): CelebrationDrainObserver {
     this.celebrationDrainState ??= new CelebrationDrainObserver();
@@ -12696,10 +12692,11 @@ export class Hud {
     return this.chatTimestamps ? this.chatClock : null;
   }
 
-  // The chat-log appender's host state, built per line so a bare-prototype
-  // test double still resolves (hud/chat/chat_log_appender.ts).
+  // hud/chat/chat_log_appender.ts host state: built on the first line and reused (its
+  // closures read live state); lazy, so a bare-prototype test double still resolves.
+  private chatLogDepsState: ChatLogAppendDeps | undefined;
   private chatLogDeps(): ChatLogAppendDeps {
-    return {
+    this.chatLogDepsState ??= {
       chatLogEl: this.chatLogEl,
       follow: () => {
         this.chatFollow ||= new ChatScrollFollow([this.chatLogEl, this.combatLogEl]);
@@ -12710,6 +12707,7 @@ export class Hud {
       chatAnnouncer: this.chatAnnouncer,
       ...this.chatItemLinkDeps(),
     };
+    return this.chatLogDepsState;
   }
 
   private chatItemLinkDeps(): ChatItemLinkDeps {
