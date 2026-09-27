@@ -718,7 +718,8 @@ const PINNED_POLISH_COMPOSITE_FINGERPRINT =
   // Re-minted for the Freeholds sync of release/v0.44.0 at aaff789813: the merged renderer leaf matches neither parent. No capture was retaken.
   // Re-minted for the aaff789813 sync's audit round: renderer.ts dropped an import the port left unused. No capture was retaken.
   // Re-minted for the @vitest/spy patch: pnpm-lock.yaml moved, so every lockfile-hashed GLB was re-stamped in place. No capture was retaken.
-  '2671eb589d15fb8b2ae35e4f2f3c8e06da682be9dafab079c631c247c4bc015c';
+  // Re-minted again for the spy patch's Map-free form: the patch file, and so its pnpm-lock.yaml hash, moved. No capture was retaken.
+  'f781d3d42e670ac5e766ddf855d88991e61aee6a07d790112a9ab1c9e200d425';
 
 function validPolishAttributionTargets(): AttributionTargetFixture[] {
   return [
