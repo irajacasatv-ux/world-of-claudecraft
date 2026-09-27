@@ -1221,7 +1221,8 @@ const MONOLITHS: MonolithRow[] = [
     // incoming 11919, combined 11876. The measured merged size exactly
     // composes both reductions and sits below both parents. Zero headroom.
     // Freeholds 05 (the owner-keyed claim): effectiveArmor and
-    // effectiveAttackPower moved whole to src/sim/combat/effective_stats.ts
+    // effectiveAttackPower moved whole to src/sim/combat/effective_stats.ts,
+    // collapsed at the 2026-09-26 sync onto the release's src/sim/effective_stats.ts
     // (Sim keeps the two seam-bound delegates), paying for the host owner
     // stamp on PlayerMeta and the freehold join/leave hooks. Exact count.
     // RESOLVED for the merge of release/v0.42.0 (tip 553a5672ed, the OSSBrain

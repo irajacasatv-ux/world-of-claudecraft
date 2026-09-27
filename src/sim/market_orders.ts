@@ -37,6 +37,7 @@
 import { bagPools, canGrantCopies } from './bags';
 import { ITEMS } from './data';
 import { formatMoney } from './format_money';
+import { isStorableItemKind } from './item_storage_rules';
 import type { MarketCollection, MarketListing } from './market';
 import { recordSale } from './market_sale_log';
 import { MARKET_SWEEP_MAX_UNITS, type SweepableListing } from './market_sweep';
@@ -151,7 +152,7 @@ export function unlistedMaterialIds(
   for (const id of materials) {
     const def = ITEMS[id];
     if (!def || listed.has(id)) continue;
-    if (def.kind === 'quest' || def.noMarketList || def.soulbound) continue;
+    if (!isStorableItemKind(def.kind) || def.noMarketList || def.soulbound) continue;
     out.push(id);
   }
   out.sort((a, b) => {
@@ -246,7 +247,7 @@ export class MarketOrderBook {
     }
     const def = ITEMS[itemId];
     if (!def) return [];
-    if (def.kind === 'quest') {
+    if (!isStorableItemKind(def.kind)) {
       ctx.error(meta.entityId, 'The Merchant will not broker quest items.');
       return [];
     }

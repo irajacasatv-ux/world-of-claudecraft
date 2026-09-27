@@ -1448,6 +1448,83 @@ describe('furnishing storage and economy', () => {
     expectNoMutation(sim, () => sim.marketListInstance(QUEST_ID, 100, SIGNED));
     expect(errors(sim)).toEqual(['The Merchant will not broker quest items.']);
   });
+
+  // The release's two newer market pipes (the Wanted board's buy orders and
+  // the partial buy) meet furnishings too; each keeps the listing rules.
+  function orderSim(): { sim: Sim; seller: number } {
+    const sim = makeSim();
+    atMarket(sim);
+    const seller = sim.addPlayer('mage', 'Seller');
+    moveTo(sim, sim.market.merchantIds[0], seller);
+    sim.meta(seller)!.inventory.splice(0);
+    sim.drainEvents();
+    return { sim, seller };
+  }
+  it.each([{ soulbound: true }, { noMarketList: true }])(
+    'retains the buy-order definition lock %j',
+    (flags) => {
+      ITEMS[ID] = { ...FURNISHING, ...flags };
+      const { sim } = orderSim();
+      const beforeMarket = structuredClone(sim.market.serializeMarket());
+      expectNoMutation(sim, () => sim.marketOrderPlace(ID, 1, 100));
+      expect(sim.market.serializeMarket()).toEqual(beforeMarket);
+      expect(errors(sim)).toEqual(['That item cannot be listed on the World Market.']);
+    },
+  );
+  it('keeps the buy-order quest refusal unchanged', () => {
+    const { sim } = orderSim();
+    expectNoMutation(sim, () => sim.marketOrderPlace(QUEST_ID, 1, 100));
+    expect(errors(sim)).toEqual(['The Merchant will not broker quest items.']);
+  });
+  it.each([
+    { name: 'signed', instance: SIGNED },
+    { name: 'armed', instance: { ...SIGNED, bindOnTrade: true } },
+    { name: 'bound to zero', instance: { ...SIGNED, boundTo: 0 } },
+    { name: 'owner-locked', instance: { ...SIGNED, locked: true } },
+  ])('never delivers a $name furnishing copy into a buy order', ({ instance }) => {
+    const { sim, seller } = orderSim();
+    sim.marketOrderPlace(ID, 1, 100);
+    const order = sim.marketOrders.find((row) => row.itemId === ID)!;
+    expect(order).toBeDefined();
+    sim.meta(seller)!.inventory.push({ itemId: ID, count: 1, instance: structuredClone(instance) });
+    const before = structuredClone(sim.meta(seller)!.inventory);
+    sim.drainEvents();
+    expect(sim.marketOrderFill(order.id, 1, seller)).toEqual({ units: 0, copper: 0 });
+    expect(errors(sim)).toEqual(['You do not have that many to sell.']);
+    expect(sim.meta(seller)!.inventory).toEqual(before);
+    expect(sim.marketOrders.find((row) => row.id === order.id)?.count).toBe(1);
+  });
+  it('delivers plain furnishings into a buy order one copy per bag slot', () => {
+    const { sim, seller } = orderSim();
+    sim.marketOrderPlace(ID, 3, 100);
+    const order = sim.marketOrders.find((row) => row.itemId === ID)!;
+    for (let i = 0; i < 3; i++) sim.meta(seller)!.inventory.push({ itemId: ID, count: 1 });
+    expect(sim.marketOrderFill(order.id, 3, seller)).toEqual({ units: 3, copper: 300 });
+    expect(sim.countItem(ID, seller)).toBe(0);
+    sim.marketCollect();
+    expect(sim.inventory).toEqual([
+      { itemId: ID, count: 1 },
+      { itemId: ID, count: 1 },
+      { itemId: ID, count: 1 },
+    ]);
+  });
+  it('splits a partial buy of a plain furnishing listing one copy per bag slot', () => {
+    const { sim, seller } = orderSim();
+    for (let i = 0; i < 3; i++) sim.meta(seller)!.inventory.push({ itemId: ID, count: 1 });
+    sim.marketList(ID, 3, 300, seller);
+    const listing = sim.market.marketListings.find((row) => row.itemId === ID)!;
+    expect(listing.count).toBe(3);
+    sim.marketBuy(listing.id, 2);
+    expect(sim.inventory).toEqual([
+      { itemId: ID, count: 1 },
+      { itemId: ID, count: 1 },
+    ]);
+    expect(sim.market.marketListings.find((row) => row.id === listing.id)?.count).toBe(1);
+    expect(sim.marketInfoFor(seller)!.collectionSales.at(-1)).toMatchObject({
+      itemId: ID,
+      count: 2,
+    });
+  });
   it('allows a catalogued furnishing to count toward Reliquary completion', () => {
     const page: ReliquaryPageDef = {
       id: 'test_furnishing_page',

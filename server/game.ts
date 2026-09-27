@@ -2033,8 +2033,8 @@ export class GameServer {
     };
     // Drop the target out of any match queues (a match popping later would
     // teleport them out of the cage; queueing anew is blocked by
-    // JAILED_BLOCKED_COMMANDS). A live Vale Cup match resolves as a desertion,
-    // same as leave(); idempotent when they are in neither.
+    // refusedJailedTravelCommand, server/freehold_wire.ts). A live Vale Cup
+    // match resolves as a desertion, as leave(); idempotent when in neither.
     this.sim.arenaQueueLeave(target.pid);
     // A live arena/fiesta match resolves as a desertion too: leaving the
     // arenaMatches entry behind silently gated releaseSpirit for the rest of

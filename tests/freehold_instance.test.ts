@@ -37,7 +37,7 @@ import {
 // test imports the owning file.
 import { applyFreeholdOwnerStamp } from '../src/sim/freehold/state';
 import type { FreeholdTier } from '../src/sim/freehold/types';
-import { instanceKeyFor } from '../src/sim/instances/dungeons';
+import { DUNGEON_DOOR_RETURN_INSET, instanceKeyFor } from '../src/sim/instances/dungeons';
 import type { InstanceSlot } from '../src/sim/sim';
 import { Sim } from '../src/sim/sim';
 import {
@@ -713,9 +713,18 @@ describe('the Sim facade delegates', () => {
     e.pos = sim.ctx.groundPos(INN.doorPos.x, INN.doorPos.z);
     sim.freeholdEnter(pid);
     expect(dungeonAt(e.pos.x)?.id).toBe(FREEHOLD_INN_ROOM_DUNGEON_ID);
+    // Face the room the other way first, so the exit facing below is the
+    // leave path's own, never the interior facing carried out.
+    e.facing = 1;
     sim.freeholdLeave(pid);
     expect(dungeonAt(e.pos.x)).toBeNull();
     expect(e.pos.x).toBeCloseTo(INN.doorPos.x, 6);
+    // The release's shared exit facing (leaveDungeon, door.facing): a freehold
+    // room has no leaveOffset, so the default drop (0, -inset) faces south,
+    // away from the gate, on both the facing and its interpolation twin.
+    expect(INN.leaveOffset).toBeUndefined();
+    expect(e.facing).toBe(Math.atan2(0, -DUNGEON_DOOR_RETURN_INSET));
+    expect(e.prevFacing).toBe(e.facing);
   });
 });
 
