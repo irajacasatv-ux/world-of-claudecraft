@@ -54,6 +54,7 @@
     "test:changed": "vitest run --passWithNoTests --changed",
     "test:turbo": "node scripts/test_turbo_experimental.mjs",
     "test:bun": "node scripts/test_bun_experimental.mjs",
+    "test:memory": "node scripts/test_memory_probe.mjs",
     "gate": "node scripts/gate.mjs",
     "gate:fast": "node scripts/gate_fast.mjs",
     "security:scan": "node scripts/malware_scan.mjs",
