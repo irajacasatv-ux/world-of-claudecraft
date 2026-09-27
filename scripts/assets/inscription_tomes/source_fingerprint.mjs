@@ -8,8 +8,8 @@ export const INSCRIPTION_TOMES_REPO_ROOT = path.resolve(HERE, '..', '..', '..');
 
 // One fingerprint covers the whole four-tome family: the committed item-icon
 // SVG references (the phase 06 trio plus the phase 09 apex tome), the factory,
-// the exporter chain, the optimizer, and the lockfile. Any change to any of
-// these re-exports all four GLBs.
+// the exporter chain and the optimizer (not the lockfile, as for every family). Any
+// change to any of these re-exports all four GLBs.
 export const INSCRIPTION_TOMES_SOURCE_FILES = Object.freeze([
   'docs/achievements/masterwrought-phase06-art/silverleaf_primer.svg',
   'docs/achievements/masterwrought-phase06-art/goldleaf_folio.svg',
@@ -21,7 +21,6 @@ export const INSCRIPTION_TOMES_SOURCE_FILES = Object.freeze([
   'scripts/assets/inscription_tomes/source_fingerprint.mjs',
   'scripts/assets/specs/inscription_tomes.json',
   'scripts/assets/build_assets.mjs',
-  'pnpm-lock.yaml',
 ]);
 
 function lengthDelimiter(byteLength) {

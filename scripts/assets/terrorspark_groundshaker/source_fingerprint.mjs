@@ -17,7 +17,6 @@ export const TANK_SOURCE_FILES = Object.freeze([
   'scripts/assets/terrorspark_groundshaker/source_fingerprint.mjs',
   'scripts/assets/specs/terrorspark_groundshaker.json',
   'scripts/assets/build_assets.mjs',
-  'pnpm-lock.yaml',
 ]);
 
 function lengthDelimiter(byteLength) {

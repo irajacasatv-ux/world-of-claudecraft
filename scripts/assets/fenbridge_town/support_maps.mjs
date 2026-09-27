@@ -12,7 +12,6 @@ export const FENBRIDGE_SUPPORT_MAP_SOURCE_FILES = Object.freeze([
   'scripts/assets/fenbridge_town/support_maps.mjs',
   'scripts/assets/fenbridge_town/build_support_maps.mjs',
   'scripts/assets/fenbridge_town/support_maps.json',
-  'pnpm-lock.yaml',
 ]);
 
 const CELL_SIZE = FENBRIDGE_SUPPORT_MAP_SIZE / FENBRIDGE_SUPPORT_MAP_GRID;

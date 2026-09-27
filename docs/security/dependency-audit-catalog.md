@@ -153,12 +153,9 @@ this jayson release.
 
 ## The re-mint chore any dependency change triggers
 
-`pnpm-lock.yaml` is a fingerprinted source input of the Eastbrook, Fenbridge,
-Dreadspark Groundshaker, and inscription-tome asset pipelines, so a
-lockfile-only change invalidates their provenance seals and
-reddens the asset suites. Use the size-preserving in-place re-mint
-(`scripts/assets/remint_lockfile_fingerprints.mjs`, then
-`node scripts/build_media_manifest.mjs generate`) and re-pin the literals it
-prints; see `scripts/assets/CLAUDE.md`. This is the real cost of a dependency
-bump in this repo, and the reason to batch dependency updates deliberately
-rather than take them as a drip.
+`pnpm-lock.yaml` and `package.json` are NOT asset fingerprint inputs (since
+2026-09-27, pinned by `tests/asset_fingerprint_inputs.test.ts`), so a
+lockfile-only change no longer touches any shipped GLB. A dependency bump that
+really changes an exporter's output shows up as that asset's rebuild or byte
+check failing, and is answered by re-exporting that family; see
+`scripts/assets/CLAUDE.md`.

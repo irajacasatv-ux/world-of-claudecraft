@@ -15,7 +15,6 @@ export const IGNIVAR_SOURCE_FILES = Object.freeze([
   'scripts/assets/ignivar_herald/finalize_kaykit.mjs',
   'scripts/assets/ignivar_herald/source_fingerprint.mjs',
   'scripts/asset_pipeline/lib/manual_rig.mjs',
-  'pnpm-lock.yaml',
 ]);
 
 function lengthDelimiter(byteLength) {

@@ -22,8 +22,8 @@ import { isSharedGeometry, isSharedMaterial } from '../src/render/shared_resourc
 const REPO_ROOT = path.join(__dirname, '..');
 const ASSET_PATH = path.join(REPO_ROOT, 'public/models/props/eastbrook_noticeboard.glb');
 const ASSET_BYTES = 24_684;
-const ASSET_SHA256 = '038092b61487abc9d9fada4ffa50a58e4423d5c016b3a48dafc22929e44b00ed';
-const SOURCE_FINGERPRINT = '5190ee3346059d0279f5cfc547e050f72d3b0a7f59db54075b787268af1e3619';
+const ASSET_SHA256 = '9c0ba9d23bc861e1eb3aaee2c545dfdb8956d6791e5dd92e0312282d9c7d1494';
+const SOURCE_FINGERPRINT = '1f7a43d021688ffcbe284183e519e23c922c3d66900ce228ad15fd2041350575';
 let restoreGfx: (() => void) | null = null;
 
 function setStandardMaterials(value: boolean): void {
@@ -112,7 +112,6 @@ describe('Eastbrook noticeboard shipping asset', () => {
       'scripts/assets/eastbrook_noticeboard/source_fingerprint.mjs',
       'scripts/assets/specs/eastbrook_noticeboard.json',
       'scripts/assets/build_assets.mjs',
-      'pnpm-lock.yaml',
     ]);
     expect(eastbrookNoticeboardSourceFingerprint(REPO_ROOT)).toBe(SOURCE_FINGERPRINT);
     expect(eastbrookNoticeboardSourceFingerprint(REPO_ROOT)).toBe(

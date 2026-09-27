@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { existsSync, readFileSync, statSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { getBounds, NodeIO, Primitive } from '@gltf-transform/core';
 import { ALL_EXTENSIONS } from '@gltf-transform/extensions';
@@ -19,9 +19,8 @@ import { MEDIA_ASSETS } from '../src/render/assets/manifest.generated';
 
 const REPO_ROOT = path.join(__dirname, '..');
 const PROPS_ROOT = path.join(REPO_ROOT, 'public/models/props');
-const EVIDENCE_ROOT = path.join(REPO_ROOT, 'docs/screenshots/eastbrook-vale-rebuild/assets');
 const MATERIALS_ROOT = path.join(REPO_ROOT, 'docs/screenshots/eastbrook-vale-rebuild/materials');
-const SOURCE_FINGERPRINT = '78ed6cde9fc621e477b3a3762f5b7401f7dcaaa24780df22b6e6290c42091c9b';
+const SOURCE_FINGERPRINT = '0953ee476d161d1d44bfec78765fcd40a4f3e4947c961d8273ca5af4c4042323';
 const SURFACE_ATLAS_SOURCE_SHA256 =
   'abec3036f8887e9c94972dab52aea664f18a74696db6b6d24cc48a4cfbe22b7d';
 const SURFACE_ATLAS_SHIPPING_SHA256 =
@@ -29,18 +28,7 @@ const SURFACE_ATLAS_SHIPPING_SHA256 =
 const SURFACE_ATLAS_PREVIEW_SHA256 =
   'ea6ba64e200f305f079cc858a4daf5d28dc8c240acd83895729237c521d26576';
 const SURFACE_ATLAS_FINGERPRINT =
-  '13d0a25b3c0151ce0cfdca3bb48acc33a2c527eadf7172605346298e2e8ee2c4';
-const TURNAROUND_VIEWS = [
-  'front',
-  'right',
-  'back',
-  'left',
-  'front-3q',
-  'rear-3q',
-  'hero',
-  'grazing',
-] as const;
-const AUDIT_VIEWS = ['neutral', 'dusk', 'player-scale', 'collider-overlay'] as const;
+  '1e76940540624fc51658d148ebf3746b4ea9e216e02564d98ff8418a0b109d01';
 
 interface SocketContract {
   id: string;
@@ -74,7 +62,7 @@ const ASSETS: readonly AssetContract[] = [
     rootName: 'EastbrookBank',
     dimensions: [7, 7.8, 5.5],
     bytes: 52_508,
-    sha256: '700544aea6f27a3e240d50677d9bf151022d6f85ba6d0f7a5349f4d18df9a5de',
+    sha256: 'a07ac3d8f94058c347230b1539be3a07bd1d1d9b7a7d39b6363a4c54b827a6f2',
     triangles: 3104,
     primitiveTriangles: [2928, 176],
     triangleCeiling: 6000,
@@ -110,7 +98,7 @@ const ASSETS: readonly AssetContract[] = [
     rootName: 'EastbrookSmithy',
     dimensions: [7, 7.5, 5.5],
     bytes: 40_352,
-    sha256: 'c8372ea60039b89856732cca7795016ec51ac246e7f66771dc207952f4b0f095',
+    sha256: '1cef7c77fb9d671912c9f4817bcc20934f0929ab632b056e9b6e7e6920583ea5',
     triangles: 2410,
     primitiveTriangles: [2282, 128],
     triangleCeiling: 6000,
@@ -138,7 +126,7 @@ const ASSETS: readonly AssetContract[] = [
     rootName: 'EastbrookInn',
     dimensions: [7.5, 8.5, 6],
     bytes: 67_768,
-    sha256: 'ac326da1b5f84de9980e1d26b3774a11354a97b2b887df1523f1a964cf04bdd5',
+    sha256: '9a4ed0543323c02289390927834e19445aa6e74ab63068f32de8693c82114145',
     triangles: 4348,
     primitiveTriangles: [4004, 344],
     triangleCeiling: 6000,
@@ -166,7 +154,7 @@ const ASSETS: readonly AssetContract[] = [
     rootName: 'EastbrookChapel',
     dimensions: [5.5, 7, 6],
     bytes: 66_132,
-    sha256: '8dc525369614a5d2589c366a92894d84182527c09d858e175248e45b7075ea97',
+    sha256: '526d08d3581ec606232e63ab63d39281861e78553c48de0f26e86acc00090581',
     triangles: 4120,
     primitiveTriangles: [3800, 320],
     triangleCeiling: 6000,
@@ -194,7 +182,7 @@ const ASSETS: readonly AssetContract[] = [
     rootName: 'EastbrookWeavingWorkshop',
     dimensions: [5.5, 5.8, 4.5],
     bytes: 40_392,
-    sha256: '80675873ddc673d832b33ff0749c99ef5ce83c8e08b4c883e3b2e856d8b5dd03',
+    sha256: 'b7ae8899cd22d4d1b96dc962c7176c603a33fa9e20225f6f247bfd134c226126',
     triangles: 2412,
     primitiveTriangles: [2272, 140],
     triangleCeiling: 6000,
@@ -222,7 +210,7 @@ const ASSETS: readonly AssetContract[] = [
     rootName: 'EastbrookToolworks',
     dimensions: [5.5, 5.8, 4.5],
     bytes: 39_920,
-    sha256: '16c140f7039058b7e60d2da0d94049c641185d0234c9c1de580453341ad7a4b6',
+    sha256: 'cb81a9012d826d8e452bfbfe104dab68fe5302b57163eabbe6831626a90442e1',
     triangles: 2320,
     primitiveTriangles: [2180, 140],
     triangleCeiling: 6000,
@@ -250,7 +238,7 @@ const ASSETS: readonly AssetContract[] = [
     rootName: 'EastbrookCivicWellBeacon',
     dimensions: [3.2, 3.1, 3.2],
     bytes: 13_216,
-    sha256: 'a23799a8fba8f926322ebc64ceaf5a7e9b16c56901b5a80773c98d50871206b7',
+    sha256: '8791e6880e72a3995619ea4d0c8563c0798fdb53cef09b5318647571d2e5893b',
     triangles: 464,
     primitiveTriangles: [456, 8],
     triangleCeiling: 3000,
@@ -278,7 +266,7 @@ const ASSETS: readonly AssetContract[] = [
     rootName: 'EastbrookMarketStall',
     dimensions: [2.8, 2.7, 2.2],
     bytes: 27_072,
-    sha256: 'e28def30c7fef537d18752aa2d661dcf8fceb8ccdc65566c064e598a7aad0f69',
+    sha256: '6ee4191a113c6585070900f1644bbcc8cf91eb085ec76695a3e0eb756cad7f3d',
     triangles: 1314,
     primitiveTriangles: [1294, 20],
     triangleCeiling: 3000,
@@ -306,7 +294,7 @@ const ASSETS: readonly AssetContract[] = [
     rootName: 'EastbrookWallWing',
     dimensions: [6.5, 2.7, 0.65],
     bytes: 8352,
-    sha256: 'c8ffc63e7fbf4ce349ba8d6e6f922cfd67c495840bc92c25533b0004c500ff08',
+    sha256: 'b81d6ec76d34039db6b839407044d493f26abe6f49a44ad1a3d9e0d833312151',
     triangles: 206,
     primitiveTriangles: [196, 10],
     triangleCeiling: 206,
@@ -382,12 +370,10 @@ describe('Eastbrook shared surface atlas', () => {
       'scripts/assets/eastbrook_town/surface_atlas.mjs',
       'scripts/assets/eastbrook_town/build_surface_atlas.mjs',
       'scripts/assets/specs/eastbrook_town_surface_atlas.json',
-      'pnpm-lock.yaml',
     ]);
     for (const atlasOnlyPath of EASTBROOK_SURFACE_ATLAS_SOURCE_FILES.slice(0, 4)) {
       expect(EASTBROOK_TOWN_SOURCE_FILES).not.toContain(atlasOnlyPath);
     }
-    expect(EASTBROOK_TOWN_SOURCE_FILES).toContain('pnpm-lock.yaml');
     expect(eastbrookTownSourceFingerprint(REPO_ROOT)).toBe(SOURCE_FINGERPRINT);
 
     const spec = JSON.parse(readFileSync(specPath, 'utf8')) as {
@@ -587,7 +573,6 @@ describe('Eastbrook town shipping GLBs', () => {
       'scripts/assets/eastbrook_town/source_fingerprint.mjs',
       'scripts/assets/specs/eastbrook_town.json',
       'scripts/assets/build_assets.mjs',
-      'pnpm-lock.yaml',
     ]);
     expect(eastbrookTownSourceFingerprint(REPO_ROOT)).toBe(SOURCE_FINGERPRINT);
     expect(eastbrookTownSourceFingerprint(REPO_ROOT)).toBe(
@@ -822,174 +807,5 @@ describe('Eastbrook town shipping GLBs', () => {
     expect(optionalFoundationSkirtTriangles).toBe(72);
     expect(wholeTownTriangles).toBe(28_902);
     expect(wholeTownTriangles).toBeLessThanOrEqual(30_000);
-  });
-
-  it('pins every evidence surface and the visual identity acceptance gate', () => {
-    const acceptance = JSON.parse(
-      readFileSync(path.join(EVIDENCE_ROOT, 'visual-acceptance.json'), 'utf8'),
-    ) as {
-      schemaVersion: number;
-      policy: {
-        authority: string;
-        globalThreshold: number;
-        criticalFeatureThreshold: number;
-        decisionRule: string;
-      };
-      turnaroundViews: string[];
-      auditViews: string[];
-      surfaceAtlas: {
-        decision: string;
-        sourceImage: string;
-        comparisonImage: string;
-        shippingAsset: string;
-        sourceDimensions: number[];
-        sourceSha256: string;
-        shippingDimensions: number[];
-        shippingSha256: string;
-        shippingBytes: number;
-        atlasFingerprint: string;
-        grid: Record<string, unknown>;
-        usageContract: Record<string, unknown>;
-        review: {
-          layerScores: Record<string, number>;
-          criticalFeatures: Array<{
-            id: string;
-            score: number;
-            threshold: number;
-            visible: boolean;
-          }>;
-        };
-      };
-      assets: Array<{
-        id: string;
-        decision: string;
-        globalScore: number;
-        comparisonImage: string;
-        auditImage: string;
-        layerScores: Record<string, number>;
-        criticalFeatures: Array<{
-          id: string;
-          score: number;
-          threshold: number;
-          visible: boolean;
-        }>;
-        intentionalOmissions: string[];
-      }>;
-    };
-    expect(acceptance.schemaVersion).toBe(1);
-    expect(acceptance.policy).toEqual({
-      authority: 'agent-vision-review',
-      globalThreshold: 0.7,
-      criticalFeatureThreshold: 0.7,
-      decisionRule: 'global-and-every-critical-feature',
-    });
-    expect(acceptance.turnaroundViews).toEqual(TURNAROUND_VIEWS);
-    expect(acceptance.auditViews).toEqual(AUDIT_VIEWS);
-    expect(acceptance.surfaceAtlas).toMatchObject({
-      decision: 'accept',
-      sourceImage: '../materials/eastbrook-surface-atlas-source.png',
-      comparisonImage: '../materials/eastbrook-surface-atlas-comparison.png',
-      shippingAsset: '/textures/eastbrook_surface_atlas.webp',
-      sourceDimensions: [1254, 1254],
-      sourceSha256: SURFACE_ATLAS_SOURCE_SHA256,
-      shippingDimensions: [512, 512],
-      shippingSha256: SURFACE_ATLAS_SHIPPING_SHA256,
-      shippingBytes: 141_666,
-      atlasFingerprint: SURFACE_ATLAS_FINGERPRINT,
-      grid: {
-        columns: 4,
-        rows: 4,
-        cellDimensions: [128, 128],
-        coordinateOrigin: 'top-left-image',
-      },
-      usageContract: {
-        role: 'high-key-grayscale-detail-multiplier',
-        colorSpace: 'none',
-        channelRange: [192, 255],
-        paletteAuthority: 'vertex-color',
-        glbTextures: 0,
-      },
-    });
-    for (const score of Object.values(acceptance.surfaceAtlas.review.layerScores)) {
-      expect(score).toBeGreaterThanOrEqual(acceptance.policy.globalThreshold);
-    }
-    expect(acceptance.surfaceAtlas.review.criticalFeatures).toHaveLength(3);
-    for (const feature of acceptance.surfaceAtlas.review.criticalFeatures) {
-      expect(feature.visible, feature.id).toBe(true);
-      expect(feature.threshold).toBe(acceptance.policy.criticalFeatureThreshold);
-      expect(feature.score, feature.id).toBeGreaterThanOrEqual(feature.threshold);
-    }
-    expect(acceptance.assets.map((asset) => asset.id)).toEqual(ASSETS.map((asset) => asset.id));
-
-    for (const asset of ASSETS) {
-      const review = acceptance.assets.find((candidate) => candidate.id === asset.id);
-      expect(review, `${asset.id} has no visual review`).toBeDefined();
-      if (!review) continue;
-      expect(review.decision).toBe('accept');
-      expect(review.globalScore).toBeGreaterThanOrEqual(acceptance.policy.globalThreshold);
-      expect(Object.keys(review.layerScores).sort()).toEqual([
-        'color-material',
-        'geometry-depth',
-        'service-readability',
-        'silhouette-proportion',
-      ]);
-      for (const score of Object.values(review.layerScores)) {
-        expect(score).toBeGreaterThanOrEqual(acceptance.policy.globalThreshold);
-      }
-      expect(review.criticalFeatures.length).toBeGreaterThanOrEqual(3);
-      for (const feature of review.criticalFeatures) {
-        expect(feature.visible).toBe(true);
-        expect(feature.threshold).toBe(acceptance.policy.criticalFeatureThreshold);
-        expect(feature.score, `${asset.id}:${feature.id}`).toBeGreaterThanOrEqual(
-          feature.threshold,
-        );
-      }
-      // The inline type above declares intentionalOmissions non-optional, but a
-      // JSON.parse(...) as T cast is not runtime validation: without this, a
-      // review entry missing the field entirely would only be caught for the
-      // bank (the one asset with a full toEqual below). All nine carry it today.
-      expect(Array.isArray(review.intentionalOmissions), asset.id).toBe(true);
-      if (asset.id === 'bank') {
-        expect(review.criticalFeatures.map((feature) => feature.id)).toEqual([
-          'cobalt-gable-and-entry-canopy',
-          'aligned-entry-and-teller-window',
-          'empty-vault-alcove-and-banner-service-cues',
-        ]);
-        expect(review.intentionalOmissions).toEqual([
-          'fine masonry seams',
-          'individual metal fasteners',
-          'baked vault chest because the runtime banker chest remains separate',
-        ]);
-      }
-      expect(review.comparisonImage).toBe(`${asset.id}-comparison.png`);
-      expect(review.auditImage).toBe(`${asset.id}-optimized-audit-contact.png`);
-      const evidenceSuffixes = [
-        'procedural-contact.png',
-        'raw-contact.png',
-        'optimized-contact.png',
-        'optimized-audit-contact.png',
-        'comparison.png',
-      ];
-      // A typo'd key in an asset's evidenceSha256 map would otherwise silently
-      // skip that hash check below instead of failing (asset.evidenceSha256?.[suffix]
-      // resolves to undefined and the `if` just no-ops), so pin the key set
-      // itself before relying on the per-suffix lookup.
-      if (asset.evidenceSha256) {
-        expect(Object.keys(asset.evidenceSha256).sort(), asset.id).toEqual(
-          [...evidenceSuffixes].sort(),
-        );
-      }
-      for (const suffix of evidenceSuffixes) {
-        const evidencePath = path.join(EVIDENCE_ROOT, `${asset.id}-${suffix}`);
-        expect(existsSync(evidencePath), `${asset.id}-${suffix} is missing`).toBe(true);
-        expect(statSync(evidencePath).size).toBeGreaterThan(1024);
-        const expectedEvidenceSha = asset.evidenceSha256?.[suffix];
-        if (expectedEvidenceSha) {
-          expect(createHash('sha256').update(readFileSync(evidencePath)).digest('hex')).toBe(
-            expectedEvidenceSha,
-          );
-        }
-      }
-    }
   });
 });

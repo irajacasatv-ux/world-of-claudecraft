@@ -22,8 +22,8 @@ import { isSharedGeometry, isSharedMaterial } from '../src/render/shared_resourc
 const REPO_ROOT = path.join(__dirname, '..');
 const ASSET_PATH = path.join(REPO_ROOT, 'public/models/props/mailbox_pillar.glb');
 const ASSET_BYTES = 32_884;
-const ASSET_SHA256 = '45de20537ffc010207788a59102893ed166905c25e80b1cf3f2f2bddbac486b9';
-const SOURCE_FINGERPRINT = 'f409024a2bc200c66b0df550c01797cceb812c86893eb866256893eb8a6c5d1c';
+const ASSET_SHA256 = '6b2193b11736b98adc68be7335ef37fc35e1575304541c84b5c448ae062aff47';
+const SOURCE_FINGERPRINT = '911354fffda278d620060ad159254abdc186166075bc57230a011b7f0f16162a';
 let restoreGfx: (() => void) | null = null;
 
 function setStandardMaterials(value: boolean): void {
@@ -68,7 +68,6 @@ describe('Eastbrook Ravenpost mailbox pipeline', () => {
       'scripts/assets/eastbrook_mailbox/source_fingerprint.mjs',
       'scripts/assets/specs/eastbrook_mailbox.json',
       'scripts/assets/build_assets.mjs',
-      'pnpm-lock.yaml',
     ]);
     expect(eastbrookMailboxSourceFingerprint(REPO_ROOT)).toBe(SOURCE_FINGERPRINT);
     expect(eastbrookMailboxSourceFingerprint(REPO_ROOT)).toBe(

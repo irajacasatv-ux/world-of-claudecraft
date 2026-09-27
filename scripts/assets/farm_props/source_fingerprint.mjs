@@ -7,8 +7,9 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 export const FARM_PROPS_REPO_ROOT = path.resolve(HERE, '..', '..', '..');
 
 // No reference image exists: this set is procedural first, so the pinned inputs
-// are the authoring modules, the optimizer specification, the optimizer itself,
-// and the lockfile that pins every library the export depends on.
+// are the authoring modules, the optimizer specification and the optimizer itself.
+// Not the lockfile: a stamp swapped in place over a lockfile move attested no rebuild,
+// and a toolchain change that moves the bytes fails the byte pins anyway.
 export const FARM_PROPS_SOURCE_FILES = Object.freeze([
   'scripts/assets/farm_props/model.js',
   'scripts/assets/farm_props/export_entry.js',
@@ -17,7 +18,6 @@ export const FARM_PROPS_SOURCE_FILES = Object.freeze([
   'scripts/assets/farm_props/source_fingerprint.d.mts',
   'scripts/assets/specs/farm_props.json',
   'scripts/assets/build_assets.mjs',
-  'pnpm-lock.yaml',
 ]);
 
 function lengthDelimiter(byteLength) {

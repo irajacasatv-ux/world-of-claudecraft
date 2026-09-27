@@ -15,7 +15,6 @@ export const EASTBROOK_MAILBOX_SOURCE_FILES = Object.freeze([
   'scripts/assets/eastbrook_mailbox/source_fingerprint.mjs',
   'scripts/assets/specs/eastbrook_mailbox.json',
   'scripts/assets/build_assets.mjs',
-  'pnpm-lock.yaml',
 ]);
 
 function lengthDelimiter(byteLength) {

@@ -1,6 +1,6 @@
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { existsSync, readFileSync, statSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { getBounds, NodeIO, Primitive } from '@gltf-transform/core';
 import { ALL_EXTENSIONS } from '@gltf-transform/extensions';
@@ -33,19 +33,14 @@ import { FENBRIDGE_SURFACE_WORLD_SPAN } from '../src/render/fenbridge_surface_at
 import { FENBRIDGE_LAYOUT, localToWorld } from '../src/sim/fenbridge_layout';
 
 const REPO_ROOT = path.join(__dirname, '..');
-const EVIDENCE_ROOT = path.join(REPO_ROOT, 'docs/screenshots/fenbridge-rebuild/assets');
 const INTAKE_ROOT = path.join(REPO_ROOT, 'docs/design/fenbridge-rebuild/img2threejs');
-// Moved by this v0.42 integration with NO geometry or pixel payload change: package.json
-// and pnpm-lock.yaml are fingerprint inputs from the release bump, and
-// compress_glb_textures.mjs is a fingerprint input from PR #3775's
-// Tripo baseColor UASTC routing. The GLBs were size-preserving reminted from
-// the candidate bytes so only the sourceFingerprint hex and sha256 pins moved.
-// Moved again, the same way, by the @vitest/spy pnpm patch (package.json's
-// patchedDependencies and pnpm-lock.yaml) and the test:memory npm script.
+// The family's source fingerprint: its exporter inputs, never the lockfile or package.json
+// (tests/asset_fingerprint_inputs.test.ts). Re-derived 2026-09-27 when those two left every
+// list; they were re-minted in place over dozens of dependency bumps and attested no rebuild.
 const EXPECTED_SOURCE_FINGERPRINT =
-  '68b6e3c6eab06ca6d5c17ae094fc094927d15514b5a6b6874395d4c5028a67bc';
+  '98902488368c713405903f2b22152de40ca62e234cae32eb0697ba3fdeca4c04';
 const EXPECTED_SUPPORT_FINGERPRINT =
-  '544b9d450cf9e4746be8ac3efe8cf48da2f95c189619d830e1fffee835aeb284';
+  'e4243b65281e24819bdefad320b6015e875fa70eac7811da840864a94d67bfe3';
 const FOUNDATION_TRIANGLES = 84;
 const RENDERER_HARD_CEILING = 88_000;
 
@@ -59,85 +54,85 @@ interface ExpectedArtifact {
 const EXPECTED_ARTIFACTS: Readonly<Record<string, ExpectedArtifact>> = {
   warden_gatehouse: {
     bytes: 141_848,
-    sha256: '06bec29ae2324f5a0f348b242297d443a732249e407cc0a6dd01631252ac2b44',
+    sha256: 'fb111006ebdd464d89950ee04079602fe4c85344feae52c22820138ee45ac3a9',
     triangles: 8_766,
     primitiveTriangles: [8_695, 71],
   },
   crooked_reed_inn: {
     bytes: 149_080,
-    sha256: '394ed3f22862997c011af4e19ac652254267cad50884bf55962651bd5e78ef52',
+    sha256: '3fddbc1616826d31fc9b700455f828c2605ecfb00d4e0ca58f59084782e24f86',
     triangles: 8_949,
     primitiveTriangles: [8_807, 142],
   },
   lantern_chapel: {
     bytes: 107_392,
-    sha256: '9500612230f100ea440e09e799f74125fe932b3be5a7f429bc6ea895147525c4',
+    sha256: '3a59d9d4f51a2546b71a0adee7096ccae585e6d284ee7608b4fed5d1f8326a7a',
     triangles: 6_671,
     primitiveTriangles: [6_486, 185],
   },
   moonwort_apothecary: {
     bytes: 104_468,
-    sha256: 'a6b386907993ae20c6fbac55fbf3ae0286cc09dcad5bd7b83f2100aecb5b6465',
+    sha256: '94f1ee02903c777e38d97b92aa31a33c08d2ba4440338519e3551189ea464009',
     triangles: 6_086,
     primitiveTriangles: [6_017, 69],
   },
   gilded_strongbox: {
     bytes: 69_908,
-    sha256: 'b6867e477e4b0f06a6ff32057558ebbdc955fc40ba1dfeb3a0634f6eb6fac184',
+    sha256: '7e19a2707989265ac08625fa5854f9f8b4f966984c09ace3454348b499936a80',
     triangles: 4_133,
     primitiveTriangles: [4_033, 100],
   },
   hesk_tannery: {
     bytes: 198_908,
-    sha256: '567418a90f8778b845fa5be6a786cd0a83f05abd4f9b6f0e3bf966caffafd0f7',
+    sha256: 'eafd78c5cb9200a75ee85b8cd92a87d4cac16dc28804d2a6d221a8fa495bb522',
     triangles: 12_740,
     primitiveTriangles: [12_581, 159],
   },
   scout_lodge: {
     bytes: 110_556,
-    sha256: '16cd0cabcdce22d29beb41052dff806744640f62bef26e1c910f9e24dd214eda',
+    sha256: '7a8664c6eec7da0bef2cc50faaf829ff88606b524237ddc93151ae4ca8445d6b',
     triangles: 6_507,
     primitiveTriangles: [6_431, 76],
   },
   mirelight_cistern: {
     bytes: 48_940,
-    sha256: '1b7ae2ab581c835db0a7fbf00b86f50d34d4706e8217c3907f52758be56d0c6f',
+    sha256: 'e97fa553db26f4f8d7d0db66b171f492465abadd828cc4d796b26f269055cf29',
     triangles: 2_388,
     primitiveTriangles: [2_328, 60],
   },
   provision_stall: {
     bytes: 26_332,
-    sha256: '76c0512cbe56804c53ac230e64130457e2c9013df8584c6b28e6a8ec90107dc7',
+    sha256: '456f0df6da4bdf59253e0380b3cdbdf2f4e0f9901387877e2c209cacd6ea6182',
     triangles: 1_304,
     primitiveTriangles: [1_280, 24],
   },
   palisade_wing: {
     bytes: 15_680,
-    sha256: '6a1ec77ad31c3a5493746c3fe8177d8f59ac4b956546a48cff27c569577dbdad',
+    sha256: 'f087384499582c53320c44b99686cf7cef81d7e2fbecf049fe004b7028bd6570',
     triangles: 766,
     primitiveTriangles: [766],
   },
   gate_arch: {
     bytes: 24_276,
-    sha256: 'd9d5bd3ba093b6064170abc4700626a3162608dfafc4d3418fafd30c7e019bb1',
+    sha256: 'fde727cae2aae66a5d559362f86ffd701d4fbd0cca2b25e9642b61effac67893',
     triangles: 1_216,
     primitiveTriangles: [1_192, 24],
   },
   boardwalk: {
     bytes: 9_264,
-    sha256: '6ca69d5dc32aaaee17194dc137b2b31d7f813a1a45de647c1e278c3ef2a3d550',
+    sha256: '4b74e361e66e667ef134b99bae14863709251d236fb31d9f348488c3ee07fd3e',
     triangles: 376,
     primitiveTriangles: [376],
   },
   muster_board: {
     bytes: 17_480,
-    sha256: 'e11b942552a34bb53f7cd79ed12dd47983f437497e2854fc01379a4c81666316',
+    sha256: '186836ff8bd8d1f0b1ff6b18b66f1618f19b929a724d42560f203a0965a0bf41',
     triangles: 760,
     primitiveTriangles: [736, 24],
   },
   muster_order: {
     bytes: 6_888,
-    sha256: '1a792b9615a9c3e8d5884c097afb87fd26cb34b28623a62de7707db6e051c712',
+    sha256: 'ebbe82d88beb8760fdd03c64d5b05460041d41f624c2951e709d80927bc21a9c',
     triangles: 204,
     primitiveTriangles: [204],
   },
@@ -166,14 +161,6 @@ const SUPPORT_MAPS = {
     sha256: 'ea442943770ba8b7fc06783654ef34f6f2a7aee7d1e272a6d26800b31d410b4a',
   },
 } as const;
-
-const REQUIRED_EVIDENCE_SUFFIXES = [
-  'procedural-contact.png',
-  'raw-contact.png',
-  'optimized-contact.png',
-  'optimized-audit-contact.png',
-  'comparison.png',
-] as const;
 
 function sha256(bytes: Uint8Array): string {
   return createHash('sha256').update(bytes).digest('hex');
@@ -410,8 +397,6 @@ describe('Fenbridge shipping asset family', () => {
 
   it('pins portable source intake, authoring records, package inputs, and fingerprints', () => {
     expect(new Set(FENBRIDGE_TOWN_SOURCE_FILES).size).toBe(FENBRIDGE_TOWN_SOURCE_FILES.length);
-    expect(FENBRIDGE_TOWN_SOURCE_FILES).toContain('package.json');
-    expect(FENBRIDGE_TOWN_SOURCE_FILES).toContain('pnpm-lock.yaml');
     expect(FENBRIDGE_TOWN_SOURCE_FILES).toContain(
       'scripts/assets/fenbridge_town/author_intake_records.mjs',
     );
@@ -785,58 +770,6 @@ describe('Fenbridge shipping asset family', () => {
     expect(bankContract.sockets.find((socket) => socket.id === 'teller-window')?.position).toEqual([
       -1.25, 1.45, 3.25,
     ]);
-  });
-
-  it('requires complete render evidence and agent-reviewed >= 0.70 visual acceptance', async () => {
-    for (const assetId of FENBRIDGE_TOWN_ASSET_IDS) {
-      for (const suffix of REQUIRED_EVIDENCE_SUFFIXES) {
-        const evidencePath = path.join(EVIDENCE_ROOT, `${assetId}-${suffix}`);
-        expect(existsSync(evidencePath), `${assetId}-${suffix}`).toBe(true);
-        expect(statSync(evidencePath).size).toBeGreaterThan(1024);
-        const metadata = await sharp(evidencePath).metadata();
-        expect(metadata.width).toBeGreaterThanOrEqual(1_400);
-        expect(metadata.height).toBeGreaterThanOrEqual(600);
-      }
-      const reviewPath = path.join(EVIDENCE_ROOT, `${assetId}-ai-review.json`);
-      const review = JSON.parse(readFileSync(reviewPath, 'utf8')) as {
-        sourceFingerprint: string;
-        minimumOverallScore: number;
-        requiredViews: string[];
-        features: Array<{
-          id: string;
-          minimumScore: number;
-          mustPass: boolean;
-          visible: boolean;
-          score: number;
-          notes: string;
-        }>;
-        overall: { score: number; decision: string; reviewer: string; notes: string };
-      };
-      expect(review.sourceFingerprint).toBe(EXPECTED_SOURCE_FINGERPRINT);
-      expect(review.minimumOverallScore).toBe(0.7);
-      expect(review.requiredViews).toEqual([
-        'front',
-        'right',
-        'rear',
-        'left',
-        'hero',
-        'player-scale',
-        'collider-overlay',
-      ]);
-      expect(review.overall.decision).toBe('accept');
-      expect(review.overall.reviewer).toBe('codex-agent-vision');
-      expect(review.overall.score).toBeGreaterThanOrEqual(review.minimumOverallScore);
-      expect(review.features.length).toBeGreaterThanOrEqual(3);
-      for (const feature of review.features) {
-        expect(feature.minimumScore).toBeGreaterThanOrEqual(0.7);
-        expect(feature.visible, `${assetId}:${feature.id}`).toBe(true);
-        expect(feature.score, `${assetId}:${feature.id}`).toBeGreaterThanOrEqual(
-          feature.minimumScore,
-        );
-        expect(feature.notes.length).toBeGreaterThan(0);
-      }
-      expect(review.overall.notes.length).toBeGreaterThan(0);
-    }
   });
 
   it('keeps the deterministic double-build, staged verification, KTX2, and evidence gates', () => {

@@ -17,7 +17,6 @@ export const EASTBROOK_TOWN_SOURCE_FILES = Object.freeze([
   'scripts/assets/eastbrook_town/source_fingerprint.mjs',
   'scripts/assets/specs/eastbrook_town.json',
   'scripts/assets/build_assets.mjs',
-  'pnpm-lock.yaml',
 ]);
 
 function lengthDelimiter(byteLength) {

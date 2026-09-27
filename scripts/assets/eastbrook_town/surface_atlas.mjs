@@ -12,7 +12,6 @@ export const EASTBROOK_SURFACE_ATLAS_SOURCE_FILES = Object.freeze([
   'scripts/assets/eastbrook_town/surface_atlas.mjs',
   'scripts/assets/eastbrook_town/build_surface_atlas.mjs',
   'scripts/assets/specs/eastbrook_town_surface_atlas.json',
-  'pnpm-lock.yaml',
 ]);
 
 const SOURCE_PIXELS = 1254;

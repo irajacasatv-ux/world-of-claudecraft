@@ -23,27 +23,10 @@ import { MEDIA_ASSETS } from '../src/render/assets/manifest.generated';
 // no-model pin in tests/held_weapon_models.test.ts in the same change.
 
 const REPO_ROOT = path.join(__dirname, '..');
-// pnpm-lock.yaml is a pinned input of this family's source fingerprint, so
-// every release lockfile bump re-mints the extras stamps and hashes via
-// scripts/assets/remint_lockfile_fingerprints.mjs with the geometry unchanged
-// (bytes, triangles, and bounds pins never move): first for the v0.37.0
-// three@0.165.0 patch-hash bump, then v0.38.0, and most recently for the
-// v0.39.0 merge's Three.js r165 to r185 bump (patches/three@0.185.1.patch).
-// Moved again at phase 18 by a REAL source change, not an absorb: the family
-// gained a fourth tome (model.js, the spec, the exporter, and the phase 09
-// reference SVG), so all four GLBs were re-exported from source. The three
-// phase 06 tomes came back byte-identical in size, triangles and bounds, with
-// only their stamped fingerprint (and so their sha256) moved. That re-export
-// also discharged the v0.42.0 lockfile drift this family still owed.
-// Re-minted during PR cleanup after moving non-shipping preview output from a
-// retired screenshot directory into ignored tmp/. Geometry and byte counts did
-// not change; only the two source-fingerprint stamps and resulting hashes did.
-// Re-minted 2026-09-08 via scripts/assets/remint_lockfile_fingerprints.mjs after
-// the release/v0.42.0 merge moved pnpm-lock.yaml (a fingerprint input, leaf-only
-// hash change) for this four-tome family: both extras stamps on every GLB were
-// restamped in place with byte counts, triangles, and bounds held exactly. No
-// source file changed.
-const SOURCE_FINGERPRINT = '30c31f2f396e4d1740aa9810ed59f11b2832dc92a15b2b2f98032aa47954ad04';
+// The family's source fingerprint: its exporter inputs, never the lockfile or package.json
+// (tests/asset_fingerprint_inputs.test.ts). Re-derived 2026-09-27 when those two left every
+// list; they were re-minted in place over dozens of dependency bumps and attested no rebuild.
+const SOURCE_FINGERPRINT = '7973635e60bbec5d2427fe757020814eaeaa9a09425c0ae45b9404c941d23f68';
 
 interface TomePin {
   itemId: string;
@@ -59,7 +42,7 @@ const TOME_PINS: Record<string, TomePin> = {
     itemId: 'silverleaf_primer',
     rootName: 'InscriptionTomeSilverleaf',
     bytes: 11_136,
-    sha256: 'f1eb4a8a5ee8d80ab3c0b54085aa438a8e2c112680b83b36816700bcd25e9f1e',
+    sha256: 'f06e8e5ebf527ad7c4e67392deb964b151ca0f018f03049a91a5f531b6b93cf1',
     triangles: 404,
     bounds: { min: [-0.1763, -0.1, -0.0555], max: [0.163, 0.3, 0.0622] },
   },
@@ -67,7 +50,7 @@ const TOME_PINS: Record<string, TomePin> = {
     itemId: 'goldleaf_folio',
     rootName: 'InscriptionTomeGoldleaf',
     bytes: 12_948,
-    sha256: '61296c92339be9af85d2a156ef7cb1c18e760af524baa123ed2ed9e407c123bf',
+    sha256: '2a3139d31d8d9b015f2d1431ecfe8232569e8b8fb74d12927513f746afe80f5d',
     triangles: 512,
     bounds: { min: [-0.1866, -0.1668, -0.0605], max: [0.1705, 0.33, 0.0672] },
   },
@@ -75,7 +58,7 @@ const TOME_PINS: Record<string, TomePin> = {
     itemId: 'sunpetal_grimoire',
     rootName: 'InscriptionTomeSunpetal',
     bytes: 13_956,
-    sha256: '60d571f34e9abaa11092b3cc7f2b8dd8d185c825d468a925a4e6af916f43fee1',
+    sha256: '8a9c276ec18e701dc94d31218fb341ef693321d27137aedf4d7f1751992371a3',
     triangles: 584,
     bounds: { min: [-0.2007, -0.1668, -0.068], max: [0.1805, 0.36, 0.0863] },
   },
@@ -86,7 +69,7 @@ const TOME_PINS: Record<string, TomePin> = {
     itemId: 'voidbound_grimoire',
     rootName: 'InscriptionTomeVoidbound',
     bytes: 16_556,
-    sha256: '585a521b2a7e6f22cac02e9b812e9f66046974ff9c1694e0c4e45d3a714e39ca',
+    sha256: 'a30da80e9a3427ad92c700d2ab2a5e62b4e95fbe681ad0a1fe247ee2f8fdb450',
     triangles: 724,
     bounds: { min: [-0.211, -0.1, -0.073], max: [0.188, 0.38, 0.086] },
   },
@@ -117,7 +100,6 @@ describe('inscription tome held models', () => {
       'scripts/assets/inscription_tomes/source_fingerprint.mjs',
       'scripts/assets/specs/inscription_tomes.json',
       'scripts/assets/build_assets.mjs',
-      'pnpm-lock.yaml',
     ]);
     expect(inscriptionTomesSourceFingerprint(REPO_ROOT)).toBe(SOURCE_FINGERPRINT);
     const exporter = readFileSync(

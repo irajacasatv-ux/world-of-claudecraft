@@ -50,8 +50,6 @@ export const FENBRIDGE_TOWN_SOURCE_FILES = Object.freeze([
   'public/textures/fenbridge_surface_atlas.webp',
   'public/textures/fenbridge_surface_normal.webp',
   'public/textures/fenbridge_surface_roughness.webp',
-  'package.json',
-  'pnpm-lock.yaml',
 ]);
 
 function lengthDelimiter(byteLength) {

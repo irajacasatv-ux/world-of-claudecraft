@@ -60,14 +60,12 @@ For reference-image reconstruction and procedural GLB authoring, read the living
   never a bespoke pipeline.
 - **Source fingerprints are load-bearing.** Eastbrook-era exporters stamp a sha256 over a
   pinned input list (factory/entry/exporter/spec, `build_assets.mjs`, reference
-  turnarounds, the shared atlas, and `pnpm-lock.yaml`) into the GLB extras, and tests
-  recompute it live. Any change to a fingerprinted input, including a lockfile-only bump,
-  means re-exporting the affected families (`--no-preview`), regenerating the media
-  manifest, and re-pinning the sha256/fingerprint literals in tests, docs, and capture
-  evidence JSONs in the same change. For a lockfile-only leaf rename/swap that must keep
-  shipping GLB sizes, prefer the size-preserving in-place remint
-  (`scripts/assets/remint_lockfile_fingerprints.mjs`) over a full geometry rebuild, then
-  re-pin the literals it prints (the tool prints that follow-up path itself).
+  turnarounds, the shared atlas) into the GLB extras, and tests recompute it live. Any
+  change to a fingerprinted input means re-exporting the affected family (`--no-preview`),
+  regenerating the media manifest, and re-pinning its literals in the same change. The
+  lockfile and `package.json` are NOT inputs (`tests/asset_fingerprint_inputs.test.ts`):
+  they once were, and every dependency bump was answered by swapping the new hash into
+  the shipped GLBs in place, a stamp that attested no rebuild; that tool is retired.
 - **`compress_standalone_textures.mjs`** (+ `lib/standalone_texture_compression_core.mjs`)
   is the KTX2/Basis step for textures that ship OUTSIDE a GLB (default sweep: the player
   skin/cosmetic atlases under `public/textures/skins/`, plus the terrain splat and
