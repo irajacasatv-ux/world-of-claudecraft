@@ -4156,3 +4156,42 @@ source mutant can only reach through data) waypoint 3 moved beside the gate, whi
 leg-before arm catches. The store measures 2,011 lines and its ceiling is LOWERED 2,026 to
 2,011, the round paid for by moving the write-side and lifecycle bounds whole
 (`server/freehold_persist_bounds.ts`, re-exported) and four dead imports.
+
+### THE FRESH READS OF THAT ROUND (`736fc144d7..`), AND THEIRS
+
+Two fresh readers over `16cd1d3c36..736fc144d7`, commits only, capped: 0 blocking, 4
+should-fix, 11 nits, all applied (`75f45bccae`, `dcffac111b`, and two test commits).
+
+- Logic (a fresh server-hot-path-reviewer): SHOULD-FIX, `deferred_writes` had folded the
+  retries in, so an outage fired the store's own saturation signal; the retries' backlog is
+  now its own `deferred_retries` measure. SHOULD-FIX, the retry sub-cap throttled the
+  shutdown drain to two lanes against the drain's eight, cutting each held owner's last
+  attempt inside the deadline; while a drain is open the retries get the drain's whole cap
+  (ordinary writes are still pumped first). NITS: a retry re-arming from its own settle went
+  around the sub-cap (it now re-arms through `arm`, and a retry slot freed by a committing
+  retry is offered to a waiting retry on that settle); a drain whose arm loop threw left the
+  clock's exception open for the life of the store and threw out of a drain that never
+  throws (it now closes the exception and answers false); throws after the last drain had
+  no sweep left to report them (they log their own lines); the leave flush never waits on a
+  leaver on the clock, launched or deferred (stated where the loop is); and a deterministic
+  throw inside the store's own code (a `JSON.stringify` of a malformed document) is now a
+  fault retried each window, which matches the ruling's reading that a store bug is not an
+  answer about the document and shows only in `retrying_offline` (recorded, not changed).
+  The login-pair read moved whole to `server/freehold_hearth_load.ts` to pay for the lines;
+  the store's ceiling is LOWERED 2,011 to 1,988.
+- Pins (a fresh test-coverage-auditor): SHOULD-FIX, the per-sweep summary was tested with
+  one owner only (now two throws in one sweep give one line reading 2); SHOULD-FIX, nothing
+  pinned that retries are pumped AFTER ordinary writes (now a freed slot goes to the waiting
+  ordinary write while two retries stay deferred). NITS: the shutdown case's deadline check
+  could not fail and picked by length (now it takes the drain's own job from what `idle()`
+  scheduled, cancelled and never fired); the hanging drain now proves it was still waiting
+  before its deadline; the read-back refusal is pinned UNBRANDED (a malformed returned
+  revision after the statement is a fault, never an answer); the sub-cap case closes its
+  gates; the rejoin asserts `retrying_offline` back to 0; the ring model's leg-before arm is
+  pinned on a synthetic line (through an extracted `ringWorstClearance`).
+- ITS MUTATION PASS: six mutants behind a control of 455, and the re-arm mutant again behind
+  a control of 360 after its pin: the drain keeping the sub-cap, the settle re-arm bypassing
+  the sub-cap (it survived the first pass, being observable only when ordinary leavers have
+  borrowed past a drain's cap; the pin builds exactly that state), no pump on a freed retry
+  slot, summaries never falling back to per-owner lines, the two deferred measures folded,
+  and the drain's arm guard removed. All KILLED.
