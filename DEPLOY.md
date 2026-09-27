@@ -875,8 +875,12 @@ For off-box safety, sync the directory to S3 occasionally:
   thrown writes that refuse the DOCUMENT: a data or constraint SQLSTATE, or the
   writer's own structural refusal) and only the first is the fence, so read it against
   `stale_writes` and `write_failures` rather than alone: `stale_writes` is the
-  fence (on a single-realm deployment that should be impossible, and on a
-  multi-realm one it means two processes are writing the same rows), and
+  fence. On a multi-realm deployment it means two processes are writing the same
+  rows; on a SINGLE realm it means the realm fenced ITSELF: a write whose driver
+  timeout (65 s, which `statement_timeout` does not bound across a slow COMMIT)
+  or dropped connection threw after the server had committed, so the next
+  attempt met its own revision. `stale_writes` rising right after
+  `write_failures` on one realm is that case, not a second writer; and
   `write_failures` counts every other refused or failed write: a missing or
   conflicting row, the write seal, the unnamed-insert refusal, the
   writable-implies-readable refusal, a write that got no background permit, and
@@ -929,16 +933,28 @@ For off-box safety, sync the directory to S3 occasionally:
   dropped connection, a timeout, exhausted resources, an operator restart, a
   permission or schema fault) that throws three writes for one owner inside five
   minutes no longer quiesces that owner. Its entry, its unwritten edits and any
-  leave capture are KEPT, `retrying` counts it, and it is retried once per five
-  minutes (the first sweep at or after each window, so `write_retries` rises at
-  about `retrying` per five minutes) until one commits, which clears it with one
-  warn line. A player who returns meanwhile gets the kept house and plays on;
-  their edits ride the next retry. What it costs is memory: each `retrying`
-  owner holds up to one extra record (`leave_captures`), and nothing caps the
-  count, because a cap would choose whose edits to drop. So a sustained
-  `retrying` is a database OUTAGE to fix, never a data incident, and a restart
-  during it gives each held owner ONE last attempt inside the 10 s drain before
-  the edits end with the process (the drain's warn line names it).
+  leave capture are KEPT, `retrying` counts it, and it is retried AT MOST once
+  per five minutes (the first sweep at or after each window) until one commits,
+  which clears it with one warn line. Retries hold at most two of the store's
+  write slots and wait behind ordinary writes, so with a large `retrying` set and
+  a slow fault the cadence stretches past five minutes (`write_retries` then
+  rises slower than `retrying` per five minutes); the store keeps serving
+  healthy owners either way. Throws on the clock print ONE summary line per sweep
+  ("freehold retry clock: N retry writes threw since the last sweep"), not one
+  per owner. A player who returns meanwhile gets the kept house and plays on;
+  their edits ride the next retry. What it costs is MEMORY: an owner on the
+  clock with no session left (`retrying_offline`) holds up to TWO full records
+  a quiesce used to free (its committed state and its leave capture), measured at
+  180 MiB per thousand such owners at the approved 420-row ceiling, and nothing
+  caps the count, because a cap would choose whose edits to drop. A WRITE-ONLY
+  fault (a revoked permission, a column missing because code deployed ahead of
+  its migration, lock or statement timeouts on the housing table, a failing
+  trigger) lets logins carry on, so the set grows with every owner who edits a
+  house until an operator acts: alert on a sustained `retrying`, and read
+  `retrying_offline` for the memory. It is a database OUTAGE to fix, never a
+  data incident, and a restart during it gives each held owner ONE last attempt
+  inside the 10 s drain (never after it) before the edits end with the process
+  (the drain's warn line names it).
   `deferred_writes` and `permit_wait_ms` are
   the two LEADING indicators of the capacity gates section 8a carries: a
   deferred set that does not return to zero between sweeps means the store's own

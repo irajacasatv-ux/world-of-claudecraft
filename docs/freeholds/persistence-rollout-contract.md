@@ -365,28 +365,40 @@ of them never quiesces an owner (R1, 2026-09-26; `server/freehold_write_retry.ts
 thrown writes for one owner inside `FREEHOLD_PERSIST_WRITE_ERROR_WINDOW_MS` (five minutes)
 put the owner on a RETRY CLOCK: its entry, its unwritten edits and any leave capture stay,
 no write is armed for it until the clock is due, and the periodic sweep then issues ONE
-statement, at most one per owner per window. A commit clears the clock; an answer no repeat
-can change (the fence's stale, a missing or conflicting row, the seal, a ceiling, or a
-thrown refusal of the document itself: a data or constraint SQLSTATE, or the writer's own
-structural refusal) quiesces as before. A player who returns meanwhile gets the kept house
-installed and plays on, and their edits ride the next retry.
+statement, AT MOST one per owner per window. Retries hold at most
+`FREEHOLD_PERSIST_RETRY_WRITE_CAP` (two) of the store's write slots and are pumped after
+ordinary writes, so a slow fault stretches their cadence rather than starving healthy
+owners. A commit clears the clock; an answer no repeat can change (the fence's stale, a
+missing or conflicting row, the seal, a ceiling, or a thrown refusal of the document
+itself: a data or constraint SQLSTATE, or the writer's own branded structural refusal,
+`FreeholdUpsertRefused`) quiesces as before. A player who returns meanwhile gets the kept
+house installed and plays on, and their edits ride the next retry.
 
-THE COST, stated as a bound: each owner on the clock holds up to ONE extra record, counted
-in `leave_captures` (66.2 MiB per thousand at the approved 420-row ceiling, 0.29 MiB with
-empty layouts), for as long as the fault lasts; the set is at most the accounts with an
-unwritten edit during the fault, and nothing caps it, because a cap would choose whose
-edits to drop. The `retrying` gauge names it. A RESTART DURING THE FAULT gives every such
-owner one last attempt inside the drain above, and the edits that still throw end with the
-process: that is the drain's accepted bound (R3), logged as the drain's one line. So a
-housing operator treats a sustained `retrying` as an outage to end before any planned
-restart, never as a data incident.
+THE COST, stated as a bound: an owner on the clock with no session left holds up to TWO
+full records that a quiesce used to free (its committed state and its leave capture),
+measured at 180 MiB per thousand such owners at the approved 420-row ceiling (a session
+probe of the real store, 2026-09-27), for as long as the fault lasts. Nothing caps the
+count, because a cap would choose whose edits to drop, and the set is NOT bounded by the
+realm's online count: a WRITE-ONLY fault (a revoked permission, a column missing because
+code deployed ahead of its migration, lock or statement timeouts on the housing table, a
+failing trigger) lets logins carry on, so it grows with every owner who edits a house until
+an operator acts. `retrying` names the set and `retrying_offline` its memory share. A
+RESTART DURING THE FAULT gives every such owner one last attempt inside the drain above,
+never after it, and the edits that still throw end with the process: that is the drain's
+accepted bound (R3), logged as the drain's one line. So a housing operator alerts on a
+sustained `retrying` and treats it as an outage to end before any planned restart, never
+as a data incident.
 
 THE FENCE STAYS A NAMED GATE (R2), and one of its cases belongs here: a thrown write can
-have COMMITTED (the connection dropped after the server committed), and the next write
-then meets its own revision as stale. The row holds that attempt's document, so nothing up
-to it is lost; an edit made after it is released with the fence's warn line, because the
-compare-and-swap cannot tell this realm's own ambiguous commit from another realm's. 07a's
-per-write receipts are what tell them apart.
+have COMMITTED, and the next write then meets its own revision as stale. On this host the
+likeliest cause is the driver's 65 s query timeout firing while a COMMIT waits on a slow
+flush (`statement_timeout` does not bound COMMIT); a dropped connection is the other. So
+`stale_writes` on a SINGLE realm, right after `write_failures`, is the realm fencing
+itself, not a second writer. The row holds that attempt's document, so nothing up to it is
+lost; an edit made after it is released with the fence's warn line. Telling this realm's
+own commit from another realm's is 07a's to do (a per-write receipt, or adopting a row
+exactly one revision past the expected one whose content equals the attempted document),
+under R2.
 
 ### Rolling back
 
