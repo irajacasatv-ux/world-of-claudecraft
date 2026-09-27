@@ -54,7 +54,15 @@
 // whole-character relation require a reviewed re-measurement if the threshold
 // changes or content outgrows it. A crossing may be an unbounded field, or
 // simply a character who owns a great deal.
-export const CHARACTER_BLOB_WARN_BYTES = 229_376;
+//
+// RE-MINTED to 262,144 (256 KiB) at the Freeholds sync of release/v0.44.0 at
+// aaff789813, by the same rule: content outgrew 229,376. The merged maximal
+// fixture measures 230,068 bytes (the release alone 227,869, this branch alone
+// 227,253, over a shared 225,054; every term attributed in
+// tests/professions_blob_growth.test.ts), 692 past the old value, so the
+// smallest 32-KiB step above it is 262,144, which now meets the guild-bank row
+// scale rather than sitting one step below it. 32,076 bytes of headroom.
+export const CHARACTER_BLOB_WARN_BYTES = 262_144;
 
 // The decision, kept pure so it is unit-testable without a database: returns the
 // dev-channel log line for an oversized blob, or null when the size is

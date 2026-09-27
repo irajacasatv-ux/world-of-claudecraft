@@ -292,10 +292,12 @@ describe('material source storage cost: the real caps', () => {
   it('records CONTAINERS-ONLY bank+vault bytes, at each container unit ceiling', () => {
     // The ceiling is PINNED, not raised: this fixture measures against the
     // number production actually uses today. Re-minted to 229,376 (224 KiB)
-    // by the Crucible integration database review (server/character_blob_size.ts);
-    // this is a warning-only threshold, never a save limit. The whole-character
-    // suite verifies this warning remains above its combined gear fixture.
-    expect(CHARACTER_BLOB_WARN_BYTES).toBe(229_376);
+    // by the Crucible integration database review, then to 262,144 (256 KiB) by
+    // the same rule at the Freeholds sync of release/v0.44.0 at aaff789813
+    // (server/character_blob_size.ts); this is a warning-only threshold, never a
+    // save limit. The whole-character suite verifies this warning remains above
+    // its combined gear fixture.
+    expect(CHARACTER_BLOB_WARN_BYTES).toBe(262_144);
 
     // Per-container unit ceilings, which differ and must not be conflated:
     //   bank slot  -> the item's stack size (20 for every shipped material)

@@ -2718,7 +2718,11 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
     // 163,840-byte threshold warned on this legal modeled state. Measured here,
     // the combined fixture is 227,099 bytes, 2,277 below the threshold (of the
     // 15,795 it had, the Warfare Season 2 stock took 13,496 and the
-    // Valestrider's reins id 22).
+    // Valestrider's reins id 22). At the Freeholds sync of release/v0.44.0 at
+    // aaff789813 the merged fixture measures 230,068 bytes, 692 PAST 229,376 (the
+    // release's +2,815 on this branch's 227,253), so the threshold was re-minted
+    // by its own rule to 262,144 (256 KiB), the smallest 32-KiB step above:
+    // 32,076 bytes of headroom (server/character_blob_size.ts).
     // A content change must be attributed and the narrow band re-measured,
     // never widened. This is warning-only; save-path tests prove oversized
     // saves stay whole.

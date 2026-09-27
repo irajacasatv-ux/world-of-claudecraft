@@ -174,6 +174,13 @@ new value. This remains a warning, never permission to truncate or reject a
 character save; p99/high-water tracking, warning dampening, and save paths are
 unchanged.
 
+Re-minted to **262,144 bytes (256 KiB)** at the Freeholds sync of
+`release/v0.44.0` at `aaff789813`, by the same rule: the merged maximal fixture
+measures 230,068 bytes (the release alone 227,869, the Freeholds branch alone
+227,253), 692 past 229,376, so the threshold takes the smallest 32 KiB step above
+it and now meets the guild-bank scale. `tests/professions_blob_growth.test.ts`
+attributes every term; `tests/character_blob_size.test.ts` pins the literal.
+
 ### Rollback compatibility
 
 A rollback to the parent branch is not lossless after players acquire this
