@@ -594,7 +594,11 @@ describe('legendary regalia graphics fairness (sheddable prestige cosmetic)', ()
     ).toContain(beforeGate);
     expect(gateAt, 'the regalia gate must open inside the dead guard').toBeGreaterThan(openAt);
     expect(emitAt, 'the regalia emit must land inside the dead guard').toBeLessThan(closeAt);
-    // The view carries the caller-owned cache shared with the pure updater.
-    expect(renderer).toContain('EntityView extends RickshawMountViewState, LegendaryRegaliaCache');
+    // The view carries the caller-owned cache shared with the pure updater. Since
+    // the release/v0.44.0 sync at aaff789813 the view also extends the world-quest
+    // carry state, so the heritage clause wraps across lines.
+    expect(renderer.replace(/\s+/g, ' ')).toMatch(
+      /export interface EntityView extends RickshawMountViewState, LegendaryRegaliaCache,/,
+    );
   });
 });

@@ -4381,7 +4381,7 @@ export async function startServer(): Promise<http.Server> {
         'freehold persistence drain did not complete (deadline, an unwritten entry, or a thrown drain): edits may be unwritten',
       );
     }
-    // Same for the world-quest scoreboard FIFO: a best-row upsert cut by
+    // Then the world-quest scoreboard FIFO, like the drains above: a best-row upsert cut by
     // pool.end() is re-earned only by a better attempt.
     await worldQuestScoresIdle();
     // Stop accepted /unstuck report intake and drain only to a finite deadline.

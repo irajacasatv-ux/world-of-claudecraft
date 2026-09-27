@@ -716,7 +716,8 @@ const PINNED_POLISH_COMPOSITE_FINGERPRINT =
   // Re-minted for the merge of release/v0.44.0 into the Eastbrook ferry branch (PR 4225). No capture was retaken.
   // Re-minted for the Freeholds sync of release/v0.44.0 at 09639d4ae9: the merged renderer leaf matches neither parent. No capture was retaken.
   // Re-minted for the Freeholds sync of release/v0.44.0 at aaff789813: the merged renderer leaf matches neither parent. No capture was retaken.
-  '399f19bdbf79c6e3d1b1fc2791c4e04c0404c4e13591359bf0111bf7f40de378';
+  // Re-minted for the aaff789813 sync's audit round: renderer.ts dropped an import the port left unused. No capture was retaken.
+  'a5d76148a212bd1aa8c13fba0a05a5c8b4a9a0d5939b4cad746ef9ef7ae9210e';
 
 function validPolishAttributionTargets(): AttributionTargetFixture[] {
   return [

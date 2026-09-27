@@ -1410,7 +1410,8 @@ const ACCEPTED_POLISH_V2_METADATA_SHA256 =
   // Re-minted for the merge of release/v0.44.0 into the Eastbrook ferry branch (PR 4225). No capture was retaken.
   // Re-minted for the Freeholds sync of release/v0.44.0 at 09639d4ae9: the merged renderer leaf matches neither parent. No capture was retaken.
   // Re-minted for the Freeholds sync of release/v0.44.0 at aaff789813: the merged renderer leaf matches neither parent. No capture was retaken.
-  'aef7c261a555b96d9dd6140b732a7188144b352875a60d155032c304ce2ee409';
+  // Re-minted for the aaff789813 sync's audit round: renderer.ts dropped an import the port left unused. No capture was retaken.
+  '292474cf8e30bf5b3434e8ce5bbfcbbc71bb626a8ed99ef5e75bba2c72976084';
 const ACCEPTED_POLISH_V2_COMPOSITE_PROVENANCE =
   // Re-minted for the Eastbrook handoff merge with release/v0.43.0: the merged renderer leaf and the moved NPC layout match neither parent. No capture was retaken.
   // Re-minted for the v0.43.0 batch base merge (ossbrain-release/v0.43.0 taking
@@ -1444,7 +1445,8 @@ const ACCEPTED_POLISH_V2_COMPOSITE_PROVENANCE =
   // Re-minted for the merge of release/v0.44.0 into the Eastbrook ferry branch (PR 4225). No capture was retaken.
   // Re-minted for the Freeholds sync of release/v0.44.0 at 09639d4ae9: the merged renderer leaf matches neither parent. No capture was retaken.
   // Re-minted for the Freeholds sync of release/v0.44.0 at aaff789813: the merged renderer leaf matches neither parent. No capture was retaken.
-  '399f19bdbf79c6e3d1b1fc2791c4e04c0404c4e13591359bf0111bf7f40de378';
+  // Re-minted for the aaff789813 sync's audit round: renderer.ts dropped an import the port left unused. No capture was retaken.
+  'a5d76148a212bd1aa8c13fba0a05a5c8b4a9a0d5939b4cad746ef9ef7ae9210e';
 const ACCEPTED_POLISH_V2_METADATA = readJsonFile<CaptureMetadata>(ACCEPTED_POLISH_V2_METADATA_PATH);
 const ACCEPTED_POLISH_V2_PROVENANCE = ACCEPTED_POLISH_V2_METADATA.polishProvenance;
 const ACCEPTED_POLISH_V2_TOWN_CONTRACT = ACCEPTED_POLISH_V2_METADATA.records[0]?.townContract;
@@ -2861,7 +2863,9 @@ describe('Eastbrook polish performance and contact evidence', () => {
       // over the re-swept evidence. No capture was retaken.
       // Freeholds sync of release/v0.44.0 at aaff789813: recomputed LAST again
       // over the re-swept evidence. No capture was retaken.
-    ).toBe('629df4fffd5d7b331c98c087f7c7cbcf30b4a734e123e06581b65c33819182db');
+      // The aaff789813 sync's audit round (renderer.ts import): recomputed LAST
+      // again over the re-swept evidence. No capture was retaken.
+    ).toBe('b5662cc1060176ec821ea7d199ac1994ac189357c2e3f8ca2f373d1c602789f8');
   });
 
   it('binds every historical after record to its accepted source and asset provenance', () => {

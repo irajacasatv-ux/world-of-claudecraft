@@ -137,8 +137,11 @@ describe('Farshore salvage render assets', () => {
     expect(
       questObjectPreloadInternalsForTest.visualItemIdForEntity('supply_crate', 2147100100),
     ).toBe('supply_crate');
-    expect(readFileSync('src/render/renderer.ts', 'utf8')).toContain(
-      "if (result.reused) body.rotation.y = groundQuestObjectYaw(e.objectItemId ?? '', e.id);",
+    // The generic object arm moved out of renderer.ts into ground_object.ts on
+    // the Freeholds branch; the release/v0.44.0 sync at aaff789813 ported the yaw
+    // there with the module's own parameter name.
+    expect(readFileSync('src/render/ground_object.ts', 'utf8')).toContain(
+      "if (result.reused) body.rotation.y = groundQuestObjectYaw(entity.objectItemId ?? '', entity.id);",
     );
   });
 

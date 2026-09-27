@@ -38,10 +38,9 @@ export function buildGroundObjectView(
   if (result.reused) h.pooledObjectCount = Math.max(0, h.pooledObjectCount - 1);
   const body = result.object.group;
   if (result.reused) body.rotation.y = groundQuestObjectYaw(entity.objectItemId ?? '', entity.id);
-  const objectPoolKey = result.poolKey;
   // Forge stations are workbenches, not pickups: no gold glint over them.
   if (entity.objectItemId?.startsWith('forge_')) {
-    return { body, height: result.object.height, objectPoolKey };
+    return { body, height: result.object.height, objectPoolKey: result.poolKey };
   }
   if (!h.sparkleMat) {
     h.sparkleMat = markSharedMaterial(
@@ -56,5 +55,5 @@ export function buildGroundObjectView(
   const sparkle = new THREE.Sprite(h.sparkleMat);
   sparkle.scale.set(0.9, 0.9, 1);
   sparkle.position.y = 1.35;
-  return { body, height: result.object.height, objectPoolKey, sparkle };
+  return { body, height: result.object.height, objectPoolKey: result.poolKey, sparkle };
 }
