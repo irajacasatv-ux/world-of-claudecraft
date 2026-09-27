@@ -1,5 +1,7 @@
 # Phase 17: trophies
 
+**Premise moved at the 2026-09-26 release sync (G3, docs/freeholds/state.md, "Premises the 2026-09-26 sync moved"):** titles now come from deed rewards AND developer-badge rungs ('dev:' ids, revocable, not in-game); the re-plan owes a ruling on excluding them from trophy sources (recommended).
+
 Wave A, the Cottage MVP. The spec is `progress.md` "17 Trophies"; the decision is
 `state.md` D19 (trophies are furnishing-shaped records, never items: `trophy_eligibility.ts`
 maps deed ids, illuminated Reliquary pages, `slain:*` marks, owned mounts, and the

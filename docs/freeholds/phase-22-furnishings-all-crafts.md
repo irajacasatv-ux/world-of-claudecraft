@@ -1,5 +1,7 @@
 # Phase 22: furnishings across all ten crafts and the R8 pattern channels
 
+**Premise moved at the 2026-09-26 release sync (G6, docs/freeholds/state.md, "Premises the 2026-09-26 sync moved"):** the market evidence includes the Wanted board's buy orders and the partial buy, the two commerce consumers the 02 census predates.
+
 Wave B, the Lodge tier and the rest of the first wave. The spec is `progress.md` "22
 Furnishings across all ten crafts and the R8 pattern channels"; the decisions are
 `state.md` Locked decisions and the approved artifact manifests (D53 pattern channels, D38

@@ -1,5 +1,7 @@
 # Phase 38: optional Charter mint and furnished-plot trading
 
+**Premise moved at the 2026-09-26 release sync (G4, docs/freeholds/state.md, "Premises the 2026-09-26 sync moved"):** rule whether plot listings appear in the character-select read-only Exchange browse, and gate that on deedSurfaces too.
+
 This implementation file and its QA are the complete contract for this bounded slice.
 The locked decisions in `state.md`, the content/measurement manifests and `ux-spec.md`
 are authoritative. Nothing in this planning packet is marked built.

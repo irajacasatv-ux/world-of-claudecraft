@@ -1,5 +1,7 @@
 # Phase 29: Guildhall purchase and upkeep
 
+**Premise moved at the 2026-09-26 release sync (G1, docs/freeholds/state.md, "Premises the 2026-09-26 sync moved"):** the spend route and the officer-only store row key on a rank permission resolved through guildRankCan, never the Officer title; the ruling owed before 28 decides which permission.
+
 Wave C, Guildhalls. The spec is `progress.md` "29 Guildhall purchase and upkeep" (apply the locked choices and verified source facts before implementing); the decisions are `state.md` Locked decisions and the approved artifact manifests (D1: the Charter rides the
 spend route; the research document's adopted ruling 3, section 12 of
 docs/prd/woc/freeholds-and-guildhalls-research.md: the service settles; D78 and D84).

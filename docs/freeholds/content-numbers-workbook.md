@@ -1,5 +1,7 @@
 # Freeholds numeric provenance and calibration workbook
 
+**Premise moved at the 2026-09-26 release sync (G7, docs/freeholds/state.md, "Premises the 2026-09-26 sync moved"):** the market-price snapshot's sold series now includes partial buys and order fills (server/market_sold_volume.ts); the calibration report states whether they belong.
+
 Status: approved packet with crafted development implementation complete locally under R01 to R46 and the round-2 dispositions
 D76-D93 (R47-R64, applied as recommended and approved on 2026-09-06). This is a filled inventory
 of existing working targets, verified source baselines and concrete unsigned production

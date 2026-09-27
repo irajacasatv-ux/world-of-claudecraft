@@ -1,5 +1,7 @@
 # Freeholds and Guildhalls: implementation plan
 
+**Premise moved at the 2026-09-26 release sync (G1 and G7, docs/freeholds/state.md, "Premises the 2026-09-26 sync moved"):** the 28 row's officer-keyed hall authority is a false premise since custom guild ranks (a ruling is owed before 28), and "transport" is now a sim domain, so the housing wire is the "wire transport".
+
 ## The per-phase workflow
 
 The packet worktree is `/Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds`

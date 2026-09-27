@@ -1,5 +1,7 @@
 # Phase 12: Strongbox and station amenities (bank access at home, the station slot, the vault arm)
 
+**Premise moved at the 2026-09-26 release sync (G7, docs/freeholds/state.md, "Premises the 2026-09-26 sync moved"):** read the placed mobile-station world object (src/sim/professions/mobile_station_object.ts) as the reuse precedent; a player can already place one inside an owner room.
+
 Wave A, the Cottage MVP. The spec is `progress.md` "12 Strongbox and station
 amenities"; the decisions are `state.md` D6 (the Strongbox is bank access at home:
 no new container, no dupe surface), D7 (the station amenity composes into the

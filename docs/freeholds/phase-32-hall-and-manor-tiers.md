@@ -1,5 +1,7 @@
 # Phase 32: Great Hall, Manor, Bastion tiers and build projects
 
+**Premise moved at the 2026-09-26 release sync (G1, docs/freeholds/state.md, "Premises the 2026-09-26 sync moved"):** hall-tier authority keys on the rank permission the ruling owed before 28 names, never the Officer title, and its rank scenes add a custom rank.
+
 Wave C. This implementation file and its paired QA own only the deliverables
 below. The locked decisions, content numbers, content-manifest.md,
 content-numbers-workbook.md, art-brief.md and ux-spec.md are authoritative. Every

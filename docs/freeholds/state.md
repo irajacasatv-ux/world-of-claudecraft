@@ -617,8 +617,9 @@ describe the audited tree and primary evidence, not additional balance rulings.
   those chosen filenames or a disabled error automatically.
 - Monolith audit: no coordinator ceiling changed during base sync. The live
   `tests/monolith_budget.test.ts` pins remain the authority. The packet's named large
-  files have no slack except `src/sim/colliders.ts`, which has some existing slack;
-  none may grow beyond its pin, and the module-first extraction rule still applies.
+  files have no slack (`src/sim/colliders.ts` too, since the 2026-09-26 sync pinned it at
+  its exact merged count); none may grow beyond its pin, and the module-first extraction
+  rule still applies.
 - Mount-catalog drift: the old "six mounts" instruction does not cover the current
   catalog. `src/sim/content/mounts.ts` exports `MOUNTS`, its derived `MOUNT_KEYS`,
   `MountKey` and `DEVELOPER_MOUNTS`; the developer list explicitly identifies mounts
@@ -1085,7 +1086,7 @@ not an unresolved product question.
 - D52 **Kitchen Garden public tableau (R26).** Project existing owner farm bed/crop/stage/status publicly without private inventory/timers. Owner board opens their own Harvest Journal; guest gets read-only owner tableau only. Produce props use existing cooking recipes or gold vendor decoration within R12 roster.
 - D53 **Pattern channels and excluded seasonal sets (R27).** Preserve adopted raid/rift/Marks doctrine, no delve channel. Every later rare pattern has one named luck channel plus Marks in its manifest; Wave A remains Marks-only. Seasonal furniture sets are explicitly outside this packet; ownership of existing decoration never expires.
 - D54 **Service-owned Hall Fund and donor target (R28).** Service owns guild pooled Claudium balance and debit/credit ledger; game mirrors absolute versioned results. Materials/gold and donor cap/audit update atomically. Proposed anti-dominance target: one current weekly Hall Ledger-equivalent per account per realm week across alts; the signed calibration artifact defines resource/currency allowance and rounding without game-side token conversion.
-- D55 **Guild layout and member trophy custody (R29).** Officers manage hall layout, members manage only their own assigned trophy plinths. Departing members retain unlock/provenance and their displays detach safely. Guild-first-kill credit uses existing eligible participant clear credit and records each qualifying participant's guild at that clear; multiple represented guilds can qualify. No invented percentage threshold or speculative retro credit from current membership.
+- D55 **Guild layout and member trophy custody (R29).** PREMISE MOVED 2026-09-26: "officer" is no longer a rank but a stamped bank tier; see "Premises the 2026-09-26 sync moved", G1 (a ruling owed before 28). Officers manage hall layout, members manage only their own assigned trophy plinths. Departing members retain unlock/provenance and their displays detach safely. Guild-first-kill credit uses existing eligible participant clear credit and records each qualifying participant's guild at that clear; multiple represented guilds can qualify. No invented percentage threshold or speculative retro credit from current membership.
 - D56 **Guild boards and cosmetic project completion (R30).** War table explicitly shows authorized guild raid lockouts and recorded first kills, with unavailable first-kill section until 31. Projects finish when approved material/fee conditions are met, no artificial multi-week wait. Completion unlocks cosmetic furnishing vendor stock only, never training/combat bypass.
 - D57 **Transactional Ward capacity and anchor (R31).** Retain 50 plots and 24 admitted occupants as TUNING, not culling. DB transaction authorizes unique slots/capacity with bounded indexed candidates and stable lock order. Largest represented guild anchors, deterministic ID tie-break; no guild means no anchor. Footprint measured against allocator before art.
 - D58 **Permanent Favor and monthly Endeavors (R32).** Favor-unlocked decor capacity is permanent. Monthly Endeavor progress resets on the authority's UTC calendar month, independently of capacity. Keep four ranks/+10 targets; content manifest fixes event weights, thresholds and rewards through approved calibration before enable.
@@ -1148,12 +1149,12 @@ so every round-2 row is settled.
   through a NEW mutation-site hook and trigger the D51 ejection recheck;
   sendSocialSnapshot is not the feed. A name that resolves to an alt resolves to that
   account's plot, and only the named character's friend list is consulted.
-- D77 **Guild-plot visiting policy (R48).** Guild-owned plots admit current members
+- D77 **Guild-plot visiting policy (R48).** PREMISE MOVED 2026-09-26: "officer" is no longer a rank but a stamped bank tier; see "Premises the 2026-09-26 sync moved", G1 (a ruling owed before 28). Guild-owned plots admit current members
   always. visit_policy for the guild owner kind is set by the leader or an officer and
   accepts only guild, public or private; friends is refused for that owner kind. Public
   admission is capped by the tier column; the Meeting Hall cap is the Cottage row until 32
   sets its own. Non-members enter as guests under the D51 ejection rules.
-- D78 **Hall Fund end-of-life (R49).** The service contract gains a Hall Fund end-of-life
+- D78 **Hall Fund end-of-life (R49).** PREMISE MOVED 2026-09-26: "officer" is no longer a rank but a stamped bank tier; see "Premises the 2026-09-26 sync moved", G1 (a ruling owed before 28). The service contract gains a Hall Fund end-of-life
   row: on disband the pooled service balance is refunded pro rata to donor accounts by
   original receipt as separately identified immutable refund operations; the game only
   requests the operation. 29 adds an officer-plus withdraw-to-guild-bank verb for fund
@@ -2078,6 +2079,80 @@ question. Never present unsigned drafts as legal/platform/service acceptance.
 | World PvP player copy names homes | `hudChrome.worldPvp.groundSanctuary` (src/ui/i18n.catalog/hud_chrome.ts) and the World PvP guide prose (src/ui/i18n.catalog/guide.ts) name only the Proving Shore and Eastbrook Vale as sanctuaries; a freehold room has been one since the v0.44.0 re-sync. Held back while housing is dark, because the live copy must not advertise an unlit feature | The phase that lights housing adds homes to both strings (English source, plus the five non-Latin fills if the value is wordy, M16) in the same change that lights it. |
 | Runtime safety and distribution | 01 strict live FREEHOLDS_ENABLED gate; 37 FREEHOLD_DEEDS_ENABLED (default off, requires freeholdsEnabled); 38 NEW allowSerializedCollectibles policy switch (default off, beside allowMounts/allowMechChromas in server/woc_market_routes.ts); 14 seven-distribution capability matrix; every priced implementation and QA | Packet owners prove dark route/command/catalog behavior, complete forbidden submodel absence and independently approved management flow before activation. |
 
+
+### Premises the 2026-09-26 sync moved (release/v0.44.0 at `09639d4ae9`, merge `8a330b3489`)
+
+Found by the release-merge audit's premise lane, read from commits. Each item names the
+corrected premise; the affected plan docs carry a pointer here. G1 is a RULING OWED before
+28 builds; G2 and G3 also want Fernando's word; the rest are corrections.
+
+- G1, RULING OWED BEFORE 28: GUILDHALL AUTHORITY IS A RANK PERMISSION, NEVER THE OFFICER
+  TITLE. The release's custom guild ranks (`c01a1b8141`, docs/prd/guild-custom-ranks.md)
+  made the rank a ladder of ids ('leader', 'member', 'officer' on the default ladder, custom
+  'r1'..'r99') with per-rank permissions (`GUILD_RANK_PERMISSIONS` in
+  src/sim/guild_ranks.ts: invite, remove, promote, bank, officerChat, motd, events). The sim
+  sees only a stamped tier: `guildBankStampRank` collapses any rank holding 'bank' to
+  'officer' and every other non-leader rank to 'member', so `GUILD_BANK_EDIT_RANKS`
+  ({leader, officer}, src/sim/guild_bank.ts) now means "holds the bank permission". Built
+  as planned (28's `canEditGuildhall` over that set, "the hall edit set equals the exported
+  GUILD_BANK_EDIT_RANKS set"), a custom Banker rank would manage the hall, pay for it and
+  withdraw the fund, and an Officer whose bank was revoked would lose all of it. The ruling:
+  either (i) append a new permission (for example 'hall') to `GUILD_RANK_PERMISSIONS` and
+  `DEFAULT_OFFICER_PERMISSIONS`, with its server gate, its column in
+  src/ui/guild_ranks_view.ts and its carry into the sim stamp (GuildMembership and
+  normalizeGuildMembership, guildStampRankOf and guildBankStampRank), or (ii) rule that the
+  ladder's 'bank' permission IS the hall permission. Either way REST gates (29's spend route)
+  resolve `guildRankCan(membership.ranks, membership.rank, perm)`, client rows read
+  GuildInfo.ranks through resolveGuildRankLadder, the planned refusal token becomes
+  permission-neutral (for example `rank_not_permitted`; unshipped, so free to choose), the
+  copy becomes "Your guild rank does not allow this.", and revocation includes a ladder
+  save: `guildSetRanks` re-stamps every member (server/social.ts), so C03 build-presence
+  clearing and 28's "revocation immediately ends access" hook that fan-out, not only a
+  per-member change. Leadership succession follows ladder seniority (guildRankIndex,
+  guildStepDownRankId). 30 and 32's rank scenes add a custom rank that holds the permission
+  and an Officer rank that does not. Affected text: D55, D77, D78 below; the guild hall rail
+  in Seams and names; implementation-plan.md (28 row); progress.md (28 row); phases 28, 29,
+  30, 32 and 40; ux-spec.md `guild.officerRequired` and `charter.guildhallOfficerOnly`; the
+  service contract ("officer-plus", "highest-ranked remaining member"), the terms amendment
+  ("Authorized officers") and the guilds research appendix.
+- G2, THE FERRY AND THE HEARTH KEY (`546e5289d9`). A ferry passenger under way is ADMITTED
+  by the Hearth Key like any teleport (src/sim/freehold/entry_context.ts has no ferry arm):
+  the ride ends on the next ferry tick (src/sim/transport_ferry.ts, the body "moved away by
+  something else"), a parked pet returns beside the owner, inside the room, the cooldown
+  advances once, and leaving lands at the Eastbrook gate drop, never the sea. The phase that
+  lights housing online pins that order, or Fernando rules a `busy` refusal instead. Every
+  berth, pier and lane waypoint stands at x <= -100, about 78 yd from the gate.
+- G3, TITLES HAVE A SECOND SOURCE (`55ce56306a`, `76109070b1`). Developer-badge rung titles
+  ('dev:' ids, src/sim/dev_badge_titles.ts) resolve live from a GitHub link and the server
+  clears them; they are not deed rewards. 17's re-plan owes a ruling: exclude 'dev:' titles
+  from trophy sources (recommended, the DEVELOPER_MOUNTS precedent: revocable, not in-game).
+- G4, THE EXCHANGE HAS A SECOND SURFACE (`b34952644d`). The character-select read-only
+  $WOC Exchange browse (src/game/charselect_woc_market_wiring.ts over
+  `wocMarketAttachAllowed(defaultWocMarketShell())`) is a second consumer of the Exchange
+  gate. 14's distribution map folds both consumers; 38 rules whether plot listings appear in
+  the character-select browse and gates that on deedSurfaces too.
+- G5, EXITS SET FACING (`64a20afed2`). `leaveDungeon` sets `p.facing = door.facing` from the
+  def's doorPos and leaveOffset (src/sim/instances/dungeons.ts), so a freehold exit faces
+  south, away from the gate (pinned in tests/freehold_instance.test.ts at this sync). 25a's
+  Fenbridge return override sets position AND facing, and its round-trip test checks facing.
+- G6, TWO NEW COMMERCE CONSUMERS (`46f671ea61`, `678153fb72`). The Wanted board's buy orders
+  (market_order_place, market_order_fill; src/sim/market_orders.ts) and the partial buy are
+  commerce consumers the 02 census predates. They keep the listing rules (orders refuse
+  soulbound and noMarketList furnishings, a fill takes only plain copies, deliveries and
+  partial buys land one copy per slot), pinned in tests/furnishing_item_kind.test.ts at this
+  sync; 22's market evidence includes both.
+- G7, NITS FOR THE NAMED PHASES. 09/ux-spec: camera-wall occlusion has a dithered ghost arm
+  (src/render/occluder_dither_fade.ts, instanced twin instanced_dither_fade.ts) beside the
+  occluder_fade convention; interiors and instanced furnishings name both. 09: Action Cam
+  (`db506e06ec`, default off) shifts the pivot and FOV over director poses, so 'hearthView'
+  states how it composes, and capture rigs keep it off. 12: the placed mobile-station world
+  object (src/sim/professions/mobile_station_object.ts, `801eded1a0`) is the reuse precedent
+  for the station amenity, and a player can already place one inside an owner room. The
+  content-numbers market-price snapshot: server/market_sold_volume.ts now counts partial buys
+  and order fills in the sold series; the calibration report states whether they belong.
+  Vocabulary: "transport" is now a sim domain (IWorldTransport, src/sim/transport_*.ts), so
+  the housing plans say "wire transport" or "snapshot transport".
+
 Final ordering is 44 implementation, 44 QA, 44a Codex artwork, 44a QA, 44b legal
 revisit/handoff, 44b QA. Only then can the completed program be reported; durable source
 preservation still precedes any separately authorized cleanup. No push/PR or legal
@@ -2085,11 +2160,13 @@ message is performed in this documentation session.
 
 ## Gotchas (read before the matching phase)
 
-- Character blob headroom (as measured on 2026-09-25, at the v0.44.0 re-sync; the live
+- Character blob headroom (as measured on 2026-09-26, at the sync of `09639d4ae9`; the live
   measurement is pinned in tests/professions_blob_growth.test.ts and the threshold is
   `CHARACTER_BLOB_WARN_BYTES` in server/character_blob_size.ts): the maximal character blob
-  measured 227,099 bytes against 229,376, so 2,277 bytes remained (Warfare Season 2 took
-  13,496 bytes of the 15,795 there were, the Valestrider's reins id 22 bytes). The next
+  measures 227,253 bytes against 229,376, so 2,123 bytes remain (the Eastbrook ferry's deed
+  and four visit marks took 154; Warfare Season 2 had taken 13,496 of the 15,795 there were,
+  the Valestrider's reins id 22). The fixture does not model the release's sparse
+  `CharacterState.pendingTownFocus`, so the real headroom is slightly less. The next
   housing content wave that grows the blob (trophies, more furnishings or Reliquary pages)
   forces a threshold decision; attribute and measure it, never widen the band.
 - Reliquary page order: pages the release appends go BEFORE the unreleased Hearth

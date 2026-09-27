@@ -1,5 +1,7 @@
 # Phase 40: Keep and Citadel tiers, prestige deeds
 
+**Premise moved at the 2026-09-26 release sync (G1, docs/freeholds/state.md, "Premises the 2026-09-26 sync moved"):** any officer-keyed authority here follows the rank permission the ruling owed before 28 names.
+
 This implementation file and its QA are the complete contract for this bounded slice.
 The locked decisions in `state.md`, the content/measurement manifests and `ux-spec.md`
 are authoritative. Nothing in this planning packet is marked built.

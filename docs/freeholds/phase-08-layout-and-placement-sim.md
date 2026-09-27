@@ -1,5 +1,7 @@
 # Phase 08: bounded placement and session undo/redo
 
+**Premise moved at the 2026-09-26 release sync (G7, docs/freeholds/state.md, "Premises the 2026-09-26 sync moved"):** "transport" is now a sim domain (the ferry); say "wire transport" or "snapshot transport" for the housing wire.
+
 Wave A. The settled decisions in state.md, content-manifest.md,
 content-numbers-workbook.md, art-brief.md and ux-spec.md govern this work. The artifacts
 and tests named below are NEW unless the context inventory labels them EXISTING.

@@ -2,6 +2,8 @@
 
 # Codebase research: crypto rails, guilds, bank, holder tiers, telemetry
 
+**Premise moved at the 2026-09-26 release sync (G1, docs/freeholds/state.md, "Premises the 2026-09-26 sync moved"):** guild ranks are now a ladder: `guilds.ranks JSONB` holds each guild's ladder and `guild_members.rank` holds ladder ids ('r1'..'r99' too); server checks resolve per-rank permissions, not inline rank comparisons.
+
 > **Dated research, not implementation authority.** Captured 2026-09-05. The
 > [proposal](../freeholds-and-guildhalls-research.md) and [state](../../../freeholds/state.md)
 > record the requirements adopted on 2026-09-06. Historical

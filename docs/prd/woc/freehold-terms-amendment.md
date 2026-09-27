@@ -1,5 +1,7 @@
 # Freehold Terms amendment draft
 
+**Premise moved at the 2026-09-26 release sync (G1, docs/freeholds/state.md, "Premises the 2026-09-26 sync moved"):** "authorized officers" means members whose guild rank holds the hall permission the ruling owed before phase 28 names, not an Officer title.
+
 Status: adopted packet requirements, approved 2026-09-06; counsel acceptance remains a release gate. This is
 redline-ready replacement/addition text for the future publisher of the Terms;
 it does not amend the live Terms. Counsel must reconcile it with the actual

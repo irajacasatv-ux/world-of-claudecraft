@@ -1,5 +1,7 @@
 # Phase 25a: twelve-week prepay and the Fenbridge gate
 
+**Premise moved at the 2026-09-26 release sync (G5, docs/freeholds/state.md, "Premises the 2026-09-26 sync moved"):** leaveDungeon now sets the exit facing from the door's leaveOffset; the Fenbridge return override sets position AND facing, and the round-trip test checks facing.
+
 Wave B. This implementation file and its paired QA own only the deliverables
 below. The locked decisions, content numbers, content-manifest.md,
 content-numbers-workbook.md, art-brief.md and ux-spec.md are authoritative. Every

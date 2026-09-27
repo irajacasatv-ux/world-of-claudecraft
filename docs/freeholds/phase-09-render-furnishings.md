@@ -1,5 +1,7 @@
 # Phase 09: render (the furnishing view, the interior light rig, the placement ghost)
 
+**Premise moved at the 2026-09-26 release sync (G7, docs/freeholds/state.md, "Premises the 2026-09-26 sync moved"):** camera-wall occlusion has a dithered ghost arm beside occluder_fade (name both), and Action Cam (default off) shifts pivot and FOV over director poses: state how 'hearthView' composes with it, and keep it off in capture rigs.
+
 Wave A, the Cottage MVP. The spec is `progress.md` "09 Render: furnishing view, light
 rig, ghost"; the decisions are `state.md` D4 (a descriptor both hosts regenerate)
 and D13 (art gets stand-ins) and `state.md` "Seams and names" (Client). This phase ships

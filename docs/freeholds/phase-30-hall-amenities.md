@@ -1,5 +1,7 @@
 # Phase 30: guild chest, feast table and shared stations
 
+**Premise moved at the 2026-09-26 release sync (G1, docs/freeholds/state.md, "Premises the 2026-09-26 sync moved"):** the leader, officer and member scenes add a custom rank that holds the hall permission and an Officer rank that does not, once the ruling owed before 28 names the permission.
+
 Wave C. This implementation file and its paired QA own only the deliverables
 below. The locked decisions, content numbers, content-manifest.md,
 content-numbers-workbook.md, art-brief.md and ux-spec.md are authoritative. Every

@@ -1,5 +1,7 @@
 # Phase 14: the distribution surface map
 
+**Premise moved at the 2026-09-26 release sync (G4, docs/freeholds/state.md, "Premises the 2026-09-26 sync moved"):** the Exchange gate now has two consumers, the in-world window and the character-select read-only browse (src/game/charselect_woc_market_wiring.ts); the map folds both.
+
 Wave A, the Cottage MVP. The spec is `progress.md` "14 Distribution surface map"; the
 decision is `state.md` D9 (one pure client module, a seven-distribution matrix, a
 `HudFeatures` row, a client gate STRICTER than the Claudium store's `!NATIVE_APP` rule),

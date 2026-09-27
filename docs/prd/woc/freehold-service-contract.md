@@ -1,5 +1,7 @@
 # Freehold economy-service contract draft
 
+**Premise moved at the 2026-09-26 release sync (G1, docs/freeholds/state.md, "Premises the 2026-09-26 sync moved"):** "officer-plus" authority and "highest-ranked remaining member" succession map to a guild rank PERMISSION and ladder seniority since the release's custom guild ranks; a ruling is owed before phase 28.
+
 Status: adopted packet requirements, approved 2026-09-06; external sign-off remains a release gate. This is a
 concrete implementation handoff, not an accepted tariff or deployed API. All
 contract field names and operation names below are NEW planned names unless an

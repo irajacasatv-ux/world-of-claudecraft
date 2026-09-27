@@ -1,5 +1,7 @@
 # Freeholds and Guildhalls: interface and experience specification
 
+**Premise moved at the 2026-09-26 release sync (G1 and G7, docs/freeholds/state.md, "Premises the 2026-09-26 sync moved"):** `guild.officerRequired` and `charter.guildhallOfficerOnly` name an Officer a guild may not have; their copy becomes permission-neutral ("Your guild rank does not allow this.") once the ruling owed before 28 lands; and occlusion names the dithered ghost arm too.
+
 Status: approved, UNBUILT design. Fernando approved R01 through R46 on
 2026-09-06, with the final Codex artwork closeout and legal-team handoff additions.
 D76 to D93 (ruling-sheet R47 to R64) are propagated here as the round-2 settled

@@ -1,5 +1,7 @@
 # Phase 28: the guild owner kind, the Meeting Hall, the Hall Fund
 
+**Premise moved at the 2026-09-26 release sync (G1, docs/freeholds/state.md, "Premises the 2026-09-26 sync moved"):** guildhall authority keyed on the Officer rank or on GUILD_BANK_EDIT_RANKS is a FALSE premise since the release's custom guild ranks: 'officer' is now a stamped bank tier. A ruling on the hall permission is owed before this phase builds.
+
 Wave C, Guildhalls. The spec is `progress.md` "28 The guild owner kind, the Meeting Hall,
 the Hall Fund" (use the locked decisions and recorded tree facts before implementing); the decisions are `state.md` (D15, D16: one record
 type keyed by owner key), the research document's adopted ruling 1
