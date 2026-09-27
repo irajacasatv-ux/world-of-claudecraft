@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import ts from 'typescript';
 import { describe, expect, it } from 'vitest';
@@ -176,9 +176,7 @@ describe('vite dev-server watch ignore list', () => {
     expect(CI_LONG_SUITES.length).toBeGreaterThan(0);
     for (const file of CI_LONG_SUITES) expect(file).toMatch(/^tests\/[\w/]+\.test\.ts$/);
     // And the function only ever returns lane files: here its widest output, a bare run.
-    const widest = localLaneExclusions({ env: {}, argv: [] });
-    expect(widest.length).toBeGreaterThan(0);
-    for (const file of widest) expect(CI_LONG_SUITES).toContain(file);
+    expect(localLaneExclusions({ env: {}, argv: [] })).toEqual([...CI_LONG_SUITES]);
   });
 
   it('names the lane scope only at its import from lane_suite_scope.mjs and that spread', () => {
@@ -224,6 +222,24 @@ describe('vite dev-server watch ignore list', () => {
     expect(() => stringArrayAt('test.exclude', holed)).toThrow(/non-literal/);
   });
 
+  it("reads the config vitest loads, built by vite's own defineConfig", () => {
+    // vite's defineConfig, imported unaliased and called once, at the export: a local
+    // function of that name could rewrite the object after this reads it.
+    const sites = identifierSites('defineConfig');
+    expect(sites).toHaveLength(2);
+    const [imported, called] = sites;
+    expect(imported && ts.isImportSpecifier(imported.parent)).toBe(true);
+    expect(imported && ts.isImportSpecifier(imported.parent) && imported.parent.propertyName).toBe(
+      undefined,
+    );
+    expect(importDeclarationOf(imported).moduleSpecifier.getText(config)).toBe("'vite'");
+    expect(called?.parent).toBe(defineConfigObject().parent);
+    // vitest prefers a root vitest.config.* over vite.config.ts; none may exist.
+    for (const ext of ['ts', 'mts', 'cts', 'js', 'mjs', 'cjs']) {
+      expect(existsSync(`${root}vitest.config.${ext}`), ext).toBe(false);
+    }
+  });
+
   it('reads the exported config only, and refuses a key it could misread', () => {
     const synthetic = (text: string) =>
       ts.createSourceFile('synthetic.ts', text, ts.ScriptTarget.Latest, true);
@@ -232,14 +248,14 @@ describe('vite dev-server watch ignore list', () => {
       "const decoy = defineConfig({ test: { exclude: ['a/**'] } });\nexport default defineConfig({ test: { exclude: ['b/**'] } });",
     );
     expect(stringArrayAt('test.exclude', decoy).strings).toEqual(['b/**']);
-    for (const shape of [
-      "{ exclude: ['a/**'], exclude: ['b/**'] }",
-      "{ exclude: ['a/**'], ...extra }",
-      "{ exclude: ['a/**'], ['exclude']: ['b/**'] }",
-      "{ exclude: ['a/**'], extra }",
-    ]) {
+    for (const [shape, refusal] of [
+      ["{ exclude: ['a/**'], exclude: ['b/**'] }", /duplicate property "exclude"/],
+      ["{ exclude: ['a/**'], ...extra }", /is not a plain property/],
+      ["{ exclude: ['a/**'], ['exclude']: ['b/**'] }", /is not a plain property/],
+      ["{ exclude: ['a/**'], extra }", /is not a plain property/],
+    ] as const) {
       const source = synthetic(`export default defineConfig({ test: ${shape} });`);
-      expect(() => stringArrayAt('test.exclude', source), shape).toThrow(/vite\.config\.ts/);
+      expect(() => stringArrayAt('test.exclude', source), shape).toThrow(refusal);
     }
   });
 
