@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import ts from 'typescript';
 import { describe, expect, it } from 'vitest';
+import { CI_LONG_SUITES } from '../scripts/lib/ci_shard_plan.mjs';
 
 // Guards `server.watch.ignored` in vite.config.ts, the only thing keeping the dev
 // server from reloading the served game for a file that cannot reach it.
@@ -58,6 +59,14 @@ function propertyValue(obj: ts.ObjectLiteralExpression, name: string): ts.Expres
   throw new Error(`vite.config.ts: property "${name}" not found`);
 }
 
+// The one computed element an array may hold, as exact source text (whitespace
+// ignored): the local lane scope in test.exclude (scripts/lib/lane_suite_scope.mjs),
+// whose output is only ever CI_LONG_SUITES test files (pinned below). Any other
+// non-literal element still throws, so an agent directory can never hide behind one.
+const LANE_SCOPE_SPREAD =
+  '...(process.env.VITEST?localLaneExclusions({env:process.env,argv:process.argv}):[])';
+const admittedSpreads: string[] = [];
+
 // Reads a string[] at a dotted path under defineConfig({ ... }). Parsed from the AST
 // rather than imported: vite.config.ts sits outside tsconfig `include` on purpose (it
 // imports untyped scripts/*.mjs helpers), so importing it here would drag it into the
@@ -72,12 +81,20 @@ function stringArrayAt(path: string): string[] {
     node = propertyValue(node, segment);
   }
   if (!ts.isArrayLiteralExpression(node)) throw new Error(`vite.config.ts: "${path}" is not array`);
-  return node.elements.map((element) => {
-    if (!ts.isStringLiteral(element)) {
-      throw new Error(`vite.config.ts: "${path}" holds a non-literal element`);
+  const strings: string[] = [];
+  for (const element of node.elements) {
+    if (ts.isStringLiteral(element)) {
+      strings.push(element.text);
+      continue;
     }
-    return element.text;
-  });
+    const text = element.getText(config).replace(/\s+/g, '');
+    if (path === 'test.exclude' && ts.isSpreadElement(element) && text === LANE_SCOPE_SPREAD) {
+      admittedSpreads.push(text);
+      continue;
+    }
+    throw new Error(`vite.config.ts: "${path}" holds a non-literal element`);
+  }
+  return strings;
 }
 
 // '**/.claude/**' and 'tmp/**' both name one directory; anything else returns undefined
@@ -113,6 +130,14 @@ describe('vite dev-server watch ignore list', () => {
     const excluded = testExcludedDirs.filter((dir) => dir.startsWith('.') || dir === 'tmp');
     expect(excluded.length).toBeGreaterThanOrEqual(6);
     for (const dir of excluded) expect(watchIgnoredDirs).toContain(dir);
+  });
+
+  it('admits only the lane scope as a computed test.exclude element, and it names test files', () => {
+    expect(admittedSpreads).toEqual([LANE_SCOPE_SPREAD]);
+    // What the spread can add: lane files only, each one a test file under tests/, so
+    // no directory glob, and no agent directory, can arrive through it.
+    expect(CI_LONG_SUITES.length).toBeGreaterThan(0);
+    for (const file of CI_LONG_SUITES) expect(file).toMatch(/^tests\/[\w/]+\.test\.ts$/);
   });
 
   it('keeps vitest agent-directory excludes root-relative for linked worktrees', () => {
