@@ -222,7 +222,7 @@ describe('vite dev-server watch ignore list', () => {
     expect(() => stringArrayAt('test.exclude', holed)).toThrow(/non-literal/);
   });
 
-  it("reads the config vitest loads, built by vite's own defineConfig", () => {
+  it("reads the config vite and vitest load, built by vite's own defineConfig", () => {
     // vite's defineConfig, imported unaliased and called once, at the export: a local
     // function of that name could rewrite the object after this reads it.
     const sites = identifierSites('defineConfig');
@@ -234,9 +234,13 @@ describe('vite dev-server watch ignore list', () => {
     );
     expect(importDeclarationOf(imported).moduleSpecifier.getText(config)).toBe("'vite'");
     expect(called?.parent).toBe(defineConfigObject().parent);
-    // vitest prefers a root vitest.config.* over vite.config.ts; none may exist.
+    // vitest prefers a root vitest.config.* over vite.config.ts, and vite itself loads a
+    // root vite.config.js or .mjs first: no other config file may exist beside this one.
     for (const ext of ['ts', 'mts', 'cts', 'js', 'mjs', 'cjs']) {
-      expect(existsSync(`${root}vitest.config.${ext}`), ext).toBe(false);
+      expect(existsSync(`${root}vitest.config.${ext}`), `vitest.config.${ext}`).toBe(false);
+      if (ext !== 'ts') {
+        expect(existsSync(`${root}vite.config.${ext}`), `vite.config.${ext}`).toBe(false);
+      }
     }
   });
 
@@ -250,9 +254,9 @@ describe('vite dev-server watch ignore list', () => {
     expect(stringArrayAt('test.exclude', decoy).strings).toEqual(['b/**']);
     for (const [shape, refusal] of [
       ["{ exclude: ['a/**'], exclude: ['b/**'] }", /duplicate property "exclude"/],
-      ["{ exclude: ['a/**'], ...extra }", /is not a plain property/],
-      ["{ exclude: ['a/**'], ['exclude']: ['b/**'] }", /is not a plain property/],
-      ["{ exclude: ['a/**'], extra }", /is not a plain property/],
+      ["{ exclude: ['a/**'], ...extra }", /beside "exclude" is not a plain property/],
+      ["{ exclude: ['a/**'], ['exclude']: ['b/**'] }", /beside "exclude" is not a plain property/],
+      ["{ exclude: ['a/**'], extra }", /beside "exclude" is not a plain property/],
     ] as const) {
       const source = synthetic(`export default defineConfig({ test: ${shape} });`);
       expect(() => stringArrayAt('test.exclude', source), shape).toThrow(refusal);
