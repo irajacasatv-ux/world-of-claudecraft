@@ -18,7 +18,8 @@
 // process made to the account, and with no loaded entry the durable row has.
 //
 // A LIVE RECORD NEEDS NO VERDICT OF ITS OWN: the install is load-once, so nothing
-// the join hands it replaces a record that is already live.
+// the join hands it replaces a record that is already live, and with one standing
+// no install changes anything for the counters to report.
 
 import type { LoadedFreehold } from './freehold_load_outcome';
 
@@ -36,8 +37,11 @@ export const FREEHOLD_JOIN_VERDICTS = [
 
 /** Which arm decided, so the store can count it and a test can name the arm it
  *  reached. `entry` and `superseded` install the same thing (the loaded entry);
- *  they differ only in whether the asked answer already matched it, so
- *  `superseded` is the twelfth path's fix actually changing an install. */
+ *  they differ only in whether the install CHANGED anything, so `superseded` is
+ *  the twelfth path's fix actually changing an install: an ask that differed
+ *  from the entry (stale, held on capacity, marked, broken or missing) with no
+ *  live record standing. A second character's join beside a live record, and a
+ *  login replaying the same DATA hold its entry holds, are `entry`. */
 export type FreeholdJoinVerdict = (typeof FREEHOLD_JOIN_VERDICTS)[number];
 
 /** A zero count per verdict, built from the vocabulary, so a verdict added to
@@ -51,12 +55,12 @@ export function freeholdJoinVerdictCounts(): Record<FreeholdJoinVerdict, number>
 
 /** True when `asked` is an answer the entry's `current` answer would not
  *  change: the same account, plot and durable revision, the same document
- *  revision, and neither a hold nor a withheld mark. */
+ *  revision, the same hold kind or none, and no withheld mark. */
 function askedMatches(asked: LoadedFreehold | undefined, current: LoadedFreehold): boolean {
   if (typeof asked !== 'object' || asked === null) return false;
   return (
     asked.accountId === current.accountId &&
-    !asked.hold &&
+    (asked.hold?.kind ?? null) === (current.hold?.kind ?? null) &&
     asked.recordWithheld === false &&
     asked.plotId === current.plotId &&
     asked.durableRev === current.durableRev &&
@@ -73,11 +77,14 @@ function askedMatches(asked: LoadedFreehold | undefined, current: LoadedFreehold
  * @param current the store's LOADED entry answering now, exactly as preload's
  *   replay arm would (its capture if it holds one, else its committed state, and
  *   no document while it is blocked), or null when no entry is loaded.
+ * @param live whether a live record already stands for the owner, which makes
+ *   the install a no-op: it decides only which verdict is counted.
  */
 export function freeholdJoinAnswer(
   accountId: number,
   asked: LoadedFreehold | undefined,
   current: LoadedFreehold | null,
+  live: boolean,
 ): { readonly answer: LoadedFreehold | undefined; readonly verdict: FreeholdJoinVerdict } {
   // THE ENTRY, whatever was asked: nothing (both handshake asks threw), a broken
   // or foreign bag, a hold, a marked answer or a stale one. A loaded entry holds
@@ -87,7 +94,8 @@ export function freeholdJoinAnswer(
   // ruling (b)). Checked against the account, so an entry can never hand one
   // account's house to another.
   if (current !== null && current.accountId === accountId) {
-    return { answer: current, verdict: askedMatches(asked, current) ? 'entry' : 'superseded' };
+    const changed = !live && !askedMatches(asked, current);
+    return { answer: current, verdict: changed ? 'superseded' : 'entry' };
   }
   // No loaded entry and no durable answer at all: install nothing, as a join
   // always has.

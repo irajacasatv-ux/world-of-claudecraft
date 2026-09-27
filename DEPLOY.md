@@ -802,16 +802,22 @@ For off-box safety, sync the directory to S3 occasionally:
   the permit and queue waits, the statement durations those waits exclude, total
   bytes written, the re-ask's cost (`reasks`, `reask_reads` for the ones that
   waited on the durable path inside the lease-held window, a read, a shared read
-  or a permit wait (a cap refusal waits on nothing and is not counted), and
+  or a permit wait (a cap refusal waits on nothing and is not counted; a read is
+  booked when it settles, so a re-ask refused on its budget books its read a
+  little later, when the abandoned read lands, which the permit wait, the
+  statement bound and the driver's query timeout guarantee), and
   `reask_ms`, the re-asks' summed wall time, bounded per handshake by what the
   first ask left of the one 10,000 ms housing budget on a monotonic clock), each
-  join's install decision (`join_entry`, a loaded entry installed whose answer the
-  ask already matched, which is every healthy join and so tracks login volume;
-  `join_superseded`, the loaded entry installed IN PLACE of a stale, held, marked,
-  broken or missing ask, which is the twelfth path's fix actually changing an
+  join's install decision (`join_entry`, a join whose install changed nothing: a
+  loaded entry the ask already matched, a second character beside the owner's
+  live record, or a login replaying its entry's DATA hold, so it tracks login
+  volume; `join_superseded`, the loaded entry installed IN PLACE of an ask that
+  differed from it (stale, held on capacity, marked, broken or missing) with no
+  live record standing, which is the twelfth path's fix actually changing an
   install; `join_held`; `join_withheld`, a join nothing could vouch for,
-  write-blocked unless a live record it shares still stands; `join_none`;
-  `join_refused`), `pre_gate_refusals` (rows refused on their on-disk size before
+  installed as no record: with no live record standing it warns and is
+  write-blocked, and beside one it shares that record and writes, or is refused,
+  as that record is; `join_none`; `join_refused`), `pre_gate_refusals` (rows refused on their on-disk size before
   anything was rendered) and `writes_without_record`.
   `woc_freehold_load_failures_total` splits load failures by `kind`, and every
   one of the NINE kinds is its own diagnosis rather than one label. FOUR are
@@ -886,8 +892,9 @@ For off-box safety, sync the directory to S3 occasionally:
   the quiet form, since the repair re-read meets the same full cap, so the entry
   stays unloaded and held with no seal line and shows only as `cap_full` in
   `woc_freehold_load_failures_total`, once per refused read. And the WITHHELD
-  race, an entry collected between the re-ask and the install, installs no record
-  either: a `join answer withheld` warning, then the same loud refusal. A
+  race, an entry collected between the re-ask and the install with no live record
+  standing, installs no record either: a `join answer withheld` warning, then the
+  same loud refusal (beside a live record the join shares it and warns nothing). A
   `quiesced` rise from either order is a write-blocked session, never a lost
   house. `held` counts
   entries under ANY recovery hold, DATA or CAPACITY: read

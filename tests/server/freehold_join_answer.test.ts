@@ -65,13 +65,13 @@ function liveCtx(): SimContext {
 
 describe('freeholdJoinAnswer', () => {
   it('answers NOTHING for a join that carries no durable answer and meets no loaded entry', () => {
-    expect(freeholdJoinAnswer(ACCOUNT_ID, undefined, null)).toEqual({
+    expect(freeholdJoinAnswer(ACCOUNT_ID, undefined, null, false)).toEqual({
       answer: undefined,
       verdict: 'none',
     });
     // Another account's entry is no entry for this join.
     expect(
-      freeholdJoinAnswer(ACCOUNT_ID, undefined, answer({ accountId: ACCOUNT_ID + 1 })),
+      freeholdJoinAnswer(ACCOUNT_ID, undefined, answer({ accountId: ACCOUNT_ID + 1 }), false),
     ).toEqual({ answer: undefined, verdict: 'none' });
   });
 
@@ -80,25 +80,25 @@ describe('freeholdJoinAnswer', () => {
     // dropped for want of an answer. The store-level order is pinned in
     // tests/server/freehold_persist.test.ts.
     const current = answer({ durableRev: '7', state: house() });
-    const decided = freeholdJoinAnswer(ACCOUNT_ID, undefined, current);
+    const decided = freeholdJoinAnswer(ACCOUNT_ID, undefined, current, false);
     expect(decided.verdict).toBe('superseded');
     expect(decided.answer).toBe(current);
   });
 
   it("hands back a malformed or another account's answer unchanged when no entry is loaded, for the install to refuse", () => {
     const foreign = answer({ accountId: ACCOUNT_ID + 1, state: house() });
-    expect(freeholdJoinAnswer(ACCOUNT_ID, foreign, null)).toEqual({
+    expect(freeholdJoinAnswer(ACCOUNT_ID, foreign, null, false)).toEqual({
       answer: foreign,
       verdict: 'refused',
     });
     const malformed = 'not an answer' as unknown as LoadedFreehold;
-    expect(freeholdJoinAnswer(ACCOUNT_ID, malformed, null)).toEqual({
+    expect(freeholdJoinAnswer(ACCOUNT_ID, malformed, null, false)).toEqual({
       answer: malformed,
       verdict: 'refused',
     });
     // A null bag, the one object-typed value that is not an answer.
     const empty = null as unknown as LoadedFreehold;
-    expect(freeholdJoinAnswer(ACCOUNT_ID, empty, null)).toEqual({
+    expect(freeholdJoinAnswer(ACCOUNT_ID, empty, null, false)).toEqual({
       answer: empty,
       verdict: 'refused',
     });
@@ -111,7 +111,7 @@ describe('freeholdJoinAnswer', () => {
       'not an answer' as unknown as LoadedFreehold,
       null as unknown as LoadedFreehold,
     ]) {
-      const decided = freeholdJoinAnswer(ACCOUNT_ID, asked, current);
+      const decided = freeholdJoinAnswer(ACCOUNT_ID, asked, current, false);
       expect(decided.verdict).toBe('superseded');
       expect(decided.answer).toBe(current);
     }
@@ -122,7 +122,7 @@ describe('freeholdJoinAnswer', () => {
     // before the other session edited; the entry holds its capture.
     const stale = answer();
     const current = answer({ durableRev: null, state: house({ rev: 3 }) });
-    const decided = freeholdJoinAnswer(ACCOUNT_ID, stale, current);
+    const decided = freeholdJoinAnswer(ACCOUNT_ID, stale, current, false);
     expect(decided.verdict).toBe('superseded');
     expect(decided.answer).toBe(current);
   });
@@ -130,7 +130,7 @@ describe('freeholdJoinAnswer', () => {
   it('supersedes a HOLD or a marked answer too, once an entry is loaded', () => {
     const current = answer({ durableRev: '7', state: house() });
     for (const asked of [answer({ hold: HOLD }), answer({ recordWithheld: true })]) {
-      const decided = freeholdJoinAnswer(ACCOUNT_ID, asked, current);
+      const decided = freeholdJoinAnswer(ACCOUNT_ID, asked, current, false);
       expect(decided.verdict).toBe('superseded');
       expect(decided.answer).toBe(current);
     }
@@ -140,7 +140,7 @@ describe('freeholdJoinAnswer', () => {
     // The healthy join: its re-ask replayed the entry, so nothing changed.
     const current = answer({ durableRev: '7', state: house({ rev: 7 }) });
     const same = answer({ durableRev: '7', state: house({ rev: 7 }) });
-    expect(freeholdJoinAnswer(ACCOUNT_ID, same, current).verdict).toBe('entry');
+    expect(freeholdJoinAnswer(ACCOUNT_ID, same, current, false).verdict).toBe('entry');
     // Each dimension on its own, so no one comparison can carry the rest.
     for (const differs of [
       answer({ durableRev: '6', state: house({ rev: 7 }) }),
@@ -149,9 +149,42 @@ describe('freeholdJoinAnswer', () => {
       answer({ durableRev: '7', plotId: 'plot:other', state: house({ rev: 7 }) }),
       answer({ durableRev: '7', state: house({ rev: 7 }), hold: HOLD }),
       answer({ durableRev: '7', state: house({ rev: 7 }), recordWithheld: true }),
+      // Another account's ask equal to the entry in every other field, so only
+      // the account comparison can refuse the match.
+      answer({ accountId: ACCOUNT_ID + 1, durableRev: '7', state: house({ rev: 7 }) }),
     ]) {
-      expect(freeholdJoinAnswer(ACCOUNT_ID, differs, current).verdict).toBe('superseded');
+      expect(freeholdJoinAnswer(ACCOUNT_ID, differs, current, false).verdict).toBe('superseded');
     }
+  });
+
+  it('names an install that changes nothing ENTRY: a live record standing, or the same DATA hold replayed', () => {
+    // A second character beside the owner's live record: preload's already-live
+    // arm MARKS its ask, and the install is load-once, so nothing is superseded.
+    const current = answer({ durableRev: '8', state: house({ rev: 8 }) });
+    const marked = answer({ durableRev: '8', state: null, recordWithheld: true });
+    expect(freeholdJoinAnswer(ACCOUNT_ID, marked, current, true)).toEqual({
+      answer: current,
+      verdict: 'entry',
+    });
+    // CONTROL: the same ask with nothing live is the fix changing the install.
+    expect(freeholdJoinAnswer(ACCOUNT_ID, marked, current, false).verdict).toBe('superseded');
+    // A loaded entry held on a DATA kind answers the same hold to both asks, so
+    // every login of that account replays it and matches.
+    const dataHold = {
+      kind: 'malformed' as const,
+      detail: 'the layout is not an array',
+      plotIndex: 0,
+      durableRev: '4',
+    };
+    const heldEntry = answer({ durableRev: '4', hold: dataHold });
+    const replayed = answer({ durableRev: '4', hold: { ...dataHold } });
+    expect(freeholdJoinAnswer(ACCOUNT_ID, replayed, heldEntry, false).verdict).toBe('entry');
+    // CONTROLS: another kind over that entry, and a capacity hold asked over a
+    // clean entry, are still asks the entry replaced.
+    const otherKind = answer({ durableRev: '4', hold: { ...HOLD, durableRev: '4' } });
+    expect(freeholdJoinAnswer(ACCOUNT_ID, otherKind, heldEntry, false).verdict).toBe('superseded');
+    const capacity = answer({ durableRev: '8', state: house({ rev: 8 }), hold: HOLD });
+    expect(freeholdJoinAnswer(ACCOUNT_ID, capacity, current, false).verdict).toBe('superseded');
   });
 
   it('never installs an entry answer that names another account', () => {
@@ -161,6 +194,7 @@ describe('freeholdJoinAnswer', () => {
       ACCOUNT_ID,
       answer({ state: house() }),
       answer({ accountId: ACCOUNT_ID + 1, state: house({ rev: 9 }) }),
+      false,
     );
     expect(decided.verdict).toBe('withheld');
     expect(decided.answer?.state).toBeNull();
@@ -169,7 +203,10 @@ describe('freeholdJoinAnswer', () => {
 
   it('keeps a HOLD when no entry is loaded: it installs nothing already', () => {
     const held = answer({ hold: HOLD });
-    expect(freeholdJoinAnswer(ACCOUNT_ID, held, null)).toEqual({ answer: held, verdict: 'held' });
+    expect(freeholdJoinAnswer(ACCOUNT_ID, held, null, false)).toEqual({
+      answer: held,
+      verdict: 'held',
+    });
   });
 
   it('WITHHOLDS a non-hold answer when no entry is loaded, keeping only its clock', () => {
@@ -180,7 +217,7 @@ describe('freeholdJoinAnswer', () => {
       answer({ durableRev: '7', state: house() }),
       answer({ recordWithheld: true }),
     ]) {
-      const decided = freeholdJoinAnswer(ACCOUNT_ID, asked, null);
+      const decided = freeholdJoinAnswer(ACCOUNT_ID, asked, null, false);
       expect(decided.verdict).toBe('withheld');
       expect(decided.answer).toEqual({ ...asked, state: null, recordWithheld: true });
     }
@@ -190,7 +227,7 @@ describe('freeholdJoinAnswer', () => {
     // A bag that crossed a boundary without the field must not read as a
     // hold-free answer the store vouches for.
     const lost = { ...answer(), hold: undefined } as unknown as LoadedFreehold;
-    expect(freeholdJoinAnswer(ACCOUNT_ID, lost, null).verdict).toBe('withheld');
+    expect(freeholdJoinAnswer(ACCOUNT_ID, lost, null, false).verdict).toBe('withheld');
   });
 });
 
@@ -201,7 +238,7 @@ describe('each verdict, through the real install', () => {
     installLoadedFreehold(
       ctx,
       ACCOUNT_ID,
-      freeholdJoinAnswer(ACCOUNT_ID, answer(), current).answer,
+      freeholdJoinAnswer(ACCOUNT_ID, answer(), current, false).answer,
     );
     expect(ctx.freeholds.get(OWNER_KEY)?.rev).toBe(3);
     expect(ctx.freeholds.get(OWNER_KEY)?.layout).toHaveLength(1);
@@ -217,7 +254,11 @@ describe('each verdict, through the real install', () => {
     expect(raw.freeholds.get(OWNER_KEY)?.layout).toEqual([]);
 
     const ctx = liveCtx();
-    installLoadedFreehold(ctx, ACCOUNT_ID, freeholdJoinAnswer(ACCOUNT_ID, asked, null).answer);
+    installLoadedFreehold(
+      ctx,
+      ACCOUNT_ID,
+      freeholdJoinAnswer(ACCOUNT_ID, asked, null, false).answer,
+    );
     expect(ctx.freeholds.has(OWNER_KEY)).toBe(false);
     // The clock is a separate durable fact and still merges.
     expect(ctx.freeholdKeyReadyAtMs.get(OWNER_KEY)).toBe(90_000);
@@ -227,14 +268,18 @@ describe('each verdict, through the real install', () => {
 
   it('the NONE and REFUSED verdicts put no record in', () => {
     const none = liveCtx();
-    installLoadedFreehold(none, ACCOUNT_ID, freeholdJoinAnswer(ACCOUNT_ID, undefined, null).answer);
+    installLoadedFreehold(
+      none,
+      ACCOUNT_ID,
+      freeholdJoinAnswer(ACCOUNT_ID, undefined, null, false).answer,
+    );
     expect(none.freeholds.size).toBe(0);
     const foreign = answer({ accountId: ACCOUNT_ID + 1, state: house() });
     const refused = liveCtx();
     installLoadedFreehold(
       refused,
       ACCOUNT_ID,
-      freeholdJoinAnswer(ACCOUNT_ID, foreign, null).answer,
+      freeholdJoinAnswer(ACCOUNT_ID, foreign, null, false).answer,
     );
     expect(refused.freeholds.size).toBe(0);
     // CONTROL: the same foreign bag installed for ITS own account does go in, so
@@ -247,7 +292,11 @@ describe('each verdict, through the real install', () => {
   it('the HELD verdict puts no record in and still merges the clock', () => {
     const ctx = liveCtx();
     const held = answer({ hold: HOLD, hearthReadyAtMs: 70_000 });
-    installLoadedFreehold(ctx, ACCOUNT_ID, freeholdJoinAnswer(ACCOUNT_ID, held, null).answer);
+    installLoadedFreehold(
+      ctx,
+      ACCOUNT_ID,
+      freeholdJoinAnswer(ACCOUNT_ID, held, null, false).answer,
+    );
     expect(ctx.freeholds.has(OWNER_KEY)).toBe(false);
     expect(ctx.freeholdKeyReadyAtMs.get(OWNER_KEY)).toBe(70_000);
   });

@@ -3996,6 +3996,46 @@ describe('ONE housing budget per handshake, and what the re-ask costs', () => {
     expect(h.store.stats().reasks).toBe(2);
   });
 
+  it('books ENTRY for a join that changes nothing: a second character, and a DATA-held login', async () => {
+    // `join_superseded` is the fix changing an install, so neither healthy shape
+    // may book it. A second character of the account joins beside the live
+    // record: its re-ask is the already-live arm's MARKED answer, and the
+    // install shares the record (load-once).
+    const h = harness({ ...rowRemembered(rowFixture()) });
+    await h.login();
+    const second = await h.joinAfterReask();
+    expect(second.recordWithheld).toBe(true);
+    expect(h.store.stats().joinVerdicts).toMatchObject({ entry: 2, superseded: 0 });
+    // A row held on a DATA kind: both asks replay the one terminal hold.
+    const held = harness({
+      rowLoad: { kind: 'row', row: rowFixture() },
+      normalized: { kind: 'malformed', detail: 'layout_not_an_array' },
+    });
+    await held.login();
+    expect(held.store.stats().joinVerdicts).toMatchObject({ entry: 1, superseded: 0, held: 0 });
+  });
+
+  it('never counts a cap-refused re-ask beside a live record as a re-ask read', async () => {
+    // The already-live arm's own exclusion: a record stands (the stand-in a
+    // cap-refused login seated) over an entry that never loaded, so the re-ask
+    // goes to the durable path and meets the full cap, waiting on nothing.
+    const gate = deferred<FreeholdRowLoad>();
+    const h = harness({ readRow: async () => await gate.promise });
+    for (let i = 0; i < FREEHOLD_PERSIST_MAX_ACTIVE_LOADS; i++) {
+      void h.store.preload(OTHER_ACCOUNT_ID + i);
+    }
+    await tick(10);
+    const atJoin = await h.login();
+    expect(atJoin.hold?.kind).toBe('cap_full');
+    expect(h.record()).toBeDefined();
+    const reask = await h.store.preload(ACCOUNT_ID, { reask: true });
+    expect(reask.hold?.kind).toBe('cap_full');
+    expect(reask.recordWithheld).toBe(true);
+    expect(h.store.stats()).toMatchObject({ reasks: 2, reaskReads: 0 });
+    gate.resolve({ kind: 'absent' });
+    await tick(20);
+  });
+
   it('never rate-limits a DATA hold line, which is a per-row incident', async () => {
     // The call site's `capacity` argument, not the limiter: two malformed rows
     // inside one window print two lines.
@@ -6067,7 +6107,9 @@ describe('the WHOLE preload is capped against the login budget', () => {
     gate.resolve({ kind: 'absent' });
     await tick(30);
     expect(h.record()).toBeUndefined();
-    const atJoin = await h.joinAfterReask();
+    // The first ask spent the whole budget, so the re-ask gets none, as in
+    // production; the replay of the entry the late read filled still wins.
+    const atJoin = await h.joinAfterReask(ACCOUNT_ID, FREEHOLD_PERSIST_LOGIN_BUDGET_MS);
     expect(atJoin.hold).toBeNull();
     expect(h.record()?.plotId).toBe(MINTED_PLOT_ID);
     h.store.saveAllDirty();
@@ -6221,8 +6263,9 @@ describe('the WHOLE preload is capped against the login budget', () => {
     // BOTH JOINS, the refused one first, now each after its re-ask: the refused
     // login's re-ask replays the entry the shared read filled, so its join names
     // the record, and the sibling's install is the no-op load-once makes it.
-    // One name, one row.
-    h.join(await h.store.preload(ACCOUNT_ID));
+    // One name, one row. The refused login spent the whole budget on its first
+    // ask, so its re-ask runs on none, as in production.
+    await h.joinAfterReask(ACCOUNT_ID, FREEHOLD_PERSIST_LOGIN_BUDGET_MS);
     await h.joinAfterReask();
     expect(h.record()?.plotId).toBe(MINTED_PLOT_ID);
     h.store.saveAllDirty();

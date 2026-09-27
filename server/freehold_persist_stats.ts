@@ -73,17 +73,21 @@ export interface FreeholdPersistStats {
    *  lease. `reaskReads` are those that waited on the durable path (a read, a
    *  shared single-flight read, or a permit wait) rather than replaying a loaded
    *  entry, which is housing wait inside the lease-held window; a cap refusal
-   *  waits on nothing and is not counted. `reaskMsTotal` is the re-asks' summed
-   *  wall time, bounded per handshake by what the first ask left of
-   *  FREEHOLD_PERSIST_LOGIN_BUDGET_MS. */
+   *  waits on nothing and is not counted, and a read is booked when it settles
+   *  (for a re-ask refused on its budget, when the abandoned read lands, which
+   *  the permit wait, the statement bound and the driver's query timeout
+   *  guarantee). `reaskMsTotal` is the re-asks' summed wall time, bounded per
+   *  handshake by what the first ask left of FREEHOLD_PERSIST_LOGIN_BUDGET_MS. */
   readonly reasks: number;
   readonly reaskReads: number;
   readonly reaskMsTotal: number;
   /** How each join's install was decided (server/freehold_join_answer.ts):
-   *  `entry` is a loaded entry the ask already matched (every healthy join, so
-   *  it tracks login volume); `superseded` is the loaded entry installed in
-   *  place of a stale, held, marked, broken or missing ask, the twelfth path's
-   *  fix actually changing an install; `withheld` is a join nothing could vouch
-   *  for, installed as no record (write-blocked unless a live record stands). */
+   *  `entry` is a join whose install changed nothing (the ask matched the
+   *  loaded entry, a live record already stood, or both asks replayed one DATA
+   *  hold), so it tracks login volume; `superseded` is the loaded entry
+   *  installed in place of an ask that differed from it with no live record
+   *  standing, the twelfth path's fix actually changing an install; `withheld`
+   *  is a join nothing could vouch for, installed as no record (write-blocked
+   *  when nothing live stands; beside a live record it shares that record). */
   readonly joinVerdicts: Readonly<Record<FreeholdJoinVerdict, number>>;
 }

@@ -1923,11 +1923,11 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
     answerForInstall(ownerKey, accountId, asked) {
       const entry = entries.get(ownerKey);
       const current = entry?.loaded ? replayAnswer(entry) : null;
-      const decided = freeholdJoinAnswer(accountId, asked, current);
+      const live = ports.hasLive(ownerKey);
+      const decided = freeholdJoinAnswer(accountId, asked, current, live);
       counters.joinVerdicts[decided.verdict]++;
-      // A live record stands whatever the install is handed, and retain's reload
-      // makes it writable: only a join with nothing live is write-blocked.
-      if (decided.verdict === 'withheld' && !ports.hasLive(ownerKey)) {
+      // A join beside a live record shares it (load-once), so only one with none warns.
+      if (decided.verdict === 'withheld' && !live) {
         ports.warn(
           `freehold plot index ${decided.answer?.plotIndex} join answer withheld: the entry it was read from went away before the install, so no record is put in and the session is write-blocked`,
         );

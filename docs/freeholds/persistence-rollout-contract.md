@@ -587,7 +587,9 @@ on capacity), bounded by that remainder; a re-ask that runs out answers
 `no_budget`, and the join installs what the store's entry decides at install
 time (the entry when one is loaded, else nothing: a write-blocked session, never
 a loss). `reask_reads` and `reask_ms` on `woc_freehold_persist_total` are what
-an operator reads that cost by.
+an operator reads that cost by; a re-ask read is booked when it settles, so one
+refused on its budget books its read when the abandoned read lands, which the
+permit wait, the statement bound and the driver's query timeout guarantee.
 
 THE LOGIN ITSELF IS NOT REFUSED, and that is deliberate: refusing a login over a
 durable housing read reverses a decision this packet has already taken and
@@ -745,8 +747,9 @@ capacity after the entry was collected, refused at the seal, loudly, over a row,
 or held as `unnamed_record` for an account with no row yet (the repair re-read
 meets the stand-in on the absent arm), except a `cap_full` refusal, which stays
 held with no seal line and shows only as its kind; and the WITHHELD race, an
-entry collected between the re-ask and the install, which warns `join answer
-withheld` and is then refused the same loud way.
+entry collected between the re-ask and the install with no live record
+standing, which warns `join answer withheld` and is then refused the same loud
+way (beside a live record the join shares it and warns nothing).
 
 OFFLINE AND HEADLESS PLOT IDENTITY: THE DIVERGENCE IS ACCEPTED AND DOCUMENTED.
 Online records now answer to a unique minted identity from their first session.

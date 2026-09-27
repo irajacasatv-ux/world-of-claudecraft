@@ -46,8 +46,9 @@ seal line). The surface therefore keys this group on the hold the join
 installed, not on the entry's hold at the time it paints, and nothing keeps that
 answer after the install today (`game.join` hands `meta.freehold` straight to
 the binding), so the surface needs a per-session carrier for it. The WITHHELD
-race, an entry collected between the re-ask and the install, books no hold kind
-at all: a `join answer withheld` warning, then the same loud refusal. The
+race, an entry collected between the re-ask and the install with no live record
+standing, books no hold kind at all: a `join answer withheld` warning, then the
+same loud refusal (beside a live record the join shares it and warns nothing). The
 surface owes that group too, keyed on the entry being write-blocked rather than
 on a hold, and its copy can say the house is safe on disk, because here it is.
 
