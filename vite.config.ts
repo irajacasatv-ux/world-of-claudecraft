@@ -570,7 +570,12 @@ export default defineConfig({
     // Runs per test file (unlike globalSetup, which runs once outside any
     // DOM environment). Needed on Node 22+ for jsdom and happy-dom files;
     // no-op when `window` is absent (default node env). See the file.
-    setupFiles: ['./tests/svelte_testing_setup.ts', './tests/jsdom_local_storage_setup.ts'],
+    // Nothing framework-specific goes here: every file loads a setup file before
+    // its first case, and the Svelte testing library alone cost the Node-env
+    // majority about 80 ms of setup per file. The admin suite, the only one that
+    // mounts Svelte, loads it through tests/admin/_setup.ts
+    // (tests/vitest_setup_scope.test.ts pins both halves).
+    setupFiles: ['./tests/jsdom_local_storage_setup.ts'],
     // Two kinds of exclusion, kept together:
     // - agent-runtime directories may contain local worktree copies, and their tracked
     //   config or instruction files are not product test sources. Excluding them keeps a

@@ -106,9 +106,10 @@ if (typeof window !== 'undefined') {
 // it: they hold no DOM tree and pay nothing.
 // AFTER EVERYTHING A CASE TEARS DOWN, not in afterEach: Vitest runs the
 // afterEach hooks first and the beforeEach cleanups after them, and
-// @testing-library/svelte unmounts a Svelte case in such a cleanup
-// (tests/svelte_testing_setup.ts), so an afterEach turn ran before the unmount
-// and the trees it released got none. The case's onTestFinished runs after both.
+// @testing-library/svelte unmounts a Svelte case in such a cleanup (its
+// `/vitest` entry, loaded by tests/admin/_setup.ts), so an afterEach turn ran
+// before the unmount and the trees it released got none. The case's
+// onTestFinished runs after both.
 if (typeof window !== 'undefined') {
   const realSetTimeout = globalThis.setTimeout.bind(globalThis);
   beforeEach(({ onTestFinished }) => {

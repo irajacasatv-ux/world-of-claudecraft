@@ -6,8 +6,13 @@
 // on their fast default environment (no global setupFiles change beyond the shared
 // localStorage polyfill in tests/jsdom_local_storage_setup.ts).
 //
-// Provides the jest-dom matchers (toBeInTheDocument, etc.) and unmounts every
-// rendered component after each test so the DOM document stays clean between cases.
+// Provides the Svelte testing library's own per-case setup and unmount (its
+// `/vitest` entry, once a global setup file every Node-env suite paid for), the
+// jest-dom matchers (toBeInTheDocument, etc.), and an unmount of every rendered
+// component after each test so the DOM document stays clean between cases. Every
+// file that imports @testing-library/svelte imports this one
+// (tests/vitest_setup_scope.test.ts).
+import '@testing-library/svelte/vitest';
 import '@testing-library/jest-dom/vitest';
 import { cleanup } from '@testing-library/svelte';
 import { afterEach, beforeEach } from 'vitest';
