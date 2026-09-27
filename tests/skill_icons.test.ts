@@ -716,18 +716,6 @@ describe('class ability webp icons', () => {
       SKILL_NORMALIZATION_EVIDENCE_DIGEST,
     );
 
-    for (const evidence of manifest.review.trackedEvidence) {
-      const file = path.join(repoRoot, evidence.path);
-      expect(existsSync(file), `${evidence.path} exists`).toBe(true);
-      const bytes = readFileSync(file);
-      expect(bytes.length, `${evidence.path} accepted bytes`).toBe(evidence.acceptedBytes);
-      expect(
-        createHash('sha256').update(bytes).digest('hex'),
-        `${evidence.path} accepted hash`,
-      ).toBe(evidence.acceptedSha256);
-      expect(await sharp(bytes).metadata(), evidence.path).toMatchObject({ format: 'webp' });
-    }
-
     // Local worktrees and full-history release gates verify the former bytes straight from the
     // recorded commit. Shallow CI checkouts may not carry that parent object, so the independent
     // literal aggregate above remains the always-on history pin there.

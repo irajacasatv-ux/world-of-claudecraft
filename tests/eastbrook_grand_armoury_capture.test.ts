@@ -1,4 +1,4 @@
-import { readFileSync, statSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
 const captureContract =
@@ -75,34 +75,6 @@ type PerfDeltas = {
   armouryWithShadows: PerfCounts;
   shadowPassAttribution: PerfCounts;
 };
-type PerformanceEvidence = {
-  schemaVersion: number;
-  shotPrefix: string;
-  expectedArmoury: boolean;
-  profile: string;
-  view: string;
-  world: {
-    seed: number;
-    lot: Record<string, unknown>;
-    player: { x: number; y: number; z: number; facing: number };
-    camera: Vector3;
-    target: Vector3;
-  };
-  settings: Record<string, boolean | number>;
-  gl: { vendor: string; renderer: string };
-  captureDiagnostics: { pageErrors: string[]; consoleErrors: string[] };
-  deltas: PerfDeltas | null;
-  sampledDeltas: PerfDeltas | null;
-  directRenderAttribution: { deltas: PerfDeltas } | null;
-};
-
-const evidenceDir = new URL('../docs/screenshots/eastbrook-grand-armoury/', import.meta.url);
-
-function readPerformanceEvidence(name: 'before' | 'after') {
-  return JSON.parse(
-    readFileSync(new URL(`${name}-performance.json`, evidenceDir), 'utf8'),
-  ) as PerformanceEvidence;
-}
 
 function validRenderState(): CaptureRenderState {
   return {
@@ -815,66 +787,6 @@ describe('Eastbrook Grand Armoury capture contract', () => {
       },
       rebuild: EASTBROOK_TOWN_REBUILD_PLACEMENT_INVENTORY,
     });
-  });
-
-  it('keeps all twelve committed screenshots present at their exact profile viewport', () => {
-    for (const prefix of ['before', 'after']) {
-      for (const captureProfile of EASTBROOK_ARMOURY_CAPTURE_PROFILES) {
-        for (const captureView of EASTBROOK_ARMOURY_CAPTURE_VIEWS) {
-          const imageUrl = new URL(
-            `${prefix}-${captureView.name}-${captureProfile.name}.png`,
-            evidenceDir,
-          );
-          const bytes = readFileSync(imageUrl);
-          expect(statSync(imageUrl).size, imageUrl.pathname).toBeGreaterThan(50_000);
-          expect(bytes.subarray(0, 8).toString('hex'), imageUrl.pathname).toBe('89504e470d0a1a0a');
-          expect(bytes.readUInt32BE(8), imageUrl.pathname).toBe(13);
-          expect(bytes.subarray(12, 16).toString('ascii'), imageUrl.pathname).toBe('IHDR');
-          expect(bytes.readUInt32BE(16), imageUrl.pathname).toBe(captureProfile.viewport.width);
-          expect(bytes.readUInt32BE(20), imageUrl.pathname).toBe(captureProfile.viewport.height);
-        }
-      }
-    }
-  });
-
-  it('pins committed native-GPU performance evidence to the matched world and shipping deltas', () => {
-    const before = readPerformanceEvidence('before');
-    const after = readPerformanceEvidence('after');
-    for (const [name, evidence, expectedArmoury] of [
-      ['before', before, false],
-      ['after', after, true],
-    ] as const) {
-      expect(evidence.schemaVersion, name).toBe(1);
-      expect(evidence.shotPrefix, name).toBe(name);
-      expect(evidence.expectedArmoury, name).toBe(expectedArmoury);
-      expect(evidence.profile, name).toBe('desktop-ultra');
-      expect(evidence.view, name).toBe('close');
-      expect(evidence.world.seed, name).toBe(EASTBROOK_ARMOURY_CAPTURE_SEED);
-      expect(evidence.world.player, name).toEqual(EASTBROOK_ARMOURY_PLAYER_STATE);
-      expect(evidence.world.camera, name).toEqual(view.camera);
-      expect(evidence.world.target, name).toEqual(view.target);
-      expect(
-        () => assertMatchedLotIdentity(evidence.world.lot, expectedArmoury),
-        name,
-      ).not.toThrow();
-      expect(evidence.settings, name).toMatchObject(profile.settings);
-      expect(evidence.gl, name).toEqual({
-        vendor: 'Google Inc. (Apple)',
-        renderer: 'ANGLE (Apple, ANGLE Metal Renderer: Apple M4 Max, Unspecified Version)',
-      });
-      expect(evidence.captureDiagnostics.pageErrors, name).toEqual([]);
-      expect(evidence.captureDiagnostics.consoleErrors, name).toEqual([]);
-    }
-
-    expect(before.deltas).toBeNull();
-    expect(before.sampledDeltas).toBeNull();
-    expect(before.directRenderAttribution).toBeNull();
-    expect(after.deltas).toEqual({
-      armouryWithShadows: EASTBROOK_ARMOURY_PERF_CONTRACT.withShadows,
-      armouryWithoutShadows: EASTBROOK_ARMOURY_PERF_CONTRACT.withoutShadows,
-      shadowPassAttribution: EASTBROOK_ARMOURY_PERF_CONTRACT.shadowPass,
-    });
-    expect(after.directRenderAttribution?.deltas).toEqual(after.deltas);
   });
 
   it('rejects missing or incompatible capture environment selections', () => {

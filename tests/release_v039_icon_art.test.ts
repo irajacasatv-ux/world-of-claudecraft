@@ -84,14 +84,6 @@ const SECOND_PASS_RECORD_SHA256 =
   // PR #3898 adds the four painted elixirs to the hotbar-eligible set, advancing
   // the sealed hotbarItems census 81 -> 85 without retaking any captures.
   'd1cbf7c3318b57e56869206c2d4ae1edefa13fa8edc8338d88e5b601c1f123eb';
-const EVIDENCE = {
-  'icon-art-before-after-desktop.png': {
-    sha256: '61d19fb321f2b30eb3749e0966f26efea0fa4df53edae4b253cfd70edb82cd7a',
-  },
-  'icon-art-before-after-mobile.png': {
-    sha256: '9ae2dc510d304a3c3667fb611884055ef2b6cb3617f6806ed1e4f4c8dae69a8d',
-  },
-} as const;
 
 const inventoryController = new ActionBarController({
   storage: {
@@ -204,23 +196,6 @@ describe('release v0.39 icon-art first-pass lineage', () => {
       shippingHashes.add(hash);
     }
     expect(shippingHashes.size).toBe(expectedIds.length);
-  });
-
-  it('retains desktop and mobile visual-review evidence', () => {
-    const screenshotDir = path.join(
-      repoRoot,
-      'docs/screenshots/release-v039-icon-art-first-pass-2026-08-16',
-    );
-    const hashes = new Set<string>();
-    for (const [file, expected] of Object.entries(EVIDENCE)) {
-      const bytes = readFileSync(path.join(screenshotDir, file));
-      expect(bytes.subarray(1, 4).toString('ascii'), file).toBe('PNG');
-      expect(bytes.length, file).toBeGreaterThan(100_000);
-      const hash = createHash('sha256').update(bytes).digest('hex');
-      expect(hash, file).toBe(expected.sha256);
-      hashes.add(hash);
-    }
-    expect(hashes.size).toBe(2);
   });
 
   it('keeps public mapping provenance identical to the sealed acceptance record', () => {

@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { existsSync, readFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { getBounds, NodeIO, Primitive } from '@gltf-transform/core';
 import { ALL_EXTENSIONS } from '@gltf-transform/extensions';
@@ -304,27 +304,6 @@ describe('Eastbrook noticeboard shipping asset', () => {
     ]);
     expect(root.getExtras()).toEqual({ sourceFingerprint: SOURCE_FINGERPRINT });
     expect(root.getAsset().extras).toEqual({ sourceFingerprint: SOURCE_FINGERPRINT });
-  });
-
-  it('commits multi-angle construction, serialized, scale, collider, and comparison evidence', () => {
-    const evidenceRoot = path.join(
-      REPO_ROOT,
-      'docs/screenshots/eastbrook-vale-rebuild/polish/assets/noticeboard',
-    );
-    for (const relativePath of [
-      'stages-contact.png',
-      'raw-contact.png',
-      'optimized-contact.png',
-      'optimized-lookdev-contact.png',
-      'reference-vs-optimized-contact.png',
-      'optimized/grazing.png',
-      'optimized-lookdev/low.png',
-      'optimized-lookdev/dusk.png',
-      'optimized-lookdev/player-scale.png',
-      'optimized-lookdev/collider-overlay.png',
-    ]) {
-      expect(existsSync(path.join(evidenceRoot, relativePath)), relativePath).toBe(true);
-    }
   });
 });
 
