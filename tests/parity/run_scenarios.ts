@@ -9,12 +9,15 @@
 // how goldens resolve, or how UPDATE_PARITY mints changes: each shard mints
 // exactly its own slice's goldens into the same tests/parity/golden dir.
 //
-// For every scenario the gate asserts two things:
+// For every scenario the gate asserts two things, in one case over two
+// recordings (it was three recordings in two cases until 2026-09-27; the
+// golden comparison reuses the first determinism recording):
 //   1. INTERNALLY DETERMINISTIC: recording the same scenario twice is identical
 //      (proves the harness itself adds no nondeterminism).
 //   2. MATCHES THE COMMITTED GOLDEN: the recorded trace equals the checked-in
 //      golden (proves current Sim behavior == the behavior captured when the
-//      golden was minted).
+//      golden was minted). A minting run proves (1) first, so a
+//      nondeterministic trace is never written as a golden.
 //
 // A red trace means behavior changed. Fix the change, NOT the harness. Regenerate
 // goldens deliberately and reviewably with `UPDATE_PARITY=1 npx vitest run
@@ -44,24 +47,20 @@ function plain(trace: Trace): unknown {
 }
 
 // Contiguous shard boundaries over SCENARIOS, timing-balanced by MEASURED
-// per-file cost (not by scenario count). Two subtleties found while balancing:
-// recording warms subsystem code paths for later same-subsystem scenarios, so
-// `fiesta` stays in the same shard as the heavy `fiesta_powerups` (cold, that
-// scenario alone records ~4x slower); and one irreducibly heavy scenario rides
-// alone in the single-entry slice [36, 37). NOTE, found by the Phase 11d QA
-// architecture audit: that slice was authored for `nythraxis_full_pull`, but
-// scenarios inserted since have shifted the indices, and index 36 is
-// `mob_locomotion` today while `nythraxis_full_pull` sits at 40 inside the final
-// shard. Nothing is dropped or double-run by that (the tiling is re-validated at
-// import and the bounds still cover 0..SCENARIOS.length), so this is a wall-time
-// balance that no longer does what its comment says, not a correctness bug. Any
-// re-balance should re-derive the isolated index from the measured costs rather
-// than trusting the name here. The last bound is
-// SCENARIOS.length, so a newly appended scenario automatically lands in the
-// final shard. Every shard file re-validates the tiling at import time, so a
-// bad edit here fails the whole suite instead of silently dropping scenarios
-// from the gate.
-const SHARD_BOUNDS: readonly number[] = [0, 7, 11, 13, 17, 36, 37, SCENARIOS.length];
+// per-scenario cost (not by scenario count). Re-derived 2026-09-27 from each
+// scenario's measured case time after the gate went to one case of two
+// recordings per scenario: the minimum-max contiguous split of the 84
+// scenarios into seven shards, about 15 s each locally (the final shard had
+// grown to 47 scenarios and 60 s, which the CI harvest recorded as 196 s).
+// Two subtleties: recording warms subsystem code paths for later
+// same-subsystem scenarios, so `fiesta` stays in the same shard as the heavy
+// `fiesta_powerups` (cold, that scenario alone records about 4x slower), and
+// the class-engine trio (shaman, druid, priest) shares one shard. Re-derive
+// from measured costs whenever a scenario is added or grows; the last bound is
+// SCENARIOS.length, so a newly appended scenario lands in the final shard.
+// Every shard file re-validates the tiling at import time, so a bad edit here
+// fails the whole suite instead of silently dropping scenarios from the gate.
+const SHARD_BOUNDS: readonly number[] = [0, 8, 17, 37, 43, 57, 60, SCENARIOS.length];
 
 export const PARITY_SHARD_COUNT = SHARD_BOUNDS.length - 1;
 
@@ -87,34 +86,32 @@ export function runParityShard(shard: number): void {
   describe('parity gate', () => {
     for (const scenario of scenarios) {
       describe(scenario.name, () => {
-        // Explicit timeouts: the heaviest scenario (nythraxis_full_pull) records a
-        // full raid pull TWICE in the determinism test and brushes vitest's 5000ms
-        // default on slow shared CI runners (observed timing out twice in a row on
-        // the PR gate while green locally). The assertions are unchanged; the
-        // recording just gets room to finish. This does not soften the gate: a
-        // trace mismatch still fails identically.
-        it('records deterministically (same scenario -> identical trace)', () => {
+        // Explicit timeout: the heaviest scenario (nythraxis_full_pull) records a
+        // full raid pull TWICE here and brushed vitest's 5000ms default on slow
+        // shared CI runners (observed timing out twice in a row on the PR gate
+        // while green locally). This does not soften the gate: a trace mismatch
+        // still fails identically. The title keeps both old names as substrings,
+        // so `-t 'matches the committed golden'` and `-t 'mints the golden'`
+        // still select it.
+        it(UPDATE
+          ? 'records deterministically and mints the golden'
+          : 'records deterministically and matches the committed golden', () => {
           const a = plain(recordTrace(scenario));
           const b = plain(recordTrace(scenario));
           expect(a).toEqual(b);
-          // two full recordings of the heaviest scenarios (the raid pull,
-          // the fiesta) on the 13-zone world: headroom under suite load
-        }, 90_000);
-
-        it(UPDATE ? 'mints the golden' : 'matches the committed golden', () => {
-          const trace = plain(recordTrace(scenario));
           const path = goldenPath(scenario.name);
           if (UPDATE) {
             mkdirSync(GOLDEN_DIR, { recursive: true });
-            writeFileSync(path, `${JSON.stringify(trace, null, 2)}\n`);
+            writeFileSync(path, `${JSON.stringify(a, null, 2)}\n`);
             return;
           }
           expect(existsSync(path), `missing golden for ${scenario.name}; run UPDATE_PARITY=1`).toBe(
             true,
           );
-          const golden = JSON.parse(readFileSync(path, 'utf8'));
-          expect(trace).toEqual(golden);
-          // a full re-recording compared against disk: same headroom as above
+          expect(a).toEqual(JSON.parse(readFileSync(path, 'utf8')));
+          // two full recordings of the heaviest scenarios (the raid pull, the
+          // fiesta) on the 13-zone world plus one golden read: headroom under
+          // suite load
         }, 90_000);
       });
     }
