@@ -35,12 +35,17 @@ import { fishPreloadInternalsForTest } from '../src/render/fish';
 import { galeFeaturesPreloadInternalsForTest } from '../src/render/gale_features';
 import { gardenFeaturesPreloadInternalsForTest } from '../src/render/garden_features';
 import { gatherNodePreloadInternalsForTest } from '../src/render/gather_nodes';
+import { harborRouteMarkerInternalsForTest } from '../src/render/harbor_route_markers';
 import { ignivarEnvPropsInternalsForTest } from '../src/render/ignivar_env_props';
 import { mailboxPreloadInternalsForTest } from '../src/render/mailbox';
 import { propPreloadInternalsForTest } from '../src/render/props';
 import { questObjectPreloadInternalsForTest } from '../src/render/quest_objects';
 import { stationsPreloadInternalsForTest } from '../src/render/stations';
+import { transportShipInternalsForTest } from '../src/render/transport_ship';
+import { wickharborHarborInternalsForTest } from '../src/render/wickharbor_harbor';
+import { wickharborWharfInternalsForTest } from '../src/render/wickharbor_wharf';
 import { wildheartPropsPreloadInternalsForTest } from '../src/render/wildheart_props';
+import { wyrmwatchHarborInternalsForTest } from '../src/render/wyrmwatch_harbor';
 import { yumiMazePreloadInternalsForTest } from '../src/render/yumi_maze';
 import { EASTBROOK_GRAND_ARMOURY } from '../src/sim/building_layout';
 import type { BuildingDef } from '../src/sim/types';
@@ -74,7 +79,7 @@ const armouryFinalPipelineEnabled =
     item.src?.endsWith('eastbrook_grand_armoury-final.glb'),
   ) ?? false;
 const ARMOURY_SHIPPING_BYTE_CEILING = 160 * 1024;
-const ARMOURY_SHIPPING_SHA256 = '936fbe6ad288c228e12738035ce93582731acd01ef264e277246f55beae6bc4b';
+const ARMOURY_SHIPPING_SHA256 = '666a77aacdd1fd52e3cd473956b3d67d640441be63a57dc88fa44a7ef71e2764';
 const MANIFEST_HASH_LENGTH = 12;
 
 function expectAssetExistsAndManifested(url: string): void {
@@ -493,6 +498,28 @@ async function expectArmouryGlbContract(
 describe('GLB-replacement asset preload sets resolve to real, manifested files', () => {
   it('leaping fish asset', () => {
     expectAssetExistsAndManifested(fishPreloadInternalsForTest.fishAssetUrl);
+  });
+
+  it('transport ship assets', () => {
+    for (const url of Object.values(transportShipInternalsForTest.models)) {
+      expectAssetExistsAndManifested(url);
+    }
+  });
+
+  it('harbor route marker asset', () => {
+    expectAssetExistsAndManifested(harborRouteMarkerInternalsForTest.assetUrl);
+  });
+
+  it('wyrmwatch cliff harbor asset', () => {
+    expectAssetExistsAndManifested(wyrmwatchHarborInternalsForTest.assetUrl);
+  });
+
+  it('wickharbor ferry wharf asset', () => {
+    expectAssetExistsAndManifested(wickharborWharfInternalsForTest.assetUrl);
+  });
+
+  it('wickharbor harbor asset', () => {
+    expectAssetExistsAndManifested(wickharborHarborInternalsForTest.assetUrl);
   });
 
   it('gather node assets', () => {

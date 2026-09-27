@@ -176,6 +176,8 @@ const FLOOR_VFX_OUT_OF_SCOPE: readonly string[] = [
   'src/render/ability_vfx/signature_crests.ts',
   // vertical or body-anchored class VFX
   'src/render/burning_pact_markers.ts',
+  'src/render/characters/gloamveil_veil.ts',
+  'src/render/characters/moonwing_adornment.ts',
   'src/render/characters/paladin_templars_verdict_fx.ts',
   'src/render/characters/visual.ts',
   'src/render/drain_life_vfx.ts',
@@ -201,6 +203,8 @@ const FLOOR_VFX_OUT_OF_SCOPE: readonly string[] = [
   'src/render/props.ts',
   'src/render/realm_builder_monument_fx.ts',
   'src/render/rift_decor.ts',
+  // the ferry's foam wake: open-sea points trailing a ship, never over a raid floor
+  'src/render/ship_wake.ts',
   'src/render/underwater.ts',
   'src/render/weather.ts',
   'src/render/wildheart_props.ts',

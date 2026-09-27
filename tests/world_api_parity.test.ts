@@ -79,6 +79,7 @@ import type { IWorldTalents } from '../src/world_api/talents';
 import type { IWorldTargeting } from '../src/world_api/targeting';
 import type { IWorldTelemetry } from '../src/world_api/telemetry';
 import type { IWorldTrade } from '../src/world_api/trade';
+import type { IWorldTransport } from '../src/world_api/transport';
 import type { IWorldWorldPvp } from '../src/world_api/world_pvp';
 import { expectScansOnlyThroughSharedWalkers } from './helpers/scan_guard_self_audit';
 import { tsFilesUnder } from './helpers/ts_files_under';
@@ -162,6 +163,7 @@ export const IWORLD_MEMBERS = [
   { name: 'activeMasterLootRolls', kind: 'method' }, // read-returning
   { name: 'pickUpObject', kind: 'method' },
   { name: 'townFocus', kind: 'data' },
+  { name: 'townFocusPending', kind: 'data' },
   { name: 'civicServicePlacements', kind: 'data' },
   { name: 'setTownFocus', kind: 'method' },
   { name: 'acceptQuest', kind: 'method' },
@@ -288,6 +290,7 @@ export const IWORLD_MEMBERS = [
   { name: 'guildEventRemove', kind: 'method' },
   { name: 'guildSetMotd', kind: 'method' },
   { name: 'guildBuyRosterPage', kind: 'method' },
+  { name: 'guildSetRanks', kind: 'method' },
   { name: 'searchCharacters', kind: 'method' }, // async (1/2)
   { name: 'characterProfile', kind: 'method' }, // async
   // Operator-set account flair, by name. A pure LOCAL read (the flair rides the entity
@@ -312,6 +315,9 @@ export const IWORLD_MEMBERS = [
   { name: 'marketSweep', kind: 'method' },
   { name: 'marketCancel', kind: 'method' },
   { name: 'marketCollect', kind: 'method' },
+  { name: 'marketOrderPlace', kind: 'method' },
+  { name: 'marketOrderFill', kind: 'method' },
+  { name: 'marketOrderCancel', kind: 'method' },
   // --- Ravenpost mail reads + commands ---
   { name: 'mailInfo', kind: 'data' },
   { name: 'mailUnread', kind: 'data' },
@@ -560,6 +566,9 @@ export const IWORLD_MEMBERS = [
   { name: 'payLedger', kind: 'method' },
   { name: 'setVisitPolicy', kind: 'method' },
   { name: 'setFreeholdBuildPresence', kind: 'method' },
+  // --- the scheduled ferry (IWorldTransport): one read-returning method, the
+  // live timetable view both worlds derive from their schedule clock ---
+  { name: 'ferryView', kind: 'method' },
   // IWorldWorldPvp (world_pvp.ts): the /pvp flag readout + raise/lower.
   { name: 'worldPvpInfo', kind: 'data' },
   { name: 'setWorldPvpFlag', kind: 'method' },
@@ -857,9 +866,14 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
     // World PvP's worldPvpInfo data and setWorldPvpFlag method and King of the
     // Hill's hillInfo data); per axis 391+4=395 members, 109+3=112 data,
     // 282+1=283 methods, confirmed by a suite run on the merged table.
-    expect(IWORLD_MEMBERS.length).toBe(395);
-    expect(DATA_MEMBERS.length).toBe(112);
-    expect(METHOD_MEMBERS.length).toBe(283);
+    // Freeholds sync of release/v0.44.0 at 09639d4ae9: ours 395/112/283, the
+    // release 388/111/277 over the shared 382/110/272 (the townFocusPending
+    // data read, the Wanted board's three market-order methods, guildSetRanks,
+    // and the ferry's ferryView method); per axis 395+6=401 members, 112+1=113
+    // data, 283+5=288 methods, confirmed by a suite run on the merged table.
+    expect(IWORLD_MEMBERS.length).toBe(401);
+    expect(DATA_MEMBERS.length).toBe(113);
+    expect(METHOD_MEMBERS.length).toBe(288);
   });
   it('has no duplicate member names', () => {
     const names = IWORLD_MEMBERS.map((m) => m.name);
@@ -1011,6 +1025,7 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'farmNowMs',
       'farmPatches',
       'feedPet',
+      'ferryView',
       'forfeitCardDuel',
       'freeholdEnter',
       'freeholdLayout',
@@ -1047,6 +1062,7 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'guildPromote',
       'guildRoster',
       'guildSetMotd',
+      'guildSetRanks',
       'guildTransfer',
       'harvestCorpse',
       'harvestCrop',
@@ -1096,6 +1112,9 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'marketInfo',
       'marketList',
       'marketListInstance',
+      'marketOrderCancel',
+      'marketOrderFill',
+      'marketOrderPlace',
       'marketSearch',
       'marketSellPriceCheck',
       'marketSweep',
@@ -1235,6 +1254,7 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'toggleWeaponStow',
       'toolEffectSlots',
       'townFocus',
+      'townFocusPending',
       'trackGatheringCommission',
       'trackGatheringRecipe',
       'tradeAccept',
@@ -1375,6 +1395,7 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'talents',
       'toolEffectSlots',
       'townFocus',
+      'townFocusPending',
       'tradeInfo',
       'unlockedMilestones',
       'vaultInfo',
@@ -1477,6 +1498,7 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'extractEssence',
       'farmNowMs',
       'feedPet',
+      'ferryView',
       'forfeitCardDuel',
       'freeholdEnter',
       'freeholdLeave',
@@ -1509,6 +1531,7 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'guildPromote',
       'guildRoster',
       'guildSetMotd',
+      'guildSetRanks',
       'guildTransfer',
       'harvestCorpse',
       'harvestCrop',
@@ -1539,6 +1562,9 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'marketCollect',
       'marketList',
       'marketListInstance',
+      'marketOrderCancel',
+      'marketOrderFill',
+      'marketOrderPlace',
       'marketSearch',
       'marketSellPriceCheck',
       'marketSweep',
@@ -1820,6 +1846,7 @@ const FACET_INTERACTION = [
   'corpseHarvestInfo',
   'pickUpObject',
   'townFocus',
+  'townFocusPending',
   'setTownFocus',
   'autoLoot',
 ] as const satisfies readonly (keyof IWorldInteraction)[];
@@ -2046,6 +2073,7 @@ const FACET_SOCIAL_GRAPH = [
   'guildEventRemove',
   'guildSetMotd',
   'guildBuyRosterPage',
+  'guildSetRanks',
   'searchCharacters',
   'characterProfile',
   'accountFlair',
@@ -2066,6 +2094,9 @@ const FACET_MARKET = [
   'marketSweep',
   'marketCancel',
   'marketCollect',
+  'marketOrderPlace',
+  'marketOrderFill',
+  'marketOrderCancel',
 ] as const satisfies readonly (keyof IWorldMarket)[];
 type _ExhaustMarket = AssertNever<Exclude<keyof IWorldMarket, (typeof FACET_MARKET)[number]>>;
 
@@ -2306,6 +2337,11 @@ const FACET_HOUSING = [
 ] as const satisfies readonly (keyof IWorldHousing)[];
 type _ExhaustHousing = AssertNever<Exclude<keyof IWorldHousing, (typeof FACET_HOUSING)[number]>>;
 
+const FACET_TRANSPORT = ['ferryView'] as const satisfies readonly (keyof IWorldTransport)[];
+type _ExhaustTransport = AssertNever<
+  Exclude<keyof IWorldTransport, (typeof FACET_TRANSPORT)[number]>
+>;
+
 const FACET_WORLD_PVP = [
   'worldPvpInfo',
   'setWorldPvpFlag',
@@ -2351,6 +2387,7 @@ const FACET_MEMBER_ARRAYS: Readonly<Record<string, readonly string[]>> = {
   actionBar: FACET_ACTION_BAR,
   farming: FACET_FARMING,
   housing: FACET_HOUSING,
+  transport: FACET_TRANSPORT,
   worldPvp: FACET_WORLD_PVP,
 };
 
@@ -2365,8 +2402,8 @@ describe('W1: aggregate IWorld member set equals the disjoint union of the facet
     // arms (farming in, vale_cup out): 33 total, measured as the facet files
     // on disk minus appearance.ts (the sweep below). +1 housing facet on this
     // branch, and World PvP (the /pvp flag) adds its own facet, world_pvp.ts:
-    // 35 total.
-    expect(Object.keys(FACET_MEMBER_ARRAYS).length).toBe(35);
+    // 35; +1 the transport facet (the Eastbrook ferry's timetable): 36.
+    expect(Object.keys(FACET_MEMBER_ARRAYS).length).toBe(36);
   });
 
   it('every facet FILE on disk is a FACET_MEMBER_ARRAYS key (none can go silently unpartitioned)', () => {
@@ -2448,9 +2485,11 @@ describe('W1: aggregate IWorld member set equals the disjoint union of the facet
     const union = Object.values(FACET_MEMBER_ARRAYS).flatMap((arr) => [...arr]);
     // Mirrors the IWORLD_MEMBERS.length pin above; this pin and the one above
     // must always agree.
-    // The release's 382 plus the thirteen Freehold members: 395.
-    expect(union.length, 'union size before dedup (catches a duplicated member)').toBe(395);
-    expect(new Set(union).size, 'union size after dedup (catches a duplicated member)').toBe(395);
+    // The release's 382 plus the thirteen Freehold members and the ferry's
+    // ferryView plus the release's five other adds (townFocusPending, three
+    // market-order methods, guildSetRanks): 401.
+    expect(union.length, 'union size before dedup (catches a duplicated member)').toBe(401);
+    expect(new Set(union).size, 'union size after dedup (catches a duplicated member)').toBe(401);
     const sortedUnion = [...union].sort();
     const pinned = IWORLD_MEMBERS.map((m) => m.name).sort();
     expect(sortedUnion).toEqual(pinned);

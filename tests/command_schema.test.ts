@@ -149,8 +149,13 @@ const repoRoot = fileURLToPath(new URL('..', import.meta.url));
 // to both sets (sent by ClientWorld.setWorldPvpFlag, dispatched beside
 // bg_flag), the release's own 225/239 to 226/240; per axis 235+1=236 and
 // 249+1=250.
-const EXPECTED_SEND_COUNT = 236;
-const EXPECTED_DISPATCH_COUNT = 250;
+// Freeholds sync of release/v0.44.0 at 09639d4ae9: BOTH parent pins for the
+// record, ours 236/250, the release 230/244 (market buy orders add three
+// commands, guild custom ranks adds guild_set_ranks; docs/prd/guild-custom-ranks.md),
+// on the shared base 226/240. Per axis: send 226+10+4=240, dispatch
+// 240+10+4=254.
+const EXPECTED_SEND_COUNT = 240;
+const EXPECTED_DISPATCH_COUNT = 254;
 const EXPECTED_DISPATCH_ONLY_COUNT = 14;
 
 // The chat sub-channel routing switch (server/game.ts `switch

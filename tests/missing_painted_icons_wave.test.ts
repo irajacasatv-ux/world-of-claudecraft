@@ -678,8 +678,10 @@ describe('missing painted deed and Heroic weapon integration', () => {
     // Crucible raid deeds (276 to 281 on its own arm) join the same pending
     // side on the deed_cat_dungeon crest.
     // The personal hammer quest uses the explicitly pending hidden-category crest.
-    // The merged catalog includes the Bramblehide collection and both Homesteader deeds.
-    expect(DEED_ORDER).toHaveLength(302);
+    // The merged catalog includes the Bramblehide collection, both Homesteader
+    // deeds, and the Eastbrook ferry's exp_harbor_to_harbor, which joins the
+    // pending side on the deed_cat_exploration crest until commissioned.
+    expect(DEED_ORDER).toHaveLength(303);
     expect(DEED_ART_PENDING.has('hid_forgebreaker')).toBe(true);
     expect(DEED_ORDER.filter((id) => !DEED_IMAGE_IDS.has(id))).toEqual([...DEED_ART_PENDING]);
     const credits = readFileSync(path.join(repoRoot, 'CREDITS.md'), 'utf8');

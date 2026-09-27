@@ -7,6 +7,7 @@ import { ITEMS } from '../src/sim/data';
 import type { PlayerEquipment, PlayerEquipmentInstances } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
 import type { FurnishingItemDef, ItemDef, ItemInstancePayload } from '../src/sim/types';
+import { charStatModel } from '../src/ui/char_stat_model_core';
 import { Hud } from '../src/ui/hud';
 import {
   ACTION_BAR_ABILITY_SLOTS,
@@ -506,11 +507,10 @@ describe('loaded furnishings in equipment display projections', () => {
     return sim;
   }
 
+  // The live-world stat bridge moved out of Hud into char_stat_model_core at
+  // the 2026-09-26 release sync; the furnishing guard moved with it.
   function statModel(world: IWorld, stat: StatId): StatTooltipModel {
-    const hud = Object.assign(Object.create(Hud.prototype), { sim: world }) as {
-      statModel(stat: StatId): StatTooltipModel;
-    };
-    return hud.statModel(stat);
+    return charStatModel(world, stat);
   }
 
   it('the actual armor hover compares against zero furnishing power and keeps real gear deltas', () => {

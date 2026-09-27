@@ -39,9 +39,11 @@ import {
   YUMI_MAZE_X,
   yumiMazeOrigin,
 } from '../src/sim/data';
+import { FERRY_PIER_DECKS } from '../src/sim/ferry_piers';
 import { GALE_HARBOR_DECKS, type GaleDeckDef } from '../src/sim/gale_harbor';
 import { KEEP_SITE } from '../src/sim/keep_site';
 import { REACH_DECKS } from '../src/sim/reach_decks';
+import { SEA_CHANNEL_CARVES } from '../src/sim/sea_channels';
 import {
   computeBorderEdges,
   GARDEN_BED_PADS,
@@ -256,6 +258,13 @@ function buildPoints(): HeightPoint[] {
     addDeck(`Galecrest deck ${i}`, GALE_HARBOR_DECKS[i]);
   }
   for (let i = 0; i < REACH_DECKS.length; i++) addDeck(`Palmreach deck ${i}`, REACH_DECKS[i]);
+  for (let i = 0; i < FERRY_PIER_DECKS.length; i++) {
+    addDeck(`Ferry pier deck ${i}`, FERRY_PIER_DECKS[i]);
+  }
+  for (let i = 0; i < SEA_CHANNEL_CARVES.length; i++) {
+    const c = SEA_CHANNEL_CARVES[i];
+    addStencil(`sea channel ${i}`, c.x, c.z, c.radius * 1.6);
+  }
 
   const instanceXs = new Set<number>([
     DUNGEON_X_THRESHOLD,
@@ -413,8 +422,12 @@ describe('terrain height bit identity', () => {
     expect(ownerIds).toEqual(['freehold_inn_room', 'freehold_cottage']);
     const isOwnerLabel = (label: string) => ownerIds.some((id) => label.includes(id));
     const firstOwner = points.findIndex((p) => isOwnerLabel(p.label));
-    expect(firstOwner).toBe(152_181);
-    expect(points).toHaveLength(152_992);
+    // Re-pinned at the Freeholds sync of release/v0.44.0 at 09639d4ae9: the
+    // release's own corpus grew to 152,532 points and is a byte prefix of the
+    // merged fixture; the rooms' 811-point tail follows it, re-seeded past
+    // index 152,532 (the index-seeded SEEDS rotation) and re-minted.
+    expect(firstOwner).toBe(152_532);
+    expect(points).toHaveLength(153_343);
     expect(points.slice(0, firstOwner).some((p) => isOwnerLabel(p.label))).toBe(false);
     expect(points[firstOwner]?.label).toBe('dungeon door freehold_inn_room center');
     // The tail is the owner rooms' three shapes and nothing else: every point

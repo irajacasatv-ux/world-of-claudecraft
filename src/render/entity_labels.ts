@@ -4,10 +4,12 @@
 // both the renderer and the NameplatePainter can share objectDisplayName without
 // a renderer <-> painter import cycle.
 
+import type { HarborRouteMarkerDestination } from '../sim/content/harbor_route_markers';
 import { IGNIVAR_LORE_OBJECTS } from '../sim/content/ignivar_raid_lore';
 import { type Entity, REALM_BUILDER_MONUMENT_TEMPLATE_ID } from '../sim/types';
-import { dungeonDisplayName, tEntity } from '../ui/entity_i18n';
+import { dungeonDisplayName, poiMarkLabel, tEntity, zoneDisplayName } from '../ui/entity_i18n';
 import { feastTitleFor } from '../ui/hud/professions/feast_title';
+import { mobileStationTitleFor } from '../ui/hud/professions/mobile_station_title';
 import { t } from '../ui/i18n';
 import { localizeSimText } from '../ui/sim_i18n';
 
@@ -17,6 +19,13 @@ export function mobDisplayName(mobId: string): string {
 
 export function npcDisplayName(npcId: string): string {
   return tEntity({ kind: 'npc', id: npcId, field: 'name' });
+}
+
+/** The destination a harbor route marker's board reads
+ *  (render/harbor_route_markers.ts): a zone's name or a town's map label,
+ *  both already localized; empty for a mark content has retired. */
+export function harborDestinationLabel(dest: HarborRouteMarkerDestination): string {
+  return dest.kind === 'zone' ? zoneDisplayName(dest.zone) : (poiMarkLabel(dest.mark) ?? '');
 }
 
 export function objectDisplayName(entity: Entity): string {
@@ -94,6 +103,10 @@ export function objectDisplayName(entity: Entity): string {
   // also reads, so the world label and the target frame cannot drift.
   const feastTitle = feastTitleFor(entity.templateId, entity.name);
   if (feastTitle !== null) return feastTitle;
+  // A placed mobile crafting station: "{name}'s Grand Cauldron", the same
+  // shared-leaf rule (src/ui/hud/professions/mobile_station_title.ts).
+  const stationTitle = mobileStationTitleFor(entity.templateId, entity.name);
+  if (stationTitle !== null) return stationTitle;
   // These four development-raid records are interactOnly narrative props, not
   // inventory items. Their lore handler returns before generic pickup, so keep
   // them out of ITEMS (and its mandatory icon-art contract) while still giving

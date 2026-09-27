@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { BUILTIN_WORLD, ITEMS } from '../src/sim/data';
 import { Sim } from '../src/sim/sim';
 import type { InvSlot, ItemDef, ItemInstancePayload } from '../src/sim/types';
-import { buildMarketCollect } from '../src/ui/market_view';
+import { buildMarketHistory } from '../src/ui/market_view';
 import { MarketWindow } from '../src/ui/market_window';
 import type { IWorld, MarketInfo } from '../src/world_api';
 import { FURNISHING } from './fixtures/furnishing_item';
@@ -58,7 +58,7 @@ function atMerchant(sim: Sim, pid: number): void {
   player.prevPos = { ...player.pos };
   sim.rebucket(player);
 }
-function renderCollect(info: MarketInfo): HTMLElement {
+function renderHistory(info: MarketInfo): HTMLElement {
   const root = document.createElement('div');
   document.body.appendChild(root);
   const noop = (): void => {};
@@ -86,9 +86,11 @@ function renderCollect(info: MarketInfo): HTMLElement {
     confirmDialog: noop,
   });
   window.open();
-  const collect = root.querySelector<HTMLButtonElement>('[data-tab="collect"]');
-  expect(collect).not.toBeNull();
-  collect!.click();
+  // The sale ledger renders on the History tab since the release split it out
+  // of Collect (PR 4213); the furnishing projection moved with it.
+  const history = root.querySelector<HTMLButtonElement>('[data-tab="history"]');
+  expect(history).not.toBeNull();
+  history!.click();
   return root;
 }
 
@@ -106,7 +108,7 @@ function purchase(
   const listing = sim.marketListings.find((row) => !row.house && row.itemId === itemId);
   expect(listing).toBeDefined();
   expect(listing!.instance).toEqual(COPY);
-  sim.marketBuy(listing!.id, buyer);
+  sim.marketBuy(listing!.id, undefined, buyer);
   expect(sim.marketListings.some((row) => row.id === listing!.id)).toBe(false);
   const received = sim.meta(buyer)!.inventory.find((copy) => copy.itemId === itemId);
   expect(received).toEqual(slot);
@@ -146,11 +148,11 @@ describe('furnishing sale identity', () => {
     const loaded = restored.marketInfoFor(restoredSeller)!;
     expect(loaded.collectionSales).toEqual(info.collectionSales);
     expect(loaded.collectionCopper).toBe(2850);
-    const model = buildMarketCollect(loaded);
+    const model = buildMarketHistory(loaded);
     expect(model.state).toBe('items');
     if (model.state !== 'items') throw new Error('missing sale model');
     expect(model.sales.map((row) => row.itemName)).toEqual([undefined, COPY.name]);
-    const root = renderCollect(loaded);
+    const root = renderHistory(loaded);
     expect(
       [...root.querySelectorAll('.mkt-sale-name > span:first-child')].map(
         (node) => node.textContent,
@@ -186,7 +188,7 @@ describe('furnishing sale identity', () => {
     const before = structuredClone(restored.serializeMarket());
     const loaded = restored.marketInfoFor(restoredSeller)!;
     expect(loaded.collectionSales[0].itemName).toBe('<Forged & Name>');
-    const model = buildMarketCollect(loaded);
+    const model = buildMarketHistory(loaded);
     expect(model.state).toBe('items');
     if (model.state !== 'items') throw new Error('missing sale model');
     expect(model.sales[0]).toEqual({
@@ -196,7 +198,7 @@ describe('furnishing sale identity', () => {
       buyerName: 'Buyer',
     });
     expect(model.sales[1].itemName).toBe(COPY.name);
-    const root = renderCollect(loaded);
+    const root = renderHistory(loaded);
     expect(
       [...root.querySelectorAll('.mkt-sale-name > span:first-child')].map(
         (node) => node.textContent,

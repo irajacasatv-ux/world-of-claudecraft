@@ -1,16 +1,12 @@
-// Effective armor and attack power: the two per-swing stat reads every melee
-// damage formula takes (the mob swing shell in sim.ts, and the auto-attack,
-// pet, undead and effect paths through ctx.effectiveArmor /
-// ctx.effectiveAttackPower). MOVED verbatim out of the Sim coordinator: both
-// are pure over the entity's stats and auras, no SimContext, no rng, so a
-// Vitest imports them directly. Sim keeps thin same-named delegates because
-// buildSimContext binds the seam callbacks to them by identity and a dozen
-// suites reach them on the Sim facade.
+// Effective armor and attack power: pure reads of an entity's base stat plus
+// its live auras, moved verbatim out of sim.ts (the monolith ratchet). Players
+// fold percent raid buffs in recalcPlayerStats, so the aura arms here are the
+// non-player (mob/pet) ones plus the debuffs every target takes. No SimContext,
+// no rng: tests/effective_stats.test.ts drives both with plain entities.
 
-import { type Entity, FAERIE_FIRE_ARMOR_PCT, SUNDER_ARMOR_PCT_PER_STACK } from '../types';
+import { type Entity, FAERIE_FIRE_ARMOR_PCT, SUNDER_ARMOR_PCT_PER_STACK } from './types';
 
-// Sunder Armor stacks shave flat armor off the defender for physical hits.
-export function effectiveArmor(e: Entity): number {
+export function effectiveArmorOf(e: Entity): number {
   let armor = e.stats.armor;
   // Player/rogue armor debuffs are PERCENTAGES that do NOT stack with each other:
   // Sunder Armor (2% per stack, up to 10% at 5 stacks) and Faerie Fire (a flat 10%)
@@ -37,7 +33,7 @@ export function effectiveArmor(e: Entity): number {
   return Math.max(0, armor * (1 - reductionPct));
 }
 
-export function effectiveAttackPower(e: Entity): number {
+export function effectiveAttackPowerOf(e: Entity): number {
   let attackPower = e.attackPower;
   if (e.kind !== 'player') {
     const base = e.attackPower;

@@ -59,6 +59,7 @@ import type { RespecPaymentTier } from '../sim/professions/focus';
 import type { MaterialRarity } from '../sim/professions/gathering';
 import type { HarvestPreference } from '../sim/professions/harvest_preference';
 import type { PerfectingSwapRequest } from '../sim/professions/perfecting_swap';
+import type { TownFocusPendingView } from '../sim/professions/town_focus_pending';
 import { emptyCraftSkills } from '../sim/professions/wheel';
 import {
   accountReliquaryOwnershipOpts,
@@ -147,6 +148,7 @@ import {
   type GuildBoardCategory,
   type GuildLeaderboardPage,
   type GuildPledgeSettings,
+  type GuildRankDef,
   type GuildRosterInfo,
   type IWorld,
   isOverheadEmoteId,
@@ -172,6 +174,7 @@ import {
   type SocialInfo,
   type ToolEffectSlotView,
   type TradeInfo,
+  type TransportFerryView,
   type VaultInfo,
   type WhoRosterInfo,
 } from '../world_api';
@@ -221,6 +224,7 @@ import { applyFreeholdSelfWire } from './freehold_snapshot_wire';
 import { applyGroundTelegraphSnapshot } from './ground_telegraph_wire';
 import { GuildBankLogMirror } from './guild_bank_log_mirror';
 import { decodeGuildBoardPage, emptyGuildBoardPage, guildBoardPath } from './guild_board_wire';
+import { decodeGuildRoster } from './guild_roster_wire';
 import { foldInputAck } from './input_ack';
 import { INPUT_SEND_TIMER_INTERVAL_MS, inputFlushGateOpen } from './input_send_cadence';
 import { inputSignature } from './input_signature';
@@ -246,6 +250,7 @@ import {
   perfectingSwapCommand,
   perfectingSwapInfoForMirror,
 } from './perfecting_swap_command';
+import { decodePlayerIdentityWire } from './player_identity_wire';
 import { applyProfessionsSelfMirror } from './professions_self_mirror';
 import { optimisticQuestState } from './quest_state_optimistic';
 import { isTransientReconnectRejection, isTransientTimeoutRejection } from './reconnect_policy';
@@ -261,6 +266,7 @@ import {
 import { socialInfoFromFrame } from './social_frame_wire';
 import { applySocialSelfWire } from './social_self_wire';
 import { armTargetEcho, type PendingTargetEcho, resolveSelfTarget } from './target_echo';
+import { applyFerryWire, applyTransportSnapshot, clientFerryView } from './transport_wire';
 import { vaultWithdrawPayload } from './vault_snapshot_wire';
 import { optimisticWeaponSkinChange } from './weapon_skin_optimistic';
 import { whoRosterFromFrame } from './who_frame_wire';
@@ -305,61 +311,29 @@ export {
   NATIVE_APP,
 } from '../client_origin';
 
-export type RealmType = 'Normal' | 'PvP' | 'RP' | 'RP-PvP';
+// The REST payload shapes (realms, releases, account, wallet proofs), moved to
+// their own module (monolith ratchet) and re-exported so importers are unchanged.
+export type {
+  AccountInfo,
+  RealmDirectory,
+  RealmEntry,
+  RealmType,
+  ReleaseEntry,
+  SeekerEntitlementStatus,
+  WalletReauthProof,
+} from './rest_types';
 
-export interface RealmEntry {
-  name: string;
-  url: string;
-  type: RealmType;
-}
-
-export interface RealmDirectory {
-  current: string;
-  realms: RealmEntry[];
-  characters: Record<string, number>; // realm name -> how many characters you have
-}
-
-// A published GitHub release, as surfaced by the server's /api/releases proxy
-// for the home-page "News & Updates" view. Body is raw release-note markdown.
-export interface ReleaseEntry {
-  id: number;
-  tag: string;
-  name: string;
-  body: string;
-  url: string;
-  prerelease: boolean;
-  publishedAt: string; // ISO 8601
-}
-
-export interface AccountInfo {
-  username: string;
-  email: string;
-  // True when the account has no recovery email yet (mandatory-email capture).
-  emailMissing?: boolean;
-  createdAt: string;
-  characterCount: number;
-  twoFactorEnabled: boolean;
-  // False for an account provisioned by Apple or Discord sign-in that never got
-  // a real, owner-chosen password (see setInitialPassword below).
-  passwordSet: boolean;
-}
+import type {
+  AccountInfo,
+  RealmDirectory,
+  ReleaseEntry,
+  SeekerEntitlementStatus,
+  WalletReauthProof,
+} from './rest_types';
 
 // The shared REST error value lives in its own module (the ratchet payment
 // for the wallet re-auth params below); re-exported so importers are unchanged.
 export { ApiError, apiErrorFromBody, isAuthError } from './api_error';
-
-export interface SeekerEntitlementStatus {
-  entitled: boolean;
-  mint: string | null;
-}
-
-/** Account proof for a wallet-link CHANGE (the R11 relink gate): the password
- *  arm, plus the second factor when the account has one enrolled. */
-export interface WalletReauthProof {
-  password: string;
-  totp?: string;
-  recoveryCode?: string;
-}
 
 export class Api {
   private static readonly SESSION_KEY = 'woc_session';
@@ -1535,6 +1509,8 @@ export class ClientWorld extends ReconWireState implements IWorld {
   professionsState: PlayerProfessionsView = { skills: [] };
   // #1143: persistent town focus allocation, mirrored from the self-wire `tfocus`.
   townFocus: Record<string, number> = {};
+  // #1144: the queued re-spec, mirrored from the self-wire `tfpend` (professions_self_mirror.ts).
+  townFocusPending: TownFocusPendingView | null = null;
   // Per-node respawn readiness (#1121, wired #1866): mirrored from the `ncd`
   // self-wire delta below, same shape/semantics as `cooldowns` (remaining
   // seconds as of the last snapshot that changed it; a node with no entry is
@@ -1740,16 +1716,8 @@ export class ClientWorld extends ReconWireState implements IWorld {
   profanityWords: string[] = [];
   private profanityDirty = false;
   private pendingQuestCommands = new Map<string, 'accept' | 'turnin'>();
-  // Pending-target echo protection, the same sanctioned display-only-optimism
-  // idiom as pendingQuestCommands / quest_state_optimistic.ts. targetEntity
-  // writes the optimistic targetId locally, but a snapshot the server generated
-  // BEFORE processing the 'target' command is nearly always already in flight
-  // and still carries the OLD target; applying it shows the previous target
-  // (or blanks the frame) until the echo lands, the select bounce. While set,
-  // every self targetId write routes through applySelfTargetFromServer, which
-  // keeps displaying the optimistic id until a snapshot whose input ack covers
-  // the command's seq (the decision core is the pure target_echo.ts; server
-  // authority is untouched: that snapshot's value wins, refusal included).
+  // Display-only target optimism. The pure ack/valve rules live in
+  // target_echo.ts; ClientWorld owns the pending record and routing.
   private pendingTargetEcho: PendingTargetEcho | null = null;
   // Lazy holder (the bareClient idiom): requests() below creates this on first use.
   private worldInteractionRequests: WorldInteractionRequests | undefined;
@@ -2700,6 +2668,7 @@ export class ClientWorld extends ReconWireState implements IWorld {
       this.serverTickHz = snap.tickHz;
     }
     applyGroundTelegraphSnapshot(this, snap);
+    applyTransportSnapshot(this, snap); // the ferry clock + its berth gates
 
     // lazy init (not the field initializer alone): tests build bare instances
     // via Object.create(ClientWorld.prototype), which skips field initializers
@@ -2802,11 +2771,7 @@ export class ClientWorld extends ReconWireState implements IWorld {
         e.dungeonId = w.dgn ?? null;
         e.riftTier = typeof w.rt === 'string' ? (w.rt as RiftTier) : undefined; // rift rank badge
         e.objectItemId = w.obj ?? null;
-        e.guild = w.gd ?? '';
-        e.pledgeGuild = w.pg ?? '';
-        e.guildTier = w.gt ?? 0;
-        e.title = w.title ?? null; // Book of Deeds active title (a deed id)
-        e.border = w.border ?? null; // Book of Deeds nameplate border (a deed id)
+        Object.assign(e, decodePlayerIdentityWire(w)); // guild, pledge, tier, deed title/border, spec
         if (e.kind === 'npc') {
           const def = NPCS[e.templateId];
           e.questIds = def ? [...def.questIds] : [];
@@ -2948,6 +2913,7 @@ export class ClientWorld extends ReconWireState implements IWorld {
       // Quantized 1..99 pull progress; undefined when idle so the visual falls back to its own clock.
       e.climbProgress = typeof w.cl === 'number' && w.cl > 0 ? w.cl / 100 : undefined;
       e.leaping = !!w.lp;
+      applyFerryWire(e, w.fry, snap ? -1 : entAlpha); // a passenger's deck spot
       e.afk = !!w.ak; // /afk display bit: drives the nameplate tag + social presence dot
       e.pvpFlag = !!w.pvp; // /pvp flag bit: nameplate + target-frame hostility colour
       e.weaponStowed = !!w.ws;
@@ -3497,10 +3463,10 @@ export class ClientWorld extends ReconWireState implements IWorld {
     // Ground-targeted: no entity target involved, so no dead-target guard.
     this.cmd({ cmd: 'castAt', ability: abilityId, x: aim.x, z: aim.z });
   }
-  // Mouseover cast: the friendly-target override rides the existing 'cast'
-  // token as an extra field; the server routes it to sim.castAbilityOn. No
-  // dead-target pre-reject here: friendly casts never take that path, and a
-  // stale override falls back to current-target-else-self server-side.
+  // Mouseover cast: the party-frame override (a friendly ability or a dual-purpose
+  // heal) rides the existing 'cast' token as an extra field; the server routes it
+  // to sim.castAbilityOn. No dead-target pre-reject here: the sim resolves a stale
+  // override back to the current target or self, and refuses there if it must.
   castAbilityOn(abilityId: string, targetId: number): void {
     this.cmd({ cmd: 'cast', ability: abilityId, target: targetId });
   }
@@ -3534,14 +3500,8 @@ export class ClientWorld extends ReconWireState implements IWorld {
     this.cmd({ cmd: 'resurrect_respond', accept });
   }
 
-  // The single write path for the LOCAL player's mirrored targetId from server
-  // state. Two snapshot sites assign it (the wireEntity `tgt` decode in
-  // applyWire and the precise `target` self-decode, same server-side value per
-  // server/game.ts selfWireJson) and both must apply the same echo protection,
-  // else the unguarded one re-introduces the clobber. `countStale` is true only
-  // for the self-decode, so one snapshot never burns two units of the valve
-  // budget; the self-decode also runs after the snapshot's ack has been folded
-  // into ackedInputSeq, so it is the write that sees the release.
+  // Both self target writes (wireEntity `tgt` and precise `self.target`) must use
+  // the same guard. Only the latter counts a stale snapshot and sees the ack.
   private applySelfTargetFromServer(
     e: Entity,
     serverTarget: number | null,
@@ -3559,24 +3519,14 @@ export class ClientWorld extends ReconWireState implements IWorld {
 
   // --- IWorldTargeting: target selection + tab cycling ---
   targetEntity(id: number | null): void {
-    // optimistic local update for snappy UI, plus the pending echo record that
-    // shields it from in-flight stale snapshots (applySelfTargetFromServer).
-    // Armed only when the optimistic write actually happened, and never while
-    // spectating: cmd() drops non-chat commands in spectate, so no echo would
-    // ever arrive to release the hold on the spectated player's mirror.
-    // The command rides the input seq stream (server/game.ts folds a command's
-    // seq into the same lastInputSeq the self snapshot acks), so the mirror can
-    // tell a snapshot built after the command from a stale in-flight one. Not
-    // drawn in spectate, where cmd() drops the command: a hole in the seq stream
-    // reads server-side as a lost frame. (A send rawCmd drops on a closed socket
-    // burns a seq harmlessly: the input frames behind it drop the same way, and
-    // the reconnect hello restarts both counters.)
+    // Optimistic local write plus a pending echo record. The command uses the
+    // input seq stream so self.ack can distinguish stale snapshots from the
+    // server's verdict. Spectate sends no command, so it arms no hold.
     const seq = typeof this.spectating === 'string' ? null : ++this.inputSeq;
     const p = this.entities.get(this.playerId);
     if (p) {
       if (id === null) {
         p.targetId = null;
-        // last write wins: a newer call replaces any older pending record
         if (seq !== null) this.pendingTargetEcho = armTargetEcho(null, seq);
       } else {
         const e = this.entities.get(id);
@@ -4035,6 +3985,10 @@ export class ClientWorld extends ReconWireState implements IWorld {
   claimEventSkin(skin: number): void {
     const idx = Math.max(0, Math.floor(skin));
     this.cmd({ cmd: 'claim_event_skin', skin: idx });
+  }
+  // --- IWorldTransport: derived from the snapshot clock (transport_wire.ts) ---
+  ferryView(): TransportFerryView | null {
+    return clientFerryView(this);
   }
   // --- IWorldMounts: collection + dismount. Summoning a specific mount is an
   // item use, not a mount command, so nothing here sends one. The toggle stays
@@ -4567,6 +4521,9 @@ export class ClientWorld extends ReconWireState implements IWorld {
   guildBuyRosterPage(): void {
     this.cmd({ cmd: 'guild_buy_roster_page' });
   }
+  guildSetRanks(ranks: readonly GuildRankDef[]): void {
+    this.cmd({ cmd: 'guild_set_ranks', ranks });
+  }
   whoRequest(filter: string): void {
     this.cmd({ cmd: 'who', filter });
   }
@@ -4699,8 +4656,8 @@ export class ClientWorld extends ReconWireState implements IWorld {
     // here can mint state.
     this.cmd({ cmd: 'market_list_instance', item: itemId, price, instance });
   }
-  marketBuy(listingId: number): void {
-    this.cmd({ cmd: 'market_buy', id: listingId });
+  marketBuy(listingId: number, count?: number): void {
+    this.cmd({ cmd: 'market_buy', id: listingId, ...(count !== undefined && { count }) });
   }
   marketSweepQuote(itemId: string, count: number): void {
     this.cmd({ cmd: 'market_sweep_quote', item: itemId, count });
@@ -4715,6 +4672,15 @@ export class ClientWorld extends ReconWireState implements IWorld {
   }
   marketCollect(): void {
     this.cmd({ cmd: 'market_collect' });
+  }
+  marketOrderPlace(itemId: string, count: number, unitPrice: number): void {
+    this.cmd({ cmd: 'market_order_place', item: itemId, count, price: unitPrice });
+  }
+  marketOrderFill(orderId: number, count: number): void {
+    this.cmd({ cmd: 'market_order_fill', id: orderId, count });
+  }
+  marketOrderCancel(orderId: number): void {
+    this.cmd({ cmd: 'market_order_cancel', id: orderId });
   }
   // --- IWorldMail: Ravenpost letter sends (snake_case wire strings). mailInfo /
   // mailUnread are snapshot reads (mirror fields above). ---
@@ -5285,29 +5251,14 @@ export class ClientWorld extends ReconWireState implements IWorld {
   // UNKNOWN guild (the window's honest empty state); a transport failure or
   // a malformed body REJECTS so the window can show its retry state instead
   // of misreading a dead server as an empty board. Rows are re-validated at
-  // this trust boundary (numbers coerced, rank narrowed) before the view
-  // core consumes them.
+  // this trust boundary by decodeGuildRoster (guild_roster_wire.ts).
   async guildRoster(name: string): Promise<GuildRosterInfo | null> {
     const res = await fetch(
       apiUrl(`/api/guilds/roster?name=${encodeURIComponent(name)}`, this.base),
     );
     if (res.status === 404) return null;
     if (!res.ok) throw new Error(`guild roster read failed (${res.status})`);
-    const data = await res.json();
-    if (typeof data?.guild !== 'string' || !Array.isArray(data?.members)) {
-      throw new Error('guild roster read returned a malformed body');
-    }
-    const members = (data.members as Record<string, unknown>[]).map((m) => ({
-      name: String(m.name ?? ''),
-      class: String(m.class ?? ''),
-      rank: (m.rank === 'leader' || m.rank === 'officer' ? m.rank : 'member') as
-        | 'leader'
-        | 'officer'
-        | 'member',
-      level: Number(m.level) || 0,
-      lifetimeXp: Number(m.lifetimeXp) || 0,
-    }));
-    return { guild: data.guild, members };
+    return decodeGuildRoster(await res.json());
   }
   // Developer high-score board (REST GET, no wire command): ?board=devs ranks
   // contributors by landed commits. The same data for every realm, paged exactly

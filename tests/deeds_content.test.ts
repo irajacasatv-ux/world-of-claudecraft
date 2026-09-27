@@ -138,11 +138,13 @@ describe('audited launch totals (literals: update deliberately with the catalog)
     // off the 3525 total the release-only chain predicts, landing at 3310.
     // MEASURED on the merged tree, which is the value that wins per this
     // file's own convention: the id COUNT stays 300 (a pure append), only the
-    // Renown SUM moves. The two manual Freeholds milestones this branch
-    // appends (homesteader_first_furnishing, homesteader_first_cottage) add
-    // five Renown each on top: 302 / 3320, MEASURED on the merged tree.
-    expect(DEED_ORDER.length).toBe(302);
-    expect(ALL.reduce((sum, d) => sum + d.renown, 0)).toBe(3320);
+    // Renown SUM moves. The Eastbrook ferry's Phase 2 appends
+    // exp_harbor_to_harbor at renown 5, and the two manual Freeholds
+    // milestones this branch appends (homesteader_first_furnishing,
+    // homesteader_first_cottage) add five Renown each on top: 303 / 3325,
+    // MEASURED on the merged tree.
+    expect(DEED_ORDER.length).toBe(303);
+    expect(ALL.reduce((sum, d) => sum + d.renown, 0)).toBe(3325);
   });
 
   it('ships the audited per-category counts', () => {
@@ -177,7 +179,8 @@ describe('audited launch totals (literals: update deliberately with the catalog)
       // +2 bank socket ladder deeds (soc_strongbox_outfitter,
       // soc_four_bags_deep; Bank Storage phase 06).
       social: 20,
-      exploration: 11,
+      // +1 the ferry round trip (exp_harbor_to_harbor).
+      exploration: 12,
       feat: 3,
       hidden: 10,
     });
@@ -372,6 +375,8 @@ describe('audited launch totals (literals: update deliberately with the catalog)
       // first here rather than appending it behind the branch's tail).
       'col_set_bramblehide',
       'hid_forgebreaker',
+      // The Eastbrook ferry's round trip (Phase 2 of the ferry), appended last.
+      'exp_harbor_to_harbor',
       'homesteader_first_furnishing',
       'homesteader_first_cottage',
     ]);
@@ -983,11 +988,12 @@ describe('frozen trigger + renown catalog (design rule 9: never retro-edit a tri
   // reproduces a prior hash); the frozen literal below is MEASURED directly
   // off the merged DEED_ORDER/DEEDS table instead. No shipped TRIGGER changed
   // on either side; only those eighteen renown values moved.
-  // The Freeholds branch appends its two Homesteader milestones after that
-  // release table; the two parent-preservation proofs below pin both parents
-  // against this merged catalog, so the literal is MEASURED here and proved
-  // there rather than asserted alone.
-  const FROZEN_CATALOG_SHA256 = 'c2746308010adebae5345ae0d0f54d2230172fe12a6097a7411f0a7a0baddffa';
+  // Re-baselined for the Eastbrook ferry's exp_harbor_to_harbor (a pure tail
+  // append on the release side), and for the Freeholds branch's two
+  // Homesteader milestones appended behind it. MEASURED on the merged tree at
+  // the 2026-09-26 sync; the pre-append digest below (the release's literal)
+  // and the parent proofs after it pin both parents against it.
+  const FROZEN_CATALOG_SHA256 = 'fb106a9c99da5b493f3c8c649effdd20d3f33e5d44e65cdb337b182a01f1ce3a';
 
   it('every shipped deed keeps its trigger and renown unchanged', () => {
     const canonical = JSON.stringify(
@@ -1031,17 +1037,20 @@ describe('frozen trigger + renown catalog (design rule 9: never retro-edit a tri
   // col_set_bramblehide and hid_forgebreaker. That is exactly the retro-edit
   // this proof exists to catch, so the old 77b670a2... pre-append literal
   // (minted before the retune) can never reproduce again by stripping only
-  // the appended ids. The baseline below is the release's own checkpoint,
-  // MEASURED fresh off its merged table with its two new ids removed, folding
-  // the eighteen-value retune in; stripping the two Homesteader milestones
-  // as well reproduces it exactly, which is the proof that this branch's
-  // deeds are pure appends over the release table. Every append AFTER this
-  // merge is once again provable the auditable way against it.
+  // the two newly appended ids. The baseline was then MEASURED fresh off the
+  // merged table with the two new ids removed, folding the eighteen-value
+  // retune into the new checkpoint; every append AFTER that merge is once
+  // again provable the auditable way against it.
+  //
+  // The Eastbrook ferry's Phase 2 appended exp_harbor_to_harbor on the
+  // release side, whose own frozen literal (7a955718...) is the baseline
+  // below: at the 2026-09-26 release sync the merged catalog minus this
+  // branch's two Homesteader milestones reproduces it exactly, so the
+  // release parent is a pure prefix of the merged table. The branch parent's
+  // proof (strip the ferry deed, reproduce c2746308...) is the it.each below.
   const PRE_APPEND_CATALOG_SHA256 =
-    '516adb010bf37c91076b9a16bdf0e4dc22c72506fcb64e237468d1ee197d1358';
+    '7a9557182e647b4d298edc146c3f381d1c9cd4667a6a3b3191d2b54c9bcdc596';
   const APPENDED_SINCE: readonly string[] = [
-    'col_set_bramblehide',
-    'hid_forgebreaker',
     'homesteader_first_furnishing',
     'homesteader_first_cottage',
   ];
@@ -1051,13 +1060,13 @@ describe('frozen trigger + renown catalog (design rule 9: never retro-edit a tri
     for (const id of APPENDED_SINCE) {
       expect(DEED_ORDER.includes(id), `${id} is in the live catalog`).toBe(true);
     }
-    // Pin the relative order of the independently added milestones.
-    expect(DEED_ORDER.slice(-5)).toEqual([
-      'dgn_varkhul_flawless',
-      'col_set_bramblehide',
+    // The branch's two milestones sit at the true tail behind the release's
+    // ferry deed: an append into a known seat, never a scattered insert or a
+    // retro-edit (the digest below proves it).
+    expect(DEED_ORDER.slice(-2 - APPENDED_SINCE.length)).toEqual([
       'hid_forgebreaker',
-      'homesteader_first_furnishing',
-      'homesteader_first_cottage',
+      'exp_harbor_to_harbor',
+      ...APPENDED_SINCE,
     ]);
     const priorRows = DEED_ORDER.filter((id) => !appended.has(id)).map((id) => {
       const trigger = DEEDS[id].trigger;
@@ -1110,18 +1119,32 @@ describe('frozen trigger + renown catalog (design rule 9: never retro-edit a tri
     for (const id of RELEASE_RETIRED_DEED_IDS) expect(DEEDS[id]?.renown, id).toBe(0);
     expect(RELEASE_RETIRED_DEED_IDS).toHaveLength(18);
   });
+  // The 2026-09-26 sync appends the release's exp_harbor_to_harbor behind
+  // both older parents' tables, so each older proof strips it too; the third
+  // row is that sync's branch parent (the branch tip it merged into),
+  // reproduced exactly by stripping the one release append.
   it.each([
     {
       parent: 'Freeholds',
-      appended: ['col_set_bramblehide'],
+      appended: ['col_set_bramblehide', 'exp_harbor_to_harbor'],
       projectOut: RELEASE_RETIRED_DEED_IDS,
       digest: '7c4f0428a2b613e9d99e0809f916655e008e8e333672021b8ba0a691a56f7b7c',
     },
     {
       parent: 'Masterwrought',
-      appended: ['homesteader_first_furnishing', 'homesteader_first_cottage'],
+      appended: [
+        'homesteader_first_furnishing',
+        'homesteader_first_cottage',
+        'exp_harbor_to_harbor',
+      ],
       projectOut: [],
       digest: '931a05935481f4014b21a20357f363bcaf52c4025c0d88512e2d60895b5cb2ef',
+    },
+    {
+      parent: 'Freeholds at the 2026-09-26 sync',
+      appended: ['exp_harbor_to_harbor'],
+      projectOut: [],
+      digest: 'c2746308010adebae5345ae0d0f54d2230172fe12a6097a7411f0a7a0baddffa',
     },
   ])(
     'preserves every $parent trigger and Renown value through the merge',
@@ -1342,8 +1365,12 @@ describe('table shape', () => {
     // that (appended behind the branch's rows; the flawless task is its
     // final entry). The Roots' Bramblehide set collection appends behind the
     // raid block (whose flawless task was the previous final entry).
-    // The one-time Forgebreaker quest's hidden celebration appends after it.
-    expect(DEED_ORDER.slice(-2)).toEqual([
+    // The one-time Forgebreaker quest's hidden celebration appends after it,
+    // then the Eastbrook ferry's round trip (the release side), then this
+    // branch's two Homesteader milestones at the true tail.
+    expect(DEED_ORDER.slice(-4)).toEqual([
+      'hid_forgebreaker',
+      'exp_harbor_to_harbor',
       'homesteader_first_furnishing',
       'homesteader_first_cottage',
     ]);

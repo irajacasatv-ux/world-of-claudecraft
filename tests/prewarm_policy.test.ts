@@ -43,6 +43,7 @@ import {
 import { DUNGEON_DOOR_RETURN_INSET } from '../src/sim/instances/dungeons';
 import { resolveSavedPosExit } from '../src/sim/saved_pos_exit';
 import { codeWithoutLineComments } from './helpers/code_without_line_comments';
+import { stripComments } from './helpers/strip_comments';
 
 // The real desktop constants (renderer.ts), injected so the test pins the actual
 // numbers the renderer uses rather than duplicating magic values.
@@ -528,6 +529,8 @@ describe('resolvePrewarmPolicy: unconstrained desktop', () => {
     expect(renderer).toContain(
       "units: (textures) => textureResumeUnits('weather-materials', textures),",
     );
+    // The dropped entry's resume links the live points before the uploads.
+    expect(stripComments(renderer)).toContain('linkRoot: () => this.weather.prewarmRoot(),');
     expect(renderer).toContain('cleanup: () => this.weather.endPrewarm(),');
     // The manifest-local mutable state is gone with them.
     expect(renderer).not.toContain('landmarkPrewarmGroup');
@@ -1407,6 +1410,16 @@ describe('constrained skips that still resume in the background', () => {
     expect(prewarmEntryResumesAfterSkip('vfx.ability-primitives', constrained)).toBe(true);
   });
 
+  it('skips the cast first-reads entry at entry but resumes its links', () => {
+    // The hard-CC band, area ring and particle cloud are the programs a
+    // closed cast gate still draws: they resume as debt rather than linking
+    // cold on the first stun or area cast.
+    expect(prewarmEntryRuns('vfx.cast-first-reads', constrained)).toBe(false);
+    expect(prewarmEntryResumesAfterSkip('vfx.cast-first-reads', constrained)).toBe(true);
+    expect(prewarmEntryRuns('vfx.cast-first-reads', desktop)).toBe(true);
+    expect(prewarmEntryResumesAfterSkip('vfx.cast-first-reads', desktop)).toBe(false);
+  });
+
   it('never resumes an entry skipped for its GPU footprint', () => {
     for (const id of [
       'entities.mob-archetypes',
@@ -1900,8 +1913,9 @@ describe('boot prewarm ordering: the sky fetch never starves the compute stages'
   });
 
   it('resolves every ran entry through the honest status gate', () => {
-    const source = rendererSource();
-    expect(source).toContain("if (status === 'completed') status = resolvePrewarmEntryStatus(");
+    expect(rendererSource()).toContain('await runStartedPrewarmEntry(entry, () =>');
+    const runner = readFileSync(new URL('../src/render/prewarm_entry.ts', import.meta.url), 'utf8');
+    expect(runner).toContain("if (status === 'completed') status = resolvePrewarmEntryStatus(");
   });
 });
 

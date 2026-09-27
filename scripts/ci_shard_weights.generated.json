@@ -2,117 +2,137 @@
   "__provenance": {
     "run": "34168361798",
     "harvested": "2026-09-08",
-    "files": 4571,
+    "files": 4637,
     "harvestedFiles": 3948,
     "carried": {
       "tests/ability_imbue_text.test.ts": {
-        "ms": 790,
+        "ms": 1954,
         "method": "local-median",
-        "measured": "2026-09-25",
-        "reason": "Freeholds re-sync of release/v0.44.0 at ed69f62ef7: the merge took the release table, so this branch's suites and the release's unharvested ones are measured locally, median of three armed runs",
+        "measured": "2026-09-23",
+        "reason": "v0.44 release candidate added or carried these suites after the latest full shard-weight harvest; measured locally during release verification pending the next green full-mode CI harvest.",
         "runs": [
-          790,
-          793,
-          789
+          1954
         ]
       },
       "tests/ability_line_of_sight.test.ts": {
-        "ms": 2,
+        "ms": 7,
+        "method": "local-median",
+        "measured": "2026-09-23",
+        "reason": "v0.44 release candidate added or carried these suites after the latest full shard-weight harvest; measured locally during release verification pending the next green full-mode CI harvest.",
+        "runs": [
+          7
+        ]
+      },
+      "tests/ability_material_live_draw_parity.test.ts": {
+        "ms": 71,
+        "method": "local-median",
+        "measured": "2026-09-26",
+        "reason": "v0.44 release candidate added or carried these suites after the latest full shard-weight harvest; measured locally during release verification pending the next green full-mode CI harvest.",
+        "runs": [
+          71
+        ]
+      },
+      "tests/ability_vfx_cast_all_or_nothing.test.ts": {
+        "ms": 360,
         "method": "local-median",
         "measured": "2026-09-25",
-        "reason": "Freeholds re-sync of release/v0.44.0 at ed69f62ef7: the merge took the release table, so this branch's suites and the release's unharvested ones are measured locally, median of three armed runs",
+        "reason": "Per-cast gate branch (fix/cast-gate-engine-family) adds nine suites absent from the last green full CI harvest; actual local single-worker Vitest json-reporter runs (endTime minus startTime), pending green full-mode CI refresh.",
         "runs": [
-          2,
-          2,
-          3
+          364,
+          360,
+          356
+        ]
+      },
+      "tests/ability_vfx_cast_requirements.test.ts": {
+        "ms": 4517,
+        "method": "local-median",
+        "measured": "2026-09-25",
+        "reason": "Per-cast gate branch (fix/cast-gate-engine-family) adds nine suites absent from the last green full CI harvest; actual local single-worker Vitest json-reporter runs (endTime minus startTime), pending green full-mode CI refresh.",
+        "runs": [
+          4516,
+          4577,
+          4517
         ]
       },
       "tests/ability_vfx_draped_pools.test.ts": {
-        "ms": 8,
+        "ms": 24,
         "method": "local-median",
-        "measured": "2026-09-25",
-        "reason": "Freeholds re-sync of release/v0.44.0 at ed69f62ef7: the merge took the release table, so this branch's suites and the release's unharvested ones are measured locally, median of three armed runs",
+        "measured": "2026-09-26",
+        "reason": "local release v0.44 candidate measurement pending full CI harvest",
         "runs": [
-          8,
-          8,
-          8
+          24
         ]
       },
       "tests/ability_vfx_idle_visibility.test.ts": {
-        "ms": 4,
+        "ms": 9,
         "method": "local-median",
-        "measured": "2026-09-25",
-        "reason": "Freeholds re-sync of release/v0.44.0 at ed69f62ef7: the merge took the release table, so this branch's suites and the release's unharvested ones are measured locally, median of three armed runs",
+        "measured": "2026-09-26",
+        "reason": "local release v0.44 candidate measurement pending full CI harvest",
         "runs": [
-          4,
-          4,
-          4
+          9
         ]
       },
       "tests/ability_vfx_instanced_pools.test.ts": {
-        "ms": 6,
+        "ms": 18,
         "method": "local-median",
-        "measured": "2026-09-25",
-        "reason": "Freeholds re-sync of release/v0.44.0 at ed69f62ef7: the merge took the release table, so this branch's suites and the release's unharvested ones are measured locally, median of three armed runs",
+        "measured": "2026-09-26",
+        "reason": "local release v0.44 candidate measurement pending full CI harvest",
         "runs": [
-          6,
-          11,
-          6
+          18
+        ]
+      },
+      "tests/absorb_credit.test.ts": {
+        "ms": 2821,
+        "method": "local-median",
+        "measured": "2026-09-23",
+        "reason": "v0.44 release candidate added or carried these suites after the latest full shard-weight harvest; measured locally during release verification pending the next green full-mode CI harvest.",
+        "runs": [
+          2821
         ]
       },
       "tests/absorb_overlay_gate.test.ts": {
-        "ms": 3,
+        "ms": 11,
         "method": "local-median",
-        "measured": "2026-09-25",
-        "reason": "Freeholds re-sync of release/v0.44.0 at ed69f62ef7: the merge took the release table, so this branch's suites and the release's unharvested ones are measured locally, median of three armed runs",
+        "measured": "2026-09-26",
+        "reason": "local release v0.44 candidate measurement pending full CI harvest",
         "runs": [
-          4,
-          3,
-          3
+          11
         ]
       },
       "tests/account_ledger.test.ts": {
-        "ms": 4,
+        "ms": 14,
         "method": "local-median",
-        "measured": "2026-09-25",
-        "reason": "Freeholds re-sync of release/v0.44.0 at ed69f62ef7: the merge took the release table, so this branch's suites and the release's unharvested ones are measured locally, median of three armed runs",
+        "measured": "2026-09-26",
+        "reason": "local release v0.44 candidate measurement pending full CI harvest",
         "runs": [
-          4,
-          4,
-          4
+          14
         ]
       },
       "tests/account_ledger_sim.test.ts": {
-        "ms": 1613,
+        "ms": 3670,
         "method": "local-median",
-        "measured": "2026-09-25",
-        "reason": "Freeholds re-sync of release/v0.44.0 at ed69f62ef7: the merge took the release table, so this branch's suites and the release's unharvested ones are measured locally, median of three armed runs",
+        "measured": "2026-09-26",
+        "reason": "local release v0.44 candidate measurement pending full CI harvest",
         "runs": [
-          1618,
-          1613,
-          1599
+          3670
         ]
       },
       "tests/account_ledger_ui.test.ts": {
-        "ms": 6,
+        "ms": 14,
         "method": "local-median",
-        "measured": "2026-09-25",
-        "reason": "Freeholds re-sync of release/v0.44.0 at ed69f62ef7: the merge took the release table, so this branch's suites and the release's unharvested ones are measured locally, median of three armed runs",
+        "measured": "2026-09-26",
+        "reason": "local release v0.44 candidate measurement pending full CI harvest",
         "runs": [
-          6,
-          6,
-          6
+          14
         ]
       },
       "tests/account_ledger_wire.test.ts": {
-        "ms": 1393,
+        "ms": 3181,
         "method": "local-median",
-        "measured": "2026-09-25",
-        "reason": "Freeholds re-sync of release/v0.44.0 at ed69f62ef7: the merge took the release table, so this branch's suites and the release's unharvested ones are measured locally, median of three armed runs",
+        "measured": "2026-09-26",
+        "reason": "local release v0.44 candidate measurement pending full CI harvest",
         "runs": [
-          1393,
-          1393,
-          1386
+          3181
         ]
       },
       "tests/account_mount_cosmetics_pg_integration.test.ts": {
@@ -127,47 +147,48 @@
         ]
       },
       "tests/action_bar_bind_banner.test.ts": {
-        "ms": 45,
+        "ms": 178,
         "method": "local-median",
-        "measured": "2026-09-25",
-        "reason": "Freeholds re-sync of release/v0.44.0 at ed69f62ef7: the merge took the release table, so this branch's suites and the release's unharvested ones are measured locally, median of three armed runs",
+        "measured": "2026-09-26",
+        "reason": "local release v0.44 candidate measurement pending full CI harvest",
         "runs": [
-          45,
-          45,
-          58
+          178
         ]
       },
       "tests/action_bar_bind_banner_placement.test.ts": {
-        "ms": 23,
+        "ms": 175,
         "method": "local-median",
-        "measured": "2026-09-25",
-        "reason": "Freeholds re-sync of release/v0.44.0 at ed69f62ef7: the merge took the release table, so this branch's suites and the release's unharvested ones are measured locally, median of three armed runs",
+        "measured": "2026-09-26",
+        "reason": "local release v0.44 candidate measurement pending full CI harvest",
         "runs": [
-          23,
-          23,
-          23
+          175
         ]
       },
       "tests/action_bar_icon_bg.test.ts": {
-        "ms": 4,
+        "ms": 8,
         "method": "local-median",
-        "measured": "2026-09-25",
-        "reason": "Freeholds re-sync of release/v0.44.0 at ed69f62ef7: the merge took the release table, so this branch's suites and the release's unharvested ones are measured locally, median of three armed runs",
+        "measured": "2026-09-26",
+        "reason": "local release v0.44 candidate measurement pending full CI harvest",
         "runs": [
-          4,
-          3,
-          4
+          8
         ]
       },
       "tests/action_bar_restore.test.ts": {
-        "ms": 3,
+        "ms": 30,
         "method": "local-median",
-        "measured": "2026-09-25",
-        "reason": "Freeholds re-sync of release/v0.44.0 at ed69f62ef7: the merge took the release table, so this branch's suites and the release's unharvested ones are measured locally, median of three armed runs",
+        "measured": "2026-09-26",
+        "reason": "local release v0.44 candidate measurement pending full CI harvest",
         "runs": [
-          3,
-          3,
-          3
+          30
+        ]
+      },
+      "tests/action_bar_secondary_requirements.test.ts": {
+        "ms": 1989,
+        "method": "local-median",
+        "measured": "2026-09-26",
+        "reason": "v0.44 release candidate added or carried these suites after the latest full shard-weight harvest; measured locally during release verification pending the next green full-mode CI harvest.",
+        "runs": [
+          1989
         ]
       },
       "tests/action_bar_spectate.test.ts": {
@@ -175,6 +196,15 @@
         "method": "local-median",
         "measured": "2026-09-24",
         "reason": "Frame layout review validation measured locally; current full CI run found coverage just below its floor while the next green full harvest is pending.",
+        "runs": [
+          14
+        ]
+      },
+      "tests/action_cam_core.test.ts": {
+        "ms": 14,
+        "method": "local-median",
+        "measured": "2026-09-26",
+        "reason": "v0.44 release candidate added or carried these suites after the latest full shard-weight harvest; measured locally during release verification pending the next green full-mode CI harvest.",
         "runs": [
           14
         ]
@@ -200,102 +230,84 @@
         ]
       },
       "tests/ambient_quest_markers.test.ts": {
-        "ms": 8,
+        "ms": 25,
         "method": "local-median",
-        "measured": "2026-09-25",
-        "reason": "Freeholds re-sync of release/v0.44.0 at ed69f62ef7: the merge took the release table, so this branch's suites and the release's unharvested ones are measured locally, median of three armed runs",
+        "measured": "2026-09-26",
+        "reason": "local release v0.44 candidate measurement pending full CI harvest",
         "runs": [
-          8,
-          8,
-          8
+          25
         ]
       },
       "tests/aura_bar_side.test.ts": {
-        "ms": 2,
+        "ms": 18,
         "method": "local-median",
-        "measured": "2026-09-25",
-        "reason": "Freeholds re-sync of release/v0.44.0 at ed69f62ef7: the merge took the release table, so this branch's suites and the release's unharvested ones are measured locally, median of three armed runs",
+        "measured": "2026-09-23",
+        "reason": "v0.44 release candidate added or carried these suites after the latest full shard-weight harvest; measured locally during release verification pending the next green full-mode CI harvest.",
         "runs": [
-          2,
-          2,
-          2
+          18
         ]
       },
       "tests/aura_cue_catalog.test.ts": {
-        "ms": 5,
+        "ms": 12,
         "method": "local-median",
-        "measured": "2026-09-25",
-        "reason": "Freeholds re-sync of release/v0.44.0 at ed69f62ef7: the merge took the release table, so this branch's suites and the release's unharvested ones are measured locally, median of three armed runs",
+        "measured": "2026-09-26",
+        "reason": "local release v0.44 candidate measurement pending full CI harvest",
         "runs": [
-          5,
-          5,
-          4
+          12
         ]
       },
       "tests/aura_ids.test.ts": {
-        "ms": 3,
+        "ms": 10,
         "method": "local-median",
-        "measured": "2026-09-25",
-        "reason": "Freeholds re-sync of release/v0.44.0 at ed69f62ef7: the merge took the release table, so this branch's suites and the release's unharvested ones are measured locally, median of three armed runs",
+        "measured": "2026-09-26",
+        "reason": "local release v0.44 candidate measurement pending full CI harvest",
         "runs": [
-          3,
-          3,
-          3
+          10
         ]
       },
       "tests/aura_track_catalog.test.ts": {
-        "ms": 2348,
+        "ms": 5403,
         "method": "local-median",
-        "measured": "2026-09-25",
-        "reason": "Freeholds re-sync of release/v0.44.0 at ed69f62ef7: the merge took the release table, so this branch's suites and the release's unharvested ones are measured locally, median of three armed runs",
+        "measured": "2026-09-26",
+        "reason": "local release v0.44 candidate measurement pending full CI harvest",
         "runs": [
-          2348,
-          2388,
-          2282
+          5403
         ]
       },
       "tests/aura_track_host.test.ts": {
-        "ms": 46,
+        "ms": 144,
         "method": "local-median",
-        "measured": "2026-09-25",
-        "reason": "Freeholds re-sync of release/v0.44.0 at ed69f62ef7: the merge took the release table, so this branch's suites and the release's unharvested ones are measured locally, median of three armed runs",
+        "measured": "2026-09-26",
+        "reason": "local release v0.44 candidate measurement pending full CI harvest",
         "runs": [
-          46,
-          50,
-          45
+          144
         ]
       },
       "tests/aura_track_painter.test.ts": {
-        "ms": 30,
+        "ms": 86,
         "method": "local-median",
-        "measured": "2026-09-25",
-        "reason": "Freeholds re-sync of release/v0.44.0 at ed69f62ef7: the merge took the release table, so this branch's suites and the release's unharvested ones are measured locally, median of three armed runs",
+        "measured": "2026-09-26",
+        "reason": "local release v0.44 candidate measurement pending full CI harvest",
         "runs": [
-          43,
-          30,
-          29
+          86
         ]
       },
       "tests/aura_track_view.test.ts": {
-        "ms": 4,
+        "ms": 12,
         "method": "local-median",
-        "measured": "2026-09-25",
-        "reason": "Freeholds re-sync of release/v0.44.0 at ed69f62ef7: the merge took the release table, so this branch's suites and the release's unharvested ones are measured locally, median of three armed runs",
+        "measured": "2026-09-26",
+        "reason": "local release v0.44 candidate measurement pending full CI harvest",
         "runs": [
-          4,
-          4,
-          4
+          12
         ]
       },
       "tests/aura_watchlist_core.test.ts": {
-        "ms": 4,
+        "ms": 12,
         "method": "local-median",
-        "measured": "2026-09-25",
-        "reason": "Freeholds re-sync of release/v0.44.0 at ed69f62ef7: the merge took the release table, so this branch's suites and the release's unharvested ones are measured locally, median of three armed runs",
+        "measured": "2026-09-26",
+        "reason": "local release v0.44 candidate measurement pending full CI harvest",
         "runs": [
-          5,
-          4,
-          4
+          12
         ]
       },
       "tests/authored_walls.test.ts": {
@@ -310,58 +322,66 @@
         ]
       },
       "tests/awarded_loot_hold.test.ts": {
-        "ms": 8361,
+        "ms": 18599,
         "method": "local-median",
-        "measured": "2026-09-25",
-        "reason": "Freeholds re-sync of release/v0.44.0 at ed69f62ef7: the merge took the release table, so this branch's suites and the release's unharvested ones are measured locally, median of three armed runs",
+        "measured": "2026-09-26",
+        "reason": "local release v0.44 candidate measurement pending full CI harvest",
         "runs": [
-          8400,
-          8361,
-          8165
+          18599
+        ]
+      },
+      "tests/bag_item_action_menu_destroy.test.ts": {
+        "ms": 21,
+        "method": "local-median",
+        "measured": "2026-09-26",
+        "reason": "v0.44 release candidate added or carried these suites after the latest full shard-weight harvest; measured locally during release verification pending the next green full-mode CI harvest.",
+        "runs": [
+          21
         ]
       },
       "tests/bags_pool_honest_refusal.test.ts": {
-        "ms": 757,
+        "ms": 1800,
         "method": "local-median",
-        "measured": "2026-09-25",
-        "reason": "Freeholds re-sync of release/v0.44.0 at ed69f62ef7: the merge took the release table, so this branch's suites and the release's unharvested ones are measured locally, median of three armed runs",
+        "measured": "2026-09-26",
+        "reason": "local release v0.44 candidate measurement pending full CI harvest",
         "runs": [
-          797,
-          757,
-          756
+          1800
         ]
       },
       "tests/bags_window_materials_only_cells.test.ts": {
-        "ms": 20,
+        "ms": 44,
         "method": "local-median",
-        "measured": "2026-09-25",
-        "reason": "Freeholds re-sync of release/v0.44.0 at ed69f62ef7: the merge took the release table, so this branch's suites and the release's unharvested ones are measured locally, median of three armed runs",
+        "measured": "2026-09-26",
+        "reason": "local release v0.44 candidate measurement pending full CI harvest",
         "runs": [
-          21,
-          20,
-          20
+          44
         ]
       },
       "tests/bags_window_party_trade.test.ts": {
-        "ms": 16,
+        "ms": 31,
         "method": "local-median",
-        "measured": "2026-09-25",
-        "reason": "Freeholds re-sync of release/v0.44.0 at ed69f62ef7: the merge took the release table, so this branch's suites and the release's unharvested ones are measured locally, median of three armed runs",
+        "measured": "2026-09-26",
+        "reason": "local release v0.44 candidate measurement pending full CI harvest",
         "runs": [
-          17,
-          16,
-          16
+          31
+        ]
+      },
+      "tests/bags_window_touch_destroy_menu.test.ts": {
+        "ms": 48,
+        "method": "local-median",
+        "measured": "2026-09-26",
+        "reason": "v0.44 release candidate added or carried these suites after the latest full shard-weight harvest; measured locally during release verification pending the next green full-mode CI harvest.",
+        "runs": [
+          48
         ]
       },
       "tests/bags_window_trade_quantity.test.ts": {
-        "ms": 34,
+        "ms": 88,
         "method": "local-median",
-        "measured": "2026-09-25",
-        "reason": "Freeholds re-sync of release/v0.44.0 at ed69f62ef7: the merge took the release table, so this branch's suites and the release's unharvested ones are measured locally, median of three armed runs",
+        "measured": "2026-09-26",
+        "reason": "local release v0.44 candidate measurement pending full CI harvest",
         "runs": [
-          34,
-          34,
-          32
+          88
         ]
       },
       "tests/baked_pool_prewarm.test.ts": {
@@ -449,14 +469,12 @@
         ]
       },
       "tests/bug_report_error_text.test.ts": {
-        "ms": 3,
+        "ms": 5,
         "method": "local-median",
-        "measured": "2026-09-25",
-        "reason": "Freeholds re-sync of release/v0.44.0 at ed69f62ef7: the merge took the release table, so this branch's suites and the release's unharvested ones are measured locally, median of three armed runs",
+        "measured": "2026-09-23",
+        "reason": "v0.44 release candidate added or carried these suites after the latest full shard-weight harvest; measured locally during release verification pending the next green full-mode CI harvest.",
         "runs": [
-          2,
-          3,
-          3
+          5
         ]
       },
       "tests/camera_impact_core.test.ts": {
@@ -468,6 +486,15 @@
           12
         ]
       },
+      "tests/camera_view_settings.test.ts": {
+        "ms": 14,
+        "method": "local-median",
+        "measured": "2026-09-26",
+        "reason": "v0.44 release candidate added or carried these suites after the latest full shard-weight harvest; measured locally during release verification pending the next green full-mode CI harvest.",
+        "runs": [
+          14
+        ]
+      },
       "tests/canopy_detail_tier_core.test.ts": {
         "ms": 4,
         "method": "local-median",
@@ -477,6 +504,59 @@
           5,
           4,
           4
+        ]
+      },
+      "tests/cast_admission_core.test.ts": {
+        "ms": 4,
+        "method": "local-median",
+        "measured": "2026-09-25",
+        "reason": "Per-cast gate branch (fix/cast-gate-engine-family) adds nine suites absent from the last green full CI harvest; actual local single-worker Vitest json-reporter runs (endTime minus startTime), pending green full-mode CI refresh.",
+        "runs": [
+          3,
+          4,
+          4
+        ]
+      },
+      "tests/cast_vfx_engine_family.test.ts": {
+        "ms": 158,
+        "method": "local-median",
+        "measured": "2026-09-25",
+        "reason": "Per-cast gate branch (fix/cast-gate-engine-family) adds nine suites absent from the last green full CI harvest; actual local single-worker Vitest json-reporter runs (endTime minus startTime), pending green full-mode CI refresh.",
+        "runs": [
+          159,
+          157,
+          158
+        ]
+      },
+      "tests/cast_vfx_first_reads.test.ts": {
+        "ms": 22,
+        "method": "local-median",
+        "measured": "2026-09-25",
+        "reason": "Per-cast gate branch (fix/cast-gate-engine-family) adds nine suites absent from the last green full CI harvest; actual local single-worker Vitest json-reporter runs (endTime minus startTime), pending green full-mode CI refresh.",
+        "runs": [
+          23,
+          22,
+          22
+        ]
+      },
+      "tests/cast_vfx_spawn_gate.test.ts": {
+        "ms": 497,
+        "method": "local-median",
+        "measured": "2026-09-25",
+        "reason": "Per-cast gate branch (fix/cast-gate-engine-family) adds nine suites absent from the last green full CI harvest; actual local single-worker Vitest json-reporter runs (endTime minus startTime), pending green full-mode CI refresh.",
+        "runs": [
+          499,
+          493,
+          497
+        ]
+      },
+      "tests/cat_form_energy.test.ts": {
+        "ms": 10179,
+        "method": "local-median",
+        "measured": "2026-09-26",
+        "reason": "v0.44 release candidate added or carried these suites after the latest full shard-weight harvest; measured locally during release verification pending the next green full-mode CI harvest.",
+        "runs": [
+          10179
         ]
       },
       "tests/character_cull_core.test.ts": {
@@ -523,6 +603,15 @@
           12
         ]
       },
+      "tests/chat_rate_limit.test.ts": {
+        "ms": 3,
+        "method": "local-median",
+        "measured": "2026-09-26",
+        "reason": "Release reconciliation combines new suites from both parents; measured locally pending the next green full-mode CI harvest.",
+        "runs": [
+          3
+        ]
+      },
       "tests/chat_scroll_follow.test.ts": {
         "ms": 2,
         "method": "local-median",
@@ -546,14 +635,12 @@
         ]
       },
       "tests/chrome_profile_dir.test.ts": {
-        "ms": 4,
+        "ms": 10,
         "method": "local-median",
-        "measured": "2026-09-25",
-        "reason": "Freeholds re-sync of release/v0.44.0 at ed69f62ef7: the merge took the release table, so this branch's suites and the release's unharvested ones are measured locally, median of three armed runs",
+        "measured": "2026-09-26",
+        "reason": "local carry pending the next full-mode harvest",
         "runs": [
-          3,
-          4,
-          4
+          10
         ]
       },
       "tests/chronomancy_cascade_relief.test.ts": {
@@ -590,47 +677,48 @@
         ]
       },
       "tests/class_health_table.test.ts": {
-        "ms": 942,
+        "ms": 2280,
         "method": "local-median",
-        "measured": "2026-09-25",
-        "reason": "Freeholds re-sync of release/v0.44.0 at ed69f62ef7: the merge took the release table, so this branch's suites and the release's unharvested ones are measured locally, median of three armed runs",
+        "measured": "2026-09-23",
+        "reason": "v0.44 release candidate added or carried these suites after the latest full shard-weight harvest; measured locally during release verification pending the next green full-mode CI harvest.",
         "runs": [
-          949,
-          942,
-          937
+          2280
+        ]
+      },
+      "tests/class_vfx_prewarm_homes.test.ts": {
+        "ms": 192,
+        "method": "local-median",
+        "measured": "2026-09-26",
+        "reason": "v0.44 release candidate added or carried these suites after the latest full shard-weight harvest; measured locally during release verification pending the next green full-mode CI harvest.",
+        "runs": [
+          192
         ]
       },
       "tests/click_claimed_focus.test.ts": {
-        "ms": 2,
+        "ms": 8,
         "method": "local-median",
-        "measured": "2026-09-25",
-        "reason": "Freeholds re-sync of release/v0.44.0 at ed69f62ef7: the merge took the release table, so this branch's suites and the release's unharvested ones are measured locally, median of three armed runs",
+        "measured": "2026-09-26",
+        "reason": "local carry pending the next full-mode harvest",
         "runs": [
-          2,
-          2,
-          2
+          8
         ]
       },
       "tests/client_api_origin.test.ts": {
-        "ms": 289,
+        "ms": 1229,
         "method": "local-median",
-        "measured": "2026-09-25",
-        "reason": "Freeholds re-sync of release/v0.44.0 at ed69f62ef7: the merge took the release table, so this branch's suites and the release's unharvested ones are measured locally, median of three armed runs",
+        "measured": "2026-09-26",
+        "reason": "local carry pending the next full-mode harvest",
         "runs": [
-          322,
-          289,
-          288
+          1229
         ]
       },
       "tests/clock_memo.test.ts": {
-        "ms": 26,
+        "ms": 55,
         "method": "local-median",
-        "measured": "2026-09-25",
-        "reason": "Freeholds re-sync of release/v0.44.0 at ed69f62ef7: the merge took the release table, so this branch's suites and the release's unharvested ones are measured locally, median of three armed runs",
+        "measured": "2026-09-23",
+        "reason": "v0.44 release candidate added or carried these suites after the latest full shard-weight harvest; measured locally during release verification pending the next green full-mode CI harvest.",
         "runs": [
-          26,
-          26,
-          25
+          55
         ]
       },
       "tests/codex_hooks.test.ts": {
@@ -656,14 +744,12 @@
         ]
       },
       "tests/combat_res_released_ghost.test.ts": {
-        "ms": 2444,
+        "ms": 5729,
         "method": "local-median",
-        "measured": "2026-09-25",
-        "reason": "Freeholds re-sync of release/v0.44.0 at ed69f62ef7: the merge took the release table, so this branch's suites and the release's unharvested ones are measured locally, median of three armed runs",
+        "measured": "2026-09-23",
+        "reason": "v0.44 release candidate added or carried these suites after the latest full shard-weight harvest; measured locally during release verification pending the next green full-mode CI harvest.",
         "runs": [
-          2444,
-          2457,
-          2426
+          5729
         ]
       },
       "tests/context_loss_recovery.test.ts": {
@@ -678,14 +764,12 @@
         ]
       },
       "tests/controller_options_view.test.ts": {
-        "ms": 2,
+        "ms": 13,
         "method": "local-median",
-        "measured": "2026-09-25",
-        "reason": "Freeholds re-sync of release/v0.44.0 at ed69f62ef7: the merge took the release table, so this branch's suites and the release's unharvested ones are measured locally, median of three armed runs",
+        "measured": "2026-09-26",
+        "reason": "local carry pending the next full-mode harvest",
         "runs": [
-          2,
-          2,
-          2
+          13
         ]
       },
       "tests/cooldown_manager_auras.test.ts": {
@@ -777,14 +861,12 @@
         ]
       },
       "tests/craft_row_text.test.ts": {
-        "ms": 10,
+        "ms": 16,
         "method": "local-median",
-        "measured": "2026-09-25",
-        "reason": "Freeholds re-sync of release/v0.44.0 at ed69f62ef7: the merge took the release table, so this branch's suites and the release's unharvested ones are measured locally, median of three armed runs",
+        "measured": "2026-09-26",
+        "reason": "local carry pending the next full-mode harvest",
         "runs": [
-          10,
-          10,
-          11
+          16
         ]
       },
       "tests/crafting_window_pin_chip.test.ts": {
@@ -852,14 +934,12 @@
         ]
       },
       "tests/css_root_anchored_has.test.ts": {
-        "ms": 237,
+        "ms": 1153,
         "method": "local-median",
-        "measured": "2026-09-25",
-        "reason": "Freeholds re-sync of release/v0.44.0 at ed69f62ef7: the merge took the release table, so this branch's suites and the release's unharvested ones are measured locally, median of three armed runs",
+        "measured": "2026-09-26",
+        "reason": "local carry pending the next full-mode harvest",
         "runs": [
-          237,
-          235,
-          252
+          1153
         ]
       },
       "tests/dais_blocks_core.test.ts": {
@@ -885,25 +965,39 @@
         ]
       },
       "tests/deck_floor.test.ts": {
-        "ms": 4,
+        "ms": 9,
         "method": "local-median",
-        "measured": "2026-09-25",
-        "reason": "Freeholds re-sync of release/v0.44.0 at ed69f62ef7: the merge took the release table, so this branch's suites and the release's unharvested ones are measured locally, median of three armed runs",
+        "measured": "2026-09-26",
+        "reason": "local carry pending the next full-mode harvest",
         "runs": [
-          4,
-          5,
-          4
+          9
+        ]
+      },
+      "tests/deck_frame.test.ts": {
+        "ms": 20,
+        "method": "local-median",
+        "measured": "2026-09-26",
+        "reason": "Eastbrook ferry Phase 3 adds four suites and grows the voyage suites (the moving deck); actual local single-worker Vitest run on 2026-09-25, pending a green full-mode CI refresh.",
+        "runs": [
+          20
+        ]
+      },
+      "tests/deck_prediction.test.ts": {
+        "ms": 1639,
+        "method": "local-median",
+        "measured": "2026-09-26",
+        "reason": "Eastbrook ferry Phase 3 adds four suites and grows the voyage suites (the moving deck); actual local single-worker Vitest run on 2026-09-25, pending a green full-mode CI refresh.",
+        "runs": [
+          1639
         ]
       },
       "tests/deeds_restore.test.ts": {
-        "ms": 717,
+        "ms": 1806,
         "method": "local-median",
-        "measured": "2026-09-25",
-        "reason": "Freeholds re-sync of release/v0.44.0 at ed69f62ef7: the merge took the release table, so this branch's suites and the release's unharvested ones are measured locally, median of three armed runs",
+        "measured": "2026-09-23",
+        "reason": "v0.44 release candidate added or carried these suites after the latest full shard-weight harvest; measured locally during release verification pending the next green full-mode CI harvest.",
         "runs": [
-          711,
-          750,
-          717
+          1806
         ]
       },
       "tests/deferred_contact_bursts.test.ts": {
@@ -916,25 +1010,21 @@
         ]
       },
       "tests/deposit_all_status_text.test.ts": {
-        "ms": 3,
+        "ms": 7,
         "method": "local-median",
-        "measured": "2026-09-25",
-        "reason": "Freeholds re-sync of release/v0.44.0 at ed69f62ef7: the merge took the release table, so this branch's suites and the release's unharvested ones are measured locally, median of three armed runs",
+        "measured": "2026-09-23",
+        "reason": "v0.44 release candidate added or carried these suites after the latest full shard-weight harvest; measured locally during release verification pending the next green full-mode CI harvest.",
         "runs": [
-          3,
-          3,
-          3
+          7
         ]
       },
       "tests/desktop_host_diag.test.ts": {
-        "ms": 4,
+        "ms": 13,
         "method": "local-median",
-        "measured": "2026-09-25",
-        "reason": "Freeholds re-sync of release/v0.44.0 at ed69f62ef7: the merge took the release table, so this branch's suites and the release's unharvested ones are measured locally, median of three armed runs",
+        "measured": "2026-09-26",
+        "reason": "local carry pending the next full-mode harvest",
         "runs": [
-          4,
-          4,
-          4
+          13
         ]
       },
       "tests/desktop_host_essentials.test.ts": {
@@ -949,14 +1039,12 @@
         ]
       },
       "tests/dev_town_teleport.test.ts": {
-        "ms": 153,
+        "ms": 429,
         "method": "local-median",
-        "measured": "2026-09-25",
-        "reason": "Freeholds re-sync of release/v0.44.0 at ed69f62ef7: the merge took the release table, so this branch's suites and the release's unharvested ones are measured locally, median of three armed runs",
+        "measured": "2026-09-23",
+        "reason": "v0.44 release candidate added or carried these suites after the latest full shard-weight harvest; measured locally during release verification pending the next green full-mode CI harvest.",
         "runs": [
-          152,
-          153,
-          153
+          429
         ]
       },
       "tests/discord_queue_ping_row.test.ts": {
@@ -990,6 +1078,17 @@
           3,
           3,
           3
+        ]
+      },
+      "tests/draw_program_signature_core.test.ts": {
+        "ms": 9,
+        "method": "local-median",
+        "measured": "2026-09-25",
+        "reason": "Per-cast gate branch (fix/cast-gate-engine-family) adds nine suites absent from the last green full CI harvest; actual local single-worker Vitest json-reporter runs (endTime minus startTime), pending green full-mode CI refresh.",
+        "runs": [
+          8,
+          9,
+          9
         ]
       },
       "tests/druid_cat_animation.test.ts": {
@@ -1045,6 +1144,24 @@
           583,
           577,
           579
+        ]
+      },
+      "tests/eastbrook_ferry_asset.test.ts": {
+        "ms": 20,
+        "method": "local-median",
+        "measured": "2026-09-26",
+        "reason": "Eastbrook ferry suites absent from the last green full CI harvest; single-worker local Vitest run on the release/v0.44.0 merge, pending a green full-mode CI refresh.",
+        "runs": [
+          20
+        ]
+      },
+      "tests/eastbrook_ferry_berth.test.ts": {
+        "ms": 10436,
+        "method": "local-median",
+        "measured": "2026-09-26",
+        "reason": "Eastbrook ferry suites absent from the last green full CI harvest; single-worker local Vitest run on the release/v0.44.0 merge, pending a green full-mode CI refresh.",
+        "runs": [
+          10436
         ]
       },
       "tests/eastbrook_guidance_choice.test.ts": {
@@ -1103,25 +1220,21 @@
         ]
       },
       "tests/effective_stats.test.ts": {
-        "ms": 4,
+        "ms": 6,
         "method": "local-median",
-        "measured": "2026-09-25",
-        "reason": "Freeholds re-sync of release/v0.44.0 at ed69f62ef7: the merge took the release table, so this branch's suites and the release's unharvested ones are measured locally, median of three armed runs",
+        "measured": "2026-09-23",
+        "reason": "v0.44 release candidate added or carried these suites after the latest full shard-weight harvest; measured locally during release verification pending the next green full-mode CI harvest.",
         "runs": [
-          4,
-          4,
-          4
+          6
         ]
       },
       "tests/electron_host_diag.test.ts": {
-        "ms": 12,
+        "ms": 29,
         "method": "local-median",
-        "measured": "2026-09-25",
-        "reason": "Freeholds re-sync of release/v0.44.0 at ed69f62ef7: the merge took the release table, so this branch's suites and the release's unharvested ones are measured locally, median of three armed runs",
+        "measured": "2026-09-26",
+        "reason": "local carry pending the next full-mode harvest",
         "runs": [
-          12,
-          12,
-          12
+          29
         ]
       },
       "tests/electron_host_essentials.test.ts": {
@@ -1202,14 +1315,12 @@
         ]
       },
       "tests/entity_ground_sample_core.test.ts": {
-        "ms": 4,
+        "ms": 11,
         "method": "local-median",
-        "measured": "2026-09-25",
-        "reason": "Freeholds re-sync of release/v0.44.0 at ed69f62ef7: the merge took the release table, so this branch's suites and the release's unharvested ones are measured locally, median of three armed runs",
+        "measured": "2026-09-26",
+        "reason": "local carry pending the next full-mode harvest",
         "runs": [
-          4,
-          4,
-          4
+          11
         ]
       },
       "tests/entity_reanchor.test.ts": {
@@ -1234,15 +1345,22 @@
           721
         ]
       },
-      "tests/far_bake_group_key.test.ts": {
-        "ms": 4,
+      "tests/error_toast_controller.test.ts": {
+        "ms": 44,
         "method": "local-median",
-        "measured": "2026-09-25",
-        "reason": "Freeholds re-sync of release/v0.44.0 at ed69f62ef7: the merge took the release table, so this branch's suites and the release's unharvested ones are measured locally, median of three armed runs",
+        "measured": "2026-09-23",
+        "reason": "v0.44 release candidate added or carried these suites after the latest full shard-weight harvest; measured locally during release verification pending the next green full-mode CI harvest.",
         "runs": [
-          4,
-          4,
-          4
+          44
+        ]
+      },
+      "tests/far_bake_group_key.test.ts": {
+        "ms": 8,
+        "method": "local-median",
+        "measured": "2026-09-26",
+        "reason": "local carry pending the next full-mode harvest",
+        "runs": [
+          8
         ]
       },
       "tests/far_bake_groups_core.test.ts": {
@@ -1257,14 +1375,12 @@
         ]
       },
       "tests/far_bake_uv_pad.test.ts": {
-        "ms": 631,
+        "ms": 1589,
         "method": "local-median",
-        "measured": "2026-09-25",
-        "reason": "Freeholds re-sync of release/v0.44.0 at ed69f62ef7: the merge took the release table, so this branch's suites and the release's unharvested ones are measured locally, median of three armed runs",
+        "measured": "2026-09-21",
+        "reason": "v0.44 release-line reconcile added these tests after the latest full shard-weight harvest",
         "runs": [
-          627,
-          631,
-          655
+          1589
         ]
       },
       "tests/fct_stage_core.test.ts": {
@@ -1274,6 +1390,15 @@
         "reason": "PR 4139 review-fix round adds four suites (area telegraph, harvest detonation staging, Onrush cue, beat-staged combat text) absent from the last green full CI harvest; actual local single-worker Vitest json-reporter run, pending green full-mode CI refresh.",
         "runs": [
           15
+        ]
+      },
+      "tests/feast_named_slot_item.test.ts": {
+        "ms": 1410,
+        "method": "local-median",
+        "measured": "2026-09-26",
+        "reason": "local carry pending the next full-mode harvest",
+        "runs": [
+          1410
         ]
       },
       "tests/fen_features_cells.test.ts": {
@@ -1307,6 +1432,33 @@
           4,
           4,
           4
+        ]
+      },
+      "tests/ferry_hud.test.ts": {
+        "ms": 1868,
+        "method": "local-median",
+        "measured": "2026-09-26",
+        "reason": "Eastbrook ferry Phase 2 adds four suites absent from the last green full CI harvest; actual local single-worker Vitest run on 2026-09-25, pending a green full-mode CI refresh.",
+        "runs": [
+          1868
+        ]
+      },
+      "tests/ferry_piers.test.ts": {
+        "ms": 36,
+        "method": "local-median",
+        "measured": "2026-09-26",
+        "reason": "Eastbrook ferry suites absent from the last green full CI harvest; single-worker local Vitest run on the release/v0.44.0 merge, pending a green full-mode CI refresh.",
+        "runs": [
+          36
+        ]
+      },
+      "tests/ferry_view_route.test.ts": {
+        "ms": 1441,
+        "method": "local-median",
+        "measured": "2026-09-26",
+        "reason": "Eastbrook ferry suites absent from the last green full CI harvest; single-worker local Vitest run on the release/v0.44.0 merge, pending a green full-mode CI refresh.",
+        "runs": [
+          1441
         ]
       },
       "tests/fiesta_effects.test.ts": {
@@ -1520,14 +1672,12 @@
         ]
       },
       "tests/frame_rate_cap_setting.test.ts": {
-        "ms": 3,
+        "ms": 10,
         "method": "local-median",
-        "measured": "2026-09-25",
-        "reason": "Freeholds re-sync of release/v0.44.0 at ed69f62ef7: the merge took the release table, so this branch's suites and the release's unharvested ones are measured locally, median of three armed runs",
+        "measured": "2026-09-23",
+        "reason": "v0.44 release candidate added or carried these suites after the latest full shard-weight harvest; measured locally during release verification pending the next green full-mode CI harvest.",
         "runs": [
-          3,
-          3,
-          3
+          10
         ]
       },
       "tests/freehold_arrival.test.ts": {
@@ -2295,14 +2445,12 @@
         ]
       },
       "tests/game_renderer.test.ts": {
-        "ms": 3,
+        "ms": 8,
         "method": "local-median",
-        "measured": "2026-09-25",
-        "reason": "Freeholds re-sync of release/v0.44.0 at ed69f62ef7: the merge took the release table, so this branch's suites and the release's unharvested ones are measured locally, median of three armed runs",
+        "measured": "2026-09-23",
+        "reason": "v0.44 release candidate added or carried these suites after the latest full shard-weight harvest; measured locally during release verification pending the next green full-mode CI harvest.",
         "runs": [
-          3,
-          3,
-          4
+          8
         ]
       },
       "tests/gather_batch_reach_core.test.ts": {
@@ -2361,14 +2509,12 @@
         ]
       },
       "tests/gpu_timer_probe_core.test.ts": {
-        "ms": 5,
+        "ms": 24,
         "method": "local-median",
-        "measured": "2026-09-25",
-        "reason": "Freeholds re-sync of release/v0.44.0 at ed69f62ef7: the merge took the release table, so this branch's suites and the release's unharvested ones are measured locally, median of three armed runs",
+        "measured": "2026-09-23",
+        "reason": "v0.44 release candidate added or carried these suites after the latest full shard-weight harvest; measured locally during release verification pending the next green full-mode CI harvest.",
         "runs": [
-          5,
-          5,
-          5
+          24
         ]
       },
       "tests/grass_tuft_cards_core.test.ts": {
@@ -2490,6 +2636,51 @@
           6,
           6,
           6
+        ]
+      },
+      "tests/harbor_route_marker_asset.test.ts": {
+        "ms": 15,
+        "method": "local-median",
+        "measured": "2026-09-26",
+        "reason": "Eastbrook ferry suites absent from the last green full CI harvest; single-worker local Vitest run on the release/v0.44.0 merge, pending a green full-mode CI refresh.",
+        "runs": [
+          15
+        ]
+      },
+      "tests/harbor_route_marker_core.test.ts": {
+        "ms": 8,
+        "method": "local-median",
+        "measured": "2026-09-26",
+        "reason": "Eastbrook ferry suites absent from the last green full CI harvest; single-worker local Vitest run on the release/v0.44.0 merge, pending a green full-mode CI refresh.",
+        "runs": [
+          8
+        ]
+      },
+      "tests/harbor_route_marker_render.test.ts": {
+        "ms": 106,
+        "method": "local-median",
+        "measured": "2026-09-26",
+        "reason": "Eastbrook ferry suites absent from the last green full CI harvest; single-worker local Vitest run on the release/v0.44.0 merge, pending a green full-mode CI refresh.",
+        "runs": [
+          106
+        ]
+      },
+      "tests/harbor_route_markers.test.ts": {
+        "ms": 1517,
+        "method": "local-median",
+        "measured": "2026-09-26",
+        "reason": "Eastbrook ferry suites absent from the last green full CI harvest; single-worker local Vitest run on the release/v0.44.0 merge, pending a green full-mode CI refresh.",
+        "runs": [
+          1517
+        ]
+      },
+      "tests/harbormaster_gear_asset.test.ts": {
+        "ms": 63,
+        "method": "local-median",
+        "measured": "2026-09-26",
+        "reason": "Eastbrook ferry suites absent from the last green full CI harvest; single-worker local Vitest run on the release/v0.44.0 merge, pending a green full-mode CI refresh.",
+        "runs": [
+          63
         ]
       },
       "tests/harvest_choreography.test.ts": {
@@ -2772,25 +2963,21 @@
         ]
       },
       "tests/hunter_trailbreak_arc.test.ts": {
-        "ms": 4,
+        "ms": 10,
         "method": "local-median",
-        "measured": "2026-09-25",
-        "reason": "Freeholds re-sync of release/v0.44.0 at ed69f62ef7: the merge took the release table, so this branch's suites and the release's unharvested ones are measured locally, median of three armed runs",
+        "measured": "2026-09-21",
+        "reason": "v0.44 release-line reconcile added these tests after the latest full shard-weight harvest",
         "runs": [
-          4,
-          4,
-          4
+          10
         ]
       },
       "tests/hunter_trailbreak_terrain.test.ts": {
-        "ms": 1190,
+        "ms": 2800,
         "method": "local-median",
-        "measured": "2026-09-25",
-        "reason": "Freeholds re-sync of release/v0.44.0 at ed69f62ef7: the merge took the release table, so this branch's suites and the release's unharvested ones are measured locally, median of three armed runs",
+        "measured": "2026-09-21",
+        "reason": "v0.44 release-line reconcile added these tests after the latest full shard-weight harvest",
         "runs": [
-          1194,
-          1178,
-          1190
+          2800
         ]
       },
       "tests/ignivar_lift_car_walls.test.ts": {
@@ -2814,14 +3001,12 @@
         ]
       },
       "tests/input_seq_fold.test.ts": {
-        "ms": 3,
+        "ms": 7,
         "method": "local-median",
-        "measured": "2026-09-25",
-        "reason": "Freeholds re-sync of release/v0.44.0 at ed69f62ef7: the merge took the release table, so this branch's suites and the release's unharvested ones are measured locally, median of three armed runs",
+        "measured": "2026-09-21",
+        "reason": "v0.44 release-line reconcile added these tests after the latest full shard-weight harvest",
         "runs": [
-          3,
-          3,
-          3
+          7
         ]
       },
       "tests/instance_combat_hold.test.ts": {
@@ -2833,6 +3018,17 @@
           700,
           694,
           688
+        ]
+      },
+      "tests/instanced_dither_fade.test.ts": {
+        "ms": 14,
+        "method": "local-median",
+        "measured": "2026-09-22",
+        "reason": "dithered camera ghost suites, local carry pending the branch's first full-mode harvest",
+        "runs": [
+          12,
+          14,
+          15
         ]
       },
       "tests/interact_key_gather.test.ts": {
@@ -2847,14 +3043,12 @@
         ]
       },
       "tests/interaction_input.test.ts": {
-        "ms": 3,
+        "ms": 16,
         "method": "local-median",
-        "measured": "2026-09-25",
-        "reason": "Freeholds re-sync of release/v0.44.0 at ed69f62ef7: the merge took the release table, so this branch's suites and the release's unharvested ones are measured locally, median of three armed runs",
+        "measured": "2026-09-23",
+        "reason": "v0.44 release candidate added or carried these suites after the latest full shard-weight harvest; measured locally during release verification pending the next green full-mode CI harvest.",
         "runs": [
-          3,
-          3,
-          2
+          16
         ]
       },
       "tests/interface_visibility_core.test.ts": {
@@ -2965,6 +3159,15 @@
           2
         ]
       },
+      "tests/kill_participation.test.ts": {
+        "ms": 6,
+        "method": "local-median",
+        "measured": "2026-09-23",
+        "reason": "v0.44 release candidate added or carried these suites after the latest full shard-weight harvest; measured locally during release verification pending the next green full-mode CI harvest.",
+        "runs": [
+          6
+        ]
+      },
       "tests/last_keep_graveyard.test.ts": {
         "ms": 578,
         "method": "local-median",
@@ -3039,6 +3242,15 @@
         "runs": [
           4,
           3,
+          3
+        ]
+      },
+      "tests/lockpick_action_guard.test.ts": {
+        "ms": 3,
+        "method": "local-median",
+        "measured": "2026-09-26",
+        "reason": "Eastbrook ferry suites absent from the last green full CI harvest; single-worker local Vitest run on the release/v0.44.0 merge, pending a green full-mode CI refresh.",
+        "runs": [
           3
         ]
       },
@@ -3669,6 +3881,17 @@
           2
         ]
       },
+      "tests/occluder_dither_fade.test.ts": {
+        "ms": 7,
+        "method": "local-median",
+        "measured": "2026-09-22",
+        "reason": "dithered camera ghost suites, local carry pending the branch's first full-mode harvest",
+        "runs": [
+          6,
+          8,
+          7
+        ]
+      },
       "tests/options_interface_rows.test.ts": {
         "ms": 8,
         "method": "local-median",
@@ -3868,14 +4091,12 @@
         ]
       },
       "tests/player_portrait_core.test.ts": {
-        "ms": 3,
+        "ms": 7,
         "method": "local-median",
-        "measured": "2026-09-25",
-        "reason": "Freeholds re-sync of release/v0.44.0 at ed69f62ef7: the merge took the release table, so this branch's suites and the release's unharvested ones are measured locally, median of three armed runs",
+        "measured": "2026-09-21",
+        "reason": "v0.44 release-line reconcile added these tests after the latest full shard-weight harvest",
         "runs": [
-          3,
-          3,
-          3
+          7
         ]
       },
       "tests/poison_coating_parse.test.ts": {
@@ -3890,14 +4111,12 @@
         ]
       },
       "tests/portrait_chip_composed_hydrate.test.ts": {
-        "ms": 10,
+        "ms": 51,
         "method": "local-median",
-        "measured": "2026-09-25",
-        "reason": "Freeholds re-sync of release/v0.44.0 at ed69f62ef7: the merge took the release table, so this branch's suites and the release's unharvested ones are measured locally, median of three armed runs",
+        "measured": "2026-09-21",
+        "reason": "v0.44 release-line reconcile added these tests after the latest full shard-weight harvest",
         "runs": [
-          12,
-          10,
-          10
+          51
         ]
       },
       "tests/post_finite_guard_glsl.test.ts": {
@@ -4120,6 +4339,15 @@
           2267
         ]
       },
+      "tests/raid_released_ghost_loot.test.ts": {
+        "ms": 1582,
+        "method": "local-median",
+        "measured": "2026-09-23",
+        "reason": "v0.44 release candidate added or carried these suites after the latest full shard-weight harvest; measured locally during release verification pending the next green full-mode CI harvest.",
+        "runs": [
+          1582
+        ]
+      },
       "tests/raid_telegraph_rig_walk.test.ts": {
         "ms": 15,
         "method": "local-median",
@@ -4305,6 +4533,17 @@
           22,
           23,
           23
+        ]
+      },
+      "tests/renderer_ability_presentation.test.ts": {
+        "ms": 73,
+        "method": "local-median",
+        "measured": "2026-09-25",
+        "reason": "Per-cast gate branch (fix/cast-gate-engine-family) adds nine suites absent from the last green full CI harvest; actual local single-worker Vitest json-reporter runs (endTime minus startTime), pending green full-mode CI refresh.",
+        "runs": [
+          71,
+          73,
+          75
         ]
       },
       "tests/renderer_build_diag.test.ts": {
@@ -5058,6 +5297,17 @@
           8
         ]
       },
+      "tests/shader_ablation_transforms.test.ts": {
+        "ms": 9,
+        "method": "local-median",
+        "measured": "2026-09-22",
+        "reason": "shader harvest and link bench suites, local carry pending the branch's first full-mode harvest",
+        "runs": [
+          8,
+          9,
+          9
+        ]
+      },
       "tests/shader_corpus_slices.test.ts": {
         "ms": 16,
         "method": "local-median",
@@ -5067,6 +5317,28 @@
           16,
           16,
           17
+        ]
+      },
+      "tests/shader_harvest_corpus.test.ts": {
+        "ms": 7,
+        "method": "local-median",
+        "measured": "2026-09-22",
+        "reason": "shader harvest and link bench suites, local carry pending the branch's first full-mode harvest",
+        "runs": [
+          7,
+          7,
+          7
+        ]
+      },
+      "tests/shader_link_bench_report.test.ts": {
+        "ms": 4,
+        "method": "local-median",
+        "measured": "2026-09-22",
+        "reason": "shader harvest and link bench suites, local carry pending the branch's first full-mode harvest",
+        "runs": [
+          4,
+          4,
+          5
         ]
       },
       "tests/shadow_extent_core.test.ts": {
@@ -5098,6 +5370,15 @@
         "reason": "Warrior PR 4139 adds 100 suites absent from the last green full CI harvest; actual local single-worker Vitest default-reporter run on 2026-09-21, pending green full-mode CI refresh (run 35567302759 failed and was not harvested).",
         "runs": [
           69
+        ]
+      },
+      "tests/ship_shadow_hold.test.ts": {
+        "ms": 13,
+        "method": "local-median",
+        "measured": "2026-09-26",
+        "reason": "Eastbrook ferry suites absent from the last green full CI harvest; single-worker local Vitest run on the release/v0.44.0 merge, pending a green full-mode CI refresh.",
+        "runs": [
+          13
         ]
       },
       "tests/slope_glue_terrain_floor.test.ts": {
@@ -5260,25 +5541,21 @@
         ]
       },
       "tests/target_echo_core.test.ts": {
-        "ms": 4,
+        "ms": 11,
         "method": "local-median",
-        "measured": "2026-09-25",
-        "reason": "Freeholds re-sync of release/v0.44.0 at ed69f62ef7: the merge took the release table, so this branch's suites and the release's unharvested ones are measured locally, median of three armed runs",
+        "measured": "2026-09-21",
+        "reason": "v0.44 release-line reconcile added these tests after the latest full shard-weight harvest",
         "runs": [
-          4,
-          4,
-          4
+          11
         ]
       },
       "tests/target_frame_descriptor.test.ts": {
-        "ms": 8,
+        "ms": 15,
         "method": "local-median",
-        "measured": "2026-09-25",
-        "reason": "Freeholds re-sync of release/v0.44.0 at ed69f62ef7: the merge took the release table, so this branch's suites and the release's unharvested ones are measured locally, median of three armed runs",
+        "measured": "2026-09-21",
+        "reason": "v0.44 release-line reconcile added these tests after the latest full shard-weight harvest",
         "runs": [
-          8,
-          8,
-          7
+          15
         ]
       },
       "tests/terrain_calm_anchor_freehold.test.ts": {
@@ -5380,6 +5657,15 @@
           4
         ]
       },
+      "tests/town_focus_pending.test.ts": {
+        "ms": 4276,
+        "method": "local-median",
+        "measured": "2026-09-26",
+        "reason": "Release reconciliation combines new suites from both parents; measured locally pending the next green full-mode CI harvest.",
+        "runs": [
+          4276
+        ]
+      },
       "tests/town_quests.test.ts": {
         "ms": 756,
         "method": "local-median",
@@ -5391,6 +5677,15 @@
           804
         ]
       },
+      "tests/tracker_collapse_settings.test.ts": {
+        "ms": 2,
+        "method": "local-median",
+        "measured": "2026-09-26",
+        "reason": "Release reconciliation combines new suites from both parents; measured locally pending the next green full-mode CI harvest.",
+        "runs": [
+          2
+        ]
+      },
       "tests/tracker_header_wiring.test.ts": {
         "ms": 8,
         "method": "local-median",
@@ -5400,6 +5695,78 @@
           8,
           8,
           8
+        ]
+      },
+      "tests/transport_deck.test.ts": {
+        "ms": 19772,
+        "method": "local-median",
+        "measured": "2026-09-26",
+        "reason": "Eastbrook ferry Phase 3 adds four suites and grows the voyage suites (the moving deck); actual local single-worker Vitest run on 2026-09-25, pending a green full-mode CI refresh.",
+        "runs": [
+          19772
+        ]
+      },
+      "tests/transport_ferry.test.ts": {
+        "ms": 37112,
+        "method": "local-median",
+        "measured": "2026-09-26",
+        "reason": "Eastbrook ferry Phase 3 adds four suites and grows the voyage suites (the moving deck); actual local single-worker Vitest run on 2026-09-25, pending a green full-mode CI refresh.",
+        "runs": [
+          37112
+        ]
+      },
+      "tests/transport_ferry_online.test.ts": {
+        "ms": 5566,
+        "method": "local-median",
+        "measured": "2026-09-26",
+        "reason": "Eastbrook ferry Phase 3 adds four suites and grows the voyage suites (the moving deck); actual local single-worker Vitest run on 2026-09-25, pending a green full-mode CI refresh.",
+        "runs": [
+          5566
+        ]
+      },
+      "tests/transport_lanes.test.ts": {
+        "ms": 3874,
+        "method": "local-median",
+        "measured": "2026-09-26",
+        "reason": "Eastbrook ferry Phase 3 adds four suites and grows the voyage suites (the moving deck); actual local single-worker Vitest run on 2026-09-25, pending a green full-mode CI refresh.",
+        "runs": [
+          3874
+        ]
+      },
+      "tests/transport_ship.test.ts": {
+        "ms": 18,
+        "method": "local-median",
+        "measured": "2026-09-26",
+        "reason": "Eastbrook ferry suites absent from the last green full CI harvest; single-worker local Vitest run on the release/v0.44.0 merge, pending a green full-mode CI refresh.",
+        "runs": [
+          18
+        ]
+      },
+      "tests/transport_ship_core.test.ts": {
+        "ms": 9,
+        "method": "local-median",
+        "measured": "2026-09-26",
+        "reason": "Eastbrook ferry suites absent from the last green full CI harvest; single-worker local Vitest run on the release/v0.44.0 merge, pending a green full-mode CI refresh.",
+        "runs": [
+          9
+        ]
+      },
+      "tests/transport_ship_render.test.ts": {
+        "ms": 110,
+        "method": "local-median",
+        "measured": "2026-09-26",
+        "reason": "Eastbrook ferry suites absent from the last green full CI harvest; single-worker local Vitest run on the release/v0.44.0 merge, pending a green full-mode CI refresh.",
+        "runs": [
+          110
+        ]
+      },
+      "tests/transport_wire.test.ts": {
+        "ms": 1650,
+        "method": "local-median",
+        "measured": "2026-09-26",
+        "reason": "Eastbrook ferry Phase 3 adds four suites and grows the voyage suites (the moving deck); actual local single-worker Vitest run on 2026-09-25, pending a green full-mode CI refresh.",
+        "runs": [
+          1650
         ]
       },
       "tests/tree_hide_fade.test.ts": {
@@ -5471,6 +5838,15 @@
           20,
           20,
           20
+        ]
+      },
+      "tests/vault_search.test.ts": {
+        "ms": 44,
+        "method": "local-median",
+        "measured": "2026-09-23",
+        "reason": "v0.44 release candidate added or carried these suites after the latest full shard-weight harvest; measured locally during release verification pending the next green full-mode CI harvest.",
+        "runs": [
+          44
         ]
       },
       "tests/vault_wire_ledger_rows.test.ts": {
@@ -6411,6 +6787,78 @@
           8
         ]
       },
+      "tests/wickharbor_harbor.test.ts": {
+        "ms": 41367,
+        "method": "local-median",
+        "measured": "2026-09-26",
+        "reason": "Eastbrook ferry suites absent from the last green full CI harvest; single-worker local Vitest run on the release/v0.44.0 merge, pending a green full-mode CI refresh.",
+        "runs": [
+          41367
+        ]
+      },
+      "tests/wickharbor_harbor_asset.test.ts": {
+        "ms": 222,
+        "method": "local-median",
+        "measured": "2026-09-26",
+        "reason": "Eastbrook ferry suites absent from the last green full CI harvest; single-worker local Vitest run on the release/v0.44.0 merge, pending a green full-mode CI refresh.",
+        "runs": [
+          222
+        ]
+      },
+      "tests/wickharbor_harbor_core.test.ts": {
+        "ms": 9,
+        "method": "local-median",
+        "measured": "2026-09-26",
+        "reason": "Eastbrook ferry suites absent from the last green full CI harvest; single-worker local Vitest run on the release/v0.44.0 merge, pending a green full-mode CI refresh.",
+        "runs": [
+          9
+        ]
+      },
+      "tests/wickharbor_harbor_render.test.ts": {
+        "ms": 144,
+        "method": "local-median",
+        "measured": "2026-09-26",
+        "reason": "Eastbrook ferry suites absent from the last green full CI harvest; single-worker local Vitest run on the release/v0.44.0 merge, pending a green full-mode CI refresh.",
+        "runs": [
+          144
+        ]
+      },
+      "tests/wickharbor_wharf.test.ts": {
+        "ms": 15173,
+        "method": "local-median",
+        "measured": "2026-09-26",
+        "reason": "Eastbrook ferry suites absent from the last green full CI harvest; single-worker local Vitest run on the release/v0.44.0 merge, pending a green full-mode CI refresh.",
+        "runs": [
+          15173
+        ]
+      },
+      "tests/wickharbor_wharf_asset.test.ts": {
+        "ms": 146,
+        "method": "local-median",
+        "measured": "2026-09-26",
+        "reason": "Eastbrook ferry suites absent from the last green full CI harvest; single-worker local Vitest run on the release/v0.44.0 merge, pending a green full-mode CI refresh.",
+        "runs": [
+          146
+        ]
+      },
+      "tests/wickharbor_wharf_core.test.ts": {
+        "ms": 5,
+        "method": "local-median",
+        "measured": "2026-09-26",
+        "reason": "Eastbrook ferry suites absent from the last green full CI harvest; single-worker local Vitest run on the release/v0.44.0 merge, pending a green full-mode CI refresh.",
+        "runs": [
+          5
+        ]
+      },
+      "tests/wickharbor_wharf_render.test.ts": {
+        "ms": 77,
+        "method": "local-median",
+        "measured": "2026-09-26",
+        "reason": "Eastbrook ferry suites absent from the last green full CI harvest; single-worker local Vitest run on the release/v0.44.0 merge, pending a green full-mode CI refresh.",
+        "runs": [
+          77
+        ]
+      },
       "tests/wildheart_field_lights.test.ts": {
         "ms": 3,
         "method": "local-median",
@@ -6522,6 +6970,60 @@
           7
         ]
       },
+      "tests/wyrmwatch_harbor.test.ts": {
+        "ms": 19798,
+        "method": "local-median",
+        "measured": "2026-09-26",
+        "reason": "Eastbrook ferry suites absent from the last green full CI harvest; single-worker local Vitest run on the release/v0.44.0 merge, pending a green full-mode CI refresh.",
+        "runs": [
+          19798
+        ]
+      },
+      "tests/wyrmwatch_harbor_asset.test.ts": {
+        "ms": 1824,
+        "method": "local-median",
+        "measured": "2026-09-26",
+        "reason": "Eastbrook ferry suites absent from the last green full CI harvest; single-worker local Vitest run on the release/v0.44.0 merge, pending a green full-mode CI refresh.",
+        "runs": [
+          1824
+        ]
+      },
+      "tests/wyrmwatch_harbor_core.test.ts": {
+        "ms": 38,
+        "method": "local-median",
+        "measured": "2026-09-26",
+        "reason": "Eastbrook ferry suites absent from the last green full CI harvest; single-worker local Vitest run on the release/v0.44.0 merge, pending a green full-mode CI refresh.",
+        "runs": [
+          38
+        ]
+      },
+      "tests/wyrmwatch_harbor_house.test.ts": {
+        "ms": 11666,
+        "method": "local-median",
+        "measured": "2026-09-26",
+        "reason": "Eastbrook ferry suites absent from the last green full CI harvest; single-worker local Vitest run on the release/v0.44.0 merge, pending a green full-mode CI refresh.",
+        "runs": [
+          11666
+        ]
+      },
+      "tests/wyrmwatch_harbor_house_core.test.ts": {
+        "ms": 7,
+        "method": "local-median",
+        "measured": "2026-09-26",
+        "reason": "Eastbrook ferry suites absent from the last green full CI harvest; single-worker local Vitest run on the release/v0.44.0 merge, pending a green full-mode CI refresh.",
+        "runs": [
+          7
+        ]
+      },
+      "tests/wyrmwatch_harbor_render.test.ts": {
+        "ms": 444,
+        "method": "local-median",
+        "measured": "2026-09-26",
+        "reason": "Eastbrook ferry suites absent from the last green full CI harvest; single-worker local Vitest run on the release/v0.44.0 merge, pending a green full-mode CI refresh.",
+        "runs": [
+          444
+        ]
+      },
       "tests/zone_character_dependencies.test.ts": {
         "ms": 4,
         "method": "local-median",
@@ -6614,8 +7116,8 @@
     "removed": {
       "tests/server/store_mount_grants.test.ts": "Replaced by store_mount_skin_grants.test.ts in PR3941; new suite uses the existing heuristic until measured."
     },
-    "mergedLocal": "2026-09-21",
-    "mergedFiles": 5
+    "mergedLocal": "2026-09-22",
+    "mergedFiles": 129
   },
   "tests/abilities_command.test.ts": 2213,
   "tests/ability_audio_defers_to_recordings.test.ts": 66,
@@ -6624,8 +7126,9 @@
   "tests/ability_description.test.ts": 23,
   "tests/ability_drill.test.ts": 8416,
   "tests/ability_icons.test.ts": 177,
-  "tests/ability_imbue_text.test.ts": 790,
-  "tests/ability_line_of_sight.test.ts": 2,
+  "tests/ability_imbue_text.test.ts": 1954,
+  "tests/ability_line_of_sight.test.ts": 7,
+  "tests/ability_material_live_draw_parity.test.ts": 71,
   "tests/ability_material_prewarm_sweep.test.ts": 124,
   "tests/ability_requirement_keys.test.ts": 13,
   "tests/ability_self_only.test.ts": 10,
@@ -6633,15 +7136,17 @@
   "tests/ability_tooltip_consistency.test.ts": 49,
   "tests/ability_tooltip_lines.test.ts": 16,
   "tests/ability_tooltip_talents.test.ts": 7,
+  "tests/ability_vfx_cast_all_or_nothing.test.ts": 360,
   "tests/ability_vfx_cast_gate.test.ts": 26,
+  "tests/ability_vfx_cast_requirements.test.ts": 4517,
   "tests/ability_vfx_cc_bands.test.ts": 164,
   "tests/ability_vfx_core.test.ts": 533,
-  "tests/ability_vfx_draped_pools.test.ts": 8,
+  "tests/ability_vfx_draped_pools.test.ts": 24,
   "tests/ability_vfx_frame_cost.test.ts": 59,
   "tests/ability_vfx_fx_sleep.test.ts": 78,
   "tests/ability_vfx_gesture_release.test.ts": 13,
-  "tests/ability_vfx_idle_visibility.test.ts": 4,
-  "tests/ability_vfx_instanced_pools.test.ts": 6,
+  "tests/ability_vfx_idle_visibility.test.ts": 9,
+  "tests/ability_vfx_instanced_pools.test.ts": 18,
   "tests/ability_vfx_longbuff_core.test.ts": 9,
   "tests/ability_vfx_longbuff_painter.test.ts": 35,
   "tests/ability_vfx_offscreen.test.ts": 13,
@@ -6649,7 +7154,8 @@
   "tests/ability_vfx_selfcast_fallthrough.test.ts": 5,
   "tests/ability_vfx_spectacle.test.ts": 25,
   "tests/absorb_bar.test.ts": 7,
-  "tests/absorb_overlay_gate.test.ts": 3,
+  "tests/absorb_credit.test.ts": 2821,
+  "tests/absorb_overlay_gate.test.ts": 11,
   "tests/abyssal_rift_fx.test.ts": 42,
   "tests/abyssal_rift_vfx.test.ts": 12,
   "tests/account_2fa.test.ts": 323,
@@ -6657,10 +7163,10 @@
   "tests/account_export_state.test.ts": 16,
   "tests/account_flair.test.ts": 15,
   "tests/account_flair_client.test.ts": 1390,
-  "tests/account_ledger.test.ts": 4,
-  "tests/account_ledger_sim.test.ts": 1613,
-  "tests/account_ledger_ui.test.ts": 6,
-  "tests/account_ledger_wire.test.ts": 1393,
+  "tests/account_ledger.test.ts": 14,
+  "tests/account_ledger_sim.test.ts": 3670,
+  "tests/account_ledger_ui.test.ts": 14,
+  "tests/account_ledger_wire.test.ts": 3181,
   "tests/account_mount_cosmetics_pg_integration.test.ts": 1415,
   "tests/account_portal.test.ts": 8,
   "tests/account_server.test.ts": 2306,
@@ -6668,25 +7174,27 @@
   "tests/account_wealth_db.pg.test.ts": 8976,
   "tests/account_wealth_db.test.ts": 21,
   "tests/account_wealth_pg_integration.test.ts": 2330,
-  "tests/action_bar_bind_banner.test.ts": 45,
-  "tests/action_bar_bind_banner_placement.test.ts": 23,
+  "tests/action_bar_bind_banner.test.ts": 178,
+  "tests/action_bar_bind_banner_placement.test.ts": 175,
   "tests/action_bar_bind_controller.test.ts": 25,
   "tests/action_bar_bind_core.test.ts": 7,
   "tests/action_bar_clear.test.ts": 8,
   "tests/action_bar_controller.test.ts": 42,
   "tests/action_bar_hud_facade.test.ts": 18,
-  "tests/action_bar_icon_bg.test.ts": 4,
+  "tests/action_bar_icon_bg.test.ts": 8,
   "tests/action_bar_layout_client.test.ts": 15,
   "tests/action_bar_layout_core.test.ts": 8,
   "tests/action_bar_layout_persistence_game.test.ts": 3966,
   "tests/action_bar_layout_sync.test.ts": 16,
   "tests/action_bar_lock.test.ts": 5,
   "tests/action_bar_painter.test.ts": 18,
-  "tests/action_bar_restore.test.ts": 3,
+  "tests/action_bar_restore.test.ts": 30,
+  "tests/action_bar_secondary_requirements.test.ts": 1989,
   "tests/action_bar_spectate.test.ts": 14,
   "tests/action_bar_toggle.test.ts": 16,
   "tests/action_bar_view.test.ts": 42,
   "tests/action_bar_visibility_core.test.ts": 5,
+  "tests/action_cam_core.test.ts": 14,
   "tests/action_replacement.test.ts": 16,
   "tests/active_animation_timer.test.ts": 8,
   "tests/active_kit_prewarm.test.ts": 69,
@@ -6795,7 +7303,7 @@
   "tests/aldric_meteor_quest.test.ts": 1627,
   "tests/alloc_probe.test.ts": 11,
   "tests/ambient_critters_removed.test.ts": 7,
-  "tests/ambient_quest_markers.test.ts": 8,
+  "tests/ambient_quest_markers.test.ts": 25,
   "tests/android_seeker_distribution.test.ts": 11,
   "tests/anim_pipeline_batch1.test.ts": 12,
   "tests/anim_pipeline_bear.test.ts": 5,
@@ -6885,16 +7393,16 @@
   "tests/audit_conservation_property.test.ts": 66896,
   "tests/audit_conservation_vault.test.ts": 4584,
   "tests/audit_cur_conservation.test.ts": 3104,
-  "tests/aura_bar_side.test.ts": 2,
+  "tests/aura_bar_side.test.ts": 18,
   "tests/aura_cancel.test.ts": 12,
   "tests/aura_classify.test.ts": 11,
-  "tests/aura_cue_catalog.test.ts": 5,
+  "tests/aura_cue_catalog.test.ts": 12,
   "tests/aura_effect.test.ts": 24,
   "tests/aura_gain_log.test.ts": 10,
   "tests/aura_icon_runtime.test.ts": 4,
   "tests/aura_icon_view.test.ts": 61,
   "tests/aura_icons.test.ts": 13,
-  "tests/aura_ids.test.ts": 3,
+  "tests/aura_ids.test.ts": 10,
   "tests/aura_image_art.test.ts": 164,
   "tests/aura_overflow_priority.test.ts": 9,
   "tests/aura_overlay_config.test.ts": 11,
@@ -6905,11 +7413,11 @@
   "tests/aura_preview_direction_css.test.ts": 4,
   "tests/aura_strip_order_core.test.ts": 9,
   "tests/aura_tooltip.test.ts": 6,
-  "tests/aura_track_catalog.test.ts": 2348,
-  "tests/aura_track_host.test.ts": 46,
-  "tests/aura_track_painter.test.ts": 30,
-  "tests/aura_track_view.test.ts": 4,
-  "tests/aura_watchlist_core.test.ts": 4,
+  "tests/aura_track_catalog.test.ts": 5403,
+  "tests/aura_track_host.test.ts": 144,
+  "tests/aura_track_painter.test.ts": 86,
+  "tests/aura_track_view.test.ts": 12,
+  "tests/aura_watchlist_core.test.ts": 12,
   "tests/aura_wire_decode.test.ts": 11,
   "tests/auras_painter.test.ts": 23,
   "tests/auras_view.test.ts": 40,
@@ -6924,7 +7432,7 @@
   "tests/avatar.test.ts": 19,
   "tests/avatar_break_control.test.ts": 3699,
   "tests/avatar_fallback.test.ts": 4,
-  "tests/awarded_loot_hold.test.ts": 8361,
+  "tests/awarded_loot_hold.test.ts": 18599,
   "tests/away_state.test.ts": 9,
   "tests/back_grips.test.ts": 13,
   "tests/backdrop_filter_survival.test.ts": 12,
@@ -6934,6 +7442,7 @@
   "tests/bag_corner_mark_view.test.ts": 4,
   "tests/bag_filter.test.ts": 27,
   "tests/bag_fine_mark_view.test.ts": 9,
+  "tests/bag_item_action_menu_destroy.test.ts": 21,
   "tests/bag_item_action_menu_paint.test.ts": 494,
   "tests/bag_item_action_menu_vendor_sell.test.ts": 26,
   "tests/bag_item_context_menu.test.ts": 16,
@@ -6945,7 +7454,7 @@
   "tests/bags_guild_deposit_routing.test.ts": 201,
   "tests/bags_money_refresh.test.ts": 2891,
   "tests/bags_money_row_paint.test.ts": 97,
-  "tests/bags_pool_honest_refusal.test.ts": 757,
+  "tests/bags_pool_honest_refusal.test.ts": 1800,
   "tests/bags_stale_click_refusal.test.ts": 57,
   "tests/bags_vendor_sell_confirm.test.ts": 292,
   "tests/bags_view.test.ts": 39,
@@ -6954,11 +7463,12 @@
   "tests/bags_window_drag_render_defer.test.ts": 62,
   "tests/bags_window_focus_restore.test.ts": 91,
   "tests/bags_window_instance_marker.test.ts": 183,
-  "tests/bags_window_materials_only_cells.test.ts": 20,
-  "tests/bags_window_party_trade.test.ts": 16,
+  "tests/bags_window_materials_only_cells.test.ts": 44,
+  "tests/bags_window_party_trade.test.ts": 31,
   "tests/bags_window_sort_button.test.ts": 162,
   "tests/bags_window_space_jump.test.ts": 49,
-  "tests/bags_window_trade_quantity.test.ts": 34,
+  "tests/bags_window_touch_destroy_menu.test.ts": 48,
+  "tests/bags_window_trade_quantity.test.ts": 88,
   "tests/bags_window_unknown_cell.test.ts": 63,
   "tests/bags_window_use_routing.test.ts": 74,
   "tests/bags_window_vendor_sell_menu.test.ts": 48,
@@ -7065,7 +7575,7 @@
   "tests/buffs_command.test.ts": 2597,
   "tests/bug_report.test.ts": 7,
   "tests/bug_report_db.test.ts": 16,
-  "tests/bug_report_error_text.test.ts": 3,
+  "tests/bug_report_error_text.test.ts": 5,
   "tests/build_assets_cli.test.ts": 754,
   "tests/build_bundle_pregen.test.ts": 458,
   "tests/build_lane_core.test.ts": 17,
@@ -7082,6 +7592,7 @@
   "tests/camera_feel_core.test.ts": 12,
   "tests/camera_follow.test.ts": 9,
   "tests/camera_impact_core.test.ts": 12,
+  "tests/camera_view_settings.test.ts": 14,
   "tests/camp_brazier_placement_core.test.ts": 14,
   "tests/camp_braziers.test.ts": 2314,
   "tests/camp_density.test.ts": 47,
@@ -7098,14 +7609,19 @@
   "tests/card_duel_view.test.ts": 8,
   "tests/card_hand.test.ts": 11,
   "tests/cascade_playtest_dev.test.ts": 3331,
+  "tests/cast_admission_core.test.ts": 4,
   "tests/cast_bar.test.ts": 8,
   "tests/cast_bar_painter.test.ts": 36,
   "tests/cast_display_name.test.ts": 7,
+  "tests/cast_vfx_engine_family.test.ts": 158,
+  "tests/cast_vfx_first_reads.test.ts": 22,
   "tests/cast_vfx_prewarm.test.ts": 13,
   "tests/cast_vfx_readiness_core.test.ts": 12,
+  "tests/cast_vfx_spawn_gate.test.ts": 497,
   "tests/caster_set_bonus.test.ts": 2441,
   "tests/casting_command.test.ts": 3207,
   "tests/castle_plan_core.test.ts": 13,
+  "tests/cat_form_energy.test.ts": 10179,
   "tests/cauterize.test.ts": 1890,
   "tests/celestial_sprites.test.ts": 6,
   "tests/chain_heal.test.ts": 5989,
@@ -7198,6 +7714,7 @@
   "tests/chat_line.test.ts": 31,
   "tests/chat_log.test.ts": 3072,
   "tests/chat_mod_live.test.ts": 13,
+  "tests/chat_rate_limit.test.ts": 3,
   "tests/chat_scroll_follow.test.ts": 2,
   "tests/chat_sender_flair.test.ts": 7,
   "tests/chat_tab_strip.test.ts": 4,
@@ -7217,7 +7734,7 @@
   "tests/chosen_cadence.test.ts": 3,
   "tests/chrome_focus_wiring.test.ts": 20,
   "tests/chrome_icons.test.ts": 21,
-  "tests/chrome_profile_dir.test.ts": 4,
+  "tests/chrome_profile_dir.test.ts": 10,
   "tests/chronomancy.test.ts": 3950,
   "tests/chronomancy_balance_targets.test.ts": 8306,
   "tests/chronomancy_buffs.test.ts": 3104,
@@ -7249,18 +7766,19 @@
   "tests/civic_service_placements.test.ts": 11,
   "tests/clamp.test.ts": 4,
   "tests/class_colors.test.ts": 11,
-  "tests/class_health_table.test.ts": 942,
+  "tests/class_health_table.test.ts": 2280,
   "tests/class_icons.test.ts": 11,
   "tests/class_spec_kits.test.ts": 4747,
+  "tests/class_vfx_prewarm_homes.test.ts": 192,
   "tests/claudium_latency_proxy_target.test.ts": 125,
   "tests/claudium_launcher_balance.test.ts": 16,
   "tests/claudium_purchase_bridge.test.ts": 11,
   "tests/claudium_view.test.ts": 14,
   "tests/claudium_window.test.ts": 42,
-  "tests/click_claimed_focus.test.ts": 2,
+  "tests/click_claimed_focus.test.ts": 8,
   "tests/click_marker.test.ts": 12,
   "tests/click_move.test.ts": 11,
-  "tests/client_api_origin.test.ts": 289,
+  "tests/client_api_origin.test.ts": 1229,
   "tests/client_challenge.test.ts": 2727,
   "tests/client_env.test.ts": 8,
   "tests/client_frame_allocations.test.ts": 118,
@@ -7273,7 +7791,7 @@
   "tests/climb.test.ts": 3269,
   "tests/climb_slope.test.ts": 3379,
   "tests/clock_format.test.ts": 23,
-  "tests/clock_memo.test.ts": 26,
+  "tests/clock_memo.test.ts": 55,
   "tests/clock_seconds_core.test.ts": 23,
   "tests/coach_prompt_view.test.ts": 40,
   "tests/coach_trail_core.test.ts": 14,
@@ -7296,7 +7814,7 @@
   "tests/combat_event_fidelity.test.ts": 4834,
   "tests/combat_log_event_route_online.test.ts": 3165,
   "tests/combat_rating.test.ts": 1340,
-  "tests/combat_res_released_ghost.test.ts": 2444,
+  "tests/combat_res_released_ghost.test.ts": 5729,
   "tests/combat_scalar_wire.test.ts": 8,
   "tests/combat_sfx.test.ts": 18,
   "tests/combat_threat_modifiers.test.ts": 3360,
@@ -7343,7 +7861,7 @@
   "tests/continent_land_mask_core.test.ts": 18,
   "tests/continent_map_painter.test.ts": 226,
   "tests/continent_map_view.test.ts": 19,
-  "tests/controller_options_view.test.ts": 2,
+  "tests/controller_options_view.test.ts": 13,
   "tests/cooking_catch_hint_view.test.ts": 31,
   "tests/cooldown_manager_auras.test.ts": 20,
   "tests/cooldown_manager_catalog.test.ts": 2255,
@@ -7387,7 +7905,7 @@
   "tests/craft_from_vault.test.ts": 5496,
   "tests/craft_name_view.test.ts": 10,
   "tests/craft_roll_events.test.ts": 3000,
-  "tests/craft_row_text.test.ts": 10,
+  "tests/craft_row_text.test.ts": 16,
   "tests/crafted_collection_effects.test.ts": 2971,
   "tests/crafted_item_tooltip_coverage.test.ts": 28,
   "tests/crafted_wearability.test.ts": 21,
@@ -7437,7 +7955,7 @@
   "tests/css_corpus.test.ts": 58,
   "tests/css_layer_containment.test.ts": 82,
   "tests/css_raw_color_ratchet.test.ts": 12,
-  "tests/css_root_anchored_has.test.ts": 237,
+  "tests/css_root_anchored_has.test.ts": 1153,
   "tests/css_token_resolution.test.ts": 18,
   "tests/css_value_validity.test.ts": 20,
   "tests/ctx_menu_mobile_stacking.test.ts": 6,
@@ -7481,7 +7999,9 @@
   "tests/death_lesson.test.ts": 3358,
   "tests/death_recap_feedback.test.ts": 9,
   "tests/death_target_prevalidation.test.ts": 9,
-  "tests/deck_floor.test.ts": 4,
+  "tests/deck_floor.test.ts": 9,
+  "tests/deck_frame.test.ts": 20,
+  "tests/deck_prediction.test.ts": 1639,
   "tests/deck_railings.test.ts": 256,
   "tests/decor_prop_colliders.test.ts": 48,
   "tests/decoration_dims.test.ts": 1580,
@@ -7510,7 +8030,7 @@
   "tests/deeds_leaderboard_view.test.ts": 10,
   "tests/deeds_rarity_client.test.ts": 14,
   "tests/deeds_reconcile.test.ts": 3312,
-  "tests/deeds_restore.test.ts": 717,
+  "tests/deeds_restore.test.ts": 1806,
   "tests/deeds_sites_pin.test.ts": 9196,
   "tests/deeds_view.test.ts": 33,
   "tests/deeds_window.test.ts": 115,
@@ -7549,7 +8069,7 @@
   "tests/deploy_rift_forge_switch.test.ts": 4,
   "tests/deploy_wallet_connect.test.ts": 10,
   "tests/deploy_watchdog.test.ts": 3103,
-  "tests/deposit_all_status_text.test.ts": 3,
+  "tests/deposit_all_status_text.test.ts": 7,
   "tests/derelict_bomber.test.ts": 2163,
   "tests/design_code.test.ts": 47,
   "tests/desktop_discord_presence.test.ts": 27,
@@ -7562,7 +8082,7 @@
   "tests/desktop_gpu_pref_sync.test.ts": 18,
   "tests/desktop_gpu_report.test.ts": 9,
   "tests/desktop_gpu_status.test.ts": 2688,
-  "tests/desktop_host_diag.test.ts": 4,
+  "tests/desktop_host_diag.test.ts": 13,
   "tests/desktop_host_essentials.test.ts": 5,
   "tests/desktop_login_exit.test.ts": 12,
   "tests/desktop_next_launch_settings.test.ts": 14,
@@ -7601,7 +8121,7 @@
   "tests/dev_quest_commands.test.ts": 1700,
   "tests/dev_tier.test.ts": 21,
   "tests/dev_tier_ui.test.ts": 9,
-  "tests/dev_town_teleport.test.ts": 153,
+  "tests/dev_town_teleport.test.ts": 429,
   "tests/device_memory_hint.test.ts": 8,
   "tests/diagnostics_capture_guard.test.ts": 8,
   "tests/dialog_close_button_semantics.test.ts": 7,
@@ -7665,6 +8185,7 @@
   "tests/drakelands_kit_grade.test.ts": 13,
   "tests/drape_lod_core.test.ts": 1680,
   "tests/draped_bounds_core.test.ts": 3,
+  "tests/draw_program_signature_core.test.ts": 9,
   "tests/draw_stats_core.test.ts": 17,
   "tests/dropdown_nav.test.ts": 7,
   "tests/dropdown_position.test.ts": 7,
@@ -7713,6 +8234,8 @@
   "tests/eastbrook_camp_spacing.test.ts": 1932,
   "tests/eastbrook_combat_giver_visibility.test.ts": 579,
   "tests/eastbrook_dedupe_objectives.test.ts": 7,
+  "tests/eastbrook_ferry_asset.test.ts": 20,
+  "tests/eastbrook_ferry_berth.test.ts": 10436,
   "tests/eastbrook_gameplay_integration.test.ts": 103908,
   "tests/eastbrook_grand_armoury.test.ts": 1633,
   "tests/eastbrook_grand_armoury_capture.test.ts": 73,
@@ -7762,7 +8285,7 @@
   "tests/editor_undo_core.test.ts": 8,
   "tests/editor_user_assets.test.ts": 8,
   "tests/editor_view.test.ts": 13,
-  "tests/effective_stats.test.ts": 4,
+  "tests/effective_stats.test.ts": 6,
   "tests/egg_hatchling.test.ts": 8,
   "tests/electron_builder_config.test.ts": 52,
   "tests/electron_desktop_config.test.ts": 14,
@@ -7778,7 +8301,7 @@
   "tests/electron_gpu_preference.test.ts": 48,
   "tests/electron_gpu_push.test.ts": 6,
   "tests/electron_gpu_status_events.test.ts": 8,
-  "tests/electron_host_diag.test.ts": 12,
+  "tests/electron_host_diag.test.ts": 29,
   "tests/electron_host_essentials.test.ts": 6,
   "tests/electron_ipc_channels.test.ts": 25,
   "tests/electron_launch_settings.test.ts": 12,
@@ -7825,7 +8348,7 @@
   "tests/entity_flair_wire.test.ts": 3,
   "tests/entity_gate_stand_in.test.ts": 288,
   "tests/entity_ground_sample.test.ts": 576,
-  "tests/entity_ground_sample_core.test.ts": 4,
+  "tests/entity_ground_sample_core.test.ts": 11,
   "tests/entity_i18n.test.ts": 7,
   "tests/entity_i18n_guards.test.ts": 9,
   "tests/entity_labels_feast.test.ts": 6,
@@ -7856,6 +8379,7 @@
   "tests/equipment_instances_wire.test.ts": 7,
   "tests/equipment_proficiency.test.ts": 4407,
   "tests/error_text_i18n_core.test.ts": 24,
+  "tests/error_toast_controller.test.ts": 44,
   "tests/error_toast_log.test.ts": 14,
   "tests/escort_ambush_convoy.test.ts": 4347,
   "tests/escort_interact.test.ts": 18,
@@ -7874,9 +8398,9 @@
   "tests/facing_smooth.test.ts": 11,
   "tests/facing_stability.test.ts": 3271,
   "tests/falling_command.test.ts": 2743,
-  "tests/far_bake_group_key.test.ts": 4,
+  "tests/far_bake_group_key.test.ts": 8,
   "tests/far_bake_groups_core.test.ts": 3,
-  "tests/far_bake_uv_pad.test.ts": 631,
+  "tests/far_bake_uv_pad.test.ts": 1589,
   "tests/far_lod_reveal_core.test.ts": 8,
   "tests/far_surface_core.test.ts": 4757,
   "tests/far_terrain_core.test.ts": 3904,
@@ -7926,6 +8450,7 @@
   "tests/fear_wall_guard.test.ts": 2355,
   "tests/feast_interact.test.ts": 9,
   "tests/feast_lifecycle.test.ts": 1148,
+  "tests/feast_named_slot_item.test.ts": 1410,
   "tests/feast_object_lifecycle.test.ts": 608,
   "tests/feast_online.test.ts": 2085,
   "tests/feast_placement.test.ts": 2079,
@@ -7942,7 +8467,10 @@
   "tests/feral_druid_v043_pass.test.ts": 4845,
   "tests/ferry_bell.test.ts": 2524,
   "tests/ferry_bell_home_note.test.ts": 4,
+  "tests/ferry_hud.test.ts": 1868,
+  "tests/ferry_piers.test.ts": 36,
   "tests/ferry_prewarm.test.ts": 7,
+  "tests/ferry_view_route.test.ts": 1441,
   "tests/field_kit_content.test.ts": 2298,
   "tests/field_kit_use.test.ts": 551,
   "tests/fiesta.test.ts": 6640,
@@ -8025,7 +8553,7 @@
   "tests/frame_present.test.ts": 10,
   "tests/frame_presets.test.ts": 162,
   "tests/frame_presets_live.test.ts": 46,
-  "tests/frame_rate_cap_setting.test.ts": 3,
+  "tests/frame_rate_cap_setting.test.ts": 10,
   "tests/freehold_arrival.test.ts": 335,
   "tests/freehold_art_admission.test.ts": 17,
   "tests/freehold_capture_census.test.ts": 95,
@@ -8109,7 +8637,7 @@
   "tests/gale_harbor.test.ts": 2326,
   "tests/galecrest.test.ts": 428,
   "tests/game_audio.test.ts": 35,
-  "tests/game_renderer.test.ts": 3,
+  "tests/game_renderer.test.ts": 8,
   "tests/game_sessions.test.ts": 6665,
   "tests/game_state_metrics.test.ts": 6731,
   "tests/gamepad.test.ts": 133,
@@ -8214,7 +8742,7 @@
   "tests/gpu_prep_events.test.ts": 11,
   "tests/gpu_queue_window_core.test.ts": 6,
   "tests/gpu_timer_probe.test.ts": 5,
-  "tests/gpu_timer_probe_core.test.ts": 5,
+  "tests/gpu_timer_probe_core.test.ts": 24,
   "tests/grant_line_view.test.ts": 17,
   "tests/graphics_overhaul_integration.test.ts": 17,
   "tests/graphics_profile_assets.test.ts": 13,
@@ -8303,6 +8831,11 @@
   "tests/guild_roster_view.test.ts": 7,
   "tests/guild_stamp_fence.test.ts": 3160,
   "tests/hallowed_wall_bounce.test.ts": 2173,
+  "tests/harbor_route_marker_asset.test.ts": 15,
+  "tests/harbor_route_marker_core.test.ts": 8,
+  "tests/harbor_route_marker_render.test.ts": 106,
+  "tests/harbor_route_markers.test.ts": 1517,
+  "tests/harbormaster_gear_asset.test.ts": 63,
   "tests/harvest_admission.test.ts": 14,
   "tests/harvest_body_pick.test.ts": 11,
   "tests/harvest_choreography.test.ts": 9,
@@ -8417,8 +8950,8 @@
   "tests/hunter_quivers.test.ts": 2658,
   "tests/hunter_spec_loops.test.ts": 13117,
   "tests/hunter_talents.test.ts": 19344,
-  "tests/hunter_trailbreak_arc.test.ts": 4,
-  "tests/hunter_trailbreak_terrain.test.ts": 1190,
+  "tests/hunter_trailbreak_arc.test.ts": 10,
+  "tests/hunter_trailbreak_terrain.test.ts": 2800,
   "tests/hunter_trap.test.ts": 3458,
   "tests/hybrid_gpu_detect.test.ts": 10,
   "tests/i18n_admin_catalog.test.ts": 1054,
@@ -8524,7 +9057,7 @@
   "tests/input_controller.test.ts": 49,
   "tests/input_echo_tracker.test.ts": 7,
   "tests/input_hint_mode.test.ts": 3,
-  "tests/input_seq_fold.test.ts": 3,
+  "tests/input_seq_fold.test.ts": 7,
   "tests/input_tick_sampler.test.ts": 14,
   "tests/inscription_catalog.test.ts": 80,
   "tests/inscription_flow.test.ts": 3934,
@@ -8538,13 +9071,14 @@
   "tests/instance_combat_hold.test.ts": 694,
   "tests/instance_music.test.ts": 8,
   "tests/instance_provenance_boundaries.test.ts": 13372,
+  "tests/instanced_dither_fade.test.ts": 14,
   "tests/instanced_occluder_ghosts.test.ts": 11,
   "tests/interact_key_gather.test.ts": 3,
   "tests/interact_loot_only.test.ts": 2278,
   "tests/interact_object_credit.test.ts": 2378,
   "tests/interaction.test.ts": 5615,
   "tests/interaction_autorun.test.ts": 10,
-  "tests/interaction_input.test.ts": 3,
+  "tests/interaction_input.test.ts": 16,
   "tests/interactions.test.ts": 27,
   "tests/interest.test.ts": 5302,
   "tests/interest_candidates.test.ts": 2344,
@@ -8631,6 +9165,7 @@
   "tests/keyboard_map_window.test.ts": 257,
   "tests/keyboard_turn_facing.test.ts": 26,
   "tests/keyboard_viewport.test.ts": 6,
+  "tests/kill_participation.test.ts": 6,
   "tests/kit_buildings.test.ts": 13,
   "tests/kit_uv_surface_core.test.ts": 34,
   "tests/kit_window_panes_core.test.ts": 28,
@@ -8697,6 +9232,7 @@
   "tests/local_storage_json.test.ts": 4,
   "tests/localization_coverage.test.ts": 10446,
   "tests/localization_fixes.test.ts": 3895,
+  "tests/lockpick_action_guard.test.ts": 3,
   "tests/lockpick_bountiful_jam.test.ts": 3951,
   "tests/lockpick_by_sight.test.ts": 95,
   "tests/lockpick_col4_heroic.test.ts": 255,
@@ -9235,6 +9771,7 @@
   "tests/oauth.test.ts": 28,
   "tests/objective_glow_view.test.ts": 8,
   "tests/obs_interaction.test.ts": 3746,
+  "tests/occluder_dither_fade.test.ts": 7,
   "tests/occluder_fade.test.ts": 4,
   "tests/occluder_fade_core.test.ts": 10,
   "tests/occluder_fade_gate.test.ts": 83,
@@ -9496,7 +10033,7 @@
   "tests/player_metrics_db.test.ts": 95,
   "tests/player_metrics_db_integration.test.ts": 3080,
   "tests/player_motion.test.ts": 4851,
-  "tests/player_portrait_core.test.ts": 3,
+  "tests/player_portrait_core.test.ts": 7,
   "tests/player_stealthed.test.ts": 5,
   "tests/player_tooltip_view.test.ts": 6,
   "tests/playtime.test.ts": 3975,
@@ -9516,7 +10053,7 @@
   "tests/portrait_atlas_readiness.test.ts": 55,
   "tests/portrait_bitmap_encode.test.ts": 24,
   "tests/portrait_capture_lane_core.test.ts": 69,
-  "tests/portrait_chip_composed_hydrate.test.ts": 10,
+  "tests/portrait_chip_composed_hydrate.test.ts": 51,
   "tests/portrait_chip_defer.test.ts": 5,
   "tests/portrait_encode_worker.test.ts": 13,
   "tests/portrait_framing.test.ts": 8,
@@ -9799,6 +10336,7 @@
   "tests/raid_lockout_world.test.ts": 2420,
   "tests/raid_music_themes.test.ts": 7,
   "tests/raid_readout_scope.test.ts": 2286,
+  "tests/raid_released_ghost_loot.test.ts": 1582,
   "tests/raid_reset.test.ts": 76,
   "tests/raid_telegraph_rig_walk.test.ts": 15,
   "tests/raid_warning_banner.test.ts": 4,
@@ -9880,6 +10418,7 @@
   "tests/render_diagnostics.test.ts": 10,
   "tests/render_glb_replacement_assets.test.ts": 1364,
   "tests/render_light_census_pin.test.ts": 999,
+  "tests/renderer_ability_presentation.test.ts": 73,
   "tests/renderer_build_diag.test.ts": 3,
   "tests/renderer_build_ledger_wiring.test.ts": 10,
   "tests/renderer_compile_gate.test.ts": 340,
@@ -10391,9 +10930,12 @@
   "tests/sfx_runtime_pack.test.ts": 191,
   "tests/sfx_studio.test.ts": 3330,
   "tests/sfx_studio_server_security.test.ts": 24286,
+  "tests/shader_ablation_transforms.test.ts": 9,
   "tests/shader_cache_warmup.test.ts": 120,
   "tests/shader_corpus_slices.test.ts": 16,
   "tests/shader_debug_flag.test.ts": 16,
+  "tests/shader_harvest_corpus.test.ts": 7,
+  "tests/shader_link_bench_report.test.ts": 4,
   "tests/shader_pow_domain.test.ts": 14,
   "tests/shader_warm_audit.test.ts": 93,
   "tests/shader_warm_audit_core.test.ts": 22,
@@ -10433,6 +10975,7 @@
   "tests/sheathe_toggle.test.ts": 5,
   "tests/shield_block.test.ts": 3613,
   "tests/shield_contact_outcomes.test.ts": 69,
+  "tests/ship_shadow_hold.test.ts": 13,
   "tests/shipped_item_ids.test.ts": 7,
   "tests/shore_water_gate_core.test.ts": 187,
   "tests/sickness_undispellable.test.ts": 2527,
@@ -10649,10 +11192,10 @@
   "tests/target_dots_refresh.test.ts": 13009,
   "tests/target_dots_view.test.ts": 18,
   "tests/target_echo_client.test.ts": 50,
-  "tests/target_echo_core.test.ts": 4,
+  "tests/target_echo_core.test.ts": 11,
   "tests/target_flair_line_view.test.ts": 12,
   "tests/target_frame.test.ts": 14,
-  "tests/target_frame_descriptor.test.ts": 8,
+  "tests/target_frame_descriptor.test.ts": 15,
   "tests/target_frame_pos.test.ts": 30,
   "tests/target_portrait_view.test.ts": 814,
   "tests/target_rank_view.test.ts": 17,
@@ -10735,11 +11278,13 @@
   "tests/town_collision.test.ts": 1178,
   "tests/town_focus_i18n.test.ts": 10,
   "tests/town_focus_number_format.test.ts": 131,
+  "tests/town_focus_pending.test.ts": 4276,
   "tests/town_focus_repaint_gate.test.ts": 213,
   "tests/town_focus_sim.test.ts": 7490,
   "tests/town_quests.test.ts": 756,
   "tests/town_reveal_core.test.ts": 45,
   "tests/tracker_body_ids.test.ts": 11,
+  "tests/tracker_collapse_settings.test.ts": 2,
   "tests/tracker_header_wiring.test.ts": 8,
   "tests/tracker_stack_anchor.test.ts": 26,
   "tests/trade.test.ts": 49,
@@ -10756,6 +11301,14 @@
   "tests/training_dummy_preload.test.ts": 603,
   "tests/transfer_lock.test.ts": 10,
   "tests/transmission_neutralize.test.ts": 651,
+  "tests/transport_deck.test.ts": 19772,
+  "tests/transport_ferry.test.ts": 37112,
+  "tests/transport_ferry_online.test.ts": 5566,
+  "tests/transport_lanes.test.ts": 3874,
+  "tests/transport_ship.test.ts": 18,
+  "tests/transport_ship_core.test.ts": 9,
+  "tests/transport_ship_render.test.ts": 110,
+  "tests/transport_wire.test.ts": 1650,
   "tests/travel_speed_fx.test.ts": 18,
   "tests/tree_hide_fade.test.ts": 165,
   "tests/trivial_mob_passive.test.ts": 1659,
@@ -10858,6 +11411,7 @@
   "tests/vault_consumption_admission.test.ts": 341,
   "tests/vault_craft_gate.test.ts": 1242,
   "tests/vault_ledger_row_bound_property.test.ts": 20,
+  "tests/vault_search.test.ts": 44,
   "tests/vault_snapshot_wire.test.ts": 18,
   "tests/vault_view.test.ts": 21,
   "tests/vault_window.test.ts": 860,
@@ -11091,6 +11645,14 @@
   "tests/who_filter.test.ts": 3333,
   "tests/who_frame.test.ts": 874,
   "tests/who_tab_view.test.ts": 8,
+  "tests/wickharbor_harbor.test.ts": 41367,
+  "tests/wickharbor_harbor_asset.test.ts": 222,
+  "tests/wickharbor_harbor_core.test.ts": 9,
+  "tests/wickharbor_harbor_render.test.ts": 144,
+  "tests/wickharbor_wharf.test.ts": 15173,
+  "tests/wickharbor_wharf_asset.test.ts": 146,
+  "tests/wickharbor_wharf_core.test.ts": 5,
+  "tests/wickharbor_wharf_render.test.ts": 77,
   "tests/wiki_link.test.ts": 16,
   "tests/wiki_vendor_channel.test.ts": 9,
   "tests/wildheart.test.ts": 5481,
@@ -11159,6 +11721,12 @@
   "tests/write_module_dir.test.ts": 10,
   "tests/ws_backpressure.test.ts": 6,
   "tests/ws_buffer.test.ts": 6,
+  "tests/wyrmwatch_harbor.test.ts": 19798,
+  "tests/wyrmwatch_harbor_asset.test.ts": 1824,
+  "tests/wyrmwatch_harbor_core.test.ts": 38,
+  "tests/wyrmwatch_harbor_house.test.ts": 11666,
+  "tests/wyrmwatch_harbor_house_core.test.ts": 7,
+  "tests/wyrmwatch_harbor_render.test.ts": 444,
   "tests/xp.test.ts": 5319,
   "tests/xp_bar_painter.test.ts": 8,
   "tests/xp_command.test.ts": 2295,

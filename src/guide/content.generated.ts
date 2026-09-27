@@ -5867,6 +5867,13 @@ export const GUIDE_DEEDS: GuideDeed[] = [
     "crest": "/ui/deeds/col_set_bramblehide.webp"
   },
   {
+    "id": "exp_harbor_to_harbor",
+    "name": "Harbor to Harbor",
+    "category": "exploration",
+    "renown": 5,
+    "feat": false
+  },
+  {
     "id": "homesteader_first_furnishing",
     "name": "Homesteader",
     "category": "progression",

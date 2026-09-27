@@ -61,7 +61,7 @@ export const WPVP_WIRE_INTERVAL_TICKS = Math.max(1, Math.round(1 / (DT * WPVP_WI
 // the whole listing book, the single most expensive per-viewer read in
 // selfWireJson on a grown book, and nothing in it carries a sub-second clock,
 // so 4 Hz keeps the window feeling live while capping the rebuild rate. The
-// viewer's OWN market commands re-arm the gate (MARKET_WIRE_PROMPT_CMDS) so
+// viewer's OWN market commands re-arm the gate (marketWirePromptCommand) so
 // their search/buy/cancel feedback still lands on the next snapshot. On top of
 // the cadence, a rebuild-only-on-change gate (sim.marketBrowseRevFor plus the
 // query object identity) skips the rebuild entirely while nothing changed;
@@ -70,17 +70,6 @@ export const WPVP_WIRE_INTERVAL_TICKS = Math.max(1, Math.round(1 / (DT * WPVP_WI
 const MARKET_WIRE_HZ = 4;
 export const MARKET_WIRE_INTERVAL_TICKS = Math.max(1, Math.round(1 / (DT * MARKET_WIRE_HZ)));
 export const MARKET_BROWSE_REFRESH_TICKS = 40;
-export const MARKET_WIRE_PROMPT_CMDS = new Set<string>([
-  'market_search',
-  'market_sell_price_check',
-  'market_list',
-  'market_list_instance',
-  'market_buy',
-  'market_sweep_quote',
-  'market_sweep',
-  'market_cancel',
-  'market_collect',
-]);
 // Commission order board readout, the market recipe applied to the second
 // O(realm-collection) read that shipped on the per-tick self path (issue
 // #1298's `corder`): commissionOrdersFor walks the whole board and every

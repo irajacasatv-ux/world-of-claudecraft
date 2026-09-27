@@ -62,6 +62,10 @@ describe('authored furnisher construction and world geometry', () => {
     // adds nothing of its own; the six new entities and the moved positions are
     // the release's. The Bronn-excluded digest below is re-measured on that same
     // merged world, so it no longer names the pre-Bronn release.
+    // RE-MEASURED at the release/v0.44.0 sync at 09639d4ae9: the release tip's
+    // own tree measures this exact fingerprint (1032 entities, both digests,
+    // the same nextId and rng cursor), so the dark merged world still adds
+    // nothing; the one new entity is the release's.
     const sim = new Sim({ seed: 1, playerClass: 'warrior' });
     expect({
       nextId: sim.nextId,
@@ -84,8 +88,8 @@ describe('authored furnisher construction and world geometry', () => {
       primaryId: 999,
       merchants: [1, 33],
       bankers: [9, 22, 34, 95],
-      entityCount: 1031,
-      positionHash: '96cd76326c03f0ca919d12cdefa4721da47d63807f04d89672ba52caff05a569',
+      entityCount: 1032,
+      positionHash: '80538e1fbdbf2ce292010abfadb350e460d6f5905136c61513785f8f3ad9b870',
       rngNext: 0.30275995447300375,
     });
     expect(sim.entities.get(1000000003)?.templateId).toBe('crucible_quartermaster');
@@ -101,7 +105,7 @@ describe('authored furnisher construction and world geometry', () => {
             hp: e.hp,
           })),
       ),
-    ).toBe('29a4384f3153721144d9cc2eb8d9a26e005b025f38ca2a9785d157b7a44ace01');
+    ).toBe('d44c84c55b569e81df81899f90088432f6c3c5ec09ba2bbf2a872292ef9b4bf6');
     expect([...sim.entities.values()].some((e) => e.templateId === 'freehold_furnisher')).toBe(
       false,
     );

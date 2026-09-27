@@ -709,7 +709,14 @@ const PINNED_POLISH_COMPOSITE_FINGERPRINT =
   // merged renderer leaf matches neither parent. No capture was retaken.
   // Re-minted for the Freeholds re-sync of release/v0.44.0 at ed69f62ef7: the merged renderer leaf matches neither parent. No capture was retaken.
   // Re-minted for the Freeholds sync of release/v0.44.0 at 9dbc47938a: the merged renderer leaf matches neither parent. No capture was retaken.
-  '8ce6b2303609141a66b2fff48e9a40fa6c7f4c6b23c0d705646386b770749aa8';
+  // Re-minted for the fail-soft prewarm entry runner: runEntry's run, progress and partial remainder moved out of renderer.ts. No capture was retaken.
+  // Re-minted for the cast stand-in slot: the ability-material slot's construction moved out of renderer.ts into cast_vfx_prewarm.ts. No capture was retaken.
+  // Re-minted for PR #4199's shader prewarm merge: the renderer leaf and cast-VFX stand-ins compose in one tree. No capture was retaken.
+  // Re-minted for the v0.44.0 release-line renderer merge. No capture was retaken.
+  // Re-minted for PR #4220 release integration: the candidate stand-in slot and per-family cast gate compose in one tree. No capture was retaken.
+  // Re-minted for the merge of release/v0.44.0 into the Eastbrook ferry branch (PR 4225). No capture was retaken.
+  // Re-minted for the Freeholds sync of release/v0.44.0 at 09639d4ae9: the merged renderer leaf matches neither parent. No capture was retaken.
+  'd4249576ccbe707b17d41627b0d7d4b1acdae8cb9ab82b8e21e518ea75c34ecf';
 
 function validPolishAttributionTargets(): AttributionTargetFixture[] {
   return [

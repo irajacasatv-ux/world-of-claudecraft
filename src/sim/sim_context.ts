@@ -214,6 +214,10 @@ export interface SimContextPrimitives {
   riftPortalSpawnCount: number;
   // Deterministically sampled next scheduler deadline (sim seconds).
   riftPortalNextAt: number;
+  // Dev-only skip for the ferry timetable (transport_ferry.ts transportClock):
+  // seconds added to `time` for the schedule. 0 in play; only /dev ferry
+  // writes it (dev/ferry_dev.ts).
+  transportClockOffset: number;
   // live arena bouts keyed by every participant pid (A2); release-spirit early-bails
   // when the dead player is mid-bout.
   readonly arenaMatches: Map<number, ArenaMatch>;
@@ -911,8 +915,8 @@ export interface SimContextCallbacks {
 
   // M3 mob on-hit affix cascade (mob/mob_swing): two stat helpers the cascade
   // reaches back for. `effectiveArmor` is the cleave-splash armor read: its body
-  // lives in src/sim/combat/effective_stats.ts and Sim keeps the thin delegate this
-  // seam binds (ten foreign modules reach it here). `recalcPlayer` stays on Sim: it
+  // lives in src/sim/effective_stats.ts and Sim keeps the thin delegate this seam
+  // binds (ten foreign modules reach it here). `recalcPlayer` stays on Sim: it
   // rebakes a player victim's derived stats after Devour Magic strips a beneficial
   // aura (wraps the Sim players-map lookup + recalcPlayerStats so the module never
   // touches the map directly).
@@ -1029,7 +1033,7 @@ export interface SimContextCallbacks {
   // physical-swing entry (also a C4a weaponStrike path): its body lives in
   // src/sim/combat/auto_attack.ts and Sim keeps the thin delegate; `effectiveAttackPower`
   // is the attack-power stat read the damage formulas use: its body lives in
-  // src/sim/combat/effective_stats.ts and Sim keeps the thin delegate (`effectiveArmor`
+  // src/sim/effective_stats.ts and Sim keeps the thin delegate (`effectiveArmor`
   // is the M3 decl above, shared, not re-declared here); `hasLineOfSight` and
   // `findChargePath` (both on Sim) gate the AoE cases and build the warrior/druid
   // charge route.
@@ -1045,6 +1049,7 @@ export interface SimContextCallbacks {
       cannotBeDodged?: boolean;
       normalizedInstant?: boolean;
       weaponMult?: number;
+      primaryDamageMult?: number;
       threatFlat?: number;
       threatMult?: number;
       forceCrit?: boolean;
@@ -1396,6 +1401,12 @@ export function createSimContext(host: SimContextHost): SimContext {
     },
     set riftPortalNextAt(v) {
       host.riftPortalNextAt = v;
+    },
+    get transportClockOffset() {
+      return host.transportClockOffset;
+    },
+    set transportClockOffset(v) {
+      host.transportClockOffset = v;
     },
     get arenaMatches() {
       return host.arenaMatches;

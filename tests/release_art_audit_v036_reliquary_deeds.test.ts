@@ -220,9 +220,13 @@ describe('v0.36 release-audit Reliquary deed art', () => {
       'dgn_varkhul_flawless',
       // The personal hammer quest ships with the explicit category-crest fallback.
       'hid_forgebreaker',
+      // The Eastbrook ferry's round trip rides the deed_cat_exploration crest
+      // until its commissioned art lands (docs/design/deeds.md, Icons).
+      'exp_harbor_to_harbor',
     ]);
-    // Combined catalog: 302 live deeds, 11 pending, and 291 painted.
-    expect(DEED_ORDER).toHaveLength(302);
+    // Combined catalog: 303 live deeds (the release's exp_harbor_to_harbor is
+    // the twelfth pending row), 12 pending, and 291 painted.
+    expect(DEED_ORDER).toHaveLength(303);
     expect(DEED_IMAGE_IDS.size).toBe(291);
     expect(DEED_ORDER.filter((id) => !DEED_IMAGE_IDS.has(id))).toEqual([...DEED_ART_PENDING]);
     expect(sorted(DEED_IMAGE_IDS)).toEqual(

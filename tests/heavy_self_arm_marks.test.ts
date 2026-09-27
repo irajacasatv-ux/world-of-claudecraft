@@ -19,6 +19,8 @@ describe('the arm-marked subset', () => {
         'convert_husks',
         'freehold_enter',
         'harvest_crop',
+        'market_order_fill',
+        'market_order_place',
         'market_sweep',
         'perfect_item',
         'place_feast',

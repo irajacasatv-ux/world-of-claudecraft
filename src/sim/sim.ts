@@ -54,6 +54,7 @@ import { trainRecipe as trainRecipeImpl } from './professions/train_recipe';
 export type { CharacterState, PetState } from './character_state';
 
 import { type AccountEarner, type AccountLedger, freshAccountLedger } from './account_ledger';
+import { campPrivateRng } from './camp_private_rng';
 import { buildCivicServicePlacements } from './civic_service_placements';
 import { advanceClimb, tryStartClimb } from './climb';
 import {
@@ -106,10 +107,6 @@ import {
 } from './combat/damage';
 import { druidEngineCombatState } from './combat/druid_engines';
 import { runEffects as runEffectsImpl } from './combat/effect_dispatch';
-import {
-  effectiveArmor as effectiveArmorImpl,
-  effectiveAttackPower as effectiveAttackPowerImpl,
-} from './combat/effective_stats';
 import { collectEngagedPids } from './combat/engaged_combat';
 import { steerFearFromWalls } from './combat/fear_steering';
 import { applyIgnite } from './combat/fire_mage';
@@ -149,7 +146,7 @@ import { applySetProcs as applySetProcsImpl } from './combat/set_procs';
 import { clearSpiritmendCurrents } from './combat/shaman_spiritmend';
 import { clearShamanTalentState, onGhostWolfExited } from './combat/shaman_talents';
 import { blockedMeleeDamage } from './combat/shield_block';
-import { spellCritBonusFromAuras, spellDamageMultFromAuras } from './combat/spell_combat';
+import { spellCritChance, spellDamageMultFromAuras } from './combat/spell_combat';
 import { isMobSpellResisted } from './combat/spell_resist';
 import { isCritImmuneTank } from './combat/tank_crit_immunity';
 import { threatMod as threatModImpl } from './combat/threat_modifiers';
@@ -240,6 +237,7 @@ import { DEV_SANDBOX_CFG, DEV_SANDBOX_CLASSES } from './dev/dev_sandbox_config';
 import { despawnMobsForDev } from './dev_commands';
 import { projectOutsideDungeonDoors } from './dungeon_door_clearance';
 import { arenaMapForSlot } from './dungeon_layout';
+import { effectiveArmorOf, effectiveAttackPowerOf } from './effective_stats';
 import * as nythraxis from './encounters/nythraxis';
 // A3: ARENA_SPAWNS_A_2v2/B_2v2 (read only by the moved fiestaRevive) now live with
 // social/fiesta.ts. The dungeon-wall consts (DUNGEON_WALL_HW/X) are now read only by
@@ -294,7 +292,8 @@ import {
   sanitizeSlotInstanceOnLoad,
   warnDroppedInstanceKeys,
 } from './item_instance_load';
-import { isMergeableInstancePayload } from './item_instance_merge';
+import { isChargeBearingPayload } from './item_instance_merge';
+import { meetsLevelRequirement } from './item_level_req';
 import { countRawInSlots, setItemLocked as setItemLockedCmd } from './item_lock';
 import * as items from './items';
 import { applyKnockback as applyKnockbackImpl } from './knockback';
@@ -314,6 +313,7 @@ import { entityLineOfSightClear } from './line_of_sight_elevation';
 import type { Ante, PickAction } from './lockpick';
 import { retirePartyTradeOnLoad, retirePartyTradeOnSave } from './loot/bop_trade_persistence';
 import { withoutPartyTradeMarker } from './loot/bop_trade_window';
+import { replacementTapperForLeave } from './loot/kill_participation';
 // L1: the loot-distribution layer (party-loot strategy, the rollLoot roller, copper
 // split, need-greed roll lifecycle, corpse-loot helpers) moved to ./loot/loot_roll.ts;
 // Sim keeps thin same-named delegates that call these.
@@ -365,6 +365,7 @@ import {
 import { updateDragonkinBrood } from './mob/dragonkin_brood';
 import { aggroDungeonPackmates } from './mob/dungeon_pack_aggro';
 import { canFlee } from './mob/flee_rules';
+import { forgetLeavingPlayer } from './mob/forget_leaver';
 import { wanderPause } from './mob/idle_rng';
 import * as lifecycle from './mob/lifecycle';
 import {
@@ -510,7 +511,6 @@ import {
 import { consumeFeastAction, type FeastState, placeFeastAction } from './professions/feast';
 import * as fishing from './professions/fishing';
 import type { RespecPaymentTier } from './professions/focus';
-import * as professionsFocus from './professions/focus';
 import {
   completeGatherCast as completeGatherCastImpl,
   drainGatheringGrants,
@@ -537,13 +537,12 @@ import {
   gatheringGoalFor as gatheringGoalForImpl,
 } from './professions/gathering_goal_projection';
 import type { GatheringGoalView } from './professions/gathering_goal_types';
-import { updateGuildTrendLetters } from './professions/guild_letter';
 import {
-  applyHarvestPreferenceOnLoad,
-  HARVEST_PREFERENCE_ALL,
-  type HarvestPreference,
-  serializeHarvestPreference,
-} from './professions/harvest_preference';
+  loadGatheringSettings,
+  serializeGatheringSettings,
+} from './professions/gathering_settings_persist';
+import { updateGuildTrendLetters } from './professions/guild_letter';
+import { HARVEST_PREFERENCE_ALL, type HarvestPreference } from './professions/harvest_preference';
 import {
   harvestPreferenceFor as harvestPreferenceForImpl,
   setHarvestPreference as setHarvestPreferenceImpl,
@@ -560,6 +559,7 @@ import {
   type MobileCraftingStation,
   placeMobileStationForPlayer,
 } from './professions/mobile_station';
+import { dropMobileStationObject } from './professions/mobile_station_object';
 import {
   applyNodeReadiness,
   isLiveGatherNodeId,
@@ -604,6 +604,7 @@ import {
   type ToolEffectSlot,
 } from './professions/tools';
 import * as townFocusCommands from './professions/town_focus_commands';
+import type { PendingTownFocus, TownFocusPendingView } from './professions/town_focus_pending';
 import {
   grandfatherKnownRecipes,
   sanitizeKnownRecipeIds,
@@ -687,6 +688,8 @@ import {
   CURRENT_CHARACTER_CONTENT_REVISION,
   migrateCharacterTalentsV2,
 } from './talent_save_migration';
+import * as ferryMod from './transport_ferry';
+import type { TransportFerryView } from './transport_schedule';
 import { updateAbilityDrill } from './tutorial/ability_drill';
 import { updateGauntletRuns } from './tutorial/gauntlet_run';
 import { updateTutorialGreeting } from './tutorial/greeting';
@@ -697,6 +700,7 @@ import {
   WORLD_BOSSES,
   type WorldBossDef,
 } from './world_boss';
+import { spawnHarborHouseKeeper } from './wyrmwatch_harbor_house';
 
 // Same pattern for the Ravenpost mail book (server/db.ts persists it as a
 // per-realm world_state row alongside the market).
@@ -767,6 +771,7 @@ import {
   updateRiftTriggers as updateRiftTriggersImpl,
 } from './rift/runs';
 import type { RiftEvent, RiftInstance } from './rift/types';
+import { updateSpiritRunTriggers } from './spirit_run_triggers';
 import { bootstrapWorldObjects } from './world_object_bootstrap';
 
 // computeQuestState (the pure quest-state fn) moved to quests/quest_commands.ts (W4);
@@ -823,7 +828,6 @@ import {
   type AuraKind,
   angleTo,
   assertCanonicalEastbrookNoticeboardDef,
-  type CampDef,
   CORPSE_HARVEST_CAST_ID,
   type CrowdControlDrCategory,
   type CrowdControlDrState,
@@ -869,7 +873,6 @@ import {
   mobArmorReduction,
   type NoticeboardDef,
   type OverheadEmoteId,
-  PARTY_XP_RANGE,
   type PendingResurrection,
   type PetMode,
   type PlayerClass,
@@ -1724,15 +1727,9 @@ export interface PlayerMeta {
   townFocus: Record<string, number>;
   // #1144: a re-spec queued on the 'time' or 'timeAndPartial' payment tier,
   // pending the tier's duration before it commits onto `townFocus` above.
-  // TRANSIENT (never serialized): a logout before it resolves simply drops the
-  // request (nothing was charged for it yet, see setTownFocus), the same way
-  // an unstarted timer costs nothing to abandon.
-  pendingTownFocus?: {
-    allocation: Record<string, number>;
-    readyAtTime: number;
-    coin: number;
-    materials: number;
-  };
+  // Persisted (professions/town_focus_pending.ts, remaining seconds), so a
+  // logout or an instance handoff no longer drops it; charged at resolution.
+  pendingTownFocus?: PendingTownFocus;
   // Heroic reset-window circuit progress for the Book of Deeds. Reward eligibility
   // is gated only by raidLockouts; this persisted field records which distinct
   // heroic clears contributed to one authoritative reset window without gating rewards.
@@ -2005,6 +2002,7 @@ export class Sim {
   // Placement-failure backoff gate only; per-zone cadence lives in the event
   // history (rift/portals.ts riftZoneNextOpenAt).
   riftPortalNextAt = 0;
+  transportClockOffset = 0; // dev-only ferry timetable skip (transport_ferry.ts, /dev ferry)
   // Escort quest runs (src/sim/escort.ts), keyed by EscortDef id. Live
   // SimContext view; the module owns every mutation.
   escortRuns = new Map<string, EscortRunState>();
@@ -2237,6 +2235,7 @@ export class Sim {
     // once here (the rng now exists); a live view + bound callbacks, it draws no rng
     // and mutates nothing, so it cannot perturb the construction draws below.
     this.ctx = this.buildSimContext(cfg.vaultConsumptionAdmission);
+    ferryMod.syncFerryGates(this.ctx); // this world's own deck gates before any placement query
     // Movement-kernel deps (MV1): pure binding, no rng draws, no construction effects.
     this.playerMotionDeps = {
       seed: this.cfg.seed,
@@ -2244,6 +2243,7 @@ export class Sim {
       resolveMove: (fromX, fromZ, nx, nz, r, e, ignoreFences) =>
         this.resolveMove(fromX, fromZ, nx, nz, r, e, ignoreFences),
       resolvedAbility: (abilityId, pid) => this.resolvedAbility(abilityId, pid),
+      platform: (p) => ferryMod.ferryDeckPlatform(this.ctx, p), // a sailing ship's deck
       cancelCast: (p) => this.cancelCast(p),
       standUp: (p) => this.standUp(p),
       dealDamage: (source, target, amount, crit, school, ability, kind, noRage) => {
@@ -2330,7 +2330,7 @@ export class Sim {
         // Seeded from the world seed plus the camp's AUTHORED identity (never
         // its array index, so reordering the list cannot move it), and never
         // from wall-clock, so all three hosts agree.
-        const campRng = camp.offStream ? this.campPrivateRng(camp, i) : this.rng;
+        const campRng = camp.offStream ? campPrivateRng(this.cfg.seed, camp, i) : this.rng;
         // Spread the camp's mobs with even nearest-neighbor spacing (a sunflower
         // spiral) instead of independent uniform sampling, which let mobs stack.
         // The two draws below feed campSpawnOffset as jitter and are consumed in the
@@ -2518,12 +2518,11 @@ export class Sim {
       }
     }
 
-    // Escort NPCs (escort.ts) and the hub practice yard (hub_practice.ts) last
-    // on purpose: rng-free, trailing ids only, so everything above is byte-
-    // identical to a world without them.
+    // Escorts, the practice yards, the harbormaster: rng-free, trailing or reserved ids.
     initEscortsImpl(this.ctx);
     spawnHubPractice(this.ctx, worldContent);
     spawnHealingTrainingGround(this.ctx, worldContent);
+    spawnHarborHouseKeeper(this.ctx, worldContent);
   }
 
   private spawnHealerPracticeDummy(): void {
@@ -3122,7 +3121,7 @@ export class Sim {
         if (
           !preservesMaterialCountOnLoad(slot) &&
           slot.instance &&
-          !isMergeableInstancePayload(slot.instance)
+          isChargeBearingPayload(slot.instance)
         )
           slot.count = 1;
         return normalizeLoadedMaterialSlot(slot);
@@ -3330,14 +3329,7 @@ export class Sim {
       meta.delveMarks = s.delveMarks ?? 0;
       meta.delveClears = { ...(s.delveClears ?? {}) };
       meta.companionUpgrades = { ...(s.companionUpgrades ?? {}) };
-      // Known component families at positive integer points only: a save that
-      // predates the #2511 key check (or a corrupt one) self-heals here rather
-      // than riding back out through the panel into a request the command
-      // boundary now rejects.
-      meta.townFocus = professionsFocus.normalizeTownFocusOnLoad(s.townFocus);
-      // Corpse-harvest preference (Intentional Gathering PR3); see
-      // PlayerMeta.harvestPreference / harvest_preference.ts applyHarvestPreferenceOnLoad.
-      meta.harvestPreference = applyHarvestPreferenceOnLoad(s.harvestPreference);
+      loadGatheringSettings(meta, s, this.time);
       // Intentional Gathering PR4: absent/undefined stays absent (no goal); a
       // valid saved goal is restored verbatim; a malformed one loads the
       // 'invalid' sentinel rather than silently becoming no goal. Never
@@ -3713,6 +3705,8 @@ export class Sim {
     const leaving = this.entities.get(pid);
     if (leaving) clearShamanTalentState(this.ctx, leaving);
     despawnMobsForDev(this.ctx, pid, 'spawned');
+    // The slot dies with the meta; its world object must not outlive it.
+    dropMobileStationObject(this.ctx, meta.mobileStation);
     // leave social systems cleanly. removeFromParty lives on the PartyMachine now
     // (A1); reach it through the seam, keeping this call in its load-bearing
     // teardown position (must run while the leaver is still in players/entities).
@@ -3748,23 +3742,7 @@ export class Sim {
     clearAfflictionState(this.ctx, pid);
     const pet = this.petOf(pid, true);
     if (pet) this.despawnPersistentPet(pet);
-    for (const m of this.entities.values()) {
-      if (m.kind !== 'mob') continue;
-      m.threat.delete(pid);
-      if (m.forcedTargetId === pid) {
-        m.forcedTargetId = null;
-        m.forcedTargetTimer = 0;
-      }
-      if (m.aggroTargetId === pid) {
-        m.aggroTargetId = null;
-        if (!m.dead && m.aiState !== 'dead' && m.ownerId === null) this.retargetMob(m);
-      }
-      if (m.tappedById === pid && !m.dead) m.tappedById = null;
-    }
-    for (const other of this.players.values()) {
-      const e = this.entities.get(other.entityId);
-      if (e && e.targetId === pid) e.targetId = null;
-    }
+    forgetLeavingPlayer(this.ctx, pid);
     resurrectionOfferMod.dropResurrectionOffer(this.ctx, pid);
     freeholdMod.releaseFreeholdOnLeave(this.ctx, pid);
     this.dropEntity(pid);
@@ -3831,41 +3809,9 @@ export class Sim {
     // member, clearing the tap mirrors immediate removal.
     for (const entity of this.entities.values()) {
       if (entity.kind === 'mob' && entity.tappedById === pid) {
-        entity.tappedById = this.replacementTapperForLeave(entity, pid, party?.members ?? []);
+        entity.tappedById = replacementTapperForLeave(this.ctx, entity, pid, party?.members ?? []);
       }
     }
-  }
-
-  private replacementTapperForLeave(
-    mob: Entity,
-    leavingPid: number,
-    partyPids: number[],
-  ): number | null {
-    const instance = this.instances.find(
-      (slot) => slot.partyKey !== null && slot.mobIds.includes(mob.id),
-    );
-    for (const candidatePid of partyPids) {
-      if (candidatePid === leavingPid) continue;
-      const candidate = this.players.get(candidatePid);
-      const entity = this.entities.get(candidatePid);
-      if (!candidate || candidate.leaving || !entity) continue;
-      // A corpse already owns an authoritative death-time recipient snapshot.
-      // Re-anchor only to someone in that snapshot, irrespective of where they
-      // moved after the kill.
-      if (mob.lootRecipientIds && mob.lootRecipientIds.length > 0) {
-        if (mob.lootRecipientIds.includes(candidatePid)) return candidatePid;
-        continue;
-      }
-      const matchingInstanceCorpse =
-        entity.ghost &&
-        entity.corpsePos &&
-        (!instance || entity.corpseInstanceId === instance.exitId)
-          ? entity.corpsePos
-          : null;
-      const participationPos = matchingInstanceCorpse ?? entity.pos;
-      if (dist2d(participationPos, mob.pos) <= PARTY_XP_RANGE) return candidatePid;
-    }
-    return null;
   }
 
   serializeCharacter(pid: number): CharacterState | null {
@@ -3922,7 +3868,7 @@ export class Sim {
         e.resource,
         e.savedMana,
       ),
-      pos: { x: e.pos.x, z: e.pos.z },
+      pos: ferryMod.ferrySavePosition(e), // never the sea: a ride saves the destination pier
       facing: e.facing,
       // Death state: a released spirit resumes its corpse run on relog, and a
       // dead-but-unreleased corpse auto-releases on load (see addPlayer).
@@ -4100,10 +4046,7 @@ export class Sim {
       // side (professions/farm_persist.ts).
       ...farmPlotsSaveFragment(meta.farmPlots),
       ...(meta.tutorialGreetingSent ? { tutorialGreetingSent: true } : {}),
-      townFocus: { ...meta.townFocus },
-      // Corpse-harvest preference; see PlayerMeta.harvestPreference /
-      // harvest_preference.ts serializeHarvestPreference for the encoding.
-      ...serializeHarvestPreference(meta.harvestPreference),
+      ...serializeGatheringSettings(meta, this.time),
       // Intentional Gathering PR4: sparse (absent while no goal is tracked).
       // Never serializes the derived projection/cache or the live order
       // binding (gatheringGoalOrder), only the compact selection.
@@ -4171,6 +4114,11 @@ export class Sim {
   ownedMountsFor(pid: number): MountKey[] {
     const meta = this.players.get(pid);
     return meta ? ownedMountsImpl(meta) : [DEFAULT_MOUNT];
+  }
+
+  // --- IWorldTransport ---
+  ferryView(): TransportFerryView | null {
+    return ferryMod.transportFerryView(this.ctx, this.entities.get(this.primaryId));
   }
 
   // --- IWorldMounts ---
@@ -4805,28 +4753,6 @@ export class Sim {
     return { x, y: placementFloorHeight(this.cfg.seed, x, z), z };
   }
 
-  /** The private scatter stream for an `offStream` camp (see CampDef.offStream).
-   *  Seeded from the world seed plus the camp's AUTHORED identity (mob id,
-   *  centre, radius, count) and the index WITHIN that camp, never the camp's
-   *  position in the CAMPS array, so reordering or inserting camps cannot move
-   *  an existing one. Pure and wall-clock-free, so offline, server and headless
-   *  all place these spawns identically. */
-  private campPrivateRng(camp: CampDef, index: number): Rng {
-    let h = 0x811c9dc5 ^ (this.cfg.seed >>> 0);
-    const mix = (n: number): void => {
-      h = (h ^ (n >>> 0)) >>> 0;
-      h = Math.imul(h, 0x01000193) >>> 0;
-    };
-    for (let i = 0; i < camp.mobId.length; i++) mix(camp.mobId.charCodeAt(i));
-    // Quantized so a float re-authored to the same place cannot drift the seed.
-    mix(Math.round(camp.center.x * 100));
-    mix(Math.round(camp.center.z * 100));
-    mix(Math.round(camp.radius * 100));
-    mix(camp.count);
-    mix(index);
-    return new Rng(h >>> 0);
-  }
-
   // Deterministic outward spiral to the nearest spot that is on dry-enough
   // ground and not inside a building/prop. Keeps NPCs out of houses and lakes.
   findSafePos(x: number, z: number, minHeight: number, bodyRadius = 0.6): { x: number; z: number } {
@@ -5003,6 +4929,12 @@ export class Sim {
       },
       set riftPortalNextAt(v: number) {
         sim.riftPortalNextAt = v;
+      },
+      get transportClockOffset() {
+        return sim.transportClockOffset;
+      },
+      set transportClockOffset(v: number) {
+        sim.transportClockOffset = v;
       },
       get riftPortalIds() {
         return sim.riftPortalIds;
@@ -5965,6 +5897,7 @@ export class Sim {
     lap?.('respawns');
     this.updateWorldBosses();
     lap?.('worldBosses');
+    ferryMod.updateTransportFerries(this.ctx); // the ferry timetable: board, carry, set down
     tickGroundAoEs(this.ctx);
     lap?.('groundAoEs');
     tickFrozenOrbs(this.ctx);
@@ -6013,7 +5946,7 @@ export class Sim {
         // #1144: resolves a queued time-tier town-focus re-spec once its
         // duration elapses. Draws no rng, so the tick-phase draw order is
         // unchanged.
-        if (meta.pendingTownFocus) this.updateTownFocusRespec(meta);
+        if (meta.pendingTownFocus) townFocusCommands.updateTownFocusRespec(this.ctx, meta);
         // Mount summon/dismount transition: decrement the timer, cancel a summon
         // on combat/swim, complete a mount/dismount, and force-dismount a mounted
         // swimmer. Live players only (a dead player is already force-dismounted by
@@ -6022,12 +5955,10 @@ export class Sim {
         lap?.('p.regen');
       } else if (p.ghost) {
         // A released spirit only runs (boosted speed via moveSpeedMult); it does not
-        // fight, cast, or regen. It CAN walk into a dungeon/raid door to re-enter its
-        // instance and resurrect at the entrance (the corpse run under the instance
-        // death model), or resurrect at its corpse / an overworld Spirit Healer.
+        // fight, cast, or regen. It CAN cross every door, rift, and overworld passage
+        // a living player can (spirit_run_triggers.ts) on its way back to its corpse.
         this.updatePlayerMovement(p, meta);
-        this.updateDoorTriggers(p);
-        this.updateRiftTriggers(p);
+        updateSpiritRunTriggers(this.ctx, p);
         lap?.('p.move');
       }
       // Breath runs for DEAD players too, and must: updateBreath's own reset
@@ -6351,14 +6282,14 @@ export class Sim {
 
   // jumpMult moved to player_motion.ts (MV1; read only by the movement kernel).
 
-  // Bodies moved to combat/effective_stats.ts (pure over the entity). Sim keeps
-  // the delegates: buildSimContext binds the seam callbacks to them by identity.
+  // Bodies moved to effective_stats.ts (pure over the entity). Sim keeps the
+  // delegates: buildSimContext binds the seam callbacks to them by identity.
   private effectiveArmor(e: Entity): number {
-    return effectiveArmorImpl(e);
+    return effectiveArmorOf(e);
   }
 
   private effectiveAttackPower(e: Entity): number {
-    return effectiveAttackPowerImpl(e);
+    return effectiveAttackPowerOf(e);
   }
 
   private petDamageMult(e: Entity): number {
@@ -6619,6 +6550,7 @@ export class Sim {
       clearAfkOnMove(this.ctx, meta, p);
     }
     if (advanceValkyrsCalling(this.ctx, p)) return;
+    if (p.ferryRide && ferryMod.stepPassenger(this.playerMotionDeps, p, meta.moveInput)) return;
     // The race countdown is a real start lock, not just a client animation.
     // Hold every forced/manual locomotion mode until the authoritative GO tick.
     if (meta.mountRace?.phase === 'countdown') return;
@@ -6874,9 +6806,8 @@ export class Sim {
   }
 
   private spellCrit(p: Entity): number {
-    // Base + Intellect + the shared crit core (crit rating, talent/set crit,
-    // flat crit auras; recalcPlayerStats) + spell-crit-specific auras.
-    return 0.05 + p.stats.int * 0.0008 + (p.sharedCritBonus ?? 0) + spellCritBonusFromAuras(p);
+    // The spell crit pool lives in combat/spell_combat.ts (the sheet reads it too).
+    return spellCritChance(p);
   }
 
   // Heal core, heal multipliers, heal-absorb soak, crit-vuln bonus, and the
@@ -7362,16 +7293,7 @@ export class Sim {
     target: Entity,
     bonus: number,
     abilityName: string | null,
-    opts: {
-      cannotBeDodged?: boolean;
-      weaponMult?: number;
-      threatFlat?: number;
-      threatMult?: number;
-      forceCrit?: boolean;
-      critBonus?: number;
-      onDealt?: (amount: number) => void;
-      onEffectiveDamage?: (amount: number) => void;
-    },
+    opts: Parameters<typeof meleeSwingImpl>[5],
   ): boolean {
     return meleeSwingImpl(this.ctx, attacker, target, bonus, abilityName, opts);
   }
@@ -8815,12 +8737,16 @@ export class Sim {
     return this.townFocusFor(this.primaryId);
   }
 
-  setTownFocus(allocation: Record<string, number>, tier: RespecPaymentTier, pid?: number): void {
-    townFocusCommands.setTownFocus(this.ctx, allocation, tier, pid);
+  townFocusPendingFor(pid: number): TownFocusPendingView | null {
+    return townFocusCommands.townFocusPendingFor(this.ctx, pid);
   }
 
-  private updateTownFocusRespec(meta: PlayerMeta): void {
-    townFocusCommands.updateTownFocusRespec(this.ctx, meta);
+  get townFocusPending(): TownFocusPendingView | null {
+    return this.townFocusPendingFor(this.primaryId);
+  }
+
+  setTownFocus(allocation: Record<string, number>, tier: RespecPaymentTier, pid?: number): void {
+    townFocusCommands.setTownFocus(this.ctx, allocation, tier, pid);
   }
 
   interact(pid?: number): void {
@@ -9428,6 +9354,7 @@ export class Sim {
   guildEventRemove(_eventId: number): void {}
   guildSetMotd(_text: string): void {}
   guildBuyRosterPage(): void {}
+  guildSetRanks(_ranks: readonly import('./guild_ranks').GuildRankDef[]): void {}
   // The Guild Bank is a guild feature, and guilds live in the server social DB,
   // so offline play never has one: the read is null and the commands are inert
   // (the socialInfo idiom), forever. The online path is live: ClientWorld sends
@@ -10278,8 +10205,8 @@ export class Sim {
     this.market.marketListInstance(itemId, price, instance, pid);
   }
 
-  marketBuy(listingId: number, pid?: number): void {
-    this.market.marketBuy(listingId, pid);
+  marketBuy(listingId: number, count?: number, pid?: number): void {
+    this.market.marketBuy(listingId, count, pid);
   }
 
   marketSweepQuote(itemId: string, count: number, pid?: number): void {
@@ -10292,6 +10219,29 @@ export class Sim {
 
   marketCancel(listingId: number, pid?: number): void {
     this.market.marketCancel(listingId, pid);
+  }
+
+  // The buy-order board (market_orders.ts): the server's sold-volume observer
+  // reads the settled rows / units the place and fill arms return.
+  marketOrderPlace(
+    itemId: string,
+    count: number,
+    unitPrice: number,
+    pid?: number,
+  ): MarketListing[] {
+    return this.market.marketOrderPlace(itemId, count, unitPrice, pid);
+  }
+
+  marketOrderFill(orderId: number, count: number, pid?: number): { units: number; copper: number } {
+    return this.market.marketOrderFill(orderId, count, pid);
+  }
+
+  marketOrderCancel(orderId: number, pid?: number): void {
+    this.market.marketOrderCancel(orderId, pid);
+  }
+
+  get marketOrders() {
+    return this.market.marketOrders;
   }
 
   marketCollect(pid?: number): void {

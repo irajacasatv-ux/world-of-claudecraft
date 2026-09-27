@@ -91,10 +91,12 @@ describe('deed_i18n English resolution', () => {
     // Retired Vale Cup and Fiesta deeds keep names but drop 19 descriptions.
     // 302 since the Freehold pair (homesteader_first_furnishing and
     // homesteader_first_cottage) adds two name/desc rows and the Homesteader
-    // title, so the title count moves to 47: 302 + 283 + 47 = 632.
-    expect(manifest.filter((row) => row.field === 'name').length).toBe(302);
-    expect(manifest.filter((row) => row.field === 'desc').length).toBe(283);
-    expect(manifest.length).toBe(632);
+    // title, so the title count moves to 47; 303 with the Eastbrook ferry's
+    // round trip (exp_harbor_to_harbor: a name and a desc, no title reward):
+    // 303 + 284 + 47 = 634.
+    expect(manifest.filter((row) => row.field === 'name').length).toBe(303);
+    expect(manifest.filter((row) => row.field === 'desc').length).toBe(284);
+    expect(manifest.length).toBe(634);
     expect(manifest.filter((row) => row.field === 'title').length).toBe(47);
     expect(manifest.filter((row) => row.id === 'hid_forgebreaker')).toEqual([
       { id: 'hid_forgebreaker', field: 'name', source: 'A Spring Unchained' },

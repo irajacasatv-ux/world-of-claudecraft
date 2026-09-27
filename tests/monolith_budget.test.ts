@@ -568,7 +568,32 @@ const MONOLITHS: MonolithRow[] = [
     // Newline counts: Freeholds 18199, incoming 18133 (-102 on the
     // fc86d90234 base); wc -l on the merged tree measures 18097. Exact
     // merged count, zero slack.
-    ceiling: 18097,
+    // Release reconciliation for PR #3806: measured the merged HUD after
+    // composing the candidate's later extraction work with the target-of-target
+    // click, menu and mouseover-cast wiring. Exact count, zero slack.
+    // Release reconciliation for PR #4179: the death recap UI itself lives in
+    // src/ui/death_recap_dialog.ts; hud.ts gained only the constructor/bind/close
+    // wiring needed to mount that extracted dialog. Exact count, zero slack.
+    // LOWERED 18235 -> 18181 by the character sheet's Healing Power + Spell
+    // Crit cells: the world -> stat-model bridge (Hud.statModel and its four
+    // imports) moved to the char_stat_model_core pure core rather than growing
+    // by the two new input fields (18235 - 54). Exact count, zero slack.
+    // Release integration composes the death recap mount with that extraction;
+    // measured after resolving both arms. Exact count, zero slack.
+    // LOWERED 18235 -> 18221 at the movable unit tooltip: the player hover
+    // card's key and lines moved to player_tooltip_view.ts (live resolvers in
+    // player_tooltip.ts) and the world-hover seat resolution to
+    // unit_tooltip_seat.ts. Measured with wc -l after biome. Exact count,
+    // zero slack.
+    // Release integration keeps the current table-driven frame registry and
+    // measures below both parent pins. Exact count, zero slack.
+    // LOWERED 18108 -> 18101 at the merge of release/v0.44.0 into the
+    // Eastbrook ferry branch (PR 4225): the release's own extractions plus the
+    // ferry's wiring, measured with wc -l on the merged tree. Exact count, zero slack.
+    // RESOLVED for the Freeholds sync of release/v0.44.0 at 09639d4ae9.
+    // Parent pins: Freeholds 18097, incoming 18101; wc -l on the merged tree
+    // measures 18065. Exact merged count, zero slack.
+    ceiling: 18065,
     seam: 'pure view core + thin painter on PainterHost (src/ui/CLAUDE.md)',
   },
   {
@@ -607,7 +632,9 @@ const MONOLITHS: MonolithRow[] = [
     // sub-view landed: the Auras render method and its placement/teardown lines
     // moved out with them to src/ui/options_overlay_panels.ts. Measured with
     // wc -l on the tree merged with release/v0.44.0. Exact count, zero slack.
-    ceiling: 2813,
+    // RE-PINNED at the Freeholds sync of release/v0.44.0 at 09639d4ae9 to the
+    // merged wc -l, 2807: the release shrank the file by 6 under the shared 2813 pin. Exact merged count, zero slack.
+    ceiling: 2807,
     seam: 'a pure view model (src/ui/options_view.ts) painted with the shared settings_controls.ts builders; sub-panels as sibling modules',
   },
   {
@@ -1003,7 +1030,33 @@ const MONOLITHS: MonolithRow[] = [
     // RESOLVED for the Freeholds sync of release/v0.44.0 (tip 56525e0343).
     // Newline counts: base 12851, Freeholds 12844 (-7), incoming 12789 (-62);
     // wc -l on the merged tree measures 12782. Exact merged count, zero slack.
-    ceiling: 12782,
+    // gained its assets line). LOWERED 12789 -> 12788 by Colorblind Mode: the
+    // setHazardPaletteMode forwarder came in, paid for by moving the travel-form
+    // speed sampling (groundSpeedFromFrame, trackLocalPos, hasTravelFormAura)
+    // into travel_speed_fx.ts and the hazard-painter rebuild into
+    // NythraxisMechanicVisuals.setPaletteMode. Exact count.
+    // LOWERED 12789 -> 12761 when the point-light pads and the bounded prewarm
+    // pad re-pin went: the carriers (src/render/point_light_carriers.ts) pin
+    // the count now; then 12761 -> 12758 when the fx and placed-GLB lights
+    // shared one registration seam object. Measured at 12757 after the
+    // PR #4177 release-line merge kept both the Colorblind Mode extraction and
+    // the packed point-light carrier seam. Exact count.
+    // LOWERED 12789 -> 12771: a started prewarm entry's run, progress and
+    // partial remainder moved into runStartedPrewarmEntry (prewarm_entry.ts),
+    // one fail-soft unit so a throwing progress() cannot end the manifest.
+    // LOWERED 12771 -> 12765: the lazy cast stand-ins' boot slot moved into
+    // castVfxStandInSlot (cast_vfx_prewarm.ts), whose resume link records the
+    // settle the cast gate reads.
+    // Lowered 12765 -> 12696: PR #4220's AoE ring slot builder and cast-gate
+    // predicate wiring landed with the candidate's release-line extractions.
+    // Exact count, zero slack.
+    // LOWERED 12696 -> 12684 at the merge of release/v0.44.0 into the
+    // Eastbrook ferry branch (PR 4225): the release's own extractions plus the
+    // ferry's wiring, measured with wc -l on the merged tree. Exact count, zero slack.
+    // RESOLVED for the Freeholds sync of release/v0.44.0 at 09639d4ae9.
+    // Parent pins: Freeholds 12782, incoming 12684; wc -l on the merged tree
+    // measures 12677. Exact merged count, zero slack.
+    ceiling: 12677,
     seam: 'a new src/render/<thing>.ts module the renderer calls (src/render/CLAUDE.md)',
   },
   {
@@ -1220,7 +1273,33 @@ const MONOLITHS: MonolithRow[] = [
     // Newline counts: Freeholds 11608, incoming 11740 (-10 on the
     // fc86d90234 base); wc -l on the merged tree measures 11598. Exact
     // merged count, zero slack.
-    ceiling: 11598,
+    // LOWERED 11750 -> 11719 at this release-line reconcile: the batch
+    // profession, spirit-run and Wanted-board extractions compose with the
+    // release loot-quality helpers below both parent pins. wc -l on the
+    // merged tree. Exact count, zero slack.
+    // LOWERED 11719 -> 11683 after #4143's released-raider instanced-kill
+    // sharing merged into the reconciled tree: the leave-time
+    // tap re-anchor (replacementTapperForLeave) moved to
+    // src/sim/loot/kill_participation.ts beside the participation predicates
+    // it shares with the kill snapshot. wc -l on the merged tree. Exact
+    // count, zero slack.
+    // Release reconciliation: measured merged tree, preserving both extraction sets.
+    // Guild custom ranks then compose underneath that pin; the combined tree is
+    // measured after the release-line extractions and the offline guildSetRanks
+    // stub landed. Exact count, zero slack.
+    // Down 11750 -> 11749 at the character sheet's Spell Crit cell: the spell
+    // crit formula moved out of Sim.spellCrit into combat/spell_combat.ts
+    // spellCritChance (the sheet runs the same function on both hosts), leaving
+    // a one-line delegate. Exact count, zero slack.
+    // Release integration composes both extraction sets and measures below both
+    // parent pins. Exact count, zero slack.
+    // LOWERED 11664 -> 11660 at the merge of release/v0.44.0 into the
+    // Eastbrook ferry branch (PR 4225): the release's own extractions plus the
+    // ferry's wiring, measured with wc -l on the merged tree. Exact count, zero slack.
+    // RESOLVED for the Freeholds sync of release/v0.44.0 at 09639d4ae9.
+    // Parent pins: Freeholds 11598, incoming 11660; wc -l on the merged tree
+    // measures 11548. Exact merged count, zero slack.
+    ceiling: 11548,
     seam: 'a sim system module behind SimContext (src/sim/CLAUDE.md)',
   },
   {
@@ -1452,7 +1531,22 @@ const MONOLITHS: MonolithRow[] = [
     // Newline counts: Freeholds 11160, incoming 11260 (-16 on the
     // fc86d90234 base); wc -l on the merged tree measures 11144. Exact
     // merged count, zero slack.
-    ceiling: 11144,
+    // LOWERED 11276 -> 11176 at this release-line reconcile: the Discord
+    // OAuth flow and delve self-motion wiring compose with the character-select
+    // lockout extraction below both parent pins. wc -l on the merged tree.
+    // Exact count, zero slack.
+    // LOWERED 11176 -> 11166 after #4158's target-aura placement merge:
+    // the buff/debuff row direction cases moved out to src/ui/aura_bar_side.ts
+    // (with the targetAurasBelowFrame side case riding the same helper), so
+    // the coordinator ends smaller. wc -l on the merged tree. Exact count,
+    // zero slack.
+    // Colorblind Mode's interface body-class extraction also composes with
+    // those release-line extractions. Release reconciliation: measured merged
+    // tree at 11140 lines, preserving both extraction sets.
+    // RESOLVED for the Freeholds sync of release/v0.44.0 at 09639d4ae9.
+    // Parent pins: Freeholds 11144, incoming 11140; wc -l on the merged tree
+    // measures 11019. Exact merged count, zero slack.
+    ceiling: 11019,
     seam: 'a src/game/ or src/ui/ sibling module; main.ts is a firewall, not a home',
   },
   {
@@ -1726,6 +1820,10 @@ const MONOLITHS: MonolithRow[] = [
     // entity wire bit and the wpvp self key; the one-use delay() helper was
     // inlined to pay for the /pvp command-lane claim. Measured with
     // wc -l < server/game.ts after biome. Exact count, zero slack.
+    // LOWERED 9979 -> 9934 at this release-line reconcile: the guild-bank
+    // autosave stall and release loot-quality reductions compose below both
+    // parent pins. wc -l on the merged tree. Exact count, zero slack.
+    // Release reconciliation: measured merged tree, preserving both extraction sets.
     // LOWERED 9979 -> 9965 by the craft_roll_events change: the ftue_events
     // quest/death record arms of the event drain moved to
     // server/event_record_observers.ts (which also hosts the new craftRoll
@@ -1748,7 +1846,31 @@ const MONOLITHS: MonolithRow[] = [
     // LOWERED 9762 -> 9758 by the re-sync audit: the jail table's header, left
     // above KNOWN_COMMANDS when the table moved to server/freehold_wire.ts, now
     // sits beside the table. Exact count, zero slack.
-    ceiling: 9758,
+    // LOWERED 9965 -> 9954 at the developer-badge titles merge: the badge flair
+    // stamp (plus its worn rung-title re-check) moved to
+    // server/dev_badge_stamp.ts, composed with the release extraction above.
+    // Measured with wc -l < server/game.ts on the merged tree. Exact count.
+    // LOWERED again by the merged #4164 tree: the release reconciliation and
+    // developer-badge title extraction compose to the measured file size.
+    // Guild custom ranks then compose under that with the guild_promote /
+    // guild_demote arms and the new guild_set_ranks command stacked into one
+    // label group dispatched by server/guild_rank_cmd.ts. Exact count.
+    // LOWERED 9965 -> 9962 at the movable unit tooltip: the identity record's
+    // guild, pledge, guild tier, deed title/border lines (plus the new spec
+    // key) moved to server/player_identity_wire.ts. Exact count, zero slack.
+    // Release integration composes both extraction sets below the prior pin.
+    // Exact count, zero slack.
+    // RE-PINNED 9838 -> 9842 after dropping PR #4179 from the release batch:
+    // reverting that merge restored the pre-existing account cosmetic/storage
+    // imports and removed only the PR's spec field from this file. Measured
+    // with wc -l < server/game.ts on the post-drop tree. Exact count, zero slack.
+    // LOWERED 9842 -> 9833 at the merge of release/v0.44.0 into the
+    // Eastbrook ferry branch (PR 4225): the release's own extractions plus the
+    // ferry's wiring, measured with wc -l on the merged tree. Exact count, zero slack.
+    // RESOLVED for the Freeholds sync of release/v0.44.0 at 09639d4ae9.
+    // Parent pins: Freeholds 9758, incoming 9833; wc -l on the merged tree
+    // measures 9700. Exact merged count, zero slack.
+    ceiling: 9700,
     seam: 'a sibling server module; see the hot-path seams in server/CLAUDE.md',
   },
   {
@@ -1978,6 +2100,8 @@ const MONOLITHS: MonolithRow[] = [
     // decision (the hold, its ack release, the valve) moved to
     // src/net/target_echo.ts, banking the 52 lines of slack the row already
     // carried with it. Measured with wc -l < src/net/online.ts after biome.
+    // RE-CONFIRMED at the v0.44 release-line reconciliation after trimming
+    // duplicated coordinator prose. Exact formatted count remains 5426.
     // Exact count, zero slack.
     // RESOLVED for the Freeholds sync of release/v0.44.0 (tip 56525e0343).
     // Newline counts: base 5540, Freeholds 5604 (+64), incoming 5426 (-114);
@@ -1997,7 +2121,22 @@ const MONOLITHS: MonolithRow[] = [
     // Newline counts: Freeholds 5500, incoming 5416 (-10 on the
     // fc86d90234 base); wc -l on the merged tree measures 5490. Exact
     // merged count, zero slack.
-    ceiling: 5490,
+    // Release reconciliation: measured merged tree, preserving both extraction sets.
+    // Guild custom ranks then compose under that: the signpost roster body
+    // decode moved to src/net/guild_roster_wire.ts, paying for the
+    // guildSetRanks send with room to spare. Exact count, zero slack.
+    // LOWERED 5426 -> 5423 at the movable unit tooltip: the identity block's
+    // guild, pledge, guild tier, deed title/border decode (plus the new spec)
+    // moved to src/net/player_identity_wire.ts. Exact count, zero slack.
+    // Release integration composes both extraction sets below the prior pin.
+    // Exact count, zero slack.
+    // LOWERED 5391 -> 5367 at the merge of release/v0.44.0 into the
+    // Eastbrook ferry branch (PR 4225): the release's own extractions plus the
+    // ferry's wiring, measured with wc -l on the merged tree. Exact count, zero slack.
+    // RESOLVED for the Freeholds sync of release/v0.44.0 at 09639d4ae9.
+    // Parent pins: Freeholds 5490, incoming 5367; wc -l on the merged tree
+    // measures 5441. Exact merged count, zero slack.
+    ceiling: 5441,
     seam: 'a src/net sibling module (the refactor/net-online split is the template)',
   },
   {
@@ -2032,7 +2171,16 @@ const MONOLITHS: MonolithRow[] = [
     // map-improvements epic (PR #3746): the castle pad chain and the Last Spring bank left with the castle (keep_site.ts holds the new pad). Measured with wc -l on the
     // merged tree. Exact merged count, zero headroom.
     // Lowered after extracting shared dungeon floor dispatch; measured after formatting.
-    ceiling: 5188,
+    // LOWERED 5216 -> 5194: the Gardenwalk west pass moved to its Thornpeak
+    // sibling leaf thornpeak_walk_grades.ts, paying for the hillside pocket
+    // grade's region-gated call beside it. Exact count, zero slack.
+    // LOWERED 5194 -> 5188 at the merge of release/v0.44.0 into the
+    // Eastbrook ferry branch (PR 4225): the release's own extractions plus the
+    // ferry's wiring, measured with wc -l on the merged tree. Exact count, zero slack.
+    // RESOLVED for the Freeholds sync of release/v0.44.0 at 09639d4ae9.
+    // Parent pins: Freeholds 5188, incoming 5188; wc -l on the merged tree
+    // measures 5160. Exact merged count, zero slack.
+    ceiling: 5160,
     seam: 'zone/terrain data as content records; logic as sim sibling modules',
   },
   {
@@ -2242,7 +2390,9 @@ const MONOLITHS: MonolithRow[] = [
     // Lowered after extracting the world trees' camera-occluder fade (the
     // hideable records, the trunk hit test, the gated instance/ghost swap)
     // into src/render/tree_hide_fade.ts.
-    ceiling: 3969,
+    // RE-PINNED at the Freeholds sync of release/v0.44.0 at 09639d4ae9 to the
+    // merged wc -l, 3972: the release grew the file by 3 into its own 3996 pin; this branch had pinned its exact 3969. Exact merged count, zero slack.
+    ceiling: 3972,
     seam: 'a new src/render/<thing>.ts module (src/render/CLAUDE.md)',
   },
   {
@@ -2316,7 +2466,15 @@ const MONOLITHS: MonolithRow[] = [
     // Lowered after extracting derived interior collider registry; measured after formatting.
     // LOWERED 2518 -> 2456 at the Freeholds sync of release/v0.44.0: the release
     // shrank this file without re-pinning the row. wc -l on the merged tree.
-    ceiling: 2456,
+    // LOWERED 2548 -> 2513 at the Eastbrook ferry's Phase 2, though the FILE grew from
+    // 2486 to 2513 into the row's slack: the berth gate bookkeeping (setColliderGateOpen,
+    // gridIndex-ordered reopen, lazy wishes) needs the grid's private state, net of the
+    // decoration collider builder moving out to decoration_collider.ts. wc -l. Exact count.
+    // RESOLVED for the Freeholds sync of release/v0.44.0 at 09639d4ae9.
+    // Parent pins: Freeholds 2456 (exact), incoming 2513 (the ferry berth
+    // gate's +27); wc -l on the merged tree measures 2483, the release's
+    // growth over this branch's extraction. Exact merged count, zero slack.
+    ceiling: 2483,
     seam: 'per-zone collider data beside the zone content; shared logic stays here',
   },
   {
@@ -2540,7 +2698,9 @@ const MONOLITHS: MonolithRow[] = [
     // below both parent pins. Exact merged count, zero slack.
     // LOWERED 1808 -> 1807 at the Freeholds sync of release/v0.44.0: the release
     // shrank this file without re-pinning the row. wc -l on the merged tree.
-    ceiling: 1807,
+    // RE-PINNED at the Freeholds sync of release/v0.44.0 at 09639d4ae9 to the
+    // merged wc -l, 1809: the release grew the file by 2 into its own 1810 pin; this branch had pinned its exact 1807. Exact merged count, zero slack.
+    ceiling: 1809,
     seam: 'a pure view-core plus a thin painter sibling (src/ui/CLAUDE.md)',
   },
   {
@@ -2577,7 +2737,9 @@ const MONOLITHS: MonolithRow[] = [
     // src/ui/hud/professions/craft_row_chip_text.ts. Exact count, zero slack.
     // LOWERED 747 -> 732 at the Freeholds sync of release/v0.44.0: the release
     // shrank this file without re-pinning the row. wc -l on the merged tree.
-    ceiling: 732,
+    // RE-PINNED at the Freeholds sync of release/v0.44.0 at 09639d4ae9 to the
+    // merged wc -l, 725: the release shrank the file by 7 under its own 747 pin. Exact merged count, zero slack.
+    ceiling: 725,
     seam: 'a pure view-core plus a thin painter sibling (src/ui/hud/CLAUDE.md)',
   },
 ];

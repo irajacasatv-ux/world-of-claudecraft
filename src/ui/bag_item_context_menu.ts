@@ -50,7 +50,7 @@ export type BagItemNewActionId =
   | 'separateByGatherer'
   | 'takeChosenQuantity'
   | 'combine';
-export type BagItemContextActionId = 'default' | 'sellAll' | BagItemNewActionId;
+export type BagItemContextActionId = 'default' | 'sellAll' | 'destroy' | BagItemNewActionId;
 
 export interface BagItemContextAction {
   id: BagItemContextActionId;
@@ -134,14 +134,19 @@ export function bagItemHasContextActions(
   );
 }
 
-/** The full ordered menu: the classic default row first, then each eligible
- *  new action. Furnishings have no default use action and keep their lock toggle. */
+/** The full ordered menu: the classic default row first (so left-click's binding
+ *  survives as row one; furnishings have no default use action and keep their
+ *  lock toggle), then each eligible new action, then Destroy last when
+ *  `includeDestroy` (the touch HUD's route to the destroy prompt: the bags sheet
+ *  covers the phone screen, so the drag-out-to-world gesture has no world to
+ *  land on there). The caller decides eligibility (bagDestroyAction 'discard'). */
 export function bagItemContextActions(
   def: ItemDef,
   itemId: string,
   instance?: ItemInstancePayload,
   materialSources?: MaterialComposition,
   includeMaterialActions = false,
+  includeDestroy = false,
 ): BagItemContextAction[] {
   const rows: BagItemContextAction[] = [];
   if (def.kind !== 'furnishing') {
@@ -156,6 +161,7 @@ export function bagItemContextActions(
   )) {
     rows.push({ id, labelKey: NEW_ACTION_LABEL_KEY[id] });
   }
+  if (includeDestroy) rows.push({ id: 'destroy', labelKey: 'itemUi.bags.destroyConfirm' });
   return rows;
 }
 

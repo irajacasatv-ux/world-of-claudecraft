@@ -26,9 +26,8 @@ import {
   zoneAt,
 } from './data';
 import { dawnholdPadTarget, dawnholdPadWeight } from './dawnhold_layout';
-import { dockSurfaceHeight } from './deck_surfaces';
+import { dockSurfaceHeight, onHarborPlanks } from './deck_surfaces';
 import { dungeonGroundHeight } from './dungeon_floor';
-import { eastbrookDeckSurface } from './eastbrook_harbor';
 import {
   EMBER_FLAT_POOLS,
   EMBER_LAVA_LINKS,
@@ -36,10 +35,11 @@ import {
   emberLinkDistanceNorm,
   emberNearestOnLink,
 } from './ember_lava_layout';
-import { GALE_DECK_FREEBOARD, galeDeckSurface } from './gale_harbor';
+import { GALE_DECK_FREEBOARD } from './gale_harbor';
 import { KEEP_SITE, keepSitePadWeight } from './keep_site';
 import { reachDeckClear } from './reach_decks';
 import { fbm2, hash2, noise2 } from './rng';
+import { carveSeaChannels } from './sea_channels';
 import {
   CALM_SKIRT_MAX_WIDTH,
   type CalmProbe,
@@ -56,6 +56,7 @@ import {
   terrainRegionHas,
 } from './terrain_region_index';
 import { cragLayer, highlandMask, reliefBase, ridged2, warpedCoords } from './terrain_relief';
+import { applyGardenwalkWestPass, applyThornpeakPocketGrade } from './thornpeak_walk_grades';
 import type { BiomeId, HeightStamp, ZoneDef } from './types';
 import { overworldWalkSurface } from './walk_lifts';
 
@@ -1331,32 +1332,6 @@ function applyGardenCoast(x: number, z: number, h: number): number {
   const passN = (1 - smoothstep(26, 52, Math.abs(x - 390))) * smoothstep(1200, 1245, z);
   if (passN > 0) out = out + (6 + (out - 6) * 0.15 - out) * passN;
   return h + (out - h) * seam * zSeam;
-}
-
-// The Gardenwalk pass floor, mirrored onto the Thornpeak (west/strip) side
-// of the border: applyGardenCoast's passW above only reaches the east
-// column (its blend rides "seam", the coastal cross-fade into the strip,
-// which is near zero west of the border). Without a matching flatten here
-// the peaks biome's full hill/crag/detail noise (baseHeight) runs right up
-// to the crossing: player report, a small unclimbable step around x=173,
-// z=797. A pure function of (x, z), like every applier in this file: it
-// touches no content table, so it cannot move roadDistance calming or any
-// other rng-consuming system.
-function applyGardenwalkWestPass(x: number, z: number, h: number): number {
-  // Symmetric around the border line itself (not a one-sided cutoff at
-  // STRIP_MAX_X): a hard x < STRIP_MAX_X gate left a seam exactly at the
-  // border, where this window's near-full weight met applyGardenCoast's
-  // own passW at whatever partial "seam" it had reached there, and the two
-  // land on different baseline math (this blends raw h; that blends a
-  // coastal "out" value), so the join was not even C0. Peaking gently AT the
-  // border and fading both directions instead overlaps applyGardenCoast's
-  // effect on the east side, but both blends pull the same direction (down
-  // toward the ~6 pass floor), so composing them stays smooth.
-  const w =
-    (1 - smoothstep(26, 52, Math.abs(z - 800))) *
-    (1 - smoothstep(0, 58, Math.abs(x - STRIP_MAX_X)));
-  if (w <= 0) return h;
-  return h + (6 + (h - 6) * 0.08 - h) * w;
 }
 
 // The Great Maze. '#' cells are modeled hedge walls; '.' cells are lawn
@@ -3491,7 +3466,8 @@ function baseHeight(
       }
     }
   }
-  return h;
+  // ...and the sea-channel bowls under the ferry lanes (sea_channels.ts)
+  return carveSeaChannels(x, z, h, WATER_LEVEL);
 }
 
 // ---------------------------------------------------------------------------
@@ -4266,6 +4242,9 @@ function terrainHeightUnpadded(x: number, z: number, seed: number, skipEdits = f
   }
   if (terrainRegionHas(region, TERRAIN_APPLIER.gardenwalkWestPass)) {
     h = applyGardenwalkWestPass(x, z, h);
+  }
+  if (terrainRegionHas(region, TERRAIN_APPLIER.thornpeakPocketGrade)) {
+    h = applyThornpeakPocketGrade(x, z, h, seed);
   }
   if (terrainRegionHas(region, TERRAIN_APPLIER.galeCoast)) {
     h = applyGaleCoast(x, z, h);
@@ -5063,15 +5042,8 @@ function decorationAt(seed: number, gx: number, gz: number): Decoration | null {
     return null;
   }
   // No rock or stunted tree grows up through Wickharbor's boardwalk planks,
-  // nor New Eastbrook's quay and piers.
-  if (galeDeckSurface(x, z, (sx, sz) => terrainHeight(sx, sz, seed), WATER_LEVEL) !== -Infinity) {
-    return null;
-  }
-  if (
-    eastbrookDeckSurface(x, z, (sx, sz) => terrainHeight(sx, sz, seed), WATER_LEVEL) !== -Infinity
-  ) {
-    return null;
-  }
+  // New Eastbrook's quay and piers, or a far ferry pier (deck_surfaces.ts).
+  if (onHarborPlanks(x, z, (sx, sz) => terrainHeight(sx, sz, seed), WATER_LEVEL)) return null;
   if (!reachDeckClear(x, z, 1)) return null;
   // The Old Beacon's lawn stays clear (nothing crowds the lighthouse stair),
   // and the raider encampments keep trees and rocks off their level pads.

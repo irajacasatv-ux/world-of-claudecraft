@@ -2193,7 +2193,10 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
     const beforeHearthKeyBytes = Buffer.byteLength(JSON.stringify(beforeHearthKey), 'utf8');
     expect(bytes - beforeHearthKeyBytes).toBe(13);
     expect(fieldBytes(s2, 'deedStats') - fieldBytes(beforeHearthKey, 'deedStats')).toBe(13);
-    expect(beforeHearthKeyBytes).toBe(227086);
+    // Every absolute figure in this chain moved +154 at the Freeholds sync of
+    // release/v0.44.0 at 09639d4ae9: the Eastbrook ferry's round-trip deed and
+    // its four visit marks, which no remover here strips (attributed below).
+    expect(beforeHearthKeyBytes).toBe(227240);
     const FREEHOLD_ROOM_IDS = ['freehold_inn_room', 'freehold_cottage'] as const;
     const withoutFreeholdRooms = structuredClone(beforeHearthKey);
     for (const id of FREEHOLD_ROOM_IDS) {
@@ -2228,7 +2231,7 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
         freeholdRoomsDelta.deedStats +
         freeholdRoomsDelta.heroicDaily,
     ).toBe(beforeHearthKeyBytes - withoutFreeholdRoomsBytes);
-    expect(withoutFreeholdRoomsBytes).toBe(226872);
+    expect(withoutFreeholdRoomsBytes).toBe(227026);
     // Isolate the accepted crafted cohort before checking older catalog baselines.
     const craftedRecipeIds = FURNISHING_RECIPES.map((recipe) => recipe.id);
     const craftedItemIds = [
@@ -2264,9 +2267,9 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
     );
     expect(craftedDelta).toEqual({ knownRecipes: 324, deedStats: 355, reliquary: 576 });
     const beforeCraftedBytes = Buffer.byteLength(JSON.stringify(beforeCrafted), 'utf8');
-    expect(beforeCraftedBytes).toBe(225617);
+    expect(beforeCraftedBytes).toBe(225771);
     expect(withoutFreeholdRoomsBytes - beforeCraftedBytes).toBe(1255);
-    expect(bytes).toBe(227099);
+    expect(bytes).toBe(227253);
     const fixtureBaseline = {
       equipment: 273,
       equipmentInstance: 1593,
@@ -2357,7 +2360,7 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
     ).toBe(444);
     const beforeFurnishingsBytes = Buffer.byteLength(JSON.stringify(withoutFurnishings), 'utf8');
     expect(beforeCraftedBytes - beforeFurnishingsBytes).toBe(632);
-    expect(beforeFurnishingsBytes).toBe(224985);
+    expect(beforeFurnishingsBytes).toBe(225139);
     const withoutFurnishingsAndFieldKit: CharacterState = {
       ...withoutFurnishings,
       deedStats: {
@@ -2371,7 +2374,7 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
       JSON.stringify(withoutFurnishingsAndFieldKit),
       'utf8',
     );
-    expect(beforeHomesteaderBytes).toBe(224973);
+    expect(beforeHomesteaderBytes).toBe(225127);
     const withoutHomesteaderDeeds: CharacterState = {
       ...withoutFurnishingsAndFieldKit,
       deeds: { ...withoutFurnishingsAndFieldKit.deeds },
@@ -2390,8 +2393,8 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
     }
     const historicalBytes = Buffer.byteLength(JSON.stringify(withoutHomesteaderDeeds), 'utf8');
     expect(beforeHomesteaderBytes - historicalBytes).toBe(85);
-    expect(counterfactualBytes).toBe(225605);
-    expect(beforeCraftedBytes).toBe(225617);
+    expect(counterfactualBytes).toBe(225759);
+    expect(beforeCraftedBytes).toBe(225771);
 
     // The one-time hammer recipe/proof content adds against the pre-hammer,
     // field-kit-excluded fixture (156144): the Crucible fixture-repair deltas
@@ -2495,8 +2498,11 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
     // Plus 50 for the two Eastbrook hub practice quests (q_hub_know_your_numbers,
     // q_hub_healing_numbers) joining questsDone in this maximal fixture: 23 and
     // 21 characters as `"<id>",` in the sorted array (26 + 24 bytes), plus the
-    // 71-byte dev-mount delta attributed above, plus 13,496 for the Warfare
-    // Season 2 honor stock (139 item ids across the maximal fixture's
+    // 71-byte dev-mount delta attributed above, plus 154 for the Eastbrook
+    // ferry's round-trip deed (exp_harbor_to_harbor) and its four
+    // ferry:<from>_<to> visit marks (two routes, both ways), earned in this
+    // maximal fixture (the release's own measurement), plus 13,496 for the
+    // Warfare Season 2 honor stock (139 item ids across the maximal fixture's
     // discovered-item and reliquary fields; the release's own measurement,
     // not isolated by a remover, so it rides every absolute figure below).
     // MEASURED, not inferred, same as every other row this equation names.
@@ -2506,6 +2512,7 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
         1548 +
         50 +
         71 +
+        154 +
         13496,
     );
     const forgeBaseline = {
@@ -2529,26 +2536,29 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
       // point: the +50 hub practice quest delta above, on top of the prior +50
       // this row already carried. deedStats +4,648 and reliquary +8,848: the
       // Warfare Season 2 stock's 139 item ids (the 13,496 attributed above).
-    ).toEqual({ questsDone: 100, knownRecipes: 30, deeds: 32, deedStats: 4669, reliquary: 8928 });
+      // deeds +36 and deedStats +118 more for the Eastbrook ferry's round-trip
+      // deed and its four visit marks (the +154).
+    ).toEqual({ questsDone: 100, knownRecipes: 30, deeds: 68, deedStats: 4787, reliquary: 8928 });
     // Removing both packet cohorts, Homesteader, field_kit, the three dev-mount
     // reins and the Bramblehide/Nythgap release rows reproduces the historical
     // baseline: 209,474 at the crafted-content close, 209,524 once the hub
     // training dummy and hub healing dummy PRs landed their two guided practice
     // quests (+50, attributed above; neither dummy nor its NPC touches any
     // other field this fixture tracks), 209,773 once the release's stamina
-    // bake (+249, attributed below) landed, and 223,269 with the Warfare
-    // Season 2 stock (+13,496, the 139 honor item ids attributed above).
+    // bake (+249, attributed below) landed, 223,269 with the Warfare Season 2
+    // stock (+13,496, the 139 honor item ids attributed above), and 223,423
+    // with the Eastbrook ferry's deed and visit marks (+154).
     expect(
       Buffer.byteLength(JSON.stringify(preReleaseCounterfactual), 'utf8'),
       'both branch additions removed, preserves the recorded Crucible+hammer baseline',
-    ).toBe(223269);
+    ).toBe(223423);
     // Packet additions and field_kit removed, retaining the Bramblehide release
-    // content, the hub practice quests, the three dev-mount reins and the
-    // Warfare Season 2 stock: 223,269 + 1,548 + 71 = 224,888.
+    // content, the hub practice quests, the three dev-mount reins, the Warfare
+    // Season 2 stock and the ferry rows: 223,423 + 1,548 + 71 = 225,042.
     expect(
       historicalBytes,
       'packet additions and field_kit removed, retains the Bramblehide release content',
-    ).toBe(224888);
+    ).toBe(225042);
     const priorContent = withoutCrucibleContent(s2);
     const contentDelta = Object.fromEntries(
       (['knownRecipes', 'deedStats', 'reliquary'] as const).map((key) => [
@@ -2606,8 +2616,15 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
     // moves by the same 13,518; the states stripped of it first
     // (preReleaseCounterfactual and the forge-row deltas) move by 13,496 alone.
     // Same standing rule, same 381 width: 226,719..227,100.
-    expect(bytes, reMint).toBeGreaterThan(226719);
-    expect(bytes, reMint).toBeLessThan(227100);
+    // RE-BASED at the Freeholds sync of release/v0.44.0 (09639d4ae9) by the
+    // release's Eastbrook ferry: +154 for the round-trip deed
+    // (exp_harbor_to_harbor, +36 in deeds) and its four ferry visit marks
+    // (+118 in deedStats), the release's own measurement, so 227,099 becomes
+    // 227,253 and every absolute figure in the isolation chain moves by the
+    // same 154 (no remover strips the ferry rows). Same standing rule, same
+    // 381 width: 226,873..227,254.
+    expect(bytes, reMint).toBeGreaterThan(226873);
+    expect(bytes, reMint).toBeLessThan(227254);
 
     // The Crucible database review approved 229,376 bytes (224 KiB), the first
     // 32-KiB step above the corrected 209,261-byte pre-field-kit fixture it was

@@ -1403,7 +1403,14 @@ const ACCEPTED_POLISH_V2_METADATA_SHA256 =
   // merged renderer leaf matches neither parent. No capture was retaken.
   // Re-minted for the Freeholds re-sync of release/v0.44.0 at ed69f62ef7: the merged renderer leaf matches neither parent. No capture was retaken.
   // Re-minted for the Freeholds sync of release/v0.44.0 at 9dbc47938a: the merged renderer leaf matches neither parent. No capture was retaken.
-  '31d23071af830bd316eaaaa72f1af55c3270b505a3e08dc0e5362875629fc437';
+  // Re-minted for the fail-soft prewarm entry runner: runEntry's run, progress and partial remainder moved out of renderer.ts. No capture was retaken.
+  // Re-minted for the cast stand-in slot: the ability-material slot's construction moved out of renderer.ts into cast_vfx_prewarm.ts. No capture was retaken.
+  // Re-minted for PR #4199's shader prewarm merge: the renderer leaf and cast-VFX stand-ins compose in one tree. No capture was retaken.
+  // Re-minted for the v0.44.0 release-line renderer merge. No capture was retaken.
+  // Re-minted for PR #4220 release integration: the candidate stand-in slot and per-family cast gate compose in one tree. No capture was retaken.
+  // Re-minted for the merge of release/v0.44.0 into the Eastbrook ferry branch (PR 4225). No capture was retaken.
+  // Re-minted for the Freeholds sync of release/v0.44.0 at 09639d4ae9: the merged renderer leaf matches neither parent. No capture was retaken.
+  'e35bdf390234eaa5090e754a27090eff1079f42db943d01bd2a367db9f71e249';
 const ACCEPTED_POLISH_V2_COMPOSITE_PROVENANCE =
   // Re-minted for the Frame Rate Limit: the renderer leaf gained the chosen-cadence feeds (frame load readings, governor signals). No capture was retaken.
   // Re-minted for the Eastbrook handoff merge with release/v0.43.0: the merged renderer leaf and the moved NPC layout match neither parent. No capture was retaken.
@@ -1430,7 +1437,14 @@ const ACCEPTED_POLISH_V2_COMPOSITE_PROVENANCE =
   // merged renderer leaf matches neither parent. No capture was retaken.
   // Re-minted for the Freeholds re-sync of release/v0.44.0 at ed69f62ef7: the merged renderer leaf matches neither parent. No capture was retaken.
   // Re-minted for the Freeholds sync of release/v0.44.0 at 9dbc47938a: the merged renderer leaf matches neither parent. No capture was retaken.
-  '8ce6b2303609141a66b2fff48e9a40fa6c7f4c6b23c0d705646386b770749aa8';
+  // Re-minted for the fail-soft prewarm entry runner: runEntry's run, progress and partial remainder moved out of renderer.ts. No capture was retaken.
+  // Re-minted for the cast stand-in slot: the ability-material slot's construction moved out of renderer.ts into cast_vfx_prewarm.ts. No capture was retaken.
+  // Re-minted for PR #4199's shader prewarm merge: the renderer leaf and cast-VFX stand-ins compose in one tree. No capture was retaken.
+  // Re-minted for the v0.44.0 release-line renderer merge. No capture was retaken.
+  // Re-minted for PR #4220 release integration: the candidate stand-in slot and per-family cast gate compose in one tree. No capture was retaken.
+  // Re-minted for the merge of release/v0.44.0 into the Eastbrook ferry branch (PR 4225). No capture was retaken.
+  // Re-minted for the Freeholds sync of release/v0.44.0 at 09639d4ae9: the merged renderer leaf matches neither parent. No capture was retaken.
+  'd4249576ccbe707b17d41627b0d7d4b1acdae8cb9ab82b8e21e518ea75c34ecf';
 const ACCEPTED_POLISH_V2_METADATA = readJsonFile<CaptureMetadata>(ACCEPTED_POLISH_V2_METADATA_PATH);
 const ACCEPTED_POLISH_V2_PROVENANCE = ACCEPTED_POLISH_V2_METADATA.polishProvenance;
 const ACCEPTED_POLISH_V2_TOWN_CONTRACT = ACCEPTED_POLISH_V2_METADATA.records[0]?.townContract;
@@ -2833,7 +2847,19 @@ describe('Eastbrook polish performance and contact evidence', () => {
       // over the re-swept evidence. No capture was retaken.
       // Freeholds sync of release/v0.44.0 at 9dbc47938a: recomputed LAST again
       // over the re-swept evidence. No capture was retaken.
-    ).toBe('84e71f9624e94872c8e303e5de497eb762ef6ab1e554f81830c6ab0234be9e7b');
+      // fail-soft prewarm entry runner: recomputed LAST again over the re-swept
+      // evidence. No capture was retaken.
+      // cast stand-in slot: recomputed LAST again over the re-swept evidence. No
+      // capture was retaken.
+      // PR #4199 shader prewarm merge: recomputed LAST again over the
+      // re-swept evidence. No capture was retaken.
+      // PR #4220 release integration: recomputed LAST again over the
+      // re-swept evidence. No capture was retaken.
+      // release/v0.44.0 merge into the Eastbrook ferry branch (PR 4225): recomputed LAST
+      // again over the re-swept evidence. No capture was retaken.
+      // Freeholds sync of release/v0.44.0 at 09639d4ae9: recomputed LAST again
+      // over the re-swept evidence. No capture was retaken.
+    ).toBe('2bb886a9136c73b8f7df5d561260bd8bea69da158af0f92a0d9c94c407b43eeb');
   });
 
   it('binds every historical after record to its accepted source and asset provenance', () => {

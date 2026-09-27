@@ -54,6 +54,7 @@
 //   reliquary.ts        IWorldReliquary      sparse firstFind / marks / recent + pure completion
 //   housing.ts          IWorldHousing        the caller's own freehold + the layout of the one
 //                                            they stand in (null mirrors) + the ten dark commands
+//   transport.ts        IWorldTransport      the scheduled ferry's phase, ship pose, passenger bit
 //   world_pvp.ts        IWorldWorldPvp       the /pvp flag: self readout + raise/lower command
 //
 // THREE GATES pin this seam (run before any facet edit; the literal counts are
@@ -101,6 +102,7 @@ import type { IWorldTalents } from './world_api/talents';
 import type { IWorldTargeting } from './world_api/targeting';
 import type { IWorldTelemetry } from './world_api/telemetry';
 import type { IWorldTrade } from './world_api/trade';
+import type { IWorldTransport } from './world_api/transport';
 import type { IWorldWorldPvp } from './world_api/world_pvp';
 
 // --- pass-through sim re-exports: downstream imports these FROM world_api ---
@@ -215,7 +217,12 @@ export type {
 // there. A bump moves this constant, scripts/lib/world_auth.mjs and its
 // .d.mts, tests/bank_wire_epoch.test.ts, and tests/world_auth_scripts.test.ts
 // together.
-export const ONLINE_WORLD_LAYOUT_VERSION = 29 as const;
+// 30 = The Eastbrook ferry sails a timetable (src/sim/transport_ferry.ts): its
+// deck now exists only at the berth where it lies docked, a second berth and a
+// boarding stage stand at Wickharbor, and the snapshot carries the ferry
+// passenger bit. An epoch-29 client would draw the ship moored at Eastbrook
+// and predict a deck the server has sailed away, so it must fail closed.
+export const ONLINE_WORLD_LAYOUT_VERSION = 30 as const;
 export const ONLINE_WORLD_AUTH_TYPE = `auth-world-${ONLINE_WORLD_LAYOUT_VERSION}` as const;
 // The one wire literal both sides emit for a layout-epoch mismatch. The server
 // rejects with it, the client synthesizes it for pre-epoch servers, and the UI
@@ -392,6 +399,7 @@ export type {
   GuildPledgeInfo,
   GuildPledgeSettings,
   GuildRank,
+  GuildRankDef,
   MyPledgeInfo,
   PresenceStatus,
   SocialInfo,
@@ -399,6 +407,7 @@ export type {
   WhoRosterInfo,
 } from './world_api/social_graph';
 export type { TradeInfo, TradeOffer } from './world_api/trade';
+export type { TransportFerryView } from './world_api/transport';
 export type {
   HillInfo,
   HillPhaseInfo,
@@ -446,6 +455,7 @@ export interface IWorld
     IWorldMounts,
     IWorldFarming,
     IWorldHousing,
+    IWorldTransport,
     IWorldWorldPvp {}
 
 // ---------------------------------------------------------------------------
@@ -588,6 +598,9 @@ export const COMMAND_NAMES = [
   'market_sweep',
   'market_cancel',
   'market_collect',
+  'market_order_place',
+  'market_order_fill',
+  'market_order_cancel',
   'dev_level',
   'dev_teleport',
   'dev_give',
@@ -878,6 +891,9 @@ export const COMMAND_NAMES = [
   // World PvP: raise or lower the /pvp flag (IWorldWorldPvp.setWorldPvpFlag;
   // the bare /pvp chat line toggles through the sim's own chat router).
   'pvp_flag',
+  // Guild custom ranks (docs/prd/guild-custom-ranks.md): the Guild Master
+  // replaces the guild's rank ladder (titles, order, permissions).
+  'guild_set_ranks',
 ] as const;
 
 // The union both the send path (`online.ts`) and the dispatch switch
@@ -1123,6 +1139,7 @@ export const COMMAND_FACETS = {
   guild_set_motd: 'IWorldSocialGraph',
   guild_buy_roster_page: 'IWorldSocialGraph',
   who: 'IWorldSocialGraph',
+  guild_set_ranks: 'IWorldSocialGraph',
   // IWorldMarket: World Market browse/list/buy/cancel/collect (snake_case wire
   // strings, by design). marketInfo is a snapshot read (no send, untagged).
   market_search: 'IWorldMarket',
@@ -1135,6 +1152,9 @@ export const COMMAND_FACETS = {
   market_sweep: 'IWorldMarket',
   market_cancel: 'IWorldMarket',
   market_collect: 'IWorldMarket',
+  market_order_place: 'IWorldMarket',
+  market_order_fill: 'IWorldMarket',
+  market_order_cancel: 'IWorldMarket',
   // IWorldMail: Ravenpost letters (snake_case wire strings, by design). mailInfo /
   // mailUnread are snapshot reads (no send, untagged).
   mail_send: 'IWorldMail',

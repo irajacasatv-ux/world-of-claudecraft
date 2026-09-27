@@ -483,12 +483,13 @@ describe('Book of Deeds webp icons', () => {
     // release-owned castle, bank, tutorial, and Crucible rows on fallback art
     // (which also carry the release-side additions, including the Roots'
     // Bramblehide collection crest from roots-bramblehide-icons-2026-09-07).
-    // The self-crafted hammer's hidden celebration adds one explicit pending crest.
+    // The self-crafted hammer's hidden celebration adds one explicit pending crest,
+    // and the Eastbrook ferry's round trip (exp_harbor_to_harbor) one more.
     // Both Freehold crests and the release's Bramblehide crest are painted.
-    expect(DEED_ORDER, 'the merged live deed catalog').toHaveLength(302);
+    expect(DEED_ORDER, 'the merged live deed catalog').toHaveLength(303);
     expect(DEED_IMAGE_IDS.size, 'every live deed but the pending set is painted').toBe(291);
-    expect(DEED_ART_PENDING_IDS).toHaveLength(11);
-    expect(DEED_ART_PENDING_IDS.at(-1)).toBe('hid_forgebreaker');
+    expect(DEED_ART_PENDING_IDS).toHaveLength(12);
+    expect(DEED_ART_PENDING_IDS.at(-1)).toBe('exp_harbor_to_harbor');
     expect(DEED_ORDER.length - DEED_IMAGE_IDS.size).toBe(DEED_ART_PENDING_IDS.length);
     for (const id of artless) {
       const catCrestId = deedCrestId(id, DEEDS[id].category);
