@@ -29,7 +29,7 @@ const config = ts.createSourceFile(
   true,
 );
 
-function defineConfigObject(): ts.ObjectLiteralExpression {
+function defineConfigObject(source: ts.SourceFile = config): ts.ObjectLiteralExpression {
   let found: ts.ObjectLiteralExpression | undefined;
   const visit = (node: ts.Node): void => {
     if (
@@ -45,7 +45,7 @@ function defineConfigObject(): ts.ObjectLiteralExpression {
     }
     ts.forEachChild(node, visit);
   };
-  visit(config);
+  visit(source);
   if (!found) throw new Error('vite.config.ts: no defineConfig({ ... }) object literal found');
   return found;
 }
@@ -59,21 +59,29 @@ function propertyValue(obj: ts.ObjectLiteralExpression, name: string): ts.Expres
   throw new Error(`vite.config.ts: property "${name}" not found`);
 }
 
-// The one computed element an array may hold, as exact source text (whitespace
-// ignored): the local lane scope in test.exclude (scripts/lib/lane_suite_scope.mjs),
-// whose output is only ever CI_LONG_SUITES test files (pinned below). Any other
-// non-literal element still throws, so an agent directory can never hide behind one.
+// The one computed element an array may hold, as exact source text (whitespace and
+// the trailing commas a formatter's wrap adds are ignored; a comment is not): the local
+// lane scope in test.exclude, whose function is pinned to scripts/lib/lane_suite_scope.mjs
+// and whose output is only ever CI_LONG_SUITES test files (both pinned below). Any other
+// non-literal element throws, so an agent directory can never hide behind one.
 const LANE_SCOPE_SPREAD =
   '...(process.env.VITEST?localLaneExclusions({env:process.env,argv:process.argv}):[])';
-const admittedSpreads: string[] = [];
+const spreadText = (element: ts.Node, source: ts.SourceFile): string =>
+  element
+    .getText(source)
+    .replace(/\s+/g, '')
+    .replace(/,(?=[)\]}])/g, '');
 
 // Reads a string[] at a dotted path under defineConfig({ ... }). Parsed from the AST
 // rather than imported: vite.config.ts sits outside tsconfig `include` on purpose (it
 // imports untyped scripts/*.mjs helpers), so importing it here would drag it into the
 // type-checked program.
-function stringArrayAt(path: string): string[] {
+function stringArrayAt(
+  path: string,
+  source: ts.SourceFile = config,
+): { strings: string[]; spreads: string[] } {
   const segments = path.split('.');
-  let node: ts.Expression = defineConfigObject();
+  let node: ts.Expression = defineConfigObject(source);
   for (const segment of segments) {
     if (!ts.isObjectLiteralExpression(node)) {
       throw new Error(`vite.config.ts: "${path}" traverses a non-object at "${segment}"`);
@@ -82,29 +90,46 @@ function stringArrayAt(path: string): string[] {
   }
   if (!ts.isArrayLiteralExpression(node)) throw new Error(`vite.config.ts: "${path}" is not array`);
   const strings: string[] = [];
+  const spreads: string[] = [];
   for (const element of node.elements) {
     if (ts.isStringLiteral(element)) {
       strings.push(element.text);
       continue;
     }
-    const text = element.getText(config).replace(/\s+/g, '');
+    const text = spreadText(element, source);
     if (path === 'test.exclude' && ts.isSpreadElement(element) && text === LANE_SCOPE_SPREAD) {
-      admittedSpreads.push(text);
+      spreads.push(text);
       continue;
     }
     throw new Error(`vite.config.ts: "${path}" holds a non-literal element`);
   }
-  return strings;
+  return { strings, spreads };
 }
+
+const identifierSites = (name: string): ts.Node[] => {
+  const sites: ts.Node[] = [];
+  const visit = (node: ts.Node): void => {
+    if (ts.isIdentifier(node) && node.text === name) sites.push(node);
+    ts.forEachChild(node, visit);
+  };
+  visit(config);
+  return sites;
+};
+const importDeclarationOf = (specifier: ts.Node | undefined): ts.ImportDeclaration => {
+  // ImportSpecifier -> NamedImports -> ImportClause -> ImportDeclaration.
+  const decl = specifier?.parent.parent.parent.parent;
+  if (!decl || !ts.isImportDeclaration(decl)) throw new Error('not an import specifier');
+  return decl;
+};
 
 // '**/.claude/**' and 'tmp/**' both name one directory; anything else returns undefined
 // so a future non-directory pattern cannot be silently read as a directory name.
 const DIRECTORY_GLOB = /^(?:\*\*\/)?([^*/]+)\/\*\*$/;
 const directoryOf = (glob: string): string | undefined => DIRECTORY_GLOB.exec(glob)?.[1];
 
-const watchIgnored = stringArrayAt('server.watch.ignored');
+const { strings: watchIgnored } = stringArrayAt('server.watch.ignored');
 const watchIgnoredDirs = watchIgnored.map(directoryOf).filter((dir) => dir !== undefined);
-const testExcluded = stringArrayAt('test.exclude');
+const { strings: testExcluded, spreads: testExcludeSpreads } = stringArrayAt('test.exclude');
 const testExcludedDirs = testExcluded.map(directoryOf).filter((dir) => dir !== undefined);
 
 describe('vite dev-server watch ignore list', () => {
@@ -133,11 +158,49 @@ describe('vite dev-server watch ignore list', () => {
   });
 
   it('admits only the lane scope as a computed test.exclude element, and it names test files', () => {
-    expect(admittedSpreads).toEqual([LANE_SCOPE_SPREAD]);
+    expect(testExcludeSpreads).toEqual([LANE_SCOPE_SPREAD]);
     // What the spread can add: lane files only, each one a test file under tests/, so
     // no directory glob, and no agent directory, can arrive through it.
     expect(CI_LONG_SUITES.length).toBeGreaterThan(0);
     for (const file of CI_LONG_SUITES) expect(file).toMatch(/^tests\/[\w/]+\.test\.ts$/);
+  });
+
+  it('names the lane scope only at its import from lane_suite_scope.mjs and that spread', () => {
+    const sites = identifierSites('localLaneExclusions');
+    expect(sites).toHaveLength(2);
+    const [imported, called] = sites;
+    // Imported under its own name (no alias), from the module that owns the rules.
+    expect(imported && ts.isImportSpecifier(imported.parent)).toBe(true);
+    expect(imported && ts.isImportSpecifier(imported.parent) && imported.parent.propertyName).toBe(
+      undefined,
+    );
+    expect(importDeclarationOf(imported).moduleSpecifier.getText(config)).toBe(
+      "'./scripts/lib/lane_suite_scope.mjs'",
+    );
+    expect(called && ts.isCallExpression(called.parent)).toBe(true);
+  });
+
+  it('admits that spread only in test.exclude, and never with a comment inside it', () => {
+    const synthetic = (text: string) =>
+      ts.createSourceFile('synthetic.ts', text, ts.ScriptTarget.Latest, true);
+    const spread =
+      '...(process.env.VITEST ? localLaneExclusions({ env: process.env, argv: process.argv }) : [])';
+    // Positive control: in test.exclude, and wrapped the way a formatter would wrap it.
+    const wrapped = synthetic(
+      `defineConfig({ test: { exclude: ['tmp/**', ...(process.env.VITEST\n  ? localLaneExclusions({\n      env: process.env,\n      argv: process.argv,\n    })\n  : []),] } })`,
+    );
+    expect(stringArrayAt('test.exclude', wrapped)).toEqual({
+      strings: ['tmp/**'],
+      spreads: [LANE_SCOPE_SPREAD],
+    });
+    const watch = synthetic(
+      `defineConfig({ server: { watch: { ignored: ['**/tmp/**', ${spread}] } } })`,
+    );
+    expect(() => stringArrayAt('server.watch.ignored', watch)).toThrow(/non-literal/);
+    const commented = synthetic(
+      `defineConfig({ test: { exclude: [${spread.replace('argv: process.argv', 'argv: process.argv /* x */')}] } })`,
+    );
+    expect(() => stringArrayAt('test.exclude', commented)).toThrow(/non-literal/);
   });
 
   it('keeps vitest agent-directory excludes root-relative for linked worktrees', () => {
@@ -191,21 +254,6 @@ describe('vite dev-server freehold dev authorization admission', () => {
   const mentions = (node: ts.Node): boolean =>
     node.getText(config).includes('freeholdDevAuthorizationPlugin');
   const admissions = plugins.elements.filter(mentions);
-  const identifierSites = (name: string): ts.Node[] => {
-    const sites: ts.Node[] = [];
-    const visit = (node: ts.Node): void => {
-      if (ts.isIdentifier(node) && node.text === name) sites.push(node);
-      ts.forEachChild(node, visit);
-    };
-    visit(config);
-    return sites;
-  };
-  const importDeclarationOf = (specifier: ts.Node | undefined): ts.ImportDeclaration => {
-    // ImportSpecifier -> NamedImports -> ImportClause -> ImportDeclaration.
-    const decl = specifier?.parent.parent.parent.parent;
-    if (!decl || !ts.isImportDeclaration(decl)) throw new Error('not an import specifier');
-    return decl;
-  };
 
   it('admits the plugin through exactly one conditional spread inside plugins', () => {
     expect(admissions).toHaveLength(1);
