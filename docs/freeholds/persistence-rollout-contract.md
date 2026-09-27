@@ -708,21 +708,25 @@ encoded a rule that a record carrying a REAL plot name goes backwards onto the
 row deliberately. That rule is RETIRED rather than dropped: a live revision
 below the entry's last committed one means the live record is not the record
 that commit came from, since every install a rejoin is offered carries at least
-the committed revision (with one known hole, the twelfth path: an answer read
-before another session edited and was evicted carries an older house, which the
-store's next write carries while that session's capture is still unwritten
-(silently, unless the entry knows a commit above the stale revision, from that
-session or an earlier one: then the seal refuses it below that commit and the
-leaver's later edits are lost loudly, and a joiner who brings it up to that
-commit first has it written silently), and which, once that capture has
-committed, is refused only by a write that samples it strictly below the
-committed revision; see the findings ledger's harness-fidelity section) and
-every sanctioned mutator only increments, and writing it would walk the
-client-facing wire counter backwards permanently, which is the exact harm the
-loader's own `wire_rev_shape` hold refuses on the read side. What it newly
-refuses is a superseded leave capture offered to a rejoin as the install source:
-refusing loses nothing, the row survives, and it books a write failure and
-quiesces an entry that is about to be collected anyway.
+the committed revision (the twelfth path, an answer read before another session
+of the account edited and was evicted, was the one known hole in that premise,
+and ruling (b) closed it on 2026-09-26: the join installs the store's answer at
+install time, the loaded entry's with any capture, or a durable re-read when the
+entry was collected, and installs no record at all when nothing can vouch for
+the answer, so the stand-in meets the name comparison; see the findings ledger,
+RULING (B) FOR THE TWELFTH PATH) and every sanctioned mutator only increments,
+and writing it would walk the client-facing wire counter backwards permanently,
+which is the exact harm the loader's own `wire_rev_shape` hold refuses on the
+read side. What it newly refuses is a superseded leave capture offered to a
+rejoin as the install source: refusing loses nothing, the row survives, and it
+books a write failure and quiesces an entry that is about to be collected
+anyway. What ruling (b) leaves write-blocked, never lost (an entry is collected
+only when it owes no work, so no capture outlives it): a durable re-ask refused
+on capacity after the entry was collected, refused at the seal, loudly, except a
+`cap_full` refusal, which stays held with no seal line and shows only as its
+kind; and the WITHHELD race, an entry collected between the re-ask and the
+install, which warns `join answer withheld` and is then refused the same loud
+way.
 
 OFFLINE AND HEADLESS PLOT IDENTITY: THE DIVERGENCE IS ACCEPTED AND DOCUMENTED.
 Online records now answer to a unique minted identity from their first session.

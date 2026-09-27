@@ -23,39 +23,29 @@ this release has is an operator watching the `held` gauge.
 Every capacity item in section 8a makes a hold more reachable, so this and they
 are one obligation.
 
-THE SAME EMPTY HOUSE WITH NO HOLD AT ALL, and a worse loss, added 2026-09-25. A
-join that lands just after the same account's previous session was evicted (a
-quick relog onto another character while the old leave is slow, or a linkdead
-session's grace expiring while a new handshake is in flight) installs nothing,
-because its answer was read beside the old record, and `addPlayer` seeds the
-same empty default. The store then refuses that record at the seal or the insert
-refusal and quiesces the entry: no `kind` is booked, so a surface keyed on the
-hold kinds alone never sees this group. THE PREMISE ABOVE DOES NOT HOLD FOR IT:
-a leave capture still waiting to be written when the join lands is released
-unwritten, so the leaver's last edits reach no row, and for an account whose
-first insert had not landed there is no row at all and the whole first house is
-gone. Copy that carries the hold's premise, that the real row sits intact on
-disk, would be false here. The surface owes this group too, keyed on the entry
-being write-blocked rather than on a hold, and a ruling on recovering the
-capture is owed first (the ledger's harness-fidelity section has the order, the
-cost and the ruling).
-
-THE SAME GROUP SEES AN OLDER HOUSE TOO, not only the empty default. The seal
-also refuses, with no hold, a record installed from an answer that went stale
-during the handshake (another session of the account edited and left inside it),
-and a superseded leave capture offered to a rejoin as the install source. When
-the store already knows a commit above that stale house (the leaving session's
-own save, or an earlier session's), refusing it also loses the leaving session's
-later edits, so here too the real row is not the house the leaving player last
-saw. Those players see an older house, write-blocked, so copy that assumes an
-empty house would be as wrong as copy that assumes an intact one. Some orders of
-the stale answer are refused by nothing and write silently (the twelfth path);
-no surface can see those, and the ruling owed on it decides whether any remain.
-A HELD login (on capacity or a thrown read) that joins after the same account's
-other session was evicted loses that session's unwritten capture the same way,
-loudly: the held player sees the empty default the hold already explains, and
-the leaver's last edits are gone, which copy built only on the hold kind would
-not say.
+THE SAME EMPTY HOUSE WITH NO HOLD AT ALL, added 2026-09-25 and narrowed
+2026-09-26. A join that lands just after the same account's previous session was
+evicted (a quick relog onto another character while the old leave is slow, or a
+linkdead session's grace expiring while a new handshake is in flight) used to
+install nothing, or an older house, and lose the leaver's unwritten capture.
+Ruling (b) closed that (the ledger, RULING (B) FOR THE TWELFTH PATH): the
+handshake asks the store again after the character read, and the join installs
+the store's answer at install time, the capture included, so those players see
+the leaver's house and can write. TWO ORDERS STILL SEAT the empty default, and
+both keep the premise above, that the real row sits intact on disk, because an
+entry is collected only when it owes no work, so no capture exists to lose. A
+durable re-ask refused on capacity after the previous entry was collected is a
+HELD login in the sense above (its answer carries the capacity kind), with one
+twist for the surface: retain's repair reload then loads the entry, so the
+entry's hold is gone while the session stays write-blocked, its first write
+refused at the seal, loudly (a `cap_full` refusal is the exception: the reload
+meets the same full cap, so the entry stays unloaded and held, with no seal
+line). The surface therefore keys this group on the hold the join installed, not
+on the entry's hold at the time it paints. The WITHHELD race, an entry collected
+between the re-ask and the install, books no hold kind at all: a
+`join answer withheld` warning, then the same loud refusal. The surface owes
+that group too, keyed on the entry being write-blocked rather than on a hold,
+and its copy can say the house is safe on disk, because here it is.
 
 ## The rule this design is built under
 

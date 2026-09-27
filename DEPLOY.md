@@ -851,25 +851,26 @@ For off-box safety, sync the directory to S3 occasionally:
   `write_failures` counts every other refused or failed write: a missing or
   conflicting row, the write seal, the unnamed-insert refusal, the
   writable-implies-readable refusal, a write that got no background permit, and
-  each write that threw or could not be queued. The seal and the insert refusal
-  also fire, with no `held` entry at all, when a login's join lands just after
-  the same account's previous session was evicted (a quick relog onto another
+  each write that threw or could not be queued. A join that lands just after the
+  same account's previous session was evicted (a quick relog onto another
   character while the old leave is slow, or a linkdead session's grace expiring
-  while a new handshake is in flight): that session plays on the empty default,
-  write-blocked until it logs out, AND a leave capture still waiting to be
-  written when it joined is released unwritten, so the leaver's last edits reach
-  no row (for an account whose first insert had not landed, that is the whole
-  house). The seal also refuses, again with no `held` entry, a record installed
-  from an answer that went stale during the handshake (another session of the
-  account edited and left inside it) and a superseded leave capture offered to a
-  rejoin: that player sees an OLDER house (for a fresh account, the empty
-  default under its own name). A login held on capacity or on a thrown read
-  that joins after the same account's other session was evicted likewise
-  releases that session's unwritten capture, refused loudly, as does a stale
-  answer below a commit the store already knows (that session's own save or an
-  earlier session's). And some orders of the stale answer write with NO refusal
-  and no counter at all (the findings ledger's twelfth path, a ruling owed), so
-  a flat `quiesced` is not proof that no house was lost. `held` counts
+  while a new handshake is in flight) no longer plays on the empty default: the
+  handshake asks the store again after the character read, and the join installs
+  the store's answer at install time, a leave capture still waiting to be written
+  included, so the leaver's last edits reach the row (the findings ledger, RULING
+  (B) FOR THE TWELFTH PATH). TWO ORDERS STILL WRITE-BLOCK a session with no `held`
+  entry for it, and neither loses anything, because an entry is collected only
+  when it owes no work, so once it is gone the row already holds every edit and no
+  capture exists to drop. A durable re-ask refused on capacity after the previous
+  entry was collected installs no record, and the session's first write is refused
+  at the seal, loudly (`quiesced`, and a `write refused (identity)` line); a
+  `cap_full` refusal is the exception, since the join's own re-read meets the same
+  full cap, so the entry stays unloaded and held with no seal line, and it shows
+  only as `cap_full` in `woc_freehold_load_failures_total`, once per refused read.
+  And the WITHHELD race, an entry collected between the re-ask and the install,
+  installs no record either: a `join answer withheld` warning, then the same loud
+  refusal. A `quiesced` rise from either order is a write-blocked session, never a
+  lost house. `held` counts
   entries under ANY recovery hold, DATA or CAPACITY: read
   `woc_freehold_load_failures_total` by `kind` to tell a row this build cannot
   read from a login storm that filled the admission cap. TWO CAVEATS on reading

@@ -157,15 +157,17 @@ the budget: three of the last ten rounds turned a "cannot be reached" into a liv
   only a stand-in-named record is refused on a regressed revision.
   THIS RULING IS RETIRED at the rulings round, and it is the one the list above asked a
   later reader to try to break. Un-gating `revisionRegressed` reverses it, and it should
-  be reversed: a live revision below the entry's last committed one means the live
-  record is not the record that commit came from, since every install a rejoin is
-  offered carries at least the committed revision (bar one known hole found 2026-09-25,
-  the twelfth path: an answer read before another session edited and was evicted carries
-  an older house; see the findings ledger's harness-fidelity section) and every
-  sanctioned mutator only increments, and writing it walks the client-facing wire
-  counter backwards permanently, which is exactly the harm the loader's own
-  `wire_rev_shape` hold refuses on the read side. Two behaviour pins encoded the old
-  rule and both flipped.
+  be reversed: a live revision below the entry's last committed one means the live record
+  is not the record that commit came from, since every install a rejoin is offered carries
+  at least the committed revision (the one known hole, the twelfth path found 2026-09-25,
+  an answer read before another session edited and was evicted, was closed by ruling (b)
+  on 2026-09-26: the join installs the store's answer at install time; see the findings
+  ledger, RULING (B) FOR THE TWELFTH PATH) and every sanctioned mutator only increments,
+  and writing it walks the client-facing wire counter backwards permanently, which is
+  exactly the harm the loader's own `wire_rev_shape` hold refuses on the read side. Two
+  behaviour pins encoded the old rule and both flipped. What ruling (b) leaves
+  write-blocked, never lost: a durable re-ask refused on capacity (loud at the seal;
+  `cap_full` quiet there but counted by kind) and the WITHHELD race (loud).
 
 ### Starter Prompt
 ```
