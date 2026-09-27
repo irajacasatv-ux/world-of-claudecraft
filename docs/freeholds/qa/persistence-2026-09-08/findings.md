@@ -4457,3 +4457,36 @@ browser suite 541 of 541, typecheck and every build.
 - The Ignivar herald GLB hashes the lockfile but is outside the re-mint tool and unpinned
   (pre-existing; its stamp is stale after the two lockfile moves).
 - Filing the @vitest/spy issue upstream (drafted; Fernando's call).
+
+## PART 3, UNUSED ASSETS AND TEST NECESSITY, 2026-09-27
+
+### THE RULINGS (Fernando, 2026-09-27), RECORDED VERBATIM
+
+After Part 2's report: "keep going this is fantastic. also, make sure all fhe screenshot ones we
+take are actually necessary and helping the project. same with the ones that check the glb's
+and all that. those seem kind of ridiculous. im not even sure if the glbs we test for are being
+used."
+
+Then: "if you find anything that isnt used at all, llease delete it."
+
+Read together: the HUD-import extraction offered at Part 2's close proceeds; every screenshot
+and GLB test is judged on whether it catches a real regression; and anything with no use at
+all (no runtime, tool, test or live-data reference) is deleted, each deletion with its evidence.
+A GLB still offered in the editor palette is NOT provably unused from the repo alone: editor
+maps are stored on the live server (`maps.doc->'placements'[].assetId`), so a player's map may
+place one. Those wait on a production read.
+
+### THE AUDIT (four read-only investigators, 2026-09-27)
+
+- GLBs: 1,416 under `public/`; 805 load at runtime, 114 are named only by build tooling, 497
+  have no reference but the two generated directory listings (the media manifest and the
+  editor palette). Seven of the 497 are outside the palette (a stale generated catalogue), so
+  no map can place them.
+- GLB tests: the lockfile and `package.json` fingerprint inputs attest nothing (the re-mint tool
+  swaps the hash without rebuilding), the Eastbrook polish seals re-seal frozen screenshots over
+  whatever changed, and exact byte pins repeat CI's manifest freshness check.
+- Screenshots: no test compares a committed screenshot with a fresh render; about 1.47 GB of
+  the corpus is referenced by nothing; six browser suites rewrite 21 tracked PNGs on every run;
+  this branch's own `tests/freehold_capture_contract.test.ts` hashes 67 live source files.
+- HUD imports: 49 runtime importers can drop `src/ui/hud` (about 658 MiB retained each) through
+  nine extraction batches.
