@@ -107,7 +107,9 @@ describe('Eastbrook world-quest caravan', () => {
       ambushes: [
         { atWaypoint: 2, mobId: 'vale_bandit', count: 3, level: 5, radius: 6 },
         { atWaypoint: 5, mobId: 'vale_bandit', count: 4, level: 5, radius: 7 },
-        { atWaypoint: 8, mobId: 'vale_bandit', count: 5, level: 5, radius: 8 },
+        // Moved from waypoint 8 by the Freehold Gate ruling G8 (2026-09-27):
+        // tests/freehold_gate_clearance.test.ts holds every ring off the arch.
+        { atWaypoint: 6, mobId: 'vale_bandit', count: 5, level: 5, radius: 8 },
       ],
       creditRadius: 35,
     });

@@ -29,12 +29,14 @@ import {
   ESCORTS,
   GATHER_NODES,
   instanceOrigin,
+  MOBS,
   NPCS,
   PORTALS,
   PROPS,
   zoneAt,
 } from '../src/sim/data';
 import { distancePointToObb, EASTBROOK_LAYOUT } from '../src/sim/eastbrook_layout';
+import { ESCORT_AMBUSH_RADIUS, ESCORT_ARRIVE_RANGE } from '../src/sim/escort';
 import {
   FREEHOLD_GATE_INTERACT_RANGE,
   FREEHOLD_GATE_TEMPLATE_ID,
@@ -51,6 +53,14 @@ import { collidersWithin, pushOutReach } from './helpers/collider_gap';
 type P = { x: number; z: number };
 const GATE = EASTBROOK_LAYOUT.services.freeholdGate.position;
 const dist = (a: P, b: P) => Math.hypot(a.x - b.x, a.z - b.z);
+// The distance from a point to the segment a..b.
+const segmentDistance = (at: P, a: P, b: P) => {
+  const vx = b.x - a.x;
+  const vz = b.z - a.z;
+  const ll = vx * vx + vz * vz;
+  const t = ll ? Math.max(0, Math.min(1, ((at.x - a.x) * vx + (at.z - a.z) * vz) / ll)) : 0;
+  return Math.hypot(at.x - (a.x + vx * t), at.z - (a.z + vz * t));
+};
 // Each rung's reach as the ladder measures it: an NPC or delve object under
 // INTERACT_RANGE + 1, a node under INTERACT_RANGE, a bed within it, an object
 // within its own objectInteractionRange. The gate reaches its range inclusive.
@@ -59,6 +69,10 @@ const BED_OR_NODE_CLEARANCE = FREEHOLD_GATE_INTERACT_RANGE + INTERACT_RANGE;
 // An escortee answers the press anywhere within INTERACT_RANGE of it while it
 // stands within ESCORT_POST_RADIUS of its post (escort_interact.ts).
 const ESCORT_CLEARANCE = FREEHOLD_GATE_INTERACT_RANGE + INTERACT_RANGE + ESCORT_POST_RADIUS;
+// An escort route (and every ambush ring) keeps this far from the arch.
+const ROUTE_CLEARANCE = 12;
+// The collider-free ring round the arch the margins case pins on every seed.
+const ARCH_CLEAR_RING = 3.5;
 const SEEDS = [1, 7, 42, 99, 1032, 1337, WORLD_SEED, 2_147_483_647];
 // Where a leaving player lands: neither room def sets a leaveOffset (the town
 // circle case below proves it per def), so the door inset applies.
@@ -136,7 +150,7 @@ describe('the Freehold Gate site', () => {
     );
     expect(cellEdge).toBeGreaterThanOrEqual(3.6 * Math.SQRT2);
     for (const seed of SEEDS) {
-      expect(isBlocked(seed, GATE.x, GATE.z, 3.5), `seed ${seed}`).toBe(false);
+      expect(isBlocked(seed, GATE.x, GATE.z, ARCH_CLEAR_RING), `seed ${seed}`).toBe(false);
       expect(isBlocked(seed, GATE.x, GATE.z, 3.6), `seed ${seed} at 3.6`).toBe(true);
       const near = collidersWithin(seed, GATE.x, GATE.z, 6);
       const reached = near.filter(({ collider }) => pushOutReach(collider, GATE.x, GATE.z) < 3.6);
@@ -191,40 +205,80 @@ describe('the Freehold Gate site', () => {
     const markers = PROPS.delveMarkers ?? [];
     expect(doors.length * portals.length * markers.length).toBeGreaterThan(0);
     for (const at of [...doors, ...portals, ...markers]) expect(dist(at, GATE)).toBeGreaterThan(15);
-    const segment = (a: P, b: P) => {
-      const vx = b.x - a.x;
-      const vz = b.z - a.z;
-      const ll = vx * vx + vz * vz;
-      const t = ll ? Math.max(0, Math.min(1, ((GATE.x - a.x) * vx + (GATE.z - a.z) * vz) / ll)) : 0;
-      return Math.hypot(GATE.x - (a.x + vx * t), GATE.z - (a.z + vz * t));
-    };
-    // A RULING OWED (state.md premise G8), not a clearance: the release's
-    // Eastbrook freight caravan (world quest wq_eastbrook_caravan, synced at
-    // aaff789813) walks the main street 4.8 yd from the gate at its nearest,
-    // and its third ambush (five level-5 bandits in an 8 yd ring) can land
-    // about a yard from the arch and a few yards from the leave drop. Housing is dark, so no player meets it yet; the phase that
-    // lights housing owes the ruling (move the gate, reroute, or accept). The
-    // named floor keeps the route from closing in further, and every other
-    // route keeps the full 12 yd.
-    const RULING_OWED_FLOOR: Record<string, number> = { esc_wq_eastbrook_caravan: 4.79 };
+    // Escort routes keep ROUTE_CLEARANCE, but one: the Eastbrook freight caravan
+    // (world quest wq_eastbrook_caravan) walks the main street 4.8 yd from the
+    // arch. RULED 2026-09-27 (state.md premise G8): friendly traffic, kept. Its
+    // escortee is never hostile, answers the press only at its post (held over
+    // ESCORT_CLEARANCE by the post case below), and fires no wave near the gate
+    // (the ambush-ring case below), so its route owes only the arch's
+    // collider-free ring (ARCH_CLEAR_RING, the margins case), never a path
+    // through it.
+    const FRIENDLY_TRAFFIC = new Set(['esc_wq_eastbrook_caravan']);
     let segments = 0;
     const nearest = new Map<string, number>();
     for (const escort of Object.values(ESCORTS)) {
       const line = [escort.start, ...escort.waypoints];
       for (let i = 0; i + 1 < line.length; i++) {
         segments++;
-        const d = segment(line[i], line[i + 1]);
+        const d = segmentDistance(GATE, line[i], line[i + 1]);
         nearest.set(escort.id, Math.min(nearest.get(escort.id) ?? Infinity, d));
-        if (!(escort.id in RULING_OWED_FLOOR)) expect(d, escort.id).toBeGreaterThan(12);
+        const need = FRIENDLY_TRAFFIC.has(escort.id) ? ARCH_CLEAR_RING : ROUTE_CLEARANCE;
+        expect(d, escort.id).toBeGreaterThan(need);
       }
     }
-    for (const [id, floor] of Object.entries(RULING_OWED_FLOOR)) {
-      expect(nearest.get(id), id).toBeGreaterThan(floor);
-    }
     expect(segments).toBeGreaterThan(0);
-    // The exception is live: the caravan really does pass inside 12 yd (so the
-    // floor is not a stale entry hiding a route that moved away).
-    expect(nearest.get('esc_wq_eastbrook_caravan')).toBeLessThan(12);
+    for (const id of FRIENDLY_TRAFFIC) {
+      const escort = ESCORTS[id];
+      expect(escort, id).toBeDefined();
+      // The exemption is live (the route really passes inside ROUTE_CLEARANCE,
+      // so it is not a stale entry hiding a route that moved away), and the
+      // walker is the friendly kind: it aggroes nothing and never moves itself.
+      expect(nearest.get(id), id).toBeLessThan(ROUTE_CLEARANCE);
+      expect(MOBS[escort.npcMobId], id).toMatchObject({ aggroRadius: 0, moveSpeed: 0 });
+    }
+  });
+
+  it('keeps every escort ambush ring clear of the arch and of the leave drop', () => {
+    // G8, RULED 2026-09-27 (state.md): no hostile wave lands near the gate. A wave
+    // spawns on an evenly spaced ring round its escortee at the moment the run
+    // counts a waypoint reached (escort.ts fireAmbushes): within
+    // ESCORT_ARRIVE_RANGE of the waypoint, or anywhere on the leg into it when the
+    // stuck arm fires. So a ring's worst case is the leg's nearest point, less the
+    // arrival reach and the ring radius, and it must keep ROUTE_CLEARANCE and the
+    // ambusher's own aggro radius from both the arch and the drop (a wave mob
+    // idles at its spawn point for the tick an evade takes before it re-commits).
+    // Before the ruling the caravan's third wave fired at waypoint 8, whose ring
+    // put two bandits 6.4 yd from the arch and one 5.6 yd from the drop.
+    let rings = 0;
+    let closest = { clearance: Number.POSITIVE_INFINITY, at: '' };
+    for (const escort of Object.values(ESCORTS)) {
+      const line = [escort.start, ...escort.waypoints];
+      for (const ambush of escort.ambushes) {
+        const template = MOBS[ambush.mobId];
+        expect(template, ambush.mobId).toBeDefined();
+        const need = Math.max(ROUTE_CLEARANCE, template.aggroRadius);
+        // line[k + 1] is waypoints[k]; the leg into it starts at line[k].
+        const from = line[ambush.atWaypoint];
+        const to = line[ambush.atWaypoint + 1];
+        expect(to, `${escort.id} wave at ${ambush.atWaypoint}`).toBeDefined();
+        const reach = ESCORT_ARRIVE_RANGE + (ambush.radius ?? ESCORT_AMBUSH_RADIUS);
+        for (const [name, at] of [
+          ['arch', GATE],
+          ['drop', DROP],
+        ] as const) {
+          const clearance = segmentDistance(at, from, to) - reach;
+          const where = `${escort.id} wave at ${ambush.atWaypoint}, ${name}`;
+          expect(clearance, where).toBeGreaterThanOrEqual(need);
+          if (clearance < closest.clearance) closest = { clearance, at: where };
+        }
+        rings++;
+      }
+    }
+    expect(rings).toBeGreaterThan(Object.keys(ESCORTS).length);
+    // Positive control: the bound is live. The nearest ring is the caravan's
+    // third wave, measured 12.93 yd from the arch at its worst.
+    expect(closest.at).toBe('esc_wq_eastbrook_caravan wave at 6, arch');
+    expect(closest.clearance).toBeCloseTo(12.933, 3);
   });
 
   it('keeps the gate, the live leave and the saved-inside rejoin inside the Eastbrook town circle', () => {

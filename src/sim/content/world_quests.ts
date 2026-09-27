@@ -121,7 +121,10 @@ export const WORLD_QUEST_ESCORTS: Record<string, EscortDef> = {
     ambushes: [
       { atWaypoint: 2, mobId: 'vale_bandit', count: 3, level: 5, radius: 6 },
       { atWaypoint: 5, mobId: 'vale_bandit', count: 4, level: 5, radius: 7 },
-      { atWaypoint: 8, mobId: 'vale_bandit', count: 5, level: 5, radius: 8 },
+      // Waypoint 6, not 8: the last leg passes the Freehold Gate, and a ring
+      // fired at 8 put bandits a few yards from its arch and leave drop (G8,
+      // ruled 2026-09-27; tests/freehold_gate_clearance.test.ts pins every ring).
+      { atWaypoint: 6, mobId: 'vale_bandit', count: 5, level: 5, radius: 8 },
     ],
     creditRadius: 35,
     respawnSeconds: 30,
