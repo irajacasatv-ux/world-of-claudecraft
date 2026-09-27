@@ -1,6 +1,5 @@
 // Loader and template cache for the Ignivar raid dressing props (the baked
-// ignivar_prop_*.glb set under models/dungeon). Follows the
-// varkhul_grand_forge adapter shape, generalized over the whole drop: every
+// ignivar_prop_*.glb set under models/dungeon). Every
 // prop loads once, bakes to ONE canonical shared geometry + material
 // (long axis on X, seated at y 0, centred in x/z), and the dressing builder
 // consumes them as clones or instanced meshes. Fail-soft: a missing model
