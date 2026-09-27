@@ -15,7 +15,7 @@ import { request as httpRequest } from 'node:http';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 // @ts-expect-error untyped zero-dependency authoring tool (scripts/*.mjs convention)
 import * as audioIo from '../scripts/sfx_studio/audio_io.mjs';
 // @ts-expect-error untyped zero-dependency authoring tool (scripts/*.mjs convention)
@@ -31,6 +31,42 @@ const {
   restoreVersion,
   STUDIO_ROOT,
 } = audioIo;
+
+// The export case builds the production ZIP, which conformance-checks every
+// published blob with ffmpeg: 717 tracks and about 34 s, work
+// tests/sfx_export_core.test.ts already does against the real catalog. This
+// suite asserts the Studio's security gates and headers, not audio
+// conformance, so the Studio runs over a fixture repository built before its
+// modules load (audio_io reads WOC_SFX_STUDIO_TEST_REPO_ROOT at import): every
+// file name of the real published catalog, each a copy of one of two real
+// clips, so the manifest and the key and track counts are the real catalog's
+// while the conformance pass sees two blobs. The server's own /repo/ routes
+// still serve the checked-in tree.
+const { fixtureRepoRoot } = await vi.hoisted(async () => {
+  const fs = await import('node:fs');
+  const path = await import('node:path');
+  const os = await import('node:os');
+  const url = await import('node:url');
+  const real = url.fileURLToPath(new URL('..', import.meta.url));
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'woc-sfx-security-repo-'));
+  const realAudio = path.join(real, 'public/audio/sfx');
+  const audio = path.join(root, 'public/audio/sfx');
+  fs.mkdirSync(audio, { recursive: true });
+  const clips = ['ui_click.mp3', 'ui_error.mp3'].map((name) => path.join(realAudio, name));
+  let index = 0;
+  for (const name of fs.readdirSync(realAudio).sort()) {
+    const from = name.endsWith('.mp3') ? clips[index++ % clips.length] : path.join(realAudio, name);
+    fs.copyFileSync(from, path.join(audio, name));
+  }
+  fs.cpSync(path.join(real, 'scripts/sfx'), path.join(root, 'scripts/sfx'), { recursive: true });
+  fs.mkdirSync(path.join(root, 'src/game'), { recursive: true });
+  fs.copyFileSync(
+    path.join(real, 'src/game/sfx_manifest.generated.ts'),
+    path.join(root, 'src/game/sfx_manifest.generated.ts'),
+  );
+  process.env.WOC_SFX_STUDIO_TEST_REPO_ROOT = root;
+  return { fixtureRepoRoot: root };
+});
 
 function getWithHost(url: string, host: string): Promise<{ status: number; body: string }> {
   return new Promise((resolve, reject) => {
@@ -126,7 +162,7 @@ describe.sequential('SFX Studio server security', () => {
   // depending on the SFX prompt catalog or its per-key published-file
   // resolution (both already exercised for real by the request itself).
   const seedCatalogAnalysisCache = () => {
-    const sfxDir = join(repoRoot, 'public/audio/sfx');
+    const sfxDir = join(fixtureRepoRoot, 'public/audio/sfx');
     const files: Record<string, unknown> = {};
     for (const name of readdirSync(sfxDir)) {
       if (!name.endsWith('.mp3')) continue;
@@ -204,8 +240,16 @@ describe.sequential('SFX Studio server security', () => {
     } finally {
       rmSync(playbackDraft, { force: true });
       if (hadPlaybackDraft) renameSync(playbackDraftBackup, playbackDraft);
+      rmSync(fixtureRepoRoot, { recursive: true, force: true });
     }
   }, 30_000);
+
+  it('runs the Studio over the fixture repository, not the checked-in catalog', () => {
+    // Without the seam the export case silently goes back to validating all
+    // 717 real tracks.
+    expect(audioIo.REPO_ROOT).toBe(fixtureRepoRoot);
+    expect(realpathSync(fixtureRepoRoot)).not.toBe(realpathSync(repoRoot));
+  });
 
   it('binds only to IPv4 loopback', () => {
     const address = server.address();
