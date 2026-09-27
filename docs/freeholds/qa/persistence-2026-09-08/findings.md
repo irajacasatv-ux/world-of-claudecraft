@@ -3869,3 +3869,114 @@ committed tree.
    past the saved snapshot. Measured cost: 3.8 s wall, 437 MB peak for the file. Mutants
    (control 1, 0 failed): the release dropped, and the release moved after the save (the
    `removePlayer` backstop alone), both KILLED.
+
+
+## R1, THE THROWN-RUN RETRY POSTURE, 2026-09-27
+
+Fernando's R1 (2026-09-26): keep a leaver's capture past a THROWN-run quiesce, the entry kept
+and write-blocked for new edits, the capture retried once per error window, released only on
+a commit or on an answer no repeat can change, installed by a rejoin meanwhile, counted under
+`leave_captures`. Read with the 2026-09-27 ruling ("what's best for the project and feature"),
+which this design applies where the letter of R1 leaves a choice.
+
+### THE DESIGN (written before any code)
+
+1. THE STATE. A thrown run no longer sets `quiesced`. `quiesced` keeps its one meaning, an
+   answer no repeat of the same payload can change (stale, missing, conflict, the seal's
+   identity and unnamed refusals, the write ceilings), and a throw is not an answer: the
+   database said nothing. The run instead puts the entry on a per-owner RETRY CLOCK, a new
+   entry field `retryAtMs` (0 when off): the entry stays `loaded`, unheld and unquiesced, so
+   `blocked()` is false and its knowledge is trusted, but no write is ARMED for it until the
+   clock is due. That is "write-blocked for new edits" as the store can honour it without
+   losing them: an edit never starts a statement, it rides the next retry. The posture is
+   sticky: every throw inside it re-arms the clock, and only a commit (or a quiesce) ends it.
+   It generalizes R1 to the case R1's text did not name and the criterion covers: a run of
+   throws while the session is still ONLINE used to quiesce the entry, so its leave captured
+   nothing (a blocked entry flushes nothing) and the session's edits were lost at logout. The
+   same posture now keeps them.
+2. `owesWork`, `settle`, `maybeRemove` AND THE ORPHAN SWEEP. Unchanged predicates, new facts.
+   A thrown write commits nothing, so the entry stays dirty and unblocked, and `owesWork`'s
+   `isDirty && !blocked` clause holds it: `settle` does not release the capture (it releases
+   only when nothing is owed), `maybeRemove` keeps the entry at zero references, and the
+   orphan sweep resets its count every pass. `settle` never re-arms a posture entry off the
+   clock: a `pending` edit that arrived during the thrown statement waits for the retry. The
+   `arm` gate is one new clause, `retryDue(entry)`, beside `blocked(entry)`.
+3. THE REJOIN. The replay arm and `answerForInstall` both answer `replayAnswer(entry)`, which
+   offers the capture (or the committed state) for any unblocked entry, so a rejoin installs
+   the leaver's unwritten house exactly as it does today while a leave write is slow. `retain`
+   then releases the capture once the live record carries it (the existing revision match),
+   because the live record now holds those edits and the retry writes the LIVE record
+   whenever one stands (runWrite's rule, unchanged: the live record descends from the capture
+   it was installed from, so it is a superset). A REJOINED SESSION MAY EDIT FREELY, and its
+   edits ride the next retry; its own leave refreshes the capture from the live record (the
+   flush captures any unblocked dirty entry, as now) and arms nothing off the clock, so the
+   logout does not wait. Nothing a rejoined session does during the fault is lost, and it
+   costs no extra statement.
+4. UN-QUIESCE. A retry that COMMITS (inserted or updated) clears the clock and the run
+   (`retryAtMs` 0, `writeErrors` 0) in `applyWriteResult`, beside the existing reset; `settle`
+   then releases the capture when nothing more is owed, or re-arms at once for an edit the
+   retry did not carry, on the ordinary cadence again. One warn line records the recovery.
+5. THE CLOCK AND ITS BOUND. On `ports.nowMs` (bound to `Date.now` in
+   `server/freehold_persist_wiring.ts`). Entering the posture and every throw inside it set
+   `retryAtMs = failedAtMs + FREEHOLD_PERSIST_WRITE_ERROR_WINDOW_MS`. The periodic sweep (every
+   `AUTOSAVE_SECONDS`) arms a due entry, so the spacing between two statements for one owner
+   is at least one window (five minutes) and at most one window plus one sweep interval. The
+   leave flush respects the clock (a mass disconnect during an outage must not add a
+   statement per leaver). ONE exception, the shutdown drain, which ignores the clock and gives
+   every posture entry one last attempt inside its deadline (item 7). A wall clock that steps
+   BACKWARD past a window would otherwise stall the retries for the size of the step, so a
+   clock reading more than one window before `retryAtMs` counts as due.
+6. THE MEMORY BOUND. A posture entry holds its committed `state` (every loaded entry does) plus
+   at most ONE capture, counted in `leave_captures`. So the added retention is
+   `leave_captures` times the record size, and the posture set is bounded by the accounts
+   that had an unwritten edit when the database stopped answering plus those that edit during
+   the fault (at most the realm's online accounts over the fault's length), each counted
+   once. Measured shape from the 07 records: 66.2 MiB per thousand captures at the approved
+   420-row ceiling, 0.29 MiB with empty layouts. There is deliberately no count cap: a cap
+   would choose whose edits to drop, which R1 rules out. The published gauge `retrying` (new)
+   names how many owners hold it; the process restart bounds it in time (item 7).
+7. SHUTDOWN, R3's BOUND. `idle()` runs with `draining` set, which makes every posture entry due:
+   the drain arms it once, at the drain's cap, inside `FREEHOLD_PERSIST_SHUTDOWN_DRAIN_MS`. A
+   database that answers commits it; one still throwing leaves the entry dirty and unblocked,
+   so `drainCheck` answers false as soon as nothing is moving (not at the deadline) and
+   `server/main.ts` prints its "freehold persistence drain did not complete" line: the capture
+   ends with the process, which is R3's accepted bound.
+8. WHAT STAYS REFUSED, each still a quiesce that releases the capture: the stale fence (R2, the
+   named activation gate 07a closes; its KNOWN COST pin holds unchanged), `missing`,
+   `conflict`, the seal's identity and unnamed refusals, and the write ceilings. One case
+   belongs to the fence and is named here: a thrown write can have COMMITTED (the connection
+   dropped after the server's commit), and the next write then meets its own revision as
+   stale. The row holds that attempt's document, so nothing up to it is lost; an edit made
+   after it is released with the fence's warn line, because the compare-and-swap cannot tell
+   this realm's own ambiguous commit from another realm's. Telling them apart needs a per-write
+   token in the row, 07a's receipts. Pre-existing, not introduced by R1.
+9. METRICS AND LINES. Gauge `woc_freehold_persist{measure="retrying"}` (entries on the retry
+   clock, each holding unwritten edits; `quiesced` no longer counts a thrown run). Counter
+   `woc_freehold_persist_total{measure="write_retries"}` (statements launched from the
+   posture, so its rate against `retrying` shows the one-per-window cadence). Lines: the
+   entry into the posture replaces "quiesced after N thrown writes" with one error line naming
+   the window and that the edits are kept; every throw keeps its existing `write failed` error
+   line (inside the posture at most one per owner per window); a recovering commit prints one
+   warn line.
+10. DEPLOY AND THE ROLLOUT CONTRACT. DEPLOY: `quiesced` loses the thrown run from its producer
+    list; `retrying` and `write_retries` are described, with the reading "a database fault
+    that outlasts three throws holds the affected owners' edits in memory and retries each
+    once per five minutes; a sustained `retrying` is an outage, not a data incident, and a
+    restart during it ends the held edits at the drain's deadline". The KNOWN COST paragraph
+    names ONE runtime order (the fence) plus the drain deadline. The rollout contract gains
+    the posture beside the drain: its memory cost, its cadence, and that a restart during a
+    database fault ends the held edits after one last attempt (R3). The held-plot surface
+    scope, `phase-07-qa.md`, `src/sim/freehold/CLAUDE.md`, the stats doc and the join-answer
+    header follow.
+
+THE PINS, test-first: the thrown-run KNOWN COST pin flips to "a run of thrown writes keeps
+the capture and retries it once per window"; the stale-fence KNOWN COST pin stays; new pins
+for the cadence (no statement before the window, one at it, a throw re-arms it), the release
+on commit (capture released, clock and run cleared, row at the leaver's revision, entry
+collected), the rejoin install (the capture installed, the rejoined session's edits riding the
+retry, its leave refreshing the capture), a retry that stays thrown (capture and entry kept
+across windows, one statement per window), the online run (a session's edits kept past its
+own leave), the backward clock step, and a shutdown with a kept capture (one attempt, the drain
+answers false before its deadline). The existing "still quiesces on a run INSIDE the window"
+pin flips to the posture. Extraction pays for the lines under the 2058 ceiling, and the ceiling
+is lowered after.
