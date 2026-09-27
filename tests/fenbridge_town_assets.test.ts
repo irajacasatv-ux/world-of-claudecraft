@@ -631,7 +631,9 @@ describe('Fenbridge shipping asset family', () => {
           if (!accessor) continue;
           const array = accessor.getArray();
           expect(array).not.toBeNull();
-          for (const value of array ?? []) expect(Number.isFinite(value)).toBe(true);
+          // One assertion per accessor, not per float (a per-float expect cost 5 s here).
+          const firstNonFinite = array ? array.findIndex((value) => !Number.isFinite(value)) : -1;
+          expect(firstNonFinite, `${assetId} has a non-finite value at index`).toBe(-1);
         }
         return (primitive.getIndices()?.getCount() ?? position.getCount()) / 3;
       });

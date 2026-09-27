@@ -21,11 +21,21 @@ describe('asset load retry policy', () => {
   });
 });
 
+// The loader tests count attempts and cache evictions; the policy above owns the
+// delays. A real backoff between attempts spent about 9 s of this file waiting.
+function zeroRetryDelays(): void {
+  vi.doMock('../src/render/assets/load_retry', async (importOriginal) => ({
+    ...(await importOriginal<typeof import('../src/render/assets/load_retry')>()),
+    retryDelayMs: () => 0,
+  }));
+}
+
 describe('loadGltf retries a transient failure before rejecting', () => {
   const url = 'models/chars/enemies/skeleton_mage.glb';
 
   beforeEach(() => {
     vi.resetModules();
+    zeroRetryDelays();
   });
 
   it('succeeds if a later attempt loads fine', async () => {
@@ -91,6 +101,7 @@ describe('loadKtx2Texture cache release', () => {
 
   beforeEach(() => {
     vi.resetModules();
+    zeroRetryDelays();
   });
 
   it('re-fetches after a release, per url and per repeat key', async () => {
@@ -139,6 +150,7 @@ describe('loadKtx2Texture evicts a terminal failure so a later apply can recover
 
   beforeEach(() => {
     vi.resetModules();
+    zeroRetryDelays();
   });
 
   it('fail-all then recover, on both the clamp and repeat cache keys', async () => {
@@ -196,6 +208,7 @@ describe('loadTexture evicts a terminal failure so a later load can recover', ()
 
   beforeEach(() => {
     vi.resetModules();
+    zeroRetryDelays();
   });
 
   it('fail-all then recover, on distinct srgb and repeat cache keys', async () => {
