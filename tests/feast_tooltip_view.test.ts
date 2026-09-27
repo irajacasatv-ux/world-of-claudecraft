@@ -1,12 +1,12 @@
 // Shared-feast item tooltip lines: the pure string-builder composed inside
-// Hud.itemTooltip beside the well-fed line (the wellfed_tooltip_view.test.ts
-// idiom). English copy asserted directly; every number must mirror the live
-// records (the def's own feast record for servings and duration, the
-// pointed-at dish's wellFed record for the buff, CONSUME_DURATION for the
-// meal length), never re-typed copy, and the buff line must state the
-// finish-the-meal trigger, because the buff lands only when the 18s
-// sit-restore COMPLETES (an interrupted meal forfeits it), the
-// important-trigger rule of docs/design/tooltip-writing.md.
+// itemTooltipHtml (src/ui/item_tooltip_view.ts) beside the well-fed line
+// (the wellfed_tooltip_view.test.ts idiom). English copy asserted
+// directly; every number must mirror the live records (the def's own feast
+// record for servings and duration, the pointed-at dish's wellFed record
+// for the buff, CONSUME_DURATION for the meal length), never re-typed copy,
+// and the buff line must state the finish-the-meal trigger, because the
+// buff lands only when the 18s sit-restore COMPLETES (an interrupted meal
+// forfeits it), the important-trigger rule of docs/design/tooltip-writing.md.
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
@@ -146,16 +146,18 @@ describe('feastTooltipLines', () => {
     expect(feastTooltipLines(ITEMS.elixir_of_the_boar)).toBe('');
   });
 
-  it('Hud.itemTooltip composes the feast lines (method-scoped source pin)', () => {
+  it('itemTooltipHtml composes the feast lines (method-scoped source pin)', () => {
     // The shared order-safe stripper (tests/helpers/strip_comments.ts), and
-    // the itemTooltip method slice, both the wellfed pin's reasoning: a
+    // the itemTooltipHtml function slice, both the wellfed pin's reasoning: a
     // commented-out or relocated composition must not pass.
-    const hudSrc = stripComments(readFileSync(path.join(__dirname, '../src/ui/hud.ts'), 'utf8'));
-    const start = hudSrc.indexOf('private itemTooltip(');
-    const end = hudSrc.indexOf('private itemProcBlock(');
+    const viewSrc = stripComments(
+      readFileSync(path.join(__dirname, '../src/ui/item_tooltip_view.ts'), 'utf8'),
+    );
+    const start = viewSrc.indexOf('export function itemTooltipHtml(');
+    const end = viewSrc.indexOf('function itemProcBlock(');
     expect(start).toBeGreaterThan(-1);
     expect(end).toBeGreaterThan(start);
-    expect(hudSrc.slice(start, end)).toContain('html += feastTooltipLines(item);');
+    expect(viewSrc.slice(start, end)).toContain('html += feastTooltipLines(item);');
   });
 });
 

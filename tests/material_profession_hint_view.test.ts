@@ -1,10 +1,9 @@
-// @vitest-environment happy-dom
-//
 // Profession-affinity tooltip line: honest materials name their crafts, Junk
 // stays for true grey trash, superseding purpose hints avoid double lines, and
-// the Hud.prototype.itemTooltip integration arm stays honest. Multi-craft
-// texts are pinned as EXACT strings (not per-name toContain), so the view
-// cannot silently reorder or re-sort what the sim derived in ring order.
+// the itemTooltipHtml (composed item card) integration arm stays honest.
+// Multi-craft texts are pinned as EXACT strings (not per-name toContain), so
+// the view cannot silently reorder or re-sort what the sim derived in ring
+// order.
 
 import { describe, expect, it } from 'vitest';
 import { RAW_COOKING_CATCH_IDS } from '../src/sim/content/items';
@@ -12,7 +11,6 @@ import { ITEMS } from '../src/sim/data';
 import { craftIdsForMaterialItem } from '../src/sim/material_profession_affinity';
 import { MATERIAL_ITEM_IDS } from '../src/sim/material_taxonomy';
 import { baseMaterialFor } from '../src/sim/professions/material_grades';
-import { Hud } from '../src/ui/hud';
 import { MATERIAL_HINT_KEYS } from '../src/ui/hud/professions/material_hint_view';
 import {
   CRAFT_NAMING_HINT_KEYS,
@@ -21,25 +19,17 @@ import {
 } from '../src/ui/hud/professions/material_profession_hint_view';
 import { setLanguage } from '../src/ui/i18n';
 import { itemKindLabel } from '../src/ui/item_kind_label';
+import { itemTooltipHtml } from '../src/ui/item_tooltip_view';
 import { adoptedTrophyIds } from './helpers/adopted_trophy_ids';
+import { itemTooltipDeps } from './helpers/item_tooltip_deps';
 
 function tooltipHtml(itemId: string): string {
-  const h = Object.create(Hud.prototype) as unknown as {
-    sim: {
-      player: { level: number };
-      cfg: { playerClass: string };
-      equipment: Record<string, string>;
-    };
-    itemTooltip(item: unknown, compare?: boolean): string;
-  };
-  // Real host shape (masterwrought_tooltip.test.ts / weapon_type_tooltip.test.ts
-  // convention): itemTooltip unconditionally reads this.sim.player.level for
-  // itemRequiredLevelLine even on a non-equipment item; cfg/equipment cover the
-  // slot/masterwrought arms none of these profession-material items take.
-  h.sim = { player: { level: 80 }, cfg: { playerClass: 'warrior' }, equipment: {} };
   const item = ITEMS[itemId];
   if (!item) throw new Error(`missing item ${itemId}`);
-  return h.itemTooltip(item, false);
+  // The minimal deps fixture (tests/helpers/item_tooltip_deps.ts): the card
+  // reads world.player.level for itemRequiredLevelLine on every item, and
+  // cfg/equipment cover the slot/masterwrought arms these items never take.
+  return itemTooltipHtml(item, itemTooltipDeps(), false);
 }
 
 /** One plain junk-kind item that is neither a material nor a graded fine id:
@@ -245,8 +235,8 @@ describe('itemTooltip integration for profession material tags', () => {
     const html = tooltipHtml('rough_hide');
     expect(html).toContain('Material');
     expect(html).not.toMatch(/\bJunk\b/);
-    // The full painted element: createTooltipLine output with the
-    // tt-material-use modifier carrying the theme craft tint.
+    // The full painted element: the shared tooltipLine builder's output with
+    // the tt-material-use modifier carrying the theme craft tint.
     expect(html).toContain(
       '<div class="tt-desc tt-material-use">Used by Leatherworking, Weaponcrafting, and Armorcrafting.</div>',
     );

@@ -17,9 +17,10 @@ prompt controller, and Freehold event feedback.
   `tests/architecture.test.ts` cannot find them: they are registered by hand in
   `UI_PURE_CORES` and in the `EXPECTED_BARE_NAMED` pin, and a new bare-named
   core here owes the same two rows or it gets no purity enforcement at all.
-- `Hud.itemTooltip` routes furnishing cards through `furnishingItemTooltip` in
-  the barrel. The composer retains identity, authored quality, placement, maker,
-  lock, soulbound, party-trade deadline and vendor-value facts. It never composes
+- `itemTooltipHtml` (`src/ui/item_tooltip_view.ts`) routes furnishing cards
+  through `furnishingItemTooltip`, imported from its leaf `furnishing_tooltip.ts`
+  rather than the barrel. The composer retains identity, authored quality,
+  placement, maker, lock, soulbound, party-trade deadline and vendor-value facts. It never composes
   equipment, consumable, heroic, enchant, Masterwork, Perfecting or Rift claims.
 - The complete card receives only `IWorld.partyTradeMsRemaining` for the
   copy's party-trade deadline. The placement model remains world-independent.

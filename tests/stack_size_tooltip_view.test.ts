@@ -1,9 +1,10 @@
 // Max-stack tooltip line: the pure string-builder composed inside
-// Hud.itemTooltip (the elixir_tooltip_view.test.ts idiom: English copy
-// asserted directly). The number must come from the one stacking rule the
-// bags actually enforce (sim/bags.ts stackSizeOf), so the potion pins below
-// go through real shipped defs, the whole-catalog biconditional proves the
-// line is a pure function of that rule (a kind-restricted reimplementation
+// itemTooltipHtml (src/ui/item_tooltip_view.ts; the
+// elixir_tooltip_view.test.ts idiom: English copy asserted directly). The
+// number must come from the one stacking rule the bags actually enforce
+// (sim/bags.ts stackSizeOf), so the potion pins below go through real
+// shipped defs, the whole-catalog biconditional proves the line is a pure
+// function of that rule (a kind-restricted reimplementation
 // that only served potions would strip 200+ shipped stackables and stay
 // green against sampled pins alone), and the unstackable-kind pins prove
 // gear never grows a noise line. The line exists for the player who owns
@@ -182,20 +183,20 @@ describe('stackSizeTooltipLine', () => {
     expect(viewSrc).toContain('$' + '{esc(text)}');
   });
 
-  it('Hud.itemTooltip composes the max-stack line (method-scoped source pin)', () => {
+  it('itemTooltipHtml composes the max-stack line (method-scoped source pin)', () => {
     // Whole-line // comments are stripped before scanning so the pin is not
     // satisfied by prose (the comment-gameable trap; block comments are left
     // alone: a /* strip would misfire on string and regex literals). Scoped
-    // to the itemTooltip method body so the call cannot drift into some
+    // to the itemTooltipHtml function body so the call cannot drift into some
     // other surface and still pass.
-    const hudSrc = readFileSync(path.join(__dirname, '../src/ui/hud.ts'), 'utf8').replace(
-      /^\s*\/\/.*$/gm,
-      '',
-    );
-    const start = hudSrc.indexOf('private itemTooltip(');
-    const end = hudSrc.indexOf('private itemProcBlock(');
+    const viewSrc = readFileSync(
+      path.join(__dirname, '../src/ui/item_tooltip_view.ts'),
+      'utf8',
+    ).replace(/^\s*\/\/.*$/gm, '');
+    const start = viewSrc.indexOf('export function itemTooltipHtml(');
+    const end = viewSrc.indexOf('function itemProcBlock(');
     expect(start).toBeGreaterThan(-1);
     expect(end).toBeGreaterThan(start);
-    expect(hudSrc.slice(start, end)).toContain('html += stackSizeTooltipLine(item, instance);');
+    expect(viewSrc.slice(start, end)).toContain('html += stackSizeTooltipLine(item, instance);');
   });
 });

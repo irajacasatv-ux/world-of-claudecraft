@@ -530,12 +530,12 @@ describe('Hud zone-map marker interaction', () => {
     hud.mapMarkerInteraction.refreshGeometry(canvas);
     hud.mapMarkerInteraction.worldQuests = [WORLD_QUEST];
 
-    expect(hud.showMapTipAt(canvas, 170, 150)).toBe(true);
+    expect(hud.mapMarkerInteraction.showAt(canvas, 170, 150)).toBe(true);
     expect(paint).toHaveBeenLastCalledWith('<div>world quest</div>', 170, 150);
     expect(mapPointMarkerHitsIntoCalls).not.toHaveBeenCalled();
 
-    expect(hud.showMapTipAt(canvas, 185, 150)).toBe(false);
-    expect(hud.showMapTipAt(canvas, 185, 150, true)).toBe(true);
+    expect(hud.mapMarkerInteraction.showAt(canvas, 185, 150)).toBe(false);
+    expect(hud.mapMarkerInteraction.showAt(canvas, 185, 150, true)).toBe(true);
     expect(paint).toHaveBeenLastCalledWith('<div>world quest</div>', 185, 150);
   });
 
@@ -546,7 +546,7 @@ describe('Hud zone-map marker interaction', () => {
     hud.mapMarkerInteraction.worldQuests = [WORLD_QUEST];
     hud.mapMarkerInteraction.worldBosses = [WORLD_BOSS];
 
-    expect(hud.showMapTipAt(canvas, 170, 150)).toBe(true);
+    expect(hud.mapMarkerInteraction.showAt(canvas, 170, 150)).toBe(true);
     expect(paint).toHaveBeenLastCalledWith('<div>world boss</div>', 170, 150);
     expect(hud.mapMarkerInteraction.selectedWorldQuestId).toBeNull();
     expect(hud.mapMarkerInteraction.selectWorldQuestAt(canvas, 170, 150)).toBe(false);
@@ -562,7 +562,7 @@ describe('Hud zone-map marker interaction', () => {
     const { hud, paint, calls } = markerHarness();
     hud.mapMarkerInteraction.refreshGeometry(canvas);
 
-    expect(hud.showMapTipAt(canvas, 170, 150)).toBe(true);
+    expect(hud.mapMarkerInteraction.showAt(canvas, 170, 150)).toBe(true);
 
     expect(mapPointMarkerHitsIntoCalls).toHaveBeenCalledWith(
       [NPC],
@@ -590,8 +590,8 @@ describe('Hud zone-map marker interaction', () => {
     hud.mapFarmPatches = [];
     hud.mapGatherNodes = [{ ...GATHER, mx: 175 }];
 
-    expect(hud.showMapTipAt(canvas, 170, 150)).toBe(false);
-    expect(hud.showMapTipAt(canvas, 170, 150, true)).toBe(true);
+    expect(hud.mapMarkerInteraction.showAt(canvas, 170, 150)).toBe(false);
+    expect(hud.mapMarkerInteraction.showAt(canvas, 170, 150, true)).toBe(true);
 
     expect(mapPointMarkerHitsIntoCalls.mock.calls.map((call) => call[8])).toEqual([10, 40]);
     expect(paint).toHaveBeenCalledTimes(1);
@@ -614,7 +614,7 @@ describe('Hud zone-map marker interaction', () => {
     hud.mapQuestAreas = [area];
     hud.questAreaTooltipHtml = areaTip;
 
-    expect(hud.showMapTipAt(canvas, 170, 150)).toBe(true);
+    expect(hud.mapMarkerInteraction.showAt(canvas, 170, 150)).toBe(true);
     expect(questAreaObjectivesAtIntoCalls).toHaveBeenCalledWith(
       [area],
       140,
@@ -628,7 +628,7 @@ describe('Hud zone-map marker interaction', () => {
     const areaCallCount = questAreaObjectivesAtIntoCalls.mock.calls.length;
     hud.mapQuestAreas = [];
     hud.mapNpcMarkers = [{ ...NPC, mx: 500, my: 500 }];
-    expect(hud.showMapTipAt(canvas, 170, 150)).toBe(false);
+    expect(hud.mapMarkerInteraction.showAt(canvas, 170, 150)).toBe(false);
     expect(questAreaObjectivesAtIntoCalls).toHaveBeenCalledTimes(areaCallCount);
     expect(areaTip).toHaveBeenCalledTimes(1);
   });
@@ -647,7 +647,7 @@ describe('Hud zone-map marker interaction', () => {
       return '<div>npc</div>';
     };
 
-    expect(hud.showMapTipAt(canvas, 170, 150)).toBe(true);
+    expect(hud.mapMarkerInteraction.showAt(canvas, 170, 150)).toBe(true);
     expect(calls).toEqual(['gather']);
   });
 
@@ -661,7 +661,7 @@ describe('Hud zone-map marker interaction', () => {
       return '<div>navigation</div>';
     };
 
-    expect(hud.showMapTipAt(canvas, 170, 150)).toBe(true);
+    expect(hud.mapMarkerInteraction.showAt(canvas, 170, 150)).toBe(true);
     expect(calls).toEqual(['npc', 'navigation']);
     expect(paint).toHaveBeenCalledWith('<div>navigation</div>', 170, 150);
   });
@@ -680,7 +680,7 @@ describe('Hud zone-map marker interaction', () => {
       return '<div>farm</div>';
     };
 
-    expect(hud.showMapTipAt(canvas, 170, 150)).toBe(true);
+    expect(hud.mapMarkerInteraction.showAt(canvas, 170, 150)).toBe(true);
     expect(calls).toEqual(['farm']);
     expect(paint).toHaveBeenCalledWith('<div>farm</div>', 170, 150);
   });
@@ -695,7 +695,7 @@ describe('Hud zone-map marker interaction', () => {
     hud.mapGatherNodes = [];
     hud.mapFarmPatches = [];
 
-    expect(hud.showMapTipAt(canvas, 170, 150)).toBe(false);
+    expect(hud.mapMarkerInteraction.showAt(canvas, 170, 150)).toBe(false);
     expect(calls).toEqual([]);
     expect(paint).not.toHaveBeenCalled();
   });
@@ -751,7 +751,7 @@ describe('Hud zone-map marker interaction', () => {
       },
       560,
     );
-    expect(hud.showMapTipAt(canvas, 170, 150)).toBe(true);
+    expect(hud.mapMarkerInteraction.showAt(canvas, 170, 150)).toBe(true);
     expect(paint).toHaveBeenLastCalledWith(
       '<div class="tt-title">Sealed passage: northwest, medium distance.</div>',
       170,
@@ -768,7 +768,7 @@ describe('Hud zone-map marker interaction', () => {
       },
       560,
     );
-    expect(hud.showMapTipAt(canvas, 170, 150)).toBe(true);
+    expect(hud.mapMarkerInteraction.showAt(canvas, 170, 150)).toBe(true);
     expect(paint.mock.lastCall?.[0]).toContain('Open passage');
 
     const reward = {
@@ -787,8 +787,8 @@ describe('Hud zone-map marker interaction', () => {
       },
       560,
     );
-    expect(hud.showMapTipAt(canvas, 170, 150)).toBe(false);
-    expect(hud.showMapTipAt(canvas, 170, 150, true)).toBe(true);
+    expect(hud.mapMarkerInteraction.showAt(canvas, 170, 150)).toBe(false);
+    expect(hud.mapMarkerInteraction.showAt(canvas, 170, 150, true)).toBe(true);
     expect(paint).toHaveBeenLastCalledWith(
       '<div class="tt-title">Delve cache active: northwest, medium distance.</div>',
       170,
@@ -823,7 +823,7 @@ describe('Hud zone-map marker interaction', () => {
         },
         560,
       );
-      expect(hud.showMapTipAt(canvas, 170, 150)).toBe(true);
+      expect(hud.mapMarkerInteraction.showAt(canvas, 170, 150)).toBe(true);
       expect(paint.mock.lastCall?.[0]).toContain(
         state === 'locked'
           ? 'Locked reliquary'
@@ -855,21 +855,21 @@ describe('Hud zone-map marker interaction', () => {
     canvas.getBoundingClientRect = readRect;
     const { hud } = markerHarness();
 
-    expect(hud.showMapTipAt(canvas, 170, 150)).toBe(false);
+    expect(hud.mapMarkerInteraction.showAt(canvas, 170, 150)).toBe(false);
     expect(readRect).not.toHaveBeenCalled();
 
     hud.mapMarkerInteraction.refreshGeometry(canvas);
-    expect(hud.showMapTipAt(canvas, 170, 150)).toBe(true);
-    expect(hud.showMapTipAt(canvas, 170, 150)).toBe(true);
+    expect(hud.mapMarkerInteraction.showAt(canvas, 170, 150)).toBe(true);
+    expect(hud.mapMarkerInteraction.showAt(canvas, 170, 150)).toBe(true);
     expect(readRect).toHaveBeenCalledTimes(1);
 
     left = 30;
     size = 140;
-    expect(hud.showMapTipAt(canvas, 65, 100)).toBe(false);
+    expect(hud.mapMarkerInteraction.showAt(canvas, 65, 100)).toBe(false);
     expect(readRect).toHaveBeenCalledTimes(1);
 
     hud.mapMarkerInteraction.refreshGeometry(canvas);
-    expect(hud.showMapTipAt(canvas, 65, 100)).toBe(true);
+    expect(hud.mapMarkerInteraction.showAt(canvas, 65, 100)).toBe(true);
     expect(readRect).toHaveBeenCalledTimes(2);
   });
 

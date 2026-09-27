@@ -81,9 +81,7 @@ import {
   zoneAt,
 } from '../sim/data';
 import { specialRoleColor } from '../sim/discord_roles';
-import { canEquipItem, isUniqueEquipped, weaponHand } from '../sim/equipment_rules';
 import type { FactionId } from '../sim/factions';
-import { isItemLevelEligible, itemInstanceLevel, itemScore } from '../sim/item_level';
 import type { Ante, PickAction } from '../sim/lockpick';
 import type { MaterialComposition } from '../sim/material_sources';
 import { petCanForceTaunt } from '../sim/pet/pet_taunt_gate';
@@ -99,7 +97,6 @@ import { questObjectivesForMob } from '../sim/quest_targets';
 import type { ResolvedAbility } from '../sim/sim';
 import {
   type AuraKind,
-  CONSUME_DURATION,
   CORPSE_HARVEST_CAST_ID,
   CRAFT_CAST_ID,
   canPrestige,
@@ -173,7 +170,7 @@ import {
   isToggleAuraKind,
 } from './auras_view';
 import { BagItemActionMenu, CTX_MENU_PICKER_CLASS } from './bag_item_action_menu';
-import { bagSlotsLineKey, bagsWindowShown } from './bags_view';
+import { bagsWindowShown } from './bags_view';
 import { BagsWindow, dismissBagPrompts } from './bags_window';
 import { BankWindow } from './bank_window';
 import { makeBankWindowFocus } from './bank_window_focus';
@@ -291,7 +288,6 @@ import {
   classDisplayName,
   dungeonDisplayName,
   itemDisplayName,
-  itemSetBonusField,
   knownLetterId,
   riftFloorLabel,
   tEntity,
@@ -322,7 +318,6 @@ import {
 } from './frame_pos_reset';
 import { applySavedFrameLayout } from './frame_presets_live';
 import { gatherRareEventFeedback } from './gather_rare_event_feedback';
-import { gatherToolTooltipLines } from './gather_tool_tooltip';
 import { generalChatQuotaView } from './general_chat_quota_view';
 import { craftedLineKey, grantItemToken, grantQtyText } from './grant_line_view';
 import { decideGuildMotdLine } from './guild_motd_login';
@@ -461,13 +456,7 @@ import { RiteController } from './hud/delve/rite_controller';
 import { FiestaController } from './hud/fiesta/fiesta_controller';
 import { GuildBoardWindow } from './hud/guild_board';
 import { buildHillBarView, HillBar } from './hud/hill';
-import {
-  FreeholdGatePrompt,
-  freeholdGateRoot,
-  furnishingItemTooltip,
-  handleFreeholdEvent,
-  hearthKeyTooltipLines,
-} from './hud/housing';
+import { FreeholdGatePrompt, freeholdGateRoot, handleFreeholdEvent } from './hud/housing';
 import { LootRollController } from './hud/loot/loot_roll_controller';
 import { lootSettingsView } from './hud/loot/loot_settings_view';
 import { renderLootSettingsWindow } from './hud/loot/loot_settings_window';
@@ -487,7 +476,6 @@ import { PlayerCardController } from './hud/player_card/player_card_controller';
 import { commissionOrderResultLine } from './hud/professions/commission_order_feedback';
 import { buildCommissionOrderBoardModel } from './hud/professions/commission_order_view';
 import { renderCommissionOrderWindow } from './hud/professions/commission_order_window';
-import { cookingCatchHintKey } from './hud/professions/cooking_catch_hint_view';
 import {
   buildCraftCastSession,
   type CraftCastSessionView,
@@ -520,7 +508,6 @@ import {
   renderCraftingWindow,
   stationNameText,
 } from './hud/professions/crafting_window';
-import { elixirTooltipLines } from './hud/professions/elixir_tooltip_view';
 import {
   applyEnchantResultToast,
   disenchantResultToast,
@@ -530,7 +517,6 @@ import {
 import { handleFarmEvent } from './hud/professions/farm_event_feedback';
 import { FarmPressAffordanceController } from './hud/professions/farm_press_affordance_controller';
 import { PlantSheetWindow } from './hud/professions/farming_plant_sheet_window';
-import { feastTooltipLines } from './hud/professions/feast_tooltip_view';
 import { handleGatheringDenial } from './hud/professions/gathering_denial_feedback';
 import { GatheringGoalController } from './hud/professions/gathering_goal_controller';
 import { gatheringProfessionNameKey } from './hud/professions/gathering_profession_name';
@@ -542,9 +528,6 @@ import { buildGatheringProficiencyRows } from './hud/professions/gathering_view'
 import { HarvestJournalWindow } from './hud/professions/harvest_journal_window';
 import { HarvestPreferenceController } from './hud/professions/harvest_preference_controller';
 import { learnedProfessionMessage } from './hud/professions/learned_profession_name';
-import { materialHintLine } from './hud/professions/material_hint_view';
-import { materialProfessionHintText } from './hud/professions/material_profession_hint_view';
-import { mobileStationTooltipLines } from './hud/professions/mobile_station_tooltip';
 import { PerfectingWindow } from './hud/professions/perfecting_window';
 import {
   isSunderCompletionLog,
@@ -563,7 +546,6 @@ import {
 import { buildProfessionTutorialModel } from './hud/professions/profession_tutorial_view';
 import { renderProfessionTutorial } from './hud/professions/profession_tutorial_window';
 import { ProfessionsWindow } from './hud/professions/professions_window';
-import { recipePatternTooltipLines } from './hud/professions/recipe_pattern_tooltip_view';
 import {
   type CelebrationHost,
   paintSkillLevelCelebrations,
@@ -573,7 +555,6 @@ import {
   type SkillLevelUp,
 } from './hud/professions/skill_level_toast_view';
 import { toolEffectResultLine } from './hud/professions/tool_effect_result_view';
-import { wellFedTooltipLines } from './hud/professions/wellfed_tooltip_view';
 import { QuestDialogController } from './hud/quest/quest_dialog_controller';
 import { applyQuestEventPresentation } from './hud/quest/quest_event_router';
 import { parseChatSegments } from './hud/quest/quest_link';
@@ -633,32 +614,12 @@ import { frameRowLabelKey, HUD_FRAME_SPECS, hudFrameActive } from './interface_u
 import { buildPartySampleMembers } from './interface_unlock_menu_core';
 import { InterfaceUnlockPreview } from './interface_unlock_preview';
 import { InteriorMapController } from './interior_map_controller';
-import { itemArmorTypeLabelKey } from './item_armor_type';
-import { requiredClassesForTooltip } from './item_class_restriction';
-import { itemCombatTooltipLines } from './item_combat_tooltip_view';
-import { itemCompareBlocksHtml } from './item_compare_view';
 import { ItemDragState } from './item_drag_state';
-import {
-  instanceBadgeLines,
-  instanceBindingLines,
-  instanceLockLine,
-  instancePartyTradeLine,
-  instanceTitleHtml,
-  itemNumber,
-  itemRequiredLevelLine,
-  materialMakersMarkLines,
-  tooltipEffectiveQuality,
-  vendorSellTooltipLine,
-} from './item_instance_tooltip';
 import { itemPresentationInstance } from './item_instance_view';
-import { itemKindLabel, itemQualityLabel } from './item_kind_label';
 import { itemNameColor } from './item_name_color';
-import {
-  equippedSetTooltipPieces,
-  itemSetMemberCounts,
-  itemSetTooltipModel,
-} from './item_set_tooltip_view';
+import { itemSetMemberCounts } from './item_set_tooltip_view';
 import { itemSlotLabel as itemSlotName } from './item_slot_labels';
+import { itemTooltipHtml, questProgressText } from './item_tooltip_view';
 import { keeperReviveConfirm, keeperReviveDialogue } from './keeper_revive_dialog_core';
 import { bindActionDisplayName } from './keybind_action_names_core';
 import { knownItemDef, ownEntry } from './known_item';
@@ -700,7 +661,6 @@ import { MapWindowPainter } from './map_window_painter';
 import { MAP_OPEN_ZOOM, type MapWindowMode, mapWindowMode } from './map_window_view';
 import { marketCollectIndicatorView } from './market_view';
 import { MarketWindow } from './market_window';
-import { masterwroughtTooltipLines } from './masterwrought_cap_view';
 import { closeMaterialSourcesDialog, openMaterialSourcesDialog } from './material_sources_dialog';
 import { Meters } from './meters';
 import { MicroMenuStatePainter, microMenuWindowOpen } from './micro_menu_state_painter';
@@ -730,7 +690,6 @@ import { MobileMoreDialogController } from './mobile_more_dialog';
 import { moneyHtml } from './money_html';
 import { MountRaceControls } from './mount_race_controls';
 import { MountRaceStrip } from './mount_race_strip';
-import { mountTooltipLines } from './mount_tooltip_view';
 import { type FrameDimension, MovableFrame } from './movable_frame';
 import { presentNoticeboardEvent } from './noticeboard_event';
 import { NoticeboardPopup } from './noticeboard_popup';
@@ -795,12 +754,6 @@ import {
 import { maskProfanity } from './profanity';
 import { createPromptTimeoutBar, PROMPT_TIMEOUT_MS } from './prompt_dialog';
 import { isPvpHostilePlayer, isPvpHostileTargetId } from './pvp_hostile_core';
-import {
-  QUEST_ITEM_TOOLTIP_COLOR,
-  type QuestItemTooltipModel,
-  questItemTooltipModel,
-  questItemTooltipRelatedKey,
-} from './quest_item_tooltip_view';
 import { RaidBossGuideWindow, raidBossGuideContextFallback } from './raid_boss_guide_window';
 import { raidCalloutKey } from './raid_callout';
 import { formatLockoutDuration, raidLockoutDisplayName } from './raid_lockout_format';
@@ -852,7 +805,6 @@ import {
   MOTD_RESULT_FALLBACK_KEY,
   MOTD_RESULT_KEYS,
 } from './result_code_keys';
-import { itemLevelReadout } from './rift_band_tooltip';
 import { isTalentRowUnlockLevel } from './row_unlock_toast';
 import { localizeServerText } from './server_i18n';
 import {
@@ -864,7 +816,6 @@ import {
 import { openSimpleMenu } from './simple_context_menu';
 import { SocialWindow } from './social_window';
 import { SpellbookWindow } from './spellbook_window';
-import { stackSizeTooltipLine } from './stack_size_tooltip_view';
 import { type StatTooltipI18n, statCellHtml, statTooltipHtml } from './stat_tooltip_view';
 import { clearOpenStoreResult, MODAL_PROMPT_SELECTOR } from './store_decision_prompt';
 import { mountStorePromoCard, type StorePromoCardController } from './store_promo_card';
@@ -886,9 +837,7 @@ import { targetRankView, targetUsesEliteFrame } from './target_rank_view';
 import { TargetSwingTimerBars } from './target_swing_timer_bars';
 import type { PresetId, ThemeKnob, ThemeState } from './theme';
 import { toolEffectNameKey } from './tool_effect_name';
-import { toolEffectTooltipLines } from './tool_effect_tooltip';
 import { type TooltipViewport, tooltipPlacementAt } from './tooltip_clamp_core';
-import { createTooltipLine } from './tooltip_line';
 import { SharedTooltipOwner } from './tooltip_owner';
 import {
   paintMobTooltipBottomRight as paintMobTooltipBottomRightCore,
@@ -904,7 +853,7 @@ import { trackerCollapseSettings } from './tracker_collapse_settings';
 import { wireTrackerHeader } from './tracker_header_wiring';
 import { installTrackerStackAnchor } from './tracker_stack_anchor';
 import { stageTradeOffer, tradeOfferHeadroom } from './trade_view';
-import { trinketGambleText, trinketTooltipLines } from './trinket_tooltip_view';
+import { trinketGambleText } from './trinket_tooltip_view';
 import { TutorialOverlay } from './tutorial';
 import { buildFerryIslandArrivalNote, type TutorialGreetingNote } from './tutorial_greeting_view';
 import { renderTutorialGreetingNote } from './tutorial_greeting_window';
@@ -922,8 +871,6 @@ import { visibleVendorStock } from './vendor_stock_gate_core';
 import { nextVoicedYell, type VoicedYellState, voicedYellGain } from './voice_events';
 import { onWalletUiChange, walletConnectionView } from './wallet_balance';
 import { requestWalletVerify } from './wallet_verify_request';
-import { type WeaponProcEffectDesc, weaponProcLines } from './weapon_proc_view';
-import { weaponTypeLabelKey } from './weapon_type_label';
 import { WeeklyQuestsWindow } from './weekly_quests_window';
 import { promptWikiVisit } from './wiki_link';
 import {
@@ -2449,7 +2396,7 @@ export class Hud {
         questNarrative,
         objectiveLabel: questObjectiveLabel,
         number: (value) => formatCount(value),
-        progress: (label, current, total) => this.questProgressText(label, current, total),
+        progress: (label, current, total) => questProgressText(label, current, total),
         suggestedPlayers: (count) => this.questSuggestedPlayersHtml(count),
         money: (copper) => moneyHtml(copper),
       },
@@ -6392,7 +6339,7 @@ export class Hud {
       rank: targetRankView(template),
       quests: mobQuests.map((q) => ({
         title: questTitle(q.questId),
-        progress: this.questProgressText(
+        progress: questProgressText(
           questObjectiveLabel(q.questId, q.objectiveIndex),
           q.current,
           q.total,
@@ -6419,406 +6366,19 @@ export class Hud {
     this.hideTooltip();
   }
 
-  // `instance` is the optional per-copy payload (#1165): a masterwork seal, a
-  // maker's mark, or baked bonus stats specific to THIS copy. Absent for
-  // fungible stacks and def-only surfaces (the crafting window's result rows),
-  // so those render exactly as before.
+  // The composed item card lives in item_tooltip_view.ts; Hud supplies its
+  // world and the live Show Item Level setting.
   private itemTooltip(
     item: ItemDef,
     compare = true,
     instance?: ItemInstancePayload,
     materialSources?: MaterialComposition,
   ): string {
-    if (item.kind === 'furnishing') return furnishingItemTooltip(item, instance, this.sim);
-    // Quest items are a purpose class, not a quality tier: title and kind use
-    // quest gold, and the kind line is "Quest Item" alone (never "Common Quest
-    // Item"). Story lines (related quest, progress, rules, orphaned) come from
-    // the pure model; escape and tEntity stay in this host.
-    const questModel = this.questItemTooltipFor(item);
-    // Title: quest gold for quest kinds, else the copy's EFFECTIVE quality; a
-    // named copy titles the card (item_instance_tooltip.ts owns the rules).
-    let html = instanceTitleHtml(item, instance, itemDisplayName(item));
-    // Quality/kind line, e.g. "Epic Armor". Heroic items (dungeon upgraded variants
-    // via heroicOf, bespoke heroic-tier raid gear via heroic) append a gold
-    // "[HEROIC]" tag here (never in the name) so the drop reads "Epic Armor [HEROIC]".
-    // Quest kinds skip the quality half so the line is a single quest-gold
-    // "Quest Item" (no redundant Common + second Quest Item desc).
-    if (questModel && !questModel.showQuality) {
-      html += `<div class="tt-sub" style="color:${QUEST_ITEM_TOOLTIP_COLOR}">${esc(
-        t(questModel.kindLineKey),
-      )}</div>`;
-    } else {
-      let qualityKindHtml = esc(
-        t('itemUi.tooltip.qualityKind', {
-          quality: itemQualityLabel(tooltipEffectiveQuality(item, instance)),
-          kind: itemKindLabel(item.kind, item.id),
-        }),
-      );
-      if (item.heroicOf || item.heroic) {
-        qualityKindHtml += ` <span style="color:${CHROME_TONE.HEROIC_TAG}">${esc(t('hudChrome.itemHeroicTag'))}</span>`;
-      }
-      html += `<div class="tt-sub">${qualityKindHtml}</div>`;
-    }
-    // Weapon type (Sword/Dagger/Mace/...) as its own plain line under the
-    // quality/kind line and above the slot/handedness line, classic-style, so a
-    // player can tell a dagger from a sword at a glance (rogues need daggers). It
-    // is NOT colored by class the way armor weight is: any class can equip most
-    // weapon types and the class/weapon rules are archetype-based, not type-based,
-    // so a red type label would mislead. Null only for a non-weapon or
-    // unclassified id (the map is guarded), which simply shows no type line.
-    if (item.kind === 'weapon') {
-      const weaponTypeKey = weaponTypeLabelKey(item.id);
-      if (weaponTypeKey) {
-        html += `<div class="tt-sub tt-weapon-type">${esc(t(weaponTypeKey))}</div>`;
-      }
-    }
-    if (item.slot) {
-      // Classic layout: slot name on the left, armor subtype (Cloth/Leather/Mail)
-      // right-aligned on the same line so it is clear which classes the gear suits.
-      // A two-handed weapon reads "Two-Hand" (the classic label), not its
-      // mainhand slot: the hand, not the paperdoll cell, is what the player needs.
-      const slotName =
-        item.kind === 'weapon' && weaponHand(item) === 'twohand'
-          ? t('itemUi.slots.twoHand')
-          : itemSlotName(item.slot);
-      const armorTypeKey = itemArmorTypeLabelKey(item);
-      // Unique-equipped tag (every EFFECTIVE legendary with a slot, a phase 13
-      // promoted copy included; one worn copy per item family): rendered in
-      // the armor-weight indicator's type seat, soulbound gold; with an armor
-      // weight already there it takes its own gold line so neither is lost.
-      const unique = isUniqueEquipped(item, instance);
-      const uniqueTag = unique ? t('hudChrome.itemUniqueEquipped') : null;
-      if (armorTypeKey) {
-        // Red armor type = the viewing player's class cannot wear this armor weight
-        // (e.g. a mage hovering Mail), so they know it is not for them at a glance.
-        const badClass = canEquipItem(this.sim.cfg.playerClass, item) ? '' : ' tt-armor-bad';
-        html += `<div class="tt-sub tt-row"><span>${esc(slotName)}</span><span class="tt-armor${badClass}">${esc(t(armorTypeKey))}</span></div>`;
-        if (uniqueTag) {
-          html += `<div class="tt-sub" style="color:var(--gold)">${esc(uniqueTag)}</div>`;
-        }
-      } else if (uniqueTag) {
-        html += `<div class="tt-sub tt-row"><span>${esc(slotName)}</span><span class="tt-unique">${esc(uniqueTag)}</span></div>`;
-      } else {
-        html += `<div class="tt-sub">${esc(slotName)}</div>`;
-      }
-      // Masterwrought (the crafted-apex tier) is a COUNTED family, not the
-      // one-copy rule above: the tag names the budget the whole family shares
-      // rather than this one item, and reads that budget off the sim's own cap
-      // so the number can never drift from the rule. It always takes its own
-      // gold line, never the type seat, because a piece can carry both tags.
-      if (item.masterwrought) {
-        for (const line of masterwroughtTooltipLines(
-          this.sim.equipment,
-          ITEMS,
-          tooltipEffectiveQuality(item, instance),
-        ))
-          html += `<div class="tt-sub" style="color:var(--gold)">${esc(t(line.key, line.values))}</div>`;
-      }
-    }
-    // Optional item-level readout (off by default; src/sim/item_level.ts derives it
-    // from where the item drops). Read live, so toggling it takes effect on the next
-    // hover. Combat gear only: sourceless items (vendor/starter) have no level, and
-    // non-combat items never get the line. A quality-rolled copy ALWAYS shows it
-    // (deliberate: its badge means "+N item levels", so the readout is the badge's
-    // legend, not the optional setting). A Riftbound band or quality copy is priced
-    // by its payload, not its stat-free shell, so its level/score come from
-    // itemLevelReadout; itemInstanceLevel/itemScore stay the source for the rest.
-    if (
-      isItemLevelEligible(item) &&
-      (instance?.lootQuality || this.optionsHooks?.settings.get('showItemLevel'))
-    ) {
-      let readout: { level: number; score: number } | undefined;
-      if (instance?.rift || instance?.lootQuality) {
-        readout = itemLevelReadout(item, instance);
-      } else {
-        const level = itemInstanceLevel(item, instance);
-        readout = level === undefined ? undefined : { level, score: itemScore(item) };
-      }
-      if (readout) {
-        html += `<div class="tt-stat" style="color:var(--gold)">${esc(
-          t('hudChrome.options.itemLevelLine', { level: itemNumber(readout.level) }),
-        )}</div>`;
-        html += `<div class="tt-sub">${esc(
-          t('hudChrome.options.itemScoreLine', {
-            score: itemNumber(readout.score, 1),
-          }),
-        )}</div>`;
-      }
-    }
-    // Bound-to-owner marker (marks and other soulbound tokens): shown like the
-    // classic "Soulbound" line so a player can see it cannot be traded or destroyed.
-    if (item.soulbound) {
-      html += `<div class="tt-sub" style="color:var(--gold)">${esc(t('hudChrome.itemSoulbound'))}</div>`;
-      // BoP party trade window: qualifies the Soulbound line while this copy can
-      // still be traded to the players who shared its drop; def-gated, so a legacy
-      // marker on a since-freed drop renders nothing (the world owns the clock).
-      html += instancePartyTradeLine(instance, (ms) => this.sim.partyTradeMsRemaining(ms));
-    }
-    // Maker's Bond lines (Professions 2.0): the commission
-    // binds-on-first-trade warning or the bound lock, beside the def-level
-    // soulbound line it parallels (item_instance_tooltip.ts owns the copy
-    // rules, incl. the equipment-kind scope and the no-name doctrine).
-    html += instanceBindingLines(instance, item.kind);
-    // Player item lock (issue 3042): the owner's own safety mark, not scoped
-    // to any item kind (item_instance_tooltip.ts owns the copy rules).
-    html += instanceLockLine(instance);
-    // Per-copy instance badges (Professions 2.0): the masterwork
-    // seal and the enchanted marker (item_instance_tooltip.ts owns the copy
-    // rules, incl. never claiming a quality-rank upgrade).
-    html += instanceBadgeLines(instance);
-    html += itemCombatTooltipLines(item, instance);
-    if (item.foodHp)
-      html += `<div class="tt-desc">${esc(t('itemUi.tooltip.useFood', { amount: itemNumber(item.foodHp), seconds: itemNumber(CONSUME_DURATION) }))}</div>`;
-    if (item.drinkMana)
-      html += `<div class="tt-desc">${esc(t('itemUi.tooltip.useDrink', { amount: itemNumber(item.drinkMana), seconds: itemNumber(CONSUME_DURATION) }))}</div>`;
-    // Directly under the restore line it qualifies: a buff food (farm dish or
-    // apex role plate) heals while you sit AND leaves Well Fed once the meal
-    // finishes, so the two read in the order the player experiences them. The
-    // ONE well-fed line per tooltip (src/ui/hud/professions/wellfed_tooltip_view.ts).
-    html += wellFedTooltipLines(item);
-    // Gathering implements (#2343): picks/axes/sickles/rods and the simple
-    // pole render their kind, requirement, use, and bonus lines from the
-    // pure sibling module (the item_instance_tooltip.ts pattern).
-    html += gatherToolTooltipLines(item);
-    // Tool-effect charms (Gatherer's Cache / Artisan's Eye): what the charm
-    // does, how to slot it from Professions, and the charge ladder. Bags,
-    // bank, crafting, and market all compose this through itemTooltip.
-    html += toolEffectTooltipLines(item);
-    // Mobile-station tools (Master's Field Forge): what placing does, the
-    // party radius, the duration, and the replace rule; same all-surfaces
-    // composition (mobile_station_tooltip.ts).
-    html += mobileStationTooltipLines(item, stationNameText);
-    // Purpose hint for the eight enchanting materials (material_hint_view.ts
-    // keys the table by item id): what the reagent is for and which gear
-    // disenchants into it. Every other item id renders nothing here.
-    html += materialHintLine(item.id);
-    // Raw cooking catches: pure key table + createElement line (no foodHp /
-    // restore-health line; no materialHintLine HTML growth). outerHTML bridges
-    // the node into the legacy string tooltip stack.
-    const cookingHintKey = cookingCatchHintKey(item.id);
-    if (cookingHintKey) html += createTooltipLine(t(cookingHintKey), 'tt-desc').outerHTML;
-    // Profession affinity for honest materials (material_profession_hint_view.ts):
-    // "Used by Leatherworking, ..." derived from live recipe/enchant consumers.
-    // Skips when a more specific purpose line above already covers a single
-    // craft. Painted like the cooking hint (createElement, no HTML-string
-    // growth); the tt-material-use modifier carries the theme-emitted tint.
-    const materialUseText = materialProfessionHintText(item.id);
-    if (materialUseText) {
-      html += createTooltipLine(materialUseText, 'tt-desc', 'tt-material-use').outerHTML;
-    }
-    if (item.potionHp)
-      html += `<div class="tt-desc">${esc(t('itemUi.tooltip.useHealingPotion', { amount: itemNumber(item.potionHp) }))}</div>`;
-    if (item.potionHpPctMax)
-      html += `<div class="tt-desc">${esc(t('itemUi.tooltip.useHealingPotionPct', { percent: formatNumber(item.potionHpPctMax * 100) }))}</div>`;
-    if (item.potionMana)
-      html += `<div class="tt-desc">${esc(t('itemUi.tooltip.useManaPotion', { amount: itemNumber(item.potionMana) }))}</div>`;
-    // Battle elixirs: the temporary stat-buff quaffing grants (sim/items.ts
-    // useItem), from the pure sibling view so bags, bank, crafting, vendor,
-    // and market all state what the elixir does.
-    html += elixirTooltipLines(item);
-    // Patterns share their realm, skill and knownness gates across item surfaces.
-    // Gate the identity read by kind: Sim copies and sorts this projection;
-    // other item hovers should not pay for it. ClientWorld mirrors it directly.
-    if (item.kind === 'recipe') {
-      html += recipePatternTooltipLines(
-        item,
-        this.sim.craftingIdentity,
-        this.sim.cfg.freeholdsEnabled,
-      );
-    }
-    html += feastTooltipLines(item);
-    html += hearthKeyTooltipLines(item);
-    // Quest story block (related quest, progress, rules, orphaned). Replaces the
-    // old plain "Quest Item" desc that doubled the kind line.
-    if (questModel) html += this.questItemTooltipStoryHtml(questModel);
-    {
-      const slotsKey = bagSlotsLineKey(item);
-      // The bagSlots guard is load-bearing twice over: it keeps the old
-      // no-line behavior for a slotless bag def AND narrows the number for
-      // itemNumber (the leaf's null covers only the non-bag arm).
-      if (slotsKey && item.bagSlots)
-        html += `<div class="tt-stat">${esc(t(slotsKey, { slots: itemNumber(item.bagSlots) }))}</div>`;
-    }
-    html += mountTooltipLines(item);
-    const requiredClasses = requiredClassesForTooltip(item);
-    if (requiredClasses) {
-      html += `<div class="tt-sub">${esc(t('itemUi.tooltip.classes', { classes: requiredClasses.map(classDisplayName).join(', ') }))}</div>`;
-    }
-    html += itemRequiredLevelLine(item, this.sim.player.level);
-    html += this.itemProcBlock(item) + trinketTooltipLines(item, this.sim.player);
-    html += this.itemSetBlock(item);
-    html += materialMakersMarkLines(item, instance, materialSources);
-    // Stackables state their per-slot cap (sim/bags.ts stackSizeOf), so a
-    // player holding a single potion learns more copies will share the slot;
-    // 1-per-slot kinds, mounts, and charge-bearing payloads render nothing.
-    html += stackSizeTooltipLine(item, instance);
-    html += vendorSellTooltipLine(item);
-    if (compare) html += this.itemCompareBlock(item, instance);
-    return html;
-  }
-
-  // Legendary "chance on action" procs: one green trigger line per proc, each
-  // wrapping its joined effect fragments. Reads ItemDef.weaponProcs through the
-  // pure weapon_proc_view core so the derived numbers stay unit-tested.
-  private itemProcBlock(item: ItemDef): string {
-    const lines = weaponProcLines(item.kind === 'weapon' ? item.weaponProcs : undefined);
-    if (!lines.length) return '';
-    let html = '';
-    for (const line of lines) {
-      const effect = line.effects.map((e) => this.procEffectText(e)).join(' ');
-      const triggerKey =
-        // onMeleeHit is the legacy key id; its English reads the generic "Chance on
-        // hit", correct for a weaponHit proc that fires on melee AND hunter ranged.
-        line.trigger === 'weaponHit'
-          ? 'hudChrome.itemProc.onMeleeHit'
-          : line.trigger === 'spellDamage'
-            ? 'hudChrome.itemProc.onSpellDamage'
-            : 'hudChrome.itemProc.onHeal';
-      html += `<div class="tt-green">${esc(
-        t(triggerKey, {
-          chance: formatNumber(line.chancePct, { maximumFractionDigits: 0 }),
-          effect,
-        }),
-      )}</div>`;
-    }
-    return html;
-  }
-
-  // One effect fragment (chain arc / attack slow / dot / hot) as localized text.
-  private procEffectText(e: WeaponProcEffectDesc): string {
-    const n = (v: number | undefined): string => formatNumber(v ?? 0, { maximumFractionDigits: 0 });
-    switch (e.kind) {
-      case 'chainArc':
-        return t('hudChrome.itemProc.chainArc', {
-          school: e.school ?? '',
-          name: e.name ?? '',
-          damage: n(e.damage),
-          jumps: n(e.jumps),
-        });
-      case 'attackSlow':
-        return t('hudChrome.itemProc.attackSlow', {
-          pct: n(e.slowPct),
-          duration: n(e.duration),
-        });
-      case 'dot':
-        return t('hudChrome.itemProc.dot', {
-          name: e.name ?? '',
-          school: e.school ?? '',
-          total: n(e.total),
-          duration: n(e.duration),
-        });
-      case 'hot':
-        return t('hudChrome.itemProc.hot', {
-          name: e.name ?? '',
-          total: n(e.total),
-          duration: n(e.duration),
-        });
-    }
-  }
-
-  // How many equipped pieces belong to the given set (read from IWorld.equipment
-  // so it is identical offline and online).
-  private equippedSetPieces(setId: string): number {
-    return equippedSetTooltipPieces(setId, Object.values(this.sim.equipment));
-  }
-
-  // Classic tier-set block: the set name with the live (have/total) piece count,
-  // then each bonus tier - lit when its threshold is met, greyed otherwise. Set
-  // name and bonus text localize through entity_i18n (English source in
-  // content/item_sets.ts).
-  private itemSetBlock(item: ItemDef): string {
-    if (!item.set) return '';
-    const model = itemSetTooltipModel({
-      itemSetId: item.set,
-      equippedPieces: this.equippedSetPieces(item.set),
-      itemSetMembers: itemSetMemberCounts(),
-    });
-    if (!model) return '';
-    const name = tEntity({ kind: 'itemSet', id: model.setId, field: 'name' });
-    let html = `<div class="tt-set-name">${esc(t('hudChrome.itemSet.header', { name, have: formatNumber(model.equippedPieces, { maximumFractionDigits: 0 }), total: formatNumber(model.totalPieces, { maximumFractionDigits: 0 }) }))}</div>`;
-    for (const tier of model.bonusTiers) {
-      // The field NAMES its tier's piece count (itemSetBonusField): the old
-      // 2/3/4 ternary chain silently painted the 4-piece text for any other
-      // breakpoint, which is what a 7-piece tier would have shipped as.
-      const text = tEntity({
-        kind: 'itemSet',
-        id: model.setId,
-        field: itemSetBonusField(tier.pieces),
-      });
-      html += `<div class="tt-set-bonus${tier.active ? ' active' : ''}">${esc(t('hudChrome.itemSet.bonusLine', { pieces: formatNumber(tier.pieces, { maximumFractionDigits: 0 }), bonus: text }))}</div>`;
-    }
-    return html;
-  }
-
-  // Classic-style item comparison (the item_compare_view pure core): Hud
-  // supplies its world's equipment reads, the hovered copy's payload, and the
-  // tooltip renderer, so BOTH sides carry per-copy stats and titles.
-  private itemCompareBlock(item: ItemDef, instance?: ItemInstancePayload): string {
-    return itemCompareBlocksHtml(
-      item,
-      { equipment: this.sim.equipment, instances: this.sim.equipmentInstances },
-      (id) => ITEMS[id],
-      (equipped, worn) => this.itemTooltip(equipped, false, worn),
-      instance,
-    );
-  }
-
-  private questProgressText(label: string, current: number, total: number): string {
-    return t('questUi.detail.objectiveProgress', {
-      label,
-      current: formatCount(current),
-      total: formatCount(total),
-    });
-  }
-
-  /** Pure quest-item tooltip model for one def, or null for non-quest kinds. */
-  private questItemTooltipFor(item: ItemDef): QuestItemTooltipModel | null {
-    if (item.kind !== 'quest') return null;
-    const questId = item.questId;
-    const quest = questId ? QUESTS[questId] : undefined;
-    const log = questId ? this.sim.questLog.get(questId) : undefined;
-    return questItemTooltipModel({
-      kind: item.kind,
-      itemId: item.id,
-      questId,
-      questKnown: !!quest,
-      log: log
-        ? {
-            counts: log.counts,
-            state: log.state,
-            resolvedCounts: log.resolvedCounts,
-          }
-        : null,
-      objectives: quest?.objectives.map((objective) => ({
-        type: objective.type,
-        itemId: 'itemId' in objective ? objective.itemId : undefined,
-        count: objective.count,
-      })),
-    });
-  }
-
-  /** Story lines under the quest kind row: related quest, progress, rules, orphaned. */
-  private questItemTooltipStoryHtml(model: QuestItemTooltipModel): string {
-    let html = '';
-    if (model.relatedQuestId) {
-      html += `<div class="tt-sub" style="color:${QUEST_ITEM_TOOLTIP_COLOR}">${esc(
-        t(questItemTooltipRelatedKey(), { quest: questTitle(model.relatedQuestId) }),
-      )}</div>`;
-    }
-    if (model.progress && model.relatedQuestId) {
-      html += `<div class="tt-sub">${esc(
-        this.questProgressText(
-          questObjectiveLabel(model.relatedQuestId, model.progress.objectiveIndex),
-          model.progress.current,
-          model.progress.required,
-        ),
-      )}</div>`;
-    }
-    html += `<div class="tt-desc">${esc(t(model.rulesKey))}</div>`;
-    if (model.orphaned) {
-      html += `<div class="tt-desc">${esc(t(model.orphanedKey))}</div>`;
-    }
-    return html;
+    const deps = {
+      world: this.sim,
+      showItemLevel: () => this.optionsHooks?.settings.get('showItemLevel') ?? false,
+    };
+    return itemTooltipHtml(item, deps, compare, instance, materialSources);
   }
 
   private questSuggestedPlayersHtml(count?: number): string {

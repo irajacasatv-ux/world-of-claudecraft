@@ -1,7 +1,7 @@
 // Tool-effect charm tooltip lines: what Gatherer's Cache, Artisan's Eye and the
 // Maker's Charm do (plus the catalog Springback Charm), how a player slots
 // them, and that a slot burns the charm. Pure string-builder composed inside
-// Hud.itemTooltip (the gather_tool_tooltip.ts / material_hint_view.ts pattern):
+// itemTooltipHtml (the gather_tool_tooltip.ts / material_hint_view.ts pattern):
 // t() + esc here, no DOM, no Hud state, so tests/tool_effect_tooltip.test.ts
 // drives it directly.
 //
@@ -128,7 +128,7 @@ export function toolEffectStandaloneTooltip(effectId: string): string {
   const body = toolEffectBodyLines(effectId);
   if (body === '') return '';
   // Title color follows the charm item's own rarity (the itemNameColor idiom
-  // Hud.itemTooltip uses for item titles); a catalog-only effect with no item
+  // itemTooltipHtml uses for item titles); a catalog-only effect with no item
   // keeps the charm family's rare tint.
   const item = charmItemFor(effectId);
   const color = item ? itemNameColor(item) : QUALITY_COLOR.rare;
@@ -136,7 +136,7 @@ export function toolEffectStandaloneTooltip(effectId: string): string {
 }
 
 /** The tooltip lines for one tool-effect charm item, or '' for any other item.
- *  Composed into Hud.itemTooltip so bags, bank, crafting, market, and every
+ *  Composed into itemTooltipHtml so bags, bank, crafting, market, and every
  *  other surface that reuses itemTooltip show the same card. No title (the
  *  item tooltip already prints the name) and no "open Professions" line: the
  *  howToSlot line names the window, and the bag hover appends the

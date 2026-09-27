@@ -1,7 +1,7 @@
 // Mobile-station tool tooltip lines: what placing the Master's Field Forge
 // does, the party-share radius, the duration, that the tool is never
 // consumed, and the replace rule. Pure string-builder composed inside
-// Hud.itemTooltip (the tool_effect_tooltip.ts pattern): t() plus the shared
+// itemTooltipHtml (the tool_effect_tooltip.ts pattern): t() plus the shared
 // tooltip_line_core builder (which owns the esc) here, no
 // DOM, no Hud state, so tests/mobile_station_tooltip.test.ts drives it
 // directly.
@@ -32,7 +32,7 @@ export function isPlaceMobileStationItem<T extends Pick<ItemDef, 'use'>>(
 }
 
 /** The tooltip lines for one mobile-station tool item, or '' for any other
- *  item. Composed into Hud.itemTooltip so bags, bank, crafting, market, and
+ *  item. Composed into itemTooltipHtml so bags, bank, crafting, market, and
  *  every other surface that reuses itemTooltip show the same card. No title:
  *  the item tooltip already prints the name. The station noun derives from
  *  the def's own stationCraftId through stationTypeForCraft, so a second

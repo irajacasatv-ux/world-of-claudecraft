@@ -7,7 +7,7 @@
 // through wornTooltipInstance (the same projection the paperdoll tooltip
 // uses), so "Currently Equipped" titles a promoted copy with its legendary
 // color and chosen name instead of the def card. The card body itself stays
-// the host's: `tooltipHtml` is Hud.itemTooltip injected, so this module owns
+// the host's: `tooltipHtml` is itemTooltipHtml injected, so this module owns
 // the comparison decisions and the delta lines, never the item card markup.
 // Reads the IWorld equipment shapes, so it works identically offline and
 // online.
@@ -33,7 +33,7 @@ export interface CompareEquipmentSource {
   instances?: Partial<Record<EquipSlot, ItemInstancePayload>>;
 }
 
-/** Renders the worn item's own tooltip card (Hud.itemTooltip with compare
+/** Renders the worn item's own tooltip card (itemTooltipHtml with compare
  *  off); `instance` is the worn copy's projected payload, or undefined for a
  *  plain worn copy. */
 export type CompareTooltipRenderer = (item: ItemDef, instance?: ItemInstancePayload) => string;

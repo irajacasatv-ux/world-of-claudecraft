@@ -2,7 +2,8 @@
 // The report behind the elixir fix asked for exactly this property (the four
 // elixirs were the only silent outputs of the 79 craftables when audited);
 // this sweep keeps it true. Each source below names one branch of
-// Hud.itemTooltip that renders effect or purpose text, or the pure sibling
+// itemTooltipHtml (src/ui/item_tooltip_view.ts, the composed item card) that
+// renders effect or purpose text, or the pure sibling
 // builder that branch composes, mirroring the branch's own guard so a
 // conditional branch cannot green-light an item it would not render for. A
 // new craftable item whose only effect rides a NEW def field must extend
@@ -106,7 +107,7 @@ describe('crafted item tooltip coverage', () => {
         source,
         `${recipe.resultItemId} (crafted by ${recipe.id}) renders no effect or purpose ` +
           'text in its tooltip: give the def an effect field itemTooltip reads, or wire ' +
-          'the new effect into Hud.itemTooltip and add it to EFFECT_SOURCES here',
+          'the new effect into itemTooltipHtml and add it to EFFECT_SOURCES here',
       ).toBeDefined();
     }
   });
@@ -125,24 +126,24 @@ describe('crafted item tooltip coverage', () => {
     expect(EFFECT_SOURCES.find(([, fires]) => fires(silent))).toBeUndefined();
   });
 
-  it('Hud.itemTooltip composes every pure builder the sweep trusts (source pin)', () => {
+  it('itemTooltipHtml composes every pure builder the sweep trusts (source pin)', () => {
     // The def-field predicates above mirror branches that live INSIDE
-    // itemTooltip itself, but the pure builders below could be unwired from
-    // the coordinator without changing any def, and the sweep would still
-    // pass. Pin each composition call inside the method body, whole-line //
+    // itemTooltipHtml itself, but the pure builders below could be unwired
+    // from the composer without changing any def, and the sweep would still
+    // pass. Pin each composition call inside the function body, whole-line //
     // comments stripped first (the comment-gameable trap; block comments are
     // left alone: a /* strip would misfire on string and regex literals).
-    const hudSrc = readFileSync(path.join(__dirname, '../src/ui/hud.ts'), 'utf8').replace(
-      /^\s*\/\/.*$/gm,
-      '',
-    );
-    const start = hudSrc.indexOf('private itemTooltip(');
-    const end = hudSrc.indexOf('private itemProcBlock(');
+    const viewSrc = readFileSync(
+      path.join(__dirname, '../src/ui/item_tooltip_view.ts'),
+      'utf8',
+    ).replace(/^\s*\/\/.*$/gm, '');
+    const start = viewSrc.indexOf('export function itemTooltipHtml(');
+    const end = viewSrc.indexOf('function itemProcBlock(');
     expect(start).toBeGreaterThan(-1);
     expect(end).toBeGreaterThan(start);
-    const body = hudSrc.slice(start, end);
+    const body = viewSrc.slice(start, end);
     for (const call of [
-      'furnishingItemTooltip(item, instance, this.sim)',
+      'furnishingItemTooltip(item, instance, world)',
       'gatherToolTooltipLines(item)',
       'toolEffectTooltipLines(item)',
       'mobileStationTooltipLines(item, stationNameText)',
@@ -157,7 +158,7 @@ describe('crafted item tooltip coverage', () => {
       expect(body, `itemTooltip must compose ${call}`).toContain(call);
     }
     expect(body).toMatch(
-      /recipePatternTooltipLines\(\s*item,\s*this\.sim\.craftingIdentity,\s*this\.sim\.cfg\.freeholdsEnabled,\s*\)/,
+      /recipePatternTooltipLines\(\s*item,\s*world\.craftingIdentity,\s*world\.cfg\.freeholdsEnabled,?\s*\)/,
     );
   });
 });

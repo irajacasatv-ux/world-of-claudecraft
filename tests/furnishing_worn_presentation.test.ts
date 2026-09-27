@@ -5,7 +5,6 @@ import { ITEM_SETS, ITEMS } from '../src/sim/data';
 import { Sim } from '../src/sim/sim';
 import type { EquipSlot, ItemDef, ItemInstancePayload } from '../src/sim/types';
 import { CharWindow } from '../src/ui/char_window';
-import { Hud } from '../src/ui/hud';
 import { setLanguage } from '../src/ui/i18n';
 import { ITEM_IMAGE_IDS, iconDataUrl } from '../src/ui/icons';
 import { ItemDragState } from '../src/ui/item_drag_state';
@@ -14,6 +13,7 @@ import {
   itemSetMemberCounts,
   itemSetTooltipModel,
 } from '../src/ui/item_set_tooltip_view';
+import { itemTooltipHtml } from '../src/ui/item_tooltip_view';
 import {
   masterwroughtCapReadout,
   masterwroughtTooltipLines,
@@ -100,14 +100,11 @@ afterEach(() => {
   setLanguage('en');
 });
 
+// The composed item card (src/ui/item_tooltip_view.ts) over a real world, with
+// the Show Item Level setting off (the value the old Hud prototype rig read).
 function tooltip(world: IWorld, item: ItemDef, instance?: ItemInstancePayload): HTMLElement {
-  const hud = Object.create(Hud.prototype) as {
-    sim: IWorld;
-    itemTooltip(item: ItemDef, compare: boolean, instance?: ItemInstancePayload): string;
-  };
-  hud.sim = world;
   const root = document.createElement('div');
-  root.innerHTML = hud.itemTooltip(item, false, instance);
+  root.innerHTML = itemTooltipHtml(item, { world, showItemLevel: () => false }, false, instance);
   return root;
 }
 

@@ -1,34 +1,19 @@
 import { describe, expect, it } from 'vitest';
 import { ITEMS } from '../src/sim/data';
-import type { ItemDef } from '../src/sim/types';
-import { Hud } from '../src/ui/hud';
+import { itemTooltipHtml } from '../src/ui/item_tooltip_view';
+import { itemTooltipDeps } from './helpers/item_tooltip_deps';
 
-// The item tooltip is a private Hud method that only builds an HTML string, so
-// exercise it directly on a prototype-only instance (no constructor / DOM),
-// mirroring tests/hud_confirm_gates.ts. Only the few fields the weapon/armor slot
-// lines read need stubbing: sim.player.level (the requires-level line) and
-// sim.cfg.playerClass + sim.equipment (the armor can-equip check).
-interface TooltipHarness {
-  sim: {
-    player: { level: number };
-    cfg: { playerClass: string };
-    equipment: Record<string, string>;
-  };
-  itemTooltip(item: ItemDef, compare?: boolean): string;
-}
-
-function harness(playerClass = 'rogue'): TooltipHarness {
-  const hud = Object.create(Hud.prototype) as unknown as TooltipHarness;
-  hud.sim = { player: { level: 80 }, cfg: { playerClass }, equipment: {} };
-  return hud;
-}
-
-function tooltip(itemId: string, playerClass?: string): string {
+// The item tooltip is a pure composer that only builds an HTML string
+// (src/ui/item_tooltip_view.ts), so exercise it directly (no Hud, no DOM).
+// Only the few world reads the weapon/armor slot lines make need stubbing:
+// player.level (the requires-level line) and cfg.playerClass + equipment (the
+// armor can-equip check).
+function tooltip(itemId: string, playerClass = 'rogue'): string {
   const item = ITEMS[itemId];
   if (!item) throw new Error(`missing test item ${itemId}`);
   // compare=false: the compare block reads more IWorld surface than this slim
-  // harness stubs and is out of scope for the slot-line assertions.
-  return harness(playerClass).itemTooltip(item, false);
+  // fixture stubs and is out of scope for the slot-line assertions.
+  return itemTooltipHtml(item, itemTooltipDeps({ playerClass }), false);
 }
 
 describe('weapon type line on the item tooltip', () => {

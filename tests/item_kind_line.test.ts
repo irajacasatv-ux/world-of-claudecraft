@@ -1,10 +1,8 @@
-// @vitest-environment happy-dom
-//
 // The material kind-line split: fine grades read "Fine Material", honest
 // materials (ores, raw cooking catches, game_meat, ...) read "Material", and
 // grey non-material junk keeps "Junk". Kind stays 'junk' internally for sell
 // and taxonomy rules. Unit arms drive item_kind_label directly; one integration
-// arm keeps Hud.prototype.itemTooltip honest.
+// arm keeps the composed item card (itemTooltipHtml) honest.
 
 import { describe, expect, it } from 'vitest';
 import { FARM_CROPS } from '../src/sim/content/farm_crops';
@@ -12,27 +10,18 @@ import { RAW_COOKING_CATCH_IDS } from '../src/sim/content/items';
 import { ITEMS } from '../src/sim/data';
 import { MATERIAL_ITEM_IDS } from '../src/sim/material_taxonomy';
 import { baseMaterialFor, materialGradeIds } from '../src/sim/professions/material_grades';
-import { Hud } from '../src/ui/hud';
 import { itemKindLabel, itemQualityLabel } from '../src/ui/item_kind_label';
+import { itemTooltipHtml } from '../src/ui/item_tooltip_view';
 import { adoptedTrophyIds } from './helpers/adopted_trophy_ids';
+import { itemTooltipDeps } from './helpers/item_tooltip_deps';
 
 function tooltipHtml(itemId: string): string {
-  const h = Object.create(Hud.prototype) as unknown as {
-    sim: {
-      player: { level: number };
-      cfg: { playerClass: string };
-      equipment: Record<string, string>;
-    };
-    itemTooltip(item: unknown, compare?: boolean): string;
-  };
-  // Real host shape (masterwrought_tooltip.test.ts / weapon_type_tooltip.test.ts
-  // convention): itemTooltip unconditionally reads this.sim.player.level for
-  // itemRequiredLevelLine even on a non-equipment item; cfg/equipment cover the
-  // slot/masterwrought arms none of these material/food kind-line items take.
-  h.sim = { player: { level: 80 }, cfg: { playerClass: 'warrior' }, equipment: {} };
   const item = ITEMS[itemId];
   if (!item) throw new Error(`missing item ${itemId}`);
-  return h.itemTooltip(item, false);
+  // The minimal deps fixture (tests/helpers/item_tooltip_deps.ts): the card
+  // reads world.player.level for itemRequiredLevelLine on every item, and
+  // cfg/equipment cover the slot/masterwrought arms these items never take.
+  return itemTooltipHtml(item, itemTooltipDeps(), false);
 }
 
 describe('itemKindLabel and itemQualityLabel, driven directly', () => {
@@ -95,7 +84,7 @@ describe('the tooltip kind line for material grades', () => {
     // TROPHY_RECIPES rows no other recipe consumes), by name, so a future
     // adoption or de-adoption moves this arm too. Membership is derived
     // from recipe reagents, so these arms hold the whole promotion visible
-    // on the kind line, through the REAL Hud.prototype.itemTooltip.
+    // on the kind line, through the REAL itemTooltipHtml.
     const adopted = adoptedTrophyIds(ITEMS);
     expect(adopted).toHaveLength(7);
     for (const id of adopted) {

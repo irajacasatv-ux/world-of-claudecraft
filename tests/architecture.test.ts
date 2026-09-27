@@ -215,6 +215,9 @@ const UI_PURE_CORES = [
   'src/ui/frame_menu_core.ts',
   'src/ui/loot_quality_view.ts',
   'src/ui/item_combat_tooltip_view.ts',
+  // The composed item tooltip card (extracted from Hud.itemTooltip): an IWorld
+  // slice plus the Show Item Level thunk in, the card's HTML string out.
+  'src/ui/item_tooltip_view.ts',
   'src/ui/trinket_tooltip_view.ts',
   // The trinket auras' tooltip descriptor and their item-icon art map.
   'src/ui/trinket_aura_effect.ts',
@@ -2596,8 +2599,6 @@ const UI_PAINTER_HELPERS = [
   'src/ui/absorb_overlay_gate.ts',
   'src/ui/continent_land_mask.ts',
   'src/ui/text_sprite_cache.ts',
-  // Detached tt-desc / tt-sub line mint (createElement + textContent only).
-  'src/ui/tooltip_line.ts',
 ].map((rel) => join(repoRoot, rel));
 
 // Modules that REACH A HOST: they own browser state (the windows, the HUD

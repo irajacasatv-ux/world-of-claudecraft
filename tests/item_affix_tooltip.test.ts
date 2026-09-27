@@ -1,7 +1,7 @@
 // The item tooltip's authored-affix lines (Spell Power / Healing Power, the
 // Crucible tier's affix debut): literal-value pins for the pure string
 // builder, its localized labels, the esc() wrap over the composed line, the
-// compare-row label-key resolver, and the hud.itemTooltip composition order
+// compare-row label-key resolver, and the itemTooltipHtml composition order
 // (the tests/item_instance_tooltip.test.ts source-pin idiom).
 import { readFileSync } from 'node:fs';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -107,14 +107,17 @@ describe('compareStatLabelKey', () => {
   });
 });
 
-describe('hud.itemTooltip composition (source pins)', () => {
+describe('itemTooltipHtml composition (source pins)', () => {
   const hud = readFileSync(new URL('../src/ui/hud.ts', import.meta.url), 'utf8');
+  // The composed item card left Hud for src/ui/item_tooltip_view.ts; the
+  // composition pins follow it there, and Hud is held to composing none.
+  const card = readFileSync(new URL('../src/ui/item_tooltip_view.ts', import.meta.url), 'utf8');
 
   it('composes the affix lines exactly once, after the stat lines and before the combat ratings', () => {
     // The column composition left hud.ts with permanent loot quality: the
     // extracted src/ui/item_combat_tooltip_view.ts resolves the quality-scaled
-    // stats once and composes Stats | Affix | Ratings from them, and hud.ts
-    // keeps the one call into it. The pin follows the code there (the
+    // stats once and composes Stats | Affix | Ratings from them, and the item
+    // card (item_tooltip_view.ts) keeps the one call into it. The pin follows the code there (the
     // item_compare_view precedent below).
     const view = readFileSync(
       new URL('../src/ui/item_combat_tooltip_view.ts', import.meta.url),
@@ -135,11 +138,15 @@ describe('hud.itemTooltip composition (source pins)', () => {
     // Exactly one composition site (the import carries no paren, so this
     // matches call sites only).
     expect(view.indexOf('itemAffixTooltipLines(', affix + 1)).toBe(-1);
-    // hud.ts composes through the view exactly once and never reaches the
-    // column helpers directly, so the order above is the tooltip's order.
-    const composed = hud.indexOf('itemCombatTooltipLines(item, instance)');
+    // The item card composes through the view exactly once and never reaches
+    // the column helpers directly, so the order above is the tooltip's order;
+    // hud.ts reaches none of the three, so the card is the only composition.
+    const composed = card.indexOf('itemCombatTooltipLines(item, instance)');
     expect(composed).toBeGreaterThan(-1);
-    expect(hud.indexOf('itemCombatTooltipLines(', composed + 1)).toBe(-1);
+    expect(card.indexOf('itemCombatTooltipLines(', composed + 1)).toBe(-1);
+    expect(card).not.toContain('itemAffixTooltipLines(');
+    expect(card).not.toContain('itemRatingTooltipLines(');
+    expect(hud).not.toContain('itemCombatTooltipLines(');
     expect(hud).not.toContain('itemAffixTooltipLines(');
     expect(hud).not.toContain('itemRatingTooltipLines(');
   });

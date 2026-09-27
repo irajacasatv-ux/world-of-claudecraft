@@ -1192,19 +1192,30 @@ describe('vendor window family: hud.ts focus-management wiring (WCAG 2.4.3)', ()
 
   it('the item tooltip derives its bag slot line from the shared bagSlotsLineKey leaf', () => {
     // The bags_window aria call site carries the same pin in its own suite;
-    // this is the hud half. Hardcoding the plain key here would keep every
-    // test green while every materials-satchel tooltip reverted to the plain
-    // wording (the leaf's variant table lives in tests/bags_view.test.ts).
-    // Anchored to itemTooltip's own body like the renderVendor pin above: an
-    // unscoped whole-file toContain is satisfied by the same expression in an
-    // unrelated method, and the slice is comment-stripped so a line of prose
-    // quoting the call cannot stand in for the call itself.
-    const itemTooltipStart = anchor(
-      'private itemTooltip(\n    item: ItemDef,\n    compare = true,\n    instance?: ItemInstancePayload,\n    materialSources?: MaterialComposition,\n  ): string {',
+    // this is the item card half (the card moved out of hud.ts into
+    // src/ui/item_tooltip_view.ts, so the anchors read that file). Hardcoding
+    // the plain key here would keep every test green while every
+    // materials-satchel tooltip reverted to the plain wording (the leaf's
+    // variant table lives in tests/bags_view.test.ts). Anchored to
+    // itemTooltipHtml's own body like the renderVendor pin above: an unscoped
+    // whole-file toContain is satisfied by the same expression in an unrelated
+    // function, and the slice is comment-stripped so a line of prose quoting
+    // the call cannot stand in for the call itself.
+    const card = readFileSync(join(__dirname, '../src/ui/item_tooltip_view.ts'), 'utf8');
+    const cardAnchor = (needle: string): number => {
+      const at = card.indexOf(needle);
+      expect(
+        at,
+        `anchor not found in item_tooltip_view.ts: ${JSON.stringify(needle)}`,
+      ).toBeGreaterThanOrEqual(0);
+      return at;
+    };
+    const itemTooltipStart = cardAnchor(
+      'export function itemTooltipHtml(\n  item: ItemDef,\n  deps: ItemTooltipDeps,\n  compare = true,\n  instance?: ItemInstancePayload,\n  materialSources?: MaterialComposition,\n): string {',
     );
-    const itemProcBlockStart = anchor('private itemProcBlock(item: ItemDef): string {');
+    const itemProcBlockStart = cardAnchor('function itemProcBlock(item: ItemDef): string {');
     expect(itemProcBlockStart).toBeGreaterThan(itemTooltipStart);
-    const itemTooltipBody = stripComments(hud.slice(itemTooltipStart, itemProcBlockStart));
+    const itemTooltipBody = stripComments(card.slice(itemTooltipStart, itemProcBlockStart));
     expect(itemTooltipBody).toContain('const slotsKey = bagSlotsLineKey(item);');
     expect(itemTooltipBody).toContain('t(slotsKey, { slots: itemNumber(item.bagSlots) })');
     // The render gate is pinned too, since the two lines above survive it being

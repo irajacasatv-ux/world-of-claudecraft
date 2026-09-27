@@ -1,7 +1,7 @@
 // The trinkets' item-tooltip lines: the green "Equip:" line for a worn passive
 // and the green "Use:" line (with its cooldown) for the action-bar effect, plus
 // the Gambler's Die fortune notice. A pure string builder (t() + esc, no DOM,
-// no Hud state) composed inside Hud.itemTooltip; registered in
+// no Hud state) composed inside itemTooltipHtml; registered in
 // tests/architecture.test.ts UI_PURE_CORES and driven directly by
 // tests/trinket_tooltip_view.test.ts.
 //

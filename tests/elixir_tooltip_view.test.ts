@@ -1,7 +1,8 @@
 // Battle-elixir tooltip line: the pure string-builder composed inside
-// Hud.itemTooltip. English copy asserted directly (the
-// gather_tool_tooltip.test.ts idiom); the numbers must mirror each def's own
-// elixir record, never re-invented copy. Also guards the data side: an item
+// itemTooltipHtml (src/ui/item_tooltip_view.ts). English copy asserted
+// directly (the gather_tool_tooltip.test.ts idiom); the numbers must mirror
+// each def's own elixir record, never re-invented copy. Also guards the data
+// side: an item
 // of kind 'elixir' without an elixir record would quaff as a silent no-op
 // (sim/items.ts useItem returns early) AND render no use line, which is
 // exactly the invisible-tooltip bug this module fixed.
@@ -162,24 +163,24 @@ describe('elixirTooltipLines', () => {
     expect(elixirTooltipLines(def)).toContain('Warchief&#39;s Blessing');
   });
 
-  it('Hud.itemTooltip composes the elixir line (method-scoped source pin)', () => {
+  it('itemTooltipHtml composes the elixir line (method-scoped source pin)', () => {
     // Whole-line // comments are stripped before scanning so the pin is not
     // satisfied by prose (the comment-gameable trap; block comments are left
     // alone: a /* strip would misfire on string and regex literals, the
-    // gather_tool_tooltip.test.ts idiom). Scoped to the itemTooltip method
-    // body so the call cannot drift into some other surface and still pass.
+    // gather_tool_tooltip.test.ts idiom). Scoped to the itemTooltipHtml
+    // function body so the call cannot drift into some other surface and still pass.
     // The Well Fed line moved to the ONE surviving view in
     // wellfed_tooltip_view.ts (Masterwrought 11c); its wiring, including the
     // exactly-one-call rule, is pinned in tests/wellfed_tooltip_view.test.ts.
-    const hudSrc = readFileSync(path.join(__dirname, '../src/ui/hud.ts'), 'utf8').replace(
-      /^\s*\/\/.*$/gm,
-      '',
-    );
-    const start = hudSrc.indexOf('private itemTooltip(');
-    const end = hudSrc.indexOf('private itemProcBlock(');
+    const viewSrc = readFileSync(
+      path.join(__dirname, '../src/ui/item_tooltip_view.ts'),
+      'utf8',
+    ).replace(/^\s*\/\/.*$/gm, '');
+    const start = viewSrc.indexOf('export function itemTooltipHtml(');
+    const end = viewSrc.indexOf('function itemProcBlock(');
     expect(start).toBeGreaterThan(-1);
     expect(end).toBeGreaterThan(start);
-    const body = hudSrc.slice(start, end);
+    const body = viewSrc.slice(start, end);
     expect(body).toContain('html += elixirTooltipLines(item);');
   });
 

@@ -99,13 +99,18 @@ describe('requiredClassesForTooltip', () => {
 // hud.ts renders the tooltip; assert the source no longer suppresses the classes
 // line for items that match a known armor-weight/weapon-archetype grouping (the
 // regression), and that it renders through the new pure resolver.
-describe('hud.ts item tooltip class-restriction line', () => {
+describe('item tooltip class-restriction line (item_tooltip_view.ts)', () => {
+  // The item card moved out of hud.ts into src/ui/item_tooltip_view.ts; the
+  // positive pin follows it, and the retired narrow gate stays dead in both.
+  const card = readFileSync(new URL('../src/ui/item_tooltip_view.ts', import.meta.url), 'utf8');
   const hud = readFileSync(new URL('../src/ui/hud.ts', import.meta.url), 'utf8');
 
   it('renders the classes line for every class-restricted item, not just narrow ones', () => {
-    expect(hud).toContain('requiredClassesForTooltip(item)');
-    expect(hud).not.toContain(
-      'if (item.requiredClass && !armorTypeForItem(item) && !weaponArchetypeForItem(item)) {',
-    );
+    expect(card).toContain('requiredClassesForTooltip(item)');
+    for (const src of [card, hud]) {
+      expect(src).not.toContain(
+        'if (item.requiredClass && !armorTypeForItem(item) && !weaponArchetypeForItem(item)) {',
+      );
+    }
   });
 });

@@ -2,8 +2,9 @@
 // Data half of the material_hint_view pattern: item id -> one shared
 // translation key. All seven locked raw catches share the same sentence
 // (they are cooking ingredients and must be cooked before eating). No markup:
-// the host paints via createTooltipLine (tooltip_line.ts) so this feature
-// does not grow materialHintLine's HTML-string path.
+// the item card paints it via the shared tooltipLine builder
+// (tooltip_line_core.ts) so this feature does not grow materialHintLine's
+// HTML-string path.
 //
 // Reuses RAW_COOKING_CATCH_IDS from content; does not re-list catch ids.
 // DOM/Three-free (registered in tests/architecture.test.ts UI_PURE_CORES).

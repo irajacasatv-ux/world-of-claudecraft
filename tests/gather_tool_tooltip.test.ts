@@ -1,5 +1,5 @@
 // Gathering-implement item tooltip lines (#2343): the pure string-builder
-// composed inside Hud.itemTooltip. English copy asserted directly (the
+// composed inside itemTooltipHtml. English copy asserted directly (the
 // gather_node_tooltip.test.ts idiom); numbers must mirror the sim's own
 // tuning constants (bite 1.5s and reel 0.75s per rod tier above 1, catch
 // band b at rod tier b+1 over the 0/100/200 thresholds), never re-invented.
@@ -313,17 +313,19 @@ describe('gatherToolTooltipLines: everything else', () => {
   });
 });
 
-describe('hud composition source pin', () => {
-  it('Hud.itemTooltip composes the module (one line, never inline logic)', () => {
+describe('item card composition source pin', () => {
+  it('itemTooltipHtml composes the module (one line, never inline logic)', () => {
     // Whole-line // comments are stripped before scanning so the negative pin
     // is not tripped by prose (the comment-gameable trap; block comments are
     // left alone: a /* strip would misfire on string and regex literals).
-    const hudSrc = readFileSync(path.join(__dirname, '../src/ui/hud.ts'), 'utf8').replace(
-      /^\s*\/\/.*$/gm,
-      '',
-    );
-    expect(hudSrc).toContain('gatherToolTooltipLines(item)');
+    const codeOf = (rel: string): string =>
+      readFileSync(path.join(__dirname, rel), 'utf8').replace(/^\s*\/\/.*$/gm, '');
+    const viewSrc = codeOf('../src/ui/item_tooltip_view.ts');
+    expect(viewSrc).toContain('gatherToolTooltipLines(item)');
     // The legacy inline pole arm is gone: the module owns the fishing lines.
-    expect(hudSrc).not.toContain("item.use?.type === 'fishing'");
+    // Checked in the composer AND in Hud, which composed the card before it
+    // moved to item_tooltip_view.ts, so the arm cannot return in either.
+    expect(viewSrc).not.toContain("item.use?.type === 'fishing'");
+    expect(codeOf('../src/ui/hud.ts')).not.toContain("item.use?.type === 'fishing'");
   });
 });

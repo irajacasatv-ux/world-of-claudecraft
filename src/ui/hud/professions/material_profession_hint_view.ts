@@ -14,8 +14,8 @@
 // material_hint_view. Multi-craft cooking reagents (e.g. a catch also used by
 // Engineering) still get this line so secondary crafts are not hidden.
 //
-// TEXT only, no markup: the host paints via createTooltipLine
-// (tooltip_line.ts) with the tt-material-use modifier, per the
+// TEXT only, no markup: the item card paints it via the shared tooltipLine
+// builder (tooltip_line_core.ts) with the tt-material-use modifier, per the
 // cooking_catch_hint_view precedent, so this feature does not grow the
 // legacy HTML-string tooltip path.
 //

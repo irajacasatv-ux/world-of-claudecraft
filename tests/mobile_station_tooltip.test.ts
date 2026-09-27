@@ -1,5 +1,5 @@
 // Master's Field Forge tooltip lines: the pure string-builder composed inside
-// Hud.itemTooltip. English copy asserted directly (the
+// itemTooltipHtml. English copy asserted directly (the
 // tool_effect_tooltip.test.ts idiom); the radius and duration numbers must
 // mirror STATION_RADIUS and MOBILE_CRAFTING_STATION_DURATION_TICKS, never
 // re-invented. The station noun derives from the def's own stationCraftId;
@@ -42,7 +42,7 @@ describe('mobileStationTooltipLines: the shipped field forge', () => {
   });
 
   it('emits no title, and the matcher can see one (positive control)', () => {
-    // No title: Hud.itemTooltip already prints the item name. The positive
+    // No title: itemTooltipHtml already prints the item name. The positive
     // control proves the tt-title token is real and detectable, so the
     // negative pin cannot pass vacuously against a token that never exists.
     expect(toolEffectStandaloneTooltip('makers_charm')).toContain('tt-title');
@@ -86,9 +86,11 @@ describe('mobileStationTooltipLines: everything else', () => {
     expect(mobileStationTooltipLines(ITEMS.copper_ore, stationNameText)).toBe('');
   });
 
-  it('Hud.itemTooltip composes the module (one line, never inline logic)', () => {
-    const hudSrc = codeOnly(readFileSync(path.join(__dirname, '../src/ui/hud.ts'), 'utf8'));
-    expect(hudSrc).toContain("from './hud/professions/mobile_station_tooltip'");
-    expect(hudSrc).toContain('mobileStationTooltipLines(item, stationNameText)');
+  it('itemTooltipHtml composes the module (one line, never inline logic)', () => {
+    const viewSrc = codeOnly(
+      readFileSync(path.join(__dirname, '../src/ui/item_tooltip_view.ts'), 'utf8'),
+    );
+    expect(viewSrc).toContain("from './hud/professions/mobile_station_tooltip'");
+    expect(viewSrc).toContain('mobileStationTooltipLines(item, stationNameText)');
   });
 });

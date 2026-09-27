@@ -21,9 +21,7 @@ import {
   recipePatternTooltipLines,
 } from '../src/ui/hud/professions/recipe_pattern_tooltip_view';
 import { toolEffectStandaloneTooltip, toolEffectTooltipLines } from '../src/ui/tool_effect_tooltip';
-// Type-only, so this suite needs no DOM: tooltip_line.ts reaches document.
-import type { TooltipLineElementClass } from '../src/ui/tooltip_line';
-import { type TooltipLineClass, tooltipLine } from '../src/ui/tooltip_line_core';
+import { tooltipLine } from '../src/ui/tooltip_line_core';
 import { expectScansOnlyThroughSharedWalkers } from './helpers/scan_guard_self_audit';
 import { tsFilesUnder } from './helpers/ts_files_under';
 
@@ -231,7 +229,7 @@ describe('the four consumers import the shared builder and keep no private copy'
 
 describe('one module owns TooltipLineClass for the whole family', () => {
   // The census caught this after the collapse shipped: src/ui/tooltip_line.ts
-  // (the createElement path) ALSO exported a type named TooltipLineClass, with
+  // (the createElement path, deleted 2026-09-27 once nothing called it) ALSO exported a type named TooltipLineClass, with
   // DIFFERENT members ('tt-desc' | 'tt-sub' against the core's four). Two
   // same-named exported unions in one directory is a worse trap than the four
   // private line() copies the collapse removed, because those at least had
@@ -248,91 +246,11 @@ describe('one module owns TooltipLineClass for the whole family', () => {
     expect(offenders).toEqual(['src/ui/tooltip_line_core.ts']);
   });
 
-  it('the DOM sibling DERIVES its subset rather than declaring one', () => {
-    // Extract off the owner's union is what makes drift impossible: drop a role
-    // from the core and this narrows, rather than two lists disagreeing.
-    const source = sourceOf('src/ui/tooltip_line.ts');
-    expect(source).toMatch(
-      /import type \{[^}]*TooltipLineClass[^}]*\} from '\.\/tooltip_line_core'/,
-    );
-    expect(source).toMatch(/Extract<\s*TooltipLineClass\s*,/);
-  });
-
   it('the scan reaches a real corpus and walks it through the shared walker', () => {
     const files = tsFilesUnder(path.join(__dirname, '..', 'src'));
     expect(files.length).toBeGreaterThan(500);
-    expect(files.map(({ file }) => file)).toContain('ui/tooltip_line.ts');
+    expect(files.map(({ file }) => file)).toContain('ui/tooltip_line_core.ts');
     expectScansOnlyThroughSharedWalkers(import.meta.url, ['ts_files_under']);
-  });
-
-  it('the derived subset accepts the two DOM roles and refuses the other two', () => {
-    // Compile-time, and tsc covers tests/: if tooltip_line.ts ever re-widens to
-    // the full union these directives go unused and red.
-    const desc: TooltipLineElementClass = 'tt-desc';
-    const sub: TooltipLineElementClass = 'tt-sub';
-    expect([desc, sub]).toEqual(['tt-desc', 'tt-sub']);
-    // @ts-expect-error tt-green is an HTML-string-builder role, not a DOM one.
-    const green: TooltipLineElementClass = 'tt-green';
-    // @ts-expect-error tt-red likewise.
-    const red: TooltipLineElementClass = 'tt-red';
-    expect([green, red]).toEqual(['tt-green', 'tt-red']);
-    // THE SHIPPED MEMBERS ARE UNCHANGED, and this is the pin that says so
-    // rather than the four assertions above, which only bound the set from
-    // each side one member at a time. tooltip_line.ts predates the core, so
-    // deriving must reproduce its published union EXACTLY: mutual
-    // assignability, so widening it (a third member sneaking in through the
-    // owner) reds here just as loudly as narrowing it.
-    type ExactlyShipped = [TooltipLineElementClass] extends ['tt-desc' | 'tt-sub']
-      ? ['tt-desc' | 'tt-sub'] extends [TooltipLineElementClass]
-        ? true
-        : false
-      : false;
-    const shippedMembersUnchanged: ExactlyShipped = true;
-    expect(shippedMembersUnchanged).toBe(true);
-    // And the owner's union really is the wider one, so the Extract above is a
-    // narrowing rather than an identity.
-    const wide: TooltipLineClass = 'tt-green';
-    expect(wide).toBe('tt-green');
-
-    // Everything above is tsc's alone: vitest transpiles without type-checking,
-    // so under a bare `vitest run` the `Exact` annotation is the literal `true`
-    // compared with itself, both `@ts-expect-error` directives are erased, and
-    // each toEqual reads back a literal assigned one line earlier. The shape
-    // that fixes it is tests/wellfed.test.ts: spell each union out as an
-    // exhaustive Record.
-    //
-    // BE EXACT ABOUT WHICH LAYER HOLDS WHAT, since a pin that claims more than
-    // it measures is the defect this file's own history is about. The two
-    // Records are a TSC arm, and they are the arm that really holds both
-    // directions: measured against this file, adding a fifth member to
-    // TooltipLineClass reds as TS2741 on `ownerRoles` and dropping one reds as
-    // TS2353, while all 40 cases here stay GREEN under a bare `vitest run` for
-    // either move. So the key-list assertions below re-state at runtime what
-    // tsc already enforces; they are a readable record of the shipped sets and
-    // a cheap catch for a hand-edit that keeps the types valid, NOT a second
-    // independent guard over the unions. The one arm that answers on its own
-    // without tsc is the round trip through the real builder at the end.
-    const ownerRoles: Record<TooltipLineClass, true> = {
-      'tt-sub': true,
-      'tt-desc': true,
-      'tt-green': true,
-      'tt-red': true,
-    };
-    const domRoles: Record<TooltipLineElementClass, true> = {
-      'tt-desc': true,
-      'tt-sub': true,
-    };
-    expect(Object.keys(ownerRoles).sort()).toEqual(['tt-desc', 'tt-green', 'tt-red', 'tt-sub']);
-    expect(Object.keys(domRoles).sort()).toEqual(['tt-desc', 'tt-sub']);
-    // The DOM path's set is a real subset of the owner's and a real NARROWING of
-    // it, both answered at runtime rather than in the type system.
-    expect(Object.keys(ownerRoles)).toEqual(expect.arrayContaining(Object.keys(domRoles)));
-    expect(Object.keys(domRoles).length).toBeLessThan(Object.keys(ownerRoles).length);
-    // ... and these are the SHIPPED roles rather than four strings this test
-    // made up: every owner key round-trips through the real builder.
-    for (const cls of Object.keys(ownerRoles) as TooltipLineClass[]) {
-      expect(tooltipLine(cls, 'x'), cls).toBe(`<div class="${cls}">x</div>`);
-    }
   });
 });
 

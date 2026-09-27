@@ -6072,8 +6072,8 @@ export const hudChromeStrings = {
     fineGrade:
       'Fine grade. Gathered from a full-tier vein with a tool ranked above the material, and counts as the ordinary version wherever one is required.',
     // One key shared by every raw fishing catch (RAW_COOKING_CATCH_IDS): cooking
-    // reagents only; never edible raw. Painted via createTooltipLine, not the
-    // materialHintLine HTML-string path.
+    // reagents only; never edible raw. Painted via its own tooltipLine call in
+    // item_tooltip_view.ts, not the materialHintLine HTML-string path.
     // One key shared by the twelve farm fine twins (content/farm_crops.ts
     // fineProduceItemId), the farming counterpart of fineGrade above. Written
     // from the live mechanic (src/sim/professions/farming.ts harvest roll:

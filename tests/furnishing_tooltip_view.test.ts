@@ -18,6 +18,7 @@ import { furnishingTooltipLines, furnishingTooltipRows } from '../src/ui/hud/hou
 import { buildPlayerCardData } from '../src/ui/hud/player_card/player_card_data';
 import { setLanguage } from '../src/ui/i18n';
 import { hudChromeStrings } from '../src/ui/i18n.catalog/hud_chrome';
+import { itemTooltipHtml } from '../src/ui/item_tooltip_view';
 import { makeWriterFacet } from '../src/ui/painter_host';
 import type { StatId, StatTooltipModel } from '../src/ui/stat_tooltip';
 import type { IWorld } from '../src/world_api';
@@ -50,17 +51,16 @@ const furnishing: FurnishingItemDef = {
   },
 };
 
+// The composed item card (src/ui/item_tooltip_view.ts) over a real world, with
+// the Show Item Level setting off (the value the old Hud prototype rig read).
+// Only the action-bar drag and chat-link cases below still need the Hud.
 function composedTooltip(
   item: ItemDef,
   instance?: ItemInstancePayload,
   world?: IWorld,
   compare = false,
 ): string {
-  const hud = Object.create(Hud.prototype) as {
-    sim: IWorld;
-    itemTooltip(item: ItemDef, compare: boolean, instance?: ItemInstancePayload): string;
-  };
-  hud.sim =
+  const tooltipWorld =
     world ??
     new Sim({
       seed: 42,
@@ -68,7 +68,12 @@ function composedTooltip(
       autoEquip: false,
       world: EMPTY_TEST_WORLD,
     });
-  return hud.itemTooltip(item, compare, instance);
+  return itemTooltipHtml(
+    item,
+    { world: tooltipWorld, showItemLevel: () => false },
+    compare,
+    instance,
+  );
 }
 
 afterEach(() => setLanguage('en'));

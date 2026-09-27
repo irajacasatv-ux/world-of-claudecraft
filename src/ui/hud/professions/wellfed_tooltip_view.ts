@@ -2,7 +2,7 @@
 // buff food actually grants, farm dish and apex role plate alike (the
 // temporary stat-buff aura the sim mints when the 18s sit-restore COMPLETES;
 // an interrupted meal, damage, death, or match reset, forfeits it), as a
-// pure string-builder composed inside Hud.itemTooltip directly under the
+// pure string-builder composed inside itemTooltipHtml directly under the
 // restore line it qualifies (the elixir_tooltip_view.ts pattern: t() + esc
 // here, no DOM, no Hud state, so tests/wellfed_tooltip_view.test.ts drives
 // it directly). The completion trigger AND the one-at-a-time rule are both

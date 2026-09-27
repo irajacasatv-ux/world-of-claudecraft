@@ -1,5 +1,5 @@
 // Max-stack item tooltip line: how many copies of the item share one bag
-// slot, as a pure string-builder composed inside Hud.itemTooltip (the
+// slot, as a pure string-builder composed inside itemTooltipHtml (the
 // elixir_tooltip_view.ts pattern: t() + esc here, no DOM, no Hud state, so
 // tests/stack_size_tooltip_view.test.ts drives it directly). The NUMBER
 // always comes from the one stacking rule every inventory site consumes

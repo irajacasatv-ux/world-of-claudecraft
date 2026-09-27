@@ -119,7 +119,7 @@ export interface WocMarketWindowDeps {
    *  positioning and the only forced-reflow reads involved, which is what keeps
    *  this cold window's no-layout-read contract intact. */
   attachTooltip(element: HTMLElement, html: () => string): void;
-  /** The SAME item tooltip the character window shows (Hud.itemTooltip with
+  /** The SAME item tooltip the character window shows (itemTooltipHtml with
    *  compare on), so a listing reads identically to worn gear: stats, the
    *  instance badges, the enchant, and the compare-to-equipped deltas. */
   itemTooltip(item: ItemDef, instance?: ItemInstancePayload): string;

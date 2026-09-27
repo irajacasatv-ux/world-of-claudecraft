@@ -12,13 +12,14 @@ import { resolvePatternLearn } from '../src/sim/professions/pattern_items';
 import type { ProfessionRecipeRecord } from '../src/sim/professions/types';
 import { Sim } from '../src/sim/sim';
 import type { ItemDef, RecipeItemDef } from '../src/sim/types';
-import { Hud } from '../src/ui/hud';
 import {
   type RecipePatternViewerInput,
   recipePatternTooltipLines,
   recipePatternTooltipModel,
 } from '../src/ui/hud/professions/recipe_pattern_tooltip_view';
+import { itemTooltipHtml } from '../src/ui/item_tooltip_view';
 import { bareClient } from './helpers/bare_client';
+import { itemTooltipDeps } from './helpers/item_tooltip_deps';
 import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // An alchemy recipe with a real skill gate and a resolvable result item.
@@ -462,42 +463,30 @@ describe('same input, same output across both IWorld shapes', () => {
   });
 });
 
-describe('reachability through the real Hud tooltip', () => {
-  // The lines above are only worth pinning if the coordinator actually composes
-  // them. Drive the REAL Hud.itemTooltip on a prototype-only instance (the
-  // tests/masterwrought_tooltip.test.ts rig) with a kind:'recipe' def, so an
-  // unwired or wrongly-gated call site fails here rather than shipping a
+describe('reachability through the real item tooltip', () => {
+  // The lines above are only worth pinning if the item card actually composes
+  // them. Drive the REAL itemTooltipHtml (src/ui/item_tooltip_view.ts, the
+  // tests/masterwrought_tooltip.test.ts fixture) with a kind:'recipe' def, so
+  // an unwired or wrongly-gated call site fails here rather than shipping a
   // pattern whose hover says only "Uncommon Pattern".
-  function hudTooltip(
+  function cardTooltip(
     item: ItemDef,
     craftingIdentity: RecipePatternViewerInput,
     freeholdsEnabled?: boolean,
   ): string {
-    const hud = Object.create(Hud.prototype) as unknown as {
-      sim: {
-        player: { level: number };
-        cfg: { playerClass: string; freeholdsEnabled?: boolean };
-        equipment: Record<string, string>;
-        craftingIdentity: RecipePatternViewerInput;
-      };
-      itemTooltip(item: ItemDef, compare?: boolean): string;
-    };
-    hud.sim = {
-      player: { level: 80 },
-      cfg: { playerClass: 'warrior', freeholdsEnabled },
-      equipment: {},
-      craftingIdentity,
-    };
-    return hud.itemTooltip(item, false);
+    const deps = itemTooltipDeps({
+      world: { cfg: { playerClass: 'warrior', freeholdsEnabled }, craftingIdentity },
+    });
+    return itemTooltipHtml(item, deps, false);
   }
 
   it('renders the teaches line for a pattern def', () => {
-    const html = hudTooltip(pattern(GATED_RECIPE), viewer());
+    const html = cardTooltip(pattern(GATED_RECIPE), viewer());
     expect(html).toContain('Use: Teaches you how to craft Sunpetal Mana Draught.');
   });
 
   it('renders the red requirement and known lines through the same call', () => {
-    const html = hudTooltip(
+    const html = cardTooltip(
       pattern(GATED_RECIPE),
       viewer({ knownRecipes: [GATED_RECIPE], craftSkills: { alchemy: 0 } }),
     );
@@ -529,7 +518,7 @@ describe('reachability through the real Hud tooltip', () => {
         meta.craftSkills[craft] = 50;
         sim.addItem(itemId, 1);
         const slot = meta.inventory.findIndex((entry) => entry.itemId === itemId);
-        const html = hudTooltip(item, sim.craftingIdentity, sim.cfg.freeholdsEnabled);
+        const html = cardTooltip(item, sim.craftingIdentity, sim.cfg.freeholdsEnabled);
         if (freeholdsEnabled) {
           expect(html).toContain('Use: Teaches you how to craft');
           expect(html).not.toContain('Freeholds are not available on this realm.');
@@ -554,7 +543,7 @@ describe('reachability through the real Hud tooltip', () => {
         const state = viewer({ synced, craftSkills: { [craft]: 50 } });
         const lines = recipePatternTooltipLines(item, state);
         expect(lines).toBe('<div class="tt-red">Freeholds are not available on this realm.</div>');
-        expect(hudTooltip(item, state)).toContain(lines);
+        expect(cardTooltip(item, state)).toContain(lines);
       }
     },
   );
@@ -567,10 +556,10 @@ describe('reachability through the real Hud tooltip', () => {
       'formula_lastflame_zeal',
     ]) {
       const item = ITEMS[itemId];
-      const original = hudTooltip(item, state);
+      const original = cardTooltip(item, state);
       expect(original).toContain('Use: Teaches you');
-      expect(hudTooltip(item, state, false)).toBe(original);
-      expect(hudTooltip(item, state, true)).toBe(original);
+      expect(cardTooltip(item, state, false)).toBe(original);
+      expect(cardTooltip(item, state, true)).toBe(original);
     }
   });
 
@@ -582,6 +571,6 @@ describe('reachability through the real Hud tooltip', () => {
       quality: 'common',
       sellValue: 1,
     };
-    expect(hudTooltip(potion, viewer())).not.toContain('Teaches you');
+    expect(cardTooltip(potion, viewer())).not.toContain('Teaches you');
   });
 });

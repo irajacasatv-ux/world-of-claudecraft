@@ -2,7 +2,7 @@
 // actually grants (the shared temporary stat-buff aura src/sim/items.ts
 // useItem applies; the view gates on the effect record, not the kind, so a
 // phase 06 scroll renders the byte-identical line of its band elixir), as a
-// pure string-builder composed inside Hud.itemTooltip beside the potion use lines
+// pure string-builder composed inside itemTooltipHtml beside the potion use lines
 // (the gather_tool_tooltip.ts pattern: t() + esc here, no DOM, no Hud state,
 // so tests/elixir_tooltip_view.test.ts drives it directly). The numbers come
 // straight from the def's own elixir record, never re-typed copy. A buff kind

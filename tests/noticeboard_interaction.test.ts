@@ -18,11 +18,10 @@ import {
   emptyZoneProps,
   INTERACT_RANGE,
   type NoticeboardDef,
-  type SimEvent,
   type WorldContent,
 } from '../src/sim/types';
-import { Hud } from '../src/ui/hud';
 import { ensureLocaleLoaded, setLanguage, t } from '../src/ui/i18n';
+import { presentNoticeboardEvent } from '../src/ui/noticeboard_event';
 
 const SEED = 20_061;
 const EMPTY_NOTICEBOARD_EVENT = {
@@ -236,60 +235,45 @@ describe('active-world noticeboard service', () => {
     expect(branch).toContain('this.openGuildBoard(id)');
     expect(branch).not.toContain('showBanner');
     expect(branch).not.toContain('Nothing seems posted.');
+    // The arm itself, up to its own break, is exactly the one routing call and
+    // nothing else (whitespace-normalized): no banner, no log line, no second
+    // open. The case below drives presentNoticeboardEvent directly, so this is
+    // what holds the Hud to calling it once and doing nothing more.
+    const armEnd = source.indexOf('break;', noticeboardCaseAt);
+    expect(armEnd).toBeGreaterThan(noticeboardCaseAt);
+    expect(armEnd).toBeLessThan(nextCaseAt);
+    const arm = source.slice(noticeboardCaseAt, armEnd + 'break;'.length).replace(/\s+/g, ' ');
+    expect(arm).toBe(
+      "case 'noticeboard': presentNoticeboardEvent(ev, this.noticeboardPopup, this.leaderboardWindow, (id) => this.openGuildBoard(id), ); break;",
+    );
   });
 
   it('opens the guild board window once for the personal empty-board event', async () => {
-    interface NoticeboardHudHarness {
-      sim: {
-        playerId: number;
-        craftingIdentity: { synced: boolean };
-        craftSkills: Record<string, number>;
-        gatheringProficiency: Record<string, number>;
-      };
-      renderer: { handleEvent: ReturnType<typeof vi.fn> };
-      playEventSfx: ReturnType<typeof vi.fn>;
-      meters: { onEvent: ReturnType<typeof vi.fn> };
-      isNythraxisEvent: ReturnType<typeof vi.fn>;
-      showBanner: ReturnType<typeof vi.fn>;
-      log: ReturnType<typeof vi.fn>;
-      prevCraftSkills: Record<string, number> | null;
-      craftTierUpDrains: number;
-      handleEvents(events: SimEvent[]): void;
-    }
-
-    const hud = Object.create(Hud.prototype) as unknown as NoticeboardHudHarness;
-    hud.sim = {
-      playerId: 17,
-      craftingIdentity: { synced: false },
-      craftSkills: {},
-      gatheringProficiency: {},
-    };
-    hud.renderer = { handleEvent: vi.fn() };
-    hud.playEventSfx = vi.fn();
-    hud.meters = { onEvent: vi.fn() };
-    hud.isNythraxisEvent = vi.fn(() => false);
-    hud.showBanner = vi.fn();
-    hud.log = vi.fn();
-    hud.prevCraftSkills = null;
-    hud.craftTierUpDrains = 0;
+    // The Hud's noticeboard arm is exactly one presentNoticeboardEvent call
+    // (pinned at its source by the case above), so the routing is driven on
+    // that function directly, under a non-English locale: the window opens
+    // exactly once, handed the board's own id (the guild board picks its
+    // default category from it), and neither the listings popup nor the glider
+    // rankings fire. No banner or log line exists on the path at all: the
+    // source pin above holds the Hud arm to the one call. The Hud-level pid
+    // gate over personal events is coordinator territory, pinned elsewhere.
+    const popup = { show: vi.fn() };
+    const rankings = { openGliderRankings: vi.fn() };
     const openGuildBoard = vi.fn();
-    (hud as unknown as { openGuildBoard: () => void }).openGuildBoard = openGuildBoard;
 
     await ensureLocaleLoaded('ja_JP');
     setLanguage('ja_JP');
-    hud.handleEvents([{ ...EMPTY_NOTICEBOARD_EVENT, pid: 17 }]);
+    presentNoticeboardEvent(
+      { ...EMPTY_NOTICEBOARD_EVENT, pid: 17 },
+      popup,
+      rankings,
+      openGuildBoard,
+    );
 
-    // The window opens exactly once, handed the board's own id (the guild
-    // board picks its default category from it), and no transient banner or
-    // log line fires: the board itself is the feedback now.
     expect(openGuildBoard).toHaveBeenCalledTimes(1);
     expect(openGuildBoard).toHaveBeenCalledWith('eastbrook_noticeboard');
-    expect(hud.showBanner).not.toHaveBeenCalled();
-    expect(hud.log).not.toHaveBeenCalled();
-    expect(hud.renderer.handleEvent).toHaveBeenCalledWith({
-      ...EMPTY_NOTICEBOARD_EVENT,
-      pid: 17,
-    });
+    expect(popup.show).not.toHaveBeenCalled();
+    expect(rankings.openGliderRankings).not.toHaveBeenCalled();
   });
 
   it('keeps the normal range and dead-player gates without consuming the board', () => {

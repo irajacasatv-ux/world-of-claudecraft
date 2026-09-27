@@ -1,6 +1,6 @@
 // Gathering-tool item tooltip lines (#2343): what a pick/axe/sickle/rod is,
 // what it is required for, how using it behaves, and its speed/fishing
-// bonuses. A pure string-builder composed inside Hud.itemTooltip (the
+// bonuses. A pure string-builder composed inside itemTooltipHtml (the
 // item_instance_tooltip.ts pattern): t() plus the shared tooltip_line_core
 // builder (which owns the esc) here, no DOM, no Hud state,
 // so tests/gather_tool_tooltip.test.ts drives it directly. Numbers come
@@ -22,7 +22,7 @@
 // of a three-element tuple and the line blanked or lied. It reads
 // FISHING_CATCH_BAND_THRESHOLDS now.
 // Tool-effect charm slotting has its own sibling card (tool_effect_tooltip.ts,
-// composed right after these lines in Hud.itemTooltip), so it is deliberately
+// composed right after these lines in itemTooltipHtml), so it is deliberately
 // not described here.
 
 import { FISHING_BAND_INTRODUCED_CATCH } from '../sim/content/items';

@@ -1,7 +1,5 @@
-// @vitest-environment happy-dom
-//
-// The COMPOSED item tooltip (Hud.prototype.itemTooltip, the item_kind_line
-// idiom) renders EXACTLY ONE Well Fed line for a farm dish and for an apex
+// The COMPOSED item tooltip (itemTooltipHtml in src/ui/item_tooltip_view.ts,
+// the item_kind_line idiom) renders EXACTLY ONE Well Fed line for a farm dish and for an apex
 // role plate, directly under the sit-down restore line it qualifies. The
 // view-level count in tests/wellfed_tooltip_view.test.ts pins the builder's
 // own output and the method-scoped source pin there counts the call
@@ -11,26 +9,17 @@
 
 import { describe, expect, it } from 'vitest';
 import { ITEMS } from '../src/sim/data';
-import { Hud } from '../src/ui/hud';
 import { wellFedTooltipLines } from '../src/ui/hud/professions/wellfed_tooltip_view';
+import { itemTooltipHtml } from '../src/ui/item_tooltip_view';
+import { itemTooltipDeps } from './helpers/item_tooltip_deps';
 
 function tooltipHtml(itemId: string): string {
-  const h = Object.create(Hud.prototype) as unknown as {
-    sim: {
-      player: { level: number };
-      cfg: { playerClass: string };
-      equipment: Record<string, string>;
-    };
-    itemTooltip(item: unknown, compare?: boolean): string;
-  };
-  // Real host shape (masterwrought_tooltip.test.ts / weapon_type_tooltip.test.ts
-  // convention): itemTooltip unconditionally reads this.sim.player.level for
-  // itemRequiredLevelLine even on a non-equipment food item; cfg/equipment cover
-  // the slot/masterwrought arms neither buff dish takes.
-  h.sim = { player: { level: 80 }, cfg: { playerClass: 'warrior' }, equipment: {} };
   const item = ITEMS[itemId];
   if (!item) throw new Error(`missing item ${itemId}`);
-  return h.itemTooltip(item, false);
+  // The minimal deps fixture (tests/helpers/item_tooltip_deps.ts): the card
+  // reads world.player.level for itemRequiredLevelLine on every item, and
+  // cfg/equipment cover the slot/masterwrought arms these items never take.
+  return itemTooltipHtml(item, itemTooltipDeps(), false);
 }
 
 describe('the composed item tooltip carries exactly one Well Fed line', () => {

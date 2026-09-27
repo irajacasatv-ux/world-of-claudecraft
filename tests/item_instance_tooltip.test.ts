@@ -2,7 +2,7 @@
 // ItemInstancePayload variant renders its exact line set, so a regression in
 // any arm (seal, bonus stats and their enchant attribution, maker's mark, the
 // legacy shapes) fails a decisive assertion. The module is the pure
-// string-builder side of hud.itemTooltip's instance composition.
+// string-builder side of itemTooltipHtml's instance composition.
 import { describe, expect, it } from 'vitest';
 import { ENCHANTS } from '../src/sim/content/enchants';
 import {
@@ -688,36 +688,43 @@ describe('isGatheredProvenanceKind partition over the live content', () => {
   });
 });
 
-// Composition ORDER inside hud.itemTooltip (the builders are pinned above,
-// the composed placement is hud.ts glue): badges under the soulbound line,
+// Composition ORDER inside itemTooltipHtml (the builders are pinned above,
+// the composed placement is src/ui/item_tooltip_view.ts glue, which Hud's
+// item card moved into): badges under the soulbound line,
 // baked bonus stats after the def's own stat lines, the maker's mark near the
 // bottom (after the set block, before the sell price).
 import { readFileSync } from 'node:fs';
 
-describe('hud.itemTooltip composition order (source pins)', () => {
+describe('itemTooltipHtml composition order (source pins)', () => {
+  const card = readFileSync(new URL('../src/ui/item_tooltip_view.ts', import.meta.url), 'utf8');
   const hud = readFileSync(new URL('../src/ui/hud.ts', import.meta.url), 'utf8');
   const hudCss = readFileSync(new URL('../src/styles/hud.css', import.meta.url), 'utf8');
-  const badges = hud.indexOf('instanceBadgeLines(instance)');
-  const bonus = hud.indexOf('itemCombatTooltipLines(item, instance)');
+  const badges = card.indexOf('instanceBadgeLines(instance)');
+  const bonus = card.indexOf('itemCombatTooltipLines(item, instance)');
   // The mark line takes the def's kind too: the gathered-vs-crafted
   // wording split resolves from item.kind at the one composition site, now
   // wrapped in materialMakersMarkLines alongside the per-unit material
   // source rows (item_instance_tooltip.ts owns both).
-  const mark = hud.indexOf('materialMakersMarkLines(item, instance, materialSources)');
-  const soulbound = hud.indexOf("t('hudChrome.itemSoulbound')");
-  const setBlock = hud.indexOf('this.itemSetBlock(item)');
+  const mark = card.indexOf('materialMakersMarkLines(item, instance, materialSources)');
+  const soulbound = card.indexOf("t('hudChrome.itemSoulbound')");
+  const setBlock = card.indexOf('itemSetBlock(item, world)');
 
   it('composes all three instance line sets exactly once each', () => {
     expect(badges).toBeGreaterThan(-1);
     expect(bonus).toBeGreaterThan(-1);
     expect(mark).toBeGreaterThan(-1);
-    expect(hud.indexOf('instanceBadgeLines(instance)', badges + 1)).toBe(-1);
-    expect(hud.indexOf('itemCombatTooltipLines(item, instance)', bonus + 1)).toBe(-1);
-    expect(hud.indexOf('materialMakersMarkLines(', mark + 1)).toBe(-1);
+    expect(card.indexOf('instanceBadgeLines(instance)', badges + 1)).toBe(-1);
+    expect(card.indexOf('itemCombatTooltipLines(item, instance)', bonus + 1)).toBe(-1);
+    expect(card.indexOf('materialMakersMarkLines(', mark + 1)).toBe(-1);
+    // Hud composes none of them itself: the card is the one composition site.
+    expect(hud).not.toContain('instanceBadgeLines(');
+    expect(hud).not.toContain('itemCombatTooltipLines(');
+    expect(hud).not.toContain('materialMakersMarkLines(');
   });
 
   it('orders them badge lines, then bonus stats, then the makers mark', () => {
     expect(soulbound).toBeGreaterThan(-1);
+    expect(setBlock).toBeGreaterThan(-1);
     expect(badges).toBeGreaterThan(soulbound);
     expect(bonus).toBeGreaterThan(badges);
     expect(mark).toBeGreaterThan(bonus);
@@ -757,11 +764,11 @@ describe('instancePartyTradeLine (the BoP party trade window line)', () => {
     ).toBe('');
   });
 
-  it('composes in hud.itemTooltip inside the Soulbound block, before the bond lines', () => {
-    const hud = readFileSync(new URL('../src/ui/hud.ts', import.meta.url), 'utf8');
-    const soulbound = hud.indexOf("t('hudChrome.itemSoulbound')");
-    const partyTrade = hud.indexOf('instancePartyTradeLine(instance,');
-    const binding = hud.indexOf('instanceBindingLines(instance, item.kind)');
+  it('composes in itemTooltipHtml inside the Soulbound block, before the bond lines', () => {
+    const card = readFileSync(new URL('../src/ui/item_tooltip_view.ts', import.meta.url), 'utf8');
+    const soulbound = card.indexOf("t('hudChrome.itemSoulbound')");
+    const partyTrade = card.indexOf('instancePartyTradeLine(instance,');
+    const binding = card.indexOf('instanceBindingLines(instance, item.kind)');
     // The window line rides INSIDE the def-level `if (item.soulbound)` block,
     // so a legacy marker on a drop that has since become freely tradable (the
     // Crucible boss drops, PR #3789) renders nothing. Pinned by braces, not
@@ -769,16 +776,16 @@ describe('instancePartyTradeLine (the BoP party trade window line)', () => {
     // the block's open and the Soulbound line, and none between the end of the
     // Soulbound statement and the call (the template's `${...}` sits inside
     // that statement, which is why the second span starts after it).
-    const blockOpen = hud.lastIndexOf('if (item.soulbound)', soulbound);
+    const blockOpen = card.lastIndexOf('if (item.soulbound)', soulbound);
     expect(blockOpen).toBeGreaterThan(-1);
-    expect(hud.slice(blockOpen, soulbound)).not.toContain('}');
-    const soulboundEnd = hud.indexOf('`;', soulbound);
+    expect(card.slice(blockOpen, soulbound)).not.toContain('}');
+    const soulboundEnd = card.indexOf('`;', soulbound);
     expect(soulboundEnd).toBeGreaterThan(soulbound);
-    expect(hud.slice(soulboundEnd, partyTrade)).not.toContain('}');
+    expect(card.slice(soulboundEnd, partyTrade)).not.toContain('}');
     expect(partyTrade).toBeGreaterThan(soulbound);
     expect(binding).toBeGreaterThan(partyTrade);
-    expect(hud.indexOf('instancePartyTradeLine(', partyTrade + 1)).toBe(-1);
+    expect(card.indexOf('instancePartyTradeLine(', partyTrade + 1)).toBe(-1);
     // The remaining span resolves through the IWorld clock, never Date.now().
-    expect(hud).toContain('this.sim.partyTradeMsRemaining(ms)');
+    expect(card).toContain('world.partyTradeMsRemaining(ms)');
   });
 });

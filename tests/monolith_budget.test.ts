@@ -596,7 +596,9 @@ const MONOLITHS: MonolithRow[] = [
     // RE-PINNED at the Freeholds sync of release/v0.44.0 at aaff789813: wc -l on the
     // merged tree measures 18045 (this branch 18065, the release 18081). Exact merged
     // count, zero slack.
-    ceiling: 18045,
+    // LOWERED 18045 -> 17605 on 2026-09-27: the item tooltip composer moved out to
+    // src/ui/item_tooltip_view.ts, so ten tests stopped importing the coordinator.
+    ceiling: 17605,
     seam: 'pure view core + thin painter on PainterHost (src/ui/CLAUDE.md)',
   },
   {

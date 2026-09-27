@@ -1,15 +1,16 @@
 // The one Well Fed tooltip line (unified in Masterwrought 11c): the pure
-// string-builder composed inside Hud.itemTooltip (the
-// elixir_tooltip_view.test.ts idiom). English copy asserted directly; the
-// numbers must mirror each def's own wellFed record, never re-invented copy,
+// string-builder composed inside itemTooltipHtml in
+// src/ui/item_tooltip_view.ts (the elixir_tooltip_view.test.ts idiom).
+// English copy asserted directly; the numbers must mirror each def's own
+// wellFed record, never re-invented copy,
 // and every line must state BOTH load-bearing clauses of the surviving key
 // pair (ruling 11c-A4-KEYPAIR): the finish-eating trigger, because the buff
 // lands only when the 18s sit-restore COMPLETES, and the one-at-a-time rule,
 // because the whole food family shares one 'well_fed' aura id. Also guards
 // the data side: a buff food without a wellFed record would render no
 // well-fed line at all, the silent-tooltip bug class the elixir view fixed,
-// and the hud composes exactly ONE well-fed line per tooltip (the 11b merge
-// briefly wired two views over the same record).
+// and the item card composes exactly ONE well-fed line per tooltip (the 11b
+// merge briefly wired two views over the same record).
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
@@ -186,21 +187,23 @@ describe('wellFedTooltipLines', () => {
     expect(wellFedTooltipLines(def)).toContain('Grandmother&#39;s Cooking');
   });
 
-  it('Hud.itemTooltip composes EXACTLY ONE well-fed line (method-scoped source pin)', () => {
+  it('itemTooltipHtml composes EXACTLY ONE well-fed line (method-scoped source pin)', () => {
     // Comments are stripped through the SHARED order-safe stripper (both
     // line and block classes in one pass, tests/helpers/strip_comments.ts),
-    // so neither prose form can satisfy the pin. Scoped to the itemTooltip
-    // method body so the call cannot drift into some other surface and
+    // so neither prose form can satisfy the pin. Scoped to the itemTooltipHtml
+    // function body so the call cannot drift into some other surface and
     // still pass. The exact-count arm is the unification's own hazard: the
     // 11b merge left BOTH packets' views wired at different lines, silent
     // under tsc, and the moment the field unified every buff dish would
     // have rendered the sentence twice in two wordings.
-    const hudSrc = stripComments(readFileSync(path.join(__dirname, '../src/ui/hud.ts'), 'utf8'));
-    const start = hudSrc.indexOf('private itemTooltip(');
-    const end = hudSrc.indexOf('private itemProcBlock(');
+    const viewSrc = stripComments(
+      readFileSync(path.join(__dirname, '../src/ui/item_tooltip_view.ts'), 'utf8'),
+    );
+    const start = viewSrc.indexOf('export function itemTooltipHtml(');
+    const end = viewSrc.indexOf('function itemProcBlock(');
     expect(start).toBeGreaterThan(-1);
     expect(end).toBeGreaterThan(start);
-    const body = hudSrc.slice(start, end);
+    const body = viewSrc.slice(start, end);
     expect(body).toContain('html += wellFedTooltipLines(item);');
     // Any composition call whose builder name says well-fed, in either
     // retired or surviving spelling, counted case-insensitively and with ANY

@@ -116,17 +116,26 @@ describe('the 7-piece set bonus text', () => {
   it('pins the tooltip call site to the helper, not a rebuilt ternary chain', () => {
     // The three cases above drive itemSetBonusField directly, which proves the
     // HELPER is right but not that the tooltip still calls it. The defect lived at
-    // the call site, so pin the call site: a reintroduced 2/3/4 chain in hud.ts
-    // would send a 7-piece tier to 'bonus4' and paint the wrong line while every
-    // assertion above stayed green.
-    const hud = fs.readFileSync(path.resolve(process.cwd(), 'src/ui/hud.ts'), 'utf8');
-    expect(hud).toContain('field: itemSetBonusField(tier.pieces)');
-    expect(hud, 'a bonus2/3/4 ternary chain came back into the set tooltip').not.toMatch(
-      /tier\.pieces === 2 \?/,
-    );
-    expect(hud, "no literal 'bonus4' should remain in the set tooltip path").not.toContain(
-      "? 'bonus3' : 'bonus4'",
-    );
+    // the call site, so pin the call site: a reintroduced 2/3/4 chain in the
+    // item card (src/ui/item_tooltip_view.ts, which the set block moved to out
+    // of hud.ts) would send a 7-piece tier to 'bonus4' and paint the wrong line
+    // while every assertion above stayed green. The chain stays dead in hud.ts
+    // too, so it cannot come back in the old home either.
+    const read = (rel: string): string => fs.readFileSync(path.resolve(process.cwd(), rel), 'utf8');
+    const card = read('src/ui/item_tooltip_view.ts');
+    expect(card).toContain('field: itemSetBonusField(tier.pieces)');
+    for (const [rel, src] of [
+      ['item_tooltip_view.ts', card],
+      ['hud.ts', read('src/ui/hud.ts')],
+    ] as const) {
+      expect(src, `${rel}: a bonus2/3/4 ternary chain came back into the set tooltip`).not.toMatch(
+        /tier\.pieces === 2 \?/,
+      );
+      expect(
+        src,
+        `${rel}: no literal 'bonus4' should remain in the set tooltip path`,
+      ).not.toContain("? 'bonus3' : 'bonus4'");
+    }
   });
 
   it('leaves the capstone tier dormant below seven pieces', () => {

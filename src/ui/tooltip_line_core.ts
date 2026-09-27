@@ -37,8 +37,19 @@ import { esc } from './esc';
 
 export type TooltipLineClass = 'tt-sub' | 'tt-desc' | 'tt-green' | 'tt-red';
 
+/** Optional modifier stacked on the base class, owned here with the base
+ *  union; extend it per use. tt-material-use: the profession-affinity Used-by
+ *  line's craft tint (item_tooltip_view.ts). */
+export type TooltipLineModifier = 'tt-material-use';
+
 /** One tooltip line. The text is always escaped, never interpolated raw: every
- *  caller reaches localized item and recipe names (the src/ui esc() rule). */
-export function tooltipLine(cls: TooltipLineClass, text: string): string {
-  return `<div class="${cls}">${esc(text)}</div>`;
+ *  caller reaches localized item and recipe names (the src/ui esc() rule). A
+ *  modifier joins the base class with one space, the class string the DOM
+ *  path's className assignment produced for the same pair. */
+export function tooltipLine(
+  cls: TooltipLineClass,
+  text: string,
+  modifier?: TooltipLineModifier,
+): string {
+  return `<div class="${modifier ? `${cls} ${modifier}` : cls}">${esc(text)}</div>`;
 }

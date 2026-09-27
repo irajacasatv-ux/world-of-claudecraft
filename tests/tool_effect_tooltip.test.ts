@@ -1,5 +1,5 @@
 // Tool-effect charm tooltip lines: the pure string-builder composed inside
-// Hud.itemTooltip and the Professions window hover cards. English copy asserted
+// itemTooltipHtml and the Professions window hover cards. English copy asserted
 // directly (the gather_tool_tooltip.test.ts idiom); charge numbers must mirror
 // TOOL_EFFECTS.startingDurability and RARITY_DURABILITY_BONUS, never re-invented.
 import { readFileSync } from 'node:fs';
@@ -30,7 +30,7 @@ describe('toolEffectTooltipLines: live charms', () => {
       `<div class="tt-desc">Starts with ${TOOL_EFFECTS.gatherers_cache.startingDurability} charges on a common tool (+${RARITY_DURABILITY_BONUS} per rarity rung).</div>`,
     );
     expect(html).toContain('<div class="tt-sub">Does not slot on fishing rods.</div>');
-    // No title (Hud.itemTooltip already prints the item name) and no "open
+    // No title (itemTooltipHtml already prints the item name) and no "open
     // Professions" cue: the bag hover appends that as its affordance hint
     // (bagTooltipHintKey), so repeating it here would double the sentence.
     expect(html).not.toContain('tt-title');
@@ -141,15 +141,15 @@ describe('toolEffectTooltipLines: everything else', () => {
     expect(toolEffectTooltipLines(retired)).toBe('');
   });
 
-  it('Hud.itemTooltip composes the module (one line, never inline logic)', () => {
+  it('itemTooltipHtml composes the module (one line, never inline logic)', () => {
     // Strip whole-line comments first so a comment merely naming the call
     // cannot satisfy the pin (the gather_tool_tooltip.test.ts idiom).
-    const hudSrc = readFileSync(path.join(__dirname, '../src/ui/hud.ts'), 'utf8').replace(
-      /^\s*\/\/.*$/gm,
-      '',
-    );
-    expect(hudSrc).toContain("from './tool_effect_tooltip'");
-    expect(hudSrc).toContain('toolEffectTooltipLines(item)');
+    const viewSrc = readFileSync(
+      path.join(__dirname, '../src/ui/item_tooltip_view.ts'),
+      'utf8',
+    ).replace(/^\s*\/\/.*$/gm, '');
+    expect(viewSrc).toContain("from './tool_effect_tooltip'");
+    expect(viewSrc).toContain('toolEffectTooltipLines(item)');
   });
 });
 

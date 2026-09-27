@@ -15,8 +15,11 @@
 // escape is the reachable path: `dispatchGamepadAction('escape')` in `src/main.ts` calls
 // `hud.closeAll()` directly, with no DOM event for that capture handler to intercept.
 //
-// So these cases drive `closeAll()` (not a synthetic key event) over a REAL controller and a
-// REAL window, and pin that the two dismissal paths produce the same observable teardown.
+// So the routing cases drive `closeAll()` (not a synthetic key event) over a REAL controller
+// and a REAL window, and pin that the two dismissal paths produce the same observable teardown.
+// The latch cases drive `LockpickController.requestClose()`, the one method the managed-window
+// arm calls (`requestClose()` then `hideTooltip()`, nothing else), directly: they pin the
+// controller's own withdraw / hedge / close rules, which need no Hud around them.
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { SimEvent } from '../src/sim/types';
@@ -172,26 +175,33 @@ function teardown(h: ReturnType<typeof harness>) {
   };
 }
 
-describe('lockpick panel: Hud.closeAll (the gamepad escape path)', () => {
-  beforeEach(() => {
-    vi.useFakeTimers();
-    vi.setSystemTime(0);
-  });
-  afterEach(() => {
-    for (const controller of built.splice(0)) controller.close(false);
-    // Not the inline mockRestore()s a failing expect would skip: a spy left on the shared
-    // jsdom window turns one red case into a cascade in every case after it.
-    vi.restoreAllMocks();
-    vi.useRealTimers();
-    document.body.innerHTML = '';
-  });
+beforeEach(() => {
+  vi.useFakeTimers();
+  vi.setSystemTime(0);
+});
+afterEach(() => {
+  for (const controller of built.splice(0)) controller.close(false);
+  // Not the inline mockRestore()s a failing expect would skip: a spy left on the shared
+  // jsdom window turns one red case into a cascade in every case after it.
+  vi.restoreAllMocks();
+  vi.useRealTimers();
+  document.body.innerHTML = '';
+});
 
-  it('is the topmost scan hit while the board is up', () => {
+describe('lockpick panel: Hud.closeAll (the gamepad escape path)', () => {
+  it('is the topmost scan hit while the board is up, and leaves the scan once closed', () => {
     // If the scan did not select it, every other case below would pass vacuously by
     // closing something else (or nothing).
     const h = harness(LIVE);
     h.controller.openBoard();
     expect(h.hud.topmostOpenWindow()).toBe(h.panel);
+    // The other side of the scan, which the requestClose latch cases below rely on
+    // when they read a hidden panel as "the sweep moves on": once the panel is
+    // closed it is no longer the topmost hit, and a closeAll with nothing else up
+    // reports that it closed nothing.
+    h.controller.close();
+    expect(h.hud.topmostOpenWindow()).not.toBe(h.panel);
+    expect(h.hud.closeAll(), 'nothing left for this harness to close').toBe(false);
   });
 
   it('withdraws from the live session and stops the 100ms countdown', () => {
@@ -229,39 +239,82 @@ describe('lockpick panel: Hud.closeAll (the gamepad escape path)', () => {
     ).not.toHaveBeenCalled();
   });
 
-  it('completes the teardown offline, inside the one closeAll call', () => {
+  it('produces the same teardown as the Escape key, live board and ante selector alike', () => {
+    // The two paths are the same funnel or they drift: the keyboard one aborts a live
+    // session and closes an idle one, and the pad must not do something else.
+    //
+    // SCOPED to what `teardown()` reads. The paths are NOT byte-identical: the managed-window
+    // arm adds its own `this.hideTooltip()`, which the controller's keydown handler has no
+    // way to reach. That difference is deliberate (the arm owes the hide the default arm used
+    // to guarantee) and is pinned in the live case above, not here.
+    for (const initial of [LIVE, null]) {
+      const viaKey = harness(initial);
+      if (initial) viaKey.controller.openBoard();
+      else viaKey.controller.openAnte(9);
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', cancelable: true }));
+      const keyResult = teardown(viaKey);
+      viaKey.controller.close();
+
+      const viaPad = harness(initial);
+      if (initial) viaPad.controller.openBoard();
+      else viaPad.controller.openAnte(9);
+      expect(
+        viaPad.hud.closeAll(),
+        `closeAll reports it closed something (live=${initial !== null})`,
+      ).toBe(true);
+      const padResult = teardown(viaPad);
+      viaPad.controller.close();
+
+      expect(padResult, `gamepad and keyboard must agree (live=${initial !== null})`).toEqual(
+        keyResult,
+      );
+      // The comparison alone is RELATIVE: both paths run the same funnel, so it survives any
+      // change made to the funnel itself, including inverting it (close a live board, abort an
+      // idle one) which keeps the two sides equal and non-empty. Pin the absolute shape too.
+      expect(keyResult, `the shape itself (live=${initial !== null})`).toEqual(
+        initial
+          ? { aborts: 1, releases: 0, timers: 0, display: 'block' }
+          : { aborts: 0, releases: 1, timers: 0, display: 'none' },
+      );
+    }
+  });
+});
+
+describe('lockpick panel: LockpickController.requestClose (the managed-close latch)', () => {
+  it('completes the teardown offline, inside the one requestClose call', () => {
     // The other host. Sim.lockpickAbort emits lockpickEnd synchronously and submitAbort's own
-    // flushEvents drains it, so end() -> close() runs before closeAll returns. Without this
+    // flushEvents drains it, so end() -> close() runs before requestClose returns. Without this
     // case every assertion in the suite describes only the online (deferred) shape.
     const h = harness(LIVE, 'offline');
     h.controller.openBoard();
     expect(vi.getTimerCount()).toBe(1);
 
-    expect(h.hud.closeAll()).toBe(true);
+    h.controller.requestClose();
 
     expect(h.abort).toHaveBeenCalledTimes(1);
     expect(h.panel.style.display, 'the round trip landed in the same stack').toBe('none');
     expect(h.release).toHaveBeenCalledTimes(1);
     expect(h.release).toHaveBeenCalledWith(true);
     expect(vi.getTimerCount()).toBe(0);
-    // Nothing is left selectable, so a repeat sweep moves on to the next window.
-    expect(h.hud.topmostOpenWindow()).not.toBe(h.panel);
+    // Nothing is left selectable: the panel is hidden, and a hidden panel leaves the
+    // managed-window scan (pinned on the Hud in the topmost-scan case), so a repeat sweep
+    // moves on to the next window.
   });
 
-  it('withdraws, re-sends once, then closes, so a repeat closeAll cannot wedge on the panel', () => {
+  it('withdraws, re-sends once, then closes, so a repeat request cannot wedge on the panel', () => {
     // SkinEventController.open() sweeps `for (i < 20 && closeTop())` to clear the stack before
     // a roll reveal, and closeTop IS closeAll. Online the withdrawal leaves the panel up, so
     // without the per-session latch this spins all 20 iterations here, fires 20 aborts, and
-    // never reaches the windows underneath. Three calls, not two: the third proves the panel
-    // has actually left the scan rather than merely stopped aborting.
+    // never reaches the windows underneath. The panel ends HIDDEN, not merely silent: a hidden
+    // panel is what the Hud's topmost scan skips (pinned in the topmost-scan case).
     const h = harness(LIVE);
     h.controller.openBoard();
 
-    expect(h.hud.closeAll(), 'first: withdraw').toBe(true);
+    h.controller.requestClose(); // first: withdraw
     expect(h.abort).toHaveBeenCalledTimes(1);
     expect(h.panel.style.display).toBe('block');
 
-    expect(h.hud.closeAll(), 'second: re-send, then close').toBe(true);
+    h.controller.requestClose(); // second: re-send, then close
     // Two, not one and not one per iteration. ClientWorld.rawCmd drops on a closed socket
     // with no queue and no retry, so a repeat request has to hedge that the first abort was
     // never sent; closing on the assumption it landed would hide a live board and forfeit
@@ -270,8 +323,9 @@ describe('lockpick panel: Hud.closeAll (the gamepad escape path)', () => {
     expect(h.panel.style.display).toBe('none');
     expect(h.release).toHaveBeenCalledWith(true);
 
-    expect(h.hud.topmostOpenWindow(), 'the sweep can move on').not.toBe(h.panel);
-    expect(h.hud.closeAll(), 'nothing left for this harness to close').toBe(false);
+    // The panel is hidden (asserted above), which is what lets the sweep move on; and
+    // nothing more was sent on the way out.
+    expect(h.abort, 'no third abort').toHaveBeenCalledTimes(2);
   });
 
   it('re-arms the withdrawal for a NEW session, so the latch cannot silence a real abort', () => {
@@ -284,12 +338,12 @@ describe('lockpick panel: Hud.closeAll (the gamepad escape path)', () => {
     // own comment saying which case it is really there for.
     const h = harness(LIVE);
     h.controller.openBoard();
-    h.hud.closeAll();
+    h.controller.requestClose();
     expect(h.abort).toHaveBeenCalledTimes(1);
 
     h.setState({ ...LIVE, sessionId: 'lp_9_1' });
     h.controller.openBoard();
-    h.hud.closeAll();
+    h.controller.requestClose();
     expect(h.abort, 'a fresh session withdraws on its own').toHaveBeenCalledTimes(2);
     // The count alone stopped separating the arms once the repeat arm started re-sending:
     // both send an abort. What still tells them apart is that the FRESH arm defers the close.
@@ -307,13 +361,13 @@ describe('lockpick panel: Hud.closeAll (the gamepad escape path)', () => {
     // while the server believes a fresh lock is live.
     const h = harness(LIVE);
     h.controller.openBoard();
-    h.hud.closeAll(); // withdraw, latch set, panel still up (online shape)
+    h.controller.requestClose(); // withdraw, latch set, panel still up (online shape)
     expect(h.abort).toHaveBeenCalledTimes(1);
 
     // The next abort's drain carries a fresh session, the way a re-engage would.
     h.queueOnAbort({ type: 'lockpickSession', sessionId: 'lp_9_2' } as SimEvent);
 
-    h.hud.closeAll(); // repeat arm: close, then re-send, whose drain re-opens the board
+    h.controller.requestClose(); // repeat arm: close, then re-send, whose drain re-opens the board
 
     expect(h.abort).toHaveBeenCalledTimes(2);
     expect(h.panel.style.display, 'the re-opened board survives the dismissal').toBe('block');
@@ -326,12 +380,12 @@ describe('lockpick panel: Hud.closeAll (the gamepad escape path)', () => {
     // board takes the repeat arm on its first dismissal and closes optimistically.
     const h = harness(LIVE);
     h.controller.openBoard();
-    h.hud.closeAll();
+    h.controller.requestClose();
     expect(h.abort).toHaveBeenCalledTimes(1);
 
     // Same session id, fresh board.
     h.controller.openBoard();
-    h.hud.closeAll();
+    h.controller.requestClose();
     expect(h.panel.style.display, 'the reopened board withdraws and waits').toBe('block');
     expect(h.release, 'no optimistic close on a re-engaged board').not.toHaveBeenCalled();
   });
@@ -362,7 +416,7 @@ describe('lockpick panel: Hud.closeAll (the gamepad escape path)', () => {
     h.controller.openAnte(9);
     expect(h.panel.style.display).toBe('block');
 
-    expect(h.hud.closeAll()).toBe(true);
+    h.controller.requestClose();
 
     expect(h.abort, 'nothing live to abort').not.toHaveBeenCalled();
     // release(true), the FocusManager's restoreFocus flag: focus goes back to the opener
@@ -381,7 +435,7 @@ describe('lockpick panel: Hud.closeAll (the gamepad escape path)', () => {
     const remove = vi.spyOn(window, 'removeEventListener');
     const h = harness(null);
     h.controller.openAnte(9);
-    h.hud.closeAll();
+    h.controller.requestClose();
     // The registration is on the CAPTURE phase, which is what lets the controller beat
     // src/game/input.ts's bubble listener; unbinding without that flag is a silent no-op.
     expect(remove).toHaveBeenCalledWith('keydown', expect.any(Function), true);
@@ -405,42 +459,5 @@ describe('lockpick panel: Hud.closeAll (the gamepad escape path)', () => {
       add.mock.calls.filter(([type]) => type === 'keydown'),
       'the reopened panel rebinds its keyboard',
     ).toHaveLength(1);
-  });
-
-  it('produces the same teardown as the Escape key, live board and ante selector alike', () => {
-    // The two paths are the same funnel or they drift: the keyboard one aborts a live
-    // session and closes an idle one, and the pad must not do something else.
-    //
-    // SCOPED to what `teardown()` reads. The paths are NOT byte-identical: the managed-window
-    // arm adds its own `this.hideTooltip()`, which the controller's keydown handler has no
-    // way to reach. That difference is deliberate (the arm owes the hide the default arm used
-    // to guarantee) and is pinned in the live case above, not here.
-    for (const initial of [LIVE, null]) {
-      const viaKey = harness(initial);
-      if (initial) viaKey.controller.openBoard();
-      else viaKey.controller.openAnte(9);
-      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', cancelable: true }));
-      const keyResult = teardown(viaKey);
-      viaKey.controller.close();
-
-      const viaPad = harness(initial);
-      if (initial) viaPad.controller.openBoard();
-      else viaPad.controller.openAnte(9);
-      viaPad.hud.closeAll();
-      const padResult = teardown(viaPad);
-      viaPad.controller.close();
-
-      expect(padResult, `gamepad and keyboard must agree (live=${initial !== null})`).toEqual(
-        keyResult,
-      );
-      // The comparison alone is RELATIVE: both paths run the same funnel, so it survives any
-      // change made to the funnel itself, including inverting it (close a live board, abort an
-      // idle one) which keeps the two sides equal and non-empty. Pin the absolute shape too.
-      expect(keyResult, `the shape itself (live=${initial !== null})`).toEqual(
-        initial
-          ? { aborts: 1, releases: 0, timers: 0, display: 'block' }
-          : { aborts: 0, releases: 1, timers: 0, display: 'none' },
-      );
-    }
   });
 });

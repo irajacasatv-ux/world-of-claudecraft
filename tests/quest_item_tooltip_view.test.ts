@@ -1,7 +1,7 @@
-// Pure-core pins for the quest-item story tooltip model. The host (Hud.itemTooltip)
+// Pure-core pins for the quest-item story tooltip model. The host (itemTooltipHtml)
 // consumes the model for title/kind gold, related quest, progress, rules, and
 // orphaned lines; these tests own the MODEL decisions only (HTML escape and
-// tEntity localization stay in the host). A source pin keeps the hud composition
+// tEntity localization stay in the host). A source pin keeps the card composition
 // from drifting back to "Common Quest Item" + a second Quest Item desc.
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
@@ -253,20 +253,25 @@ describe('quest_item_tooltip_view: orphaned', () => {
   });
 });
 
-describe('hud composition source pin', () => {
-  it('Hud.itemTooltip composes the pure model and never reopens Common Quest Item', () => {
+describe('item card composition source pin', () => {
+  it('itemTooltipHtml composes the pure model and never reopens Common Quest Item', () => {
     // Whole-line // comments are stripped before scanning so prose cannot
     // trip the negative pins (same trap as gather_tool_tooltip source pin).
-    const hudSrc = readFileSync(path.join(__dirname, '../src/ui/hud.ts'), 'utf8').replace(
-      /^\s*\/\/.*$/gm,
-      '',
-    );
-    expect(hudSrc).toContain('questItemTooltipModel');
-    expect(hudSrc).toContain('QUEST_ITEM_TOOLTIP_COLOR');
-    expect(hudSrc).toContain('questItemTooltipStoryHtml');
+    // The card moved out of Hud into src/ui/item_tooltip_view.ts: the
+    // positive pins follow it there, and the negative pins hold for BOTH
+    // files so the legacy lines cannot return in either.
+    const codeOf = (rel: string): string =>
+      readFileSync(path.join(__dirname, rel), 'utf8').replace(/^\s*\/\/.*$/gm, '');
+    const viewSrc = codeOf('../src/ui/item_tooltip_view.ts');
+    expect(viewSrc).toContain('questItemTooltipModel');
+    expect(viewSrc).toContain('QUEST_ITEM_TOOLTIP_COLOR');
+    expect(viewSrc).toContain('questItemTooltipStoryHtml');
     // Legacy double line: qualityKind for quest kinds, and a second plain
     // questItem desc, must stay dead for the purpose-class treatment.
-    expect(hudSrc).not.toContain("item.kind === 'quest')\n      html +=");
-    expect(hudSrc).not.toContain("t('itemUi.tooltip.questItem')");
+    for (const src of [viewSrc, codeOf('../src/ui/hud.ts')]) {
+      expect(src).not.toContain("item.kind === 'quest')\n      html +=");
+      expect(src).not.toContain("item.kind === 'quest')\n    html +=");
+      expect(src).not.toContain("t('itemUi.tooltip.questItem')");
+    }
   });
 });

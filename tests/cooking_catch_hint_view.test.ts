@@ -1,38 +1,27 @@
-// @vitest-environment happy-dom
 //
 // Raw cooking catch purpose line: pure key table (every RAW_COOKING_CATCH_IDS
 // member shares one key) plus createElement paint (tt-desc + textContent, no
-// innerHTML). Integration: Hud itemTooltip shows the cooking line and never a
-// restore-health / foodHp line.
+// innerHTML). Integration: the composed item card (itemTooltipHtml) shows
+// the cooking line and never a restore-health / foodHp line.
 
 import { describe, expect, it } from 'vitest';
 import { RAW_COOKING_CATCH_IDS } from '../src/sim/content/items';
 import { ITEMS } from '../src/sim/data';
-import { Hud } from '../src/ui/hud';
 import {
   COOKING_CATCH_HINT_KEY,
   cookingCatchHintKey,
 } from '../src/ui/hud/professions/cooking_catch_hint_view';
 import { t } from '../src/ui/i18n';
-import { createTooltipLine } from '../src/ui/tooltip_line';
+import { itemTooltipHtml } from '../src/ui/item_tooltip_view';
+import { itemTooltipDeps } from './helpers/item_tooltip_deps';
 
 function tooltipHtml(itemId: string): string {
-  const h = Object.create(Hud.prototype) as unknown as {
-    sim: {
-      player: { level: number };
-      cfg: { playerClass: string };
-      equipment: Record<string, string>;
-    };
-    itemTooltip(item: unknown, compare?: boolean): string;
-  };
-  // Real host shape (masterwrought_tooltip.test.ts / weapon_type_tooltip.test.ts
-  // convention): itemTooltip unconditionally reads this.sim.player.level for
-  // itemRequiredLevelLine even on a non-equipment item; cfg/equipment cover the
-  // slot/masterwrought arms none of these raw catches or cooked control take.
-  h.sim = { player: { level: 80 }, cfg: { playerClass: 'warrior' }, equipment: {} };
   const item = ITEMS[itemId];
   if (!item) throw new Error(`missing item ${itemId}`);
-  return h.itemTooltip(item, false);
+  // The minimal deps fixture (tests/helpers/item_tooltip_deps.ts): the card
+  // reads world.player.level for itemRequiredLevelLine on every item, and
+  // cfg/equipment cover the slot/masterwrought arms these items never take.
+  return itemTooltipHtml(item, itemTooltipDeps(), false);
 }
 
 describe('cooking_catch_hint_view (pure keys)', () => {
@@ -57,31 +46,12 @@ describe('cooking_catch_hint_view (pure keys)', () => {
   });
 });
 
-describe('createTooltipLine (createElement paint)', () => {
-  it('builds tt-desc with textContent and never assigns innerHTML', () => {
-    const line = createTooltipLine('Cooking ingredient. Must be cooked before eating.', 'tt-desc');
-    expect(line.tagName).toBe('DIV');
-    expect(line.className).toBe('tt-desc');
-    expect(line.textContent).toBe('Cooking ingredient. Must be cooked before eating.');
-    // Source of truth: text lives in textContent; no child HTML nodes.
-    expect(line.childNodes.length).toBe(1);
-    expect(line.childNodes[0].nodeType).toBe(Node.TEXT_NODE);
-  });
-
-  it('supports tt-sub class for shared reuse', () => {
-    const line = createTooltipLine('sub line', 'tt-sub');
-    expect(line.className).toBe('tt-sub');
-    expect(line.textContent).toBe('sub line');
-  });
-
+describe('cooking catch hint source', () => {
   it('new feature modules do not introduce innerHTML assignments', async () => {
     const { readFileSync } = await import('node:fs');
     const { join } = await import('node:path');
     // Repo root is process.cwd() under vitest (worktree root).
-    for (const rel of [
-      'src/ui/hud/professions/cooking_catch_hint_view.ts',
-      'src/ui/tooltip_line.ts',
-    ]) {
+    for (const rel of ['src/ui/hud/professions/cooking_catch_hint_view.ts']) {
       const src = readFileSync(join(process.cwd(), rel), 'utf8');
       expect(src, rel).not.toMatch(/\.innerHTML\s*=/);
       expect(src, rel).not.toMatch(/`[\s\S]*class="tt-/);
