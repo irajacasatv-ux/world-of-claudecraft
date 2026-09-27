@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { listingEligibility, WOC_MARKET_RESTRICTED_POLICY } from '../server/woc_market_rules';
 import { stackSizeOf } from '../src/sim/bags';
+import { wieldsDagger } from '../src/sim/combat/equipment_requirement';
 import { buildHeroicVariants } from '../src/sim/content/heroic_variants';
 import * as recipeContent from '../src/sim/content/recipes';
 import type { ReliquaryPageDef } from '../src/sim/content/reliquary';
@@ -468,6 +469,16 @@ describe('furnishing definition and inventory', () => {
 });
 
 describe('furnishing refusal and power gates', () => {
+  it('never counts as a dagger for the Backstab family, on the bar or at the gate', () => {
+    // The release's equipment requirement leaf re-derives the dagger flag from
+    // the worn id; it mirrors recalcPlayerStats' furnishing guard, so a forged
+    // furnishing def carrying a dagger weapon lights nothing.
+    ITEMS[ID] = { ...FURNISHING, weapon: { ...ITEMS.rusty_dagger.weapon } } as unknown as ItemDef;
+    expect(ITEMS.rusty_dagger.weapon?.dagger).toBe(true);
+    expect(wieldsDagger({ mainhand: ID }, 60)).toBe(false);
+    // CONTROL: the real dagger, worn the same way, counts.
+    expect(wieldsDagger({ mainhand: 'rusty_dagger' }, 60)).toBe(true);
+  });
   it('refuses equipment eligibility for every player class', () => {
     for (const cls of [
       'warrior',

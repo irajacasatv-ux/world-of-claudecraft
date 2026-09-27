@@ -9,12 +9,35 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { WocListingView, WocSaleView } from '../src/net/woc_market_sdk';
 import { ITEMS } from '../src/sim/data';
+import type { ItemInstancePayload } from '../src/sim/types';
 import {
   type CharselectMarketClient,
   type CharselectWocMarketDeps,
   CharselectWocMarketPanel,
 } from '../src/ui/charselect_woc_market_panel';
 import { itemDisplayName } from '../src/ui/entity_i18n';
+
+// The history table's host, captured so a case can drive its item cell with a
+// copy payload: the table itself always passes none (woc_market_sales_html.ts).
+type SalesHost = {
+  itemCell: (
+    itemId: string,
+    quality: string,
+    key: string,
+    instance?: ItemInstancePayload,
+  ) => string;
+};
+const salesHosts: SalesHost[] = [];
+vi.mock('../src/ui/woc_market_sales_html', async (importOriginal) => {
+  const real = await importOriginal<typeof import('../src/ui/woc_market_sales_html')>();
+  return {
+    ...real,
+    wocSalesTableHtml: (...args: Parameters<typeof real.wocSalesTableHtml>) => {
+      salesHosts.push(args[1] as unknown as SalesHost);
+      return real.wocSalesTableHtml(...args);
+    },
+  };
+});
 
 const ITEM_ID = Object.keys(ITEMS)[0]!;
 const ITEM_NAME = itemDisplayName(ITEMS[ITEM_ID]!);
@@ -264,5 +287,33 @@ describe('web hand-off', () => {
     expect(link.target).toBe('_blank');
     expect(link.rel).toContain('noopener');
     expect(link.getAttribute('href')).toBeTruthy();
+  });
+});
+
+describe('furnishing copies', () => {
+  it("strips a furnishing copy's fields in the history cell, as the main Exchange window does", async () => {
+    const client = fakeClient();
+    const { panel } = panelWith(client);
+    panel.open(document.getElementById('opener'));
+    await flush();
+    document
+      .getElementById('charselect-woc-market')
+      ?.querySelector<HTMLElement>('[data-tab="history"]')
+      ?.click();
+    await flush();
+    const host = salesHosts.at(-1);
+    expect(host).toBeDefined();
+    const rolled: ItemInstancePayload = {
+      signer: 'Testmaker',
+      lootQuality: { version: 1, tier: 4, weights: [4, 900, 200, 6, 7] },
+    };
+    // A furnishing copy: the loot-quality badge is dropped, so the cell reads
+    // exactly as one with no payload.
+    expect(host?.itemCell('freehold_timber_bed', 'common', 'k', rolled)).toBe(
+      host?.itemCell('freehold_timber_bed', 'common', 'k'),
+    );
+    // CONTROL: gear keeps its copy's badge, so the equality above is the strip.
+    expect(host?.itemCell('rusty_dagger', 'common', 'k', rolled)).toContain('loot-quality-badge');
+    expect(ITEMS.freehold_timber_bed?.kind).toBe('furnishing');
   });
 });

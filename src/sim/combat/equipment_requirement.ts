@@ -24,7 +24,10 @@ export function shieldEquipped(worn: WornItems): boolean {
 /** Does the worn main hand count as a dagger at this level? Mirrors the
  *  `weapon.dagger` recalcPlayerStats derives for the cast gate. */
 export function wieldsDagger(worn: WornItems, level: number): boolean {
-  const mainhand = worn.mainhand !== undefined ? ITEMS[worn.mainhand] : undefined;
+  const def = worn.mainhand !== undefined ? ITEMS[worn.mainhand] : undefined;
+  // A furnishing copy is never a weapon, whatever an old save put in the slot:
+  // the guard recalcPlayerStats applies, so the bar and the cast gate agree.
+  const mainhand = def?.kind === 'furnishing' ? undefined : def;
   return (
     mainhand?.weapon?.dagger === true &&
     mainhand !== undefined &&
