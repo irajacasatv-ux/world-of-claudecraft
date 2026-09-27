@@ -502,8 +502,9 @@ export function createWsAuth(deps: WsAuthDeps): WsAuthHandlers {
             // it.
             let freehold: LoadedFreehold | undefined;
             // ONE HOUSING BUDGET PER HANDSHAKE: the re-ask below gets only what
-            // this ask leaves (freeholdReaskBudgetMs). Server wall clock, not sim.
-            const firstAskStartMs = Date.now();
+            // this ask leaves (freeholdReaskBudgetMs), timed on the MONOTONIC
+            // clock, so a wall-clock step cannot hand the re-ask a fresh budget.
+            const firstAskStartMs = performance.now();
             try {
               freehold = await freeholdForAccount(accountId);
             } catch (err) {
@@ -519,7 +520,7 @@ export function createWsAuth(deps: WsAuthDeps): WsAuthHandlers {
               // re-throwing a database error, which is why it is written down.
               console.error('freehold durable read failed; joining unloaded:', err);
             }
-            const firstAskMs = Date.now() - firstAskStartMs;
+            const firstAskMs = performance.now() - firstAskStartMs;
             leaseNonce = randomUUID();
             const leased = await acquireCharacterLease(character.id, accountId, leaseNonce);
             if (!leased) {

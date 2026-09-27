@@ -773,8 +773,9 @@ export function registerGameStateMetrics(
       this.inc({ measure: 'reask_reads' }, state.reaskReads);
       this.inc({ measure: 'reask_ms' }, state.reaskMsTotal);
       // How each join's install was decided, one fixed measure per verdict:
-      // `join_entry` is the stale-answer fix at work, `join_withheld` a
-      // write-blocked session nothing could vouch for.
+      // `join_superseded` is the stale-answer fix changing an install (a plain
+      // `join_entry` is every healthy join), `join_withheld` a join nothing could
+      // vouch for.
       for (const verdict of FREEHOLD_JOIN_VERDICTS) {
         this.inc({ measure: `join_${verdict}` }, state.joinVerdicts[verdict] ?? 0);
       }

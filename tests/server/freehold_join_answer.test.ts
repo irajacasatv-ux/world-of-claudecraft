@@ -81,28 +81,40 @@ describe('freeholdJoinAnswer', () => {
     // tests/server/freehold_persist.test.ts.
     const current = answer({ durableRev: '7', state: house() });
     const decided = freeholdJoinAnswer(ACCOUNT_ID, undefined, current);
-    expect(decided.verdict).toBe('entry');
+    expect(decided.verdict).toBe('superseded');
     expect(decided.answer).toBe(current);
   });
 
-  it("hands back a malformed or another account's answer unchanged, for the install to refuse", () => {
+  it("hands back a malformed or another account's answer unchanged when no entry is loaded, for the install to refuse", () => {
     const foreign = answer({ accountId: ACCOUNT_ID + 1, state: house() });
-    const current = answer({ state: house({ rev: 8 }) });
-    expect(freeholdJoinAnswer(ACCOUNT_ID, foreign, current)).toEqual({
+    expect(freeholdJoinAnswer(ACCOUNT_ID, foreign, null)).toEqual({
       answer: foreign,
       verdict: 'refused',
     });
     const malformed = 'not an answer' as unknown as LoadedFreehold;
-    expect(freeholdJoinAnswer(ACCOUNT_ID, malformed, current)).toEqual({
+    expect(freeholdJoinAnswer(ACCOUNT_ID, malformed, null)).toEqual({
       answer: malformed,
       verdict: 'refused',
     });
     // A null bag, the one object-typed value that is not an answer.
     const empty = null as unknown as LoadedFreehold;
-    expect(freeholdJoinAnswer(ACCOUNT_ID, empty, current)).toEqual({
+    expect(freeholdJoinAnswer(ACCOUNT_ID, empty, null)).toEqual({
       answer: empty,
       verdict: 'refused',
     });
+  });
+
+  it('lets a loaded entry answer a broken or foreign ask too, so its capture is never dropped', () => {
+    const current = answer({ state: house({ rev: 8 }) });
+    for (const asked of [
+      answer({ accountId: ACCOUNT_ID + 1, state: house() }),
+      'not an answer' as unknown as LoadedFreehold,
+      null as unknown as LoadedFreehold,
+    ]) {
+      const decided = freeholdJoinAnswer(ACCOUNT_ID, asked, current);
+      expect(decided.verdict).toBe('superseded');
+      expect(decided.answer).toBe(current);
+    }
   });
 
   it("installs the LOADED ENTRY'S answer now, whatever the handshake asked", () => {
@@ -111,7 +123,7 @@ describe('freeholdJoinAnswer', () => {
     const stale = answer();
     const current = answer({ durableRev: null, state: house({ rev: 3 }) });
     const decided = freeholdJoinAnswer(ACCOUNT_ID, stale, current);
-    expect(decided.verdict).toBe('entry');
+    expect(decided.verdict).toBe('superseded');
     expect(decided.answer).toBe(current);
   });
 
@@ -119,8 +131,26 @@ describe('freeholdJoinAnswer', () => {
     const current = answer({ durableRev: '7', state: house() });
     for (const asked of [answer({ hold: HOLD }), answer({ recordWithheld: true })]) {
       const decided = freeholdJoinAnswer(ACCOUNT_ID, asked, current);
-      expect(decided.verdict).toBe('entry');
+      expect(decided.verdict).toBe('superseded');
       expect(decided.answer).toBe(current);
+    }
+  });
+
+  it('names an ask that already matches the entry the plain ENTRY verdict, and any one difference SUPERSEDED', () => {
+    // The healthy join: its re-ask replayed the entry, so nothing changed.
+    const current = answer({ durableRev: '7', state: house({ rev: 7 }) });
+    const same = answer({ durableRev: '7', state: house({ rev: 7 }) });
+    expect(freeholdJoinAnswer(ACCOUNT_ID, same, current).verdict).toBe('entry');
+    // Each dimension on its own, so no one comparison can carry the rest.
+    for (const differs of [
+      answer({ durableRev: '6', state: house({ rev: 7 }) }),
+      answer({ durableRev: '7', state: house({ rev: 6 }) }),
+      answer({ durableRev: '7', state: null }),
+      answer({ durableRev: '7', plotId: 'plot:other', state: house({ rev: 7 }) }),
+      answer({ durableRev: '7', state: house({ rev: 7 }), hold: HOLD }),
+      answer({ durableRev: '7', state: house({ rev: 7 }), recordWithheld: true }),
+    ]) {
+      expect(freeholdJoinAnswer(ACCOUNT_ID, differs, current).verdict).toBe('superseded');
     }
   });
 

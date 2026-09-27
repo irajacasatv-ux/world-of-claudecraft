@@ -10,7 +10,10 @@
 // prints says how many it held back. The exact count is never lost:
 // woc_freehold_load_failures_total books every refusal by kind whether or not a
 // line was printed. A DATA kind (a row this build cannot read) is a per-row
-// incident and always prints.
+// incident and always prints. One capacity line is NOT limited here: the error
+// the store logs when a durable read throws (`freehold durable load failed`)
+// prints per event, because each carries its own database error, which a
+// counted summary would lose.
 //
 // Pure over its two injected ports, like the store it serves: no wall clock and
 // no timer of its own.

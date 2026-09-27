@@ -22,19 +22,47 @@
 
 import type { LoadedFreehold } from './freehold_load_outcome';
 
-/** Which arm decided, so the store can say so when it matters and a test can
- *  name the arm it reached. */
-export type FreeholdJoinVerdict = 'none' | 'refused' | 'entry' | 'held' | 'withheld';
-
 /** The fixed verdict vocabulary, walked by the metrics exporter so its label
- *  set is this list and never whatever a producer happens to emit. */
-export const FREEHOLD_JOIN_VERDICTS: readonly FreeholdJoinVerdict[] = [
+ *  set is this list and never whatever a producer happens to emit; the verdict
+ *  type is derived from it, so the two cannot drift. */
+export const FREEHOLD_JOIN_VERDICTS = [
   'none',
   'refused',
   'entry',
+  'superseded',
   'held',
   'withheld',
-];
+] as const;
+
+/** Which arm decided, so the store can count it and a test can name the arm it
+ *  reached. `entry` and `superseded` install the same thing (the loaded entry);
+ *  they differ only in whether the asked answer already matched it, so
+ *  `superseded` is the twelfth path's fix actually changing an install. */
+export type FreeholdJoinVerdict = (typeof FREEHOLD_JOIN_VERDICTS)[number];
+
+/** A zero count per verdict, built from the vocabulary, so a verdict added to
+ *  it can never be missing from a counter (it would count NaN). */
+export function freeholdJoinVerdictCounts(): Record<FreeholdJoinVerdict, number> {
+  return Object.fromEntries(FREEHOLD_JOIN_VERDICTS.map((verdict) => [verdict, 0])) as Record<
+    FreeholdJoinVerdict,
+    number
+  >;
+}
+
+/** True when `asked` is an answer the entry's `current` answer would not
+ *  change: the same account, plot and durable revision, the same document
+ *  revision, and neither a hold nor a withheld mark. */
+function askedMatches(asked: LoadedFreehold | undefined, current: LoadedFreehold): boolean {
+  if (typeof asked !== 'object' || asked === null) return false;
+  return (
+    asked.accountId === current.accountId &&
+    !asked.hold &&
+    asked.recordWithheld === false &&
+    asked.plotId === current.plotId &&
+    asked.durableRev === current.durableRev &&
+    (asked.state?.rev ?? null) === (current.state?.rev ?? null)
+  );
+}
 
 /**
  * The answer this join installs.
@@ -51,28 +79,23 @@ export function freeholdJoinAnswer(
   asked: LoadedFreehold | undefined,
   current: LoadedFreehold | null,
 ): { readonly answer: LoadedFreehold | undefined; readonly verdict: FreeholdJoinVerdict } {
-  // No durable answer at all (a caller with no handshake, or both asks threw).
-  // A LOADED ENTRY still answers, so a leave capture waiting on it is installed
-  // rather than dropped for want of an answer (the QA read of ruling (b) found
-  // the old "install nothing" arm rested on preload never rejecting); with no
-  // entry, install nothing, as a join always has.
-  if (asked === undefined) {
-    if (current !== null && current.accountId === accountId) {
-      return { answer: current, verdict: 'entry' };
-    }
-    return { answer: undefined, verdict: 'none' };
+  // THE ENTRY, whatever was asked: nothing (both handshake asks threw), a broken
+  // or foreign bag, a hold, a marked answer or a stale one. A loaded entry holds
+  // the capture a leaving session still owes, the house a sibling committed, or
+  // the hold it now carries, so it answers before any other arm and a waiting
+  // capture is never dropped for want of a usable ask (the QA and fresh reads of
+  // ruling (b)). Checked against the account, so an entry can never hand one
+  // account's house to another.
+  if (current !== null && current.accountId === accountId) {
+    return { answer: current, verdict: askedMatches(asked, current) ? 'entry' : 'superseded' };
   }
+  // No loaded entry and no durable answer at all: install nothing, as a join
+  // always has.
+  if (asked === undefined) return { answer: undefined, verdict: 'none' };
   // Not this account's answer, or not an answer: unchanged, so the install's own
   // structural guards refuse it and nothing new decides on a broken bag.
   if (typeof asked !== 'object' || asked === null || asked.accountId !== accountId) {
     return { answer: asked, verdict: 'refused' };
-  }
-  // THE ENTRY, whatever was asked: the capture a leaving session still owes, the
-  // house a sibling committed, or the hold the entry now carries. Checked against
-  // the account like the asked answer, so an entry can never hand one account's
-  // house to another.
-  if (current !== null && current.accountId === accountId) {
-    return { answer: current, verdict: 'entry' };
   }
   // No loaded entry. A hold installs nothing already.
   if (asked.hold) return { answer: asked, verdict: 'held' };

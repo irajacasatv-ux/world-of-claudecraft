@@ -70,17 +70,20 @@ export interface FreeholdPersistStats {
    *  on top of the entry's own, retained until the write lands. */
   readonly leaveCaptures: number;
   /** Ruling (b)'s re-asks: the handshake's second ask, after the character
-   *  lease. `reaskReads` are those that waited on a durable read (their own or
-   *  a shared single-flight one) rather than replaying a loaded entry, which is
-   *  housing wait inside the lease-held window; `reaskMsTotal` is their summed
+   *  lease. `reaskReads` are those that waited on the durable path (a read, a
+   *  shared single-flight read, or a permit wait) rather than replaying a loaded
+   *  entry, which is housing wait inside the lease-held window; a cap refusal
+   *  waits on nothing and is not counted. `reaskMsTotal` is the re-asks' summed
    *  wall time, bounded per handshake by what the first ask left of
    *  FREEHOLD_PERSIST_LOGIN_BUDGET_MS. */
   readonly reasks: number;
   readonly reaskReads: number;
   readonly reaskMsTotal: number;
   /** How each join's install was decided (server/freehold_join_answer.ts):
-   *  `entry` is the loaded entry answering at install time, the twelfth path's
-   *  fix doing its work when the asked answer was stale; `withheld` is a join
-   *  nothing could vouch for, installed as no record and write-blocked. */
+   *  `entry` is a loaded entry the ask already matched (every healthy join, so
+   *  it tracks login volume); `superseded` is the loaded entry installed in
+   *  place of a stale, held, marked, broken or missing ask, the twelfth path's
+   *  fix actually changing an install; `withheld` is a join nothing could vouch
+   *  for, installed as no record (write-blocked unless a live record stands). */
   readonly joinVerdicts: Readonly<Record<FreeholdJoinVerdict, number>>;
 }

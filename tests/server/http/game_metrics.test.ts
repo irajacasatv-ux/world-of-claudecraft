@@ -2064,7 +2064,7 @@ describe('the housing persistence families', () => {
     reasks: 71,
     reaskReads: 72,
     reaskMsTotal: 73,
-    joinVerdicts: { none: 81, refused: 82, entry: 83, held: 84, withheld: 85 },
+    joinVerdicts: { none: 81, refused: 82, entry: 83, superseded: 86, held: 84, withheld: 85 },
     deferredWrites: 17,
     activeWrites: 18,
     leaveCaptures: 19,
@@ -2131,6 +2131,7 @@ describe('the housing persistence families', () => {
     expect(labelled(text, WOC_FREEHOLD_PERSIST_TOTAL, 'join_entry')).toBe('83');
     expect(labelled(text, WOC_FREEHOLD_PERSIST_TOTAL, 'join_held')).toBe('84');
     expect(labelled(text, WOC_FREEHOLD_PERSIST_TOTAL, 'join_withheld')).toBe('85');
+    expect(labelled(text, WOC_FREEHOLD_PERSIST_TOTAL, 'join_superseded')).toBe('86');
   });
 
   it('splits load failures by hold kind, because the kind IS the response', async () => {

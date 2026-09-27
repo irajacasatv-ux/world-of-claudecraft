@@ -1389,7 +1389,9 @@ describe('createWsAuth: durable freehold stamp', () => {
     ])(
       'a first ask of $firstAskMs ms leaves the re-ask $budgetMs ms',
       async ({ firstAskMs, budgetMs }) => {
-        vi.useFakeTimers({ toFake: ['Date'] });
+        // The MONOTONIC clock the handshake times the first ask on; a wall-clock
+        // step backwards during the ask must not refund the budget.
+        vi.useFakeTimers({ toFake: ['performance', 'Date'] });
         vi.setSystemTime(1_000_000);
         const { ws, deps, req } = setup();
         let asks = 0;
@@ -1397,12 +1399,15 @@ describe('createWsAuth: durable freehold stamp', () => {
           asks += 1;
           // The first ask "takes" firstAskMs; the lease and the character read
           // after it take another second, which must NOT be charged to housing.
-          if (asks === 1) vi.setSystemTime(Date.now() + firstAskMs);
+          if (asks === 1) {
+            vi.advanceTimersByTime(firstAskMs);
+            vi.setSystemTime(Date.now() - 60_000);
+          }
           return loadedAnswer;
         });
         const lease = deps.acquireCharacterLease;
         deps.acquireCharacterLease = vi.fn(async (...args: Parameters<typeof lease>) => {
-          vi.setSystemTime(Date.now() + 1_000);
+          vi.advanceTimersByTime(1_000);
           return await lease(...args);
         });
         const { authenticateWebSocket } = createWsAuth(deps);

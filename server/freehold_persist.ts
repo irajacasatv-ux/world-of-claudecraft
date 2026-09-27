@@ -71,7 +71,7 @@ import {
   type FreeholdHearthReading,
   normalizeHearthLoad,
 } from './freehold_hearth_load';
-import { type FreeholdJoinVerdict, freeholdJoinAnswer } from './freehold_join_answer';
+import { freeholdJoinAnswer, freeholdJoinVerdictCounts } from './freehold_join_answer';
 import {
   FREEHOLD_ABSENT_DURABLE_REV,
   type FreeholdRecoveryHold,
@@ -517,10 +517,7 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
     reasks: 0,
     reaskReads: 0,
     reaskMsTotal: 0,
-    joinVerdicts: { none: 0, refused: 0, entry: 0, held: 0, withheld: 0 } as Record<
-      FreeholdJoinVerdict,
-      number
-    >,
+    joinVerdicts: freeholdJoinVerdictCounts(),
   };
 
   // Capacity-kind hold lines, one per kind per window (freehold_capacity_warn.ts).
@@ -1101,8 +1098,8 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
       // durable revision, and an entry that never loaded is write-blocked for the
       // whole session, every edit discarded at logout. So read, then answer with
       // no state.
-      if (reask) counters.reaskReads++;
       const loaded = await beginLoad(accountId, ownerKey);
+      if (reask && loaded.hold?.kind !== 'cap_full') counters.reaskReads++;
       const touched = entries.get(ownerKey);
       if (touched) touched.orphanPasses = 0;
       return { ...loaded, state: null, recordWithheld: true };
@@ -1130,8 +1127,9 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
       // a lost-save path of its own.
       return replayAnswer(entry);
     }
-    if (reask) counters.reaskReads++;
     const loaded = await beginLoad(accountId, ownerKey);
+    // A re-ask that waited on the durable path; a cap refusal waited on nothing.
+    if (reask && loaded.hold?.kind !== 'cap_full') counters.reaskReads++;
     const touched = entries.get(ownerKey);
     if (touched) touched.orphanPasses = 0;
     return loaded;
@@ -1927,7 +1925,9 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
       const current = entry?.loaded ? replayAnswer(entry) : null;
       const decided = freeholdJoinAnswer(accountId, asked, current);
       counters.joinVerdicts[decided.verdict]++;
-      if (decided.verdict === 'withheld') {
+      // A live record stands whatever the install is handed, and retain's reload
+      // makes it writable: only a join with nothing live is write-blocked.
+      if (decided.verdict === 'withheld' && !ports.hasLive(ownerKey)) {
         ports.warn(
           `freehold plot index ${decided.answer?.plotIndex} join answer withheld: the entry it was read from went away before the install, so no record is put in and the session is write-blocked`,
         );

@@ -9,6 +9,7 @@
 
 import { FREEHOLD_PRIMARY_PLOT_INDEX } from './freehold_db';
 import { ABSENT_HEARTH_REVISION } from './freehold_hearth_load';
+import { freeholdJoinVerdictCounts } from './freehold_join_answer';
 import type { FreeholdPreloadOptions } from './freehold_login_bounds';
 import {
   FREEHOLD_ABSENT_DURABLE_REV,
@@ -103,7 +104,7 @@ export function freeholdPersistStats(): FreeholdPersistStats {
       reasks: 0,
       reaskReads: 0,
       reaskMsTotal: 0,
-      joinVerdicts: { none: 0, refused: 0, entry: 0, held: 0, withheld: 0 },
+      joinVerdicts: freeholdJoinVerdictCounts(),
       deferredWrites: 0,
       activeWrites: 0,
       leaveCaptures: 0,
