@@ -1,5 +1,7 @@
 # Freeholds and Guildhalls: housing research and proposal
 
+**Premise moved at the 2026-09-26 release sync (G1, docs/freeholds/state.md, "Premises the 2026-09-26 sync moved"):** officer-keyed guild authority in this document (layout, pay, upgrades, the fund, the store row, visit policy, succession) is a false premise since the release's custom guild ranks: "officer" is now a stamped bank tier, and guild ranks are a ladder with per-rank permissions. A ruling on the hall permission is owed before phase 28 builds, and every check here keys on the permission it names, never the Officer title.
+
 > **STATUS: PACKET REQUIREMENTS ADOPTED 2026-09-06. Nothing is built.**
 > The nine rulings in section 12 remain adopted. Fernando approved all R01 to R46
 > recommendations on 2026-09-06, plus the closing Codex artwork and legal-team handoff. The

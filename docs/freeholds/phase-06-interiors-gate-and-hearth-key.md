@@ -1,5 +1,7 @@
 # Phase 06: the interiors, the Eastbrook Freehold Gate, the Hearth Key
 
+**Premise moved at the 2026-09-26 release sync (G2, docs/freeholds/state.md, "Premises the 2026-09-26 sync moved"):** the Hearth Key's context refusals have no ferry arm, so a passenger under way on the release's scheduled ferry is admitted like any teleport (the ride ends on the next ferry tick, a parked pet returns beside the owner in the room). The phase that lights housing online pins that order, or Fernando rules a `busy` refusal.
+
 ## Functional capture inventory
 
 The exact 06 registry is `scripts/lib/pr_shot_freeholds.mjs::freeholdReviewTargets`:

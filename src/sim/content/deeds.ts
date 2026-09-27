@@ -3396,7 +3396,8 @@ export const DEEDS: Record<string, DeedDef> = {
   // The scheduled ferries (sim/transport_ferry.ts): one crossing in each
   // direction on every route, the visit marks written when a living passenger
   // steps off at the far pier. Cosmetic exploration at the castle-visit value
-  // (renown 5); appended at the END per the append-only contract.
+  // (renown 5); appended at the release's END per the append-only contract (the
+  // Freeholds branch's two Homesteader deeds follow it in the merged table).
   exp_harbor_to_harbor: {
     id: 'exp_harbor_to_harbor',
     name: 'Harbor to Harbor',

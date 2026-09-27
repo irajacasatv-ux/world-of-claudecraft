@@ -1421,6 +1421,11 @@ Deliverables (at most five):
 Deliverable 2 keys the weekly cap on ledgerWeekOf (D84) and adds the officer-plus
 withdraw-to-guild-bank verb on the 07a rail (D78).
 
+PREMISE MOVED at the 2026-09-26 release sync (G1 in state.md, "Premises the
+2026-09-26 sync moved"): "officer" is no longer a rank but a stamped bank tier, so
+the member/officer UX and the officer-plus withdraw above key on the guild rank
+permission the ruling owed before phase 28 names, never the Officer title.
+
 Regenerates ux-key-manifest.json (29 keys owned) in this phase with every cited count
 updated (D92).
 

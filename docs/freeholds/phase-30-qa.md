@@ -1,5 +1,7 @@
 # Phase 30 QA: audit guild chest, feast table and shared stations
 
+**Premise moved at the 2026-09-26 release sync (G1, docs/freeholds/state.md, "Premises the 2026-09-26 sync moved"):** officer-keyed guild authority in this document (layout, pay, upgrades, the fund, the store row, visit policy, succession) is a false premise since the release's custom guild ranks: "officer" is now a stamped bank tier, and guild ranks are a ladder with per-rank permissions. A ruling on the hall permission is owed before phase 28 builds, and every check here keys on the permission it names, never the Officer title.
+
 Audits [phase-30-hall-amenities.md](phase-30-hall-amenities.md) and every one of its deliverable/acceptance rows. Verdict goes
 in progress.md row "30 QA". A check not run cannot be reported as proved.
 

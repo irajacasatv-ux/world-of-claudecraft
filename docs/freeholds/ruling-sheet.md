@@ -1,5 +1,7 @@
 # Freeholds settlement ruling sheet
 
+**Premise moved at the 2026-09-26 release sync (G1, docs/freeholds/state.md, "Premises the 2026-09-26 sync moved"):** officer-keyed guild authority in this document (layout, pay, upgrades, the fund, the store row, visit policy, succession) is a false premise since the release's custom guild ranks: "officer" is now a stamped bank tier, and guild ranks are a ladder with per-rank permissions. A ruling on the hall permission is owed before phase 28 builds, and every check here keys on the permission it names, never the Officer title.
+
 Status: ANSWERED AND ADOPTED on 2026-09-06. All R01-R46 recommendations were approved.
 R01-R46 map to D27-D72 in state.md; the three additional instructions are D73-D75. The
 second round below (R47-R64, mapping in order to D76-D93) carries recommended dispositions

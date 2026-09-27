@@ -1,5 +1,7 @@
 # Phase 28a QA: audit guild lifecycle and membership evidence
 
+**Premise moved at the 2026-09-26 release sync (G1, docs/freeholds/state.md, "Premises the 2026-09-26 sync moved"):** officer-keyed guild authority in this document (layout, pay, upgrades, the fund, the store row, visit policy, succession) is a false premise since the release's custom guild ranks: "officer" is now a stamped bank tier, and guild ranks are a ladder with per-rank permissions. A ruling on the hall permission is owed before phase 28 builds, and every check here keys on the permission it names, never the Officer title.
+
 Audit phase-28a-guild-lifecycle-and-membership.md and the exact five deliverables below.
 The verdict goes in progress.md row 28a QA; 29 cannot start until this pair passes.
 
