@@ -122,10 +122,16 @@ const read = (file) => {
   return { bytes, value: JSON.parse(bytes.toString('utf8')) };
 };
 
-try {
+/**
+ * Seal one completed capture set (the CLI's arguments), or throw the refusal. Exported so
+ * the refusal matrix runs in-process instead of spawning a Node process per case.
+ *
+ * @param {string[]} args
+ * @returns {string} the success line the CLI prints
+ */
+export function sealFreeholdCaptures(args) {
   const allowed = ['before', 'after', 'performance', 'output', 'baseline-root', 'baseline-url'];
   const options = {};
-  const args = process.argv.slice(2);
   for (let i = 0; i < args.length; i += 2) {
     const name = args[i]?.replace(/^--/, '');
     requireEvidence(
@@ -440,10 +446,14 @@ try {
   fs.mkdirSync(output, { recursive: true });
   for (const [file, bytes] of pending) fs.writeFileSync(path.join(output, file), bytes);
   fs.writeFileSync(path.join(output, 'acceptance.json'), acceptanceBytes);
-  console.log(
-    `Sealed ${captures.length} matched captures and ${rawFiles.length} unmodified producer records in ${output}`,
-  );
-} catch (error) {
-  console.error(error instanceof Error ? error.message : String(error));
-  process.exitCode = 1;
+  return `Sealed ${captures.length} matched captures and ${rawFiles.length} unmodified producer records in ${output}`;
+}
+
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  try {
+    console.log(sealFreeholdCaptures(process.argv.slice(2)));
+  } catch (error) {
+    console.error(error instanceof Error ? error.message : String(error));
+    process.exitCode = 1;
+  }
 }

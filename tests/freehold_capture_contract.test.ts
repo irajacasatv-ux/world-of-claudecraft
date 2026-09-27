@@ -3,6 +3,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { sealFreeholdCaptures } from '../scripts/freehold_capture_receipt.mjs';
 import { FREEHOLD_GATE_STANCE } from '../scripts/freehold_interior_route.mjs';
 import {
   baselineRuntimeRefusal,
@@ -141,25 +142,43 @@ describe('Freehold capture receipt refusal', () => {
     edit?.(record);
     return record;
   }
-  function receipt(before: string, after: string, output: string) {
-    return spawnSync(
+  type Receipt = (
+    before: string,
+    after: string,
+    output: string,
+  ) => {
+    status: number | null;
+    stderr: string;
+  };
+  const receiptArgs = (before: string, after: string, output: string) => [
+    '--before',
+    before,
+    '--after',
+    after,
+    '--performance',
+    join(before, 'performance.json'),
+    '--output',
+    output,
+    '--baseline-root',
+    '.',
+  ];
+  // In-process: the matrix calls the sealer directly (one Node spawn per case
+  // cost about 7 s over the matrix), reading a refusal as the CLI reports it.
+  const receipt: Receipt = (before, after, output) => {
+    try {
+      sealFreeholdCaptures(receiptArgs(before, after, output));
+      return { status: 0, stderr: '' };
+    } catch (error) {
+      return { status: 1, stderr: error instanceof Error ? error.message : String(error) };
+    }
+  };
+  // The real CLI, once, so the wrapper that prints and exits stays covered.
+  const receiptCli: Receipt = (before, after, output) =>
+    spawnSync(
       process.execPath,
-      [
-        'scripts/freehold_capture_receipt.mjs',
-        '--before',
-        before,
-        '--after',
-        after,
-        '--performance',
-        join(before, 'performance.json'),
-        '--output',
-        output,
-        '--baseline-root',
-        '.',
-      ],
+      ['scripts/freehold_capture_receipt.mjs', ...receiptArgs(before, after, output)],
       { encoding: 'utf8' },
     );
-  }
   // The positive control stops here: the synthetic set cannot carry a
   // baseline checkout at the release commit, so reaching this refusal proves
   // every frame, manifest and performance check before it passed.
@@ -434,7 +453,7 @@ describe('Freehold capture receipt refusal', () => {
     // Too short to hold an IHDR size: refused by name, never a RangeError.
     if (defect === 'truncated image') writeFileSync(first, readFileSync(first).subarray(0, 20));
   }
-  function run(defect: string) {
+  function run(defect: string, via: Receipt = receipt) {
     const root = mkdtempSync(join(tmpdir(), 'freehold-receipt-'));
     const output = join(root, 'receipt');
     const [before, after] = [join(root, 'before'), join(root, 'after')];
@@ -447,7 +466,7 @@ describe('Freehold capture receipt refusal', () => {
       JSON.stringify(performance(edits(defect).performance)),
     );
     try {
-      return { result: receipt(before, after, output), wrote: existsSync(output) };
+      return { result: via(before, after, output), wrote: existsSync(output) };
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
@@ -462,6 +481,13 @@ describe('Freehold capture receipt refusal', () => {
       expect(wrote).toBe(false);
     },
   );
+
+  it('runs the same refusal through the CLI, which prints it and exits 1', () => {
+    const { result, wrote } = run('a valid synthetic set (the positive control)', receiptCli);
+    expect(result.status).toBe(1);
+    expect(result.stderr.trim()).toBe(PAST_EVERY_CHECK);
+    expect(wrote).toBe(false);
+  });
 
   it.each(Object.keys(REFUSALS))('refuses %s before publishing any evidence', (defect) => {
     const { result, wrote } = run(defect);
