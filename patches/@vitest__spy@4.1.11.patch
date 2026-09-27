@@ -1,0 +1,56 @@
+diff --git a/dist/index.js b/dist/index.js
+index 6d907fc02f65ca9b3959f75c623e83ca866a457c..c71c760ca1001a1a007549817dd0608049b9239e 100644
+--- a/dist/index.js
++++ b/dist/index.js
+@@ -6,6 +6,12 @@ const MOCK_RESTORE = new Set();
+ // but it makes the state slower to access and return different values
+ // if you stored it before calling `mockClear` where it will be recreated
+ const REGISTERED_MOCKS = new Set();
++// PATCHED (world-of-claudecraft, patches/@vitest__spy@4.1.11.patch): which mock
++// each restore closure uninstalls. A spy's closures hold the object it spied on
++// (its `restore` closes over that object), so a spy left in REGISTERED_MOCKS
++// after it is restored keeps that object, a whole Sim or GameServer in a server
++// suite, alive until the worker exits. Restoring a spy now removes it.
++const RESTORE_OWNERS = new Map();
+ const MOCK_CONFIGS = new WeakMap();
+ function createMockInstance(options = {}) {
+ 	const { originalImplementation, restore, mockImplementation, resetToMockImplementation, resetToMockName } = options;
+@@ -34,6 +40,9 @@ function createMockInstance(options = {}) {
+ 	}
+ 	MOCK_CONFIGS.set(mock, config);
+ 	REGISTERED_MOCKS.add(mock);
++	if (restore) {
++		RESTORE_OWNERS.set(restore, mock);
++	}
+ 	mock._isMockFunction = true;
+ 	mock.getMockImplementation = () => {
+ 		// Jest only returns `config.mockImplementation` here,
+@@ -157,6 +166,13 @@ function createMockInstance(options = {}) {
+ 	};
+ 	mock.mockRestore = function mockRestore() {
+ 		mock.mockReset();
++		// PATCHED: a restored spy leaves both registries (a plain vi.fn, which has
++		// no restore, stays registered so clearAllMocks still reaches it).
++		if (restore) {
++			MOCK_RESTORE.delete(restore);
++			RESTORE_OWNERS.delete(restore);
++			REGISTERED_MOCKS.delete(mock);
++		}
+ 		return restore?.();
+ 	};
+ 	mock.mockName = function mockName(name) {
+@@ -467,8 +483,14 @@ function getDefaultState() {
+ function restoreAllMocks() {
+ 	for (const restore of MOCK_RESTORE) {
+ 		restore();
++		// PATCHED: the restored spy leaves the registry with its restore.
++		const owner = RESTORE_OWNERS.get(restore);
++		if (owner) {
++			REGISTERED_MOCKS.delete(owner);
++		}
+ 	}
+ 	MOCK_RESTORE.clear();
++	RESTORE_OWNERS.clear();
+ }
+ function clearAllMocks() {
+ 	REGISTERED_MOCKS.forEach((mock) => mock.mockClear());

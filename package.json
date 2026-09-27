@@ -343,7 +343,8 @@
       "@reown/appkit"
     ],
     "patchedDependencies": {
-      "three@0.185.1": "patches/three@0.185.1.patch"
+      "three@0.185.1": "patches/three@0.185.1.patch",
+      "@vitest/spy@4.1.11": "patches/@vitest__spy@4.1.11.patch"
     }
   }
 }
