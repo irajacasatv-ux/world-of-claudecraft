@@ -24,7 +24,6 @@
 // schedule, or over a batch of recent commits.
 import { spawnSync } from 'node:child_process';
 import { appendFileSync, existsSync, mkdirSync, readdirSync, readFileSync } from 'node:fs';
-import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
@@ -34,13 +33,13 @@ import {
   listChangedPaths,
   resolveSelectBase,
 } from './lib/gate_discovery.mjs';
-import { resolveAvailableMemoryBytes } from './lib/gate_memory.mjs';
+import { resolveHostGateWorkers } from './lib/gate_host_workers.mjs';
 import {
   buildSelectiveLegArgs,
   buildSelectPlan,
   planSelectiveLegs,
 } from './lib/gate_select_plan.mjs';
-import { computeGateWorkers, resolveGateWorkerTierCap } from './lib/gate_workers.mjs';
+import { laneSuitesOptInEnv } from './lib/lane_suite_scope.mjs';
 
 const shell = process.platform === 'win32';
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -65,15 +64,8 @@ const git = (cmd, args) => {
   return res;
 };
 
-const workers = computeGateWorkers({
-  cpuCount: os.availableParallelism(),
-  freeMemBytes: resolveAvailableMemoryBytes({
-    platform: process.platform,
-    freeMemBytes: os.freemem(),
-  }),
-  envOverride: process.env.GATE_MAX_WORKERS,
-  tierCap: resolveGateWorkerTierCap(process.env.GATE_WORKER_TIER),
-});
+// Same host sizing as the gates (computeGateWorkers behind lib/gate_host_workers.mjs).
+const workers = resolveHostGateWorkers();
 
 /**
  * Run one vitest invocation and return per-file outcomes.
@@ -94,7 +86,10 @@ function runVitest(tag, args) {
     ['--no-install', 'vitest', ...args, '--reporter=json', `--outputFile=${outFile}`],
     // NOTE: no WOC_SKIP_PRETEST here. It is an npm lifecycle variable and `npx
     // vitest` never triggers pretest, so setting it was inert.
-    { stdio: 'inherit', shell, cwd: repoRoot },
+    // The lane opt-in: a validator that measures escapes must run the same
+    // files the gate does, and a bare local vitest run drops the long-sims
+    // lane files (lib/lane_suite_scope.mjs).
+    { stdio: 'inherit', shell, cwd: repoRoot, env: { ...process.env, ...laneSuitesOptInEnv() } },
   );
   const ran = new Set();
   const failed = new Set();

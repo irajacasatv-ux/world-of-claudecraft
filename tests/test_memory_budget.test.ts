@@ -151,7 +151,8 @@ describe('the probe wiring', () => {
 });
 
 describe('the probe measures after every other cleanup', () => {
-  // vitest runs onTestFinished callbacks last-registered first, so the probe setup,
+  // vitest runs onTestFinished callbacks last-registered first (the runner calls
+  // them in "stack" order whatever the config's sequence.hooks), so the probe setup,
   // FIRST in vitest.memory.config.ts setupFiles, registers first and measures last,
   // after the other setups' cleanups (the DOM files' event-loop turn among them).
   const order: string[] = [];

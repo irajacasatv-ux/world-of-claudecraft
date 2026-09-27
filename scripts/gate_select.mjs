@@ -63,7 +63,7 @@ import {
   I18N_RELEASE_TIER_SUITES,
   PRE_VITEST_STEP_NAME,
 } from './lib/gate_steps.mjs';
-import { laneSuitesOptInEnv } from './lib/lane_suite_scope.mjs';
+import { withLaneSuitesOptIn } from './lib/lane_suite_scope.mjs';
 
 const shell = process.platform === 'win32';
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -240,11 +240,12 @@ if (releaseTier) {
 
 // A gate never drops a long-sims lane file: a bare local vitest run leaves them
 // out (lib/lane_suite_scope.mjs), so every leg here opts back in, the full-suite
-// fallbacks and the merged leg's related side included.
-for (const step of vitestSteps) step.env = { ...laneSuitesOptInEnv(), ...(step.env ?? {}) };
+// fallbacks and the merged leg's related side included, with the opt-in merged
+// last so no leg can opt out.
+const gatedVitestSteps = withLaneSuitesOptIn(vitestSteps);
 
 const anchor = steps.findIndex((s) => s.name === PRE_VITEST_STEP_NAME);
-steps.splice(anchor >= 0 ? anchor + 1 : steps.length, 0, ...vitestSteps);
+steps.splice(anchor >= 0 ? anchor + 1 : steps.length, 0, ...gatedVitestSteps);
 
 // Every vitest leg runs under the same cross-process lock as gate.mjs's full-suite
 // step (lib/gate_lock.mjs, #2808): each gate sizes its pool as if it owned the host,
@@ -252,7 +253,7 @@ steps.splice(anchor >= 0 ? anchor + 1 : steps.length, 0, ...vitestSteps);
 // leg runs through the async runGateChild so the lock's listener keeps answering
 // contenders while it runs (spawnSync would block the event loop). The other steps
 // stay unserialized. GATE_NO_LOCK=1 is the same opt-out gate.mjs honors.
-const lockedSteps = new Set(vitestSteps);
+const lockedSteps = new Set(gatedVitestSteps);
 const noLock = process.env.GATE_NO_LOCK === '1';
 if (noLock) {
   console.log('[gate:select] GATE_NO_LOCK=1: full-suite lock disabled, running unserialized');

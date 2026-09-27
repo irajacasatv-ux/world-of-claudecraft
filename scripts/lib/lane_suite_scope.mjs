@@ -8,14 +8,16 @@
 //   - any CI value (the CI env var GitHub Actions sets) excludes nothing, so the
 //     shards, the lanes, release-gate and the nightly are untouched;
 //   - WOC_LANE_SUITES set to anything but empty or 0 includes them all, and
-//     both local gates set it on every vitest leg (`npm run gate` and
-//     `node scripts/gate_select.mjs`), so a gate never drops a lane file,
-//     neither on a full-suite fallback nor when the import graph reaches one;
-//   - a run that names a lane file keeps it, by vitest's own filter rule: a
-//     positional argument, lowercased, with a leading ./ stripped and an
-//     absolute path made repo-relative, that is a substring of the file's
-//     lowercased path. `npx vitest run ./tests/druid_balance_probe.test.ts`,
-//     `vitest run Warlock` and `vitest run tests/` keep what they name.
+//     every local gate sets it on every vitest leg (`npm run gate`,
+//     `node scripts/gate_select.mjs`, and the gate_shadow validator), so a gate
+//     never drops a lane file, neither on a full-suite fallback nor when the
+//     import graph reaches one;
+//   - a run that names a lane file keeps it, the way vitest matches a filter:
+//     a trailing :line dropped, then the filter as written (lowercased, a
+//     leading ./ stripped) or the path it resolves to from the root, as a
+//     substring of the file's lowercased path. `npx vitest run
+//     ./tests/druid_balance_probe.test.ts`, `vitest run Warlock` and `vitest
+//     run tests/` keep what they name.
 
 import path from 'node:path';
 import { CI_LONG_SUITES } from './ci_shard_plan.mjs';
@@ -23,6 +25,18 @@ import { CI_LONG_SUITES } from './ci_shard_plan.mjs';
 /** The opt-in, as the env overlay a caller merges into a vitest run. */
 export function laneSuitesOptInEnv() {
   return { WOC_LANE_SUITES: '1' };
+}
+
+/**
+ * A gate's vitest steps with the opt-in merged LAST, so no step's own env can
+ * opt a gate back out of the lane files.
+ *
+ * @template {{ env?: Record<string, string> }} T
+ * @param {readonly T[]} steps
+ * @returns {T[]}
+ */
+export function withLaneSuitesOptIn(steps) {
+  return steps.map((step) => ({ ...step, env: { ...(step.env ?? {}), ...laneSuitesOptInEnv() } }));
 }
 
 // vitest subcommands, never file filters.
@@ -75,17 +89,21 @@ const VALUE_FLAGS = new Set([
 ]);
 
 /**
- * A CLI filter as vitest matches it: lowercased, an absolute path made relative
- * to the project root, forward slashes, any leading ./ stripped.
+ * The forms a CLI filter matches in, as vitest reads it: a trailing `:line` is
+ * dropped, and the filter matches as written (lowercased, forward slashes, any
+ * leading ./ stripped) or as the path it resolves to from the root (which
+ * collapses `..`, `//` and `/./` and makes an absolute path relative).
  *
  * @param {string} filter
  * @param {string} root
+ * @returns {string[]}
  */
 export function normalizeVitestFilter(filter, root) {
-  let out = filter.replaceAll('\\', '/');
-  if (path.isAbsolute(filter)) out = path.relative(root, filter).replaceAll('\\', '/');
-  while (out.startsWith('./')) out = out.slice(2);
-  return out.toLowerCase();
+  const bare = filter.replace(/:\d+$/, '');
+  let raw = bare.replaceAll('\\', '/');
+  while (raw.startsWith('./')) raw = raw.slice(2);
+  const resolved = path.relative(root, path.resolve(root, bare)).replaceAll('\\', '/');
+  return [...new Set([raw.toLowerCase(), resolved.toLowerCase()])].filter((form) => form !== '');
 }
 
 /**
@@ -96,8 +114,10 @@ export function localLaneExclusions({ env, argv, root = process.cwd() }) {
   if (env.CI !== undefined) return [];
   const optIn = env.WOC_LANE_SUITES;
   if (optIn !== undefined && optIn !== '' && optIn !== '0') return [];
-  const filters = vitestFilterArgs(argv).map((filter) => normalizeVitestFilter(filter, root));
-  return CI_LONG_SUITES.filter(
-    (file) => !filters.some((filter) => file.toLowerCase().includes(filter)),
-  );
+  const forms = vitestFilterArgs(argv).flatMap((filter) => normalizeVitestFilter(filter, root));
+  // A filter that resolves to the root itself (an empty form) names every file.
+  if (vitestFilterArgs(argv).some((filter) => normalizeVitestFilter(filter, root).length === 0)) {
+    return [];
+  }
+  return CI_LONG_SUITES.filter((file) => !forms.some((form) => file.toLowerCase().includes(form)));
 }

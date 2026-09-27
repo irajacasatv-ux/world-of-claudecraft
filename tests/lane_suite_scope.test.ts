@@ -7,7 +7,9 @@ import {
   localLaneExclusions,
   normalizeVitestFilter,
   vitestFilterArgs,
+  withLaneSuitesOptIn,
 } from '../scripts/lib/lane_suite_scope.mjs';
+import { stripComments } from './helpers/strip_comments';
 
 const VITEST = '/repo/node_modules/.bin/vitest';
 const argv = (...args: string[]) => ['/usr/bin/node', VITEST, ...args];
@@ -48,8 +50,13 @@ describe('local lane-suite scope', () => {
     expect(kept('run', `${root}/${first}`)).toEqual([first]);
     expect(kept('run', first.toUpperCase())).toEqual([first]);
     expect(kept('run', './tests/a.test.ts', `./${first}`)).toEqual([first]);
-    expect(normalizeVitestFilter(`${root}/tests/X.test.ts`, root)).toBe('tests/x.test.ts');
-    expect(normalizeVitestFilter('.\\tests\\x.test.ts', root)).toBe('tests/x.test.ts');
+    // vitest resolves the filter too (.. and // collapse) and drops a :line suffix.
+    expect(kept('run', `tests/../${first}`)).toEqual([first]);
+    expect(kept('run', `${first}:12`)).toEqual([first]);
+    // A filter naming the root itself names every file.
+    expect(kept('run', '.')).toEqual([...CI_LONG_SUITES]);
+    expect(normalizeVitestFilter(`${root}/tests/X.test.ts`, root)).toContain('tests/x.test.ts');
+    expect(normalizeVitestFilter('.\\tests\\x.test.ts', root)).toContain('tests/x.test.ts');
   });
 
   it('keeps a lane file the run names, by vitest substring filter', () => {
@@ -93,20 +100,38 @@ describe('local lane-suite scope', () => {
     }
   });
 
-  it('keeps gate_select from dropping a lane file on any vitest leg', () => {
-    // Every vitest leg, the full-suite fallbacks and the merged related leg
-    // included, carries the opt-in; the loop runs before the legs are spliced in.
-    const source = readFileSync(new URL('../scripts/gate_select.mjs', import.meta.url), 'utf8');
-    const optIn = source.indexOf(
-      'for (const step of vitestSteps) step.env = { ...laneSuitesOptInEnv(), ...(step.env ?? {}) };',
+  it('merges the gate opt-in LAST, so no leg can opt out, and keeps its other env', () => {
+    const steps: Array<{ name: string; env?: Record<string, string> }> = [
+      { name: 'a' },
+      { name: 'b', env: { I18N_RELEASE_TIER: '1' } },
+      { name: 'c', env: { WOC_LANE_SUITES: '0' } },
+    ];
+    const [plain, tier, optedOut] = withLaneSuitesOptIn(steps);
+    expect(plain.env).toEqual(laneSuitesOptInEnv());
+    expect(tier.env).toEqual({ I18N_RELEASE_TIER: '1', ...laneSuitesOptInEnv() });
+    expect(optedOut.env).toEqual(laneSuitesOptInEnv());
+  });
+
+  it('keeps gate_select and gate_shadow from dropping a lane file on any vitest leg', () => {
+    // Comment-stripped, so a comment cannot stand in for the wiring. gate_select
+    // splices and locks only the opted-in copy of its vitest legs; gate_shadow's
+    // one vitest spawn carries the opt-in.
+    const select = stripComments(
+      readFileSync(new URL('../scripts/gate_select.mjs', import.meta.url), 'utf8'),
     );
-    const splice = source.indexOf(
-      'steps.splice(anchor >= 0 ? anchor + 1 : steps.length, 0, ...vitestSteps);',
+    expect(select).toContain('const gatedVitestSteps = withLaneSuitesOptIn(vitestSteps);');
+    expect(select).toContain(
+      'steps.splice(anchor >= 0 ? anchor + 1 : steps.length, 0, ...gatedVitestSteps);',
     );
-    expect(optIn).toBeGreaterThan(-1);
-    expect(splice).toBeGreaterThan(optIn);
-    expect(source.slice(optIn, splice)).not.toMatch(/vitestSteps\.push\(/);
-    expect(source.slice(splice)).not.toMatch(/vitestSteps\.push\(/);
+    expect(select).toContain('const lockedSteps = new Set(gatedVitestSteps);');
+    expect(select).not.toMatch(/\.\.\.vitestSteps\b/);
+    const optIn = select.indexOf('withLaneSuitesOptIn(vitestSteps)');
+    expect(select.slice(optIn)).not.toMatch(/vitestSteps\.(?:push|unshift|splice)\(/);
+    const shadow = stripComments(
+      readFileSync(new URL('../scripts/gate_shadow.mjs', import.meta.url), 'utf8'),
+    );
+    expect(shadow).toContain('env: { ...process.env, ...laneSuitesOptInEnv() }');
+    expect(shadow.match(/'vitest'/g)).toHaveLength(1);
   });
 
   it('keeps the full merge bar CI-equivalent', () => {

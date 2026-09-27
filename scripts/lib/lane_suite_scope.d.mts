@@ -2,7 +2,11 @@ export function laneSuitesOptInEnv(): { WOC_LANE_SUITES: string };
 
 export function vitestFilterArgs(argv: string[]): string[];
 
-export function normalizeVitestFilter(filter: string, root: string): string;
+export function normalizeVitestFilter(filter: string, root: string): string[];
+
+export function withLaneSuitesOptIn<T extends { env?: Record<string, string> }>(
+  steps: readonly T[],
+): T[];
 
 export function localLaneExclusions(opts: {
   env: Record<string, string | undefined>;

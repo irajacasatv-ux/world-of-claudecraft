@@ -251,7 +251,7 @@ describe('gate_select.mjs wiring pin', () => {
     expect(gateSelect).toContain("import { acquireFullSuiteLock } from './lib/gate_lock.mjs'");
     expect(gateSelect).toContain("import { runGateChild } from './lib/gate_child.mjs'");
     // The locked set is exactly the vitest legs the planner pushed.
-    expect(gateSelect).toMatch(/^const lockedSteps = new Set\(vitestSteps\);$/m);
+    expect(gateSelect).toMatch(/^const lockedSteps = new Set\(gatedVitestSteps\);$/m);
     expect(gateSelect).toMatch(/const locked = lockedSteps\.has\(step\);/);
     expect(gateSelect).toMatch(/locked\s*\?\s*await acquireFullSuiteLock\(\{ optOut: noLock \}\)/);
     expect(gateSelect).toMatch(/locked\s*\?\s*await runGateChild\(/);

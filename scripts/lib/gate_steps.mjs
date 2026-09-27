@@ -173,7 +173,7 @@ export function buildFullGateSteps(workers, opts = {}) {
         name: 'vitest (release-tier i18n)',
         cmd: 'npm',
         args: ['test', '--', ...I18N_RELEASE_TIER_SUITES, `--maxWorkers=${workers}`],
-        env: { ...gateVitestSkipPretestEnv(), I18N_RELEASE_TIER: '1' },
+        env: { ...gateVitestSkipPretestEnv(), ...laneSuitesOptInEnv(), I18N_RELEASE_TIER: '1' },
         hint: 'release-tier i18n is red until every locale is filled: run the i18n-locale-fill workflow (docs/i18n-scaling/translation-workflow.md). It does NOT indicate a code regression.',
       });
     }

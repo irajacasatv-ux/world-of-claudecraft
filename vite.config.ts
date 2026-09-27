@@ -616,10 +616,10 @@ export default defineConfig({
       'docs/**',
       'tests/browser/**',
       '**/*.browser.test.ts',
-      // - locally, the long-sims lane files (CI_LONG_SUITES, which CI runs in its
-      //   lane jobs on every PR) are opt-in: WOC_LANE_SUITES=1, naming the file,
-      //   or `npm run gate` keeps them, and under CI nothing is dropped
-      //   (scripts/lib/lane_suite_scope.mjs owns the rules).
+      // - in a bare local run, the long-sims lane files (CI_LONG_SUITES, which CI
+      //   runs in its lane jobs on every PR) are opt-in: WOC_LANE_SUITES, naming
+      //   the file, or any local gate (every leg opts in) keeps them, and under CI
+      //   nothing is dropped (scripts/lib/lane_suite_scope.mjs owns the rules).
       ...(process.env.VITEST ? localLaneExclusions({ env: process.env, argv: process.argv }) : []),
     ],
     // The world grew from 3 zones to 11 and Sim construction/tick cost with
