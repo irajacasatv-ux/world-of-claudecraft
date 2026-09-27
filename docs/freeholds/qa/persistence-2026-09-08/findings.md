@@ -3812,3 +3812,60 @@ one-commit, data-only delta:
 - Targeted runs on the merged tree: the core i18n trio (76 passed, 3 skipped), the freehold
   and seal suites (194 passed, 2 skipped) and the locale-reading suites that name housing
   (516 passed, 1 skipped).
+
+### THE THREE RULED ITEMS, TEST-FIRST, EACH MUTATION-CHECKED
+
+Every mutant ran through the scratch runner (apply, run the named suites with JSON output,
+restore through `git checkout`, assert a clean tree) behind its own control run, on a
+committed tree.
+
+1. G8, THE CARAVAN ROUTE (`07f7250fb4`). THE EVIDENCE, measured by driving the run on the
+   lit world (seeds 20061, 1 and 42, identical): the third wave's ring fires where the run
+   counts waypoint 8, `(-26,-101)`, reached (`escort.ts` `fireAmbushes`, the escortee at
+   `(-28.42,-100.44)`), which puts two bandits 6.35 and 6.37 yd from the arch and one 5.59 yd
+   from the leave drop. (The audit's "about a yard" figure computed the ring round waypoint
+   7; the measured one is the worse-placed truth for the drop.) The run is a public event
+   one day in seven (Eastbrook's pool rotates seven quests), replayable all that day on a
+   30 s respawn; the ambushers are level-5 vale bandits with an 11 yd aggro radius; the gate
+   refuses a player in combat (`entry_context.ts`, `combat`), so a fight beside the arch
+   also shuts the door. THE DECISION: keep the gate (four moves, pinned margins, sealed
+   captures) and the friendly caravan's route (4.8 yd at its nearest; the escortee is never
+   hostile, answers the press only at its post, and now fires no wave near the gate), and
+   fire the third wave at waypoint 6, `(-56,-88)`, a one-token change to the release's
+   content. Its worst case, over every point the run can count the waypoint reached (the
+   2.5 yd arrival disc, or anywhere on the leg into it when the stuck arm fires), is 12.93
+   yd from the arch and 15.8 yd from the drop; the measured spawns sit 17.99 and 20.77 yd
+   off. The story holds its order (the waypoint 6 line waits out the wave, as every line
+   does). THE PIN: `tests/freehold_gate_clearance.test.ts` replaces the named 4.79 yd route
+   floor with (a) every route keeping 12 yd but the caravan, which as ruled friendly traffic
+   keeps only the arch's collider-free 3.5 yd ring, the exemption asserted live and the
+   walker asserted aggro-free, and (b) every ambush ring of every escort keeping 12 yd and
+   its ambusher's own aggro radius from both the arch and the drop at its worst case, with
+   a positive control naming the nearest ring and its 12.933 yd. The release's own
+   `tests/world_quest_caravan.test.ts` pins the new waypoint. Mutants (control 17 tests, 0
+   failed): the fix reverted (wave back at 8), the ring widened to 9 yd, and waypoint 7
+   moved through the arch, each KILLED by the clearance pin (and the release's shape pin).
+   No sealed capture input moved (`world_quests.ts` is not sealed, and the idle caravan
+   stands 89 yd off at its quay). RECORDED FOR THE RELEASE OWNER: the caravan's third
+   ambush now fires at waypoint 6, not 8.
+2. THE EMISSARY CACHE POOL (`52ef856a28`). `isRaidGear` kept any non-tool epic, so the
+   pool held the Crucible's ten epic recipe patterns (open to every class) beside 54 pieces
+   of gear, against its own "wearable" contract and its tooltip ("Opens into one Normal raid
+   piece for your class"). It now takes the Weekly Vault's kinds (weapon, armor,
+   held_offhand), and the pin holds the pool's kind counts exactly (15, 35 and 4) plus every
+   class pool's kinds. Mutants (control 10, 0 failed): the fix reverted and held_offhand
+   dropped, both KILLED. RECORDED FOR THE RELEASE OWNER, THE REWARD-ODDS CHANGE: each
+   class's pool shrinks by the ten patterns, so a class piece's chance per cache rises from
+   1/N to 1/(N-10) and a pattern's falls to zero. Per class, pool size before to after
+   (the pattern share before): warrior 32 to 22 (31%), paladin 44 to 34 (23%), hunter 30 to
+   20 (33%), rogue 26 to 16 (38%), priest 30 to 20 (33%), shaman 46 to 36 (22%), mage 30 to
+   20 (33%), warlock 27 to 17 (37%), druid 35 to 25 (29%). The marks and the one draw on
+   `ctx.rng` are unchanged.
+3. THE MANNED-CANNON LEAVE ORDER (`7157aae3a2`). `tests/leave_vehicle_release_game.test.ts`
+   seats a joined player at the North Watch cannon through the ordinary rig, then reads the
+   vehicle from inside the leave save: it must already be released, since the save awaits
+   Postgres while the world loop keeps ticking the leaving player until `removePlayer`, and
+   a manned cannon there would run its encounter (credit, the score row, the retry lockout)
+   past the saved snapshot. Measured cost: 3.8 s wall, 437 MB peak for the file. Mutants
+   (control 1, 0 failed): the release dropped, and the release moved after the save (the
+   `removePlayer` backstop alone), both KILLED.

@@ -2240,9 +2240,11 @@ phases apply.
   freight caravan escort (`esc_wq_eastbrook_caravan`, src/sim/content/world_quests.ts) walks
   the main street 4.8 yd from the gate at its nearest, and its third ambush (five level-5
   vale bandits in an 8 yd ring) can land about a yard from the arch and a few yards from the
-  leave drop. Move the gate, ask the release owner to reroute, or accept.
-  tests/freehold_gate_clearance.test.ts holds it behind a named live floor; every other
-  route keeps 12 yd.
+  leave drop (measured: two bandits 6.4 yd from the arch, one 5.6 yd from the drop, the
+  wave firing at waypoint 8). RESOLVED (`07f7250fb4`): the gate and the friendly caravan
+  stay, and the third wave fires at waypoint 6, its worst case 12.93 yd from the arch;
+  tests/freehold_gate_clearance.test.ts holds every escort ambush ring clear of the arch and
+  the drop, and every route but the caravan (friendly traffic) keeps 12 yd.
 - G9, THE ACTION LOCKS. A manned cannon, a live wisp maze trial, a shadow cloak and a glider
   run own a player's actions: `useItem` refuses every item use in them silently, before the
   Hearth Key's arm, and since `76b85c2b3a` the entry context answers `busy` too, so the gate
