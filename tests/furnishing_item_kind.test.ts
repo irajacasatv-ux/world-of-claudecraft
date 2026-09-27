@@ -1748,6 +1748,12 @@ describe('furnishing presentation and input', () => {
     expect(bagItemContextActions(FURNISHING, ID)).toEqual([
       { id: 'lock', labelKey: 'hudChrome.bags.lockItem' },
     ]);
+    // The release's touch Destroy row (includeDestroy) composes with it: still
+    // no default row, the lock toggle, then Destroy last.
+    expect(bagItemContextActions(FURNISHING, ID, undefined, undefined, false, true)).toEqual([
+      { id: 'lock', labelKey: 'hudChrome.bags.lockItem' },
+      { id: 'destroy', labelKey: 'itemUi.bags.destroyConfirm' },
+    ]);
     expect(bagItemNewActions(FURNISHING, ID, { locked: true })).toEqual(['unlock']);
     expect(bagItemContextActions(GEAR, GEAR.id)).toEqual([
       { id: 'default', labelKey: 'hudChrome.itemMenu.equip' },

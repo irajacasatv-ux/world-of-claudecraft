@@ -42,6 +42,7 @@ import {
 } from './focus_restore';
 import { formatNumber, t } from './i18n';
 import { iconDataUrl } from './icons';
+import { itemPresentationInstance } from './item_instance_view';
 import { focusActiveTab, wireTabStrip } from './tab_strip_painter';
 import { tabStripHtml, tabStripModel } from './tab_strip_view';
 import { svgIcon } from './ui_icons';
@@ -416,7 +417,14 @@ export class CharselectWocMarketPanel {
     const table = wocSalesTableHtml(model.history, {
       itemName: (id) => this.itemName(id),
       itemCell: (itemId: string, quality: string, key: string, instance?: ItemInstancePayload) =>
-        wocItemCellHtml(this.itemName(itemId), iconDataUrl('item', itemId), quality, key, instance),
+        wocItemCellHtml(
+          this.itemName(itemId),
+          iconDataUrl('item', itemId),
+          quality,
+          key,
+          // The main Exchange window's furnishing strip, for parity.
+          itemPresentationInstance(ITEMS[itemId]?.kind, instance),
+        ),
       usd: (cents) => usdText(cents),
       // No tooltip host on this cold, char-select-only panel; the sold cell
       // just carries no title attribute (the medium date already shown is

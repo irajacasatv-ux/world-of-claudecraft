@@ -538,12 +538,18 @@ describe('loaded furnishings in equipment display projections', () => {
       weapon: weapon.weapon,
       stats: weapon.stats,
       spellPower: weapon.spellPower,
+      healPower: 31,
     } as unknown as ItemDef;
     const world = loaded({ mainhand: furnishing.id });
     expect(world.player.weapon).toEqual({ min: 1, max: 2, speed: 2 });
     expect(statModel(world, 'str').sources.filter((source) => source.kind === 'gear')).toEqual([]);
     expect(
       statModel(world, 'spellPower').sources.filter((source) => source.kind === 'gear'),
+    ).toEqual([]);
+    // The release's Healing Power cell reads gear healPower too; a forged
+    // furnishing adds no line there either.
+    expect(
+      statModel(world, 'healPower').sources.filter((source) => source.kind === 'gear'),
     ).toEqual([]);
     expect(statModel(world, 'dps').statValue - world.player.attackPower / 14).toBeCloseTo(0.75);
     const control = loaded({ mainhand: weapon.id });
