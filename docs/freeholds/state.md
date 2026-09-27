@@ -67,6 +67,25 @@ Only what the next session needs. Update at the end of every phase and QA.
 
 ## Current phase
 
+**PART 2, THE REPO-WIDE TEST COST, DONE 2026-09-27, LOCAL.** Every item of the brief landed on
+this branch in order, each measured before and after (the table is in the ledger): the
+`@vitest/spy` retention patch and `releasedSpyOn`, the Svelte setup scoped out of the global
+setup, the 2 GiB worker cap and one host sizing module, the lane and its seed diets, the local
+lane opt-in (every gate leg opts in), parity recording twice, the SFX fixture root, the merged
+`anim_pipeline`, the splits, the approved deletions with coverage proofs, and the durable guard
+(`tests/suite_lane_threshold.test.ts` on every PR, `npm run test:memory` nightly, the rules in
+root and tests `CLAUDE.md`, `docs/qa-gate.md` and two agents). Three reviewers and nine fresh
+reads found nothing blocking; the first final gate caught one regression (the lane spread
+failed `tests/vite_dev_watch.test.ts` at load), fixed and hardened; 128 mutants are killed; the
+armed gate is green on all 12 steps at `c2e49691be` (72,917 tests, browser 541; the full run
+946.50 to 856.75 s). OWED, not closable locally: one green CI run under the heap cap and one
+nightly with the eight-seed druid arm before this is pushed, the lane bound re-derived from the
+first full-mode lane walls, the next harvest replacing the carried weight rows, and the
+upstream `@vitest/spy` issue (drafted; Fernando's call). The 07 PASS below stands. NEXT: the
+HUD-import cost (44 test files import `src/ui/hud`), if Fernando wants it. Detail: [the
+ledger](qa/persistence-2026-09-08/findings.md), PART 2, THE REPO-WIDE TEST COST.
+
+(Superseded 2026-09-27 by the paragraph above: Part 2 is done.)
 **07 RE-JUDGED PASS, 2026-09-27, LOCAL: R1 IS BUILT, REVIEWED AND GATED.** A thrown run of
 writes no longer quiesces an owner and drops its edits: a fault puts the owner on a per-owner
 retry clock (`server/freehold_write_retry.ts`) that keeps its capture, offers it to a

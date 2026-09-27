@@ -4261,3 +4261,199 @@ nits, all applied); 36 mutants over R1 and its rounds, every one KILLED (four on
 pin a survivor asked for); the STEP 3 trim proven pair by pair; and the armed gate green on
 all 12 steps at `3167e0cbbc`. 07 is CLOSED as PASS; the fence (R2) is 07a's activation
 gate, and the drain's deadline (R3) is the accepted bound of an orderly exit.
+
+## PART 2, THE REPO-WIDE TEST COST, 2026-09-27
+
+On this branch by the 2026-09-26 branch ruling, after Part 1 closed (`4f3529fb25`), in the
+brief's order, each change measured with the forced-GC probe (retained heap: `heapUsed` after
+two full collections at the end of every case) and a plain run under `/usr/bin/time`, one file
+at a time on one worker. LOCAL: nothing pushed, no CI run exists for any of it.
+
+### THE WORK, ITEM BY ITEM
+
+1. LEAK A. `patches/@vitest__spy@4.1.11.patch`: restoring a spy (either path) drops it from
+   @vitest/spy's module-level `REGISTERED_MOCKS`, which otherwise held every restored spy and,
+   through its restore closure, the object it spied on, for the life of the worker. The first
+   form tracked owners in a `Map`; the first full run went red on exactly that
+   (`tests/text_sprite_cache.test.ts` spies `Map.prototype.set` and counted the library's two
+   bookkeeping sets), so the patch was rewritten collection-free (`7d262fff1b`) and a pin keeps
+   it off `Map`. Test side, independent of the patch: `releasedSpyOn`
+   (`tests/helpers/released_spy.ts`) for spies on per-test world objects, and the wire suite
+   clears its mocks (an admission stub called as a `cfg` method recorded the config as its
+   `this`). A trap found and pinned on the way: a call-through closure written inline shares
+   V8's function context with the release closure and kept the Sim alive anyway. The upstream
+   issue is DRAFTED, not filed (the session record holds it; filing is Fernando's call). Each
+   lockfile move re-minted the fingerprinted GLB families in place (`7072ec58e8`,
+   `f75e511289`: 48 GLBs, sizes kept, digests swept, manifest regenerated, polish re-sealed).
+2. THE SVELTE SETUP. `@testing-library/svelte/vitest` left the global `setupFiles` for
+   `tests/admin/_setup.ts`, the only suite that mounts Svelte (`76c47cd342`, `18ddf3152c`).
+3. WORKER SIZING. `GATE_BYTES_PER_WORKER` raised to the heavy files' measured floor, every
+   fork's heap capped by `test.execArgv`, a bare `npm test` bounded by the gates' host sizing
+   (one module now serves gate, gate_select, gate_fast, gate_shadow and the config), and
+   gate_select's vitest legs under the full-suite lock (`f8cf433ad2`, `55d950872b`).
+4. THE LANE. The three warlock anchor files and the five-minute windows joined
+   `CI_LONG_SUITES`, `chronomancy_balance_targets` left, and the anchors take the
+   balance-harness seed diet with per-configuration bands (`3c9e7481e0`). The lane job bound
+   stays at its value; its re-derivation from the first full-mode lane walls is OWED.
+5. THE DRUID MATRIX. Kept at ONE seed on PR (it already ran one: the audit read
+   `DRUID_PROBE_SEEDS[0]` as eight, so the brief's "two on PR" would have raised the cost),
+   and the eight-seed matrix the case defines now runs nightly under the flag, with its own
+   bands (`e0be556a9e`; the eight-seed arm measured green, 908 s under load).
+6. LOCAL LANE OPT-IN. A bare local run leaves the lane files out unless named or opted in;
+   every gate leg opts in, and nothing is dropped under `CI` (`1b0a5b8868` and the review
+   rounds below).
+7. PARITY. One case per scenario records twice and compares the first recording to the
+   golden (three recordings became two), and `SHARD_BOUNDS` is re-derived from measured
+   per-scenario cost (`560b6166ff`).
+8. THE SFX SUITES. The Studio security suite runs over a fixture root carrying the real
+   catalog's file names over two real clips (`c167984565`). The export-core suite was NOT
+   restructured: its first full build costs about 34 s and a second about 0.2 s (per-blob
+   conformance cache), so a fixture-root determinism check would save 0.2 s.
+9. ANIM PIPELINE. 26 files, one suite, one `it.each` table over every donor GLB
+   (`3178d7b2af`; the same 125 cases and 1,175 runtime assertions).
+10. `snapshots` split by describe into eight files with its source pins comment-stripped
+    (`26084410b1`); the conservation sweep's readouts print only on request (`bebd32ae63`);
+    Varkhul and Ignivar split at thematic midpoints over shared harness modules
+    (`a04b1f6fc0`); `equip_drop_core` probed: its whole cost was one case's `Hud` import,
+    now its own suite (`992b80c130`).
+11. THE APPROVED DELETIONS (`841b93e48a`, `d45acba583`): 25 source mutants run BEFORE and
+    AFTER; every removed or trimmed case's behavior still fails a surviving or merged case.
+
+    | Target | Verdict | Proof |
+    |---|---|---|
+    | professions_crafting self-signed describe | deleted (a verbatim twin; its third case covered elsewhere) | ps_nodisc, ps_anysigner, ps_always |
+    | action_bar_view three cases | deleted (byte-identical twins) | ab_scope, ab_unscoped, ab_cost, ab_instant |
+    | gossip_menu line-9 case | deleted (the Marshal case, same input) | gm_never |
+    | tests/quest_rewards.test.ts | deleted, after a direct override-precedence case | qr_nofallback, qr_nooverride |
+    | quest_reward line 19 | trimmed (a formula restating line 18) | qr_nofallback |
+    | ws_buffer 73-82 | trimmed (runs no repo code; no mutant possible) | by inspection |
+    | social_status_dots tombstone | trimmed, its survivor strengthened (a mutant showed the old substring check passed on a CSS comment) | sd_rename, sd_nobg, sd_gone |
+    | homepage_foundation 39-85 | trimmed | hf_english, hf_lang |
+    | pvp_safety reset tails | trimmed, after a direct 60 s window case in stun_dr | dr_polynever, dr_fearnever, dr_polyshort, dr_fearshort |
+    | farm_patch_placement 434 | MERGED (the dry-land arm's only false case) | fp_nolake |
+    | stealth_render 12 and 17 | merged | st_localonly, st_otheronly |
+    | fixes' two 1,220-tick runs | merged into one run | fx_eventtext, fx_noexpire, fx_noreturn |
+    | fixes 995 and 1088 | KEPT: not copies (a rigged greed-over-need order; the only lootable-after-all-pass assertion) | n/a |
+
+12. THE DURABLE GUARD. Measured time: `tests/suite_lane_threshold.test.ts` (a
+    `CI_GUARD_SUITES` member) fails any file outside the lane over `LANE_THRESHOLD_MS` in the
+    shard weights, with a positive control; the carry tool gained `--supersede` for a row
+    whose file changed shape after the harvest (`26662a48c0`), and the table was pruned,
+    superseded and carried (`5aaf414cc3`). Memory: `npm run test:memory` over
+    `scripts/test_memory_budgets.json`, run nightly as its own step (`2cc313a8ca`,
+    `70c6691f83`, `c1c6e9f9e3`). The rules are in root and tests `CLAUDE.md`,
+    `docs/qa-gate.md`, and a test-cost item in `qa-checklist` and `test-coverage-auditor`
+    (`c899e01cc9`). Tombstones: the policy is written, and one retired this pass.
+
+FOUND ON THE WAY AND FIXED, each pinned: the duration ratchet's parser read the empty tail
+after a trailing comma as the last argument, so every timeout in biome's multi-line call shape
+was invisible, and an expression in the timeout slot passed silently (`40e10ea0d9`; three
+suites it hid gained ledger rows).
+
+### THE REVIEWERS, AND THEIR ROUNDS
+
+gate-integrity-reviewer, test-coverage-auditor and qa-checklist on `4f3529fb25..558809d6ae`
+(capped; each resumed once to report). 0 blocking. Should-fix, all applied: gate_select's
+full-suite fallback and related side dropped lane files locally (every leg now opts in); a
+named file could still be excluded (vitest's own filter rule now); the deletions commit had no
+scope (reworded); the Map-free pin lacked a positive control; the budget validator lacked two
+negative cases. Every nit applied: opt-in values, a null guard, a double-stub refusal, an exact
+tier-cap case, a finish-order pin, the docs citing symbols instead of values, and the warlock
+diet comments recording the same-day four-seed means (the auditor withdrew its band finding
+once it measured them). Four fresh reads of the fix rounds: the first found the `gate_shadow`
+validator still running without the opt-in and with its own sizing copy, plus five smaller
+items, all applied (`ed4f649ca4`); the second found a filter naming the repo root (an absolute
+root, `tests/..`) excluding every lane file, a root pin that could not fail, a tier assertion
+sampling free memory twice, and the release-tier leg's opt-in unpinned, all applied
+(`544d6614f4`); the third, four nits (the message's wording, reworded before anything built on
+it; `vm_stat` still sampled, now mocked beside a memory-bound arm; `.` and the empty filter
+unpinned; a later command word read as a non-filter), all applied (`836aeb83f3`); the fourth,
+one should-fix (the comment and message said vitest reads a lone `-` as a filter; it drops it,
+and keeping it only keeps more) and two nits, all applied in the same unpushed commit.
+
+MUTANTS: 128, every one KILLED, each behind a control run: 59 on the items (Leak A and its
+Map-free rewrite 18, the worker sizing 10, the memory tool 7, the local opt-in 5, the lane 4,
+the ratchet parser 3, parity 3, the anim merge 3, the durable guard 3, the splits 2, the SFX
+seam 1), the 25 deletion proofs above (each run before and after), 16 on the first review round
+and its fresh read, 8 on the second and third fresh reads, and 12 on the gate catch and its two
+fresh reads.
+
+### THE BEFORE AND AFTER
+
+Every row is one file alone on one worker with Postgres armed, BEFORE at the Part 1 tip
+(`3167e0cbbc`, morning of 2026-09-27) and AFTER at `ed4f649ca4` (afternoon, same host,
+same probe). Wall and peak RSS come from a plain run under `/usr/bin/time -l`; retained is
+`heapUsed` after two forced collections at the end of every case, peak over the file. The
+before side probed retained heap only for the four files the leak and memory work targeted
+("n/p": not probed then). The unchanged rows at the bottom are the noise band between the
+two sessions: read single-digit differences as noise.
+
+| File | Change | Wall s | Peak RSS MB | Retained MB | Tests |
+|---|---|---|---|---|---|
+| `server/freehold_wire` | Leak A | 7.12 to 6.24 and 6.88 (a quiet-host re-run; 10.44 in the loaded batch) | 2424 to 1700 (1860 loaded) | 1757 to 561 | 117 to 117 |
+| `guild_bank_persistence` | Leak A | 13.96 to 14.47 | 1346 to 1135 | 494 to 240 | 118 to 118 |
+| `equip_drop_core` | its `Hud` case left | 11.18 to 7.48 | 1443 to 673 | 696 to 168 | 70 to 67 |
+| `hud_touch_drop_routing` (new) | that `Hud` case | n/a to 11.56 | n/a to 1852 | n/a to 659 | 0 to 3 |
+| `snapshots` (one file to eight) | split | 12.77 to 9.54 max (41.57 summed) | 1711 to 1079 max | 445 to 244 max | 270 to 270 |
+| `varkhul_forge_encounter` (to two) | split | 46.88 to 24.36 and 24.08 | 1116 to 862 and 611 | n/p to 260 and 212 | 63 to 44 + 19 |
+| `ignivar_encounter` (to two) | split | 38.20 to 18.68 and 23.15 | 1196 to 761 and 809 | n/p to 211 and 235 | 103 to 45 + 58 |
+| `parity/parity_a` to `_g` | record twice, re-bound | 132.08 summed, 75.41 max (g) to 111.07 summed, 19.34 max (f) | 1209 to 875 max | n/p to 202 max | 168 to 84 |
+| `sfx_studio_server_security` | fixture root | 39.78 to 6.11 | 349 to 286 | n/p to 23 | 16 to 17 |
+| `anim_pipeline` (26 files to one) | merged | 6.07 to 2.21 | 386 to 473 (one process) | n/p to 135 | 125 to 125 |
+| `warlock_anchor_destruction` | lane + seed diet | 80.93 to 41.65 | 496 to 399 | n/p to 152 | 2 to 2 |
+| `warlock_anchor_demonology` | lane + seed diet | 74.94 to 39.74 | 536 to 424 | n/p to 153 | 2 to 2 |
+| `warlock_anchor_affliction` | lane + seed diet | 72.28 to 38.92 | 531 to 421 | n/p to 152 | 2 to 2 |
+| `audit_conservation_property` | readouts on request | 30.61 to 21.02 | 631 to 575 | n/p to 185 | 74 to 74 |
+| `warlock_five_minute_windows` | laned only (unchanged) | 68.60 to 79.25 | 413 to 692 | n/p to 151 | 3 to 3 |
+| `druid_balance_probe` | one seed both sides (unchanged on PR) | 120.97 to 143.13 | 797 to 759 | n/p to 161 | 7 to 7 |
+| `sfx_export_core` | not restructured | 50.75 to 43.41 | 441 to 383 | n/p to 17 | 5 to 5 |
+| `chronomancy_balance_targets` | left the lane (unchanged) | 8.29 to 9.18 | 401 to 383 | n/p to 151 | 9 to 9 |
+| `parity/coverage_a` / `_b` / `_c` | unchanged | 13.47 / 14.53 / 36.80 to 13.89 / 14.66 / 34.41 | 596 / 576 / 950 to 531 / 772 / 753 | n/p | 77 to 77 |
+
+The Svelte setup, measured over whole runs: 403.91 s of aggregate setup to 18.15 s.
+
+The full run (the gate's full-suite fallback, 8 workers, Postgres armed): 946.50 s at
+`3167e0cbbc` to 856.75 s at `c2e49691be`, both at 8 workers with the lane files in (aggregate
+setup 403.91 to 16.93 s, test time 4,920.79 to 4,576.07 s, import 1,879.52 to 1,869.09 s; 4,967
+files to 4,959, 72,957 tests to 72,947).
+
+### THE ARMED GATE
+
+The first final run (`node scripts/gate_select.mjs`, Postgres armed, proven first on
+`tests/server/freehold_db.pg.test.ts`, 16 of 16; the full-suite fallback at 8 workers) went RED
+on one file: `tests/vite_dev_watch.test.ts` reads `test.exclude` in `vite.config.ts` as string
+literals and threw at load on the lane-scope spread item 6 added (`1b0a5b8868`). No full run
+had happened since that commit, and no reviewer or fresh read named the guard; the gate is what
+caught it. Every other file passed (4,957 files, 72,904 tests, 874.96 s). The fix
+(`6c994c01c2`) admits exactly that spread by its source text and proves it can only add lane
+test files, so any other computed element still throws; three mutants killed (a different
+spread, no spread, a directory in the lane list), and its fresh reads: the first found the
+admission matched by text alone (its import's module unpinned), the path check unpinned, a
+formatter's trailing commas able to fail it spuriously, and module-level state, all applied
+(`236deb8094`, four mutants); the second found the reader taking the first `defineConfig` call
+anywhere and the first of two duplicate keys (older than this work: a decoy call or a second
+`exclude` could have carried an agent directory past it), an array hole normalizing to an empty
+array, and the lane function's output unpinned, all applied (`e0ac0a24f5`, five mutants); the
+third: `defineConfig` unpinned to vite (a file-local function of that name could rewrite the
+object after the guard reads it) and refusal cases matching any config error, plus two nits
+(the lane output pinned whole; no root `vitest.config.*`, which vitest would prefer), all
+applied (`49ef59b7d7`, four mutants); the fourth: a root `vite.config.js` or `.mjs`, which vite
+loads before the `.ts`, unrefused, and a refusal pattern that also matched the outer member,
+both applied (`338745d4e4`, two mutants); a last read-only check of that commit: one nit (the
+refused names hand-typed from vite's unexported list), applied as a root listing that admits
+only `vite.config.ts` (`c2e49691be`, two mutants; the pattern the reader suggested, `vitest?`,
+matched neither file name, and the exact-list pin caught it on the first run). The re-run at
+the tip: green on all 12 steps at `e0ac0a24f5` (856.50 s) and at `338745d4e4` (858.78 s), and
+at the code tip `c2e49691be`: every step green with Postgres armed (16 of 16 first) at 8
+workers, 4,958 files and 72,917 tests passed (2 expected fails, 28 skipped) in 856.75 s, the
+browser suite 541 of 541, typecheck and every build.
+
+### OWED, AND NOT CLOSABLE LOCALLY
+
+- One fully green CI run under the heap cap (all shards, both lanes) and one nightly with the
+  eight-seed druid arm, before this is pushed.
+- The lane job bound re-derived from the first full-mode lane walls.
+- The next full-mode harvest replaces the carried and superseded weight rows.
+- The Ignivar herald GLB hashes the lockfile but is outside the re-mint tool and unpinned
+  (pre-existing; its stamp is stale after the two lockfile moves).
+- Filing the @vitest/spy issue upstream (drafted; Fernando's call).
