@@ -11,6 +11,11 @@
 // Storage setup is a no-op on pure Node environment files (no `window`). The
 // ProgressEvent shim is global because Three's FileLoader may instantiate it
 // from a Node-environment test before jsdom exists.
+//
+// It also turns the event loop once after every case in a DOM-environment file
+// (the last block below): a memory leak in the harness, not in any one suite.
+
+import { afterEach } from 'vitest';
 
 function isUsableStorage(storage: unknown): storage is Storage {
   return (
@@ -86,4 +91,20 @@ if (typeof window !== 'undefined') {
       enumerable: true,
     });
   }
+}
+
+// THE DOM-ENV RETENTION LEAK (the 2026-09-26 test-suite audit). Cases in one
+// DOM-environment file run back to back without the event loop ever turning,
+// so a timer or async callback a case queues keeps that case's whole DOM tree
+// reachable until the file ends, and a window suite that renders a large
+// catalog per case climbs by hundreds of MB per case (measured retained heap
+// after a forced GC: loot_explorer_window_focus 1,862 MB at its last case,
+// reliquary_window_behavior 1,243, daily_rewards_store_behavior 946). One real
+// macrotask turn after each case lets those callbacks settle and the trees go.
+// The timer is captured at load, before any case can install fake timers, so a
+// case that leaves fake timers on cannot hang this hook. Pure Node files skip
+// it: they hold no DOM tree and pay nothing.
+if (typeof window !== 'undefined') {
+  const realSetTimeout = globalThis.setTimeout.bind(globalThis);
+  afterEach(() => new Promise<void>((resolve) => realSetTimeout(resolve, 0)));
 }
