@@ -3009,7 +3009,7 @@ floor VFX ladder (PR 4113). Merge `b627c4ad32` takes it. No patch, lockfile or
   `renderer.ts` stays at 12782 lines, its exact ceiling.
 - The release moved two of the 67 sealed capture inputs (`renderer.ts` and
   `pr_shot_targets.mjs`). A probe of the after leg from a frozen worktree at the merge
-  (the protocol [[capture-rehash-needs-a-probe-frame]] set) found the room frames at the
+  (the protocol the 2026-09-25 re-sync set) found the room frames at the
   unchanged-tree level and every HUD element in place, so the two digests were
   re-hashed (`75bc308552`) rather than the set re-shot;
   `docs/freeholds/interiors-implementation-evidence.md` has the numbers.
@@ -3142,3 +3142,131 @@ that still seats a stand-in beside an entry that knows the row: a re-ask refused
 permit after the eviction, then the repair reload. Every KNOWN DEFECT and KNOWN COST pin
 flips to the fixed behaviour; every arm the harness-fidelity section left unpinned is
 pinned; the new call's failure modes are pinned; each against its mutant.
+
+### THE BUILD (`b77421251a`), AND WHAT IT CHANGED THAT THE DESIGN DID NOT NAME
+
+Built as designed, test-first where a test could come first (the pure module's suite was
+red before it existed; every KNOWN pin went red against the new code before it was
+rewritten to the fixed behaviour):
+
+- `server/freehold_join_answer.ts`: the pure decision (verdicts `none`, `refused`,
+  `entry`, `held`, `withheld`), with `tests/server/freehold_join_answer.test.ts`, every
+  verdict driven with literals and through the real install.
+- `FreeholdPersistStore.answerForInstall`, synchronous, over a shared `replayAnswer`
+  (preload's replay arm and the join's validation are one expression); a WITHHELD
+  verdict warns `join answer withheld`.
+- `bindFreeholdOnJoin` installs `store.answerForInstall(ownerKey, accountId, loaded)`;
+  `FreeholdBindingStore` gained the method.
+- `server/ws_auth.ts`: the re-ask after the character read, the last await before
+  `game.join`, a thrown re-ask keeping the first answer. Pinned: two asks, the order
+  `character, freehold, lease, character, freehold, join`, no `await` between the re-ask
+  and the join (source pin), the fallback.
+- `besideLiveRecord` renamed `recordWithheld` in every constructor and double.
+- Paid for by extraction: `server/freehold_bounded_error.ts` and
+  `server/freehold_row_document.ts`, each with its own suite; the store's ceiling
+  LOWERED 2193 to 2150 (`tests/monolith_budget.test.ts`).
+
+THE HARNESS: `login()` asks, re-asks and joins; `joinAfterReask` is the fresh arm's tail;
+`refuseNextPermits(n)` is a saturated gate for exactly the calls a case names;
+`rejoinOverEviction` is now a re-ask refused a permit after a clean leave (it throws if
+the leave did not collect the entry). Every direct join left in the suite is handed an
+answer read immediately before it, or says it is modelling the one await on purpose.
+
+THE KNOWN PINS, rebuilt as one parametric block
+(`a join installs the store answer at install time, never one that went stale in its
+handshake`, 89 cases): the unwritten order over every form (waiting, refused a permit,
+thrown once, deferred) x both shapes x no known commit, a mid-session commit, an
+earlier-session commit; the joiner editing before the owed write samples (the old silent
+arms); the joiner leaving first, every form and shape; the held first ask (`no_permit`,
+`read_threw`, `cap_full`, `no_budget`) x every form x both shapes; the committed order
+(the edit past it, a refused-permit re-arm, an armed write, a DEFERRED write) x both
+shapes; both forms of the eleventh path; and the new call's failure modes (a durable
+re-ask refused on each capacity kind, the sibling outrunning the durable re-ask, a
+sibling sharing its one read, and an eviction between the re-ask and the install with
+the write owed and with it committed). Every arm the harness-fidelity section listed as
+unpinned is in it.
+
+WHAT BUILDING IT FOUND, each recorded where the case lives:
+- THE RE-ASK AND THE VALIDATION SPLIT THE WORK. The re-ask alone fixes every order whose
+  window closes before it (the replay carries the capture; a collected entry is re-read);
+  the install-time validation is what covers the one await the re-ask is (the eviction
+  between the re-ask and the install, the sibling outrunning a durable re-ask). The
+  mutation pass below attributes each pin to its half.
+- A `cap_full` refusal of the durable re-ask is write-blocked SILENTLY-BUT-COUNTED: the
+  join's retain reload meets the same full cap, so the entry stays unloaded and held
+  (`cap_full` counted twice) and no seal line is printed. Never a loss; loud only by kind.
+- ORDERS RULING (B) RETIRED, each case rebased rather than deleted:
+  the eighth-path MINTED reseed cases (the minting entry can no longer face a reseed, the
+  join installs from any loaded entry: they now pin the name arm against the RE-READ
+  entry, two to three loads); the ninth and tenth paths (a budget-refused login whose
+  read lands before its re-ask, alone or with a sibling on the same read, now installs
+  the named default and writes under it: FLIPPED; the unnamed refusal is pinned on the
+  order that still seats the stand-in, both asks over budget and the read landing after
+  the seed); `ADOPTS the live record identity` (rebased onto a quiesced entry collected
+  inside its session's leave window); `blocks writes for an entry whose load has not
+  landed yet` (rebased onto the refused re-ask; its contrast is now the door opening onto
+  the seal, since no producible order lets that stand-in write); retain's repair reload
+  (reached only after a join that installed nothing, so its job is now a LOUD block, not
+  a writable one); `releases the capture only when the live record CARRIES it` (its
+  no-record moment is unproducible with a capture outstanding; the mutant it killed is
+  killed by the sibling world); the captured-write rejoin pair (landed: the seal on the
+  refused re-ask; waiting: the capture installed, FLIPPED).
+- `insertWouldMintAnUnnamedRow` is now DEFENSE IN DEPTH: no producible order seeds a
+  stand-in beside a loaded, unheld, minted entry. Its literals stay pinned in
+  `tests/server/freehold_write_seal.test.ts`.
+
+### THE MUTATION PASS (first round, at `b77421251a`)
+
+One mutant at a time, on the committed tree, over the store, join-answer, handshake,
+bounded-error and row-document suites with JSON output, restored through `git checkout`
+and the tree asserted clean after each. CONTROL: 419 tests ran, 0 failed. Every mutant
+KILLED (tests failed out of 419):
+
+- the validation off (no loaded entry is ever used) 192; the capture ignored at install
+  (committed state instead) 75; preload's replay arm ignoring the capture 76; the binding
+  installing the asked answer 4 (the two between-the-re-ask-and-the-install pins, the
+  sibling outrunning the durable re-ask, and the wiring source pin); a withheld verdict
+  installing the asked answer 3; the handshake not re-asking 5; an `await` between the
+  re-ask and the join 1; a thrown re-ask dropping the first answer 1; the entry's
+  account check dropped 1; the hold arm dropped 1; the install ignoring `recordWithheld`
+  3; no retain reload 21; no withheld warning 1; the bounded error dropping the
+  constraint, the row document's revision, the revision narrowing: each killed by its
+  suite.
+- THE TWO HALVES, attributed: reverting the handshake's re-ask in the harness that
+  models it kills 13 of the block's 89 pins (the committed order and the failure modes
+  that need a durable re-ask); reverting it AND the binding's validation (the whole fix)
+  kills 86 of 89. The unwritten order survives either half alone and dies with both:
+  each half by itself installs the capture.
+- THE MARK (evidence for keeping `recordWithheld` on preload's answers): unmarking both
+  already-live arms kills 6, three pre-existing preload-admission pins and three new
+  pins, all on assertions about the answer itself; no join outcome changes, because the
+  join re-decides from the entry. It stays as defense in depth for a raw consumer of a
+  preload answer; the install's check is load-bearing for the WITHHELD verdict (3 kills).
+- OWED, three pins killed only by the validation-off mutant, each needing a targeted
+  mutant next session: the `no_budget` refusal of the durable re-ask (the seal's name arm
+  off), the sibling sharing one durable read (single-flight off in `beginLoad`), and the
+  healthy two-character contrast (a stopped writer).
+
+### STATUS AT THIS HANDOFF (2026-09-26), AND WHAT IS OWED, IN ORDER
+
+The fix is built and committed (`b77421251a`); nothing was pushed. The armed Postgres
+suite ran 16 of 16 at the fix. NOT YET DONE, for the next session:
+
+1. The three targeted mutants above.
+2. The docs that still state the twelfth path open: DEPLOY.md (the `quiesced` and
+   `held` paragraph), `docs/freeholds/held-plot-surface-scope.md` (the "older house" and
+   empty-house groups), `docs/freeholds/persistence-rollout-contract.md` (the retired-rule
+   paragraph) and `docs/freeholds/phase-07-qa.md` (the premise line): the twelfth path is
+   closed; what remains write-blocked is the refused durable re-ask (loud; `cap_full`
+   silent but counted) and the withheld race (loud).
+3. The repo's reviewers on `22d883d3c2..HEAD`: qa-checklist, test-coverage-auditor,
+   server-hot-path-reviewer (the join path), database-performance-reviewer (a durable
+   read inside the lease window), privacy-security-review (the handshake now calls the
+   housing read twice; no wire or deps shape changed).
+4. The shard carry, armed, on a quiet machine: the release's `tests/floor_vfx_layer.test.ts`
+   and the three new suites.
+5. `npx tsc --noEmit`, the ARMED `node scripts/gate_select.mjs` (check uptime and for a
+   stray `node_modules/node_modules` first; restore any PNGs under `docs/screenshots` the
+   browser step rewrites), `npm run ci:changed` after the last commit.
+6. Fresh reads of the whole change and every fix round until nothing blocking.
+7. Re-judge 07 on the record, then the progress row, state.md and the memory handoff.

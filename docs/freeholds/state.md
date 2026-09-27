@@ -32,7 +32,12 @@ Only what the next session needs. Update at the end of every phase and QA.
   `190329610f`, both audited. Everything they left owed is done and recorded in
   [the ledger](qa/persistence-2026-09-08/findings.md), THE OWED LIST WORKED THROUGH.
   Nothing has been pushed.
-- Current sync (2026-09-25, closed): `origin/release/v0.44.0` at `ed69f62ef7` (still the
+- Current sync (2026-09-26, closed): `origin/release/v0.44.0` at `9dbc47938a` (the floor
+  VFX ladder) in merge `b627c4ad32`: six provenance conflicts re-minted, audited, two
+  sealed capture inputs re-hashed on a probe (`75bc308552`). Recorded in [the
+  ledger](qa/persistence-2026-09-08/findings.md), RULING (B) FOR THE TWELFTH PATH, THE
+  SYNC FIRST. Nothing has been pushed.
+- Earlier sync (2026-09-25, closed): `origin/release/v0.44.0` at `ed69f62ef7` (still the
   version-newest release branch) in merge `484cb61a46`: 120 commits, 64 conflicts by hand,
   audited by four lanes and read fresh three times. Recorded in
   [the ledger](qa/persistence-2026-09-08/findings.md), THE RE-SYNC OF RELEASE/V0.44.0 AT
@@ -47,6 +52,21 @@ Only what the next session needs. Update at the end of every phase and QA.
   from a session.
 
 ## Current phase
+
+**RULING (B) FOR THE TWELFTH PATH IS BUILT, 2026-09-26, LOCAL; ITS REVIEW, GATE AND THE 07
+RE-JUDGEMENT ARE OWED, SO 07 STAYS FAIL FOR NOW.** A sync came first: merge `b627c4ad32`
+takes `origin/release/v0.44.0` at `9dbc47938a` (the floor VFX ladder), audited, two sealed
+capture inputs re-hashed on a probe. The fix is `b77421251a`: the handshake re-asks after
+the character read, and the join installs the store's answer at install time
+(`answerForInstall` over `server/freehold_join_answer.ts`: the loaded entry, capture
+included, or no record when no entry vouches for the answer). Every KNOWN DEFECT and KNOWN
+COST pin now asserts the fixed behaviour; 19 mutants all killed. Open, in order: (1)
+finish ruling (b): three targeted mutants, four docs still stating the path open, the
+reviewers, the shard carry, the armed gate, fresh reads, the 07 re-judgement (the list is
+the ledger's last subsection, STATUS AT THIS HANDOFF); (2) `Sim.addPlayer` atomicity; (3)
+D85 (a ruling); (4) the phase 17 re-plan with the trophy-source ruling; (5) a new release
+sync if `release/**` moves. Owed before 25a builds: the Fenbridge ruling. Detail: [the
+ledger](qa/persistence-2026-09-08/findings.md), RULING (B) FOR THE TWELFTH PATH.
 
 **THE 07 HARNESS-FIDELITY REWRITE IS DONE, 2026-09-25, LOCAL, AND 07 STAYS FAIL ON A
 TWELFTH PATH IT FOUND.** The work is `37e6ae6624..3686434478` plus its records; the base
