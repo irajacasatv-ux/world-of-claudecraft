@@ -3602,3 +3602,114 @@ gates.
    online (the ferry and the Hearth Key).
 7. A new release sync if `release/**` moves. The Fenbridge ruling is owed before 25a
    builds.
+
+
+## FERNANDO'S RULINGS OF 2026-09-26, AND THE SYNC OF RELEASE/V0.44.0 AT AAFF789813, 2026-09-26
+
+LOCAL: nothing pushed, no PR. The worktree has no `.env`; Postgres is armed by passing
+`TEST_DATABASE_URL` alone (the main checkout's `DATABASE_URL` line, never sourced).
+
+### THE RULINGS (Fernando, 2026-09-26), RECORDED VERBATIM
+
+Fernando's words: "Let's go with all your recommendations." and "Let's keep it all on this
+branch." What they rule, as the brief states them:
+
+- R1, 07's thrown-write run: option (i). Keep a leaver's capture past a THROWN-run quiesce:
+  the entry is kept, write-blocked for new edits; the capture is retried once per error
+  window (one statement per owner per five minutes); it is released only on a commit or on
+  an answer no repeat can change; a rejoin installs it meanwhile; it is counted under
+  `leave_captures`.
+- R2: the cross-realm fence is carried to 07a as a named activation gate (recorded here, not
+  built).
+- R3: the shutdown drain's 10 s deadline is accepted as the orderly exit's bound.
+- R4, G3: developer-badge `dev:` titles are excluded from trophy sources (state.md G3 and
+  the phase 17 plan carry it).
+- R5: act on every recommendation of the 2026-09-26 test-suite audit, the `@vitest/spy`
+  patch included, on this branch. The deletions it listed are APPROVED, each only after
+  proving its coverage is preserved (a mutant the deleted case kills, killed by the
+  covering case too). Any removal beyond that list still needs Fernando's word.
+- G1 (guildhall authority as a rank permission) and G2 (the Hearth Key on a moving ferry)
+  had no recommendation and stay owed: a recommendation comes when their phases approach.
+- A NEW STANDING RULE: watch every test for wall time and memory. A suite that drifts slow
+  or memory-hungry must fail a guard, not wait for someone to notice (the repo-wide test
+  work, Part 2 of the brief, builds that guard).
+
+So 07 re-judges PASS once R1 is built, reviewed and gated, with the R2 fence and the R3
+deadline as the two named gates.
+
+### THE MERGE (`dd7f954501`)
+
+`origin/release/v0.44.0` had moved past `09639d4ae9` to `aaff789813` (267 commits: world
+quests round 2, the faction reputation ladder and quartermasters, the trinket equipment
+slot, the Weekly Vault and weekly emissary, Clue Scrolls, vehicles and the glider). A real
+merge, 63 conflicts by hand against both parents; `patches/`, the lockfile and
+`package.json` did not move, so no reinstall.
+
+- THE WORLD-OBJECT BOOTSTRAP DOUBLE EXTRACTION collapses onto the release's
+  `src/sim/ground_object_spawns.ts` (which also brought stable authored entity ids, heights,
+  facings and scales). The branch's `src/sim/world_object_bootstrap.ts` shrinks to
+  `bootstrapFreeholdGate`, run from a new optional `beforeDungeonDoors` hook, so a lit world
+  still mints the gate between the mailboxes and the doors and a dark world's ids hold
+  (pinned both ways in `tests/world_object_bootstrap.test.ts`).
+- The release's forge and salvage changes to the generic object arm were ported into the
+  branch's extracted `src/render/ground_object.ts` (the `groundQuestObjectYaw` reuse yaw, no
+  sparkle over `forge_` workbenches). `leaveVehicle` opens `settleLeavingSession`, inside
+  the leave's `finally` guard. The trinket helper returns `JewelryItemDef`, since spreading
+  the whole `ItemDef` union met the furnishing arm's `pvpOffenseRating?: never`.
+- Re-measured on the merged tree, never argued: every count pin by per-axis arithmetic
+  (deeds 320, IWORLD 434/126/308 with 37 facets, commands 257/271, catalog 1,367/1,385 with
+  27 groups and 33 sheet pages, sha and bytes from `--verify-only`); the deeds catalog digest
+  plus a fourth parent proof (strip the release's seventeen new deeds, reproduce the branch
+  tip's `fb106a9c...`); the Eastbrook polish seal re-minted; the terrain corpus with the
+  release body (152,912 points) as a byte prefix and the same 811-point room tail; every
+  monolith row at its exact merged count (sim.ts 11,589 sits between the parents, 11,548 and
+  11,642, because both sides removed the same bootstrap block; bank_window 1,810 is the
+  release's); the professions blob measured on the release, its base and the merge (18,830,
+  18,975, 19,299: exactly additive); the wiki, i18n and MediaWiki seed regenerated.
+
+### THE INTEGRATION REDS, EACH FIXED IN ITS OWN COMMIT
+
+- `51d9e2b124`: the merged maximal character blob measures 230,068 bytes, 692 PAST the
+  229,376 warning (the release alone 227,869, this branch alone 227,253, over a shared
+  225,054). By the threshold's own documented rule (the smallest 32-KiB step above the
+  fixture) `CHARACTER_BLOB_WARN_BYTES` moves to 262,144, which now meets the guild-bank scale.
+  A threshold move a database review approved before: flagged for Fernando's confirmation and
+  for the database-performance reviewer of the Part 1 round. A mutant restoring 229,376 reds
+  five pins.
+- `e2a4845e4a`: the release's new NPCs, pads and entities moved the furnisher-site terrain,
+  the dark-world fingerprint, the nearest neighbour (now the weekly emissary, 18.4 yd) and the
+  dark owner of the lit furnisher's id (the Rift Watch quartermaster); every value was
+  measured on the release tip's own tree first and the merged dark world matches it exactly.
+  The Hud dispatch rig gained the world the release's vehicle bar gate reads.
+- `f899ccb24f`: the `freehold_claim` parity golden re-minted for the release's three new save
+  fields (`worldQuestReplacements`, `gliderRecords`, `factions`); every other golden held.
+- `554b9631cb` and `76b85c2b3a`: the audit's fixes (below).
+
+### THE AUDIT (release-merge-audit, four fresh lanes, commits only)
+
+- Server lane: 0 blocking, 2 nits. `leaveVehicle`'s new seat is safe (sim-only, no await, no
+  reader between it and the leave marks). Applied: the shutdown comment that said "Same" now
+  names its real neighbour. OWED to the next session: a test that the leave path releases a
+  manned cannon before the leave save (a release-side gap; `removePlayer` backstops it).
+- Sim lane: 0 blocking, 1 should-fix, 3 nits. Applied in `76b85c2b3a`: the entry context
+  answers `busy` under the release's four action locks (a manned cannon, a live wisp maze
+  trial, a shadow cloak, a glider run), so the gate refuses them loudly and the Hearth Key no
+  longer rests on `useItem`'s check order alone; pinned per lock on the context, the key and
+  the gate beside a control (all four arms off kills 8; the key cases pass on either layer,
+  defense in depth). A merged deeds comment now reads plainly. RECORDED FOR THE RELEASE
+  OWNER: `isRaidGear` in `src/sim/emissary_cache.ts` filters `kind !== 'tool'` only, and the
+  cache pool measures 64 ids of kinds weapon, armor, held_offhand AND recipe, against its own
+  "wearable" contract; changing it changes the release's reward odds, so it is not this
+  branch's edit.
+- UI and render lane: 5 blocking (three source pins the merge moved, the capture seal, the
+  caravan route), 1 nit. The pins and the unused import are fixed in the audit-round commit
+  (the Eastbrook polish seal re-minted again); each repinned case was mutation-checked (three
+  mutants, three kills).
+- Premises lane: 0 blocking, 8 should-fix, 7 nits; G1 to G7 hold. Recorded in state.md as
+  premises G8 to G14 and the gotcha updates (the caravan route, the silent-then-busy action
+  locks, the Fenbridge investigation post, a second week rule, a calendar-free headless, the
+  guild-clear hook no longer last, the 07a census's new callers and tables, and the nits).
+- THE CARAVAN ROUTE (G8, A RULING OWED BEFORE HOUSING LIGHTS): the release's Eastbrook freight
+  caravan walks 4.8 yd from the gate at its nearest and its third ambush (five level-5
+  bandits in an 8 yd ring) can land about a yard from the arch. `tests/freehold_gate_clearance`
+  keeps the full 12 yd for every other route and holds this one behind a named, live floor.

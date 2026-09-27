@@ -32,7 +32,14 @@ Only what the next session needs. Update at the end of every phase and QA.
   `190329610f`, both audited. Everything they left owed is done and recorded in
   [the ledger](qa/persistence-2026-09-08/findings.md), THE OWED LIST WORKED THROUGH.
   Nothing has been pushed.
-- Current sync (2026-09-26, second, closed): `origin/release/v0.44.0` at `09639d4ae9`
+- Current sync (2026-09-26, third, closed): `origin/release/v0.44.0` at `aaff789813`
+  (267 commits: world quests round 2, the faction ladder, the trinket slot, the Weekly
+  Vault, Clue Scrolls, vehicles and the glider) in merge `dd7f954501`: 63 conflicts by hand,
+  the world-object bootstrap double extraction collapsed onto the release's
+  `ground_object_spawns.ts`, audited by four lanes, the premises it moved recorded below as
+  G8 to G14. Recorded in [the ledger](qa/persistence-2026-09-08/findings.md), FERNANDO'S RULINGS OF 2026-09-26, AND THE SYNC OF
+  RELEASE/V0.44.0 AT AAFF789813. Nothing has been pushed.
+- Earlier sync (2026-09-26, second, closed): `origin/release/v0.44.0` at `09639d4ae9`
   (548 commits: the Eastbrook ferry, the Wanted board, custom guild ranks, partial buys,
   the market History tab) in merge `8a330b3489`: 43 conflicts by hand against both
   parents, audited by four lanes, twelve sealed capture inputs re-hashed on a probe
@@ -59,6 +66,25 @@ Only what the next session needs. Update at the end of every phase and QA.
   from a session.
 
 ## Current phase
+
+**FERNANDO RULED ON 07 AND THE TEST AUDIT, 2026-09-26 ("Let's go with all your
+recommendations." and "Let's keep it all on this branch."), AND RELEASE/V0.44.0 AT
+`aaff789813` IS SYNCED; 07 STAYS FAIL UNTIL R1 IS BUILT.** The rulings, recorded verbatim in
+the ledger: R1 keep a leaver's capture past a THROWN-run quiesce (kept, write-blocked,
+retried once per error window, released only on a commit or an answer no repeat can change,
+installed by a rejoin, counted under `leave_captures`); R2 the cross-realm fence carried to
+07a as a named activation gate; R3 the shutdown drain's 10 s deadline accepted; R4 (G3)
+`dev:` titles excluded from trophy sources; R5 every recommendation of the test-suite audit,
+the `@vitest/spy` patch included, the listed deletions approved each after a coverage proof;
+G1 and G2 still owed; and a standing rule that test wall time and memory are guarded. The
+sync: merge `dd7f954501` plus its integration fixes (the character blob warning re-minted to
+262,144 by its own rule, the branch suites re-pinned on release-measured values, the
+`freehold_claim` golden, the audit's fixes including `busy` entry refusals under the
+release's four action locks). NEXT, in a FRESH session: Part 1 from STEP 2 (write the R1
+design into the ledger, then build it test-first), then the audit trims, reviewers, the
+armed gate and the 07 re-judgement; then Part 2, the repo-wide test cost work. Owed first
+there: the capture seal decision if this session's probe did not close it (the ledger says),
+the manned-cannon leave-order test, and ruling G8 (the caravan route) before housing lights.
 
 **RULING (B) IS FINISHED AND 07 IS RE-JUDGED, 2026-09-26, LOCAL: THE TWELFTH PATH IS
 CLOSED, AND 07 STAYS FAIL ON THREE PRE-EXISTING CAPTURE-LOSS ORDERS, A RULING OWED.** A
@@ -2158,8 +2184,9 @@ corrected premise; the affected plan docs carry a pointer here. G1 is a RULING O
   (berths at x 473 to 515).
 - G3, TITLES HAVE A SECOND SOURCE (`55ce56306a`, `76109070b1`). Developer-badge rung titles
   ('dev:' ids, src/sim/dev_badge_titles.ts) resolve live from a GitHub link and the server
-  clears them; they are not deed rewards. 17's re-plan owes a ruling: exclude 'dev:' titles
-  from trophy sources (recommended, the DEVELOPER_MOUNTS precedent: revocable, not in-game).
+  clears them; they are not deed rewards. RULED 2026-09-26 (Fernando, "Let's go with all
+  your recommendations."): 'dev:' titles are EXCLUDED from trophy sources (the
+  DEVELOPER_MOUNTS precedent: revocable, not in-game); 17's re-plan builds on it.
 - G4, THE EXCHANGE HAS A SECOND SURFACE (`b34952644d`). The character-select read-only
   $WOC Exchange browse (src/game/charselect_woc_market_wiring.ts over
   `wocMarketAttachAllowed(defaultWocMarketShell())`) is a second consumer of the Exchange
@@ -2187,6 +2214,47 @@ corrected premise; the affected plan docs carry a pointer here. G1 is a RULING O
   Vocabulary: "transport" is now a sim domain (IWorldTransport, src/sim/transport_*.ts), so
   the housing plans say "wire transport" or "snapshot transport".
 
+### Premises the aaff789813 sync moved (release/v0.44.0 at `aaff789813`, merge `dd7f954501`)
+
+Found by the release-merge audit's premise, sim and render lanes, read from commits. G8 is a
+RULING OWED before housing lights; the rest are corrections the named phases apply.
+
+- G8, RULING OWED BEFORE HOUSING LIGHTS: THE CARAVAN ROUTE PASSES THE GATE. The Eastbrook
+  freight caravan escort (`esc_wq_eastbrook_caravan`, src/sim/content/world_quests.ts) walks
+  the main street 4.8 yd from the gate at its nearest, and its third ambush (five level-5
+  vale bandits in an 8 yd ring) can land about a yard from the arch and a few yards from the
+  leave drop. Move the gate, ask the release owner to reroute, or accept.
+  tests/freehold_gate_clearance.test.ts holds it behind a named live floor; every other
+  route keeps 12 yd.
+- G9, THE ACTION LOCKS. A manned cannon, a live wisp maze trial, a shadow cloak and a glider
+  run own a player's actions: `useItem` refuses every item use in them silently, before the
+  Hearth Key's arm, and since `76b85c2b3a` the entry context answers `busy` too, so the gate
+  refuses them loudly. The phase that lights housing decides whether the key's silent
+  refusal gets a toast.
+- G10, FENBRIDGE (25a): the infiltrator investigation (src/sim/content/world_quest_investigation.ts)
+  puts five NPCs, two clue objects and a summoned hostile inside the hub around (-6,284), none
+  of them in FENBRIDGE_LAYOUT; 25a measures its gate against them too.
+- G11, A SECOND WEEK RULE (13): `weeklyQuestWeekForResetDay` (src/sim/weekly_quests.ts)
+  derives a week from `resetDay` through `civilDayNumber`, and the Weekly Vault keys on
+  `ctx.weeklyRaidResetMs`; 13's `realm_week.ts` folds or pins equality with them.
+- G12, HEADLESS IS CALENDAR-FREE ON PURPOSE (13a): headless/env_server.ts keeps `resetDay`
+  empty so rotating world quests stay dormant in RL episodes; a housing calendar fixture stays
+  test-side or housing-scoped.
+- G13, THE GUILD-CLEAR HOOK IS NO LONGER LAST (31): both callers of
+  `onDungeonFinalBossKilledForDeeds` now run `onDungeonClearedForWeeklyQuests` after it, and
+  the boss death hub gained `recordWeeklyBossKill`; 31's hook placement accounts for both.
+- G14, THE 07a CENSUS (07a): server/weekly_reward_open.ts is a new durability-barrier
+  `saveCharacter` caller, and `world_quest_scores` and `glider_course_bests` cascade from
+  characters and accounts; both join the touch-set and the reverse-FK inventory.
+- Nits for the named phases: offline builds inject `lockoutNowMs: Date.now`, so offline
+  housing clocks are wall-clock; the reset calendar moved to src/reset_calendar.ts and its
+  feeds carry five fields (`worldQuestExpiresAtMs` added); 08's build-presence clear belongs
+  in server/disconnected_player_input.ts; 28's `ghall` self key copies
+  `emitGuildAndWeeklySelfKeys` and `applyGuildBankSelfWire`; 17's mount sweep:
+  DEVELOPER_MOUNTS is now only `terrorspark_groundshaker`; ux-spec's "Pay From Vault" labels
+  say "Materials Vault" now that Eastbrook has a Weekly Vault; 11's build-mode gamepad
+  arbitration takes its place beside the vehicle and temporary-bar modal arms.
+
 Final ordering is 44 implementation, 44 QA, 44a Codex artwork, 44a QA, 44b legal
 revisit/handoff, 44b QA. Only then can the completed program be reported; durable source
 preservation still precedes any separately authorized cleanup. No push/PR or legal
@@ -2194,12 +2262,12 @@ message is performed in this documentation session.
 
 ## Gotchas (read before the matching phase)
 
-- Character blob headroom (as measured on 2026-09-26, at the sync of `09639d4ae9`; the live
+- Character blob headroom (as measured on 2026-09-26, at the sync of `aaff789813`; the live
   measurement is pinned in tests/professions_blob_growth.test.ts and the threshold is
-  `CHARACTER_BLOB_WARN_BYTES` in server/character_blob_size.ts): the maximal character blob
-  measures 227,253 bytes against 229,376, so 2,123 bytes remain (the Eastbrook ferry's deed
-  and four visit marks took 154; Warfare Season 2 had taken 13,496 of the 15,795 there were,
-  the Valestrider's reins id 22). The fixture does not model the release's sparse
+  `CHARACTER_BLOB_WARN_BYTES` in server/character_blob_size.ts): the merged maximal
+  character blob measures 230,068 bytes, which crossed the old 229,376, so the threshold was
+  re-minted by its own rule to 262,144 (`51d9e2b124`, Fernando to confirm): 32,076 bytes
+  remain. The release's world-quest, faction and trinket rows took 2,815. The fixture does not model the release's sparse
   `CharacterState.pendingTownFocus`, so the real headroom is slightly less. The next
   housing content wave that grows the blob (trophies, more furnishings or Reliquary pages)
   forces a threshold decision; attribute and measure it, never widen the band.
