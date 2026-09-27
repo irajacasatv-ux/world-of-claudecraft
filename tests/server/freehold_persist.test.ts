@@ -26,6 +26,7 @@ import { readLoginDurables } from '../../server/freehold_hearth_load';
 import { installLoadedFreehold } from '../../server/freehold_install';
 import { freeholdLivenessPorts } from '../../server/freehold_liveness';
 import { FREEHOLD_LOAD_FAILURE_KINDS } from '../../server/freehold_load_outcome';
+import { freeholdReaskBudgetMs } from '../../server/freehold_login_bounds';
 import {
   createFreeholdPersistStore,
   FREEHOLD_PERSIST_DRAIN_MAX_ACTIVE_WRITES,
@@ -529,15 +530,23 @@ function harness(options: HarnessOptions = {}) {
     join,
     removePlayer,
     /** A whole login: the handshake's first ask (before the lease), its
-     *  re-ask (after the character read), then the join. Answers the re-ask. */
+     *  re-ask (after the character read), then the join. Answers the re-ask.
+     *  The re-ask runs on what the first ask left of the one housing budget,
+     *  measured on this harness's clock, exactly as server/ws_auth.ts does. */
     async login(accountId = ACCOUNT_ID): Promise<LoadedFreehold> {
+      const firstAskStartMs = nowMs;
       await store.preload(accountId);
-      return await h.joinAfterReask(accountId);
+      return await h.joinAfterReask(accountId, nowMs - firstAskStartMs);
     },
     /** The fresh arm's tail, for a case whose first ask came earlier: the
-     *  re-ask, then the join with nothing awaited between. Answers the re-ask. */
-    async joinAfterReask(accountId = ACCOUNT_ID): Promise<LoadedFreehold> {
-      const atJoin = await store.preload(accountId);
+     *  re-ask, marked and on the budget the first ask left (`firstAskMs`,
+     *  zero when the case does not model it), then the join with nothing
+     *  awaited between. Answers the re-ask. */
+    async joinAfterReask(accountId = ACCOUNT_ID, firstAskMs = 0): Promise<LoadedFreehold> {
+      const atJoin = await store.preload(accountId, {
+        budgetMs: freeholdReaskBudgetMs(firstAskMs),
+        reask: true,
+      });
       join(atJoin, accountId);
       return atJoin;
     },
@@ -3254,14 +3263,16 @@ describe('a join installs the store answer at install time, never one that went 
   // The old SILENT arms: the joiner edits before the owed write samples. The
   // write then carries the leaver's house with the joiner's edit on it, never
   // the stale house brought up to a committed revision.
-  for (const known of ['NONE', 'MID-SESSION', 'EARLIER-SESSION'] as const) {
-    for (const shape of ['ABSENT', 'ROW'] as const) {
-      it(`a joiner that edits before the waiting write samples (${shape}, ${known} commit) writes on top of the leaver's house`, async () => {
-        const run = await unwrittenOrder(shape, 'WAITING', known);
-        run.h.edit(OWNER_KEY, { rev: run.final.rev + 1 });
-        await run.drive();
-        await expectLanded(run, run.final.rev + 1);
-      });
+  for (const form of ['WAITING', 'REFUSED A PERMIT', 'THREW ONCE', 'DEFERRED'] as const) {
+    for (const known of ['NONE', 'MID-SESSION', 'EARLIER-SESSION'] as const) {
+      for (const shape of ['ABSENT', 'ROW'] as const) {
+        it(`a joiner that edits before the owed write samples (${form}, ${shape}, ${known} commit) writes on top of the leaver's house`, async () => {
+          const run = await unwrittenOrder(shape, form, known);
+          run.h.edit(OWNER_KEY, { rev: run.final.rev + 1 });
+          await run.drive();
+          await expectLanded(run, run.final.rev + 1);
+        });
+      }
     }
   }
 
@@ -3565,6 +3576,10 @@ describe('a join installs the store answer at install time, never one that went 
         open.resolve();
       }
       expect(atJoin.hold?.kind).toBe(kind);
+      // A HELD verdict, never the withheld one: only a join nothing can vouch
+      // for warns that line.
+      expect(h.warnings.filter((line) => line.includes('join answer withheld'))).toEqual([]);
+      expect(h.store.stats().joinVerdicts.held).toBe(1);
       await tick(40);
       expect(h.record()?.plotId).toBe(PENDING_FREEHOLD_PLOT_ID);
       h.edit(OWNER_KEY, { rev: 9 });
@@ -3642,7 +3657,7 @@ describe('a join installs the store answer at install time, never one that went 
     expect(h.store.stats().quiesced).toBe(0);
   });
 
-  it('a sibling that joins during the durable re-ask shares its one read, so nothing commits ahead of the install', async () => {
+  it('a sibling that asks during the durable re-ask shares its one read', async () => {
     let gate: Deferred<void> | null = null;
     const db = rowRemembered(rowFixture());
     const { h, house } = await afterCommittedLeave(db, {
@@ -3663,11 +3678,6 @@ describe('a join installs the store answer at install time, never one that went 
     const siblingFirstAsk = h.store.preload(ACCOUNT_ID);
     await tick(10);
     expect(h.calls.filter((call) => call === 'readRow')).toHaveLength(readsBefore + 1);
-    // Nothing can write for this account while the read is out: no entry is
-    // loaded, and nothing writes without one.
-    h.store.saveAllDirty();
-    await tick(10);
-    expect(h.writeCount()).toBe(1);
     open.resolve();
     h.join(await yReask);
     await siblingFirstAsk;
@@ -3702,6 +3712,9 @@ describe('a join installs the store answer at install time, never one that went 
     h.join(atJoin);
     expect(h.record()?.layout).toEqual(HOUSE_LAYOUT);
     expect(h.record()?.rev).toBe(8);
+    // The ENTRY verdict: the capture, and no withheld line.
+    expect(h.warnings.filter((line) => line.includes('join answer withheld'))).toEqual([]);
+    expect(h.store.stats().joinVerdicts.entry).toBeGreaterThan(0);
     permit.resolve({ release: () => {} });
     await tick(40);
     expect(h.writeCount()).toBe(1);
@@ -3722,7 +3735,10 @@ describe('a join installs the store answer at install time, never one that went 
     h.join(atJoin);
     // Nothing vouches for the answer, so nothing went in: the stand-in.
     expect(h.record()?.plotId).toBe(PENDING_FREEHOLD_PLOT_ID);
-    expect(h.warnings.filter((line) => line.includes('join answer withheld'))).toHaveLength(1);
+    const withheld = h.warnings.filter((line) => line.includes('join answer withheld'));
+    expect(withheld).toHaveLength(1);
+    // The line carries the plot index only, never the account.
+    expect(withheld[0]).not.toContain(String(ACCOUNT_ID));
     await tick(30);
     h.edit(OWNER_KEY, { rev: 9 });
     h.store.saveAllDirty();
@@ -3731,6 +3747,68 @@ describe('a join installs the store answer at install time, never one that went 
     expect(h.store.stats().quiesced).toBe(1);
     expect(refusals(h)).toEqual([expect.stringContaining('write refused (identity)')]);
     expect(await rowOf(db)).toEqual([JSON.stringify(HOUSE_LAYOUT), '8']);
+  });
+
+  it("WITHHOLDS the twelfth path's own shape: an UNMARKED stale ABSENT answer whose entry went away", async () => {
+    // The case above hands the join a MARKED answer, which the install refuses
+    // whatever answerForInstall says. This one is the path itself: Y reads a
+    // fresh account's absent answer with nothing live, and X's whole session
+    // (join, furnish, leave, insert, eviction) lands in the one await before
+    // Y's join. Installed as asked, that answer puts an EMPTY default in under
+    // the minted name; withheld, nothing goes in and the stand-in is refused.
+    const db = rowRemembered();
+    const h = harness({ ...db });
+    await h.store.preload(ACCOUNT_ID);
+    const atJoin = await h.store.preload(ACCOUNT_ID, { reask: true });
+    expect(atJoin.recordWithheld).toBe(false);
+    expect(atJoin.durableRev).toBeNull();
+    expect(atJoin.hold).toBeNull();
+    // X: a whole session of the same account, committed and collected.
+    await h.joinAfterReask();
+    h.edit(OWNER_KEY, { ...furnishedEdit(4), layout: HOUSE_LAYOUT });
+    await h.leave();
+    expect(h.store.stats().entries).toBe(0);
+    expect(h.record()).toBeUndefined();
+    expect(await rowOf(db)).toEqual([JSON.stringify(HOUSE_LAYOUT), '4']);
+    h.join(atJoin);
+    expect(h.record()?.plotId).toBe(PENDING_FREEHOLD_PLOT_ID);
+    expect(h.record()?.plotId).not.toBe(MINTED_PLOT_ID);
+    expect(h.warnings.filter((line) => line.includes('join answer withheld'))).toHaveLength(1);
+    expect(h.store.stats().joinVerdicts.withheld).toBe(1);
+    await tick(30);
+    h.edit(OWNER_KEY, { rev: 9 });
+    h.store.saveAllDirty();
+    await tick(30);
+    expect(refusals(h)).toEqual([expect.stringContaining('write refused (identity)')]);
+    expect(await rowOf(db)).toEqual([JSON.stringify(HOUSE_LAYOUT), '4']);
+  });
+
+  it('installs the loaded entry, its waiting capture included, for a join that carries NO answer', async () => {
+    // Both handshake asks threw (a programming fault: preload never rejects),
+    // so the join carries undefined. The loaded entry still answers, so the
+    // capture a leaving session owes is installed rather than dropped at the
+    // seal (the QA read of ruling (b), N3).
+    let hold = false;
+    const permit = deferred<{ release(): void } | null>();
+    const db = rowRemembered(rowFixture());
+    const h = harness({
+      ...db,
+      acquirePermit: async () => (hold ? await permit.promise : { release: () => {} }),
+    });
+    await h.login();
+    h.edit(OWNER_KEY, { ...furnishedEdit(8), layout: HOUSE_LAYOUT });
+    hold = true;
+    await leaveWithinDeadline(h);
+    expect(h.record()).toBeUndefined();
+    expect(h.store.stats().leaveCaptures).toBe(1);
+    h.join(undefined);
+    expect(h.record()?.layout).toEqual(HOUSE_LAYOUT);
+    expect(h.store.stats().joinVerdicts.entry).toBeGreaterThan(0);
+    expect(h.store.stats().joinVerdicts.none).toBe(0);
+    permit.resolve({ release: () => {} });
+    await tick(40);
+    expect(await rowOf(db)).toEqual([JSON.stringify(HOUSE_LAYOUT), '8']);
+    expect(h.store.stats().quiesced).toBe(0);
   });
 
   it('still lets the next character write when the old record is still live at its join', async () => {
@@ -3749,6 +3827,113 @@ describe('a join installs the store answer at install time, never one that went 
     expect(h.writeCount()).toBe(2);
     expect(h.writes[1].wireRev).toBe(4);
     expect(h.store.stats().quiesced).toBe(0);
+  });
+});
+
+describe('ONE housing budget per handshake, and what the re-ask costs', () => {
+  // The hot-path and database reviews of ruling (b) found each ask arming the
+  // whole FREEHOLD_PERSIST_LOGIN_BUDGET_MS: up to twice it per login, the second
+  // half inside the lease-held window. The handshake now hands the re-ask what
+  // the first ask left (tests/server/ws_auth.test.ts pins that arithmetic at
+  // the caller); these pin what the store does with it, and the counters and
+  // lines an operator reads the re-ask by.
+  const realDeadline = (callback: () => void, ms: number): (() => void) => {
+    const timer = setTimeout(callback, ms);
+    return () => clearTimeout(timer);
+  };
+
+  it('arms the budget a preload is given, never more than the whole budget', async () => {
+    const h = harness({ ...rowRemembered(rowFixture()) });
+    await h.store.preload(ACCOUNT_ID, { budgetMs: 3_000 });
+    await h.store.preload(ACCOUNT_ID, { budgetMs: 50_000 });
+    await h.store.preload(ACCOUNT_ID);
+    await h.store.preload(ACCOUNT_ID, { budgetMs: -5 });
+    expect(h.deadlines.map((job) => job.ms)).toEqual([
+      3_000,
+      FREEHOLD_PERSIST_LOGIN_BUDGET_MS,
+      FREEHOLD_PERSIST_LOGIN_BUDGET_MS,
+      0,
+    ]);
+  });
+
+  it('a zero-budget re-ask still replays a loaded entry: the replay beats the timer', async () => {
+    const h = harness({ ...rowRemembered(rowFixture()), scheduleDeadline: realDeadline });
+    await h.login();
+    const reask = await h.store.preload(ACCOUNT_ID, { budgetMs: 0, reask: true });
+    expect(reask.hold).toBeNull();
+    expect(reask.plotId).toBe(ROW_PLOT_ID);
+  });
+
+  it('a zero-budget re-ask that would wait on a read answers no_budget at once, naming its budget', async () => {
+    const gate = deferred<FreeholdRowLoad>();
+    const h = harness({ readRow: async () => await gate.promise, scheduleDeadline: realDeadline });
+    const reask = await h.store.preload(ACCOUNT_ID, { budgetMs: 0, reask: true });
+    expect(reask.hold?.kind).toBe('no_budget');
+    expect(reask.hold?.detail).toContain('within 0 ms');
+    // The read it gave up waiting for still fills the entry.
+    gate.resolve({ kind: 'row', row: rowFixture() });
+    await tick(20);
+    expect(h.store.stats().loaded).toBe(1);
+  });
+
+  it('counts re-asks, the ones that waited on a read, their time, and each join verdict', async () => {
+    let onRead: () => void = () => {};
+    const db = rowRemembered(rowFixture());
+    const h = harness({
+      readRow: async (accountId) => {
+        onRead();
+        return await db.readRow(accountId);
+      },
+      writeRow: db.writeRow,
+    });
+    // A healthy login: the re-ask replays, no read, the entry verdict.
+    await h.login();
+    expect(h.store.stats()).toMatchObject({ reasks: 1, reaskReads: 0, reaskMsTotal: 0 });
+    expect(h.store.stats().joinVerdicts).toEqual({
+      none: 0,
+      refused: 0,
+      entry: 1,
+      held: 0,
+      withheld: 0,
+    });
+    // The committed order: the entry is collected, so the re-ask reads, and
+    // the read takes 40 ms on this harness's clock.
+    await h.leave();
+    expect(h.store.stats().entries).toBe(0);
+    let now = 50_000;
+    h.setNow(now);
+    onRead = () => {
+      now += 40;
+      h.setNow(now);
+    };
+    await h.joinAfterReask();
+    expect(h.store.stats()).toMatchObject({ reasks: 2, reaskReads: 1, reaskMsTotal: 40 });
+    // A first ask is never counted as a re-ask.
+    await h.store.preload(ACCOUNT_ID);
+    expect(h.store.stats().reasks).toBe(2);
+  });
+
+  it('prints one capacity line per kind per window, and still counts every refusal', async () => {
+    const gate = deferred<FreeholdRowLoad>();
+    const h = harness({ readRow: async () => await gate.promise });
+    for (let i = 0; i < FREEHOLD_PERSIST_MAX_ACTIVE_LOADS; i++) {
+      void h.store.preload(OTHER_ACCOUNT_ID + i);
+    }
+    await tick(10);
+    h.setNow(100_000);
+    expect((await h.store.preload(ACCOUNT_ID)).hold?.kind).toBe('cap_full');
+    expect((await h.store.preload(ACCOUNT_ID, { reask: true })).hold?.kind).toBe('cap_full');
+    const lines = () => h.warnings.filter((line) => line.includes('held (cap_full)'));
+    expect(lines()).toHaveLength(1);
+    expect(h.store.stats().loadFailuresByKind.cap_full).toBe(2);
+    // A window later the next line prints, and says what it held back.
+    h.setNow(100_000 + 10_000);
+    expect((await h.store.preload(ACCOUNT_ID)).hold?.kind).toBe('cap_full');
+    expect(lines()).toHaveLength(2);
+    expect(lines()[1]).toContain('(1 more cap_full held back since the last line)');
+    expect(h.store.stats().loadFailuresByKind.cap_full).toBe(3);
+    gate.resolve({ kind: 'absent' });
+    await tick(20);
   });
 });
 
@@ -6186,9 +6371,15 @@ describe('stats', () => {
     expect(json).not.toContain('account:');
     const stats = h.store.stats();
     for (const [measure, value] of Object.entries(stats)) {
-      if (measure === 'loadFailuresByKind') continue;
+      if (measure === 'loadFailuresByKind' || measure === 'joinVerdicts') continue;
       expect(typeof value).toBe('number');
     }
+    // The second record measure: its keys are the fixed verdict vocabulary and
+    // its values are counts.
+    expect(Object.keys(stats.joinVerdicts).sort()).toEqual(
+      ['entry', 'held', 'none', 'refused', 'withheld'].sort(),
+    );
+    for (const count of Object.values(stats.joinVerdicts)) expect(typeof count).toBe('number');
     // The one non-scalar measure, checked on both halves: its KEYS are hold
     // kinds from a closed vocabulary and its values are counts, so no identity
     // can ride in on either side.
@@ -6847,7 +7038,7 @@ describe('the coordinator side of the wiring (source pins)', () => {
     // absence would invite the store to generate an identity and persist an
     // empty default over a row this realm never read.
     expect(MAIN).toContain('game.sim.ctx.freeholdsEnabled');
-    expect(MAIN).toContain('freeholdPreloadForAccount(id)');
+    expect(MAIN).toContain('freeholdPreloadForAccount(id, opts)');
     expect(MAIN).toContain('freeholdPreloadUnavailable(id,');
     // THE CONTIGUOUS CLAUSE, not three index comparisons. Both call forms sit
     // after the gate text whichever arm each one occupies, so an ordering pin
@@ -6858,15 +7049,15 @@ describe('the coordinator side of the wiring (source pins)', () => {
     // pins in tests/server/freehold_db.test.ts read theirs.
     const clause = MAIN.replace(/\s+/g, ' ');
     expect(clause).toContain(
-      'freeholdForAccount: (id) => game.sim.ctx.freeholdsEnabled ' +
-        '? freeholdPreloadForAccount(id) ' +
+      'freeholdForAccount: (id, opts) => game.sim.ctx.freeholdsEnabled ' +
+        '? freeholdPreloadForAccount(id, opts) ' +
         ': Promise.resolve(freeholdPreloadUnavailable(id,',
     );
     // ONE SOURCE for the join path's decision. The store's own port reads
     // ctx.freeholdsEnabled, and so do both record inserters and retain's repair
     // reload; a live process.env read here disagreed with all of them across an
     // in-process flag flip. The live read belongs to the wire and the route.
-    expect(clause).not.toContain('freeholdForAccount: (id) => freeholdsEnabled(process.env)');
+    expect(clause).not.toContain('freeholdsEnabled(process.env)');
   });
 });
 

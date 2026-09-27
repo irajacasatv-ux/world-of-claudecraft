@@ -3,7 +3,9 @@
 // answer and its loaded entry's answer at the instant of the install, and what
 // it returns is what `installLoadedFreehold` puts into the sim. Every verdict is
 // driven here with literals, and then through the real install over a real live
-// map, because a verdict is only as good as what the install does with it.
+// map, because a verdict is only as good as what the install does with it. Which
+// document a loaded entry answers with (its capture over its committed state) is
+// the store's replay, pinned in tests/server/freehold_persist.test.ts.
 
 import { describe, expect, it } from 'vitest';
 import { installLoadedFreehold } from '../../server/freehold_install';
@@ -62,11 +64,25 @@ function liveCtx(): SimContext {
 }
 
 describe('freeholdJoinAnswer', () => {
-  it('answers NOTHING for a join that carries no durable answer, as the install always has', () => {
-    expect(freeholdJoinAnswer(ACCOUNT_ID, undefined, answer({ state: house() }))).toEqual({
+  it('answers NOTHING for a join that carries no durable answer and meets no loaded entry', () => {
+    expect(freeholdJoinAnswer(ACCOUNT_ID, undefined, null)).toEqual({
       answer: undefined,
       verdict: 'none',
     });
+    // Another account's entry is no entry for this join.
+    expect(
+      freeholdJoinAnswer(ACCOUNT_ID, undefined, answer({ accountId: ACCOUNT_ID + 1 })),
+    ).toEqual({ answer: undefined, verdict: 'none' });
+  });
+
+  it("installs the LOADED ENTRY'S answer even for a join that carries none", () => {
+    // Both asks threw: the entry still answers, so a waiting capture is never
+    // dropped for want of an answer. The store-level order is pinned in
+    // tests/server/freehold_persist.test.ts.
+    const current = answer({ durableRev: '7', state: house() });
+    const decided = freeholdJoinAnswer(ACCOUNT_ID, undefined, current);
+    expect(decided.verdict).toBe('entry');
+    expect(decided.answer).toBe(current);
   });
 
   it("hands back a malformed or another account's answer unchanged, for the install to refuse", () => {
@@ -79,6 +95,12 @@ describe('freeholdJoinAnswer', () => {
     const malformed = 'not an answer' as unknown as LoadedFreehold;
     expect(freeholdJoinAnswer(ACCOUNT_ID, malformed, current)).toEqual({
       answer: malformed,
+      verdict: 'refused',
+    });
+    // A null bag, the one object-typed value that is not an answer.
+    const empty = null as unknown as LoadedFreehold;
+    expect(freeholdJoinAnswer(ACCOUNT_ID, empty, current)).toEqual({
+      answer: empty,
       verdict: 'refused',
     });
   });
@@ -143,7 +165,7 @@ describe('freeholdJoinAnswer', () => {
 });
 
 describe('each verdict, through the real install', () => {
-  it('the ENTRY verdict puts the entry document in, capture included', () => {
+  it('the ENTRY verdict puts the entry document in', () => {
     const ctx = liveCtx();
     const current = answer({ state: house({ rev: 3 }) });
     installLoadedFreehold(
@@ -171,6 +193,25 @@ describe('each verdict, through the real install', () => {
     expect(ctx.freeholdKeyReadyAtMs.get(OWNER_KEY)).toBe(90_000);
     // What the sim then seeds is the stand-in, which the seal and the insert
     // refusal refuse (driven end to end in tests/server/freehold_persist.test.ts).
+  });
+
+  it('the NONE and REFUSED verdicts put no record in', () => {
+    const none = liveCtx();
+    installLoadedFreehold(none, ACCOUNT_ID, freeholdJoinAnswer(ACCOUNT_ID, undefined, null).answer);
+    expect(none.freeholds.size).toBe(0);
+    const foreign = answer({ accountId: ACCOUNT_ID + 1, state: house() });
+    const refused = liveCtx();
+    installLoadedFreehold(
+      refused,
+      ACCOUNT_ID,
+      freeholdJoinAnswer(ACCOUNT_ID, foreign, null).answer,
+    );
+    expect(refused.freeholds.size).toBe(0);
+    // CONTROL: the same foreign bag installed for ITS own account does go in, so
+    // the empty map above is the refusal and not a broken fixture.
+    const own = liveCtx();
+    installLoadedFreehold(own, ACCOUNT_ID + 1, foreign);
+    expect(own.freeholds.size).toBe(1);
   });
 
   it('the HELD verdict puts no record in and still merges the clock', () => {

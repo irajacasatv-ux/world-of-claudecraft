@@ -57,6 +57,7 @@ import {
 } from '../src/sim/freehold/state';
 import type { SimContext } from '../src/sim/sim_context';
 import { boundedDatabaseError } from './freehold_bounded_error';
+import { createFreeholdCapacityWarn } from './freehold_capacity_warn';
 import {
   FREEHOLD_PRIMARY_PLOT_INDEX,
   type FreeholdRowLoad,
@@ -70,7 +71,7 @@ import {
   type FreeholdHearthReading,
   normalizeHearthLoad,
 } from './freehold_hearth_load';
-import { freeholdJoinAnswer } from './freehold_join_answer';
+import { type FreeholdJoinVerdict, freeholdJoinAnswer } from './freehold_join_answer';
 import {
   FREEHOLD_ABSENT_DURABLE_REV,
   type FreeholdRecoveryHold,
@@ -80,6 +81,12 @@ import {
   type LoadedFreehold,
   freeholdSnapshotOf as snapshotOf,
 } from './freehold_load_outcome';
+import {
+  FREEHOLD_PERSIST_LOAD_PERMIT_WAIT_MS,
+  type FreeholdPreloadOptions,
+  freeholdPreloadBudgetMs,
+} from './freehold_login_bounds';
+import type { FreeholdPersistStats } from './freehold_persist_stats';
 import { freeholdRevisionMoved } from './freehold_revision_probe';
 import { representableRev, rowDocument } from './freehold_row_document';
 import { freeholdOwnerKeyForAccount } from './freehold_wire';
@@ -96,94 +103,13 @@ export const FREEHOLD_PERSIST_SHUTDOWN_DRAIN_MS = 10_000;
  *  under a stalled pool. The login path has its own, shorter bound below. */
 export const FREEHOLD_PERSIST_WRITE_PERMIT_WAIT_MS = 15_000;
 
-/**
- * The LOGIN-path bound, deliberately shorter than the write one, because the
- * handshake awaits this read: it is bounded at the same 5,000 as
- * DB_POOL_CONNECT_TIMEOUT_MS rather than SHORTER than it (an earlier version of
- * this line claimed shorter, and the two numbers are equal), and a joining
- * player must not sit fifteen seconds waiting for a permit to read two small
- * rows. Under gate saturation this still stalls a handshake for a full five
- * seconds before answering a hold, which is carried as a named gate in
- * docs/freeholds/persistence-rollout-contract.md rather than tuned here. The local
- * admission cap already makes an early answer safe: it is a HOLD, not a
- * failure, so the account joins on its live record and simply does not write.
- * The two are separate constants on purpose; merging them puts a background
- * write's budget on a player's login.
- */
-export const FREEHOLD_PERSIST_LOAD_PERMIT_WAIT_MS = 5_000;
-
-/**
- * The SERVER-SIDE statement bound on the two login-path reads, applied through
- * the runWithStatementTimeout seam in server/db.ts.
- *
- * Without it both reads inherit the pool's DB_STATEMENT_TIMEOUT_MS of 15,000,
- * three times the permit bound above. In health these two statements are
- * sub-millisecond; a sick database is exactly when the difference binds, and
- * the handshake is the one place a slow read is paid by a player rather than by
- * a sweep.
- *
- * PER STATEMENT, AND IT DOES NOT COVER THE WHOLE TRANSACTION. The combined port
- * (readDurables, in server/freehold_persist_wiring.ts) puts both reads on ONE
- * checked-out client, which is the real saving. But SET LOCAL bounds each
- * statement separately (measured: two 300 ms sleeps under a 400 ms bound both ran,
- * 612 ms elapsed), and BEGIN and SET LOCAL both run BEFORE the lowered bound is
- * in force, so both answer to the pool session default.
- *
- * AND COMMIT ANSWERS TO NEITHER SERVER-SIDE BOUND, which every earlier version
- * of this docblock got wrong in the same direction. Measured on PostgreSQL 16
- * with a deferred constraint trigger putting two seconds of work inside the
- * commit itself: under `SET LOCAL statement_timeout = 300` the COMMIT ran
- * 2,008 ms and COMMITTED. Its only ceiling is the driver's own query_timeout,
- * DB_QUERY_TIMEOUT_MS, measured to reject a COMMIT at its deadline. So the floor
- * on the worst case is 5,000 (DB_POOL_CONNECT_TIMEOUT_MS) + 2 x 15,000
- * (DB_STATEMENT_TIMEOUT_MS, for BEGIN and SET LOCAL) + 2 x 2,000 (the two reads)
- * + 65,000 (DB_QUERY_TIMEOUT_MS, for COMMIT) = 104,000 ms, not the 41,000 this
- * paragraph published, nor the 9,000 or the 19,000 before that.
- *
- * WHICH IS WHY THE WHOLE PRELOAD IS CAPPED, not the statements alone: see
- * FREEHOLD_PERSIST_LOGIN_BUDGET_MS below.
- */
-export const FREEHOLD_PERSIST_LOGIN_STATEMENT_TIMEOUT_MS = 2_000;
-
-/**
- * THE CAP ON THE WHOLE PRELOAD, which is the gate section 8a of the rollout
- * contract carried open and which the statement bound above narrows without
- * closing.
- *
- * WHAT IT BOUNDS. Every step of a login-path load has a bound of its own (the
- * local admission cap answers at once, the permit wait is 5,000, each read is
- * 2,000) and the SUM of them had none, because the steps the store does not
- * own answer to the pool: a pool checkout, BEGIN, SET LOCAL and a COMMIT that
- * neither server-side timeout covers add up to a measured floor of 104,000 ms.
- * A login that spends that long does not fail: it keeps running, and the socket
- * behind it can die meanwhile. The chain then acquires a character lease and
- * joins anyway, and the mid-handshake death re-check hands the session it just
- * created to socketClosed, leaving a linkdead ghost holding a realm slot and
- * that lease for the whole grace window while the player's every re-login is
- * refused as already in world.
- *
- * WHY IT IS A CONSTANT AND NOT "THE HANDSHAKE'S REMAINING BUDGET", which is how
- * the gate was written and which rests on a premise that is FALSE. AUTH_TIMEOUT_MS
- * (server/ws_auth.ts, 10,000 ms) is cleared synchronously by the first-frame
- * handler BEFORE authenticateWebSocket runs, and that file says so: it bounds
- * upgrade-to-first-frame only, never the handshake's database work. There is no
- * remaining budget to read, so nothing is threaded from the handshake. What is
- * borrowed is the MAGNITUDE: 10,000 ms is the wait the product already treats as
- * the most a connecting player should spend, and a housing read has no claim on
- * more than that. Stated as a deliberate ceiling rather than dressed up as a
- * derivation.
- *
- * WHAT IT COSTS WHEN IT FIRES. The login is NOT refused: refusing a login over a
- * durable housing read reverses a decision this packet has already taken and
- * pinned (server/ws_auth.ts catches that read for exactly this reason, and a
- * test proves a thrown read joins with nothing installed). The PRELOAD is
- * refused instead, with a hold, so the player joins on the sim's default record
- * and no write goes out for that account. The refusal deliberately does NOT
- * touch the store entry: the read it gave up waiting for is still in flight
- * behind a single-flight slot, and letting it finish and fill the entry is
- * strictly better than marking the entry held over a read that then succeeds.
- */
-export const FREEHOLD_PERSIST_LOGIN_BUDGET_MS = 10_000;
+// The three LOGIN-path bounds (the permit wait, the statement bound and the
+// whole-preload budget, one per handshake) live in server/freehold_login_bounds.ts.
+export {
+  FREEHOLD_PERSIST_LOAD_PERMIT_WAIT_MS,
+  FREEHOLD_PERSIST_LOGIN_BUDGET_MS,
+  FREEHOLD_PERSIST_LOGIN_STATEMENT_TIMEOUT_MS,
+} from './freehold_login_bounds';
 
 /** Local concurrency cap on durable loads, applied BEFORE the shared permit
  *  (the guild-bank lazy loader's admission cap). Past the cap a load is
@@ -400,76 +326,13 @@ export interface FreeholdPersistPorts {
   scheduleDeadline?(callback: () => void, ms: number): () => void;
 }
 
-/** Scrape-safe counters. COUNTS, BYTE TOTALS AND MILLISECOND TOTALS ONLY: no
- *  owner key, no account id, no plot id ever appears here, because these are
- *  read by an operator dashboard and a metrics endpoint that are not entitled
- *  to player identity. */
-export interface FreeholdPersistStats {
-  /** EVERY entry the store holds, including the reference-only placeholders a
-   *  join creates before any read. On a dark realm that is one per online
-   *  account and nothing else, so this measure alone must never be read as
-   *  "records this realm is persisting": `loaded` is that number. */
-  readonly entries: number;
-  /** Entries that have finished a durable read, and so the only ones that can
-   *  write. Zero on a dark realm however many entries exist. */
-  readonly loaded: number;
-  readonly dirty: number;
-  readonly running: number;
-  readonly pending: number;
-  /** Entries held by ANY recovery hold, DATA or CAPACITY. A row this build could
-   *  not interpret is one cause; a full local admission cap, a missing
-   *  background permit and a thrown read are the others, and they mean opposite
-   *  things to an operator. Read `loadFailuresByKind` to tell them apart. */
-  readonly held: number;
-  /** Entries quiesced by an answer no repeat of the same payload can fix. Only
-   *  the first producer is the compare-and-swap fence: a stale CAS, a missing or
-   *  conflicting row, the seal refusing a record this entry did not load, the
-   *  unnamed-insert refusal, the writable-implies-readable refusal, and a run of
-   *  thrown writes inside the error window. Read it against `staleWrites` and
-   *  `writeFailures` rather than alone, because only `staleWrites` means a
-   *  second writer is touching these rows. Kept apart from `held` because the
-   *  two are counted independently and must never be summed. */
-  readonly quiesced: number;
-  readonly loads: number;
-  readonly loadFailures: number;
-  /** The same total, split by the hold kind that caused it. */
-  readonly loadFailuresByKind: Readonly<Record<string, number>>;
-  readonly writes: number;
-  readonly writeFailures: number;
-  readonly staleWrites: number;
-  readonly permitWaitMsTotal: number;
-  readonly queueWaitMsTotal: number;
-  readonly writeMsTotal: number;
-  /** Serialization, cloning and the write refusal's own walk: the synchronous
-   *  work between the permit and the statement, which `write_ms` deliberately
-   *  does not bracket. */
-  readonly codecMsTotal: number;
-  readonly loadMsTotal: number;
-  readonly oldestDirtyAgeMs: number;
-  readonly writeBytesTotal: number;
-  readonly maxWriteBytes: number;
-  /** Writes that held a background permit with no document to send. No
-   *  statement is issued: the arm returns before the row is ever touched. The
-   *  terminal state of every lost-save path this store has had. */
-  readonly writesWithoutRecord: number;
-  /** Oversize refusals taken on the ON-DISK pre-gate, where no text length was
-   *  measured, as opposed to the measured byte bound. */
-  readonly preGateRefusals: number;
-  /** Owners whose write is waiting on the store's own admission cap rather than
-   *  on the shared gate. The cap's whole claim is that the surplus waits in a
-   *  bounded set this store owns, and an unobservable set is an unfalsifiable
-   *  claim. */
-  readonly deferredWrites: number;
-  readonly activeWrites: number;
-  /** Documents captured at leave and not yet written: a second full record each
-   *  on top of the entry's own, retained until the write lands. */
-  readonly leaveCaptures: number;
-}
+// The counters a scrape reads: server/freehold_persist_stats.ts.
+export type { FreeholdPersistStats } from './freehold_persist_stats';
 
 export interface FreeholdPersistStore {
   /** Bounded, single-flight per account. Never rejects: an admission refusal
-   *  or a throwing port answers with a hold. */
-  preload(accountId: number): Promise<LoadedFreehold>;
+   *  or a throwing port answers with a hold. `opts` narrows its budget. */
+  preload(accountId: number, opts?: FreeholdPreloadOptions): Promise<LoadedFreehold>;
   markDirty(ownerKey: string): void;
   /** Fire and forget, coalesced to one running plus one pending write. */
   save(ownerKey: string): void;
@@ -650,7 +513,21 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
     // row was too big to even look at, the other says it was measured and
     // refused.
     preGateRefusals: 0,
+    // Ruling (b)'s second ask and the install it feeds (freehold_persist_stats.ts).
+    reasks: 0,
+    reaskReads: 0,
+    reaskMsTotal: 0,
+    joinVerdicts: { none: 0, refused: 0, entry: 0, held: 0, withheld: 0 } as Record<
+      FreeholdJoinVerdict,
+      number
+    >,
   };
+
+  // Capacity-kind hold lines, one per kind per window (freehold_capacity_warn.ts).
+  const capacityWarn = createFreeholdCapacityWarn(
+    (line) => ports.warn(line),
+    () => ports.nowMs(),
+  );
 
   const isDirty = (entry: FreeholdPersistEntry): boolean =>
     entry.dirtyGeneration > entry.committedGeneration;
@@ -872,7 +749,9 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
     // Per KIND, because the causes demand different operator responses; the
     // vocabulary module carries the full split.
     counters.loadFailuresByKind[hold.kind] = (counters.loadFailuresByKind[hold.kind] ?? 0) + 1;
-    ports.warn(
+    capacityWarn(
+      hold.kind,
+      !freeholdHoldIsTerminal(hold.kind),
       `freehold plot index ${hold.plotIndex} held (${hold.kind}): ${hold.detail}; the durable row is left untouched`,
     );
     return freeholdHoldAnswer(entry, hold, hearth);
@@ -1199,7 +1078,7 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
   // then releases. Making the function async turns it into a rejection the catch
   // can see. Unreachable today (accounts.id is INT4 and the handshake refuses a
   // malformed id first), which is why it is a shape fix rather than a defect.
-  async function preloadWithin(accountId: number): Promise<LoadedFreehold> {
+  async function preloadWithin(accountId: number, reask = false): Promise<LoadedFreehold> {
     const ownerKey = freeholdOwnerKeyForAccount(accountId);
     const entry = entries.get(ownerKey);
     // A second character of the same account is joining: the live record is the
@@ -1222,6 +1101,7 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
       // durable revision, and an entry that never loaded is write-blocked for the
       // whole session, every edit discarded at logout. So read, then answer with
       // no state.
+      if (reask) counters.reaskReads++;
       const loaded = await beginLoad(accountId, ownerKey);
       const touched = entries.get(ownerKey);
       if (touched) touched.orphanPasses = 0;
@@ -1250,6 +1130,7 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
       // a lost-save path of its own.
       return replayAnswer(entry);
     }
+    if (reask) counters.reaskReads++;
     const loaded = await beginLoad(accountId, ownerKey);
     const touched = entries.get(ownerKey);
     if (touched) touched.orphanPasses = 0;
@@ -1259,14 +1140,16 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
   /** Book the whole-preload cap's refusal and answer it. The SHAPE is in
    *  server/freehold_load_outcome.ts with the reasoning for every field; the
    *  counters and the operator line are the store's own. */
-  function budgetRefusal(accountId: number): LoadedFreehold {
+  function budgetRefusal(accountId: number, budgetMs: number): LoadedFreehold {
     counters.loadFailures++;
     counters.loadFailuresByKind.no_budget = (counters.loadFailuresByKind.no_budget ?? 0) + 1;
-    const answer = freeholdBudgetRefusal(accountId, FREEHOLD_PERSIST_LOGIN_BUDGET_MS, {
+    const answer = freeholdBudgetRefusal(accountId, budgetMs, {
       readyAtMs: 0,
       revision: ABSENT_HEARTH_REVISION,
     });
-    ports.warn(
+    capacityWarn(
+      'no_budget',
+      true,
       `freehold plot index ${answer.plotIndex} held (no_budget): ${answer.hold?.detail}; the durable row is left untouched`,
     );
     return answer;
@@ -1282,19 +1165,39 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
    * fire-and-forget behind a `.catch`, so a synchronous throw would walk past
    * that catch after retain had already taken a reference nothing then releases.
    */
-  async function preload(accountId: number): Promise<LoadedFreehold> {
+  async function preload(
+    accountId: number,
+    opts: FreeholdPreloadOptions = {},
+  ): Promise<LoadedFreehold> {
+    const budgetMs = freeholdPreloadBudgetMs(opts.budgetMs);
+    const startMs = ports.nowMs();
+    try {
+      return await cappedPreload(accountId, budgetMs, opts.reask === true);
+    } finally {
+      if (opts.reask === true) {
+        counters.reasks++;
+        counters.reaskMsTotal += Math.max(0, ports.nowMs() - startMs);
+      }
+    }
+  }
+
+  async function cappedPreload(
+    accountId: number,
+    budgetMs: number,
+    reask: boolean,
+  ): Promise<LoadedFreehold> {
     let expired!: () => void;
     const overrun = new Promise<'no-budget'>((resolve) => {
       expired = () => resolve('no-budget');
     });
     let cancel: (() => void) | null = null;
     try {
-      cancel = scheduleDeadline(expired, FREEHOLD_PERSIST_LOGIN_BUDGET_MS);
+      cancel = scheduleDeadline(expired, budgetMs);
     } catch (err) {
       // A scheduler that will not schedule must not refuse the login: run
       // uncapped and say so, which is the behaviour that predates this cap.
       ports.error('freehold login budget could not be scheduled; the load runs uncapped:', err);
-      return await preloadWithin(accountId);
+      return await preloadWithin(accountId, reask);
     }
     try {
       // THE LOSING PROMISE KEEPS A HANDLER. `preloadWithin` is designed not to
@@ -1302,14 +1205,14 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
       // rejection that arrives AFTER the deadline has already answered would be
       // unhandled, and the cost of being wrong about that is the realm process.
       // The catch is a no-op because the answer has already been decided.
-      const load = preloadWithin(accountId);
+      const load = preloadWithin(accountId, reask);
       const answer = await Promise.race([load, overrun]);
       if (answer === 'no-budget') {
         void load.catch(() => undefined);
         // THE READ OUTLIVES THIS CALLER and is left running on purpose, to fill
         // the entry. What that costs is recorded on classify's absent arm and
         // bounded by the insert refusal in server/freehold_write_seal.ts.
-        return budgetRefusal(accountId);
+        return budgetRefusal(accountId, budgetMs);
       }
       return answer;
     } finally {
@@ -2000,8 +1903,8 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
         releaseCapture(entry);
       }
       // AN UNLOADED ENTRY HERE FOLLOWS A JOIN THAT INSTALLED NOTHING: the join
-      // installs from any loaded entry (answerForInstall), so only a hold or a
-      // withheld answer reaches this, and the session is on the stand-in. Left
+      // installs from any loaded entry (answerForInstall), so only a join that
+      // installed nothing reaches this, and the session is on the stand-in. Left
       // unloaded, the entry would block every write with no hold of its own, no
       // refusal and no line, so the session's discarded edits would be
       // invisible. So re-read: the entry learns the row and the seal refuses the
@@ -2023,6 +1926,7 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
       const entry = entries.get(ownerKey);
       const current = entry?.loaded ? replayAnswer(entry) : null;
       const decided = freeholdJoinAnswer(accountId, asked, current);
+      counters.joinVerdicts[decided.verdict]++;
       if (decided.verdict === 'withheld') {
         ports.warn(
           `freehold plot index ${decided.answer?.plotIndex} join answer withheld: the entry it was read from went away before the install, so no record is put in and the session is write-blocked`,
@@ -2127,6 +2031,10 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
         maxWriteBytes: counters.maxWriteBytes,
         writesWithoutRecord: counters.writesWithoutRecord,
         preGateRefusals: counters.preGateRefusals,
+        reasks: counters.reasks,
+        reaskReads: counters.reaskReads,
+        reaskMsTotal: counters.reaskMsTotal,
+        joinVerdicts: { ...counters.joinVerdicts },
         deferredWrites: deferredWrites.size,
         activeWrites,
         leaveCaptures,

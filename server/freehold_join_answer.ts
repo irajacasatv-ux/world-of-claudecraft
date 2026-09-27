@@ -26,6 +26,16 @@ import type { LoadedFreehold } from './freehold_load_outcome';
  *  name the arm it reached. */
 export type FreeholdJoinVerdict = 'none' | 'refused' | 'entry' | 'held' | 'withheld';
 
+/** The fixed verdict vocabulary, walked by the metrics exporter so its label
+ *  set is this list and never whatever a producer happens to emit. */
+export const FREEHOLD_JOIN_VERDICTS: readonly FreeholdJoinVerdict[] = [
+  'none',
+  'refused',
+  'entry',
+  'held',
+  'withheld',
+];
+
 /**
  * The answer this join installs.
  *
@@ -41,9 +51,17 @@ export function freeholdJoinAnswer(
   asked: LoadedFreehold | undefined,
   current: LoadedFreehold | null,
 ): { readonly answer: LoadedFreehold | undefined; readonly verdict: FreeholdJoinVerdict } {
-  // No durable answer at all (a caller with no handshake, or both asks threw):
-  // install nothing, as a join always has.
-  if (asked === undefined) return { answer: undefined, verdict: 'none' };
+  // No durable answer at all (a caller with no handshake, or both asks threw).
+  // A LOADED ENTRY still answers, so a leave capture waiting on it is installed
+  // rather than dropped for want of an answer (the QA read of ruling (b) found
+  // the old "install nothing" arm rested on preload never rejecting); with no
+  // entry, install nothing, as a join always has.
+  if (asked === undefined) {
+    if (current !== null && current.accountId === accountId) {
+      return { answer: current, verdict: 'entry' };
+    }
+    return { answer: undefined, verdict: 'none' };
+  }
   // Not this account's answer, or not an answer: unchanged, so the install's own
   // structural guards refuse it and nothing new decides on a broken bag.
   if (typeof asked !== 'object' || asked === null || asked.accountId !== accountId) {

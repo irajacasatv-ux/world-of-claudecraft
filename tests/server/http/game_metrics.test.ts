@@ -2061,6 +2061,10 @@ describe('the housing persistence families', () => {
     maxWriteBytes: 52,
     writesWithoutRecord: 61,
     preGateRefusals: 62,
+    reasks: 71,
+    reaskReads: 72,
+    reaskMsTotal: 73,
+    joinVerdicts: { none: 81, refused: 82, entry: 83, held: 84, withheld: 85 },
     deferredWrites: 17,
     activeWrites: 18,
     leaveCaptures: 19,
@@ -2118,6 +2122,15 @@ describe('the housing persistence families', () => {
     expect(labelled(text, WOC_FREEHOLD_PERSIST_TOTAL, 'write_bytes')).toBe('51');
     expect(labelled(text, WOC_FREEHOLD_PERSIST_TOTAL, 'writes_without_record')).toBe('61');
     expect(labelled(text, WOC_FREEHOLD_PERSIST_TOTAL, 'pre_gate_refusals')).toBe('62');
+    // Ruling (b)'s re-ask and the install verdicts, each its own fixed measure.
+    expect(labelled(text, WOC_FREEHOLD_PERSIST_TOTAL, 'reasks')).toBe('71');
+    expect(labelled(text, WOC_FREEHOLD_PERSIST_TOTAL, 'reask_reads')).toBe('72');
+    expect(labelled(text, WOC_FREEHOLD_PERSIST_TOTAL, 'reask_ms')).toBe('73');
+    expect(labelled(text, WOC_FREEHOLD_PERSIST_TOTAL, 'join_none')).toBe('81');
+    expect(labelled(text, WOC_FREEHOLD_PERSIST_TOTAL, 'join_refused')).toBe('82');
+    expect(labelled(text, WOC_FREEHOLD_PERSIST_TOTAL, 'join_entry')).toBe('83');
+    expect(labelled(text, WOC_FREEHOLD_PERSIST_TOTAL, 'join_held')).toBe('84');
+    expect(labelled(text, WOC_FREEHOLD_PERSIST_TOTAL, 'join_withheld')).toBe('85');
   });
 
   it('splits load failures by hold kind, because the kind IS the response', async () => {

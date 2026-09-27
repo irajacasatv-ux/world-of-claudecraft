@@ -3860,9 +3860,9 @@ export async function startServer(): Promise<http.Server> {
     // write-blocked and lands in `quiesced`, where DEPLOY.md tells the operator
     // to read a second realm writing the same rows. The live read stays on the
     // wire verdict and the status route, where it is the stated design.
-    freeholdForAccount: (id) =>
+    freeholdForAccount: (id, opts) =>
       game.sim.ctx.freeholdsEnabled
-        ? freeholdPreloadForAccount(id)
+        ? freeholdPreloadForAccount(id, opts)
         : Promise.resolve(freeholdPreloadUnavailable(id, 'housing is disabled on this realm')),
   });
   wsAuth.attachUpgrade(server, wss);

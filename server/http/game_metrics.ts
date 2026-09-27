@@ -77,6 +77,7 @@ import {
   ROD_FEE_RECIPE_IDS,
   rodFeeForRecipe,
 } from '../fishing_telemetry';
+import { FREEHOLD_JOIN_VERDICTS } from '../freehold_join_answer';
 import type { FreeholdPersistStats } from '../freehold_persist';
 import { FREEHOLD_LOAD_FAILURE_KINDS } from '../freehold_persist';
 import { OFFLINE_FENCE_WRITERS, offlineFenceRefusals } from '../offline_fence_refusals';
@@ -733,7 +734,7 @@ export function registerGameStateMetrics(
 
   new Counter({
     name: WOC_FREEHOLD_PERSIST_TOTAL,
-    help: 'Housing persistence store CUMULATIVE totals by fixed measure: loads, writes, failures, stale compare-and-swap refusals, the admission and queue waits, the statement durations those waits deliberately exclude, and total bytes written. A Counter rather than a Gauge so rate() and increase() get counter-reset handling across a realm restart.',
+    help: 'Housing persistence store CUMULATIVE totals by fixed measure: loads, writes, failures, stale compare-and-swap refusals, the admission and queue waits, the statement durations those waits deliberately exclude, total bytes written, the reads and time of the handshake re-ask, and one measure per join install verdict. A Counter rather than a Gauge so rate() and increase() get counter-reset handling across a realm restart.',
     labelNames: ['measure'],
     registers: [registry],
     collect() {
@@ -766,6 +767,17 @@ export function registerGameStateMetrics(
       // Which arm of the oversize refusal fired: the on-disk pre-gate, where no
       // text length was ever measured, or the measured byte bound.
       this.inc({ measure: 'pre_gate_refusals' }, state.preGateRefusals);
+      // Ruling (b)'s second ask: how often it waited on a durable read inside
+      // the lease-held window, and for how long in all.
+      this.inc({ measure: 'reasks' }, state.reasks);
+      this.inc({ measure: 'reask_reads' }, state.reaskReads);
+      this.inc({ measure: 'reask_ms' }, state.reaskMsTotal);
+      // How each join's install was decided, one fixed measure per verdict:
+      // `join_entry` is the stale-answer fix at work, `join_withheld` a
+      // write-blocked session nothing could vouch for.
+      for (const verdict of FREEHOLD_JOIN_VERDICTS) {
+        this.inc({ measure: `join_${verdict}` }, state.joinVerdicts[verdict] ?? 0);
+      }
     },
   });
 

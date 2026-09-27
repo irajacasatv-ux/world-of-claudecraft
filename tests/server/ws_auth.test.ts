@@ -14,6 +14,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { WebSocket, WebSocketServer } from 'ws';
 import { ChatModerationLiveState } from '../../server/chat_mod_live';
 import type { AccountModerationStatus, CharacterRow } from '../../server/db';
+import { FREEHOLD_PERSIST_LOGIN_BUDGET_MS } from '../../server/freehold_login_bounds';
 import { GeneralChatRateLimitLiveState } from '../../server/general_chat_quota';
 import { isConnectionRefused as realIsConnectionRefused } from '../../server/ip_block';
 import { createWsAuth, type WsAuthDeps } from '../../server/ws_auth';
@@ -1362,16 +1363,64 @@ describe('createWsAuth: durable freehold stamp', () => {
     await authenticateWebSocket(asWs(ws), authRaw(), req);
 
     expect(deps.freeholdForAccount).toHaveBeenCalledTimes(2);
-    expect((deps.freeholdForAccount as any).mock.calls).toEqual([[1], [1]]);
+    // The first ask runs on the whole budget; the re-ask is marked and carries
+    // what the first ask left (the clock-driven cases below pin the arithmetic).
+    const calls = (deps.freeholdForAccount as any).mock.calls;
+    expect(calls[0]).toEqual([1]);
+    expect(calls[1]).toEqual([1, { budgetMs: expect.any(Number), reask: true }]);
+    expect(calls[1][1].budgetMs).toBeGreaterThan(0);
+    expect(calls[1][1].budgetMs).toBeLessThanOrEqual(FREEHOLD_PERSIST_LOGIN_BUDGET_MS);
     const joinMeta = (game.join as any).mock.calls[0][7] as { freehold?: unknown };
     expect(joinMeta.freehold).toEqual(reaskedAnswer);
+  });
+
+  describe('ONE housing budget per handshake: the re-ask gets only what the first ask left', () => {
+    // Found by the hot-path and database reviews of ruling (b): each ask used to
+    // arm the whole FREEHOLD_PERSIST_LOGIN_BUDGET_MS, so a degraded login spent
+    // up to twice it on housing, past the client's entry watchdog.
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+    it.each([
+      { firstAskMs: 0, budgetMs: FREEHOLD_PERSIST_LOGIN_BUDGET_MS },
+      { firstAskMs: 7_000, budgetMs: FREEHOLD_PERSIST_LOGIN_BUDGET_MS - 7_000 },
+      { firstAskMs: FREEHOLD_PERSIST_LOGIN_BUDGET_MS, budgetMs: 0 },
+      { firstAskMs: 12_000, budgetMs: 0 },
+    ])(
+      'a first ask of $firstAskMs ms leaves the re-ask $budgetMs ms',
+      async ({ firstAskMs, budgetMs }) => {
+        vi.useFakeTimers({ toFake: ['Date'] });
+        vi.setSystemTime(1_000_000);
+        const { ws, deps, req } = setup();
+        let asks = 0;
+        deps.freeholdForAccount = vi.fn(async () => {
+          asks += 1;
+          // The first ask "takes" firstAskMs; the lease and the character read
+          // after it take another second, which must NOT be charged to housing.
+          if (asks === 1) vi.setSystemTime(Date.now() + firstAskMs);
+          return loadedAnswer;
+        });
+        const lease = deps.acquireCharacterLease;
+        deps.acquireCharacterLease = vi.fn(async (...args: Parameters<typeof lease>) => {
+          vi.setSystemTime(Date.now() + 1_000);
+          return await lease(...args);
+        });
+        const { authenticateWebSocket } = createWsAuth(deps);
+        await authenticateWebSocket(asWs(ws), authRaw(), req);
+        const calls = (deps.freeholdForAccount as any).mock.calls;
+        expect(calls).toHaveLength(2);
+        expect(calls[1]).toEqual([1, { budgetMs, reask: true }]);
+      },
+    );
   });
 
   it('asks BEFORE the character lease, and asks again AFTER the character read, before the join', async () => {
     // The first ask keeps the durable read out of the lease-held window in the
     // common case (a durable read inside it would hold another session out of
     // the character for the whole of a background-gate wait); the re-ask is a
-    // replay then, and a read only when the store's entry was collected.
+    // replay then, and a read only when the store's entry was collected or the
+    // first ask was held on capacity, inside what the first ask left of the
+    // one housing budget.
     const order: string[] = [];
     const { ws, game, deps, req } = setup();
     deps.freeholdForAccount = vi.fn(async () => {
@@ -1404,13 +1453,28 @@ describe('createWsAuth: durable freehold stamp', () => {
     const source = stripComments(
       fs.readFileSync(path.resolve(process.cwd(), 'server/ws_auth.ts'), 'utf8'),
     );
-    const reask = source.indexOf('freeholdAtJoin = await freeholdForAccount(accountId);');
+    const reaskCall = 'freeholdAtJoin = await freeholdForAccount(accountId, reaskOpts);';
+    const reask = source.indexOf(reaskCall);
     const join = source.indexOf('result = game.join(', reask);
     expect(reask).toBeGreaterThan(0);
     expect(join).toBeGreaterThan(reask);
     const between = source.slice(reask + 'freeholdAtJoin = await'.length, join);
     expect(between).not.toMatch(/\bawait\b/);
-    expect(source.slice(join, source.indexOf('});', join))).toContain('freehold: freeholdAtJoin,');
+    // POSITIVE CONTROL: the same regex does see the awaits between the first ask
+    // and the re-ask (the lease and the character read), so the negative above
+    // is not blind to an await.
+    const firstAsk = source.indexOf('freehold = await freeholdForAccount(accountId);');
+    expect(firstAsk).toBeGreaterThan(0);
+    expect(source.slice(firstAsk + 'freehold = await'.length, reask)).toMatch(/\bawait\b/);
+    // The join's own argument list, balanced, carries the re-ask.
+    const open = source.indexOf('(', join);
+    let depth = 0;
+    let close = open;
+    for (; close < source.length; close++) {
+      if (source[close] === '(') depth++;
+      else if (source[close] === ')' && --depth === 0) break;
+    }
+    expect(source.slice(open, close + 1)).toContain('freehold: freeholdAtJoin,');
   });
 
   it('keeps the FIRST answer when the re-ask throws', async () => {
@@ -1428,7 +1492,30 @@ describe('createWsAuth: durable freehold stamp', () => {
       const joinMeta = (game.join as any).mock.calls[0][7] as { freehold?: unknown };
       expect(joinMeta.freehold).toEqual(loadedAnswer);
       expect(errors).toHaveBeenCalledTimes(1);
-      expect(String(errors.mock.calls[0][0])).toContain('re-ask');
+      expect(String(errors.mock.calls[0][0])).toBe(
+        'freehold durable re-ask failed; joining on the first answer:',
+      );
+    } finally {
+      errors.mockRestore();
+    }
+  });
+
+  it('joins on the RE-ASK when only the first ask throws', async () => {
+    // The inverse arm: the first ask is caught (joining unloaded would follow),
+    // and the re-ask's answer is what the join carries.
+    const errors = vi.spyOn(console, 'error').mockImplementation(() => {});
+    try {
+      const { ws, game, deps, req } = setup();
+      deps.freeholdForAccount = vi
+        .fn()
+        .mockRejectedValueOnce(new Error('durable housing read failed'))
+        .mockResolvedValueOnce(reaskedAnswer);
+      const { authenticateWebSocket } = createWsAuth(deps);
+      await authenticateWebSocket(asWs(ws), authRaw(), req);
+      const joinMeta = (game.join as any).mock.calls[0][7] as { freehold?: unknown };
+      expect(joinMeta.freehold).toEqual(reaskedAnswer);
+      expect(errors).toHaveBeenCalledTimes(1);
+      expect(String(errors.mock.calls[0][0])).toContain('freehold durable read failed');
     } finally {
       errors.mockRestore();
     }

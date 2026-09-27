@@ -32,6 +32,7 @@ import type {
   CharacterRow,
   TokenScope,
 } from './db';
+import { type FreeholdPreloadOptions, freeholdReaskBudgetMs } from './freehold_login_bounds';
 import type { LoadedFreehold } from './freehold_persist';
 import type { GameServer } from './game';
 import { noteClientFrame } from './keepalive_sweep';
@@ -159,12 +160,15 @@ export interface WsAuthDeps {
   // The account's durable freehold plot and its shared Hearth clock, read on
   // the FRESH-JOIN arm only (a resume keeps the live record, which is the
   // truth), TWICE: once before the lease and again after the character read,
-  // as the last await before the join (ruling (b) for the twelfth path). Bounded
+  // as the last await before the join (ruling (b) for the twelfth path). The
+  // second ask reads the row only when the entry was collected between them or
+  // the first ask was held on capacity (the entry then stays unloaded), inside
+  // the lease-held window. Bounded
   // and single-flight inside the persistence store, and it never rejects: an
   // admission refusal or an unreadable row comes back as a write-blocked hold,
   // so a database problem costs the player their housing for that session
   // rather than the handshake.
-  freeholdForAccount: (accountId: number) => Promise<LoadedFreehold>;
+  freeholdForAccount: (accountId: number, opts?: FreeholdPreloadOptions) => Promise<LoadedFreehold>;
 }
 
 export interface WsAuthHandlers {
@@ -497,11 +501,15 @@ export function createWsAuth(deps: WsAuthDeps): WsAuthHandlers {
             // row on disk is never overwritten by a realm that failed to read
             // it.
             let freehold: LoadedFreehold | undefined;
+            // ONE HOUSING BUDGET PER HANDSHAKE: the re-ask below gets only what
+            // this ask leaves (freeholdReaskBudgetMs). Server wall clock, not sim.
+            const firstAskStartMs = Date.now();
             try {
               freehold = await freeholdForAccount(accountId);
             } catch (err) {
-              // RAW, and it is the one console site on the housing path the
-              // store's bounded-error wrapper does not cover. It is deliberate:
+              // RAW, and it is one of the two console sites on the housing path
+              // the store's bounded-error wrapper does not cover (the re-ask's
+              // catch below is the other, on this same reasoning). It is deliberate:
               // every database throw on this path is already caught inside the
               // store and converted to a hold through boundedDatabaseError, so
               // nothing reaching here is a pg error carrying row content in
@@ -511,6 +519,7 @@ export function createWsAuth(deps: WsAuthDeps): WsAuthHandlers {
               // re-throwing a database error, which is why it is written down.
               console.error('freehold durable read failed; joining unloaded:', err);
             }
+            const firstAskMs = Date.now() - firstAskStartMs;
             leaseNonce = randomUUID();
             const leased = await acquireCharacterLease(character.id, accountId, leaseNonce);
             if (!leased) {
@@ -566,14 +575,23 @@ export function createWsAuth(deps: WsAuthDeps): WsAuthHandlers {
             // of this account can join, edit, leave and be evicted inside those
             // awaits. Asked again here, as the LAST await before the join: a
             // replay with no I/O while the store's entry is loaded, a durable read
-            // under the same bounds when the entry was collected (the other
-            // session committed and left). The join then decides what to install
+            // inside what the first ask left of the one housing budget (so the two
+            // together never pass FREEHOLD_PERSIST_LOGIN_BUDGET_MS, the client's
+            // entry watchdog magnitude) when the entry was collected (the other
+            // session committed and left) or the first ask was held on capacity,
+            // which leaves the entry unloaded (then retain's repair reload is the
+            // third and last attempt). The join then decides what to install
             // from the store's entry at install time, synchronously, so the one
             // await this leaves is covered there. A thrown re-ask keeps the first
-            // answer, on the same reasoning as the catch above.
+            // answer; its raw console line is safe on the same reasoning as the
+            // catch above (the store converts every database throw to a hold).
+            const reaskOpts: FreeholdPreloadOptions = {
+              budgetMs: freeholdReaskBudgetMs(firstAskMs),
+              reask: true,
+            };
             let freeholdAtJoin = freehold;
             try {
-              freeholdAtJoin = await freeholdForAccount(accountId);
+              freeholdAtJoin = await freeholdForAccount(accountId, reaskOpts);
             } catch (err) {
               console.error('freehold durable re-ask failed; joining on the first answer:', err);
             }

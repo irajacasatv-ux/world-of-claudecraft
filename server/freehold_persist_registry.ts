@@ -9,6 +9,7 @@
 
 import { FREEHOLD_PRIMARY_PLOT_INDEX } from './freehold_db';
 import { ABSENT_HEARTH_REVISION } from './freehold_hearth_load';
+import type { FreeholdPreloadOptions } from './freehold_login_bounds';
 import {
   FREEHOLD_ABSENT_DURABLE_REV,
   FREEHOLD_PERSIST_SHUTDOWN_DRAIN_MS,
@@ -30,9 +31,12 @@ export function registerFreeholdPersistStore(store: FreeholdPersistStore | null)
  *  bonus). Never rejects: with no store registered it answers a HOLD, so the
  *  join installs nothing and writes nothing rather than seeding a default over
  *  a row it could not read. */
-export async function freeholdPreloadForAccount(accountId: number): Promise<LoadedFreehold> {
+export async function freeholdPreloadForAccount(
+  accountId: number,
+  opts?: FreeholdPreloadOptions,
+): Promise<LoadedFreehold> {
   const store = registered;
-  if (store) return await store.preload(accountId);
+  if (store) return await store.preload(accountId, opts);
   return freeholdPreloadUnavailable(accountId, 'no persistence store is registered on this host');
 }
 
@@ -96,6 +100,10 @@ export function freeholdPersistStats(): FreeholdPersistStats {
       maxWriteBytes: 0,
       writesWithoutRecord: 0,
       preGateRefusals: 0,
+      reasks: 0,
+      reaskReads: 0,
+      reaskMsTotal: 0,
+      joinVerdicts: { none: 0, refused: 0, entry: 0, held: 0, withheld: 0 },
       deferredWrites: 0,
       activeWrites: 0,
       leaveCaptures: 0,

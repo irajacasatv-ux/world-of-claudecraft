@@ -1942,8 +1942,16 @@ const MONOLITHS: MonolithRow[] = [
     // document with its revision narrowing (server/freehold_row_document.ts) out
     // whole, each with a suite of its own, and by tightening retain's comments.
     // Exact count, zero slack.
+    // LOWERED, 2150 -> 2058, by the review round of that ruling: the handshake's
+    // housing budget became ONE per handshake (a per-call budget on preload), the
+    // re-ask and each join verdict gained counters, and the capacity-kind hold
+    // lines are rate-limited. Paid for by moving the three login-path bounds with
+    // their reasoning (server/freehold_login_bounds.ts), the scrape's stats shape
+    // (server/freehold_persist_stats.ts) and the line limiter
+    // (server/freehold_capacity_warn.ts) out whole, each re-exported or with a
+    // suite of its own. Exact count, zero slack.
     file: 'server/freehold_persist.ts',
-    ceiling: 2150,
+    ceiling: 2058,
     seam: 'a sibling server module behind the store ports; see server/CLAUDE.md',
   },
   {
