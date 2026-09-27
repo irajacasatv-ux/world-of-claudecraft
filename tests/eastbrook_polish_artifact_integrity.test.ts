@@ -1411,7 +1411,8 @@ const ACCEPTED_POLISH_V2_METADATA_SHA256 =
   // Re-minted for the Freeholds sync of release/v0.44.0 at 09639d4ae9: the merged renderer leaf matches neither parent. No capture was retaken.
   // Re-minted for the Freeholds sync of release/v0.44.0 at aaff789813: the merged renderer leaf matches neither parent. No capture was retaken.
   // Re-minted for the aaff789813 sync's audit round: renderer.ts dropped an import the port left unused. No capture was retaken.
-  '292474cf8e30bf5b3434e8ce5bbfcbbc71bb626a8ed99ef5e75bba2c72976084';
+  // Re-minted for the @vitest/spy patch: pnpm-lock.yaml moved, so every lockfile-hashed GLB was re-stamped in place. No capture was retaken.
+  'da4b26544f299eee8cce9cf6b75a8103f215901fbdac40141f78a014c08a3174';
 const ACCEPTED_POLISH_V2_COMPOSITE_PROVENANCE =
   // Re-minted for the Eastbrook handoff merge with release/v0.43.0: the merged renderer leaf and the moved NPC layout match neither parent. No capture was retaken.
   // Re-minted for the v0.43.0 batch base merge (ossbrain-release/v0.43.0 taking
@@ -1446,7 +1447,8 @@ const ACCEPTED_POLISH_V2_COMPOSITE_PROVENANCE =
   // Re-minted for the Freeholds sync of release/v0.44.0 at 09639d4ae9: the merged renderer leaf matches neither parent. No capture was retaken.
   // Re-minted for the Freeholds sync of release/v0.44.0 at aaff789813: the merged renderer leaf matches neither parent. No capture was retaken.
   // Re-minted for the aaff789813 sync's audit round: renderer.ts dropped an import the port left unused. No capture was retaken.
-  'a5d76148a212bd1aa8c13fba0a05a5c8b4a9a0d5939b4cad746ef9ef7ae9210e';
+  // Re-minted for the @vitest/spy patch: pnpm-lock.yaml moved, so every lockfile-hashed GLB was re-stamped in place. No capture was retaken.
+  '2671eb589d15fb8b2ae35e4f2f3c8e06da682be9dafab079c631c247c4bc015c';
 const ACCEPTED_POLISH_V2_METADATA = readJsonFile<CaptureMetadata>(ACCEPTED_POLISH_V2_METADATA_PATH);
 const ACCEPTED_POLISH_V2_PROVENANCE = ACCEPTED_POLISH_V2_METADATA.polishProvenance;
 const ACCEPTED_POLISH_V2_TOWN_CONTRACT = ACCEPTED_POLISH_V2_METADATA.records[0]?.townContract;
@@ -2865,7 +2867,9 @@ describe('Eastbrook polish performance and contact evidence', () => {
       // over the re-swept evidence. No capture was retaken.
       // The aaff789813 sync's audit round (renderer.ts import): recomputed LAST
       // again over the re-swept evidence. No capture was retaken.
-    ).toBe('b5662cc1060176ec821ea7d199ac1994ac189357c2e3f8ca2f373d1c602789f8');
+      // The @vitest/spy patch's lockfile re-mint: recomputed LAST over the
+      // re-swept evidence. No capture was retaken.
+    ).toBe('02a34c0f8f0b0d2c8033d1e24ab1cdc31ea03bdb309ffbe181451a00d04a5154');
   });
 
   it('binds every historical after record to its accepted source and asset provenance', () => {
