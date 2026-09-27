@@ -4195,3 +4195,15 @@ should-fix, 11 nits, all applied (`75f45bccae`, `dcffac111b`, and two test commi
   borrowed past a drain's cap; the pin builds exactly that state), no pump on a freed retry
   slot, summaries never falling back to per-owner lines, the two deferred measures folded,
   and the drain's arm guard removed. All KILLED.
+- THE READ OF THAT ROUND (a fresh general reader over `736fc144d7..b39877d85d`): 0 blocking,
+  1 should-fix, 4 nits, all applied. SHOULD-FIX: a retry re-arming from its own settle went
+  through `arm` BEFORE the pump, so it could take back its freed slot ahead of a waiting
+  ordinary write (a gap the round left, not one it made); it now re-queues at the back of the
+  clock's own set and the fall-through pump orders it, pinned by a drain whose cap retries
+  fill with a healthy owner waiting. NITS: the leave-flush comment (a RUNNING retry is waited
+  on to the flush deadline; only a deferred one is not), the drain's arm-failure path now
+  reports pending throws (pinned), a comment's premise about sweeps corrected, and the settle
+  re-arm case fires only the deadlines it scheduled. Its mutants: re-arming through `arm`
+  again and launching directly, and the catch's report removed; all KILLED (control 361).
+  The store stays at 1,988 lines. That read found nothing blocking, so the fresh-read loop
+  ends here.
