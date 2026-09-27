@@ -8,6 +8,8 @@ export interface CarriedEntry {
   /** Required for `local-median`: why the row is carried, not harvested. */
   reason?: string;
   runs?: number[];
+  /** The harvested CI weight this local row deliberately replaced. */
+  supersedes?: number;
 }
 
 export interface CarriedProvenance {
@@ -34,7 +36,7 @@ export function carriedDefects(
 export function applyLocalCarry(
   table: Record<string, unknown>,
   measurements: ReadonlyArray<{ file: string; runs: readonly number[] }>,
-  opts: { measured: string; reason: string },
+  opts: { measured: string; reason: string; supersede?: readonly string[] },
 ): CarriedWeightTable;
 export const DEFAULT_LOCAL_CARRY_REASON: string;
 export function missingWeightFiles(
@@ -43,6 +45,7 @@ export function missingWeightFiles(
 ): string[];
 export function parseCarryLocalCli(argv: readonly string[]): {
   reason: string;
+  supersede: boolean;
   tokens: string[];
 };
 export function parseCarryLocalArgs(

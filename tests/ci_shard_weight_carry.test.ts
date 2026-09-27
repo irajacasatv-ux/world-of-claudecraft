@@ -326,6 +326,62 @@ describe('applyLocalCarry', () => {
     expect(provenanceOf(out).harvestedFiles).toBe(1);
   });
 
+  it('supersedes a NAMED harvested row, recording the CI weight it replaced', () => {
+    const out = applyLocalCarry(base, [{ file: 'tests/a.test.ts', runs: [4, 3, 5] }], {
+      measured: '2026-09-27',
+      reason: 'split after the harvest',
+      supersede: ['tests/a.test.ts'],
+    });
+    expect(out['tests/a.test.ts']).toBe(4);
+    expect(carriedRows(out)['tests/a.test.ts']).toEqual({
+      ms: 4,
+      method: 'local-median',
+      measured: '2026-09-27',
+      reason: 'split after the harvest',
+      runs: [4, 3, 5],
+      supersedes: 10,
+    });
+    // The superseded row leaves the harvested count, so the accounting holds.
+    expect(provenanceOf(out).harvestedFiles).toBe(0);
+    expect(carriedDefects(out, { fallbackMs: 31, requireMap: true })).toEqual([]);
+  });
+
+  it('refuses a supersede that names no harvested row or an unmeasured file', () => {
+    const opts = { measured: '2026-09-27', reason: 'split' };
+    // A new file is not a harvested row: the exception cannot carry it.
+    expect(() =>
+      applyLocalCarry(base, [{ file: 'tests/new.test.ts', runs: [1] }], {
+        ...opts,
+        supersede: ['tests/new.test.ts'],
+      }),
+    ).toThrow('is not a harvested row');
+    // Nor can it name an already carried row.
+    expect(() =>
+      applyLocalCarry(base, [{ file: 'tests/old.test.ts', runs: [1] }], {
+        ...opts,
+        supersede: ['tests/old.test.ts'],
+      }),
+    ).toThrow('is not a harvested row');
+    expect(() =>
+      applyLocalCarry(base, [{ file: 'tests/aa.test.ts', runs: [1] }], {
+        ...opts,
+        supersede: ['tests/a.test.ts'],
+      }),
+    ).toThrow('was not measured');
+    // A supersedes value that is not a CI weight is a defect.
+    const out = applyLocalCarry(base, [{ file: 'tests/a.test.ts', runs: [2] }], {
+      ...opts,
+      supersede: ['tests/a.test.ts'],
+    });
+    const broken = structuredClone(out) as Record<string, unknown>;
+    const prov = (broken.__provenance as { carried: Record<string, { supersedes?: unknown }> })
+      .carried;
+    prov['tests/a.test.ts'].supersedes = 0;
+    expect(carriedDefects(broken, { requireMap: true })).toContain(
+      'tests/a.test.ts: supersedes 0 is not a CI weight',
+    );
+  });
+
   it('REFUSES to overwrite a harvested row, a non-tests path, or non-integer runs', () => {
     expect(() =>
       applyLocalCarry(base, [{ file: 'tests/a.test.ts', runs: [1] }], {
@@ -420,6 +476,15 @@ describe('parseCarryLocalCli: the --reason flag', () => {
     );
     expect(() => parseCarryLocalCli(['--reason', '--reason', 'tests/a.test.ts=1'])).toThrow(
       /--reason needs a non-empty value/,
+    );
+    expect(parseCarryLocalCli(['--reason', 'split', '--supersede', 'tests/a.test.ts=1'])).toEqual({
+      reason: 'split',
+      supersede: true,
+      tokens: ['tests/a.test.ts=1'],
+    });
+    // Replacing a CI weight always says why.
+    expect(() => parseCarryLocalCli(['--supersede', 'tests/a.test.ts=1'])).toThrow(
+      '--supersede replaces a CI weight, so it needs a --reason',
     );
     expect(() => parseCarryLocalCli(['--reason', 'a', '--reason', 'b'])).toThrow(
       /--reason given twice/,

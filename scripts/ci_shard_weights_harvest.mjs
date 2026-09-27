@@ -20,7 +20,10 @@
 //   Phase 18 this carrying happened by hand and was disclosed in prose only,
 //   which is how 410 rows reached the committed table with nothing
 //   machine-checking that they were real measurements
-//   (scripts/lib/ci_shard_weight_carry.mjs states the contract).
+//   (scripts/lib/ci_shard_weight_carry.mjs states the contract). With
+//   --supersede (and a required --reason) the listed files may replace their
+//   harvested rows: the escape for a file whose shape changed after the harvest,
+//   recorded per row with the CI weight it replaced.
 //
 // Staleness is deliberately cheap: a wrong or missing weight only unbalances
 // a pack, it can never drop a file from the partition (completeness is
@@ -68,7 +71,12 @@ if (process.argv[2] === '--carry-local') {
     reason = cli.reason;
     measurements = parseCarryLocalArgs(cli.tokens);
     const table = JSON.parse(readFileSync(target, 'utf8'));
-    out = applyLocalCarry(table, measurements, { measured: today(), reason });
+    out = applyLocalCarry(table, measurements, {
+      measured: today(),
+      reason,
+      // --supersede: every measured file replaces its (stale) harvested row.
+      ...(cli.supersede ? { supersede: measurements.map((m) => m.file) } : {}),
+    });
   } catch (err) {
     console.error(`[carry-local] ${err instanceof Error ? err.message : String(err)}`);
     console.error('usage: node scripts/ci_shard_weights_harvest.mjs --carry-local <path>=<ms>,...');

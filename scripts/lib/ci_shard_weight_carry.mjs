@@ -160,6 +160,12 @@ export function carriedDefects(table, opts = {}) {
       if (typeof entry.reason !== 'string' || entry.reason.trim() === '') {
         defects.push(`${key}: local-median without a reason`);
       }
+      if (
+        entry.supersedes !== undefined &&
+        (!Number.isInteger(entry.supersedes) || entry.supersedes <= 0)
+      ) {
+        defects.push(`${key}: supersedes ${JSON.stringify(entry.supersedes)} is not a CI weight`);
+      }
     } else {
       backfilled += 1;
     }
@@ -192,12 +198,20 @@ export function carriedDefects(table, opts = {}) {
  * Apply local measurements to a table: each file gets a row at the median of its
  * runs and a `local-median` carried entry. A file the newest harvest measured
  * (a row NOT in the carried map) is refused: a local run never overwrites a CI
- * weight. Re-carrying an already carried row replaces its attribution.
+ * weight, with ONE deliberate exception. A file whose shape changed after the
+ * harvest (split, rebalanced, stripped of an import) carries a CI weight that
+ * no longer describes it, and the next full-mode harvest may be a release away:
+ * naming it in `opts.supersede` replaces that row with the local median and
+ * records the replaced CI weight as `supersedes`, so the swap is attributed and
+ * reversible, never silent. A superseded file must BE a harvested row (a typo
+ * cannot quietly carry a new file under the exception). Re-carrying an already
+ * carried row replaces its attribution.
  *
  * @param {Record<string, any>} table
  * @param {ReadonlyArray<{ file: string, runs: readonly number[] }>} measurements
- * @param {{ measured: string, reason: string }} opts the measurement date
- *   (YYYY-MM-DD) and why these rows are carried rather than harvested
+ * @param {{ measured: string, reason: string, supersede?: readonly string[] }} opts the
+ *   measurement date (YYYY-MM-DD), why these rows are carried rather than
+ *   harvested, and the harvested files this carry deliberately supersedes
  * @returns {Record<string, any>} a new table, rows sorted
  */
 export function applyLocalCarry(table, measurements, opts) {
@@ -214,10 +228,23 @@ export function applyLocalCarry(table, measurements, opts) {
   const rows = {};
   for (const k of tableRows(table)) rows[k] = table[k];
   const harvestedBefore = tableRows(table).length - Object.keys(carriedRows(table)).length;
+  const supersede = new Set(opts.supersede ?? []);
+  for (const file of supersede) {
+    if (!(file in rows) || file in carried) {
+      throw new Error(
+        `applyLocalCarry: ${file} is not a harvested row, so there is nothing to supersede`,
+      );
+    }
+    if (!measurements.some((m) => m.file === file)) {
+      throw new Error(`applyLocalCarry: ${file} is named to supersede but was not measured`);
+    }
+  }
+  let superseded = 0;
   for (const m of measurements) {
     if (!m.file.startsWith('tests/'))
       throw new Error(`applyLocalCarry: ${m.file} is not under tests/`);
-    if (m.file in rows && !(m.file in carried)) {
+    const replaces = m.file in rows && !(m.file in carried) ? rows[m.file] : null;
+    if (replaces !== null && !supersede.has(m.file)) {
       throw new Error(
         `applyLocalCarry: ${m.file} is a harvested row; a local run never overwrites a CI weight`,
       );
@@ -233,7 +260,9 @@ export function applyLocalCarry(table, measurements, opts) {
       measured: opts.measured,
       reason: opts.reason.trim(),
       runs: [...m.runs],
+      ...(replaces !== null ? { supersedes: replaces } : {}),
     };
+    if (replaces !== null) superseded += 1;
   }
   const sortedRows = Object.fromEntries(Object.entries(rows).sort(([a], [b]) => (a < b ? -1 : 1)));
   const sortedCarried = Object.fromEntries(
@@ -244,7 +273,8 @@ export function applyLocalCarry(table, measurements, opts) {
       ...prov,
       files: Object.keys(sortedRows).length,
       harvestedFiles:
-        typeof prov.harvestedFiles === 'number' ? prov.harvestedFiles : harvestedBefore,
+        (typeof prov.harvestedFiles === 'number' ? prov.harvestedFiles : harvestedBefore) -
+        superseded,
       carried: sortedCarried,
     },
     ...sortedRows,
@@ -278,12 +308,17 @@ export function missingWeightFiles(walkedFiles, weights) {
  * the default reason instead of the one the operator typed.
  *
  * @param {readonly string[]} argv the arguments AFTER `--carry-local`
- * @returns {{ reason: string, tokens: string[] }}
+ * @returns {{ reason: string, supersede: boolean, tokens: string[] }}
  */
 export function parseCarryLocalCli(argv) {
   const tokens = [];
   let reason = null;
+  let supersede = false;
   for (let i = 0; i < argv.length; i++) {
+    if (argv[i] === '--supersede') {
+      supersede = true;
+      continue;
+    }
     if (argv[i] !== '--reason') {
       tokens.push(argv[i]);
       continue;
@@ -296,7 +331,10 @@ export function parseCarryLocalCli(argv) {
     reason = value.trim();
     i += 1;
   }
-  return { reason: reason ?? DEFAULT_LOCAL_CARRY_REASON, tokens };
+  if (supersede && reason === null) {
+    throw new Error('--carry-local: --supersede replaces a CI weight, so it needs a --reason');
+  }
+  return { reason: reason ?? DEFAULT_LOCAL_CARRY_REASON, supersede, tokens };
 }
 
 /**
