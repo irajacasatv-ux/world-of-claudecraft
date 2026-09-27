@@ -30,6 +30,9 @@ describe('the Vitest setup scope', () => {
   it('loads no testing framework from a global setup file', () => {
     const files = globalSetupFiles();
     expect(files).toContain('tests/jsdom_local_storage_setup.ts');
+    // The Svelte testing plugin appends the same library to setupFiles unless
+    // its autoCleanup is off, which would undo the scoping from the config side.
+    expect(read('vite.config.ts')).toMatch(/svelteTesting\(\{\s*autoCleanup:\s*false\s*\}\)/);
     for (const file of files) {
       expect(FRAMEWORK_IMPORT.test(read(file)), `${file} imports a testing framework`).toBe(false);
     }
