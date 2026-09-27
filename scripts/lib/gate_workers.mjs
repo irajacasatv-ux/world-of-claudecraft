@@ -16,8 +16,15 @@
 // Phase 3 adds optional GATE_WORKER_TIER=low|medium|high as a *cap* on top of the free-mem
 // clamp. It never replaces the clamp. GATE_MAX_WORKERS remains the expert absolute override
 // (takes precedence over both the heuristic and the tier cap).
-const BYTES_PER_WORKER = 768 * 1024 * 1024; // 0.75 GiB: observed RSS ceiling for one heavy
-// vitest fork worker in this repo's sim/render/server suites under load, with headroom.
+//
+// The per-worker memory budget. 1.5 GiB, re-measured 2026-09-27 after the spy-registry fix
+// (patches/@vitest__spy@4.1.11.patch) and under the 2 GiB heap cap vite.config.ts gives every
+// worker (test.execArgv): the heaviest files still peak at 1.1 to 2.2 GB RSS on their own
+// (tests/server/freehold_wire, snapshots, equip_drop_core, parity_g, ignivar_encounter,
+// guild_bank_persistence), while a typical file sits near 0.4 to 0.65 GB. The 0.75 GiB this
+// replaced was below the heavy files' floor, so a memory-tight host sized a pool about twice
+// the size that fits and swapped instead of clamping.
+export const GATE_BYTES_PER_WORKER = 1536 * 1024 * 1024;
 
 /** Caps applied after CPU/2 and free-mem bounds. high leaves only the heuristic. */
 export const GATE_WORKER_TIER_CAPS = Object.freeze({
@@ -67,7 +74,7 @@ export function computeGateWorkers({ cpuCount, freeMemBytes, envOverride, tierCa
     if (Number.isFinite(parsed) && parsed > 0) return parsed;
   }
   const cpuBound = Math.max(1, Math.floor(cpuCount / 2));
-  const memBound = Math.max(1, Math.floor(freeMemBytes / BYTES_PER_WORKER));
+  const memBound = Math.max(1, Math.floor(freeMemBytes / GATE_BYTES_PER_WORKER));
   let workers = Math.min(cpuBound, memBound);
   if (tierCap !== undefined && tierCap !== null) {
     const cap = Number(tierCap);

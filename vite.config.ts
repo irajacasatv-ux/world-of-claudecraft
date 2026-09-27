@@ -19,6 +19,7 @@ import {
   freeholdDevAuthorizationEnabled,
   freeholdDevAuthorizationPlugin,
 } from './scripts/lib/freehold_dev_authorization.mjs';
+import { resolveHostGateWorkers } from './scripts/lib/gate_host_workers.mjs';
 import { shouldDisableVitestFsModuleCache } from './scripts/lib/vitest_fs_module_cache.mjs';
 
 const root = fileURLToPath(new URL('.', import.meta.url));
@@ -623,6 +624,19 @@ export default defineConfig({
     // headroom for the current world size; deliberately long walkers keep their
     // own explicit budgets.
     testTimeout: 20000,
+    // Every fork worker's V8 heap is capped at 2 GiB, so a suite whose retention
+    // outgrows it dies with a heap-limit crash that names the file instead of
+    // swapping the host into timeouts elsewhere. The heaviest file retains about
+    // 0.6 GB under a forced GC once its spies release their worlds (it retained
+    // 1.76 GB before patches/@vitest__spy@4.1.11.patch), and the per-worker
+    // budget in scripts/lib/gate_workers.mjs is sized against this cap.
+    execArgv: ['--max-old-space-size=2048'],
+    // A bare `vitest run` (so `npm test`) sizes its pool like the gates: half the
+    // cores, clamped by available memory at GATE_BYTES_PER_WORKER, with the same
+    // GATE_MAX_WORKERS / GATE_WORKER_TIER knobs. Vitest's own default is every
+    // core but one, which oversubscribes memory on a laptop. Every gate and CI leg
+    // passes --maxWorkers, which overrides this; outside vitest the host is not read.
+    maxWorkers: process.env.VITEST ? resolveHostGateWorkers() : undefined,
     // Phase 4 local-gate-perf: persist Vite module transform cache across runs
     // (Vitest 4.1 experimental.fsModuleCache). Default path is under
     // node_modules/.experimental-vitest-cache (gitignored via node_modules/).

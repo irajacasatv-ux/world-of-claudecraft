@@ -31,9 +31,13 @@ describe('computeGateWorkers: CPU-bound default (plenty of free memory)', () => 
 
 describe('computeGateWorkers: memory-bound clamp', () => {
   it('clamps below the CPU bound when free memory is tight', () => {
+    // 1.5 GiB per worker: 4.5 GiB is three workers, a 1.4 GiB host one.
     expect(
-      computeGateWorkers({ cpuCount: 16, freeMemBytes: 1536 * MIB, envOverride: undefined }),
-    ).toBe(2);
+      computeGateWorkers({ cpuCount: 16, freeMemBytes: 4608 * MIB, envOverride: undefined }),
+    ).toBe(3);
+    expect(
+      computeGateWorkers({ cpuCount: 16, freeMemBytes: 1433 * MIB, envOverride: undefined }),
+    ).toBe(1);
   });
 
   it('never returns fewer than 1 worker even under severe memory pressure', () => {
@@ -49,7 +53,7 @@ describe('computeGateWorkers: memory-bound clamp', () => {
   it('does not tighten below the CPU bound when memory is not actually the limiter', () => {
     // Memory bound (10) is looser than the CPU bound (4): CPU stays the limiter.
     expect(
-      computeGateWorkers({ cpuCount: 8, freeMemBytes: 10 * 768 * MIB, envOverride: undefined }),
+      computeGateWorkers({ cpuCount: 8, freeMemBytes: 10 * 1536 * MIB, envOverride: undefined }),
     ).toBe(4);
   });
 });

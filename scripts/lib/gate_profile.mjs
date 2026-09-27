@@ -5,8 +5,8 @@
 
 import { buildFullGateSteps } from './gate_steps.mjs';
 
-/** GiB used by gate.mjs's free-mem worker clamp; re-exported for docs only. */
-export const GATE_BYTES_PER_WORKER = 768 * 1024 * 1024;
+/** Bytes per worker in the gates' free-mem clamp; re-exported for docs only. */
+export { GATE_BYTES_PER_WORKER } from './gate_workers.mjs';
 
 /**
  * Machine-tier labels used in docs/local-gate-perf/baselines.md.

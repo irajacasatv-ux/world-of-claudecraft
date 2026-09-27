@@ -1714,7 +1714,9 @@ describe('CI workflow parity', () => {
     expect(vitest?.env).toEqual({ WOC_SKIP_PRETEST: '1' });
     // gate.mjs still binds workers into the shared step builder.
     expect(gate).toContain('buildFullGateSteps(workers, { releaseTier, repoRoot })');
-    expect(gate).toContain('computeGateWorkers');
+    // Sized by the shared host composition (lib/gate_host_workers.mjs), which feeds
+    // computeGateWorkers the core count, the memory sensor and the env knobs.
+    expect(gate).toMatch(/^const workers = resolveHostGateWorkers\(\);$/m);
     // Both check jobs stay single unsharded jobs: serialized checks run once.
     for (const job of [prChecks, releaseChecks]) {
       expect(job).not.toContain('strategy:');

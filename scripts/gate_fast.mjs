@@ -18,7 +18,6 @@
 // NOT expanded via --changed (that re-runs nearly the full suite). Opt in to
 // branch-wide --changed with GATE_FAST_BASE=<ref>.
 import { spawnSync } from 'node:child_process';
-import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
@@ -28,12 +27,8 @@ import {
   GATE_FAST_STEP_NAMES,
   resolveFastChangedBase,
 } from './lib/gate_fast_plan.mjs';
-import { resolveAvailableMemoryBytes } from './lib/gate_memory.mjs';
-import {
-  computeGateWorkers,
-  parseGateWorkerTier,
-  resolveGateWorkerTierCap,
-} from './lib/gate_workers.mjs';
+import { resolveHostGateWorkers } from './lib/gate_host_workers.mjs';
+import { parseGateWorkerTier, resolveGateWorkerTierCap } from './lib/gate_workers.mjs';
 
 // npm/npx resolve to .cmd files on Windows, which spawnSync only finds via a shell.
 const shell = process.platform === 'win32';
@@ -53,17 +48,9 @@ const vitestBin = path.join(
 const tierRaw = process.env.GATE_WORKER_TIER;
 const tier = parseGateWorkerTier(tierRaw);
 const tierCap = resolveGateWorkerTierCap(tierRaw);
-const workers = computeGateWorkers({
-  cpuCount: os.availableParallelism(),
-  // See lib/gate_memory.mjs: os.freemem() under-reports availability on macOS and used to
-  // pin this day-loop path to a single worker too.
-  freeMemBytes: resolveAvailableMemoryBytes({
-    platform: process.platform,
-    freeMemBytes: os.freemem(),
-  }),
-  envOverride: process.env.GATE_MAX_WORKERS,
-  tierCap,
-});
+// computeGateWorkers behind lib/gate_host_workers.mjs, which also reads the tier cap
+// above from GATE_WORKER_TIER; the two reads here only label the log line.
+const workers = resolveHostGateWorkers();
 
 const changedBase = resolveFastChangedBase({
   envBase: process.env.GATE_FAST_BASE,

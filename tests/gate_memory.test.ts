@@ -157,7 +157,9 @@ describe('the macOS single-worker collapse this fixes', () => {
     ).toBe(1);
   });
 
-  it('restores the CPU bound once availability is measured properly', () => {
+  it('lifts the clamp off one worker once availability is measured properly', () => {
+    // The 6.6 GiB this host really had is four workers at the 1.5 GiB per-worker budget
+    // (2026-09-27); under the 0.75 GiB budget of the original fix it was the CPU bound, 7.
     const available = resolveAvailableMemoryBytes({
       platform: 'darwin',
       freeMemBytes: OBSERVED_FREEMEM,
@@ -165,7 +167,7 @@ describe('the macOS single-worker collapse this fixes', () => {
     });
     expect(
       computeGateWorkers({ cpuCount: 14, freeMemBytes: available, envOverride: undefined }),
-    ).toBe(7);
+    ).toBe(4);
   });
 
   it('still clamps below the CPU bound when the machine is genuinely tight', () => {
@@ -191,6 +193,6 @@ describe('the macOS single-worker collapse this fixes', () => {
     expect(available).toBe(98304 * 16384); // 1.5 GiB
     expect(
       computeGateWorkers({ cpuCount: 14, freeMemBytes: available, envOverride: undefined }),
-    ).toBe(2);
+    ).toBe(1);
   });
 });

@@ -39,7 +39,6 @@
 // known-green baseline off everyone's critical path.
 import { spawnSync } from 'node:child_process';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
-import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
@@ -48,7 +47,7 @@ import {
   listChangedPaths,
   resolveSelectBase,
 } from './lib/gate_discovery.mjs';
-import { resolveAvailableMemoryBytes } from './lib/gate_memory.mjs';
+import { resolveHostGateWorkers } from './lib/gate_host_workers.mjs';
 import { runGatePreflights } from './lib/gate_preflight.mjs';
 import {
   buildFullSuiteArgs,
@@ -62,7 +61,6 @@ import {
   I18N_RELEASE_TIER_SUITES,
   PRE_VITEST_STEP_NAME,
 } from './lib/gate_steps.mjs';
-import { computeGateWorkers, resolveGateWorkerTierCap } from './lib/gate_workers.mjs';
 
 const shell = process.platform === 'win32';
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -104,15 +102,8 @@ const vitestBin = path.join(
 // one, and this path is the one people run most.
 await runGatePreflights({ label: 'gate:select', shell, command: 'node scripts/gate_select.mjs' });
 
-const workers = computeGateWorkers({
-  cpuCount: os.availableParallelism(),
-  freeMemBytes: resolveAvailableMemoryBytes({
-    platform: process.platform,
-    freeMemBytes: os.freemem(),
-  }),
-  envOverride: process.env.GATE_MAX_WORKERS,
-  tierCap: resolveGateWorkerTierCap(process.env.GATE_WORKER_TIER),
-});
+// Same host sizing as gate.mjs (computeGateWorkers behind lib/gate_host_workers.mjs).
+const workers = resolveHostGateWorkers();
 
 // Classify the suite. Recomputed every run rather than read from a committed
 // list, so the always-run set can never go stale as tests are added: a new test

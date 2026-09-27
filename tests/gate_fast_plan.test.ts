@@ -150,7 +150,7 @@ describe('gate:fast wiring contracts', () => {
 
   it('gate_fast.mjs uses Windows-safe shell spawn and free-mem worker policy', () => {
     expect(gateFastSrc).toMatch(/process\.platform === 'win32'/);
-    expect(gateFastSrc).toMatch(/computeGateWorkers/);
+    expect(gateFastSrc).toMatch(/^const workers = resolveHostGateWorkers\(\);$/m);
     expect(gateFastSrc).toMatch(/GATE_WORKER_TIER/);
     expect(gateFastSrc).toMatch(/GATE_MAX_WORKERS/);
     expect(gateFastSrc).toMatch(/buildDayLoopVitestPlan|vitest related/);

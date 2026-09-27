@@ -20,14 +20,12 @@
 // (local disk cache + parallel typecheck/env/server). Tests, malware, and
 // changed-file biome are never treated as cacheable "green forever".
 import { spawnSync } from 'node:child_process';
-import os from 'node:os';
 import { cwd } from 'node:process';
 import { runGateChild } from './lib/gate_child.mjs';
+import { resolveHostGateWorkers } from './lib/gate_host_workers.mjs';
 import { acquireFullSuiteLock } from './lib/gate_lock.mjs';
-import { resolveAvailableMemoryBytes } from './lib/gate_memory.mjs';
 import { runGatePreflights } from './lib/gate_preflight.mjs';
 import { buildFullGateSteps, FULL_SUITE_STEP_NAME } from './lib/gate_steps.mjs';
-import { computeGateWorkers, resolveGateWorkerTierCap } from './lib/gate_workers.mjs';
 
 // Halving the core count only protects a gate run from ITSELF; it does nothing when a
 // second `npm run gate` (or any other heavy vitest run) is happening in a sibling
@@ -39,15 +37,9 @@ import { computeGateWorkers, resolveGateWorkerTierCap } from './lib/gate_workers
 // lib/gate_memory.mjs). Optional GATE_WORKER_TIER=low|medium|high applies a further cap
 // AFTER that clamp (never instead of it). GATE_MAX_WORKERS=<n> remains the expert absolute
 // override when you deliberately share the machine or raise workers on a quiet high-tier host.
-const workers = computeGateWorkers({
-  cpuCount: os.availableParallelism(),
-  freeMemBytes: resolveAvailableMemoryBytes({
-    platform: process.platform,
-    freeMemBytes: os.freemem(),
-  }),
-  envOverride: process.env.GATE_MAX_WORKERS,
-  tierCap: resolveGateWorkerTierCap(process.env.GATE_WORKER_TIER),
-});
+// resolveHostGateWorkers (lib/gate_host_workers.mjs) feeds computeGateWorkers those
+// host readings, the same composition gate:select, gate:fast and a bare `vitest run` use.
+const workers = resolveHostGateWorkers();
 // npm/npx resolve to .cmd files on Windows, which spawnSync only finds via a shell.
 const shell = process.platform === 'win32';
 

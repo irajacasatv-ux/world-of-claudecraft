@@ -1,14 +1,18 @@
 # Machine-tier worker presets (Windows, macOS, Linux)
 
-Cross-platform guidance for Vitest workers under `npm run gate` and
-`npm run gate:fast`. Implementation: `scripts/lib/gate_workers.mjs`
-(`computeGateWorkers`, `GATE_WORKER_TIER_CAPS`).
+Cross-platform guidance for Vitest workers under `npm run gate`, `npm run gate:fast`,
+`node scripts/gate_select.mjs`, and a bare `npm test` / `vitest run` (vite.config.ts's
+`test.maxWorkers`). Implementation: `scripts/lib/gate_workers.mjs` (`computeGateWorkers`,
+`GATE_BYTES_PER_WORKER`, `GATE_WORKER_TIER_CAPS`), fed the host readings by
+`scripts/lib/gate_host_workers.mjs` (`resolveHostGateWorkers`).
 
 ## Policy (locked)
 
 1. **Available-memory clamp stays.** Default workers are
-   `min(floor(cpu/2), floor(availableMem / 0.75 GiB))`, never fewer than 1. The sensor is
-   `scripts/lib/gate_memory.mjs`: `vm_stat` on darwin, `os.freemem()` everywhere else.
+   `min(floor(cpu/2), floor(availableMem / GATE_BYTES_PER_WORKER))`, never fewer than 1.
+   The budget is 1.5 GiB since 2026-09-27 (it was 0.75 GiB, below the heaviest files'
+   own peak RSS), and every worker's heap is capped at 2 GiB (`test.execArgv`). The sensor
+   is `scripts/lib/gate_memory.mjs`: `vm_stat` on darwin, `os.freemem()` everywhere else.
 2. **Tier presets are caps**, not a way around memory pressure.
 3. **Full gate remains the merge bar** (`npm run gate`). `gate:fast` is day-loop only.
 4. Scripts use `spawnSync(..., { shell: process.platform === 'win32' })` so `npm` /

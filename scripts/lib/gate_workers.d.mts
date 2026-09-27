@@ -1,3 +1,5 @@
+export const GATE_BYTES_PER_WORKER: number;
+
 export const GATE_WORKER_TIER_CAPS: Readonly<{
   low: 2;
   medium: 4;
