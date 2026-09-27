@@ -8,6 +8,7 @@ import { MOUNT_SKIN_IDS } from '../../src/sim/content/mount_skins';
 import { storeMountsSectionHtml } from '../../src/ui/store_mount_card_view';
 import { hydrateIcons } from '../../src/ui/ui_icons';
 import { buildStoreMountRows } from '../../src/ui/woc_store_view';
+import { captureEvidence } from './_evidence';
 import { cleanup } from './_harness';
 
 afterEach(() => {
@@ -65,7 +66,7 @@ describe.each(['index.html', 'play.html'])('%s release UI', (entry) => {
     );
     document.body.append(store);
     await Promise.all([...document.images].map((img) => img.decode().catch(() => {})));
-    await page.screenshot({
+    await captureEvidence({
       path: `../../docs/screenshots/cosmetics-window/v042-polish/${entry}-desktop.png`,
     });
     const [a, b] = bounds(root);
@@ -93,7 +94,7 @@ describe.each(['index.html', 'play.html'])('%s release UI', (entry) => {
         expect(rect.right, button.id).toBeLessThanOrEqual(844);
       }
     }
-    await page.screenshot({
+    await captureEvidence({
       path: `../../docs/screenshots/cosmetics-window/v042-polish/${entry}-mobile-pad.png`,
     });
     document.body.classList.remove('xhb-mode');

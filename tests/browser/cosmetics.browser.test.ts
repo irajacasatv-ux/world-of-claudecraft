@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { page, userEvent } from 'vitest/browser';
 import { MOUNT_SKIN_IDS } from '../../src/sim/content/mount_skins';
 import { CosmeticsWindow } from '../../src/ui/hud/cosmetics/cosmetics_window';
+import { captureEvidence } from './_evidence';
 import { axeSeriousViolations, cleanup, formatViolations, host, stubDeps } from './_harness';
 
 afterEach(() => {
@@ -61,7 +62,7 @@ describe('cosmetics accessibility and interaction', () => {
     expect(world.player.mountSkinId).toBe('mech_bird');
     expect(document.activeElement).toBe(control());
     expect(control().dataset.act).toBe('takeoff-mount');
-    await page.screenshot({
+    await captureEvidence({
       path: '../../docs/screenshots/cosmetics-window/review-keyboard-focus.png',
     });
     world.accountCosmetics.mountSkinIds = ['mech_bird'];
@@ -84,7 +85,7 @@ describe('cosmetics accessibility and interaction', () => {
       expect(tab.getBoundingClientRect().height).toBeGreaterThanOrEqual(40);
       expect(tab.getBoundingClientRect().width).toBeGreaterThanOrEqual(40);
     }
-    await page.screenshot({
+    await captureEvidence({
       path: '../../docs/screenshots/cosmetics-window/review-mobile-tabs.png',
     });
     for (const id of MOUNT_SKIN_IDS) {

@@ -8,6 +8,7 @@ import {
 } from '../../src/game/dpad_focus_nav';
 import type { MaterialComposition } from '../../src/sim/material_sources';
 import { MaterialSourcesDialog } from '../../src/ui/material_sources_dialog';
+import { captureEvidence } from './_evidence';
 import { axeSeriousViolations, cleanup, host } from './_harness';
 
 let dialog: MaterialSourcesDialog | null = null;
@@ -90,7 +91,7 @@ describe('material source prompt in Chromium', () => {
         }
       }
       expect(await axeSeriousViolations(root)).toEqual([]);
-      await page.screenshot({
+      await captureEvidence({
         path: `../../docs/screenshots/intentional-gathering-pr2/source-picker-${width}x${height}.png`,
       });
     });

@@ -27,6 +27,7 @@ import {
 import { HarvestPreferenceController } from '../../src/ui/hud/professions/harvest_preference_controller';
 import { makeWindowFocus } from '../../src/ui/window_focus';
 import type { CorpseHarvestInfo, IWorld } from '../../src/world_api';
+import { captureEvidence } from './_evidence';
 import { cleanup, stubDeps } from './_harness';
 
 let current: ReturnType<typeof mount> | null = null;
@@ -230,7 +231,7 @@ describe('harvest-preference picker: real controllers, real DOM', () => {
       expect(harvest.getAttribute('aria-disabled')).toBe('true');
       expect(harvest.disabled).toBe(false);
       if (cycle === 0) {
-        await page.screenshot({
+        await captureEvidence({
           path: `../../docs/screenshots/harvest-button-refresh/refresh-${viewport.name}.png`,
         });
       }

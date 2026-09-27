@@ -30,6 +30,9 @@ Subdirectories and shared fixtures:
   below; the `tests/admin/_setup.ts` header documents the convention).
 - `browser/`: OPT-IN real-browser Playwright suite (`*.browser.test.ts`,
   `npm run test:browser`) for WebKit/Safari CSS, axe, target-size; never a bare `vitest run`.
+  A suite never writes a screenshot as a side effect: evidence goes through
+  `browser/_evidence.ts` (written only under `VITE_EVIDENCE_CAPTURE=1`) or a suite's own capture
+  flag (`tests/browser_evidence_capture.test.ts`).
 - `progression/`: mirrors `src/sim/progression/` (unit tests for the extracted modules).
 - `helpers/` + `util/`: shared cross-suite utilities; each helper's own header explains it,
   so no inventory here. The policy-bearing ones: the shared walkers (`ts_files_under.ts`

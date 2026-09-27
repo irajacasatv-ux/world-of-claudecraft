@@ -26,6 +26,7 @@ import { ProfessionsWindow } from '../../src/ui/hud/professions/professions_wind
 import { makeWindowFocus } from '../../src/ui/window_focus';
 import type { CorpseHarvestInfo, IWorld } from '../../src/world_api';
 import type { FarmPlotView } from '../../src/world_api/farming';
+import { captureEvidence } from './_evidence';
 import { cleanup, stubDeps } from './_harness';
 
 const BED = 'bed_eastbrook_1';
@@ -333,7 +334,7 @@ describe('intentional gathering through real browser input', () => {
     expect(document.activeElement).toBe(button(h.plantRoot, '[data-close]'));
     focusFirstInWindow();
     expect(document.activeElement).toBe(button(h.plantRoot, '[data-close]'));
-    await page.screenshot({
+    await captureEvidence({
       path: '../../docs/screenshots/intentional-gathering-pr1/crop-choice-desktop.png',
     });
     await userEvent.keyboard('[Tab][Enter]');
@@ -354,7 +355,7 @@ describe('intentional gathering through real browser input', () => {
       const close = button(h.lootRoot, '[data-close]');
       expect(document.activeElement).toBe(close);
       if (!mobile)
-        await page.screenshot({
+        await captureEvidence({
           path: '../../docs/screenshots/intentional-gathering-pr1/corpse-choice-desktop.png',
         });
       // The real pad navigator must follow the popup, despite production DOM order.
@@ -391,7 +392,7 @@ describe('intentional gathering through real browser input', () => {
       const harvest = button(h.lootRoot, '.corpse-harvest-btn');
       expectTouchable(harvest);
       expect(h.world.harvestCorpse).not.toHaveBeenCalled();
-      await page.screenshot({
+      await captureEvidence({
         path: `../../docs/screenshots/intentional-gathering-pr1/corpse-choice-mobile-${layout}.png`,
       });
       await userEvent.click(harvest);
@@ -412,7 +413,7 @@ describe('intentional gathering through real browser input', () => {
       const harvest = button(h.plantRoot, '[data-harvest]');
       expect(h.world.harvestCrop).not.toHaveBeenCalled();
       expectTouchable(harvest);
-      await page.screenshot({
+      await captureEvidence({
         path: `../../docs/screenshots/intentional-gathering-pr1/crop-choice-mobile-${layout}.png`,
       });
       await userEvent.click(harvest);

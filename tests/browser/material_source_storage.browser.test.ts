@@ -7,6 +7,7 @@ import {
   openMaterialSourcesDialog,
 } from '../../src/ui/material_sources_dialog';
 import type { BankInfo, IWorld } from '../../src/world_api';
+import { captureEvidence } from './_evidence';
 import { cleanup, host, stubDeps } from './_harness';
 
 let bank: BankWindow | null = null;
@@ -100,7 +101,7 @@ describe('material source actions in the real bank window', () => {
     expect(
       Math.abs(cell.getBoundingClientRect().height - empty.getBoundingClientRect().height),
     ).toBeLessThanOrEqual(1);
-    await page.screenshot({
+    await captureEvidence({
       path: '../../docs/screenshots/intentional-gathering-pr2/bank-1280x720.png',
     });
     rightClick(cell);
@@ -137,7 +138,7 @@ describe('material source actions in the real bank window', () => {
       expect(followingRow).toBeDefined();
       expect(actionBox.bottom).toBeLessThanOrEqual(followingRow!.top);
       expect(root.querySelector('button button')).toBeNull();
-      await page.screenshot({
+      await captureEvidence({
         path: `../../docs/screenshots/intentional-gathering-pr2/bank-${width}x${height}.png`,
       });
       action.click();
