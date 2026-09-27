@@ -13,7 +13,7 @@
       },
       {
         "path": "scripts/pr_shot_targets.mjs",
-        "sha256": "87825933ef05483916e3ba916e79601ee0b41618fc2559ddd66b04dbf12dc330"
+        "sha256": "1d0184a14008aabd3dd406824854592798d0199002e029cfbfd142e12d3ef6ba"
       },
       {
         "path": "scripts/pr_screenshots.mjs",
@@ -231,7 +231,7 @@
     },
     {
       "path": "scripts/pr_shot_targets.mjs",
-      "sha256": "87825933ef05483916e3ba916e79601ee0b41618fc2559ddd66b04dbf12dc330"
+      "sha256": "1d0184a14008aabd3dd406824854592798d0199002e029cfbfd142e12d3ef6ba"
     },
     {
       "path": "scripts/pr_screenshots.mjs",

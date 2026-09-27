@@ -14625,14 +14625,15 @@ export const TARGETS = [
       // The spawn greeting (Ferryman Odo) is a #tutorial-greeting MODAL that
       // dismissEntryOverlays does not cover. It sits over the middle of every frame
       // shot and, worse, swallows the pointer events an arrange-mode drag needs, so
-      // clear it (and any leftover entry chrome) before anything else runs.
-      await page.evaluate(() => {
-        document.querySelector('#tutorial-greeting [data-close]')?.click();
-        document.querySelector('#tutorial-greeting [data-skip]')?.click();
+      // clear it (and any leftover entry chrome) before anything else runs,
+      // through its own declining control (GREETING_DECLINE): a greeting's skip
+      // or first button accepts golden guidance for the frame.
+      await page.evaluate((decline) => {
+        document.getElementById('tutorial-greeting')?.querySelector(decline)?.click();
         document.querySelector('button.tut-skip')?.click();
         document.querySelector('.camera-prompt-confirm')?.click();
         document.querySelector('#gpu-notice')?.remove();
-      });
+      }, GREETING_DECLINE);
       await wait(400);
       await page.evaluate(
         ({ withParty, asBoss }) => {

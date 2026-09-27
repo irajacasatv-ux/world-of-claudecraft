@@ -13,7 +13,7 @@
 import fs from 'node:fs';
 import puppeteer from 'puppeteer-core';
 import { BROWSER_PATH } from './browser_path.mjs';
-import { enterOfflineGame } from './enter_offline_game.mjs';
+import { enterOfflineGame, GREETING_DECLINE } from './enter_offline_game.mjs';
 
 const URL = process.env.GAME_URL ?? 'http://localhost:5173';
 const OUT_PREFIX = process.env.OUT_PREFIX ?? 'tmp/aura-caster';
@@ -70,12 +70,11 @@ async function screenshotSelector(selector, path, pad = { x: 20, top: 10, bottom
   });
 }
 
-// Dismiss a tutorial NPC greeting if one popped, so it never overlaps a shot.
-await page.evaluate(() => {
-  document
-    .querySelector('#tutorial-greeting [data-close], #tutorial-greeting [data-skip]')
-    ?.click();
-});
+// Dismiss a tutorial NPC greeting if one popped, so it never overlaps a shot,
+// through its own declining control (a skip or first button accepts guidance).
+await page.evaluate((decline) => {
+  document.getElementById('tutorial-greeting')?.querySelector(decline)?.click();
+}, GREETING_DECLINE);
 await sleep(150);
 
 // Stage a paladin blessing applied by a THIRD PARTY (a synthetic entity, not

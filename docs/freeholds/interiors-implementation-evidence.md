@@ -445,3 +445,13 @@ list carries `pr_shot_targets.mjs` twice, so thirteen lines), with no sealed inp
 between the probe commit and the re-hash; no frame, sidecar or manifest changed, and
 `tests/freehold_capture_contract.test.ts` passes 102 of 102. The probe worktree was
 removed afterwards.
+
+One more re-hash in the same close, of `scripts/pr_shot_targets.mjs` alone (both
+occurrences), and without a probe, because the edit cannot reach a freehold frame: the
+release's `target-of-target` capture cleared the spawn greeting with its skip control,
+which `tests/greeting_decline.test.ts` (a branch guard the release never ran) refuses
+because a greeting's skip or first button accepts golden guidance for the frame. It now
+declines through `GREETING_DECLINE` like every other target. The change sits inside that
+target's own `capture` function; the three freehold targets live in
+`scripts/lib/pr_shot_freeholds.mjs` and never call it, so no freehold leg runs a changed
+line. `tests/freehold_capture_contract.test.ts` passes 102 of 102.
