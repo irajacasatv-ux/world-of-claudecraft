@@ -1965,8 +1965,13 @@ const MONOLITHS: MonolithRow[] = [
     // (server/freehold_persist_stats.ts) and the line limiter
     // (server/freehold_capacity_warn.ts) out whole, each re-exported or with a
     // suite of its own. Exact count, zero slack.
+    // LOWERED, 2058 -> 2026, by R1 (2026-09-27): a thrown run moves an owner onto
+    // a per-owner retry clock rather than quiescing it. Paid for by moving the
+    // run's two constants and its decisions (server/freehold_write_retry.ts,
+    // re-exported, with a suite of its own) and the counters with the scrape's
+    // fold (server/freehold_persist_stats.ts) out whole. Exact count, zero slack.
     file: 'server/freehold_persist.ts',
-    ceiling: 2058,
+    ceiling: 2026,
     seam: 'a sibling server module behind the store ports; see server/CLAUDE.md',
   },
   {

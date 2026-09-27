@@ -9,7 +9,6 @@
 
 import { FREEHOLD_PRIMARY_PLOT_INDEX } from './freehold_db';
 import { ABSENT_HEARTH_REVISION } from './freehold_hearth_load';
-import { freeholdJoinVerdictCounts } from './freehold_join_answer';
 import type { FreeholdPreloadOptions } from './freehold_login_bounds';
 import {
   FREEHOLD_ABSENT_DURABLE_REV,
@@ -18,6 +17,7 @@ import {
   type FreeholdPersistStore,
   type LoadedFreehold,
 } from './freehold_persist';
+import { createFreeholdPersistCounters, freeholdPersistStatsOf } from './freehold_persist_stats';
 
 let registered: FreeholdPersistStore | null = null;
 
@@ -77,38 +77,24 @@ export function freeholdPreloadUnavailable(accountId: number, detail: string): L
  *  store is registered, which is the honest reading of "nothing is loaded". */
 export function freeholdPersistStats(): FreeholdPersistStats {
   return (
-    registered?.stats() ?? {
-      entries: 0,
-      loaded: 0,
-      dirty: 0,
-      running: 0,
-      pending: 0,
-      held: 0,
-      quiesced: 0,
-      loads: 0,
-      loadFailures: 0,
-      loadFailuresByKind: {},
-      writes: 0,
-      writeFailures: 0,
-      staleWrites: 0,
-      permitWaitMsTotal: 0,
-      queueWaitMsTotal: 0,
-      writeMsTotal: 0,
-      codecMsTotal: 0,
-      loadMsTotal: 0,
-      oldestDirtyAgeMs: 0,
-      writeBytesTotal: 0,
-      maxWriteBytes: 0,
-      writesWithoutRecord: 0,
-      preGateRefusals: 0,
-      reasks: 0,
-      reaskReads: 0,
-      reaskMsTotal: 0,
-      joinVerdicts: freeholdJoinVerdictCounts(),
-      deferredWrites: 0,
-      activeWrites: 0,
-      leaveCaptures: 0,
-    }
+    registered?.stats() ??
+    freeholdPersistStatsOf(
+      {
+        entries: 0,
+        loaded: 0,
+        dirty: 0,
+        running: 0,
+        pending: 0,
+        held: 0,
+        quiesced: 0,
+        retrying: 0,
+        oldestDirtyAgeMs: 0,
+        deferredWrites: 0,
+        activeWrites: 0,
+        leaveCaptures: 0,
+      },
+      createFreeholdPersistCounters(),
+    )
   );
 }
 

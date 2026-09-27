@@ -698,7 +698,7 @@ export function registerGameStateMetrics(
 
   new Gauge({
     name: WOC_FREEHOLD_PERSIST,
-    help: 'Housing persistence store OCCUPANCY by fixed measure. `entries` counts EVERY entry including the reference-only placeholder a join creates before any read, so on a realm with housing disabled it tracks online accounts and nothing else; `loaded` is the number that have finished a durable read and can therefore write, and is zero on such a realm. Then dirty and in-flight work, recovery holds, compare-and-swap quiesces (counted independently of holds, so the two must not be summed), the age of the oldest unwritten edit, outstanding leave captures and the largest write seen. Counts and bytes only, never player identity. Cumulative totals are on woc_freehold_persist_total.',
+    help: 'Housing persistence store OCCUPANCY by fixed measure. `entries` counts EVERY entry including the reference-only placeholder a join creates before any read, so on a realm with housing disabled it tracks online accounts and nothing else; `loaded` is the number that have finished a durable read and can therefore write, and is zero on such a realm. Then dirty and in-flight work, recovery holds, compare-and-swap quiesces (counted independently of holds, so the two must not be summed), owners on the thrown-run retry clock, the age of the oldest unwritten edit, outstanding leave captures and the largest write seen. Counts and bytes only, never player identity. Cumulative totals are on woc_freehold_persist_total.',
     labelNames: ['measure'],
     registers: [registry],
     collect() {
@@ -716,6 +716,10 @@ export function registerGameStateMetrics(
       // appears in both and the two must not be summed on a panel.
       this.set({ measure: 'held' }, state.held);
       this.set({ measure: 'quiesced' }, state.quiesced);
+      // R1's retry clock: owners whose writes threw in a run, kept rather than
+      // quiesced, each holding unwritten edits retried once per error window. A
+      // sustained value is a database outage, never a data incident.
+      this.set({ measure: 'retrying' }, state.retrying);
       this.set({ measure: 'oldest_dirty_age_ms' }, state.oldestDirtyAgeMs);
       // A high-water mark, not a last sample: at a thousand owners a scrape of
       // "the most recent write's size" names nothing an operator can act on.
@@ -767,6 +771,9 @@ export function registerGameStateMetrics(
       // Which arm of the oversize refusal fired: the on-disk pre-gate, where no
       // text length was ever measured, or the measured byte bound.
       this.inc({ measure: 'pre_gate_refusals' }, state.preGateRefusals);
+      // Statements issued from R1's retry clock; against `retrying` on the
+      // gauge, its rate shows the one-per-owner-per-window cadence.
+      this.inc({ measure: 'write_retries' }, state.writeRetries);
       // Ruling (b)'s second ask: how often it waited on a durable read inside
       // the lease-held window, and for how long in all.
       this.inc({ measure: 'reasks' }, state.reasks);

@@ -2045,6 +2045,7 @@ describe('the housing persistence families', () => {
     pending: 14,
     held: 15,
     quiesced: 16,
+    retrying: 20,
     loads: 21,
     loadFailures: 22,
     loadFailuresByKind: { oversize: 7, unadmitted: 15 },
@@ -2060,6 +2061,7 @@ describe('the housing persistence families', () => {
     writeBytesTotal: 51,
     maxWriteBytes: 52,
     writesWithoutRecord: 61,
+    writeRetries: 63,
     preGateRefusals: 62,
     reasks: 71,
     reaskReads: 72,
@@ -2093,6 +2095,8 @@ describe('the housing persistence families', () => {
     // the one condition the durable revision fence exists to detect.
     expect(labelled(text, WOC_FREEHOLD_PERSIST, 'held')).toBe('15');
     expect(labelled(text, WOC_FREEHOLD_PERSIST, 'quiesced')).toBe('16');
+    // R1's retry clock: owners holding unwritten edits through a database fault.
+    expect(labelled(text, WOC_FREEHOLD_PERSIST, 'retrying')).toBe('20');
     expect(labelled(text, WOC_FREEHOLD_PERSIST, 'oldest_dirty_age_ms')).toBe('41');
     expect(labelled(text, WOC_FREEHOLD_PERSIST, 'max_write_bytes')).toBe('52');
     expect(labelled(text, WOC_FREEHOLD_PERSIST, 'deferred_writes')).toBe('17');
@@ -2122,6 +2126,8 @@ describe('the housing persistence families', () => {
     expect(labelled(text, WOC_FREEHOLD_PERSIST_TOTAL, 'write_bytes')).toBe('51');
     expect(labelled(text, WOC_FREEHOLD_PERSIST_TOTAL, 'writes_without_record')).toBe('61');
     expect(labelled(text, WOC_FREEHOLD_PERSIST_TOTAL, 'pre_gate_refusals')).toBe('62');
+    // Statements from R1's retry clock: its rate against `retrying` is the cadence.
+    expect(labelled(text, WOC_FREEHOLD_PERSIST_TOTAL, 'write_retries')).toBe('63');
     // Ruling (b)'s re-ask and the install verdicts, each its own fixed measure.
     expect(labelled(text, WOC_FREEHOLD_PERSIST_TOTAL, 'reasks')).toBe('71');
     expect(labelled(text, WOC_FREEHOLD_PERSIST_TOTAL, 'reask_reads')).toBe('72');

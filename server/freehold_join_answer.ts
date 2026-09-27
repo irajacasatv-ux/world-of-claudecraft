@@ -16,9 +16,10 @@
 // that state; and an entry is collected only when it owes no work, while nothing
 // writes without a loaded entry. So a loaded entry has seen every edit this
 // process made to the account, and with no loaded entry the durable row has
-// every edit the store did not already drop, loudly, at a quiesce (the two KNOWN
-// COST orders in tests/server/freehold_persist.test.ts: a run of thrown writes,
-// and another realm's commit fencing a leave write stale).
+// every edit the store did not already drop, loudly, at a quiesce (the KNOWN
+// COST order in tests/server/freehold_persist.test.ts: another realm's commit
+// fencing a leave write stale; a run of thrown writes keeps its entry and its
+// edits on the retry clock since R1, server/freehold_write_retry.ts).
 //
 // A LIVE RECORD NEEDS NO VERDICT OF ITS OWN: the install is load-once, so nothing
 // the join hands it replaces a record that is already live. Beside one, an

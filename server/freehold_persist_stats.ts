@@ -3,7 +3,7 @@
 // type so every importer's contract point is unchanged. Counts, bytes and
 // milliseconds only, never player identity.
 
-import type { FreeholdJoinVerdict } from './freehold_join_answer';
+import { type FreeholdJoinVerdict, freeholdJoinVerdictCounts } from './freehold_join_answer';
 
 /** Scrape-safe counters. COUNTS, BYTE TOTALS AND MILLISECOND TOTALS ONLY: no
  *  owner key, no account id, no plot id ever appears here, because these are
@@ -29,12 +29,18 @@ export interface FreeholdPersistStats {
   /** Entries quiesced by an answer no repeat of the same payload can fix. Only
    *  the first producer is the compare-and-swap fence: a stale CAS, a missing or
    *  conflicting row, the seal refusing a record this entry did not load, the
-   *  unnamed-insert refusal, the writable-implies-readable refusal, and a run of
-   *  thrown writes inside the error window. Read it against `staleWrites` and
+   *  unnamed-insert refusal, and the writable-implies-readable refusal (a run of
+   *  thrown writes is `retrying` since R1, never this). Read it against `staleWrites` and
    *  `writeFailures` rather than alone, because only `staleWrites` means a
    *  second writer is touching these rows. Kept apart from `held` because the
    *  two are counted independently and must never be summed. */
   readonly quiesced: number;
+  /** Entries on the THROWN-RUN RETRY CLOCK (R1, server/freehold_write_retry.ts):
+   *  a run of thrown writes, kept rather than quiesced, each holding its owner's
+   *  unwritten edits and retried once per error window until one commits. A
+   *  sustained value is a database outage, not a data incident, and a restart
+   *  during it ends those edits after one last attempt at the drain. */
+  readonly retrying: number;
   readonly loads: number;
   readonly loadFailures: number;
   /** The same total, split by the hold kind that caused it. */
@@ -57,6 +63,9 @@ export interface FreeholdPersistStats {
    *  statement is issued: the arm returns before the row is ever touched. The
    *  terminal state of every lost-save path this store has had. */
   readonly writesWithoutRecord: number;
+  /** Statements issued from the retry clock, so its rate against `retrying`
+   *  shows the one-per-owner-per-window cadence. */
+  readonly writeRetries: number;
   /** Oversize refusals taken on the ON-DISK pre-gate, where no text length was
    *  measured, as opposed to the measured byte bound. */
   readonly preGateRefusals: number;
@@ -91,4 +100,74 @@ export interface FreeholdPersistStats {
    *  record (write-blocked when nothing live stands; beside a live record it
    *  shares that record). */
   readonly joinVerdicts: Readonly<Record<FreeholdJoinVerdict, number>>;
+}
+
+/** The store's cumulative counters, mutated in place by
+ *  server/freehold_persist.ts and published whole by freeholdPersistStatsOf. */
+export function createFreeholdPersistCounters() {
+  return {
+    loads: 0,
+    loadFailures: 0,
+    loadFailuresByKind: {} as Record<string, number>,
+    writes: 0,
+    writeFailures: 0,
+    staleWrites: 0,
+    permitWaitMsTotal: 0,
+    queueWaitMsTotal: 0,
+    // The two durations the wait totals deliberately exclude: a durable write
+    // that has become slow is pinning a gate permit AND a pool client, and
+    // without these it is visible only indirectly, as OTHER work's waits rising.
+    writeMsTotal: 0,
+    // The CODEC, beside the statement rather than inside it. Every save
+    // serializes the document twice (once for the refusal's byte measure and
+    // once for the two content columns) and clones it twice before that, and
+    // none of it reached a counter while `write_ms` bracketed only the
+    // statement. Measured at 0.198 ms per save at the 420-row ceiling, of which
+    // the refusal walk is 74 percent, and it is UNYIELDING synchronous time
+    // between the permit and the statement, so it escapes the tick profiler's
+    // save lap as well.
+    codecMsTotal: 0,
+    loadMsTotal: 0,
+    // A TOTAL plus a high-water mark rather than a last-sample gauge: at a
+    // thousand owners a scrape samples one arbitrary write, which says nothing
+    // about the size distribution or about growth toward the byte ceiling.
+    writeBytesTotal: 0,
+    maxWriteBytes: 0,
+    // The terminal state of every lost-save path: a write that held a permit
+    // with no document to send, and issued no statement at all. It used to be
+    // silent, which is why three separate versions of that bug had to be found
+    // by reading rather than by watching.
+    writesWithoutRecord: 0,
+    // Which arm of the oversize refusal fired. The on-disk pre-gate and the
+    // measured byte bound mean different things to an operator: one says the
+    // row was too big to even look at, the other says it was measured and
+    // refused.
+    preGateRefusals: 0,
+    // Ruling (b)'s second ask and the install it feeds (the stats doc above).
+    reasks: 0,
+    reaskReads: 0,
+    reaskMsTotal: 0,
+    joinVerdicts: freeholdJoinVerdictCounts(),
+    // R1: statements issued from the thrown-run retry clock.
+    writeRetries: 0,
+  };
+}
+
+export type FreeholdPersistCounters = ReturnType<typeof createFreeholdPersistCounters>;
+
+/** What the store folds from its entries and its own gauges on each scrape. */
+export type FreeholdPersistOccupancy = Omit<FreeholdPersistStats, keyof FreeholdPersistCounters>;
+
+/** One scrape: the occupancy plus a COPY of every counter, the two record
+ *  measures cloned so a caller can never reach the store's live ones. */
+export function freeholdPersistStatsOf(
+  occupancy: FreeholdPersistOccupancy,
+  counters: FreeholdPersistCounters,
+): FreeholdPersistStats {
+  return {
+    ...occupancy,
+    ...counters,
+    loadFailuresByKind: { ...counters.loadFailuresByKind },
+    joinVerdicts: { ...counters.joinVerdicts },
+  };
 }

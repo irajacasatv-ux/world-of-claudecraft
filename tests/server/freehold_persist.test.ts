@@ -2618,11 +2618,12 @@ describe('reference counting and eviction', () => {
 });
 
 describe('a durable answer no repeat can fix stops the writes', () => {
-  it('quiesces after a run of thrown writes, and not before', async () => {
+  it('moves a run of thrown writes onto the retry clock, and not before', async () => {
     // A stale or refused answer quiesces on the FIRST reply, because no repeat
-    // can change it. A thrown write might be a connection blip, so it gets a
-    // few chances; without any bound a row this realm genuinely cannot write is
-    // retried on every sweep for the life of the process.
+    // can change it. A thrown write is not an answer, so it gets a few chances
+    // on the sweep and then the retry clock (R1), never a quiesce; without any
+    // bound a row this realm genuinely cannot write would be retried on every
+    // sweep for the life of the process.
     const h = await loadedStore({
       rowLoad: { kind: 'row', row: rowFixture({ wireRev: '7' }) },
       writeRow: async () => {
@@ -2634,16 +2635,16 @@ describe('a durable answer no repeat can fix stops the writes', () => {
       h.store.saveAllDirty();
       await tick(30);
       expect(h.writeCount()).toBe(attempt);
-      // Still trying: the entry is not quiesced yet.
-      expect(h.store.stats().quiesced).toBe(0);
+      // Still on the ordinary cadence.
+      expect(h.store.stats()).toMatchObject({ quiesced: 0, retrying: 0 });
     }
     h.edit(OWNER_KEY);
     h.store.saveAllDirty();
     await tick(30);
     expect(h.writeCount()).toBe(FREEHOLD_PERSIST_MAX_WRITE_ERRORS);
-    expect(h.store.stats().quiesced).toBe(1);
+    expect(h.store.stats()).toMatchObject({ quiesced: 0, retrying: 1 });
 
-    // And it really stops: every later sweep costs nothing.
+    // And it really slows: every later sweep inside the window costs nothing.
     for (let i = 0; i < 5; i++) {
       h.edit(OWNER_KEY);
       h.store.saveAllDirty();
@@ -5330,11 +5331,11 @@ describe('a run of thrown writes is a RUN, bounded in time', () => {
       h.store.saveAllDirty();
       await tick(30);
     }
-    expect(h.store.stats().quiesced).toBe(0);
+    expect(h.store.stats()).toMatchObject({ quiesced: 0, retrying: 0 });
     expect(h.store.stats().writeFailures).toBe(FREEHOLD_PERSIST_MAX_WRITE_ERRORS + 2);
   });
 
-  it('still quiesces on a run INSIDE the window, so the window is not an escape', async () => {
+  it('still puts a run INSIDE the window on the retry clock, so the window is not an escape', async () => {
     const h = await loadedStore({
       rowLoad: { kind: 'row', row: rowFixture({ wireRev: '7' }) },
       writeRow: async () => {
@@ -5347,7 +5348,8 @@ describe('a run of thrown writes is a RUN, bounded in time', () => {
       h.store.saveAllDirty();
       await tick(30);
     }
-    expect(h.store.stats().quiesced).toBe(1);
+    // R1: a run is a retry posture, never a quiesce (a throw is not an answer).
+    expect(h.store.stats()).toMatchObject({ retrying: 1, quiesced: 0 });
   });
 
   it('reports a database error by its CLASSIFICATION, never its row content', async () => {
@@ -8060,67 +8062,25 @@ describe('the gaps a mutation pass over the store found', () => {
   });
 });
 
-describe('the two orders the 07 re-judgement names, which still lose a captured edit (2026-09-26)', () => {
-  // Pinned as they behave so a later ruling flips them. Neither is the twelfth
-  // path and ruling (b) touched neither: in both a leaver's capture is still
-  // owed when its entry QUIESCES, a quiesced entry owes no work, and settle
-  // releases the capture, so the leaver's last edits reach no row. Both are
-  // loud, both leave the row holding the house it held (nothing is
-  // overwritten), and both lose the captured edit, which is the half of the
-  // invariant 07 is judged on.
+describe('the one runtime order the 07 re-judgement still names: the cross-realm fence (R2)', () => {
+  // Pinned as it behaves: R2 (2026-09-26) carries it to 07a as a named
+  // activation gate. A leaver's capture is still owed when the entry QUIESCES
+  // on another realm's commit, a quiesced entry owes no work, and settle
+  // releases the capture, so the leaver's last edits reach no row. Loud, and the
+  // row keeps the other realm's house (nothing is overwritten).
   //
-  // NOT THE WHOLE LIST OF CAPTURE RELEASES. Every arm that quiesces an entry
-  // while a capture is owed releases it the same way: the seal's identity and
-  // unnamed refusals (a session already write-blocked, whose capture is a
-  // stand-in's), the write refusal's ceilings (a legal record fits them; the
-  // maximal one is measured), a `missing` row (the account's row deleted) and a
-  // `conflict` (a minted plot id colliding). Those are deliberate or out of
-  // reach. The shutdown drain's deadline is the third order the re-judgement
-  // names: the captures still owed end with the process, pinned in the bounded
-  // drain's own cases and logged by server/main.ts. These two are the orders a
-  // realm reaches while it runs.
+  // THE OTHER QUIESCES RELEASE A CAPTURE THE SAME WAY, and are deliberate or out
+  // of reach: the seal's identity and unnamed refusals (a session already
+  // write-blocked, whose capture is a stand-in's), the write refusal's ceilings
+  // (a legal record fits them; the maximal one is measured), a `missing` row
+  // (the account's row deleted) and a `conflict` (a minted plot id colliding).
+  // A run of THROWN writes is no longer one of them (R1, the retry posture
+  // below), and the shutdown drain's deadline is R3's accepted bound, pinned in
+  // the posture's shutdown case.
   const rowOfOwner = async (db: ReturnType<typeof rowRemembered>) => {
     const row = await db.readRow(ACCOUNT_ID);
     return row.kind === 'row' ? row.row.wireRev : row.kind;
   };
-
-  it('KNOWN COST: a run of thrown writes quiesces the entry and releases the capture unwritten', async () => {
-    // A database fault that outlasts the run: the leave flush's write throws,
-    // so the entry keeps the leaver's capture and stays dirty, and the next
-    // two sweeps throw too. FREEHOLD_PERSIST_MAX_WRITE_ERRORS inside the window
-    // quiesces the entry, and the capture goes with it.
-    const db = rowRemembered(rowFixture({ wireRev: '7' }));
-    const h = await loadedStore({
-      readRow: db.readRow,
-      writeRow: async () => {
-        throw new Error('connection terminated unexpectedly');
-      },
-    });
-    h.edit(OWNER_KEY, { rev: 8 });
-    await h.leave();
-    expect(h.record()).toBeUndefined();
-    // Still owed: the one thrown write is not a run.
-    expect(h.store.stats().leaveCaptures).toBe(1);
-    expect(h.store.stats().quiesced).toBe(0);
-    for (let sweep = 1; sweep < FREEHOLD_PERSIST_MAX_WRITE_ERRORS; sweep++) {
-      h.store.saveAllDirty();
-      await tick(30);
-    }
-    expect(h.writeCount()).toBe(FREEHOLD_PERSIST_MAX_WRITE_ERRORS);
-    expect(h.errors.filter((line) => line.includes('write failed'))).toHaveLength(
-      FREEHOLD_PERSIST_MAX_WRITE_ERRORS,
-    );
-    // QUIESCED, and then COLLECTED on the spot: a quiesced entry owes no work
-    // and nothing refers to it, so the `quiesced` gauge reads zero once it is
-    // gone and the error line is the record.
-    expect(h.errors.filter((line) => line.includes('thrown writes'))).toHaveLength(1);
-    expect(h.store.stats().entries).toBe(0);
-    // RELEASED, and with it the leaver's revision-8 house.
-    expect(h.store.stats().leaveCaptures).toBe(0);
-    // The next login reads the row, which never saw revision 8: the edit is gone.
-    await h.login();
-    expect(h.record()?.rev).toBe(7);
-  });
 
   it("KNOWN COST: another realm's commit fences the capture stale and releases it unwritten", async () => {
     // THE CONTRACT'S ACTIVATION GATE (persistence-rollout-contract.md, "ONE
@@ -8156,5 +8116,231 @@ describe('the two orders the 07 re-judgement names, which still lose a captured 
     expect(h.store.stats().leaveCaptures).toBe(0);
     // The other realm's house stands; this realm's revision-8 edits are gone.
     expect(await rowOfOwner(db)).toBe('9');
+  });
+});
+
+describe('a run of thrown writes keeps its edits and retries them once per window (R1)', () => {
+  // R1 (Fernando, 2026-09-26; the ledger, R1, THE THROWN-RUN RETRY POSTURE): a
+  // throw is not an answer, so a run of them no longer quiesces the entry. It
+  // puts the entry on a per-owner retry clock instead: nothing arms a write
+  // until the clock is due, the capture and every later edit ride the next
+  // retry, and only a commit (or an answer no repeat can change) ends it.
+  const WINDOW = FREEHOLD_PERSIST_WRITE_ERROR_WINDOW_MS;
+  const START_MS = 10_000;
+
+  /** A row in a database that throws until `recover()`, then answers as one. */
+  function faultyDatabase(wireRev = '7') {
+    const db = rowRemembered(rowFixture({ wireRev }));
+    let failing = true;
+    return {
+      readRow: db.readRow,
+      writeRow: async (input: FreeholdUpsert): Promise<FreeholdUpsertResult> => {
+        if (failing) throw new Error('connection terminated unexpectedly');
+        return await db.writeRow(input);
+      },
+      recover(): void {
+        failing = false;
+      },
+      async wireRev(): Promise<string> {
+        const row = await db.readRow(ACCOUNT_ID);
+        return row.kind === 'row' ? row.row.wireRev : row.kind;
+      },
+    };
+  }
+
+  /** A leaver whose leave write throws, then the two sweeps that complete the
+   *  run, all at START_MS: the entry enters the posture there, due at
+   *  START_MS + WINDOW. */
+  async function leaverInPosture(database = faultyDatabase()) {
+    const h = await loadedStore({ readRow: database.readRow, writeRow: database.writeRow });
+    h.setNow(START_MS);
+    h.edit(OWNER_KEY, { rev: 8 });
+    await h.leave();
+    expect(h.record()).toBeUndefined();
+    for (let sweep = 1; sweep < FREEHOLD_PERSIST_MAX_WRITE_ERRORS; sweep++) {
+      h.store.saveAllDirty();
+      await tick(30);
+    }
+    expect(h.writeCount()).toBe(FREEHOLD_PERSIST_MAX_WRITE_ERRORS);
+    return { h, database };
+  }
+
+  const postureLines = (h: Harness) => h.errors.filter((line) => line.includes('retried once per'));
+
+  it('keeps the capture past the run and writes it when the database answers again', async () => {
+    const { h, database } = await leaverInPosture();
+    // THE FLIP of the 2026-09-26 KNOWN COST pin: the run no longer quiesces the
+    // entry or releases the leaver's revision-8 house.
+    expect(h.store.stats()).toMatchObject({
+      quiesced: 0,
+      retrying: 1,
+      leaveCaptures: 1,
+      entries: 1,
+      dirty: 1,
+    });
+    expect(postureLines(h)).toHaveLength(1);
+    expect(h.errors.filter((line) => line.includes('quiesced'))).toEqual([]);
+    // The database answers again, and the retry is due one window after the
+    // last throw.
+    database.recover();
+    h.setNow(START_MS + WINDOW);
+    h.store.saveAllDirty();
+    await tick(30);
+    expect(await database.wireRev()).toBe('8');
+    expect(h.warnings.filter((line) => line.includes('committed after a thrown run'))).toHaveLength(
+      1,
+    );
+    // Released on the commit, the clock and the run cleared, and the entry
+    // collected (no session refers to it and nothing is owed).
+    expect(h.store.stats()).toMatchObject({ retrying: 0, leaveCaptures: 0, entries: 0, dirty: 0 });
+    await h.login();
+    expect(h.record()?.rev).toBe(8);
+  });
+
+  it('costs one statement per owner per window while the database keeps throwing, and keeps everything', async () => {
+    const { h } = await leaverInPosture();
+    const retriesBefore = h.store.stats().writeRetries;
+    for (let window = 1; window <= 3; window++) {
+      const writesAtStart = h.writeCount();
+      // Every sweep of the window before the clock is due writes nothing.
+      for (let at = 30_000; at < WINDOW; at += 30_000) {
+        h.setNow(START_MS + (window - 1) * WINDOW + at);
+        h.store.saveAllDirty();
+        await tick(10);
+      }
+      expect(h.writeCount(), `window ${window} before due`).toBe(writesAtStart);
+      // Due: exactly one statement, which throws and re-arms the clock one
+      // window on from its own failure.
+      h.setNow(START_MS + window * WINDOW);
+      h.store.saveAllDirty();
+      await tick(30);
+      h.store.saveAllDirty();
+      await tick(30);
+      expect(h.writeCount(), `window ${window} due`).toBe(writesAtStart + 1);
+      // Kept: never quiesced, never collected, the capture still counted.
+      expect(h.store.stats()).toMatchObject({
+        quiesced: 0,
+        retrying: 1,
+        leaveCaptures: 1,
+        entries: 1,
+      });
+    }
+    expect(h.store.stats().writeRetries - retriesBefore).toBe(3);
+    // One entry line for the posture, and every throw its own error line.
+    expect(postureLines(h)).toHaveLength(1);
+    expect(h.errors.filter((line) => line.includes('write failed:'))).toHaveLength(
+      FREEHOLD_PERSIST_MAX_WRITE_ERRORS + 3,
+    );
+  });
+
+  it('installs the kept capture on a rejoin, and the rejoined session edits ride the retry', async () => {
+    const { h, database } = await leaverInPosture();
+    // The rejoin installs the leaver's unwritten house, as a slow leave write's
+    // rejoin always has.
+    await h.login();
+    expect(h.record()?.rev).toBe(8);
+    expect(h.store.stats().retrying).toBe(1);
+    // The rejoined session edits freely; nothing arms off the clock.
+    h.edit(OWNER_KEY, { rev: 9 });
+    h.store.saveAllDirty();
+    await tick(30);
+    expect(h.writeCount()).toBe(FREEHOLD_PERSIST_MAX_WRITE_ERRORS);
+    // Its own leave refreshes the capture from its record, writes nothing, and
+    // does not wait on the leave deadline.
+    await h.leave();
+    expect(h.writeCount()).toBe(FREEHOLD_PERSIST_MAX_WRITE_ERRORS);
+    expect(h.store.stats().leaveCaptures).toBe(1);
+    expect(h.deadlines.filter((job) => job.fired)).toEqual([]);
+    database.recover();
+    h.setNow(START_MS + WINDOW);
+    h.store.saveAllDirty();
+    await tick(30);
+    // The row gets the REJOINED session's house, which carries the leaver's.
+    expect(await database.wireRev()).toBe('9');
+    expect(h.store.stats()).toMatchObject({ retrying: 0, leaveCaptures: 0, entries: 0 });
+  });
+
+  it("keeps an ONLINE session's edits past a run and past its own leave", async () => {
+    // The order R1's text did not name: the run lands while the session is
+    // still in the world. It used to quiesce the entry, so the leave captured
+    // nothing and the session's edits were gone at logout.
+    const database = faultyDatabase();
+    const h = await loadedStore({ readRow: database.readRow, writeRow: database.writeRow });
+    h.setNow(START_MS);
+    h.edit(OWNER_KEY, { rev: 8 });
+    for (let sweep = 0; sweep < FREEHOLD_PERSIST_MAX_WRITE_ERRORS; sweep++) {
+      h.store.saveAllDirty();
+      await tick(30);
+    }
+    expect(h.store.stats()).toMatchObject({ quiesced: 0, retrying: 1, leaveCaptures: 0 });
+    await h.leave();
+    expect(h.store.stats().leaveCaptures).toBe(1);
+    database.recover();
+    h.setNow(START_MS + WINDOW);
+    h.store.saveAllDirty();
+    await tick(30);
+    expect(await database.wireRev()).toBe('8');
+  });
+
+  it('treats a wall clock that stepped back past a window as due, and a smaller step as not', async () => {
+    const { h } = await leaverInPosture();
+    const writes = h.writeCount();
+    // Back less than one window from the failure: still waiting.
+    h.setNow(START_MS - WINDOW / 2);
+    h.store.saveAllDirty();
+    await tick(30);
+    expect(h.writeCount()).toBe(writes);
+    // Back past one window: the clock would otherwise stall the retries for the
+    // size of the step, so it counts as due.
+    h.setNow(START_MS - WINDOW - 1);
+    h.store.saveAllDirty();
+    await tick(30);
+    expect(h.writeCount()).toBe(writes + 1);
+  });
+
+  it('gives a kept capture one last attempt at shutdown, and ends it with the process at R3', async () => {
+    const { h } = await leaverInPosture();
+    const writes = h.writeCount();
+    // The drain ignores the clock (not due for a whole window yet) and attempts
+    // it once; the database still throws, so the drain answers NOT drained as
+    // soon as nothing is moving, never at its deadline.
+    const drained = await h.store.idle(FREEHOLD_PERSIST_SHUTDOWN_DRAIN_MS);
+    expect(drained).toBe(false);
+    expect(h.writeCount()).toBe(writes + 1);
+    const deadline = h.deadlines.find((job) => job.ms === FREEHOLD_PERSIST_SHUTDOWN_DRAIN_MS);
+    expect(deadline?.fired).toBe(false);
+    // The capture is still held: it ends with the process, R3's accepted bound.
+    expect(h.store.stats().leaveCaptures).toBe(1);
+  });
+
+  it('still quiesces a run of throws that ANSWER about the payload, and releases the capture', async () => {
+    // A throw is a fault unless it is about the document itself: the writer's
+    // own structural refusal (a TypeError out of requireUpsertInput) or a
+    // payload SQLSTATE. Those answer the same way every time, so the run ends in
+    // a quiesce as it always has, and the clock never holds them.
+    const h = await loadedStore({
+      rowLoad: { kind: 'row', row: rowFixture({ wireRev: '7' }) },
+      writeRow: async () => {
+        throw Object.assign(new Error('new row violates check constraint'), { code: '23514' });
+      },
+    });
+    h.setNow(START_MS);
+    h.edit(OWNER_KEY, { rev: 8 });
+    await h.leave();
+    for (let sweep = 1; sweep < FREEHOLD_PERSIST_MAX_WRITE_ERRORS; sweep++) {
+      h.store.saveAllDirty();
+      await tick(30);
+    }
+    expect(
+      h.errors.filter((line) => line.includes('thrown writes refusing this document')),
+    ).toHaveLength(1);
+    expect(h.store.stats()).toMatchObject({ retrying: 0, leaveCaptures: 0, entries: 0 });
+  });
+
+  it('writes a kept capture in the shutdown drain when the database answers', async () => {
+    const { h, database } = await leaverInPosture();
+    database.recover();
+    expect(await h.store.idle(FREEHOLD_PERSIST_SHUTDOWN_DRAIN_MS)).toBe(true);
+    expect(await database.wireRev()).toBe('8');
   });
 });

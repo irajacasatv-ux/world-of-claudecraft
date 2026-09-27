@@ -71,7 +71,7 @@ import {
   type FreeholdHearthReading,
   normalizeHearthLoad,
 } from './freehold_hearth_load';
-import { freeholdJoinAnswer, freeholdJoinVerdictCounts } from './freehold_join_answer';
+import { freeholdJoinAnswer } from './freehold_join_answer';
 import {
   FREEHOLD_ABSENT_DURABLE_REV,
   type FreeholdRecoveryHold,
@@ -86,10 +86,21 @@ import {
   type FreeholdPreloadOptions,
   freeholdPreloadBudgetMs,
 } from './freehold_login_bounds';
-import type { FreeholdPersistStats } from './freehold_persist_stats';
+import {
+  createFreeholdPersistCounters,
+  type FreeholdPersistStats,
+  freeholdPersistStatsOf,
+} from './freehold_persist_stats';
 import { freeholdRevisionMoved } from './freehold_revision_probe';
 import { representableRev, rowDocument } from './freehold_row_document';
 import { freeholdOwnerKeyForAccount } from './freehold_wire';
+import {
+  FREEHOLD_PERSIST_MAX_WRITE_ERRORS,
+  FREEHOLD_PERSIST_WRITE_ERROR_WINDOW_MS,
+  freeholdRetryDue,
+  freeholdThrownWriteIsAnswer,
+  noteThrownWrite,
+} from './freehold_write_retry';
 import { insertWouldMintAnUnnamedRow, seedWouldLandOnRealRow } from './freehold_write_seal';
 
 /** How long the shutdown drain waits for running and pending writes before it
@@ -181,22 +192,12 @@ export const FREEHOLD_PERSIST_LEAVE_WRITE_RESERVE = 2;
  */
 export const FREEHOLD_PERSIST_LEAVE_FLUSH_MS = 2_000;
 
-/** Consecutive THROWN writes for one owner before the store stops trying. A
- *  stale or refused write already quiesces on the first answer, because those
- *  are answers no repeat can change; a thrown one might be a connection blip,
- *  so it gets a second and a third chance before the same treatment. Without a
- *  bound, a row this realm genuinely cannot write is retried on every sweep for
- *  the life of the process. */
-export const FREEHOLD_PERSIST_MAX_WRITE_ERRORS = 3;
-
-/** How close together those thrown writes have to be to count as one RUN. A
- *  connection blip an hour after the last one is a new event, not a third
- *  strike: without a window, three unrelated blips across a long session
- *  quiesce a healthy owner, and a quiesced entry stops installing its own house
- *  on the next join, so the player meets an empty room and every edit they make
- *  there is discarded. Five minutes is far longer than any transient the pool
- *  recovers from and far shorter than a session. */
-export const FREEHOLD_PERSIST_WRITE_ERROR_WINDOW_MS = 300_000;
+// The thrown-write run's two constants and its retry clock (R1) live in
+// server/freehold_write_retry.ts, re-exported so every importer stands.
+export {
+  FREEHOLD_PERSIST_MAX_WRITE_ERRORS,
+  FREEHOLD_PERSIST_WRITE_ERROR_WINDOW_MS,
+} from './freehold_write_retry';
 
 /**
  * The zero-reference entry sweep is MARK AND SWEEP over two passes, so an
@@ -415,6 +416,11 @@ interface FreeholdPersistEntry {
   /** When the last thrown write landed, so a run is a RUN and not a tally of
    *  unrelated blips hours apart. */
   lastWriteErrorMs: number;
+  /** THE RETRY CLOCK (R1): 0 off it; else when the next write may be armed. A
+   *  run of thrown writes sets it and every throw on it re-arms it, and only a
+   *  commit clears it. The entry stays unblocked, so its capture is kept and
+   *  offered to a rejoin; see server/freehold_write_retry.ts. */
+  retryAtMs: number;
   refs: number;
   dirtyGeneration: number;
   committedGeneration: number;
@@ -475,50 +481,8 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
   // drain (a supervised restart racing a test teardown) can never orphan the
   // first one's deadline timer.
   const drainWaiters = new Set<{ finish(drained: boolean): void }>();
-  const counters = {
-    loads: 0,
-    loadFailures: 0,
-    loadFailuresByKind: {} as Record<string, number>,
-    writes: 0,
-    writeFailures: 0,
-    staleWrites: 0,
-    permitWaitMsTotal: 0,
-    queueWaitMsTotal: 0,
-    // The two durations the wait totals deliberately exclude: a durable write
-    // that has become slow is pinning a gate permit AND a pool client, and
-    // without these it is visible only indirectly, as OTHER work's waits rising.
-    writeMsTotal: 0,
-    // The CODEC, beside the statement rather than inside it. Every save
-    // serializes the document twice (once for the refusal's byte measure and
-    // once for the two content columns) and clones it twice before that, and
-    // none of it reached a counter while `write_ms` bracketed only the
-    // statement. Measured at 0.198 ms per save at the 420-row ceiling, of which
-    // the refusal walk is 74 percent, and it is UNYIELDING synchronous time
-    // between the permit and the statement, so it escapes the tick profiler's
-    // save lap as well.
-    codecMsTotal: 0,
-    loadMsTotal: 0,
-    // A TOTAL plus a high-water mark rather than a last-sample gauge: at a
-    // thousand owners a scrape samples one arbitrary write, which says nothing
-    // about the size distribution or about growth toward the byte ceiling.
-    writeBytesTotal: 0,
-    maxWriteBytes: 0,
-    // The terminal state of every lost-save path: a write that held a permit
-    // with no document to send, and issued no statement at all. It used to be
-    // silent, which is why three separate versions of that bug had to be found
-    // by reading rather than by watching.
-    writesWithoutRecord: 0,
-    // Which arm of the oversize refusal fired. The on-disk pre-gate and the
-    // measured byte bound mean different things to an operator: one says the
-    // row was too big to even look at, the other says it was measured and
-    // refused.
-    preGateRefusals: 0,
-    // Ruling (b)'s second ask and the install it feeds (freehold_persist_stats.ts).
-    reasks: 0,
-    reaskReads: 0,
-    reaskMsTotal: 0,
-    joinVerdicts: freeholdJoinVerdictCounts(),
-  };
+  // The cumulative counters, each with its reason, in freehold_persist_stats.ts.
+  const counters = createFreeholdPersistCounters();
 
   // Capacity-kind hold lines, one per kind per window (freehold_capacity_warn.ts).
   const capacityWarn = createFreeholdCapacityWarn(
@@ -565,6 +529,10 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
   // finished a durable read may not write.
   const blocked = (entry: FreeholdPersistEntry): boolean => !entry.loaded || isHeld(entry);
 
+  // R1: may a write be ARMED for this entry now (always, off the retry clock).
+  const retryDue = (entry: FreeholdPersistEntry): boolean =>
+    freeholdRetryDue(entry.retryAtMs, ports.nowMs(), draining);
+
   const live = (entry: FreeholdPersistEntry): boolean => entries.get(entry.ownerKey) === entry;
 
   function ensureEntry(ownerKey: string, accountId: number): FreeholdPersistEntry {
@@ -598,6 +566,7 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
       leaveDocument: null,
       writeErrors: 0,
       lastWriteErrorMs: 0,
+      retryAtMs: 0,
       refs: 0,
       dirtyGeneration: 0,
       committedGeneration: 0,
@@ -1271,6 +1240,12 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
       // simplification's clothes.
       entry.state = { ...written, plotId: persistedPlotId };
       entry.writeErrors = 0;
+      if (entry.retryAtMs > 0) {
+        entry.retryAtMs = 0;
+        ports.warn(
+          `freehold plot index ${entry.plotIndex} write committed after a thrown run; the kept edits are on the row and ordinary writes resume`,
+        );
+      }
       if (entry.committedGeneration < generation) entry.committedGeneration = generation;
       // Every edit that survived this write arrived at or after the snapshot,
       // so the snapshot instant is the exact lower bound on their age.
@@ -1440,6 +1415,7 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
       counters.writeBytesTotal += writeBytes;
       if (writeBytes > counters.maxWriteBytes) counters.maxWriteBytes = writeBytes;
       const writeStartMs = ports.nowMs();
+      if (entry.retryAtMs > 0) counters.writeRetries++;
       const result = await ports.writeRow({
         accountId: entry.accountId,
         plotIndex: entry.plotIndex,
@@ -1505,7 +1481,7 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
     // row cannot become a retry loop against the pool.
     const rearm = entry.pending || (committed && isDirty(entry));
     entry.pending = false;
-    if (rearm && live(entry) && !blocked(entry)) {
+    if (rearm && live(entry) && !blocked(entry) && retryDue(entry)) {
       // Straight back into the slot this write just freed, so a re-arm is
       // never pushed behind the deferred set it was already ahead of.
       launch(entry);
@@ -1549,23 +1525,23 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
         .enqueue(entry.ownerKey, controller.signal, () => runWrite(entry, enqueuedAtMs))
         .catch((err: unknown) => {
           counters.writeFailures++;
-          // A RUN, not a lifetime tally: an error further back than the window
-          // starts a fresh count rather than adding to one.
-          const failedAtMs = ports.nowMs();
-          const withinWindow =
-            entry.lastWriteErrorMs > 0 &&
-            failedAtMs - entry.lastWriteErrorMs <= FREEHOLD_PERSIST_WRITE_ERROR_WINDOW_MS;
-          entry.writeErrors = withinWindow ? entry.writeErrors + 1 : 1;
-          entry.lastWriteErrorMs = failedAtMs;
+          // A FAULT is not an answer, so a run of them never quiesces (R1): it
+          // puts the owner on the retry clock, and the edits it owes are kept.
+          // A throw about the payload IS one, and quiesces as it always has.
+          const outcome = noteThrownWrite(entry, ports.nowMs(), freeholdThrownWriteIsAnswer(err));
           ports.error(
             `freehold plot index ${entry.plotIndex} write failed:`,
             boundedDatabaseError(err),
           );
-          if (entry.writeErrors >= FREEHOLD_PERSIST_MAX_WRITE_ERRORS && !entry.quiesced) {
+          if (outcome === 'answered' && !entry.quiesced) {
             entry.quiesced = true;
             entry.quiesceWarned = true;
             ports.error(
-              `freehold plot index ${entry.plotIndex} quiesced after ${entry.writeErrors} thrown writes; no further writes go out for this owner`,
+              `freehold plot index ${entry.plotIndex} quiesced after ${entry.writeErrors} thrown writes refusing this document; no further writes go out for this owner`,
+            );
+          } else if (outcome === 'entered') {
+            ports.error(
+              `freehold plot index ${entry.plotIndex} write failed ${FREEHOLD_PERSIST_MAX_WRITE_ERRORS} times in a row; its unwritten edits are kept and retried once per ${FREEHOLD_PERSIST_WRITE_ERROR_WINDOW_MS} ms until one commits`,
             );
           }
           return false;
@@ -1674,6 +1650,8 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
   // marks costs one write in flight and one behind it, never a thousand.
   function arm(entry: FreeholdPersistEntry, leaving = false): void {
     if (blocked(entry)) return;
+    // R1: on the retry clock nothing arms until it is due; the edit rides it.
+    if (!entry.running && !retryDue(entry)) return;
     if (!entry.running && activeWrites >= writeCap(leaving)) {
       // The local cap, applied BEFORE the shared gate. The entry stays dirty,
       // so nothing is lost and nothing is retried against the pool: it waits
@@ -1991,6 +1969,7 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
       let pending = 0;
       let held = 0;
       let quiesced = 0;
+      let retrying = 0;
       let loaded = 0;
       let oldestDirtyAtMs = 0;
       for (const entry of entries.values()) {
@@ -1999,6 +1978,8 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
         if (entry.pending) pending++;
         if (entry.hold !== null) held++;
         if (entry.quiesced) quiesced++;
+        // On the clock and still writing (a later quiesce ends the posture).
+        if (entry.retryAtMs > 0 && !isHeld(entry)) retrying++;
         if (entry.loaded) loaded++;
         if (
           entry.dirtySinceMs > 0 &&
@@ -2007,38 +1988,25 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
           oldestDirtyAtMs = entry.dirtySinceMs;
         }
       }
-      return {
-        entries: entries.size,
-        loaded,
-        dirty,
-        running,
-        pending,
-        held,
-        quiesced,
-        loads: counters.loads,
-        loadFailures: counters.loadFailures,
-        loadFailuresByKind: { ...counters.loadFailuresByKind },
-        writes: counters.writes,
-        writeFailures: counters.writeFailures,
-        staleWrites: counters.staleWrites,
-        permitWaitMsTotal: counters.permitWaitMsTotal,
-        queueWaitMsTotal: counters.queueWaitMsTotal,
-        writeMsTotal: counters.writeMsTotal,
-        codecMsTotal: counters.codecMsTotal,
-        loadMsTotal: counters.loadMsTotal,
-        oldestDirtyAgeMs: oldestDirtyAtMs === 0 ? 0 : Math.max(0, ports.nowMs() - oldestDirtyAtMs),
-        writeBytesTotal: counters.writeBytesTotal,
-        maxWriteBytes: counters.maxWriteBytes,
-        writesWithoutRecord: counters.writesWithoutRecord,
-        preGateRefusals: counters.preGateRefusals,
-        reasks: counters.reasks,
-        reaskReads: counters.reaskReads,
-        reaskMsTotal: counters.reaskMsTotal,
-        joinVerdicts: { ...counters.joinVerdicts },
-        deferredWrites: deferredWrites.size,
-        activeWrites,
-        leaveCaptures,
-      };
+      const oldestDirtyAgeMs =
+        oldestDirtyAtMs === 0 ? 0 : Math.max(0, ports.nowMs() - oldestDirtyAtMs);
+      return freeholdPersistStatsOf(
+        {
+          entries: entries.size,
+          loaded,
+          dirty,
+          running,
+          pending,
+          held,
+          quiesced,
+          retrying,
+          oldestDirtyAgeMs,
+          deferredWrites: deferredWrites.size,
+          activeWrites,
+          leaveCaptures,
+        },
+        counters,
+      );
     },
 
     // Timers only. Intake is NOT flipped here: an outstanding drain is
