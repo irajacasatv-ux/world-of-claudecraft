@@ -53,8 +53,10 @@ describe('local lane-suite scope', () => {
     // vitest resolves the filter too (.. and // collapse) and drops a :line suffix.
     expect(kept('run', `tests/../${first}`)).toEqual([first]);
     expect(kept('run', `${first}:12`)).toEqual([first]);
-    // A filter naming the root itself, however spelled, names every file.
-    for (const rootFilter of [root, `${root}/`, 'tests/..', './']) {
+    // A filter naming the root itself, however spelled, names every file. (`.`
+    // also passes as a plain substring, since every lane path has one; the other
+    // spellings are what pin the root resolution.)
+    for (const rootFilter of [root, `${root}/`, 'tests/..', './', '.', '']) {
       expect(kept('run', rootFilter), rootFilter).toEqual([...CI_LONG_SUITES]);
     }
     expect(normalizeVitestFilter(`${root}/tests/X.test.ts`, root)).toContain('tests/x.test.ts');
@@ -82,6 +84,11 @@ describe('local lane-suite scope', () => {
       ),
     ).toEqual(['tests/a.test.ts']);
     expect(vitestFilterArgs(argv('list', '--filesOnly', 'x'))).toEqual(['x']);
+    // Only the first positional is a command: a later command word is a filter
+    // vitest matches as a substring. vitest drops a lone `-`; reading it as a
+    // filter can only keep more lane files.
+    expect(vitestFilterArgs(argv('run', 'list', '-'))).toEqual(['list', '-']);
+    expect(vitestFilterArgs(argv('--config', 'c.ts', 'run', 'x'))).toEqual(['x']);
     // An unknown flag consumes nothing: its value reads as a filter, which can
     // only keep more lane files.
     expect(vitestFilterArgs(argv('run', '--someFutureFlag', 'value'))).toEqual(['value']);

@@ -44,22 +44,36 @@ describe('vitest worker sizing', () => {
   });
 
   it('reads the whole host sizing, the tier cap included, from a fixed host', async () => {
-    // A mocked host (6 cores, 64 GiB free; the darwin sensor only ever widens
-    // free memory), so the numbers are exact on any machine: half the cores
-    // uncapped, then the low tier's cap under it.
+    // A mocked host: 6 cores and a settable free memory from node:os, and vm_stat
+    // read as unavailable, so the darwin sensor falls back to that free memory
+    // and every number is exact on any machine. (Only darwin reads vm_stat, so
+    // that mock is load-bearing there and inert elsewhere.)
+    let freeBytes = 64 * 1024 * MIB;
     vi.doMock('node:os', async (importOriginal) => {
       const actual = await importOriginal<typeof import('node:os')>();
-      const host = { ...actual, availableParallelism: () => 6, freemem: () => 64 * 1024 * MIB };
+      const host = { ...actual, availableParallelism: () => 6, freemem: () => freeBytes };
       return { ...host, default: host };
+    });
+    vi.doMock('node:child_process', async (importOriginal) => {
+      const actual = await importOriginal<typeof import('node:child_process')>();
+      const spawnSync = (() => ({ status: 1, stdout: '' })) as unknown as typeof actual.spawnSync;
+      const child = { ...actual, spawnSync };
+      return { ...child, default: child };
     });
     try {
       vi.stubEnv('GATE_MAX_WORKERS', undefined);
       vi.stubEnv('GATE_WORKER_TIER', undefined);
+      // CPU-bound: half of 6 cores, then the low tier's cap under it.
       expect((await loadTestConfig()).maxWorkers).toBe(3);
       vi.stubEnv('GATE_WORKER_TIER', 'low');
       expect((await loadTestConfig()).maxWorkers).toBe(2);
+      // Memory-bound: free memory for exactly two workers, and no tier cap.
+      vi.stubEnv('GATE_WORKER_TIER', undefined);
+      freeBytes = 2 * GATE_BYTES_PER_WORKER;
+      expect((await loadTestConfig()).maxWorkers).toBe(2);
     } finally {
       vi.doUnmock('node:os');
+      vi.doUnmock('node:child_process');
     }
   });
 

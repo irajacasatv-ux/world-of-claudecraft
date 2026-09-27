@@ -39,7 +39,8 @@ export function withLaneSuitesOptIn(steps) {
   return steps.map((step) => ({ ...step, env: { ...(step.env ?? {}), ...laneSuitesOptInEnv() } }));
 }
 
-// vitest subcommands, never file filters.
+// vitest subcommands. Only the first positional argument can be one; a later
+// command word (`vitest run list`) is a filter, as vitest reads it.
 const VITEST_COMMANDS = new Set(['run', 'related', 'watch', 'dev', 'bench', 'list']);
 
 /**
@@ -50,16 +51,21 @@ export function vitestFilterArgs(argv) {
   const cli = argv.findIndex((arg) => /(?:^|[\\/])vitest(?:\.cmd|\.mjs)?$/.test(arg));
   const tail = cli >= 0 ? argv.slice(cli + 1) : argv.slice(2);
   const filters = [];
+  let sawPositional = false;
   for (let i = 0; i < tail.length; i++) {
     const arg = tail[i];
-    if (arg.startsWith('-')) {
+    // A lone `-` reads as a filter. vitest itself drops it (and the argument
+    // after it); keeping it can only keep more lane files, never fewer.
+    if (arg.startsWith('-') && arg !== '-') {
       // `--config x`, `-t name`: a known value flag's value is not a filter. An
       // unknown flag consumes nothing, so its value, if it has one, reads as a
       // filter, which can only keep more lane files, never fewer.
       if (VALUE_FLAGS.has(arg)) i++;
       continue;
     }
-    if (VITEST_COMMANDS.has(arg)) continue;
+    const first = !sawPositional;
+    sawPositional = true;
+    if (first && VITEST_COMMANDS.has(arg)) continue;
     filters.push(arg.replaceAll('\\', '/'));
   }
   return filters;
