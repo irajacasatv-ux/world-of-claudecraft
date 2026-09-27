@@ -8517,6 +8517,10 @@ describe('a run of thrown writes keeps its edits and retries them once per windo
     // A throwing port inside idle() must neither throw out of a drain that never
     // throws nor leave every clock due for the life of the store.
     const { h } = await onlineInPosture();
+    // A retry throws on the clock, counted for the next sweep's summary line.
+    h.setNow(START_MS + WINDOW);
+    h.store.saveAllDirty();
+    await tick(30);
     const liveRev = h.ports.liveRev;
     h.ports.liveRev = () => {
       throw new Error('liveness port fault');
@@ -8526,6 +8530,10 @@ describe('a run of thrown writes keeps its edits and retries them once per windo
     expect(h.errors.filter((line) => line.includes('drain could not arm its writes'))).toHaveLength(
       1,
     );
+    // The pending throw is reported there, since no sweep may follow.
+    expect(
+      h.errors.filter((line) => line.includes('freehold retry clock: 1 retry writes threw')),
+    ).toHaveLength(1);
     // Not due, and the drain is closed: the leave arms nothing.
     const writes = h.writeCount();
     await h.leave();
