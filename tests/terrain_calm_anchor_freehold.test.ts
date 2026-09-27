@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest';
+import { WORLD_QUEST_CALLIGRAPHY_NPCS } from '../src/sim/content/world_quest_calligraphy';
 import { NPCS, setActiveWorldContent } from '../src/sim/data';
 import { Sim } from '../src/sim/sim';
 import { collectCalmAnchorPads } from '../src/sim/terrain_calm_anchors';
@@ -11,20 +12,23 @@ afterEach(() => setActiveWorldContent(null));
 // RE-MEASURED at the release/v0.44.0 sync: release 77fd08ab72 moved the Lin and
 // Redbrook NPC pads off the civic green, which moves the two seed-42 points;
 // the merged tree and the release's own tree measure the same heights here.
+// RE-MEASURED at the release/v0.44.0 sync at aaff789813: the release's new NPC
+// pads (the weekly emissary among them) move three of the four points; the
+// release tip's own tree and the merged tree measure these exact heights.
 const GOLDEN_POINTS = [
   { seed: 42, x: -60, z: -96, height: -0.4346181985109496 },
-  { seed: 42, x: -66, z: -90, height: -0.4336767488652407 },
+  { seed: 42, x: -66, z: -90, height: -0.5726544836247572 },
   {
     seed: 2_147_483_647,
     x: -60.863476185594166,
     z: -92.86172453079594,
-    height: -0.10891595743617682,
+    height: -0.10259241303151852,
   },
   {
     seed: 2_147_483_647,
     x: -61.825141408007866,
     z: -93.82338975320965,
-    height: 0.08224219563562438,
+    height: 0.13782156178499191,
   },
 ] as const;
 
@@ -33,7 +37,11 @@ describe('freehold NPC terrain calm registration', () => {
     const pads = collectCalmAnchorPads().filter((pad) => pad.category === 'npc');
     expect(pads).toEqual(
       Object.values(NPCS)
-        .filter((npc) => npc.id !== 'freehold_furnisher')
+        // The release's calligraphy NPCs take no pad (terrain_calm_anchors.ts).
+        .filter(
+          (npc) =>
+            npc.id !== 'freehold_furnisher' && !Object.hasOwn(WORLD_QUEST_CALLIGRAPHY_NPCS, npc.id),
+        )
         .map((npc) => ({
           x: npc.pos.x,
           z: npc.pos.z,

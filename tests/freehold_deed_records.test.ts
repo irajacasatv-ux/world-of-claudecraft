@@ -17,9 +17,10 @@ const COTTAGE = 'homesteader_first_cottage';
 describe('Freehold manual deed records', () => {
   it('appends the two routine cosmetic milestones after the existing tail', () => {
     // The release's Eastbrook ferry deed (exp_harbor_to_harbor) sits behind
-    // hid_forgebreaker since the 2026-09-26 sync; the two milestones stay last.
+    // hid_forgebreaker since the 2026-09-26 sync, and behind the release's Clue
+    // Scroll casket pair since the aaff789813 sync; the two milestones stay last.
     expect(DEED_ORDER.slice(-4)).toEqual([
-      'hid_forgebreaker',
+      'exp_clue_ten_caskets',
       'exp_harbor_to_harbor',
       FURNISHING,
       COTTAGE,

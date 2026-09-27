@@ -226,6 +226,9 @@ describe('furnishing activation refusals', () => {
       const flash = vi.fn();
       const showError = vi.fn();
       const host = {
+        // The release's vehicle bar gate (VehicleActionBarController) reads the
+        // world first; the real Sim answers "not in a vehicle".
+        sim,
         isGroundAimActive: () => false,
         actionForSlot: (slot: number) => (route !== 'crossOnly' && slot === 1 ? action : null),
         hotbarActions: [null],

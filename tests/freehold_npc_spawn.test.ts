@@ -66,6 +66,10 @@ describe('authored furnisher construction and world geometry', () => {
     // own tree measures this exact fingerprint (1032 entities, both digests,
     // the same nextId and rng cursor), so the dark merged world still adds
     // nothing; the one new entity is the release's.
+    // RE-MEASURED at the release/v0.44.0 sync at aaff789813: the release tip's
+    // own tree measures this exact fingerprint (1053 entities, both digests,
+    // the same nextId and rng cursor), so the dark merged world still adds
+    // nothing; the 21 new entities (four of them before the player) are the release's.
     const sim = new Sim({ seed: 1, playerClass: 'warrior' });
     expect({
       nextId: sim.nextId,
@@ -84,12 +88,12 @@ describe('authored furnisher construction and world geometry', () => {
       ),
       rngNext: sim.rng.next(),
     }).toEqual({
-      nextId: 1007,
-      primaryId: 999,
+      nextId: 1011,
+      primaryId: 1003,
       merchants: [1, 33],
       bankers: [9, 22, 34, 95],
-      entityCount: 1032,
-      positionHash: '80538e1fbdbf2ce292010abfadb350e460d6f5905136c61513785f8f3ad9b870',
+      entityCount: 1053,
+      positionHash: 'd945ea64e75faa0560b87f47f2a4caa074f7a18df9f2caaef9fc8220a0e22c77',
       rngNext: 0.30275995447300375,
     });
     expect(sim.entities.get(1000000003)?.templateId).toBe('crucible_quartermaster');
@@ -105,7 +109,7 @@ describe('authored furnisher construction and world geometry', () => {
             hp: e.hp,
           })),
       ),
-    ).toBe('d44c84c55b569e81df81899f90088432f6c3c5ec09ba2bbf2a872292ef9b4bf6');
+    ).toBe('e97a97edcb0de3379fa60ebd3de8ec4e8fc46eaad95dccb7b04f8ed76b18a895');
     expect([...sim.entities.values()].some((e) => e.templateId === 'freehold_furnisher')).toBe(
       false,
     );
@@ -151,13 +155,17 @@ describe('authored furnisher construction and world geometry', () => {
       );
     }
     // Release 77fd08ab72 moved Apothecary Lin (6 yd) and Marshal Redbrook (10 yd)
-    // onto the civic square stands, so the nearest neighbour is now Cook Marlow.
+    // onto the civic square stands, so the nearest neighbour was Cook Marlow
+    // (23.676 yd); since the aaff789813 sync it is the release's weekly emissary,
+    // 18.4 yd off, far outside interaction range.
     const neighbors = Object.values(NPCS)
       .filter((npc) => npc.id !== 'freehold_furnisher')
       .map((npc) => ({ id: npc.id, d: Math.hypot(npc.pos.x - pos.x, npc.pos.z - pos.z) }))
       .sort((a, b) => a.d - b.d);
-    expect(neighbors[0].id).toBe('cook_marlow');
-    expect(neighbors[0].d).toBeCloseTo(23.676, 3);
+    expect(neighbors[0].id).toBe('weekly_emissary');
+    expect(neighbors[0].d).toBeCloseTo(18.439, 3);
+    expect(neighbors[1].id).toBe('cook_marlow');
+    expect(neighbors[1].d).toBeCloseTo(23.676, 3);
   });
 
   it('adding the authored NPC does not alter static colliders, lamp sites or decoration output', () => {
