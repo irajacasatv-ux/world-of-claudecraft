@@ -82,8 +82,12 @@ function harness() {
         ownedMounts: () => [],
         accountCosmetics: { mountSkinIds: [] },
       },
-      vfx: { clear: vi.fn() },
-      abilityVfxFx: { clear: vi.fn() },
+      // The release's cast first-reads boot entry (src/render/cast_vfx_prewarm.ts)
+      // gathers these three roots when the manifest is built; a null root links
+      // nothing, which is all a lifetime case needs.
+      vfx: { clear: vi.fn(), cloudDrawable: () => null },
+      abilityVfxFx: { clear: vi.fn(), ccBandDrawable: () => null },
+      aoeRings: [],
       needleOfFateVfx: { clear: vi.fn() },
       sentenceVfx: { clear: vi.fn() },
       weather: { endPrewarm: vi.fn() },
