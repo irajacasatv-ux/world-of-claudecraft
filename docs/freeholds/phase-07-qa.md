@@ -167,7 +167,8 @@ the budget: three of the last ten rounds turned a "cannot be reached" into a liv
   exactly the harm the loader's own `wire_rev_shape` hold refuses on the read side. Two
   behaviour pins encoded the old rule and both flipped. What ruling (b) leaves
   write-blocked, never lost: a durable re-ask refused on capacity (loud at the seal;
-  `cap_full` quiet there but counted by kind) and the WITHHELD race (loud).
+  `cap_full` quiet there but counted by kind) and the WITHHELD race with no live record
+  standing (loud).
 
 ### Starter Prompt
 ```

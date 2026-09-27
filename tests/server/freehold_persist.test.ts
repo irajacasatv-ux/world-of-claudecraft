@@ -8060,14 +8060,25 @@ describe('the gaps a mutation pass over the store found', () => {
   });
 });
 
-describe('what still loses a captured edit after ruling (b) (the 07 re-judgement, 2026-09-26)', () => {
-  // THE TWO ORDERS the re-judgement names, pinned as they behave so a later
-  // ruling flips them. Neither is the twelfth path and ruling (b) touched
-  // neither: in both a leaver's capture is still owed when its entry
-  // QUIESCES, a quiesced entry owes no work, and settle releases the capture,
-  // so the leaver's last edits reach no row. Both are loud, both leave the row
-  // holding the house it held (nothing is overwritten), and both lose the
-  // captured edit, which is the half of the invariant 07 is judged on.
+describe('the two orders the 07 re-judgement names, which still lose a captured edit (2026-09-26)', () => {
+  // Pinned as they behave so a later ruling flips them. Neither is the twelfth
+  // path and ruling (b) touched neither: in both a leaver's capture is still
+  // owed when its entry QUIESCES, a quiesced entry owes no work, and settle
+  // releases the capture, so the leaver's last edits reach no row. Both are
+  // loud, both leave the row holding the house it held (nothing is
+  // overwritten), and both lose the captured edit, which is the half of the
+  // invariant 07 is judged on.
+  //
+  // NOT THE WHOLE LIST OF CAPTURE RELEASES. Every arm that quiesces an entry
+  // while a capture is owed releases it the same way: the seal's identity and
+  // unnamed refusals (a session already write-blocked, whose capture is a
+  // stand-in's), the write refusal's ceilings (a legal record fits them; the
+  // maximal one is measured), a `missing` row (the account's row deleted) and a
+  // `conflict` (a minted plot id colliding). Those are deliberate or out of
+  // reach. The shutdown drain's deadline is the third order the re-judgement
+  // names: the captures still owed end with the process, pinned in the bounded
+  // drain's own cases and logged by server/main.ts. These two are the orders a
+  // realm reaches while it runs.
   const rowOfOwner = async (db: ReturnType<typeof rowRemembered>) => {
     const row = await db.readRow(ACCOUNT_ID);
     return row.kind === 'row' ? row.row.wireRev : row.kind;
@@ -8104,11 +8115,12 @@ describe('what still loses a captured edit after ruling (b) (the 07 re-judgement
     // gone and the error line is the record.
     expect(h.errors.filter((line) => line.includes('thrown writes'))).toHaveLength(1);
     expect(h.store.stats().entries).toBe(0);
+    expect(h.store.stats().quiesced).toBe(0);
     // RELEASED, and with it the leaver's revision-8 house.
     expect(h.store.stats().leaveCaptures).toBe(0);
-    // The row keeps revision 7's house: the next login reads it, without the
-    // edit.
-    expect(await rowOfOwner(db)).toBe('7');
+    // The next login reads the row, which never saw revision 8: the edit is gone.
+    await h.login();
+    expect(h.record()?.rev).toBe(7);
   });
 
   it("KNOWN COST: another realm's commit fences the capture stale and releases it unwritten", async () => {
@@ -8117,8 +8129,9 @@ describe('what still loses a captured edit after ruling (b) (the 07 re-judgement
     // its leaving form: the row is account-scoped and shared by every realm on
     // one database, another realm commits first, and this realm's leave write
     // meets the fence. The fence keeps the other realm's house, which is its
-    // job; the leaver's capture is released with a warn line and the quiesced
-    // gauge only.
+    // job; the leaver's capture is released with one warn line and the
+    // `stale_writes` counter only (the entry is collected at once, so the
+    // `quiesced` gauge reads zero).
     const db = rowRemembered(rowFixture({ wireRev: '7' }));
     const gate = deferred<void>();
     const h = await loadedStore({
@@ -8141,6 +8154,7 @@ describe('what still loses a captured edit after ruling (b) (the 07 re-judgement
     expect(h.warnings.filter((line) => line.includes('durable revision moved'))).toHaveLength(1);
     // Quiesced and collected together, the capture with it.
     expect(h.store.stats().entries).toBe(0);
+    expect(h.store.stats().quiesced).toBe(0);
     expect(h.store.stats().leaveCaptures).toBe(0);
     // The other realm's house stands; this realm's revision-8 edits are gone.
     expect(await rowOfOwner(db)).toBe('9');

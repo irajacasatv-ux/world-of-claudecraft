@@ -77,8 +77,9 @@ function askedMatches(asked: LoadedFreehold | undefined, current: LoadedFreehold
  * @param current the store's LOADED entry answering now, exactly as preload's
  *   replay arm would (its capture if it holds one, else its committed state, and
  *   no document while it is blocked), or null when no entry is loaded.
- * @param live whether a live record already stands for the owner, which makes
- *   the install a no-op: it decides only which verdict is counted.
+ * @param live whether a live record already stands for the owner. The install
+ *   then only merges the Hearth clock (load-once keeps the record that stands),
+ *   so this decides only which verdict is counted.
  */
 export function freeholdJoinAnswer(
   accountId: number,
@@ -110,9 +111,10 @@ export function freeholdJoinAnswer(
   // WITHHELD: the entry this answer was read from has gone, so nothing in the
   // store can vouch for it, and a stale absent answer would put an empty default
   // in under the account's real name. No record goes in; the Hearth clock, a
-  // separate forward-only durable fact, still merges. The sim then seeds the
-  // stand-in, which the write seal (over a row) or the insert refusal (before
-  // one) refuses: a write-blocked session, never a lost edit, because no capture
-  // can outlive the entry that held it.
+  // separate forward-only durable fact, still merges. With no live record
+  // standing the sim then seeds the stand-in, which the write seal (over a row)
+  // or the insert refusal (before one) refuses: a write-blocked session, never a
+  // lost edit, because no capture can outlive the entry that held it. Beside a
+  // live record the join shares that record and writes, or is refused, as it is.
   return { answer: { ...asked, state: null, recordWithheld: true }, verdict: 'withheld' };
 }
