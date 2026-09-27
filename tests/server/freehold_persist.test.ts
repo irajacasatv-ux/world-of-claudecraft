@@ -8340,6 +8340,14 @@ describe('a run of thrown writes keeps its edits and retries them once per windo
     await tick(30);
     expect(hung).toHaveLength(FREEHOLD_PERSIST_RETRY_WRITE_CAP + 1);
     expect(h.store.stats().activeWrites).toBe(FREEHOLD_PERSIST_RETRY_WRITE_CAP + 1);
+    // A retry settles (it throws again): the pump re-admits exactly ONE deferred
+    // retry into the freed sub-cap slot, never both.
+    hung[0].reject(new Error('connection terminated unexpectedly'));
+    await tick(60);
+    expect(hung).toHaveLength(FREEHOLD_PERSIST_RETRY_WRITE_CAP + 2);
+    expect(h.store.stats().deferredWrites).toBe(
+      FOUR_ACCOUNTS.length - FREEHOLD_PERSIST_RETRY_WRITE_CAP - 1,
+    );
   });
 
   it("ends the drain's clock exception WITH the drain: no retry launches past its deadline", async () => {
