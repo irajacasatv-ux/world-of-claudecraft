@@ -1,6 +1,6 @@
 // The whole per-frame presentation pass for the mount under a rider: gait
-// animation, body attitude (jump pitch and terrain-reactive suspension), the
-// rider seat carried with it, and the mount's ambient particle trail.
+// animation, body attitude (jump pitch), the rider seat carried with it, and
+// the mount's ambient particle trail.
 //
 // One function rather than a block inside the entity loop for the usual two
 // reasons: it is mount behavior, not coordinator work, and renderer.ts is a
@@ -15,10 +15,8 @@
 //     the same idea, and exactly one of the two drives any given mount.
 //   - `rickshaw_mount` owns the rolling wheels and the puller that walks in the
 //     shafts.
-//   - `vehicle_suspension_fx` owns four-wheel terrain response, and composes
-//     ONTO the attitude above rather than replacing it.
-// Order matters: attitude first, suspension second, because the suspension
-// pass reads the pitch already on the body and adds to it.
+// The four-wheel suspension, lamps and piped exhaust that served the retired
+// Rallycart RXT were deleted with its assets on 2026-09-27.
 
 import type * as THREE from 'three';
 import type { AnimState, CharacterVisual } from './characters/visual';
@@ -29,26 +27,7 @@ import { type MountLamps, updateMountLamps } from './mount_lamps';
 import { seatRiderOnBone } from './mount_lifecycle';
 import { type MountVisualSpec, mountBobY } from './mount_visuals';
 import { spinMountWheels, updateRickshawPuller } from './rickshaw_mount';
-import { type ExhaustPhase, RALLYCART_EXHAUST_PORTS } from './vehicle_exhaust_core';
-import {
-  applyVehicleExhaust,
-  createVehicleExhaust,
-  type VehicleExhaustState,
-} from './vehicle_exhaust_fx';
-import { attachVehicleHeadlights, RALLYCART_HEADLIGHTS } from './vehicle_headlights';
-import {
-  applyVehicleSuspension,
-  createVehicleSuspensionRig,
-  type VehicleSuspensionRig,
-} from './vehicle_suspension_fx';
-import { attachVehicleTaillights, RALLYCART_TAILLIGHTS } from './vehicle_taillights';
 import type { Vfx } from './vfx';
-
-// The audio state intentionally latches `stopping` after its one-shot fires so
-// the parked idle can sit underneath it. Smoke still needs the authored tail
-// only, or a parked cart keeps reading as mid-winddown forever. This is the
-// shipped forward Rallycart stop take rounded up from 2.53s.
-const RALLYCART_STOP_EXHAUST_TAIL_SEC = 2.55;
 
 /** The EntityView slice this pass touches: a caller-owned view record. */
 export interface MountPresentationHost {
@@ -72,12 +51,6 @@ export interface MountPresentationHost {
    *  its attitude or seat bone meanwhile, or he floats/glitches against a
    *  mount nobody can see yet. */
   mountCompilePending: boolean;
-  /** Turning on the spot, for the engine audio's pitch bend. Written here
-   *  rather than in renderer.ts because the suspension rig is what knows it. */
-  mountPivot: boolean;
-  mountSuspension: VehicleSuspensionRig | null | undefined;
-  /** Exhaust latch state, created on first sight of a piped mount. */
-  mountExhaust: VehicleExhaustState | null;
 }
 
 export interface MountPresentationInputs {
@@ -106,10 +79,6 @@ export interface MountPresentationInputs {
   present: boolean;
   animate: boolean;
   vfx: Vfx;
-  /** Where this entity's engine audio is, for visuals that want to land on a
-   *  specific moment inside an authored take. Null with no engine running. */
-  enginePhase: { state: 'idle' | 'starting' | 'moving' | 'stopping'; elapsed: number } | null;
-  groundSample: (x: number, z: number) => number;
   dt: number;
 }
 
@@ -126,22 +95,6 @@ export function borrowRiderLocomotion(mount: AnimState, rider: AnimState, airbor
   mount.airborne = airborne;
   mount.backwards = rider.backwards;
   mount.swimming = rider.swimming;
-}
-
-// Dormant since the Rallycart RXT retired (RETIRED_MOUNT_SKIN_IDS): no live
-// spec sets the 'pipes' exhaust, so nothing reaches this or the 'pipes'
-// branches below until a vehicle skin ships again or the asset sweep removes them.
-function rallycartExhaustPhase(input: MountPresentationInputs): ExhaustPhase {
-  const phase = input.enginePhase;
-  if (!phase) return 'idle';
-  if (
-    phase.state === 'stopping' &&
-    !input.moving &&
-    phase.elapsed > RALLYCART_STOP_EXHAUST_TAIL_SEC
-  ) {
-    return 'idle';
-  }
-  return phase.state;
 }
 
 export function updateMountPresentation(
@@ -176,11 +129,11 @@ export function updateMountPresentation(
     // so this merge keeps each arm driving the mounts it was tuned against and
     // leaves the collapse to a follow-up.
     //
-    // All of it (attitude, the seat-bone re-seat, the suspension pass, and the
-    // ambient trail/exhaust fx) carries the RIDER, who is visible even while
-    // the mount root itself is still hidden behind mountCompilePending (its
-    // swapped-in materials have not linked yet). Gated on `presented`, or a
-    // rider swapping mounts floats/glitches against a mount nobody can see.
+    // All of it (attitude, the seat-bone re-seat, and the ambient trail/exhaust
+    // fx) carries the RIDER, who is visible even while the mount root itself is
+    // still hidden behind mountCompilePending (its swapped-in materials have not
+    // linked yet). Gated on `presented`, or a rider swapping mounts
+    // floats/glitches against a mount nobody can see.
     const presented = !v.mountCompilePending;
     if (presented) {
       if (spec.jumpTips) {
@@ -213,36 +166,6 @@ export function updateMountPresentation(
         seatRiderOnBone(v.group, riderRoot, v.mountVisual.root, spec, v);
       }
     }
-    // A wheeled mount reads the ground under each of its four wheels and
-    // answers with body pitch/roll plus per-corner spring travel. The rig is
-    // probed once per mount and cached as null for everything without
-    // suspension nodes, so this costs one property read for every other mount.
-    if (v.mountSuspension === undefined) {
-      v.mountSuspension = createVehicleSuspensionRig(v.mountVisual.root, v.group);
-    }
-    if (presented && v.mountSuspension) {
-      applyVehicleSuspension(
-        v.mountSuspension,
-        v.group,
-        v.mountVisual.root,
-        riderRoot,
-        v.mountLift + bob,
-        spec.seatFwd,
-        !input.airborne,
-        input.moving,
-        input.facing,
-        input.dyRaw,
-        input.groundSample,
-        dt,
-      );
-      v.mountPivot = v.mountSuspension.pivoting;
-      // Lamps are parented into the chassis, so this is a one-time attach that
-      // costs a property read afterwards and needs no per-frame update.
-      if (spec.fx === 'pipes') {
-        attachVehicleHeadlights(v.mountSuspension.chassis, RALLYCART_HEADLIGHTS);
-        attachVehicleTaillights(v.mountSuspension.chassis, RALLYCART_TAILLIGHTS);
-      }
-    }
     // Ambient mount particles: the snail paints its slime path while gliding,
     // the hover cycle streams aether exhaust off its tail.
     if (presented) {
@@ -250,21 +173,6 @@ export function updateMountPresentation(
         if (input.moving) input.vfx.mountSlimeTrail(v.group.position, dt);
       } else if (spec.fx === 'exhaust') {
         input.vfx.mountExhaust(v.group.position, input.facing, dt, input.moving);
-      } else if (spec.fx === 'pipes' && v.mountSuspension) {
-        // Piped exhaust rides the chassis matrix, so it keeps its place through
-        // the body's pitch, roll and landing squat.
-        v.mountExhaust ??= createVehicleExhaust();
-        applyVehicleExhaust(v.mountExhaust, {
-          chassis: v.mountSuspension.chassis,
-          frontSign: v.mountSuspension.frontSign,
-          ports: RALLYCART_EXHAUST_PORTS,
-          phase: rallycartExhaustPhase(input),
-          elapsed: input.enginePhase?.elapsed ?? 0,
-          reversing: input.anim.backwards,
-          pivoting: v.mountPivot,
-          vfx: input.vfx,
-          dt,
-        });
       }
     }
     if (v.mountLamps) updateMountLamps(v.mountLamps, input.time);
@@ -279,7 +187,6 @@ export function updateMountPresentation(
     // vehicle's last attitude after the vehicle is gone.
     v.rocketSledJumpPitch = 0;
     v.mountJumpPitch = 0;
-    v.mountPivot = false;
     v.visual.root.rotation.x = 0;
     v.visual.root.rotation.z = 0;
     v.visual.root.position.x = 0;

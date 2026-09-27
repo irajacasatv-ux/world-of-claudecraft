@@ -164,7 +164,7 @@ describe('buildManifest', () => {
     expect(manifest).toContain('cast_lightning_bolt');
   });
 
-  it('keeps release mount/UI cues and Warrior recordings in one 387-key inventory', () => {
+  it('keeps release mount/UI cues and Warrior recordings in one 377-key inventory', () => {
     // Combine the release farming/crafting cues with the candidate mount cues.
     // Release inventory: 319 total, 92 UI, 34 mount. A mount may share
     // player footfalls or have several cues, so this is not a mount count.
@@ -176,8 +176,11 @@ describe('buildManifest', () => {
     // 387 adds the Viridian Valestrider's six mount cues on top of that 381:
     // its gait pool, summon call, takeoff, touchdown, and the squawk/flap pair
     // it calls at the apex of a jump. Mount cues 34 -> 40; UI is unchanged.
+    // 377 drops the retired Rallycart RXT's ten keys with its deleted takes
+    // (summon, idle, start, loop, stop, the reverse trio, takeoff, touchdown).
+    // Mount cues 40 -> 30; UI is unchanged.
     const keys = new Set(SFX.map((entry) => entry.key));
-    expect(keys.size).toBe(387);
+    expect(keys.size).toBe(377);
     expect([...keys].filter((key) => key.includes('_warrior_'))).toHaveLength(60);
     expect([...keys].filter((key) => key.includes('_masterwork_'))).toEqual([
       'impact_masterwork_execution',
@@ -186,7 +189,7 @@ describe('buildManifest', () => {
     expect(keys.has('piercing_howl')).toBe(true);
     expect([...keys].filter((key) => key.startsWith('ui_aura_'))).toHaveLength(20);
     expect([...keys].filter((key) => key.startsWith('ui_'))).toHaveLength(92);
-    expect([...keys].filter((key) => key.startsWith('mount_'))).toHaveLength(40);
+    expect([...keys].filter((key) => key.startsWith('mount_'))).toHaveLength(30);
     expect(keys.has('ui_craft_cast')).toBe(true);
     expect(keys.has('ui_farm_plant')).toBe(true);
     expect(keys.has('ui_farm_harvest')).toBe(true);
@@ -279,7 +282,7 @@ describe('buildManifest', () => {
     // purely filesystem-discovered.
     const mobFamilyKeys = [...keys].filter((key) => key.startsWith('mob_'));
     expect(mobFamilyKeys).toHaveLength(65); // 13 families x 5 actions
-    expect(SFX_FIXED_CATALOG_KEYS).toHaveLength(387);
+    expect(SFX_FIXED_CATALOG_KEYS).toHaveLength(377);
     expect([...SFX_FIXED_CATALOG_KEYS].sort()).toEqual([...keys].sort());
   });
 });

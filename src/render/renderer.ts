@@ -804,7 +804,6 @@ import { createPrewarmGroupSlot, createVariantPrewarmSlot } from './variant_prew
 import { routeVarkhulForgeHammer } from './varkhul_forge_hammer';
 import { VarkhulForgestormVisuals } from './varkhul_forgestorm_visual';
 import { createVehicleCamera, stepRendererVehicleCamera } from './vehicle_camera_core';
-import type { VehicleSuspensionRig } from './vehicle_suspension_fx';
 import { SCHOOL_COLORS, Vfx } from './vfx';
 import { createOffsetVfxAnchor, createVfxAnchor } from './vfx_anchor';
 import { buildCastVfxBasicStandIns } from './vfx_basic_materials';
@@ -1279,12 +1278,6 @@ export interface EntityView
   fallSpeed: number;
   /** Goblin Rocket Sled's display-only rigid jump attitude (nose-up radians). */
   rocketSledJumpPitch: number;
-  mountPivot: boolean;
-  mountExhaust: { flameFired: boolean } | null;
-  /** Terrain-reactive suspension for a wheeled mount. `undefined` means the
-   *  current mount has not been probed yet, `null` that it has no suspension
-   *  nodes, which is every mount that is not a vehicle. */
-  mountSuspension: VehicleSuspensionRig | null | undefined;
   /** Damped terrain lean plus its cadence-sampled gradient. */
   groundTilt: GroundTiltState;
   tiltGradX: number;
@@ -8181,9 +8174,6 @@ export class Renderer {
       hasPrevY: false,
       fallSpeed: 0,
       rocketSledJumpPitch: 0,
-      mountPivot: false,
-      mountExhaust: null,
-      mountSuspension: undefined,
       // Stagger the first resample so a crowd spreads its terrain samples.
       tiltSampleT: (e.id % 7) * (TILT_SAMPLE_INTERVAL / 7),
       tiltGradX: 0,
@@ -10483,9 +10473,6 @@ export class Renderer {
       const targetMountVisualKey = mountSpec?.visualKey ?? '';
       if (v.mountVisualKey !== targetMountVisualKey) {
         releaseMountFx(v);
-        v.mountSuspension = undefined;
-        v.mountExhaust = null;
-        v.mountPivot = false;
       }
       syncMountVisual(v, mountSpec, this.mountHost);
       const mountPresented = mountShown && !!v.mountVisual && !v.mountCompilePending;
@@ -11129,8 +11116,6 @@ export class Renderer {
         present: runCharacterPresentation,
         animate,
         vfx: this.vfx,
-        enginePhase: this.audioSink?.mountEnginePhase(e.id) ?? null,
-        groundSample: this.groundSample,
         dt,
       });
       // The rider is placed: carry the body-attached auras to the saddle.

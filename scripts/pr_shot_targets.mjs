@@ -2685,7 +2685,6 @@ export const TARGETS = [
             'chimeglass_tortoise',
             'rickshaw_mount',
             'goblin_rocket_sled',
-            'rallycart_rxt',
           ],
           weaponSkinIds: ['ice_fang_sword', 'glaciersplit_axe'],
           mechChromaIds: ['amber_crimson', 'onyx_gold'],

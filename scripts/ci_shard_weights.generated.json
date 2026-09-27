@@ -2,7 +2,7 @@
   "__provenance": {
     "run": "34168361798",
     "harvested": "2026-09-08",
-    "files": 4936,
+    "files": 4927,
     "harvestedFiles": 3903,
     "carried": {
       "tests/ability_imbue_text.test.ts": {
@@ -5361,42 +5361,6 @@
           843
         ]
       },
-      "tests/rallycart_exhaust_ports.test.ts": {
-        "ms": 12,
-        "method": "local-median",
-        "measured": "2026-09-26",
-        "reason": "local carry pending the next full-mode harvest",
-        "runs": [
-          12
-        ]
-      },
-      "tests/rallycart_headlights.test.ts": {
-        "ms": 13,
-        "method": "local-median",
-        "measured": "2026-09-26",
-        "reason": "local carry pending the next full-mode harvest",
-        "runs": [
-          13
-        ]
-      },
-      "tests/rallycart_steer_lock.test.ts": {
-        "ms": 98,
-        "method": "local-median",
-        "measured": "2026-09-26",
-        "reason": "local carry pending the next full-mode harvest",
-        "runs": [
-          98
-        ]
-      },
-      "tests/rallycart_taillights.test.ts": {
-        "ms": 1172,
-        "method": "local-median",
-        "measured": "2026-09-26",
-        "reason": "local carry pending the next full-mode harvest",
-        "runs": [
-          1172
-        ]
-      },
       "tests/ready_check_leader_window.test.ts": {
         "ms": 5,
         "method": "local-median",
@@ -7342,15 +7306,6 @@
           8
         ]
       },
-      "tests/vehicle_exhaust_core.test.ts": {
-        "ms": 5,
-        "method": "local-median",
-        "measured": "2026-09-26",
-        "reason": "local carry pending the next full-mode harvest",
-        "runs": [
-          5
-        ]
-      },
       "tests/vehicle_gamepad.test.ts": {
         "ms": 7,
         "method": "local-median",
@@ -7376,42 +7331,6 @@
         "reason": "local carry pending the next full-mode harvest",
         "runs": [
           1628
-        ]
-      },
-      "tests/vehicle_steering_core.test.ts": {
-        "ms": 5,
-        "method": "local-median",
-        "measured": "2026-09-26",
-        "reason": "local carry pending the next full-mode harvest",
-        "runs": [
-          5
-        ]
-      },
-      "tests/vehicle_suspension_core.test.ts": {
-        "ms": 12,
-        "method": "local-median",
-        "measured": "2026-09-26",
-        "reason": "local carry pending the next full-mode harvest",
-        "runs": [
-          12
-        ]
-      },
-      "tests/vehicle_suspension_fx.test.ts": {
-        "ms": 35,
-        "method": "local-median",
-        "measured": "2026-09-26",
-        "reason": "local carry pending the next full-mode harvest",
-        "runs": [
-          35
-        ]
-      },
-      "tests/vehicle_wheel_overspin.test.ts": {
-        "ms": 10,
-        "method": "local-median",
-        "measured": "2026-09-26",
-        "reason": "local carry pending the next full-mode harvest",
-        "runs": [
-          10
         ]
       },
       "tests/vehicles.test.ts": {
@@ -13037,10 +12956,6 @@
   "tests/raid_warning_banner.test.ts": 6,
   "tests/raid_wipe_cooldowns.test.ts": 1454,
   "tests/raid_wipe_entrant_reset.test.ts": 843,
-  "tests/rallycart_exhaust_ports.test.ts": 12,
-  "tests/rallycart_headlights.test.ts": 13,
-  "tests/rallycart_steer_lock.test.ts": 98,
-  "tests/rallycart_taillights.test.ts": 1172,
   "tests/range_command.test.ts": 3024,
   "tests/ranged_shot.test.ts": 9,
   "tests/rare_ogre_spawn.test.ts": 2212,
@@ -14176,14 +14091,9 @@
   "tests/vehicle_aim_core.test.ts": 7,
   "tests/vehicle_camera_core.test.ts": 9,
   "tests/vehicle_command_wire.test.ts": 8,
-  "tests/vehicle_exhaust_core.test.ts": 5,
   "tests/vehicle_gamepad.test.ts": 7,
   "tests/vehicle_gamepad_core.test.ts": 4,
   "tests/vehicle_station_placement.test.ts": 1628,
-  "tests/vehicle_steering_core.test.ts": 5,
-  "tests/vehicle_suspension_core.test.ts": 12,
-  "tests/vehicle_suspension_fx.test.ts": 35,
-  "tests/vehicle_wheel_overspin.test.ts": 10,
   "tests/vehicles.test.ts": 35143,
   "tests/veiled_hollow.test.ts": 7039,
   "tests/veiled_hollow_a.test.ts": 2221,

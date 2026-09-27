@@ -131,7 +131,7 @@ export interface MountVisualSpec {
   bobShape: 'hover' | 'hop';
   /** Ambient particle effect the renderer emits for this mount: the snail's
    *  slime path while moving, the hover cycle's aether exhaust. */
-  fx: 'slime' | 'exhaust' | 'pipes' | null;
+  fx: 'slime' | 'exhaust' | null;
   /** Lit lamps carried on the rig (empty for every mount that carries none). */
   lamps: readonly MountLampSpec[];
   /** Seat bone the rider is anchored to, or null to sit at the fixed `seat`
@@ -150,7 +150,7 @@ const spec = (
   rigged: boolean,
   bob?: { amp: number; hz: number; idle?: boolean; shape?: 'hover' | 'hop' },
   seatFwd = 0,
-  fx: 'slime' | 'exhaust' | 'pipes' | null = null,
+  fx: 'slime' | 'exhaust' | null = null,
   lamps: readonly MountLampSpec[] = [],
   seatBone: MountSeatSpec | null = null,
   // Two rarely-set fields ride an options bag rather than extending an already
@@ -348,10 +348,6 @@ export const MOUNT_SKIN_VISUAL_SPECS: Record<MountSkinId, MountVisualSpec> = {
     null,
     { groundLift: 0.09 },
   ),
-  // The Rallycart RXT spec (mount_rallycart_rxt, scale 1.06, seat -0.86,
-  // 'pipes' exhaust) left with the skin's retirement (RETIRED_MOUNT_SKIN_IDS in
-  // src/sim/content/mount_skins.ts); the GLB and its vehicle modules stay dormant.
-
   // The Cluckwork Mech Bird: authored rigid-servo clips (no procedural bob,
   // the clips carry the motion). Saddle surface sits at 0.60 of the raw model
   // (x3.4 height), dead over the origin, so no fore/aft shift.

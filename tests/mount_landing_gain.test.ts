@@ -37,9 +37,9 @@ function capture(
 describe('mount landing gain', () => {
   it('plays a mount landing 50% louder than the rider on foot', () => {
     const onFoot = capture('land', '');
-    const mounted = capture('land', 'rallycart_rxt');
+    const mounted = capture('land', 'avian_strider');
     expect(onFoot.key).toBe('move_land');
-    expect(mounted.key).toBe('mount_land_rallycart_rxt');
+    expect(mounted.key).toBe('mount_land_avian_strider');
     expect(mounted.gain).toBeCloseTo(onFoot.gain * 1.125, 9);
   });
 
@@ -48,14 +48,14 @@ describe('mount landing gain', () => {
   });
 
   it('does not lift the takeoff, only the landing', () => {
-    const jump = capture('jump', 'rallycart_rxt');
-    expect(jump.key).toBe('mount_jump_rallycart_rxt');
+    const jump = capture('jump', 'avian_strider');
+    expect(jump.key).toBe('mount_jump_avian_strider');
     expect(jump.gain).toBeCloseTo(0.7, 9);
   });
 
   it('leaves the water cues alone, mounted or not', () => {
-    expect(capture('splash', 'rallycart_rxt').gain).toBeCloseTo(0.7, 9);
-    expect(capture('swim', 'rallycart_rxt').gain).toBeCloseTo(0.5, 9);
+    expect(capture('splash', 'avian_strider').gain).toBeCloseTo(0.7, 9);
+    expect(capture('swim', 'avian_strider').gain).toBeCloseTo(0.5, 9);
   });
 
   it('does not lift a mount that has no landing take of its own', () => {

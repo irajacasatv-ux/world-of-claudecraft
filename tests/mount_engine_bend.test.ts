@@ -89,38 +89,3 @@ describe('direction flips cut on a dime', () => {
     expect(d.next.state).toBe('stopping');
   });
 });
-
-describe('mountEngineBendRate while pivoting', () => {
-  // Turning on the spot works the engine the way reverse does: load, and no
-  // road speed. The same lift rather than a third value, which is what was
-  // asked for and also what it sounds like.
-  const semitones = (rate: number) => Math.round(12 * Math.log2(rate));
-
-  it('lifts a pivot by the reverse interval', () => {
-    expect(semitones(mountEngineBendRate(false, false, true, true))).toBe(2);
-    expect(mountEngineBendRate(false, false, true, true)).toBeCloseTo(
-      mountEngineBendRate(true, false, true, false),
-      12,
-    );
-  });
-
-  it('does not stack with reverse', () => {
-    // Reversing AND pivoting is still one loaded engine, not two.
-    expect(semitones(mountEngineBendRate(true, false, true, true))).toBe(2);
-  });
-
-  it('combines with airborne exactly as reverse does', () => {
-    expect(semitones(mountEngineBendRate(false, true, true, true))).toBe(4);
-  });
-
-  it('leaves a mount with no idle take alone', () => {
-    // The tank and the sled express none of this as a pitch bend, so a pivot
-    // must not start retuning a shipped mount.
-    expect(mountEngineBendRate(false, false, false, true)).toBe(1);
-  });
-
-  it('is inert when not pivoting, so nothing changed by default', () => {
-    expect(mountEngineBendRate(false, false, true)).toBe(1);
-    expect(mountEngineBendRate(false, false, true, false)).toBe(1);
-  });
-});

@@ -179,10 +179,6 @@ const BOW_PIN_BLEND_S = 0.12; // engage/disengage fade for the orientation pins
 
 const FADE = 0.22;
 const ONESHOT_FADE = 0.1;
-/** Near-instant crossfade for a `cutToIdle` visual: not zero, because three
- *  needs a frame to hand the pose over cleanly, but short enough to read as a
- *  hard stop. */
-const CUT_FADE = 0.02;
 /** Idle-breaker cadence (seconds): a floor plus a per-fire jitter, so several
  *  copies of the same rig standing together never fidget in lockstep.
  *
@@ -3518,10 +3514,6 @@ export class CharacterVisual {
     // stride almost immediately. The normal crossfade preserves too much of a
     // forward-leaning Run pose after takeoff and reads as a frozen leap.
     if (this.key === 'form_metamorph' && next === 'jump') return 0.04;
-    // A wheeled vehicle stops turning its wheels the moment it stops moving.
-    // The outgoing clip keeps playing through a crossfade, so any real fade
-    // here spins the wheels on after the throttle is released.
-    if (this.def.cutToIdle && next === 'idle') return CUT_FADE;
     return FADE;
   }
 

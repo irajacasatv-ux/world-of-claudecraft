@@ -90,14 +90,16 @@ export const MOUNT_SKINS: Record<MountSkinId, MountSkinDef> = {
   },
 };
 
-/** Skins withdrawn from the game. Their assets, audio, legacy reins items and
- *  locale rows stay in the tree as dormant data (a load never destroys what a
- *  save carries), but nothing here sells, grants, wears, lists, or renders
- *  them: `isMountSkinId` is false, so the store and Cosmetics screen omit the
- *  card, the account mirror filters the grant, `normalizeMountSkinId` refuses
- *  the wear, the join reconcile takes a worn one off, and the renderer falls
- *  back to the ridden mount's own look. The Rallycart RXT (2026-09-10) was
- *  pulled after player feedback; its economy catalog row went first. */
+/** Skins withdrawn from the game. Nothing here sells, grants, wears, lists, or
+ *  renders them: `isMountSkinId` is false, so the store and Cosmetics screen
+ *  omit the card, the account mirror filters the grant, `normalizeMountSkinId`
+ *  refuses the wear, the join reconcile takes a worn one off, and the renderer
+ *  falls back to the ridden mount's own look. The Rallycart RXT (2026-09-10)
+ *  was pulled after player feedback; its economy catalog row went first. Its
+ *  model, audio, vehicle render code and store art were deleted on 2026-09-27
+ *  under the ruling to remove what nothing uses; the reins item, its icon and
+ *  its locale rows stay, because a save can still carry the item (a load never
+ *  destroys what a save carries). */
 export const RETIRED_MOUNT_SKIN_IDS: readonly string[] = ['rallycart_rxt'];
 
 /** Catalog order (see MOUNT_SKINS). */

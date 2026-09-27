@@ -405,12 +405,12 @@ describe('mount transition effects', () => {
     const cast = transitionInputs({
       mountCasting: true,
       mountCastKey: 'valorsteed',
-      mountLook: 'rallycart_rxt',
+      mountLook: 'goblin_rocket_sled',
     });
     state.wasMountCasting = syncMountTransitionFx(state, cast);
-    expect(cast.preloadSummon).toHaveBeenCalledWith('rallycart_rxt');
-    expect(cast.preloadEngine).toHaveBeenCalledWith('rallycart_rxt');
-    const complete = transitionInputs({ mountKey: 'valorsteed', mountLook: 'rallycart_rxt' });
+    expect(cast.preloadSummon).toHaveBeenCalledWith('goblin_rocket_sled');
+    expect(cast.preloadEngine).toHaveBeenCalledWith('goblin_rocket_sled');
+    const complete = transitionInputs({ mountKey: 'valorsteed', mountLook: 'goblin_rocket_sled' });
     state.wasMountCasting = syncMountTransitionFx(state, complete);
     expect(complete.engineReset).toHaveBeenCalledOnce();
     expect(complete.summonCall).toHaveBeenCalledOnce();

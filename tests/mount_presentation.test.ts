@@ -74,9 +74,6 @@ function rig(): {
     mountGlows: null,
     mountSeatBone: null,
     mountCompilePending: false,
-    mountPivot: false,
-    mountSuspension: undefined,
-    mountExhaust: null,
   };
   return { v, rider, mountUpdate };
 }
@@ -114,8 +111,6 @@ function inputs(
     present: true,
     animate: true,
     vfx,
-    enginePhase: null,
-    groundSample: () => 0,
     dt: 1 / 20,
     ...overrides,
   };

@@ -51,9 +51,10 @@ describe('mount skin catalog', () => {
   });
 
   it('retires the Rallycart RXT out of every registry read', () => {
-    // Withdrawn 2026-09-10 after player feedback. The id stays listed under
-    // RETIRED_MOUNT_SKIN_IDS so the dormant assets have an owner, but no read
-    // that sells, grants, wears, lists or renders a skin ever sees it.
+    // Withdrawn 2026-09-10 after player feedback, its assets deleted 2026-09-27.
+    // The id stays listed under RETIRED_MOUNT_SKIN_IDS for the join reconcile
+    // and the save-carried reins item, but no read that sells, grants, wears,
+    // lists or renders a skin ever sees it.
     expect(RETIRED_MOUNT_SKIN_IDS).toEqual(['rallycart_rxt']);
     for (const id of RETIRED_MOUNT_SKIN_IDS) {
       expect(MOUNT_SKIN_IDS).not.toContain(id);

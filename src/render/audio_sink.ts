@@ -7,15 +7,6 @@ import type { BiomeId } from '../sim/types';
 
 export type Surface = 'grass' | 'dirt' | 'stone' | 'wood' | 'snow' | 'water';
 
-/** Where a mount's engine audio currently is, for visuals that want to land on
- *  a specific moment of it. Kept structural rather than importing the sim-side
- *  state type, so src/render keeps its no-src/game rule. */
-export interface MountEnginePhase {
-  state: 'idle' | 'starting' | 'moving' | 'stopping';
-  /** Seconds on the audio clock since this phase began. */
-  elapsed: number;
-}
-
 export interface AmbientPointSource {
   readonly id: string;
   // 'rift_portal'/'rift_roller'/'rift_ice_glide' are dynamic (spawn/move/
@@ -102,9 +93,6 @@ export interface SpatialAudioSink {
     entityId: number,
     backwards?: boolean,
     airborne?: boolean,
-    /** Turning on the spot. Works the engine the way reverse does, load with
-     *  no road speed, so it takes the same pitch bend. */
-    pivoting?: boolean,
   ): boolean;
   /** The mount-appears one-shot, fired on the summon channel's completion
    *  edge. Silent for a mount with no summon take. */
@@ -137,13 +125,6 @@ export interface SpatialAudioSink {
    *  polled mid-jump without a hop reading as a stop. True for a mount with a
    *  parked idle take. */
   mountEngineIdles(mountKey: string): boolean;
-  /** Engine phase for an entity, or null when it has no engine running.
-   *
-   *  `elapsed` is seconds since the phase began, measured on the AUDIO clock
-   *  rather than a frame counter. That is what lets a visual event be pinned to
-   *  a known moment INSIDE an authored take and stay pinned through a frame
-   *  hitch, instead of drifting against the sound it is meant to punctuate. */
-  mountEnginePhase(entityId: number): MountEnginePhase | null;
   /** Warm a mount's authored run/idle/jump/land and engine take set ahead of
    *  first movement. The renderer calls this on summon-cast and mountKey
    *  transitions. A no-op for a mount with no custom movement clips. */

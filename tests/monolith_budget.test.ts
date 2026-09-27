@@ -1062,7 +1062,9 @@ const MONOLITHS: MonolithRow[] = [
     // RE-PINNED at the Freeholds sync of release/v0.44.0 at aaff789813: wc -l on the
     // merged tree measures 12675 (this branch 12677, the release 12680). Exact merged
     // count, zero slack.
-    ceiling: 12675,
+    // LOWERED 12675 -> 12659 on 2026-09-27: the retired Rallycart's wheeled-vehicle
+    // branch (suspension, lamps, piped exhaust, engine phase) was deleted as unused.
+    ceiling: 12659,
     seam: 'a new src/render/<thing>.ts module the renderer calls (src/render/CLAUDE.md)',
   },
   {

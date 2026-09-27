@@ -16,12 +16,23 @@
 
 import { describe, expect, it } from 'vitest';
 import { sfx } from '../src/game/sfx';
+import { SFX_CLIPS } from '../src/game/sfx_manifest.generated';
 
 describe('mountEngineIdles', () => {
   it('is true for a mount authored with a parked idle take', () => {
     // Never silent while summoned, so a mid-jump poll cannot be mistaken for a
-    // stop and the airborne bend can actually be applied.
-    expect(sfx.mountEngineIdles('rallycart_rxt')).toBe(true);
+    // stop and the airborne bend can actually be applied. The opt-in is data:
+    // a `mount_run_<key>_idle` manifest entry. No shipped mount carries one
+    // since the Rallycart RXT's takes were deleted, so a synthetic entry under
+    // a key nothing else uses stands in for it.
+    const clips = SFX_CLIPS as Record<string, unknown>;
+    const idleKey = 'mount_run_test_parked_engine_idle';
+    clips[idleKey] = clips.mount_run_goblin_rocket_sled;
+    try {
+      expect(sfx.mountEngineIdles('test_parked_engine')).toBe(true);
+    } finally {
+      Reflect.deleteProperty(clips, idleKey);
+    }
   });
 
   it('is false for an engine mount with no idle take', () => {

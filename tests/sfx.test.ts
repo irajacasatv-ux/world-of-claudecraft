@@ -2,7 +2,7 @@ import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { FORGE_MAX_DISTANCE, MAX_DISTANCE, REF_DISTANCE, sfx } from '../src/game/sfx';
 import { SFX_CLIPS, type SfxEntry } from '../src/game/sfx_manifest.generated';
-import { MOUNT_SKIN_IDS, RETIRED_MOUNT_SKIN_IDS } from '../src/sim/content/mount_skins';
+import { MOUNT_SKIN_IDS } from '../src/sim/content/mount_skins';
 import { MOUNT_KEYS } from '../src/sim/content/mounts';
 
 // The footstep "jingling" bug: foot clips are ~0.48s but steps fire every ~0.22s
@@ -218,7 +218,7 @@ beforeEach(() => {
 // parked idle had already been rising underneath it at full level. What the
 // player heard was two engines and then a step, not a crossfade.
 describe('mount summon to idle crossfade', () => {
-  const SUMMON_KEY = 'mount_summon_rallycart_rxt';
+  const SUMMON_KEY = 'mount_summon_goblin_rocket_sled';
   const SUMMON_DURATION = 2.3;
   // Mirrors SUMMON_CROSSFADE_SEC in src/game/sfx.ts. Pinned as a literal so a
   // change to that constant has to be a deliberate edit here too: both halves
@@ -234,7 +234,7 @@ describe('mount summon to idle crossfade', () => {
   it('fades the summon tail instead of truncating the take', () => {
     seedSummon();
     gainScheduleCalls = [];
-    sfx.mountSummon(0, 0, 0, 'rallycart_rxt', true, 1);
+    sfx.mountSummon(0, 0, 0, 'goblin_rocket_sled', true, 1);
 
     const fade = gainScheduleCalls.find((c) => c.kind === 'setTargetAtTime' && c.value < 0.01);
     expect(fade, 'the summon must schedule a fade to silence').toBeDefined();
@@ -252,7 +252,7 @@ describe('mount summon to idle crossfade', () => {
 
   it('opens the idle gate exactly as the summon starts fading', () => {
     seedSummon();
-    sfx.mountSummon(0, 0, 0, 'rallycart_rxt', true, 7);
+    sfx.mountSummon(0, 0, 0, 'goblin_rocket_sled', true, 7);
 
     const gate = (
       sfx as unknown as { mountEngineIdleGate: Map<number, number> }
@@ -268,7 +268,7 @@ describe('mount summon to idle crossfade', () => {
     // before the summon had begun fading. They must land on the same instant.
     seedSummon();
     gainScheduleCalls = [];
-    sfx.mountSummon(0, 0, 0, 'rallycart_rxt', true, 11);
+    sfx.mountSummon(0, 0, 0, 'goblin_rocket_sled', true, 11);
 
     const fade = gainScheduleCalls.find((c) => c.kind === 'setTargetAtTime' && c.value < 0.01);
     const gate = (
@@ -282,7 +282,7 @@ describe('mount summon to idle crossfade', () => {
     // the handoff is scheduled off the take's real (rate-scaled) length.
     seedSummon();
     vi.spyOn(Math, 'random').mockReturnValue(0.99); // a maximal jitter roll
-    sfx.mountSummon(0, 0, 0, 'rallycart_rxt', true, 12);
+    sfx.mountSummon(0, 0, 0, 'goblin_rocket_sled', true, 12);
     expect(sources.at(-1)?.playbackRate.value).toBeCloseTo(1, 6);
   });
 
@@ -351,7 +351,7 @@ describe('mount summon to idle crossfade', () => {
     // Guard against scheduling a fade that would start before the sound does.
     seedSummon(0.2);
     gainScheduleCalls = [];
-    sfx.mountSummon(0, 0, 0, 'rallycart_rxt', true, 2);
+    sfx.mountSummon(0, 0, 0, 'goblin_rocket_sled', true, 2);
 
     expect(gainScheduleCalls.some((c) => c.kind === 'setTargetAtTime' && c.value < 0.01)).toBe(
       false,
@@ -487,11 +487,7 @@ describe('mount running audio', () => {
     // Engine mounts use mount_run_ as the sustain take of an authored
     // windup/loop/winddown set. Those entries genuinely run through
     // Sfx.loop(); every other mount's entry is a per-stride one-shot.
-    const ENGINE_LOOP_MOUNTS = new Set([
-      'goblin_rocket_sled',
-      'rallycart_rxt',
-      'terrorspark_groundshaker',
-    ]);
+    const ENGINE_LOOP_MOUNTS = new Set(['goblin_rocket_sled', 'terrorspark_groundshaker']);
     // A mount that ships a continuous mount_loop_ cue (the rickshaw) has no
     // mount_run_ entry at all, since mountRun no-ops for it, so it is excluded
     // from this per-stride-manifest-entry check entirely. Lanternback and
@@ -524,26 +520,19 @@ describe('mount running audio', () => {
   // Engine mounts ship start and stop transitions beside their base loop.
   const ENGINE_MOUNT_EXTRA_SUFFIXES: Partial<Record<string, string[]>> = {
     goblin_rocket_sled: ['_start', '_stop', '_reverse_start', '_reverse', '_reverse_stop'],
-    // The cart adds a parked IDLE take on top of the sled's set: its reverse is
-    // that idle pitched at runtime, so the printed reverse takes ship but are
-    // not resolved by the engine state machine.
-    rallycart_rxt: ['_start', '_stop', '_idle', '_reverse_start', '_reverse', '_reverse_stop'],
     terrorspark_groundshaker: ['_start', '_stop'],
   };
 
   it('ships one non-empty MP3 asset for every mount and no orphan clips', () => {
     const directory = new URL('../public/audio/sfx/', import.meta.url);
-    // A retired skin's takes stay on disk as dormant data: expected here, never
-    // orphans, until the asset sweep that deletes them moves this pin together
-    // with the RETIRED_MOUNT_SKIN_IDS entry.
-    const expected = [...CUSTOM_STRIDE_MOUNTS, ...RETIRED_MOUNT_SKIN_IDS]
-      .flatMap((mountKey) => [
-        ...gaitTakeNames(mountKey),
-        ...(ENGINE_MOUNT_EXTRA_SUFFIXES[mountKey] ?? []).map(
-          (suffix) => `mount_run_${mountKey}${suffix}.mp3`,
-        ),
-      ])
-      .sort();
+    // A retired skin ships no takes: the Rallycart RXT's were deleted with its
+    // assets, so one reappearing on disk is an orphan this pin catches.
+    const expected = CUSTOM_STRIDE_MOUNTS.flatMap((mountKey) => [
+      ...gaitTakeNames(mountKey),
+      ...(ENGINE_MOUNT_EXTRA_SUFFIXES[mountKey] ?? []).map(
+        (suffix) => `mount_run_${mountKey}${suffix}.mp3`,
+      ),
+    ]).sort();
     const actual = readdirSync(directory)
       .filter((file) => file.startsWith('mount_run_') && file.endsWith('.mp3'))
       .sort();

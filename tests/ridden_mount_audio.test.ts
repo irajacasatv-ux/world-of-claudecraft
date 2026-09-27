@@ -11,7 +11,7 @@ function setup(look: string, moving = true, airborne = false, engine = false, id
     mountApex: vi.fn(),
   };
   const surface = vi.fn(() => 'stone' as const);
-  const state = { stepAccum: 5.7, mountPivot: true };
+  const state = { stepAccum: 5.7 };
   updateRiddenMountAudio(
     sink,
     state,
@@ -37,7 +37,7 @@ describe('ridden mount audio', () => {
     expect(sink.mountRun).toHaveBeenCalledWith(1, 2, 3, id, 'stone', true);
   });
   it('does not add gait beats or surface samples to an engine skin', () => {
-    const { sink, surface } = setup('rallycart_rxt', true, false, true);
+    const { sink, surface } = setup('goblin_rocket_sled', true, false, true);
     expect(sink.mountRun).not.toHaveBeenCalled();
     expect(surface).not.toHaveBeenCalled();
   });
@@ -51,22 +51,15 @@ describe('ridden mount audio', () => {
       9,
       true,
       true,
-      true,
     );
     expect(setup('terrorspark_groundshaker', true, true).sink.mountEngine).not.toHaveBeenCalled();
-    expect(setup('rallycart_rxt', true, true, true, true).sink.mountEngine).toHaveBeenCalledWith(
-      1,
-      2,
-      3,
-      'rallycart_rxt',
-      true,
-      9,
-      true,
-      true,
-      true,
-    );
+    // An engine with a parked idle take is polled mid-jump too. The sink answers
+    // mountEngineIdles, so the look is any mount authored with one.
+    expect(
+      setup('parked_idle_engine', true, true, true, true).sink.mountEngine,
+    ).toHaveBeenCalledWith(1, 2, 3, 'parked_idle_engine', true, 9, true, true);
   });
-  it('polls idle and pivot audio while stopped', () => {
+  it('polls idle audio while stopped', () => {
     const { sink } = setup('rickshaw_mount', false);
     expect(sink.mountEngine).toHaveBeenCalledWith(
       1,
@@ -77,7 +70,6 @@ describe('ridden mount audio', () => {
       9,
       false,
       false,
-      true,
     );
     expect(sink.mountIdle).toHaveBeenCalledWith(1, 2, 3, 'rickshaw_mount', true, 9);
   });
@@ -95,7 +87,7 @@ describe('ridden mount audio', () => {
         mountApex: vi.fn(),
       };
       const surface = vi.fn(() => 'stone' as const);
-      const state = { stepAccum: 0, mountPivot: false };
+      const state = { stepAccum: 0 };
       // y is the driver: the pass takes the rise from the height it saw last
       // frame, so a jump is expressed as the arc the body actually travels.
       const frame = (airborne: boolean, y: number) =>

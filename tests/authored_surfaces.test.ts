@@ -139,7 +139,6 @@ const AUTHORED_ATLAS_DEFS = [
   'mob_dragonkin_matriarch',
   'mob_dragon_egg',
   'mount_goblin_rocket_sled',
-  'mount_rallycart_rxt',
   'mount_avian_strider',
 ];
 

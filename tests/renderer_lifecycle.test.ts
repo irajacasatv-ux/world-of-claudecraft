@@ -279,9 +279,7 @@ describe('Renderer lifecycle wiring', () => {
   it('keeps the airborne engine poll limited to the spaceship or an idling engine', () => {
     const branch = sliceIn(mountAudioSource, 'if (airborne) {', '} else if (moving) {');
     expect(branch).toContain("if (look === 'goblin_rocket_sled' || sink.mountEngineIdles(look)) {");
-    expect(branch).toContain(
-      'sink.mountEngine(x, y, z, look, moving, id, backwards, true, state.mountPivot)',
-    );
+    expect(branch).toContain('sink.mountEngine(x, y, z, look, moving, id, backwards, true)');
     expect(branch.match(/sink.mountEngine\(/g)).toHaveLength(1);
     expect(branch).not.toContain('sink.mountEngineReset(');
   });

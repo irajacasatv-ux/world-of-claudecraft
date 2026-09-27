@@ -14,7 +14,6 @@ import type * as THREE from 'three';
 import type { CharacterVisual } from './characters/visual';
 import type { GoblinRocketSledFx } from './goblin_rocket_sled_fx';
 import { type RickshawMountViewState, releaseRickshawMountState } from './rickshaw_mount';
-import type { VehicleSuspensionRig } from './vehicle_suspension_fx';
 
 /** The EntityView slice this teardown touches: a caller-owned view record. */
 export interface MountVisualHost extends RickshawMountViewState {
@@ -22,7 +21,6 @@ export interface MountVisualHost extends RickshawMountViewState {
   mountVisual: CharacterVisual | null;
   mountVisualKey: string;
   goblinRocketSledFx: GoblinRocketSledFx | null;
-  mountSuspension: VehicleSuspensionRig | null | undefined;
 }
 
 /** Disposes the mount FX controller alone, leaving the rig in place.
@@ -52,8 +50,4 @@ export function releaseMountVisual(view: MountVisualHost): void {
     view.mountVisual = null;
   }
   view.mountVisualKey = '';
-  // The suspension rig caches Object3D references INTO the rig that just went
-  // away, so it has to die with it. Back to `undefined` (not probed) rather
-  // than `null` (probed, has none), or the next mount never gets one.
-  view.mountSuspension = undefined;
 }

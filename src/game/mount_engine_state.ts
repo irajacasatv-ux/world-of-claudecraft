@@ -138,14 +138,9 @@ export function mountEngineBendRate(
   reversing: boolean,
   airborne: boolean,
   hasIdleTake: boolean,
-  pivoting = false,
 ): number {
   if (!hasIdleTake) return airborne ? SLED_AIRBORNE_RATE : 1;
-  // A car turning on the spot is working its engine the same way reverse does:
-  // load with no road speed. It gets the reverse bend rather than a third
-  // value, which is both what it sounds like and what was asked for.
-  const loaded = reversing || pivoting;
-  const semitones = loaded
+  const semitones = reversing
     ? airborne
       ? BEND_SEMITONES.both
       : BEND_SEMITONES.reverse

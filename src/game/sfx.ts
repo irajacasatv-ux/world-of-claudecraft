@@ -19,7 +19,6 @@ import {
   advanceInterruptibleMountEngine,
   advanceMountEngine,
   type MountEngineEntry,
-  type MountEngineState,
   mountEngineBendRate,
   mountEngineIdleAudible,
   mountEngineLoopActive,
@@ -1263,19 +1262,6 @@ class Sfx {
     return this.engineIdleKey(mountKey) !== null;
   }
 
-  /** Where this entity's engine audio is, and how far into that phase, on the
-   *  AUDIO clock.
-   *
-   *  Exposed so a visual can be pinned to a known moment inside an authored
-   *  take rather than to a render frame. `phaseStartedAt` is `ctx.currentTime`,
-   *  so a caller comparing against `elapsed` stays locked to the sound through
-   *  a frame hitch instead of drifting away from the thing it punctuates. */
-  mountEnginePhase(entityId: number): { state: MountEngineState; elapsed: number } | null {
-    const entry = this.mountEngines.get(entityId);
-    if (!entry || !this.ctx) return null;
-    return { state: entry.state, elapsed: this.ctx.currentTime - entry.phaseStartedAt };
-  }
-
   /** The parked engine-idle loop, for a mount authored with one. Its presence
    *  changes the shape of the whole state machine: the mount is never silent
    *  while summoned, and reverse becomes this same loop pitched up rather than
@@ -1298,11 +1284,9 @@ class Sfx {
     entityId: number,
     backwards = false,
     airborne = false,
-    pivoting = false,
   ): boolean {
-    // Mounts whose engine take set has a reverse variant and bends with jump
-    // load. Was a single hardcoded key; the rallycart wants the same behaviour.
-    const interruptible = mountKey === 'goblin_rocket_sled' || mountKey === 'rallycart_rxt';
+    // Mounts whose engine take set has a reverse variant and bends with jump load.
+    const interruptible = mountKey === 'goblin_rocket_sled';
     const idleKey = this.engineIdleKey(mountKey);
     // With a parked-idle take, REVERSE is that loop pitched up, not a separate
     // clip set, so the windup/loop/winddown machine only ever drives forward
@@ -1410,8 +1394,7 @@ class Sfx {
       const loop = this.loops.get(activeLoopId);
       if (loop) {
         const authored = this.authoredPlaybackRate(loop.key);
-        const pitchTarget =
-          authored * mountEngineBendRate(reversing, airborne, !!idleKey, pivoting);
+        const pitchTarget = authored * mountEngineBendRate(reversing, airborne, !!idleKey);
         if (loop.playbackTarget !== pitchTarget) {
           const rising = pitchTarget > loop.playbackTarget;
           loop.playbackTarget = pitchTarget;

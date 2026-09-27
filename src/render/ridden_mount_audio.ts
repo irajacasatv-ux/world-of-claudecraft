@@ -23,7 +23,7 @@ export interface MountAirborneState {
 }
 export function updateRiddenMountAudio(
   sink: MountAudio,
-  state: { stepAccum: number; mountPivot: boolean } & MountAirborneState,
+  state: { stepAccum: number } & MountAirborneState,
   look: string,
   id: number,
   x: number,
@@ -61,7 +61,7 @@ export function updateRiddenMountAudio(
     // Hold an ordinary engine phase across hops. Vehicles with an airborne
     // take or continuous idle loop still need their position and load updated.
     if (look === 'goblin_rocket_sled' || sink.mountEngineIdles(look)) {
-      sink.mountEngine(x, y, z, look, moving, id, backwards, true, state.mountPivot);
+      sink.mountEngine(x, y, z, look, moving, id, backwards, true);
     }
   } else if (moving) {
     sink.mountIdle(x, y, z, look, false, id);
@@ -74,7 +74,7 @@ export function updateRiddenMountAudio(
       state.stepAccum = MOUNT_STRIDE_RUN * 0.6;
     }
   } else {
-    sink.mountEngine(x, y, z, look, false, id, false, false, state.mountPivot);
+    sink.mountEngine(x, y, z, look, false, id, false, false);
     sink.mountIdle(x, y, z, look, true, id);
   }
 }
