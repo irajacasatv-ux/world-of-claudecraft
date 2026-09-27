@@ -5,6 +5,9 @@
 // the housing wire suite retained 1.7 GB across its cases. These pins drive
 // the installed module, so a vitest upgrade that drops the patch (pnpm refuses
 // an unused patch, but a re-authored one can lose a hunk) fails here.
+// The patch adds no collection of its own: its first form tracked restores in a
+// Map, and every suite that spies on Map.prototype.set then counted the spy
+// library's bookkeeping (tests/text_sprite_cache.test.ts caught it).
 
 import { readFileSync } from 'node:fs';
 import { describe, expect, it, vi } from 'vitest';
@@ -60,6 +63,29 @@ describe('the @vitest/spy restore patch', () => {
       expect(dropped.deref()).toBeUndefined();
     },
   );
+
+  it('keeps its bookkeeping off Map, so a spy on Map.prototype.set sees only the code under test', () => {
+    // tests/text_sprite_cache.test.ts spies Map.prototype.set and then creates two
+    // more spies before it counts: a patch that tracked restores in a Map made
+    // each of those spy creations (and their restores) count as a set.
+    const mapSet = vi.spyOn(Map.prototype, 'set');
+    const mapDelete = vi.spyOn(Map.prototype, 'delete');
+    let sets: number;
+    let deletes: number;
+    try {
+      const target = freshTarget();
+      const other = vi.spyOn(target, 'method');
+      target.method(1);
+      other.mockRestore();
+      vi.spyOn(freshTarget(), 'method');
+      sets = mapSet.mock.calls.length;
+      deletes = mapDelete.mock.calls.length;
+    } finally {
+      vi.restoreAllMocks();
+    }
+    expect(sets).toBe(0);
+    expect(deletes).toBe(0);
+  });
 
   it('a restored spy leaves the registry, and a plain or unrestored mock stays in it', () => {
     const target = freshTarget();
