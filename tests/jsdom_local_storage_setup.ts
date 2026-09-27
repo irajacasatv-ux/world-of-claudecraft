@@ -15,7 +15,7 @@
 // It also turns the event loop once after every case in a DOM-environment file
 // (the last block below): a memory leak in the harness, not in any one suite.
 
-import { afterEach } from 'vitest';
+import { beforeEach } from 'vitest';
 
 function isUsableStorage(storage: unknown): storage is Storage {
   return (
@@ -104,7 +104,14 @@ if (typeof window !== 'undefined') {
 // The timer is captured at load, before any case can install fake timers, so a
 // case that leaves fake timers on cannot hang this hook. Pure Node files skip
 // it: they hold no DOM tree and pay nothing.
+// AFTER EVERYTHING A CASE TEARS DOWN, not in afterEach: Vitest runs the
+// afterEach hooks first and the beforeEach cleanups after them, and
+// @testing-library/svelte unmounts a Svelte case in such a cleanup
+// (tests/svelte_testing_setup.ts), so an afterEach turn ran before the unmount
+// and the trees it released got none. The case's onTestFinished runs after both.
 if (typeof window !== 'undefined') {
   const realSetTimeout = globalThis.setTimeout.bind(globalThis);
-  afterEach(() => new Promise<void>((resolve) => realSetTimeout(resolve, 0)));
+  beforeEach(({ onTestFinished }) => {
+    onTestFinished(() => new Promise<void>((resolve) => realSetTimeout(resolve, 0)));
+  });
 }
