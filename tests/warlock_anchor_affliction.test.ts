@@ -3,6 +3,7 @@ import {
   runWarlockBalanceProbe,
   WARLOCK_HEROIC_NYTHRAXIS_SCENARIO,
 } from '../scripts/warlock_balance_probe';
+import { bandAt } from './helpers/balance_diet';
 
 // The 200 heroic anchor (owner directive, 2026-08-23 PVE viability round):
 // each warlock spec converges on about 200 DPS at 120 seconds against the
@@ -17,7 +18,15 @@ import {
 // wobbles a few points around it). One spec per file since the 2026-08-13
 // split, so the anchors spread across CI shards instead of sharing one
 // file's wall clock.
-const ANCHOR_SEEDS = [42, 1337, 9001, 777] as const;
+// The PR long-sims lane runs a two-seed diet of these anchors and the nightly
+// full sweep (WOC_FULL_BALANCE_SWEEP=1) all four seeds (docs/qa-gate.md, "The
+// balance-harness diet"; seed VALUES never change, only the count). Each band
+// is pinned per configuration via band(full, diet): the diet band keeps its full
+// band's relative width around the two-seed mean measured 2026-09-27; re-pin
+// each from its own printed actuals.
+const FULL_SWEEP = process.env.WOC_FULL_BALANCE_SWEEP === '1';
+const band = bandAt(FULL_SWEEP);
+const ANCHOR_SEEDS = FULL_SWEEP ? ([42, 1337, 9001, 777] as const) : ([42, 1337] as const);
 
 describe('affliction 200 DPS anchors at 120 seconds', () => {
   it('lands on the 200 DPS heroic Nythraxis anchor with a healthy economy', () => {
@@ -37,8 +46,9 @@ describe('affliction 200 DPS anchors at 120 seconds', () => {
     // new-tier kit actually measures, above 200 included. #4048 lets the
     // off-GCD Possess/Hour openers fire without a primary Eye target and the
     // heroic four-seed mean rises to 193.51, still below the old 200 target.
-    expect(mean('dps')).toBeGreaterThanOrEqual(163);
-    expect(mean('dps')).toBeLessThanOrEqual(196);
+    // Diet: 191.89 over seeds 42 and 1337.
+    expect(mean('dps')).toBeGreaterThanOrEqual(band(163, 164));
+    expect(mean('dps')).toBeLessThanOrEqual(band(196, 198));
     expect(mean('starvedPct')).toBeLessThan(0.1);
   }, 240_000);
 
@@ -50,8 +60,9 @@ describe('affliction 200 DPS anchors at 120 seconds', () => {
     // 208.8 measured at the 2026-08-23 re-anchor; about plus or minus 5%, so
     // the tripwire trips on a real collapse or runaway, not on engine drift.
     // Post-retune measurement 194.7 (see the heroic anchor note above).
-    expect(mean('dps')).toBeGreaterThanOrEqual(186);
-    expect(mean('dps')).toBeLessThanOrEqual(210);
+    // Diet: 204.82 over seeds 42 and 1337.
+    expect(mean('dps')).toBeGreaterThanOrEqual(band(186, 186));
+    expect(mean('dps')).toBeLessThanOrEqual(band(210, 211));
     expect(mean('starvedPct')).toBeLessThan(0.1);
   }, 240_000);
 });

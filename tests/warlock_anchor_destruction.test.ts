@@ -3,13 +3,22 @@ import {
   runWarlockBalanceProbe,
   WARLOCK_HEROIC_NYTHRAXIS_SCENARIO,
 } from '../scripts/warlock_balance_probe';
+import { bandAt } from './helpers/balance_diet';
 
 // September 8 approved tuning: a faster Gloom Bolt generator and a faster,
 // guaranteed-critical Ruinbolt. Retain the historical full-world fixtures,
 // four seeds, duration and economy guard; center the damage corridors on the
 // measured new means. The isolated before/after matrix is recorded separately
 // in docs/design/warlock-ruinbolt-feedback/README.md.
-const ANCHOR_SEEDS = [42, 1337, 9001, 777] as const;
+// The PR long-sims lane runs a two-seed diet of these anchors and the nightly
+// full sweep (WOC_FULL_BALANCE_SWEEP=1) all four seeds (docs/qa-gate.md, "The
+// balance-harness diet"; seed VALUES never change, only the count). Each band
+// is pinned per configuration via band(full, diet): the diet band keeps its full
+// band's relative width around the two-seed mean measured 2026-09-27; re-pin
+// each from its own printed actuals.
+const FULL_SWEEP = process.env.WOC_FULL_BALANCE_SWEEP === '1';
+const band = bandAt(FULL_SWEEP);
+const ANCHOR_SEEDS = FULL_SWEEP ? ([42, 1337, 9001, 777] as const) : ([42, 1337] as const);
 
 describe('destruction Ruinbolt feedback anchors at 120 seconds', () => {
   it('lands on the approved Ruinbolt heroic anchor with a healthy economy', () => {
@@ -36,8 +45,9 @@ describe('destruction Ruinbolt feedback anchors at 120 seconds', () => {
     // change. With the approved faster guaranteed-critical cycle, the same
     // release fixture measures 236.21875; keep about plus or minus 5% around
     // that, the same relative corridor as every prior re-anchor here.
-    expect(mean('dps')).toBeGreaterThanOrEqual(224);
-    expect(mean('dps')).toBeLessThanOrEqual(249);
+    // Diet: 241.90 over seeds 42 and 1337.
+    expect(mean('dps')).toBeGreaterThanOrEqual(band(224, 224));
+    expect(mean('dps')).toBeLessThanOrEqual(band(249, 250));
     expect(mean('starvedPct')).toBeLessThan(0.1);
   }, 240_000);
 
@@ -60,8 +70,9 @@ describe('destruction Ruinbolt feedback anchors at 120 seconds', () => {
     // 252.82708333333335 on the same release fixture; preserve that same
     // relative corridor (this pin has no separate collapse-guard rationale
     // for its floor, unlike the OSSBrain re-anchor above).
-    expect(mean('dps')).toBeGreaterThanOrEqual(240);
-    expect(mean('dps')).toBeLessThanOrEqual(266);
+    // Diet: 251.50 over seeds 42 and 1337.
+    expect(mean('dps')).toBeGreaterThanOrEqual(band(240, 238));
+    expect(mean('dps')).toBeLessThanOrEqual(band(266, 265));
     expect(mean('starvedPct')).toBeLessThan(0.1);
   }, 240_000);
 });

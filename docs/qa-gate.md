@@ -312,7 +312,8 @@ stopgap: replace them with a wholesale harvest from the next green full-mode CI 
 
 **The long-sims lanes** (Phase 4; split in two by the lane-diet PR). The
 `CI_LONG_SUITES` files (`scripts/lib/ci_shard_plan.mjs`: the suites measured over 90
-seconds inside a full-mode shard, the chronomancy balance sweep among them, plus the
+seconds inside a full-mode shard, the warlock anchor and five-minute-window suites among
+them since 2026-09-27 (the chronomancy balance sweep, down to 8 seconds, left), plus the
 owned-class balance family, which is lane-owned as a unit since its 2026-08-13 split
 so the diet-flag registry and its lane accounting stay in one place; the measured
 per-file lane duration ledgers live in the lane-split PR bodies, #3370 first) run in the

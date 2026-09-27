@@ -3,6 +3,7 @@ import {
   runWarlockBalanceProbe,
   WARLOCK_HEROIC_NYTHRAXIS_SCENARIO,
 } from '../scripts/warlock_balance_probe';
+import { bandAt } from './helpers/balance_diet';
 
 // The 200 heroic anchor (owner directive, 2026-08-23 PVE viability round):
 // each warlock spec converges on about 200 DPS at 120 seconds against the
@@ -18,7 +19,15 @@ import {
 // tuning study and the balance reports quote (a single seed wobbles a few
 // points around it). One spec per file since the 2026-08-13 split, so the
 // anchors spread across CI shards instead of sharing one file's wall clock.
-const ANCHOR_SEEDS = [42, 1337, 9001, 777] as const;
+// The PR long-sims lane runs a two-seed diet of these anchors and the nightly
+// full sweep (WOC_FULL_BALANCE_SWEEP=1) all four seeds (docs/qa-gate.md, "The
+// balance-harness diet"; seed VALUES never change, only the count). Each band
+// is pinned per configuration via band(full, diet): the diet band keeps its full
+// band's relative width around the two-seed mean measured 2026-09-27; re-pin
+// each from its own printed actuals.
+const FULL_SWEEP = process.env.WOC_FULL_BALANCE_SWEEP === '1';
+const band = bandAt(FULL_SWEEP);
+const ANCHOR_SEEDS = FULL_SWEEP ? ([42, 1337, 9001, 777] as const) : ([42, 1337] as const);
 
 describe('demonology 200 DPS anchors at 120 seconds', () => {
   it('lands on the 200 DPS heroic Nythraxis anchor with a healthy economy', () => {
@@ -51,8 +60,9 @@ describe('demonology 200 DPS anchors at 120 seconds', () => {
     // parity goldens. No warlock number changed: with that one line reverted on
     // this tip the old band passes. Measured 213.84 over the four seeds; the
     // band keeps its plus or minus 5% width.
-    expect(mean('dps')).toBeGreaterThanOrEqual(203);
-    expect(mean('dps')).toBeLessThanOrEqual(225);
+    // Diet: 214.52 over seeds 42 and 1337.
+    expect(mean('dps')).toBeGreaterThanOrEqual(band(203, 199));
+    expect(mean('dps')).toBeLessThanOrEqual(band(225, 222));
     expect(mean('starvedPct')).toBeLessThan(0.1);
   }, 240_000);
 
@@ -72,8 +82,9 @@ describe('demonology 200 DPS anchors at 120 seconds', () => {
     // plus or minus 5% around the new measurement.
     // The Drakelands camps/props move changes the shared random stream.
     // Both post-buff bands pass unchanged on the merged world.
-    expect(mean('dps')).toBeGreaterThanOrEqual(254);
-    expect(mean('dps')).toBeLessThanOrEqual(281);
+    // Diet: 268.25 over seeds 42 and 1337.
+    expect(mean('dps')).toBeGreaterThanOrEqual(band(254, 255));
+    expect(mean('dps')).toBeLessThanOrEqual(band(281, 283));
     expect(mean('starvedPct')).toBeLessThan(0.1);
   }, 240_000);
 });

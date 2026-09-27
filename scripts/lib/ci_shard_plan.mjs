@@ -115,7 +115,15 @@ export const CI_LONG_SUITES = Object.freeze([
   // druid_balance_probe stays WHOLE: its cost is one matrix test whose
   // bestDruidBuilds assertions are an argmax across capstones, so a
   // per-capstone split would weaken the winner selection it pins.
-  'tests/chronomancy_balance_targets.test.ts',
+  // 2026-09-27 re-decision from the 2026-09-08 harvest
+  // (scripts/ci_shard_weights.generated.json, in-shard ms): the three
+  // warlock anchor files (267.6 s, 216.5 s, 129.3 s) and the five-minute
+  // windows (191.2 s) had outgrown the 90-second rule in the shard pool and
+  // join; the anchors run the balance-harness two-seed diet here, all four
+  // seeds nightly. chronomancy_balance_targets (8.3 s) leaves for the shard
+  // pool. Projected from those weights by two-worker LPT, each half's file
+  // time grows by about two minutes: re-derive the lane bound in ci.yml
+  // from the first full-mode lane walls after this lands.
   // The five-class-overhauls balance harnesses (review 3050): the owned-class
   // matrices grew to 8 specs and the raid loop to ~510s, pushing shards 1 and
   // 4 past the then-20-minute pr-gate shard budget; they are exactly what this
@@ -140,6 +148,10 @@ export const CI_LONG_SUITES = Object.freeze([
   'tests/owned_class_balance_role_bands.test.ts',
   'tests/owned_class_raid_armor_avoidance.test.ts',
   'tests/owned_class_raid_sustain_bands.test.ts',
+  'tests/warlock_anchor_affliction.test.ts',
+  'tests/warlock_anchor_demonology.test.ts',
+  'tests/warlock_anchor_destruction.test.ts',
+  'tests/warlock_five_minute_windows.test.ts',
 ]);
 
 /**
@@ -162,6 +174,11 @@ const CI_LONG_SUITE_HALF_A = Object.freeze([
   'tests/owned_class_balance_healer_probes.test.ts',
   'tests/owned_class_balance_role_bands.test.ts',
   'tests/owned_class_raid_armor_avoidance.test.ts',
+  // 2026-09-27: the heaviest newcomer and the lightest anchor come here, the
+  // other two anchors land in b (two-worker LPT over the harvested weights,
+  // anchors halved for the diet: a about 532 s, b about 561 s of file time).
+  'tests/warlock_anchor_affliction.test.ts',
+  'tests/warlock_five_minute_windows.test.ts',
 ]);
 
 // Half b is DERIVED (the union minus half a), so a lane file excluded from
