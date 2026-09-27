@@ -82,9 +82,11 @@ sync: merge `dd7f954501` plus its integration fixes (the character blob warning 
 `freehold_claim` golden, the audit's fixes including `busy` entry refusals under the
 release's four action locks). NEXT, in a FRESH session: Part 1 from STEP 2 (write the R1
 design into the ledger, then build it test-first), then the audit trims, reviewers, the
-armed gate and the 07 re-judgement; then Part 2, the repo-wide test cost work. Owed first
-there: the capture seal decision if this session's probe did not close it (the ledger says),
-the manned-cannon leave-order test, and ruling G8 (the caravan route) before housing lights.
+armed gate and the 07 re-judgement; then Part 2, the repo-wide test cost work. The capture
+set was re-shot at `e89b62487c` (`a9060dbf0e`), the armed full suite is green (0 failed) and
+131 shard rows are carried (`dbae472b24`). Owed there: the manned-cannon leave-order test,
+Fernando's confirmation of the 262,144 blob warning, and ruling G8 (the caravan route)
+before housing lights. The ordered list is the ledger's STILL OPEN.
 
 **RULING (B) IS FINISHED AND 07 IS RE-JUDGED, 2026-09-26, LOCAL: THE TWELFTH PATH IS
 CLOSED, AND 07 STAYS FAIL ON THREE PRE-EXISTING CAPTURE-LOSS ORDERS, A RULING OWED.** A
