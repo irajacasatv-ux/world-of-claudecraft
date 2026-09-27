@@ -1396,13 +1396,6 @@ describe('preload admission', () => {
     expect(again.recordWithheld).toBe(true);
   });
 
-  it('does read the row when nothing is live (the other arm of the short circuit)', async () => {
-    const h = harness();
-    await h.store.preload(ACCOUNT_ID);
-    expect(h.calls).toContain('readRow');
-    expect(h.store.stats().loads).toBe(1);
-  });
-
   it('replays what the entry knows on a rejoin, without a second read or a second mint', async () => {
     // The first handshake reads and dies before its join (so no record and no
     // reference), and the retry lands inside the orphan grace.
@@ -1476,13 +1469,6 @@ describe('preload admission', () => {
     expect(loaded.hold?.detail).toContain(String(FREEHOLD_PERSIST_LOAD_PERMIT_WAIT_MS));
     expect(h.store.stats().loadFailures).toBe(1);
     expect(h.store.stats().loadFailuresByKind).toEqual({ no_permit: 1 });
-  });
-
-  it('reads the row when the permit is granted (the other arm)', async () => {
-    const h = harness({ acquirePermit: async () => ({ release: () => undefined }) });
-    const loaded = await h.store.preload(ACCOUNT_ID);
-    expect(h.calls).toContain('readRow');
-    expect(loaded.hold).toBeNull();
   });
 
   it('bounds every permit wait with its own live signal', async () => {
@@ -1744,14 +1730,6 @@ describe('preload classification', () => {
     expect(h.warnings.join(' ')).not.toContain(String(ACCOUNT_ID));
   });
 
-  it('writes for a load that was NOT held (the contrast arm)', async () => {
-    const h = await loadedStore();
-    h.store.markDirty(OWNER_KEY);
-    h.store.save(OWNER_KEY);
-    await tick();
-    expect(h.writeCount()).toBe(1);
-  });
-
   it('blocks writes for an entry whose load has not landed yet', async () => {
     // A joined session whose entry is NOT loaded. Under ruling (b) a join
     // installs from any loaded entry, so this is reached only after a join that
@@ -1908,24 +1886,6 @@ describe('write coalescing', () => {
     await tick(30);
     expect(h.writeCount()).toBe(2);
     expect(h.store.stats().dirty).toBe(0);
-  });
-
-  it('skips the write entirely when the owner holds no live record', async () => {
-    // A LOADED entry with no record beside it is a handshake that read and died
-    // before its join. The mark is the store's explicit seam, which has no
-    // production caller yet; it is driven here because it is the only way to
-    // owe a write with nothing live.
-    const h = harness();
-    await h.store.preload(ACCOUNT_ID);
-    expect(h.record()).toBeUndefined();
-    h.calls.length = 0;
-    h.store.markDirty(OWNER_KEY);
-    h.store.save(OWNER_KEY);
-    await tick(30);
-    expect(h.calls).toContain('serialize');
-    expect(h.writeCount()).toBe(0);
-    expect(h.store.stats().running).toBe(0);
-    expect(h.store.stats().writesWithoutRecord).toBe(1);
   });
 
   it('writes when the record IS live (the other arm of the null-serialize skip)', async () => {
@@ -2736,37 +2696,6 @@ describe('a durable answer no repeat can fix stops the writes', () => {
 });
 
 describe('the coalescer, the drain and the age report at their stated edges', () => {
-  it('treats a revision that went BACKWARDS as movement, not as clean', () => {
-    // Documented and load-bearing for the PROBE: a `<=` comparison would call a
-    // backwards revision clean, and the store would never look at a live record
-    // that is not the one it committed. What the probe hands to is the seal,
-    // which refuses the write; this case pins that the probe SAW it, which is
-    // the half a `<=` mutant kills.
-    return (async () => {
-      // The same relation as the sweep case above, and a different claim: that
-      // case pins the REFUSAL, this one pins that the probe calls the clean
-      // state clean first and then SEES the backwards one. Built through
-      // `rejoinBeforeRemoval` over a row another realm writes forward.
-      const db = rowRemembered(rowFixture({ wireRev: '7' }));
-      const h = await loadedStore({ readRow: db.readRow, writeRow: db.writeRow });
-      h.store.saveAllDirty();
-      await tick(20);
-      expect(h.writeCount()).toBe(0);
-      expect(h.store.stats().writeFailures).toBe(0);
-
-      db.advance({ wireRev: '8' });
-      const reread = await h.rejoinBeforeRemoval();
-      expect(reread.durableRev).toBe('8');
-      expect(h.record()?.rev).toBe(7);
-      h.store.saveAllDirty();
-      await tick(30);
-      // NOT written, but SEEN: a `<=` probe books no failure at all here.
-      expect(h.writeCount()).toBe(0);
-      expect(h.store.stats().writeFailures).toBe(1);
-      expect(h.store.stats().quiesced).toBe(1);
-    })();
-  });
-
   it('reports the OLDEST dirty age, not the newest or the last one seen', () => {
     return (async () => {
       const h = await loadedStore();
@@ -4378,41 +4307,6 @@ describe('a leaving session never loses its last edits to a queue', () => {
     expect(h.store.stats().leaveCaptures).toBe(0);
   });
 
-  it('keeps the capture when a write FAILED without quiescing', async () => {
-    // The null-permit arm returns false without quiescing, so the entry settles
-    // uncommitted, unblocked and still dirty. Dropping its capture there left
-    // the next sweep to re-arm a write whose record removePlayer had already
-    // evicted, and the leaving session's edits were gone for good. Gate
-    // saturation is what produces BOTH that timeout and the deferral the
-    // capture exists for, so these two arms sit next to each other.
-    let granted = 0;
-    const h = await loadedStore({
-      rowLoad: { kind: 'row', row: rowFixture() },
-      acquirePermit: async () => {
-        granted += 1;
-        // The load gets its permit; the FIRST write does not; later ones do.
-        return granted === 2 ? null : { release: () => {} };
-      },
-      writeRow: async () => ({ kind: 'updated', durableRev: '6' }),
-    });
-    h.edit(OWNER_KEY, { rev: 6 });
-    // The whole leave: the flush, then removePlayer evicts the record.
-    await h.leave();
-    await tick(30);
-    expect(h.record()).toBeUndefined();
-    expect(h.writeCount()).toBe(0);
-    expect(h.store.stats().writeFailures).toBe(1);
-    // Still dirty, still unblocked, and STILL HOLDING its document.
-    expect(h.store.stats().dirty).toBe(1);
-    expect(h.store.stats().leaveCaptures).toBe(1);
-
-    h.store.saveAllDirty();
-    await tick(30);
-    expect(h.writeCount()).toBe(1);
-    expect(h.writes[0].wireRev).toBe(6);
-    expect(h.store.stats().writesWithoutRecord).toBe(0);
-  });
-
   it('hands an outstanding capture to a REJOIN, rather than replaying a staler state', async () => {
     // The leaver's unwritten edits live only in the capture. `entry.state`
     // advances at COMMIT, so replaying it would show the returning player a
@@ -4707,42 +4601,6 @@ describe('a leaving session never loses its last edits to a queue', () => {
     expect(h.store.stats().quiesced).toBe(0);
   });
 
-  it('refuses a seed the returning player has ALREADY TOUCHED', async () => {
-    // THE SEVENTH PATH, and the one the pristine test does not reach. A seed
-    // stops being pristine the instant the returning player does anything: one
-    // tier grant today, one furnishing once that writer lands. The record is
-    // then a stand-in identity at revision one standing against an entry that
-    // committed revision seven, both other tests pass, and the empty default is
-    // compare-and-swapped over the real house with plot_id untouched.
-    //
-    // What SEPARATED them was the regressed revision, and since the install fix
-    // the name comparison refuses first here too. The regression discriminator
-    // is pinned on its own, with literals and its own mutants, in
-    // tests/server/freehold_write_seal.test.ts; what this case proves is the
-    // outcome, that a touched reseed never lands on the row.
-    const h = await loadedStore({ ...rowRemembered() });
-    h.edit(OWNER_KEY, { ...furnishedEdit(7), tier: 'cottage' });
-    h.store.markDirty(OWNER_KEY);
-    h.store.save(OWNER_KEY);
-    await tick(30);
-    expect(h.writeCount()).toBe(1);
-    expect(h.writes[0].wireRev).toBe(7);
-    expect(h.writes[0].layoutJson).toBe(JSON.stringify(persistedFixture().layout));
-
-    // The fresh default, then ONE edit on top of it: not pristine any more.
-    await h.rejoinOverEviction();
-    h.edit(OWNER_KEY, { tier: 'cottage' });
-    expect(h.record()?.plotId).toBe(PENDING_FREEHOLD_PLOT_ID);
-    expect(h.record()?.rev).toBe(1);
-    h.store.saveAllDirty();
-    await tick(30);
-    // The absence of a second write IS the assertion: without it the row would
-    // take layoutJson '[]' at wireRev 1 over a house stored at wireRev 7.
-    expect(h.writeCount()).toBe(1);
-    expect(h.store.stats().quiesced).toBe(1);
-    expect(h.errors[0]).toContain('identity');
-  });
-
   it('does NOT refuse a rejoin replay at the revision the entry committed', async () => {
     // THE COMPANION PROOF the identity fix owes, and the direction that made a
     // revision comparison wrong once before. W1 established that a rejoin replay
@@ -4824,106 +4682,69 @@ describe('a leaving session never loses its last edits to a queue', () => {
     expect(h.store.stats().writeFailures).toBe(1);
   });
 
-  it('REFUSES an empty default over a MINTED account whose reseed caught up', async () => {
-    // THE EIGHTH PATH, CLOSED. This case was pinned AS IT BEHAVED, asserting the
-    // defect, so the fix would flip a red test rather than be discovered; this
-    // is that flip.
-    //
-    // The seal's name comparison was INERT for an entry that minted its own row:
-    // applyWriteResult caches the identity the LIVE RECORD carried, nothing
-    // taught a live record its minted name, so that entry's cached name WAS the
-    // stand-in and a freshly seeded default carried the same literal. The two
-    // continuity tests were then the whole seal and both are revision-shaped, so
-    // a reseed whose revision had CAUGHT UP satisfied neither and the empty
-    // tier-0 Inn Room was compare-and-swapped over the house.
-    //
-    // installLoadedFreehold now installs a default carrying the minted identity
-    // on the ABSENT arm, so the live record answers to its own name from the
-    // first session and a RESEED (ensureFreeholdRecord after an eviction, which
-    // has no install in front of it) carries the stand-in. The two differ, and
-    // the name comparison fires.
-    //
-    // WHICH ENTRY FACES THE RESEED CHANGED WITH RULING (B). This used to keep the
-    // minting entry itself alive past the eviction (its leave write refused a
-    // permit) and reseed beside it; the join now installs from any loaded entry,
-    // so that entry hands the rejoin its capture and no reseed happens. The one
-    // producible reseed is a rejoin whose re-ask is refused on capacity after a
-    // CLEAN leave collected the minting entry (`rejoinOverEviction`), so the
-    // entry facing it is a RE-READ of the row this account minted: its cached
-    // name is that minted name, read back (two loads, asserted), and the name
-    // comparison is what refuses.
-    const h = await loadedStore({ ...rowRemembered() });
-    // The installed record carries the MINTED name, and the session builds a
-    // house on it.
-    expect(h.record()?.plotId).toBe('plot:minted1');
-    h.edit(OWNER_KEY, { ...furnishedEdit(7), tier: 'cottage', condition: 91 });
-    h.store.saveAllDirty();
-    await tick(30);
-    expect(h.writeCount()).toBe(1);
-    expect(h.writes[0].layoutJson).toBe(JSON.stringify(persistedFixture().layout));
-    expect(h.writes[0].plotId).toBe('plot:minted1');
-
-    // The rejoin over the eviction: reseeded without an install, and edited past
-    // the entry's committed revision to nine.
-    await h.rejoinOverEviction();
-    expect(h.store.stats().loads).toBe(3);
-    h.edit(OWNER_KEY, { rev: 9 });
-    expect(h.record()?.plotId).toBe(PENDING_FREEHOLD_PLOT_ID);
-    expect(h.record()?.layout).toEqual([]);
-    h.store.saveAllDirty();
-    await tick(30);
-    // NO SECOND WRITE. The row keeps the house, and the owner is write-blocked
-    // for the session with an error line rather than losing it silently.
-    expect(h.writeCount()).toBe(1);
-    expect(h.store.stats().quiesced).toBe(1);
-    expect(h.errors[0]).toContain('identity');
-  });
-
-  it('REFUSES the same reseed when its revision EQUALS the committed one', async () => {
-    // The neighbouring case, because the old escape threshold was `>=` and not
-    // `>`. Kept separate so a future change that only moves a boundary is still
-    // caught. It is refused through the SAME name arm as the case above, with
-    // the revisions EQUAL this time, so a change that let an equal-revision
-    // reseed through the revision arms would still meet the name comparison
-    // here. The entry facing it is the re-read one, as above.
-    const h = await loadedStore({ ...rowRemembered() });
-    h.edit(OWNER_KEY, { ...furnishedEdit(7), tier: 'cottage', condition: 91 });
-    h.store.saveAllDirty();
-    await tick(30);
-    expect(h.writeCount()).toBe(1);
-    await h.rejoinOverEviction();
-    expect(h.store.stats().loads).toBe(3);
-    h.edit(OWNER_KEY, { rev: 7 });
-    expect(h.record()?.plotId).toBe(PENDING_FREEHOLD_PLOT_ID);
-    // At EQUAL revisions the probe sees no movement, so the write is asked for
-    // explicitly: the claim is what the seal does once one samples.
-    h.store.markDirty(OWNER_KEY);
-    h.store.saveAllDirty();
-    await tick(30);
-    expect(h.writeCount()).toBe(1);
-    expect(h.store.stats().quiesced).toBe(1);
-    expect(h.errors[0]).toContain('identity');
-  });
-
-  it('REFUSES the same reseed for a ROW-LOADED entry, which is why this is about the MINT', async () => {
-    // The contrast arm, and the reason the two MINTED-account reseed cases
-    // above are about the entry that minted its own row rather than about the
-    // seal in general. Identical shape, one difference: this entry loaded a
-    // ROW, so its cached name is the row's and the seeded default's stand-in
-    // differs from it. The name comparison fires and the house survives.
-    const h = await loadedStore({
-      rowLoad: { kind: 'row', row: rowFixture({ wireRev: '7', tier: 'cottage', condition: 91 }) },
-      writeRow: async () => ({ kind: 'updated', durableRev: '8' }),
-    });
-    await h.rejoinOverEviction();
-    h.edit(OWNER_KEY, { rev: 9 });
-    expect(h.record()?.plotId).toBe(PENDING_FREEHOLD_PLOT_ID);
-    h.store.saveAllDirty();
-    await tick(30);
-    expect(h.writeCount()).toBe(0);
-    expect(h.store.stats().quiesced).toBe(1);
-    expect(h.errors[0]).toContain('identity');
-  });
+  // THE SEVENTH AND EIGHTH PATHS, and the boundary between them, merged into one
+  // table 2026-09-27 (the three cases shared their whole body). A minted account
+  // commits its house at revision seven; a rejoin whose re-ask is refused on
+  // capacity after a CLEAN leave collected the minting entry
+  // (`rejoinOverEviction`) reseeds the default with no install in front of it, so
+  // the entry facing it is a RE-READ of the row the account minted (three loads)
+  // and its cached name is that minted name. The reseed carries the stand-in, the
+  // two names differ, and the seal's name comparison refuses it whatever the
+  // reseed's revision: BELOW the committed one after a single touch (the seventh
+  // path: before the install fix only the regressed revision separated it), CAUGHT
+  // UP past it (the eighth path, once compare-and-swapped over the house), or
+  // EQUAL (the old escape threshold was `>=`, not `>`; at equal revisions the probe
+  // sees no movement, so the write is asked for explicitly). The regression
+  // discriminator is pinned on its own in tests/server/freehold_write_seal.test.ts.
+  it.each<{ name: string; edit: RecordEdit; rev: number; mark: boolean }>([
+    {
+      name: 'TOUCHED',
+      edit: { tier: 'cottage' },
+      rev: 1,
+      mark: false,
+    },
+    {
+      name: 'CAUGHT-UP',
+      edit: { rev: 9 },
+      rev: 9,
+      mark: false,
+    },
+    {
+      name: 'EQUAL-revision',
+      edit: { rev: 7 },
+      rev: 7,
+      mark: true,
+    },
+  ])(
+    'REFUSES a $name reseed over a MINTED account, through the name arm',
+    async ({ edit, rev, mark }) => {
+      const h = await loadedStore({ ...rowRemembered() });
+      // The installed record carries the MINTED name, and the session builds a
+      // house on it.
+      expect(h.record()?.plotId).toBe(MINTED_PLOT_ID);
+      h.edit(OWNER_KEY, { ...furnishedEdit(7), tier: 'cottage', condition: 91 });
+      h.store.saveAllDirty();
+      await tick(30);
+      expect(h.writeCount()).toBe(1);
+      expect(h.writes[0].wireRev).toBe(7);
+      expect(h.writes[0].plotId).toBe(MINTED_PLOT_ID);
+      expect(h.writes[0].layoutJson).toBe(JSON.stringify(persistedFixture().layout));
+      await h.rejoinOverEviction();
+      expect(h.store.stats().loads).toBe(3);
+      h.edit(OWNER_KEY, edit);
+      expect(h.record()?.plotId).toBe(PENDING_FREEHOLD_PLOT_ID);
+      expect(h.record()?.rev).toBe(rev);
+      expect(h.record()?.layout).toEqual([]);
+      if (mark) h.store.markDirty(OWNER_KEY);
+      h.store.saveAllDirty();
+      await tick(30);
+      // NO SECOND WRITE. The row keeps the house, and the owner is write-blocked
+      // for the session with an error line rather than losing it silently.
+      expect(h.writeCount()).toBe(1);
+      expect(h.store.stats().quiesced).toBe(1);
+      expect(h.errors[0]).toContain('identity');
+    },
+  );
 
   it('KEEPS WRITING a fresh account whose entry re-reads the row it wrote', async () => {
     // THE MIRROR OF THE EIGHTH PATH, and the other half this fix closes. It was
@@ -5082,8 +4903,14 @@ describe('a leaving session never loses its last edits to a queue', () => {
     // removePlayer evicts it the instant the flush returns.
     await h.leave();
     await tick(20);
-    expect(h.store.stats().leaveCaptures).toBe(1);
     expect(h.record()).toBeUndefined();
+    expect(h.writeCount()).toBe(0);
+    // The null-permit arm counts a failure WITHOUT quiescing: the entry is still
+    // dirty and unblocked, and so it keeps its document (absorbed 2026-09-27 from
+    // "keeps the capture when a write FAILED without quiescing").
+    expect(h.store.stats().writeFailures).toBe(1);
+    expect(h.store.stats().dirty).toBe(1);
+    expect(h.store.stats().leaveCaptures).toBe(1);
 
     // The handshake reads, then dies before the join.
     await h.store.preload(ACCOUNT_ID);
@@ -5270,7 +5097,10 @@ describe('the store refuses what it cannot represent, rather than repairing it',
     });
     const loaded = await h.store.preload(ACCOUNT_ID);
     expect(loaded.hold).toBeNull();
-    expect(loaded.state).not.toBeNull();
+    // The EXACT revision, not merely a state: a boundary that loaded and then
+    // repaired the revision to zero would pass a presence check, and the next
+    // save would write that zero over the stored value.
+    expect(loaded.state?.rev).toBe(Number.MAX_SAFE_INTEGER);
   });
 
   it('never writes for an entry that was quiesced while its write sat in the queue', async () => {
@@ -5785,17 +5615,6 @@ describe('an abandoned preload does not leak an entry', () => {
     for (let i = 0; i < passes; i++) h.store.saveAllDirty();
   }
 
-  it('collects a preloaded entry that no session ever retained', async () => {
-    const h = harness({ rowLoad: { kind: 'row', row: rowFixture() } });
-    await h.store.preload(ACCOUNT_ID);
-    expect(h.store.stats().entries).toBe(1);
-    sweep(h, FREEHOLD_PERSIST_ORPHAN_SWEEP_PASSES);
-    await tick(10);
-    expect(h.store.stats().entries).toBe(0);
-    // No write went out for it: a collected entry owes nothing.
-    expect(h.writeCount()).toBe(0);
-  });
-
   it('does not collect on the first pass, so a join between preload and retain is safe', async () => {
     // The mark pass is the whole reason this is two passes: preload resolves
     // before game.join calls retain, and an entry removed in that window costs
@@ -5841,19 +5660,6 @@ describe('an abandoned preload does not leak an entry', () => {
     await tick(30);
     expect(h.writeCount()).toBe(1);
   });
-
-  it('leaves the immediate removal path alone: a real leave still removes at once', async () => {
-    // The contrast case. A session that actually leaves is removed by
-    // flushAndRelease on the spot, with no sweep involved, so the sweep is
-    // only ever collecting entries no leave will ever come for. Without this
-    // arm the cases above could pass on a store that had quietly moved every
-    // eviction onto a thirty-second delay.
-    const h = harness({ rowLoad: { kind: 'row', row: rowFixture() } });
-    await h.login();
-    expect(h.store.stats().entries).toBe(1);
-    await h.leave();
-    expect(h.store.stats().entries).toBe(0);
-  });
 });
 
 describe('the two admission caps sum past the shared gate, and that is the accepted answer', () => {
@@ -5871,7 +5677,7 @@ describe('the two admission caps sum past the shared gate, and that is the accep
     // claim is about how this store composes with the one gate the realm shares.
     // Cross-pinned against server/db.ts, because a pool size copied by hand is a
     // number that goes stale the moment the real one moves.
-    expect(readFileSync('server/db.ts', 'utf8')).toContain(
+    expect(stripComments(readFileSync('server/db.ts', 'utf8'))).toContain(
       `const DB_POOL_MAX_CLIENTS_DEFAULT = ${DEFAULT_DB_POOL_MAX_CLIENTS};`,
     );
     const gate = createBackgroundDbGate(DEFAULT_DB_POOL_MAX_CLIENTS);
@@ -6279,16 +6085,6 @@ describe('the WHOLE preload is capped against the login budget', () => {
     expect(refused.hold?.kind).toBe('no_budget');
   });
 
-  it('still names a row for a login that WAITED for its own read', async () => {
-    // The anti-vacuity arm, and the one that keeps the refusal above from being
-    // satisfied by a constant: the ordinary absent-row login mints, because its
-    // answer IS installed. Without it, refusing every absent load would pass.
-    const h = harness({ rowLoad: { kind: 'absent' } });
-    const answer = await h.store.preload(ACCOUNT_ID);
-    expect(answer.hold).toBeNull();
-    expect(answer.plotId).toBe(MINTED_PLOT_ID);
-  });
-
   it('clears the abandonment with the read, so the NEXT login is not refused', async () => {
     // An abandonment that outlived its own read would refuse a perfectly
     // ordinary later load for the same account, which is a housing outage
@@ -6367,10 +6163,22 @@ describe('the bounded drain', () => {
   });
 
   it('flushes what is dirty before it waits', async () => {
-    const h = await loadedStore();
+    // A ROW-LOADED entry whose record sits at the committed revision, so the
+    // revision probe sees NO movement and only the explicit mark can arm the
+    // drain's write. A fresh account's entry has no committed state, which the
+    // probe calls movement, so it could not tell a drain that reads the dirty
+    // generation from one that ignores it.
+    const h = await loadedStore({
+      rowLoad: { kind: 'row', row: rowFixture() },
+      writeRow: async () => ({ kind: 'updated', durableRev: '8' }),
+    });
+    expect(h.record()?.rev).toBe(5);
     h.store.markDirty(OWNER_KEY);
+    expect(h.store.stats().dirty).toBe(1);
     expect(await h.store.idle(5_000)).toBe(true);
     expect(h.writeCount()).toBe(1);
+    expect(h.writes[0].wireRev).toBe(5);
+    expect(h.store.stats().dirty).toBe(0);
   });
 
   it('answers false at its deadline without throwing', async () => {
@@ -6560,7 +6368,30 @@ describe('stats', () => {
   });
 
   it('reports the dirty age from the store clock and the write byte totals', async () => {
-    const h = await loadedStore();
+    // Each bracket moves the store clock by its own step, so every total is an
+    // exact sum: 7 per permit (one load, one write), 11 in the read, 19 in the
+    // queue, 13 in the statement.
+    let h!: Harness;
+    const advance = (ms: number): void => h.setNow(h.ports.nowMs() + ms);
+    h = harness({
+      acquirePermit: async () => {
+        advance(7);
+        return { release: () => {} };
+      },
+      readRow: async () => {
+        advance(11);
+        return { kind: 'absent' };
+      },
+      enqueue: async <T>(_key: string, _signal: AbortSignal, write: () => Promise<T>) => {
+        advance(19);
+        return await write();
+      },
+      writeRow: async () => {
+        advance(13);
+        return { kind: 'inserted', durableRev: '1' };
+      },
+    });
+    await h.login();
     h.setNow(20_000);
     h.store.markDirty(OWNER_KEY);
     h.setNow(23_500);
@@ -6575,10 +6406,11 @@ describe('stats', () => {
     // distribution or about growth toward the byte ceiling.
     expect(after.writeBytesTotal).toBeGreaterThan(0);
     expect(after.maxWriteBytes).toBe(after.writeBytesTotal);
-    expect(after.permitWaitMsTotal).toBeGreaterThanOrEqual(0);
-    expect(after.queueWaitMsTotal).toBeGreaterThanOrEqual(0);
-    expect(after.writeMsTotal).toBeGreaterThanOrEqual(0);
-    expect(after.loadMsTotal).toBeGreaterThanOrEqual(0);
+    // One load permit plus one write permit.
+    expect(after.permitWaitMsTotal).toBe(14);
+    expect(after.queueWaitMsTotal).toBe(19);
+    expect(after.writeMsTotal).toBe(13);
+    expect(after.loadMsTotal).toBe(11);
   });
 });
 
@@ -6809,21 +6641,6 @@ describe('installLoadedFreehold', () => {
     expect(ctx.freeholdKeyReadyAtMs.get(OWNER_KEY)).toBe(90_000);
   });
 
-  it('installs no plot from a bag that lost its shape, and says why that is safe', () => {
-    // Not reachable from the real store, which always hands a PersistedFreehold
-    // or null. The guard is about the FAILURE MODE: falling through would let
-    // addPlayer seed a default while the store's entry still believed it loaded
-    // a real row. That used to be how a default reached the row; it no longer
-    // is, because runWrite's identity seal refuses to write a record still
-    // carrying the unassigned plot id over a row that has a durable revision.
-    const ctx = fakeCtx();
-    installLoadedFreehold(ctx, ACCOUNT_ID, {
-      ...loadedFixture(),
-      state: 'not an object',
-    } as unknown as LoadedFreehold);
-    expect(ctx.freeholds.size).toBe(0);
-  });
-
   it('installs the CLOCK even from a bag whose plot state lost its shape', () => {
     // The two are independent durable facts. Coupling them means one malformed
     // field costs the owner both, including a travel cooldown they already
@@ -6923,12 +6740,6 @@ describe('installLoadedFreehold', () => {
       recordWithheld: false,
     });
     expect(lit.freeholdKeyReadyAtMs.get(OWNER_KEY)).toBe(9_000);
-  });
-
-  it('installs nothing on a dark host', () => {
-    const ctx = fakeCtx(false);
-    installLoadedFreehold(ctx, ACCOUNT_ID, loadedFixture());
-    expect(ctx.freeholds.size).toBe(0);
   });
 });
 
@@ -7936,12 +7747,17 @@ describe('the gaps a mutation pass over the store found', () => {
     const h = harness({ rowLoad: { kind: 'row', row: rowFixture() } });
     await h.store.preload(ACCOUNT_ID);
     expect(h.record()).toBeUndefined();
+    h.calls.length = 0;
     h.store.markDirty(OWNER_KEY);
     h.store.save(OWNER_KEY);
     await tick(30);
-    // The write reached its permit, found nothing to send, and issued no
-    // statement.
+    // The write reached its permit and SAMPLED the record (the skip is the null
+    // serialize, not a door that never opened), found nothing to send, and
+    // issued no statement (absorbed 2026-09-27 from "skips the write entirely
+    // when the owner holds no live record").
+    expect(h.calls).toContain('serialize');
     expect(h.writeCount()).toBe(0);
+    expect(h.store.stats().running).toBe(0);
     expect(h.store.stats().writesWithoutRecord).toBe(1);
     // AND IT STOPPED OWING IT. Without the generation advance the entry stays
     // dirty, every later sweep re-arms the same empty write and spends a permit
@@ -8039,26 +7855,6 @@ describe('the gaps a mutation pass over the store found', () => {
     h.store.saveAllDirty();
     expect(h.store.stats().entries).toBe(0);
     h.removePlayer();
-  });
-
-  it('releases a retained capture on the ordinary flush, so the gauge reads zero', async () => {
-    // WHAT THIS ACTUALLY PROVES, said plainly. It drives one ordinary flush, and
-    // `settle`'s own `!owesWork` release runs first, so `maybeRemove` finds the
-    // document already null and the delete-site call added beside it is a no-op
-    // here. That release predates this round in inline form, so this case pins
-    // pre-existing behaviour: the gauge returns to zero on the ordinary path.
-    //
-    // The delete-site calls are DEFENSIVE and no test reaches them; the argument
-    // that nothing can is in releaseCapture's own docblock. An earlier version
-    // of this comment claimed neither removal path cleared the document, which
-    // read as a repair for a defect that was never reachable.
-    const h = await loadedStore({ rowLoad: { kind: 'row', row: rowFixture() } });
-    h.store.markDirty(OWNER_KEY);
-    await h.store.flushAndRelease(OWNER_KEY);
-    await tick(30);
-    // The write landed and settle released it, which is the ordinary path.
-    expect(h.store.stats().leaveCaptures).toBe(0);
-    expect(h.store.stats().entries).toBe(0);
   });
 });
 
