@@ -65,7 +65,9 @@ describe('the @vitest/spy restore patch', () => {
     const target = freshTarget();
     const restored = vi.spyOn(target, 'method');
     restored.mockRestore();
+    // A plain vi.fn has no restore to undo, so restoring it keeps it registered.
     const plain = vi.fn();
+    plain.mockRestore();
     const unrestored = vi.spyOn(freshTarget(), 'method');
     restored(1);
     plain(2);
