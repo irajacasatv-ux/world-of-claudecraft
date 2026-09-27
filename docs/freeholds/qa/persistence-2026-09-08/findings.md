@@ -3990,3 +3990,101 @@ own leave), the backward clock step, and a shutdown with a kept capture (one att
 answers false before its deadline). The existing "still quiesces on a run INSIDE the window"
 pin flips to the posture. Extraction pays for the lines under the 2058 ceiling, and the ceiling
 is lowered after.
+
+### THE BUILD, TEST-FIRST (`d0e96f8514` and its pins)
+
+The design above, as built. `server/freehold_write_retry.ts` is the new leaf: the two run
+constants (moved, re-exported from the store), `noteThrownWrite` (the run fold, the sticky
+clock, the payload answer), `freeholdThrownWriteIsAnswer` and `freeholdRetryDue` (the due
+test, the drain's exception and the backward clock step), with its own suite. The store
+gains one entry field (`retryAtMs`), one gate in `arm` and one in `settle`, the clock's
+clear on a commit with its recovery line, the entry line in the throw arm, the
+`write_retries` count at the statement and the `retrying` count in the fold. The counters
+and the scrape's fold moved whole to `server/freehold_persist_stats.ts`, and the registry's
+zero stats derive from the same factory, so a counter added later cannot be missing from the
+empty-store scrape. The metrics exporter publishes the two new measures. The store measures
+2,026 lines and its ratchet ceiling is LOWERED 2,058 to 2,026 (exact, zero slack).
+
+THE PINS: the 2026-09-26 KNOWN COST pin flipped ("keeps the capture past the run and writes
+it when the database answers again", the row at the leaver's revision 8); the stale-fence
+KNOWN COST pin kept unchanged under a describe that now names one runtime order; and new
+cases for the cadence (no statement before the window, exactly one at it, three windows, the
+`write_retries` delta, one posture line, every throw its own line), the rejoin (the kept
+house installed, the rejoined session's edit riding the retry, its leave refreshing the
+capture without waiting), an ONLINE session's run kept past its own leave, the backward
+clock step (half a window back waits, a window and a millisecond back is due), an edit that
+lands while a retry is out (it waits for the next window), a stale retry ending the posture
+(quiesced, released), the clock cleared on a commit with the entry retained (a later single
+throw is a blip on the ordinary cadence), the gauge dropping a quiesced posture entry, a run
+of PAYLOAD refusals still quiescing and releasing, and the shutdown drain (one last attempt
+answering false before its deadline with the capture still held, and a drain that writes it
+when the database answers). Two older pins flipped from "quiesces" to the posture.
+
+THE MUTATION PASS: 15 mutants, each behind a control (428 tests at the first batch, 430 at
+the second, 0 failed), all KILLED. The first batch left two survivors, both masked because
+the entry was COLLECTED when the posture ended: a commit that kept the clock, and a gauge
+that counted a quiesced posture entry. The online-session pins that keep the entry alive
+(`96953e25f9`) kill both. The fifteen: the fix reverted (every run answered, so
+quiesced: 11 failures), the `arm` gate off, the `settle` gate off, the clock kept on commit,
+`write_retries` uncounted, the gauge counting a quiesced entry, the drain respecting the
+clock, no backward-step clause, a one-window backward step, the clock not re-armed on a
+retry's throw, payload answers retried, the SQLSTATE classes ignored, a TypeError taken for a
+fault, the recovery line removed, and the posture line removed.
+
+### STEP 3, THE PERSISTENCE SUITE TRIM (`700f2eb685`)
+
+The audit's approved list, re-located by title from its `2af5f917c0` line numbers (every one
+still present). The proof ran twice through a scratch runner (apply one source mutant, run
+`freehold_persist`, `freehold_revision_probe` and `freehold_write_seal` with JSON output,
+restore through `git checkout`, assert a clean tree): BEFORE the edit (control 385 tests
+across the three suites, 0 failed), where each mutant had to fail the case being deleted AND
+a surviving case, and AFTER it (control 372, the persistence suite at 351, 0 failed), where
+the same mutant had to fail the surviving or merged case. Every pair held. Mutants are one-line semantic changes on the path the deleted case
+drives; the specs are kept in the session record, not the repo.
+
+| Deleted case | Mutant it killed | Also killed by (surviving) |
+|---|---|---|
+| does read the row when nothing is live | `counters.loads++` to `+= 0` | is a live recorder; collapses concurrent preloads |
+| reads the row when the permit is granted | loadOnce `if (!permit)` inverted | is a live recorder; refuses rather than falls through |
+| writes for a load that was NOT held | `arm` refuses every unheld entry | writes when the record IS live; one running plus one pending |
+| still names a row for a login that WAITED | an absent load answered `no_budget` | gives an absent row a minted plot id; still names a row when a SIBLING waits |
+| installs nothing on a dark host | `loadFreehold` ignores the dark flag | installs no hearth clock on a dark host either; the absent arm of a DARK host |
+| installs no plot from a bag that lost its shape | the install's shape guard off | installs the CLOCK even from a bag whose plot state lost its shape |
+| leaves the immediate removal path alone | `maybeRemove` never removes (`refs >= 0`) | installs nothing when the record is already live; does NOT refuse a rejoin replay; blocks writes for an entry whose load has not landed |
+| releases a retained capture on the ordinary flush | `releaseCapture` keeps the count | counts an outstanding capture; drops the capture once the write settled |
+| collects a preloaded entry no session retained | the orphan grace one pass longer | collapses concurrent preloads |
+| treats a revision that went BACKWARDS as movement | the probe calls a backwards revision clean | ARMS a write when the live revision moved BACKWARDS; refuses a REGRESSED revision for a ROW-LOADED entry |
+| REFUSES the same reseed for a ROW-LOADED entry | the seal's name arm off | the it.each's CAUGHT UP row; COUPLES the install to the seal |
+
+THE MERGES. The three MINTED-account reseed cases (TOUCHED, CAUGHT UP, EQUALS) share one body
+and are one `it.each` now, each row asserting everything its case did (the touched case
+gained the minted-name and empty-layout checks the other two made). Their mutants: the whole
+seal off (killed by the TOUCHED row and the BACKWARDS and REGRESSED cases), the name arm off
+(the CAUGHT UP row), and an equal revision let through the name arm (the EQUALS row only: no
+other case in the suite sits at equal revisions, so that row is load-bearing). "keeps the
+capture when a write FAILED without quiescing" folded into "keeps the capture when the
+handshake that read it never joins" (its `writeCount` 0, `writeFailures` 1 and `dirty` 1
+checks moved; the unconditional settle-release mutant and the uncounted null-permit mutant
+are both killed by the merged case). "skips the write entirely when the owner holds no live
+record" folded into "stops owing a write that has no record and no capture" (the
+`serialize` and `running` checks moved; the uncounted-skip and skipped-serialize mutants are
+both killed by the merged case).
+
+THE WEAK PINS, each with a mutant the old form passed and the new form kills:
+- The largest representable revision now pins `state.rev` to `Number.MAX_SAFE_INTEGER` (the
+  mutant loads that revision as 0).
+- "flushes what is dirty before it waits" now drives a ROW-LOADED entry at its committed
+  revision, so only the dirty generation can arm the drain's write (the mutant drops
+  `isDirty` from `idle`'s loop; on the old absent-row entry the revision probe armed it
+  anyway).
+- The four `>= 0` stats checks are exact values from a harness clock stepped inside each
+  bracket (permit 7 twice, read 11, queue 19, statement 13; the mutant stops counting the
+  queue wait).
+- The pool-size source pin strips comments first (the mutant comments the old line out and
+  sets 12).
+
+"releases a retained capture on the ordinary flush" was on both of the brief's lists (a
+high-confidence redundancy, and a weak pin wanting a positive control). It is deleted: its
+covering case, "counts an outstanding capture", IS that case with the positive control (the
+gauge at 1 while the write is held, then 0), and the control's own mutant (no capture ever
+taken) is killed there.
