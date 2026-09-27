@@ -84,10 +84,11 @@ export interface FreeholdPersistStats {
   /** How each join's install was decided (server/freehold_join_answer.ts):
    *  `entry` is a join whose install changed nothing (the ask matched the
    *  loaded entry, a live record already stood beside a loaded entry, or both
-   *  asks replayed one DATA hold), so it tracks login volume; `superseded` is the loaded entry
-   *  installed in place of an ask that differed from it with no live record
-   *  standing, the twelfth path's fix actually changing an install; `withheld`
-   *  is a join nothing could vouch for, installed as no record (write-blocked
-   *  when nothing live stands; beside a live record it shares that record). */
+   *  asks replayed one DATA hold), so it tracks login volume; `superseded` is
+   *  the loaded entry installed in place of an ask that differed from it with
+   *  no live record standing, the twelfth path's fix actually changing an
+   *  install; `withheld` is a join nothing could vouch for, installed as no
+   *  record (write-blocked when nothing live stands; beside a live record it
+   *  shares that record). */
   readonly joinVerdicts: Readonly<Record<FreeholdJoinVerdict, number>>;
 }

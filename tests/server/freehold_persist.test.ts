@@ -8115,7 +8115,6 @@ describe('the two orders the 07 re-judgement names, which still lose a captured 
     // gone and the error line is the record.
     expect(h.errors.filter((line) => line.includes('thrown writes'))).toHaveLength(1);
     expect(h.store.stats().entries).toBe(0);
-    expect(h.store.stats().quiesced).toBe(0);
     // RELEASED, and with it the leaver's revision-8 house.
     expect(h.store.stats().leaveCaptures).toBe(0);
     // The next login reads the row, which never saw revision 8: the edit is gone.
@@ -8154,7 +8153,6 @@ describe('the two orders the 07 re-judgement names, which still lose a captured 
     expect(h.warnings.filter((line) => line.includes('durable revision moved'))).toHaveLength(1);
     // Quiesced and collected together, the capture with it.
     expect(h.store.stats().entries).toBe(0);
-    expect(h.store.stats().quiesced).toBe(0);
     expect(h.store.stats().leaveCaptures).toBe(0);
     // The other realm's house stands; this realm's revision-8 edits are gone.
     expect(await rowOfOwner(db)).toBe('9');

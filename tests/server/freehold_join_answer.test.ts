@@ -173,7 +173,10 @@ describe('freeholdJoinAnswer', () => {
     // first ask went stale) and no ask at all (both asks threw) count the same.
     const staleUnmarked = answer({ durableRev: '7', state: house({ rev: 7 }) });
     for (const asked of [staleUnmarked, undefined]) {
-      expect(freeholdJoinAnswer(ACCOUNT_ID, asked, current, true).verdict).toBe('entry');
+      expect(freeholdJoinAnswer(ACCOUNT_ID, asked, current, true)).toEqual({
+        answer: current,
+        verdict: 'entry',
+      });
       expect(freeholdJoinAnswer(ACCOUNT_ID, asked, current, false).verdict).toBe('superseded');
     }
     // A loaded entry held on a DATA kind answers the same hold to both asks, so

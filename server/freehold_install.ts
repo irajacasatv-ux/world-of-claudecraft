@@ -67,7 +67,8 @@ export function installLoadedFreehold(
   // join's WITHHELD verdict stands on it: no loaded entry vouches for that
   // answer, so with no live record standing addPlayer seeds the stand-in, which
   // the insert refusal (no row yet) or the seal (a row) refuses, write-blocking
-  // the session (beside a live record the join shares it instead); no capture
+  // the session (beside a live record the join shares that live record
+  // instead); no capture
   // can be lost there, because a capture never outlives its entry. The eleventh
   // path's cost this arm used to carry (a joiner write-blocked and a waiting
   // capture released) is gone: the join now installs from the entry that holds

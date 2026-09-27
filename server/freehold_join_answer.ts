@@ -47,8 +47,8 @@ export const FREEHOLD_JOIN_VERDICTS = [
  *  from the entry (stale, held on capacity, marked, broken or missing) with no
  *  live record standing. A second character's join beside a live record over a
  *  loaded entry, and a login replaying the same DATA hold its entry holds, are
- *  `entry`. `held` is then a hold with no loaded entry, a capacity hold in
- *  practice. */
+ *  `entry`. `held` is then a hold with no loaded entry: mostly a capacity hold,
+ *  or a DATA hold whose entry was collected in the withheld race's window. */
 export type FreeholdJoinVerdict = (typeof FREEHOLD_JOIN_VERDICTS)[number];
 
 /** A zero count per verdict, built from the vocabulary, so a verdict added to
@@ -122,6 +122,7 @@ export function freeholdJoinAnswer(
   // standing the sim then seeds the stand-in, which the write seal (over a row)
   // or the insert refusal (before one) refuses: a write-blocked session, never a
   // lost edit, because no capture can outlive the entry that held it. Beside a
-  // live record the join shares that record and writes, or is refused, as it is.
+  // live record the join shares that live record and writes, or is refused, as
+  // that live record is.
   return { answer: { ...asked, state: null, recordWithheld: true }, verdict: 'withheld' };
 }
