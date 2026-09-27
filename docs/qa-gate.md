@@ -313,7 +313,7 @@ stopgap: replace them with a wholesale harvest from the next green full-mode CI 
 **The long-sims lanes** (Phase 4; split in two by the lane-diet PR). The
 `CI_LONG_SUITES` files (`scripts/lib/ci_shard_plan.mjs`: the suites measured over 90
 seconds inside a full-mode shard, the warlock anchor and five-minute-window suites among
-them since 2026-09-27 (the chronomancy balance sweep, down to 8 seconds, left), plus the
+them since 2026-09-27 (the chronomancy balance sweep left for the shard pool), plus the
 owned-class balance family, which is lane-owned as a unit since its 2026-08-13 split
 so the diet-flag registry and its lane accounting stay in one place; the measured
 per-file lane duration ledgers live in the lane-split PR bodies, #3370 first) run in the
@@ -391,8 +391,8 @@ each file budgeted in `scripts/test_memory_budgets.json` alone, forces a full GC
 case, and fails a file whose peak RETAINED heap passes its budget or that leaves no record. The
 nightly tests job runs it as its own step (pinned in `tests/ci_workflow.test.ts`). Budgets are the
 measured peak plus about 20 percent; lowering one is free, raising one needs its reason in the
-commit. Every vitest worker's heap is capped at 2 GiB (`test.execArgv` in vite.config.ts) and
-the gates budget 1.5 GiB of memory per worker (`GATE_BYTES_PER_WORKER`), so a retaining file
+commit. Every vitest worker's heap is capped (`test.execArgv` in vite.config.ts) and the
+gates budget `GATE_BYTES_PER_WORKER` of memory per worker, so a retaining file
 fails loudly on the cap rather than swapping the host.
 
 **The balance-harness diet.** The heavy balance suites in the lane are regression

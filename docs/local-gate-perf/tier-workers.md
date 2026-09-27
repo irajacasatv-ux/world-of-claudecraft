@@ -10,8 +10,9 @@ Cross-platform guidance for Vitest workers under `npm run gate`, `npm run gate:f
 
 1. **Available-memory clamp stays.** Default workers are
    `min(floor(cpu/2), floor(availableMem / GATE_BYTES_PER_WORKER))`, never fewer than 1.
-   The budget is 1.5 GiB since 2026-09-27 (it was 0.75 GiB, below the heaviest files'
-   own peak RSS), and every worker's heap is capped at 2 GiB (`test.execArgv`). The sensor
+   The budget is `GATE_BYTES_PER_WORKER` (raised on 2026-09-27, when it sat below the
+   heaviest files' own peak RSS), and every worker's heap is capped by vite.config.ts
+   `test.execArgv`. The sensor
    is `scripts/lib/gate_memory.mjs`: `vm_stat` on darwin, `os.freemem()` everywhere else.
 2. **Tier presets are caps**, not a way around memory pressure.
 3. **Full gate remains the merge bar** (`npm run gate`). `gate:fast` is day-loop only.

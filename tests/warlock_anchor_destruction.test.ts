@@ -45,7 +45,9 @@ describe('destruction Ruinbolt feedback anchors at 120 seconds', () => {
     // change. With the approved faster guaranteed-critical cycle, the same
     // release fixture measures 236.21875; keep about plus or minus 5% around
     // that, the same relative corridor as every prior re-anchor here.
-    // Diet: 241.90 over seeds 42 and 1337.
+    // Diet: 241.90 over seeds 42 and 1337, against a four-seed mean of 241.10
+    // measured the same day (2026-09-27); the diet band is the full band scaled
+    // by that ratio and rounded outward (older figures above predate it).
     expect(mean('dps')).toBeGreaterThanOrEqual(band(224, 224));
     expect(mean('dps')).toBeLessThanOrEqual(band(249, 250));
     expect(mean('starvedPct')).toBeLessThan(0.1);
@@ -70,7 +72,9 @@ describe('destruction Ruinbolt feedback anchors at 120 seconds', () => {
     // 252.82708333333335 on the same release fixture; preserve that same
     // relative corridor (this pin has no separate collapse-guard rationale
     // for its floor, unlike the OSSBrain re-anchor above).
-    // Diet: 251.50 over seeds 42 and 1337.
+    // Diet: 251.50 over seeds 42 and 1337, against a four-seed mean of 252.57
+    // measured the same day (2026-09-27); the diet band is the full band scaled
+    // by that ratio and rounded outward (older figures above predate it).
     expect(mean('dps')).toBeGreaterThanOrEqual(band(240, 238));
     expect(mean('dps')).toBeLessThanOrEqual(band(266, 265));
     expect(mean('starvedPct')).toBeLessThan(0.1);

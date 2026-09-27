@@ -233,7 +233,7 @@ guards hold the line, each naming its own remedy:
   `scripts/test_memory_budgets.json` alone with a forced GC after every case and fails a file
   whose peak RETAINED heap passes its budget; `npm run test:memory -- <files>` measures any file,
   held to the ceiling. A climb case over case is retention: release it, never raise the budget or
-  the 2 GiB worker heap cap (`test.execArgv`) to make room.
+  the worker heap cap (vite.config.ts `test.execArgv`) to make room.
 
 The recurring causes, each measured on this suite:
 - A spy on a per-test world object (`server.sim`, a `GameServer`, a session) stays registered for

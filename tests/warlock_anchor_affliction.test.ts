@@ -46,7 +46,9 @@ describe('affliction 200 DPS anchors at 120 seconds', () => {
     // new-tier kit actually measures, above 200 included. #4048 lets the
     // off-GCD Possess/Hour openers fire without a primary Eye target and the
     // heroic four-seed mean rises to 193.51, still below the old 200 target.
-    // Diet: 191.89 over seeds 42 and 1337.
+    // Diet: 191.89 over seeds 42 and 1337, against a four-seed mean of 190.55
+    // measured the same day (2026-09-27); the diet band is the full band scaled
+    // by that ratio and rounded outward (older figures above predate it).
     expect(mean('dps')).toBeGreaterThanOrEqual(band(163, 164));
     expect(mean('dps')).toBeLessThanOrEqual(band(196, 198));
     expect(mean('starvedPct')).toBeLessThan(0.1);
@@ -60,7 +62,9 @@ describe('affliction 200 DPS anchors at 120 seconds', () => {
     // 208.8 measured at the 2026-08-23 re-anchor; about plus or minus 5%, so
     // the tripwire trips on a real collapse or runaway, not on engine drift.
     // Post-retune measurement 194.7 (see the heroic anchor note above).
-    // Diet: 204.82 over seeds 42 and 1337.
+    // Diet: 204.82 over seeds 42 and 1337, against a four-seed mean of 204.52
+    // measured the same day (2026-09-27); the diet band is the full band scaled
+    // by that ratio and rounded outward (older figures above predate it).
     expect(mean('dps')).toBeGreaterThanOrEqual(band(186, 186));
     expect(mean('dps')).toBeLessThanOrEqual(band(210, 211));
     expect(mean('starvedPct')).toBeLessThan(0.1);

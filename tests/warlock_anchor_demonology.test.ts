@@ -60,7 +60,9 @@ describe('demonology 200 DPS anchors at 120 seconds', () => {
     // parity goldens. No warlock number changed: with that one line reverted on
     // this tip the old band passes. Measured 213.84 over the four seeds; the
     // band keeps its plus or minus 5% width.
-    // Diet: 214.52 over seeds 42 and 1337.
+    // Diet: 214.52 over seeds 42 and 1337, against a four-seed mean of 218.10
+    // measured the same day (2026-09-27); the diet band is the full band scaled
+    // by that ratio and rounded outward (older figures above predate it).
     expect(mean('dps')).toBeGreaterThanOrEqual(band(203, 199));
     expect(mean('dps')).toBeLessThanOrEqual(band(225, 222));
     expect(mean('starvedPct')).toBeLessThan(0.1);
@@ -82,7 +84,9 @@ describe('demonology 200 DPS anchors at 120 seconds', () => {
     // plus or minus 5% around the new measurement.
     // The Drakelands camps/props move changes the shared random stream.
     // Both post-buff bands pass unchanged on the merged world.
-    // Diet: 268.25 over seeds 42 and 1337.
+    // Diet: 268.25 over seeds 42 and 1337, against a four-seed mean of 267.00
+    // measured the same day (2026-09-27); the diet band is the full band scaled
+    // by that ratio and rounded outward (older figures above predate it).
     expect(mean('dps')).toBeGreaterThanOrEqual(band(254, 255));
     expect(mean('dps')).toBeLessThanOrEqual(band(281, 283));
     expect(mean('starvedPct')).toBeLessThan(0.1);
