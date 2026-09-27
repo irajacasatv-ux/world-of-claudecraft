@@ -3,10 +3,18 @@ import { describe, expect, it } from 'vitest';
 import { GroundDecals } from '../src/render/ability_vfx/decals';
 import type { AbilityVfxTextures } from '../src/render/ability_vfx/fx_textures';
 import {
-  abilityVfxCompileMaterials,
+  abilityVfxGateMaterials,
   collectAbilityVfxCompileTargets,
 } from '../src/render/ability_vfx/prewarm';
 import { paintWarriorFracture } from '../src/render/ability_vfx/warrior_fracture_atlas';
+
+// One material per distinct pooled VFX program: the compile targets' own.
+function abilityVfxCompileMaterials(root: THREE.Object3D): THREE.Material[] {
+  return collectAbilityVfxCompileTargets(root).flatMap(({ object }) => {
+    const material = (object as THREE.Mesh).material;
+    return Array.isArray(material) ? material : material ? [material] : [];
+  });
+}
 
 // ---------------------------------------------------------------------------
 // paintWarriorFracture: recording canvas context
@@ -270,7 +278,7 @@ it('discovers the Warrior stone program before any visible decal spawn and keeps
   const scene = new THREE.Scene();
   const decals = new GroundDecals(scene, makeFakeTextures(), groundY);
   expect(scene.children).toHaveLength(12);
-  const before = abilityVfxCompileMaterials(scene);
+  const before = abilityVfxGateMaterials(scene);
   expect(before).toHaveLength(2);
   expect(before.map((m) => m.blending).sort()).toEqual(
     [THREE.NormalBlending, THREE.AdditiveBlending].sort(),

@@ -5,7 +5,7 @@ export async function prepareImpactFragments(pool: SolidImpactFragments): Promis
   const programs = new Map([
     ['canvas', { isReady: () => true, getUniforms: () => ({}), getAttributes: () => ({}) }],
   ]);
-  for (const unit of pool.prewarmUnits({
+  for (const unit of pool.units({
     properties: { get: () => ({ programs }) },
     compile: async () => {},
     draw: () => {},

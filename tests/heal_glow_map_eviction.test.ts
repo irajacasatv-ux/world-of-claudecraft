@@ -28,7 +28,6 @@ interface LifecycleView {
 
 interface LifecycleHarness {
   sim: { entities: Map<number, Entity> };
-  abilityVfxFx: Pick<AbilityVfxFx, 'warriorRecovery'>;
   abilityVfx: AbilityVfx;
   views: Map<number, LifecycleView>;
   healGlowAt: Map<number, number>;
@@ -71,12 +70,16 @@ function harness(views: Map<number, LifecycleView>, healGlowAt: Map<number, numb
   // real recovery discriminator so ordinary heals still exercise the actual
   // fallthrough path; its unrelated GPU pools are never needed by this event.
   renderer.sim = { entities: new Map() };
-  renderer.abilityVfxFx = Object.assign(Object.create(AbilityVfxFx.prototype), { disposed: false });
+  const fx: AbilityVfxFx = Object.assign(Object.create(AbilityVfxFx.prototype), {
+    disposed: false,
+  });
   // Keep the real Shaman discriminator too: a Druid heal must still fall
   // through to the generic glow and its existing eviction/throttle contract.
-  renderer.abilityVfx = new AbilityVfx({
+  const abilityVfx = new AbilityVfx({
     fx: { setDelegates: vi.fn() },
   } as unknown as AbilityVfxDeps);
+  abilityVfx.warriorRecovery = (ev, maxHp) => fx.warriorRecovery(ev, maxHp);
+  renderer.abilityVfx = abilityVfx;
   renderer.views = views;
   renderer.healGlowAt = healGlowAt;
   renderer.scene = { remove: vi.fn() };

@@ -1,14 +1,19 @@
 import * as THREE from 'three';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { AbilityVfxFx } from '../src/render/ability_vfx/fx';
-import {
-  abilityVfxCompileMaterials,
-  collectAbilityVfxCompileTargets,
-} from '../src/render/ability_vfx/prewarm';
+import { collectAbilityVfxCompileTargets } from '../src/render/ability_vfx/prewarm';
 import type { AbilityVfxRibbons } from '../src/render/ability_vfx/ribbons';
 import type { ArchetypeSequencer } from '../src/render/ability_vfx/sequencer';
 import type { ShamanHeldEntity } from '../src/render/ability_vfx/shaman_held';
 import { SHAMAN_VFX_FULL_SPECS } from '../src/render/shaman_vfx_specs';
+
+// One material per distinct pooled VFX program: the compile targets' own.
+function abilityVfxCompileMaterials(root: THREE.Object3D): THREE.Material[] {
+  return collectAbilityVfxCompileTargets(root).flatMap(({ object }) => {
+    const material = (object as THREE.Mesh).material;
+    return Array.isArray(material) ? material : material ? [material] : [];
+  });
+}
 
 function fixture() {
   const noop = () => {};

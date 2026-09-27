@@ -1,4 +1,10 @@
 import * as THREE from 'three';
+import {
+  CAST_VFX_ENGINE,
+  type CastVfxSpawnGate,
+  OPEN_CAST_VFX_SPAWN_GATE,
+  tagCastVfxEngine,
+} from '../cast_vfx_family';
 import type { VfxAnchorResolver } from '../vfx_anchor';
 import { type AbilityVfxTextures, OVERLAY_CELL } from './fx_textures';
 import { slashWidthScale } from './spectacle';
@@ -240,6 +246,8 @@ export interface RibbonPoint {
 }
 
 export class AbilityVfxRibbons {
+  /** Set by AbilityVfxFx: the fail-closed family check at spawn. */
+  spawnGate: CastVfxSpawnGate = OPEN_CAST_VFX_SPAWN_GATE;
   private arcAdmissionCursor = 0;
   private readonly arcCurve = new THREE.CatmullRomCurve3();
   private readonly arcSmooth = allocPts(34);
@@ -360,7 +368,7 @@ export class AbilityVfxRibbons {
     this.mesh = new THREE.Mesh(this.geo, this.mat);
     this.mesh.frustumCulled = false;
     this.mesh.renderOrder = 6;
-    this.mesh.userData.renderCategory = 'vfx';
+    tagCastVfxEngine(this.mesh);
     // An idle pool is NOT free: three does not early-out on a zero draw count,
     // so a drawRange of 0 still pays setProgram, the VAO bind and a zero-count
     // draw every frame, on every renderer that owns a ribbon pool (this one and
@@ -467,6 +475,7 @@ export class AbilityVfxRibbons {
     width = 0.09,
     jagScale = 1,
   ): void {
+    if (!this.spawnGate.allows(CAST_VFX_ENGINE)) return;
     const slot = this.bolts.find((b) => !b.active) ?? this.bolts[0];
     slot.active = true;
     slot.age = 0;
@@ -499,6 +508,7 @@ export class AbilityVfxRibbons {
     jagScale = 1,
     delay = 0,
   ): void {
+    if (!this.spawnGate.allows(CAST_VFX_ENGINE)) return;
     const slot = this.bolts.find((b) => !b.active) ?? this.bolts[0];
     slot.active = true;
     slot.age = -delay;
@@ -567,6 +577,7 @@ export class AbilityVfxRibbons {
     priority: 0 | 1 = 0,
     sweep: SteelSweepRange | null = null,
   ): boolean {
+    if (!this.spawnGate.allows(CAST_VFX_ENGINE)) return false;
     const slot = this.chooseArcSlot(priority, preserveActive);
     if (!slot) return false;
     slot.sample = null;
@@ -594,6 +605,7 @@ export class AbilityVfxRibbons {
     life: number,
     sample: (out: THREE.Vector3) => boolean,
   ): void {
+    if (!this.spawnGate.allows(CAST_VFX_ENGINE)) return;
     const slot = this.chooseArcSlot(1, false);
     if (!slot) return;
     if (!sample(slot.pts[0])) return;
@@ -679,6 +691,7 @@ export class AbilityVfxRibbons {
     onArrive: ((x: number, y: number, z: number) => void) | null,
     onTerminate: ((x: number, y: number, z: number) => void) | null,
   ): void {
+    if (!this.spawnGate.allows(CAST_VFX_ENGINE)) return;
     const from = opts.sourceAnchor
       ? opts.sourceAnchor(sourceId, this.a1)
         ? this.a1
@@ -752,6 +765,7 @@ export class AbilityVfxRibbons {
   // A bowed slash arc through a world point (melee strike read): computed once
   // into the slot's preallocated points, fades fast.
   spawnSlash(at: RibbonPoint, colorHex: number, span = 1.15, life = 0.22): void {
+    if (!this.spawnGate.allows(CAST_VFX_ENGINE)) return;
     this.slashOne(at, colorHex, span, life, (Math.random() - 0.5) * 1.1, 0, 0.34);
   }
 
@@ -760,6 +774,7 @@ export class AbilityVfxRibbons {
   // Strip width follows the span scale (slashWidthScale) so a scaled-up arc
   // keeps its aspect instead of thinning into a hoop.
   spawnSlashStyled(at: RibbonPoint, colorHex: number, style: string, scale = 1): void {
+    if (!this.spawnGate.allows(CAST_VFX_ENGINE)) return;
     const w = slashWidthScale(scale);
     switch (style) {
       case 'vertical':
@@ -1216,6 +1231,7 @@ export class AbilityVfxRibbons {
     color: number,
     light: number,
   ): void {
+    if (!this.spawnGate.allows(CAST_VFX_ENGINE)) return;
     this.heldColor.setHex(color);
     this.add(points, count, width, this.heldColor, light, 0.1, 1, null, 0, true);
   }

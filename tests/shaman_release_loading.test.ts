@@ -27,11 +27,11 @@ describe('demand-loaded Shaman debris', () => {
       vi.spyOn(mesh.geometry, 'dispose'),
       vi.spyOn(mesh.material, 'dispose'),
     ]);
-    const carrier = scene.children.find((node) => node.name === 'signature-crest-prewarm')!;
+    const carrier = scene.children.find((node) => node.name === 'guard-upload')!;
     vi.spyOn(carrier, 'removeFromParent').mockImplementationOnce(() => {
       throw new Error('detach failed');
     });
-    expect(() => pool.dispose()).toThrow('Impact fragment cleanup failed');
+    expect(() => pool.dispose()).toThrow('Solid fragment cleanup failed');
     for (const dispose of disposals) expect(dispose).toHaveBeenCalledOnce();
     expect(() => pool.dispose()).not.toThrow();
   });
@@ -57,7 +57,7 @@ describe('demand-loaded Shaman debris', () => {
     ]);
     const draw = vi.fn();
     const host = { compile, draw, properties: { get: () => ({ programs }) } };
-    const units = pool.prewarmUnits(host);
+    const units = pool.units(host);
     await units[0].run();
     const task = units[1].run();
     expect(compile).toHaveBeenCalledOnce();
@@ -74,16 +74,16 @@ describe('demand-loaded Shaman debris', () => {
     const objects = [...scene.children];
     expect(objects.filter((object) => object.name.startsWith('solidImpact:'))).toHaveLength(3);
     expect(burst()).toBe(3);
-    expect(pool.prewarmUnits(host)).toEqual([]);
+    expect(pool.units(host)).toEqual([]);
     expect(compile).toHaveBeenCalledTimes(3);
     expect(scene.children).toEqual(objects);
     pool.dispose();
     expect(scene.children).toHaveLength(0);
-    expect(pool.prewarmUnits(host)).toEqual([]);
+    expect(pool.units(host)).toEqual([]);
     expect(compile).toHaveBeenCalledTimes(3);
     const rebuilt = new SolidImpactFragments(scene);
     expect(rebuilt.burst('stone_chip', 0, 1, 0, 0xffffff, 3, 1, 0, 1, () => 0)).toBe(0);
-    for (const unit of rebuilt.prewarmUnits(host)) await unit.run();
+    for (const unit of rebuilt.units(host)) await unit.run();
     expect(compile).toHaveBeenCalledTimes(6);
     expect(rebuilt.burst('stone_chip', 0, 1, 0, 0xffffff, 3, 1, 0, 1, () => 0)).toBe(3);
     rebuilt.dispose();
