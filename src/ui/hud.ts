@@ -58,7 +58,6 @@ import { HEROIC_VENDOR_STOCK } from '../sim/content/heroic_vendor';
 import { CRUCIBLE_VENDOR_STOCK } from '../sim/content/ignivar_loot';
 import { isOnMountRaceStartPlatform } from '../sim/content/mounts';
 import { recipeById } from '../sim/content/recipes';
-import { RELIQUARY_PAGES, RELIQUARY_PAGES_BY_ID } from '../sim/content/reliquary';
 import { FIRST_TALENT_LEVEL, type TalentAllocation, talentsFor } from '../sim/content/talents';
 import { resolveActiveWeaponSkin } from '../sim/content/weapon_skin_rules';
 import type { ZoneDef } from '../sim/data';
@@ -81,7 +80,6 @@ import {
   zoneAt,
 } from '../sim/data';
 import { specialRoleColor } from '../sim/discord_roles';
-import type { FactionId } from '../sim/factions';
 import type { Ante, PickAction } from '../sim/lockpick';
 import type { MaterialComposition } from '../sim/material_sources';
 import { petCanForceTaunt } from '../sim/pet/pet_taunt_gate';
@@ -174,12 +172,8 @@ import { bagsWindowShown } from './bags_view';
 import { BagsWindow, dismissBagPrompts } from './bags_window';
 import { BankWindow } from './bank_window';
 import { makeBankWindowFocus } from './bank_window_focus';
-import {
-  type BannerClass,
-  type BannerEnqueueOutcome,
-  BannerQueue,
-  bannerSubtextLines,
-} from './banner_queue';
+import type { BannerClass, BannerEnqueueOutcome } from './banner_queue';
+import { BannerSlot, type BannerVariant, celebrationBannerArgs } from './banner_slot';
 import { blockLandingLogKey } from './block_landing_feedback_core';
 import { BootcampOverlay } from './bootcamp';
 import { CalendarWindow } from './calendar_window';
@@ -243,20 +237,12 @@ import { DailyRewardsWindow, type StoreSpendResult } from './daily_rewards_windo
 import { DayNightDialPainter } from './day_night_dial_painter';
 import { DeathRecapDialog } from './death_recap_dialog';
 import { deathRecapFeedback } from './death_recap_feedback';
-import { decorativeArtImg } from './decorative_art';
 import { deedBorderSlug } from './deed_border_view';
-import {
-  deedBroadcastRendered,
-  deedName,
-  deedTitleText,
-  type TitledNameDecoration,
-  titledDisplayName,
-  titledNameDecoration,
-} from './deed_i18n';
+import { type TitledNameDecoration, titledDisplayName, titledNameDecoration } from './deed_i18n';
 import { DeedTrackerPainter } from './deed_tracker_painter';
+import { type DeedUnlockHost, paintDeedBroadcast, paintDeedUnlocks } from './deed_unlock_painter';
 import {
   buildDeedTrackerViewInto,
-  buildDeedUnlockPlan,
   type DeedDisplayCategory,
   makeDeedTrackerView,
 } from './deeds_view';
@@ -432,9 +418,17 @@ import {
   chatRoleTagEl,
   chatStreamerBadgeEl,
 } from './hud/chat/chat_line';
-import { type ChatClock, clampChatClock, formatChatTimestamp } from './hud/chat/chat_timestamp';
+import {
+  announceChatLine,
+  appendChatLogLine,
+  type ChatItemLinkDeps,
+  type ChatLogAppendDeps,
+  chatItemLinkEl,
+  chatLogLine,
+  prependChatTimestamp,
+} from './hud/chat/chat_log_appender';
+import { type ChatClock, clampChatClock } from './hud/chat/chat_timestamp';
 import { ChatWindowController } from './hud/chat/chat_window_controller';
-import { DEED_NAME_TOKEN, deedChatLinkEl, deedLineNodes } from './hud/chat/deed_chat_line';
 import { RaidWarningBanner } from './hud/chat/raid_warning_banner';
 import { ReadyCheckLeaderWindow } from './hud/chat/ready_check_leader_window';
 import { type CooldownManagerController, mountCooldowns } from './hud/cooldown_manager';
@@ -473,6 +467,7 @@ import { refreshSideButtonLabels } from './hud/menu/side_buttons';
 import { livingSecondaryPet } from './hud/pet_bar_core';
 import { CARD_POSES } from './hud/player_card/player_card';
 import { PlayerCardController } from './hud/player_card/player_card_controller';
+import { CelebrationDrainObserver } from './hud/professions/celebration_drain_observer';
 import { commissionOrderResultLine } from './hud/professions/commission_order_feedback';
 import { buildCommissionOrderBoardModel } from './hud/professions/commission_order_view';
 import { renderCommissionOrderWindow } from './hud/professions/commission_order_window';
@@ -481,20 +476,12 @@ import {
   type CraftCastSessionView,
   craftCastActivitySig,
 } from './hud/professions/craft_cast_view';
+import type { CraftCelebrationHost } from './hud/professions/craft_celebration_painter';
 import {
-  craftBannerIcon,
-  craftBannerText,
-  craftToastLogLines,
   legendaryForgedLine,
   legendaryZoneLine,
   masterworkZoneLine,
 } from './hud/professions/craft_celebration_text_view';
-import {
-  buildCraftCelebrationPlan,
-  CRAFT_TIER_UP_DRAIN_WINDOW,
-  type CraftTierUp,
-  observeCraftSkillsForTierUps,
-} from './hud/professions/craft_celebration_view';
 import { craftDenyMessage } from './hud/professions/crafting_deny_core';
 import { parseCraftingTab, serializeCraftingTab } from './hud/professions/crafting_tab_pref';
 import {
@@ -546,14 +533,6 @@ import {
 import { buildProfessionTutorialModel } from './hud/professions/profession_tutorial_view';
 import { renderProfessionTutorial } from './hud/professions/profession_tutorial_window';
 import { ProfessionsWindow } from './hud/professions/professions_window';
-import {
-  type CelebrationHost,
-  paintSkillLevelCelebrations,
-} from './hud/professions/skill_level_toast_painter';
-import {
-  advanceSkillLevelObservation,
-  type SkillLevelUp,
-} from './hud/professions/skill_level_toast_view';
 import { toolEffectResultLine } from './hud/professions/tool_effect_result_view';
 import { QuestDialogController } from './hud/quest/quest_dialog_controller';
 import { applyQuestEventPresentation } from './hud/quest/quest_event_router';
@@ -561,8 +540,6 @@ import { parseChatSegments } from './hud/quest/quest_link';
 import { QuestProgressBanner } from './hud/quest/quest_progress_banner';
 import { QuestTrackerController } from './hud/quest/quest_tracker_controller';
 import { QuestLogWindow } from './hud/quest/questlog_window';
-import { paintFactionTierCelebrations } from './hud/reputation/faction_tier_celebration_painter';
-import { advanceFactionTierObservation } from './hud/reputation/faction_tier_celebration_view';
 import { RiftMapPainter } from './hud/rift';
 import { RiftFloorTrackerController } from './hud/rift/rift_floor_tracker_controller';
 import { RiftForgeWindow, riftForgeInReach } from './hud/rift_forge';
@@ -615,8 +592,6 @@ import { buildPartySampleMembers } from './interface_unlock_menu_core';
 import { InterfaceUnlockPreview } from './interface_unlock_preview';
 import { InteriorMapController } from './interior_map_controller';
 import { ItemDragState } from './item_drag_state';
-import { itemPresentationInstance } from './item_instance_view';
-import { itemNameColor } from './item_name_color';
 import { itemSetMemberCounts } from './item_set_tooltip_view';
 import { itemSlotLabel as itemSlotName } from './item_slot_labels';
 import { itemTooltipHtml, questProgressText } from './item_tooltip_view';
@@ -627,7 +602,6 @@ import { LeaderboardWindow } from './leaderboard_window';
 import { ReannounceMarker } from './live_region_reannounce';
 import { chatBubbleKind, isCombatFlavorLog } from './log_event_route';
 import { lootQualityReceiptBody } from './loot_quality_receipt';
-import { lootQualityAriaName } from './loot_quality_view';
 import { lootRollWinBanner } from './loot_roll_win_view';
 import { lowHealthVignette } from './low_health';
 import { type LowResourceView, lowResourceViewInto } from './low_resource';
@@ -767,12 +741,6 @@ import {
   type RecipeTrackerInput,
   recipeTrackerView,
 } from './recipe_tracker_view';
-import {
-  reliquaryIlluminationBroadcastLine,
-  reliquaryIlluminationBroadcastRendered,
-  reliquaryPageName,
-} from './reliquary_i18n';
-import { reliquaryRelicDisplayName } from './reliquary_labels';
 import { selfCuratorStanding } from './reliquary_sheet_view';
 import { ReliquaryTrackerPainter } from './reliquary_tracker_painter';
 import {
@@ -782,14 +750,12 @@ import {
   type ReliquaryTrackerInput,
 } from './reliquary_tracker_view';
 import {
-  buildReliquaryUnlockPlan,
-  CURATOR_BORDER_REWARD,
-  type ReliquaryUnlockEventModel,
-  reliquaryFlashKey,
-  reliquaryRelicPageId,
-  reliquaryRelicPageIndex,
-} from './reliquary_view';
-import { curatorRankNameKey, ReliquaryWindow } from './reliquary_window';
+  paintReliquaryIlluminationBroadcast,
+  paintReliquaryUnlocks,
+  type ReliquaryUnlockHost,
+} from './reliquary_unlock_painter';
+import type { ReliquaryUnlockEventModel } from './reliquary_view';
+import { ReliquaryWindow } from './reliquary_window';
 import { closeReportWindow, openReportWindow } from './report_window';
 import { restView } from './rest_indicator';
 import { paintRestIndicator } from './rest_indicator_painter';
@@ -1085,49 +1051,6 @@ const PET_MODE_DESC_KEYS: Record<PetMode, TranslationKey> = {
   defensive: 'hud.pet.defensiveDesc',
   aggressive: 'hud.pet.aggressiveDesc',
 };
-/** The visual language the shared #banner slot paints in. 'default' is the
- *  bare gold celebration text every milestone has always used (level up, zone
- *  crossing, craft masterwork, duel result). 'deed' is the Book of Deeds
- *  plate: a framed, quieter parchment treatment, because a deed accomplishment
- *  firing an identical gold banner to a real level-up is a known cause of
- *  players reading routine gathering progress as leveling. 'skill' is the
- *  gathering skill milestone plate: copper craft framing with the profession
- *  crest, so a Mining 50 plate can never steal the character level-up reading. */
-export type BannerVariant = 'default' | 'deed' | 'skill';
-
-/** Everything one banner paint needs, held whole so a queued banner (R38)
- *  renders later exactly as it would have rendered immediately. */
-interface BannerPayload {
-  text: string;
-  motion: boolean;
-  decorativeIconUrl?: string;
-  variant: BannerVariant;
-  /** The secondary lines stacked under the title, ALREADY normalized by
-   *  `bannerSubtextLines` (never an empty array, never an empty string). Several
-   *  exist for the battleground verdict, whose facts (score plus rating swing,
-   *  why the match ended, the first-win bonus) are INDEPENDENT sentences: each
-   *  stays its own `t()` key on its own line instead of being concatenated. */
-  subtext?: string[];
-  durationMs: number;
-  source: 'unstuck' | null;
-  /** The R38 class, kept on the payload so the advance chain can tell a
-   *  deferred AMBIENT (droppable when stale) from a celebration. */
-  bannerClass: BannerClass;
-  /** performance.now() at enqueue, for the ambient max-defer below. */
-  enqueuedAt: number;
-}
-
-/** The fade gap between a finished banner and the next queued one. */
-const BANNER_ADVANCE_GAP_MS = 250;
-
-/** How long a parked AMBIENT banner stays worth replaying. An ambient is
- *  current-state, not history: behind ONE celebration (2600ms + gap) a zone
- *  name or prompt is still fresh enough to show, but behind a celebration
- *  CHAIN a "starting now" or countdown digit replayed many seconds late
- *  misleads (the phase 14 QA finding), so the advance chain drops anything
- *  parked longer than this. Celebrations never age out: "you leveled" stays
- *  true however late it shows. */
-const AMBIENT_MAX_DEFER_MS = 4000;
 // Classic class colors (CLASSES[cls].color is a 0xRRGGBB number) as a CSS
 // string, used to color-code party members on the minimap and in the frames.
 const classCss = (cls: string): string =>
@@ -1202,11 +1125,6 @@ function appendChildSpan(parent: HTMLElement, className: string): HTMLElement {
 }
 
 const CHEAT_DEATH_SAVE_TEXT = 'Cheat Death saves you!';
-
-/** Named Curator rank for rank-up toast/banner (cosmetic chrome only). */
-function curatorRankDisplayName(rank: number): string {
-  return t(curatorRankNameKey(rank), { rank: formatNumber(rank) });
-}
 
 // Module-scope (created once, not per frame): freedAttackSlotAbility's abilityDef
 // callback into freedAttackSlotDisplayAbility.
@@ -1424,7 +1342,9 @@ export class Hud {
   // every close path (closeContextMenu + item activation).
   private ctxMenuOpener: HTMLElement | null = null;
   private errorToast = new ErrorToastController($('#error-msg'));
-  private bannerEl = $('#banner');
+  // The shared #banner slot (banner_slot.ts): the element, its timers, the
+  // R38 queue and the unstuck source; showBanner delegates to it.
+  private readonly bannerSlot = new BannerSlot($('#banner'));
   // The WoW-style quest-progress flash (quest_progress_banner.ts): yellow
   // top-center lines fed by the questProgress event, aria-hidden decoration
   // (the chat log + live region carry the announced copy).
@@ -1446,18 +1366,7 @@ export class Hud {
   // its show method every frame without rebuilding unchanged HTML.
   private lastHoverTooltipId: string | null = null;
   private lastMirroredErrorText: string | undefined;
-  private bannerTimer: number | undefined;
-  // The hideBannerImmediately re-arm's own handle, kept so repeat hides
-  // replace the pending re-arm instead of stacking one leaked timer each.
-  private bannerHideRearmTimer: number | undefined;
-  // R38: the banner slot's scheduler (celebrations queue, ambient replaces;
-  // the pure policy lives in banner_queue.ts, this class owns the timers).
-  // Lazily created: several test harnesses build a bare Hud prototype
-  // (Object.create) whose field initializers never ran, the established
-  // stableNodeDeadlines fixture shape.
-  private bannerQueue: BannerQueue<BannerPayload> | undefined;
   private mountRaceInstructionTimer: number | undefined;
-  private bannerSource: 'unstuck' | null = null;
   private pfLevelEl = $('#pf-level');
   // The portrait frame the Book of Deeds border paints on (both entry
   // documents carry the id); the unit_frame painter owns every write to it.
@@ -1748,31 +1657,29 @@ export class Hud {
   // ONE bridge for the Hud's lifetime, like every other window's: a per-open
   // one has a null handle every time, so it orphans the previous trap.
   private readonly reportWindowFocus = this.windowFocus('#report-window');
-  // Craft tier-up snapshot (Professions 2.0): the last SYNCED
-  // craftSkills observation handleEvents diffs for tier crossings. null until
-  // the first synced observation, which initializes silently (no toasts for
-  // history on login/join).
-  private prevCraftSkills: Record<string, number> | null = null;
-  // Drains left in the post-craftResult window during which the tier-up diff
-  // runs (0 = disarmed; see the handleEvents tail).
-  private craftTierUpDrains = 0;
-  // Profession skill level-up snapshots (craft + gathering): the last SYNCED
-  // observation handleEvents diffs for floored integer skill climbs. null
-  // until the first synced observation (silent login/join baseline). Separate
-  // from the tier-up snapshot so a fractional craft skill carry never desyncs
-  // either consumer, and so gathering proficiency has its own baseline.
-  private prevCraftSkillLevels: Record<string, number> | null = null;
-  private prevGatheringSkillLevels: Record<string, number> | null = null;
-  private prevFactionStanding: Record<FactionId, number> | null = null;
+  // The drain tail's STATE-driven celebrations (craft tier-ups, skill
+  // level-ups, faction tiers) and their snapshots between drains
+  // (hud/professions/celebration_drain_observer.ts). Lazily created, the
+  // banner queue's old precedent: several handleEvents rigs build a bare Hud
+  // prototype (Object.create) whose field initializers never ran.
+  private celebrationDrainState: CelebrationDrainObserver | undefined;
+  private get celebrationDrain(): CelebrationDrainObserver {
+    this.celebrationDrainState ??= new CelebrationDrainObserver();
+    return this.celebrationDrainState;
+  }
   // The CelebrationHost seam the celebration painters draw through, built per
   // celebration (a rare drain) so a prototype-only test double still resolves.
-  private celebrationHost(): CelebrationHost {
+  private celebrationHost(): CraftCelebrationHost & DeedUnlockHost & ReliquaryUnlockHost {
     return {
       log: (text, color) => this.log(text, color),
+      logNodes: (nodes, color) => this.logNodes(nodes, color),
+      showBanner: (text, motion, iconUrl) => this.showBanner(text, motion, iconUrl),
       showCelebrationBanner: (text, bannerClass, variant, motion, iconUrl, subtext) =>
         this.showCelebrationBanner(text, bannerClass, variant, motion, iconUrl, subtext),
       announce: (text) => this.combatAnnouncer.push(text, performance.now()),
       reducedMotion: () => window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+      deedsWindow: this.deedsWindow,
+      reliquaryWindow: this.reliquaryWindow,
     };
   }
   // Signature of the in-range station-type set as of the last crafting-window
@@ -10659,7 +10566,7 @@ export class Hud {
     // Reliquary catalog fills batch the same way (handleReliquaryUnlocks):
     // presentation-only; membership stays on discovery mirrors.
     const reliquaryUnlocks: ReliquaryUnlockEventModel[] = [];
-    // Personal masterwork procs batch the same way (handleCraftCelebrations):
+    // Personal masterwork procs batch the same way (the drain observer's craft plate):
     // coalesced to the drain's last proc, planned purely alongside tier-ups.
     let masterworkItemId: string | null = null;
     // One spawn clock for the whole batch: FCT floaters spawned from this event burst
@@ -11114,11 +11021,9 @@ export class Hud {
               );
             }
           }
-          // Arm the tier-up state check below: skills only ever change on a
-          // craft, and online the cprof mirror can land a few snapshots after
-          // this event, so the diff stays armed for a bounded drain window
-          // instead of polling every frame.
-          this.craftTierUpDrains = CRAFT_TIER_UP_DRAIN_WINDOW;
+          // Arm the drain tail's tier-up state check (armCraftTierUps says why
+          // a bounded window rather than a per-frame poll).
+          this.celebrationDrain.armCraftTierUps();
           if (ev.ok && ev.itemId) {
             // The ONLY line for the craft grant: the hub's 'loot' events are
             // emitted both silent and callerLogs for every craft-output grant
@@ -11701,61 +11606,16 @@ export class Hud {
             HUD_LOG.GUILD_SUCCESS,
           );
           break;
-        case 'deedBroadcast': {
-          // A guildmate's or followed friend's marquee unlock. Id-based on
-          // the wire (server sends the deed id, never English); the visible
-          // line composes in deed_i18n (Node-pinned there), in the guild-chat
-          // green so it reads as social news. The deed name is spliced in as
-          // a clickable jump to that deed's card in the viewer's own Book.
-          this.logNodes(
-            deedLineNodes(document, deedBroadcastRendered(ev.characterName, DEED_NAME_TOKEN), () =>
-              deedChatLinkEl(document, deedName(ev.deedId), () =>
-                this.deedsWindow.openWithDeed(ev.deedId),
-              ),
-            ),
-            HUD_LOG.BROADCAST,
-          );
+        case 'deedBroadcast':
+          // A guildmate's or followed friend's marquee unlock, the deed name a
+          // clickable jump into the viewer's own Book (deed_unlock_painter.ts).
+          paintDeedBroadcast(this.celebrationHost(), ev.characterName, ev.deedId);
           break;
-        }
-        case 'reliquaryIlluminationBroadcast': {
-          // A guildmate's or followed friend's first-ever page Illumination
-          // (Phase 18), the deedBroadcast arm's Reliquary sibling. Id-based
-          // on the wire (server sends the page id, never English); the line
-          // composes in reliquary_i18n (Node-pinned there), guild-chat green,
-          // with the page name spliced in as a clickable jump to that page in
-          // the viewer's own Reliquary. A catalog-unknown page id
-          // (mixed-version drift; membership via Object.hasOwn, the
-          // reliquary_i18n pageDef idiom) keeps the plain line rather than a
-          // dead link: the Illumination toast's inert-link policy.
-          const pageId = ev.pageId;
-          if (!Object.hasOwn(RELIQUARY_PAGES_BY_ID, pageId)) {
-            // Text NODES, never the token-parsing log path: this branch is
-            // the one place a remote-origin string (name + raw page id)
-            // reaches chat, and it must stay structurally inert rather than
-            // incidentally safe via the name charset.
-            this.logNodes(
-              [
-                document.createTextNode(
-                  reliquaryIlluminationBroadcastLine(ev.characterName, pageId),
-                ),
-              ],
-              HUD_LOG.BROADCAST,
-            );
-          } else {
-            this.logNodes(
-              deedLineNodes(
-                document,
-                reliquaryIlluminationBroadcastRendered(ev.characterName, DEED_NAME_TOKEN),
-                () =>
-                  deedChatLinkEl(document, reliquaryPageName(pageId), () =>
-                    this.reliquaryWindow.openWithPage(pageId),
-                  ),
-              ),
-              HUD_LOG.BROADCAST,
-            );
-          }
+        case 'reliquaryIlluminationBroadcast':
+          // Its Reliquary sibling: the page name a clickable jump, a
+          // catalog-unknown page a plain line (reliquary_unlock_painter.ts).
+          paintReliquaryIlluminationBroadcast(this.celebrationHost(), ev.characterName, ev.pageId);
           break;
-        }
         case 'error': {
           const quota = generalChatQuotaView(ev);
           if (quota) {
@@ -12631,7 +12491,7 @@ export class Hud {
           // The 3..2..1 countdown paints from the per-frame view; nudge it now so
           // it appears the instant the race arms. Clear any lingering lesson
           // instruction immediately so the two center-screen messages cannot overlap.
-          this.hideBannerImmediately();
+          this.bannerSlot.hideImmediately();
           this.mountRaceControls.update();
           break;
         case 'mountRaceStart':
@@ -12756,7 +12616,7 @@ export class Hud {
         case 'unstuck': {
           const feedback = unstuckFeedback(ev);
           const text = t(feedback.key, feedback.values);
-          if (feedback.clearBanner) this.clearUnstuckBanner();
+          if (feedback.clearBanner) this.bannerSlot.clearUnstuck();
           if (feedback.kind === 'error') {
             this.showError(text);
             break;
@@ -12862,114 +12722,12 @@ export class Hud {
     }
     if (deedUnlocks.length > 0) this.handleDeedUnlocks(deedUnlocks);
     if (reliquaryUnlocks.length > 0) this.handleReliquaryUnlocks(reliquaryUnlocks);
-    // Craft tier crossings are STATE-driven, not event-driven: online the
-    // cprof mirror can land a snapshot after (or without) this drain's
-    // events, so the observation reads the live craftSkills rather than an
-    // event payload. The armed-window rules (bounded post-craftResult drains,
-    // the synced guard, the silent first init, disarm-on-change) live in the
-    // pure step observeCraftSkillsForTierUps (craft_celebration_view.ts).
-    // One craftingIdentity/craftSkills read per drain, shared by the tier-up
-    // and skill-level observations below: this tail runs every drain and the
-    // offline getters allocate a fresh copy per access.
-    const identitySynced = sim.craftingIdentity.synced;
-    const craftSkillsNow = sim.craftSkills;
-    const obs = observeCraftSkillsForTierUps(
-      identitySynced,
-      this.prevCraftSkills,
-      craftSkillsNow,
-      this.craftTierUpDrains,
-    );
-    this.prevCraftSkills = obs.prev;
-    this.craftTierUpDrains = obs.drains;
-    if (masterworkItemId !== null || obs.tierUps.length > 0)
-      this.handleCraftCelebrations(masterworkItemId, obs.tierUps);
-    // Profession skill level-ups (floored craft skill + gathering proficiency):
-    // also STATE-driven. Always-on after a silent synced baseline so a quiet
-    // post-gather drain (proficiency applies the next tick) and enchant /
-    // battlefield trickle still land their chat lines without arming every
-    // event arm. Both families gate on the cprof identity sync flag: the
-    // server ships cprof and gprof unconditionally in the same self snapshot
-    // (server/game.ts selfWireJson), and offline both are always synced.
-    const craftSkillObs = advanceSkillLevelObservation(
-      identitySynced,
-      this.prevCraftSkillLevels,
-      craftSkillsNow,
-    );
-    this.prevCraftSkillLevels = craftSkillObs.prev;
-    const gatherSkillObs = advanceSkillLevelObservation(
-      identitySynced,
-      this.prevGatheringSkillLevels,
-      sim.gatheringProficiency,
-    );
-    this.prevGatheringSkillLevels = gatherSkillObs.prev;
-    if (craftSkillObs.skillUps.length > 0 || gatherSkillObs.skillUps.length > 0)
-      this.handleSkillLevelCelebrations(
-        craftSkillObs.skillUps,
-        gatherSkillObs.skillUps,
-        // One celebration chime per drain across the whole tail: stand down
-        // when a tier-up, masterwork, or deed celebration just chimed (a
-        // retro-only deed drain draws no chime; over-suppressing there only
-        // quiets a login catch-up, never a live earned moment).
-        masterworkItemId !== null || obs.tierUps.length > 0 || deedUnlocks.length > 0,
-      );
-    // Faction standing tiers ride the same diff-observer family over
-    // IWorld.factions (hud/reputation/faction_tier_celebration_view.ts), on
-    // the same sync flag: `fac` ships in the self snapshot beside cprof.
-    const factionObs = advanceFactionTierObservation(
-      identitySynced,
-      this.prevFactionStanding,
-      sim.factions,
-    );
-    this.prevFactionStanding = factionObs.prev;
-    if (factionObs.tierUps.length > 0)
-      paintFactionTierCelebrations(
-        this.celebrationHost(),
-        factionObs.tierUps,
-        masterworkItemId !== null || obs.tierUps.length > 0 || deedUnlocks.length > 0,
-      );
-  }
-
-  // Profession skill level-ups (gathering + craft counters): pure plan in
-  // skill_level_toast_view.ts, drawn by skill_level_toast_painter.ts through
-  // the celebration host seam. Kept as a method so the drain tail and the
-  // paint-contract tests call one name.
-  private handleSkillLevelCelebrations(
-    craftUps: SkillLevelUp[],
-    gatherUps: SkillLevelUp[],
-    celebrationAlreadyChimed: boolean,
-  ): void {
-    paintSkillLevelCelebrations(
+    // The STATE-driven celebrations (craft tier-ups and the masterwork plate,
+    // profession skill level-ups, faction standing tiers) read the live
+    // mirror once per drain (hud/professions/celebration_drain_observer.ts).
+    this.celebrationDrain.observe(sim, masterworkItemId, deedUnlocks.length > 0, () =>
       this.celebrationHost(),
-      craftUps,
-      gatherUps,
-      celebrationAlreadyChimed,
     );
-  }
-
-  // The crafted earned moment, planned purely (craft_celebration_view) so the
-  // batching rules stay unit-pinned: the durable log copy for the masterwork
-  // proc and each tier crossing, the single banner slot coalesced (masterwork
-  // outranks tier-up), and at most ONE celebration sound per drain. The
-  // reduced-motion probe (the skin controller precedent) trims motion only,
-  // never information.
-  private handleCraftCelebrations(masterworkItemId: string | null, tierUps: CraftTierUp[]): void {
-    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const plan = buildCraftCelebrationPlan({
-      masterwork: masterworkItemId !== null ? { itemId: masterworkItemId } : null,
-      tierUps,
-      reducedMotion,
-    });
-    for (const l of craftToastLogLines(plan)) this.log(l.text, l.color);
-    if (plan.banner !== null) {
-      const text = craftBannerText(plan.banner);
-      // plan.motion trims the banner fade only; the announcer push below is
-      // the polite #combat-live ARIA region (accessibility, never gated).
-      this.showBanner(text, plan.motion, craftBannerIcon(plan.banner));
-      // The banner div carries no live semantics (the handleDeedUnlocks
-      // precedent), so the polite #combat-live region carries the copy.
-      this.combatAnnouncer.push(text, performance.now());
-    }
-    if (plan.playSound) audio.achievement();
   }
 
   // The four Professions 2.0 text-free events, rendered through the
@@ -13086,232 +12844,18 @@ export class Hud {
     el.querySelector<HTMLElement>('.cd-ok')?.focus();
   }
 
-  // Reliquary catalog fill: planned purely (buildReliquaryUnlockPlan). Each
-  // unlock gets a gold log line; rank-up outranks Illumination outranks a plain
-  // unlock for the single banner slot; one sound per drain; reducedMotion trims
-  // motion only. Membership is NEVER invented here: the event is presentation-only.
+  // Reliquary catalog fill: planned purely (buildReliquaryUnlockPlan) and
+  // drawn by reliquary_unlock_painter.ts through the celebration host seam.
   private handleReliquaryUnlocks(events: ReliquaryUnlockEventModel[]): void {
-    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const plan = buildReliquaryUnlockPlan(events, reducedMotion);
-    // One catalog index for the whole drain, feeding the SAME resolution the
-    // Reliquary's own recent strip uses (reliquaryRelicPageId: the first
-    // authored page listing the slot). A chip and its own announcement
-    // therefore cannot point at different pages.
-    const pageIndex = reliquaryRelicPageIndex(RELIQUARY_PAGES);
-    for (const log of plan.logs) {
-      // One shared resolver for chat, banner, and every window surface: the two
-      // ladders here each carried their own humanized fallback, and only one of
-      // them stripped a colon namespace, so `mount:swift_gryphon` printed
-      // differently in the log than on the banner for the same unlock.
-      const name = reliquaryRelicDisplayName(log.kind, log.id);
-      const pageId = reliquaryRelicPageId(pageIndex, log.id);
-      if (pageId === null) {
-        // A relic the catalog no longer places has nowhere to jump, so the line
-        // stays plain rather than offering a link that opens nothing (the
-        // recent strip's inert-chip policy).
-        this.log(t('hudChrome.reliquary.unlockToast', { name }), HUD_LOG.NOTICE);
-        continue;
-      }
-      // The durable gold line, with the relic name spliced in as a clickable
-      // jump to the page that holds it.
-      this.logNodes(
-        deedLineNodes(
-          document,
-          t('hudChrome.reliquary.unlockToast', { name: DEED_NAME_TOKEN }),
-          () => deedChatLinkEl(document, name, () => this.reliquaryWindow.openWithPage(pageId)),
-        ),
-        HUD_LOG.NOTICE,
-      );
-    }
-    // Durable Illumination log survives even when rank-up claims the banner slot.
-    if (plan.illuminatedPageId && plan.banner?.kind !== 'illuminate') {
-      const pageName = reliquaryPageName(plan.illuminatedPageId);
-      // Captured for the link closure: a property narrowing does not survive
-      // into a callback, and the jump target is exactly the illuminated page.
-      const jumpId = plan.illuminatedPageId;
-      // Membership via Object.hasOwn (the reliquary_i18n pageDef idiom): the
-      // record has a normal prototype, so an `in`/truthiness check would let
-      // a forged id like "constructor" through.
-      if (!Object.hasOwn(RELIQUARY_PAGES_BY_ID, jumpId)) {
-        // A page the catalog no longer holds (client/server catalog drift)
-        // would jump to a window that opens un-navigated, so the line stays
-        // plain instead of carrying a dead link: the relic line's inert-link
-        // policy above, applied to both Illumination emitters.
-        this.log(t('hudChrome.reliquary.illuminateToast', { name: pageName }), HUD_LOG.NOTICE);
-      } else {
-        this.logNodes(
-          deedLineNodes(
-            document,
-            t('hudChrome.reliquary.illuminateToast', { name: DEED_NAME_TOKEN }),
-            () =>
-              deedChatLinkEl(document, pageName, () => this.reliquaryWindow.openWithPage(jumpId)),
-          ),
-          HUD_LOG.NOTICE,
-        );
-      }
-    }
-    if (plan.banner) {
-      const banner = plan.banner;
-      let bannerText: string;
-      if (banner.kind === 'rankUp') {
-        const rankName = curatorRankDisplayName(banner.rank);
-        bannerText = t('hudChrome.reliquary.rankUpBanner', {
-          rank: formatNumber(banner.rank),
-          name: rankName,
-        });
-        // The rank is the whole collection's, so its link lands on Overview,
-        // the one surface that shows the seal and the catalog total.
-        this.logNodes(
-          deedLineNodes(
-            document,
-            t('hudChrome.reliquary.rankUpToast', {
-              rank: formatNumber(banner.rank),
-              name: DEED_NAME_TOKEN,
-            }),
-            () => deedChatLinkEl(document, rankName, () => this.reliquaryWindow.open('overview')),
-          ),
-          HUD_LOG.NOTICE,
-        );
-        // The one rank whose deed bridge rewards a nameplate border earns a
-        // second, durable line: the rank banner alone never says the border is
-        // now wearable, and the Book of Deeds is where it is put on.
-        if (CURATOR_BORDER_REWARD !== null && banner.rank === CURATOR_BORDER_REWARD.rank) {
-          this.log(
-            t('hudChrome.reliquary.borderWearableNote', {
-              name: deedName(CURATOR_BORDER_REWARD.deedId),
-            }),
-            HUD_LOG.NOTICE,
-          );
-        }
-      } else if (banner.kind === 'illuminate') {
-        const pageName = reliquaryPageName(banner.pageId);
-        bannerText = t('hudChrome.reliquary.illuminateBanner', { name: pageName });
-        // The banner's own Illumination line is clickable too: this is the
-        // branch that fires when Illumination OWNS the banner slot, and a
-        // single-site conversion would leave it plain.
-        const jumpId = banner.pageId;
-        if (!Object.hasOwn(RELIQUARY_PAGES_BY_ID, jumpId)) {
-          // Same drift guard as the durable arm: a catalog-unknown page gets
-          // the plain line, never a link that would open un-navigated. The
-          // banner prose above keeps the (fallback) name on purpose: it is
-          // text, not a jump, and a drift drain is a dev/ops anomaly worth
-          // seeing.
-          this.log(t('hudChrome.reliquary.illuminateToast', { name: pageName }), HUD_LOG.NOTICE);
-        } else {
-          this.logNodes(
-            deedLineNodes(
-              document,
-              t('hudChrome.reliquary.illuminateToast', { name: DEED_NAME_TOKEN }),
-              () =>
-                deedChatLinkEl(document, pageName, () => this.reliquaryWindow.openWithPage(jumpId)),
-            ),
-            HUD_LOG.NOTICE,
-          );
-        }
-      } else {
-        const relic = banner.relic;
-        const name = reliquaryRelicDisplayName(relic.kind, relic.id);
-        bannerText = t('hudChrome.reliquary.unlockToast', { name });
-      }
-      this.showCelebrationBanner(bannerText, 'deed', 'deed', plan.motion);
-      this.combatAnnouncer.push(bannerText, performance.now());
-    }
-    if (plan.playSound) audio.achievement();
-    // Immediate open-window refresh so silhouette grids fill live.
-    // refreshIfChanged, NOT bare render(): the prebuilt-input path
-    // classifies the repaint as world-driven, which keeps the live region
-    // silent when the announced count did not change; a bare render() reads
-    // as player-driven and re-announces a count the player never asked
-    // about (the Phase 13 QA regression). Offline the ownership digest
-    // moves in the same tick, so this paints immediately. Online the event
-    // frame can precede the heavy snapshot that moves the mirror, in which
-    // case this call elides and the grid converges when that snapshot lands
-    // plus the slow band (the old bare render() painted the same stale
-    // mirror, just noisily).
-    if (plan.refreshWindow && this.reliquaryWindow.isOpen) {
-      // Arm the celebration one-shots BEFORE the refresh, so the repaint that
-      // shows the fill is the one that carries them. Both are consumed by a
-      // render, so a refresh that elides (the online snapshot-lag case above)
-      // leaves them armed for the paint that actually shows the new state
-      // instead of firing on a surface that has not caught up yet. Reduced
-      // motion is handled in CSS for both, so a player who prefers less motion
-      // still gets the static treatment rather than nothing.
-      this.reliquaryWindow.flashRelics(plan.logs.map((log) => reliquaryFlashKey(log.kind, log.id)));
-      if (plan.illuminatedPageId !== null) {
-        this.reliquaryWindow.celebrateIllumination(plan.illuminatedPageId);
-      }
-      this.reliquaryWindow.refreshIfChanged();
-    }
-    // On-join catch-up: one localized summary line, the same treatment the
-    // Book of Deeds gives its retro pass. No banner, no audio, and no forced
-    // window rebuild (the slow-band signature picks the new fills up).
-    if (plan.retroCount > 0) {
-      const retroText = tPlural('hudChrome.plurals.reliquaryRetroSummary', plan.retroCount, {
-        count: formatNumber(plan.retroCount, { maximumFractionDigits: 0 }),
-      });
-      this.log(retroText, HUD_LOG.NOTICE);
-      this.combatAnnouncer.push(retroText, performance.now());
-    }
+    paintReliquaryUnlocks(this.celebrationHost(), events);
   }
 
-  // The earned moment, planned purely (deeds_view buildDeedUnlockPlan) so the
-  // batching rules stay unit-pinned: each fresh unlock gets a gold log line
-  // (the durable copy) and title rewards a second hint line; the single
-  // banner slot shows the drain's last unlock; one celebration sound per
-  // drain. The on-join retro catch-up draws NO banner and NO audio, just one
-  // localized summary count.
+  // The Book of Deeds earned moment: planned purely (deeds_view
+  // buildDeedUnlockPlan) and drawn by deed_unlock_painter.ts through the
+  // celebration host seam. Kept as a method: the drain tail and the PR
+  // screenshot rig (window.__game.hud.handleDeedUnlocks) call this name.
   private handleDeedUnlocks(events: { deedId: string; retro?: boolean }[]): void {
-    const plan = buildDeedUnlockPlan(events, DEEDS);
-    // Feed the Book's recent strip the exact session order (the drain order),
-    // ahead of the server record that may still be catching up.
-    this.deedsWindow.noteUnlocks(plan.logIds);
-    for (const id of plan.logIds) {
-      // The durable gold log line, with the deed name spliced in as a
-      // clickable jump to its card in the Book of Deeds.
-      this.logNodes(
-        deedLineNodes(
-          document,
-          t('hudChrome.deeds.unlockedBanner', { name: DEED_NAME_TOKEN }),
-          () => deedChatLinkEl(document, deedName(id), () => this.deedsWindow.openWithDeed(id)),
-        ),
-        HUD_LOG.NOTICE,
-      );
-    }
-    for (const id of plan.titleHintIds) {
-      this.log(
-        t('hudChrome.deeds.unlockedTitleHint', { title: deedTitleText(id) }),
-        HUD_LOG.NOTICE,
-      );
-    }
-    // The border sibling of the title hint, same color and placement. A border
-    // reward carries no display text of its own (only a palette slug), so the
-    // line names the DEED, which is also what the picker lists it under.
-    for (const id of plan.borderHintIds) {
-      this.log(t('hudChrome.deeds.unlockedBorderHint', { name: deedName(id) }), HUD_LOG.NOTICE);
-    }
-    if (plan.bannerId !== null) {
-      const bannerText = t('hudChrome.deeds.unlockedBanner', { name: deedName(plan.bannerId) });
-      // The 'deed' variant, NOT the shared gold level-up treatment: an early
-      // character trips three or more deeds in its first five gathering
-      // actions, and an identical banner made those read as levels. Copy,
-      // lifetime and the announcer push below are untouched: this is
-      // presentation only, never information.
-      // R38: a deed is a celebration; it queues behind whatever is live
-      // instead of replacing it (the first-level-up collision).
-      this.showCelebrationBanner(bannerText, 'deed', 'deed');
-      // The banner div carries no live semantics and the chat log is
-      // deliberately aria-live off, so the polite #combat-live region is what
-      // a screen reader hears (the throttled self-note precedent above).
-      this.combatAnnouncer.push(bannerText, performance.now());
-    }
-    if (plan.playSound) audio.achievement();
-    if (plan.retroCount > 0) {
-      const retroText = tPlural('hudChrome.plurals.deedsRetroSummary', plan.retroCount, {
-        count: formatNumber(plan.retroCount, { maximumFractionDigits: 0 }),
-      });
-      this.log(retroText, HUD_LOG.NOTICE);
-      this.combatAnnouncer.push(retroText, performance.now());
-    }
+    paintDeedUnlocks(this.celebrationHost(), events);
   }
 
   log(
@@ -13326,16 +12870,10 @@ export class Hud {
     // text (a chosen legendary name): tokens render verbatim, never as links.
     plainText = false,
   ): void {
-    this.appendLog(
+    appendChatLogLine(
       this.chatLogEl,
-      typeof text === 'string' ? text : '',
-      color,
-      true,
-      channel,
-      decorativeIconUrl,
-      plainText,
-      typeof text === 'string' ? undefined : text,
-      announceWhenFiltered,
+      chatLogLine(text, color, decorativeIconUrl, channel, announceWhenFiltered, plainText),
+      this.chatLogDeps(),
     );
   }
 
@@ -13386,15 +12924,34 @@ export class Hud {
     if (text) this.showSelfNote(text);
   }
 
-  // Prepend a dim bracketed wall-clock prefix to a chat line when the "Show
-  // Timestamps" option is on. No-op otherwise. Wall-clock time is fine here —
-  // the determinism ban is sim-only.
-  private prependTimestamp(div: HTMLElement): void {
-    if (!this.chatTimestamps) return;
-    const ts = document.createElement('span');
-    ts.className = 'chat-ts ui-faint ui-num';
-    ts.textContent = `${formatChatTimestamp(new Date(), this.chatClock)} `;
-    div.appendChild(ts);
+  // The Show Timestamps clock the chat lines stamp with, or null while the
+  // option is off (prependChatTimestamp in hud/chat/chat_log_appender.ts).
+  private chatTimestampClock(): ChatClock | null {
+    return this.chatTimestamps ? this.chatClock : null;
+  }
+
+  // The chat-log appender's host state, built per line so a bare-prototype
+  // test double still resolves (hud/chat/chat_log_appender.ts).
+  private chatLogDeps(): ChatLogAppendDeps {
+    return {
+      chatLogEl: this.chatLogEl,
+      follow: () => {
+        this.chatFollow ||= new ChatScrollFollow([this.chatLogEl, this.combatLogEl]);
+        return this.chatFollow;
+      },
+      timestampClock: () => this.chatTimestampClock(),
+      hideIfFiltered: (div, chan) => this.hideIfFiltered(div, chan),
+      chatAnnouncer: this.chatAnnouncer,
+      ...this.chatItemLinkDeps(),
+    };
+  }
+
+  private chatItemLinkDeps(): ChatItemLinkDeps {
+    return {
+      maskChat: (text) => this.maskChat(text),
+      attachTooltip: (el, html) => this.attachTooltip(el, html),
+      itemTooltip: (item, compare, instance) => this.itemTooltip(item, compare, instance),
+    };
   }
 
   private logZoneWelcome(zone: ZoneDef): void {
@@ -13420,7 +12977,7 @@ export class Hud {
     div.style.color = chatChannelColor(chan);
     div.dataset.chan = chan;
     this.hideIfFiltered(div, chan);
-    this.prependTimestamp(div);
+    prependChatTimestamp(div, this.chatTimestampClock());
     const sender = document.createElement('span');
     sender.className = 'chat-player-name';
     // The DISPLAYED sender may carry the speaker's Book of Deeds title (a
@@ -13488,7 +13045,7 @@ export class Hud {
     });
     this.chatLogEl.appendChild(div);
     // Announce the player-chat line through the tab-independent #chat-live region.
-    this.announceChatLine(div);
+    announceChatLine(div, this.chatAnnouncer);
     while (this.chatLogEl.children.length > 200) {
       const first = this.chatLogEl.firstChild;
       if (!first) break;
@@ -13530,30 +13087,14 @@ export class Hud {
     }
   }
 
-  // Render a [[i:id]] chat segment as a quality-colored, inspectable item link.
-  // Quest kinds use quest gold (purpose class) via itemNameColor so chat matches
-  // bag / tooltip / loot name language. Hover/focus shows the same item tooltip
-  // the bags window uses; an unknown id (e.g. content drift between players)
-  // degrades to a plain [?].
+  // Render a [[i:id]] chat segment as a quality-colored, inspectable item link
+  // (chatItemLinkEl in hud/chat/chat_log_appender.ts).
   private appendChatItemLink(
     parent: HTMLElement,
     itemId: string,
     instance?: ItemInstancePayload,
   ): void {
-    // knownItemDef, not bare truthiness: a peer-typed prototype key must miss.
-    const item = knownItemDef(ITEMS, itemId);
-    if (!item) {
-      parent.append(document.createTextNode(this.maskChat('[?]')));
-      return;
-    }
-    const link = document.createElement('span');
-    link.className = 'chat-item-link';
-    link.style.color = itemNameColor(item);
-    const shown = itemPresentationInstance(item.kind, instance);
-    link.textContent = `[${lootQualityAriaName(itemDisplayName(item), shown)}]`;
-    link.tabIndex = 0;
-    this.attachTooltip(link, () => this.itemTooltip(item, true, instance));
-    parent.append(link);
+    parent.append(chatItemLinkEl(document, itemId, this.chatItemLinkDeps(), instance));
   }
 
   // The plain-text form of a chat string with [[q:id]]/[[i:id]] tokens replaced by
@@ -13732,18 +13273,8 @@ export class Hud {
     this.combatAnnouncer.push(text, performance.now());
   }
 
-  // Announce visible #chatlog lines through #chat-live, mirroring the old aria-live:
-  // channel-filtered .chat-hidden lines stay silent, matching display:none live-region children.
-  // The relayed text is the rendered line text the
-  // screen reader read off the div (sender + message, already localized); ChatAnnouncer
-  // coalesces + throttles a burst. Both chat append paths (appendLog's chat case and
-  // chatLogFrom) call this so player chat and system chat announce alike, as #chatlog's
-  // implicit-polite log did before the decouple.
-  private announceChatLine(div: HTMLElement, announceWhenFiltered = false): void {
-    if (!announceWhenFiltered && div.classList.contains('chat-hidden')) return;
-    this.chatAnnouncer.push(div.textContent ?? '', performance.now());
-  }
-
+  // One line on a log pane (the chat or the combat pane): hud/chat/chat_log_appender.ts
+  // owns the chrome, the token splice, the announce, the trim and the scroll.
   private appendLog(
     el: HTMLElement,
     text: string,
@@ -13751,59 +13282,25 @@ export class Hud {
     timestamp = false,
     chan = 'system',
     decorativeIconUrl?: string,
-    // True forces the single-text-node path even on the chat pane: the line
-    // renders VERBATIM and [[i:...]]/[[q:...]] tokens are never turned into
-    // links. For player-authored surfaces whose home rendering is plain
-    // escaped text (the guild billboard echo: the social pane shows the MOTD
-    // via esc(), so guild-controlled text must not mint trusted clickable
-    // item links in chat either).
+    // The single-text-node opt-out for player-authored text (ChatLogLine.plainText).
     plainText = false,
     bodyNodes?: readonly Node[],
-    // Sender-only command feedback must still reach the tab-independent live
-    // region when its durable channel line is filtered by another active tab.
+    // Filtered sender-only feedback still announces (ChatLogLine.announceWhenFiltered).
     announceWhenFiltered = false,
   ): void {
-    this.chatFollow ||= new ChatScrollFollow([this.chatLogEl, this.combatLogEl]);
-    const wasNearBottom = this.chatFollow.shouldFollow(el);
-    const div = document.createElement('div');
-    div.style.color = color;
-    if (timestamp) this.prependTimestamp(div);
-    // tag + filter only the chat pane; the combat pane is a separate view
-    if (el === this.chatLogEl) {
-      div.dataset.chan = chan;
-      this.hideIfFiltered(div, chan);
-    }
-    if (decorativeIconUrl) {
-      div.append(decorativeArtImg(document, 'chat-masterwork-seal', decorativeIconUrl));
-    }
-    // A caller-assembled node body (the deed-link splice) lands verbatim.
-    // Loot lines carry name-free item tokens ([[i:id]]); render those as clickable
-    // links via the shared chat item-link renderer. Plain system/combat lines keep
-    // the fast text-node path (the substring test never fires for tokenless lines),
-    // and a plainText caller opts out entirely (see the parameter note above).
-    if (bodyNodes) {
-      for (const node of bodyNodes) div.append(node);
-    } else if (!plainText && el === this.chatLogEl && text.includes('[[i:')) {
-      for (const seg of parseChatSegments(text)) {
-        if (seg.kind === 'item') this.appendChatItemLink(div, seg.itemId);
-        else if (seg.kind === 'quest')
-          div.append(
-            document.createTextNode(`[${QUESTS[seg.questId] ? questTitle(seg.questId) : '?'}]`),
-          );
-        else div.append(document.createTextNode(seg.value));
-      }
-    } else {
-      div.append(document.createTextNode(text));
-    }
-    el.appendChild(div);
-    // Announce chat-pane lines through #chat-live (the combat pane has its own announcer).
-    if (el === this.chatLogEl) this.announceChatLine(div, announceWhenFiltered);
-    while (el.children.length > 200) {
-      const first = el.firstChild;
-      if (!first) break;
-      el.removeChild(first);
-    }
-    if (wasNearBottom) this.chatFollow.scrollToBottom(el);
+    appendChatLogLine(
+      el,
+      {
+        body: bodyNodes ?? text,
+        color,
+        timestamp,
+        chan,
+        decorativeIconUrl,
+        plainText,
+        announceWhenFiltered,
+      },
+      this.chatLogDeps(),
+    );
   }
 
   // A floating note over the local player (e.g. "Can't move!" when a movement command
@@ -13858,22 +13355,6 @@ export class Hud {
     }
   }
 
-  private clearUnstuckBanner(): void {
-    // Queued unstuck entries purge unconditionally; the LIVE banner clears
-    // only when it is itself the unstuck one.
-    this.bannerQueue?.retainQueued((p) => p.source !== 'unstuck');
-    if (this.bannerSource !== 'unstuck') return;
-    clearTimeout(this.bannerTimer);
-    this.bannerTimer = undefined;
-    this.bannerSource = null;
-    this.bannerEl.replaceChildren();
-    this.bannerEl.classList.remove('has-subtext');
-    this.bannerEl.style.opacity = '0';
-    // The live slot just ended early: the queue decides what (if anything)
-    // takes it, so a level-up waiting behind the unstuck line still shows.
-    this.advanceBannerSlot();
-  }
-
   showBanner(
     text: string,
     motion = true,
@@ -13882,40 +13363,25 @@ export class Hud {
     subtext?: string | string[],
     durationMs = 2600,
     source: 'unstuck' | null = null,
-    // R38: celebrations queue instead of last-write-wins; ambient (the
-    // default: zone names, prompts, countdowns) keeps replace semantics.
-    // See src/ui/banner_queue.ts for the whole policy. The outcome returns
-    // so a time-critical caller (the duel and arena countdowns) can lay a
-    // durable log line exactly when its banner did NOT show immediately.
+    // R38: celebrations queue, ambient replaces (banner_queue.ts policy); the
+    // outcome lets a countdown caller log exactly when its banner deferred.
     bannerClass: BannerClass = 'ambient',
   ): BannerEnqueueOutcome {
-    const subtextLines = bannerSubtextLines(subtext);
-    const payload: BannerPayload = {
+    return this.bannerSlot.show(
       text,
       motion,
       decorativeIconUrl,
       variant,
-      // Normalized once, here: an EMPTY line list is no subtext at all, and
-      // paintBanner's `!!subtext` gate and the has-subtext class must agree.
-      subtext: subtextLines.length > 0 ? subtextLines : undefined,
+      subtext,
       durationMs,
       source,
       bannerClass,
-      enqueuedAt: performance.now(),
-    };
-    this.bannerQueue ??= new BannerQueue();
-    const outcome = this.bannerQueue.enqueue(bannerClass, payload);
-    if (outcome === 'show') this.paintBanner(payload);
-    return outcome;
+    );
   }
 
-  /** The celebration form of showBanner (R38): full motion, the standard
-   *  2600ms duration, queued under the given class. Exists so the
-   *  celebration call sites stop threading five defaults positionally to
-   *  reach the class argument (and so changing the default duration cannot
-   *  strand them). `motion` stays a parameter for the reduced-motion
-   *  celebration plans; `decorativeIconUrl` and `subtext` carry the art-plus-
-   *  detail plates (the gathering skill milestone). */
+  /** The celebration form of showBanner (R38; celebrationBannerArgs in
+   *  banner_slot.ts owns the defaults). Routed through showBanner, the one
+   *  banner entry point. */
   showCelebrationBanner(
     text: string,
     bannerClass: 'levelup' | 'deed',
@@ -13924,117 +13390,9 @@ export class Hud {
     decorativeIconUrl?: string,
     subtext?: string,
   ): void {
-    this.showBanner(text, motion, decorativeIconUrl, variant, subtext, 2600, null, bannerClass);
-  }
-
-  /** The paint half of the banner slot: renders one payload and arms the
-   *  advance chain (duration, fade gap, then the queue's next). Only
-   *  showBanner's 'show' outcome and the advance chain itself call this. */
-  private paintBanner(payload: BannerPayload): void {
-    const { text, motion, decorativeIconUrl, variant, subtext, durationMs, source } = payload;
-    this.bannerEl.style.removeProperty('display');
-    this.bannerEl.classList.toggle('has-subtext', !!subtext);
-    if (subtext) {
-      const title = document.createElement('span');
-      title.className = 'banner-title';
-      title.textContent = text;
-      // One span per line; the has-subtext rule already stacks them (flex column).
-      const details = subtext.map((line) => {
-        const detail = document.createElement('span');
-        detail.className = 'banner-subtext';
-        detail.textContent = line;
-        return detail;
-      });
-      if (decorativeIconUrl) {
-        // Art-plus-subtext plate (the gathering skill milestone, and any
-        // future variant): crest beside a title/detail column. The wrapper is
-        // variant-agnostic; #banner.banner-with-art.has-subtext styles it.
-        const copy = document.createElement('span');
-        copy.className = 'banner-art-copy';
-        copy.append(title, ...details);
-        this.bannerEl.replaceChildren(
-          decorativeArtImg(document, 'banner-art', decorativeIconUrl),
-          copy,
-        );
-      } else {
-        this.bannerEl.replaceChildren(title, ...details);
-      }
-    } else {
-      const copy = document.createElement('span');
-      copy.className = 'banner-copy';
-      copy.textContent = text;
-      if (decorativeIconUrl) {
-        this.bannerEl.replaceChildren(
-          decorativeArtImg(document, 'banner-art', decorativeIconUrl),
-          copy,
-        );
-      } else {
-        this.bannerEl.replaceChildren(copy);
-      }
-    }
-    this.bannerEl.classList.toggle('banner-with-art', Boolean(decorativeIconUrl));
-    // The banner is ONE reused element, so every variant class must be
-    // toggled off as well as on: the next unrelated banner through this slot
-    // would otherwise inherit the previous one's visual language.
-    this.bannerEl.classList.toggle('banner-deed', variant === 'deed');
-    this.bannerEl.classList.toggle('banner-skill', variant === 'skill');
-    this.bannerEl.classList.toggle('banner-loot', payload.bannerClass === 'loot');
-    // Reduced-motion celebrations (craft plan.motion) show and hide the
-    // banner without the fade transition: identical text and duration, no
-    // animation. Motion-trimming only; information always survives.
-    this.bannerEl.classList.toggle('banner-no-motion', !motion);
-    this.bannerEl.style.opacity = '1';
-    this.bannerSource = source;
-    clearTimeout(this.bannerTimer);
-    this.bannerTimer = window.setTimeout(() => {
-      this.bannerEl.style.opacity = '0';
-      this.bannerSource = null;
-      // The fade gap before the next queued banner, so back-to-back
-      // celebrations read as two banners rather than one changing its text.
-      this.bannerTimer = window.setTimeout(() => this.advanceBannerSlot(), BANNER_ADVANCE_GAP_MS);
-    }, durationMs);
-  }
-
-  /** Advance the banner slot to the next queued payload, dropping any parked
-   *  AMBIENT older than AMBIENT_MAX_DEFER_MS (stale current-state; the doc
-   *  above the constant). Celebrations paint however late they surface. */
-  private advanceBannerSlot(): void {
-    for (;;) {
-      const next = this.bannerQueue?.advance();
-      if (!next) return;
-      if (
-        next.bannerClass === 'ambient' &&
-        performance.now() - next.enqueuedAt > AMBIENT_MAX_DEFER_MS
-      ) {
-        continue;
-      }
-      this.paintBanner(next);
-      return;
-    }
-  }
-
-  private hideBannerImmediately(): void {
-    // hideLive, not clear (the phase 14 QA): the one caller is the
-    // mount-race countdown claiming the slot, an ambient takeover, not a
-    // hard reset. Queued celebrations survive to play after the race;
-    // only the live element and the stale pending-ambient seat go.
-    this.bannerQueue?.hideLive();
-    // Re-arm the advance ourselves (the fix-round review): the takeover
-    // caller paints its own ambient right after, whose paint clears this
-    // timer, but a future caller that hides WITHOUT showing must not leave
-    // surviving celebrations waiting on an unrelated banner. The handle is
-    // kept so a second hide inside the gap replaces the pending re-arm
-    // rather than stacking another.
-    clearTimeout(this.bannerHideRearmTimer);
-    this.bannerHideRearmTimer = window.setTimeout(() => {
-      this.bannerHideRearmTimer = undefined;
-      if (this.bannerTimer === undefined && this.bannerSource === null) this.advanceBannerSlot();
-    }, BANNER_ADVANCE_GAP_MS);
-    clearTimeout(this.bannerTimer);
-    this.bannerTimer = undefined;
-    this.bannerSource = null;
-    this.bannerEl.style.opacity = '0';
-    this.bannerEl.style.display = 'none';
+    this.showBanner(
+      ...celebrationBannerArgs(text, bannerClass, variant, motion, decorativeIconUrl, subtext),
+    );
   }
 
   showSubzone(text: string): void {

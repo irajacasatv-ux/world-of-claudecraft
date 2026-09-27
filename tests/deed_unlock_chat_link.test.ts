@@ -1,22 +1,27 @@
 // @vitest-environment happy-dom
 
-// The clickable deed announcements, driven through the REAL Hud methods (the
-// professions_single_line_grants rig): a deed unlock and a guild broadcast
-// each render the deed NAME as a chat-deed-link span inside the localized
-// line, and activating the link (click or Enter) jumps to that deed's card
-// via DeedsWindow.openWithDeed. The link label resolves from the local
-// catalog (deedName), never from the wire.
+// The clickable deed announcements, driven through the REAL painters the Hud
+// delegates to (src/ui/deed_unlock_painter.ts and reliquary_unlock_painter.ts)
+// over the real chat-log appender, on the celebration rig that wires them the
+// way Hud.celebrationHost() does: a deed unlock and a guild broadcast each
+// render the deed NAME as a chat-deed-link span inside the localized line, and
+// activating the link (click or Enter) jumps to that deed's card via
+// DeedsWindow.openWithDeed. The link label resolves from the local catalog
+// (deedName), never from the wire. The handleEvents switch arms that route the
+// two broadcast events here are pinned at source.
 
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { audio } from '../src/game/audio';
-import type { SimEvent } from '../src/sim/types';
 import { deedName } from '../src/ui/deed_i18n';
-import { Hud } from '../src/ui/hud';
+import { paintDeedBroadcast, paintDeedUnlocks } from '../src/ui/deed_unlock_painter';
 import { t } from '../src/ui/i18n';
 import { reliquaryPageName } from '../src/ui/reliquary_i18n';
+import { paintReliquaryIlluminationBroadcast } from '../src/ui/reliquary_unlock_painter';
+import { type CelebrationRig, celebrationRig } from './helpers/celebration_rig';
+import { type ChatPane, chatPane } from './helpers/chat_log_deps';
 
 const UNLOCK_ID = 'prog_first_steps';
 const BROADCAST_ID = 'cmb_first_blood';
@@ -30,61 +35,14 @@ const cssColor = (hex: string): string => {
   return el.style.color;
 };
 
-interface DeedLinkHarness {
-  sim: unknown;
-  renderer: { handleEvent: ReturnType<typeof vi.fn> };
-  playEventSfx: ReturnType<typeof vi.fn>;
-  meters: { onEvent: ReturnType<typeof vi.fn> };
-  isNythraxisEvent: ReturnType<typeof vi.fn>;
-  chatLogEl: HTMLElement;
-  chatTimestamps: boolean;
-  chatClock: string;
-  chatWindow: { hideIfFiltered: ReturnType<typeof vi.fn> };
-  chatAnnouncer: { push: ReturnType<typeof vi.fn> };
-  combatAnnouncer: { push: ReturnType<typeof vi.fn> };
-  bannerEl: HTMLElement;
-  bannerTimer: number | undefined;
-  bannerSource: 'unstuck' | null;
-  log: ReturnType<typeof vi.fn>;
-  deedsWindow: {
-    noteUnlocks: ReturnType<typeof vi.fn>;
-    openWithDeed: ReturnType<typeof vi.fn>;
-  };
-  reliquaryWindow: {
-    openWithPage: ReturnType<typeof vi.fn>;
-  };
-  handleDeedUnlocks(events: { deedId: string; retro?: boolean }[]): void;
-  handleEvents(events: SimEvent[]): void;
-}
-
-function makeHud(): DeedLinkHarness {
-  const hud = Object.create(Hud.prototype) as unknown as DeedLinkHarness;
-  hud.sim = {
-    playerId: 7,
-    craftingIdentity: { synced: false },
-    craftSkills: {},
-    gatheringProficiency: {},
-  };
-  hud.renderer = { handleEvent: vi.fn() };
-  hud.playEventSfx = vi.fn();
-  hud.meters = { onEvent: vi.fn() };
-  hud.isNythraxisEvent = vi.fn(() => false);
-  hud.chatLogEl = document.createElement('div');
-  hud.chatTimestamps = false;
-  hud.chatClock = '24h';
-  hud.chatWindow = { hideIfFiltered: vi.fn() };
-  hud.chatAnnouncer = { push: vi.fn() };
-  hud.combatAnnouncer = { push: vi.fn() };
-  hud.bannerEl = document.createElement('div');
-  hud.bannerTimer = undefined;
-  hud.bannerSource = null;
-  // The plain-text log arm (the retro summary) stays a stub: this suite is
-  // about the NODE lines, which run the real logNodes/appendLog path.
-  hud.log = vi.fn();
-  hud.deedsWindow = { noteUnlocks: vi.fn(), openWithDeed: vi.fn() };
-  hud.reliquaryWindow = { openWithPage: vi.fn() };
-  return hud;
-}
+// The plain-text log arm (the retro summary) stays a stub on the rig: this
+// suite is about the NODE lines, which run the real logNodes/appender path
+// into a real chat pane.
+type DeedLinkRig = ChatPane & CelebrationRig;
+const makeRig = (): DeedLinkRig => {
+  const pane = chatPane();
+  return Object.assign(pane, celebrationRig({ logNodes: pane.logNodes }));
+};
 
 beforeEach(() => {
   document.body.innerHTML = '';
@@ -94,8 +52,8 @@ beforeEach(() => {
 
 describe('the unlock line (handleDeedUnlocks)', () => {
   it('renders the localized line with the deed name as a chat-deed-link span', () => {
-    const hud = makeHud();
-    hud.handleDeedUnlocks([{ deedId: UNLOCK_ID }]);
+    const hud = makeRig();
+    paintDeedUnlocks(hud.host, [{ deedId: UNLOCK_ID }]);
     const line = hud.chatLogEl.lastElementChild as HTMLElement;
     expect(line).not.toBeNull();
     // The whole line reads exactly as before, name bracketed link-style.
@@ -112,8 +70,8 @@ describe('the unlock line (handleDeedUnlocks)', () => {
   });
 
   it('click and Enter on the link both jump to the deed card', () => {
-    const hud = makeHud();
-    hud.handleDeedUnlocks([{ deedId: UNLOCK_ID }]);
+    const hud = makeRig();
+    paintDeedUnlocks(hud.host, [{ deedId: UNLOCK_ID }]);
     const link = hud.chatLogEl.querySelector('span.chat-deed-link') as HTMLElement;
     link.click();
     expect(hud.deedsWindow.openWithDeed).toHaveBeenCalledWith(UNLOCK_ID);
@@ -122,9 +80,9 @@ describe('the unlock line (handleDeedUnlocks)', () => {
   });
 
   it('announces the full spliced line through the chat live region, timestamp included', () => {
-    const hud = makeHud();
+    const hud = makeRig();
     hud.chatTimestamps = true;
-    hud.handleDeedUnlocks([{ deedId: UNLOCK_ID }]);
+    paintDeedUnlocks(hud.host, [{ deedId: UNLOCK_ID }]);
     const line = hud.chatLogEl.lastElementChild as HTMLElement;
     // The timestamp option still decorates the node-body line.
     expect(line.querySelector('.chat-ts')).not.toBeNull();
@@ -135,8 +93,8 @@ describe('the unlock line (handleDeedUnlocks)', () => {
   });
 
   it('feeds the drain order to the recent strip and keeps retro out of it', () => {
-    const hud = makeHud();
-    hud.handleDeedUnlocks([
+    const hud = makeRig();
+    paintDeedUnlocks(hud.host, [
       { deedId: UNLOCK_ID },
       { deedId: 'retro_x', retro: true },
       { deedId: BROADCAST_ID },
@@ -149,12 +107,12 @@ describe('the unlock line (handleDeedUnlocks)', () => {
 });
 
 describe('the broadcast line (case deedBroadcast)', () => {
-  const broadcast = (): SimEvent =>
-    ({ type: 'deedBroadcast', characterName: 'Hilda', deedId: BROADCAST_ID }) as SimEvent;
+  // The switch arm's payload: { type: 'deedBroadcast', characterName, deedId }.
+  const broadcast = (hud: DeedLinkRig): void => paintDeedBroadcast(hud.host, 'Hilda', BROADCAST_ID);
 
   it('renders the guild-green line with the deed name as the clickable jump', () => {
-    const hud = makeHud();
-    hud.handleEvents([broadcast()]);
+    const hud = makeRig();
+    broadcast(hud);
     const line = hud.chatLogEl.lastElementChild as HTMLElement;
     expect(line.textContent).toBe(
       t('hudChrome.deeds.broadcastLine', { name: 'Hilda', deed: `[${deedName(BROADCAST_ID)}]` }),
@@ -172,12 +130,13 @@ describe('the broadcast line (case deedBroadcast)', () => {
 });
 
 describe('the illumination broadcast line (case reliquaryIlluminationBroadcast)', () => {
-  const illumination = (pageId: string = ILLUMINATED_PAGE_ID): SimEvent =>
-    ({ type: 'reliquaryIlluminationBroadcast', characterName: 'Hilda', pageId }) as SimEvent;
+  // The switch arm's payload: { type: 'reliquaryIlluminationBroadcast', characterName, pageId }.
+  const illumination = (hud: DeedLinkRig, pageId: string = ILLUMINATED_PAGE_ID): void =>
+    paintReliquaryIlluminationBroadcast(hud.host, 'Hilda', pageId);
 
   it('renders the guild-green line with the localized page name as the clickable jump', () => {
-    const hud = makeHud();
-    hud.handleEvents([illumination()]);
+    const hud = makeRig();
+    illumination(hud);
     const line = hud.chatLogEl.lastElementChild as HTMLElement;
     expect(line.textContent).toBe(
       t('hudChrome.reliquary.illuminationBroadcastLine', {
@@ -207,8 +166,8 @@ describe('the illumination broadcast line (case reliquaryIlluminationBroadcast)'
     // token-parsing log path: a remote-origin string containing an item-link
     // token must stay literal text, so the branch is structurally inert
     // rather than incidentally safe via the name charset.
-    const hud = makeHud();
-    hud.handleEvents([illumination('page_from_a_newer_build[[i:evil]]')]);
+    const hud = makeRig();
+    illumination(hud, 'page_from_a_newer_build[[i:evil]]');
     const line = hud.chatLogEl.lastElementChild as HTMLElement;
     expect(line.textContent).toBe(
       t('hudChrome.reliquary.illuminationBroadcastLine', {
@@ -227,11 +186,31 @@ describe('the illumination broadcast line (case reliquaryIlluminationBroadcast)'
     // Belt over the behavior arms above: the real handleEvents switch must
     // name the case in CODE (comments stripped so a commented-out arm cannot
     // satisfy the pin).
-    const hudSource = fs.readFileSync(
-      path.join(path.dirname(fileURLToPath(import.meta.url)), '../src/ui/hud.ts'),
-      'utf8',
+    expect(hudCode()).toContain("case 'reliquaryIlluminationBroadcast':");
+  });
+});
+
+// The painters above are what the handleEvents switch arms call, so each arm
+// is pinned to hand its OWN event fields to its OWN painter: a swapped field,
+// a dropped call or a crossed painter would leave every behavior arm green.
+function hudCode(): string {
+  const hudSource = fs.readFileSync(
+    path.join(path.dirname(fileURLToPath(import.meta.url)), '../src/ui/hud.ts'),
+    'utf8',
+  );
+  return hudSource.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+}
+
+describe('the handleEvents broadcast arms route to the painters (source pins)', () => {
+  it('deedBroadcast hands characterName and deedId to paintDeedBroadcast', () => {
+    expect(hudCode()).toMatch(
+      /case 'deedBroadcast':\s*paintDeedBroadcast\(this\.celebrationHost\(\), ev\.characterName, ev\.deedId\);\s*break;/,
     );
-    const code = hudSource.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
-    expect(code).toContain("case 'reliquaryIlluminationBroadcast':");
+  });
+
+  it('reliquaryIlluminationBroadcast hands characterName and pageId to its painter', () => {
+    expect(hudCode()).toMatch(
+      /case 'reliquaryIlluminationBroadcast':\s*paintReliquaryIlluminationBroadcast\(\s*this\.celebrationHost\(\),\s*ev\.characterName,\s*ev\.pageId,?\s*\);\s*break;/,
+    );
   });
 });

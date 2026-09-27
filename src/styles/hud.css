@@ -10109,7 +10109,7 @@
     object-fit: contain;
     filter: drop-shadow(var(--art-shadow-lg));
   }
-  /* Art AND subtext on one plate (hud.ts paintBanner's .banner-art-copy
+  /* Art AND subtext on one plate (banner_slot.ts BannerSlot.paint's .banner-art-copy
      wrapper): has-subtext alone stacks title over subtext; with art the
      plate becomes a row and the title/detail column moves into the wrapper.
      Variant-agnostic on purpose: any future art-plus-detail banner lays out

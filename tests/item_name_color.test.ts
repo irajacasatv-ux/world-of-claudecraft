@@ -91,14 +91,16 @@ describe('item_name_color: quality path for non-quest', () => {
 
 describe('item_name_color: consumer source pins', () => {
   it('chat item links and tooltip titles route through itemNameColor', () => {
-    const hudSrc = readFileSync(path.join(__dirname, '../src/ui/hud.ts'), 'utf8').replace(
-      /^\s*\/\/.*$/gm,
-      '',
-    );
-    expect(hudSrc).toContain("from './item_name_color'");
-    expect(hudSrc).toContain('itemNameColor(item)');
+    // The chat item link moved out of Hud.appendChatItemLink into the
+    // chat-log appender (chatItemLinkEl).
+    const linkSrc = readFileSync(
+      path.join(__dirname, '../src/ui/hud/chat/chat_log_appender.ts'),
+      'utf8',
+    ).replace(/^\s*\/\/.*$/gm, '');
+    expect(linkSrc).toContain("from '../../item_name_color'");
+    expect(linkSrc).toContain('link.style.color = itemNameColor(item);');
     // Chat link must not re-inline QUALITY_COLOR for the name color.
-    expect(hudSrc).not.toMatch(/link\.style\.color\s*=\s*QUALITY_COLOR\[item\.quality/);
+    expect(linkSrc).not.toMatch(/link\.style\.color\s*=\s*QUALITY_COLOR\[item\.quality/);
   });
 
   it('loot roll need/greed, watch, and master name colors use itemNameColor', () => {

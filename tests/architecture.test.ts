@@ -2627,6 +2627,10 @@ const UI_PAINTER_HELPERS = [
 const UI_DOM_MODULES = [
   'src/ui/hud/housing/gate_prompt_controller.ts',
   'src/ui/error_toast_controller.ts',
+  // The shared #banner slot's live half (extracted from Hud): the element, the
+  // duration and fade-gap timers, performance.now() stamps. The queue policy
+  // stays in the pure banner_queue.ts.
+  'src/ui/banner_slot.ts',
   'src/ui/frame_presets_live.ts',
   'src/ui/frame_editor_deps.ts',
   'src/ui/frame_presets_controls.ts',
@@ -2739,6 +2743,9 @@ const UI_DOM_MODULES = [
   'src/ui/hud/action_bar/action_bar_toggle_controller.ts',
   'src/ui/hud/chat/chat_geometry_controller.ts',
   'src/ui/hud/chat/chat_window_controller.ts',
+  // The chat and combat log line appender (extracted from Hud.appendLog): mints
+  // the line on document, stamps the wall-clock timestamp and performance.now().
+  'src/ui/hud/chat/chat_log_appender.ts',
   'src/ui/hud/cosmetics/skin_event_controller.ts',
   'src/ui/hud/delve/lockpick_controller.ts',
   'src/ui/hud/delve/lockpick_window.ts',

@@ -16,6 +16,10 @@ function stripComments(code: string): string {
 }
 
 const HUD = stripComments(readFileSync(resolve(process.cwd(), 'src/ui/hud.ts'), 'utf8'));
+// The chat item link moved out of Hud.appendChatItemLink into the appender.
+const APPENDER = stripComments(
+  readFileSync(resolve(process.cwd(), 'src/ui/hud/chat/chat_log_appender.ts'), 'utf8'),
+);
 // The maps and their fallbacks live in their own module (hud.ts is the thin
 // consumer); the dispatch ARM still has to be in hud.ts, only the declaration
 // moved.
@@ -58,11 +62,12 @@ function resolveDotted(key: string): unknown {
 describe('the peer-typed chat-link guards (the remote-reachable arm)', () => {
   // A [[i:constructor]] token in a peer's chat line is the one prototype-key
   // path any player can fire at any other; the predicate itself is unit
-  // tested in known_item.test.ts, so what is pinned here is that BOTH hud
-  // sinks (the interactive span and the 3D-bubble plain text) resolve
-  // through it rather than a bare table read.
+  // tested in known_item.test.ts, so what is pinned here is that BOTH chat
+  // sinks (the interactive span in the appender and the hud 3D-bubble plain
+  // text) resolve through it rather than a bare table read.
   it('the interactive link and the plain-text form both read through the predicate', () => {
-    const linkBody = HUD.slice(HUD.indexOf('private appendChatItemLink('));
+    expect(APPENDER.indexOf('export function chatItemLinkEl(')).toBeGreaterThan(-1);
+    const linkBody = APPENDER.slice(APPENDER.indexOf('export function chatItemLinkEl('));
     expect(linkBody.slice(0, 400)).toContain('knownItemDef(ITEMS, itemId)');
     const plainBody = HUD.slice(HUD.indexOf('private chatLinkPlainText('));
     expect(plainBody.slice(0, 500)).toContain('knownItemDef(ITEMS, s.itemId)');

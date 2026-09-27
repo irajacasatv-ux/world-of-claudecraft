@@ -1,15 +1,20 @@
 // @vitest-environment happy-dom
 
-// The real handleEvents drain wiring of the faction standing tier
-// celebration: the observer rides the professions sync flag, baselines
-// silently on the first synced drain, plates and logs a later tier crossing
-// through the celebration host, and stays quiet on a gain inside a tier.
+// The real drain wiring of the faction standing tier celebration, through the
+// CelebrationDrainObserver the Hud handleEvents tail delegates to: the
+// observer rides the professions sync flag, baselines silently on the first
+// synced drain, plates and logs a later tier crossing through the celebration
+// host (the celebration rig: a real BannerSlot), and stays quiet on a gain
+// inside a tier.
 
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { audio } from '../src/game/audio';
 import { STANDING_THRESHOLDS } from '../src/sim/factions';
-import type { SimEvent } from '../src/sim/types';
-import { Hud } from '../src/ui/hud';
+import {
+  CelebrationDrainObserver,
+  type CelebrationDrainWorld,
+} from '../src/ui/hud/professions/celebration_drain_observer';
+import { type CelebrationRig, celebrationRig } from './helpers/celebration_rig';
 
 interface DrainHarness {
   sim: {
@@ -20,39 +25,36 @@ interface DrainHarness {
     factions: Record<string, number>;
   };
   bannerEl: HTMLElement;
-  bannerTimer: number | undefined;
-  log: ReturnType<typeof vi.fn>;
-  combatAnnouncer: { push: ReturnType<typeof vi.fn> };
-  prevCraftSkills: Record<string, number> | null;
-  craftTierUpDrains: number;
-  prevCraftSkillLevels: Record<string, number> | null;
-  prevGatheringSkillLevels: Record<string, number> | null;
-  prevFactionStanding: Record<string, number> | null;
-  handleEvents(events: SimEvent[]): void;
+  log: CelebrationRig['log'];
+  combatAnnouncer: CelebrationRig['combatAnnouncer'];
+  observer: CelebrationDrainObserver;
+  /** One empty drain's tail: what Hud.handleEvents([]) hands the observer
+   *  (no masterwork proc, no deed unlock). */
+  drain(): void;
 }
 
 function drainHud(synced: boolean): DrainHarness {
-  const hud = Object.create(Hud.prototype) as unknown as DrainHarness;
-  hud.sim = {
-    playerId: 1,
-    craftingIdentity: { synced },
-    craftSkills: {},
-    gatheringProficiency: {},
-    factions: { rift_watch: 0, church_order: 0, automatons: 0 },
+  const rig = celebrationRig();
+  const observer = new CelebrationDrainObserver();
+  const hud: DrainHarness = {
+    sim: {
+      playerId: 1,
+      craftingIdentity: { synced },
+      craftSkills: {},
+      gatheringProficiency: {},
+      factions: { rift_watch: 0, church_order: 0, automatons: 0 },
+    },
+    bannerEl: rig.bannerEl,
+    log: rig.log,
+    combatAnnouncer: rig.combatAnnouncer,
+    observer,
+    drain: () =>
+      observer.observe(hud.sim as unknown as CelebrationDrainWorld, null, false, () => rig.host),
   };
-  hud.bannerEl = document.createElement('div');
-  hud.bannerTimer = undefined;
-  hud.log = vi.fn();
-  hud.combatAnnouncer = { push: vi.fn() };
-  hud.prevCraftSkills = null;
-  hud.craftTierUpDrains = 0;
-  hud.prevCraftSkillLevels = null;
-  hud.prevGatheringSkillLevels = null;
-  hud.prevFactionStanding = null;
   return hud;
 }
 
-describe('faction tier celebration: the handleEvents drain wiring', () => {
+describe('faction tier celebration: the drain wiring', () => {
   afterEach(() => {
     vi.useRealTimers();
     vi.restoreAllMocks();
@@ -65,13 +67,13 @@ describe('faction tier celebration: the handleEvents drain wiring', () => {
     hud.sim.factions = { rift_watch: STANDING_THRESHOLDS.trusted, church_order: 0, automatons: 0 };
 
     // Drain 1: the first synced observation is history, never a toast.
-    hud.handleEvents([]);
+    hud.drain();
     expect(hud.log).not.toHaveBeenCalled();
     expect(achievement).not.toHaveBeenCalled();
 
     // The mirror updates (the online path replaces the object wholesale).
     hud.sim.factions = { rift_watch: STANDING_THRESHOLDS.proven, church_order: 0, automatons: 0 };
-    hud.handleEvents([]);
+    hud.drain();
     expect(hud.log).toHaveBeenCalledTimes(1);
     expect(hud.log).toHaveBeenCalledWith(
       'You are now Proven with the Rift Watch. Your faction title is now Warden.',
@@ -89,7 +91,7 @@ describe('faction tier celebration: the handleEvents drain wiring', () => {
       church_order: 0,
       automatons: 0,
     };
-    hud.handleEvents([]);
+    hud.drain();
     expect(hud.log).toHaveBeenCalledTimes(1);
     expect(achievement).toHaveBeenCalledTimes(1);
   });
@@ -97,13 +99,13 @@ describe('faction tier celebration: the handleEvents drain wiring', () => {
   it('never baselines on the pre-mirror default (unsynced), so the first real snapshot is history too', () => {
     const achievement = vi.spyOn(audio, 'achievement').mockImplementation(() => {});
     const hud = drainHud(false);
-    hud.handleEvents([]);
-    expect(hud.prevFactionStanding).toBeNull();
+    hud.drain();
+    expect(hud.observer.prevFactionStanding).toBeNull();
     hud.sim.craftingIdentity = { synced: true };
     hud.sim.factions = { rift_watch: STANDING_THRESHOLDS.champion, church_order: 0, automatons: 0 };
-    hud.handleEvents([]);
+    hud.drain();
     expect(hud.log).not.toHaveBeenCalled();
     expect(achievement).not.toHaveBeenCalled();
-    expect(hud.prevFactionStanding?.rift_watch).toBe(STANDING_THRESHOLDS.champion);
+    expect(hud.observer.prevFactionStanding?.rift_watch).toBe(STANDING_THRESHOLDS.champion);
   });
 });

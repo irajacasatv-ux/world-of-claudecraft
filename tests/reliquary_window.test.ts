@@ -27,6 +27,8 @@ const labels = read('../src/ui/reliquary_labels.ts');
 const trackerView = read('../src/ui/reliquary_tracker_view.ts');
 const trackerPainter = read('../src/ui/reliquary_tracker_painter.ts');
 const hud = read('../src/ui/hud.ts');
+// The unlock painter Hud.handleReliquaryUnlocks delegates to.
+const unlockPainter = read('../src/ui/reliquary_unlock_painter.ts');
 const sideButtons = read('../src/ui/hud/menu/side_buttons.ts');
 const mainSrc = read('../src/main.ts');
 const inputSrc = read('../src/game/input.ts');
@@ -1092,15 +1094,22 @@ describe('entry HTML and i18n chrome', () => {
   it('wires reliquaryUnlock presentation through the pure plan (no membership invent)', () => {
     expect(hud).toContain("case 'reliquaryUnlock':");
     expect(hud).toContain('handleReliquaryUnlocks');
-    // Comment-stripped body of handleReliquaryUnlocks: reduced-motion and plan
+    // The Hud method is a delegator to the painter, handed the celebration host.
+    expect(hud).toMatch(
+      /private handleReliquaryUnlocks\(events: ReliquaryUnlockEventModel\[\]\): void \{\s*paintReliquaryUnlocks\(this\.celebrationHost\(\), events\);\s*\}/,
+    );
+    // Comment-stripped body of the painter (reliquary_unlock_painter.ts), up to
+    // its next export (the Illumination broadcast): reduced-motion and plan
     // application must not be hard-coded away.
-    const handler = hud
+    const handler = unlockPainter
       .split('\n')
       .filter((line) => !/^\s*\/\//.test(line))
       .join('\n')
-      .match(/private handleReliquaryUnlocks\([\s\S]*?\n {2}private handleDeedUnlocks/)?.[0];
-    expect(handler, 'handleReliquaryUnlocks body').toBeTruthy();
-    expect(handler).toContain("matchMedia('(prefers-reduced-motion: reduce)')");
+      .match(/export function paintReliquaryUnlocks\([\s\S]*?\nexport function /)?.[0];
+    expect(handler, 'paintReliquaryUnlocks body').toBeTruthy();
+    // The reduced-motion probe rides the host (Hud.celebrationHost resolves it
+    // through matchMedia('(prefers-reduced-motion: reduce)')).
+    expect(handler).toContain('const reducedMotion = host.reducedMotion();');
     expect(handler).toContain('buildReliquaryUnlockPlan(events, reducedMotion)');
     // Plan fields must actually drive presentation (not only plan.motion token).
     expect(handler).toContain('for (const log of plan.logs)');
@@ -1144,17 +1153,17 @@ describe('entry HTML and i18n chrome', () => {
     // formatNumber even though the selection arg above is the raw count.
     expect(handler).toContain('count: formatNumber(plan.retroCount, { maximumFractionDigits: 0 })');
     // The regex above proves the line is BUILT; these prove it is DELIVERED.
-    // handler is already the reliquary body sliced before handleDeedUnlocks,
+    // handler is already the reliquary body sliced before the next export,
     // so the deeds sibling's identical pushes cannot satisfy them. Without
     // this, deleting the two display calls keeps every suite and tsc green
     // (noUnusedLocals is off) while a veteran's one catch-up line vanishes:
     // the deeds sibling pins its emission (tests/deeds_window.test.ts) and
     // the reliquary side must too.
-    expect(handler).toContain('this.log(retroText, HUD_LOG.NOTICE);');
-    expect(handler).toContain('this.combatAnnouncer.push(retroText, performance.now());');
+    expect(handler).toContain('host.log(retroText, HUD_LOG.NOTICE);');
+    expect(handler).toContain('host.announce(retroText);');
     // Exactly the live-find banner push plus the retro push: a stray or
     // duplicated announcement cannot hide (the deeds sibling pins the same).
-    expect(handler?.match(/combatAnnouncer\.push/g)?.length).toBe(2);
+    expect(handler?.match(/host\.announce\(/g)?.length).toBe(2);
     // Phase 15: a relic gain in chat is ONE CLICK from its Reliquary page.
     // Four node-built lines, no more and no fewer: the per-relic unlock, the
     // durable Illumination line (rank-up owns the banner), the Illumination
@@ -1163,7 +1172,7 @@ describe('entry HTML and i18n chrome', () => {
     // the two illuminateToast emitters gets its link and the other silently
     // stays plain prose. The two ladder counts above are unchanged by this
     // conversion (the name resolvers and the announcer pushes did not move).
-    expect(handler?.match(/this\.logNodes\(/g)?.length).toBe(4);
+    expect(handler?.match(/host\.logNodes\(/g)?.length).toBe(4);
     expect(handler?.match(/deedLineNodes\(/g)?.length).toBe(4);
     expect(handler?.match(/deedChatLinkEl\(/g)?.length).toBe(4);
     // Every converted template renders its name slot to the sentinel, or
@@ -1183,27 +1192,28 @@ describe('entry HTML and i18n chrome', () => {
     // seal (open('overview') now clears a persisted off-shelf page).
     expect(handler).toContain('const pageIndex = reliquaryRelicPageIndex(RELIQUARY_PAGES);');
     // Phase 17: the resolver reads the catalog index alone (the stored
-    // first-find pageId hint is gone), so the handler no longer threads
-    // this.sim.reliquaryFirstFind through it.
-    expect(handler).not.toContain('this.sim.reliquaryFirstFind');
+    // first-find pageId hint is gone), so the painter never threads the
+    // world's reliquaryFirstFind through it (its host carries no world).
+    expect(unlockPainter).not.toContain('reliquaryFirstFind');
     expect(handler).toContain('const pageId = reliquaryRelicPageId(pageIndex, log.id);');
     expect(handler).toContain(
-      'deedChatLinkEl(document, name, () => this.reliquaryWindow.openWithPage(pageId))',
+      'deedChatLinkEl(document, name, () => host.reliquaryWindow.openWithPage(pageId))',
     );
     expect(handler?.match(/openWithPage\(jumpId\)/g)?.length).toBe(2);
     expect(handler).toContain(
-      "deedChatLinkEl(document, rankName, () => this.reliquaryWindow.open('overview'))",
+      "deedChatLinkEl(document, rankName, () => host.reliquaryWindow.open('overview'))",
     );
     // A relic the catalog no longer places keeps a PLAIN line: a link that
     // opens nothing is worse than no link (the recent strip's inert chip).
     expect(handler).toMatch(
-      /if \(pageId === null\) \{\s*this\.log\(t\('hudChrome\.reliquary\.unlockToast', \{ name \}\), HUD_LOG\.NOTICE\);\s*continue;\s*\}/,
+      /if \(pageId === null\) \{\s*host\.log\(t\('hudChrome\.reliquary\.unlockToast', \{ name \}\), HUD_LOG\.NOTICE\);\s*continue;\s*\}/,
     );
     // The retro catch-up summary stays plain by design (it names no single
     // relic to jump to), so nothing after the retroCount gate may go node-built.
     expect(handler).not.toMatch(/plan\.retroCount > 0[\s\S]*logNodes/);
-    // Shared key table (window export) so toast/banner cannot desync from Overview.
-    expect(hud).toContain('curatorRankNameKey');
+    // Shared key table (the view's definition, which the window re-exports) so
+    // toast/banner cannot desync from Overview.
+    expect(unlockPainter).toContain('curatorRankNameKey');
     // Pure-core definition (view) + re-export from the painter for existing imports.
     expect(view).toContain('export function curatorRankNameKey');
     expect(painter).toMatch(/export\s*\{[^}]*curatorRankNameKey/);
@@ -1225,9 +1235,9 @@ describe('entry HTML and i18n chrome', () => {
     // A bare render() here reads as player-driven and re-announces "N
     // results." for an event the player never asked about (the Phase 13 QA
     // regression that motivated this pin).
-    expect(handler).toContain('plan.refreshWindow && this.reliquaryWindow.isOpen');
-    expect(handler).toContain('this.reliquaryWindow.refreshIfChanged()');
-    expect(handler).not.toContain('this.reliquaryWindow.render()');
+    expect(handler).toContain('plan.refreshWindow && host.reliquaryWindow.isOpen');
+    expect(handler).toContain('host.reliquaryWindow.refreshIfChanged()');
+    expect(handler).not.toContain('reliquaryWindow.render()');
     // Phase 14: the two celebration one-shots are ARMED on this drain, keyed
     // and gated exactly. The flash key is kind:id (the grid-cell key; a bare
     // id would collide across un-namespaced kinds) and the illumination stays
@@ -1236,13 +1246,13 @@ describe('entry HTML and i18n chrome', () => {
     // armed after it would ride the NEXT repaint, not the one that shows the
     // fill, and deleting either call keeps every other pin green.
     expect(handler).toContain(
-      'this.reliquaryWindow.flashRelics(plan.logs.map((log) => reliquaryFlashKey(log.kind, log.id)));',
+      'host.reliquaryWindow.flashRelics(plan.logs.map((log) => reliquaryFlashKey(log.kind, log.id)));',
     );
     expect(handler).toMatch(
-      /if \(plan\.illuminatedPageId !== null\) \{\s*this\.reliquaryWindow\.celebrateIllumination\(plan\.illuminatedPageId\);\s*\}/,
+      /if \(plan\.illuminatedPageId !== null\) \{\s*host\.reliquaryWindow\.celebrateIllumination\(plan\.illuminatedPageId\);\s*\}/,
     );
     expect(handler).toMatch(
-      /flashRelics[\s\S]*celebrateIllumination[\s\S]*this\.reliquaryWindow\.refreshIfChanged\(\)/,
+      /flashRelics[\s\S]*celebrateIllumination[\s\S]*host\.reliquaryWindow\.refreshIfChanged\(\)/,
     );
     // Presentation-only: never write discovery / firstFind from the event.
     expect(handler).not.toMatch(/itemsDiscovered\.(add|has)/);

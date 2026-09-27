@@ -7,7 +7,11 @@ import { describe, expect, it } from 'vitest';
 // touch-pan (the exact regressions this PR fixes) fails here instead of silently.
 const hud = readFileSync(new URL('../src/styles/hud.css', import.meta.url), 'utf8');
 const mobile = readFileSync(new URL('../src/styles/hud.mobile.css', import.meta.url), 'utf8');
-const hudSource = readFileSync(new URL('../src/ui/hud.ts', import.meta.url), 'utf8');
+// The chat timestamp prefix moved out of Hud into the chat-log appender.
+const appenderSource = readFileSync(
+  new URL('../src/ui/hud/chat/chat_log_appender.ts', import.meta.url),
+  'utf8',
+);
 const index = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 const play = readFileSync(new URL('../play.html', import.meta.url), 'utf8');
 
@@ -63,7 +67,7 @@ describe('chat tab strip layout (issue #1365)', () => {
 
   it('keeps chat numerals tabular and gives the focused composer a strong fill', () => {
     expect(block(hud, '.chat-pane div')).toMatch(/font-variant-numeric:\s*tabular-nums/);
-    expect(hudSource).toContain("ts.className = 'chat-ts ui-faint ui-num';");
+    expect(appenderSource).toContain("ts.className = 'chat-ts ui-faint ui-num';");
     expect(block(hud, '#chat-input:focus-visible')).toMatch(
       /background:\s*var\(--panel-bg-strong\)/,
     );

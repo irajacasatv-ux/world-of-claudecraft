@@ -4,15 +4,20 @@
 // over craft and gathering skill snapshots, silent first init, the milestone
 // cadence (chat line every point, plate/chime only on a gathering 25-crossing),
 // cross-drain chime dedupe, reduced-motion batching, the HUD paint contracts
-// the skill plate renders, and the real handleEvents drain wiring.
+// the skill plate renders (the real painter and BannerSlot on the celebration
+// rig), and the real drain observation (the CelebrationDrainObserver the Hud
+// handleEvents tail delegates to).
 
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { audio } from '../src/game/audio';
-import type { SimEvent } from '../src/sim/types';
-import { type BannerVariant, Hud } from '../src/ui/hud';
+import {
+  CelebrationDrainObserver,
+  type CelebrationDrainWorld,
+} from '../src/ui/hud/professions/celebration_drain_observer';
 import { professionImageUrl } from '../src/ui/hud/professions/profession_art';
+import { paintSkillLevelCelebrations } from '../src/ui/hud/professions/skill_level_toast_painter';
 import {
   advanceSkillLevelObservation,
   buildSkillLevelCelebrationPlan,
@@ -22,6 +27,7 @@ import {
   skillDisplayLevel,
   skillLevelArtId,
 } from '../src/ui/hud/professions/skill_level_toast_view';
+import { type CelebrationRig, celebrationRig } from './helpers/celebration_rig';
 
 describe('skillDisplayLevel', () => {
   it('floors a fractional skill to the player-visible level', () => {
@@ -281,43 +287,20 @@ describe('skillLevelArtId', () => {
   });
 });
 
-interface SkillLevelHudHarness {
-  bannerEl: HTMLElement;
-  bannerTimer: number | undefined;
-  log: ReturnType<typeof vi.fn>;
-  combatAnnouncer: { push: ReturnType<typeof vi.fn> };
-  handleSkillLevelCelebrations(
-    craftUps: { skillId: string; fromLevel: number; toLevel: number }[],
-    gatherUps: { skillId: string; fromLevel: number; toLevel: number }[],
-    celebrationAlreadyChimed: boolean,
-  ): void;
-  showBanner(
-    text: string,
-    motion?: boolean,
-    decorativeIconUrl?: string,
-    variant?: BannerVariant,
-    subtext?: string,
-  ): void;
-}
-
-function skillLevelHud(): SkillLevelHudHarness {
-  const hud = Object.create(Hud.prototype) as unknown as SkillLevelHudHarness;
-  hud.bannerEl = document.createElement('div');
-  hud.bannerTimer = undefined;
-  hud.log = vi.fn();
-  hud.combatAnnouncer = { push: vi.fn() };
-  return hud;
-}
+// The painter Hud.handleSkillLevelCelebrations delegated to, on the
+// celebration rig: a real BannerSlot, the plain log arm a stub.
+type SkillLevelHudHarness = CelebrationRig;
+const skillLevelHud = (): SkillLevelHudHarness => celebrationRig();
 
 /** Ends the live celebration the way the advance chain does, so a follow-up
  *  banner paints instead of queueing behind the plate. */
 function clearBannerSlot(hud: SkillLevelHudHarness): void {
-  const queueHost = hud as unknown as {
-    bannerQueue?: { clear(): void };
-    bannerTimer: number | undefined;
+  const queueHost = hud.slot as unknown as {
+    queue: { clear(): void };
+    timer: number | undefined;
   };
-  queueHost.bannerQueue?.clear();
-  queueHost.bannerTimer = undefined;
+  queueHost.queue.clear();
+  queueHost.timer = undefined;
 }
 
 describe('skill level celebration HUD behavior', () => {
@@ -339,7 +322,8 @@ describe('skill level celebration HUD behavior', () => {
     const achievement = vi.spyOn(audio, 'achievement').mockImplementation(() => {});
     const hud = skillLevelHud();
 
-    hud.handleSkillLevelCelebrations(
+    paintSkillLevelCelebrations(
+      hud.host,
       [],
       [{ skillId: 'mining', fromLevel: 24, toLevel: 25 }],
       false,
@@ -372,7 +356,7 @@ describe('skill level celebration HUD behavior', () => {
     // A later ordinary banner through the same reused element must not
     // inherit the skill language.
     clearBannerSlot(hud);
-    hud.showBanner('Ordinary banner');
+    hud.slot.show('Ordinary banner');
     expect(hud.bannerEl.classList.contains('banner-skill')).toBe(false);
     expect(hud.bannerEl.classList.contains('banner-with-art')).toBe(false);
     expect(hud.bannerEl.querySelector('img')).toBeNull();
@@ -386,7 +370,8 @@ describe('skill level celebration HUD behavior', () => {
     );
     const hud = skillLevelHud();
 
-    hud.handleSkillLevelCelebrations(
+    paintSkillLevelCelebrations(
+      hud.host,
       [],
       [{ skillId: 'mining', fromLevel: 24, toLevel: 25 }],
       false,
@@ -400,7 +385,8 @@ describe('skill level celebration HUD behavior', () => {
     const achievement = vi.spyOn(audio, 'achievement').mockImplementation(() => {});
     const hud = skillLevelHud();
 
-    hud.handleSkillLevelCelebrations(
+    paintSkillLevelCelebrations(
+      hud.host,
       [{ skillId: 'cooking', fromLevel: 12, toLevel: 13 }],
       [
         { skillId: 'mining', fromLevel: 24, toLevel: 25 },
@@ -423,7 +409,12 @@ describe('skill level celebration HUD behavior', () => {
     const achievement = vi.spyOn(audio, 'achievement').mockImplementation(() => {});
     const hud = skillLevelHud();
 
-    hud.handleSkillLevelCelebrations([], [{ skillId: 'mining', fromLevel: 24, toLevel: 25 }], true);
+    paintSkillLevelCelebrations(
+      hud.host,
+      [],
+      [{ skillId: 'mining', fromLevel: 24, toLevel: 25 }],
+      true,
+    );
 
     expect(hud.bannerEl.classList.contains('banner-skill')).toBe(true);
     expect(achievement).not.toHaveBeenCalled();
@@ -433,7 +424,8 @@ describe('skill level celebration HUD behavior', () => {
     const achievement = vi.spyOn(audio, 'achievement').mockImplementation(() => {});
     const hud = skillLevelHud();
 
-    hud.handleSkillLevelCelebrations(
+    paintSkillLevelCelebrations(
+      hud.host,
       [{ skillId: 'cooking', fromLevel: 24, toLevel: 25 }],
       [],
       false,
@@ -453,7 +445,12 @@ describe('skill level celebration HUD behavior', () => {
 
     // An id with no art file: professionImageUrl(gather_kelp) is null, so the
     // plate paints title + detail directly, no img and no art layout class.
-    hud.handleSkillLevelCelebrations([], [{ skillId: 'kelp', fromLevel: 24, toLevel: 25 }], false);
+    paintSkillLevelCelebrations(
+      hud.host,
+      [],
+      [{ skillId: 'kelp', fromLevel: 24, toLevel: 25 }],
+      false,
+    );
 
     expect(hud.bannerEl.querySelector('img')).toBeNull();
     expect(hud.bannerEl.classList.contains('banner-with-art')).toBe(false);
@@ -475,42 +472,39 @@ interface DrainHarness {
     factions: Record<string, number>;
   };
   bannerEl: HTMLElement;
-  bannerTimer: number | undefined;
-  log: ReturnType<typeof vi.fn>;
-  combatAnnouncer: { push: ReturnType<typeof vi.fn> };
-  prevCraftSkills: Record<string, number> | null;
-  craftTierUpDrains: number;
-  prevCraftSkillLevels: Record<string, number> | null;
-  prevGatheringSkillLevels: Record<string, number> | null;
-  prevFactionStanding: Record<string, number> | null;
-  handleEvents(events: SimEvent[]): void;
+  log: CelebrationRig['log'];
+  combatAnnouncer: CelebrationRig['combatAnnouncer'];
+  observer: CelebrationDrainObserver;
+  /** One empty drain's tail: what Hud.handleEvents([]) hands the observer
+   *  (no masterwork proc, no deed unlock). */
+  drain(): void;
 }
 
 function drainHud(synced: boolean): DrainHarness {
-  const hud = Object.create(Hud.prototype) as unknown as DrainHarness;
-  hud.sim = {
-    playerId: 1,
-    craftingIdentity: { synced },
-    craftSkills: {},
-    gatheringProficiency: {},
-    // The faction tier observer rides the same drain tail (and sync flag).
-    factions: { rift_watch: 0, church_order: 0, automatons: 0 },
-    // The concrete worlds carry far more; handleEvents with an empty drain
-    // reads only this slice (the six sibling harnesses are the precedent).
+  const rig = celebrationRig();
+  const observer = new CelebrationDrainObserver();
+  const hud: DrainHarness = {
+    sim: {
+      playerId: 1,
+      craftingIdentity: { synced },
+      craftSkills: {},
+      gatheringProficiency: {},
+      // The faction tier observer rides the same drain tail (and sync flag).
+      factions: { rift_watch: 0, church_order: 0, automatons: 0 },
+      // The concrete worlds carry far more; an empty drain reads only this
+      // slice (the six sibling harnesses are the precedent).
+    },
+    bannerEl: rig.bannerEl,
+    log: rig.log,
+    combatAnnouncer: rig.combatAnnouncer,
+    observer,
+    drain: () =>
+      observer.observe(hud.sim as unknown as CelebrationDrainWorld, null, false, () => rig.host),
   };
-  hud.bannerEl = document.createElement('div');
-  hud.bannerTimer = undefined;
-  hud.log = vi.fn();
-  hud.combatAnnouncer = { push: vi.fn() };
-  hud.prevCraftSkills = null;
-  hud.craftTierUpDrains = 0;
-  hud.prevCraftSkillLevels = null;
-  hud.prevFactionStanding = null;
-  hud.prevGatheringSkillLevels = null;
   return hud;
 }
 
-describe('handleEvents drain wiring (the real observation path)', () => {
+describe('the drain wiring (the real observation path)', () => {
   beforeEach(() => {
     vi.useFakeTimers();
     window.matchMedia = vi.fn(
@@ -529,20 +523,20 @@ describe('handleEvents drain wiring (the real observation path)', () => {
     hud.sim.gatheringProficiency = { mining: 24.2 };
 
     // Drain 1: first synced observation, the whole map is history, no toast.
-    hud.handleEvents([]);
+    hud.drain();
     expect(hud.log).not.toHaveBeenCalled();
     expect(achievement).not.toHaveBeenCalled();
 
     // The mirror updates (the online path replaces the object wholesale).
     hud.sim.gatheringProficiency = { mining: 25.1 };
-    hud.handleEvents([]);
+    hud.drain();
     expect(hud.log).toHaveBeenCalledTimes(1);
     expect(hud.log).toHaveBeenCalledWith('Mining skill increased to 25!', '#ffd100');
     expect(hud.bannerEl.classList.contains('banner-skill')).toBe(true);
     expect(achievement).toHaveBeenCalledTimes(1);
 
     // Drain 3: nothing changed, nothing fires.
-    hud.handleEvents([]);
+    hud.drain();
     expect(hud.log).toHaveBeenCalledTimes(1);
     expect(achievement).toHaveBeenCalledTimes(1);
   });
@@ -552,9 +546,9 @@ describe('handleEvents drain wiring (the real observation path)', () => {
     const hud = drainHud(true);
     hud.sim.craftSkills = { cooking: 11.2 };
 
-    hud.handleEvents([]);
+    hud.drain();
     hud.sim.craftSkills = { cooking: 12.4 };
-    hud.handleEvents([]);
+    hud.drain();
 
     expect(hud.log).toHaveBeenCalledTimes(1);
     expect(hud.log).toHaveBeenCalledWith('Cooking skill increased to 12!', '#ffd100');
@@ -565,25 +559,25 @@ describe('handleEvents drain wiring (the real observation path)', () => {
   it('stays quiet on pure fractional gathering progress', () => {
     const hud = drainHud(true);
     hud.sim.gatheringProficiency = { mining: 24.1 };
-    hud.handleEvents([]);
+    hud.drain();
     hud.sim.gatheringProficiency = { mining: 24.9 };
-    hud.handleEvents([]);
+    hud.drain();
     expect(hud.log).not.toHaveBeenCalled();
   });
 
   it('never observes an unsynced world, and never baselines it', () => {
     const hud = drainHud(false);
     hud.sim.gatheringProficiency = { mining: 47 };
-    hud.handleEvents([]);
+    hud.drain();
     expect(hud.log).not.toHaveBeenCalled();
-    expect(hud.prevGatheringSkillLevels).toBeNull();
-    expect(hud.prevCraftSkillLevels).toBeNull();
+    expect(hud.observer.prevGatheringSkillLevels).toBeNull();
+    expect(hud.observer.prevCraftSkillLevels).toBeNull();
   });
 
   it('tolerates a world stub without the gathering map while unsynced', () => {
     const hud = drainHud(false);
     (hud.sim as { gatheringProficiency?: Record<string, number> }).gatheringProficiency = undefined;
-    expect(() => hud.handleEvents([])).not.toThrow();
+    expect(() => hud.drain()).not.toThrow();
     expect(hud.log).not.toHaveBeenCalled();
   });
 });

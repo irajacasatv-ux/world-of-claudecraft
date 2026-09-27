@@ -10,6 +10,8 @@ const componentsCss = read('src/styles/components.css');
 const mobileCss = read('src/styles/hud.mobile.css');
 const hudCss = read('src/styles/hud.css');
 const hudTs = read('src/ui/hud.ts');
+// The shared #banner slot's live half (extracted from Hud).
+const bannerSlotTs = read('src/ui/banner_slot.ts');
 const controlsTs = read('src/ui/mount_race_controls.ts');
 const stripTs = read('src/ui/mount_race_strip.ts');
 const questEventViewTs = read('src/ui/quest_event_view.ts');
@@ -48,7 +50,7 @@ describe('show-jumping race UI wiring', () => {
   });
 
   it('keeps lesson instructions clear of the countdown and GO flash', () => {
-    expect(hudTs).toContain('this.hideBannerImmediately()');
+    expect(hudTs).toContain('this.bannerSlot.hideImmediately()');
     expect(hudTs).toContain('this.mountRaceInstructionTimer = window.setTimeout');
     expect(hudTs).toContain("this.showBanner(t('hudChrome.mountRace.start'))");
   });
@@ -68,8 +70,8 @@ describe('show-jumping race UI wiring', () => {
     expect(hudTs).toMatch(
       /showBanner\(\s*summary,\s*true,\s*undefined,\s*'default',\s*t\('hudChrome\.mountTraining\.returnToMarla'\),\s*6000,?\s*\)/,
     );
-    expect(hudTs).toContain("this.bannerEl.classList.toggle('has-subtext', !!subtext)");
-    expect(hudTs).toContain('this.bannerEl.replaceChildren()');
+    expect(bannerSlotTs).toContain("this.el.classList.toggle('has-subtext', !!subtext)");
+    expect(bannerSlotTs).toContain('this.el.replaceChildren()');
     expect(hudCss).toContain('#banner .banner-subtext');
   });
 

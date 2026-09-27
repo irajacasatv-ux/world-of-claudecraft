@@ -146,21 +146,19 @@ describe('bannerSubtextLines: the banner secondary-line contract', () => {
 });
 
 describe('the banner paint side consumes the normalized lines', () => {
-  const hud = readFileSync(new URL('../src/ui/hud.ts', import.meta.url), 'utf8');
+  // The slot's live half moved out of Hud into banner_slot.ts.
+  const slot = readFileSync(new URL('../src/ui/banner_slot.ts', import.meta.url), 'utf8');
 
   it('normalizes ONCE at enqueue, so the payload never carries an empty list', () => {
-    expect(hud).toContain('const subtextLines = bannerSubtextLines(subtext);');
-    expect(hud).toContain('subtext: subtextLines.length > 0 ? subtextLines : undefined,');
+    expect(slot).toContain('const subtextLines = bannerSubtextLines(subtext);');
+    expect(slot).toContain('subtext: subtextLines.length > 0 ? subtextLines : undefined,');
   });
 
   it('paints one .banner-subtext span per line under one .banner-title', () => {
-    const paint = hud.slice(
-      hud.indexOf('private paintBanner('),
-      hud.indexOf('private paintBanner(') + 2000,
-    );
+    const paint = slot.slice(slot.indexOf('private paint('), slot.indexOf('private paint(') + 2000);
     expect(paint).toContain("classList.toggle('has-subtext', !!subtext)");
     expect(paint).toContain('const details = subtext.map((line) => {');
     expect(paint).toContain("detail.className = 'banner-subtext';");
-    expect(paint).toContain('this.bannerEl.replaceChildren(title, ...details);');
+    expect(paint).toContain('this.el.replaceChildren(title, ...details);');
   });
 });

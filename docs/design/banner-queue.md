@@ -31,16 +31,16 @@ the Hud drives with its own timers). Two behavior classes:
   live, ambient waits in a single latest-wins pending seat rather than a
   queue: replaying three stale countdown numbers after a deed banner
   would be worse than showing the newest once. The seat also AGES
-  (`AMBIENT_MAX_DEFER_MS` in hud.ts, the QA refinement): parked behind
+  (`AMBIENT_MAX_DEFER_MS` in `src/ui/banner_slot.ts`, the QA refinement): parked behind
   one celebration an ambient is still fresh and replays; parked behind a
   celebration chain it is stale news and the advance chain drops it.
 
 ## Interactions kept honest
 
-- `clearUnstuckBanner` purges queued unstuck entries and, when it clears
+- `BannerSlot.clearUnstuck` (`src/ui/banner_slot.ts`) purges queued unstuck entries and, when it clears
   the live banner, advances the queue so a waiting celebration still
   shows.
-- `hideBannerImmediately` is an ambient TAKEOVER (the mount-race
+- `BannerSlot.hideImmediately` is an ambient TAKEOVER (the mount-race
   countdown claiming the slot), not a reset: it rides `hideLive`, which
   ends the live banner and drops the stale pending-ambient seat while
   every queued celebration survives to play afterwards. `clear()` stays

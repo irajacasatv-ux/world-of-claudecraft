@@ -3,7 +3,9 @@
 // Source-guard suite for the Book of Deeds window + tracker wiring (the
 // bank_window.test.ts pattern): no-magic-values in the painters, the hud.ts
 // orchestration pins (construction, Esc arm, slow band, language switch, the
-// unlock batching), both entry HTMLs, the keybind dispatch chain, the
+// unlock batching), the unlock painter (deed_unlock_painter.ts, driven on the
+// celebration rig over the real BannerSlot), both entry HTMLs, the keybind
+// dispatch chain, the
 // renderer celebration arm, the nameplate title subtitle, and the CSS
 // tap-target floors. Behavior of the pure core is covered in
 // tests/deeds_view.test.ts; these pins keep the thin consumers honest.
@@ -13,8 +15,9 @@ import { describe, expect, it, vi } from 'vitest';
 import { audio } from '../src/game/audio';
 import { CHROME_GUARDED_PANELS } from '../src/ui/chrome_focus_wiring';
 import { deedName } from '../src/ui/deed_i18n';
-import { Hud } from '../src/ui/hud';
+import { paintDeedUnlocks } from '../src/ui/deed_unlock_painter';
 import { bindChromeButtonKeyGuard } from '../src/ui/pointer_blur';
+import { celebrationRig } from './helpers/celebration_rig';
 
 // This file runs under jsdom (for the keyboard-guard behavioral test below),
 // where import.meta.url is an http URL that readFileSync rejects; resolve the
@@ -26,13 +29,24 @@ const read = (rel: string): string => readFileSync(join(__dirname, rel), 'utf8')
 // Only WHOLE-line comments: a trailing-comment or URL-bearing code line must
 // survive intact, or the pins below would stop seeing the code they guard.
 // A regex, not a lexer: assumes no `/*` inside a string or regex literal in the scanned
-// sources (true for hud.ts, pointer_blur.ts and chrome_focus_wiring.ts today).
+// sources (true for hud.ts, deed_unlock_painter.ts, pointer_blur.ts and chrome_focus_wiring.ts
+// today).
 const stripLineComments = (src: string): string =>
   src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
 
 const painter = read('../src/ui/deeds_window.ts');
 const tracker = read('../src/ui/deed_tracker_painter.ts');
 const hud = read('../src/ui/hud.ts');
+const unlockPainter = read('../src/ui/deed_unlock_painter.ts');
+// The earned-moment body Hud.handleDeedUnlocks delegates to, bounded by the
+// module's next export (the broadcast line) so no sibling can satisfy a pin.
+const unlockBody = (): string => {
+  const start = unlockPainter.indexOf('export function paintDeedUnlocks(');
+  const end = unlockPainter.indexOf('\nexport function ', start + 1);
+  expect(start).toBeGreaterThan(-1);
+  expect(end).toBeGreaterThan(start);
+  return unlockPainter.slice(start, end);
+};
 const sideButtons = read('../src/ui/hud/menu/side_buttons.ts');
 const mainSrc = read('../src/main.ts');
 const inputSrc = read('../src/game/input.ts');
@@ -154,6 +168,25 @@ describe('painter hygiene', () => {
   });
 });
 
+// The rig for the earned-moment drive and the queue-lifecycle arms below: the
+// deed unlock painter and a real BannerSlot on the celebration rig (the chat
+// lines stay stubs, as on the bare Hud prototype this replaced), named by the
+// Hud members each call used to reach.
+function bannerRig() {
+  const rig = celebrationRig();
+  return {
+    bannerEl: rig.bannerEl,
+    deedsWindow: rig.deedsWindow,
+    combatAnnouncer: rig.combatAnnouncer,
+    handleDeedUnlocks: (events: { deedId: string; retro?: boolean }[]) =>
+      paintDeedUnlocks(rig.host, events),
+    showBanner: rig.slot.show.bind(rig.slot),
+    showCelebrationBanner: rig.showCelebrationBanner,
+    hideBannerImmediately: () => rig.slot.hideImmediately(),
+    clearUnstuckBanner: () => rig.slot.clearUnstuck(),
+  };
+}
+
 describe('hud wiring', () => {
   it('constructs the window on the trapping windowFocus family', () => {
     expect(hud).toContain('new DeedsWindow({');
@@ -199,14 +232,10 @@ describe('hud wiring', () => {
   });
 
   it('keeps the retro arm silent: one summary line, no banner, no audio', () => {
-    const start = hud.indexOf('private handleDeedUnlocks(');
-    const end = hud.indexOf('\n  log(\n', start);
-    expect(start).toBeGreaterThan(-1);
-    expect(end).toBeGreaterThan(start);
     // Comment-stripped (the reliquary sibling's idiom, and this file's own
     // level-up arm): the arm carries prose about tPlural and formatNumber right
     // above the code, which would otherwise satisfy the pins below on its own.
-    const body = stripLineComments(hud.slice(start, end));
+    const body = stripLineComments(unlockBody());
     // Banner and audio are gated on the PLAN's fresh-unlock fields; the retro
     // count only ever feeds the one localized summary log line.
     expect(body).toContain('if (plan.bannerId !== null)');
@@ -230,15 +259,13 @@ describe('hud wiring', () => {
     // and three of the four border deeds are earned far from the Book. Both
     // lines are pinned here (comment-stripped, like the arm above) so neither
     // consumer loop can be dropped while the pure plan keeps building the list.
-    const start = hud.indexOf('private handleDeedUnlocks(');
-    const end = hud.indexOf('\n  log(\n', start);
-    const body = stripLineComments(hud.slice(start, end));
+    const body = stripLineComments(unlockBody());
     expect(body).toMatch(
-      /for \(const id of plan\.titleHintIds\) \{\s*this\.log\(\s*t\('hudChrome\.deeds\.unlockedTitleHint', \{ title: deedTitleText\(id\) \}\),\s*HUD_LOG\.NOTICE,?\s*\);/,
+      /for \(const id of plan\.titleHintIds\) \{\s*host\.log\(\s*t\('hudChrome\.deeds\.unlockedTitleHint', \{ title: deedTitleText\(id\) \}\),\s*HUD_LOG\.NOTICE,?\s*\);/,
     );
     // Named by the DEED: a border reward carries a palette slug, never text.
     expect(body).toMatch(
-      /for \(const id of plan\.borderHintIds\) \{\s*this\.log\(\s*t\('hudChrome\.deeds\.unlockedBorderHint', \{ name: deedName\(id\) \}\),\s*HUD_LOG\.NOTICE,?\s*\);/,
+      /for \(const id of plan\.borderHintIds\) \{\s*host\.log\(\s*t\('hudChrome\.deeds\.unlockedBorderHint', \{ name: deedName\(id\) \}\),\s*HUD_LOG\.NOTICE,?\s*\);/,
     );
   });
 
@@ -275,17 +302,16 @@ describe('hud wiring', () => {
     // two moments were unreadable apart. The variant is presentation only:
     // same copy, same lifetime, and the announcer push stays (information is
     // never gated on a visual).
-    const start = hud.indexOf('private handleDeedUnlocks(');
-    expect(start).toBeGreaterThan(-1);
     // Strip line comments first: this method's prose names the 'deed' variant,
     // so an uncommented slice would let a reworded comment satisfy the pin.
-    const body = stripLineComments(hud.slice(start, hud.indexOf('\n  log(\n', start)));
+    const body = stripLineComments(unlockBody());
     // The deed variant AND the R38 'deed' banner class both ride the call
     // (the celebration wrapper's second and third arguments): the class is
     // what queues it behind a live level-up instead of replacing it, the
-    // variant is the visual split from the level-up gold.
-    expect(body).toContain("this.showCelebrationBanner(bannerText, 'deed', 'deed');");
-    expect(body).toContain('this.combatAnnouncer.push(bannerText, performance.now());');
+    // variant is the visual split from the level-up gold. Full motion (the
+    // deed plate has no reduced-motion plan), the old wrapper's default.
+    expect(body).toContain("host.showCelebrationBanner(bannerText, 'deed', 'deed', true);");
+    expect(body).toContain('host.announce(bannerText);');
   });
 
   it('gives the deed banner its own plate in CSS, on desktop and touch', () => {
@@ -347,29 +373,14 @@ describe('hud wiring', () => {
     ).toBe(false);
   });
 
-  // The two source pins above prove hud.ts PASSES 'deed' and that showBanner
-  // SETS the class, but neither executes the join. This drives the real
-  // earned-moment arm end to end on the real Hud.prototype method.
+  // The two source pins above prove the painter PASSES 'deed' and that the
+  // slot SETS the class, but neither executes the join. This drives the real
+  // earned-moment painter end to end into a real BannerSlot.
   it('paints the real deed unlock as a deed-variant banner, with copy and lifetime intact', () => {
     vi.useFakeTimers();
     const achievement = vi.spyOn(audio, 'achievement').mockImplementation(() => {});
     try {
-      const h = Object.create(Hud.prototype) as unknown as {
-        bannerEl: HTMLElement;
-        bannerTimer: number | undefined;
-        log: ReturnType<typeof vi.fn>;
-        logNodes: ReturnType<typeof vi.fn>;
-        deedsWindow: { noteUnlocks: ReturnType<typeof vi.fn> };
-        combatAnnouncer: { push: ReturnType<typeof vi.fn> };
-        handleDeedUnlocks(events: { deedId: string; retro?: boolean }[]): void;
-        showBanner(text: string): void;
-      };
-      h.bannerEl = document.createElement('div');
-      h.bannerTimer = undefined;
-      h.log = vi.fn();
-      h.logNodes = vi.fn();
-      h.deedsWindow = { noteUnlocks: vi.fn() };
-      h.combatAnnouncer = { push: vi.fn() };
+      const h = bannerRig();
 
       h.handleDeedUnlocks([{ deedId: 'prog_first_steps' }]);
 
@@ -394,23 +405,10 @@ describe('hud wiring', () => {
       // frees (an arrival inside the gap would queue, not replace).
       vi.advanceTimersByTime(250);
 
-      // THE R38 COLLISION, end to end on the real method: a deed landing
+      // THE R38 COLLISION, end to end on the real slot: a deed landing
       // while the level-up banner is live queues behind it instead of
       // replacing it, and takes the slot whole after the gap.
-      (
-        h as unknown as {
-          showBanner(
-            text: string,
-            motion?: boolean,
-            icon?: string,
-            variant?: string,
-            subtext?: string,
-            durationMs?: number,
-            source?: null,
-            bannerClass?: string,
-          ): void;
-        }
-      ).showBanner('Level 2!', true, undefined, 'default', undefined, 2600, null, 'levelup');
+      h.showBanner('Level 2!', true, undefined, 'default', undefined, 2600, null, 'levelup');
       expect(h.bannerEl.textContent).toBe('Level 2!');
       h.handleDeedUnlocks([{ deedId: 'prog_first_steps' }]);
       // Still the level-up: the deed did NOT replace it.
@@ -433,42 +431,6 @@ describe('hud wiring', () => {
       vi.restoreAllMocks();
     }
   });
-
-  // Shared rig for the queue-lifecycle arms below: the same bare-prototype
-  // shape the collision drive uses.
-  function bannerRig() {
-    const h = Object.create(Hud.prototype) as unknown as {
-      bannerEl: HTMLElement;
-      bannerTimer: number | undefined;
-      bannerSource: 'unstuck' | null;
-      log: ReturnType<typeof vi.fn>;
-      logNodes: ReturnType<typeof vi.fn>;
-      deedsWindow: { noteUnlocks: ReturnType<typeof vi.fn> };
-      combatAnnouncer: { push: ReturnType<typeof vi.fn> };
-      handleDeedUnlocks(events: { deedId: string; retro?: boolean }[]): void;
-      showBanner(
-        text: string,
-        motion?: boolean,
-        icon?: string,
-        variant?: string,
-        subtext?: string,
-        durationMs?: number,
-        source?: 'unstuck' | null,
-        bannerClass?: string,
-      ): string;
-      showCelebrationBanner(text: string, bannerClass: 'levelup' | 'deed'): void;
-      hideBannerImmediately(): void;
-      clearUnstuckBanner(): void;
-    };
-    h.bannerEl = document.createElement('div');
-    h.bannerTimer = undefined;
-    h.bannerSource = null;
-    h.log = vi.fn();
-    h.logNodes = vi.fn();
-    h.deedsWindow = { noteUnlocks: vi.fn() };
-    h.combatAnnouncer = { push: vi.fn() };
-    return h;
-  }
 
   it('the mount-race takeover (hideBannerImmediately) keeps queued celebrations', () => {
     // The phase 14 QA finding: the takeover used clear(), silently
@@ -571,16 +533,17 @@ describe('hud wiring', () => {
   it('announces the unlock and the retro summary through the polite #combat-live region', () => {
     // The banner div carries no live semantics and the chat log is aria-live
     // off, so BOTH earned-moment texts route through the throttled combat
-    // announcer (once for the coalesced banner line, once for retro).
-    const start = hud.indexOf('private handleDeedUnlocks(');
-    const body = hud.slice(start, hud.indexOf('\n  log(\n', start));
-    expect(body).toContain('this.combatAnnouncer.push(bannerText, performance.now());');
-    expect(body).toContain('this.combatAnnouncer.push(retroText, performance.now());');
-    expect(body.match(/combatAnnouncer\.push/g)?.length).toBe(2);
+    // announcer (once for the coalesced banner line, once for retro). The
+    // painter reaches it as host.announce (Hud.celebrationHost wires it to
+    // combatAnnouncer.push with performance.now()).
+    const body = unlockBody();
+    expect(body).toContain('host.announce(bannerText);');
+    expect(body).toContain('host.announce(retroText);');
+    expect(body.match(/host\.announce\(/g)?.length).toBe(2);
     // The chat-pane delivery too, not just the announcer: deleting the log
     // call would compile and pass everything else while the visible catch-up
     // line vanishes (the reliquary sibling pins its log line the same way).
-    expect(body).toContain('this.log(retroText, HUD_LOG.NOTICE);');
+    expect(body).toContain('host.log(retroText, HUD_LOG.NOTICE);');
   });
 
   it('marks the watch toggle state and names the recent-strip jump buttons', () => {

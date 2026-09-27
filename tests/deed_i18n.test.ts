@@ -141,20 +141,31 @@ describe('deedBroadcastLine (the guild-chat news line)', () => {
   });
 
   it('the HUD switch arm stays wired to this composer with the guild-chat green', () => {
-    // hud.ts cannot be unit-driven (DOM monolith); the live wiring was
-    // verified end to end against a real server, and this source pin keeps
-    // the arm from being dropped or detached from the pinned composer. The
-    // deed slot renders as the splice sentinel so the name lands as a
-    // clickable jump node (deed_chat_line.ts); the template still comes from
-    // this module (deedBroadcastRendered, which deedBroadcastLine shares).
+    // The live wiring was verified end to end against a real server, and
+    // these source pins keep the arm from being dropped or detached from the
+    // pinned composer. The hud.ts switch arm hands the event to the painter
+    // (deed_unlock_painter.ts paintDeedBroadcast; the behavioral drive is in
+    // tests/deed_unlock_chat_link.test.ts). The deed slot renders as the
+    // splice sentinel so the name lands as a clickable jump node
+    // (deed_chat_line.ts); the template still comes from this module
+    // (deedBroadcastRendered, which deedBroadcastLine shares).
     const hudSrc = readFileSync(new URL('../src/ui/hud.ts', import.meta.url), 'utf8');
     const arm = hudSrc.slice(hudSrc.indexOf("case 'deedBroadcast'"));
     expect(arm.length).toBeGreaterThan(0);
-    expect(arm.slice(0, 900)).toContain('deedBroadcastRendered(ev.characterName, DEED_NAME_TOKEN)');
+    expect(arm.slice(0, 400)).toContain(
+      'paintDeedBroadcast(this.celebrationHost(), ev.characterName, ev.deedId)',
+    );
+    const painterSrc = readFileSync(
+      new URL('../src/ui/deed_unlock_painter.ts', import.meta.url),
+      'utf8',
+    );
+    const line = painterSrc.slice(painterSrc.indexOf('export function paintDeedBroadcast('));
+    expect(line.length).toBeGreaterThan(0);
+    expect(line.slice(0, 900)).toContain('deedBroadcastRendered(characterName, DEED_NAME_TOKEN)');
     // The broadcast register is named, never spelled (tests/hud_tones.test.ts
     // keeps hud.ts hex-free).
-    expect(arm.slice(0, 900)).toContain('HUD_LOG.BROADCAST');
-    expect(arm.slice(0, 900)).toContain('this.deedsWindow.openWithDeed(ev.deedId)');
+    expect(line.slice(0, 900)).toContain('HUD_LOG.BROADCAST');
+    expect(line.slice(0, 900)).toContain('host.deedsWindow.openWithDeed(deedId)');
   });
 });
 

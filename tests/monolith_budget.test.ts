@@ -597,8 +597,10 @@ const MONOLITHS: MonolithRow[] = [
     // merged tree measures 18045 (this branch 18065, the release 18081). Exact merged
     // count, zero slack.
     // LOWERED 18045 -> 17605 on 2026-09-27: the item tooltip composer moved out to
-    // src/ui/item_tooltip_view.ts, so ten tests stopped importing the coordinator.
-    ceiling: 17605,
+    // src/ui/item_tooltip_view.ts, so ten tests stopped importing the coordinator,
+    // then 17605 -> 16963 with the chat log appender (hud/chat/chat_log_appender.ts),
+    // BannerSlot (banner_slot.ts) and the celebration painters and drain observer.
+    ceiling: 16963,
     seam: 'pure view core + thin painter on PainterHost (src/ui/CLAUDE.md)',
   },
   {

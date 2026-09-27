@@ -8,9 +8,9 @@
 // gathering milestones as character levels).
 
 import { audio } from '../../../game/audio';
-import { craftNameText } from '../../char_window';
 import { HUD_LOG } from '../../hud_tones';
 import { formatNumber, t } from '../../i18n';
+import { craftNameText } from './craft_name_view';
 import { gatheringProfessionNameKey } from './gathering_profession_name';
 import { professionImageUrl } from './profession_art';
 import {

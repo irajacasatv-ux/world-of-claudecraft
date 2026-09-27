@@ -10,7 +10,7 @@ import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { audio } from '../src/game/audio';
 import { TIER_SKILL_STEP } from '../src/sim/professions/wheel';
-import { type BannerVariant, Hud } from '../src/ui/hud';
+import { paintCraftCelebrations } from '../src/ui/hud/professions/craft_celebration_painter';
 import {
   buildCraftCelebrationPlan,
   CRAFT_TIER_UP_DRAIN_WINDOW,
@@ -18,6 +18,7 @@ import {
   observeCraftSkillsForTierUps,
 } from '../src/ui/hud/professions/craft_celebration_view';
 import { MASTERWORK_SEAL_IMAGE_URL } from '../src/ui/hud/professions/profession_art';
+import { type CelebrationRig, celebrationRig } from './helpers/celebration_rig';
 
 describe('computeCraftTierUps', () => {
   it('reports no tier-ups on first observation (null prev), the silent init', () => {
@@ -150,31 +151,9 @@ describe('buildCraftCelebrationPlan', () => {
   });
 });
 
-interface CraftCelebrationHudHarness {
-  bannerEl: HTMLElement;
-  bannerTimer: number | undefined;
-  log: ReturnType<typeof vi.fn>;
-  combatAnnouncer: { push: ReturnType<typeof vi.fn> };
-  handleCraftCelebrations(
-    masterworkItemId: string | null,
-    tierUps: { craftId: string; toTier: number }[],
-  ): void;
-  showBanner(
-    text: string,
-    motion?: boolean,
-    decorativeIconUrl?: string,
-    variant?: BannerVariant,
-  ): void;
-}
-
-function celebrationHud(): CraftCelebrationHudHarness {
-  const hud = Object.create(Hud.prototype) as unknown as CraftCelebrationHudHarness;
-  hud.bannerEl = document.createElement('div');
-  hud.bannerTimer = undefined;
-  hud.log = vi.fn();
-  hud.combatAnnouncer = { push: vi.fn() };
-  return hud;
-}
+// The painter Hud.handleCraftCelebrations became (craft_celebration_painter.ts)
+// on the celebration rig: a real BannerSlot, the plain log arm a stub.
+const celebrationHud = (): CelebrationRig => celebrationRig();
 
 describe('craft celebration HUD behavior', () => {
   const hudCss = readFileSync(join(process.cwd(), 'src/styles/hud.css'), 'utf8');
@@ -197,7 +176,7 @@ describe('craft celebration HUD behavior', () => {
     const achievement = vi.spyOn(audio, 'achievement').mockImplementation(() => {});
     const hud = celebrationHud();
 
-    hud.handleCraftCelebrations('iron_sword', []);
+    paintCraftCelebrations(hud.host, 'iron_sword', []);
 
     const icon = hud.bannerEl.querySelector<HTMLImageElement>('img.banner-art');
     const copy = hud.bannerEl.querySelector<HTMLElement>('.banner-copy');
@@ -212,7 +191,7 @@ describe('craft celebration HUD behavior', () => {
     expect(hud.log.mock.calls[0][0]).toBe(copy?.textContent);
     expect(achievement).toHaveBeenCalledTimes(1);
 
-    hud.showBanner('Ordinary banner');
+    hud.slot.show('Ordinary banner');
 
     expect(hud.bannerEl.querySelector('img')).toBeNull();
     expect(hud.bannerEl.children).toHaveLength(1);
@@ -226,10 +205,10 @@ describe('craft celebration HUD behavior', () => {
     // celebration must not leave the next banner wearing the deed language.
     const hud = celebrationHud();
 
-    hud.showBanner('Deed accomplished: Old Salt', true, undefined, 'deed');
+    hud.slot.show('Deed accomplished: Old Salt', true, undefined, 'deed');
     expect(hud.bannerEl.classList.contains('banner-deed')).toBe(true);
 
-    hud.showBanner('Level 12!');
+    hud.slot.show('Level 12!');
     expect(hud.bannerEl.classList.contains('banner-deed')).toBe(false);
     expect(hud.bannerEl.querySelector('.banner-copy')?.textContent).toBe('Level 12!');
   });

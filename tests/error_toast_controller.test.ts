@@ -3,6 +3,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { audio } from '../src/game/audio';
 import type { SimEvent } from '../src/sim/types';
+import { BannerSlot } from '../src/ui/banner_slot';
 import { ErrorToastController } from '../src/ui/error_toast_controller';
 import { heldLootWarningText } from '../src/ui/held_loot_warning_view';
 import { Hud } from '../src/ui/hud';
@@ -27,10 +28,10 @@ function rig() {
     isNythraxisEvent: vi.fn(() => false),
     lootRolls: { closeForItem: vi.fn() },
     errorToast: new ErrorToastController(el),
-    bannerEl,
+    // The #banner slot's live half (banner_slot.ts), the field Hud builds;
+    // the drain tail's celebration observer builds itself lazily.
+    bannerSlot: new BannerSlot(bannerEl),
     log: vi.fn(),
-    prevCraftSkills: null,
-    craftTierUpDrains: 0,
   });
   return { el, bannerEl, hud, send: (events: SimEvent[]) => hud.handleEvents(events) };
 }

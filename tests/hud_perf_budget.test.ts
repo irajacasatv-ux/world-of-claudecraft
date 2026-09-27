@@ -597,6 +597,12 @@ const HOT_PAINTERS: ReadonlyArray<ScannedPainter> = [
   // slot, announcer), so they make no raw DOM write at all.
   { file: 'hud/professions/skill_level_toast_painter.ts', allow: {}, reflowAllow: {} },
   { file: 'hud/reputation/faction_tier_celebration_painter.ts', allow: {}, reflowAllow: {} },
+  // Their siblings extracted from Hud: the craft masterwork / tier-up plate,
+  // and the deed and Reliquary unlock lines, whose name-link nodes are minted
+  // by deed_chat_line.ts and land through the host's logNodes.
+  { file: 'hud/professions/craft_celebration_painter.ts', allow: {}, reflowAllow: {} },
+  { file: 'deed_unlock_painter.ts', allow: {}, reflowAllow: {} },
+  { file: 'reliquary_unlock_painter.ts', allow: {}, reflowAllow: {} },
   { file: 'hud/action_bar/action_bar_painter.ts', allow: {}, reflowAllow: {} },
   { file: 'hud/action_bar/mobile_action_ring_painter.ts', allow: {}, reflowAllow: {} },
   { file: 'hud/action_bar/radial_petal_painter.ts', allow: {}, reflowAllow: {} },
