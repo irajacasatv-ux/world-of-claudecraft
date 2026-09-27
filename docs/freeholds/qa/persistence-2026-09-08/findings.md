@@ -4088,3 +4088,71 @@ high-confidence redundancy, and a weak pin wanting a positive control). It is de
 covering case, "counts an outstanding capture", IS that case with the positive control (the
 gauge at 1 while the write is held, then 0), and the control's own mutant (no capture ever
 taken) is killed there.
+
+### STEP 4, THE REVIEWERS ON THE PART 1 DIFF, AND THEIR ROUND
+
+Five reviewers on `60cd9f859a..16cd1d3c36` (commits only, capped reports), plus the two the
+qa-checklist named for the sim edits. Four hit their turn limits and were resumed with a
+report-now instruction; every report arrived whole. Findings: 0 blocking, 3 should-fix, 17
+nits, all applied (`9173c0c536`, `b2f2cc2e49`, `fb835f322c` and this record).
+
+- privacy-security-review (0 blocking, 2 nits): any `TypeError` or `RangeError` counted as
+  an answer, including a read-back after the statement and a store bug; `message` still
+  rides the bounded error. APPLIED: the writer's refusals are the branded
+  `FreeholdUpsertRefused` (`server/freehold_upsert_refused.ts`, a TypeError subclass so every
+  caller that tested for one still passes), the only thrown class the clock reads as an
+  answer; the message caveat stays where the bounded-error module states it.
+- server-hot-path-reviewer (2 should-fix, 3 nits). SHOULD-FIX: the drain's clock exception
+  outlived the drain (`draining` is never reset, and the pump launched deferred entries
+  unchecked), so a hanging fault kept retries launching past the 10 s deadline into the
+  lease release. APPLIED: the exception lasts while an `idle()` is open (`openDrains`) and
+  the pump re-checks the clock (`stillWants`); pinned with four owners and a hanging writer.
+  SHOULD-FIX: the memory bound under-counted an OFFLINE owner, which holds its committed
+  state AND its capture, two records a quiesce used to free, and a write-only fault grows
+  the set with login churn. APPLIED: MEASURED with a session probe of the real store, 180.3
+  MiB per thousand offline owners on the clock at the approved 420-row ceiling (359.9 at
+  two thousand, linear; the design's 66.2 MiB was the capture alone); a `retrying_offline`
+  gauge; DEPLOY and the contract state both and the write-only growth case with an alert on
+  a sustained `retrying`. NITS, all applied: the clock read short-circuits off the clock;
+  retries hold at most `FREEHOLD_PERSIST_RETRY_WRITE_CAP` (two) write slots in their own
+  deferred set pumped after ordinary writes, pinned (and the pump's re-admission on a
+  settle); throws on the clock print one summary line per sweep instead of one per owner.
+- database-performance-reviewer (1 should-fix, 4 nits; the 262,144 blob warning PASSES: the
+  smallest 32 KiB step above the 230,068-byte fixture, and nothing else keyed on 229,376).
+  SHOULD-FIX: DEPLOY called a single-realm stale write impossible, but the realm fences
+  itself when the 65 s driver timeout fires across a slow COMMIT (which `statement_timeout`
+  does not bound). APPLIED in DEPLOY and the contract, with the reading "stale after
+  write_failures on one realm is a self-fence" and the adopt-if-identical option named for
+  07a under R2. NITS applied: Node `ERR_*` TypeErrors no longer count (the brand), the quiesce
+  line on the clock says so ("quiesced on the retry clock"), the pump checks the clock, and
+  the cadence reads "at most one per owner per window".
+- qa-checklist (0 blocking, 2 nits, both the classification, applied by the brand) and
+  test-coverage-auditor (0 blocking, 5 nits): the rejoin and drain "did not wait" checks
+  could not fail on their own (now each races the call against a few microtasks), the
+  retain release on the clock was unasserted (now `leaveCaptures` 0 after the rejoin), the
+  store's cadence sweeps stopped 30 s short of due (now one at `WINDOW - 1`), the ring model
+  missed a double stuck pin (now the nearest of the leg into the waypoint and the leg before
+  it), and the positive control is a hand-picked literal (kept on purpose and said so). Its
+  tracing request: both "deleted" assertions survive (the revision one strengthened to the
+  exact value, the capture count moved within its merged case).
+- content-obligations-reviewer and architecture-reviewer (0 blocking, 2 and 4 nits): the ten
+  removed patterns are Nythraxis's apex gear patterns (its `nythraxis_patterns` tail), not
+  the Crucible's, which the test comment and this ledger now say (the earlier commit body
+  and the section above keep the wrong raid name; this line corrects them). The old pool
+  test's `kind !== 'tool'` is now the wearable kinds. PACING, INTENDED: the third wave now
+  fires at waypoint 6, where Tobin's third line sits, so "Inside? Wooden horses and patched
+  dolls" plays after the last fight rather than before it; the story still finishes before
+  the market, and waves two and three now come one short leg apart. No draw count moves
+  (`rng.pick` draws once whatever the pool size; the ambush ring is rng-free), and no parity
+  scenario drives the caravan or opens a cache.
+
+THE ROUND'S MUTATION PASS: 12 mutants behind their controls (450 tests across the four
+store, retry, database and metrics suites; 12 for the clearance suite), all KILLED: the drain
+never closing, the pump ignoring the clock, the arm's and the pump's sub-cap each removed,
+the per-sweep summary off, per-owner lines on the clock, the clock wording forced off, the
+offline gauge counting everyone, a plain TypeError taken for an answer, the SQLSTATE shape
+check dropped, the writer's tier refusal unbranded, and (for the two-leg ring model, which a
+source mutant can only reach through data) waypoint 3 moved beside the gate, which only the
+leg-before arm catches. The store measures 2,011 lines and its ceiling is LOWERED 2,026 to
+2,011, the round paid for by moving the write-side and lifecycle bounds whole
+(`server/freehold_persist_bounds.ts`, re-exported) and four dead imports.
