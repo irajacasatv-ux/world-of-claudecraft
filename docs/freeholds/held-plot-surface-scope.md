@@ -38,16 +38,18 @@ durable re-ask refused on capacity after the previous entry was collected is a
 HELD login in the sense above (its answer carries the capacity kind), with one
 twist for the surface: retain's repair reload then loads the entry, so the
 entry's hold is gone while the session stays write-blocked, its first write
-refused at the seal, loudly (a `cap_full` refusal is the exception: the reload
-meets the same full cap, so the entry stays unloaded and held, with no seal
-line). The surface therefore keys this group on the hold the join installed, not
-on the entry's hold at the time it paints, and nothing keeps that answer after
-the install today (`game.join` hands `meta.freehold` straight to the binding), so
-the surface needs a per-session carrier for it. The WITHHELD race, an entry collected
-between the re-ask and the install, books no hold kind at all: a
-`join answer withheld` warning, then the same loud refusal. The surface owes
-that group too, keyed on the entry being write-blocked rather than on a hold,
-and its copy can say the house is safe on disk, because here it is.
+refused at the seal, loudly, over a row (for an account with no row yet the
+reload meets the stand-in on the absent arm and the entry takes the terminal
+`unnamed_record` hold instead; a `cap_full` refusal is the quiet form: the
+reload meets the same full cap, so the entry stays unloaded and held, with no
+seal line). The surface therefore keys this group on the hold the join
+installed, not on the entry's hold at the time it paints, and nothing keeps that
+answer after the install today (`game.join` hands `meta.freehold` straight to
+the binding), so the surface needs a per-session carrier for it. The WITHHELD
+race, an entry collected between the re-ask and the install, books no hold kind
+at all: a `join answer withheld` warning, then the same loud refusal. The
+surface owes that group too, keyed on the entry being write-blocked rather than
+on a hold, and its copy can say the house is safe on disk, because here it is.
 
 ## The rule this design is built under
 

@@ -192,9 +192,11 @@ carries an opaque plot id only.
   answer could be installed, which carries the stand-in and is write-blocked by
   the store's refusals: a hold (including a durable re-ask refused on
   capacity), both handshake asks throwing with no loaded entry to answer for
-  them, a minted name the install refuses as inadmissible, or a join answer
-  WITHHELD at install (`server/freehold_join_answer.ts`: nothing loaded could
-  vouch for it). OFFLINE AND HEADLESS
+  them, a minted name the install refuses as inadmissible, a loaded QUIESCED
+  entry over a row (its replay carries no document, so the entry installs
+  nothing), or a join answer WITHHELD at install
+  (`server/freehold_join_answer.ts`: nothing loaded could vouch for it).
+  OFFLINE AND HEADLESS
   there is no store and no minter, so every record on those hosts carries the
   one literal stand-in `PENDING_FREEHOLD_PLOT_ID` forever, and two offline
   records are therefore indistinguishable by `plotId`. That is harmless while

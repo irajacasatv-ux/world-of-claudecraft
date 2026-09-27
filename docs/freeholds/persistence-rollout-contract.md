@@ -573,18 +573,21 @@ is refused as already in world.
 ONE BUDGET PER HANDSHAKE, NOT PER ASK (2026-09-26). Ruling (b) for the twelfth
 path asks twice, once before the character lease and again after the character
 read, and as first built each ask armed this whole budget and its own permit
-wait: up to 20,000 ms of housing per login, the second half inside the lease-held
-window with the admission slot still counted, past the client's 10,000 ms entry
-watchdog. The hot-path and database reviews of that ruling found it, and the
-handshake now hands the re-ask only what the first ask left
+wait: up to 20,000 ms of housing per login, the second half inside the
+lease-held window with the admission slot still counted, past the client's
+10,000 ms entry watchdog. The hot-path and database reviews of that ruling found
+it, and the handshake now hands the re-ask only what the first ask left
 (`freeholdReaskBudgetMs`, server/freehold_login_bounds.ts), so a login's housing
-wait is back under the one 10,000 ms ceiling. The second ask can still wait
-INSIDE the lease-held window (when the entry was collected between the asks, or
-the first ask was held on capacity), bounded by that remainder; a re-ask that
-runs out answers `no_budget`, and the join installs what the store's entry
-decides at install time (the entry when one is loaded, else nothing: a
-write-blocked session, never a loss). `reask_reads` and `reask_ms` on
-`woc_freehold_persist_total` are what an operator reads that cost by.
+wait is back under the one 10,000 ms ceiling, timed on the monotonic clock
+(`performance.now`), so a wall-clock step cannot refund it; the one exception is
+a deadline the host cannot schedule, where that ask runs uncapped and says so,
+as a single ask always has. The second ask can still wait INSIDE the lease-held
+window (when the entry was collected between the asks, or the first ask was held
+on capacity), bounded by that remainder; a re-ask that runs out answers
+`no_budget`, and the join installs what the store's entry decides at install
+time (the entry when one is loaded, else nothing: a write-blocked session, never
+a loss). `reask_reads` and `reask_ms` on `woc_freehold_persist_total` are what
+an operator reads that cost by.
 
 THE LOGIN ITSELF IS NOT REFUSED, and that is deliberate: refusing a login over a
 durable housing read reverses a decision this packet has already taken and
@@ -736,13 +739,14 @@ which is the exact harm the loader's own `wire_rev_shape` hold refuses on the
 read side. What it newly refuses is a superseded leave capture offered to a
 rejoin as the install source: refusing loses nothing, the row survives, and it
 books a write failure and quiesces an entry that is about to be collected
-anyway. What ruling (b) leaves write-blocked, never lost (an entry is collected
-only when it owes no work, so no capture outlives it): a durable re-ask refused
-on capacity after the entry was collected, refused at the seal, loudly, except a
-`cap_full` refusal, which stays held with no seal line and shows only as its
-kind; and the WITHHELD race, an entry collected between the re-ask and the
-install, which warns `join answer withheld` and is then refused the same loud
-way.
+anyway. What ruling (b) leaves write-blocked, never lost (an entry is collected only
+when it owes no work, so no capture outlives it): a durable re-ask refused on
+capacity after the entry was collected, refused at the seal, loudly, over a row,
+or held as `unnamed_record` for an account with no row yet (the repair re-read
+meets the stand-in on the absent arm), except a `cap_full` refusal, which stays
+held with no seal line and shows only as its kind; and the WITHHELD race, an
+entry collected between the re-ask and the install, which warns `join answer
+withheld` and is then refused the same loud way.
 
 OFFLINE AND HEADLESS PLOT IDENTITY: THE DIVERGENCE IS ACCEPTED AND DOCUMENTED.
 Online records now answer to a unique minted identity from their first session.

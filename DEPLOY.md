@@ -801,13 +801,18 @@ For off-box safety, sync the directory to S3 occasionally:
   cumulative work: loads, writes, their failures, stale compare-and-swap refusals,
   the permit and queue waits, the statement durations those waits exclude, total
   bytes written, the re-ask's cost (`reasks`, `reask_reads` for the ones that
-  waited on a durable read inside the lease-held window, and `reask_ms`, the
-  re-asks' summed wall time, bounded per handshake by what the first ask left of
-  the one 10,000 ms housing budget), each join's install decision (`join_entry`,
-  the loaded entry answering at install time, which is the stale answer fix at
-  work; `join_held`; `join_withheld`, a write-blocked session nothing could vouch
-  for; `join_none`; `join_refused`), `pre_gate_refusals` (rows refused on their
-  on-disk size before anything was rendered) and `writes_without_record`.
+  waited on the durable path inside the lease-held window, a read, a shared read
+  or a permit wait (a cap refusal waits on nothing and is not counted), and
+  `reask_ms`, the re-asks' summed wall time, bounded per handshake by what the
+  first ask left of the one 10,000 ms housing budget on a monotonic clock), each
+  join's install decision (`join_entry`, a loaded entry installed whose answer the
+  ask already matched, which is every healthy join and so tracks login volume;
+  `join_superseded`, the loaded entry installed IN PLACE of a stale, held, marked,
+  broken or missing ask, which is the twelfth path's fix actually changing an
+  install; `join_held`; `join_withheld`, a join nothing could vouch for,
+  write-blocked unless a live record it shares still stands; `join_none`;
+  `join_refused`), `pre_gate_refusals` (rows refused on their on-disk size before
+  anything was rendered) and `writes_without_record`.
   `woc_freehold_load_failures_total` splits load failures by `kind`, and every
   one of the NINE kinds is its own diagnosis rather than one label. FOUR are
   DATA incidents, where the same row answers the same way every time and the
@@ -839,13 +844,15 @@ For off-box safety, sync the directory to S3 occasionally:
   (b) for the twelfth path), and the join's repair re-read, since a capacity hold
   is repairable and a realm that is still saturated refuses each; and a login
   refused on the whole-preload budget books `no_budget` while the read it stopped
-  waiting for goes on to book its own outcome. The capacity kinds' console lines
-  are rate-limited to one per kind per 10 s (the next line says how many it held
-  back), so read the rate here, never off the log. That is the honest reading of a
-  per-refusal counter and it is not double counting, but an alert threshold
-  derived from a login rate has to allow for it. The series worth an alert are
-  named one by one below rather than counted, because a bare count is a number a
-  later edit makes wrong without touching anything it describes.
+  waiting for goes on to book its own outcome. The capacity kinds' hold lines are
+  rate-limited to one per kind per 10 s (the next line says how many it held
+  back), so read the rate here, never off the log; the `read_threw` load-failure
+  error line is the exception, printed per event because each carries its own
+  database error. That is the honest reading of a per-refusal counter and it is
+  not double counting, but an alert threshold derived from a login rate has to
+  allow for it. The series worth an alert are named one by one below rather than
+  counted, because a bare count is a number a later edit makes wrong without
+  touching anything it describes.
   `writes_without_record` counts a write that held a
   background permit with no document to send and issued no statement at all,
   which is the terminal state of every way this store has ever lost a save; it
@@ -871,15 +878,18 @@ For off-box safety, sync the directory to S3 occasionally:
   entry for it, and neither loses anything, because an entry is collected only
   when it owes no work, so once it is gone the row already holds every edit and no
   capture exists to drop. A durable re-ask refused on capacity after the previous
-  entry was collected installs no record, and the session's first write is refused
-  at the seal, loudly (`quiesced`, and a `write refused (identity)` line); a
-  `cap_full` refusal is the exception, since the join's own re-read meets the same
-  full cap, so the entry stays unloaded and held with no seal line, and it shows
-  only as `cap_full` in `woc_freehold_load_failures_total`, once per refused read.
-  And the WITHHELD race, an entry collected between the re-ask and the install,
-  installs no record either: a `join answer withheld` warning, then the same loud
-  refusal. A `quiesced` rise from either order is a write-blocked session, never a
-  lost house. `held` counts
+  entry was collected installs no record. Over a row, the session's first write is
+  then refused at the seal, loudly (`quiesced`, and a `write refused (identity)`
+  line); for an account with no row yet, the join's repair re-read meets the
+  stand-in on the absent arm and takes the terminal `unnamed_record` hold instead
+  (a data line and the `held` gauge, no seal line); and a `cap_full` refusal is
+  the quiet form, since the repair re-read meets the same full cap, so the entry
+  stays unloaded and held with no seal line and shows only as `cap_full` in
+  `woc_freehold_load_failures_total`, once per refused read. And the WITHHELD
+  race, an entry collected between the re-ask and the install, installs no record
+  either: a `join answer withheld` warning, then the same loud refusal. A
+  `quiesced` rise from either order is a write-blocked session, never a lost
+  house. `held` counts
   entries under ANY recovery hold, DATA or CAPACITY: read
   `woc_freehold_load_failures_total` by `kind` to tell a row this build cannot
   read from a login storm that filled the admission cap. TWO CAVEATS on reading
