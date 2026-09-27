@@ -2412,6 +2412,13 @@ function genExploitSteps(seed: number): Step[] {
   return steps;
 }
 
+// The sweep readouts (runs, steps, ops that succeeded) are for a person
+// investigating the property, not for every suite run's log: they print only
+// with WOC_CONSERVATION_REPORT=1. The coverage FLOOR below is asserted either way.
+function report(line: string): void {
+  if (process.env.WOC_CONSERVATION_REPORT === '1') process.stderr.write(`\n${line}\n`);
+}
+
 describe('P4-EXPLOIT the two-account money printer, measured', () => {
   it('conserves on every generated instance of the shape', async () => {
     const failures: Failure[] = [];
@@ -2425,8 +2432,8 @@ describe('P4-EXPLOIT the two-account money printer, measured', () => {
         if (failures.length >= 3) break;
       }
     }
-    process.stderr.write(
-      `\n[exploit sweep] ran=${ran} failures=${failures.length} (carry-and-record printed on this shape; refusing does not)\n`,
+    report(
+      `[exploit sweep] ran=${ran} failures=${failures.length} (carry-and-record printed on this shape; refusing does not)`,
     );
     expect(reportFailures('P4-EXPLOIT', failures)).toBe('');
     expect(ran).toBe(300);
@@ -2524,7 +2531,7 @@ describe('P6 conservation when a leave flush exhausts its retries', () => {
 // ---------------------------------------------------------------------------
 describe('coverage of the property sweeps', () => {
   it('reports what was exercised and holds a floor under it', () => {
-    process.stderr.write(`\n[conservation coverage] ${coverage.render()}\n`);
+    report(`[conservation coverage] ${coverage.render()}`);
     for (const op of [
       'deposit',
       'withdraw',
