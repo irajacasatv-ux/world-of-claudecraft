@@ -145,4 +145,25 @@ describe('emote wheel view (the one slot list)', () => {
     expect(emoteWheelPick([], 0, -92, 330)).toBeNull();
     expect(emoteWheelPick([], 0, 0, 330)).toBe('edit');
   });
+
+  it('reads the UI scale off the mounted wheel (screen width over layout width)', () => {
+    const { wheel } = showWheel(['wave', 'dance', 'cheer']);
+    // Laid out at 165 CSS px and drawn at 330 screen px: a UI scale of 2. The
+    // pointer 80 screen px above the centre (185, 195) is 40 author px out, so
+    // it is on the Edit button, not the top seat.
+    Object.defineProperty(wheel, 'offsetWidth', { configurable: true, value: 165 });
+    expect(pointEmoteWheel(wheel, ['wave', 'dance', 'cheer'], 185, 115)).toBe('edit');
+  });
+
+  it('scales the Edit button and the gap with the wheel under a UI scale', () => {
+    const slots = ['wave', 'dance', 'cheer'];
+    // 80 screen px out: past the author Edit radius and gap at scale 1 (a seat)...
+    expect(emoteWheelPick(slots, 0, -80, 330)).toBe('wave');
+    // ...but only 40 author px at scale 2, which is still the Edit button.
+    expect(emoteWheelPick(slots, 0, -80, 660, 2)).toBe('edit');
+    // The seat ring itself scales too: 92 author px is 184 screen px at scale 2.
+    expect(emoteWheelPick(slots, 0, -184, 660, 2)).toBe('wave');
+    // And the gap between them: 55 author px (110 screen) picks nothing.
+    expect(emoteWheelPick(slots, 0, -110, 660, 2)).toBeNull();
+  });
 });

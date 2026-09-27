@@ -74,7 +74,9 @@ export function pointEmoteWheel(
   const rect = el.getBoundingClientRect();
   const cx = rect.left + rect.width / 2;
   const cy = rect.top + rect.height / 2;
-  const hover = emoteWheelPick(slots, x - cx, y - cy, rect.width);
+  // Screen width over layout width: the UI scale the author-px thresholds need.
+  const scale = el.offsetWidth > 0 ? rect.width / el.offsetWidth : 1;
+  const hover = emoteWheelPick(slots, x - cx, y - cy, rect.width, scale);
   el.querySelector('.emote-wheel-edit')?.classList.toggle('selected', hover === 'edit');
   el.querySelectorAll<HTMLElement>('.emote-wheel-item').forEach((item) => {
     item.classList.toggle('selected', item.dataset.emote === hover);

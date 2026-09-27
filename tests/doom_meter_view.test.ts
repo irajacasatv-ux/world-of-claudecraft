@@ -159,8 +159,12 @@ describe('Warlock Doom meter frame input', () => {
     const start = hud.indexOf('private updateWarlockDoomMeter(p: Entity): number {');
     expect(start).toBeGreaterThan(-1);
     const body = hud.slice(start, hud.indexOf('\n  }\n', start));
-    expect(body).toContain('const input = warlockDoomMeterInput(this.sim.talentSpec, p);');
-    expect(body).toContain('this.doomMeter.paint(input);');
-    expect(body).toContain('return input.fateThreads;');
+    // The whole body, whitespace-normalized: a second paint or an early return
+    // cannot slip past a set of contains checks this way.
+    expect(body.replace(/\s+/g, ' ').trim()).toBe(
+      'private updateWarlockDoomMeter(p: Entity): number { ' +
+        'const input = warlockDoomMeterInput(this.sim.talentSpec, p); ' +
+        'this.doomMeter.paint(input); return input.fateThreads;',
+    );
   });
 });

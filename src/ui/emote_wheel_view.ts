@@ -4,11 +4,17 @@
 //
 // ONE slot list feeds both halves. Hud used to draw the seats from the
 // filtered, capped list (valid emote ids only, at most EMOTE_WHEEL_LIMIT) while
-// the pointer hit test divided the ring by the RAW slot count, so a list
-// holding a non-emote id or more than eight ids selected a different emote
-// than the seat under the pointer (or a non-emote id at all). Both functions
-// below take the raw list and derive the seats through emoteWheelSeats, so the
-// drawn ring and the hit ring cannot disagree.
+// the pointer hit test divided the ring by the RAW slot count. In play the two
+// writers of that list (loadEmoteWheelSlots and the wheel editor) already keep
+// it valid and capped, so the two never disagreed; a raw list that did would
+// have selected the wrong seat. Both functions below take the raw list and
+// derive the seats through emoteWheelSeats, so the drawn ring and the hit ring
+// cannot disagree whatever the list holds.
+//
+// Distances: the seat ring and the Edit and band thresholds are AUTHOR px, the
+// pointer offset is SCREEN px. emoteWheelPick takes the wheel's scale (screen
+// width over layout width) so the Edit button and the gap scale with the ring
+// under a UI scale other than 1.
 //
 // Pure and DOM-free (registered in tests/architecture.test.ts UI_PURE_CORES);
 // the wheel's DOM half is src/ui/emote_wheel.ts.
@@ -62,11 +68,16 @@ export function emoteWheelPick(
   dx: number,
   dy: number,
   wheelWidth: number,
+  scale = 1,
 ): OverheadEmoteId | 'edit' | null {
   const dist = Math.hypot(dx, dy);
-  if (dist <= EDIT_RADIUS) return 'edit';
+  if (dist <= EDIT_RADIUS * scale) return 'edit';
   const seats = emoteWheelSeats(slots);
-  if (dist < SEAT_BAND_INNER || dist > wheelWidth * SEAT_BAND_OUTER_FRAC || seats.length === 0) {
+  if (
+    dist < SEAT_BAND_INNER * scale ||
+    dist > wheelWidth * SEAT_BAND_OUTER_FRAC ||
+    seats.length === 0
+  ) {
     return null;
   }
   const angle = (Math.atan2(dy, dx) + Math.PI / 2 + Math.PI * 2) % (Math.PI * 2);

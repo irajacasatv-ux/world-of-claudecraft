@@ -445,18 +445,23 @@ describe('crafting window bag-freshness wiring (source pins)', () => {
     // core, which checks it BEFORE building the signature; the memo comparison
     // stays spelled in the Hud (the language fan-out sweep sees it there).
     const probe = region('private refreshOpenCraftingIfReagentsChanged(): void {', '\n  }');
-    expect(probe).toContain(
-      "const sig = openCraftingRefreshSig($('#crafting-window').style.display === 'flex', this.sim);",
+    // The whole body, whitespace-normalized, so nothing can run before the probe
+    // or beside the one repaint.
+    expect(probe.replace(/\s+/g, ' ').trim()).toBe(
+      'private refreshOpenCraftingIfReagentsChanged(): void { ' +
+        "const sig = openCraftingRefreshSig($('#crafting-window').style.display === 'flex', this.sim); " +
+        'if (sig !== null && sig !== this.lastCraftingReagentSig) this.renderCrafting();',
     );
-    expect(probe).toContain(
-      'if (sig !== null && sig !== this.lastCraftingReagentSig) this.renderCrafting();',
-    );
-    expect(probe.match(/this\.renderCrafting\(\)/g)).toHaveLength(1);
   });
 
   it('the reconnect hook resets the focus-target frames', () => {
     const resync = region('resyncAfterReconnect(): void {', '\n  }');
-    expect(resync).toContain('this.focusTargets.reset();');
+    // The whole reconnect hook: every window it resyncs, the focus reset unguarded.
+    expect(resync.replace(/\s+/g, ' ').trim()).toBe(
+      'resyncAfterReconnect(): void { this.marketWindow.onReconnected(); ' +
+        'this.focusTargets.reset(); this.perfectingWindow?.onReconnected(); ' +
+        'this.freeholdGatePrompt?.onReconnected();',
+    );
   });
 
   it('the online authoritative inventory delta converges it on the same frame', () => {
