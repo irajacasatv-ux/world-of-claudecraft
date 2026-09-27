@@ -41,12 +41,12 @@ import {
   freeholdWriteRefusal,
   type PersistedFreehold,
 } from '../src/sim/freehold/persisted';
-// BY PATH, like the persistence leaf and the hearth clock above, and for the
-// same reason those two give in src/sim/freehold/index.ts: this module is the
-// server-side durable consumer, so it reaches the leaf it needs rather than
-// pulling the directory's whole public surface into a server graph. Named here
-// because these three ARE on the barrel, so without a reason a later reader
-// cannot tell the deliberate exception from drift.
+// BY PATH, like the persistence leaf above, and for the same reason
+// src/sim/freehold/index.ts gives: this module is the server-side durable
+// consumer, so it reaches the leaf it needs rather than pulling the directory's
+// whole public surface into a server graph. Named here because this name IS on
+// the barrel, so without a reason a later reader cannot tell the deliberate
+// exception from drift.
 import { PENDING_FREEHOLD_PLOT_ID } from '../src/sim/freehold/state';
 import { boundedDatabaseError } from './freehold_bounded_error';
 import { createFreeholdCapacityWarn } from './freehold_capacity_warn';
