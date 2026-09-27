@@ -357,6 +357,37 @@ entirely. A generation the deadline abandons leaves the same hole a crash leaves
 the durable compare-and-set refuses a stale write rather than corrupting a good one.
 The drain never throws; a missed deadline logs one line and the shutdown continues.
 
+### The thrown-run retry clock, and what a restart during a database fault costs
+
+A database FAULT (a dropped connection, a statement or driver timeout, exhausted
+resources, an operator restart, a permission or schema fault) is not an answer, so a run
+of them never quiesces an owner (R1, 2026-09-26; `server/freehold_write_retry.ts`). Three
+thrown writes for one owner inside `FREEHOLD_PERSIST_WRITE_ERROR_WINDOW_MS` (five minutes)
+put the owner on a RETRY CLOCK: its entry, its unwritten edits and any leave capture stay,
+no write is armed for it until the clock is due, and the periodic sweep then issues ONE
+statement, at most one per owner per window. A commit clears the clock; an answer no repeat
+can change (the fence's stale, a missing or conflicting row, the seal, a ceiling, or a
+thrown refusal of the document itself: a data or constraint SQLSTATE, or the writer's own
+structural refusal) quiesces as before. A player who returns meanwhile gets the kept house
+installed and plays on, and their edits ride the next retry.
+
+THE COST, stated as a bound: each owner on the clock holds up to ONE extra record, counted
+in `leave_captures` (66.2 MiB per thousand at the approved 420-row ceiling, 0.29 MiB with
+empty layouts), for as long as the fault lasts; the set is at most the accounts with an
+unwritten edit during the fault, and nothing caps it, because a cap would choose whose
+edits to drop. The `retrying` gauge names it. A RESTART DURING THE FAULT gives every such
+owner one last attempt inside the drain above, and the edits that still throw end with the
+process: that is the drain's accepted bound (R3), logged as the drain's one line. So a
+housing operator treats a sustained `retrying` as an outage to end before any planned
+restart, never as a data incident.
+
+THE FENCE STAYS A NAMED GATE (R2), and one of its cases belongs here: a thrown write can
+have COMMITTED (the connection dropped after the server committed), and the next write
+then meets its own revision as stale. The row holds that attempt's document, so nothing up
+to it is lost; an edit made after it is released with the fence's warn line, because the
+compare-and-swap cannot tell this realm's own ambiguous commit from another realm's. 07a's
+per-write receipts are what tell them apart.
+
 ### Rolling back
 
 TURN THE FEATURE FLAG OFF BEFORE ROLLING BACK. Unset `FREEHOLDS_ENABLED` and restart

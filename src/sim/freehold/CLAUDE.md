@@ -194,7 +194,8 @@ carries an opaque plot id only.
   capacity), both handshake asks throwing with no loaded entry to answer for
   them, a minted name the install refuses as inadmissible, a loaded QUIESCED
   entry over a row (its replay carries no document, so the entry installs
-  nothing), or a join answer WITHHELD at install
+  nothing; a run of thrown writes no longer quiesces since R1, so its entry
+  replays its kept edits instead), or a join answer WITHHELD at install
   (`server/freehold_join_answer.ts`: nothing loaded could vouch for it).
   OFFLINE AND HEADLESS
   there is no store and no minter, so every record on those hosts carries the

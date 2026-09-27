@@ -3925,7 +3925,10 @@ which this design applies where the letter of R1 leaves a choice.
    statement per leaver). ONE exception, the shutdown drain, which ignores the clock and gives
    every posture entry one last attempt inside its deadline (item 7). A wall clock that steps
    BACKWARD past a window would otherwise stall the retries for the size of the step, so a
-   clock reading more than one window before `retryAtMs` counts as due.
+   clock reading more than one window before the failure that set it (`retryAtMs` less two
+   windows) counts as due; a smaller step delays one retry by at most one more window.
+   (Corrected at the build: the first wording, "more than one window before `retryAtMs`",
+   made any backward step count as due.)
 6. THE MEMORY BOUND. A posture entry holds its committed `state` (every loaded entry does) plus
    at most ONE capture, counted in `leave_captures`. So the added retention is
    `leave_captures` times the record size, and the posture set is bounded by the accounts
@@ -3941,7 +3944,14 @@ which this design applies where the letter of R1 leaves a choice.
    so `drainCheck` answers false as soon as nothing is moving (not at the deadline) and
    `server/main.ts` prints its "freehold persistence drain did not complete" line: the capture
    ends with the process, which is R3's accepted bound.
-8. WHAT STAYS REFUSED, each still a quiesce that releases the capture: the stale fence (R2, the
+8. A THROW ABOUT THE DOCUMENT IS AN ANSWER, added at the build: the writer's own structural
+   refusal (a `TypeError` out of `requireUpsertInput`, which refuses before a byte is sent)
+   and a payload SQLSTATE (class 22, data exception; class 23, integrity constraint) answer
+   the same way every time, so a run of them still quiesces as before (the run-completing
+   one before the clock, the first one on it), never holding the edits forever at one
+   statement a window. Every other throw, including a permission or schema fault an operator
+   fixes, is a fault and takes the clock (`freeholdThrownWriteIsAnswer`).
+9. WHAT STAYS REFUSED, each still a quiesce that releases the capture: the stale fence (R2, the
    named activation gate 07a closes; its KNOWN COST pin holds unchanged), `missing`,
    `conflict`, the seal's identity and unnamed refusals, and the write ceilings. One case
    belongs to the fence and is named here: a thrown write can have COMMITTED (the connection
@@ -3950,7 +3960,7 @@ which this design applies where the letter of R1 leaves a choice.
    after it is released with the fence's warn line, because the compare-and-swap cannot tell
    this realm's own ambiguous commit from another realm's. Telling them apart needs a per-write
    token in the row, 07a's receipts. Pre-existing, not introduced by R1.
-9. METRICS AND LINES. Gauge `woc_freehold_persist{measure="retrying"}` (entries on the retry
+10. METRICS AND LINES. Gauge `woc_freehold_persist{measure="retrying"}` (entries on the retry
    clock, each holding unwritten edits; `quiesced` no longer counts a thrown run). Counter
    `woc_freehold_persist_total{measure="write_retries"}` (statements launched from the
    posture, so its rate against `retrying` shows the one-per-window cadence). Lines: the
@@ -3958,7 +3968,7 @@ which this design applies where the letter of R1 leaves a choice.
    the window and that the edits are kept; every throw keeps its existing `write failed` error
    line (inside the posture at most one per owner per window); a recovering commit prints one
    warn line.
-10. DEPLOY AND THE ROLLOUT CONTRACT. DEPLOY: `quiesced` loses the thrown run from its producer
+11. DEPLOY AND THE ROLLOUT CONTRACT. DEPLOY: `quiesced` loses the thrown run from its producer
     list; `retrying` and `write_retries` are described, with the reading "a database fault
     that outlasts three throws holds the affected owners' edits in memory and retries each
     once per five minutes; a sustained `retrying` is an outage, not a data incident, and a

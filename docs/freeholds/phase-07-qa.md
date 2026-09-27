@@ -169,6 +169,10 @@ the budget: three of the last ten rounds turned a "cannot be reached" into a liv
   write-blocked, never lost: a durable re-ask refused on capacity (loud at the seal;
   `cap_full` quiet there but counted by kind) and the WITHHELD race with no live record
   standing (loud).
+  R1 (2026-09-27) took the thrown-write run off the loss list: a run of database faults
+  puts the owner on a retry clock that keeps its edits and its capture and retries them
+  once per error window until one commits (the findings ledger, R1, THE THROWN-RUN RETRY
+  POSTURE). The fence (R2) and the drain's deadline (R3) stay the two named gates.
 
 ### Starter Prompt
 ```

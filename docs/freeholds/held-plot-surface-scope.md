@@ -34,10 +34,11 @@ the store's answer at install time, the capture included, so those players see
 the leaver's house and can write. TWO ORDERS STILL SEAT the empty default, and
 both keep the premise above, that the real row sits intact on disk, because an
 entry is collected only when it owes no work, so no capture exists to lose there
-(what the row lacks, it lost earlier and loudly: at a quiesce in the two KNOWN
-COST orders pinned at the end of tests/server/freehold_persist.test.ts (a run of
-thrown writes, and another realm's commit fencing a leave write stale), or at a
-previous process's shutdown drain deadline, which server/main.ts logs). A
+(what the row lacks, it lost earlier and loudly: at a quiesce in the KNOWN COST
+order pinned at the end of tests/server/freehold_persist.test.ts, another realm's
+commit fencing a leave write stale, or at a previous process's shutdown drain
+deadline, which server/main.ts logs; a run of thrown writes keeps its entry and
+its edits on the retry clock since R1, so it seats no default and loses nothing). A
 durable re-ask refused on capacity after the previous entry was collected is a
 HELD login in the sense above (its answer carries the capacity kind), with one
 twist for the surface: retain's repair reload then loads the entry, so the

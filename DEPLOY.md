@@ -796,7 +796,8 @@ For off-box safety, sync the directory to S3 occasionally:
   (those that finished a durable read, and so the only ones that can write, zero
   on a dark realm), then `dirty`, `running`, `pending`, `held`, `quiesced`,
   `oldest_dirty_age_ms`, `max_write_bytes`, `leave_captures` (documents held for
-  a leaving session until its write lands), and `active_writes` with
+  a leaving session until its write lands), `retrying` (owners on the thrown-run
+  retry clock, below), and `active_writes` with
   `deferred_writes` for the store's own write admission cap. `woc_freehold_persist_total` is a COUNTER of
   cumulative work: loads, writes, their failures, stale compare-and-swap refusals,
   the permit and queue waits, the statement durations those waits exclude, total
@@ -822,7 +823,8 @@ For off-box safety, sync the directory to S3 occasionally:
   and is write-blocked, and beside one it shares that record and writes, or is
   refused, as that record is; `join_none`; `join_refused`),
   `pre_gate_refusals` (rows refused on their on-disk size before anything was
-  rendered) and `writes_without_record`.
+  rendered), `writes_without_record`, and `write_retries` (statements issued
+  from the retry clock).
   `woc_freehold_load_failures_total` splits load failures by `kind`, and every
   one of the NINE kinds is its own diagnosis rather than one label. FOUR are
   DATA incidents, where the same row answers the same way every time and the
@@ -870,7 +872,8 @@ For off-box safety, sync the directory to S3 occasionally:
   dropped silently. `quiesced` has one producer per refusal no retry can fix
   (a stale compare-and-swap, a missing or conflicting row, the write seal, the
   unnamed-insert refusal, the writable-implies-readable refusal, and a run of
-  thrown writes) and only the first is the fence, so read it against
+  thrown writes that refuse the DOCUMENT: a data or constraint SQLSTATE, or the
+  writer's own structural refusal) and only the first is the fence, so read it against
   `stale_writes` and `write_failures` rather than alone: `stale_writes` is the
   fence (on a single-realm deployment that should be impossible, and on a
   multi-realm one it means two processes are writing the same rows), and
@@ -888,10 +891,11 @@ For off-box safety, sync the directory to S3 occasionally:
   entry for it, and neither loses anything of its own, because an entry is
   collected only when it owes no work, so once it is gone no capture exists to
   drop and the row holds every edit the store did not already drop, loudly: at a
-  quiesce in the two KNOWN COST orders pinned at the end of
-  tests/server/freehold_persist.test.ts (a run of thrown writes, and another
-  realm's commit fencing a leave write stale), or at a previous process's shutdown
-  drain deadline, which server/main.ts logs. A durable re-ask refused on capacity
+  quiesce in the KNOWN COST order pinned at the end of
+  tests/server/freehold_persist.test.ts (another realm's commit fencing a leave
+  write stale, the named gate 07a closes), or at a previous process's shutdown
+  drain deadline, which server/main.ts logs. A run of thrown writes no longer
+  drops anything (the retry clock, below). A durable re-ask refused on capacity
   after the previous entry was collected installs no record. Over a row, the
   session's first write is then refused at the seal, loudly (`quiesced`, and a
   `write refused (identity)` line); for an account with no row yet, the join's
@@ -921,7 +925,21 @@ For off-box safety, sync the directory to S3 occasionally:
   ever booking a hold: the whole-preload cap refuses the login's read while
   deliberately leaving the entry untouched, so that kind can climb with `held`
   flat, which is the correct reading and not a lost update. A growing `oldest_dirty_age_ms`
-  means edits are not reaching disk. `deferred_writes` and `permit_wait_ms` are
+  means edits are not reaching disk. THE RETRY CLOCK: a database FAULT (a
+  dropped connection, a timeout, exhausted resources, an operator restart, a
+  permission or schema fault) that throws three writes for one owner inside five
+  minutes no longer quiesces that owner. Its entry, its unwritten edits and any
+  leave capture are KEPT, `retrying` counts it, and it is retried once per five
+  minutes (the first sweep at or after each window, so `write_retries` rises at
+  about `retrying` per five minutes) until one commits, which clears it with one
+  warn line. A player who returns meanwhile gets the kept house and plays on;
+  their edits ride the next retry. What it costs is memory: each `retrying`
+  owner holds up to one extra record (`leave_captures`), and nothing caps the
+  count, because a cap would choose whose edits to drop. So a sustained
+  `retrying` is a database OUTAGE to fix, never a data incident, and a restart
+  during it gives each held owner ONE last attempt inside the 10 s drain before
+  the edits end with the process (the drain's warn line names it).
+  `deferred_writes` and `permit_wait_ms` are
   the two LEADING indicators of the capacity gates section 8a carries: a
   deferred set that does not return to zero between sweeps means the store's own
   write admission cap is the bottleneck and entry collection is suspended while
