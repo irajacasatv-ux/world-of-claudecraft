@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { CI_LONG_SUITES } from '../scripts/lib/ci_shard_plan.mjs';
 import { buildFullGateSteps } from '../scripts/lib/gate_steps.mjs';
 import {
@@ -52,6 +52,21 @@ describe('local lane-suite scope', () => {
     // An unknown flag consumes nothing: its value reads as a filter, which can
     // only keep more lane files.
     expect(vitestFilterArgs(argv('run', '--someFutureFlag', 'value'))).toEqual(['value']);
+  });
+
+  it('is applied by vite.config.ts test.exclude', async () => {
+    // A URL import: vite.config.ts sits outside the tsconfig include on purpose.
+    vi.resetModules();
+    const config = (await import(
+      /* @vite-ignore */ new URL('../vite.config.ts', import.meta.url).href
+    )) as { default: { test: { exclude: string[] } } };
+    const expected = localLaneExclusions({ env: process.env, argv: process.argv });
+    const { exclude } = config.default.test;
+    expect(exclude.filter((pattern) => CI_LONG_SUITES.includes(pattern))).toEqual(expected);
+    // This worker's own argv names no lane file, so outside CI the list is whole.
+    if (!process.env.CI && process.env.WOC_LANE_SUITES !== '1') {
+      expect(expected).toEqual([...CI_LONG_SUITES]);
+    }
   });
 
   it('keeps the full merge bar CI-equivalent', () => {
