@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import ts from 'typescript';
 import { describe, expect, it } from 'vitest';
 import { CI_LONG_SUITES } from '../scripts/lib/ci_shard_plan.mjs';
+import { localLaneExclusions } from '../scripts/lib/lane_suite_scope.mjs';
 
 // Guards `server.watch.ignored` in vite.config.ts, the only thing keeping the dev
 // server from reloading the served game for a file that cannot reach it.
@@ -29,34 +30,45 @@ const config = ts.createSourceFile(
   true,
 );
 
+// The object vite actually loads: the `export default defineConfig({ ... })` call, never
+// the first such call anywhere in the file (a decoy above it would be read instead).
 function defineConfigObject(source: ts.SourceFile = config): ts.ObjectLiteralExpression {
-  let found: ts.ObjectLiteralExpression | undefined;
-  const visit = (node: ts.Node): void => {
-    if (
-      !found &&
-      ts.isCallExpression(node) &&
-      ts.isIdentifier(node.expression) &&
-      node.expression.text === 'defineConfig' &&
-      node.arguments.length === 1 &&
-      ts.isObjectLiteralExpression(node.arguments[0])
-    ) {
-      found = node.arguments[0];
-      return;
-    }
-    ts.forEachChild(node, visit);
-  };
-  visit(source);
-  if (!found) throw new Error('vite.config.ts: no defineConfig({ ... }) object literal found');
-  return found;
+  const exported = source.statements.filter(
+    (statement): statement is ts.ExportAssignment =>
+      ts.isExportAssignment(statement) && !statement.isExportEquals,
+  );
+  const call = exported.length === 1 ? exported[0].expression : undefined;
+  if (
+    !call ||
+    !ts.isCallExpression(call) ||
+    !ts.isIdentifier(call.expression) ||
+    call.expression.text !== 'defineConfig' ||
+    call.arguments.length !== 1 ||
+    !ts.isObjectLiteralExpression(call.arguments[0])
+  ) {
+    throw new Error('vite.config.ts: no `export default defineConfig({ ... })` object literal');
+  }
+  return call.arguments[0];
 }
 
+// Strict on every object it walks: each member a plain `name: value` with a literal name,
+// and each name once. A spread, a shorthand, a computed name or a duplicate key could set
+// the property this reads without this reading it (JavaScript keeps the LAST duplicate).
 function propertyValue(obj: ts.ObjectLiteralExpression, name: string): ts.Expression {
+  const matches: ts.Expression[] = [];
   for (const prop of obj.properties) {
-    if (!ts.isPropertyAssignment(prop)) continue;
-    const key = ts.isIdentifier(prop.name) || ts.isStringLiteral(prop.name) ? prop.name.text : '';
-    if (key === name) return prop.initializer;
+    if (
+      !ts.isPropertyAssignment(prop) ||
+      !(ts.isIdentifier(prop.name) || ts.isStringLiteral(prop.name))
+    ) {
+      throw new Error(`vite.config.ts: a member beside "${name}" is not a plain property`);
+    }
+    if (prop.name.text === name) matches.push(prop.initializer);
   }
-  throw new Error(`vite.config.ts: property "${name}" not found`);
+  if (matches.length > 1) throw new Error(`vite.config.ts: duplicate property "${name}"`);
+  const [value] = matches;
+  if (!value) throw new Error(`vite.config.ts: property "${name}" not found`);
+  return value;
 }
 
 // The one computed element an array may hold, as exact source text (whitespace and
@@ -70,7 +82,7 @@ const spreadText = (element: ts.Node, source: ts.SourceFile): string =>
   element
     .getText(source)
     .replace(/\s+/g, '')
-    .replace(/,(?=[)\]}])/g, '');
+    .replace(/(?<![[,]),(?=[)\]}])/g, '');
 
 // Reads a string[] at a dotted path under defineConfig({ ... }). Parsed from the AST
 // rather than imported: vite.config.ts sits outside tsconfig `include` on purpose (it
@@ -163,6 +175,10 @@ describe('vite dev-server watch ignore list', () => {
     // no directory glob, and no agent directory, can arrive through it.
     expect(CI_LONG_SUITES.length).toBeGreaterThan(0);
     for (const file of CI_LONG_SUITES) expect(file).toMatch(/^tests\/[\w/]+\.test\.ts$/);
+    // And the function only ever returns lane files: here its widest output, a bare run.
+    const widest = localLaneExclusions({ env: {}, argv: [] });
+    expect(widest.length).toBeGreaterThan(0);
+    for (const file of widest) expect(CI_LONG_SUITES).toContain(file);
   });
 
   it('names the lane scope only at its import from lane_suite_scope.mjs and that spread', () => {
@@ -187,20 +203,44 @@ describe('vite dev-server watch ignore list', () => {
       '...(process.env.VITEST ? localLaneExclusions({ env: process.env, argv: process.argv }) : [])';
     // Positive control: in test.exclude, and wrapped the way a formatter would wrap it.
     const wrapped = synthetic(
-      `defineConfig({ test: { exclude: ['tmp/**', ...(process.env.VITEST\n  ? localLaneExclusions({\n      env: process.env,\n      argv: process.argv,\n    })\n  : []),] } })`,
+      `export default defineConfig({ test: { exclude: ['tmp/**', ...(process.env.VITEST\n  ? localLaneExclusions({\n      env: process.env,\n      argv: process.argv,\n    })\n  : []),] } })`,
     );
     expect(stringArrayAt('test.exclude', wrapped)).toEqual({
       strings: ['tmp/**'],
       spreads: [LANE_SCOPE_SPREAD],
     });
     const watch = synthetic(
-      `defineConfig({ server: { watch: { ignored: ['**/tmp/**', ${spread}] } } })`,
+      `export default defineConfig({ server: { watch: { ignored: ['**/tmp/**', ${spread}] } } })`,
     );
     expect(() => stringArrayAt('server.watch.ignored', watch)).toThrow(/non-literal/);
     const commented = synthetic(
-      `defineConfig({ test: { exclude: [${spread.replace('argv: process.argv', 'argv: process.argv /* x */')}] } })`,
+      `export default defineConfig({ test: { exclude: [${spread.replace('argv: process.argv', 'argv: process.argv /* x */')}] } })`,
     );
     expect(() => stringArrayAt('test.exclude', commented)).toThrow(/non-literal/);
+    // An array hole in the fallback arm is not the empty array.
+    const holed = synthetic(
+      `export default defineConfig({ test: { exclude: [${spread.replace(': [])', ': [,])')}] } })`,
+    );
+    expect(() => stringArrayAt('test.exclude', holed)).toThrow(/non-literal/);
+  });
+
+  it('reads the exported config only, and refuses a key it could misread', () => {
+    const synthetic = (text: string) =>
+      ts.createSourceFile('synthetic.ts', text, ts.ScriptTarget.Latest, true);
+    // A decoy call above the export is never the one read.
+    const decoy = synthetic(
+      "const decoy = defineConfig({ test: { exclude: ['a/**'] } });\nexport default defineConfig({ test: { exclude: ['b/**'] } });",
+    );
+    expect(stringArrayAt('test.exclude', decoy).strings).toEqual(['b/**']);
+    for (const shape of [
+      "{ exclude: ['a/**'], exclude: ['b/**'] }",
+      "{ exclude: ['a/**'], ...extra }",
+      "{ exclude: ['a/**'], ['exclude']: ['b/**'] }",
+      "{ exclude: ['a/**'], extra }",
+    ]) {
+      const source = synthetic(`export default defineConfig({ test: ${shape} });`);
+      expect(() => stringArrayAt('test.exclude', source), shape).toThrow(/vite\.config\.ts/);
+    }
   });
 
   it('keeps vitest agent-directory excludes root-relative for linked worktrees', () => {
