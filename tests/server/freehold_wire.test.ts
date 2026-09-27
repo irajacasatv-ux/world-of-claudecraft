@@ -93,6 +93,7 @@ import { FreeholdGatePrompt } from '../../src/ui/hud/housing/gate_prompt_control
 import { COMMAND_FACETS, type CommandName } from '../../src/world_api';
 import { bareClient, broadcast, fakeWs, joinServer, lastSnap } from '../helpers/bare_client';
 import { methodBody } from '../helpers/method_body';
+import { releasedSpyOn } from '../helpers/released_spy';
 
 type HousingCommand = (typeof FREEHOLD_WIRE_COMMANDS)[number];
 
@@ -359,6 +360,11 @@ afterEach(() => {
   else process.env.FREEHOLDS_ENABLED = saved;
   vi.unstubAllEnvs();
   vi.restoreAllMocks();
+  // A registered vi.fn keeps its calls and the `this` of each call until it is
+  // cleared, and an admission stub on server.sim.cfg is called as a method, so
+  // uncleared it would hold the realm config (and the world behind it) for the
+  // rest of the file. Spies on world objects go through releasedSpyOn.
+  vi.clearAllMocks();
   setGameMetricsCounters(noopGameMetricsCounters);
 });
 
@@ -451,7 +457,7 @@ describe('freeholds wire: dark realm dispatch', () => {
       delete process.env.FREEHOLDS_ENABLED;
       const refusals = recordingRefusalSink();
       const { server, fc, session } = housingSession();
-      const stub = vi.spyOn(server.sim, STUB[cmd].method);
+      const stub = releasedSpyOn(server.sim, STUB[cmd].method);
       session.selfHeavyDirty = false;
 
       server.handleMessage(
@@ -481,7 +487,7 @@ describe('freeholds wire: dark realm dispatch', () => {
     delete process.env.FREEHOLDS_ENABLED;
     const refusals = recordingRefusalSink();
     const { server, fc, session } = housingSession();
-    const junk = vi.spyOn(server.sim, 'sellAllJunk');
+    const junk = releasedSpyOn(server.sim, 'sellAllJunk');
     server.handleMessage(session, JSON.stringify({ t: 'cmd', cmd: 'sell_all_junk', rid: 41 }));
     // The frame reached its own arm: the sim was invoked, nothing was counted,
     // and no gate refusal answered the rid.
@@ -545,7 +551,7 @@ describe('freeholds wire: dark realm dispatch', () => {
     // claims below mean anything: that arm reports the token as the
     // unknown_command protocol anomaly, so a frame dropped ahead of the
     // switch (or an arm that stopped observing) leaves this spy silent.
-    const anomaly = vi.spyOn(botDetectorOf(server), 'observeProtocolAnomaly');
+    const anomaly = releasedSpyOn(botDetectorOf(server), 'observeProtocolAnomaly');
     server.handleMessage(session, JSON.stringify({ t: 'cmd', cmd: 'freehold_tour', rid: 61 }));
     expect(anomaly).toHaveBeenCalledTimes(1);
     expect(anomaly.mock.calls[0][1]).toBe('unknown_command');
@@ -560,7 +566,7 @@ describe('freeholds wire: dark realm dispatch', () => {
     delete process.env.FREEHOLDS_ENABLED;
     const refusals = recordingRefusalSink();
     const { server, session } = housingSession();
-    const stub = vi.spyOn(server.sim, 'freeholdEnter');
+    const stub = releasedSpyOn(server.sim, 'freeholdEnter');
     const frame = JSON.stringify({ t: 'cmd', cmd: 'freehold_enter' });
 
     server.handleMessage(session, frame);
@@ -583,7 +589,7 @@ describe('freeholds wire: lit realm dispatch reaches the Sim methods', () => {
       process.env.FREEHOLDS_ENABLED = '1';
       const refusals = recordingRefusalSink();
       const { server, fc, session, pid } = housingSession();
-      const stub = vi.spyOn(server.sim, STUB[cmd].method);
+      const stub = releasedSpyOn(server.sim, STUB[cmd].method);
       session.selfHeavyDirty = false;
 
       server.handleMessage(
@@ -606,7 +612,7 @@ describe('freeholds wire: lit realm dispatch reaches the Sim methods', () => {
     (cmd, _why, payload) => {
       process.env.FREEHOLDS_ENABLED = '1';
       const { server, session, pid } = housingSession();
-      const stub = vi.spyOn(server.sim, STUB[cmd].method);
+      const stub = releasedSpyOn(server.sim, STUB[cmd].method);
       expect(dispatchFreeholdCommand(server.sim, session, cmd, { cmd, ...payload }, pid)).toBe(
         false,
       );
@@ -624,7 +630,7 @@ describe('freeholds wire: lit realm dispatch reaches the Sim methods', () => {
       // ever send 'friends', so each value needs its own accepted arm.
       process.env.FREEHOLDS_ENABLED = '1';
       const { server, session, pid } = housingSession();
-      const stub = vi.spyOn(server.sim, 'setVisitPolicy');
+      const stub = releasedSpyOn(server.sim, 'setVisitPolicy');
       expect(
         dispatchFreeholdCommand(
           server.sim,
@@ -641,7 +647,7 @@ describe('freeholds wire: lit realm dispatch reaches the Sim methods', () => {
   it('the widest opaque ids the bound admits still reach the stub (the bound is not over-tight)', () => {
     process.env.FREEHOLDS_ENABLED = '1';
     const { server, session, pid } = housingSession();
-    const stub = vi.spyOn(server.sim, 'setFreeholdBuildPresence');
+    const stub = releasedSpyOn(server.sim, 'setFreeholdBuildPresence');
     expect(WIDEST_ID).toHaveLength(64);
     const msg = {
       cmd: 'set_freehold_build_presence',
@@ -660,7 +666,7 @@ describe('freeholds wire: lit realm dispatch reaches the Sim methods', () => {
     process.env.FREEHOLDS_ENABLED = '1';
     const refusals = recordingRefusalSink();
     const { server, fc, session } = housingSession();
-    const stub = vi.spyOn(server.sim, 'placeFurnishing');
+    const stub = releasedSpyOn(server.sim, 'placeFurnishing');
     session.selfHeavyDirty = false;
     server.handleMessage(
       session,
@@ -677,14 +683,14 @@ describe('freeholds wire: lit realm dispatch reaches the Sim methods', () => {
     process.env.FREEHOLDS_ENABLED = '1';
     const { server, session, pid } = housingSession();
     for (const cmd of TEN_TOKENS) {
-      const stub = vi.spyOn(server.sim, STUB[cmd].method);
+      const stub = releasedSpyOn(server.sim, STUB[cmd].method);
       expect(
         dispatchFreeholdCommand(server.sim, session, cmd, { cmd, ...WELL_FORMED[cmd] }, pid),
         cmd,
       ).toBe(true);
       expect(stub).toHaveBeenCalledTimes(1);
     }
-    const junk = vi.spyOn(server.sim, 'sellAllJunk');
+    const junk = releasedSpyOn(server.sim, 'sellAllJunk');
     expect(
       dispatchFreeholdCommand(
         server.sim,
@@ -826,7 +832,7 @@ describe('freeholds wire: a jailed session cannot step through its own door', ()
     const refusals = recordingRefusalSink();
     const { server, fc, session } = housingSession();
     session.jailed = { returnPos: { x: 0, z: 0 }, returnFacing: 0 };
-    const enter = vi.spyOn(server.sim, 'freeholdEnter');
+    const enter = releasedSpyOn(server.sim, 'freeholdEnter');
     session.selfHeavyDirty = false;
     fc.sent.length = 0;
 
@@ -858,8 +864,8 @@ describe('freeholds wire: a jailed session cannot step through its own door', ()
     const refusals = recordingRefusalSink();
     const { server, fc, session, pid } = housingSession();
     session.jailed = { returnPos: { x: 0, z: 0 }, returnFacing: 0 };
-    const enter = vi.spyOn(server.sim, 'freeholdEnter');
-    const leave = vi.spyOn(server.sim, 'freeholdLeave');
+    const enter = releasedSpyOn(server.sim, 'freeholdEnter');
+    const leave = releasedSpyOn(server.sim, 'freeholdLeave');
 
     server.handleMessage(session, JSON.stringify({ t: 'cmd', cmd: 'freehold_enter', rid: 71 }));
     expect(enter).not.toHaveBeenCalled();
@@ -1026,7 +1032,7 @@ describe('freeholds wire: the two lit arms read nothing off the frame', () => {
       process.env.FREEHOLDS_ENABLED = '1';
       const refusals = recordingRefusalSink();
       const { server, fc, session, pid } = housingSession();
-      const target = vi.spyOn(server.sim, method);
+      const target = releasedSpyOn(server.sim, method);
       server.handleMessage(session, JSON.stringify({ t: 'cmd', cmd, ...SMUGGLED, rid: 93 }));
       expect(target).toHaveBeenCalledTimes(1);
       // Exactly one argument, the session's own pid: no smuggled owner, account
@@ -1079,8 +1085,8 @@ describe('Freehold Gate and Hearth Key real server dispatch', () => {
       const other = fakeWs();
       joinServer(server, other, 7202, 'Observer');
       server.sim.addItem('hearth_key', 1, pid);
-      const use = vi.spyOn(server.sim, 'useItem');
-      const enter = vi.spyOn(server.sim, 'freeholdEnter');
+      const use = releasedSpyOn(server.sim, 'useItem');
+      const enter = releasedSpyOn(server.sim, 'freeholdEnter');
       expect([...server.sim.entities.values()].some((e) => e.templateId === 'freehold_gate')).toBe(
         boot !== 'dark boot',
       );
@@ -1193,8 +1199,8 @@ describe('Freehold Gate and Hearth Key real server dispatch', () => {
       server.sim.freeholdKeyReadyAtMs.set(ownerKey, 9999999);
       const admission = vi.fn(() => true);
       server.sim.cfg.freeholdKeyAdmission = admission;
-      const use = vi.spyOn(server.sim, 'useItem');
-      const enter = vi.spyOn(server.sim, 'freeholdEnter');
+      const use = releasedSpyOn(server.sim, 'useItem');
+      const enter = releasedSpyOn(server.sim, 'freeholdEnter');
       const state = () => ({
         position: player.pos,
         entrySeq: player.dungeonEntrySeq,
@@ -1252,7 +1258,7 @@ describe('Freehold Gate and Hearth Key real server dispatch', () => {
       });
       const admission = vi.fn(() => true);
       server.sim.cfg.freeholdKeyAdmission = admission;
-      const use = vi.spyOn(server.sim, 'useItem');
+      const use = releasedSpyOn(server.sim, 'useItem');
       const refusals = recordingRefusalSink();
       server.sim.drainEvents();
       fc.sent.length = 0;
@@ -1312,7 +1318,7 @@ describe('Freehold Gate and Hearth Key real server dispatch', () => {
         deadlines: [...server.sim.freeholdKeyReadyAtMs],
       });
       const before = structuredClone(state());
-      const use = vi.spyOn(server.sim, 'useItem');
+      const use = releasedSpyOn(server.sim, 'useItem');
       server.handleMessage(
         session,
         JSON.stringify({ t: 'cmd', cmd: 'use', item: 'hearth_key', slot, accountId: 1 }),
@@ -1349,7 +1355,7 @@ describe('Freehold Gate inventory change drives heavy self snapshots', () => {
       }
       // The heavy block invokes this projection even when delta serialization
       // drops identical bytes. Observe work as well as the resulting payload.
-      const heavyProjection = vi.spyOn(server.sim, 'ownedMountsFor');
+      const heavyProjection = releasedSpyOn(server.sim, 'ownedMountsFor');
       server.sim.tickCount = 40 - (pid % 40) + 1;
       broadcast(server);
       expect(heavyProjection).toHaveBeenCalledExactlyOnceWith(pid);
@@ -1510,7 +1516,7 @@ it('silently sheds a live gate command and recovers only after a fresh user conf
       root.querySelector<HTMLButtonElement>('[data-focus-key="gate-enter"]')!.click();
     session.msgLanes.commandTokens = 0;
     session.msgLanes.lastRefillSec = Number.POSITIVE_INFINITY;
-    const authority = vi.spyOn(server.sim, 'freeholdEnter');
+    const authority = releasedSpyOn(server.sim, 'freeholdEnter');
     const before = { ...player.pos };
     prompt.open();
     enter();

@@ -95,6 +95,7 @@ import {
 import { captureMaterialStackSelection } from '../src/sim/material_stack_selection';
 import { type CharacterState, Sim } from '../src/sim/sim';
 import type { Entity } from '../src/sim/types';
+import { releasedSpyOn } from './helpers/released_spy';
 
 const GUILD_ID = 913;
 const BANKERS = ['bursar_fernando', 'bursar_petra_vell', 'bursar_aldous_crane'];
@@ -1385,7 +1386,7 @@ describe('the guild_create fee gate + the create/disband hooks', () => {
     const meta = server.sim.players.get(session.pid);
     if (!meta) throw new Error('missing meta');
     meta.copper = 150_000;
-    vi.spyOn(server.sim, 'chargeGuildCreationFeeFor').mockReturnValueOnce(0);
+    releasedSpyOn(server.sim, 'chargeGuildCreationFeeFor').mockReturnValueOnce(0);
     dispatch(server, session, { cmd: 'guild_create', name: 'Iron Vanguard' });
     await session.guildCreateSettlement;
 
@@ -1406,7 +1407,7 @@ describe('the guild_create fee gate + the create/disband hooks', () => {
     const meta = server.sim.players.get(session.pid);
     if (!meta) throw new Error('missing meta');
     meta.copper = 150_000;
-    vi.spyOn(server.sim, 'chargeGuildCreationFeeFor').mockImplementationOnce(() => {
+    releasedSpyOn(server.sim, 'chargeGuildCreationFeeFor').mockImplementationOnce(() => {
       meta.copper -= 5_000;
       return 5_000;
     });
@@ -1431,11 +1432,11 @@ describe('the guild_create fee gate + the create/disband hooks', () => {
     const meta = server.sim.players.get(session.pid);
     if (!meta) throw new Error('missing meta');
     meta.copper = 150_000;
-    vi.spyOn(server.sim, 'chargeGuildCreationFeeFor').mockImplementationOnce(() => {
+    releasedSpyOn(server.sim, 'chargeGuildCreationFeeFor').mockImplementationOnce(() => {
       meta.copper -= 5_000;
       return GUILD_CREATION_FEE_COPPER;
     });
-    const kickSpy = vi.spyOn(priv(server), 'kickSession').mockResolvedValue(undefined);
+    const kickSpy = releasedSpyOn(priv(server), 'kickSession').mockResolvedValue(undefined);
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
     dispatch(server, session, { cmd: 'guild_create', name: 'Iron Vanguard' });
@@ -1501,7 +1502,7 @@ describe('the guild_create fee gate + the create/disband hooks', () => {
           ),
         ).toBe(true);
       }
-      const chargeSpy = vi.spyOn(server.sim, 'chargeGuildCreationFeeFor');
+      const chargeSpy = releasedSpyOn(server.sim, 'chargeGuildCreationFeeFor');
 
       dispatch(server, session, { cmd: 'guild_create', name: 'Iron Vanguard' });
       await session.guildCreateSettlement;
@@ -1639,7 +1640,7 @@ describe('the guild_create fee gate + the create/disband hooks', () => {
     session.leaseNonce = 'lease:refused';
     const meta = server.sim.players.get(session.pid);
     if (!meta) throw new Error('missing meta');
-    const chargeSpy = vi.spyOn(server.sim, 'chargeGuildCreationFeeFor');
+    const chargeSpy = releasedSpyOn(server.sim, 'chargeGuildCreationFeeFor');
     for (const result of [
       { durability: 'not_committed', reason: 'name_taken' } as const,
       {
@@ -1683,7 +1684,7 @@ describe('the guild_create fee gate + the create/disband hooks', () => {
         growthRefusals++;
       },
     });
-    const kickSpy = vi.spyOn(priv(server), 'kickSession').mockResolvedValue(undefined);
+    const kickSpy = releasedSpyOn(priv(server), 'kickSession').mockResolvedValue(undefined);
     const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     try {
       dispatch(server, session, { cmd: 'guild_create', name: 'Iron Vanguard' });
@@ -1900,11 +1901,13 @@ describe('the guild_create fee gate + the create/disband hooks', () => {
     );
     const order: string[] = [];
     const created = priv(server).social.tx.onGuildCreated.bind(priv(server).social.tx);
-    vi.spyOn(priv(server).social.tx, 'onGuildCreated').mockImplementation((...args: unknown[]) => {
-      const [characterId, guildId] = args as [number, number];
-      order.push('created-hook');
-      created(characterId, guildId);
-    });
+    releasedSpyOn(priv(server).social.tx, 'onGuildCreated').mockImplementation(
+      (...args: unknown[]) => {
+        const [characterId, guildId] = args as [number, number];
+        order.push('created-hook');
+        created(characterId, guildId);
+      },
+    );
     dbMock.saveCharacterAndMarketState.mockImplementationOnce(async () => {
       order.push('final-save');
       return true;
@@ -1947,7 +1950,7 @@ describe('the guild_create fee gate + the create/disband hooks', () => {
       await blocked;
       return { durability: 'not_committed', reason: 'name_taken' };
     });
-    vi.spyOn(priv(server), 'kickSession').mockResolvedValue(undefined);
+    releasedSpyOn(priv(server), 'kickSession').mockResolvedValue(undefined);
     const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
     dispatch(server, origin, { cmd: 'guild_create', name: 'Iron Vanguard' });
@@ -1980,7 +1983,7 @@ describe('the guild_create fee gate + the create/disband hooks', () => {
         error: new Error('commit answer lost'),
       }),
     );
-    const kickSpy = vi.spyOn(priv(server), 'kickSession').mockResolvedValue(undefined);
+    const kickSpy = releasedSpyOn(priv(server), 'kickSession').mockResolvedValue(undefined);
     const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
     dispatch(server, session, { cmd: 'guild_create', name: 'Iron Vanguard' });
@@ -2004,9 +2007,9 @@ describe('the guild_create fee gate + the create/disband hooks', () => {
     const meta = server.sim.players.get(session.pid);
     if (!meta) throw new Error('missing meta');
     meta.copper = 150_000;
-    vi.spyOn(session.bankLedgerJournal.outbox, 'canAcknowledge').mockReturnValue(false);
-    const membershipSpy = vi.spyOn(server.sim, 'setPlayerGuildMembership');
-    vi.spyOn(priv(server), 'kickSession').mockResolvedValue(undefined);
+    releasedSpyOn(session.bankLedgerJournal.outbox, 'canAcknowledge').mockReturnValue(false);
+    const membershipSpy = releasedSpyOn(server.sim, 'setPlayerGuildMembership');
+    releasedSpyOn(priv(server), 'kickSession').mockResolvedValue(undefined);
     const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
     dispatch(server, session, { cmd: 'guild_create', name: 'Iron Vanguard' });
@@ -2041,9 +2044,9 @@ describe('the guild_create fee gate + the create/disband hooks', () => {
       guildId: GUILD_ID,
       feeBatchKey: 'ledger:different-durable-fee',
     });
-    const refundSpy = vi.spyOn(server.sim, 'refundGuildCreationFeeFor');
-    const membershipSpy = vi.spyOn(server.sim, 'setPlayerGuildMembership');
-    const kickSpy = vi.spyOn(priv(server), 'kickSession').mockResolvedValue(undefined);
+    const refundSpy = releasedSpyOn(server.sim, 'refundGuildCreationFeeFor');
+    const membershipSpy = releasedSpyOn(server.sim, 'setPlayerGuildMembership');
+    const kickSpy = releasedSpyOn(priv(server), 'kickSession').mockResolvedValue(undefined);
     const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
     dispatch(server, session, { cmd: 'guild_create', name: 'Iron Vanguard' });
@@ -3008,7 +3011,7 @@ describe('guild bank incident counters at their real emission sites', () => {
         ? dbMock.saveCharacterAndMarketState
         : dbMock.saveCharacterAndGuildBankState;
       save.mockRejectedValueOnce(refusal);
-      const kickSpy = vi.spyOn(priv(server), 'kickSession').mockResolvedValue(undefined);
+      const kickSpy = releasedSpyOn(priv(server), 'kickSession').mockResolvedValue(undefined);
       const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       try {
         await expect(priv(server).saveCharacter(session, { withMarket })).rejects.toBe(refusal);
@@ -3076,7 +3079,7 @@ describe('guild bank incident counters at their real emission sites', () => {
     });
     const refusal = new BankLedgerGrowthLimitExceeded(10_000_000, 2, 10_000_000);
     dbMock.saveCharacterAndGuildBankState.mockRejectedValueOnce(refusal);
-    const kickSpy = vi.spyOn(priv(server), 'kickSession').mockResolvedValue(undefined);
+    const kickSpy = releasedSpyOn(priv(server), 'kickSession').mockResolvedValue(undefined);
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     try {
       await expect(priv(server).saveCharacter(session)).rejects.toBe(refusal);
@@ -3247,7 +3250,7 @@ describe('guild bank incident counters at their real emission sites', () => {
     officerSetup(server, session);
     const rec = recordingIncidents();
     setGameMetricsCounters(rec.sink);
-    vi.spyOn(session.bankLedgerJournal.outbox, 'commit').mockImplementationOnce(() => {
+    releasedSpyOn(session.bankLedgerJournal.outbox, 'commit').mockImplementationOnce(() => {
       throw new Error('projection rejected');
     });
     const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
@@ -3501,7 +3504,7 @@ describe('adminPurgeGuildBankSlot (the operator escape hatch)', () => {
     stampMember(server, session, 'officer');
     seatBook(server, { treasury: 0, inventory: [{ ...DORMANT_SLOT }], purchasedSlots: 24 });
     let releaseLookup!: () => void;
-    vi.spyOn(priv(server).socialDb, 'guildMembersFresh').mockImplementationOnce(
+    releasedSpyOn(priv(server).socialDb, 'guildMembersFresh').mockImplementationOnce(
       () =>
         new Promise((resolve) => {
           releaseLookup = () => resolve([{ id: session.characterId, rank: 'officer' }]);
