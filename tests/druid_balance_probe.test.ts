@@ -10,6 +10,7 @@ import {
 } from '../scripts/druid_balance_probe';
 import { equipReferenceEpicKitForDev } from '../src/sim/dev/bis_gear';
 import { Sim } from '../src/sim/sim';
+import { bandAt } from './helpers/balance_diet';
 
 // The fixture loadout the live-mob and Bruin probes equip (scripts/
 // druid_balance_probe.ts runDruidLiveMobProbe / bruinFixture:
@@ -119,6 +120,16 @@ const BRUIN_TANK_MEASURED = {
   marrowbreakSnapThreat: 990.99,
 } as const;
 const BAND = 0.08;
+
+// PR-tier diet vs the nightly full sweep (docs/qa-gate.md, "The balance-harness
+// diet"): the PR long-sims lane runs the capstone matrix at the first fixed seed
+// only, and WOC_FULL_BALANCE_SWEEP=1 (nightly only) runs all eight, the matrix
+// the case below defines. The matrix bands are pinned per configuration via
+// band(full, diet): the eight-seed bands keep the one-seed bands' relative width
+// around their own measurement (2026-09-27: moongrove_1t 155.82 at one seed and
+// 149.27 at eight, wildfang 198.89 and 191.86); re-pin each from its own actuals.
+const FULL_SWEEP = process.env.WOC_FULL_BALANCE_SWEEP === '1';
+const band = bandAt(FULL_SWEEP);
 const within = (measured: number) =>
   [measured * (1 - BAND), measured * (1 + BAND)] as [number, number];
 
@@ -137,39 +148,48 @@ function fixtureEquipment(
 }
 
 describe('Druid v0.29 balance and live-mob harness', () => {
-  it('defines the PDF-required 123-second, eight-seed, all-capstone matrix', () => {
-    expect(DRUID_PROBE_SECONDS).toBe(123);
-    expect(DRUID_PROBE_SEEDS).toHaveLength(8);
-    expect(Object.keys(DRUID_CAPSTONES)).toEqual(['naturesFury', 'wildApex', 'quickening']);
+  it(
+    'defines the PDF-required 123-second, eight-seed, all-capstone matrix',
+    () => {
+      expect(DRUID_PROBE_SECONDS).toBe(123);
+      expect(DRUID_PROBE_SEEDS).toHaveLength(8);
+      expect(Object.keys(DRUID_CAPSTONES)).toEqual(['naturesFury', 'wildApex', 'quickening']);
 
-    const results = runDruidBalanceMatrix([DRUID_PROBE_SEEDS[0]]);
-    expect(results).toHaveLength(12);
-    expect(new Set(results.map((result) => result.profile))).toEqual(
-      new Set(['moongrove_1t', 'moongrove_3t', 'wildfang', 'groveheart']),
-    );
-    expect(new Set(results.map((result) => result.capstone))).toEqual(
-      new Set(['naturesFury', 'wildApex', 'quickening']),
-    );
+      const results = runDruidBalanceMatrix(
+        FULL_SWEEP ? DRUID_PROBE_SEEDS : [DRUID_PROBE_SEEDS[0]],
+      );
+      expect(results).toHaveLength(12);
+      expect(new Set(results.map((result) => result.profile))).toEqual(
+        new Set(['moongrove_1t', 'moongrove_3t', 'wildfang', 'groveheart']),
+      );
+      expect(new Set(results.map((result) => result.capstone))).toEqual(
+        new Set(['naturesFury', 'wildApex', 'quickening']),
+      );
 
-    const best = bestDruidBuilds(results);
-    const moongrove = best.find((result) => result.profile === 'moongrove_1t');
-    const wildfang = best.find((result) => result.profile === 'wildfang');
-    // This probe runs a fixed level-20 loadout, a low-SP proxy for Balance (spell
-    // power ~105). Balance is re-seated onto spell-power coefficients calibrated
-    // so its real searched best-in-slot (spell power ~150) lands at the ~200 DPS
-    // Nythraxis anchor; on this proxy it reads ~160. Wildfang (agility melee) is
-    // not under-geared here, so the arms are not directly comparable on the proxy
-    // (real BiS parity is the montecarlo's job). These bands guard the proxy only.
-    expect(moongrove?.value).toBeGreaterThanOrEqual(140);
-    expect(moongrove?.value).toBeLessThanOrEqual(185);
-    expect(wildfang?.value).toBeGreaterThanOrEqual(165);
-    expect(wildfang?.value).toBeLessThanOrEqual(205);
-    expect(best.find((result) => result.profile === 'moongrove_3t')?.value).toBeGreaterThan(0);
-    expect(best.find((result) => result.profile === 'groveheart')?.value).toBeGreaterThan(0);
-    // 12 profile x capstone combos over a 123s window: ~90-105s solo. In the
-    // long-sims lane (workers=2) two heavy suites share the runner, roughly
-    // doubling wall time (run 31288946173 killed this at 150s mid-matrix).
-  }, 420_000);
+      const best = bestDruidBuilds(results);
+      const moongrove = best.find((result) => result.profile === 'moongrove_1t');
+      const wildfang = best.find((result) => result.profile === 'wildfang');
+      // This probe runs a fixed level-20 loadout, a low-SP proxy for Balance (spell
+      // power ~105). Balance is re-seated onto spell-power coefficients calibrated
+      // so its real searched best-in-slot (spell power ~150) lands at the ~200 DPS
+      // Nythraxis anchor; on this proxy it reads ~160. Wildfang (agility melee) is
+      // not under-geared here, so the arms are not directly comparable on the proxy
+      // (real BiS parity is the montecarlo's job). These bands guard the proxy only.
+      expect(moongrove?.value).toBeGreaterThanOrEqual(band(134, 140));
+      expect(moongrove?.value).toBeLessThanOrEqual(band(178, 185));
+      expect(wildfang?.value).toBeGreaterThanOrEqual(band(159, 165));
+      expect(wildfang?.value).toBeLessThanOrEqual(band(198, 205));
+      expect(best.find((result) => result.profile === 'moongrove_3t')?.value).toBeGreaterThan(0);
+      expect(best.find((result) => result.profile === 'groveheart')?.value).toBeGreaterThan(0);
+      // 12 profile x capstone combos over a 123s window: ~90-105s solo. In the
+      // long-sims lane (workers=2) two heavy suites share the runner, roughly
+      // doubling wall time (run 31288946173 killed this at 150s mid-matrix).
+      // The nightly eight-seed sweep is eight times that work (the eight seeds
+      // measured 994 s of probe time together on 2026-09-27), so its arm carries
+      // about 2.4x headroom over that.
+    },
+    FULL_SWEEP ? 2_400_000 : 420_000,
+  );
 
   it('the live-mob and Bruin fixtures wear the pinned reference loadout', () => {
     // Identity first: every band below is conditioned on this gear, and the

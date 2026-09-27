@@ -491,6 +491,7 @@ describe('the long-sims lane (Phase 4)', () => {
       .filter((f) => readFileSync(path.join(REPO_ROOT, f), 'utf8').includes(needle))
       .sort();
     expect(readers).toEqual([
+      'tests/druid_balance_probe.test.ts',
       'tests/hunter_dps_balance.test.ts',
       'tests/owned_class_balance_dps_metrics.test.ts',
       'tests/owned_class_balance_druid_bands.test.ts',
