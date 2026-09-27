@@ -409,3 +409,39 @@ frames:
 So the two digests were re-minted in `acceptance.json`, every occurrence (the producer
 list carries `pr_shot_targets.mjs` twice), the `9f72819c58` precedent; no frame, sidecar
 or manifest changed, and `tests/freehold_capture_contract.test.ts` passes 102 of 102.
+
+## The second 2026-09-26 re-hash (after the sync of `release/v0.44.0` at `09639d4ae9`)
+
+The 2026-09-25 set is still the current capture set. Merge `8a330b3489` took 548 release
+commits (the Eastbrook ferry, the Wanted board, custom guild ranks, the market History tab
+and more) and moved twelve of the 67 sealed inputs: `src/render/renderer.ts`,
+`entity_labels.ts`, `characters/assets.ts`, `zone_prewarm_groups.ts`, `prewarm_policy.ts`
+and `foliage.ts`; `src/styles/components.css` and `hud.mobile.css`;
+`scripts/pr_shot_targets.mjs`; `src/sim/instances/dungeons.ts` and `src/sim/world.ts`; and
+`src/game/camera_follow.ts`. The CSS and the release's HUD work made a re-shoot the
+expected answer, so the decision was taken on a probe.
+
+The after leg was shot at `8a330b3489` from a frozen detached worktree (Vite on the spare
+port 5183, the same harness and defaults, into the session scratchpad, not committed) and
+compared with the sealed after frames:
+
+- **Room frames:** the three Inn Room frames differ from the sealed ones on 0.078, 0.095
+  and 0.050 percent of pixels (desktop, compact, tablet), the level an unchanged tree
+  reaches run to run.
+- **Gate frames:** read side by side by eye on all three variants. Every HUD element is
+  present and in place: the prompt with its selected tab, chat, the unit frame, the action
+  bar, the minimap with its compass and clock, the menu column, the store badge and, on the
+  touch variants, the joystick, the action buttons and the target and swap controls. The
+  frames differ in the wall-clock time of day (the HUD clock and the sky) and the stance's
+  camera yaw, which vary run to run. The merge audit's UI lane read the same from the code:
+  no release rule touches the gate prompt, and the ferry HUD shows only within 45 yd of a
+  docked ferry while the gate stands about 77 yd from the nearest pier.
+- **Not probed:** the three Cottage frames. Their grant needs the loopback game server,
+  which the probe did not run; they draw the same room renderer, HUD and floor bands the
+  Inn Room frames do.
+
+So the twelve digests were re-minted in `acceptance.json`, every occurrence (the producer
+list carries `pr_shot_targets.mjs` twice, so thirteen lines), with no sealed input changed
+between the probe commit and the re-hash; no frame, sidecar or manifest changed, and
+`tests/freehold_capture_contract.test.ts` passes 102 of 102. The probe worktree was
+removed afterwards.

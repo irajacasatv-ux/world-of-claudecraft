@@ -13,7 +13,7 @@
       },
       {
         "path": "scripts/pr_shot_targets.mjs",
-        "sha256": "a26a876365fe15bc8166c6b5ac835ac054743d63b4066dad3b0161649f9c8c92"
+        "sha256": "87825933ef05483916e3ba916e79601ee0b41618fc2559ddd66b04dbf12dc330"
       },
       {
         "path": "scripts/pr_screenshots.mjs",
@@ -123,7 +123,7 @@
   "sourceInputs": [
     {
       "path": "src/render/renderer.ts",
-      "sha256": "b0330cd1fba3d0e384a10e734c0f50ff39e5b749395832f86e95d487404c5754"
+      "sha256": "2e171ad1459a7392da5456ea185c35432b09d43be184466d22a5355dc6a87800"
     },
     {
       "path": "src/render/dungeon.ts",
@@ -139,7 +139,7 @@
     },
     {
       "path": "src/render/entity_labels.ts",
-      "sha256": "914e85deeffe660542c72f0c7cf9668564b4052f18eb690618af6d62f6036ea5"
+      "sha256": "e5260776702c148232d3e96d9f8dbf9b03eadf6d4073f95b8607aba59cce87eb"
     },
     {
       "path": "src/render/nameplate_painter.ts",
@@ -151,7 +151,7 @@
     },
     {
       "path": "src/render/characters/assets.ts",
-      "sha256": "484b266c0abf8ff065785e6cfaa1677b5a5bb67d91ded1361fe6671066d94d2b"
+      "sha256": "9f531131be7123c12dc1b0de58bd57d45942c84b58f6788228da4d229363fec1"
     },
     {
       "path": "src/render/characters/streaming_policy_core.ts",
@@ -167,7 +167,7 @@
     },
     {
       "path": "src/render/zone_prewarm_groups.ts",
-      "sha256": "9cebe737fae1ad21acb38ea9e3994d26e4226ebec49e1cdf03dcf9dd936a644c"
+      "sha256": "94a959e7514c049ecc29b581bb1fbdcfea548c343787dca88657a24c9e223500"
     },
     {
       "path": "src/render/freehold/wall_cutaway.ts",
@@ -215,11 +215,11 @@
     },
     {
       "path": "src/styles/components.css",
-      "sha256": "6e10eb4a4c06f680322aa956b75fc1ec46d6077489493de1e35d061c73563e4e"
+      "sha256": "a28c42c207f12e92d72f66b688fe441c1e0a2f5589dde74cdcd711955f0cff12"
     },
     {
       "path": "src/styles/hud.mobile.css",
-      "sha256": "f5b87e169c3a2ae43ed6db62a1e41f4390bbdcd9fb584efbe53bd0b73c8aa675"
+      "sha256": "76fa65e0da80f3fc05a5ca94d32d8930384b691a1958780b8b13df85ab5d154a"
     },
     {
       "path": "scripts/lib/freehold_capture_notices.mjs",
@@ -231,7 +231,7 @@
     },
     {
       "path": "scripts/pr_shot_targets.mjs",
-      "sha256": "a26a876365fe15bc8166c6b5ac835ac054743d63b4066dad3b0161649f9c8c92"
+      "sha256": "87825933ef05483916e3ba916e79601ee0b41618fc2559ddd66b04dbf12dc330"
     },
     {
       "path": "scripts/pr_screenshots.mjs",
@@ -267,7 +267,7 @@
     },
     {
       "path": "src/sim/instances/dungeons.ts",
-      "sha256": "a4f2a730d5fc23773ddcf3d47c81ccba691c24acae3845ee085b3f25e18e8216"
+      "sha256": "23cb9e9a93057573c4e57dd6be3f7bf546243e12e10760d19ac4472486c352a2"
     },
     {
       "path": "src/sim/content/freehold/dungeons.ts",
@@ -275,7 +275,7 @@
     },
     {
       "path": "src/sim/world.ts",
-      "sha256": "6c894d2fc06e745b537cf09145983564fd1d3f9dd49a43846290ba210020b687"
+      "sha256": "bbbeb2eefb9d8a417fcc69127ac13bac6e6906a66843adc550ee12b515bb4b49"
     },
     {
       "path": "src/ui/panel_key_guard.ts",
@@ -307,7 +307,7 @@
     },
     {
       "path": "src/render/prewarm_policy.ts",
-      "sha256": "e448b636b74ce6a8c048285793503597d0339bc06c5720ea43813db89b8e8230"
+      "sha256": "11b60a75bcb907652c528f393075931d7dffdfcdae2b75d9fd66bff704cc5be1"
     },
     {
       "path": "docs/freeholds/art/space-measurements.json",
@@ -335,7 +335,7 @@
     },
     {
       "path": "src/render/foliage.ts",
-      "sha256": "182f65cf86207fbbc481a64d4ff909d98ba818d2d1d9f757edc1808aaf4d5c0d"
+      "sha256": "e662868e1998c28f2610eec093dad4394db4ec3b8a6bfa893570359d94afea93"
     },
     {
       "path": "src/sim/world_object_bootstrap.ts",
@@ -383,7 +383,7 @@
     },
     {
       "path": "src/game/camera_follow.ts",
-      "sha256": "4447d1057684f8cf007f1ab191362dfbab2aa075995ac5ac86872d895f1f96c9"
+      "sha256": "4fd8895b20acaf1912a8db4752b32c64d6386c8608788da68bd52021210d673a"
     },
     {
       "path": "src/game/offline_world_config.ts",
