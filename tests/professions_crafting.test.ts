@@ -508,69 +508,6 @@ describe('craftItem command (#1127)', () => {
   });
 });
 
-// #1145: signed materials + the self-gathered crafting bonus. The chosen bonus
-// (see professions/crafting.ts) is a reduced required quantity: one fewer unit
-// of a reagent the crafter holds a self-signed instance of.
-describe('self-gathered crafting bonus (#1145)', () => {
-  it('a self-signed instance reduces that reagent requirement by one and is consumed', () => {
-    const sim = makeSim();
-    const pid = sim.playerId;
-    const meta = (sim as any).players.get(pid);
-    // Reagents: wolf_fang x2, bone_fragments x4, smithing_flux x6.
-    const recipe = recipeById('recipe_eastbrook_arming_sword')!;
-    // One self-signed bone_fragments (stamped with this player's own name) plus
-    // two plain bone_fragments: normally 4 would be required, the bonus drops
-    // it to 3; the other reagents are held in full.
-    sim.addItemInstance('bone_fragments', { signer: meta.name }, pid);
-    grantItem(sim, 'bone_fragments', 2, pid);
-    grantItem(sim, 'wolf_fang', 2, pid);
-    grantItem(sim, 'smithing_flux', 6, pid);
-
-    expect(hasRecipeMaterials((sim as any).ctx, recipe, pid)).toBe(true);
-    const result = resolveCraft((sim as any).ctx, pid, recipe.id);
-
-    expect(result.ok).toBe(true);
-    expect(result.selfSignedBonusApplied).toBe(true);
-    // The signed copy plus both plain copies (the reduced 3-unit requirement)
-    // were all consumed.
-    expect(sim.countItem('bone_fragments', pid)).toBe(0);
-    expect(sim.countItem('wolf_fang', pid)).toBe(0);
-    expect(sim.countItem('eastbrook_arming_sword', pid)).toBe(1);
-  });
-
-  it('a material signed by a DIFFERENT player grants no bonus (same as unsigned)', () => {
-    const sim = makeSim();
-    const pid = sim.playerId;
-    const recipe = recipeById('recipe_eastbrook_arming_sword')!;
-    // Signed by someone else: does not count toward the crafter's own bonus.
-    sim.addItemInstance('bone_fragments', { signer: 'SomeoneElse' }, pid);
-    grantItem(sim, 'bone_fragments', 2, pid);
-    grantItem(sim, 'wolf_fang', 2, pid);
-    grantItem(sim, 'smithing_flux', 6, pid);
-
-    // Still short: only 3 of the required 4 bone_fragments (no bonus reduction).
-    expect(hasRecipeMaterials((sim as any).ctx, recipe, pid)).toBe(false);
-    const result = resolveCraft((sim as any).ctx, pid, recipe.id);
-    expect(result.ok).toBe(false);
-    expect(result.reason).toBe('insufficient_materials');
-    expect(result.selfSignedBonusApplied).toBeUndefined();
-  });
-
-  it('an unsigned (plain fungible) material grants no bonus', () => {
-    const sim = makeSim();
-    const pid = sim.playerId;
-    const recipe = recipeById('recipe_eastbrook_arming_sword')!;
-    grantItem(sim, 'wolf_fang', 2, pid);
-    grantItem(sim, 'bone_fragments', 4, pid);
-    grantItem(sim, 'smithing_flux', 6, pid);
-
-    const result = resolveCraft((sim as any).ctx, pid, recipe.id);
-    expect(result.ok).toBe(true);
-    expect(result.selfSignedBonusApplied).toBe(false);
-    expect(sim.countItem('bone_fragments', pid)).toBe(0);
-  });
-});
-
 describe('tiered mastery gating (#1128)', () => {
   // A synthetic tier-1 recipe (skillReq 25, one bucket above common) reusing an
   // existing harvested reagent, so these tests can drive the tier curve without

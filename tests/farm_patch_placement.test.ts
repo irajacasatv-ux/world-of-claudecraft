@@ -429,10 +429,8 @@ describe('farm patch placement: every bed sits on ground a player can work', () 
         `${bed.id} at (${bed.x},${bed.z}) clears the water by ${clearance.toFixed(2)}yd, needs ${WATER_MARGIN}`,
       ).toBe(true);
     }
-  });
-
-  it('the dry-land arm rejects a lake floor and the shallows, so it can fail', () => {
-    // Assert the property first (these points ARE wet), then that the arm says so.
+    // The arm can fail: it rejects a lake floor and the shallows. Assert the
+    // property first (these points ARE wet), then that the arm says so.
     expect(isInWaterBody(ON_MIRROR_LAKE_FLOOR.x, ON_MIRROR_LAKE_FLOOR.z)).toBe(true);
     expect(groundHeight(ON_MIRROR_LAKE_FLOOR.x, ON_MIRROR_LAKE_FLOOR.z, WORLD_SEED)).toBeLessThan(
       waterAt(ON_MIRROR_LAKE_FLOOR.x, ON_MIRROR_LAKE_FLOOR.z),

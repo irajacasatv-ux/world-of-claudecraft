@@ -1055,7 +1055,9 @@ describe('boss loot and encounter resets', () => {
     expect(sim.countItem('greyjaw_hide_boots', b)).toBe(1);
   });
 
-  it('treats unanswered need-greed rolls as pass at timeout', () => {
+  it('treats unanswered need-greed rolls as pass at timeout and returns the loot for whoever loots next', () => {
+    // One 61-second timeout run serves both halves: the unanswered roll resolves
+    // as everyone passing, and the item goes back on the corpse as open loot.
     const sim = makeLootSim();
     const a = sim.playerId;
     const b = sim.addPlayer('mage', 'Bert');
@@ -1083,6 +1085,14 @@ describe('boss loot and encounter resets', () => {
         (e) => e.type === 'loot' && e.text === 'Everyone passed on [[i:greyjaw_hide_boots]].',
       ),
     ).toBe(true);
+    expect(mob.loot?.items).toEqual([{ itemId: 'greyjaw_hide_boots', count: 1, openToAll: true }]);
+
+    sim.events.length = 0;
+    sim.lootCorpse(mob.id, a);
+
+    expect(sim.countItem('greyjaw_hide_boots', a)).toBe(1);
+    expect(mob.loot).toBeNull();
+    expect(sim.events.some((e) => e.type === 'lootRoll')).toBe(false);
   }, 90_000);
 
   it('returns all-passed need-greed loot to the corpse as open loot', () => {
@@ -1153,36 +1163,6 @@ describe('boss loot and encounter resets', () => {
     expect(sim.countItem('greyjaw_hide_boots', a)).toBe(0);
     expect(sim.countItem('greyjaw_hide_boots', b)).toBe(0);
     expect(sim.events.some((e) => e.type === 'error' && e.text.includes('permission'))).toBe(false);
-    expect(sim.events.some((e) => e.type === 'lootRoll')).toBe(false);
-  });
-
-  it('returns timed-out need-greed loot to the corpse for whoever loots next', () => {
-    const sim = makeLootSim();
-    const a = sim.playerId;
-    const b = sim.addPlayer('mage', 'Bert');
-    sim.partyInvite(b, a);
-    sim.partyAccept(b);
-    teleportTo(sim, 20, 20, a);
-    teleportTo(sim, 21, 20, b);
-    const mob = createMob(990108, MOBS.forest_wolf, 2, { x: 20, y: 0, z: 22 });
-    mob.dead = true;
-    mob.corpseTimer = FRESH_CORPSE_TIMER;
-    mob.lootable = true;
-    mob.tappedById = a;
-    mob.loot = { copper: 0, items: [{ itemId: 'greyjaw_hide_boots', count: 1 }] };
-    sim.entities.set(mob.id, mob);
-
-    sim.events.length = 0;
-    sim.lootCorpse(mob.id, a);
-    for (let i = 0; i < 61 * 20; i++) sim.tick();
-
-    expect(mob.loot?.items).toEqual([{ itemId: 'greyjaw_hide_boots', count: 1, openToAll: true }]);
-
-    sim.events.length = 0;
-    sim.lootCorpse(mob.id, a);
-
-    expect(sim.countItem('greyjaw_hide_boots', a)).toBe(1);
-    expect(mob.loot).toBeNull();
     expect(sim.events.some((e) => e.type === 'lootRoll')).toBe(false);
   });
 

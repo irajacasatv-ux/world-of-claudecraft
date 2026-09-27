@@ -2,8 +2,8 @@
   "__provenance": {
     "run": "34168361798",
     "harvested": "2026-09-08",
-    "files": 4943,
-    "harvestedFiles": 3910,
+    "files": 4942,
+    "harvestedFiles": 3909,
     "carried": {
       "tests/ability_imbue_text.test.ts": {
         "ms": 1954,
@@ -12999,7 +12999,6 @@
   "tests/quest_recipe_rewards.test.ts": 1938,
   "tests/quest_repeat_repro.test.ts": 1408,
   "tests/quest_reward.test.ts": 1534,
-  "tests/quest_rewards.test.ts": 35,
   "tests/quest_state_optimistic.test.ts": 11,
   "tests/quest_strip_controller.test.ts": 111,
   "tests/quest_strip_core.test.ts": 29,

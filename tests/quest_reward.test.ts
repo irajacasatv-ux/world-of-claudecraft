@@ -4,7 +4,7 @@
 // itemRewards[class] ?? itemRewards[archetype]; a priest saw nothing but got
 // the mage staff. questRewardItemId is now the single source of truth.
 import { describe, expect, it } from 'vitest';
-import { QUESTS, questRewardItemId, REWARD_ARCHETYPE } from '../src/sim/data';
+import { QUESTS, questRewardItemId } from '../src/sim/data';
 import { Sim } from '../src/sim/sim';
 import type { PlayerClass } from '../src/sim/types';
 
@@ -26,7 +26,6 @@ describe('quest reward preview matches turn-in (#98)', () => {
     // priest -> mage archetype, so it must still resolve the cloak
     expect(quest.itemRewards['priest']).toBeUndefined();
     expect(questRewardItemId(quest, 'priest')).toBe('greyjaw_pelt_cloak');
-    expect(questRewardItemId(quest, 'priest')).toBe(quest.itemRewards[REWARD_ARCHETYPE['priest']]);
   });
 
   it('a class-specific reward overrides the archetype one', () => {

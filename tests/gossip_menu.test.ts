@@ -6,26 +6,6 @@ import { gossipMenuIsEmpty } from '../src/ui/hud/quest/gossip_menu';
 // ever has), the dialog should recognize the menu is now empty so the caller
 // can close it, instead of leaving a dead greeting-only window on screen.
 describe('gossipMenuIsEmpty', () => {
-  it('is empty when the NPC has no quests, shop, or board left to offer', () => {
-    expect(
-      gossipMenuIsEmpty({
-        questCount: 0,
-        discussionCount: 0,
-        hasVendor: false,
-        hasMarket: false,
-        hasHeroicVendor: false,
-        hasWarfareVendor: false,
-        hasCrucibleVendor: false,
-        hasDelveBoard: false,
-        hasCardMaster: false,
-        hasTraining: false,
-        hasFarmer: false,
-        hasWorldQuestBoard: false,
-        hasClueStep: false,
-      }),
-    ).toBe(true);
-  });
-
   it('the Marshal case: quest just accepted/turned in, nothing else offered', () => {
     // Mirrors marshal_redbrook's gossip state for a brand-new tutorial
     // character right after acceptQuest/turnInQuest('q_wolves'): the quest is

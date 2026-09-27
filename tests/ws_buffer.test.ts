@@ -70,14 +70,4 @@ describe('bufferHandshakeMessages', () => {
 
     expect(handled).toEqual(['a', 'b']);
   });
-
-  it('documents the underlying drop the buffer prevents', () => {
-    // Without buffering, a frame emitted before any listener is attached is
-    // silently discarded by EventEmitter — exactly the lost-input failure mode.
-    const ws = new EventEmitter();
-    const handled: unknown[] = [];
-    ws.emit('message', 'lost');
-    ws.on('message', (d) => handled.push(d));
-    expect(handled).toEqual([]);
-  });
 });

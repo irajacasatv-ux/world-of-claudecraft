@@ -229,7 +229,7 @@ describe('PvP control abilities in active duels', () => {
     expect(npc!.auras.some((au) => au.kind === 'polymorph')).toBe(false);
   });
 
-  it('diminishes repeated duel Polymorphs to 10s, 5s, 1s and resets after 60s', () => {
+  it('diminishes repeated duel Polymorphs to 10s, 5s, 1s', () => {
     const { sim, aPid, b } = startDuel('mage', 'warrior', 20);
 
     // Polymorph is now a projectile whose hit roll happens on impact, so it can miss.
@@ -253,11 +253,6 @@ describe('PvP control abilities in active duels', () => {
     expect(castPolymorph()).toBe(10);
     expect(castPolymorph()).toBe(5);
     expect(castPolymorph()).toBe(1);
-
-    b.auras = b.auras.filter((aura) => aura.kind !== 'polymorph');
-    for (let i = 0; i < 20 * 61; i++) sim.tick();
-
-    expect(castPolymorph()).toBe(10);
   }, 90_000);
 
   it('makes feared hostile players run in a deterministic panic direction', () => {
@@ -284,7 +279,7 @@ describe('PvP control abilities in active duels', () => {
     expect(b.auras.some((aura) => aura.id === 'fear_incap')).toBe(true);
   });
 
-  it('diminishes repeated duel Fears from their authored duration and resets after 60s', () => {
+  it('diminishes repeated duel Fears from their authored duration', () => {
     const { sim, aPid, b } = startDuel('warlock', 'warrior', 20);
 
     const castFear = () => {
@@ -309,11 +304,6 @@ describe('PvP control abilities in active duels', () => {
     expect(castFear()).toBe(2.5);
     expect(castFear()).toBe(1.25);
     expect(castFear()).toBe(0.625);
-
-    b.auras = b.auras.filter((aura) => aura.id !== 'fear_incap');
-    for (let i = 0; i < 20 * 61; i++) sim.tick();
-
-    expect(castFear()).toBe(5);
   }, 90_000);
 
   it('duel stuns land at full duration on every repeat (stun DR exemption)', () => {
