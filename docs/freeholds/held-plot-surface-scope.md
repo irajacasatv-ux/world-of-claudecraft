@@ -33,7 +33,10 @@ handshake asks the store again after the character read, and the join installs
 the store's answer at install time, the capture included, so those players see
 the leaver's house and can write. TWO ORDERS STILL SEAT the empty default, and
 both keep the premise above, that the real row sits intact on disk, because an
-entry is collected only when it owes no work, so no capture exists to lose. A
+entry is collected only when it owes no work, so no capture exists to lose there
+(what the row lacks, it lost earlier and loudly, at a quiesce: the two KNOWN
+COST orders the 07 re-judgement names, a run of thrown writes and another
+realm's commit fencing a leave write stale). A
 durable re-ask refused on capacity after the previous entry was collected is a
 HELD login in the sense above (its answer carries the capacity kind), with one
 twist for the surface: retain's repair reload then loads the entry, so the
@@ -50,7 +53,9 @@ race, an entry collected between the re-ask and the install with no live record
 standing, books no hold kind at all: a `join answer withheld` warning, then the
 same loud refusal (beside a live record the join shares it and warns nothing). The
 surface owes that group too, keyed on the entry being write-blocked rather than
-on a hold, and its copy can say the house is safe on disk, because here it is.
+on a hold, and its copy can say the house on disk is intact and nothing now is
+changing it, which is true here; it cannot promise the row holds the last
+session's edits, because of those two orders.
 
 ## The rule this design is built under
 

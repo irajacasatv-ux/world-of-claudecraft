@@ -810,15 +810,18 @@ For off-box safety, sync the directory to S3 occasionally:
   first ask left of the one 10,000 ms housing budget on a monotonic clock), each
   join's install decision (`join_entry`, a join whose install changed nothing: a
   loaded entry the ask already matched, a second character beside the owner's
-  live record, or a login replaying its entry's DATA hold, so it tracks login
-  volume; `join_superseded`, the loaded entry installed IN PLACE of an ask that
-  differed from it (stale, held on capacity, marked, broken or missing) with no
-  live record standing, which is the twelfth path's fix actually changing an
-  install; `join_held`; `join_withheld`, a join nothing could vouch for,
-  installed as no record: with no live record standing it warns and is
-  write-blocked, and beside one it shares that record and writes, or is refused,
-  as that record is; `join_none`; `join_refused`), `pre_gate_refusals` (rows refused on their on-disk size before
-  anything was rendered) and `writes_without_record`.
+  live record over a loaded entry, or a login replaying its entry's DATA hold,
+  so it tracks login volume; `join_superseded`, the loaded entry installed IN
+  PLACE of an ask that differed from it (stale, held on capacity, marked, broken
+  or missing) with no live record standing, which is the twelfth path's fix
+  actually changing an install; `join_held`, a hold with no loaded entry, which
+  in practice is a capacity hold, since a DATA-held login replays its loaded
+  entry and counts `join_entry`; `join_withheld`, a join nothing could vouch
+  for, installed as no record: with no live record standing it warns and is
+  write-blocked, and beside one it shares that record and writes, or is
+  refused, as that record is; `join_none`; `join_refused`),
+  `pre_gate_refusals` (rows refused on their on-disk size before anything was
+  rendered) and `writes_without_record`.
   `woc_freehold_load_failures_total` splits load failures by `kind`, and every
   one of the NINE kinds is its own diagnosis rather than one label. FOUR are
   DATA incidents, where the same row answers the same way every time and the
@@ -881,20 +884,23 @@ For off-box safety, sync the directory to S3 occasionally:
   the store's answer at install time, a leave capture still waiting to be written
   included, so the leaver's last edits reach the row (the findings ledger, RULING
   (B) FOR THE TWELFTH PATH). TWO ORDERS STILL WRITE-BLOCK a session with no `held`
-  entry for it, and neither loses anything, because an entry is collected only
-  when it owes no work, so once it is gone the row already holds every edit and no
-  capture exists to drop. A durable re-ask refused on capacity after the previous
-  entry was collected installs no record. Over a row, the session's first write is
-  then refused at the seal, loudly (`quiesced`, and a `write refused (identity)`
-  line); for an account with no row yet, the join's repair re-read meets the
-  stand-in on the absent arm and takes the terminal `unnamed_record` hold instead
-  (a data line and the `held` gauge, no seal line); and a `cap_full` refusal is
-  the quiet form, since the repair re-read meets the same full cap, so the entry
-  stays unloaded and held with no seal line and shows only as `cap_full` in
-  `woc_freehold_load_failures_total`, once per refused read. And the WITHHELD
-  race, an entry collected between the re-ask and the install with no live record
-  standing, installs no record either: a `join answer withheld` warning, then the
-  same loud refusal (beside a live record the join shares it and warns nothing). A
+  entry for it, and neither loses anything of its own, because an entry is
+  collected only when it owes no work, so once it is gone no capture exists to
+  drop and the row holds every edit the store did not already drop, loudly, at a
+  quiesce (a run of thrown writes, or another realm's commit fencing a leave write
+  stale: the two KNOWN COST orders the 07 re-judgement names). A durable re-ask
+  refused on capacity after the previous entry was collected installs no record.
+  Over a row, the session's first write is then refused at the seal, loudly
+  (`quiesced`, and a `write refused (identity)` line); for an account with no row
+  yet, the join's repair re-read meets the stand-in on the absent arm and takes
+  the terminal `unnamed_record` hold instead (a data line and the `held` gauge, no
+  seal line); and a `cap_full` refusal is the quiet form, since the repair re-read
+  meets the same full cap, so the entry stays unloaded and held with no seal line
+  and shows only as `cap_full` in `woc_freehold_load_failures_total`, once per
+  refused read. And the WITHHELD race, an entry collected between the re-ask and
+  the install with no live record standing, installs no record either: a `join
+  answer withheld` warning, then the same loud refusal (beside a live record the
+  join shares it and warns nothing). A
   `quiesced` rise from either order is a write-blocked session, never a lost
   house. `held` counts
   entries under ANY recovery hold, DATA or CAPACITY: read

@@ -168,6 +168,14 @@ describe('freeholdJoinAnswer', () => {
     });
     // CONTROL: the same ask with nothing live is the fix changing the install.
     expect(freeholdJoinAnswer(ACCOUNT_ID, marked, current, false).verdict).toBe('superseded');
+    // Beside a live record it is the record, not the ask's mark, that makes the
+    // install change nothing: an UNMARKED stale ask (the re-ask threw and the
+    // first ask went stale) and no ask at all (both asks threw) count the same.
+    const staleUnmarked = answer({ durableRev: '7', state: house({ rev: 7 }) });
+    for (const asked of [staleUnmarked, undefined]) {
+      expect(freeholdJoinAnswer(ACCOUNT_ID, asked, current, true).verdict).toBe('entry');
+      expect(freeholdJoinAnswer(ACCOUNT_ID, asked, current, false).verdict).toBe('superseded');
+    }
     // A loaded entry held on a DATA kind answers the same hold to both asks, so
     // every login of that account replays it and matches.
     const dataHold = {

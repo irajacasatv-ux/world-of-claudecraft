@@ -15,11 +15,16 @@
 // write has not committed is held on the entry as its capture, which outranks
 // that state; and an entry is collected only when it owes no work, while nothing
 // writes without a loaded entry. So a loaded entry has seen every edit this
-// process made to the account, and with no loaded entry the durable row has.
+// process made to the account, and with no loaded entry the durable row has
+// every edit the store did not already drop, loudly, at a quiesce (the two KNOWN
+// COST orders in tests/server/freehold_persist.test.ts: a run of thrown writes,
+// and another realm's commit fencing a leave write stale).
 //
 // A LIVE RECORD NEEDS NO VERDICT OF ITS OWN: the install is load-once, so nothing
-// the join hands it replaces a record that is already live, and with one standing
-// no install changes anything for the counters to report.
+// the join hands it replaces a record that is already live. Beside one, an
+// install over a LOADED entry changes no record and only merges the Hearth clock
+// forward, so it counts `entry`; with no loaded entry the other arms count as
+// they would, and only the withheld warning is left unsaid.
 
 import type { LoadedFreehold } from './freehold_load_outcome';
 
@@ -40,8 +45,10 @@ export const FREEHOLD_JOIN_VERDICTS = [
  *  they differ only in whether the install CHANGED anything, so `superseded` is
  *  the twelfth path's fix actually changing an install: an ask that differed
  *  from the entry (stale, held on capacity, marked, broken or missing) with no
- *  live record standing. A second character's join beside a live record, and a
- *  login replaying the same DATA hold its entry holds, are `entry`. */
+ *  live record standing. A second character's join beside a live record over a
+ *  loaded entry, and a login replaying the same DATA hold its entry holds, are
+ *  `entry`. `held` is then a hold with no loaded entry, a capacity hold in
+ *  practice. */
 export type FreeholdJoinVerdict = (typeof FREEHOLD_JOIN_VERDICTS)[number];
 
 /** A zero count per verdict, built from the vocabulary, so a verdict added to
