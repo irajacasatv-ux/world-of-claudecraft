@@ -9,6 +9,7 @@ import {
 } from '../scripts/lib/gate_lock.mjs';
 
 const gate = readFileSync(new URL('../scripts/gate.mjs', import.meta.url), 'utf8');
+const gateSelect = readFileSync(new URL('../scripts/gate_select.mjs', import.meta.url), 'utf8');
 const lockModuleUrl = new URL('../scripts/lib/gate_lock.mjs', import.meta.url).href;
 
 async function freePort(): Promise<number> {
@@ -242,6 +243,29 @@ describe('gate.mjs wiring pin', () => {
   it('reads GATE_NO_LOCK as the opt-out and announces it', () => {
     expect(gate).toContain("process.env.GATE_NO_LOCK === '1'");
     expect(gate).toContain('GATE_NO_LOCK=1');
+  });
+});
+
+describe('gate_select.mjs wiring pin', () => {
+  it('locks every vitest leg, and only those, through the async child with release in a finally', () => {
+    expect(gateSelect).toContain("import { acquireFullSuiteLock } from './lib/gate_lock.mjs'");
+    expect(gateSelect).toContain("import { runGateChild } from './lib/gate_child.mjs'");
+    // The locked set is exactly the vitest legs the planner pushed.
+    expect(gateSelect).toMatch(/^const lockedSteps = new Set\(vitestSteps\);$/m);
+    expect(gateSelect).toMatch(/const locked = lockedSteps\.has\(step\);/);
+    expect(gateSelect).toMatch(/locked\s*\?\s*await acquireFullSuiteLock\(\{ optOut: noLock \}\)/);
+    expect(gateSelect).toMatch(/locked\s*\?\s*await runGateChild\(/);
+    expect(gateSelect).toMatch(/finally\s*{\s*await release\(\);?\s*}/);
+    // Every vitest step the file builds goes through vitestSteps, so none escapes the lock.
+    const vitestPushes = gateSelect.match(/vitestSteps\.push\(/g) ?? [];
+    const stepCmds = gateSelect.match(/cmd: vitestBin,/g) ?? [];
+    expect(vitestPushes.length).toBeGreaterThanOrEqual(3);
+    expect(stepCmds.length).toBe(vitestPushes.length);
+  });
+
+  it('reads GATE_NO_LOCK as the opt-out and announces it', () => {
+    expect(gateSelect).toContain("process.env.GATE_NO_LOCK === '1'");
+    expect(gateSelect).toContain('GATE_NO_LOCK=1');
   });
 });
 

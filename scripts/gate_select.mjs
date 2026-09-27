@@ -41,6 +41,7 @@ import { spawnSync } from 'node:child_process';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { runGateChild } from './lib/gate_child.mjs';
 import {
   collectSuiteVisibility,
   filterExisting,
@@ -48,6 +49,7 @@ import {
   resolveSelectBase,
 } from './lib/gate_discovery.mjs';
 import { resolveHostGateWorkers } from './lib/gate_host_workers.mjs';
+import { acquireFullSuiteLock } from './lib/gate_lock.mjs';
 import { runGatePreflights } from './lib/gate_preflight.mjs';
 import {
   buildFullSuiteArgs,
@@ -238,10 +240,34 @@ if (releaseTier) {
 const anchor = steps.findIndex((s) => s.name === PRE_VITEST_STEP_NAME);
 steps.splice(anchor >= 0 ? anchor + 1 : steps.length, 0, ...vitestSteps);
 
-for (const { name, cmd, args, hint, env: envOverlay } of steps) {
+// Every vitest leg runs under the same cross-process lock as gate.mjs's full-suite
+// step (lib/gate_lock.mjs, #2808): each gate sizes its pool as if it owned the host,
+// so two worktrees' vitest steps at once oversubscribe memory and swap. The locked
+// leg runs through the async runGateChild so the lock's listener keeps answering
+// contenders while it runs (spawnSync would block the event loop). The other steps
+// stay unserialized. GATE_NO_LOCK=1 is the same opt-out gate.mjs honors.
+const lockedSteps = new Set(vitestSteps);
+const noLock = process.env.GATE_NO_LOCK === '1';
+if (noLock) {
+  console.log('[gate:select] GATE_NO_LOCK=1: full-suite lock disabled, running unserialized');
+}
+
+for (const step of steps) {
+  const { name, cmd, args, hint, env: envOverlay } = step;
   console.log(`\n[gate:select] ${name}: ${cmd} ${args.join(' ')}`);
   const env = envOverlay ? { ...process.env, ...envOverlay } : process.env;
-  const res = spawnSync(cmd, args, { stdio: 'inherit', env, shell, cwd: repoRoot });
+  const locked = lockedSteps.has(step);
+  const { release } = locked
+    ? await acquireFullSuiteLock({ optOut: noLock })
+    : { release: async () => {} };
+  let res;
+  try {
+    res = locked
+      ? await runGateChild(cmd, args, { stdio: 'inherit', env, shell, cwd: repoRoot })
+      : spawnSync(cmd, args, { stdio: 'inherit', env, shell, cwd: repoRoot });
+  } finally {
+    await release();
+  }
   if (res.status !== 0) {
     console.error(`\n[gate:select] FAIL at "${name}" (exit ${res.status ?? 'killed'})`);
     if (hint) console.error(`[gate:select] hint: ${hint}`);

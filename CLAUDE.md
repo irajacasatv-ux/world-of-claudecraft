@@ -66,7 +66,8 @@ the nested `npm run` forms below are the package.json script names.
   release-tier automatically on a `release/**` branch; FFmpeg/ffprobe come from the bundled
   ffmpeg-static/ffprobe-static packages, PATH is the fallback). Exit-code-safe;
   use it instead of an ad-hoc `&&` chain before calling a change done (piping `npm test` through
-  `tail` masks its exit code, and an unbounded run flakes heavy suites under core contention).
+  `tail` masks its exit code, and a bare `npm test` takes no cross-worktree lock, so it can
+  overlap another gate's full suite and flake heavy suites under contention).
 - `npm run gate:fast`: the high-signal day-loop subset while iterating; never the merge
   bar (`docs/qa-gate.md` owns the tier detail).
 - `npm run build`: regen all generated artifacts (i18n, wiki content, sitemap, SFX + media

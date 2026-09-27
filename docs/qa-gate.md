@@ -126,8 +126,12 @@ bypassed rather than blocking local work. The locked npm/Vitest step runs in a m
 child process group, so handled termination tears down the active workload before
 releasing ownership. `GATE_NO_LOCK=1` restores fully concurrent behavior for a user who
 deliberately wants two full suites running at once.
-`gate_select.mjs`/`gate_fast.mjs` never touch this lock; it exists for the one step
-that is actually the shared-host bottleneck.
+`gate_select.mjs` takes the same lock around each of its vitest legs (the merged
+related leg, a planner fallback's full suite, the release-tier i18n leg), since it is the
+pre-merge gate people run most and its legs are the same shared-host bottleneck; its
+other steps stay unserialized. `gate_fast.mjs` never touches the lock (a day-loop subset),
+and neither does a bare `npm test`, which is instead bounded by the same host sizing
+(`test.maxWorkers` from `scripts/lib/gate_host_workers.mjs`).
 
 **Task cache (Turborepo):** pure artifact steps (`i18n:gen`, `wiki:content`, `sfx:check`,
 `check:types`, `build:env`, `build:server`, `build:bot`, `build:bundle`) run through `turbo run`
