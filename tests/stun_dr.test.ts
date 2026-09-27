@@ -127,6 +127,25 @@ describe('crowdControlDurationAfterDr / diminishedCrowdControlDuration', () => {
     expect(crowdControlDurationAfterDr(0, hostile, source, target, 'fear', 4)).toBe(0.5);
   });
 
+  it('restarts the polymorph and fear ladders only after their 60s reset window', () => {
+    // The window runs from the LAST application: 30s in, the ladder still
+    // advances; 61s after that, the next application is fresh again. (This
+    // replaces the 61 seconds of world ticks tests/pvp_safety.test.ts used to
+    // spend on each reset: the resolver takes the clock directly.)
+    {
+      const { source, target } = players();
+      expect(crowdControlDurationAfterDr(0, hostile, source, target, 'polymorph', 30)).toBe(10);
+      expect(crowdControlDurationAfterDr(30, hostile, source, target, 'polymorph', 30)).toBe(5);
+      expect(crowdControlDurationAfterDr(91, hostile, source, target, 'polymorph', 30)).toBe(10);
+    }
+    {
+      const { source, target } = players();
+      expect(crowdControlDurationAfterDr(0, hostile, source, target, 'fear', 8)).toBe(8);
+      expect(crowdControlDurationAfterDr(30, hostile, source, target, 'fear', 8)).toBe(4);
+      expect(crowdControlDurationAfterDr(91, hostile, source, target, 'fear', 8)).toBe(8);
+    }
+  });
+
   it('leaves stun categories (openerStun/controlledStun/randomStun) undiminished', () => {
     const stunCategories: CrowdControlDrCategory[] = ['openerStun', 'controlledStun', 'randomStun'];
     for (const category of stunCategories) {
