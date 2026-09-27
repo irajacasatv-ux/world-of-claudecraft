@@ -252,7 +252,7 @@ describe('buildGateProfileSteps', () => {
     const vitest = steps.find((s) => s.name === 'vitest (full suite)');
     expect(vitest?.args).toEqual(['test', '--', '--maxWorkers=8']);
     // Generate-once: skip pretest after i18n + wiki; client build is turbo build:bundle.
-    expect(vitest?.env).toEqual({ WOC_SKIP_PRETEST: '1' });
+    expect(vitest?.env).toEqual({ WOC_SKIP_PRETEST: '1', WOC_LANE_SUITES: '1' });
     const i18n = steps.find((s) => s.name === 'i18n + wiki + sfx artifacts');
     expect(i18n?.cmd).toMatch(/(?:^|[\\/])turbo(?:\.cmd)?$/);
     expect(i18n?.args).toEqual(

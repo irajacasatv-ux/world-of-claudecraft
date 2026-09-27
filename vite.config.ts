@@ -20,6 +20,7 @@ import {
   freeholdDevAuthorizationPlugin,
 } from './scripts/lib/freehold_dev_authorization.mjs';
 import { resolveHostGateWorkers } from './scripts/lib/gate_host_workers.mjs';
+import { localLaneExclusions } from './scripts/lib/lane_suite_scope.mjs';
 import { shouldDisableVitestFsModuleCache } from './scripts/lib/vitest_fs_module_cache.mjs';
 
 const root = fileURLToPath(new URL('.', import.meta.url));
@@ -615,6 +616,11 @@ export default defineConfig({
       'docs/**',
       'tests/browser/**',
       '**/*.browser.test.ts',
+      // - locally, the long-sims lane files (CI_LONG_SUITES, which CI runs in its
+      //   lane jobs on every PR) are opt-in: WOC_LANE_SUITES=1, naming the file,
+      //   or `npm run gate` keeps them, and under CI nothing is dropped
+      //   (scripts/lib/lane_suite_scope.mjs owns the rules).
+      ...(process.env.VITEST ? localLaneExclusions({ env: process.env, argv: process.argv }) : []),
     ],
     // The world grew from 3 zones to 11 and Sim construction/tick cost with
     // it: the long tick-loop tests written against the 3-zone world brush

@@ -5,6 +5,7 @@
 import path from 'node:path';
 import { gateVitestSkipPretestEnv } from './gate_artifact_skip.mjs';
 import { turboRunArgs } from './gate_task_cache.mjs';
+import { laneSuitesOptInEnv } from './lane_suite_scope.mjs';
 
 // The suites whose ASSERTIONS change under I18N_RELEASE_TIER=1 (they read the flag
 // and tighten from "key is registered" to "every locale is filled"). They are the
@@ -160,7 +161,9 @@ export function buildFullGateSteps(workers, opts = {}) {
       name: FULL_SUITE_STEP_NAME,
       cmd: 'npm',
       args: ['test', '--', `--maxWorkers=${workers}`],
-      env: gateVitestSkipPretestEnv(),
+      // The full merge bar keeps the long-sims lane files a local run leaves
+      // out by default (lib/lane_suite_scope.mjs), so it stays CI-equivalent.
+      env: { ...gateVitestSkipPretestEnv(), ...laneSuitesOptInEnv() },
     });
     // Release tier is a SEPARATE step over the tier-sensitive suites only, mirroring
     // the release-i18n job in ci.yml. The full suite above stays at PR tier, so a red

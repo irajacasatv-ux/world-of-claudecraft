@@ -1711,7 +1711,7 @@ describe('CI workflow parity', () => {
     const vitest = gateSteps.find((s) => s.name === 'vitest (full suite)');
     expect(vitest?.cmd).toBe('npm');
     expect(vitest?.args).toEqual(['test', '--', '--maxWorkers=8']);
-    expect(vitest?.env).toEqual({ WOC_SKIP_PRETEST: '1' });
+    expect(vitest?.env).toEqual({ WOC_SKIP_PRETEST: '1', WOC_LANE_SUITES: '1' });
     // gate.mjs still binds workers into the shared step builder.
     expect(gate).toContain('buildFullGateSteps(workers, { releaseTier, repoRoot })');
     // Sized by the shared host composition (lib/gate_host_workers.mjs), which feeds

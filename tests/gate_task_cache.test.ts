@@ -272,7 +272,10 @@ describe('buildFullGateSteps orchestration', () => {
     expect(byName['biome (changed files)'].args).toEqual(['run', 'ci:changed']);
     expect(byName['vitest (full suite)'].cmd).toBe('npm');
     expect(byName['vitest (full suite)'].args).toEqual(['test', '--', '--maxWorkers=8']);
-    expect(byName['vitest (full suite)'].env).toEqual({ WOC_SKIP_PRETEST: '1' });
+    expect(byName['vitest (full suite)'].env).toEqual({
+      WOC_SKIP_PRETEST: '1',
+      WOC_LANE_SUITES: '1',
+    });
     expect(byName['browser regressions'].cmd).toBe('npm');
 
     const typesBuilds = byName['typecheck + env/server/bot builds'];
