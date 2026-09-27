@@ -570,6 +570,22 @@ join behind a socket that has died, which leaves a linkdead ghost holding a real
 slot and that lease for the whole grace window while the player's every re-login
 is refused as already in world.
 
+ONE BUDGET PER HANDSHAKE, NOT PER ASK (2026-09-26). Ruling (b) for the twelfth
+path asks twice, once before the character lease and again after the character
+read, and as first built each ask armed this whole budget and its own permit
+wait: up to 20,000 ms of housing per login, the second half inside the lease-held
+window with the admission slot still counted, past the client's 10,000 ms entry
+watchdog. The hot-path and database reviews of that ruling found it, and the
+handshake now hands the re-ask only what the first ask left
+(`freeholdReaskBudgetMs`, server/freehold_login_bounds.ts), so a login's housing
+wait is back under the one 10,000 ms ceiling. The second ask can still wait
+INSIDE the lease-held window (when the entry was collected between the asks, or
+the first ask was held on capacity), bounded by that remainder; a re-ask that
+runs out answers `no_budget`, and the join installs what the store's entry
+decides at install time (the entry when one is loaded, else nothing: a
+write-blocked session, never a loss). `reask_reads` and `reask_ms` on
+`woc_freehold_persist_total` are what an operator reads that cost by.
+
 THE LOGIN ITSELF IS NOT REFUSED, and that is deliberate: refusing a login over a
 durable housing read reverses a decision this packet has already taken and
 pinned. The player joins on the sim's default record and no write goes out for

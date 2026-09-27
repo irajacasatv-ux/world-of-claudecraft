@@ -190,9 +190,11 @@ carries an opaque plot id only.
   the store minted on the ABSENT arm of a durable load, so an online record
   answers to a unique id from its FIRST session, except a record seeded where no
   answer could be installed, which carries the stand-in and is write-blocked by
-  the store's refusals: a hold, a preload that threw (the handshake joins with
-  no answer), a minted name the install refuses as inadmissible, or an answer
-  read beside a record that was evicted before the join. OFFLINE AND HEADLESS
+  the store's refusals: a hold (including a durable re-ask refused on
+  capacity), both handshake asks throwing with no loaded entry to answer for
+  them, a minted name the install refuses as inadmissible, or a join answer
+  WITHHELD at install (`server/freehold_join_answer.ts`: nothing loaded could
+  vouch for it). OFFLINE AND HEADLESS
   there is no store and no minter, so every record on those hosts carries the
   one literal stand-in `PENDING_FREEHOLD_PLOT_ID` forever, and two offline
   records are therefore indistinguishable by `plotId`. That is harmless while

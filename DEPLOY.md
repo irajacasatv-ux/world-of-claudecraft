@@ -798,9 +798,15 @@ For off-box safety, sync the directory to S3 occasionally:
   `oldest_dirty_age_ms`, `max_write_bytes`, `leave_captures` (documents held for
   a leaving session until its write lands), and `active_writes` with
   `deferred_writes` for the store's own write admission cap. `woc_freehold_persist_total` is a COUNTER of
-  cumulative work: loads, writes, their failures, stale compare-and-swap
-  refusals, the permit and queue waits, the statement durations those waits
-  exclude, total bytes written, `pre_gate_refusals` (rows refused on their
+  cumulative work: loads, writes, their failures, stale compare-and-swap refusals,
+  the permit and queue waits, the statement durations those waits exclude, total
+  bytes written, the re-ask's cost (`reasks`, `reask_reads` for the ones that
+  waited on a durable read inside the lease-held window, and `reask_ms`, the
+  re-asks' summed wall time, bounded per handshake by what the first ask left of
+  the one 10,000 ms housing budget), each join's install decision (`join_entry`,
+  the loaded entry answering at install time, which is the stale answer fix at
+  work; `join_held`; `join_withheld`, a write-blocked session nothing could vouch
+  for; `join_none`; `join_refused`), `pre_gate_refusals` (rows refused on their
   on-disk size before anything was rendered) and `writes_without_record`.
   `woc_freehold_load_failures_total` splits load failures by `kind`, and every
   one of the NINE kinds is its own diagnosis rather than one label. FOUR are
@@ -829,14 +835,17 @@ For off-box safety, sync the directory to S3 occasionally:
   investigate, a sustained capacity-kind rate is a realm to give more headroom.
 
   COUNT REFUSALS, NOT LOGINS. This series counts every refusal, and one login can
-  book more than one: a capacity hold is repairable, so a later join re-reads and
-  a realm that is still saturated books a second refusal for the same account,
-  and a login refused on the whole-preload budget books `no_budget` while the read
-  it stopped waiting for goes on to book its own outcome. That is the honest
-  reading of a per-refusal counter and it is not double counting, but an alert
-  threshold derived from a login rate has to allow for it. The series worth an alert are named one
-  by one below rather than counted, because a bare count is a number a later
-  edit makes wrong without touching anything it describes.
+  book up to three: its first ask, its re-ask after the character lease (ruling
+  (b) for the twelfth path), and the join's repair re-read, since a capacity hold
+  is repairable and a realm that is still saturated refuses each; and a login
+  refused on the whole-preload budget books `no_budget` while the read it stopped
+  waiting for goes on to book its own outcome. The capacity kinds' console lines
+  are rate-limited to one per kind per 10 s (the next line says how many it held
+  back), so read the rate here, never off the log. That is the honest reading of a
+  per-refusal counter and it is not double counting, but an alert threshold
+  derived from a login rate has to allow for it. The series worth an alert are
+  named one by one below rather than counted, because a bare count is a number a
+  later edit makes wrong without touching anything it describes.
   `writes_without_record` counts a write that held a
   background permit with no document to send and issued no statement at all,
   which is the terminal state of every way this store has ever lost a save; it

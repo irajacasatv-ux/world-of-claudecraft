@@ -41,7 +41,9 @@ entry's hold is gone while the session stays write-blocked, its first write
 refused at the seal, loudly (a `cap_full` refusal is the exception: the reload
 meets the same full cap, so the entry stays unloaded and held, with no seal
 line). The surface therefore keys this group on the hold the join installed, not
-on the entry's hold at the time it paints. The WITHHELD race, an entry collected
+on the entry's hold at the time it paints, and nothing keeps that answer after
+the install today (`game.join` hands `meta.freehold` straight to the binding), so
+the surface needs a per-session carrier for it. The WITHHELD race, an entry collected
 between the re-ask and the install, books no hold kind at all: a
 `join answer withheld` warning, then the same loud refusal. The surface owes
 that group too, keyed on the entry being write-blocked rather than on a hold,
