@@ -201,8 +201,8 @@ describe('the Freehold Gate site', () => {
     // A RULING OWED (state.md premise G8), not a clearance: the release's
     // Eastbrook freight caravan (world quest wq_eastbrook_caravan, synced at
     // aaff789813) walks the main street 4.8 yd from the gate at its nearest,
-    // and its third ambush (five bandits, radius 8 around (-26,-101)) can land
-    // within about 5 yd of it. Housing is dark, so no player meets it yet; the phase that
+    // and its third ambush (five level-5 bandits in an 8 yd ring) can land
+    // about a yard from the arch and a few yards from the leave drop. Housing is dark, so no player meets it yet; the phase that
     // lights housing owes the ruling (move the gate, reroute, or accept). The
     // named floor keeps the route from closing in further, and every other
     // route keeps the full 12 yd.
