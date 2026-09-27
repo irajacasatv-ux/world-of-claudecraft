@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process';
-import { existsSync, readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import ts from 'typescript';
 import { describe, expect, it } from 'vitest';
@@ -235,13 +235,11 @@ describe('vite dev-server watch ignore list', () => {
     expect(importDeclarationOf(imported).moduleSpecifier.getText(config)).toBe("'vite'");
     expect(called?.parent).toBe(defineConfigObject().parent);
     // vitest prefers a root vitest.config.* over vite.config.ts, and vite itself loads a
-    // root vite.config.js or .mjs first: no other config file may exist beside this one.
-    for (const ext of ['ts', 'mts', 'cts', 'js', 'mjs', 'cjs']) {
-      expect(existsSync(`${root}vitest.config.${ext}`), `vitest.config.${ext}`).toBe(false);
-      if (ext !== 'ts') {
-        expect(existsSync(`${root}vite.config.${ext}`), `vite.config.${ext}`).toBe(false);
-      }
-    }
+    // root vite.config.js or .mjs first: the root holds no config file but this one. Read
+    // from the root listing rather than a hand list of extensions, so one a future vite
+    // or vitest adds is refused too (single-level by decision: both look at the root).
+    const configs = readdirSync(root).filter((name) => /^vite(?:st)?\.config\./.test(name));
+    expect(configs).toEqual(['vite.config.ts']);
   });
 
   it('reads the exported config only, and refuses a key it could misread', () => {
