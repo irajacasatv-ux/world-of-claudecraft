@@ -160,6 +160,14 @@ jobs:
           WOC_FULL_BALANCE_SWEEP: '1'
         run: npm test -- --maxWorkers="$(node -p 'Math.max(1, Math.floor(require("node:os").availableParallelism() / 2))')"
 
+      - name: Per-file memory budgets
+        # scripts/test_memory_probe.mjs over scripts/test_memory_budgets.json: each
+        # budgeted file alone, a forced full GC after every case, red when a file's
+        # peak retained heap passes its budget. Its own step, run even when the
+        # suite above is red, so a retention regression is named on its own.
+        if: ${{ !cancelled() }}
+        run: npm run test:memory
+
   # The serialized checks, mirroring the release-checks job in ci.yml (same
   # run-step list, pinned to it by tests/nightly_workflow.test.ts; the one
   # omission is the tsc incremental cache step, which is a uses: cache keyed

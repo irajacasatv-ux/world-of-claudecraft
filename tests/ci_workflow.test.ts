@@ -2185,3 +2185,29 @@ describe('CI workflow parity', () => {
     }
   });
 });
+
+describe('nightly per-file memory budgets', () => {
+  it('runs npm run test:memory as its own step of the nightly tests job, even after a red suite', () => {
+    const nightly = readFileSync(
+      new URL('../.github/workflows/nightly.yml', import.meta.url),
+      'utf8',
+    );
+    // The tests job's span: from its key to the next top-level job key.
+    const start = nightly.indexOf('\n  tests:\n');
+    const end = nightly.indexOf('\n  checks:\n', start);
+    expect(start).toBeGreaterThan(-1);
+    expect(end).toBeGreaterThan(start);
+    const testsJob = nightly.slice(start, end);
+    // Name-to-if-to-run adjacency (comment lines allowed), so a commented-out or
+    // step-detached copy cannot satisfy it; the budgets live in
+    // scripts/test_memory_budgets.json and the probe in scripts/test_memory_probe.mjs.
+    expect(testsJob).toMatch(
+      new RegExp(
+        String.raw`- name: Per-file memory budgets\n` +
+          String.raw`(?: {8}#[^\n]*\n)* {8}if: \$\{\{ !cancelled\(\) \}\}\n` +
+          String.raw` {8}run: npm run test:memory\n`,
+      ),
+    );
+    expect(nightly.match(/npm run test:memory/g)).toHaveLength(1);
+  });
+});
