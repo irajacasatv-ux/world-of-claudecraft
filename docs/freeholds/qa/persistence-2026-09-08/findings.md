@@ -4207,3 +4207,57 @@ should-fix, 11 nits, all applied (`75f45bccae`, `dcffac111b`, and two test commi
   again and launching directly, and the catch's report removed; all KILLED (control 361).
   The store stays at 1,988 lines. That read found nothing blocking, so the fresh-read loop
   ends here.
+
+### STEP 5, THE ARMED GATE
+
+Uptime checked and no stray `node_modules/node_modules` before each run; `npx tsc --noEmit`
+clean; Postgres armed by `TEST_DATABASE_URL` alone, `tests/server/freehold_db.pg.test.ts` 16
+of 16 before each run; `node scripts/gate_select.mjs` (the planner fell back to the full
+suite on the branch's diff against the release).
+
+- Run 1 at `b39877d85d` FAILED at the full vitest step, 1 of 72,987 tests:
+  `tests/freehold_module.test.ts` "names every server file that reaches these leaves BY PATH,
+  in CLAUDE.md". The round that moved the login-pair read into
+  `server/freehold_hearth_load.ts` gave that module a by-path import of `persisted.ts`, and
+  dropped the store's dead `hearth_key.ts` import, and `src/sim/freehold/CLAUDE.md`'s
+  exhaustive list said neither. The derived pin did its job; the guide is corrected
+  (`3167e0cbbc`, with a stale "these three" comment in the store).
+- Run 2 at `3167e0cbbc`: PASS, ALL 12 STEPS GREEN: 4,966 files and 72,957 tests passed (2 expected-fail, 28 skipped, 1 file skipped), the browser suite 65 files and 541 tests. The PNGs the browser step rewrites under `docs/screenshots` were restored.
+
+### STEP 6, 07 RE-JUDGED
+
+VERDICT: PASS, WITH THE TWO NAMED GATES (R2, the cross-realm fence; R3, the shutdown drain's
+deadline). Judged against the criterion as the brief states it:
+
+- ONLY A GENUINELY ABSENT ROW RESOLVES TO THE FREE TIER-0 INN ROOM: HOLDS, as ruling (b) left
+  it. R1 touches no load arm, and it removes one way a session met a stand-in beside a real
+  row: an entry a thrown run used to quiesce stays loaded now and replays its kept document
+  to a rejoin, where a quiesced entry replayed nothing.
+- NO COMMITTED EDIT IS LOST: HOLDS (the join installs the loaded entry or nothing, and every
+  refusal left keeps the row as it stands).
+- NO CAPTURED EDIT IS LOST BEYOND THE TWO NAMED GATES: HOLDS. The thrown-write run, the order
+  the 2026-09-26 re-judgement failed on, loses nothing now: a fault keeps the leaver's
+  capture (and an online session's edits, which its own leave then captures) on the retry
+  clock, retried at most once per owner per window, until a commit or an answer no repeat
+  can change; a rejoin installs it meanwhile. What still releases a capture: the fence's
+  stale answer, which is R2 (including the self-fence after an ambiguous commit, which the
+  contract now names and 07a closes); the shutdown drain's deadline, which is R3 (each held
+  owner gets one last attempt at the drain's full cap); and quiesces the criterion does not
+  protect, as before: the seal's refusals (only a stand-in's capture), the write ceilings
+  and a thrown refusal of the document (a legal record passes both, by the
+  writable-implies-readable refusal that runs first), a `missing` row (the account's row
+  deleted), a `conflict` (a minted id colliding). A store bug that throws deterministically
+  is a fault now, so its edits wait on the clock until a restart, which is R3 again. A
+  process that dies without draining loses what it holds, outside the criterion.
+
+THE PRICE, named rather than discovered: an owner on the clock with no session holds up to
+two records until the fault ends (measured 180 MiB per thousand at the approved ceiling),
+uncapped by ruling, published as `retrying_offline`, with an alert on a sustained
+`retrying` in DEPLOY.
+
+THE EVIDENCE: the design written first; the build test-first; seven reviewers on the Part 1
+diff and three fresh reads of their fix rounds (0 blocking anywhere, 6 should-fix and 32
+nits, all applied); 36 mutants over R1 and its rounds, every one KILLED (four only after the
+pin a survivor asked for); the STEP 3 trim proven pair by pair; and the armed gate green on
+all 12 steps at `3167e0cbbc`. 07 is CLOSED as PASS; the fence (R2) is 07a's activation
+gate, and the drain's deadline (R3) is the accepted bound of an orderly exit.

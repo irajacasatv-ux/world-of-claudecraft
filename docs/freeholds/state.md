@@ -67,6 +67,24 @@ Only what the next session needs. Update at the end of every phase and QA.
 
 ## Current phase
 
+**07 RE-JUDGED PASS, 2026-09-27, LOCAL: R1 IS BUILT, REVIEWED AND GATED.** A thrown run of
+writes no longer quiesces an owner and drops its edits: a fault puts the owner on a per-owner
+retry clock (`server/freehold_write_retry.ts`) that keeps its capture, offers it to a
+rejoin, retries at most once per window inside a two-slot sub-cap, and clears on a commit;
+a throw about the document (the branded `FreeholdUpsertRefused`, a payload SQLSTATE) still
+quiesces. The memory it holds is measured (180 MiB per thousand offline owners at the
+ceiling) and published (`retrying`, `retrying_offline`, `deferred_retries`,
+`write_retries`). Seven reviewers and three fresh reads found nothing blocking, 36 mutants
+are killed, the STEP 3 trim of the persistence suite is proven pair by pair, and the armed
+gate is green on all 12 steps at `3167e0cbbc`. The two named gates stay: the cross-realm
+fence (R2, 07a's activation gate, which now also names the self-fence after an ambiguous
+commit) and the shutdown drain's deadline (R3). The 2026-09-27 ruling's three items landed
+first: G8 resolved (the caravan's third wave moved to waypoint 6), the emissary pool held to
+wearable kinds (odds recorded for the release owner), the cannon leave-order pin. NEXT: Part
+2, the repo-wide test cost work, on this branch. Detail: [the ledger](qa/persistence-2026-09-08/findings.md),
+R1, THE THROWN-RUN RETRY POSTURE, through STEP 6.
+
+(Superseded 2026-09-27 by the paragraph above: R1 is built and 07 re-judged PASS.)
 **FERNANDO RULED ON THE SYNC'S OPEN DECISIONS, 2026-09-27 ("let's do what's best for the
 project and feature for all of those."), AND RELEASE/V0.44.0 AT `3bdb537657` IS SYNCED
 (`60cd9f859a`, the release's locale fill).** The ruling, recorded verbatim in the ledger:
