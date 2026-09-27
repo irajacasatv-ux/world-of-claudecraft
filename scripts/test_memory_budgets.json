@@ -2,6 +2,10 @@
   "_policy": "retainedMb is a file's measured peak retained heap (npm run test:memory) plus about 20 percent, rounded up to 10 MiB. Lower a budget freely when a file gets leaner; raising one needs the reason in the commit body. ceilingMb holds every file probed without a budget of its own, half the 2 GiB worker heap cap.",
   "ceilingMb": 1024,
   "files": {
+    "tests/audit_conservation_property.test.ts": {
+      "retainedMb": 220,
+      "measuredMb": 178
+    },
     "tests/daily_rewards_store_behavior.test.ts": {
       "retainedMb": 560,
       "measuredMb": 461
@@ -14,9 +18,17 @@
       "retainedMb": 290,
       "measuredMb": 240
     },
+    "tests/hud_touch_drop_routing.test.ts": {
+      "retainedMb": 800,
+      "measuredMb": 659
+    },
     "tests/loot_explorer_window_focus.test.ts": {
       "retainedMb": 550,
       "measuredMb": 452
+    },
+    "tests/parity/parity_g.test.ts": {
+      "retainedMb": 240,
+      "measuredMb": 199
     },
     "tests/reliquary_window_behavior.test.ts": {
       "retainedMb": 520,
@@ -25,6 +37,14 @@
     "tests/server/freehold_wire.test.ts": {
       "retainedMb": 680,
       "measuredMb": 564
+    },
+    "tests/snapshots.test.ts": {
+      "retainedMb": 270,
+      "measuredMb": 218
+    },
+    "tests/varkhul_forge_encounter.test.ts": {
+      "retainedMb": 320,
+      "measuredMb": 260
     }
   }
 }
