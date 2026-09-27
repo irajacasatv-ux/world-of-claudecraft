@@ -10,26 +10,29 @@
 // Four layers are pinned here:
 //  1. craftingReagentSig (pure): it moves exactly when the bag facts
 //     buildCraftingView reads move, and stays put on churn the view ignores.
-//  2. The HUD probe's behavior, driven on a bare Hud prototype (the
-//     hud_profession_events.test.ts precedent, since the probe is private and
-//     update() is not drivable in a unit test): cold latch, elision, the
-//     repro edge, and that a closed window reads nothing at all.
+//  2. The HUD probe's behavior. Its signature half is openCraftingRefreshSig
+//     (extracted from Hud.refreshOpenCraftingIfReagentsChanged into
+//     crafting_view.ts), so it is driven through a harness that runs the
+//     probe's two lines over that core (the harness spelling is pinned to
+//     hud.ts below, so the two cannot drift): cold latch, elision, the repro
+//     edge, and that a closed window reads nothing at all.
 //  3. The wiring source pins for the three edges that call the probe, each
-//     anchored to the REGION it must live in, not to the whole file.
+//     anchored to the REGION it must live in, not to the whole file, plus the
+//     probe body itself and the reconnect hook's focus-target reset.
 //  4. The painter carrying the tab strip's scroll offset across the rebuild,
 //     since the window now repaints from causes the player did not initiate.
 
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, type Mock, vi } from 'vitest';
 import { ALL_RECIPES } from '../src/sim/content/recipes';
 import { ITEMS as CATALOG_ITEMS } from '../src/sim/data';
 import type { InvSlot, ItemDef } from '../src/sim/types';
-import { Hud } from '../src/ui/hud';
 import {
   buildCraftingView,
   craftingReagentSig,
   craftingWindowRefreshSig,
+  openCraftingRefreshSig,
   type RecipeDefLike,
 } from '../src/ui/hud/professions/crafting_view';
 import { renderCraftingWindow } from '../src/ui/hud/professions/crafting_window';
@@ -185,17 +188,20 @@ describe('craftingReagentSig', () => {
 });
 
 // ---------------------------------------------------------------------------
-// The HUD probe. refreshOpenCraftingIfReagentsChanged is private and reached
-// from update(), which no unit test can drive, so it is exercised on a bare
-// Hud prototype with renderCrafting stubbed (the hud_profession_events.test.ts
-// precedent). The stub re-arms the latch the way the real renderCrafting does
-// (hud.ts, pinned by the source region below), so the call counts here measure
-// the probe's own elision and nothing else.
+// The HUD probe. Hud.refreshOpenCraftingIfReagentsChanged is two lines over
+// openCraftingRefreshSig: the signature of the window if it is open (null if
+// closed, read off its display), then a repaint when that differs from the
+// latched memo. The harness below runs exactly those two
+// lines (the Hud spelling is pinned by 'the probe is the extracted core, open
+// check first' in the wiring block), with renderCrafting stubbed. The stub
+// re-arms the latch the way the real renderCrafting does (hud.ts, pinned by the
+// source region below), so the call counts here measure the probe's own
+// elision and nothing else.
 // ---------------------------------------------------------------------------
 
 interface CraftingRefreshHarness {
   sim: Parameters<typeof craftingWindowRefreshSig>[0];
-  renderCrafting: ReturnType<typeof vi.fn>;
+  renderCrafting: Mock<() => void>;
   lastCraftingReagentSig: string;
   refreshOpenCraftingIfReagentsChanged(): void;
 }
@@ -208,30 +214,39 @@ function makeHud(inventory: InvSlot[]): {
   inventoryReads(): number;
   setInventory(next: InvSlot[]): void;
 } {
-  const hud = Object.create(Hud.prototype) as unknown as CraftingRefreshHarness;
   let bag = inventory;
   let reads = 0;
   const player = { name: VIEWER };
-  hud.sim = {
-    cfg: { seed: 20061, playerClass: 'warrior' },
-    craftVaultStock: null,
-    get inventory() {
-      reads++;
-      return bag;
-    },
-    player,
-  } as CraftingRefreshHarness['sim'];
-  // Object.create skips field initializers, so seed the latch the way the real
-  // field declares it ('' until the first paint arms it).
-  hud.lastCraftingReagentSig = '';
-  hud.renderCrafting = vi.fn(() => {
-    hud.lastCraftingReagentSig = craftingWindowRefreshSig(hud.sim);
-  });
   document.getElementById('crafting-window')?.remove();
   const el = document.createElement('div');
   el.id = 'crafting-window';
   el.style.display = 'flex';
   document.body.appendChild(el);
+  const hud: CraftingRefreshHarness = {
+    sim: {
+      cfg: { seed: 20061, playerClass: 'warrior' },
+      craftVaultStock: null,
+      get inventory() {
+        reads++;
+        return bag;
+      },
+      player,
+    } as CraftingRefreshHarness['sim'],
+    // Seed the latch the way the real field declares it ('' until the first
+    // paint arms it).
+    lastCraftingReagentSig: '',
+    renderCrafting: vi.fn(() => {
+      hud.lastCraftingReagentSig = craftingWindowRefreshSig(hud.sim);
+    }),
+    // Hud.refreshOpenCraftingIfReagentsChanged, line for line.
+    refreshOpenCraftingIfReagentsChanged() {
+      const sig = openCraftingRefreshSig(
+        (document.getElementById('crafting-window') as HTMLElement).style.display === 'flex',
+        this.sim,
+      );
+      if (sig !== null && sig !== this.lastCraftingReagentSig) this.renderCrafting();
+    },
+  };
   return {
     hud,
     window: el,
@@ -272,24 +287,13 @@ describe('refreshOpenCraftingIfReagentsChanged', () => {
           ).recipes.map((row) => row.recipeId),
         );
       });
-      const reconnectHud = hud as CraftingRefreshHarness & {
-        resyncAfterReconnect(): void;
-        onInventoryChanged(): void;
-      };
-      // The release's reconnect hook also resets the focus-target frames
-      // (Hud.resyncAfterReconnect), so the harness carries that member too.
-      const focusTargets = { reset: vi.fn() };
-      Object.assign(hud, {
-        marketWindow: { onReconnected: vi.fn() },
-        focusTargets,
-        repaintOpenServiceWindows: vi.fn(),
-        renderCharIfOpen: vi.fn(),
-      });
-      document.getElementById('bags')?.remove();
-      const bags = document.createElement('div');
-      bags.id = 'bags';
-      bags.style.display = 'none';
-      document.body.appendChild(bags);
+      // Hud.onInventoryChanged ends in the probe (pinned by 'the online
+      // authoritative inventory delta converges it on the same frame' below),
+      // so the delta hook is the probe here. The reconnect hook is counted:
+      // Hud.resyncAfterReconnect is what main.ts chains onto it (its
+      // focus-target reset is pinned in the wiring block).
+      const onInventoryChanged = () => hud.refreshOpenCraftingIfReagentsChanged();
+      let reconnects = 0;
       hud.refreshOpenCraftingIfReagentsChanged();
       expect(displayed.at(-1)).toEqual(enabled ? [] : ['recipe_freehold_weapon_rack']);
       hud.renderCrafting.mockClear();
@@ -299,10 +303,12 @@ describe('refreshOpenCraftingIfReagentsChanged', () => {
         world.player.pos,
         world.craftingIdentity.knownRecipes,
       ]);
-      world.onReconnected = () => reconnectHud.resyncAfterReconnect();
+      world.onReconnected = () => {
+        reconnects += 1;
+      };
       (world as unknown as { reconnectAttempts: number }).reconnectAttempts = 1;
       hello(enabled);
-      reconnectHud.onInventoryChanged();
+      onInventoryChanged();
       expect(
         JSON.stringify([
           world.inventory,
@@ -312,9 +318,9 @@ describe('refreshOpenCraftingIfReagentsChanged', () => {
         ]),
       ).toBe(before);
       expect(hud.renderCrafting).toHaveBeenCalledTimes(1);
-      expect(focusTargets.reset).toHaveBeenCalledTimes(1);
+      expect(reconnects).toBe(1);
       expect(displayed.at(-1)).toEqual(enabled ? ['recipe_freehold_weapon_rack'] : []);
-      reconnectHud.onInventoryChanged();
+      onInventoryChanged();
       hud.refreshOpenCraftingIfReagentsChanged();
       expect(hud.renderCrafting).toHaveBeenCalledTimes(1);
       expect(world.craftingIdentity.knownRecipes).toEqual(['recipe_freehold_weapon_rack']);
@@ -431,6 +437,26 @@ describe('crafting window bag-freshness wiring (source pins)', () => {
     const slowBand = region('if (slowHud) {', 'this.playerFramePainter');
     expect(slowBand).toContain('!== this.lastCraftingStationSig');
     expect(slowBand).toContain('this.renderCrafting();');
+  });
+
+  it('the probe is the extracted core, open check first', () => {
+    // The harness above runs these two lines; pinned here so it cannot drift
+    // from the Hud. The open state is read off the window and handed to the
+    // core, which checks it BEFORE building the signature; the memo comparison
+    // stays spelled in the Hud (the language fan-out sweep sees it there).
+    const probe = region('private refreshOpenCraftingIfReagentsChanged(): void {', '\n  }');
+    expect(probe).toContain(
+      "const sig = openCraftingRefreshSig($('#crafting-window').style.display === 'flex', this.sim);",
+    );
+    expect(probe).toContain(
+      'if (sig !== null && sig !== this.lastCraftingReagentSig) this.renderCrafting();',
+    );
+    expect(probe.match(/this\.renderCrafting\(\)/g)).toHaveLength(1);
+  });
+
+  it('the reconnect hook resets the focus-target frames', () => {
+    const resync = region('resyncAfterReconnect(): void {', '\n  }');
+    expect(resync).toContain('this.focusTargets.reset();');
   });
 
   it('the online authoritative inventory delta converges it on the same frame', () => {

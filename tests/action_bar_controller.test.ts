@@ -8,6 +8,7 @@ import {
 } from '../src/ui/hud/action_bar/action_bar_controller';
 import type { HotbarAction } from '../src/ui/hud/action_bar/hotbar';
 import type { ActionBarLayoutSave } from '../src/world_api/action_bar';
+import { releasedSpyOn } from './helpers/released_spy';
 
 class MemoryStorage {
   readonly values = new Map<string, string>();
@@ -1601,5 +1602,48 @@ describe('ActionBarController mutators while spectating', () => {
     expect(controller.removeAbility('charge')).toBe(true);
     expect(controller.actions.some((action) => action?.id === 'charge')).toBe(false);
     expect(persisted.length).toBeGreaterThan(0);
+  });
+});
+
+// The touch drop's placement (moved from tests/hud_touch_drop_routing.test.ts,
+// which drove the Hud's placeHotbarItemFromTouch on a bare prototype with a
+// stubbed item gate). The refusals and the save now live on the controller and
+// run against the REAL isHotbarItemId; Hud keeps only the stale-tooltip rule,
+// applied when this returns true (pinned in that file as a source pin).
+describe('ActionBarController.placeItemFromTouch', () => {
+  it('refuses bad slots and non-hotbar items, places the rest', () => {
+    // The three behaviors: the slot >= 1 integer refusal, the isHotbarItemId
+    // silent cancel, and the placement with its save (and a true return, which
+    // is what fires the Hud's stale-tooltip rule).
+    const rig = () => {
+      const h = makeHarness('warrior', [], bar());
+      return {
+        controller: h.controller,
+        replaceActions: releasedSpyOn(h.controller, 'replaceActions'),
+        saveActions: releasedSpyOn(h.controller, 'saveActions'),
+      };
+    };
+    // The fixture ids keep their roles: a real hotbar implement and a real
+    // item the bar refuses.
+    const premise = rig();
+    expect(premise.controller.isHotbarItemId('simple_fishing_pole')).toBe(true);
+    expect(premise.controller.isHotbarItemId('iron_ore')).toBe(false);
+    for (const bad of [0, -1, 1.5, Number.NaN]) {
+      const h = rig();
+      expect(h.controller.placeItemFromTouch('simple_fishing_pole', bad), `slot ${bad}`).toBe(
+        false,
+      );
+      expect(h.saveActions, `slot ${bad}`).not.toHaveBeenCalled();
+      expect(h.replaceActions).not.toHaveBeenCalled();
+    }
+    const notHotbar = rig();
+    expect(notHotbar.controller.placeItemFromTouch('iron_ore', 2)).toBe(false);
+    expect(notHotbar.saveActions).not.toHaveBeenCalled();
+    const ok = rig();
+    expect(ok.controller.placeItemFromTouch('simple_fishing_pole', 2)).toBe(true);
+    const placed = ok.replaceActions.mock.calls[0]?.[0] as unknown[];
+    expect(placed?.[1]).toMatchObject({ type: 'item', id: 'simple_fishing_pole' });
+    expect(ok.saveActions).toHaveBeenCalledTimes(1);
+    expect(ok.controller.actions[1]).toEqual({ type: 'item', id: 'simple_fishing_pole' });
   });
 });

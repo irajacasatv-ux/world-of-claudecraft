@@ -64,8 +64,9 @@ one.
    message localize via a helper (see `localizeServerDuration`, which re-renders
    `formatDuration`'s `N second/minute/hour/day` output through `tServer`).
    - A sim/server string can alternatively be recognized by a **hud-local matcher**
-     (`localizeErrorText` / `localizeSystemText` / `localizeLootText` in `hud.ts`,
-     which map to `t()` keys in `main` scope). These run first at runtime; the S3
+     (`localizeErrorText` in `error_text_i18n_core.ts`, `localizeSystemText` in
+     `system_text_i18n.ts`, `localizeLootText` in `loot_text_i18n_core.ts`, which map
+     to `t()` keys in `main` scope). These run first at runtime; the S3
      guard accepts recognition by any of the three paths.
 4. **Admin (`src/admin`).** Operators are users. Add the flat key to
    `src/admin/i18n.en.ts` and render via the admin `t()`. A server operator-error

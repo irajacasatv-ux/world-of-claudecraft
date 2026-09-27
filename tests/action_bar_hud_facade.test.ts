@@ -140,6 +140,14 @@ describe('Hud action-bar facade', () => {
   // to cancel here any more. What still matters at this seam is the OTHER half
   // that test covered: a form swap must drop the desktop drag AND re-clamp the
   // ring page, or the newly loaded bar is exposed through a stale page.
+  //
+  // The DECISION (which syncs run, in which order, and what each combination
+  // owes) is hotbarSyncOutcome now, pinned in
+  // tests/action_bar_form_sync_core.test.ts, including that a surface flip runs
+  // no second form sync. What stays on Hud is applying the outcome to Hud's own
+  // fields (dragAction, mobileActionPage) and the spellbook refresh, so ONE
+  // coordinator case drives the real syncActiveHotbarForm through all three
+  // outcomes.
   interface FormSyncHud {
     actionBarController: {
       syncActiveForm(): boolean;
@@ -158,22 +166,16 @@ describe('Hud action-bar facade', () => {
     formSwapped: boolean,
   ): FormSyncHud & {
     refreshes: number;
-    formSyncs: number;
   } {
     const hud = Object.create(Hud.prototype) as unknown as FormSyncHud & {
       refreshes: number;
-      formSyncs: number;
     };
     hud.refreshes = 0;
-    hud.formSyncs = 0;
     hud.actionBarController = {
-      syncActiveForm: () => {
-        hud.formSyncs += 1;
-        return formSwapped;
-      },
+      syncActiveForm: () => formSwapped,
       syncProfile: () => profileSwitched,
       // The spec sync sits beside the profile and form syncs on the real
-      // controller; these cases hold the spec still so only the form and
+      // controller; this case holds the spec still so only the form and
       // surface arms move.
       syncSpec: () => false,
     };
@@ -188,39 +190,29 @@ describe('Hud action-bar facade', () => {
     return hud;
   }
 
-  it('drops the desktop drag and re-clamps the ring page on a form swap', () => {
-    const hud = formSyncHud(false, true);
+  it('applies the form-sync outcome: drag drop and page re-clamp on a form swap or a surface flip, the spellbook refresh only on the flip, nothing when unchanged', () => {
+    // A form swap drops the desktop drag and re-clamps the ring page.
+    const swapped = formSyncHud(false, true);
+    swapped.syncActiveHotbarForm();
+    expect(swapped.dragAction).toBeNull();
+    expect(swapped.mobileActionPage).toBe(1);
+    expect(swapped.refreshes).toBe(0);
 
-    hud.syncActiveHotbarForm();
+    // A mid-session Interface Mode flip re-seeds the bars from the other
+    // surface's keys: the same drag drop and page re-clamp as a form swap, plus
+    // the spellbook's hotbar controls re-read the newly loaded bar.
+    const flipped = formSyncHud(true, false);
+    flipped.syncActiveHotbarForm();
+    expect(flipped.dragAction).toBeNull();
+    expect(flipped.mobileActionPage).toBe(1);
+    expect(flipped.refreshes).toBe(1);
 
-    expect(hud.dragAction).toBeNull();
-    expect(hud.mobileActionPage).toBe(1);
-    expect(hud.refreshes).toBe(0);
-  });
-
-  // A mid-session Interface Mode flip re-seeds the bars from the other
-  // surface's keys: the same drag drop and page re-clamp as a form swap, plus
-  // the spellbook's hotbar controls re-read the newly loaded bar.
-  it('drops the drag, re-clamps the page, and refreshes the spellbook on a surface flip', () => {
-    const hud = formSyncHud(true, false);
-
-    hud.syncActiveHotbarForm();
-
-    expect(hud.dragAction).toBeNull();
-    expect(hud.mobileActionPage).toBe(1);
-    expect(hud.refreshes).toBe(1);
-    // The reload already loaded the resolved form; no second form sync runs.
-    expect(hud.formSyncs).toBe(0);
-  });
-
-  it('leaves the drag and page alone when neither the surface nor the form changed', () => {
-    const hud = formSyncHud(false, false);
-
-    hud.syncActiveHotbarForm();
-
-    expect(hud.dragAction).not.toBeNull();
-    expect(hud.mobileActionPage).toBe(4);
-    expect(hud.refreshes).toBe(0);
+    // Neither the surface nor the form changed: the drag and page stay put.
+    const unchanged = formSyncHud(false, false);
+    unchanged.syncActiveHotbarForm();
+    expect(unchanged.dragAction).not.toBeNull();
+    expect(unchanged.mobileActionPage).toBe(4);
+    expect(unchanged.refreshes).toBe(0);
   });
 
   it('leaves no touch long-press rearrange path on the action bar', () => {

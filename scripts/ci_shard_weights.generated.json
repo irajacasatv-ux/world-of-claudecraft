@@ -2,8 +2,8 @@
   "__provenance": {
     "run": "34168361798",
     "harvested": "2026-09-08",
-    "files": 4927,
-    "harvestedFiles": 3903,
+    "files": 4926,
+    "harvestedFiles": 3902,
     "carried": {
       "tests/ability_imbue_text.test.ts": {
         "ms": 1954,
@@ -10694,7 +10694,6 @@
   "tests/disenchant_yield_view.test.ts": 18,
   "tests/dock_collision.test.ts": 2725,
   "tests/dockerignore_context.test.ts": 19,
-  "tests/doom_meter_hud.test.ts": 7,
   "tests/doom_meter_movable.test.ts": 12,
   "tests/doom_meter_painter.test.ts": 7,
   "tests/doom_meter_view.test.ts": 8,

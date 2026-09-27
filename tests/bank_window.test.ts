@@ -816,8 +816,14 @@ describe('bank_window: mobile pairing (hud.mobile.css)', () => {
     // placeNewWindow bakes an inline cascade-offset inset; on mobile that inline inset
     // beats the docking CSS and breaks the 50/50 pairing. The bank cluster must be
     // exempted exactly as the vendor cluster is, or the mobile pairing silently regresses.
-    expect(hud).toMatch(
-      /classList\.contains\('bank-open'\)\s*&&\s*\(el\.id === 'bank-window' \|\| el\.id === 'bags'\)\s*\)\s*return;/,
+    // The exemption list moved out of hud.ts into window_reflow_core.ts cascadeExempt
+    // (driven behaviorally in tests/window_reflow_core.test.ts).
+    const reflowCore = readFileSync(
+      new URL('../src/ui/window_reflow_core.ts', import.meta.url),
+      'utf8',
+    );
+    expect(reflowCore).toMatch(
+      /body\.contains\('bank-open'\)\s*&&\s*\(id === 'bank-window' \|\| id === 'bags'\)\s*\)\s*return true;/,
     );
   });
 

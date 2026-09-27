@@ -756,7 +756,13 @@ describe('tracker chrome', () => {
     // The literal key is the contract three surfaces share (the tracker build,
     // the window eye, the Options row): a drifted spelling on any one of them
     // would fork the switch into two settings that both look right alone.
-    expect(trackerBody, 'enabled read').toContain(
+    // The tracker build's read lives in buildReliquaryTrackerFrame (extracted
+    // from Hud.updateReliquaryTracker), scoped to that function's body.
+    const viewSrc = read('../src/ui/reliquary_tracker_view.ts');
+    const frameBody = stripComments(
+      sliceBetween(viewSrc, 'export function buildReliquaryTrackerFrame(', '\nexport function'),
+    );
+    expect(frameBody, 'enabled read').toContain(
       "input.enabled = (settings?.get('showReliquaryTracker') ?? true) === true;",
     );
     // Scoped to the reliquaryWindow deps bag (the same discipline as

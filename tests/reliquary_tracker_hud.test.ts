@@ -9,9 +9,12 @@
 // body classes, and nothing said a pinned page really travels from the window's
 // store into a tracker line.
 //
-// The rig is the reliquary_unlock_chat_link.test.ts one: Object.create over the
-// real Hud.prototype with only the fields this method touches assigned onto the
-// instance, so the assertions run the shipped code rather than a copy of it.
+// Everything that method decides is buildReliquaryTrackerFrame now (extracted
+// into src/ui/reliquary_tracker_view.ts); the Hud keeps two statements: mint
+// the reused input once, then paint the frame built from its live pin store,
+// its settings and the body classes. The rig runs exactly those two statements
+// (their Hud spelling is pinned by the last describe below, so the two cannot
+// drift) over the REAL frame builder, without importing the Hud coordinator.
 // The tracker view is the REAL reused container (makeReliquaryTrackerView), the
 // container-reuse contract being what makes the immediate-assert style below
 // necessary: the painter is handed the same object every build, so a captured
@@ -25,12 +28,16 @@
 // completion() null, and the method must produce the hidden strip, not a
 // throw.
 
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { RELIQUARY_PAGES_BY_ID } from '../src/sim/content/reliquary';
-import { Hud } from '../src/ui/hud';
 import { reliquaryPageName } from '../src/ui/reliquary_i18n';
 import {
+  buildReliquaryTrackerFrame,
+  makeReliquaryTrackerInput,
   makeReliquaryTrackerView,
+  type ReliquaryTrackerInput,
   type ReliquaryTrackerView,
 } from '../src/ui/reliquary_tracker_view';
 import type { ReliquaryPageCompletion } from '../src/world_api/reliquary';
@@ -67,6 +74,7 @@ interface TrackerHarness {
   };
   reliquaryWindow: { pinned: Set<string> };
   reliquaryTrackerView: ReliquaryTrackerView;
+  reliquaryTrackerInput: ReliquaryTrackerInput | null;
   reliquaryTrackerPainter: { update(view: ReliquaryTrackerView): void };
   updateReliquaryTracker(): void;
 }
@@ -86,7 +94,7 @@ interface TrackerRig {
 }
 
 function makeRig(): TrackerRig {
-  const hud = Object.create(Hud.prototype) as unknown as TrackerHarness;
+  const hud = {} as TrackerHarness;
   const settings: Record<string, unknown> = {};
   const painted: ReliquaryTrackerView[] = [];
   // Only the pinned page starts with progress: every other catalog page reads
@@ -121,10 +129,25 @@ function makeRig(): TrackerRig {
   };
   hud.reliquaryWindow = { pinned: new Set<string>() };
   hud.reliquaryTrackerView = makeReliquaryTrackerView();
+  // The Hud field declares null until the first build mints it.
+  hud.reliquaryTrackerInput = null;
   hud.reliquaryTrackerPainter = {
     update: (view) => {
       painted.push(view);
     },
+  };
+  // Hud.updateReliquaryTracker, statement for statement (pinned below).
+  hud.updateReliquaryTracker = function (this: TrackerHarness) {
+    this.reliquaryTrackerInput ??= makeReliquaryTrackerInput(() => this.sim);
+    this.reliquaryTrackerPainter.update(
+      buildReliquaryTrackerFrame(
+        this.reliquaryTrackerView,
+        this.reliquaryTrackerInput,
+        this.reliquaryWindow.pinned,
+        this.optionsHooks?.settings,
+        document.body.classList,
+      ),
+    );
   };
   return { hud, settings, painted, progress, mounts, counts };
 }
@@ -371,5 +394,27 @@ describe('Hud.updateReliquaryTracker: the master visibility switch', () => {
     settings.showReliquaryTracker = false;
     hud.updateReliquaryTracker();
     expect(counts.ownedMounts).toBe(0);
+  });
+});
+
+describe('Hud.updateReliquaryTracker: the method the rig mirrors', () => {
+  it('mints the input once and paints the frame built from the live store, settings and body', () => {
+    // Comment-stripped and scoped to the method, so the rig above and the Hud
+    // cannot drift apart: dropping the live pin-store read, the settings, or
+    // the body classes from the Hud call reds here, and the behavior cases above
+    // prove what each argument does inside the frame builder.
+    const hud = readFileSync(join(__dirname, '../src/ui/hud.ts'), 'utf8').replace(
+      /(^|[^:])\/\/.*$/gm,
+      '$1',
+    );
+    const start = hud.indexOf('private updateReliquaryTracker(): void {');
+    expect(start).toBeGreaterThan(-1);
+    const body = hud.slice(start, hud.indexOf('\n  }\n', start)).replace(/\s+/g, ' ');
+    expect(body).toContain(
+      'this.reliquaryTrackerInput ??= makeReliquaryTrackerInput(() => this.sim);',
+    );
+    expect(body).toContain(
+      'this.reliquaryTrackerPainter.update( buildReliquaryTrackerFrame( this.reliquaryTrackerView, this.reliquaryTrackerInput, this.reliquaryWindow.pinned, this.optionsHooks?.settings, document.body.classList, ), );',
+    );
   });
 });

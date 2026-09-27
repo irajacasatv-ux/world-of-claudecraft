@@ -7068,7 +7068,7 @@ export const hudChromeStrings = {
     // used to print one line and one ding per component. Like gatherLine
     // above, these carry the quantity and splice {name} as a clickable,
     // quality-colored item link, and stay worded APART from the loot family
-    // whose "You receive:" wording Hud.localizeLootText still matches on
+    // whose "You receive:" wording localizeLootText (loot_text_i18n_core.ts) still matches on
     // (contract pin: tests/gather_event_i18n.test.ts).
     harvestLine: 'You harvest: {name}.',
     harvestLineQty: 'You harvest: {name} x{qty}.',

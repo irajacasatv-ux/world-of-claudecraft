@@ -1,6 +1,12 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import type { Aura } from '../src/sim/types';
-import { afflictionFateThreadCount, doomMeterState } from '../src/ui/hud/warlock/doom_meter_view';
+import type { Aura, Entity } from '../src/sim/types';
+import {
+  afflictionFateThreadCount,
+  doomMeterState,
+  warlockDoomMeterInput,
+} from '../src/ui/hud/warlock/doom_meter_view';
 
 function doom(stacks: number, remaining: number): Aura {
   return {
@@ -106,5 +112,55 @@ describe('Affliction Condemnation meter view', () => {
     expect(doomMeterState({ affliction: false, auras: [] }, String, empty, timed).visible).toBe(
       false,
     );
+  });
+});
+
+// The Hud integration (moved from tests/doom_meter_hud.test.ts, which drove the
+// real Hud.updateWarlockDoomMeter on a bare prototype): the frame's input is now
+// built by warlockDoomMeterInput, so the case drives that directly, and the
+// Hud's two remaining lines (paint exactly that input, hand its thread count on
+// to the frame) are pinned against the comment-stripped method below.
+describe('Warlock Doom meter frame input', () => {
+  it('builds the painted input from Fate Threads owned by the player', () => {
+    const player = {
+      id: 7,
+      auras: [
+        {
+          id: 'needle_of_fate',
+          name: 'Fate Threads',
+          kind: 'affliction_fate_threads',
+          remaining: 12,
+          duration: 12,
+          value: 3,
+          stacks: 3,
+          sourceId: 7,
+          school: 'shadow',
+        },
+      ],
+    } as Entity;
+
+    const input = warlockDoomMeterInput('affliction', player);
+
+    // Was the Hud method's return value (the count the frame reads on).
+    expect(input.fateThreads).toBe(3);
+    // Was the painter's argument.
+    expect(input).toEqual({
+      affliction: true,
+      auras: player.auras,
+      fateThreads: 3,
+    });
+  });
+
+  it('Hud paints exactly that input and returns its thread count (source pin)', () => {
+    const hud = readFileSync(join(__dirname, '../src/ui/hud.ts'), 'utf8').replace(
+      /(^|[^:])\/\/.*$/gm,
+      '$1',
+    );
+    const start = hud.indexOf('private updateWarlockDoomMeter(p: Entity): number {');
+    expect(start).toBeGreaterThan(-1);
+    const body = hud.slice(start, hud.indexOf('\n  }\n', start));
+    expect(body).toContain('const input = warlockDoomMeterInput(this.sim.talentSpec, p);');
+    expect(body).toContain('this.doomMeter.paint(input);');
+    expect(body).toContain('return input.fateThreads;');
   });
 });

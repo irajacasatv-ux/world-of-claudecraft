@@ -5,4 +5,5 @@ export {
   type DoomMeterInput,
   type DoomMeterState,
   doomMeterState,
+  warlockDoomMeterInput,
 } from './doom_meter_view';

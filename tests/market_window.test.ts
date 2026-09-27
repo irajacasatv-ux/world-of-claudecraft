@@ -267,8 +267,14 @@ describe('market_window: desktop docking with bags (PR #2107 review round 4)', (
     // beats the docking CSS above and re-overlaps the two windows. The market cluster
     // must be exempted exactly as the bank cluster is, or opening a third window
     // (e.g. bags first, then market) silently regresses the docked pairing.
-    expect(hud).toMatch(
-      /classList\.contains\('market-open'\)\s*&&\s*\(el\.id === 'market-window' \|\| el\.id === 'bags'\)\s*\)\s*return;/,
+    // The exemption list moved out of hud.ts into window_reflow_core.ts cascadeExempt
+    // (driven behaviorally in tests/window_reflow_core.test.ts).
+    const reflowCore = readFileSync(
+      new URL('../src/ui/window_reflow_core.ts', import.meta.url),
+      'utf8',
+    );
+    expect(reflowCore).toMatch(
+      /body\.contains\('market-open'\)\s*&&\s*\(id === 'market-window' \|\| id === 'bags'\)\s*\)\s*return true;/,
     );
   });
 });

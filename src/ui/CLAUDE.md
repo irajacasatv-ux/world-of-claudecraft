@@ -488,8 +488,8 @@ fraction-digit options (see `coords.ts`, `meters.ts`, `xp_bar.ts`, `clock.ts`).
 
 **Three client-side matchers re-localize `src/sim`/`server` English** (which stay
 language-agnostic): `localizeErrorText` (the registered pure core
-`error_text_i18n_core.ts`; Hud keeps a thin delegator) plus the hud-local
-`localizeSystemText`/`localizeLootText`, then `server_i18n.ts` (`localizeServerText`), then
+`error_text_i18n_core.ts`; Hud keeps a thin delegator), `localizeSystemText`
+(`system_text_i18n.ts`) and `localizeLootText` (the pure core `loot_text_i18n_core.ts`), then `server_i18n.ts` (`localizeServerText`), then
 `sim_i18n.ts` (`localizeSimText`), in that order; the S3 drift guard resolves each arm
 through its per-arm file table and accepts recognition by any of the three. Dev-channel
 text (`console.*`, thrown errors) stays English and is NOT matched.

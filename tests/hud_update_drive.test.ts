@@ -378,9 +378,11 @@ const HUD_UPDATE_DRIVES: readonly DriveRow[] = [
     guard: {
       kind: 'hud',
       proof:
-        // The shared signature includes host capability, bags, player name,
-        // and vault stock so each change repaints an open crafting window.
-        'if (craftingWindowRefreshSig(this.sim) === this.lastCraftingReagentSig) return;',
+        // The shared signature (openCraftingRefreshSig in
+        // hud/professions/crafting_view.ts, null while the window is closed)
+        // includes host capability, bags, player name, and vault stock so each
+        // change repaints an open crafting window.
+        'if (sig !== null && sig !== this.lastCraftingReagentSig) this.renderCrafting();',
     },
     why: 'the other half of the Craft gate: rebuilds the crafting window when the bags move',
   },
@@ -1949,7 +1951,7 @@ describe('Hud.update() drives exactly the registered set, on the registered band
         'hud/battleground/battleground_proposal_popup.ts: if (view.sig !== this.lastSig) {',
         'hud/cosmetics/cosmetics_window.ts: const sig = cosmeticsSig(this.snapshot()); if (sig === this.lastSig) return;',
         'hud.ts: if (craftCastActivitySig(session) !== this.lastCraftingCastSig) {',
-        'hud.ts: if (craftingWindowRefreshSig(this.sim) === this.lastCraftingReagentSig) return;',
+        'hud.ts: if (sig !== null && sig !== this.lastCraftingReagentSig) this.renderCrafting();',
         'hud.ts: if (sig !== this.lastLootSettingsSig) {',
         // Phase 20: the progression-block latch for the open character sheet.
         'hud.ts: if (sig === this.lastCharSheetSig) return;',

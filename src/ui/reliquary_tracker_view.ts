@@ -38,6 +38,7 @@
 
 import { RELIQUARY_PAGE_ORDER, RELIQUARY_PAGES_BY_ID } from '../sim/content/reliquary';
 import type { ReliquaryPageCompletion } from '../world_api/reliquary';
+import { isCompactTouchHud } from './mobile_hud_layout';
 import { isReliquaryNearlyComplete, rankNearlyComplete } from './reliquary_view';
 
 /** Pinned pages, and therefore tracker lines, per character. */
@@ -244,6 +245,40 @@ export function reliquaryTrackerOwnershipSig(parts: {
   sig = (Math.imul(sig, 1009) + (parts.accountFinds ?? 0)) | 0;
   sig = (Math.imul(sig, 1009) + (parts.accountDeeds ?? 0)) | 0;
   return sig;
+}
+
+/** The two persisted tracker settings one frame build reads (the live
+ *  settings store satisfies it structurally). */
+export interface ReliquaryTrackerSettings {
+  get(key: 'reliquaryTrackerCollapsed' | 'showReliquaryTracker'): unknown;
+}
+
+/**
+ * One build of the strip (extracted from Hud.updateReliquaryTracker): refresh
+ * the reused input's per-build fields, build into the reused container, and
+ * stamp the compact-touch chip flag. The pin set is taken per call and written
+ * onto the input every build, because ReliquaryWindow replaces its store with a
+ * NEW Set on every accepted toggle and prune (a captured reference would freeze
+ * the strip). The collapse and the master switch are read off the persisted
+ * settings each build (collapse defaults to expanded, the switch to shown).
+ * The chip flag needs BOTH body classes and is re-read every build: the compact
+ * tier's header is a count chip that opens The Reliquary instead of a
+ * disclosure toggle, and this is the same class test that header's click
+ * delegation uses, so the announced role matches the behavior.
+ */
+export function buildReliquaryTrackerFrame(
+  view: ReliquaryTrackerView,
+  input: ReliquaryTrackerInput,
+  pinned: ReadonlySet<string>,
+  settings: ReliquaryTrackerSettings | undefined,
+  bodyClasses: { contains(cls: string): boolean },
+): ReliquaryTrackerView {
+  input.pinned = pinned;
+  input.collapsed = (settings?.get('reliquaryTrackerCollapsed') ?? false) === true;
+  input.enabled = (settings?.get('showReliquaryTracker') ?? true) === true;
+  const out = buildReliquaryTrackerViewInto(view, input);
+  out.chip = isCompactTouchHud(bodyClasses);
+  return out;
 }
 
 /**

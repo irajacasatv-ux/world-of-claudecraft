@@ -31,6 +31,7 @@ import {
   isAbilityActionBarEligible,
   parseHotbarActions,
   placeAbilityOnSlot,
+  placeItemOnSlot,
   classHasFormBars as playerClassHasFormBars,
   loadAttackSlotAction as readAttackSlotAction,
   sanitizeHotbarAction,
@@ -494,6 +495,21 @@ export class ActionBarController {
     const target = this.actionState.indexOf(null);
     if (target === -1) return false;
     this.actionState = placeAbilityOnSlot(this.actionState, abilityId, target);
+    this.saveActions();
+    return true;
+  }
+
+  /** The touch arm of the desktop item-to-hotbar drop (the UX pass's mobile
+   *  angler item): a bag stack released over an action seat places the item
+   *  there, exactly the desktop drop's item branch, including its silent
+   *  refusal of a non-hotbar item. `slot` is the 1-based bar slot (a ring
+   *  release resolves it through the live page before this runs). Returns
+   *  whether the placement ran, so the caller applies the desktop drop's
+   *  stale-tooltip rule (#1485) only then. */
+  placeItemFromTouch(itemId: string, slot: number): boolean {
+    if (!Number.isInteger(slot) || slot < 1) return false;
+    if (!this.isHotbarItemId(itemId)) return false;
+    this.replaceActions(placeItemOnSlot(this.actions, itemId, slot - 1));
     this.saveActions();
     return true;
   }

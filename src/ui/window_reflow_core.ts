@@ -70,3 +70,40 @@ export function anchoredRequestedPos(
   const anchored = anchorAdjustedPos(pos, size, viewport);
   return { left: anchored.left, top: anchored.top };
 }
+
+/** Whether the desktop open cascade (window_reflow.ts placeNewWindow) must
+ *  leave a newly shown window where its CSS put it. `moved` is the window's
+ *  own moved stamp (a window the player or an earlier cascade already placed
+ *  keeps its spot); `body` is the body's class list. Extracted from Hud. */
+export function cascadeExempt(
+  id: string,
+  moved: boolean,
+  body: { contains(cls: string): boolean },
+): boolean {
+  // Desktop-only cascade: mobile windows are full-screen/modal (see
+  // src/styles/hud.mobile.css), so the pixel-offset cascade would hijack
+  // their inset:0 CSS with an inline top/left/right:auto/bottom:auto that
+  // never gets reset, breaking the full-screen layout for the rest of the
+  // session (issue 1577 char/talents redo).
+  if (body.contains('mobile-touch') || moved || id === 'loot-window' || id === 'confirm-dialog') {
+    return true;
+  }
+  if (body.contains('vendor-open') && (id === 'vendor-window' || id === 'bags')) return true;
+  // Fixed vault and bank layouts must not inherit cascaded window positions.
+  if (id === 'bank-window' && body.contains('weekly-vault-open')) return true;
+  if (body.contains('bank-open') && (id === 'bank-window' || id === 'bags')) return true;
+  // The market docks its bags companion the same way (body.market-open, see
+  // components.css): skip the cascade for that cluster too, or the inline
+  // position the cascade bakes onto #bags beats the docking CSS the moment a
+  // second window is already open (PR #2107 review round 5).
+  if (body.contains('market-open') && (id === 'market-window' || id === 'bags')) return true;
+  return false;
+}
+
+/** The cascade step, in VISUAL px, for a window shown over `openCount` other
+ *  open windows: 28px per open window, wrapping after eight. Null when no
+ *  other window is open (the window keeps its CSS spot). */
+export function cascadeOffset(openCount: number): number | null {
+  if (openCount <= 0) return null;
+  return (((openCount - 1) % 8) + 1) * 28;
+}

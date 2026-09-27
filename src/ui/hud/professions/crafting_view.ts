@@ -533,6 +533,22 @@ export function craftingWindowRefreshSig(
   return host + craftingReagentSig(world.inventory, world.player.name, vaultStock);
 }
 
+/** The bag-freshness probe's signature for the crafting window (issue #2375,
+ *  extracted from Hud.refreshOpenCraftingIfReagentsChanged): the refresh
+ *  signature while the window is open, null while it is closed. The open check
+ *  comes FIRST, so a closed window never builds the signature (no bag sweep per
+ *  slow tick). Hud repaints when a non-null answer differs from the signature
+ *  its last paint latched; that comparison stays in Hud, spelled against its
+ *  own memo field, so the language fan-out sweep
+ *  (tests/language_fanout_registry.test.ts) still sees the gate. */
+export function openCraftingRefreshSig(
+  open: boolean,
+  world: Parameters<typeof craftingWindowRefreshSig>[0],
+): string | null {
+  if (!open) return null;
+  return craftingWindowRefreshSig(world);
+}
+
 // ---------------------------------------------------------------------------
 // Craft tabs: the window shows one craft at a time behind a tab strip, so a
 // ten-craft recipe book stays scannable. The tab list and the selection

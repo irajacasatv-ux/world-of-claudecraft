@@ -179,6 +179,8 @@ const UI_ROOT_TOUCHERS: Record<string, string> = {
   'src/ui/meters_frame.ts': 're-homes framed meter panels onto #ui',
   'src/ui/bootcamp.ts': 'world-anchored tutorial prompts, transient coachmarks',
   'src/ui/tutorial.ts': 'transient tutorial coachmarks',
+  'src/ui/emote_wheel.ts':
+    'mounts the emote wheel (extracted from hud.ts): a transient pick radial shown only while the wheel is held or pinned open',
   'src/ui/window_open_state.ts':
     'mounts nothing: toggles #ui.options-open (the Esc menu scrim state class that replaced a #ui-anchored :has())',
   'src/ui/noticeboard_popup.ts': 'transient noticeboard popup card',

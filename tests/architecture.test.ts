@@ -218,6 +218,16 @@ const UI_PURE_CORES = [
   // The composed item tooltip card (extracted from Hud.itemTooltip): an IWorld
   // slice plus the Show Item Level thunk in, the card's HTML string out.
   'src/ui/item_tooltip_view.ts',
+  // The ability tooltip card and the one-line aura effect summary (extracted
+  // from Hud.abilityTooltip / auraEffectTooltipHtml): a player + talents slice in,
+  // HTML out.
+  'src/ui/ability_tooltip_view.ts',
+  // The loot-line matcher (extracted from Hud.localizeLootText with its
+  // sim-money helper): English loot text in, localized text out.
+  'src/ui/loot_text_i18n_core.ts',
+  // The emote wheel's geometry (extracted from Hud): the seated emotes, their
+  // ring offsets and the pointer hit test, all resolved from ONE slot list.
+  'src/ui/emote_wheel_view.ts',
   'src/ui/trinket_tooltip_view.ts',
   // The trinket auras' tooltip descriptor and their item-icon art map.
   'src/ui/trinket_aura_effect.ts',
@@ -672,6 +682,8 @@ const UI_PURE_CORES = [
   'src/ui/hud/action_bar/action_bar_visibility_core.ts',
   'src/ui/hud/action_bar/action_bar_toggle_core.ts',
   'src/ui/hud/action_bar/action_bar_bind_core.ts',
+  // The per-frame form sync's decision (extracted from Hud.syncActiveHotbarForm).
+  'src/ui/hud/action_bar/action_bar_form_sync_core.ts',
   'src/ui/hud/action_bar/mobile_action_page_view.ts',
   'src/ui/hud/action_bar/consumable_bar_view.ts',
   'src/ui/hud/action_bar/consumable_strip_core.ts',
@@ -2631,6 +2643,10 @@ const UI_DOM_MODULES = [
   // duration and fade-gap timers, performance.now() stamps. The queue policy
   // stays in the pure banner_queue.ts.
   'src/ui/banner_slot.ts',
+  // The emote wheel's DOM half (extracted from Hud): mounts #emote-wheel under
+  // #ui, paints the seats, reads the wheel rect and marks the seat under the
+  // pointer. The geometry stays in the pure emote_wheel_view.ts.
+  'src/ui/emote_wheel.ts',
   'src/ui/frame_presets_live.ts',
   'src/ui/frame_editor_deps.ts',
   'src/ui/frame_presets_controls.ts',

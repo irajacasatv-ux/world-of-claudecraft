@@ -268,22 +268,30 @@ describe('hud.ts wiring pins (the surfaces the Space-reopens-last-menu fix cover
   });
 
   it('re-marks the emote wheel on every show, not once at creation (its name follows a language switch)', () => {
-    // The wheel element is created once (the `if (!el)` block) and shown many
-    // times; a mark inside the create block would freeze the aria-label in the
+    // The wheel element is created once (mountEmoteWheel in src/ui/emote_wheel.ts
+    // hands back the existing element on every later show) and shown many
+    // times; a mark inside the create path would freeze the aria-label in the
     // language of the first show. Pin the call to the per-show region: after the
-    // create block closes and before the show paints the wheel's contents.
+    // mount returns and before the show paints the wheel's contents, and pin
+    // that the mount itself never marks.
     const start = hud.indexOf('private showEmoteWheel(');
     expect(start).toBeGreaterThan(0);
-    const createBlock = hud.indexOf('if (!el) {', start);
-    expect(createBlock).toBeGreaterThan(start);
-    const createBlockEnd = hud.indexOf('\n    }\n', createBlock);
-    expect(createBlockEnd).toBeGreaterThan(createBlock);
-    const paint = hud.indexOf('el.innerHTML =', start);
-    const mark = hud.indexOf(
-      "markDialogRoot(el, { label: t('hudChrome.emoteWheel.label') })",
-      start,
-    );
-    expect(mark).toBeGreaterThan(createBlockEnd);
+    const end = hud.indexOf('\n  }\n', start);
+    expect(end).toBeGreaterThan(start);
+    const show = hud.slice(start, end);
+    const mount = show.indexOf('const el = mountEmoteWheel(this.emoteWheelEl);');
+    expect(mount).toBeGreaterThan(0);
+    const paint = show.indexOf('el.innerHTML =');
+    const mark = show.indexOf("markDialogRoot(el, { label: t('hudChrome.emoteWheel.label') })");
+    expect(mark).toBeGreaterThan(mount);
     expect(mark).toBeLessThan(paint);
+    const wheel = stripLineComments(
+      readFileSync(join(__dirname, '../src/ui/emote_wheel.ts'), 'utf8'),
+    );
+    const mountStart = wheel.indexOf('export function mountEmoteWheel(');
+    expect(mountStart).toBeGreaterThan(-1);
+    const mountBody = wheel.slice(mountStart, wheel.indexOf('\n}\n', mountStart));
+    expect(mountBody).toContain("el.id = 'emote-wheel';");
+    expect(mountBody).not.toContain('markDialogRoot');
   });
 });

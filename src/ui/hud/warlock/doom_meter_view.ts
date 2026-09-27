@@ -1,4 +1,4 @@
-import type { Aura } from '../../../sim/types';
+import type { Aura, Entity } from '../../../sim/types';
 
 const DOOM_MAX = 100;
 const FATE_THREAD_MAX = 3;
@@ -28,6 +28,19 @@ export function afflictionFateThreadCount(auras: readonly Aura[], sourceId: numb
     (aura) => aura.sourceId === sourceId && aura.kind === 'affliction_fate_threads',
   );
   return Math.max(0, Math.min(FATE_THREAD_MAX, Math.round(threads?.stacks ?? threads?.value ?? 0)));
+}
+
+/** The meter's input for one frame, off the live world (extracted from
+ *  Hud.updateWarlockDoomMeter): the meter shows only in Affliction, and the
+ *  Fate Threads count comes from the thread aura THIS warlock owns, zero
+ *  outside Affliction. Hud paints it and hands the count on to the frame. */
+export function warlockDoomMeterInput(
+  talentSpec: string | null,
+  player: Pick<Entity, 'id' | 'auras'>,
+): Required<DoomMeterInput> {
+  const affliction = talentSpec === 'affliction';
+  const fateThreads = affliction ? afflictionFateThreadCount(player.auras, player.id) : 0;
+  return { affliction, auras: player.auras, fateThreads };
 }
 
 export function doomMeterState(

@@ -134,26 +134,15 @@ import {
 import { abilityScalingOf } from './ability_damage';
 import {
   abilityDisplayDescription,
-  abilityEffectAuraInput,
   abilityEffectText,
   formatAbilityNumber,
 } from './ability_description';
 import { abilityDisplayName, abilityDisplayNameFromSource } from './ability_display_name';
-import {
-  abilityCastLine,
-  abilityRangeLine,
-  abilityRequirementLines,
-  describeAbilitySummary,
-  playerSpellHasteFrac,
-  resourceDisplayName,
-} from './ability_tooltip_lines';
+import { describeAbilitySummary, playerSpellHasteFrac } from './ability_tooltip_lines';
+import { abilityTooltipHtml, auraEffectTooltipHtml } from './ability_tooltip_view';
 import { ArenaWindow } from './arena_window';
 import { auraDisplayNameForHud, auraDisplayNameFromSource } from './aura_display_name';
-import {
-  type AuraEffectInput,
-  auraEffectDescriptor,
-  auraEffectMaximumFractionDigits,
-} from './aura_effect';
+import type { AuraEffectInput } from './aura_effect';
 import { auraGainLogKeyFor, findAuraForGainEvent } from './aura_gain_log';
 import { resolveHudAuraIconId, resolveHudAuraIconUrl } from './aura_icon_runtime';
 import type { AuraOverlayController } from './aura_overlay_controller';
@@ -254,18 +243,17 @@ import { dropdownKeyNav } from './dropdown_nav';
 import { DungeonFinderProposalPopup } from './dungeon_finder_proposal_popup';
 import { DungeonFinderWindow } from './dungeon_finder_window';
 import { emoteIconUrl } from './emote_icons';
+import { appendEmoteWheelSeats, mountEmoteWheel, pointEmoteWheel } from './emote_wheel';
+import { EMOTE_WHEEL_LIMIT } from './emote_wheel_view';
 import { crossHotbarActionSlot, EmpowerHold } from './empower_hold_core';
 import {
   combatAbilityName,
   delveDisplayName,
   entityDisplayName,
-  itemDisplayNameFromSource,
-  itemStackDisplayName,
   mobDisplayName,
   npcDisplayName,
   npcDisplayTitle,
   npcGreeting,
-  parseSimMoney,
   questNarrative,
   questObjectiveLabel,
   questTitle,
@@ -322,6 +310,7 @@ import {
   handleShiftClearKeydown,
 } from './hud/action_bar/action_bar_clear';
 import { ActionBarController } from './hud/action_bar/action_bar_controller';
+import { hotbarSyncOutcome } from './hud/action_bar/action_bar_form_sync_core';
 import { actionBarIconBg } from './hud/action_bar/action_bar_icon_bg';
 import {
   ACTION_BAR_ABILITY_SLOTS,
@@ -489,6 +478,7 @@ import {
   craftingWindowRefreshSig,
   craftLearnHints,
   craftOwnsTab,
+  openCraftingRefreshSig,
 } from './hud/professions/crafting_view';
 import {
   craftCastStripElements,
@@ -566,7 +556,7 @@ import {
 import { renderVendorWindow } from './hud/vendor/vendor_window';
 import { buildWarfareVendorView, warfareShopViewer } from './hud/vendor/warfare_vendor_view';
 import { renderWarfareVendorWindow } from './hud/vendor/warfare_vendor_window';
-import { afflictionFateThreadCount, createDoomMeter, destructionRuinPips } from './hud/warlock';
+import { createDoomMeter, destructionRuinPips, warlockDoomMeterInput } from './hud/warlock';
 import { WocTradeController } from './hud/woc_trade';
 import { HudFrameGroups, refreshHudFrameGroupLabels } from './hud_frame_groups';
 import { partyFrameGrid, registerHudFrames } from './hud_frame_registry';
@@ -603,6 +593,7 @@ import { ReannounceMarker } from './live_region_reannounce';
 import { chatBubbleKind, isCombatFlavorLog } from './log_event_route';
 import { lootQualityReceiptBody } from './loot_quality_receipt';
 import { lootRollWinBanner } from './loot_roll_win_view';
+import { localizeLootText } from './loot_text_i18n_core';
 import { lowHealthVignette } from './low_health';
 import { type LowResourceView, lowResourceViewInto } from './low_resource';
 import { mailIndicatorView } from './mailbox_view';
@@ -744,7 +735,7 @@ import {
 import { selfCuratorStanding } from './reliquary_sheet_view';
 import { ReliquaryTrackerPainter } from './reliquary_tracker_painter';
 import {
-  buildReliquaryTrackerViewInto,
+  buildReliquaryTrackerFrame,
   makeReliquaryTrackerInput,
   makeReliquaryTrackerView,
   type ReliquaryTrackerInput,
@@ -772,13 +763,7 @@ import {
   MOTD_RESULT_KEYS,
 } from './result_code_keys';
 import { isTalentRowUnlockLevel } from './row_unlock_toast';
-import { localizeServerText } from './server_i18n';
-import {
-  localizeAuthoredYellSpeakerName,
-  localizeAuthoredYellText,
-  localizeSimText,
-  tSim,
-} from './sim_i18n';
+import { localizeAuthoredYellSpeakerName, localizeAuthoredYellText, tSim } from './sim_i18n';
 import { openSimpleMenu } from './simple_context_menu';
 import { SocialWindow } from './social_window';
 import { SpellbookWindow } from './spellbook_window';
@@ -846,8 +831,12 @@ import {
 } from './window_drag';
 import { makeWindowFocus } from './window_focus';
 import { syncWindowOpenBodyClasses } from './window_open_state';
-import { installWindowReflow, rememberWindowPos, requestedWindowPos } from './window_reflow';
-import { placeWindow } from './window_reflow_core';
+import {
+  installWindowReflow,
+  placeNewWindow,
+  requestedWindowPos,
+  setWindowPixelPosition as writeWindowPixelPosition,
+} from './window_reflow';
 import { installWindowResize, markResizableWindow } from './window_resize';
 import { wocBalanceChipHtml } from './woc_balance_chip';
 import { promptWocMarketBrowserVisit, wocMarketToggleAction } from './woc_market_link';
@@ -1056,7 +1045,6 @@ const PET_MODE_DESC_KEYS: Record<PetMode, TranslationKey> = {
 const classCss = (cls: string): string =>
   `#${((CLASSES as Record<string, { color: number }>)[cls]?.color ?? 0x5fa8ff).toString(16).padStart(6, '0')}`;
 
-const EMOTE_WHEEL_LIMIT = 8;
 const DEFAULT_EMOTE_WHEEL: OverheadEmoteId[] = [
   'wave',
   'laugh',
@@ -2133,7 +2121,7 @@ export class Hud {
       attachTooltip: (el, html) => this.attachTooltip(el, html),
       hideTooltip: () => this.hideTooltip(),
       previewResolvedAbility: (id) => this.previewResolvedAbility(id),
-      abilityTooltip: (res) => this.abilityTooltip(res),
+      abilityTooltip: (res) => abilityTooltipHtml(res, this.sim),
     });
     this.targetAurasWindow = new TargetAurasWindow({
       root: $('#target-auras-window'),
@@ -3210,7 +3198,8 @@ export class Hud {
     }
     if (el.dataset.windowOpen !== '1') {
       el.dataset.windowOpen = '1';
-      this.placeNewWindow(el);
+      // The desktop open cascade (window_reflow.ts).
+      placeNewWindow(el, (win) => this.isWindowVisible(win));
       // The viewport-resize reflow skips hidden windows, so re-derive (and
       // re-anchor) at show time or a stale spot can reopen off-screen.
       if (el.dataset.windowMoved === '1') {
@@ -3227,49 +3216,6 @@ export class Hud {
     // The whole body-class scan lives in window_open_state.ts (Phase 14
     // extraction); every window's onVisibilityChange dep points here.
     syncWindowOpenBodyClasses((el) => this.isWindowVisible(el));
-  }
-
-  private placeNewWindow(el: HTMLElement): void {
-    // Desktop-only cascade: mobile windows are full-screen/modal (see
-    // src/styles/hud.mobile.css), so the pixel-offset cascade here would hijack
-    // their inset:0 CSS with an inline top/left/right:auto/bottom:auto that
-    // never gets reset, breaking the full-screen layout for the rest of the
-    // session (issue 1577 char/talents redo).
-    if (
-      document.body.classList.contains('mobile-touch') ||
-      el.dataset.windowMoved === '1' ||
-      el.id === 'loot-window' ||
-      el.id === 'confirm-dialog'
-    )
-      return;
-    if (
-      document.body.classList.contains('vendor-open') &&
-      (el.id === 'vendor-window' || el.id === 'bags')
-    )
-      return;
-    // Fixed vault and bank layouts must not inherit cascaded window positions.
-    if (el.id === 'bank-window' && document.body.classList.contains('weekly-vault-open')) return;
-    if (
-      document.body.classList.contains('bank-open') &&
-      (el.id === 'bank-window' || el.id === 'bags')
-    )
-      return;
-    // The market docks its bags companion the same way (body.market-open, see
-    // components.css): skip the cascade for that cluster too, or the inline
-    // position the cascade bakes onto #bags beats the docking CSS the moment a
-    // second window is already open (PR #2107 review round 5).
-    if (
-      document.body.classList.contains('market-open') &&
-      (el.id === 'market-window' || el.id === 'bags')
-    )
-      return;
-    const openCount = [...document.querySelectorAll<HTMLElement>('.window.panel')].filter(
-      (win) => win !== el && this.isWindowVisible(win),
-    ).length;
-    if (openCount <= 0) return;
-    const rect = el.getBoundingClientRect();
-    const offset = (((openCount - 1) % 8) + 1) * 28;
-    this.setWindowPixelPosition(el, rect.left + offset, rect.top + offset, rect);
   }
 
   private bringWindowToFront(el: HTMLElement): void {
@@ -3312,34 +3258,16 @@ export class Hud {
     return win.id === 'map-window' && target === win;
   }
 
-  // left/top: visual space (placeWindow); remember=false for a passive reflow.
+  // left/top: visual space; remember=false for a passive reflow. The writer
+  // (and the moved stamp every explicit write sets) is window_reflow.ts.
   private setWindowPixelPosition(
     el: HTMLElement,
     left: number,
     top: number,
-    rect = el.getBoundingClientRect(),
-    remember = true,
+    rect?: DOMRect,
+    remember?: boolean,
   ): void {
-    const placement = placeWindow(
-      left,
-      top,
-      { w: rect.width, h: rect.height },
-      { w: window.innerWidth, h: window.innerHeight },
-      getUiScale(),
-    );
-    el.style.left = `${placement.css.left}px`;
-    el.style.top = `${placement.css.top}px`;
-    el.style.right = 'auto';
-    el.style.bottom = 'auto';
-    el.style.transform = 'none';
-    if (remember) {
-      rememberWindowPos(el, placement.visual.left, placement.visual.top);
-      // Every explicit write (drag/resize commit, or the automatic open
-      // cascade in placeNewWindow) marks the window as moved, so a viewport
-      // resize/reopen also reflows a window the player never dragged by hand
-      // (a cascaded window going invisible after a shrink resize otherwise).
-      el.dataset.windowMoved = '1';
-    }
+    writeWindowPixelPosition(el, left, top, rect, remember);
   }
 
   // Place a cursor-anchored popup (context menus, the loot window) at a viewport
@@ -4182,41 +4110,18 @@ export class Hud {
   }
 
   private showEmoteWheel(pinned = false): void {
-    let el = this.emoteWheelEl;
-    if (!el) {
-      el = document.createElement('div');
-      el.id = 'emote-wheel';
-      document.getElementById('ui')?.appendChild(el);
-      this.emoteWheelEl = el;
-    }
+    // Mounted once (emote_wheel.ts); everything below runs on every show.
+    const el = mountEmoteWheel(this.emoteWheelEl);
+    this.emoteWheelEl = el;
     // An isModalOpen() surface: a dialog root (re-marked per show, so its name follows a
     // language switch); the blocked-state Space guard (stale_chrome_focus.ts) spares it.
     markDialogRoot(el, { label: t('hudChrome.emoteWheel.label') });
-    const slots = this.emoteWheelSlots.filter(isOverheadEmoteId).slice(0, EMOTE_WHEEL_LIMIT);
     el.innerHTML = `<div class="emote-wheel-ring"></div><button class="emote-wheel-edit ui-btn" data-edit>${esc(t('hudChrome.emoteWheel.edit'))}</button>`;
-    slots.forEach((id, i) => {
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'emote-wheel-item ui-btn';
-      btn.dataset.emote = id;
-      btn.title = this.emoteLabel(id);
-      const icon = document.createElement('img');
-      icon.className = 'emote-wheel-icon';
-      icon.src = emoteIconUrl(id);
-      icon.alt = '';
-      const label = document.createElement('span');
-      label.className = 'emote-wheel-label';
-      label.textContent = this.emoteLabel(id);
-      btn.append(icon, label);
-      btn.addEventListener('click', (ev) => {
-        ev.preventDefault();
-        ev.stopPropagation();
-        this.selectEmoteWheelChoice(id);
-      });
-      const angle = -Math.PI / 2 + (i / Math.max(1, slots.length)) * Math.PI * 2;
-      btn.style.left = `calc(50% + ${Math.cos(angle) * 92}px)`;
-      btn.style.top = `calc(50% + ${Math.sin(angle) * 92}px)`;
-      el.appendChild(btn);
+    // The seats come from the same raw slot list the pointer resolves against
+    // (emote_wheel_view.ts), so the seat drawn is the seat picked.
+    appendEmoteWheelSeats(el, this.emoteWheelSlots, {
+      label: (id) => this.emoteLabel(id),
+      choose: (id) => this.selectEmoteWheelChoice(id),
     });
     el.querySelector<HTMLButtonElement>('.emote-wheel-edit')?.addEventListener('click', (ev) => {
       ev.preventDefault();
@@ -4239,27 +4144,7 @@ export class Hud {
   private updateEmoteWheelPointer(x: number, y: number): void {
     const el = this.emoteWheelEl;
     if (!el || !this.emoteWheelOpen) return;
-    const rect = el.getBoundingClientRect();
-    const cx = rect.left + rect.width / 2;
-    const cy = rect.top + rect.height / 2;
-    const dx = x - cx;
-    const dy = y - cy;
-    const dist = Math.hypot(dx, dy);
-    let hover: OverheadEmoteId | 'edit' | null = null;
-    if (dist <= 44) {
-      hover = 'edit';
-    } else if (dist >= 58 && dist <= rect.width * 0.58 && this.emoteWheelSlots.length > 0) {
-      const angle = (Math.atan2(dy, dx) + Math.PI / 2 + Math.PI * 2) % (Math.PI * 2);
-      const idx =
-        Math.round((angle / (Math.PI * 2)) * this.emoteWheelSlots.length) %
-        this.emoteWheelSlots.length;
-      hover = this.emoteWheelSlots[idx] ?? null;
-    }
-    this.emoteWheelHover = hover;
-    el.querySelector('.emote-wheel-edit')?.classList.toggle('selected', hover === 'edit');
-    el.querySelectorAll<HTMLElement>('.emote-wheel-item').forEach((item) => {
-      item.classList.toggle('selected', item.dataset.emote === hover);
-    });
+    this.emoteWheelHover = pointEmoteWheel(el, this.emoteWheelSlots, x, y);
   }
 
   private openEmoteEditor(): void {
@@ -4994,7 +4879,7 @@ export class Hud {
     loadouts: () => this.sim.loadouts,
     abilityTooltip: (id) => {
       const res = this.previewResolvedAbility(id);
-      return res ? this.abilityTooltip(res) : null;
+      return res ? abilityTooltipHtml(res, this.sim) : null;
     },
     commitSpec: (specId) => this.sim.setSpec(specId),
     selectRow: (level, optionId) => this.sim.selectTalentRow(level, optionId),
@@ -5780,7 +5665,7 @@ export class Hud {
         this.sim.player.resourceType,
         playerSpellHasteFrac(this.sim.player),
       ),
-    abilityTooltip: (known) => this.abilityTooltip(known),
+    abilityTooltip: (known) => abilityTooltipHtml(known, this.sim),
     // The bar's LIVE slot array (index 0 = barSlot 1, hotbarActions' own index =
     // barSlot-1 convention), handed over as-is. It used to be two DERIVED id lists
     // (a flatMap for the on-bar ids, a map for the per-slot ids the mobile action-
@@ -6010,7 +5895,7 @@ export class Hud {
   // definition still retain their descriptor. This keeps new ability buffs from
   // silently degrading to name + timer just because their AuraKind is new.
   private auraTooltipBodyHtml(a: AuraEffectInput & { id?: string }): string {
-    if (!a.id) return this.auraEffectTooltipHtml(a);
+    if (!a.id) return auraEffectTooltipHtml(a, this.sim.player);
     return renderAuraTooltipBodyHtml(a as AuraEffectInput & { id: string }, {
       abilityDescription: (id) => {
         const res = this.previewResolvedAbility(id);
@@ -6018,37 +5903,9 @@ export class Hud {
         const scaling = abilityScalingOf(this.sim.player);
         return abilityDisplayDescription(res, abilityEffectText(res, scaling), scaling, a);
       },
-      effectHtml: (aura) => this.auraEffectTooltipHtml(aura),
+      effectHtml: (aura) => auraEffectTooltipHtml(aura, this.sim.player),
       escapeHtml: esc,
     });
-  }
-
-  // One-line aura effect summary HTML for the buff/debuff tooltip: the pure descriptor
-  // (aura_effect.ts) resolved to localized, esc'd text. The descriptor is exhaustive
-  // for current AuraKinds and safely omits an unknown mixed-release kind. Injected so
-  // the view never calls t().
-  private auraEffectTooltipHtml(a: AuraEffectInput & { id?: string }): string {
-    const effect = auraEffectDescriptor(a, this.sim.player);
-    if (!effect) return '';
-    const values: Record<string, string> = {};
-    if (effect.nums) {
-      for (const [k, n] of Object.entries(effect.nums)) {
-        values[k] = formatNumber(n, {
-          maximumFractionDigits: auraEffectMaximumFractionDigits(n),
-        });
-      }
-    }
-    // Resolve the {school} placeholder in the dot/absorb/thorns summaries. Prefer
-    // the SOURCE ability's school: it is authoritative and always present
-    // client-side, unlike the aura's own school, which the ability-tooltip call
-    // site omits (only kind+value) and the online wire mirror drops. Without this
-    // a magic reflect like Lightning Shield read a raw "{school}" (ability tooltip)
-    // or the wrong "Physical" (online buff frame) instead of its real school.
-    const school = (a.id ? ABILITIES[a.id]?.school : undefined) ?? effect.school;
-    if (school) {
-      values.school = t(`hudChrome.auraEffect.school.${school}` as TranslationKey);
-    }
-    return `<div class="tt-effect">${esc(t(effect.key as TranslationKey, values))}</div>`;
   }
 
   attachTooltip(el: HTMLElement, html: () => string): void {
@@ -6495,86 +6352,6 @@ export class Hud {
     };
   }
 
-  private abilityTooltip(res: ResolvedAbility): string {
-    const a = res.def;
-    const scaling = abilityScalingOf(this.sim.player);
-    const damageText = abilityEffectText(res, scaling);
-    let html = `<div class="tt-title">${esc(abilityDisplayName(a))}</div>`;
-    html += `<div class="tt-sub">${esc(t('abilityUi.tooltip.rank', { rank: formatAbilityNumber(res.rank) }))}</div>`;
-    const costLine: string[] = [];
-    if (res.cost > 0) {
-      costLine.push(
-        t('abilityUi.tooltip.cost', {
-          cost: formatAbilityNumber(res.cost),
-          resource: resourceDisplayName(this.sim.player.resourceType),
-        }),
-      );
-    }
-    if (a.devotionCost) {
-      costLine.push(
-        t('abilityUi.tooltip.cost', {
-          cost: formatAbilityNumber(a.devotionCost),
-          resource: t('abilityUi.resources.devotion'),
-        }),
-      );
-    }
-    if ((a.ruinCost ?? 0) > 0) {
-      costLine.push(
-        t('abilityUi.tooltip.ruinCost', {
-          cost: formatAbilityNumber(a.ruinCost ?? 0),
-        }),
-      );
-    }
-    const rangeLine = abilityRangeLine(a);
-    if (rangeLine) costLine.push(rangeLine);
-    if (costLine.length) html += `<div class="tt-stat">${costLine.map(esc).join(' &nbsp; ')}</div>`;
-    const castLine = [abilityCastLine(res, playerSpellHasteFrac(this.sim.player))];
-    // Use the RESOLVED cooldown (res.cooldown), not res.def.cooldown, so talents that
-    // reduce cooldown (Improved Mortal Strike, Barrage, Improved Fire Blast, ...) show
-    // their effect in the tooltip.
-    if (res.cooldown > 0)
-      castLine.push(
-        t('abilityUi.tooltip.cooldownSeconds', {
-          seconds: formatAbilityNumber(res.cooldown),
-        }),
-      );
-    html += `<div class="tt-stat">${castLine.map(esc).join(' &nbsp; ')}</div>`;
-    html += `<div class="tt-desc">${esc(abilityDisplayDescription(res, damageText, scaling, undefined, this.sim.talents.spec))}</div>`;
-    // Resolved buff/aura effect line(s). Reads the RESOLVED effect value, so a buff's
-    // tooltip reflects rank AND talents that strengthen it (Improved Devotion Aura /
-    // Aspect of the Hawk / Fortitude via buffPct) - which the static description can't.
-    for (const eff of res.effects) {
-      if (res.def.tooltipOmitEffectLines) break;
-      const resolvedAuraEffect = abilityEffectAuraInput(eff);
-      if (resolvedAuraEffect) {
-        html += this.auraEffectTooltipHtml(resolvedAuraEffect);
-      } else if (eff.type === 'selfBuff' || eff.type === 'buffTarget') {
-        // Pass the ability id so the effect line can resolve its damage school
-        // (the {school} placeholder in the thorns/dot/absorb summaries).
-        html += this.auraEffectTooltipHtml({
-          kind: eff.kind,
-          value: eff.value,
-          id: a.id,
-        });
-      } else if (eff.type === 'partyMeleeBuff') {
-        // Sanguine Aura: surface the same composite line the buff icon shows.
-        html += this.auraEffectTooltipHtml({
-          kind: 'sanguine',
-          value: eff.attackSpeedMult,
-          value2: eff.dmgPct,
-        });
-      }
-    }
-    // Pass the RESOLVED ability, not just its def: a talent that retires a
-    // requirement (Cheap Trick on Gut Punch) must retire its line with it, the
-    // same way the resolved cost / cast / cooldown above beat the def's.
-    const requirements = abilityRequirementLines(a, this.sim.talents.spec, res);
-    if (requirements.length) {
-      html += requirements.map((line) => `<div class="tt-sub">${esc(line)}</div>`).join('');
-    }
-    return html;
-  }
-
   // -------------------------------------------------------------------------
   // Action bar
   // -------------------------------------------------------------------------
@@ -6587,19 +6364,12 @@ export class Hud {
     return this.actionBarController.isHotbarItemId(itemId);
   }
 
-  /** The touch arm of the desktop item-to-hotbar drop (the UX pass's mobile
-   *  angler item): a bag stack released over an action seat places the item
-   *  there, exactly the desktop drop's item branch, including its silent
-   *  refusal of a non-hotbar item. `slot` is the 1-based bar slot (a ring
-   *  release resolves it through the live page before this runs). */
+  /** The touch arm of the desktop item-to-hotbar drop
+   *  (ActionBarController.placeItemFromTouch owns the refusals and the save). */
   private placeHotbarItemFromTouch(itemId: string, slot: number): void {
-    if (!Number.isInteger(slot) || slot < 1) return;
-    if (!this.isHotbarItemId(itemId)) return;
-    this.hotbarActions = placeItemOnSlot(this.hotbarActions, itemId, slot - 1);
-    this.saveSlotMap();
     // The desktop drop's stale-tooltip rule (#1485): the rearranged seat's
     // next hover resolves live.
-    this.hideTooltip();
+    if (this.actionBarController.placeItemFromTouch(itemId, slot)) this.hideTooltip();
   }
 
   private classHasFormBars(): boolean {
@@ -6638,10 +6408,10 @@ export class Hud {
   }
 
   private syncActiveHotbarForm(): void {
-    const profileSwitched = this.actionBarController.syncProfile();
-    const specSwitched = this.actionBarController.syncSpec();
-    if (profileSwitched || specSwitched) this.spellbookWindow.refreshHotbarControls();
-    if (!profileSwitched && !specSwitched && !this.actionBarController.syncActiveForm()) return;
+    // Which syncs ran and what they changed: action_bar_form_sync_core.ts.
+    const outcome = hotbarSyncOutcome(this.actionBarController);
+    if (outcome === 'unchanged') return;
+    if (outcome === 'rebuilt') this.spellbookWindow.refreshHotbarControls();
     this.dragAction = null;
     this.mobileActionPage = this.currentMobileActionPage();
   }
@@ -7144,7 +6914,7 @@ export class Hud {
         }
         const known = this.abilityForSlot(slot);
         const clearHint = `<div class="tt-sub">${esc(t('abilityUi.actionBar.clearHint'))}</div>`;
-        if (known) return this.abilityTooltip(known) + clearHint;
+        if (known) return abilityTooltipHtml(known, this.sim) + clearHint;
         const freed = slot === 0 && this.freedAttackSlotAbility();
         if (freed)
           return `<div class="tt-title">${esc(abilityDisplayName(freed.def))}</div><div class="tt-sub">${esc(t('abilityUi.tooltip.unavailable'))}</div>${clearHint}`;
@@ -7448,7 +7218,7 @@ export class Hud {
         stanceName === null
           ? t('hudChrome.mobile.stanceAnchorEmptyAria')
           : t('hudChrome.mobile.stanceAnchorAria', { stance: stanceName }),
-      abilityTooltip: (known) => this.abilityTooltip(known),
+      abilityTooltip: (known) => abilityTooltipHtml(known, this.sim),
       attachTooltip: (el, html) => this.attachTooltip(el, html),
       hideTooltip: () => this.hideTooltip(),
       consumePeekGuard: () => this.peekGuard.consume(),
@@ -9078,10 +8848,9 @@ export class Hud {
   }
 
   private updateWarlockDoomMeter(p: Entity): number {
-    const affliction = this.sim.talentSpec === 'affliction';
-    const fateThreads = affliction ? afflictionFateThreadCount(p.auras, p.id) : 0;
-    this.doomMeter.paint({ affliction, auras: p.auras, fateThreads });
-    return fateThreads;
+    const input = warlockDoomMeterInput(this.sim.talentSpec, p);
+    this.doomMeter.paint(input);
+    return input.fateThreads;
   }
 
   private initMailIndicator(): void {
@@ -12889,11 +12658,8 @@ export class Hud {
    *  localized text, or for a quality-rolled copy the nodes whose item link
    *  opens that exact copy rather than the catalogue definition. */
   private lootReceiptBody(ev: Extract<SimEvent, { type: 'loot' }>): string | Node[] {
-    return lootQualityReceiptBody(
-      document,
-      ev,
-      (value) => this.localizeLootText(value),
-      (parent, id, copy) => this.appendChatItemLink(parent, id, copy),
+    return lootQualityReceiptBody(document, ev, localizeLootText, (parent, id, copy) =>
+      this.appendChatItemLink(parent, id, copy),
     );
   }
 
@@ -13136,133 +12902,6 @@ export class Hud {
 
   private localizeErrorText(text: string): string {
     return localizeErrorTextCore(text, this.errorTextDeps);
-  }
-
-  private localizeLootText(text: string): string {
-    // The optional xN suffix (multi-unit grants, both grant hubs emit it)
-    // routes through itemStackDisplayName so the item NAME still localizes;
-    // a greedy single capture would feed "Copper Ore x3" to the exact-name
-    // lookup and silently degrade to raw English.
-    let match = /^You receive: (.+?)( x\d+)?\.$/.exec(text);
-    if (match)
-      return t('hud.logs.lootReceiveItem', {
-        item: itemStackDisplayName(match[1], match[2]),
-      });
-    match = /^You receive (.+)\.$/.exec(text);
-    if (match)
-      return t('hud.logs.lootReceiveMoney', {
-        money: this.localizeSimMoney(match[1]),
-      });
-    match = /^You loot (.+)\.$/.exec(text);
-    if (match)
-      return t('hud.logs.lootMoney', {
-        money: this.localizeSimMoney(match[1]),
-      });
-    match = /^Rolling for (\[\[i:[A-Za-z0-9_]+\]\])\.$/.exec(text);
-    if (match) return t('hudChrome.masterLoot.rollingFor', { item: match[1] });
-    match = /^Everyone passed on (.+)\.$/.exec(text);
-    if (match) return t('itemUi.lootRoll.everyonePassed', { item: match[1] });
-    match = /^Sold (\d+) junk items? for (.+)\.$/.exec(text);
-    if (match) {
-      const n = Number(match[1]);
-      return t(n === 1 ? 'hud.logs.soldJunkOne' : 'hud.logs.soldJunkMany', {
-        count: formatNumber(n, { maximumFractionDigits: 0 }),
-        money: this.localizeSimMoney(match[2]),
-      });
-    }
-    match = /^Kept (\d+) bound cop(?:y|ies)\.$/.exec(text);
-    if (match) {
-      const n = Number(match[1]);
-      return t(n === 1 ? 'hud.logs.keptBoundOne' : 'hud.logs.keptBoundMany', {
-        count: formatNumber(n, { maximumFractionDigits: 0 }),
-      });
-    }
-    // The LOCKED twin (Masterwrought phase 18 QA, item
-    // vendor-partial-sell-locked-toast): a partial vendor sale used to report every
-    // spared copy as bound, including the ones spared because the player had LOCKED
-    // them, so the summary named the wrong reason and the player had nothing to act
-    // on. src/sim/items.ts now splits the two counts and emits this line beside the
-    // bound one, so the matcher needs both arms or the locked half ships raw English.
-    match = /^Kept (\d+) locked cop(?:y|ies)\.$/.exec(text);
-    if (match) {
-      const n = Number(match[1]);
-      return t(n === 1 ? 'hud.logs.keptLockedOne' : 'hud.logs.keptLockedMany', {
-        count: formatNumber(n, { maximumFractionDigits: 0 }),
-      });
-    }
-    match = /^(.+) assigned (.+) to (.+)\.$/.exec(text);
-    if (match)
-      return t('hudChrome.masterLoot.assigned', {
-        looter: match[1],
-        item: match[2],
-        target: match[3],
-      });
-    match = /^(.+) was not assigned and is free for all\.$/.exec(text);
-    if (match)
-      return t('hudChrome.masterLoot.unassigned', {
-        item: itemDisplayNameFromSource(match[1]),
-      });
-    // The optional xN suffix (vendor-selling a stack) routes through
-    // itemStackDisplayName so the item NAME still localizes, the same
-    // treatment as the receive/listed/bought/reclaimed arms above and below:
-    // a greedy single capture would feed "Copper Ore x2" to the exact-name
-    // lookup and silently degrade to raw English.
-    match = /^Sold (.+?)( x\d+)? for (.+)\.$/.exec(text);
-    if (match)
-      return t('hud.logs.soldItem', {
-        item: itemStackDisplayName(match[1], match[2]),
-        money: this.localizeSimMoney(match[3]),
-      });
-    match = /^Listed (.+?)( x\d+)? on the World Market for (.+)\.$/.exec(text);
-    if (match)
-      return t('itemUi.logs.listedItem', {
-        item: itemStackDisplayName(match[1], match[2]),
-        money: this.localizeSimMoney(match[3]),
-      });
-    match = /^(.+) bought your (.+) for (.+?) (?:\u2014|-) collect (.+) from the Merchant\.$/.exec(
-      text,
-    );
-    if (match)
-      return t('itemUi.logs.sellerSold', {
-        buyer: match[1],
-        item: itemDisplayNameFromSource(match[2]),
-        money: this.localizeSimMoney(match[3]),
-        proceeds: this.localizeSimMoney(match[4]),
-      });
-    match = /^Bought back (.+) for (.+)\.$/.exec(text);
-    if (match)
-      return t('itemUi.logs.boughtBackItem', {
-        item: itemDisplayNameFromSource(match[1]),
-        money: this.localizeSimMoney(match[2]),
-      });
-    match = /^Bought (.+?)( x\d+)? for (.+)\.$/.exec(text);
-    if (match)
-      return t('itemUi.logs.boughtItem', {
-        item: itemStackDisplayName(match[1], match[2]),
-        money: this.localizeSimMoney(match[3]),
-      });
-    match = /^Reclaimed (.+?)( x\d+)? from the market\.$/.exec(text);
-    if (match)
-      return t('itemUi.logs.reclaimedItem', {
-        item: itemStackDisplayName(match[1], match[2]),
-      });
-    match = /^You collect (.+) from the Merchant\.$/.exec(text);
-    if (match)
-      return t('itemUi.logs.collectedMoney', {
-        money: this.localizeSimMoney(match[1]),
-      });
-    const server = localizeServerText(text);
-    if (server !== null) return server;
-    // Sim-emitted log/error/loot text (src/sim) is English at the source; localize it
-    // here, the same way server-sent text is handled above.
-    const simLocalized = localizeSimText(text);
-    if (simLocalized !== null) return simLocalized;
-    return text;
-  }
-
-  private localizeSimMoney(text: string): string {
-    const copper = parseSimMoney(text);
-    return copper === null ? text : formatLocalizedMoney(copper);
   }
 
   private combatLog(text: string, color: string = HUD_LOG.PLAIN): void {
@@ -14674,27 +14313,22 @@ export class Hud {
   // what lets the core hold its default (nothing-pinned) ranking instead of
   // re-folding all 28 catalog pages every slow tick.
   private updateReliquaryTracker(): void {
-    const settings = this.optionsHooks?.settings;
     // The pinned-live vs memoized-default cost asymmetry is recorded on the
     // factory (makeReliquaryTrackerInput); the closures read this.sim at call
     // time, so the reused input survives world swaps.
     this.reliquaryTrackerInput ??= makeReliquaryTrackerInput(() => this.sim);
-    const input = this.reliquaryTrackerInput;
-    // Per-build fields: the pin set is re-read live off the window store, the
-    // collapse and the master visibility switch off settings; everything else
-    // on the reused input is stable.
-    input.pinned = this.reliquaryWindow.pinned;
-    input.collapsed = (settings?.get('reliquaryTrackerCollapsed') ?? false) === true;
-    input.enabled = (settings?.get('showReliquaryTracker') ?? true) === true;
-    const view = buildReliquaryTrackerViewInto(this.reliquaryTrackerView, input);
-    // Compact touch tier: the rows are folded away (hud.mobile.css) and the header
-    // is a count chip that opens The Reliquary (see the #reliquary-tracker
-    // click/keydown delegation, which reroutes to openReliquary here). Tell the
-    // painter so it swaps the header from a disclosure toggle to a dialog opener.
-    // Reuse the exact class test the delegation uses so the announced role
-    // matches the behavior.
-    view.chip = isCompactTouchHud(document.body.classList);
-    this.reliquaryTrackerPainter.update(view);
+    // The per-build fields (the live pin set, the collapse and the master
+    // switch, the compact-touch chip that the #reliquary-tracker click/keydown
+    // delegation reroutes to openReliquary) are buildReliquaryTrackerFrame's.
+    this.reliquaryTrackerPainter.update(
+      buildReliquaryTrackerFrame(
+        this.reliquaryTrackerView,
+        this.reliquaryTrackerInput,
+        this.reliquaryWindow.pinned,
+        this.optionsHooks?.settings,
+        document.body.classList,
+      ),
+    );
   }
 
   /** Flip the persisted Reliquary-tracker collapse (header click/keyboard delegation). */
@@ -14827,9 +14461,8 @@ export class Hud {
    * at all, and unchanged materials plus host capability elide the painter.
    */
   private refreshOpenCraftingIfReagentsChanged(): void {
-    if ($('#crafting-window').style.display !== 'flex') return;
-    if (craftingWindowRefreshSig(this.sim) === this.lastCraftingReagentSig) return;
-    this.renderCrafting();
+    const sig = openCraftingRefreshSig($('#crafting-window').style.display === 'flex', this.sim);
+    if (sig !== null && sig !== this.lastCraftingReagentSig) this.renderCrafting();
   }
 
   /** Repaint every OPEN service window (copper vendor, heroic quartermaster,
@@ -16957,7 +16590,8 @@ export class Hud {
 
 // abilityRangeLine, playerSpellHasteFrac, abilityCastLine,
 // abilityRequirementLines, describeAbilitySummary and resourceDisplayName
-// moved WHOLE to ./ability_tooltip_lines (imported above) at the Phase 10
-// headroom extraction, so a Vitest can pin the tooltip lines directly.
+// moved WHOLE to ./ability_tooltip_lines at the Phase 10 headroom extraction,
+// so a Vitest can pin the tooltip lines directly; the ability card that reads
+// most of them is ./ability_tooltip_view (abilityTooltipHtml).
 
 // require2dContext moved to ./canvas_context (imported above).

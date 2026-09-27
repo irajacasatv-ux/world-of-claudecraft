@@ -19,8 +19,8 @@
       "measuredMb": 240
     },
     "tests/hud_touch_drop_routing.test.ts": {
-      "retainedMb": 800,
-      "measuredMb": 659
+      "retainedMb": 20,
+      "measuredMb": 10
     },
     "tests/loot_explorer_window_focus.test.ts": {
       "retainedMb": 550,

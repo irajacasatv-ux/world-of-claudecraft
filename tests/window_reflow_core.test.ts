@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { anchoredRequestedPos, placeWindow } from '../src/ui/window_reflow_core';
+import {
+  anchoredRequestedPos,
+  cascadeExempt,
+  cascadeOffset,
+  placeWindow,
+} from '../src/ui/window_reflow_core';
 
 describe('placeWindow', () => {
   const size = { w: 300, h: 200 };
@@ -61,5 +66,50 @@ describe('anchoredRequestedPos', () => {
     expect(
       anchoredRequestedPos({ ...shrunk, vw: 1920, vh: 1080 }, size, { w: 3840, h: 2160 }),
     ).toEqual({ left: 3500, top: 1900 });
+  });
+});
+
+// The desktop open cascade's two decisions (extracted from Hud.placeNewWindow;
+// the DOM half is window_reflow.ts placeNewWindow, driven end to end in
+// tests/hud_window_moved_flag.test.ts).
+describe('cascadeExempt', () => {
+  const body = (...classes: string[]) => ({ contains: (cls: string) => classes.includes(cls) });
+
+  it('cascades an ordinary desktop window that nothing has placed yet', () => {
+    expect(cascadeExempt('char-window', false, body())).toBe(false);
+    expect(cascadeExempt('bags', false, body())).toBe(false);
+  });
+
+  it('exempts every mobile window, a moved window, and the loot and confirm popups', () => {
+    expect(cascadeExempt('char-window', false, body('mobile-touch'))).toBe(true);
+    expect(cascadeExempt('char-window', true, body())).toBe(true);
+    expect(cascadeExempt('loot-window', false, body())).toBe(true);
+    expect(cascadeExempt('confirm-dialog', false, body())).toBe(true);
+  });
+
+  it('exempts only the docked cluster of each docked layout', () => {
+    for (const [cls, ids] of [
+      ['vendor-open', ['vendor-window', 'bags']],
+      ['bank-open', ['bank-window', 'bags']],
+      ['market-open', ['market-window', 'bags']],
+      ['weekly-vault-open', ['bank-window']],
+    ] as const) {
+      for (const id of ids) expect(cascadeExempt(id, false, body(cls)), `${cls} ${id}`).toBe(true);
+      expect(cascadeExempt('char-window', false, body(cls)), `${cls} char-window`).toBe(false);
+    }
+    // Without its layout class, a docked window cascades like any other.
+    expect(cascadeExempt('vendor-window', false, body())).toBe(false);
+    expect(cascadeExempt('market-window', false, body())).toBe(false);
+  });
+});
+
+describe('cascadeOffset', () => {
+  it('steps 28px per other open window and wraps after eight', () => {
+    expect(cascadeOffset(0)).toBeNull();
+    expect(cascadeOffset(-1)).toBeNull();
+    expect(cascadeOffset(1)).toBe(28);
+    expect(cascadeOffset(2)).toBe(56);
+    expect(cascadeOffset(8)).toBe(224);
+    expect(cascadeOffset(9)).toBe(28);
   });
 });

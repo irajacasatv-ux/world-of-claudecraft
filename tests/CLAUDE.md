@@ -179,9 +179,10 @@ yourself or the S3 guard throws "status.json is missing".
 - **`localization_fixes.test.ts` is the S3 guard**: it parses `src/sim/sim.ts`, `server/game.ts`,
   and a broad set of sim source modules (combat/mob/pet/delves/instances/market/bank/loot and more;
   the authoritative file list lives in the test itself),
-  enumerating every player-facing emit and asserting each is recognized by a `hud.ts` localize arm or
-  the `localizeServerText`/`localizeSimText` matchers (plus `simDICT`/`serverDICT`/`adminDICT`
-  completeness + placeholder parity per locale). Add or change a sim/server player string and update
+  enumerating every player-facing emit and asserting each is recognized by a client matcher arm
+  (the extracted modules its `MATCHER_ARMS` table names) or the `localizeServerText`/
+  `localizeSimText` matchers (plus `simDICT`/`serverDICT`/`adminDICT` completeness + placeholder
+  parity per locale). Add or change a sim/server player string and update
   the matcher in the SAME change or this fails.
 - **`I18N_RELEASE_TIER` mechanics** (tier POLICY is root CLAUDE.md's; the flag is read by
   `localization_coverage`, `i18n_status_registry`, `i18n_t_behavior`, `deed_i18n`):
@@ -243,8 +244,10 @@ The recurring causes, each measured on this suite:
   the life of the worker: spy with `releasedSpyOn` (`tests/helpers/released_spy.ts`). A `vi.fn`
   called as a method records its `this` until cleared: clear mocks after each case.
 - A coordinator import (`src/ui/hud`) in a pure-core suite costs every case its whole module graph
-  (about 400 to 650 MB retained): test the core directly and keep a `Hud.prototype` rig in its own
-  file (`hud_touch_drop_routing.test.ts`).
+  (about 400 to 650 MB retained): move the logic out of `Hud` and test it directly (the touch
+  drop's placement became `ActionBarController.placeItemFromTouch`, so
+  `hud_touch_drop_routing.test.ts` keeps only source pins and no longer imports `Hud`), and keep
+  a case that genuinely needs the coordinator in a small `Hud.prototype` rig file of its own.
 - Nothing framework-specific in the global `setupFiles` (`tests/vitest_setup_scope.test.ts`):
   every file pays for it before its first case.
 - A determinism check reuses its first run (the parity gate records a scenario twice, not three

@@ -1,16 +1,14 @@
-// @vitest-environment happy-dom
-//
 // The touch drop routing past the hit test (the phase 14 QA gaps): the bags
 // release reaches the HUD's drop deps, the action-ring wiring bounds its index,
-// and the Hud's placeHotbarItemFromTouch refuses bad slots and non-hotbar items.
-// Moved out of tests/equip_drop_core.test.ts on 2026-09-27: it is the one case
-// there that needs the Hud class, and importing src/ui/hud cost every other case
-// of that pure-core suite about 400 MB of retained heap.
+// and the Hud's placeHotbarItemFromTouch hides the tooltip only on a placement.
+// Source pins only: the placement itself (the bad-slot and non-hotbar refusals,
+// the save) moved to ActionBarController.placeItemFromTouch, and its case moved
+// with it to tests/action_bar_controller.test.ts, so this file no longer
+// imports src/ui/hud (whose module graph cost it about 660 MB of retained heap).
 
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { describe, expect, it, vi } from 'vitest';
-import { Hud } from '../src/ui/hud';
+import { describe, expect, it } from 'vitest';
 
 describe('touch drop routing beyond the hit-test (the phase 14 QA gaps)', () => {
   const stripped = (rel: string): string =>
@@ -49,47 +47,19 @@ describe('touch drop routing beyond the hit-test (the phase 14 QA gaps)', () => 
     );
   });
 
-  it('placeHotbarItemFromTouch refuses bad slots and non-hotbar items, places the rest', () => {
-    // The three behaviors on the real prototype method: the slot >= 1
-    // integer refusal, the isHotbarItemId silent cancel, and the placement
-    // with its save and stale-tooltip rule.
-    const rig = () => {
-      const replaceActions = vi.fn();
-      const h = Object.create(Hud.prototype) as unknown as {
-        actionBarController: {
-          isHotbarItemId(id: string): boolean;
-          actions: unknown[];
-          replaceActions: ReturnType<typeof vi.fn>;
-        };
-        saveSlotMap: ReturnType<typeof vi.fn>;
-        hideTooltip: ReturnType<typeof vi.fn>;
-        placeHotbarItemFromTouch(itemId: string, slot: number): void;
-      };
-      // The hotbarActions accessor pair delegates to the controller: the
-      // getter reads `actions`, the setter calls `replaceActions`.
-      h.actionBarController = {
-        isHotbarItemId: (id: string) => id === 'simple_fishing_pole',
-        actions: [null, null, null, null],
-        replaceActions,
-      };
-      h.saveSlotMap = vi.fn();
-      h.hideTooltip = vi.fn();
-      return h;
-    };
-    for (const bad of [0, -1, 1.5, Number.NaN]) {
-      const h = rig();
-      h.placeHotbarItemFromTouch('simple_fishing_pole', bad);
-      expect(h.saveSlotMap, `slot ${bad}`).not.toHaveBeenCalled();
-      expect(h.actionBarController.replaceActions).not.toHaveBeenCalled();
-    }
-    const notHotbar = rig();
-    notHotbar.placeHotbarItemFromTouch('iron_ore', 2);
-    expect(notHotbar.saveSlotMap).not.toHaveBeenCalled();
-    const ok = rig();
-    ok.placeHotbarItemFromTouch('simple_fishing_pole', 2);
-    const placed = ok.actionBarController.replaceActions.mock.calls[0]?.[0] as unknown[];
-    expect(placed?.[1]).toMatchObject({ type: 'item', id: 'simple_fishing_pole' });
-    expect(ok.saveSlotMap).toHaveBeenCalledTimes(1);
-    expect(ok.hideTooltip).toHaveBeenCalledTimes(1);
+  it('the Hud delegator applies the stale-tooltip rule only on a placement (source pin)', () => {
+    // The refusals, the placement and the save are ActionBarController's
+    // placeItemFromTouch (tests/action_bar_controller.test.ts); what the Hud
+    // still owns is hiding the tooltip, and only when that returned true.
+    const hud = stripped('../src/ui/hud.ts');
+    const idx = hud.indexOf(
+      'private placeHotbarItemFromTouch(itemId: string, slot: number): void {',
+    );
+    expect(idx).toBeGreaterThan(-1);
+    const body = hud.slice(idx, hud.indexOf('\n  }\n', idx));
+    expect(body).toContain(
+      'if (this.actionBarController.placeItemFromTouch(itemId, slot)) this.hideTooltip();',
+    );
+    expect(body.match(/this\.hideTooltip\(\)/g)).toHaveLength(1);
   });
 });
