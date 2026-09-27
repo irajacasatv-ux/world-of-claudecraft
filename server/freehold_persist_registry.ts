@@ -88,6 +88,7 @@ export function freeholdPersistStats(): FreeholdPersistStats {
         held: 0,
         quiesced: 0,
         retrying: 0,
+        retryingOffline: 0,
         oldestDirtyAgeMs: 0,
         deferredWrites: 0,
         activeWrites: 0,

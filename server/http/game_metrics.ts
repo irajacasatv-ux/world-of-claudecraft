@@ -720,6 +720,9 @@ export function registerGameStateMetrics(
       // quiesced, each holding unwritten edits retried once per error window. A
       // sustained value is a database outage, never a data incident.
       this.set({ measure: 'retrying' }, state.retrying);
+      // Its offline share, each holding up to two records a quiesce used to free:
+      // the memory bound's gauge (a write-only fault grows it with login churn).
+      this.set({ measure: 'retrying_offline' }, state.retryingOffline);
       this.set({ measure: 'oldest_dirty_age_ms' }, state.oldestDirtyAgeMs);
       // A high-water mark, not a last sample: at a thousand owners a scrape of
       // "the most recent write's size" names nothing an operator can act on.

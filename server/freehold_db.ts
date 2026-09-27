@@ -25,6 +25,7 @@
 
 import { randomUUID } from 'node:crypto';
 import type { Pool } from 'pg';
+import { FreeholdUpsertRefused } from './freehold_upsert_refused';
 
 /** Every public plot identity carries this prefix, so an id is recognizable in
  *  a log line without being guessable or carrying an account key. */
@@ -557,7 +558,9 @@ const FREEHOLD_CURRENT_REV_SQL = `SELECT durable_rev::text AS durable_rev
  *  would raise 22P02 or 23514 and abort the caller's whole transaction, where a
  *  throw here costs the caller nothing it had not already broken. */
 function requireUpsertInput(input: FreeholdUpsert): void {
-  requireAccountId(input.accountId);
+  if (!Number.isSafeInteger(input.accountId) || input.accountId <= 0) {
+    throw new FreeholdUpsertRefused('freehold accountId must be a positive safe integer');
+  }
   // BOUNDED AT THE COLUMN, not just at zero. plot_index is SMALLINT and
   // schema_version is INT: a value past either raises 22003 and aborts the
   // caller's whole transaction, which is exactly what this function's header
@@ -568,18 +571,18 @@ function requireUpsertInput(input: FreeholdUpsert): void {
     input.plotIndex < 0 ||
     input.plotIndex > FREEHOLD_PLOT_INDEX_COLUMN_MAX
   ) {
-    throw new TypeError(
+    throw new FreeholdUpsertRefused(
       `freehold plotIndex must be an integer between 0 and ${FREEHOLD_PLOT_INDEX_COLUMN_MAX}`,
     );
   }
   if (typeof input.plotId !== 'string' || !FREEHOLD_PLOT_ID_RE.test(input.plotId)) {
-    throw new TypeError('freehold plotId must match the opaque plot id charset');
+    throw new FreeholdUpsertRefused('freehold plotId must match the opaque plot id charset');
   }
   if (typeof input.tier !== 'string' || input.tier === '') {
-    throw new TypeError('freehold tier must be a non-empty string');
+    throw new FreeholdUpsertRefused('freehold tier must be a non-empty string');
   }
   if (typeof input.visitPolicy !== 'string' || input.visitPolicy === '') {
-    throw new TypeError('freehold visitPolicy must be a non-empty string');
+    throw new FreeholdUpsertRefused('freehold visitPolicy must be a non-empty string');
   }
   // AND THEY HAVE TO BE JSON ARRAYS. A string that is not parseable raises
   // 22P02 on the ::jsonb cast and one that parses to an object or a scalar
@@ -592,30 +595,32 @@ function requireUpsertInput(input: FreeholdUpsert): void {
     ['trophiesJson', input.trophiesJson],
   ] as const) {
     if (typeof json !== 'string') {
-      throw new TypeError('freehold layoutJson and trophiesJson must be serialized strings');
+      throw new FreeholdUpsertRefused(
+        'freehold layoutJson and trophiesJson must be serialized strings',
+      );
     }
     let parsed: unknown;
     try {
       parsed = JSON.parse(json);
     } catch {
-      throw new TypeError(`freehold ${name} must be parseable JSON`);
+      throw new FreeholdUpsertRefused(`freehold ${name} must be parseable JSON`);
     }
     if (!Array.isArray(parsed)) {
-      throw new TypeError(`freehold ${name} must serialize a JSON array`);
+      throw new FreeholdUpsertRefused(`freehold ${name} must serialize a JSON array`);
     }
   }
   if (!Number.isSafeInteger(input.condition) || input.condition < 0 || input.condition > 100) {
-    throw new TypeError('freehold condition must be an integer between 0 and 100');
+    throw new FreeholdUpsertRefused('freehold condition must be an integer between 0 and 100');
   }
   if (!Number.isSafeInteger(input.wireRev) || input.wireRev < 0) {
-    throw new TypeError('freehold wireRev must be a non-negative safe integer');
+    throw new FreeholdUpsertRefused('freehold wireRev must be a non-negative safe integer');
   }
   if (
     !Number.isSafeInteger(input.schemaVersion) ||
     input.schemaVersion < 1 ||
     input.schemaVersion > FREEHOLD_SCHEMA_VERSION_COLUMN_MAX
   ) {
-    throw new TypeError(
+    throw new FreeholdUpsertRefused(
       `freehold schemaVersion must be an integer between 1 and ${FREEHOLD_SCHEMA_VERSION_COLUMN_MAX}`,
     );
   }
@@ -623,17 +628,19 @@ function requireUpsertInput(input: FreeholdUpsert): void {
   // for the same reason as every other refusal in this function: a value the
   // CHECK would refuse raises 23514 and aborts the caller's whole transaction.
   if (input.tier.length > FREEHOLD_TIER_COLUMN_MAX_LENGTH) {
-    throw new TypeError(
+    throw new FreeholdUpsertRefused(
       `freehold tier must be at most ${FREEHOLD_TIER_COLUMN_MAX_LENGTH} characters`,
     );
   }
   if (input.visitPolicy.length > FREEHOLD_VISIT_POLICY_COLUMN_MAX_LENGTH) {
-    throw new TypeError(
+    throw new FreeholdUpsertRefused(
       `freehold visitPolicy must be at most ${FREEHOLD_VISIT_POLICY_COLUMN_MAX_LENGTH} characters`,
     );
   }
   if (input.expectedDurableRev !== null && !/^[0-9]+$/.test(input.expectedDurableRev)) {
-    throw new TypeError('freehold expectedDurableRev must be null or exact bigint text');
+    throw new FreeholdUpsertRefused(
+      'freehold expectedDurableRev must be null or exact bigint text',
+    );
   }
 }
 

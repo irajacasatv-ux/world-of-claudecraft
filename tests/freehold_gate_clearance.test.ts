@@ -243,8 +243,12 @@ describe('the Freehold Gate site', () => {
     // spawns on an evenly spaced ring round its escortee at the moment the run
     // counts a waypoint reached (escort.ts fireAmbushes): within
     // ESCORT_ARRIVE_RANGE of the waypoint, or anywhere on the leg into it when the
-    // stuck arm fires. So a ring's worst case is the leg's nearest point, less the
-    // arrival reach and the ring radius, and it must keep ROUTE_CLEARANCE and the
+    // stuck arm fires, and a stuck arm on the leg BEFORE it can start that leg
+    // anywhere on the previous one. So a ring's worst case is the nearest point
+    // of those two legs, less the arrival reach and the ring radius (a slide round
+    // a collider shifts the wagon by less than the margin the positive control
+    // below measures: the live drive put the nearest spawn 17.99 yd from the
+    // arch), and it must keep ROUTE_CLEARANCE and the
     // ambusher's own aggro radius from both the arch and the drop (a wave mob
     // idles at its spawn point for the tick an evade takes before it re-commits).
     // Before the ruling the caravan's third wave fired at waypoint 8, whose ring
@@ -257,16 +261,19 @@ describe('the Freehold Gate site', () => {
         const template = MOBS[ambush.mobId];
         expect(template, ambush.mobId).toBeDefined();
         const need = Math.max(ROUTE_CLEARANCE, template.aggroRadius);
-        // line[k + 1] is waypoints[k]; the leg into it starts at line[k].
-        const from = line[ambush.atWaypoint];
+        // line[k + 1] is waypoints[k]; the leg into it starts at line[k], and the
+        // leg before that at line[k - 1] (none for the first waypoint).
         const to = line[ambush.atWaypoint + 1];
         expect(to, `${escort.id} wave at ${ambush.atWaypoint}`).toBeDefined();
+        const legs = [[line[ambush.atWaypoint], to]];
+        if (ambush.atWaypoint > 0)
+          legs.push([line[ambush.atWaypoint - 1], line[ambush.atWaypoint]]);
         const reach = ESCORT_ARRIVE_RANGE + (ambush.radius ?? ESCORT_AMBUSH_RADIUS);
         for (const [name, at] of [
           ['arch', GATE],
           ['drop', DROP],
         ] as const) {
-          const clearance = segmentDistance(at, from, to) - reach;
+          const clearance = Math.min(...legs.map(([a, b]) => segmentDistance(at, a, b))) - reach;
           const where = `${escort.id} wave at ${ambush.atWaypoint}, ${name}`;
           expect(clearance, where).toBeGreaterThanOrEqual(need);
           if (clearance < closest.clearance) closest = { clearance, at: where };
@@ -276,7 +283,9 @@ describe('the Freehold Gate site', () => {
     }
     expect(rings).toBeGreaterThan(Object.keys(ESCORTS).length);
     // Positive control: the bound is live. The nearest ring is the caravan's
-    // third wave, measured 12.93 yd from the arch at its worst.
+    // third wave, measured 12.93 yd from the arch at its worst. A measured
+    // literal on purpose (reviewed 2026-09-27): an escort edit that moves a ring
+    // nearer the gate, even one that still clears it, is re-read here.
     expect(closest.at).toBe('esc_wq_eastbrook_caravan wave at 6, arch');
     expect(closest.clearance).toBeCloseTo(12.933, 3);
   });

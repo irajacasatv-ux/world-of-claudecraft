@@ -6,6 +6,8 @@
 // clock is due. No store, no ports and no clock of its own, so a Vitest drives
 // every arm with literals.
 
+import { FreeholdUpsertRefused } from './freehold_upsert_refused';
+
 /** Consecutive THROWN writes for one owner before the store stops retrying on
  *  the ordinary cadence. A stale or refused write already quiesces on the first
  *  answer, because those are answers no repeat can change; a thrown one might be
@@ -23,6 +25,15 @@ export const FREEHOLD_PERSIST_MAX_WRITE_ERRORS = 3;
  *  outage to one statement per owner per window. */
 export const FREEHOLD_PERSIST_WRITE_ERROR_WINDOW_MS = 300_000;
 
+/** How many retry-clock writes may be in flight at once, out of the store's
+ *  write cap (server/freehold_persist_bounds.ts). A fault that makes every
+ *  statement run to its timeout would otherwise let retries hold the whole cap
+ *  for as long as it lasts, with every healthy owner's ordinary write queued
+ *  behind them. Retries past it wait in their own deferred set, pumped AFTER the
+ *  ordinary one, so the clock's cadence is "at most one per owner per window",
+ *  stretched by this cap when the retrying set is large and the fault slow. */
+export const FREEHOLD_PERSIST_RETRY_WRITE_CAP = 2;
+
 /** The run state one owner's entry carries. `retryAtMs` is 0 off the clock. */
 export interface FreeholdWriteRun {
   writeErrors: number;
@@ -37,18 +48,24 @@ export interface FreeholdWriteRun {
 const PAYLOAD_SQLSTATE_CLASSES: ReadonlySet<string> = new Set(['22', '23']);
 
 /**
- * Is this thrown write an ANSWER about the payload rather than a fault? A
- * `TypeError` or `RangeError` is the writer's own structural refusal
- * (requireUpsertInput in server/freehold_db.ts refuses before a byte is sent),
- * and a payload SQLSTATE is the database refusing this document. Everything else
- * (a dropped connection, which pg throws with no code, a statement or driver
+ * Is this thrown write an ANSWER about the document rather than a fault? The
+ * writer's own structural refusal (`FreeholdUpsertRefused`, thrown by
+ * requireUpsertInput before a byte is sent) and a payload SQLSTATE (the database
+ * refusing this document) are answers. Everything else is a FAULT a repeat can
+ * clear: a dropped connection (pg throws it with no code), a statement or driver
  * timeout, exhausted resources, an operator restart, a permission or schema
- * fault an operator fixes, an unknown code) is a FAULT: a repeat can succeed.
+ * fault an operator fixes, a Node `ERR_*` error, a store bug, a bigint that came
+ * back unreadable AFTER the statement (the row may have committed, so the next
+ * attempt meets its own revision as stale), or an unknown code.
  */
 export function freeholdThrownWriteIsAnswer(err: unknown): boolean {
-  if (err instanceof TypeError || err instanceof RangeError) return true;
+  if (err instanceof FreeholdUpsertRefused) return true;
   const code = typeof err === 'object' && err !== null ? (err as { code?: unknown }).code : null;
-  return typeof code === 'string' && PAYLOAD_SQLSTATE_CLASSES.has(code.slice(0, 2));
+  return (
+    typeof code === 'string' &&
+    /^[0-9A-Z]{5}$/.test(code) &&
+    PAYLOAD_SQLSTATE_CLASSES.has(code.slice(0, 2))
+  );
 }
 
 /** What one thrown write did to the run: `blip` counted it and left the owner

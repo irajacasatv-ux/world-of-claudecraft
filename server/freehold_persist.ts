@@ -33,14 +33,12 @@
 //    by AbortSignal.timeout), and a refused permit is a REFUSAL, never a
 //    fall-through to doing the work unadmitted.
 
-import { mergeFreeholdKeyReadyAt } from '../src/sim/freehold/hearth_key';
 import { boundedFreeholdDetail, freeholdLoadDiagnostic } from '../src/sim/freehold/load_report';
 import {
   FREEHOLD_MAX_STORED_BYTES,
   type FreeholdLoadResult,
   type FreeholdWriteRefusalOptions,
   freeholdPlotIdAdmitted,
-  freeholdStateFromPersisted,
   freeholdWriteRefusal,
   type PersistedFreehold,
 } from '../src/sim/freehold/persisted';
@@ -50,12 +48,7 @@ import {
 // pulling the directory's whole public surface into a server graph. Named here
 // because these three ARE on the barrel, so without a reason a later reader
 // cannot tell the deliberate exception from drift.
-import {
-  defaultFreeholdState,
-  loadFreehold,
-  PENDING_FREEHOLD_PLOT_ID,
-} from '../src/sim/freehold/state';
-import type { SimContext } from '../src/sim/sim_context';
+import { PENDING_FREEHOLD_PLOT_ID } from '../src/sim/freehold/state';
 import { boundedDatabaseError } from './freehold_bounded_error';
 import { createFreeholdCapacityWarn } from './freehold_capacity_warn';
 import {
@@ -87,6 +80,16 @@ import {
   freeholdPreloadBudgetMs,
 } from './freehold_login_bounds';
 import {
+  FREEHOLD_PERSIST_DRAIN_MAX_ACTIVE_WRITES,
+  FREEHOLD_PERSIST_FLUSH_MAX_PASSES,
+  FREEHOLD_PERSIST_LEAVE_FLUSH_MS,
+  FREEHOLD_PERSIST_LEAVE_WRITE_RESERVE,
+  FREEHOLD_PERSIST_MAX_ACTIVE_LOADS,
+  FREEHOLD_PERSIST_MAX_ACTIVE_WRITES,
+  FREEHOLD_PERSIST_ORPHAN_SWEEP_PASSES,
+  FREEHOLD_PERSIST_WRITE_PERMIT_WAIT_MS,
+} from './freehold_persist_bounds';
+import {
   createFreeholdPersistCounters,
   type FreeholdPersistStats,
   freeholdPersistStatsOf,
@@ -96,6 +99,7 @@ import { representableRev, rowDocument } from './freehold_row_document';
 import { freeholdOwnerKeyForAccount } from './freehold_wire';
 import {
   FREEHOLD_PERSIST_MAX_WRITE_ERRORS,
+  FREEHOLD_PERSIST_RETRY_WRITE_CAP,
   FREEHOLD_PERSIST_WRITE_ERROR_WINDOW_MS,
   freeholdRetryDue,
   freeholdThrownWriteIsAnswer,
@@ -103,133 +107,6 @@ import {
 } from './freehold_write_retry';
 import { insertWouldMintAnUnnamedRow, seedWouldLandOnRealRow } from './freehold_write_seal';
 
-/** How long the shutdown drain waits for running and pending writes before it
- *  gives up and answers false. Finite by contract: a drain that can block
- *  forever is a hung realm restart. */
-export const FREEHOLD_PERSIST_SHUTDOWN_DRAIN_MS = 10_000;
-
-/** The bound on a BACKGROUND WRITE's wait for a shared background permit.
- *  server/background_db_gate.ts keeps its waiter list UNCAPPED, so a caller
- *  that queues without a bounded signal is the thing that grows without limit
- *  under a stalled pool. The login path has its own, shorter bound below. */
-export const FREEHOLD_PERSIST_WRITE_PERMIT_WAIT_MS = 15_000;
-
-// The three LOGIN-path bounds (the permit wait, the statement bound and the
-// whole-preload budget, one per handshake) live in server/freehold_login_bounds.ts.
-export {
-  FREEHOLD_PERSIST_LOAD_PERMIT_WAIT_MS,
-  FREEHOLD_PERSIST_LOGIN_BUDGET_MS,
-  FREEHOLD_PERSIST_LOGIN_STATEMENT_TIMEOUT_MS,
-} from './freehold_login_bounds';
-
-/** Local concurrency cap on durable loads, applied BEFORE the shared permit
- *  (the guild-bank lazy loader's admission cap). Past the cap a load is
- *  refused rather than queued: a local waiter list would be the unbounded
- *  queue the shared gate already warns about, and a refused load is safe
- *  because it is write-blocked, so the account simply gets no durable house
- *  this session and its row is untouched. */
-export const FREEHOLD_PERSIST_MAX_ACTIVE_LOADS = 4;
-
-/**
- * The local admission cap on CONCURRENT WRITES, the twin of the load cap above
- * and for a sharper reason: the keyed serial writer serializes per OWNER KEY,
- * so a thousand owners are a thousand independent FIFOs racing for one shared
- * background permit, and server/background_db_gate.ts keeps its waiter list
- * UNCAPPED. Bounding each WAIT does not bound the waiter COUNT. Measured, the
- * first sweep after a mass login queued 993 simultaneous waiters at gate
- * capacity 7, each with its own abort timer, and every other named producer
- * (storage-purchase recovery, escrow, character delete) queued behind them.
- *
- * Deferring a write is free in a way deferring a load is not: the entry stays
- * dirty and the next sweep picks it up, and the shutdown drain keeps pumping
- * the deferred set until it empties or the deadline fires. So the surplus waits
- * HERE, in a bounded set this store owns, rather than on a shared queue.
- */
-export const FREEHOLD_PERSIST_MAX_ACTIVE_WRITES = 4;
-
-/**
- * The cap the SHUTDOWN DRAIN runs at, and the reserve a LEAVING session may
- * borrow. Both exist because the steady-state cap is calibrated against a realm
- * that is also serving logins, escrow, storage recovery and character deletes
- * on the same background gate, and neither of these moments is that.
- *
- * The drain is the one moment nothing else contends for the gate, and the two
- * constants have to be read as a PAIR: at four concurrent writes and a ten
- * millisecond statement, FREEHOLD_PERSIST_SHUTDOWN_DRAIN_MS covers about four
- * thousand owners. Measured at that cap, a thousand dirty owners drained in
- * 2.9 seconds and five thousand did not finish, leaving 1,584 owners' edits
- * unwritten; re-measured at the raised cap, five thousand drained in 6,944 ms,
- * inside the deadline. That second number is the one this constant stands on and
- * it was missing here, so the block argued from the figures it contradicts.
- * The shared gate's own capacity of seven still bounds what actually reaches the
- * database, so at the default pool the eighth slot can only ever be parked on a
- * permit wait: `active_writes` reads eight while seven are working.
- *
- * The leave reserve is smaller and for a different reason: a leaving session's
- * write is the LAST chance for that owner's edits, and without a reserve it
- * queues behind an insertion-ordered backlog of background writes that have a
- * next sweep to catch them. Two slots keep a mass disconnect from starving the
- * one write that cannot be retried.
- */
-export const FREEHOLD_PERSIST_DRAIN_MAX_ACTIVE_WRITES = 8;
-export const FREEHOLD_PERSIST_LEAVE_WRITE_RESERVE = 2;
-
-/**
- * How long GameServer.leave waits for a leaving session's last durable write
- * before it stops blocking on it.
- *
- * Without a bound, leave inherits the background write's whole budget: the
- * permit wait plus a statement bounded by DB_STATEMENT_TIMEOUT_MS, and
- * FREEHOLD_PERSIST_FLUSH_MAX_PASSES re-arms can extend it further. Under gate
- * saturation, which is exactly the mass-disconnect case, every leaving session
- * would block for tens of seconds, GameServer.leave would back up, and
- * character leases would be released late, so reconnects wait out the lease.
- *
- * Giving up the WAIT is not giving up the WRITE: the write is already queued
- * and keeps running, the entry stays in the store until it settles, and the
- * shutdown drain still waits for it. All this bounds is how long a logout
- * blocks.
- */
-export const FREEHOLD_PERSIST_LEAVE_FLUSH_MS = 2_000;
-
-// The thrown-write run's two constants and its retry clock (R1) live in
-// server/freehold_write_retry.ts, re-exported so every importer stands.
-export {
-  FREEHOLD_PERSIST_MAX_WRITE_ERRORS,
-  FREEHOLD_PERSIST_WRITE_ERROR_WINDOW_MS,
-} from './freehold_write_retry';
-
-/**
- * The zero-reference entry sweep is MARK AND SWEEP over two passes, so an
- * entry lives at least one full AUTOSAVE_SECONDS period after its last
- * reference goes away rather than being collected the instant it has none.
- *
- * It exists because a reference is not guaranteed. The handshake reads the
- * durable row BEFORE it acquires the character lease, and five refusals sit
- * between the two (a lease already held, no such character, a forced rename, a
- * throwing character read, and the max-online-characters cap). Every one of
- * them returns without ever reaching retain(), so the entry that read created
- * had no other removal path and stayed for the life of the process, holding a
- * parsed record. A double login is routine, so the map grew toward one entry
- * per distinct account that ever hit one.
- *
- * The marked entry is also the STALE one on a multi-realm deployment: preload
- * replays a loaded entry rather than re-reading, so an abandoned entry would
- * serve an old house for every later login on this process.
- */
-export const FREEHOLD_PERSIST_ORPHAN_SWEEP_PASSES = 2;
-// KNOWN LIMIT, named rather than left to be discovered: this is a TIME bound,
-// not a size one, so peak `entries` is the join rate times the grace period and
-// not a cap. Each entry holds one parsed record, and a dirty leaver briefly
-// holds two. `entries` and `leave_captures` are both published, so the growth
-// is watchable; if a realm ever needs a hard cap, the seam that fits is the
-// keyed bounded cache with LRU eviction in server/discord_status_cache.ts.
-
-/** How many write passes one flushAndRelease will wait through. A committed
- *  write that finds fresh edits re-arms exactly once, so two passes is the
- *  normal ceiling; the bound is here so a pathological re-arm cannot hold a
- *  leaving session open. */
-export const FREEHOLD_PERSIST_FLUSH_MAX_PASSES = 4;
 // THE LOAD-OUTCOME VOCABULARY (the failure kinds, which of them are repairable,
 // FreeholdRecoveryHold and LoadedFreehold) moved WHOLE to
 // server/freehold_load_outcome.ts. None of it needs this file: it is the shape
@@ -243,6 +120,33 @@ export {
   type FreeholdRecoveryHold,
   type LoadedFreehold,
 } from './freehold_load_outcome';
+
+// The three LOGIN-path bounds (the permit wait, the statement bound and the
+// whole-preload budget, one per handshake) live in server/freehold_login_bounds.ts.
+export {
+  FREEHOLD_PERSIST_LOAD_PERMIT_WAIT_MS,
+  FREEHOLD_PERSIST_LOGIN_BUDGET_MS,
+  FREEHOLD_PERSIST_LOGIN_STATEMENT_TIMEOUT_MS,
+} from './freehold_login_bounds';
+// The write-side and lifecycle bounds, with their reasoning, live in
+// server/freehold_persist_bounds.ts, re-exported so every importer stands.
+export {
+  FREEHOLD_PERSIST_DRAIN_MAX_ACTIVE_WRITES,
+  FREEHOLD_PERSIST_FLUSH_MAX_PASSES,
+  FREEHOLD_PERSIST_LEAVE_FLUSH_MS,
+  FREEHOLD_PERSIST_LEAVE_WRITE_RESERVE,
+  FREEHOLD_PERSIST_MAX_ACTIVE_LOADS,
+  FREEHOLD_PERSIST_MAX_ACTIVE_WRITES,
+  FREEHOLD_PERSIST_ORPHAN_SWEEP_PASSES,
+  FREEHOLD_PERSIST_SHUTDOWN_DRAIN_MS,
+  FREEHOLD_PERSIST_WRITE_PERMIT_WAIT_MS,
+} from './freehold_persist_bounds';
+// The thrown-write run's two constants and its retry clock (R1) live in
+// server/freehold_write_retry.ts, re-exported so every importer stands.
+export {
+  FREEHOLD_PERSIST_MAX_WRITE_ERRORS,
+  FREEHOLD_PERSIST_WRITE_ERROR_WINDOW_MS,
+} from './freehold_write_retry';
 
 /** Every side effect the store has. Nothing here touches a pool, a Sim or a
  *  session directly, which is what lets one Vitest drive the whole lifecycle. */
@@ -421,6 +325,9 @@ interface FreeholdPersistEntry {
    *  commit clears it. The entry stays unblocked, so its capture is kept and
    *  offered to a rejoin; see server/freehold_write_retry.ts. */
   retryAtMs: number;
+  /** The running write was launched from the retry clock, so it holds one of
+   *  FREEHOLD_PERSIST_RETRY_WRITE_CAP's slots until it settles. */
+  retryInFlight: boolean;
   refs: number;
   dirtyGeneration: number;
   committedGeneration: number;
@@ -467,7 +374,16 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
    *  iterations to answer a question the insertion order used to answer at once.
    *  Every deferredWrites mutation below keeps this in step. */
   const deferredLeavers = new Set<FreeholdPersistEntry>();
+  /** Retry-clock writes waiting on their sub-cap or the write cap: their own set,
+   *  pumped AFTER the ordinary one, so a slow fault never holds every slot. */
+  const deferredRetries = new Set<FreeholdPersistEntry>();
   let activeWrites = 0;
+  let activeRetries = 0;
+  /** idle() calls not yet finished: the clock's drain exception lasts this long. */
+  let openDrains = 0;
+  /** Throws on the clock since the last sweep, reported as ONE line per sweep. */
+  let retryThrows = 0;
+  let lastRetryError: Record<string, unknown> | undefined;
   /** Documents captured at leave and not yet written. Each is a SECOND full
    *  record on top of entry.state, so at the approved 420-row ceiling a
    *  thousand simultaneous dirty logouts retain 66.2 MiB until their writes
@@ -531,7 +447,7 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
 
   // R1: may a write be ARMED for this entry now (always, off the retry clock).
   const retryDue = (entry: FreeholdPersistEntry): boolean =>
-    freeholdRetryDue(entry.retryAtMs, ports.nowMs(), draining);
+    entry.retryAtMs === 0 || freeholdRetryDue(entry.retryAtMs, ports.nowMs(), openDrains > 0);
 
   const live = (entry: FreeholdPersistEntry): boolean => entries.get(entry.ownerKey) === entry;
 
@@ -567,6 +483,7 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
       writeErrors: 0,
       lastWriteErrorMs: 0,
       retryAtMs: 0,
+      retryInFlight: false,
       refs: 0,
       dirtyGeneration: 0,
       committedGeneration: 0,
@@ -618,6 +535,7 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
     (entry.accountId > 0 && inFlightLoads.has(entry.accountId)) ||
     entry.pending ||
     deferredWrites.has(entry) ||
+    deferredRetries.has(entry) ||
     (isDirty(entry) && !blocked(entry));
   // NOT a clause of its own for the retained leave document, deliberately, and
   // the reason is worth writing down because it is the shape of a defect this
@@ -1474,7 +1392,7 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
   function settle(entry: FreeholdPersistEntry, committed: boolean): void {
     entry.running = false;
     entry.chain = null;
-    activeWrites--;
+    freeSlot(entry);
     // Clear ONLY what the write actually committed: an edit that landed while
     // the write was out is still dirty here, and re-arms exactly one more
     // write. A write that did NOT commit never re-arms itself, so a failing
@@ -1510,6 +1428,8 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
     // A leaving flush parked on this entry has something to await again.
     releaseSettleWaiters(entry);
     activeWrites++;
+    entry.retryInFlight = entry.retryAtMs > 0;
+    if (entry.retryInFlight) activeRetries++;
     entry.running = true;
     entry.pending = false;
     // Nothing sampled yet, and the sample happens AFTER the permit wait, so
@@ -1528,16 +1448,23 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
           // A FAULT is not an answer, so a run of them never quiesces (R1): it
           // puts the owner on the retry clock, and the edits it owes are kept.
           // A throw about the payload IS one, and quiesces as it always has.
+          const onClock = entry.retryAtMs > 0;
           const outcome = noteThrownWrite(entry, ports.nowMs(), freeholdThrownWriteIsAnswer(err));
-          ports.error(
-            `freehold plot index ${entry.plotIndex} write failed:`,
-            boundedDatabaseError(err),
-          );
+          if (outcome === 'retrying') {
+            // A throw ON the clock is one line per sweep, not per owner.
+            retryThrows++;
+            lastRetryError = boundedDatabaseError(err);
+          } else {
+            ports.error(
+              `freehold plot index ${entry.plotIndex} write failed:`,
+              boundedDatabaseError(err),
+            );
+          }
           if (outcome === 'answered' && !entry.quiesced) {
             entry.quiesced = true;
             entry.quiesceWarned = true;
             ports.error(
-              `freehold plot index ${entry.plotIndex} quiesced after ${entry.writeErrors} thrown writes refusing this document; no further writes go out for this owner`,
+              `freehold plot index ${entry.plotIndex} quiesced ${onClock ? 'on the retry clock: a thrown write refused this document' : `after ${entry.writeErrors} thrown writes refusing this document`}; no further writes go out for this owner`,
             );
           } else if (outcome === 'entered') {
             ports.error(
@@ -1571,7 +1498,7 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
       ports.error(`freehold plot index ${entry.plotIndex} write could not be queued:`, err);
       entry.running = false;
       entry.chain = null;
-      activeWrites--;
+      freeSlot(entry);
       // A leaving flush parked on this entry has nothing left to await: every
       // other exit from an armed write wakes them, and this one did not, so a
       // parked leaver spent its whole deadline on a write that had already
@@ -1624,6 +1551,25 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
   function undefer(entry: FreeholdPersistEntry): void {
     deferredWrites.delete(entry);
     deferredLeavers.delete(entry);
+    deferredRetries.delete(entry);
+  }
+
+  /** Give back the slot (and a retry's sub-cap slot) a launched write held. */
+  function freeSlot(entry: FreeholdPersistEntry): void {
+    activeWrites--;
+    if (entry.retryInFlight) activeRetries--;
+    entry.retryInFlight = false;
+  }
+
+  /** The sweep's one line for every throw on the clock since the last one. */
+  function reportRetryThrows(): void {
+    if (retryThrows === 0) return;
+    ports.error(
+      `freehold retry clock: ${retryThrows} retry writes threw since the last sweep; their owners keep their unwritten edits for the next window:`,
+      lastRetryError,
+    );
+    retryThrows = 0;
+    lastRetryError = undefined;
   }
 
   function pumpLoop(): void {
@@ -1635,15 +1581,33 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
       undefer(next);
       // The wait may have outlived the reason for the write: the entry could
       // have been evicted, held or quiesced since it was deferred.
-      if (!live(next) || blocked(next) || next.running || !isDirty(next)) {
-        // It left the deferred set without a write, so it may now be removable:
-        // without this the entry waits for the orphan sweep instead.
-        releaseSettleWaiters(next);
-        maybeRemove(next);
-        continue;
-      }
+      if (!stillWants(next)) continue;
       launch(next);
     }
+    // THEN the retry clock's writes, inside their own sub-cap (R1's review).
+    while (
+      deferredRetries.size > 0 &&
+      activeWrites < writeCap(false) &&
+      activeRetries < FREEHOLD_PERSIST_RETRY_WRITE_CAP
+    ) {
+      const next = deferredRetries.values().next().value as FreeholdPersistEntry;
+      undefer(next);
+      if (stillWants(next)) launch(next);
+    }
+  }
+
+  /** Does a deferred entry still want the write it waited for? The wait may have
+   *  outlived the reason: the entry could have been evicted, held or quiesced,
+   *  or (the drain's exception having ended) be off due on the retry clock. One
+   *  that no longer wants it left the deferred set without a write, so it may
+   *  now be removable: without this it waits for the orphan sweep instead. */
+  function stillWants(entry: FreeholdPersistEntry): boolean {
+    if (live(entry) && !blocked(entry) && !entry.running && isDirty(entry) && retryDue(entry)) {
+      return true;
+    }
+    releaseSettleWaiters(entry);
+    maybeRemove(entry);
+    return false;
   }
 
   // Exactly one running plus one pending per owner key: a burst of a thousand
@@ -1652,6 +1616,15 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
     if (blocked(entry)) return;
     // R1: on the retry clock nothing arms until it is due; the edit rides it.
     if (!entry.running && !retryDue(entry)) return;
+    // Its own sub-cap and deferred set, so retries never hold every slot.
+    if (!entry.running && entry.retryAtMs > 0) {
+      if (activeWrites < writeCap(false) && activeRetries < FREEHOLD_PERSIST_RETRY_WRITE_CAP) {
+        launch(entry);
+      } else {
+        deferredRetries.add(entry);
+      }
+      return;
+    }
     if (!entry.running && activeWrites >= writeCap(leaving)) {
       // The local cap, applied BEFORE the shared gate. The entry stays dirty,
       // so nothing is lost and nothing is retried against the pool: it waits
@@ -1681,7 +1654,7 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
   function drainCheck(): void {
     if (drainWaiters.size === 0) return;
     // A deferred write is owed work exactly like a pending one.
-    if (deferredWrites.size > 0) return;
+    if (deferredWrites.size > 0 || deferredRetries.size > 0) return;
     for (const entry of entries.values()) {
       if (entry.running || entry.pending) return;
     }
@@ -1734,6 +1707,7 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
       // it: leaving the sweep behind the guard retired the entries map's only
       // time bound for any store that outlives a drain.
       sweepOrphans();
+      reportRetryThrows();
       if (!intake) return;
       for (const entry of entries.values()) {
         if (noteRevisionMoved(entry) || isDirty(entry)) arm(entry);
@@ -1918,6 +1892,9 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
       // earlier in the shutdown sequence cannot refuse this drain's own
       // enqueues.
       intake = false;
+      // The retry clock's exception (one last attempt) lasts while this drain is
+      // open, and ENDS with it: past the deadline no retry launches (R3).
+      openDrains++;
       // The drain runs at its own cap: nothing else contends for the shared
       // gate once intake is closed, and the deadline has to cover the realm
       // rather than a quarter of it.
@@ -1941,6 +1918,8 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
           finish(drained: boolean): void {
             if (settled) return;
             settled = true;
+            openDrains--;
+            reportRetryThrows();
             drainWaiters.delete(waiter);
             try {
               cancel?.();
@@ -1970,6 +1949,7 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
       let held = 0;
       let quiesced = 0;
       let retrying = 0;
+      let retryingOffline = 0;
       let loaded = 0;
       let oldestDirtyAtMs = 0;
       for (const entry of entries.values()) {
@@ -1978,8 +1958,12 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
         if (entry.pending) pending++;
         if (entry.hold !== null) held++;
         if (entry.quiesced) quiesced++;
-        // On the clock and still writing (a later quiesce ends the posture).
-        if (entry.retryAtMs > 0 && !isHeld(entry)) retrying++;
+        // On the clock and still writing (a later quiesce ends the posture); the
+        // offline share holds up to TWO records each (its state and its capture).
+        if (entry.retryAtMs > 0 && !isHeld(entry)) {
+          retrying++;
+          if (entry.refs === 0) retryingOffline++;
+        }
         if (entry.loaded) loaded++;
         if (
           entry.dirtySinceMs > 0 &&
@@ -2000,8 +1984,9 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
           held,
           quiesced,
           retrying,
+          retryingOffline,
           oldestDirtyAgeMs,
-          deferredWrites: deferredWrites.size,
+          deferredWrites: deferredWrites.size + deferredRetries.size,
           activeWrites,
           leaveCaptures,
         },

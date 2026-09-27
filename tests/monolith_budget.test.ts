@@ -1970,8 +1970,13 @@ const MONOLITHS: MonolithRow[] = [
     // run's two constants and its decisions (server/freehold_write_retry.ts,
     // re-exported, with a suite of its own) and the counters with the scrape's
     // fold (server/freehold_persist_stats.ts) out whole. Exact count, zero slack.
+    // LOWERED, 2026 -> 2011, by R1's review round: the retry sub-cap with its own
+    // deferred set, the drain-bounded clock exception, the per-sweep throw line
+    // and the offline gauge, paid for by moving the write-side and lifecycle
+    // bounds with their reasoning (server/freehold_persist_bounds.ts, re-exported)
+    // out whole and dropping four dead imports. Exact count, zero slack.
     file: 'server/freehold_persist.ts',
-    ceiling: 2026,
+    ceiling: 2011,
     seam: 'a sibling server module behind the store ports; see server/CLAUDE.md',
   },
   {

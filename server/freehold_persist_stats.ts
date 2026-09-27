@@ -41,6 +41,10 @@ export interface FreeholdPersistStats {
    *  sustained value is a database outage, not a data incident, and a restart
    *  during it ends those edits after one last attempt at the drain. */
   readonly retrying: number;
+  /** The share of `retrying` with no session left: each holds up to TWO full
+   *  records (its committed state and its leave capture) that a quiesce used to
+   *  free, so this is the gauge the posture's memory bound is read from. */
+  readonly retryingOffline: number;
   readonly loads: number;
   readonly loadFailures: number;
   /** The same total, split by the hold kind that caused it. */

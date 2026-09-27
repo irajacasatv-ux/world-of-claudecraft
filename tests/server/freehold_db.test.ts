@@ -30,6 +30,7 @@ import {
   mintFreeholdPlotId,
   upsertFreehold,
 } from '../../server/freehold_db';
+import { FreeholdUpsertRefused } from '../../server/freehold_upsert_refused';
 import { FREEHOLD_MAX_VISIT_POLICY_LENGTH } from '../../src/sim/freehold/persisted';
 import { stripComments } from '../helpers/strip_comments';
 
@@ -666,6 +667,11 @@ describe('the compare-and-swap upsert', () => {
         upsertFreehold(cap.db, corrupt(patch)),
         `expected a refusal for ${field}`,
       ).rejects.toThrow(message);
+      // BRANDED, so the retry clock (server/freehold_write_retry.ts) reads it as
+      // an answer about the document and never as a fault to retry.
+      await expect(upsertFreehold(cap.db, corrupt(patch)), field).rejects.toBeInstanceOf(
+        FreeholdUpsertRefused,
+      );
       expect(cap.calls, `${field} must be refused before any SQL is sent`).toHaveLength(0);
     }
   });

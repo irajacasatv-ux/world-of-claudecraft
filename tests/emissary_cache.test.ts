@@ -34,7 +34,7 @@ describe('the cache pool', () => {
       const def = ITEMS[id];
       expect(def, id).toBeDefined();
       expect(def.quality, id).toBe('epic');
-      expect(def.kind, id).not.toBe('tool');
+      expect(['weapon', 'armor', 'held_offhand'], id).toContain(def.kind);
       expect(def.heroicOf, id).toBeUndefined();
       expect(def.set, id).toBeUndefined();
     }
@@ -48,8 +48,9 @@ describe('the cache pool', () => {
 
   it('holds only wearable kinds, the Weekly Vault rule: weapon, armor and held offhand, never a recipe', () => {
     // Ruled 2026-09-27 (the freeholds ledger): the pool used to keep any non-tool
-    // epic, so the Crucible's ten epic patterns rode in beside the gear (open to
-    // every class, 22 to 38 percent of a class's draws). Pinned by kind count so a
+    // epic, so Nythraxis's ten apex gear patterns (the `nythraxis_patterns` tail of
+    // its loot table) rode in beside the gear (open to every class, 22 to 38
+    // percent of a class's draws). Pinned by kind count so a
     // new raid table that adds a non-wearable kind is reviewed here.
     const kinds = new Map<string, number>();
     for (const id of emissaryCacheRaidPool()) {

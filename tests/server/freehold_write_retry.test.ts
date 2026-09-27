@@ -3,8 +3,10 @@
 // the drain) is pinned in tests/server/freehold_persist.test.ts, "a run of thrown
 // writes keeps its edits and retries them once per window (R1)".
 import { describe, expect, it } from 'vitest';
+import { FreeholdUpsertRefused } from '../../server/freehold_upsert_refused';
 import {
   FREEHOLD_PERSIST_MAX_WRITE_ERRORS,
+  FREEHOLD_PERSIST_RETRY_WRITE_CAP,
   FREEHOLD_PERSIST_WRITE_ERROR_WINDOW_MS,
   type FreeholdWriteRun,
   freeholdRetryDue,
@@ -18,9 +20,10 @@ const FAULT = false;
 const ANSWER = true;
 
 describe('noteThrownWrite', () => {
-  it('pins the two constants the posture stands on', () => {
+  it('pins the three constants the posture stands on', () => {
     expect(FREEHOLD_PERSIST_MAX_WRITE_ERRORS).toBe(3);
     expect(WINDOW).toBe(300_000);
+    expect(FREEHOLD_PERSIST_RETRY_WRITE_CAP).toBe(2);
   });
 
   it('counts faults inside the window and enters the clock on the run-completing one', () => {
@@ -80,21 +83,31 @@ describe('noteThrownWrite', () => {
 });
 
 describe('freeholdThrownWriteIsAnswer', () => {
-  it("names the writer's own structural refusal and the payload SQLSTATE classes answers", () => {
+  it("names the writer's own BRANDED refusal and the payload SQLSTATE classes answers", () => {
     expect(
-      freeholdThrownWriteIsAnswer(new TypeError('freehold tier must be a non-empty string')),
+      freeholdThrownWriteIsAnswer(
+        new FreeholdUpsertRefused('freehold tier must be a non-empty string'),
+      ),
     ).toBe(true);
-    expect(freeholdThrownWriteIsAnswer(new RangeError('out of range'))).toBe(true);
     for (const code of ['22001', '22P02', '23505', '23514']) {
       expect(freeholdThrownWriteIsAnswer(Object.assign(new Error('x'), { code })), code).toBe(true);
     }
   });
 
-  it('names every other throw a fault a repeat can clear', () => {
-    // pg throws a dropped connection with no code at all.
+  it('names every other throw a fault a repeat can clear, a plain TypeError or RangeError included', () => {
+    // pg throws a dropped connection with no code at all; a read-back of the
+    // statement's own result or a store bug is a plain TypeError, and Node's
+    // ERR_* errors are TypeErrors or RangeErrors carrying a string code.
     expect(freeholdThrownWriteIsAnswer(new Error('Connection terminated unexpectedly'))).toBe(
       false,
     );
+    expect(freeholdThrownWriteIsAnswer(new TypeError('must come back as exact bigint text'))).toBe(
+      false,
+    );
+    expect(freeholdThrownWriteIsAnswer(new RangeError('out of range'))).toBe(false);
+    expect(
+      freeholdThrownWriteIsAnswer(Object.assign(new RangeError('x'), { code: 'ERR_OUT_OF_RANGE' })),
+    ).toBe(false);
     for (const code of [
       '08006',
       '53300',
@@ -105,6 +118,8 @@ describe('freeholdThrownWriteIsAnswer', () => {
       '55P03',
       '42501',
       'XX000',
+      '2350',
+      '235140',
     ]) {
       expect(freeholdThrownWriteIsAnswer(Object.assign(new Error('x'), { code })), code).toBe(
         false,

@@ -2046,6 +2046,7 @@ describe('the housing persistence families', () => {
     held: 15,
     quiesced: 16,
     retrying: 20,
+    retryingOffline: 26,
     loads: 21,
     loadFailures: 22,
     loadFailuresByKind: { oversize: 7, unadmitted: 15 },
@@ -2097,6 +2098,8 @@ describe('the housing persistence families', () => {
     expect(labelled(text, WOC_FREEHOLD_PERSIST, 'quiesced')).toBe('16');
     // R1's retry clock: owners holding unwritten edits through a database fault.
     expect(labelled(text, WOC_FREEHOLD_PERSIST, 'retrying')).toBe('20');
+    // Its offline share, the posture's memory bound (two records each).
+    expect(labelled(text, WOC_FREEHOLD_PERSIST, 'retrying_offline')).toBe('26');
     expect(labelled(text, WOC_FREEHOLD_PERSIST, 'oldest_dirty_age_ms')).toBe('41');
     expect(labelled(text, WOC_FREEHOLD_PERSIST, 'max_write_bytes')).toBe('52');
     expect(labelled(text, WOC_FREEHOLD_PERSIST, 'deferred_writes')).toBe('17');
