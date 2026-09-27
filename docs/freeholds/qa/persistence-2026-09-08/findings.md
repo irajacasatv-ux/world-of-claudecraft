@@ -3713,3 +3713,50 @@ merge, 63 conflicts by hand against both parents; `patches/`, the lockfile and
   caravan walks 4.8 yd from the gate at its nearest and its third ambush (five level-5
   bandits in an 8 yd ring) can land about a yard from the arch. `tests/freehold_gate_clearance`
   keeps the full 12 yd for every other route and holds this one behind a named, live floor.
+
+### THE CAPTURE SET: A PROBE, THEN A RE-SHOOT (`a9060dbf0e`)
+
+The merge moved 17 of the 67 sealed inputs (the audit round two more). A probe of the after
+leg at `dd7f954501`, beside a pre-merge control at `20209e4c21` shot the same night, found
+the room frames at the control's level but every gate frame changed through UNSEALED
+content: the release's weekly emissary (Cham Pete, `src/sim/content/weekly_quests.ts`)
+stands at the stance and the minimap carries new star markers. So the set was RE-SHOT, not
+re-hashed: all 18 frames, sidecars, both producer manifests and the performance record,
+from a frozen worktree at `e89b62487c`, re-sealed with the repo's receipt tool;
+`tests/freehold_capture_contract.test.ts` 102 of 102. Detail in
+`docs/freeholds/interiors-implementation-evidence.md`, "The 2026-09-26 re-shoot". Two
+observations recorded there and here: the before leg's baseline worktree has linked the
+branch's `node_modules` since 2026-09-08 (as every earlier set), and the performance
+record's reveal soft-deadline counter read 9 (desktop) and 8 (mobile) BEFORE the measured
+island window, where the 2026-09-25 record read 0; it did not move inside the window and the
+receipt does not enforce it. The receipt's `sourceIdentity.current.root` now names the
+frozen scratchpad worktree the receipt ran in.
+
+### THE VERIFICATION
+
+- The terrain corpus re-mint passes on linux/amd64 in Docker (`node:26-bookworm`, a fresh
+  `pnpm install --frozen-lockfile`): 2 of 2.
+- The full suite, ARMED (`TEST_DATABASE_URL` alone; `freehold_db.pg` 16 of 16 first), at
+  `a9060dbf0e`: 72,963 tests, 72,935 passed, 0 failed, 28 skipped. Uptime was checked and
+  there was no stray `node_modules/node_modules`.
+- THE SHARD CARRY (`dbae472b24`, its own chore commit, armed, quiet machine): 131 walked
+  suites had no weight row; each is the median of three armed runs (4,948 rows).
+
+### STILL OPEN, IN ORDER (the next session starts here)
+
+1. Part 1 of the 2026-09-26 brief from STEP 2: write the R1 design into this ledger (the
+   questions the brief lists), then build it test-first (the thrown-write KNOWN COST pin
+   flips, the stale-fence KNOWN COST pin holds, the new pins, extraction to pay for the
+   lines under the 2058 ceiling, every pin mutation-checked).
+2. Owed from this sync's audit: a test that the leave path releases a manned cannon before
+   the leave save (the server lane's nit; `removePlayer` backstops it today).
+3. STEP 3 (the `freehold_persist` trims with a coverage proof per deletion), STEP 4 (five
+   capped reviewers, which also review `51d9e2b124`'s threshold re-mint), STEP 5 (the armed
+   gate), STEP 6 (re-judge 07).
+4. Part 2, the repo-wide test cost work, in the brief's order, ending with the durable
+   guard.
+5. Rulings owed: G8 (the caravan route beside the gate) before housing lights; G1 before 28;
+   G2 when housing lights online; Fernando's confirmation of the 262,144 blob warning.
+6. The older list: `Sim.addPlayer` atomicity (now also the release's world-quest restore),
+   D85, the phase 17 re-plan on the G3 ruling, the Fenbridge ruling before 25a (with G10's
+   investigation post measured), and a new release sync if `release/**` moves.
