@@ -383,7 +383,7 @@ export const DUNGEON_MOBS: Record<string, MobTemplate> = {
     // Last Inferno flips `enraged` itself at 20% (so dmgMult applies) and
     // carries the swing-speed half as its encounter-owned 1.2x haste aura;
     // a template hasteMult would stack on that aura and double-dip. Pinned
-    // by tests/mob_enrage.test.ts and tests/ignivar_encounter.test.ts.
+    // by tests/mob_enrage.test.ts and tests/ignivar_encounter_tanking_lifecycle.test.ts.
     enrage: { belowHpPct: 0.25, dmgMult: 1.35 },
   },
   // Stationary priority target for Ignivar's Normal intermission.

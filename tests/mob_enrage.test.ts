@@ -100,8 +100,8 @@ describe('enrage frenzy (swing-speed haste)', () => {
     // The one deliberate exception: the Ignivar herald's encounter script owns
     // his frenzy. Last Inferno flips `enraged` itself at 20% (so dmgMult
     // applies) and carries the swing-speed half as its encounter-owned 1.2x
-    // haste aura (tests/ignivar_encounter.test.ts pins the resulting swing
-    // interval exactly). A template hasteMult would stack on that aura and
+    // haste aura (tests/ignivar_encounter_tanking_lifecycle.test.ts pins the
+    // Last Inferno enrage). A template hasteMult would stack on that aura and
     // double-dip, so its absence is pinned here rather than left as a gap.
     const ENCOUNTER_OWNED_FRENZY = new Set(['ignivar_herald_of_the_last_flame']);
     for (const id of ENCOUNTER_OWNED_FRENZY) {
