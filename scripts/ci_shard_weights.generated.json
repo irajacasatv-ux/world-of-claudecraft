@@ -2,7 +2,7 @@
   "__provenance": {
     "run": "34168361798",
     "harvested": "2026-09-08",
-    "files": 4817,
+    "files": 4948,
     "harvestedFiles": 3948,
     "carried": {
       "tests/ability_imbue_text.test.ts": {
@@ -225,6 +225,17 @@
           17
         ]
       },
+      "tests/agent_surface_paths.test.ts": {
+        "ms": 4,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          4,
+          4,
+          3
+        ]
+      },
       "tests/ambience_state_core.test.ts": {
         "ms": 27,
         "method": "local-median",
@@ -313,6 +324,17 @@
         "reason": "local release v0.44 candidate measurement pending full CI harvest",
         "runs": [
           12
+        ]
+      },
+      "tests/authored_walls.test.ts": {
+        "ms": 4,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          4,
+          3,
+          4
         ]
       },
       "tests/awarded_loot_hold.test.ts": {
@@ -450,6 +472,17 @@
           43
         ]
       },
+      "tests/blank_entity.test.ts": {
+        "ms": 44,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          48,
+          44,
+          44
+        ]
+      },
       "tests/bloodletting_choreography.test.ts": {
         "ms": 23,
         "method": "local-median",
@@ -466,6 +499,17 @@
         "reason": "local carry pending the next full-mode harvest",
         "runs": [
           921
+        ]
+      },
+      "tests/browser_fullscreen.test.ts": {
+        "ms": 31,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          32,
+          31,
+          31
         ]
       },
       "tests/bug_report_error_text.test.ts": {
@@ -710,6 +754,17 @@
           11
         ]
       },
+      "tests/character_streaming_policy_core.test.ts": {
+        "ms": 3,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          3,
+          3,
+          3
+        ]
+      },
       "tests/charselect_hints.test.ts": {
         "ms": 16,
         "method": "local-median",
@@ -789,6 +844,17 @@
         "reason": "local carry pending the next full-mode harvest",
         "runs": [
           5
+        ]
+      },
+      "tests/ci_changed_entry.test.ts": {
+        "ms": 116,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          182,
+          112,
+          116
         ]
       },
       "tests/class_health_table.test.ts": {
@@ -879,6 +945,17 @@
         "reason": "local carry pending the next full-mode harvest",
         "runs": [
           6
+        ]
+      },
+      "tests/codex_hooks.test.ts": {
+        "ms": 3143,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          3193,
+          3143,
+          3129
         ]
       },
       "tests/collection_actions_core.test.ts": {
@@ -1424,6 +1501,17 @@
           738
         ]
       },
+      "tests/dungeon_interior_resolver_core.test.ts": {
+        "ms": 3,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          3,
+          3,
+          3
+        ]
+      },
       "tests/eastbrook_combat_giver_visibility.test.ts": {
         "ms": 807,
         "method": "local-median",
@@ -1557,6 +1645,17 @@
         "reason": "local carry pending the next full-mode harvest",
         "runs": [
           989
+        ]
+      },
+      "tests/enter_offline_game.test.ts": {
+        "ms": 3,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          3,
+          3,
+          3
         ]
       },
       "tests/entity_flair_wire.test.ts": {
@@ -1919,6 +2018,17 @@
           5
         ]
       },
+      "tests/foliage_freehold_gate_grass.test.ts": {
+        "ms": 2374,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          2689,
+          2324,
+          2374
+        ]
+      },
       "tests/foliage_lean_cull_wiring.test.ts": {
         "ms": 6,
         "method": "local-median",
@@ -2090,6 +2200,446 @@
           10
         ]
       },
+      "tests/freehold_arrival.test.ts": {
+        "ms": 339,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          343,
+          337,
+          339
+        ]
+      },
+      "tests/freehold_art_admission.test.ts": {
+        "ms": 18,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          20,
+          18,
+          17
+        ]
+      },
+      "tests/freehold_capture_census.test.ts": {
+        "ms": 98,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          235,
+          97,
+          98
+        ]
+      },
+      "tests/freehold_capture_contract.test.ts": {
+        "ms": 6259,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          6296,
+          6258,
+          6259
+        ]
+      },
+      "tests/freehold_capture_notices.test.ts": {
+        "ms": 38,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          38,
+          37,
+          38
+        ]
+      },
+      "tests/freehold_catalog_rollback.test.ts": {
+        "ms": 3,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          3,
+          3,
+          3
+        ]
+      },
+      "tests/freehold_command_chain_online.test.ts": {
+        "ms": 1298,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          1290,
+          1298,
+          1298
+        ]
+      },
+      "tests/freehold_content.test.ts": {
+        "ms": 12,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          12,
+          12,
+          12
+        ]
+      },
+      "tests/freehold_crafted_art.test.ts": {
+        "ms": 25,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          29,
+          25,
+          25
+        ]
+      },
+      "tests/freehold_crafted_availability.test.ts": {
+        "ms": 2071,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          2069,
+          2077,
+          2071
+        ]
+      },
+      "tests/freehold_crafted_presentation.test.ts": {
+        "ms": 782,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          782,
+          787,
+          775
+        ]
+      },
+      "tests/freehold_deed_records.test.ts": {
+        "ms": 620,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          621,
+          620,
+          615
+        ]
+      },
+      "tests/freehold_dev_authorization.test.ts": {
+        "ms": 7,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          7,
+          8,
+          7
+        ]
+      },
+      "tests/freehold_dev_bootstrap.test.ts": {
+        "ms": 54,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          54,
+          54,
+          54
+        ]
+      },
+      "tests/freehold_dev_grant.test.ts": {
+        "ms": 337,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          397,
+          337,
+          337
+        ]
+      },
+      "tests/freehold_dungeon_build.test.ts": {
+        "ms": 21,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          21,
+          21,
+          21
+        ]
+      },
+      "tests/freehold_dungeon_defs.test.ts": {
+        "ms": 3943,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          3943,
+          3934,
+          3943
+        ]
+      },
+      "tests/freehold_entry_action_locks.test.ts": {
+        "ms": 163,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          163,
+          163,
+          163
+        ]
+      },
+      "tests/freehold_exit_label_core.test.ts": {
+        "ms": 4,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          4,
+          3,
+          4
+        ]
+      },
+      "tests/freehold_furnisher.test.ts": {
+        "ms": 928,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          928,
+          929,
+          915
+        ]
+      },
+      "tests/freehold_gate_and_key.test.ts": {
+        "ms": 912,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          924,
+          912,
+          911
+        ]
+      },
+      "tests/freehold_gate_clearance.test.ts": {
+        "ms": 8106,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          8165,
+          8090,
+          8106
+        ]
+      },
+      "tests/freehold_gate_probe.test.ts": {
+        "ms": 20,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          20,
+          20,
+          18
+        ]
+      },
+      "tests/freehold_gate_prompt.test.ts": {
+        "ms": 171,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          172,
+          168,
+          171
+        ]
+      },
+      "tests/freehold_instance.test.ts": {
+        "ms": 1238,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          1225,
+          1248,
+          1238
+        ]
+      },
+      "tests/freehold_instance_online.test.ts": {
+        "ms": 1643,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          1643,
+          1647,
+          1642
+        ]
+      },
+      "tests/freehold_interior_dressing.test.ts": {
+        "ms": 7,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          8,
+          7,
+          7
+        ]
+      },
+      "tests/freehold_interior_route.test.ts": {
+        "ms": 7797,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          7783,
+          7797,
+          7822
+        ]
+      },
+      "tests/freehold_key_persistence.test.ts": {
+        "ms": 643,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          647,
+          643,
+          639
+        ]
+      },
+      "tests/freehold_layouts.test.ts": {
+        "ms": 165,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          164,
+          165,
+          170
+        ]
+      },
+      "tests/freehold_ledger_schedule.test.ts": {
+        "ms": 11,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          12,
+          11,
+          11
+        ]
+      },
+      "tests/freehold_module.test.ts": {
+        "ms": 1925,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          2274,
+          1925,
+          1842
+        ]
+      },
+      "tests/freehold_npc_spawn.test.ts": {
+        "ms": 1818,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          1795,
+          1822,
+          1818
+        ]
+      },
+      "tests/freehold_offline_default.test.ts": {
+        "ms": 635,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          636,
+          635,
+          624
+        ]
+      },
+      "tests/freehold_pvp_vitality.test.ts": {
+        "ms": 646,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          643,
+          651,
+          646
+        ]
+      },
+      "tests/freehold_snapshot_wire.test.ts": {
+        "ms": 17,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          17,
+          18,
+          17
+        ]
+      },
+      "tests/freehold_state.test.ts": {
+        "ms": 35,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          35,
+          35,
+          34
+        ]
+      },
+      "tests/freehold_trial_economy.test.ts": {
+        "ms": 5,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          5,
+          6,
+          5
+        ]
+      },
+      "tests/freehold_trial_geometry.test.ts": {
+        "ms": 10,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          11,
+          10,
+          10
+        ]
+      },
+      "tests/freehold_world_pvp_sanctuary.test.ts": {
+        "ms": 649,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          649,
+          638,
+          649
+        ]
+      },
       "tests/friendly_nameplate_keybind.test.ts": {
         "ms": 30,
         "method": "local-median",
@@ -2097,6 +2647,303 @@
         "reason": "local carry pending the next full-mode harvest",
         "runs": [
           30
+        ]
+      },
+      "tests/furnishing_asset_identity.test.ts": {
+        "ms": 6,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          6,
+          6,
+          6
+        ]
+      },
+      "tests/furnishing_auto_equip.test.ts": {
+        "ms": 178,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          179,
+          178,
+          177
+        ]
+      },
+      "tests/furnishing_commerce_parity.test.ts": {
+        "ms": 1604,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          1599,
+          1630,
+          1604
+        ]
+      },
+      "tests/furnishing_consumer_parity.test.ts": {
+        "ms": 2984,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          2984,
+          3014,
+          2967
+        ]
+      },
+      "tests/furnishing_crafting.test.ts": {
+        "ms": 1306,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          1297,
+          1306,
+          1306
+        ]
+      },
+      "tests/furnishing_dev_picker.test.ts": {
+        "ms": 24,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          25,
+          24,
+          23
+        ]
+      },
+      "tests/furnishing_discovery.test.ts": {
+        "ms": 612,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          611,
+          612,
+          633
+        ]
+      },
+      "tests/furnishing_enchant_picker.test.ts": {
+        "ms": 4,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          4,
+          4,
+          4
+        ]
+      },
+      "tests/furnishing_equipment_power.test.ts": {
+        "ms": 631,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          631,
+          656,
+          627
+        ]
+      },
+      "tests/furnishing_event_identity.test.ts": {
+        "ms": 1922,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          1918,
+          1927,
+          1922
+        ]
+      },
+      "tests/furnishing_exchange_identity.test.ts": {
+        "ms": 7,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          7,
+          7,
+          7
+        ]
+      },
+      "tests/furnishing_feast_admission.test.ts": {
+        "ms": 950,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          939,
+          952,
+          950
+        ]
+      },
+      "tests/furnishing_feast_parity.test.ts": {
+        "ms": 1049,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          1049,
+          1040,
+          1067
+        ]
+      },
+      "tests/furnishing_item_kind.test.ts": {
+        "ms": 1793,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          1778,
+          1803,
+          1793
+        ]
+      },
+      "tests/furnishing_market_catalog.test.ts": {
+        "ms": 709,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          710,
+          709,
+          706
+        ]
+      },
+      "tests/furnishing_market_identity.test.ts": {
+        "ms": 674,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          674,
+          667,
+          674
+        ]
+      },
+      "tests/furnishing_material_source_journal.test.ts": {
+        "ms": 5,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          5,
+          5,
+          5
+        ]
+      },
+      "tests/furnishing_pattern_items.test.ts": {
+        "ms": 748,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          750,
+          748,
+          748
+        ]
+      },
+      "tests/furnishing_perfecting_collection.test.ts": {
+        "ms": 146,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          142,
+          146,
+          146
+        ]
+      },
+      "tests/furnishing_persistence.test.ts": {
+        "ms": 897,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          924,
+          896,
+          897
+        ]
+      },
+      "tests/furnishing_recipes.test.ts": {
+        "ms": 906,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          922,
+          906,
+          900
+        ]
+      },
+      "tests/furnishing_regalia.test.ts": {
+        "ms": 3,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          3,
+          4,
+          3
+        ]
+      },
+      "tests/furnishing_rift_admission.test.ts": {
+        "ms": 1651,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          1663,
+          1643,
+          1651
+        ]
+      },
+      "tests/furnishing_tool_effect_tooltip.test.ts": {
+        "ms": 10,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          11,
+          10,
+          10
+        ]
+      },
+      "tests/furnishing_tool_parity.test.ts": {
+        "ms": 2801,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          2780,
+          2801,
+          2806
+        ]
+      },
+      "tests/furnishing_tooltip_view.test.ts": {
+        "ms": 778,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          779,
+          778,
+          762
+        ]
+      },
+      "tests/furnishing_worn_presentation.test.ts": {
+        "ms": 190,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          190,
+          197,
+          189
         ]
       },
       "tests/fury_audio_integration.test.ts": {
@@ -2142,6 +2989,17 @@
         "reason": "local carry pending the next full-mode harvest",
         "runs": [
           5
+        ]
+      },
+      "tests/gathering_denial_feedback.test.ts": {
+        "ms": 6,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          6,
+          6,
+          6
         ]
       },
       "tests/glb_punctual_lights.test.ts": {
@@ -2324,6 +3182,28 @@
           7
         ]
       },
+      "tests/greeting_decline.test.ts": {
+        "ms": 221,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          255,
+          205,
+          221
+        ]
+      },
+      "tests/ground_object.test.ts": {
+        "ms": 7,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          7,
+          7,
+          7
+        ]
+      },
       "tests/ground_object_spawns.test.ts": {
         "ms": 5,
         "method": "local-median",
@@ -2340,6 +3220,28 @@
         "reason": "local carry pending the next full-mode harvest",
         "runs": [
           12
+        ]
+      },
+      "tests/guide_provisioning.test.ts": {
+        "ms": 12,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          12,
+          12,
+          11
+        ]
+      },
+      "tests/guide_reliquary_hearth.test.ts": {
+        "ms": 10,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          11,
+          10,
+          10
         ]
       },
       "tests/guild_bank_material_settle_gate.test.ts": {
@@ -2630,6 +3532,17 @@
           6
         ]
       },
+      "tests/housing_view.test.ts": {
+        "ms": 12,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          12,
+          12,
+          13
+        ]
+      },
       "tests/hub_dummy_drill.test.ts": {
         "ms": 3069,
         "method": "local-median",
@@ -2889,6 +3802,17 @@
         "reason": "Warrior PR 4139 adds 100 suites absent from the last green full CI harvest; actual local single-worker Vitest default-reporter run on 2026-09-21, pending green full-mode CI refresh (run 35567302759 failed and was not harvested).",
         "runs": [
           402
+        ]
+      },
+      "tests/item_instance_view.test.ts": {
+        "ms": 4,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          4,
+          4,
+          4
         ]
       },
       "tests/item_stamina_baseline.test.ts": {
@@ -3566,6 +4490,17 @@
           5
         ]
       },
+      "tests/mount_tooltip_view.test.ts": {
+        "ms": 3,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          3,
+          3,
+          3
+        ]
+      },
       "tests/mouseover_cast_core.test.ts": {
         "ms": 5,
         "method": "local-median",
@@ -3582,6 +4517,17 @@
         "reason": "local carry pending the next full-mode harvest",
         "runs": [
           7
+        ]
+      },
+      "tests/move_toward.test.ts": {
+        "ms": 601,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          612,
+          601,
+          601
         ]
       },
       "tests/music_notes.test.ts": {
@@ -3781,6 +4727,39 @@
         "measured": "2026-09-26",
         "reason": "local carry pending the next full-mode harvest",
         "runs": [
+          4
+        ]
+      },
+      "tests/owner_arrival.test.ts": {
+        "ms": 153,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          152,
+          153,
+          153
+        ]
+      },
+      "tests/owner_claim_occupancy.test.ts": {
+        "ms": 775,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          772,
+          784,
+          775
+        ]
+      },
+      "tests/owner_claim_room_at.test.ts": {
+        "ms": 4,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          4,
+          4,
           4
         ]
       },
@@ -4010,6 +4989,17 @@
         "measured": "2026-09-26",
         "reason": "local carry pending the next full-mode harvest",
         "runs": [
+          7
+        ]
+      },
+      "tests/prewarm_instance_lifecycle.test.ts": {
+        "ms": 6,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          6,
+          6,
           7
         ]
       },
@@ -4267,6 +5257,17 @@
           14
         ]
       },
+      "tests/recipe_visibility.test.ts": {
+        "ms": 3,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          3,
+          3,
+          3
+        ]
+      },
       "tests/regional_caravan_content.test.ts": {
         "ms": 1956,
         "method": "local-median",
@@ -4274,6 +5275,39 @@
         "reason": "local carry pending the next full-mode harvest",
         "runs": [
           1956
+        ]
+      },
+      "tests/reliquary_empty_shelf.test.ts": {
+        "ms": 27,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          29,
+          27,
+          27
+        ]
+      },
+      "tests/reliquary_hearth_shelf.test.ts": {
+        "ms": 5,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          5,
+          5,
+          5
+        ]
+      },
+      "tests/reliquary_hearth_window.test.ts": {
+        "ms": 45,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          45,
+          45,
+          45
         ]
       },
       "tests/render_budget_chosen_cadence.test.ts": {
@@ -4323,6 +5357,17 @@
           45
         ]
       },
+      "tests/renderer_zone_dependency_lifecycle.test.ts": {
+        "ms": 180,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          178,
+          180,
+          182
+        ]
+      },
       "tests/reputation_tab_html.test.ts": {
         "ms": 11,
         "method": "local-median",
@@ -4348,6 +5393,17 @@
         "reason": "local carry pending the next full-mode harvest",
         "runs": [
           761
+        ]
+      },
+      "tests/reserved_surface_npc_bootstrap.test.ts": {
+        "ms": 774,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          765,
+          774,
+          786
         ]
       },
       "tests/reset_cooldown_policy.test.ts": {
@@ -4548,6 +5604,17 @@
           930
         ]
       },
+      "tests/seo_metadata.test.ts": {
+        "ms": 14,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          15,
+          14,
+          14
+        ]
+      },
       "tests/server/account_cosmetics_live.test.ts": {
         "ms": 4,
         "method": "local-median",
@@ -4629,6 +5696,28 @@
           5
         ]
       },
+      "tests/server/bot_detection_snapshot.test.ts": {
+        "ms": 5,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          6,
+          5,
+          5
+        ]
+      },
+      "tests/server/client_perf_reports_db.test.ts": {
+        "ms": 5,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          6,
+          5,
+          5
+        ]
+      },
       "tests/server/craft_roll_events.test.ts": {
         "ms": 9,
         "method": "local-median",
@@ -4672,6 +5761,193 @@
         "reason": "local carry pending the next full-mode harvest",
         "runs": [
           190
+        ]
+      },
+      "tests/server/entity_wire_cache.test.ts": {
+        "ms": 6,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          6,
+          5,
+          6
+        ]
+      },
+      "tests/server/freehold_bounded_error.test.ts": {
+        "ms": 3,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          3,
+          3,
+          3
+        ]
+      },
+      "tests/server/freehold_capacity_warn.test.ts": {
+        "ms": 3,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          3,
+          3,
+          3
+        ]
+      },
+      "tests/server/freehold_db.pg.test.ts": {
+        "ms": 279,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          278,
+          287,
+          279
+        ]
+      },
+      "tests/server/freehold_db.test.ts": {
+        "ms": 9,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          9,
+          9,
+          8
+        ]
+      },
+      "tests/server/freehold_dev_grant_boot.test.ts": {
+        "ms": 3,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          3,
+          3,
+          3
+        ]
+      },
+      "tests/server/freehold_hearth_db.pg.test.ts": {
+        "ms": 138,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          138,
+          143,
+          134
+        ]
+      },
+      "tests/server/freehold_hearth_db.test.ts": {
+        "ms": 9,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          9,
+          9,
+          9
+        ]
+      },
+      "tests/server/freehold_join_answer.test.ts": {
+        "ms": 4,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          4,
+          4,
+          4
+        ]
+      },
+      "tests/server/freehold_liveness.test.ts": {
+        "ms": 3,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          3,
+          3,
+          4
+        ]
+      },
+      "tests/server/freehold_login_bounds.test.ts": {
+        "ms": 4,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          4,
+          4,
+          4
+        ]
+      },
+      "tests/server/freehold_persist.test.ts": {
+        "ms": 79,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          80,
+          79,
+          77
+        ]
+      },
+      "tests/server/freehold_revision_probe.test.ts": {
+        "ms": 3,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          3,
+          3,
+          3
+        ]
+      },
+      "tests/server/freehold_routes.test.ts": {
+        "ms": 10,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          10,
+          9,
+          10
+        ]
+      },
+      "tests/server/freehold_row_document.test.ts": {
+        "ms": 3,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          3,
+          3,
+          3
+        ]
+      },
+      "tests/server/freehold_wire.test.ts": {
+        "ms": 2967,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          2967,
+          2943,
+          3013
+        ]
+      },
+      "tests/server/freehold_write_seal.test.ts": {
+        "ms": 3,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          3,
+          3,
+          4
         ]
       },
       "tests/server/gl_backend.test.ts": {
@@ -4752,6 +6028,61 @@
         "measured": "2026-09-26",
         "reason": "local carry pending the next full-mode harvest",
         "runs": [
+          4
+        ]
+      },
+      "tests/server/instance_presence.test.ts": {
+        "ms": 3,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          3,
+          3,
+          3
+        ]
+      },
+      "tests/server/instance_scan_tick_stats.test.ts": {
+        "ms": 3,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          3,
+          3,
+          3
+        ]
+      },
+      "tests/server/join_tail_relic_reconcile.test.ts": {
+        "ms": 4,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          4,
+          4,
+          4
+        ]
+      },
+      "tests/server/leave_character_save.test.ts": {
+        "ms": 8280,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          8277,
+          8280,
+          8282
+        ]
+      },
+      "tests/server/live_location.test.ts": {
+        "ms": 4,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          4,
+          4,
           4
         ]
       },
@@ -5103,6 +6434,17 @@
           4
         ]
       },
+      "tests/start_panel_navigation.test.ts": {
+        "ms": 17,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          18,
+          16,
+          17
+        ]
+      },
       "tests/static_merge_shadow_core.test.ts": {
         "ms": 5,
         "method": "local-median",
@@ -5137,6 +6479,28 @@
         "reason": "local carry pending the next full-mode harvest",
         "runs": [
           7
+        ]
+      },
+      "tests/store_prompt_host.test.ts": {
+        "ms": 22,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          22,
+          22,
+          21
+        ]
+      },
+      "tests/surface_npc_bootstrap.test.ts": {
+        "ms": 3,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          4,
+          3,
+          3
         ]
       },
       "tests/surface_response.test.ts": {
@@ -5200,6 +6564,17 @@
         "reason": "v0.44 release-line reconcile added these tests after the latest full shard-weight harvest",
         "runs": [
           15
+        ]
+      },
+      "tests/terrain_calm_anchor_freehold.test.ts": {
+        "ms": 1335,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          1324,
+          1335,
+          1339
         ]
       },
       "tests/terrain_detail_shed_core.test.ts": {
@@ -6552,6 +7927,28 @@
           6
         ]
       },
+      "tests/website_navigation.test.ts": {
+        "ms": 3,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          4,
+          3,
+          3
+        ]
+      },
+      "tests/website_view_navigation.test.ts": {
+        "ms": 32,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          32,
+          32,
+          30
+        ]
+      },
       "tests/weekly_quests.test.ts": {
         "ms": 1609,
         "method": "local-median",
@@ -6964,6 +8361,17 @@
         "reason": "local carry pending the next full-mode harvest",
         "runs": [
           39
+        ]
+      },
+      "tests/world_object_bootstrap.test.ts": {
+        "ms": 4,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          4,
+          4,
+          3
         ]
       },
       "tests/world_pvp.test.ts": {
@@ -7839,6 +9247,28 @@
           444
         ]
       },
+      "tests/zone_character_dependencies.test.ts": {
+        "ms": 4,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          5,
+          4,
+          4
+        ]
+      },
+      "tests/zone_character_dependency_wait.test.ts": {
+        "ms": 4,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          4,
+          4,
+          4
+        ]
+      },
       "tests/zone_dressing_lod_core.test.ts": {
         "ms": 9,
         "method": "local-median",
@@ -7882,6 +9312,17 @@
         "reason": "local carry pending the next full-mode harvest",
         "runs": [
           5
+        ]
+      },
+      "tests/zone_prewarm_finalize.test.ts": {
+        "ms": 4,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "Freeholds sync of release/v0.44.0 at aaff789813: suites the merged tree walks with no weight row, each the median of three armed runs",
+        "runs": [
+          4,
+          4,
+          4
         ]
       }
     },
@@ -8072,6 +9513,7 @@
   "tests/affliction_familiar_prewarm.test.ts": 17,
   "tests/affliction_sentence_queue.test.ts": 4,
   "tests/afk_wire.test.ts": 2715,
+  "tests/agent_surface_paths.test.ts": 4,
   "tests/aldric_meteor_quest.test.ts": 1627,
   "tests/alloc_probe.test.ts": 11,
   "tests/ambience_state_core.test.ts": 27,
@@ -8197,6 +9639,7 @@
   "tests/auth_token_scope_constraint_integration.test.ts": 1030,
   "tests/auth_utils.test.ts": 12,
   "tests/authored_surfaces.test.ts": 104,
+  "tests/authored_walls.test.ts": 4,
   "tests/auto_acquire_target.test.ts": 9,
   "tests/auto_equip_gate.test.ts": 10,
   "tests/auto_target.test.ts": 7,
@@ -8320,6 +9763,7 @@
   "tests/blade_grass_pool_core.test.ts": 160,
   "tests/blade_grass_sector_pool.test.ts": 1743,
   "tests/blade_grass_upload_bands_core.test.ts": 43,
+  "tests/blank_entity.test.ts": 44,
   "tests/blob_shadow_core.test.ts": 62,
   "tests/block_invites.test.ts": 3088,
   "tests/block_landing_feedback_core.test.ts": 6,
@@ -8343,6 +9787,7 @@
   "tests/breath.test.ts": 2952,
   "tests/broker_custody.test.ts": 3252,
   "tests/browser_env.test.ts": 8,
+  "tests/browser_fullscreen.test.ts": 31,
   "tests/browser_support_notice.test.ts": 12,
   "tests/browser_support_notice_dom.test.ts": 24,
   "tests/browserslist_targets.test.ts": 6,
@@ -8461,6 +9906,7 @@
   "tests/character_skeleton_update.test.ts": 10,
   "tests/character_state_backcompat.test.ts": 3315,
   "tests/character_state_module.test.ts": 15,
+  "tests/character_streaming_policy_core.test.ts": 3,
   "tests/character_tpose_repair.test.ts": 1197,
   "tests/character_uv_dequantize.test.ts": 8,
   "tests/character_view_core.test.ts": 14,
@@ -8540,6 +9986,7 @@
   "tests/ci_balanced_sequencer.test.ts": 29,
   "tests/ci_change_classify.test.ts": 302,
   "tests/ci_changed_base.test.ts": 13,
+  "tests/ci_changed_entry.test.ts": 116,
   "tests/ci_leg_runner.test.ts": 1779,
   "tests/ci_pg_presence.test.ts": 7,
   "tests/ci_selection_pipeline.test.ts": 12,
@@ -8590,6 +10037,7 @@
   "tests/coach_prompt_view.test.ts": 40,
   "tests/coach_trail_core.test.ts": 14,
   "tests/coach_trail_materials.test.ts": 26,
+  "tests/codex_hooks.test.ts": 3143,
   "tests/codex_setup.test.ts": 155,
   "tests/collection_actions_core.test.ts": 4,
   "tests/collection_manuals.test.ts": 627,
@@ -9028,6 +10476,7 @@
   "tests/dungeon_finder_view.test.ts": 24,
   "tests/dungeon_finder_window.test.ts": 10,
   "tests/dungeon_instance_disconnect_reset.test.ts": 3634,
+  "tests/dungeon_interior_resolver_core.test.ts": 3,
   "tests/dungeon_map_painter.test.ts": 11,
   "tests/dungeon_map_view.test.ts": 14,
   "tests/dungeon_miniboss_stomp.test.ts": 2867,
@@ -9156,6 +10605,7 @@
   "tests/encounter_living_target.test.ts": 5,
   "tests/encounter_wipe.test.ts": 7572,
   "tests/engaged_combat.test.ts": 989,
+  "tests/enter_offline_game.test.ts": 3,
   "tests/entity_display_core.test.ts": 19,
   "tests/entity_display_name.test.ts": 11,
   "tests/entity_flair_wire.test.ts": 5,
@@ -9344,6 +10794,7 @@
   "tests/foliage_dressing_profile.test.ts": 5336,
   "tests/foliage_field_bark_decimation.test.ts": 9462,
   "tests/foliage_frame_windows_core.test.ts": 5,
+  "tests/foliage_freehold_gate_grass.test.ts": 2374,
   "tests/foliage_ghost_prewarm.test.ts": 16,
   "tests/foliage_gpu_contract.test.ts": 9,
   "tests/foliage_impostor_core.test.ts": 75,
@@ -9388,6 +10839,46 @@
   "tests/frame_presets.test.ts": 162,
   "tests/frame_presets_live.test.ts": 46,
   "tests/frame_rate_cap_setting.test.ts": 10,
+  "tests/freehold_arrival.test.ts": 339,
+  "tests/freehold_art_admission.test.ts": 18,
+  "tests/freehold_capture_census.test.ts": 98,
+  "tests/freehold_capture_contract.test.ts": 6259,
+  "tests/freehold_capture_notices.test.ts": 38,
+  "tests/freehold_catalog_rollback.test.ts": 3,
+  "tests/freehold_command_chain_online.test.ts": 1298,
+  "tests/freehold_content.test.ts": 12,
+  "tests/freehold_crafted_art.test.ts": 25,
+  "tests/freehold_crafted_availability.test.ts": 2071,
+  "tests/freehold_crafted_presentation.test.ts": 782,
+  "tests/freehold_deed_records.test.ts": 620,
+  "tests/freehold_dev_authorization.test.ts": 7,
+  "tests/freehold_dev_bootstrap.test.ts": 54,
+  "tests/freehold_dev_grant.test.ts": 337,
+  "tests/freehold_dungeon_build.test.ts": 21,
+  "tests/freehold_dungeon_defs.test.ts": 3943,
+  "tests/freehold_entry_action_locks.test.ts": 163,
+  "tests/freehold_exit_label_core.test.ts": 4,
+  "tests/freehold_furnisher.test.ts": 928,
+  "tests/freehold_gate_and_key.test.ts": 912,
+  "tests/freehold_gate_clearance.test.ts": 8106,
+  "tests/freehold_gate_probe.test.ts": 20,
+  "tests/freehold_gate_prompt.test.ts": 171,
+  "tests/freehold_instance.test.ts": 1238,
+  "tests/freehold_instance_online.test.ts": 1643,
+  "tests/freehold_interior_dressing.test.ts": 7,
+  "tests/freehold_interior_route.test.ts": 7797,
+  "tests/freehold_key_persistence.test.ts": 643,
+  "tests/freehold_layouts.test.ts": 165,
+  "tests/freehold_ledger_schedule.test.ts": 11,
+  "tests/freehold_module.test.ts": 1925,
+  "tests/freehold_npc_spawn.test.ts": 1818,
+  "tests/freehold_offline_default.test.ts": 635,
+  "tests/freehold_pvp_vitality.test.ts": 646,
+  "tests/freehold_snapshot_wire.test.ts": 17,
+  "tests/freehold_state.test.ts": 35,
+  "tests/freehold_trial_economy.test.ts": 5,
+  "tests/freehold_trial_geometry.test.ts": 10,
+  "tests/freehold_world_pvp_sanctuary.test.ts": 649,
   "tests/friendly_nameplate_keybind.test.ts": 30,
   "tests/frost_ice_fields.test.ts": 236,
   "tests/frost_ice_fields_core.test.ts": 9,
@@ -9399,6 +10890,33 @@
   "tests/frostbrand.test.ts": 10,
   "tests/frostveil_pit_escape.test.ts": 5700,
   "tests/frozen_orb_fx.test.ts": 39,
+  "tests/furnishing_asset_identity.test.ts": 6,
+  "tests/furnishing_auto_equip.test.ts": 178,
+  "tests/furnishing_commerce_parity.test.ts": 1604,
+  "tests/furnishing_consumer_parity.test.ts": 2984,
+  "tests/furnishing_crafting.test.ts": 1306,
+  "tests/furnishing_dev_picker.test.ts": 24,
+  "tests/furnishing_discovery.test.ts": 612,
+  "tests/furnishing_enchant_picker.test.ts": 4,
+  "tests/furnishing_equipment_power.test.ts": 631,
+  "tests/furnishing_event_identity.test.ts": 1922,
+  "tests/furnishing_exchange_identity.test.ts": 7,
+  "tests/furnishing_feast_admission.test.ts": 950,
+  "tests/furnishing_feast_parity.test.ts": 1049,
+  "tests/furnishing_item_kind.test.ts": 1793,
+  "tests/furnishing_market_catalog.test.ts": 709,
+  "tests/furnishing_market_identity.test.ts": 674,
+  "tests/furnishing_material_source_journal.test.ts": 5,
+  "tests/furnishing_pattern_items.test.ts": 748,
+  "tests/furnishing_perfecting_collection.test.ts": 146,
+  "tests/furnishing_persistence.test.ts": 897,
+  "tests/furnishing_recipes.test.ts": 906,
+  "tests/furnishing_regalia.test.ts": 3,
+  "tests/furnishing_rift_admission.test.ts": 1651,
+  "tests/furnishing_tool_effect_tooltip.test.ts": 10,
+  "tests/furnishing_tool_parity.test.ts": 2801,
+  "tests/furnishing_tooltip_view.test.ts": 778,
+  "tests/furnishing_worn_presentation.test.ts": 190,
   "tests/fury_audio_integration.test.ts": 359,
   "tests/fury_audio_queue.test.ts": 10,
   "tests/fury_component_contacts.test.ts": 37,
@@ -9451,6 +10969,7 @@
   "tests/gather_tool_use.test.ts": 2790,
   "tests/gatherer_host_identity.test.ts": 15,
   "tests/gathering.test.ts": 99,
+  "tests/gathering_denial_feedback.test.ts": 6,
   "tests/gathering_goal_cache.test.ts": 3550,
   "tests/gathering_goal_hud_integration.test.ts": 586,
   "tests/gathering_goal_once_use_recipe.test.ts": 2917,
@@ -9540,6 +11059,7 @@
   "tests/gravewyrm_farm_exploit.test.ts": 1819,
   "tests/gravewyrm_normal_tuning.test.ts": 15,
   "tests/graveyard_command.test.ts": 2024,
+  "tests/greeting_decline.test.ts": 221,
   "tests/grix_tunnelking_presence.test.ts": 10,
   "tests/ground_aim.test.ts": 14,
   "tests/ground_aim_hud.test.ts": 30,
@@ -9548,6 +11068,7 @@
   "tests/ground_aim_reticle_visual.test.ts": 17,
   "tests/ground_decor_prewarm.test.ts": 215,
   "tests/ground_glow_patch.test.ts": 12,
+  "tests/ground_object.test.ts": 7,
   "tests/ground_object_placement.test.ts": 2711,
   "tests/ground_object_pool.test.ts": 18,
   "tests/ground_object_spawns.test.ts": 5,
@@ -9567,6 +11088,8 @@
   "tests/guide_level_cap_drift.test.ts": 10,
   "tests/guide_models_fallback.test.ts": 8,
   "tests/guide_prof_faq_keys.test.ts": 9,
+  "tests/guide_provisioning.test.ts": 12,
+  "tests/guide_reliquary_hearth.test.ts": 10,
   "tests/guide_route_render.test.ts": 157,
   "tests/guide_search.test.ts": 57,
   "tests/guide_still_key.test.ts": 8,
@@ -9704,6 +11227,7 @@
   "tests/host_essentials_vocabulary_parity.test.ts": 6,
   "tests/hotbar.test.ts": 23,
   "tests/hotbar_drop_tooltip.test.ts": 8,
+  "tests/housing_view.test.ts": 12,
   "tests/http_util.test.ts": 11,
   "tests/hub_dummy_drill.test.ts": 3069,
   "tests/hub_dummy_visual_alias.test.ts": 2,
@@ -9922,6 +11446,7 @@
   "tests/item_instance_stats.test.ts": 7,
   "tests/item_instance_tooltip.test.ts": 24,
   "tests/item_instance_transfer.test.ts": 22,
+  "tests/item_instance_view.test.ts": 4,
   "tests/item_kind_line.test.ts": 39,
   "tests/item_level.test.ts": 32,
   "tests/item_level_req.test.ts": 23,
@@ -10436,6 +11961,7 @@
   "tests/mount_race_wire.test.ts": 8,
   "tests/mount_skin_legacy_items.test.ts": 5,
   "tests/mount_skins.test.ts": 5,
+  "tests/mount_tooltip_view.test.ts": 3,
   "tests/mount_transition.test.ts": 2267,
   "tests/mount_visuals.test.ts": 52,
   "tests/mounts.test.ts": 1974,
@@ -10446,6 +11972,7 @@
   "tests/mouseover_cast_wiring.test.ts": 7,
   "tests/movable_frame.test.ts": 1407,
   "tests/move_input.test.ts": 9,
+  "tests/move_toward.test.ts": 601,
   "tests/movement_ground_truth.test.ts": 3298,
   "tests/movement_latency_baseline.test.ts": 18152,
   "tests/movement_metrics.test.ts": 1428,
@@ -10633,6 +12160,9 @@
   "tests/owned_class_raid_armor_avoidance.test.ts": 170565,
   "tests/owned_class_raid_sustain_bands.test.ts": 115825,
   "tests/owned_class_tooltip_clarity.test.ts": 8,
+  "tests/owner_arrival.test.ts": 153,
+  "tests/owner_claim_occupancy.test.ts": 775,
+  "tests/owner_claim_room_at.test.ts": 4,
   "tests/pad_cast_routing.test.ts": 9,
   "tests/pad_cast_wiring.test.ts": 6,
   "tests/pad_focus_action.test.ts": 9,
@@ -10910,6 +12440,7 @@
   "tests/prewarm_compile_submission_core.test.ts": 11,
   "tests/prewarm_depth_material.test.ts": 22,
   "tests/prewarm_entry.test.ts": 7,
+  "tests/prewarm_instance_lifecycle.test.ts": 6,
   "tests/prewarm_pass.test.ts": 19,
   "tests/prewarm_policy.test.ts": 56,
   "tests/prewarm_program_key_contract.test.ts": 24,
@@ -11188,6 +12719,7 @@
   "tests/recipe_reachability.test.ts": 55,
   "tests/recipe_tracker_painter.test.ts": 25,
   "tests/recipe_tracker_view.test.ts": 14,
+  "tests/recipe_visibility.test.ts": 3,
   "tests/reclaim_name.test.ts": 8,
   "tests/reconnect_overlay.test.ts": 26,
   "tests/reconnect_status_core.test.ts": 6,
@@ -11200,6 +12732,9 @@
   "tests/release_version.test.ts": 15,
   "tests/reliquary_cell_art.test.ts": 292,
   "tests/reliquary_content.test.ts": 188,
+  "tests/reliquary_empty_shelf.test.ts": 27,
+  "tests/reliquary_hearth_shelf.test.ts": 5,
+  "tests/reliquary_hearth_window.test.ts": 45,
   "tests/reliquary_i18n.test.ts": 245,
   "tests/reliquary_i18n_lazy.test.ts": 22,
   "tests/reliquary_i18n_pseudo.test.ts": 126,
@@ -11243,11 +12778,13 @@
   "tests/renderer_resource_lifecycle.test.ts": 26,
   "tests/renderer_shadow_prewarm.test.ts": 12,
   "tests/renderer_spellfx_dispatch_order.test.ts": 7,
+  "tests/renderer_zone_dependency_lifecycle.test.ts": 180,
   "tests/report_target.test.ts": 7,
   "tests/report_window.test.ts": 153,
   "tests/reputation_tab_html.test.ts": 11,
   "tests/reputation_view.test.ts": 5,
   "tests/reserved_singleton_entity_ids.test.ts": 761,
+  "tests/reserved_surface_npc_bootstrap.test.ts": 774,
   "tests/reset_cooldown_policy.test.ts": 4,
   "tests/reset_day_guard.test.ts": 2092,
   "tests/resident_scenery_core.test.ts": 7,
@@ -11399,6 +12936,7 @@
   "tests/sentence_renderer.test.ts": 38,
   "tests/sentence_vfx.test.ts": 100,
   "tests/sentence_vfx_core.test.ts": 14,
+  "tests/seo_metadata.test.ts": 14,
   "tests/serial_writer.test.ts": 33,
   "tests/server/account.test.ts": 87,
   "tests/server/account_cosmetics_live.test.ts": 4,
@@ -11444,6 +12982,7 @@
   "tests/server/battleground.test.ts": 21,
   "tests/server/battleground_telemetry.test.ts": 11,
   "tests/server/board_read_single_flight.test.ts": 91,
+  "tests/server/bot_detection_snapshot.test.ts": 5,
   "tests/server/cached_read.test.ts": 22,
   "tests/server/card_route.test.ts": 22,
   "tests/server/character_delete_http.test.ts": 10,
@@ -11463,6 +13002,7 @@
   "tests/server/clean_metadata_text.test.ts": 5,
   "tests/server/clear_item_name.test.ts": 41,
   "tests/server/clear_item_name_db.test.ts": 22,
+  "tests/server/client_perf_reports_db.test.ts": 5,
   "tests/server/client_perf_summary_shape.test.ts": 15,
   "tests/server/client_perf_summary_sql.test.ts": 11,
   "tests/server/community_rifts.test.ts": 3771,
@@ -11497,6 +13037,7 @@
   "tests/server/discord_status_cache.test.ts": 16,
   "tests/server/dungeon_entry_facing.test.ts": 3143,
   "tests/server/earned_deeds_single_flight.test.ts": 9,
+  "tests/server/entity_wire_cache.test.ts": 6,
   "tests/server/env_bootstrap.test.ts": 6,
   "tests/server/epic_db.test.ts": 12,
   "tests/server/epic_mirror.test.ts": 95,
@@ -11505,6 +13046,22 @@
   "tests/server/epic_web_api.test.ts": 509,
   "tests/server/event_delivery.test.ts": 7,
   "tests/server/fake_woc_market_db.test.ts": 18,
+  "tests/server/freehold_bounded_error.test.ts": 3,
+  "tests/server/freehold_capacity_warn.test.ts": 3,
+  "tests/server/freehold_db.pg.test.ts": 279,
+  "tests/server/freehold_db.test.ts": 9,
+  "tests/server/freehold_dev_grant_boot.test.ts": 3,
+  "tests/server/freehold_hearth_db.pg.test.ts": 138,
+  "tests/server/freehold_hearth_db.test.ts": 9,
+  "tests/server/freehold_join_answer.test.ts": 4,
+  "tests/server/freehold_liveness.test.ts": 3,
+  "tests/server/freehold_login_bounds.test.ts": 4,
+  "tests/server/freehold_persist.test.ts": 79,
+  "tests/server/freehold_revision_probe.test.ts": 3,
+  "tests/server/freehold_routes.test.ts": 10,
+  "tests/server/freehold_row_document.test.ts": 3,
+  "tests/server/freehold_wire.test.ts": 2967,
+  "tests/server/freehold_write_seal.test.ts": 3,
   "tests/server/game_boot_order.test.ts": 1160,
   "tests/server/game_flag_host_boot.test.ts": 2403,
   "tests/server/gathering_goal_commands.test.ts": 1686,
@@ -11586,12 +13143,17 @@
   "tests/server/http/surface_inventory.test.ts": 26,
   "tests/server/http/with_errors.test.ts": 9,
   "tests/server/importable_spine.test.ts": 1468,
+  "tests/server/instance_presence.test.ts": 3,
+  "tests/server/instance_scan_tick_stats.test.ts": 3,
   "tests/server/internal.test.ts": 89,
+  "tests/server/join_tail_relic_reconcile.test.ts": 4,
   "tests/server/keepalive_sweep.test.ts": 6,
   "tests/server/leaderboard.test.ts": 35,
   "tests/server/leaderboard_guild_reads.test.ts": 15,
   "tests/server/leaderboard_moderation.test.ts": 35,
+  "tests/server/leave_character_save.test.ts": 8280,
   "tests/server/live_character_resolver.test.ts": 7,
+  "tests/server/live_location.test.ts": 4,
   "tests/server/loop_lateness_instrumentation.test.ts": 78,
   "tests/server/mail_custody_overlay.test.ts": 3044,
   "tests/server/mail_partition_backfill.test.ts": 9,
@@ -11882,6 +13444,7 @@
   "tests/stance_bar_view.test.ts": 8,
   "tests/stance_control_controller.test.ts": 56,
   "tests/stance_radial_core.test.ts": 12,
+  "tests/start_panel_navigation.test.ts": 17,
   "tests/start_skin_picker_portraits.test.ts": 22,
   "tests/starter_items.test.ts": 3374,
   "tests/starting_attack.test.ts": 16,
@@ -11917,6 +13480,7 @@
   "tests/store_mount_card_view.test.ts": 23,
   "tests/store_mount_purchase.test.ts": 65,
   "tests/store_promo_card.test.ts": 15,
+  "tests/store_prompt_host.test.ts": 22,
   "tests/store_purchase_intent.test.ts": 16,
   "tests/store_spend_controllers.test.ts": 15,
   "tests/store_stack_diag.test.ts": 6,
@@ -11938,6 +13502,7 @@
   "tests/summon_threat_seed.test.ts": 6448,
   "tests/summoned_add_respawn.test.ts": 2675,
   "tests/surface_detail_fade.test.ts": 5,
+  "tests/surface_npc_bootstrap.test.ts": 3,
   "tests/surface_response.test.ts": 5,
   "tests/surface_texture_ktx2.test.ts": 79,
   "tests/suspicion_flag_list.test.ts": 12,
@@ -12030,6 +13595,7 @@
   "tests/temporal_hourglass_visual.test.ts": 18,
   "tests/terms_link.test.ts": 8,
   "tests/terrain_calm_anchor_doors.test.ts": 6,
+  "tests/terrain_calm_anchor_freehold.test.ts": 1335,
   "tests/terrain_chunk_geometry.test.ts": 2972,
   "tests/terrain_chunk_worker.test.ts": 436,
   "tests/terrain_detail_shed_core.test.ts": 24,
@@ -12477,6 +14043,8 @@
   "tests/weather_field_core.test.ts": 13,
   "tests/web_login_guard.test.ts": 10,
   "tests/webgl_context_fallback.test.ts": 10,
+  "tests/website_navigation.test.ts": 3,
+  "tests/website_view_navigation.test.ts": 32,
   "tests/weekly_quests.test.ts": 1609,
   "tests/weekly_quests_view.test.ts": 9,
   "tests/weekly_quests_window.test.ts": 28,
@@ -12577,6 +14145,7 @@
   "tests/world_grid.test.ts": 199,
   "tests/world_guidance.test.ts": 39,
   "tests/world_interaction_requests.test.ts": 24,
+  "tests/world_object_bootstrap.test.ts": 4,
   "tests/world_population_invariant.test.ts": 43341,
   "tests/world_pvp.test.ts": 30440,
   "tests/world_pvp_rules.test.ts": 21,
@@ -12693,6 +14262,8 @@
   "tests/zone1_removed_content.test.ts": 28,
   "tests/zone3_sanctum_quests.test.ts": 6,
   "tests/zone_celebration_fanout_shape.test.ts": 112,
+  "tests/zone_character_dependencies.test.ts": 4,
+  "tests/zone_character_dependency_wait.test.ts": 4,
   "tests/zone_dressing_lod_core.test.ts": 9,
   "tests/zone_dressing_lod_wiring.test.ts": 5,
   "tests/zone_entry_line_core.test.ts": 7,
@@ -12702,6 +14273,7 @@
   "tests/zone_feature_sweep.test.ts": 5,
   "tests/zone_feature_visibility.test.ts": 14,
   "tests/zone_prepare_stats.test.ts": 4,
+  "tests/zone_prewarm_finalize.test.ts": 4,
   "tests/zone_prewarm_groups.test.ts": 14,
   "tests/zone_prewarm_templates_core.test.ts": 20,
   "tests/zone_streaming.test.ts": 11,
