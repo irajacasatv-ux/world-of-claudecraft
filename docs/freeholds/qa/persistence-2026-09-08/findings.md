@@ -3760,3 +3760,55 @@ frozen scratchpad worktree the receipt ran in.
 6. The older list: `Sim.addPlayer` atomicity (now also the release's world-quest restore),
    D85, the phase 17 re-plan on the G3 ruling, the Fenbridge ruling before 25a (with G10's
    investigation post measured), and a new release sync if `release/**` moves.
+
+
+## FERNANDO'S RULING OF 2026-09-27, AND THE SYNC OF RELEASE/V0.44.0 AT 3BDB537657, 2026-09-27
+
+LOCAL: nothing pushed, no PR. The worktree has no `.env`; Postgres is armed by passing
+`TEST_DATABASE_URL` alone (the main checkout's `DATABASE_URL` line, never sourced).
+
+### THE RULING (Fernando, 2026-09-27), RECORDED VERBATIM
+
+Fernando's words, on the open decisions the aaff789813 sync left: "let's do what's best for
+the project and feature for all of those." What it rules, as the brief states it:
+
+- The character blob warning stays at 262,144 bytes (`51d9e2b124`, moved from 229,376 by the
+  threshold's own documented rule after the merged maximal blob measured 230,068). The
+  confirmation this ledger owed is given; the database-performance reviewer of the Part 1
+  round still reads the re-mint.
+- G8, the caravan route beside the gate: resolved by the option best for the feature, on
+  evidence gathered first (the third ambush's spawn ring, the gate arch, the leave drop, the
+  gate's combat refusal, how often the event runs). The recommendation the brief carries:
+  keep the gate where it is (four moves, pinned margins, sealed captures) and the friendly
+  caravan walking by, but guarantee no hostile ambush spawn lands inside the gate's 12 yd ring
+  or near the leave drop, with the smallest change, and replace the named floor in
+  `tests/freehold_gate_clearance.test.ts` with a real clearance pin over ambush rings.
+- The emissary cache pool: `isRaidGear` in `src/sim/emissary_cache.ts` keeps any non-tool
+  epic, so the pool holds an epic recipe against its own "wearable" contract. Restrict it to
+  weapon, armor and held_offhand (the Weekly Vault's rule), pin the pool's kinds, and record
+  the reward-odds change for the release owner.
+- The manned-cannon leave-order test: the leave path releases a manned cannon before the leave
+  save, pinned at GameServer level through `settleLeavingSession`.
+
+### THE SYNC (`60cd9f859a`)
+
+`origin/release/v0.44.0` had moved one commit past `aaff789813`, to `3bdb537657`: the release
+tier's locale fill (every locale's overlays, the deed and sim overlays, the resolved bundles
+and the map-marker digests in `tests/i18n_completeness.test.ts`). A real merge with one
+conflict, the generated pending set, resolved by `npm run i18n:gen`; the wiki content and the
+MediaWiki seed regenerate byte-identical. The release-merge audit, run by hand on a
+one-commit, data-only delta:
+
+- OVERLAPS: the five non-Latin overlays and deed overlays, `src/ui/sim_i18n.ts` and the
+  completeness test. Every line each side added over `aaff789813` is present in the merged
+  file (0 lost on either side, per file), and `npx tsc --noEmit` is clean, so no key is
+  duplicated.
+- REWORD STALENESS: the branch changed three English values (two Reliquary guide paragraphs
+  and the armorcrafting ladder paragraph); the release filled none of those keys.
+- NO LEGACY ARM, ROUTE, INJECTED HELPER OR PREMISE moved: the delta is locale data and one
+  digest block. No sealed capture input moved (the capture set is English-only), `patches/`,
+  the lockfile and `package.json` did not move (no reinstall), no monolith row and no test
+  file moved (no shard carry).
+- Targeted runs on the merged tree: the core i18n trio (76 passed, 3 skipped), the freehold
+  and seal suites (194 passed, 2 skipped) and the locale-reading suites that name housing
+  (516 passed, 1 skipped).

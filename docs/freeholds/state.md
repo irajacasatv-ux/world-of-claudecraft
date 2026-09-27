@@ -67,6 +67,18 @@ Only what the next session needs. Update at the end of every phase and QA.
 
 ## Current phase
 
+**FERNANDO RULED ON THE SYNC'S OPEN DECISIONS, 2026-09-27 ("let's do what's best for the
+project and feature for all of those."), AND RELEASE/V0.44.0 AT `3bdb537657` IS SYNCED
+(`60cd9f859a`, the release's locale fill).** The ruling, recorded verbatim in the ledger:
+the character blob warning stays at 262,144 (`51d9e2b124`); G8 is resolved by the option
+best for the feature, on evidence (recommended: keep the gate and the friendly caravan,
+keep every hostile ambush spawn out of the gate's 12 yd ring and away from the leave drop);
+the emissary cache pool is restricted to weapon, armor and held_offhand; the manned-cannon
+leave-order test is written. NEXT: those three, test-first; then Part 1 from STEP 2 (the R1
+design, the build, the trims, reviewers, the armed gate, the 07 re-judgement); then Part 2.
+The ordered list is the ledger's STILL OPEN.
+
+(Superseded 2026-09-27 by the paragraph above: the confirmation and G8 are ruled.)
 **FERNANDO RULED ON 07 AND THE TEST AUDIT, 2026-09-26 ("Let's go with all your
 recommendations." and "Let's keep it all on this branch."), AND RELEASE/V0.44.0 AT
 `aaff789813` IS SYNCED; 07 STAYS FAIL UNTIL R1 IS BUILT.** The rulings, recorded verbatim in
@@ -2218,10 +2230,13 @@ corrected premise; the affected plan docs carry a pointer here. G1 is a RULING O
 
 ### Premises the aaff789813 sync moved (release/v0.44.0 at `aaff789813`, merge `dd7f954501`)
 
-Found by the release-merge audit's premise, sim and render lanes, read from commits. G8 is a
-RULING OWED before housing lights; the rest are corrections the named phases apply.
+Found by the release-merge audit's premise, sim and render lanes, read from commits. G8 was
+a ruling owed before housing lights (ruled 2026-09-27); the rest are corrections the named
+phases apply.
 
-- G8, RULING OWED BEFORE HOUSING LIGHTS: THE CARAVAN ROUTE PASSES THE GATE. The Eastbrook
+- G8, RULED 2026-09-27 ("let's do what's best for the project and feature for all of
+  those."; the resolution and its evidence are in the ledger's 2026-09-27 section): THE
+  CARAVAN ROUTE PASSES THE GATE. The Eastbrook
   freight caravan escort (`esc_wq_eastbrook_caravan`, src/sim/content/world_quests.ts) walks
   the main street 4.8 yd from the gate at its nearest, and its third ambush (five level-5
   vale bandits in an 8 yd ring) can land about a yard from the arch and a few yards from the
@@ -2268,7 +2283,7 @@ message is performed in this documentation session.
   measurement is pinned in tests/professions_blob_growth.test.ts and the threshold is
   `CHARACTER_BLOB_WARN_BYTES` in server/character_blob_size.ts): the merged maximal
   character blob measures 230,068 bytes, which crossed the old 229,376, so the threshold was
-  re-minted by its own rule to 262,144 (`51d9e2b124`, Fernando to confirm): 32,076 bytes
+  re-minted by its own rule to 262,144 (`51d9e2b124`, confirmed by Fernando 2026-09-27): 32,076 bytes
   remain. The release's world-quest, faction and trinket rows took 2,815. The fixture does not model the release's sparse
   `CharacterState.pendingTownFocus`, so the real headroom is slightly less. The next
   housing content wave that grows the blob (trophies, more furnishings or Reliquary pages)
