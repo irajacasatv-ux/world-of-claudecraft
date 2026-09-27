@@ -8141,6 +8141,8 @@ describe('a run of thrown writes keeps its edits and retries them once per windo
       recover(): void {
         failing = false;
       },
+      /** Another realm sharing the database writes the row forward. */
+      advance: db.advance,
       async wireRev(): Promise<string> {
         const row = await db.readRow(ACCOUNT_ID);
         return row.kind === 'row' ? row.row.wireRev : row.kind;
@@ -8311,6 +8313,72 @@ describe('a run of thrown writes keeps its edits and retries them once per windo
     expect(deadline?.fired).toBe(false);
     // The capture is still held: it ends with the process, R3's accepted bound.
     expect(h.store.stats().leaveCaptures).toBe(1);
+  });
+
+  it('holds an edit that lands while a retry is out for the next window, never re-arming at once', async () => {
+    // The retry is the only statement a window buys. An edit made while it is
+    // out sets `pending`, and on a thrown settle that edit rides the NEXT due
+    // retry rather than a second statement straight away.
+    const database = faultyDatabase();
+    const gates: Array<Deferred<void>> = [];
+    const h = await loadedStore({
+      readRow: database.readRow,
+      writeRow: async (input) => {
+        const gate = deferred<void>();
+        gates.push(gate);
+        await gate.promise;
+        return await database.writeRow(input);
+      },
+    });
+    h.setNow(START_MS);
+    h.edit(OWNER_KEY, { rev: 8 });
+    for (let sweep = 0; sweep < FREEHOLD_PERSIST_MAX_WRITE_ERRORS; sweep++) {
+      h.store.saveAllDirty();
+      await tick(30);
+      gates.shift()?.resolve();
+      await tick(30);
+    }
+    expect(h.store.stats().retrying).toBe(1);
+    h.setNow(START_MS + WINDOW);
+    h.store.saveAllDirty();
+    await tick(30);
+    expect(h.writeCount()).toBe(FREEHOLD_PERSIST_MAX_WRITE_ERRORS + 1);
+    // The edit lands while the retry is out, then the retry throws.
+    h.edit(OWNER_KEY, { rev: 9 });
+    h.store.saveAllDirty();
+    gates.shift()?.resolve();
+    await tick(30);
+    expect(h.store.stats()).toMatchObject({ running: 0, retrying: 1, pending: 0 });
+    expect(h.writeCount()).toBe(FREEHOLD_PERSIST_MAX_WRITE_ERRORS + 1);
+    // It rides the next due retry instead.
+    database.recover();
+    h.setNow(START_MS + 2 * WINDOW);
+    h.store.saveAllDirty();
+    await tick(30);
+    gates.shift()?.resolve();
+    await tick(30);
+    expect(await database.wireRev()).toBe('9');
+  });
+
+  it('ends the posture on an answer no repeat can change: a stale retry quiesces and releases (R2)', async () => {
+    // "Released only on a commit or on an answer no repeat can change": the
+    // fence is such an answer, so a retry that meets another realm's commit ends
+    // the posture exactly as a first write would, and the gauge stops counting it.
+    const database = faultyDatabase();
+    const { h } = await leaverInPosture(database);
+    // The row moved under this realm while its database was unreachable, so the
+    // retry is fenced.
+    database.recover();
+    database.advance({ wireRev: '11' });
+    h.setNow(START_MS + WINDOW);
+    h.store.saveAllDirty();
+    await tick(30);
+    expect(h.store.stats()).toMatchObject({
+      staleWrites: 1,
+      retrying: 0,
+      leaveCaptures: 0,
+      entries: 0,
+    });
   });
 
   it('still quiesces a run of throws that ANSWER about the payload, and releases the capture', async () => {
