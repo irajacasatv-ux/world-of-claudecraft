@@ -29,6 +29,7 @@ function core() {
     rift: (name, rank) => `${name} (${rank ?? '?'})`,
     npc: (id) => `NPC ${id}`,
     mob: (id) => `Mob ${id}`,
+    worldQuest: (id) => `World quest ${id}`,
   });
 }
 
@@ -131,6 +132,31 @@ afterEach(() => {
 });
 
 describe('map semantic accessibility core', () => {
+  it('announces available and active world quests as distinct semantic states', () => {
+    const model = {
+      ...crowdedOverworldModel(),
+      questAreas: [],
+      npcs: [],
+      gatherNodes: [],
+      stations: [],
+      services: [],
+      allies: [],
+      party: [],
+      navigation: [],
+      portals: [],
+      pois: [],
+      worldQuests: [
+        { questId: 'available', mx: 260, my: 280, radius: 30, state: 'available' as const },
+        { questId: 'active', mx: 300, my: 280, radius: 30, state: 'active' as const },
+      ],
+      worldBosses: [{ bossId: 'thunzharr_waking_peak', mx: 340, my: 280 }],
+    };
+    const description = core().updateOverworld(model, 'Eastbrook Vale', 560);
+    expect(description).toContain('Available world quest: World quest available');
+    expect(description).toContain('Active world quest: World quest active');
+    expect(description).toContain('World boss: Mob thunzharr_waking_peak');
+  });
+
   it('quantizes eight-way direction and coarse distance without exposing raw coordinates', () => {
     expect(quantizeMapMarkerLocation(280, 280, 280, 280, 560)).toEqual({
       direction: 'center',
@@ -345,6 +371,7 @@ describe('map semantic accessibility core', () => {
       rift: (name) => name,
       npc: (id) => id,
       mob: (id) => id,
+      worldQuest: (id) => id,
     });
     const model = {
       view: {},
@@ -414,6 +441,7 @@ describe('map semantic accessibility core', () => {
       rift: (name) => name,
       npc: (id) => id,
       mob: (id) => id,
+      worldQuest: (id) => id,
     });
     const model = crowdedOverworldModel();
 
@@ -667,6 +695,8 @@ it('composes the disclosed Freeholds gate into both map description and pointer 
       100,
       false,
       model.questAreas,
+      [],
+      [],
       model.npcs,
       model.gatherNodes,
       model.stations,
@@ -683,6 +713,8 @@ it('composes the disclosed Freeholds gate into both map description and pointer 
         gather: () => '',
         farm: () => '',
         questArea: () => '',
+        worldQuest: () => '',
+        worldBoss: () => '',
         navigation: (marker) => view.navigationText(marker),
         paint,
       },

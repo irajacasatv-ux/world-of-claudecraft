@@ -845,38 +845,50 @@ describe('item-art audit builder', () => {
     // and 1087 + 212 + 2 = 1301. The sha/bytes below are measured directly
     // from `node scripts/item_art_audit.mjs --verify-only` run on the merged
     // tree, not invented or derived from either parent.
-    // PR3941 plus Freeholds: measured again after retiring the five premium
-    // reins, with all furnishing definitions retained on the merged tree.
-    // The Hearth Key adds one shipping icon and one live definition.
-    // Viridian Valestrider: measured again with its reins icon, and Warfare
-    // Season 2 with its four painted weapons: 1288 / 1306 on the release, 1310 /
-    // 1328 merged with the 22 Freeholds ids. Catalog hashes and bytes below are
-    // remeasured on the merged tree by the same verify-only command.
+    // PR3941: measured again after retiring the five premium reins.
+    // Clue Scrolls (2026-09-17): measured again on the tree carrying the 15
+    // faction quartermaster items (which landed without moving this block)
+    // plus the two clue items (clue_scroll, treasure_casket): 1304 / 1322,
+    // the sha/bytes straight from `--verify-only` on this tree.
+    // the Viridian Valestrider's reins (PR 4175, release/v0.44.0 base merge): 1306 / 1324, re-minted on the merged tree.
+    // Warfare Season 2: measured again with its four painted weapons, 1288 / 1306 on the release.
     expect(verified).toMatchObject({
       catalogPath: 'tmp/imagegen/item-art-consistency/final-audit/catalog.json',
-      catalogSha256: '70a8e17b481bf7977092eb4d12b506fe8a1199b70bc9f19a628cdac63d076c88',
-      catalogBytes: 714240,
+      // Re-minted on the quests integration branch: the catalog carries the 15
+      // faction quartermaster owners, the Emissary's Cache chest and the two
+      // Clue Scroll items (1305 / 1323). Re-minted again with the faction
+      // ladder rework's 17 rows (faction-ladder-icons-2026-09-23): 1322 /
+      // 1340, sha and bytes straight from `--verify-only` on this tree; 1323 / 1341
+      // with the Viridian Valestrider's reins (release/v0.44.0 base merge), re-measured the same way. 1341 / 1359 with the trinket slot's 18 trinkets (PR 4173) landed on the integration branch (a 26th group and a 32nd sheet page), sha and bytes re-measured with `--verify-only` on the merged tree.
+      // 1345 / 1498 with Warfare Season 2 (release/v0.44.0, second base merge 2026-09-26)'s four
+      // painted weapons, re-measured with `--verify-only` on the merged tree.
+      // 1367 / 1385 at the Freeholds sync of release/v0.44.0 at aaff789813: the
+      // release's 1345 / 1363 plus the branch's 22 furnishing and Hearth Key ids
+      // (a 27th group and a 33rd sheet page), sha and bytes re-measured with
+      // `--verify-only` on the merged tree.
+      catalogSha256: '5f8a6369f62c8651ab755f4e503d83997fd7706a2f3d4c8cdc5e7f6001c3444e',
+      catalogBytes: 745014,
       rendererFingerprint: '41f5404c4d6d9643c8f03b9d88a8546e44564cc03a1baabdd4a72cb9258a2da7',
-      catalogCount: 1310,
-      liveItemCount: 1328,
+      catalogCount: 1367,
+      liveItemCount: 1385,
       generatedHeroicDefinitions: 78,
       heroicDefinitionsWithOwnWebp: 59,
       heroicWeaponArtAliases: 19,
-      groupCount: 26,
-      sheetPageCount: 32,
-      sheetCount: 256,
+      groupCount: 27,
+      sheetPageCount: 33,
+      sheetCount: 264,
       sheetModeCounts: {
-        '128-color': 32,
-        '40-color': 32,
-        '28-color': 32,
-        '22-color': 32,
-        '28-grayscale': 32,
-        '64-circle': 32,
-        'small-multiview': 32,
-        identity: 32,
+        '128-color': 33,
+        '40-color': 33,
+        '28-color': 33,
+        '22-color': 33,
+        '28-grayscale': 33,
+        '64-circle': 33,
+        'small-multiview': 33,
+        identity: 33,
       },
       sheetSetSha256: null,
-      shippingCatalogSha256: 'ffb53512bfd09cf71d81596abe116925b1305d8d61b87d80f757a8e17f4ed7d3',
+      shippingCatalogSha256: 'dce78aee9f5c5b75a8301bbfc10ea6d72dc40fdbb7620fef27ab0a279f369034',
       machineChecksPassed: true,
       verdict: null,
     });

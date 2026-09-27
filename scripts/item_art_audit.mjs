@@ -120,21 +120,31 @@ const build = await buildItemArtAudit({
     // reins_rallycart_rxt, on the shared 1069 / 1087 base); both deltas are
     // additive over that shared base, so 1069 + 212 + 2 = 1283 and
     // 1087 + 212 + 2 = 1301, plus the Viridian Valestrider's reins on both
-    // sides = 1284 / 1302. Warfare Season 2: the four painted weapons
-    // (warfare-season2-weapons-2026-09-25) make 1288 / 1306, and its 135 armor
-    // pieces ride ITEM_ART_PENDING until the art pass. The Freeholds branch adds
-    // its eight vendor and thirteen crafted furnishing ids and the permanent
-    // Hearth Key on top, disjoint from every release id, each with a shipping
-    // icon: 1288 + 22 = 1310 and 1306 + 22 = 1328. Verified with
-    // `node scripts/item_art_audit.mjs --verify-only` against the merged tree.
-    catalogCount: 1310,
-    liveItemCount: 1328,
+    // sides = 1284 / 1302. Verified with `node scripts/item_art_audit.mjs
+    // --verify-only` against the merged tree.
+    // + the World Quests branch merge (release/v0.43.0 sync): its two painted
+    // puzzle activators and two Eastbrook freight icons join both counts.
+    // + the 15 faction quartermaster items (faction-vendor-icons-2026-09-16),
+    // which landed without moving this block (1302 / 1320), + the weekly
+    // emissary's cache chest (feature/weekly-quests: 1303 / 1321), + the two
+    // Clue Scroll items (clue_scroll, treasure_casket; clue-scroll-icons-2026-09-17):
+    // 1305 / 1323 on the quests integration branch, measured with
+    // `node scripts/item_art_audit.mjs --verify-only`. + the faction ladder
+    // rework's 17 rows (faction-ladder-icons-2026-09-23): 1322 / 1340. + the Viridian Valestrider's reins (release/v0.44.0 base merge): 1323 / 1341. + the trinket slot's 18 trinkets (PR 4173) landed on the integration branch: 1341 / 1359.
+    // The Freeholds branch adds its eight vendor and thirteen crafted furnishing
+    // ids and the permanent Hearth Key on top, disjoint from every release id,
+    // each with a shipping icon: 1345 + 22 = 1367 and 1363 + 22 = 1385, verified
+    // with `node scripts/item_art_audit.mjs --verify-only` against the merged tree.
+    catalogCount: 1367,
+    liveItemCount: 1385,
     pendingArtCount: 135,
     generatedHeroicDefinitions: 78,
     heroicDefinitionsWithOwnWebp: 59,
     heroicWeaponArtAliases: 19,
-    sheetPageCount: 32,
-    groupCount: 26,
+    // 33 / 27 on the merged tree: over the shared 31 / 25 base each parent added
+    // one group and one sheet page (the Freeholds furnishings, the trinket slot).
+    sheetPageCount: 33,
+    groupCount: 27,
   },
 });
 assertItemArtAuditPass(build);

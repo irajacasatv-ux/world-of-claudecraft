@@ -593,7 +593,10 @@ const MONOLITHS: MonolithRow[] = [
     // RESOLVED for the Freeholds sync of release/v0.44.0 at 09639d4ae9.
     // Parent pins: Freeholds 18097, incoming 18101; wc -l on the merged tree
     // measures 18065. Exact merged count, zero slack.
-    ceiling: 18065,
+    // RE-PINNED at the Freeholds sync of release/v0.44.0 at aaff789813: wc -l on the
+    // merged tree measures 18045 (this branch 18065, the release 18081). Exact merged
+    // count, zero slack.
+    ceiling: 18045,
     seam: 'pure view core + thin painter on PainterHost (src/ui/CLAUDE.md)',
   },
   {
@@ -1056,7 +1059,10 @@ const MONOLITHS: MonolithRow[] = [
     // RESOLVED for the Freeholds sync of release/v0.44.0 at 09639d4ae9.
     // Parent pins: Freeholds 12782, incoming 12684; wc -l on the merged tree
     // measures 12677. Exact merged count, zero slack.
-    ceiling: 12677,
+    // RE-PINNED at the Freeholds sync of release/v0.44.0 at aaff789813: wc -l on the
+    // merged tree measures 12675 (this branch 12677, the release 12680). Exact merged
+    // count, zero slack.
+    ceiling: 12675,
     seam: 'a new src/render/<thing>.ts module the renderer calls (src/render/CLAUDE.md)',
   },
   {
@@ -1300,7 +1306,10 @@ const MONOLITHS: MonolithRow[] = [
     // RESOLVED for the Freeholds sync of release/v0.44.0 at 09639d4ae9.
     // Parent pins: Freeholds 11598, incoming 11660; wc -l on the merged tree
     // measures 11548. Exact merged count, zero slack.
-    ceiling: 11548,
+    // RE-PINNED at the Freeholds sync of release/v0.44.0 at aaff789813: wc -l on the
+    // merged tree measures 11589 (this branch 11548, the release 11642). Exact merged
+    // count, zero slack.
+    ceiling: 11589,
     seam: 'a sim system module behind SimContext (src/sim/CLAUDE.md)',
   },
   {
@@ -1547,7 +1556,10 @@ const MONOLITHS: MonolithRow[] = [
     // RESOLVED for the Freeholds sync of release/v0.44.0 at 09639d4ae9.
     // Parent pins: Freeholds 11144, incoming 11140; wc -l on the merged tree
     // measures 11019. Exact merged count, zero slack.
-    ceiling: 11019,
+    // RE-PINNED at the Freeholds sync of release/v0.44.0 at aaff789813: wc -l on the
+    // merged tree measures 10849 (this branch 11019, the release 10965). Exact merged
+    // count, zero slack.
+    ceiling: 10849,
     seam: 'a src/game/ or src/ui/ sibling module; main.ts is a firewall, not a home',
   },
   {
@@ -1871,7 +1883,10 @@ const MONOLITHS: MonolithRow[] = [
     // RESOLVED for the Freeholds sync of release/v0.44.0 at 09639d4ae9.
     // Parent pins: Freeholds 9758, incoming 9833; wc -l on the merged tree
     // measures 9700. Exact merged count, zero slack.
-    ceiling: 9700,
+    // RE-PINNED at the Freeholds sync of release/v0.44.0 at aaff789813: wc -l on the
+    // merged tree measures 9694 (this branch 9700, the release 9827). Exact merged
+    // count, zero slack.
+    ceiling: 9694,
     seam: 'a sibling server module; see the hot-path seams in server/CLAUDE.md',
   },
   {
@@ -2125,6 +2140,14 @@ const MONOLITHS: MonolithRow[] = [
     // LOWERED 5426 -> 5421 by extracting first-snapshot action bar restore resolution.
     // Re-pinned at the 2026-09-25 merge of release/v0.44.0 into feature/world-pvp-flag:
     // exact count measured on the MERGED working tree (wc -l < src/net/online.ts),
+    // Weekly Vault (PR 4052) integration on the world-quests branch: the
+    // guild-bank self-decode moved to src/net/bank_snapshot_wire.ts (ours 5433
+    // against the base 5498), composed at the release/v0.44.0 base merge.
+    // Exact merged count, zero slack.
+    // Re-pinned at the second release/v0.44.0 base merge into
+    // integration/world-quests-v0440 (World PvP, King of the Hill, the Cooldown
+    // Manager and the release's later extractions compose with the branch's):
+    // exact count measured on the MERGED working tree (wc -l after biome),
     // never reconciled by arithmetic. Zero slack.
     // RESOLVED for the Freeholds re-sync of release/v0.44.0 at ed69f62ef7.
     // Newline counts: Freeholds 5500, incoming 5416 (-10 on the
@@ -2145,7 +2168,10 @@ const MONOLITHS: MonolithRow[] = [
     // RESOLVED for the Freeholds sync of release/v0.44.0 at 09639d4ae9.
     // Parent pins: Freeholds 5490, incoming 5367; wc -l on the merged tree
     // measures 5441. Exact merged count, zero slack.
-    ceiling: 5441,
+    // RE-PINNED at the Freeholds sync of release/v0.44.0 at aaff789813: wc -l on the
+    // merged tree measures 5428 (this branch 5441, the release 5354). Exact merged
+    // count, zero slack.
+    ceiling: 5428,
     seam: 'a src/net sibling module (the refactor/net-online split is the template)',
   },
   {
@@ -2157,7 +2183,13 @@ const MONOLITHS: MonolithRow[] = [
     // Re-pinned 4943 -> 4935: the molten-assembly music row paid for itself by
     // moving the DUNGEON_MUSIC table to dungeon_music_zones.ts. Exact count.
     // Pure location/rift routing moved to music_zones.ts; floor streams reuse the director.
-    ceiling: 4850,
+    // Re-pinned 4850 -> 4720: the world quest minigame layer's three director
+    // hooks were paid for by moving the note-event primitives (the Inst union,
+    // NoteEvent/Theme, and the push* composition helpers) to music_notes.ts.
+    // RE-PINNED at the Freeholds sync of release/v0.44.0 at aaff789813: wc -l on the
+    // merged tree measures 4717 (this branch 4850, the release 4717). Exact merged
+    // count, zero slack.
+    ceiling: 4717,
     seam: 'a src/game sibling module (the refactor/game-music split is the template)',
   },
   {
@@ -2189,7 +2221,10 @@ const MONOLITHS: MonolithRow[] = [
     // RESOLVED for the Freeholds sync of release/v0.44.0 at 09639d4ae9.
     // Parent pins: Freeholds 5188, incoming 5188; wc -l on the merged tree
     // measures 5160. Exact merged count, zero slack.
-    ceiling: 5160,
+    // RE-PINNED at the Freeholds sync of release/v0.44.0 at aaff789813: wc -l on the
+    // merged tree measures 5151 (this branch 5160, the release 5179). Exact merged
+    // count, zero slack.
+    ceiling: 5151,
     seam: 'zone/terrain data as content records; logic as sim sibling modules',
   },
   {
@@ -2634,6 +2669,10 @@ const MONOLITHS: MonolithRow[] = [
     // (That target, the bonus-slots footer, SHIPPED in Bank Storage phase 17
     // alongside ruling 30's controller; the current one is named at the end of
     // this row.)
+    // Re-pinned at the third release/v0.44.0 base merge into
+    // integration/world-quests-v0440: the release's vault search caret restore
+    // (restoreSearchCaret) composes with the branch's tree. wc -l on the merged
+    // tree. Exact count, zero slack.
     file: 'src/ui/bank_window.ts',
     // LOWERED 2127 -> 2124 by Bank Storage phase 16. Making the rung ledger
     // DURABLE needed a line in a file with zero slack, and the wiring paid for
@@ -2709,7 +2748,10 @@ const MONOLITHS: MonolithRow[] = [
     // shrank this file without re-pinning the row. wc -l on the merged tree.
     // RE-PINNED at the Freeholds sync of release/v0.44.0 at 09639d4ae9 to the
     // merged wc -l, 1809: the release grew the file by 2 into its own 1810 pin; this branch had pinned its exact 1807. Exact merged count, zero slack.
-    ceiling: 1809,
+    // RE-PINNED at the Freeholds sync of release/v0.44.0 at aaff789813: wc -l on the
+    // merged tree measures 1810 (this branch 1809, the release 1810). Exact merged
+    // count, zero slack.
+    ceiling: 1810,
     seam: 'a pure view-core plus a thin painter sibling (src/ui/CLAUDE.md)',
   },
   {
@@ -2728,7 +2770,10 @@ const MONOLITHS: MonolithRow[] = [
     // LOWERED 847 -> 824 on the redesign review: the craft row's role and
     // ceiling chip labels and its next-unlock line moved to
     // src/ui/hud/professions/craft_row_labels.ts. Exact count, zero slack.
-    ceiling: 824,
+    // RE-PINNED at the Freeholds sync of release/v0.44.0 at aaff789813: wc -l on the
+    // merged tree measures 823 (this branch 824, the release 823). Exact merged
+    // count, zero slack.
+    ceiling: 823,
     seam: 'a pure view-core plus a thin painter sibling (src/ui/hud/CLAUDE.md)',
   },
   {

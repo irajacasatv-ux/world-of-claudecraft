@@ -251,6 +251,7 @@ describe('mobile window coverage (Phase 5 parity)', () => {
       'input_controller.ts',
       'keyboard_map_window.ts',
       'tutorial_greeting_window.ts',
+      'world_quest_puzzle_window.ts',
     ]);
     expect([...dyn.ids].sort()).toEqual([
       'confirm-dialog',
@@ -260,6 +261,7 @@ describe('mobile window coverage (Phase 5 parity)', () => {
       'perfecting-window',
       'profession-tutorial',
       'tutorial-greeting',
+      'world-quest-puzzle-window',
     ]);
   });
 

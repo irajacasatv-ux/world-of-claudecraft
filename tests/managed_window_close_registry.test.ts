@@ -44,6 +44,7 @@ const CODE_BUILT: Record<string, string> = {
     'src/ui/hud.ts (confirmDialog) + src/ui/input_controller.ts (the extracted input modal); the two share the one id',
   'profession-tutorial': 'src/ui/hud/professions/profession_tutorial_window.ts',
   'tutorial-greeting': 'src/ui/tutorial_greeting_window.ts',
+  'world-quest-puzzle-window': 'src/ui/world_quest_puzzle_window.ts',
   'dev-command-window': 'src/ui/dev_command_window.ts',
   'perfecting-window': 'src/ui/hud/professions/perfecting_window.ts',
   'keyboard-map-window': 'src/ui/keyboard_map_window.ts',
@@ -363,6 +364,7 @@ describe('closeManagedWindow case registry', () => {
       'ui/hud/professions/perfecting_window.ts': 1,
       // The gate's explicit entry dialog owns one runtime root and close lifecycle.
       'ui/hud/housing/gate_prompt_controller.ts': 1,
+      'ui/world_quest_puzzle_window.ts': 1,
     });
     for (const id of Object.keys(CODE_BUILT)) expect(caseIds).toContain(id);
   });

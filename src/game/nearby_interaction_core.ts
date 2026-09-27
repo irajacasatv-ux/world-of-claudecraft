@@ -1,3 +1,4 @@
+import { WORLD_QUESTS_BY_ID } from '../sim/data';
 import { FREEHOLD_GATE_TEMPLATE_ID } from '../sim/freehold/gate_rules';
 import { isQuestGatedGroundObjectHidden } from '../sim/quest_gated_entity';
 import { isObjectOpenedByViewer } from '../sim/quests/opened_object_view';
@@ -8,7 +9,14 @@ import {
   INTERACT_RANGE,
   type InvSlot,
   type QuestProgress,
+  type WorldQuestProgress,
 } from '../sim/types';
+import { investigationDisguiseHidden } from '../sim/world_quest_investigation_visibility';
+import {
+  isWorldQuestSalvageObject,
+  isWorldQuestSalvageObjectHidden,
+} from '../sim/world_quest_salvage';
+import { shadowGuardHidden } from '../sim/world_quest_shadow_visibility';
 import { canPresentFreeholdGate } from '../ui/hud/housing/housing_view';
 import type { FarmPatchDef } from '../world_api/farming';
 import { corpseLootAvailability, localPartyMemberIds } from './corpse_loot_availability';
@@ -25,6 +33,10 @@ export interface NearbyInteractionScanWorld {
   entities: ReadonlyMap<number, Entity>;
   questLog: ReadonlyMap<string, QuestProgress>;
   farmPatches: readonly FarmPatchDef[];
+  // World quests: the salvage props follow the viewer's rotation cycle and
+  // progress, and a world-quest escort is startable from its own log.
+  worldQuestCycle?: string;
+  worldQuestLog?: ReadonlyMap<string, WorldQuestProgress>;
   /** The viewer's bags, read ONLY by the last-resort corpse harvest-choice arm
    *  (a carried Field Kit is what makes a harvest-only body openable at all,
    *  `harvest_body_pick.ts`). Optional so a scan slice that carries no bags (a
@@ -93,6 +105,7 @@ export function resolveNearbyInteractionCandidate(
   let bestNpcDistance = INTERACT_RANGE + 1;
   let bestDelve: Entity | null = null;
   let bestDelveDistance = INTERACT_RANGE + 1;
+  const salvageQuest = WORLD_QUESTS_BY_ID.wq_farshore_salvage;
   let bestNode: NearbyGatherNode | null = null;
   let bestNodeDistance = INTERACT_RANGE;
 
@@ -109,6 +122,9 @@ export function resolveNearbyInteractionCandidate(
   }
 
   for (const entity of world.entities.values()) {
+    // A disguised infiltrator or a shadow-mission guard the viewer cannot see is
+    // no candidate, exactly as the renderer hides it.
+    if (investigationDisguiseHidden(entity, world) || shadowGuardHidden(entity, world)) continue;
     const distance = dist2d(player.pos, entity.pos);
     // A corpse is a candidate only for the ordinary loot this viewer may take
     // (hasLoot, never canOpen): a harvest-only corpse is no candidate here, so
@@ -133,8 +149,15 @@ export function resolveNearbyInteractionCandidate(
       entity.kind === 'object' &&
       ((!player.dead && entity.lootable) ||
         (entity.templateId === FREEHOLD_GATE_TEMPLATE_ID && canPresentFreeholdGate(player))) &&
-      !isQuestGatedGroundObjectHidden(entity, world.questLog) &&
-      !isObjectOpenedByViewer(entity, world.questLog) &&
+      (salvageQuest && isWorldQuestSalvageObject(entity, salvageQuest)
+        ? !isWorldQuestSalvageObjectHidden(
+            entity,
+            salvageQuest,
+            world.worldQuestCycle ?? '',
+            world.worldQuestLog ?? new Map(),
+          )
+        : !isQuestGatedGroundObjectHidden(entity, world.questLog) &&
+          !isObjectOpenedByViewer(entity, world.questLog)) &&
       distance <= objectInteractionRange(entity) &&
       (distance < bestObjectDistance || (bestObject === null && distance === bestObjectDistance))
     ) {
@@ -186,7 +209,7 @@ export function resolveNearbyInteractionCandidate(
   }
   const escort = player.dead
     ? ({ kind: 'none' } as const)
-    : decideEscortPress(player.pos, world.entities, world.questLog);
+    : decideEscortPress(player.pos, world.entities, world.questLog, world.worldQuestLog);
   if (escort.kind === 'start') {
     // TERMINAL, like upstream's own arm: decideEscortPress derives the id from
     // THIS map, so the lookup cannot miss, and a miss must not hand the press

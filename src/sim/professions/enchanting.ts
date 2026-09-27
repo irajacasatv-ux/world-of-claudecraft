@@ -319,6 +319,15 @@ export function enchantGainTier(enchant: EnchantDef): number {
 // other remover does.
 type ConsumedDisenchantUnit = InventoryUnit;
 
+/** The weapon-hand gate a `weaponHand` enchant adds on top of the slot-kind
+ *  gate: a two-hander-only formula admits only a `hand: 'twohand'` weapon.
+ *  Every other enchant admits any item of its slot (hand: absent), so the
+ *  static tiers are untouched. Both apply arms read this one predicate. */
+export function enchantAdmitsWeaponHand(enchant: EnchantDef, itemDef: ItemDef): boolean {
+  if (enchant.weaponHand === undefined) return true;
+  return itemDef.kind === 'weapon' && itemDef.hand === enchant.weaponHand;
+}
+
 function isCraftedDisenchantVictim(consumed: ConsumedDisenchantUnit | undefined): boolean {
   return (
     consumed?.craftedRecipeId !== undefined ||
@@ -1404,6 +1413,9 @@ export function resolveApplyEnchant(
   if (!enchantTargetsItem(itemDef, enchant)) {
     return { ok: false, itemId, enchantId, reason: 'wrong_slot' };
   }
+  if (!enchantAdmitsWeaponHand(enchant, itemDef)) {
+    return { ok: false, itemId, enchantId, reason: 'wrong_slot' };
+  }
   if (
     enchant.skillReq !== undefined &&
     skillInCraft(applier?.craftSkills ?? {}, 'enchanting') < enchant.skillReq
@@ -1559,6 +1571,9 @@ export function evaluateApplyEnchantAdmission(
     return { ok: false, itemId, enchantId, reason: 'not_perfected' };
   }
   if (!enchantTargetsItem(itemDef, enchant)) {
+    return { ok: false, itemId, enchantId, reason: 'wrong_slot' };
+  }
+  if (!enchantAdmitsWeaponHand(enchant, itemDef)) {
     return { ok: false, itemId, enchantId, reason: 'wrong_slot' };
   }
   if (

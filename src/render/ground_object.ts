@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import type { Entity } from '../sim/types';
 import { buildStaticDoorBody } from './door_portal';
+import { groundQuestObjectYaw } from './farshore_salvage_assets';
 import {
   groundObjectPoolKey,
   type PooledObjectView,
@@ -36,7 +37,12 @@ export function buildGroundObjectView(
   );
   if (result.reused) h.pooledObjectCount = Math.max(0, h.pooledObjectCount - 1);
   const body = result.object.group;
-  if (result.reused) body.rotation.y = (entity.id % 7) * 0.45;
+  if (result.reused) body.rotation.y = groundQuestObjectYaw(entity.objectItemId ?? '', entity.id);
+  const objectPoolKey = result.poolKey;
+  // Forge stations are workbenches, not pickups: no gold glint over them.
+  if (entity.objectItemId?.startsWith('forge_')) {
+    return { body, height: result.object.height, objectPoolKey };
+  }
   if (!h.sparkleMat) {
     h.sparkleMat = markSharedMaterial(
       new THREE.SpriteMaterial({
@@ -50,5 +56,5 @@ export function buildGroundObjectView(
   const sparkle = new THREE.Sprite(h.sparkleMat);
   sparkle.scale.set(0.9, 0.9, 1);
   sparkle.position.y = 1.35;
-  return { body, height: result.object.height, objectPoolKey: result.poolKey, sparkle };
+  return { body, height: result.object.height, objectPoolKey, sparkle };
 }

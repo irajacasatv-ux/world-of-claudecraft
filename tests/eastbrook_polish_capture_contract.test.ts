@@ -684,7 +684,6 @@ interface AttributionTargetFixture {
 // Re-minted for the Freeholds sync of release/v0.44.0: the branch's layout and
 // renderer leaves compose with the release's. No capture was retaken.
 const PINNED_POLISH_COMPOSITE_FINGERPRINT =
-  // Re-minted for the Frame Rate Limit: the renderer leaf gained the chosen-cadence feeds (frame load readings, governor signals). No capture was retaken.
   // Re-minted for the Eastbrook handoff merge with release/v0.43.0: the merged renderer leaf and the moved NPC layout match neither parent. No capture was retaken.
   // Re-minted for the v0.43.0 batch base merge (ossbrain-release/v0.43.0 taking
   // the Eastbrook handoff): the merged renderer leaf, the moved NPC layout and
@@ -716,7 +715,8 @@ const PINNED_POLISH_COMPOSITE_FINGERPRINT =
   // Re-minted for PR #4220 release integration: the candidate stand-in slot and per-family cast gate compose in one tree. No capture was retaken.
   // Re-minted for the merge of release/v0.44.0 into the Eastbrook ferry branch (PR 4225). No capture was retaken.
   // Re-minted for the Freeholds sync of release/v0.44.0 at 09639d4ae9: the merged renderer leaf matches neither parent. No capture was retaken.
-  'd4249576ccbe707b17d41627b0d7d4b1acdae8cb9ab82b8e21e518ea75c34ecf';
+  // Re-minted for the Freeholds sync of release/v0.44.0 at aaff789813: the merged renderer leaf matches neither parent. No capture was retaken.
+  '399f19bdbf79c6e3d1b1fc2791c4e04c0404c4e13591359bf0111bf7f40de378';
 
 function validPolishAttributionTargets(): AttributionTargetFixture[] {
   return [

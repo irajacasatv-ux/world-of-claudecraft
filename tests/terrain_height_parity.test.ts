@@ -426,8 +426,12 @@ describe('terrain height bit identity', () => {
     // release's own corpus grew to 152,532 points and is a byte prefix of the
     // merged fixture; the rooms' 811-point tail follows it, re-seeded past
     // index 152,532 (the index-seeded SEEDS rotation) and re-minted.
-    expect(firstOwner).toBe(152_532);
-    expect(points).toHaveLength(153_343);
+    // Re-pinned at the Freeholds sync of release/v0.44.0 at aaff789813: the
+    // release's corpus grew to 152,912 points with the world-quest integration's
+    // content and terrain and is a byte prefix of the merged fixture; the same 811-point tail follows it, re-seeded past index
+    // 152,912 and re-minted.
+    expect(firstOwner).toBe(152_912);
+    expect(points).toHaveLength(153_723);
     expect(points.slice(0, firstOwner).some((p) => isOwnerLabel(p.label))).toBe(false);
     expect(points[firstOwner]?.label).toBe('dungeon door freehold_inn_room center');
     // The tail is the owner rooms' three shapes and nothing else: every point

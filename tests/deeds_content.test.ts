@@ -138,13 +138,20 @@ describe('audited launch totals (literals: update deliberately with the catalog)
     // off the 3525 total the release-only chain predicts, landing at 3310.
     // MEASURED on the merged tree, which is the value that wins per this
     // file's own convention: the id COUNT stays 300 (a pure append), only the
-    // Renown SUM moves. The Eastbrook ferry's Phase 2 appends
-    // exp_harbor_to_harbor at renown 5, and the two manual Freeholds
-    // milestones this branch appends (homesteader_first_furnishing,
-    // homesteader_first_cottage) add five Renown each on top: 303 / 3325,
-    // MEASURED on the merged tree.
-    expect(DEED_ORDER.length).toBe(303);
-    expect(ALL.reduce((sum, d) => sum + d.renown, 0)).toBe(3325);
+    // Renown SUM moves.
+    // 308 / 3355 at the release/v0.43.0 merge into feature/world-quests: the
+    // release's 300 plus the branch's eight world-quest exploration deeds.
+    // 315 / 3495 with the seven faction standing deeds (three Trusted at 5,
+    // three Champion at 25, and the all-factions meta at 50: +140).
+    // 317 / 3530 with the two Clue Scroll casket deeds (the first casket at
+    // 10 and the tenth at 25: +35).
+    // 318 / 3535 with the release's Eastbrook ferry round trip
+    // (exp_harbor_to_harbor at renown 5) at the fourth release/v0.44.0 base merge.
+    // 320 / 3545 with the Freeholds branch's two manual milestones
+    // (homesteader_first_furnishing, homesteader_first_cottage, five Renown
+    // each) appended behind the ferry deed, MEASURED on the merged tree.
+    expect(DEED_ORDER.length).toBe(320);
+    expect(ALL.reduce((sum, d) => sum + d.renown, 0)).toBe(3545);
   });
 
   it('ships the audited per-category counts', () => {
@@ -160,8 +167,11 @@ describe('audited launch totals (literals: update deliberately with the catalog)
       // +1 Phase 11k's cross-packet prog_field_to_feast, then
       // +1 the Proving Shore graduation (prog_ready_for_an_adventure) at the
       // release/v0.41.0 merge (the release's own chain read 58), then
-      // +1 the Phase 13 promotion capstone prog_legendmaker.
-      progression: 70,
+      // +1 the Phase 13 promotion capstone prog_legendmaker, then
+      // +7 the faction standing ladder (a Trusted and a Champion deed per
+      // allied faction plus the all-factions meta), then
+      // +2 the Freeholds branch's two Homesteader milestones.
+      progression: 77,
       combat: 10,
       // +2 Rift coverage deeds (dgn_rift, dgn_rift_s_rank), +5 Crucible raid
       // deeds (per-boss clear pairs plus the Varkhul flawless task).
@@ -179,8 +189,10 @@ describe('audited launch totals (literals: update deliberately with the catalog)
       // +2 bank socket ladder deeds (soc_strongbox_outfitter,
       // soc_four_bags_deep; Bank Storage phase 06).
       social: 20,
-      // +1 the ferry round trip (exp_harbor_to_harbor).
-      exploration: 12,
+      // +2 the Clue Scroll casket pair (exp_clue_first_casket and
+      // exp_clue_ten_caskets, both on the clueCasketsOpened meter).
+      // +1 the release's ferry round trip (exp_harbor_to_harbor).
+      exploration: 22,
       feat: 3,
       hidden: 10,
     });
@@ -375,7 +387,29 @@ describe('audited launch totals (literals: update deliberately with the catalog)
       // first here rather than appending it behind the branch's tail).
       'col_set_bramblehide',
       'hid_forgebreaker',
-      // The Eastbrook ferry's round trip (Phase 2 of the ferry), appended last.
+      'exp_arcane_calligraphy',
+      'exp_arcane_calligraphy_gold',
+      'exp_forge_helper',
+      'exp_last_barricade',
+      'exp_borrowed_face',
+      'exp_windrider_slalom',
+      'exp_duskweave_dispatches',
+      'exp_wisp_maze',
+      // The faction standing ladder: Trusted and Champion per allied faction
+      // (the standing* meters) plus the all-factions meta, appended last.
+      'prog_rift_watch_trusted',
+      'prog_church_order_trusted',
+      'prog_automatons_trusted',
+      'prog_rift_watch_champion',
+      'prog_church_order_champion',
+      'prog_automatons_champion',
+      'prog_faction_champion_all',
+      // The Clue Scroll casket pair: two meter deeds on clueCasketsOpened
+      // (the first casket and the tenth, which grants Treasure Hunter).
+      'exp_clue_first_casket',
+      'exp_clue_ten_caskets',
+      // The release's Eastbrook ferry round trip, appended last at the fourth
+      // release/v0.44.0 base merge.
       'exp_harbor_to_harbor',
       'homesteader_first_furnishing',
       'homesteader_first_cottage',
@@ -761,7 +795,7 @@ describe('audited launch totals (literals: update deliberately with the catalog)
     });
   });
 
-  it('ships exactly 47 titles and 5 borders', () => {
+  it('ships exactly 52 titles and 5 borders', () => {
     const titles = ALL.filter((d) => d.reward?.kind === 'title');
     const borders = ALL.filter((d) => d.reward?.kind === 'border');
     // Reliquary Curator ranks append 3 titles + 1 border, the WARFARE honor
@@ -771,12 +805,16 @@ describe('audited launch totals (literals: update deliberately with the catalog)
     // (phase 06) the tenth, closing the family across the whole ring,
     // prog_farming_100's Harvestmaster (the absorbed packet's D13 title
     // mandate), and the Crucible raid's flawless title (dgn_varkhul_flawless,
-    // the 2026-08-30 release/v0.41.0 sync merge) one more.
-    expect(titles.length).toBe(47);
+    // the 2026-08-30 release/v0.41.0 sync merge) one more, and the three
+    // faction standing Champion titles (Riftwarden, Dawnkeeper, Forgemaster)
+    // three more, and the Clue Scroll tenth-casket title (Treasure Hunter)
+    // one more, and the Freeholds branch's Homesteader title one more; the
+    // branch's cottage milestone adds the fifth border.
+    expect(titles.length).toBe(52);
     expect(borders.length).toBe(5);
     // Titles and border slugs are unique (one deed per cosmetic).
     const titleTexts = titles.map((d) => (d.reward as { text: string }).text);
-    expect(new Set(titleTexts).size).toBe(47);
+    expect(new Set(titleTexts).size).toBe(52);
     const borderSlugs = borders.map((d) => (d.reward as { slug: string }).slug);
     expect([...borderSlugs].sort()).toEqual([
       'curators_gilt',
@@ -988,12 +1026,28 @@ describe('frozen trigger + renown catalog (design rule 9: never retro-edit a tri
   // reproduces a prior hash); the frozen literal below is MEASURED directly
   // off the merged DEED_ORDER/DEEDS table instead. No shipped TRIGGER changed
   // on either side; only those eighteen renown values moved.
-  // Re-baselined for the Eastbrook ferry's exp_harbor_to_harbor (a pure tail
-  // append on the release side), and for the Freeholds branch's two
-  // Homesteader milestones appended behind it. MEASURED on the merged tree at
-  // the 2026-09-26 sync; the pre-append digest below (the release's literal)
-  // and the parent proofs after it pin both parents against it.
-  const FROZEN_CATALOG_SHA256 = 'fb106a9c99da5b493f3c8c649effdd20d3f33e5d44e65cdb337b182a01f1ce3a';
+  // Re-baselined for the seven appended faction standing deeds (a Trusted and
+  // a Champion meter deed per allied faction on the new standing* meters,
+  // plus the prog_faction_champion_all meta), re-minted THE AUDITABLE WAY:
+  // the afe535f4... literal rotated down into PRE_APPEND_CATALOG_SHA256 and
+  // the proof below reproduces it exactly. No shipped trigger or renown
+  // value was touched.
+  // Re-baselined for the two appended Clue Scroll casket deeds (the
+  // exp_clue_first_casket / exp_clue_ten_caskets meter pair on the new
+  // clueCasketsOpened meter), re-minted THE AUDITABLE WAY: the 2b8d9d03...
+  // literal rotated down into PRE_APPEND_CATALOG_SHA256 and the proof below
+  // reproduces it exactly. No shipped trigger or renown value was touched.
+  // Re-baselined for the release's appended Eastbrook ferry round trip
+  // (exp_harbor_to_harbor, a visits deed on the four ferry crossings) at the
+  // fourth release/v0.44.0 base merge into integration/world-quests-v0440,
+  // re-minted THE AUDITABLE WAY: the 0d91bc68... literal rotated down into
+  // PRE_APPEND_CATALOG_SHA256 and the proof below reproduces it exactly. No
+  // shipped trigger or renown value was touched.
+  // Then the Freeholds branch's two Homesteader milestones appended behind it at
+  // the 2026-09-26 sync of release/v0.44.0 at aaff789813: the release's literal
+  // 8749b988... rotated down into PRE_APPEND_CATALOG_SHA256, and the proof below
+  // reproduces it exactly by stripping the two. MEASURED on the merged tree.
+  const FROZEN_CATALOG_SHA256 = 'ffa267a5bc691eab2f5d14ff7171c023afe137e6a8d9a8373787278a60515d34';
 
   it('every shipped deed keeps its trigger and renown unchanged', () => {
     const canonical = JSON.stringify(
@@ -1042,14 +1096,32 @@ describe('frozen trigger + renown catalog (design rule 9: never retro-edit a tri
   // retune into the new checkpoint; every append AFTER that merge is once
   // again provable the auditable way against it.
   //
-  // The Eastbrook ferry's Phase 2 appended exp_harbor_to_harbor on the
-  // release side, whose own frozen literal (7a955718...) is the baseline
-  // below: at the 2026-09-26 release sync the merged catalog minus this
-  // branch's two Homesteader milestones reproduces it exactly, so the
+  // At the release/v0.43.0 merge into feature/world-quests the previous mint is
+  // the release's own 931a0593... literal and the append set is the branch's
+  // eight world-quest deeds, seated after hid_forgebreaker: stripping them
+  // must reproduce the release catalogue exactly.
+  //
+  // The faction standing ladder appends seven deeds after exp_wisp_maze; the
+  // previous mint is that merge's afe535f4... literal, and stripping the
+  // seven reproduced it exactly.
+  //
+  // The Clue Scroll casket pair appends two deeds after
+  // prog_faction_champion_all; the previous mint is the faction ladder's
+  // 2b8d9d03... literal (rotated down here), and stripping the two must
+  // reproduce it exactly.
+  //
+  // The release's Eastbrook ferry round trip appends exp_harbor_to_harbor
+  // after exp_clue_ten_caskets at the fourth release/v0.44.0 base merge; the
+  // previous mint is the clue pair's 0d91bc68... literal (rotated down here),
+  // and stripping the one id must reproduce it exactly.
+  //
+  // The 2026-09-26 sync of release/v0.44.0 at aaff789813 into feature/freeholds:
+  // the previous mint is the release's own 8749b988... literal and the append
+  // set is the branch's two Homesteader milestones behind the ferry deed, so the
   // release parent is a pure prefix of the merged table. The branch parent's
-  // proof (strip the ferry deed, reproduce c2746308...) is the it.each below.
+  // proof (strip the release's seventeen new deeds) is the it.each below.
   const PRE_APPEND_CATALOG_SHA256 =
-    '7a9557182e647b4d298edc146c3f381d1c9cd4667a6a3b3191d2b54c9bcdc596';
+    '8749b988a2135b7b3c0dee2065b54e6491660e86ce51bf7880924ff763ae1a25';
   const APPENDED_SINCE: readonly string[] = [
     'homesteader_first_furnishing',
     'homesteader_first_cottage',
@@ -1061,10 +1133,11 @@ describe('frozen trigger + renown catalog (design rule 9: never retro-edit a tri
       expect(DEED_ORDER.includes(id), `${id} is in the live catalog`).toBe(true);
     }
     // The branch's two milestones sit at the true tail behind the release's
-    // ferry deed: an append into a known seat, never a scattered insert or a
-    // retro-edit (the digest below proves it).
+    // ferry deed, which follows the Clue Scroll casket pair: an append into a
+    // known seat, never a scattered insert or a retro-edit (the digest below
+    // proves it).
     expect(DEED_ORDER.slice(-2 - APPENDED_SINCE.length)).toEqual([
-      'hid_forgebreaker',
+      'exp_clue_ten_caskets',
       'exp_harbor_to_harbor',
       ...APPENDED_SINCE,
     ]);
@@ -1119,14 +1192,37 @@ describe('frozen trigger + renown catalog (design rule 9: never retro-edit a tri
     for (const id of RELEASE_RETIRED_DEED_IDS) expect(DEEDS[id]?.renown, id).toBe(0);
     expect(RELEASE_RETIRED_DEED_IDS).toHaveLength(18);
   });
-  // The 2026-09-26 sync appends the release's exp_harbor_to_harbor behind
+  // The first 2026-09-26 sync appends the release's exp_harbor_to_harbor behind
   // both older parents' tables, so each older proof strips it too; the third
   // row is that sync's branch parent (the branch tip it merged into),
-  // reproduced exactly by stripping the one release append.
+  // reproduced exactly by stripping the one release append. The second
+  // 2026-09-26 sync (release/v0.44.0 at aaff789813) seats the release's
+  // seventeen world-quest, faction standing and Clue Scroll deeds ahead of the
+  // ferry deed, so every older proof strips them as well, and the fourth row is
+  // that sync's branch parent (20209e4c21), reproduced by stripping only them.
+  const RELEASE_WORLD_QUEST_DEED_IDS: readonly string[] = [
+    'exp_arcane_calligraphy',
+    'exp_arcane_calligraphy_gold',
+    'exp_forge_helper',
+    'exp_last_barricade',
+    'exp_borrowed_face',
+    'exp_windrider_slalom',
+    'exp_duskweave_dispatches',
+    'exp_wisp_maze',
+    'prog_rift_watch_trusted',
+    'prog_church_order_trusted',
+    'prog_automatons_trusted',
+    'prog_rift_watch_champion',
+    'prog_church_order_champion',
+    'prog_automatons_champion',
+    'prog_faction_champion_all',
+    'exp_clue_first_casket',
+    'exp_clue_ten_caskets',
+  ];
   it.each([
     {
       parent: 'Freeholds',
-      appended: ['col_set_bramblehide', 'exp_harbor_to_harbor'],
+      appended: ['col_set_bramblehide', 'exp_harbor_to_harbor', ...RELEASE_WORLD_QUEST_DEED_IDS],
       projectOut: RELEASE_RETIRED_DEED_IDS,
       digest: '7c4f0428a2b613e9d99e0809f916655e008e8e333672021b8ba0a691a56f7b7c',
     },
@@ -1136,15 +1232,22 @@ describe('frozen trigger + renown catalog (design rule 9: never retro-edit a tri
         'homesteader_first_furnishing',
         'homesteader_first_cottage',
         'exp_harbor_to_harbor',
+        ...RELEASE_WORLD_QUEST_DEED_IDS,
       ],
       projectOut: [],
       digest: '931a05935481f4014b21a20357f363bcaf52c4025c0d88512e2d60895b5cb2ef',
     },
     {
-      parent: 'Freeholds at the 2026-09-26 sync',
-      appended: ['exp_harbor_to_harbor'],
+      parent: 'Freeholds at the first 2026-09-26 sync',
+      appended: ['exp_harbor_to_harbor', ...RELEASE_WORLD_QUEST_DEED_IDS],
       projectOut: [],
       digest: 'c2746308010adebae5345ae0d0f54d2230172fe12a6097a7411f0a7a0baddffa',
+    },
+    {
+      parent: 'Freeholds at the second 2026-09-26 sync',
+      appended: RELEASE_WORLD_QUEST_DEED_IDS,
+      projectOut: [],
+      digest: 'fb106a9c99da5b493f3c8c649effdd20d3f33e5d44e65cdb337b182a01f1ce3a',
     },
   ])(
     'preserves every $parent trigger and Renown value through the merge',
@@ -1366,10 +1469,11 @@ describe('table shape', () => {
     // final entry). The Roots' Bramblehide set collection appends behind the
     // raid block (whose flawless task was the previous final entry).
     // The one-time Forgebreaker quest's hidden celebration appends after it,
-    // then the Eastbrook ferry's round trip (the release side), then this
+    // then the world-quest block, then the faction standing ladder, then the
+    // Clue Scroll casket pair, then the release's ferry round trip, then this
     // branch's two Homesteader milestones at the true tail.
     expect(DEED_ORDER.slice(-4)).toEqual([
-      'hid_forgebreaker',
+      'exp_clue_ten_caskets',
       'exp_harbor_to_harbor',
       'homesteader_first_furnishing',
       'homesteader_first_cottage',
@@ -1731,6 +1835,11 @@ describe('trigger references resolve against the real content tables', () => {
     ).toEqual([
       'col_deepest_cast:Clockreel Fishing Rod',
       'col_glimmerfin:Sunglint Koi',
+      // Reviewed at the Clue Scroll casket deeds: the first-casket desc names
+      // the Treasure Casket, and the casket-opening site that bumps the
+      // clueCasketsOpened meter consumes exactly that item
+      // (TREASURE_CASKET_ITEM_ID), so the desc names the RIGHT one.
+      'exp_clue_first_casket:Treasure Casket',
       'feat_brightwood_relic:Bramblehide Jerkin',
       "feat_brightwood_relic:Monarch's Crown",
       'hid_codfather:The Codfather',

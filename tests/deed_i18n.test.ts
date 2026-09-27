@@ -89,15 +89,27 @@ describe('deed_i18n English resolution', () => {
     // set collection (col_set_bramblehide, no title reward; the release's own
     // chain read 282 * 2 + 43), so the title count stays at 46.
     // Retired Vale Cup and Fiesta deeds keep names but drop 19 descriptions.
-    // 302 since the Freehold pair (homesteader_first_furnishing and
-    // homesteader_first_cottage) adds two name/desc rows and the Homesteader
-    // title, so the title count moves to 47; 303 with the Eastbrook ferry's
-    // round trip (exp_harbor_to_harbor: a name and a desc, no title reward):
-    // 303 + 284 + 47 = 634.
-    expect(manifest.filter((row) => row.field === 'name').length).toBe(303);
-    expect(manifest.filter((row) => row.field === 'desc').length).toBe(284);
-    expect(manifest.length).toBe(634);
-    expect(manifest.filter((row) => row.field === 'title').length).toBe(47);
+    // 308 at the release/v0.43.0 merge: plus the eight world-quest deeds.
+    // 315 with the seven faction standing deeds (Trusted and Champion per
+    // allied faction plus the all-factions meta), each with a name and desc.
+    // 317 with the two Clue Scroll casket deeds, each with a name and desc;
+    // the tenth carries the Treasure Hunter title.
+    // 318 with the release's Eastbrook ferry round trip (exp_harbor_to_harbor: a
+    // name and a desc, no title) at the fourth release/v0.44.0 base merge.
+    // 320 with the Freehold pair (homesteader_first_furnishing and
+    // homesteader_first_cottage), each a name and a desc; the Homesteader title
+    // joins the titles.
+    expect(manifest.filter((row) => row.field === 'name').length).toBe(320);
+    // 289 descs at the release/v0.43.0 merge: plus the eight world-quest deeds.
+    // 296 with the seven faction standing deeds. 298 with the two Clue Scroll
+    // casket deeds. 301 with the Freehold pair.
+    expect(manifest.filter((row) => row.field === 'desc').length).toBe(301);
+    // 668 rows: 318 names + 299 descs + 51 titles (the three faction Champion
+    // titles Riftwarden, Dawnkeeper and Forgemaster join the 47, then the
+    // Clue Scroll Treasure Hunter title), then the Freehold pair's Homesteader
+    // title: 320 + 301 + 52 = 673.
+    expect(manifest.length).toBe(673);
+    expect(manifest.filter((row) => row.field === 'title').length).toBe(52);
     expect(manifest.filter((row) => row.id === 'hid_forgebreaker')).toEqual([
       { id: 'hid_forgebreaker', field: 'name', source: 'A Spring Unchained' },
       {

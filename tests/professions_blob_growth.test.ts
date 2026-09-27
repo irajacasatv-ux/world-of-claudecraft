@@ -202,6 +202,13 @@ const NON_PROFESSIONS_BLOB_FIELDS = [
   'vendorBuyback',
   'questLog',
   'questsDone',
+  'worldQuests',
+  // Faction standing rows (src/sim/factions.ts), persisted beside the
+  // world-quest log they are earned from.
+  'factions',
+  // The weekly emissary's pick (src/sim/weekly_quests.ts), beside the world
+  // quests it stands next to.
+  'weeklyQuest',
   'arenaRating',
   'arenaWins',
   'arenaLosses',
@@ -491,7 +498,13 @@ function enchantCeiling(itemId: string, payload: ItemInstancePayload): ItemInsta
     (a, b) =>
       Buffer.byteLength(JSON.stringify(b), 'utf8') - Buffer.byteLength(JSON.stringify(a), 'utf8'),
   );
-  if (!candidates[0]) throw new Error(`no legal enchant for ${itemId}`);
+  // The trinket slot (PR 4173) admits no enchant: no ENCHANTS row names it, so
+  // its instance carries the bare payload at the ceiling rather than a made-up
+  // roll; every other slot still throws when it finds no legal enchant.
+  if (!candidates[0]) {
+    if (def.slot === 'trinket') return payload;
+    throw new Error(`no legal enchant for ${itemId}`);
+  }
   return candidates[0];
 }
 
@@ -596,7 +609,8 @@ function ceilingSim(nowMs?: number): Sim {
   // The fixture and the settle assertion both read ALL_EQUIP_SLOTS, so the
   // list length itself needs a literal pin: a slot silently dropped from the
   // live list would shrink the fixture and the measured ceiling in lockstep.
-  if (ALL_EQUIP_SLOTS.length !== 12)
+  // 13 with the trinket slot (PR 4173); the ceilings below were re-minted.
+  if (ALL_EQUIP_SLOTS.length !== 13)
     throw new Error('live equip slot list changed; re-mint the ceiling');
   for (const slot of ALL_EQUIP_SLOTS) {
     const ordinary = ALL_RECIPES.map((recipe) => ITEMS[recipe.resultItemId]).find(
@@ -886,7 +900,10 @@ describe('the professions blob growth bound (phase 16)', () => {
     expect(new Set(s2.knownRecipes)).toEqual(RETAINABLE_KNOWN_IDS);
     expect(MAX_KNOWN_RECIPE_IDS).toBe(512);
     expect(new Set(ALL_RECIPES.map((recipe) => recipe.id)).size).toBe(214);
-    expect(RETAINABLE_KNOWN_IDS.size).toBe(215);
+    // 219 with the release's four learned faction formulas (content/enchants.ts),
+    // each a retained `acquisition: 'drop'` enchant id like Zeal, on top of the
+    // branch's ten crafted furnishing recipes (215).
+    expect(RETAINABLE_KNOWN_IDS.size).toBe(219);
     expect(RETAINABLE_KNOWN_IDS.size).toBeLessThan(MAX_KNOWN_RECIPE_IDS);
     expect(s2.knownRecipes).toContain('enchant_weapon_lastflame_zeal');
     // Derived from the refusal policy so a profession becoming slottable
@@ -927,7 +944,9 @@ describe('the professions blob growth bound (phase 16)', () => {
     expect(Object.keys(s2.questCadence ?? {})).toHaveLength(
       Object.values(QUESTS).filter((q) => q.repeatCadenceTicks).length,
     );
-    expect(Object.keys(s2.equipmentInstance ?? {})).toHaveLength(ALL_EQUIP_SLOTS.length);
+    // Every slot but the trinket (PR 4173): trinkets admit no enchant and no
+    // crafting signer, so the fixture's empty trinket instance prunes on save.
+    expect(Object.keys(s2.equipmentInstance ?? {})).toHaveLength(ALL_EQUIP_SLOTS.length - 1);
     // Content-scaled like the node cooldowns: one row per authored bed, so
     // the field grows with the FARM_PATCHES table, never per player action.
     expect(Object.keys(s2.farmPlots ?? {})).toHaveLength(FARM_BED_IDS.size);
@@ -1161,6 +1180,12 @@ describe('the professions blob growth bound (phase 16)', () => {
     // boundTo digits for this fixture's. The edge stays measurement plus one
     // and the floor measurement minus 380 (the 11m rule); the 18 KiB
     // structural ceiling holds with 836 bytes of headroom.
+    //
+    // Faction ladder rework: 18,975 measured (the four learned faction
+    // formula ids joining retained knowledge, content/enchants.ts: 134 bytes
+    // at their widths plus quotes and commas, and the worn copy's widest
+    // enchant marker growing with the longest new id). Edge measurement plus
+    // one, floor measurement minus 380.
     const bytes = professionsBytes(s2);
     // Crucible 2026-09-05: 18,807 = 17,596 + 1,189 (33 new recipe ids) + 32
     // (Zeal) - 10 (legal equipment payloads, including new binding/provenance,
@@ -1170,9 +1195,13 @@ describe('the professions blob growth bound (phase 16)', () => {
     // Real settled measurement: 18,837 + 324 = 19,161; preserve the tracking width.
     // The release/v0.44.0 stamina baseline model shortens this fixture's baked
     // equipped-instance payloads by 7 bytes: 19,161 - 7 = 19,154; same band width.
-    expect(bytes).toBe(19154);
-    expect(bytes).toBeGreaterThan(18774);
-    expect(bytes).toBeLessThan(19155);
+    // The Freeholds sync of release/v0.44.0 at aaff789813 composes the release's
+    // own +145 (its four learned faction formulas and the trinket slot: 18,830 to
+    // 18,975, both measured on the release parent and its base alone): 19,154 +
+    // 145 = 19,299 on the merged tree, measured; same band width.
+    expect(bytes).toBe(19299);
+    expect(bytes).toBeGreaterThan(18919);
+    expect(bytes).toBeLessThan(19300);
     // Strictly dominated by the band's upper edge while the band holds:
     // kept as documentation that the structural ceiling also bounds this
     // state, never the live guard.
@@ -1957,8 +1986,8 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
     // professions arm pins, so the two measurements can never describe
     // different fixtures.
     const professions = professionsBytes(s2);
-    expect(professions).toBeGreaterThan(18774);
-    expect(professions).toBeLessThan(19155);
+    expect(professions).toBeGreaterThan(18919);
+    expect(professions).toBeLessThan(19300);
 
     // Every container really reached its ceiling through the load (the
     // `field in state` and non-empty pins above are the pattern): a load clamp
@@ -2196,7 +2225,11 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
     // Every absolute figure in this chain moved +154 at the Freeholds sync of
     // release/v0.44.0 at 09639d4ae9: the Eastbrook ferry's round-trip deed and
     // its four visit marks, which no remover here strips (attributed below).
-    expect(beforeHearthKeyBytes).toBe(227240);
+    // The Freeholds sync of release/v0.44.0 at aaff789813 moves every absolute
+    // figure in this chain by the release's +2,815 (its world-quest, faction,
+    // weekly, Clue Scroll, faction ladder and trinket rows, attributed in the
+    // growth equation below), which no remover here strips.
+    expect(beforeHearthKeyBytes).toBe(230055);
     const FREEHOLD_ROOM_IDS = ['freehold_inn_room', 'freehold_cottage'] as const;
     const withoutFreeholdRooms = structuredClone(beforeHearthKey);
     for (const id of FREEHOLD_ROOM_IDS) {
@@ -2231,7 +2264,7 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
         freeholdRoomsDelta.deedStats +
         freeholdRoomsDelta.heroicDaily,
     ).toBe(beforeHearthKeyBytes - withoutFreeholdRoomsBytes);
-    expect(withoutFreeholdRoomsBytes).toBe(227026);
+    expect(withoutFreeholdRoomsBytes).toBe(229841);
     // Isolate the accepted crafted cohort before checking older catalog baselines.
     const craftedRecipeIds = FURNISHING_RECIPES.map((recipe) => recipe.id);
     const craftedItemIds = [
@@ -2267,9 +2300,9 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
     );
     expect(craftedDelta).toEqual({ knownRecipes: 324, deedStats: 355, reliquary: 576 });
     const beforeCraftedBytes = Buffer.byteLength(JSON.stringify(beforeCrafted), 'utf8');
-    expect(beforeCraftedBytes).toBe(225771);
+    expect(beforeCraftedBytes).toBe(228586);
     expect(withoutFreeholdRoomsBytes - beforeCraftedBytes).toBe(1255);
-    expect(bytes).toBe(227253);
+    expect(bytes).toBe(230068);
     const fixtureBaseline = {
       equipment: 273,
       equipmentInstance: 1593,
@@ -2289,13 +2322,21 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
     // Intellect and Spirit (tierDeltaStats, item_budget.ts), so every baked
     // copy in the maximal bags and bank is a few bytes longer and the
     // equipped-instance delta shrinks by the same shape.
+    // Faction ladder rework: knownRecipes +134 (the four learned faction
+    // formula ids at their widths plus quotes and commas), equipmentInstance
+    // +11 (the worn copy's widest legal enchant marker is now a faction
+    // formula id); the professions band above re-measured at 18,975.
+    // The trinket slot (PR 4173) then adds its equipment row (the id-ordered
+    // first trinket a warrior can wear, bastion_sigil): 115 to 141.
     expect(fixtureDelta).toEqual({
-      equipment: 115,
-      equipmentInstance: -17,
+      equipment: 141,
+      equipmentInstance: -6,
       inventory: 16400,
       bank: 36080,
       vendorBuyback: 756,
-      knownRecipes: 62,
+      // 62 + 134: the four learned faction formula ids retained in
+      // knownRecipes (content/enchants.ts, the faction ladder rework).
+      knownRecipes: 196,
     });
     // field_kit (below) is the ONE Field Kit deedStats entry inside this same
     // settled state; the fixture-repair deltas above are Crucible-only and
@@ -2360,7 +2401,7 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
     ).toBe(444);
     const beforeFurnishingsBytes = Buffer.byteLength(JSON.stringify(withoutFurnishings), 'utf8');
     expect(beforeCraftedBytes - beforeFurnishingsBytes).toBe(632);
-    expect(beforeFurnishingsBytes).toBe(225139);
+    expect(beforeFurnishingsBytes).toBe(227954);
     const withoutFurnishingsAndFieldKit: CharacterState = {
       ...withoutFurnishings,
       deedStats: {
@@ -2374,7 +2415,7 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
       JSON.stringify(withoutFurnishingsAndFieldKit),
       'utf8',
     );
-    expect(beforeHomesteaderBytes).toBe(225127);
+    expect(beforeHomesteaderBytes).toBe(227942);
     const withoutHomesteaderDeeds: CharacterState = {
       ...withoutFurnishingsAndFieldKit,
       deeds: { ...withoutFurnishingsAndFieldKit.deeds },
@@ -2393,8 +2434,8 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
     }
     const historicalBytes = Buffer.byteLength(JSON.stringify(withoutHomesteaderDeeds), 'utf8');
     expect(beforeHomesteaderBytes - historicalBytes).toBe(85);
-    expect(counterfactualBytes).toBe(225759);
-    expect(beforeCraftedBytes).toBe(225771);
+    expect(counterfactualBytes).toBe(228574);
+    expect(beforeCraftedBytes).toBe(228586);
 
     // The one-time hammer recipe/proof content adds against the pre-hammer,
     // field-kit-excluded fixture (156144): the Crucible fixture-repair deltas
@@ -2511,9 +2552,38 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
         183 +
         1548 +
         50 +
+        // 49 -> 71 with the Viridian Valestrider's reins (PR 4175, release/v0.44.0 base merge) in the dev-mount isolation.
         71 +
-        154 +
-        13496,
+        375 +
+        358 +
+        // Plus 17 at the weekly emissary rebase: the Emissary's Cache id in the
+        // maximal character's deedStats.itemsDiscovered (the deedStats row
+        // below moves 469 to 486 by the same 17). MEASURED (56,241 to 56,258).
+        // Plus 105 at the Clue Scroll content (the two deed ids and the two
+        // item ids).
+        282 +
+        17 +
+        105 +
+        // Plus 371 at the faction ladder rework: the 17 new faction rows
+        // (13 periphery pieces and 4 formulas) in the maximal character's
+        // deedStats.itemsDiscovered, 320 characters of ids plus 3 bytes of
+        // quoting and comma each. Predicted from the literals BEFORE the run
+        // (56,508 to 56,879; the deedStats row below moves by the same 371).
+        371 +
+        // Plus 1,136 at the trinket slot (PR 4173) landing on the integration
+        // branch: the 18 trinket ids in the maximal character's
+        // deedStats.itemsDiscovered (270 characters of ids plus 18 x 3 = 324)
+        // and the 17 trinket Reliquary pages in its reliquary rows (+812).
+        // MEASURED on the integration tree (the deedStats row below moves by
+        // the same 324 and reliquary 80 to 892).
+        1136 +
+        // Plus 13,496 at the second release/v0.44.0 base merge: Warfare Season 2's
+        // 139 honor item ids (deedStats.itemsDiscovered +4,648 and the reliquary
+        // rows +8,848, the release's own attribution).
+        13496 +
+        // Plus 154 at the fourth release/v0.44.0 base merge (the ferry deed and
+        // its four visit marks, attributed above).
+        154,
     );
     const forgeBaseline = {
       questsDone: 4606,
@@ -2538,7 +2608,12 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
       // Warfare Season 2 stock's 139 item ids (the 13,496 attributed above).
       // deeds +36 and deedStats +118 more for the Eastbrook ferry's round-trip
       // deed and its four visit marks (the +154).
-    ).toEqual({ questsDone: 100, knownRecipes: 30, deeds: 68, deedStats: 4787, reliquary: 8928 });
+      // The Freeholds sync of release/v0.44.0 at aaff789813 takes the release's
+      // own row: knownRecipes +134 (the four learned faction formulas), deeds
+      // +640 (the world-quest +285, faction standing +282 and Clue Scroll +73
+      // deed rows), deedStats +1,192 (+90, +358, +17, +32, +371 and +324) and
+      // reliquary +812 (the trinket pages); this branch never moved the row.
+    ).toEqual({ questsDone: 100, knownRecipes: 164, deeds: 708, deedStats: 5979, reliquary: 9740 });
     // Removing both packet cohorts, Homesteader, field_kit, the three dev-mount
     // reins and the Bramblehide/Nythgap release rows reproduces the historical
     // baseline: 209,474 at the crafted-content close, 209,524 once the hub
@@ -2547,18 +2622,21 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
     // other field this fixture tracks), 209,773 once the release's stamina
     // bake (+249, attributed below) landed, 223,269 with the Warfare Season 2
     // stock (+13,496, the 139 honor item ids attributed above), and 223,423
-    // with the Eastbrook ferry's deed and visit marks (+154).
+    // with the Eastbrook ferry's deed and visit marks (+154), and 226,238 with the
+    // release's +2,815 at the Freeholds sync of release/v0.44.0 at aaff789813 (the
+    // release parent measures the same figure on its own tree).
     expect(
       Buffer.byteLength(JSON.stringify(preReleaseCounterfactual), 'utf8'),
       'both branch additions removed, preserves the recorded Crucible+hammer baseline',
-    ).toBe(223423);
+    ).toBe(226238);
     // Packet additions and field_kit removed, retaining the Bramblehide release
     // content, the hub practice quests, the three dev-mount reins, the Warfare
-    // Season 2 stock and the ferry rows: 223,423 + 1,548 + 71 = 225,042.
+    // Season 2 stock, the ferry rows and the release's +2,815 at the aaff789813
+    // sync: 226,238 + 1,548 + 71 = 227,857 (the release parent's own figure).
     expect(
       historicalBytes,
       'packet additions and field_kit removed, retains the Bramblehide release content',
-    ).toBe(225042);
+    ).toBe(227857);
     const priorContent = withoutCrucibleContent(s2);
     const contentDelta = Object.fromEntries(
       (['knownRecipes', 'deedStats', 'reliquary'] as const).map((key) => [
@@ -2623,8 +2701,15 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
     // 227,253 and every absolute figure in the isolation chain moves by the
     // same 154 (no remover strips the ferry rows). Same standing rule, same
     // 381 width: 226,873..227,254.
-    expect(bytes, reMint).toBeGreaterThan(226873);
-    expect(bytes, reMint).toBeLessThan(227254);
+    // RE-BASED at the Freeholds sync of release/v0.44.0 (aaff789813) by the
+    // release's +2,815 (the world-quest, faction, weekly, Clue Scroll, faction
+    // ladder and trinket rows, attributed in the growth equation above; the
+    // release parent measures 227,869 on its own tree, 2,815 over the 225,054
+    // its base read), so 227,253 becomes 230,068 and every absolute figure in
+    // the isolation chain moves by the same 2,815. Same standing rule, same 381
+    // width: 229,688..230,069.
+    expect(bytes, reMint).toBeGreaterThan(229688);
+    expect(bytes, reMint).toBeLessThan(230069);
 
     // The Crucible database review approved 229,376 bytes (224 KiB), the first
     // 32-KiB step above the corrected 209,261-byte pre-field-kit fixture it was

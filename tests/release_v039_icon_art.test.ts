@@ -513,16 +513,18 @@ describe('release v0.39 icon-art second-pass lineage', () => {
     // PR #3898 admits the four painted elixirs to the production hotbar item
     // inventory. The production set is broader than the sealed historical
     // second-pass record because it also includes later pending-art families.
-    // The permanent Hearth Key joins with committed painted art, and the
-    // Viridian Valestrider's reins ship painted art the same way: 101 + 1 + 1 = 103.
-    expect(liveHotbarItemIds, 'production isHotbarItemId inventory').toHaveLength(103);
+    // The Viridian Valestrider's reins ship painted art the same way: 102.
+    // The trinket slot (PR 4173) admits its 18 usable trinkets to the hotbar
+    // (isHotbarItemId), each with committed painted art: 120.
+    // The permanent Hearth Key joins with committed painted art too: 121.
+    expect(liveHotbarItemIds, 'production isHotbarItemId inventory').toHaveLength(121);
     expect(artSubjectHotbarItemIds).toContain('hearth_key');
     expect(
       artSubjectHotbarItemIds,
       'production isHotbarItemId art-subject inventory (live minus ITEM_ART_PENDING)',
-      // Both parents moved this line to 102 on their own addition (the Hearth
-      // Key, the Valestrider's reins), so the merge took it silently; merged: 103.
-    ).toHaveLength(103);
+      // Both parents moved this line on their own additions (the Hearth Key;
+      // the Valestrider's reins and the 18 trinkets), so merged: 102 + 1 + 18 = 121.
+    ).toHaveLength(121);
     expect(pendingHotbarItemIds, 'ITEM_ART_PENDING hotbar items').toHaveLength(0);
     expect(
       pendingHotbarItemIds.filter((id) => shippingImageExists(`/ui/items/${id}.webp`)),

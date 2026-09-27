@@ -513,6 +513,8 @@ import { registerWocMarketReadCacheForBusts, WocMarketReadCache } from './woc_ma
 import { configureWocMarketRuntime, wocMarketConfig } from './woc_market_routes';
 import { createWocMarketSweep } from './woc_market_sweep';
 import { createWocMarketSweepWatchdog } from './woc_market_sweep_watchdog';
+import { bustWorldQuestLeaderboardCaches, worldQuestScoresIdle } from './world_quest_leaderboard';
+import { pruneWorldQuestScoresBatch } from './world_quest_scores_db';
 import { createWsAuth } from './ws_auth';
 import { bufferHandshakeMessages } from './ws_buffer';
 
@@ -1016,6 +1018,7 @@ function bustBoardCaches(): void {
   // officer's name must leave the presence tooltip as fast as the boards.
   guildBoardPresence.bust();
   bustDailyRewardBoardCache();
+  bustWorldQuestLeaderboardCaches();
   // Not a board, but the same delisting-must-be-immediate reasoning: the
   // per-character lifetime-XP rank cache (server/character_rank_cache.ts).
   // A ban/unban changes every OTHER eligible character's ahead/total counts
@@ -4142,6 +4145,13 @@ export async function startServer(): Promise<http.Server> {
         pruneBatch: (n) => pruneFtueEventsBatch(pool, config.ftueEventsRetentionDays, n),
       },
       {
+        // World-quest scoreboard rows nobody has improved in a year: the
+        // ladder should never show a character last seen that long ago.
+        name: 'world_quest_scores',
+        pruneBatch: (n) =>
+          pruneWorldQuestScoresBatch(pool, config.worldQuestScoresRetentionDays, n),
+      },
+      {
         // The chance-based crafting outcome audit (one row per masterwork
         // proc draw or Perfecting attempt); append-only, observer-written
         // (server/craft_roll_events.ts).
@@ -4371,6 +4381,9 @@ export async function startServer(): Promise<http.Server> {
         'freehold persistence drain did not complete (deadline, an unwritten entry, or a thrown drain): edits may be unwritten',
       );
     }
+    // Same for the world-quest scoreboard FIFO: a best-row upsert cut by
+    // pool.end() is re-earned only by a better attempt.
+    await worldQuestScoresIdle();
     // Stop accepted /unstuck report intake and drain only to a finite deadline.
     // Per-query timeouts bound an active write; deadline expiry aborts retry
     // delays and drops queued telemetry before the shared pool closes.

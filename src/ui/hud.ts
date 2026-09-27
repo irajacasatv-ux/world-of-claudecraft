@@ -8,6 +8,7 @@ import type { GraphicsSettingsSnapshot } from '../game/graphics_rebuild_core';
 import { InstanceMusicController, type InstanceMusicDecision } from '../game/instance_music';
 import { bindActionLabel, type Keybinds, keyCapLabel } from '../game/keybinds';
 import { trackMetaPixel } from '../game/meta_pixel';
+import { syncMinigameMusic } from '../game/minigame_music_sync';
 import { music } from '../game/music';
 import {
   type BoolSettingKey,
@@ -81,6 +82,7 @@ import {
 } from '../sim/data';
 import { specialRoleColor } from '../sim/discord_roles';
 import { canEquipItem, isUniqueEquipped, weaponHand } from '../sim/equipment_rules';
+import type { FactionId } from '../sim/factions';
 import { isItemLevelEligible, itemInstanceLevel, itemScore } from '../sim/item_level';
 import type { Ante, PickAction } from '../sim/lockpick';
 import type { MaterialComposition } from '../sim/material_sources';
@@ -174,6 +176,7 @@ import { BagItemActionMenu, CTX_MENU_PICKER_CLASS } from './bag_item_action_menu
 import { bagSlotsLineKey, bagsWindowShown } from './bags_view';
 import { BagsWindow, dismissBagPrompts } from './bags_window';
 import { BankWindow } from './bank_window';
+import { makeBankWindowFocus } from './bank_window_focus';
 import {
   type BannerClass,
   type BannerEnqueueOutcome,
@@ -193,7 +196,7 @@ import { type CharSkinPainterHost, paintCharSkinPicker } from './char_skin_windo
 import { charStatModel } from './char_stat_model_core';
 import { archetypeTitleText, CharWindow, craftNameText } from './char_window';
 import { activeCharacterAppearancePreview } from './character_appearance';
-import { progressionHtml, talentSummaryHtml } from './character_progression_view';
+import { progressionHtml } from './character_progression_view';
 import { chatBubbleStyle } from './chat_bubble_style';
 import {
   ignoreKey,
@@ -372,7 +375,8 @@ import {
 import { bindEmpoweredActionHold } from './hud/action_bar/empowered_hold';
 import {
   type AimPoint,
-  quickAimPoint,
+  quickGroundTarget,
+  selectedGroundAimPoint,
   shouldUseGroundAim,
   XHB_ONLY_AIM_SLOT,
 } from './hud/action_bar/ground_aim';
@@ -385,17 +389,16 @@ import {
   assignAttackSlotAction,
   attackDragDisposition,
   clearHotbarSlot,
-  encodeHotbarAction,
   type FreedAttackSlotAbility,
   freedAttackSlotDisplayAbility,
-  HOTBAR_ACTION_MIME,
   type HotbarAction,
   isAbilityActionBarEligible,
   loadoutKnownAbilityIds,
-  parseHotbarAction,
   placeAbilityOnSlot,
   placeItemOnSlot,
+  readHotbarDragData,
   swapHotbarSlots,
+  writeHotbarDragData,
 } from './hud/action_bar/hotbar';
 import { itemInBagsLine } from './hud/action_bar/item_bags_line_core';
 import {
@@ -470,7 +473,13 @@ import { lootSettingsView } from './hud/loot/loot_settings_view';
 import { renderLootSettingsWindow } from './hud/loot/loot_settings_window';
 import { LootWindowController } from './hud/loot/loot_window_controller';
 import { LootExplorerWindow } from './hud/loot_explorer/loot_explorer_window';
-import { MapMarkerInteractionController, MapMarkerTooltipContent } from './hud/map';
+import {
+  bindMinimapObjectiveTap,
+  MapMarkerInteractionController,
+  MapMarkerTooltipContent,
+} from './hud/map';
+import { MapSidebarCollapse } from './hud/map/map_sidebar_collapse';
+import { resolveMapZone } from './hud/map/map_zone_focus_core';
 import { refreshSideButtonLabels } from './hud/menu/side_buttons';
 import { livingSecondaryPet } from './hud/pet_bar_core';
 import { CARD_POSES } from './hud/player_card/player_card';
@@ -537,7 +546,6 @@ import { materialHintLine } from './hud/professions/material_hint_view';
 import { materialProfessionHintText } from './hud/professions/material_profession_hint_view';
 import { mobileStationTooltipLines } from './hud/professions/mobile_station_tooltip';
 import { PerfectingWindow } from './hud/professions/perfecting_window';
-import { professionImageUrl } from './hud/professions/profession_art';
 import {
   isSunderCompletionLog,
   type ProfessionEventInput,
@@ -557,18 +565,23 @@ import { renderProfessionTutorial } from './hud/professions/profession_tutorial_
 import { ProfessionsWindow } from './hud/professions/professions_window';
 import { recipePatternTooltipLines } from './hud/professions/recipe_pattern_tooltip_view';
 import {
+  type CelebrationHost,
+  paintSkillLevelCelebrations,
+} from './hud/professions/skill_level_toast_painter';
+import {
   advanceSkillLevelObservation,
-  buildSkillLevelCelebrationPlan,
   type SkillLevelUp,
-  skillLevelArtId,
 } from './hud/professions/skill_level_toast_view';
 import { toolEffectResultLine } from './hud/professions/tool_effect_result_view';
 import { wellFedTooltipLines } from './hud/professions/wellfed_tooltip_view';
 import { QuestDialogController } from './hud/quest/quest_dialog_controller';
+import { applyQuestEventPresentation } from './hud/quest/quest_event_router';
 import { parseChatSegments } from './hud/quest/quest_link';
 import { QuestProgressBanner } from './hud/quest/quest_progress_banner';
 import { QuestTrackerController } from './hud/quest/quest_tracker_controller';
 import { QuestLogWindow } from './hud/quest/questlog_window';
+import { paintFactionTierCelebrations } from './hud/reputation/faction_tier_celebration_painter';
+import { advanceFactionTierObservation } from './hud/reputation/faction_tier_celebration_view';
 import { RiftMapPainter } from './hud/rift';
 import { RiftFloorTrackerController } from './hud/rift/rift_floor_tracker_controller';
 import { RiftForgeWindow, riftForgeInReach } from './hud/rift_forge';
@@ -576,6 +589,7 @@ import { StanceBarController } from './hud/stance';
 import { closeOpenTouchMenu } from './hud/tap_menu';
 import { createTargetDotsView, type TargetDotsInput, TargetDotsPainter } from './hud/target_dots';
 import { FerryHudPainter } from './hud/transport';
+import { createHudVehicleBar, VehicleActionBarController } from './hud/vehicle';
 import { dismissBuyQuantityPrompts } from './hud/vendor/buy_quantity_prompt_window';
 import { buildCrucibleVendorView } from './hud/vendor/crucible_vendor_view';
 import { renderCrucibleVendorWindow } from './hud/vendor/crucible_vendor_window';
@@ -718,8 +732,9 @@ import { MountRaceControls } from './mount_race_controls';
 import { MountRaceStrip } from './mount_race_strip';
 import { mountTooltipLines } from './mount_tooltip_view';
 import { type FrameDimension, MovableFrame } from './movable_frame';
+import { presentNoticeboardEvent } from './noticeboard_event';
 import { NoticeboardPopup } from './noticeboard_popup';
-import { NPC_WINDOW_CLOSE_RANGE } from './npc_service_range';
+import { NPC_WINDOW_CLOSE_RANGE, nearbyServiceNpc } from './npc_service_range';
 import { type AccountToggleSeam, OptionsWindow } from './options_window';
 import {
   makeWriterFacet,
@@ -786,7 +801,6 @@ import {
   questItemTooltipModel,
   questItemTooltipRelatedKey,
 } from './quest_item_tooltip_view';
-import { questProgressEventText } from './quest_progress_text';
 import { RaidBossGuideWindow, raidBossGuideContextFallback } from './raid_boss_guide_window';
 import { raidCalloutKey } from './raid_callout';
 import { formatLockoutDuration, raidLockoutDisplayName } from './raid_lockout_format';
@@ -852,7 +866,7 @@ import { SocialWindow } from './social_window';
 import { SpellbookWindow } from './spellbook_window';
 import { stackSizeTooltipLine } from './stack_size_tooltip_view';
 import { type StatTooltipI18n, statCellHtml, statTooltipHtml } from './stat_tooltip_view';
-import { clearOpenStoreResult } from './store_decision_prompt';
+import { clearOpenStoreResult, MODAL_PROMPT_SELECTOR } from './store_decision_prompt';
 import { mountStorePromoCard, type StorePromoCardController } from './store_promo_card';
 import { nearestSubzone } from './subzone';
 import { SwingTimerBars } from './swing_timer_bars';
@@ -890,6 +904,7 @@ import { trackerCollapseSettings } from './tracker_collapse_settings';
 import { wireTrackerHeader } from './tracker_header_wiring';
 import { installTrackerStackAnchor } from './tracker_stack_anchor';
 import { stageTradeOffer, tradeOfferHeadroom } from './trade_view';
+import { trinketGambleText, trinketTooltipLines } from './trinket_tooltip_view';
 import { TutorialOverlay } from './tutorial';
 import { buildFerryIslandArrivalNote, type TutorialGreetingNote } from './tutorial_greeting_view';
 import { renderTutorialGreetingNote } from './tutorial_greeting_window';
@@ -909,6 +924,7 @@ import { onWalletUiChange, walletConnectionView } from './wallet_balance';
 import { requestWalletVerify } from './wallet_verify_request';
 import { type WeaponProcEffectDesc, weaponProcLines } from './weapon_proc_view';
 import { weaponTypeLabelKey } from './weapon_type_label';
+import { WeeklyQuestsWindow } from './weekly_quests_window';
 import { promptWikiVisit } from './wiki_link';
 import {
   installWindowDrag,
@@ -924,6 +940,7 @@ import { wocBalanceChipHtml } from './woc_balance_chip';
 import { promptWocMarketBrowserVisit, wocMarketToggleAction } from './woc_market_link';
 import { type WocMarketHooks, WocMarketWindow } from './woc_market_window';
 import { installWorldDropTarget } from './world_drop_target';
+import { WorldQuestPuzzleWindow } from './world_quest_puzzle_window';
 import { formatXp, type XpBarView, xpBarView } from './xp_bar';
 import { XpBarPainter } from './xp_bar_painter';
 import { YumiMatchPainter } from './yumi_match_painter';
@@ -937,6 +954,7 @@ let lpAdvancedLast = -1;
 // perf_overlay_settings.ts alongside the panel that consumes it.
 export interface OptionsHooks {
   logout(): void;
+  gliderPitchHold?(value: -1 | 0 | 1): void;
   captureKey(cb: ((code: string | null) => void) | null): void;
   settings: Settings;
   onSettingChange(key: keyof GameSettings, value: GameSettings[keyof GameSettings]): void;
@@ -1345,11 +1363,24 @@ export class Hud {
   private set attackSlotAction(action: HotbarAction) {
     this.actionBarController.replaceAttackAction(action);
   }
-  private readonly groundAim = new GroundAimController({
+  private vehicleBar: VehicleActionBarController | null = null;
+  private get vehicleControls(): VehicleActionBarController {
+    this.vehicleBar ??= createHudVehicleBar(this);
+    return this.vehicleBar;
+  }
+  private get groundAim() {
+    return this.sim.vehicleSession ? this.vehicleControls.aim : this.playerGroundAim;
+  }
+  private readonly playerGroundAim = new GroundAimController({
     player: () => this.sim.player,
     resolveAbility: (id) => this.sim.known.find((k) => k.def.id === id) ?? null,
-    seedTargetPoint: () => this.groundAimSeedTarget(),
-    fallbackPoint: () => this.groundTargetAim(),
+    seedTargetPoint: () =>
+      selectedGroundAimPoint(
+        this.sim.player,
+        this.sim.entities,
+        this.optionsHooks?.groundAimTargetAttackable,
+      ),
+    fallbackPoint: () => quickGroundTarget(this.sim.player, this.sim.entities),
     castAt: (id, point) => this.sim.castAbilityAt(id, point),
     clearReticle: () => this.renderer.setGroundAimReticle(null),
     projectPlacement: (id, point) => this.sim.groundAimPlacementPreview(id, point),
@@ -1369,6 +1400,15 @@ export class Hud {
   private readonly itemDragState = new ItemDragState();
   private suppressNextActionClick = false;
   private optionsHooks: OptionsHooks | null = null;
+  // The world-quest board opener: opens the map and unfolds the atlas rail on
+  // the release's mapAtlasSidebarCollapsed preference (the toggle lives in
+  // the rail, src/ui/map_sidebar_controller.ts).
+  private readonly mapSidebarCollapse = new MapSidebarCollapse({
+    settings: trackerCollapseSettings(() => this.optionsHooks, 'mapAtlasSidebarCollapsed'),
+    mapOpen: () => $('#map-window').style.display === 'block',
+    openMap: () => this.toggleMap(),
+    onChange: () => this.updateMapWindow(),
+  });
   private reportHooks: ReportHooks | null = null;
   private bugReportHooks: BugReportHooks | null = null;
   // Only wired online (main.ts owns the Discord account/panel state); its presence
@@ -1776,6 +1816,18 @@ export class Hud {
   // either consumer, and so gathering proficiency has its own baseline.
   private prevCraftSkillLevels: Record<string, number> | null = null;
   private prevGatheringSkillLevels: Record<string, number> | null = null;
+  private prevFactionStanding: Record<FactionId, number> | null = null;
+  // The CelebrationHost seam the celebration painters draw through, built per
+  // celebration (a rare drain) so a prototype-only test double still resolves.
+  private celebrationHost(): CelebrationHost {
+    return {
+      log: (text, color) => this.log(text, color),
+      showCelebrationBanner: (text, bannerClass, variant, motion, iconUrl, subtext) =>
+        this.showCelebrationBanner(text, bannerClass, variant, motion, iconUrl, subtext),
+      announce: (text) => this.combatAnnouncer.push(text, performance.now()),
+      reducedMotion: () => window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+    };
+  }
   // Signature of the in-range station-type set as of the last crafting-window
   // paint (stations.ts stationTypesSignature): the slow band compares the live
   // set against this to keep an OPEN window fresh without per-frame repaints
@@ -2154,6 +2206,8 @@ export class Hud {
         rift: riftFloorLabel,
         npc: npcDisplayName,
         mob: mobDisplayName,
+        worldQuest: (questId) =>
+          this.mapMarkerTooltipContent.worldQuestSemantic(questId, Date.now()),
       },
       npc: (marker) => this.mapMarkerTooltipContent.npc(marker),
       navigation: (marker) =>
@@ -2164,6 +2218,8 @@ export class Hud {
       service: (marker) => this.mapMarkerTooltipContent.service(marker),
       gather: (marker) => this.mapMarkerTooltipContent.gather(marker),
       farm: (marker) => this.mapMarkerTooltipContent.farm(marker),
+      worldQuest: (marker) => this.mapMarkerTooltipContent.worldQuest(marker, Date.now()),
+      worldBoss: (marker) => this.mapMarkerTooltipContent.worldBoss(marker),
       questArea: (refs, count) => this.mapMarkerTooltipContent.questArea(refs, count),
       paint: (html, x, y) => this.paintTooltipAt(html, x, y),
       clearMemo: () => this.mapMarkerTooltipContent.clearMemo(),
@@ -2341,6 +2397,15 @@ export class Hud {
       click: () => audio.click(),
       onRepaintMap: () => this.repaintOpenMap(),
       onShowRoute: (route) => this.showFinderOnMap(route.x, route.z),
+      worldQuests: {
+        selectedId: () => this.mapMarkerInteraction.selectedWorldQuestId,
+        select: (questId) => {
+          this.mapMarkerInteraction.selectWorldQuest(questId);
+        },
+        confirmDialog: (title, body, okText, cancelText, onOk) =>
+          this.confirmDialog(title, body, okText, cancelText, onOk),
+        nowMs: () => Date.now(),
+      },
       settings: trackerCollapseSettings(() => this.optionsHooks, 'mapAtlasSidebarCollapsed'),
     });
     this.fiesta = new FiestaController({
@@ -2403,6 +2468,7 @@ export class Hud {
       openUnbind: (npcId) => this.openUnbind(npcId),
       openCrafting: (craftId) => this.openCrafting(craftId),
       openMarket: () => this.openMarket(),
+      openWorldQuestBoard: () => this.mapSidebarCollapse.openBoard(),
       openDelveBoard: (npcId) => this.openDelveBoard(npcId),
       openCardDuel: () => this.toggleCardDuel(),
       onOpenChange: (open) => this.onQuestDialogStateChange?.(open),
@@ -2638,7 +2704,7 @@ export class Hud {
     }
     mm.style.cursor = 'var(--cursor-point)';
     mm.title = t('controls.worldMap');
-    mm.addEventListener('click', () => this.toggleMap());
+    bindMinimapObjectiveTap(mm, this);
     window.addEventListener('pointermove', (ev) => {
       if (this.emoteWheelOpen) this.updateEmoteWheelPointer(ev.clientX, ev.clientY);
     });
@@ -2881,6 +2947,7 @@ export class Hud {
     $('#mm-map').addEventListener('click', () => this.toggleMap());
     $('#map-close').addEventListener('click', () => {
       $('#map-window').style.display = 'none';
+      this.mapMarkerInteraction.selectWorldQuest(null);
       this.hideTooltip(); // a touch marker tip can outlive the window otherwise
       this.syncAnyWindowOpenState();
     });
@@ -2980,7 +3047,12 @@ export class Hud {
       finishMapTap(
         mapPinch,
         mapTapReleaseFromPointer(ev, mapTapStart, MAP_TAP_MOVE_TOLERANCE_PX),
-        (clientX, clientY) => showMapTipAt(clientX, clientY, true),
+        (clientX, clientY) => {
+          if (this.mapMarkerInteraction.selectWorldQuestAt(mapCanvas, clientX, clientY, true)) {
+            this.updateMapWindow();
+          }
+          return showMapTipAt(clientX, clientY, true);
+        },
       );
       mapTapStart = null;
     };
@@ -3010,7 +3082,12 @@ export class Hud {
       this.toggleMapLevel();
     });
     mapCanvas.addEventListener('click', (ev) => {
-      if (this.mapLevel !== 'continent') return;
+      if (this.mapLevel === 'zone') {
+        if (this.mapMarkerInteraction.selectWorldQuestAt(mapCanvas, ev.clientX, ev.clientY)) {
+          this.updateMapWindow();
+        }
+        return;
+      }
       const { cx, cy } = canvasPoint(ev.clientX, ev.clientY);
       const zoneId = continentZoneAt(this.continentRegions, cx, cy);
       if (zoneId) {
@@ -3316,10 +3393,8 @@ export class Hud {
       (el.id === 'vendor-window' || el.id === 'bags')
     )
       return;
-    // The bank docks its bags companion the same way the vendor does (a fixed
-    // side-by-side cluster driven by body.bank-open, mobile-paired 50/50); baking a
-    // cascade-offset inline position onto either half would defeat that layout (the
-    // inline inset beats the docking CSS), so skip the cascade for the bank cluster.
+    // Fixed vault and bank layouts must not inherit cascaded window positions.
+    if (el.id === 'bank-window' && document.body.classList.contains('weekly-vault-open')) return;
     if (
       document.body.classList.contains('bank-open') &&
       (el.id === 'bank-window' || el.id === 'bags')
@@ -3556,6 +3631,9 @@ export class Hud {
       case 'bank-window':
         this.closeBank();
         break;
+      case 'weekly-quests-window':
+        this.weeklyQuestsWindow.close();
+        break;
       case 'calendar-window':
         // Route through the painter so focus returns to the opener (WCAG 2.2 AA).
         this.calendarWindow.close();
@@ -3574,6 +3652,9 @@ export class Hud {
         break;
       case 'cosmetics-window':
         this.cosmeticsWindow.close();
+        break;
+      case 'world-quest-puzzle-window':
+        this.worldQuestPuzzleWindow.close();
         break;
       case 'professions-window':
         // Route through the painter so focus returns to the opener (WCAG 2.2 AA).
@@ -3686,6 +3767,7 @@ export class Hud {
       case 'quest-log-window':
         this.questlogWindow.close();
         break;
+      case 'world-quest-leaderboard-window':
       case 'leaderboard-window':
         this.leaderboardWindow.close();
         break;
@@ -5266,15 +5348,9 @@ export class Hud {
     closeOthers: () => this.closeOtherWindows(['#bank-window', '#bags']),
     hideTooltip: () => this.hideTooltip(),
     consumePeek: () => this.peekGuard.consume(),
-    // Non-trapping focus capture/return (bank is a non-modal companion of bags):
-    // NOT windowFocus('#bank-window'), which would install a Tab trap.
-    captureFocus: () => this.focusManager.activeFocusable(),
-    restoreFocus: (target) => this.focusManager.restore(target),
+    ...makeBankWindowFocus(this.focusManager, () => $('#bank-window')),
     onClosed: () => this.onBankClosed(),
-    // A bank op (withdraw / deposit-all / buy-slots) moved inventory or coin: repaint
-    // the bags companion (and vendor/char if open) through the same coordinator the
-    // online inventory-delta path calls. Offline this is the ONLY repaint; online the
-    // snapshot echo repaints again authoritatively.
+    // Repaint inventory through the same coordinator as authoritative snapshots.
     onInventoryChanged: () => this.onInventoryChanged(),
   });
   // Book of Deeds window painter (deeds_view.ts core + deeds_window.ts
@@ -5459,6 +5535,12 @@ export class Hud {
     ...this.windowFocus('#calendar-window'),
     showError: (text) => this.showError(text),
   });
+  private readonly weeklyQuestsWindow = new WeeklyQuestsWindow({
+    root: () => $('#weekly-quests-window'),
+    world: () => this.sim,
+    closeOthers: () => this.closeOtherWindows('#weekly-quests-window'),
+    ...this.windowFocus('#weekly-quests-window'),
+  });
   // Ashen Coliseum window painter (arena_window_view.ts offline/live model +
   // arena_window.ts painter). It owns the selected bracket, the all-time-ladder
   // cache + fetch throttle, the render-skip signature, and focus-return; Hud
@@ -5544,7 +5626,6 @@ export class Hud {
     statCellHtml: (stat) =>
       statCellHtml(charStatModel(this.sim, stat), STAT_VIEW_DEPS, { colon: false }),
     statTooltipHtml: (stat) => statTooltipHtml(charStatModel(this.sim, stat), STAT_VIEW_DEPS),
-    talentSummaryHtml: () => talentSummaryHtml(this.sim),
     progressionHtml: (level) => progressionHtml(this.sim, level),
     unequip: (slot) => {
       this.sim.unequipItem(slot);
@@ -5553,8 +5634,9 @@ export class Hud {
       this.renderBags();
       this.renderCharIfOpen();
     },
-    beginUnequipDrag: (slot) => {
+    beginUnequipDrag: (slot, action) => {
       this.dragUnequipSlot = slot;
+      this.dragAction = action ? { action, sourceIndex: null } : null;
       // Open the bags window if it's closed so there's a visible drop target,
       // otherwise the drag silently snaps back with no feedback.
       const bags = $('#bags');
@@ -5569,6 +5651,7 @@ export class Hud {
     },
     endUnequipDrag: () => {
       this.dragUnequipSlot = null;
+      this.dragAction = null;
       $('#bags').classList.remove('drop-target');
     },
     renderPreview: () => this.renderCharPreview(),
@@ -5690,6 +5773,7 @@ export class Hud {
     ...this.windowFocus('#leaderboard-window'),
     onVisibilityChange: () => this.syncAnyWindowOpenState(),
     showDevBadges: () => this.optionsHooks?.settings.get('showDevBadges') ?? true,
+    windowFocusFor: (selector) => this.windowFocus(selector),
   });
   // The signpost guild board (src/ui/hud/guild_board/): opened by the world's
   // noticeboard interaction, never a menu button; the board lives in the world.
@@ -5910,6 +5994,13 @@ export class Hud {
     insertQuestChatLink: (questId) => this.insertQuestChatLink(questId),
     showOnMap: (x, z) => this.showFinderOnMap(x, z),
   });
+  private readonly worldQuestPuzzleWindow = new WorldQuestPuzzleWindow({
+    document,
+    world: () => this.sim,
+    closeOthers: (selector) => this.closeOtherWindows(selector),
+    openFocusTrap: (root) => this.focusManager.open({ root }),
+    click: () => audio.click(),
+  });
 
   /** The player's own frame portrait: the one body rule every frame that
    *  holds a player shares (drawPlayerPortrait). */
@@ -6083,7 +6174,7 @@ export class Hud {
   // for current AuraKinds and safely omits an unknown mixed-release kind. Injected so
   // the view never calls t().
   private auraEffectTooltipHtml(a: AuraEffectInput & { id?: string }): string {
-    const effect = auraEffectDescriptor(a);
+    const effect = auraEffectDescriptor(a, this.sim.player);
     if (!effect) return '';
     const values: Record<string, string> = {};
     if (effect.nums) {
@@ -6554,7 +6645,7 @@ export class Hud {
       html += `<div class="tt-sub">${esc(t('itemUi.tooltip.classes', { classes: requiredClasses.map(classDisplayName).join(', ') }))}</div>`;
     }
     html += itemRequiredLevelLine(item, this.sim.player.level);
-    html += this.itemProcBlock(item);
+    html += this.itemProcBlock(item) + trinketTooltipLines(item, this.sim.player);
     html += this.itemSetBlock(item);
     html += materialMakersMarkLines(item, instance, materialSources);
     // Stackables state their per-slot cap (sim/bags.ts stackSizeOf), so a
@@ -6786,6 +6877,7 @@ export class Hud {
     this.relocalizeCoordinatorMemos();
     this.syncDailyRewardsSurfaceLabels();
     this.wocMarketWindow.relocalize();
+    this.weeklyQuestsWindow.relocalize();
     // Self-gated on its own open check (root src/ui/CLAUDE.md); refreshes the
     // root accessible name and row labels, preserving the uncommitted draft
     // and exact focus (Intentional Gathering PR3).
@@ -6803,6 +6895,7 @@ export class Hud {
     this.mountRaceControls.relocalize();
     this.refreshKeybindLabels();
     this.questTracker.relocalize(); // the strip key cannot see a locale-only change.
+    this.worldQuestPuzzleWindow.relocalize();
     // NOT updateDelveTracker(): the tracker's own signature is ids + numbers, so
     // a plain update() early-returns here and re-emits nothing. relocalize()
     // clears it for exactly one rebuild (#2529).
@@ -7158,25 +7251,6 @@ export class Hud {
     );
   }
 
-  // Where a ground-targeted ability should land: the current target's position if
-  // one is selected (the usual "cast on that pack" intent), else the caster's own
-  // spot for an open-ground cast. The sim clamps this to the ability's range.
-  private groundTargetAim(): { x: number; z: number } {
-    const me = this.sim.player;
-    const tid = me.targetId;
-    const t = tid !== null ? this.sim.entities.get(tid) : null;
-    if (t && !t.dead && t.id !== me.id) return { x: t.pos.x, z: t.pos.z };
-    return { x: me.pos.x, z: me.pos.z };
-  }
-
-  private groundAimSeedTarget(): AimPoint | null {
-    const me = this.sim.player;
-    const target = me.targetId !== null ? this.sim.entities.get(me.targetId) : null;
-    if (!target || target.dead || target.id === me.id) return null;
-    const attackable = this.optionsHooks?.groundAimTargetAttackable;
-    return !attackable || attackable(target.id) ? { x: target.pos.x, z: target.pos.z } : null;
-  }
-
   private empoweredAbilityIdForSlot(slot: number): string | null {
     const known = this.abilityForSlot(slot);
     return known?.def.empowerStages ? known.def.id : null;
@@ -7185,6 +7259,10 @@ export class Hud {
   // Slot key DOWN: every slot fires immediately (a tap is down + up, so this
   // is the press).
   pressSlot(slot: number): void {
+    if (VehicleActionBarController.blocksPlayerActions(this.sim)) {
+      this.vehicleControls.chooseSlot(slot);
+      return;
+    }
     if (this.empowerHold.press(slot, this.empoweredAbilityIdForSlot(slot), this.sim)) return;
     this.castSlot(slot);
   }
@@ -7192,6 +7270,7 @@ export class Hud {
   // Slot key UP: release an empowered hold. A non-charging slot already fired
   // on press, so this is a no-op.
   releaseSlot(slot: number): void {
+    if (VehicleActionBarController.blocksPlayerActions(this.sim)) return;
     this.empowerHold.releaseSlot(slot, this.sim, (released) => this.flashActionSlot(released));
   }
 
@@ -7223,10 +7302,6 @@ export class Hud {
 
   cancelGroundAim(): boolean {
     return this.groundAim.cancel();
-  }
-
-  private beginGroundAim(abilityId: string, slot: number): void {
-    this.groundAim.begin(abilityId, slot);
   }
 
   groundAimAbilityRange(): number | null {
@@ -7264,6 +7339,7 @@ export class Hud {
   // (reticle, empower charge, mouseover cast, the auto-attack QoL) rather than a
   // second cast path that would drift from it; the release edge is releaseCrossHotbarAction.
   pressCrossHotbarAction(action: { type: 'ability' | 'item'; id: string }): void {
+    if (VehicleActionBarController.blocksPlayerActions(this.sim)) return;
     if (action.id === CROSS_HOTBAR_ATTACK_ID || action.type === 'item') {
       this.castCrossHotbarAction(action);
       return;
@@ -7281,6 +7357,7 @@ export class Hud {
   }
 
   releaseCrossHotbarAction(action: { type: 'ability' | 'item'; id: string }): void {
+    if (VehicleActionBarController.blocksPlayerActions(this.sim)) return;
     this.empowerHold.releaseAction(action, this.sim, (slot) => this.flashActionSlot(slot));
   }
 
@@ -7289,6 +7366,7 @@ export class Hud {
   // the pad and nowhere else falls back to a plain cast (position abilities keep
   // the reticle via the ability-id aim identity) or the shared item-use seam.
   castCrossHotbarAction(action: { type: 'ability' | 'item'; id: string }): void {
+    if (VehicleActionBarController.blocksPlayerActions(this.sim)) return;
     // Attack is the fixed slot-0 toggle, not something the sim can cast by id.
     if (action.id === CROSS_HOTBAR_ATTACK_ID) {
       this.activateFixedAttackSlot();
@@ -7339,25 +7417,21 @@ export class Hud {
     resolved: ResolvedAbility,
     slotForAim: number,
   ): void {
-    const cooldown = actionBarCooldownRemaining(this.sim.player, resolved);
-    if (this.groundReticleEnabled() && !this.sim.player.dead && cooldown <= 0) {
-      this.beginGroundAim(abilityId, slotForAim);
-      return;
-    }
-    this.sim.castAbilityAt(
+    this.playerGroundAim.pressPosition(
       abilityId,
-      quickAimPoint(
-        this.sim.player,
-        this.groundAimSeedTarget(),
-        this.groundTargetAim(),
-        resolved.def.range,
-        resolved.def.minRange,
-        document.body.classList.contains('mobile-touch'),
-      ),
+      slotForAim,
+      this.groundReticleEnabled() &&
+        !this.sim.player.dead &&
+        actionBarCooldownRemaining(this.sim.player, resolved) <= 0,
+      document.body.classList.contains('mobile-touch'),
     );
   }
 
   castSlot(barSlot: number): void {
+    if (VehicleActionBarController.blocksPlayerActions(this.sim)) {
+      this.vehicleControls.chooseSlot(barSlot);
+      return;
+    }
     if (this.isGroundAimActive()) {
       if (this.groundAim.activeSlot() === barSlot) {
         this.commitGroundAimAt();
@@ -7501,24 +7575,9 @@ export class Hud {
     window.setTimeout(() => btn.classList.remove('used'), 180);
   }
 
-  private writeDraggedAction(dt: DataTransfer | null, action: Exclude<HotbarAction, null>): void {
-    if (!dt) return;
-    dt.setData(HOTBAR_ACTION_MIME, encodeHotbarAction(action));
-    dt.setData('text/plain', action.id);
-  }
-
   private readDraggedAction(dt: DataTransfer | null): Exclude<HotbarAction, null> | null {
-    if (!dt) return null;
-    const raw = dt.getData(HOTBAR_ACTION_MIME);
-    if (!raw) return null;
-    let parsed: unknown = null;
-    try {
-      parsed = JSON.parse(raw);
-    } catch {
-      return null;
-    }
-    return parseHotbarAction(
-      parsed,
+    return readHotbarDragData(
+      dt,
       (id) => this.sim.known.some((k) => k.def.id === id),
       (id) => this.isHotbarItemId(id),
     );
@@ -7624,7 +7683,10 @@ export class Hud {
           return `<div class="tt-title">${esc(abilityDisplayName(freed.def))}</div><div class="tt-sub">${esc(t('abilityUi.tooltip.unavailable'))}</div>${clearHint}`;
         const item = this.itemForSlot(slot);
         if (item) {
-          return this.itemTooltip(item) + itemInBagsLine(this.inventoryCount(item.id)) + clearHint;
+          const worn = item.id === this.sim.equipment.trinket;
+          return (
+            this.itemTooltip(item) + itemInBagsLine(this.inventoryCount(item.id), worn) + clearHint
+          );
         }
         return `<div class="tt-sub">${esc(t('abilityUi.actionBar.emptySlot'))}<br>${esc(t('abilityUi.actionBar.clearHint'))}</div>`;
       });
@@ -7652,7 +7714,7 @@ export class Hud {
             return;
           }
           this.dragAction = { action, sourceIndex: slot - 1 };
-          this.writeDraggedAction(e.dataTransfer, action);
+          writeHotbarDragData(e.dataTransfer, action);
           if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move';
           this.hideTooltip();
         });
@@ -7754,7 +7816,7 @@ export class Hud {
             sourceIndex: null,
             sourceAttackSlot: true,
           };
-          this.writeDraggedAction(e.dataTransfer, action);
+          writeHotbarDragData(e.dataTransfer, action);
           if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move';
           this.hideTooltip();
         });
@@ -8670,6 +8732,7 @@ export class Hud {
     // cadence the painted path always drove it at; the paint half reads the
     // stored decision instead of driving the machine itself.
     if (mediumHud) {
+      syncMinigameMusic(sim, p.pos, this.worldQuestPuzzleWindow.activeQuestId);
       this.lastMusicDecision = this.instanceMusic.update({
         now,
         lastCombatEventAt: this.lastCombatEventAt,
@@ -8695,6 +8758,7 @@ export class Hud {
     this.meters.update();
     this.mountRaceStrip.repaintIfChanged();
     this.mountRaceControls.update();
+    this.vehicleControls.update();
     this.lockpickController.repaintIfChanged();
     this.tutorial.update(sim, this.renderer, this.keybinds);
     this.bootcamp.update(sim, this.renderer, this.keybinds, this.optionsHooks?.gamepad ?? null);
@@ -9201,6 +9265,7 @@ export class Hud {
       actionBarWorld.player = p;
       actionBarWorld.target = target ?? null;
       actionBarWorld.inventory = sim.inventory;
+      actionBarWorld.wornTrinketId = sim.equipment.trinket;
       actionBarWorld.stealthed = stealthed;
       actionBarWorld.paladinSpec = sim.talentSpec;
       actionBarWorld.playerClass = sim.cfg.playerClass;
@@ -9212,6 +9277,7 @@ export class Hud {
         player: p,
         target: target ?? null,
         inventory: sim.inventory,
+        wornTrinketId: sim.equipment.trinket,
         stealthed,
         paladinSpec: sim.talentSpec,
         playerClass: sim.cfg.playerClass,
@@ -9488,7 +9554,7 @@ export class Hud {
     if (slowHud) this.socialWindow.refreshIfChanged();
     if (slowHud) this.updateGuildBillboardEcho();
     if (slowHud && this.marketWindow.isOpen) {
-      if (!this.nearbyMarketNpc()) this.marketWindow.close();
+      if (!nearbyServiceNpc(this.sim, 'market')) this.marketWindow.close();
       else this.marketWindow.refreshIfChanged();
     }
     // The forge window follows the player out of the Riftwright's reach (the
@@ -9539,6 +9605,7 @@ export class Hud {
     // Re-seat the tracker stack under the minimap column (bounded layout read).
     if (slowHud) this.trackerStackAnchor.apply();
     if (slowHud && this.calendarWindow.isOpen) this.calendarWindow.refreshIfChanged();
+    if (slowHud && this.weeklyQuestsWindow.isOpen) this.weeklyQuestsWindow.refreshIfChanged();
     if (slowHud) this.updateMailIndicator();
     if (slowHud) this.updateMarketIndicator();
   }
@@ -9629,7 +9696,7 @@ export class Hud {
       // At the Merchant the coin opens the World Market (the same gate the
       // market window itself lives behind); anywhere else it is informational
       // only: the tooltip already says the proceeds wait at the Merchant.
-      if (this.nearbyMarketNpc()) this.openMarket();
+      if (nearbyServiceNpc(this.sim, 'market')) this.openMarket();
     };
     el.addEventListener('click', (ev) => {
       ev.preventDefault();
@@ -9729,6 +9796,7 @@ export class Hud {
 
   private updateQuestTracker(now: number): void {
     this.questTracker.update(now);
+    this.worldQuestPuzzleWindow.refreshIfChanged();
   }
 
   /** Flip the persisted tracker-collapsed preference (the header click/keyboard
@@ -10409,6 +10477,7 @@ export class Hud {
     const el = $('#map-window');
     if (el.style.display === 'block') {
       el.style.display = 'none';
+      this.mapMarkerInteraction.selectWorldQuest(null);
       this.hideTooltip(); // a touch marker tip can outlive the window otherwise
       this.mapPing = null;
       this.mapZoneOverride = null;
@@ -10619,17 +10688,12 @@ export class Hud {
     }
     this.continentRegions = [];
 
-    // inside a dungeon, show the zone the dungeon's door is in (dungeonAt owns
-    // the instance x-band layout); in any other instance band lastZoneId is the
-    // zone the player entered from (the zone tracker freezes past
-    // DUNGEON_X_THRESHOLD); outdoors, follow the committed zone so
-    // border-straddling can't thrash the cached terrain regen.
-    const dungeon = dungeonAt(p.pos.x);
-    const zone: ZoneDef = this.mapZoneOverride
-      ? (ZONES.find((z) => z.id === this.mapZoneOverride) ?? zoneAt(p.pos.x, p.pos.z))
-      : dungeon
-        ? zoneAt(dungeon.doorPos.x, dungeon.doorPos.z)
-        : (ZONES.find((z) => z.id === this.lastZoneId) ?? zoneAt(p.pos.x, p.pos.z));
+    // map_zone_focus_core.ts: dungeon door, frozen last zone, committed zone, override first.
+    const zone = resolveMapZone(this.mapZoneOverride, this.lastZoneId, p.pos, {
+      zones: ZONES,
+      zoneAt,
+      dungeonAt,
+    });
     this.mapSidebar.update(this.sim, zone);
     // Crossing a zone while the map is open starts that zone at its full frame;
     // a pan target from the previous zone must never leak into the new one.
@@ -10656,6 +10720,7 @@ export class Hud {
       ping: this.mapPing,
       filters: this.mapSidebar.filterState(),
       route: this.mapSidebar.shownRoute(),
+      selectedWorldQuestId: this.mapMarkerInteraction.selectedWorldQuestId,
     });
     this.mapView = result.view;
     this.mapMarkerInteraction.setOverworld(result);
@@ -11060,6 +11125,9 @@ export class Hud {
       this.playEventSfx(ev); // positional sound for nearby combat/creatures
       this.meters.onEvent(ev);
       if (this.isNythraxisEvent(ev)) this.lastNythraxisCombatEventAt = performance.now();
+      if (applyQuestEventPresentation(this, ev)) continue;
+      if (ev.type === 'worldQuestInvestigationDialogue') this.questDialog.open(ev.targetId);
+      if (ev.type === 'worldQuestWeeklyOpen') this.weeklyQuestsWindow.open();
       switch (ev.type) {
         case 'damage': {
           const src = sim.entities.get(ev.sourceId);
@@ -11985,8 +12053,8 @@ export class Hud {
           this.openMailbox();
           break;
         case 'bank':
-          // Keyboard/sim interact at a banker NPC: open the bank window.
-          this.openBank();
+        case 'weekly_rewards':
+          this.openBank(ev.type === 'weekly_rewards' ? 'rewards' : undefined);
           break;
         case 'riftForge':
           // Interact at the Riftwright: open the Rift Forge window (which
@@ -11995,20 +12063,9 @@ export class Hud {
           this.openRiftForge();
           break;
         case 'noticeboard':
-          // The structured private event keeps this feedback localized and
-          // identical offline and online. A board carrying authored listings
-          // opens the signpost popup (guild names and notes are world data,
-          // spliced verbatim like player names); every other board opens the
-          // guild board window below.
-          if (ev.state === 'listings') {
-            this.noticeboardPopup.show(ev.listings);
-          } else {
-            // A board with no authored listings IS the guild board: the
-            // signpost opens the realm's ranked pledge surface
-            // (src/ui/hud/guild_board/) on the view its board id selects.
-            // Offline the window renders its localized nothing-posted state.
-            this.openGuildBoard(ev.boardId);
-          }
+          presentNoticeboardEvent(ev, this.noticeboardPopup, this.leaderboardWindow, (id) =>
+            this.openGuildBoard(id),
+          );
           break;
         case 'realmBuilder':
           presentRealmBuilder(this.realmBuilderPopup, this.renderer, ev.current, ev.past);
@@ -12150,43 +12207,9 @@ export class Hud {
           this.perfectingWindow.notifyErrorToast();
           break;
         }
-        case 'questAccepted':
-          sfx.playUi('quest_accept');
-          this.questDialog.refresh();
-          break;
-        case 'questProgress': {
-          const progressText = questProgressEventText(ev);
-          this.log(progressText, HUD_LOG.PROGRESS);
-          // The classic yellow top-center flash ("Forest Wolf slain: 3/8"); the
-          // log line above stays the durable, announced copy.
-          this.questBanner.show(progressText);
-          this.questDialog.refresh();
-          break;
-        }
-        case 'questReady': {
-          this.showBanner(
-            t('questUi.logs.ready', {
-              name: questTitle(ev.questId),
-              status: t('questUi.log.readyStatus'),
-            }),
-          );
-          sfx.playUi('quest_ready');
-          this.questDialog.refresh();
-          break;
-        }
-        case 'questDone':
-          sfx.playUi('quest_complete');
-          if (ev.questId === 'q_riding_lessons') {
-            this.showBanner(
-              t('hudChrome.mountTraining.ownedMountPrompt'),
-              true,
-              undefined,
-              'default',
-              undefined,
-              6000,
-            );
-          }
-          this.questDialog.refresh();
+        case 'trinketGamble':
+          this.showBanner(trinketGambleText(ev.fortune));
+          this.log(trinketGambleText(ev.fortune), HUD_LOG.NOTICE);
           break;
         case 'varkhulCallout':
         case 'nythraxisCallout': {
@@ -13329,61 +13352,38 @@ export class Hud {
         // quiets a login catch-up, never a live earned moment).
         masterworkItemId !== null || obs.tierUps.length > 0 || deedUnlocks.length > 0,
       );
+    // Faction standing tiers ride the same diff-observer family over
+    // IWorld.factions (hud/reputation/faction_tier_celebration_view.ts), on
+    // the same sync flag: `fac` ships in the self snapshot beside cprof.
+    const factionObs = advanceFactionTierObservation(
+      identitySynced,
+      this.prevFactionStanding,
+      sim.factions,
+    );
+    this.prevFactionStanding = factionObs.prev;
+    if (factionObs.tierUps.length > 0)
+      paintFactionTierCelebrations(
+        this.celebrationHost(),
+        factionObs.tierUps,
+        masterworkItemId !== null || obs.tierUps.length > 0 || deedUnlocks.length > 0,
+      );
   }
 
   // Profession skill level-ups (gathering + craft counters): pure plan in
-  // skill_level_toast_view.ts. Chat log for EVERY floor climb (the classic
-  // per-point skill message); the copper skill plate, polite announce, and
-  // celebration chime only for a gathering milestone crossing (the plan's
-  // cadence rules; craft boundaries belong to the tier-up celebration).
-  // Presentation is deliberately NOT the bare gold level-up language
-  // (players used to misread gathering milestones as character levels).
+  // skill_level_toast_view.ts, drawn by skill_level_toast_painter.ts through
+  // the celebration host seam. Kept as a method so the drain tail and the
+  // paint-contract tests call one name.
   private handleSkillLevelCelebrations(
     craftUps: SkillLevelUp[],
     gatherUps: SkillLevelUp[],
     celebrationAlreadyChimed: boolean,
   ): void {
-    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const plan = buildSkillLevelCelebrationPlan(
+    paintSkillLevelCelebrations(
+      this.celebrationHost(),
       craftUps,
       gatherUps,
-      reducedMotion,
       celebrationAlreadyChimed,
     );
-    const skillName = (skillId: string): string => {
-      const gatherKey = gatheringProfessionNameKey(skillId);
-      if (gatherKey) return t(gatherKey);
-      return craftNameText(skillId);
-    };
-    const toastText = (up: SkillLevelUp) =>
-      t('hudChrome.crafting.skillUpToast', {
-        skill: skillName(up.skillId),
-        level: formatNumber(up.toLevel, { maximumFractionDigits: 0 }),
-      });
-    for (const up of plan.skillUpLogs) this.log(toastText(up), HUD_LOG.NOTICE);
-    if (plan.banner !== null) {
-      const artUrl = professionImageUrl(skillLevelArtId(plan.banner.skillId));
-      // Celebration class 'deed': queues behind level-ups, never ambient
-      // replace, so a milestone landing after a ding still plays in order.
-      // The skill VARIANT is the copper plate; class and variant are
-      // orthogonal. The title is the skill name, already localized through
-      // gatheringProfessionNameKey above, so no wrapper key is needed.
-      this.showCelebrationBanner(
-        skillName(plan.banner.skillId),
-        'deed',
-        'skill',
-        plan.motion,
-        artUrl ?? undefined,
-        t('hudChrome.crafting.skillUpSubtext', {
-          level: formatNumber(plan.banner.toLevel, { maximumFractionDigits: 0 }),
-        }),
-      );
-      // The banner div carries no live semantics, so the polite #combat-live
-      // region carries the combined line (skill name AND level in one string,
-      // the level the visual title omits).
-      this.combatAnnouncer.push(toastText(plan.banner), performance.now());
-    }
-    if (plan.playSound) audio.achievement();
   }
 
   // The crafted earned moment, planned purely (craft_celebration_view) so the
@@ -14640,6 +14640,7 @@ export class Hud {
           // new wire field, exactly as the delve shop resolves its lock badge
           // from the mirrored clears map.
           gatheringProficiency: this.sim.gatheringProficiency,
+          factions: this.sim.factions,
         },
         this.vendorQtyMultiple,
       ),
@@ -15576,17 +15577,20 @@ export class Hud {
   // class drives the side-by-side desktop layout, and the bags window is force-opened
   // so items can be withdrawn into it. closeBank routes through the painter (which
   // fires onClosed) so focus returns to the opener (WCAG 2.4.3).
-  openBank(): void {
-    // The bags companion is exclusive: every hub has a vendor within simultaneous
-    // interact range of its banker, and vendor-open + bank-open together overlap
-    // the two windows on the same side of #bags (and on mobile the cluster-close
-    // precedence would strand the bank at half-width with its x-btn hidden).
+  openBank(tab?: 'rewards'): void {
+    // Weekly rewards own the screen; ordinary bank storage keeps its bags companion.
     if (this.vendorOpen) this.closeVendor();
-    // The heroic marks shop is a second tenant of #vendor-window that nulls
-    // openVendorNpcId, so the vendorOpen guard above never sees it.
     if (this.openHeroicVendorNpcId !== null) this.closeHeroicVendor();
-    document.body.classList.add('bank-open');
-    this.bankWindow.open();
+    if (
+      this.bankWindow.isOpen &&
+      document.body.classList.contains('weekly-vault-open') !== (tab === 'rewards')
+    )
+      this.closeBank();
+    if (tab === 'rewards') this.bagsWindow.close();
+    document.body.classList.toggle('weekly-vault-open', tab === 'rewards');
+    document.body.classList.toggle('bank-open', tab !== 'rewards');
+    this.bankWindow.open(tab);
+    if (tab === 'rewards') return;
     this.renderBags();
     $('#bags').style.display = 'flex';
   }
@@ -15597,7 +15601,7 @@ export class Hud {
 
   private onBankClosed(): void {
     const closeMobileBags = touchBagsShown(document.body.classList, $('#bags').style.display);
-    document.body.classList.remove('bank-open'); // bags (if still open) re-centres
+    document.body.classList.remove('bank-open', 'weekly-vault-open'); // bags (if still open) re-centres
     if (closeMobileBags) {
       // Mirror closeVendor's teardown backstop: a discard/sell/deposit prompt may hold
       // #bags inert (installPromptDialog) and this mobile path hides the grid without
@@ -15816,20 +15820,6 @@ export class Hud {
     return this.calendarWindow.isOpen;
   }
 
-  private nearbyMarketNpc(): Entity | null {
-    const p = this.sim.player;
-    for (const e of this.sim.entities.values()) {
-      if (
-        e.kind === 'npc' &&
-        NPCS[e.templateId]?.market &&
-        dist2d(p.pos, e.pos) <= NPC_WINDOW_CLOSE_RANGE
-      ) {
-        return e;
-      }
-    }
-    return null;
-  }
-
   // -------------------------------------------------------------------------
   // Bags
   // -------------------------------------------------------------------------
@@ -15865,6 +15855,7 @@ export class Hud {
       this.syncCharBagsPairing();
       return;
     }
+    if (document.body.classList.contains('weekly-vault-open')) this.closeBank();
     this.closeOtherWindows('#bags');
     // Record the opener (the minimap bag button / keybind focus) for the focus return.
     this.bagsWindow.noteOpener();
@@ -17680,7 +17671,6 @@ export class Hud {
   private playerSocialFlags(name: string): PlayerSocialFlags {
     return resolvePlayerSocialFlags(name, this.sim.socialInfo, this.localIgnoredNames);
   }
-
   private loadLocalIgnoredNames(): Set<string> {
     try {
       return parseIgnoreList(localStorage.getItem(LOCAL_IGNORES_KEY));
@@ -17688,7 +17678,6 @@ export class Hud {
       return new Set();
     }
   }
-
   private saveLocalIgnoredNames(): void {
     try {
       localStorage.setItem(LOCAL_IGNORES_KEY, serializeIgnoreList(this.localIgnoredNames));
@@ -17724,7 +17713,6 @@ export class Hud {
     if (this.sim.socialInfo === null) return;
     blocked ? this.sim.blockRemove(name) : this.sim.blockAdd(name);
   }
-
   closeContextMenu(): void {
     const el = $('#ctx-menu');
     el.style.display = 'none';
@@ -17761,7 +17749,6 @@ export class Hud {
   noteDevCommandsAdvertised(): void {
     this.devCommandsAdvertised = true;
   }
-
   toggleDevCommandWindow(): boolean {
     return this.devCommandWindow.toggle();
   }
@@ -17787,7 +17774,6 @@ export class Hud {
     this.resurrectionPromptEl?.remove();
     this.resurrectionPromptEl = null;
   }
-
   private showPrompt(
     text: string,
     acceptLabel: string,
@@ -17855,7 +17841,6 @@ export class Hud {
     if (stageTradeOffer(this.stagedTrade.items, this.sim.inventory, itemId, count) < 1) return;
     this.pushTradeOffer();
   }
-
   private pushTradeOffer(): void {
     this.sim.tradeSetOffer(this.stagedTrade.items, this.stagedTrade.copper);
   }
@@ -17890,15 +17875,12 @@ export class Hud {
   attachDiscordHook(toggle: () => void): void {
     this.discordHook = toggle;
   }
-
   get optionsOpen(): boolean {
     return this.optionsWindow.isOpen;
   }
-
   get characterOpen(): boolean {
     return this.charWindow.isOpen;
   }
-
   get questDialogOpen(): boolean {
     return this.questDialog.isOpen;
   }
@@ -17932,7 +17914,7 @@ export class Hud {
   // party/trade/duel prompts (no aria-modal) stay non-blocking. Called from
   // keydown paths only, never per frame.
   promptModalOpen(): boolean {
-    return $('#prompt-stack').querySelector('.prompt[aria-modal="true"]') !== null;
+    return document.querySelector(MODAL_PROMPT_SELECTOR) !== null;
   }
 
   // True when any interactive HUD surface is open: a modal OR a managed window
@@ -17941,7 +17923,6 @@ export class Hud {
   isWindowOpen(): boolean {
     return this.isModalOpen() || this.topmostOpenWindow() !== null;
   }
-
   toggleOptionsMenu(): void {
     this.optionsWindow.toggle();
   }
@@ -17955,7 +17936,6 @@ export class Hud {
         this.confirmDialog(title, body, okText, cancelText, onOk),
     });
   }
-
   closeOptions(): void {
     this.optionsWindow.close();
   }

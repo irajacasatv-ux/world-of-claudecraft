@@ -141,21 +141,56 @@ const repoRoot = fileURLToPath(new URL('..', import.meta.url));
 // counts each move by one over the eighth composition; dispatch-only stays
 // 13. Set from a suite run on the merged tree, never by arithmetic in the
 // diff.
-// RE-PINNED at the Freeholds sync of release/v0.44.0. BOTH parent pins for the
-// record: ours 232/246 (the Freehold commands over the v0.43.0 base), the
-// release 225/239 (the Who tab plus the two Market Sweep pairs), on the shared
-// base 222/236. Per axis: send 222+10+3=235, dispatch 236+10+3=249.
-// Freeholds re-sync of release/v0.44.0 at ed69f62ef7: World PvP adds pvp_flag
-// to both sets (sent by ClientWorld.setWorldPvpFlag, dispatched beside
-// bg_flag), the release's own 225/239 to 226/240; per axis 235+1=236 and
-// 249+1=250.
-// Freeholds sync of release/v0.44.0 at 09639d4ae9: BOTH parent pins for the
-// record, ours 236/250, the release 230/244 (market buy orders add three
-// commands, guild custom ranks adds guild_set_ranks; docs/prd/guild-custom-ranks.md),
-// on the shared base 226/240. Per axis: send 226+10+4=240, dispatch
-// 240+10+4=254.
-const EXPECTED_SEND_COUNT = 240;
-const EXPECTED_DISPATCH_COUNT = 254;
+// Intentional Gathering PR3 adds the set_harvest_preference command (a
+// client-sent, dispatched pair, so both counts move together by one);
+// dispatch-only stays 13.
+// Intentional Gathering PR3 adds a second command, inspectCorpseHarvest (the
+// selected-corpse status query, also a client-sent + dispatched pair):
+// 217/230, dispatch-only stays 13.
+// Intentional Gathering PR4 adds three more client-sent + dispatched pairs
+// (track_gathering_recipe, track_gathering_commission, clear_gathering_goal):
+// 220/233, dispatch-only stays 13.
+// Masterwrought Perfecting rank exchange adds swap_perfecting_ranks (one more
+// client-sent + dispatched pair): 221/234, dispatch-only stays 13.
+// The New Eastbrook program then retires the Vale Cup minigame, removing its
+// six vcup_* send + dispatch pairs (docs/design/eastbrook-revamp/master-plan.md);
+// the Proving Shore tutorial adds its one start_tutorial pair back on top, and
+// the v0.40.0 sync merge brings the release side's one new pair with it: base
+// 207/220/13 for this merge.
+//
+// RE-PINNED at this merge of release/v0.42.0 into feature/masterwrought.
+// BOTH parent pins for the record: ours 221/234/13 (the professions-merge
+// chain above), the release 207/221/14 (its own dispatch-only addition: one
+// dispatch handler with no matching client send). Arithmetic reconciliation
+// per axis (base + ours' delta + theirs' delta: send 207+14+0=221, dispatch
+// 220+14+1=235, dispatch-only 13+0+1=14), NOT a suite run, which the NOTE
+// above explicitly warns against trusting: confirm with
+// `npx vitest run tests/command_schema.test.ts` before merge lands.
+// +1 send / +1 dispatch for the Social window's Who tab (`who`: a structured
+// realm roster answered by the `who` frame; the chat /who stays as it was).
+// Market Sweep composes on top of it with `market_sweep_quote` and
+// `market_sweep`, both client-sent and server-dispatched.
+// RE-PINNED at the third release/v0.43.0 merge into feature/world-quests:
+// the release's 225/239 plus the branch's eleven world-quest and vehicle
+// commands, plus world_quest_reroll: 237/251/14. Plus the weekly emissary's
+// pick and commendation (world_quest_weekly_choose, world_quest_weekly_commend):
+// 239/253/14.
+// +1 send / +1 dispatch for the Clue Scrolls tracker abandon
+// (`clue_hunt_abandon`, sent by QuestWorldWireState.abandonClueHunt and
+// routed through the delegated world-quest switch); on the quests
+// integration branch (weekly + clue scrolls together): 240/254/14.
+// +2 send / +2 dispatch for the Weekly Vault (weekly_reward_claim,
+// weekly_reward_open; PR 4052) on the quests integration branch: 242/256/14.
+// World PvP adds pvp_flag to both sets (sent by ClientWorld.setWorldPvpFlag,
+// dispatched beside bg_flag), at the second release/v0.44.0 base merge: 243/257/14.
+// The third release/v0.44.0 base merge adds the market buy orders (three
+// commands) and guild custom ranks (guild_set_ranks): 247/261/14.
+// Freeholds sync of release/v0.44.0 at aaff789813: BOTH parent pins for the
+// record, ours 240/254 (the ten Freehold commands plus the release pairs up to
+// 09639d4ae9), the release 247/261 (the lines above), on the shared base
+// 230/244. Per axis: send 230+10+17=257, dispatch 244+10+17=271.
+const EXPECTED_SEND_COUNT = 257;
+const EXPECTED_DISPATCH_COUNT = 271;
 const EXPECTED_DISPATCH_ONLY_COUNT = 14;
 
 // The chat sub-channel routing switch (server/game.ts `switch
@@ -186,10 +221,8 @@ function readSource(relPath: string): string {
   return stripComments(readFileSync(join(repoRoot, relPath), 'utf8'));
 }
 
-// Distinct `cmd:'X'` literals ClientWorld sends. Every send funnels through the
-// single private cmd() helper as an object literal, including the handshake send
-// (`challengeResponse`) outside the IWorld-commands block, so a whole-file scan
-// captures the complete send-set. There is no dynamic/computed cmd value.
+// Distinct `cmd:'X'` literals ClientWorld sends. Commands are authored as object
+// literals in online.ts and its wire-state bases; there is no dynamic cmd value.
 function scanSendSet(src: string): Set<string> {
   const tokens = new Set<string>();
   for (const m of src.matchAll(/cmd:\s*'([^']+)'/g)) tokens.add(m[1]);
@@ -238,6 +271,25 @@ function scanDispatchSet(src: string): Set<string> {
   return labels;
 }
 
+// The world-quest-only command family is routed out of dispatchMessage before
+// its switch (`if (questWire.isWorldQuestWireCommand(command)) return void
+// questWire.dispatchWorldQuestWire(...)`), so its `case 'X':` labels live in
+// server/quest_command_wire.ts. Scan that one delegated switch, bounded by the
+// dispatcher's own body, and require the guard in game.ts so the family cannot
+// be counted as dispatched after the route is removed.
+function scanDelegatedWorldQuestDispatchSet(gameSrc: string, wireSrc: string): Set<string> {
+  if (!gameSrc.includes('questWire.dispatchWorldQuestWire(')) {
+    throw new Error('dispatchMessage no longer routes the world-quest wire family');
+  }
+  const start = wireSrc.indexOf('export function dispatchWorldQuestWire(');
+  if (start === -1) throw new Error('dispatchWorldQuestWire not found');
+  const end = wireSrc.indexOf('\n}\n', start);
+  if (end === -1) throw new Error('dispatchWorldQuestWire body end not found');
+  const labels = new Set<string>();
+  for (const m of wireSrc.slice(start, end).matchAll(/\bcase\s+'([^']+)'\s*:/g)) labels.add(m[1]);
+  return labels;
+}
+
 function difference<T>(a: Set<T>, b: Set<T>): Set<T> {
   const out = new Set<T>();
   for (const v of a) if (!b.has(v)) out.add(v);
@@ -245,7 +297,11 @@ function difference<T>(a: Set<T>, b: Set<T>): Set<T> {
 }
 
 const sendSet = scanNetSendSet();
-const dispatchSet = scanDispatchSet(readSource('server/game.ts'));
+const gameSource = readSource('server/game.ts');
+const dispatchSet = new Set([
+  ...scanDispatchSet(gameSource),
+  ...scanDelegatedWorldQuestDispatchSet(gameSource, readSource('server/quest_command_wire.ts')),
+]);
 const tableSet = new Set<CommandName>(COMMAND_NAMES);
 const allowlistSet = new Set<CommandName>(DISPATCH_ONLY_COMMANDS);
 

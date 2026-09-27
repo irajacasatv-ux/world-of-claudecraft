@@ -147,7 +147,6 @@ function renderSheet(
     slotName: (slot) => slot,
     statCellHtml: () => '',
     statTooltipHtml: () => '',
-    talentSummaryHtml: () => '',
     progressionHtml: () => '',
     unequip: vi.fn(),
     beginUnequipDrag: vi.fn(),
