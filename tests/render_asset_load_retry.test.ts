@@ -60,6 +60,10 @@ describe('loadGltf retries a transient failure before rejecting', () => {
     vi.doMock('three/addons/libs/meshopt_decoder.module.js', () => ({ MeshoptDecoder: {} }));
 
     const { loadGltf } = await import('../src/render/assets/loader');
+    // The zero-delay mock really applies (a drifted mock path would fall back to
+    // the real backoff and quietly cost seconds again).
+    const { retryDelayMs: mockedDelay } = await import('../src/render/assets/load_retry');
+    expect(mockedDelay(1)).toBe(0);
     const result = await loadGltf(url);
     expect(result).toBe(fakeGltf);
     expect(calls).toBe(MAX_LOAD_ATTEMPTS);
