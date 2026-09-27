@@ -8141,6 +8141,10 @@ describe('a run of thrown writes keeps its edits and retries them once per windo
       recover(): void {
         failing = false;
       },
+      /** The fault returns. */
+      fail(): void {
+        failing = true;
+      },
       /** Another realm sharing the database writes the row forward. */
       advance: db.advance,
       async wireRev(): Promise<string> {
@@ -8378,6 +8382,60 @@ describe('a run of thrown writes keeps its edits and retries them once per windo
       retrying: 0,
       leaveCaptures: 0,
       entries: 0,
+    });
+  });
+
+  /** A session still in the world whose writes threw a whole run: on the clock
+   *  with its entry retained, so the entry outlives whatever ends the posture. */
+  async function onlineInPosture(database = faultyDatabase()) {
+    const h = await loadedStore({ readRow: database.readRow, writeRow: database.writeRow });
+    h.setNow(START_MS);
+    h.edit(OWNER_KEY, { rev: 8 });
+    for (let sweep = 0; sweep < FREEHOLD_PERSIST_MAX_WRITE_ERRORS; sweep++) {
+      h.store.saveAllDirty();
+      await tick(30);
+    }
+    expect(h.store.stats()).toMatchObject({ retrying: 1, entries: 1 });
+    return { h, database };
+  }
+
+  it('leaves the clock on a commit, so the next single throw is a blip on the ordinary cadence', async () => {
+    const { h, database } = await onlineInPosture();
+    database.recover();
+    h.setNow(START_MS + WINDOW);
+    h.store.saveAllDirty();
+    await tick(30);
+    expect(await database.wireRev()).toBe('8');
+    // Off the clock with the entry still retained, not merely collected.
+    expect(h.store.stats()).toMatchObject({ retrying: 0, entries: 1, quiesced: 0 });
+    // One blip after the recovery: the next sweep retries it at once, as any
+    // owner's blip is, rather than a window later.
+    const writes = h.writeCount();
+    database.fail();
+    h.edit(OWNER_KEY, { rev: 9 });
+    h.store.saveAllDirty();
+    await tick(30);
+    expect(h.store.stats().retrying).toBe(0);
+    h.store.saveAllDirty();
+    await tick(30);
+    expect(h.writeCount()).toBe(writes + 2);
+  });
+
+  it('stops counting an entry on the clock once an answer quiesces it', async () => {
+    const database = faultyDatabase();
+    const { h } = await onlineInPosture(database);
+    database.recover();
+    database.advance({ wireRev: '11' });
+    h.setNow(START_MS + WINDOW);
+    h.store.saveAllDirty();
+    await tick(30);
+    // Retained (the session is in the world), quiesced by the fence, and no
+    // longer on the clock's gauge.
+    expect(h.store.stats()).toMatchObject({
+      entries: 1,
+      staleWrites: 1,
+      quiesced: 1,
+      retrying: 0,
     });
   });
 
