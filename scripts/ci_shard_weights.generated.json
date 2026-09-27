@@ -2,8 +2,8 @@
   "__provenance": {
     "run": "34168361798",
     "harvested": "2026-09-08",
-    "files": 4948,
-    "harvestedFiles": 3948,
+    "files": 4943,
+    "harvestedFiles": 3910,
     "carried": {
       "tests/ability_imbue_text.test.ts": {
         "ms": 1954,
@@ -252,6 +252,17 @@
         "reason": "local release v0.44 candidate measurement pending full CI harvest",
         "runs": [
           25
+        ]
+      },
+      "tests/anim_pipeline.test.ts": {
+        "ms": 40,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "added on feature/freeholds after the 2026-09-08 harvest (Part 1 persistence suites, Part 2 test-cost suites and splits); local median pending the next full-mode harvest",
+        "runs": [
+          40,
+          34,
+          44
         ]
       },
       "tests/aura_bar_side.test.ts": {
@@ -1712,6 +1723,18 @@
           1545
         ]
       },
+      "tests/equip_drop_core.test.ts": {
+        "ms": 3658,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "changed shape after the 2026-09-08 harvest (parity shards rebalanced and cut to two recordings, encounter suites split, the Hud import moved out of equip_drop_core, the snapshots suite split, the SFX Studio suite on a fixture root); local median of three solo runs, 2026-09-27",
+        "runs": [
+          3662,
+          3658,
+          3654
+        ],
+        "supersedes": 9881
+      },
       "tests/equip_trinket.test.ts": {
         "ms": 942,
         "method": "local-median",
@@ -2982,6 +3005,17 @@
           8
         ]
       },
+      "tests/gate_host_workers.test.ts": {
+        "ms": 2,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "added on feature/freeholds after the 2026-09-08 harvest (Part 1 persistence suites, Part 2 test-cost suites and splits); local median pending the next full-mode harvest",
+        "runs": [
+          2,
+          2,
+          1
+        ]
+      },
       "tests/gather_batch_reach_core.test.ts": {
         "ms": 5,
         "method": "local-median",
@@ -3451,6 +3485,17 @@
           6
         ]
       },
+      "tests/helpers/released_spy.test.ts": {
+        "ms": 5,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "added on feature/freeholds after the 2026-09-08 harvest (Part 1 persistence suites, Part 2 test-cost suites and splits); local median pending the next full-mode harvest",
+        "runs": [
+          7,
+          5,
+          5
+        ]
+      },
       "tests/heroic_loot_budget.test.ts": {
         "ms": 914,
         "method": "local-median",
@@ -3640,6 +3685,17 @@
           86
         ]
       },
+      "tests/hud_touch_drop_routing.test.ts": {
+        "ms": 9,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "added on feature/freeholds after the 2026-09-08 harvest (Part 1 persistence suites, Part 2 test-cost suites and splits); local median pending the next full-mode harvest",
+        "runs": [
+          9,
+          9,
+          10
+        ]
+      },
       "tests/hud_vehicle_bar.test.ts": {
         "ms": 6,
         "method": "local-median",
@@ -3674,6 +3730,29 @@
         "reason": "v0.44 release-line reconcile added these tests after the latest full shard-weight harvest",
         "runs": [
           2800
+        ]
+      },
+      "tests/ignivar_encounter.test.ts": {
+        "ms": 16523,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "changed shape after the 2026-09-08 harvest (parity shards rebalanced and cut to two recordings, encounter suites split, the Hud import moved out of equip_drop_core, the snapshots suite split, the SFX Studio suite on a fixture root); local median of three solo runs, 2026-09-27",
+        "runs": [
+          16426,
+          16684,
+          16523
+        ],
+        "supersedes": 103796
+      },
+      "tests/ignivar_encounter_tanking_lifecycle.test.ts": {
+        "ms": 20922,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "added on feature/freeholds after the 2026-09-08 harvest (Part 1 persistence suites, Part 2 test-cost suites and splits); local median pending the next full-mode harvest",
+        "runs": [
+          20974,
+          20714,
+          20922
         ]
       },
       "tests/ignivar_lift_car_walls.test.ts": {
@@ -3878,6 +3957,17 @@
           6
         ]
       },
+      "tests/lane_suite_scope.test.ts": {
+        "ms": 220,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "added on feature/freeholds after the 2026-09-08 harvest (Part 1 persistence suites, Part 2 test-cost suites and splits); local median pending the next full-mode harvest",
+        "runs": [
+          220,
+          198,
+          221
+        ]
+      },
       "tests/last_keep_graveyard.test.ts": {
         "ms": 674,
         "method": "local-median",
@@ -3930,6 +4020,17 @@
         "reason": "local carry pending the next full-mode harvest",
         "runs": [
           54
+        ]
+      },
+      "tests/leave_vehicle_release_game.test.ts": {
+        "ms": 757,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "added on feature/freeholds after the 2026-09-08 harvest (Part 1 persistence suites, Part 2 test-cost suites and splits); local median pending the next full-mode harvest",
+        "runs": [
+          774,
+          757,
+          742
         ]
       },
       "tests/live_program_hunt_report.test.ts": {
@@ -4762,6 +4863,90 @@
           4,
           4
         ]
+      },
+      "tests/parity/parity_a.test.ts": {
+        "ms": 7468,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "changed shape after the 2026-09-08 harvest (parity shards rebalanced and cut to two recordings, encounter suites split, the Hud import moved out of equip_drop_core, the snapshots suite split, the SFX Studio suite on a fixture root); local median of three solo runs, 2026-09-27",
+        "runs": [
+          7374,
+          7468,
+          7532
+        ],
+        "supersedes": 16617
+      },
+      "tests/parity/parity_b.test.ts": {
+        "ms": 12613,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "changed shape after the 2026-09-08 harvest (parity shards rebalanced and cut to two recordings, encounter suites split, the Hud import moved out of equip_drop_core, the snapshots suite split, the SFX Studio suite on a fixture root); local median of three solo runs, 2026-09-27",
+        "runs": [
+          12613,
+          12486,
+          12700
+        ],
+        "supersedes": 10983
+      },
+      "tests/parity/parity_c.test.ts": {
+        "ms": 12740,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "changed shape after the 2026-09-08 harvest (parity shards rebalanced and cut to two recordings, encounter suites split, the Hud import moved out of equip_drop_core, the snapshots suite split, the SFX Studio suite on a fixture root); local median of three solo runs, 2026-09-27",
+        "runs": [
+          12878,
+          12593,
+          12740
+        ],
+        "supersedes": 7308
+      },
+      "tests/parity/parity_d.test.ts": {
+        "ms": 13631,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "changed shape after the 2026-09-08 harvest (parity shards rebalanced and cut to two recordings, encounter suites split, the Hud import moved out of equip_drop_core, the snapshots suite split, the SFX Studio suite on a fixture root); local median of three solo runs, 2026-09-27",
+        "runs": [
+          13720,
+          13631,
+          13584
+        ],
+        "supersedes": 32761
+      },
+      "tests/parity/parity_e.test.ts": {
+        "ms": 13750,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "changed shape after the 2026-09-08 harvest (parity shards rebalanced and cut to two recordings, encounter suites split, the Hud import moved out of equip_drop_core, the snapshots suite split, the SFX Studio suite on a fixture root); local median of three solo runs, 2026-09-27",
+        "runs": [
+          13765,
+          13724,
+          13750
+        ],
+        "supersedes": 39093
+      },
+      "tests/parity/parity_f.test.ts": {
+        "ms": 14343,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "changed shape after the 2026-09-08 harvest (parity shards rebalanced and cut to two recordings, encounter suites split, the Hud import moved out of equip_drop_core, the snapshots suite split, the SFX Studio suite on a fixture root); local median of three solo runs, 2026-09-27",
+        "runs": [
+          14444,
+          14264,
+          14343
+        ],
+        "supersedes": 2565
+      },
+      "tests/parity/parity_g.test.ts": {
+        "ms": 15616,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "changed shape after the 2026-09-08 harvest (parity shards rebalanced and cut to two recordings, encounter suites split, the Hud import moved out of equip_drop_core, the snapshots suite split, the SFX Studio suite on a fixture root); local median of three solo runs, 2026-09-27",
+        "runs": [
+          15763,
+          15616,
+          15596
+        ],
+        "supersedes": 195960
       },
       "tests/party_pids_core.test.ts": {
         "ms": 5,
@@ -5939,6 +6124,17 @@
           3013
         ]
       },
+      "tests/server/freehold_write_retry.test.ts": {
+        "ms": 2,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "added on feature/freeholds after the 2026-09-08 harvest (Part 1 persistence suites, Part 2 test-cost suites and splits); local median pending the next full-mode harvest",
+        "runs": [
+          2,
+          2,
+          3
+        ]
+      },
       "tests/server/freehold_write_seal.test.ts": {
         "ms": 3,
         "method": "local-median",
@@ -6212,6 +6408,18 @@
           12
         ]
       },
+      "tests/sfx_studio_server_security.test.ts": {
+        "ms": 5234,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "changed shape after the 2026-09-08 harvest (parity shards rebalanced and cut to two recordings, encounter suites split, the Hud import moved out of equip_drop_core, the snapshots suite split, the SFX Studio suite on a fixture root); local median of three solo runs, 2026-09-27",
+        "runs": [
+          6130,
+          5234,
+          5204
+        ],
+        "supersedes": 24286
+      },
       "tests/shader_ablation_transforms.test.ts": {
         "ms": 9,
         "method": "local-median",
@@ -6333,6 +6541,95 @@
         "reason": "local carry pending the next full-mode harvest",
         "runs": [
           1516
+        ]
+      },
+      "tests/snapshots.test.ts": {
+        "ms": 2126,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "changed shape after the 2026-09-08 harvest (parity shards rebalanced and cut to two recordings, encounter suites split, the Hud import moved out of equip_drop_core, the snapshots suite split, the SFX Studio suite on a fixture root); local median of three solo runs, 2026-09-27",
+        "runs": [
+          2126,
+          2164,
+          2094
+        ],
+        "supersedes": 29921
+      },
+      "tests/snapshots_auras.test.ts": {
+        "ms": 1918,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "added on feature/freeholds after the 2026-09-08 harvest (Part 1 persistence suites, Part 2 test-cost suites and splits); local median pending the next full-mode harvest",
+        "runs": [
+          1974,
+          1918,
+          1891
+        ]
+      },
+      "tests/snapshots_client_merge.test.ts": {
+        "ms": 2444,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "added on feature/freeholds after the 2026-09-08 harvest (Part 1 persistence suites, Part 2 test-cost suites and splits); local median pending the next full-mode harvest",
+        "runs": [
+          2444,
+          2461,
+          2390
+        ]
+      },
+      "tests/snapshots_cosmetics.test.ts": {
+        "ms": 1941,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "added on feature/freeholds after the 2026-09-08 harvest (Part 1 persistence suites, Part 2 test-cost suites and splits); local median pending the next full-mode harvest",
+        "runs": [
+          1941,
+          1940,
+          1974
+        ]
+      },
+      "tests/snapshots_encounters.test.ts": {
+        "ms": 963,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "added on feature/freeholds after the 2026-09-08 harvest (Part 1 persistence suites, Part 2 test-cost suites and splits); local median pending the next full-mode harvest",
+        "runs": [
+          963,
+          963,
+          956
+        ]
+      },
+      "tests/snapshots_self_wire.test.ts": {
+        "ms": 3278,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "added on feature/freeholds after the 2026-09-08 harvest (Part 1 persistence suites, Part 2 test-cost suites and splits); local median pending the next full-mode harvest",
+        "runs": [
+          3277,
+          3332,
+          3278
+        ]
+      },
+      "tests/snapshots_session.test.ts": {
+        "ms": 1719,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "added on feature/freeholds after the 2026-09-08 harvest (Part 1 persistence suites, Part 2 test-cost suites and splits); local median pending the next full-mode harvest",
+        "runs": [
+          1719,
+          1711,
+          1738
+        ]
+      },
+      "tests/snapshots_world.test.ts": {
+        "ms": 2198,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "added on feature/freeholds after the 2026-09-08 harvest (Part 1 persistence suites, Part 2 test-cost suites and splits); local median pending the next full-mode harvest",
+        "runs": [
+          2188,
+          2198,
+          2247
         ]
       },
       "tests/social_db_guild_ranks.test.ts": {
@@ -6492,6 +6789,17 @@
           21
         ]
       },
+      "tests/suite_lane_threshold.test.ts": {
+        "ms": 2,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "added on feature/freeholds after the 2026-09-08 harvest (Part 1 persistence suites, Part 2 test-cost suites and splits); local median pending the next full-mode harvest",
+        "runs": [
+          2,
+          2,
+          2
+        ]
+      },
       "tests/surface_npc_bootstrap.test.ts": {
         "ms": 3,
         "method": "local-median",
@@ -6593,6 +6901,17 @@
         "reason": "local carry pending the next full-mode harvest",
         "runs": [
           31
+        ]
+      },
+      "tests/test_memory_budget.test.ts": {
+        "ms": 223,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "added on feature/freeholds after the 2026-09-08 harvest (Part 1 persistence suites, Part 2 test-cost suites and splits); local median pending the next full-mode harvest",
+        "runs": [
+          231,
+          223,
+          223
         ]
       },
       "tests/texture_anisotropy.test.ts": {
@@ -6928,6 +7247,29 @@
           2509
         ]
       },
+      "tests/varkhul_forge_encounter.test.ts": {
+        "ms": 22520,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "changed shape after the 2026-09-08 harvest (parity shards rebalanced and cut to two recordings, encounter suites split, the Hud import moved out of equip_drop_core, the snapshots suite split, the SFX Studio suite on a fixture root); local median of three solo runs, 2026-09-27",
+        "runs": [
+          22240,
+          22878,
+          22520
+        ],
+        "supersedes": 119260
+      },
+      "tests/varkhul_forge_encounter_adds.test.ts": {
+        "ms": 26070,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "added on feature/freeholds after the 2026-09-08 harvest (Part 1 persistence suites, Part 2 test-cost suites and splits); local median pending the next full-mode harvest",
+        "runs": [
+          25712,
+          26514,
+          26070
+        ]
+      },
       "tests/vault_ledger_row_bound_property.test.ts": {
         "ms": 25,
         "method": "local-median",
@@ -7115,6 +7457,39 @@
         "reason": "local carry pending the next full-mode harvest",
         "runs": [
           5
+        ]
+      },
+      "tests/vitest_setup_scope.test.ts": {
+        "ms": 316,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "added on feature/freeholds after the 2026-09-08 harvest (Part 1 persistence suites, Part 2 test-cost suites and splits); local median pending the next full-mode harvest",
+        "runs": [
+          774,
+          316,
+          161
+        ]
+      },
+      "tests/vitest_spy_restore_patch.test.ts": {
+        "ms": 14,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "added on feature/freeholds after the 2026-09-08 harvest (Part 1 persistence suites, Part 2 test-cost suites and splits); local median pending the next full-mode harvest",
+        "runs": [
+          14,
+          14,
+          14
+        ]
+      },
+      "tests/vitest_worker_sizing.test.ts": {
+        "ms": 278,
+        "method": "local-median",
+        "measured": "2026-09-27",
+        "reason": "added on feature/freeholds after the 2026-09-08 harvest (Part 1 persistence suites, Part 2 test-cost suites and splits); local median pending the next full-mode harvest",
+        "runs": [
+          278,
+          269,
+          288
         ]
       },
       "tests/wand_swing_between_queued_casts.test.ts": {
@@ -9520,32 +9895,7 @@
   "tests/ambient_critters_removed.test.ts": 7,
   "tests/ambient_quest_markers.test.ts": 25,
   "tests/android_seeker_distribution.test.ts": 11,
-  "tests/anim_pipeline_batch1.test.ts": 12,
-  "tests/anim_pipeline_bear.test.ts": 5,
-  "tests/anim_pipeline_biped14_hit_variety.test.ts": 12,
-  "tests/anim_pipeline_crab.test.ts": 7,
-  "tests/anim_pipeline_demon.test.ts": 7,
-  "tests/anim_pipeline_druid_dragonkin.test.ts": 17,
-  "tests/anim_pipeline_enemy7_hit_variety.test.ts": 5,
-  "tests/anim_pipeline_enemy_bite_hit_variety.test.ts": 10,
-  "tests/anim_pipeline_glub.test.ts": 7,
-  "tests/anim_pipeline_greyjaw.test.ts": 5,
-  "tests/anim_pipeline_hunter_ghost.test.ts": 13,
-  "tests/anim_pipeline_kaykit_hit_variety.test.ts": 17,
-  "tests/anim_pipeline_murloc.test.ts": 6,
-  "tests/anim_pipeline_paladin_undead.test.ts": 16,
-  "tests/anim_pipeline_rogue_troll.test.ts": 18,
-  "tests/anim_pipeline_shaman_demonflying.test.ts": 10,
-  "tests/anim_pipeline_skelboss_stag.test.ts": 12,
-  "tests/anim_pipeline_treant.test.ts": 8,
-  "tests/anim_pipeline_warlock_nightkin.test.ts": 11,
-  "tests/anim_pipeline_warrior_kobold.test.ts": 18,
-  "tests/anim_pipeline_wildheart_hexcaller.test.ts": 6,
-  "tests/anim_pipeline_wildheart_high_priest.test.ts": 9,
-  "tests/anim_pipeline_wildheart_hit_stagger.test.ts": 12,
-  "tests/anim_pipeline_wildheart_ravager.test.ts": 7,
-  "tests/anim_pipeline_wildheart_stalker.test.ts": 4,
-  "tests/anim_pipeline_yeti.test.ts": 5,
+  "tests/anim_pipeline.test.ts": 40,
   "tests/anim_state_entity_core.test.ts": 8,
   "tests/antibot_config_api.test.ts": 75,
   "tests/antibot_config_db.test.ts": 14,
@@ -10634,7 +10984,7 @@
   "tests/epic_bpt_upload.test.ts": 13,
   "tests/epic_link.test.ts": 985,
   "tests/epic_link_markup.test.ts": 13,
-  "tests/equip_drop_core.test.ts": 9881,
+  "tests/equip_drop_core.test.ts": 3658,
   "tests/equip_jewelry.test.ts": 1664,
   "tests/equip_level_requirement.test.ts": 3234,
   "tests/equip_procs.test.ts": 11,
@@ -10941,6 +11291,7 @@
   "tests/gate_artifact_skip.test.ts": 5,
   "tests/gate_child.test.ts": 236,
   "tests/gate_fast_plan.test.ts": 12,
+  "tests/gate_host_workers.test.ts": 2,
   "tests/gate_lock.test.ts": 199,
   "tests/gate_memory.test.ts": 11,
   "tests/gate_preflight.test.ts": 37,
@@ -11191,6 +11542,7 @@
   "tests/helpers/driver_callback_bodies.test.ts": 34,
   "tests/helpers/method_call_sites.test.ts": 53,
   "tests/helpers/pg_plan.test.ts": 6,
+  "tests/helpers/released_spy.test.ts": 5,
   "tests/helpers/save_fragment_keys.test.ts": 36,
   "tests/helpers/scan_guard_self_audit.test.ts": 16,
   "tests/helpers/source_files_under.test.ts": 23,
@@ -11248,6 +11600,7 @@
   "tests/hud_profession_events.test.ts": 21,
   "tests/hud_resurrection_prompt.test.ts": 26,
   "tests/hud_tones.test.ts": 23,
+  "tests/hud_touch_drop_routing.test.ts": 9,
   "tests/hud_update_drive.test.ts": 129,
   "tests/hud_vehicle_bar.test.ts": 6,
   "tests/hud_window_moved_flag.test.ts": 21,
@@ -11303,9 +11656,10 @@
   "tests/ignivar_dev_raid.test.ts": 3310,
   "tests/ignivar_dialogue.test.ts": 9,
   "tests/ignivar_dressing_plan_core.test.ts": 160,
-  "tests/ignivar_encounter.test.ts": 103796,
+  "tests/ignivar_encounter.test.ts": 16523,
   "tests/ignivar_encounter_disposal.test.ts": 8,
   "tests/ignivar_encounter_render.test.ts": 121,
+  "tests/ignivar_encounter_tanking_lifecycle.test.ts": 20922,
   "tests/ignivar_exit_routing.test.ts": 3815,
   "tests/ignivar_fire_beams.test.ts": 59,
   "tests/ignivar_forge_chains.test.ts": 6,
@@ -11491,6 +11845,7 @@
   "tests/lake_shores.test.ts": 13198,
   "tests/landing_backdrop.test.ts": 5,
   "tests/landing_theme.test.ts": 13,
+  "tests/lane_suite_scope.test.ts": 220,
   "tests/language_fanout_registry.test.ts": 12670,
   "tests/language_fanout_relocalize.test.ts": 212,
   "tests/last_keep.test.ts": 2329,
@@ -11511,6 +11866,7 @@
   "tests/leaderboard_window_podium.test.ts": 54,
   "tests/leaderboard_window_stale.test.ts": 27,
   "tests/learned_profession_name.test.ts": 4,
+  "tests/leave_vehicle_release_game.test.ts": 757,
   "tests/legendary_chat_plaintext.test.ts": 25,
   "tests/legendary_regalia.test.ts": 65,
   "tests/lich_audio_state.test.ts": 6,
@@ -12219,13 +12575,13 @@
   "tests/parity/coverage_b.test.ts": 23540,
   "tests/parity/coverage_c.test.ts": 84247,
   "tests/parity/harness.test.ts": 11405,
-  "tests/parity/parity_a.test.ts": 16617,
-  "tests/parity/parity_b.test.ts": 10983,
-  "tests/parity/parity_c.test.ts": 7308,
-  "tests/parity/parity_d.test.ts": 32761,
-  "tests/parity/parity_e.test.ts": 39093,
-  "tests/parity/parity_f.test.ts": 2565,
-  "tests/parity/parity_g.test.ts": 195960,
+  "tests/parity/parity_a.test.ts": 7468,
+  "tests/parity/parity_b.test.ts": 12613,
+  "tests/parity/parity_c.test.ts": 12740,
+  "tests/parity/parity_d.test.ts": 13631,
+  "tests/parity/parity_e.test.ts": 13750,
+  "tests/parity/parity_f.test.ts": 14343,
+  "tests/parity/parity_g.test.ts": 15616,
   "tests/parity/rename_state_proof.test.ts": 2150,
   "tests/parkour.test.ts": 8317,
   "tests/parry.test.ts": 1757,
@@ -13061,6 +13417,7 @@
   "tests/server/freehold_routes.test.ts": 10,
   "tests/server/freehold_row_document.test.ts": 3,
   "tests/server/freehold_wire.test.ts": 2967,
+  "tests/server/freehold_write_retry.test.ts": 2,
   "tests/server/freehold_write_seal.test.ts": 3,
   "tests/server/game_boot_order.test.ts": 1160,
   "tests/server/game_flag_host_boot.test.ts": 2403,
@@ -13297,7 +13654,7 @@
   "tests/sfx_rift_pending_sweep.test.ts": 5,
   "tests/sfx_runtime_pack.test.ts": 191,
   "tests/sfx_studio.test.ts": 3330,
-  "tests/sfx_studio_server_security.test.ts": 24286,
+  "tests/sfx_studio_server_security.test.ts": 5234,
   "tests/shader_ablation_transforms.test.ts": 9,
   "tests/shader_cache_warmup.test.ts": 120,
   "tests/shader_corpus_slices.test.ts": 23,
@@ -13385,7 +13742,14 @@
   "tests/sloppy_pick.test.ts": 8,
   "tests/snapshot_alpha.test.ts": 4,
   "tests/snapshot_timer_wire.test.ts": 20,
-  "tests/snapshots.test.ts": 29921,
+  "tests/snapshots.test.ts": 2126,
+  "tests/snapshots_auras.test.ts": 1918,
+  "tests/snapshots_client_merge.test.ts": 2444,
+  "tests/snapshots_cosmetics.test.ts": 1941,
+  "tests/snapshots_encounters.test.ts": 963,
+  "tests/snapshots_self_wire.test.ts": 3278,
+  "tests/snapshots_session.test.ts": 1719,
+  "tests/snapshots_world.test.ts": 2198,
   "tests/social.test.ts": 4283,
   "tests/social_aggro.test.ts": 3063,
   "tests/social_classes.test.ts": 14319,
@@ -13499,6 +13863,7 @@
   "tests/styles_extraction.test.ts": 10,
   "tests/subzone.test.ts": 6,
   "tests/suite_duration_budget.test.ts": 84,
+  "tests/suite_lane_threshold.test.ts": 2,
   "tests/summon_threat_seed.test.ts": 6448,
   "tests/summoned_add_respawn.test.ts": 2675,
   "tests/surface_detail_fade.test.ts": 5,
@@ -13617,6 +13982,7 @@
   "tests/terrorspark_groundshaker_asset.test.ts": 165,
   "tests/terrorspark_groundshaker_surface_maps.test.ts": 5282,
   "tests/terrorspark_groundshaker_surface_shading.test.ts": 31,
+  "tests/test_memory_budget.test.ts": 223,
   "tests/text_sprite_cache.test.ts": 48,
   "tests/texture_anisotropy.test.ts": 47,
   "tests/texture_prep_core.test.ts": 11,
@@ -13784,7 +14150,8 @@
   "tests/varkhul_engage.test.ts": 2235,
   "tests/varkhul_forge_beam_render.test.ts": 64,
   "tests/varkhul_forge_beams.test.ts": 10,
-  "tests/varkhul_forge_encounter.test.ts": 119260,
+  "tests/varkhul_forge_encounter.test.ts": 22520,
+  "tests/varkhul_forge_encounter_adds.test.ts": 26070,
   "tests/varkhul_forge_hammer_render.test.ts": 56,
   "tests/varkhul_forge_intermission.test.ts": 17,
   "tests/varkhul_forgestorm_render.test.ts": 148,
@@ -13857,6 +14224,9 @@
   "tests/visual_manifest.test.ts": 549,
   "tests/vite_dev_watch.test.ts": 19,
   "tests/vitest_fs_module_cache.test.ts": 7,
+  "tests/vitest_setup_scope.test.ts": 316,
+  "tests/vitest_spy_restore_patch.test.ts": 14,
+  "tests/vitest_worker_sizing.test.ts": 278,
   "tests/voice.test.ts": 13,
   "tests/voice_clip_extraction.test.ts": 11,
   "tests/voice_events.test.ts": 8,
