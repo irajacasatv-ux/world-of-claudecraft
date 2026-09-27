@@ -8016,3 +8016,90 @@ describe('the gaps a mutation pass over the store found', () => {
     expect(h.store.stats().entries).toBe(0);
   });
 });
+
+describe('what still loses a captured edit after ruling (b) (the 07 re-judgement, 2026-09-26)', () => {
+  // THE TWO ORDERS the re-judgement names, pinned as they behave so a later
+  // ruling flips them. Neither is the twelfth path and ruling (b) touched
+  // neither: in both a leaver's capture is still owed when its entry
+  // QUIESCES, a quiesced entry owes no work, and settle releases the capture,
+  // so the leaver's last edits reach no row. Both are loud, both leave the row
+  // holding the house it held (nothing is overwritten), and both lose the
+  // captured edit, which is the half of the invariant 07 is judged on.
+  const rowOfOwner = async (db: ReturnType<typeof rowRemembered>) => {
+    const row = await db.readRow(ACCOUNT_ID);
+    return row.kind === 'row' ? row.row.wireRev : row.kind;
+  };
+
+  it('KNOWN COST: a run of thrown writes quiesces the entry and releases the capture unwritten', async () => {
+    // A database fault that outlasts the run: the leave flush's write throws,
+    // so the entry keeps the leaver's capture and stays dirty, and the next
+    // two sweeps throw too. FREEHOLD_PERSIST_MAX_WRITE_ERRORS inside the window
+    // quiesces the entry, and the capture goes with it.
+    const db = rowRemembered(rowFixture({ wireRev: '7' }));
+    const h = await loadedStore({
+      readRow: db.readRow,
+      writeRow: async () => {
+        throw new Error('connection terminated unexpectedly');
+      },
+    });
+    h.edit(OWNER_KEY, { rev: 8 });
+    await h.leave();
+    expect(h.record()).toBeUndefined();
+    // Still owed: the one thrown write is not a run.
+    expect(h.store.stats().leaveCaptures).toBe(1);
+    expect(h.store.stats().quiesced).toBe(0);
+    for (let sweep = 1; sweep < FREEHOLD_PERSIST_MAX_WRITE_ERRORS; sweep++) {
+      h.store.saveAllDirty();
+      await tick(30);
+    }
+    expect(h.writeCount()).toBe(FREEHOLD_PERSIST_MAX_WRITE_ERRORS);
+    expect(h.errors.filter((line) => line.includes('write failed'))).toHaveLength(
+      FREEHOLD_PERSIST_MAX_WRITE_ERRORS,
+    );
+    // QUIESCED, and then COLLECTED on the spot: a quiesced entry owes no work
+    // and nothing refers to it, so the `quiesced` gauge reads zero once it is
+    // gone and the error line is the record.
+    expect(h.errors.filter((line) => line.includes('thrown writes'))).toHaveLength(1);
+    expect(h.store.stats().entries).toBe(0);
+    // RELEASED, and with it the leaver's revision-8 house.
+    expect(h.store.stats().leaveCaptures).toBe(0);
+    // The row keeps revision 7's house: the next login reads it, without the
+    // edit.
+    expect(await rowOfOwner(db)).toBe('7');
+  });
+
+  it("KNOWN COST: another realm's commit fences the capture stale and releases it unwritten", async () => {
+    // THE CONTRACT'S ACTIVATION GATE (persistence-rollout-contract.md, "ONE
+    // ACCOUNT ONLINE ON TWO REALMS HAS ONE OF THEM WRITE-BLOCKED, SILENTLY") in
+    // its leaving form: the row is account-scoped and shared by every realm on
+    // one database, another realm commits first, and this realm's leave write
+    // meets the fence. The fence keeps the other realm's house, which is its
+    // job; the leaver's capture is released with a warn line and the quiesced
+    // gauge only.
+    const db = rowRemembered(rowFixture({ wireRev: '7' }));
+    const gate = deferred<void>();
+    const h = await loadedStore({
+      readRow: db.readRow,
+      writeRow: async (input) => {
+        await gate.promise;
+        return await db.writeRow(input);
+      },
+    });
+    h.edit(OWNER_KEY, { rev: 8 });
+    const leaving = h.leave();
+    await tick(10);
+    expect(h.store.stats().leaveCaptures).toBe(1);
+    // The other realm's write lands while this one waits.
+    db.advance({ wireRev: '9' });
+    gate.resolve();
+    await leaving;
+    await tick(30);
+    expect(h.store.stats().staleWrites).toBe(1);
+    expect(h.warnings.filter((line) => line.includes('durable revision moved'))).toHaveLength(1);
+    // Quiesced and collected together, the capture with it.
+    expect(h.store.stats().entries).toBe(0);
+    expect(h.store.stats().leaveCaptures).toBe(0);
+    // The other realm's house stands; this realm's revision-8 edits are gone.
+    expect(await rowOfOwner(db)).toBe('9');
+  });
+});
