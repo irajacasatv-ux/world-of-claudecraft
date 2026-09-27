@@ -303,6 +303,12 @@ Detailed heuristics and the bug-fix workflow live in the `extract-and-test` skil
 - E2E/visual: `scripts/*.mjs` drive real browsers via `puppeteer-core` and need
   `npm run dev` (often `npm run server` too) running. Bot raids / E2E that teleport
   or level need `ALLOW_DEV_COMMANDS=1` (dev only).
+- **Test cost is a gate, not a habit.** A file outside the long-sims lane may not weigh more than
+  `LANE_THRESHOLD_MS` in the shard weights (`tests/suite_lane_threshold.test.ts`, every PR),
+  declared timeouts are rationed (`tests/suite_duration_budget.test.ts`), and budgeted files may
+  not retain past their memory budget (`npm run test:memory`, nightly). Spy on per-test world
+  objects with `releasedSpyOn`, keep coordinators such as `src/ui/hud` out of pure-core suites,
+  and keep the global setup framework-free; `tests/CLAUDE.md` "Test cost" has the remedies.
 - **QA gate before a change is done.** Run `/qa` (or invoke the `qa-checklist` agent) over your
   diff: it checks every invariant in play, names the domain reviewers to dispatch, and ends with
   an adversarial "what is missing" pass. Checked-in hooks enforce the cheap floor so it is

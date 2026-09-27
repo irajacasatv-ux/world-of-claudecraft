@@ -265,6 +265,13 @@ headline rules here:
 - An E2E script (`scripts/*.mjs`) covers the user flow where applicable (note which need
   `npm run dev`, `npm run server`, or `ALLOW_DEV_COMMANDS=1`).
 - Assertions are meaningful (not just "it runs").
+- **Test cost.** A new or grown suite stays under the lane threshold (`tests/suite_lane_threshold.test.ts`
+  over the shard weights; a new file carries a local row, a split file supersedes its stale one),
+  under its declared-timeout ledger, and inside its memory budget (`npm run test:memory -- <file>`
+  for any heavy new suite). Flag a spy on a per-test world object that is not `releasedSpyOn`, a
+  coordinator import (`src/ui/hud`) in a pure-core suite, a framework import in a global setup
+  file, and a determinism check that records more times than it compares. `tests/CLAUDE.md`
+  "Test cost" has the remedies.
 
 ### 10. Build & copy gate
 

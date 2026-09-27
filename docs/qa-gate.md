@@ -372,6 +372,26 @@ allowances, not runtimes, so lane membership stays a MEASURED decision owned by
 `CI_LONG_SUITES` and its 90-second rule; the guard classifies onto the always-run
 floor and is also named in `CI_GUARD_SUITES` as drift insurance.
 
+**Measured lane threshold.** `tests/suite_lane_threshold.test.ts` is the measured half of
+that rule, a `CI_GUARD_SUITES` member so it rides every PR: no file outside `CI_LONG_SUITES`
+may weigh more than `LANE_THRESHOLD_MS` (exported beside the list in
+`scripts/lib/ci_shard_plan.mjs`, never restated as a literal) in
+`scripts/ci_shard_weights.generated.json`, with a positive control that the lane itself holds
+weights over the line. The table is harvested from green full-mode CI, so a file split or made
+cheaper after the harvest re-measures its own row locally with `--carry-local --supersede` (a
+required reason, and the replaced CI weight recorded on the row) until the next harvest
+replaces it; a new file carries with `--carry-local-missing`.
+
+**Per-file memory budgets.** `npm run test:memory` (`scripts/test_memory_probe.mjs`, the pure
+judge in `scripts/lib/test_memory_budget.mjs`, the probe config `vitest.memory.config.ts`) runs
+each file budgeted in `scripts/test_memory_budgets.json` alone, forces a full GC after every
+case, and fails a file whose peak RETAINED heap passes its budget or that leaves no record. The
+nightly tests job runs it as its own step (pinned in `tests/ci_workflow.test.ts`). Budgets are the
+measured peak plus about 20 percent; lowering one is free, raising one needs its reason in the
+commit. Every vitest worker's heap is capped at 2 GiB (`test.execArgv` in vite.config.ts) and
+the gates budget 1.5 GiB of memory per worker (`GATE_BYTES_PER_WORKER`), so a retaining file
+fails loudly on the cap rather than swapping the host.
+
 **The balance-harness diet.** The heavy balance suites in the lane are regression
 tripwires, not measurements (the authoritative instrument is the offline Monte Carlo
 sweep), so at PR time they run a reduced configuration: fewer fixed seeds, the

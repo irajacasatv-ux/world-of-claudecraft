@@ -206,7 +206,8 @@ yourself or the S3 guard throws "status.json is missing".
   virgin CI database without those indexes even though a booted dev database has them.
 - **DOM in tests, the two-branch rule.** The default Vitest env is plain Node (no
   `document`/`window`). Game-HUD/UI tests stay there: stub a single global on `globalThis`
-  (`localStorage` in `keybinds.test.ts`, `WebSocket` in `snapshots_client_merge.test.ts`) or build a small
+  (`localStorage` in `keybinds.test.ts`, `WebSocket` in `snapshots_client_merge.test.ts`) or
+  build a small
   **hand-rolled fake DOM** modeling only the contract under test (reuse
   `tests/helpers/fake_dom.ts` before hand-rolling a new one; `focus_manager.test.ts`,
   `painter_host.test.ts`); prefer these for pure cores and painters. A HUD controller/window
@@ -218,3 +219,35 @@ yourself or the S3 guard throws "status.json is missing".
   DOM envs stay per-file so the Node-env majority keeps the fast default.
   Enumerate the live DOM-env set with `grep -rl '@vitest-environment' tests/`.
 - Add/update a test here when you change sim or server behavior (see root CLAUDE.md).
+
+## Test cost (a guard, not a habit)
+Every file is paid for twice, in a CI shard's wall clock and in a worker's memory, and three
+guards hold the line, each naming its own remedy:
+- **Measured time.** `tests/suite_lane_threshold.test.ts` (every PR) holds each file outside
+  `CI_LONG_SUITES` under `LANE_THRESHOLD_MS` in `scripts/ci_shard_weights.generated.json`. Over
+  it: split the file along its cost clusters, make it cheaper, or lane it (a measured decision in
+  `scripts/lib/ci_shard_plan.mjs`). A file whose shape changed re-measures its row with
+  `node scripts/ci_shard_weights_harvest.mjs --carry-local --supersede --reason "..."`.
+- **Declared time.** `tests/suite_duration_budget.test.ts` rations declared timeouts (below).
+- **Memory.** `npm run test:memory` (nightly) runs each file budgeted in
+  `scripts/test_memory_budgets.json` alone with a forced GC after every case and fails a file
+  whose peak RETAINED heap passes its budget; `npm run test:memory -- <files>` measures any file,
+  held to the ceiling. A climb case over case is retention: release it, never raise the budget or
+  the 2 GiB worker heap cap (`test.execArgv`) to make room.
+
+The recurring causes, each measured on this suite:
+- A spy on a per-test world object (`server.sim`, a `GameServer`, a session) stays registered for
+  the life of the worker: spy with `releasedSpyOn` (`tests/helpers/released_spy.ts`). A `vi.fn`
+  called as a method records its `this` until cleared: clear mocks after each case.
+- A coordinator import (`src/ui/hud`) in a pure-core suite costs every case its whole module graph
+  (about 400 to 650 MB retained): test the core directly and keep a `Hud.prototype` rig in its own
+  file (`hud_touch_drop_routing.test.ts`).
+- Nothing framework-specific in the global `setupFiles` (`tests/vitest_setup_scope.test.ts`):
+  every file pays for it before its first case.
+- A determinism check reuses its first run (the parity gate records a scenario twice, not three
+  times).
+- Locally the long-sims lane files are opt-in (`WOC_LANE_SUITES=1`, or name the file).
+
+Tombstone pins (a case that only asserts a removed thing stays removed) retire once the removal
+is old and a live assertion covers the same ground, deleted with a coverage proof; do not add new
+ones without a stated reason.

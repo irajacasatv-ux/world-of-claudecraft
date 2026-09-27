@@ -107,6 +107,16 @@ no-change-needed rather than demanding an impossible test.
 asserted only in prose/docs with no test at all, tests deleted or rewritten without an
 equivalent replacement (compare against the pre-change test file in git history).
 
+### Check 7b - Test cost (SHOULD-FIX; BLOCKING when a guard would go red)
+
+A changed or new suite pays in wall time and memory: check it against the three guards in
+`tests/CLAUDE.md` "Test cost" (the lane threshold over the shard weights, the declared-timeout
+ledger, the per-file memory budgets). Flag a spy on a per-test world object that is not
+`releasedSpyOn`, a `vi.fn` called as a method and never cleared, a coordinator import
+(`src/ui/hud`) in a pure-core suite, a repeated expensive setup or recording that could be
+reused, and a deleted or trimmed case without a coverage proof (a mutant it killed that a
+surviving case also kills).
+
 ### Check 8 - Known vacuous-pin classes (BLOCKING when the pin is the only coverage)
 
 Recurring shapes that LOOK like coverage but protect nothing. Flag each occurrence:
