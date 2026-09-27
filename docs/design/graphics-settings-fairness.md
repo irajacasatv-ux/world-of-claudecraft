@@ -621,7 +621,7 @@ The choice reads the static preset or the player's own dial, never the FPS gover
   scenery shed, splash richness) is named beside it.
 - `scripts/perf_tour.mjs` per-tier run: `hudHotDomWrites` pinned across tiers (byte-equivalence)
   and the FCT cap engaging per tier.
-- `tests/snapshots.test.ts`: a real Sim aura to `wireEntity` to `ClientWorld` round trip pins that
+- `tests/snapshots_auras.test.ts`: a real Sim aura to `wireEntity` to `ClientWorld` round trip pins that
   a negative-value `buff_*` stat-sap carries its value over the wire (so `isAuraDebuff` agrees
   online and offline), while positive buffs, absorb shields, and negative-value non-buff auras
   (a fear angle) stay sparse and decode to 0 (no other online behavior changes); an old-server

@@ -18,7 +18,8 @@ test-first bug-fix workflow itself is root CLAUDE.md's (plus the `extract-and-te
 ## Map
 Most tests sit flat here: `<area>.test.ts` pairs with the module under test; `ls tests/`
 to find an area. Cross-boundary pairs worth knowing: `social_system.test.ts` to
-`server/social.ts`, `snapshots.test.ts`/`bandwidth.test.ts` to `server/game.ts`.
+`server/social.ts`, `snapshots.test.ts` (the delta-key core; its topic siblings are
+`snapshots_*.test.ts`)/`bandwidth.test.ts` to `server/game.ts`.
 Subdirectories and shared fixtures:
 - `parity/`: the golden-trace sim-drift gate; own `CLAUDE.md` (see Coverage & guards).
 - `server/`: the RouteDef/http-pipeline suite. REUSE the shared fakes in
@@ -205,7 +206,7 @@ yourself or the S3 guard throws "status.json is missing".
   virgin CI database without those indexes even though a booted dev database has them.
 - **DOM in tests, the two-branch rule.** The default Vitest env is plain Node (no
   `document`/`window`). Game-HUD/UI tests stay there: stub a single global on `globalThis`
-  (`localStorage` in `keybinds.test.ts`, `WebSocket` in `snapshots.test.ts`) or build a small
+  (`localStorage` in `keybinds.test.ts`, `WebSocket` in `snapshots_client_merge.test.ts`) or build a small
   **hand-rolled fake DOM** modeling only the contract under test (reuse
   `tests/helpers/fake_dom.ts` before hand-rolling a new one; `focus_manager.test.ts`,
   `painter_host.test.ts`); prefer these for pure cores and painters. A HUD controller/window
