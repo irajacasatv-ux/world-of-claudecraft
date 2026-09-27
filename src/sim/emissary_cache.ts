@@ -18,10 +18,17 @@ export const EMISSARY_CACHE_ITEM_ID = 'emissary_cache';
 /** Marks tucked in beside the raid piece. */
 export const EMISSARY_CACHE_MARKS = 3;
 
-/** A wearable epic raid piece: never a token, never a generated heroic copy,
- *  and never a tier-set piece (set bonuses are earned in the raid itself). */
+/** The wearable kinds, the Weekly Vault's rule (weekly_reward_tables.ts): a
+ *  raid table's tools, tokens and recipe patterns are never a cache piece. */
+const WEARABLE_KINDS: ReadonlySet<ItemDef['kind']> = new Set(['weapon', 'armor', 'held_offhand']);
+
+/** A wearable epic raid piece: never a token or pattern, never a generated
+ *  heroic copy, and never a tier-set piece (set bonuses are earned in the raid
+ *  itself). */
 function isRaidGear(def: ItemDef | undefined): def is ItemDef {
-  return !!def && def.quality === 'epic' && def.kind !== 'tool' && !def.heroicOf && !def.set;
+  return (
+    !!def && def.quality === 'epic' && WEARABLE_KINDS.has(def.kind) && !def.heroicOf && !def.set
+  );
 }
 
 /** Every Normal raid piece the cache can hold, in a fixed order (Nythraxis

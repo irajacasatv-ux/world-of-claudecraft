@@ -46,6 +46,24 @@ describe('the cache pool', () => {
     expect(pool.some((id) => id.startsWith('sigil_'))).toBe(false);
   });
 
+  it('holds only wearable kinds, the Weekly Vault rule: weapon, armor and held offhand, never a recipe', () => {
+    // Ruled 2026-09-27 (the freeholds ledger): the pool used to keep any non-tool
+    // epic, so the Crucible's ten epic patterns rode in beside the gear (open to
+    // every class, 22 to 38 percent of a class's draws). Pinned by kind count so a
+    // new raid table that adds a non-wearable kind is reviewed here.
+    const kinds = new Map<string, number>();
+    for (const id of emissaryCacheRaidPool()) {
+      const kind = ITEMS[id].kind;
+      kinds.set(kind, (kinds.get(kind) ?? 0) + 1);
+    }
+    expect(Object.fromEntries(kinds)).toEqual({ weapon: 15, armor: 35, held_offhand: 4 });
+    expect(emissaryCacheRaidPool()).not.toContain('pattern_duskforged_warblade');
+    for (const cls of CLASSES) {
+      for (const id of emissaryCachePoolForClass(cls))
+        expect(['weapon', 'armor', 'held_offhand'], `${cls} ${id}`).toContain(ITEMS[id].kind);
+    }
+  });
+
   it('gives every class a non-empty pool it can wear', () => {
     for (const cls of CLASSES) {
       const pool = emissaryCachePoolForClass(cls);
