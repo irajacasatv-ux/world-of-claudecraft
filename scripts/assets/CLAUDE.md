@@ -67,8 +67,7 @@ For reference-image reconstruction and procedural GLB authoring, read the living
   evidence JSONs in the same change. For a lockfile-only leaf rename/swap that must keep
   shipping GLB sizes, prefer the size-preserving in-place remint
   (`scripts/assets/remint_lockfile_fingerprints.mjs`) over a full geometry rebuild, then
-  re-pin seals and run `scripts/assets/eastbrook_grand_armoury/remint_polish_provenance.mjs`
-  as needed (the remint tool prints that follow-up path itself).
+  re-pin the literals it prints (the tool prints that follow-up path itself).
 - **`compress_standalone_textures.mjs`** (+ `lib/standalone_texture_compression_core.mjs`)
   is the KTX2/Basis step for textures that ship OUTSIDE a GLB (default sweep: the player
   skin/cosmetic atlases under `public/textures/skins/`, plus the terrain splat and

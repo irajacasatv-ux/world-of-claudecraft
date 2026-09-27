@@ -159,8 +159,5 @@ before moving anything:
   reads as floating rather than projected, raise `alpha` in `BEAM_FRAGMENT`.
 - The Eastbrook polish capture archive still shows the OLD square. That is on
   purpose (its metadata is frozen evidence of captures already taken); retaking
-  it is its own change. The provenance pins HAVE been re-minted for both this
-  round and the last; if any of `renderer.ts`, `eastbrook_town.ts` or
-  `realm_builder_monument_fx.ts` moves again, re-run
-  `scripts/assets/eastbrook_grand_armoury/remint_polish_provenance.mjs` LAST,
-  after biome, and commit exactly those bytes.
+  it is its own change. (The live-tree provenance seal over those captures was
+  retired on 2026-09-27: a renderer edit no longer owes a re-mint.)

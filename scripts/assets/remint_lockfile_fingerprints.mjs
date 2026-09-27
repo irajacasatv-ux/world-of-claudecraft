@@ -9,7 +9,7 @@
 //   node scripts/assets/remint_lockfile_fingerprints.mjs
 //
 // Then re-pin test SOURCE_FINGERPRINT / ASSET_SHA256 literals from the printed
-// table, run remint_polish_provenance.mjs, and regenerate the media manifest.
+// table and regenerate the media manifest.
 import { createHash } from 'node:crypto';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
@@ -167,6 +167,4 @@ const outPath = path.join(ROOT, 'tmp/lockfile-fingerprint-remint.json');
 mkdirSync(path.dirname(outPath), { recursive: true });
 writeFileSync(outPath, `${JSON.stringify({ fps, results }, null, 2)}\n`);
 console.log(`wrote ${outPath}`);
-console.log(
-  'Next: re-pin test hashes, node scripts/assets/eastbrook_grand_armoury/remint_polish_provenance.mjs, media manifest.',
-);
+console.log('Next: re-pin test hashes, then regenerate the media manifest.');

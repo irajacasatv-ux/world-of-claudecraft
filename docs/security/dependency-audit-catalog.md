@@ -158,7 +158,6 @@ Dreadspark Groundshaker, and inscription-tome asset pipelines, so a
 lockfile-only change invalidates their provenance seals and
 reddens the asset suites. Use the size-preserving in-place re-mint
 (`scripts/assets/remint_lockfile_fingerprints.mjs`, then
-`eastbrook_grand_armoury/remint_polish_provenance.mjs`, then
 `node scripts/build_media_manifest.mjs generate`) and re-pin the literals it
 prints; see `scripts/assets/CLAUDE.md`. This is the real cost of a dependency
 bump in this repo, and the reason to batch dependency updates deliberately
