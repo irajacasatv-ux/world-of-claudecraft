@@ -78,6 +78,11 @@ export interface FreeholdPersistStats {
    *  bounded set this store owns, and an unobservable set is an unfalsifiable
    *  claim. */
   readonly deferredWrites: number;
+  /** Retry-clock writes waiting on their sub-cap (R1), apart from
+   *  `deferredWrites`, which stays the ordinary backlog: a slow outage keeps
+   *  this non-zero by design, and must not read as healthy owners saturating
+   *  the store's own cap. */
+  readonly deferredRetries: number;
   readonly activeWrites: number;
   /** Documents captured at leave and not yet written: a second full record each
    *  on top of the entry's own, retained until the write lands. */

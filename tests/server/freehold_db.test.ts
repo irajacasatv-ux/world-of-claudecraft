@@ -531,6 +531,25 @@ describe('the compare-and-swap upsert', () => {
     ).rejects.toThrow('connection terminated');
   });
 
+  it('leaves a malformed READ-BACK revision unbranded, so the retry clock reads it as a fault', async () => {
+    // The statement has run (the row may have COMMITTED) when the returned
+    // durable_rev cannot be read, so this is not an answer about the document:
+    // branding it would quiesce a write that may have landed. The next attempt
+    // then meets its own revision as stale instead (the self-fence DEPLOY names).
+    const cap = makeCapture([{ rows: [{ durable_rev: '1e3' }] }]);
+    const refusal = await upsertFreehold(cap.db, {
+      ...VALID_UPSERT,
+      expectedDurableRev: null,
+    }).then(
+      () => null,
+      (err: unknown) => err,
+    );
+    expect(refusal).toBeInstanceOf(TypeError);
+    expect(refusal).not.toBeInstanceOf(FreeholdUpsertRefused);
+    expect(String(refusal)).toContain('exact bigint text');
+    expect(cap.calls).toHaveLength(1);
+  });
+
   it('diagnoses a conflicting insert as stale, with the winner revision', async () => {
     const cap = makeCapture([{ rows: [] }, { rows: [{ durable_rev: '5' }] }]);
     const result = await upsertFreehold(cap.db, {

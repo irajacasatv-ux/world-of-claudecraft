@@ -35,7 +35,6 @@
 
 import { boundedFreeholdDetail, freeholdLoadDiagnostic } from '../src/sim/freehold/load_report';
 import {
-  FREEHOLD_MAX_STORED_BYTES,
   type FreeholdLoadResult,
   type FreeholdWriteRefusalOptions,
   freeholdPlotIdAdmitted,
@@ -58,12 +57,7 @@ import {
   type FreeholdUpsertResult,
 } from './freehold_db';
 import type { FreeholdHearthLoad } from './freehold_hearth_db';
-import {
-  ABSENT_HEARTH_REVISION,
-  COLD_HEARTH,
-  type FreeholdHearthReading,
-  normalizeHearthLoad,
-} from './freehold_hearth_load';
+import { ABSENT_HEARTH_REVISION, COLD_HEARTH, readFreeholdLoginPair } from './freehold_hearth_load';
 import { freeholdJoinAnswer } from './freehold_join_answer';
 import {
   FREEHOLD_ABSENT_DURABLE_REV,
@@ -641,51 +635,8 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
     return freeholdHoldAnswer(entry, hold, hearth);
   }
 
-  /** Normalize one hearth answer, or the absence of one. Total: a clock this
-   *  store cannot read starts COLD rather than faulting the plot load beside it,
-   *  which is a deliberate asymmetry carried as a named gate. */
-  const normalizeHearth = (load: FreeholdHearthLoad): FreeholdHearthReading =>
-    normalizeHearthLoad(load, ports.warn);
-
-  const coldHearth = (err: unknown): FreeholdHearthReading => {
-    ports.error(
-      'freehold hearth clock read failed; the cooldown starts cold:',
-      boundedDatabaseError(err),
-    );
-    return COLD_HEARTH;
-  };
-
-  /** The two login reads, on one client when the host offers one. The row half
-   *  is allowed to throw, because loadOnce turns that into a HOLD; the clock
-   *  half is not, because a clock this store cannot read starts cold.
-   *  ONE PATH FOR BOTH PORT SHAPES, deliberately: written as two returns, the
-   *  combined arm normalized outside a `try` the fallback arm had, so a malformed
-   *  clock payload failed OPEN on one host and held the whole login on the other.
-   *  Which port a host binds must not decide that. */
-  async function readLoginPair(
-    accountId: number,
-  ): Promise<{ rowLoad: FreeholdRowLoad; hearth: FreeholdHearthReading }> {
-    const combined = ports.readDurables;
-    const both = combined
-      ? await combined(accountId, FREEHOLD_MAX_STORED_BYTES)
-      : { row: await ports.readRow(accountId, FREEHOLD_MAX_STORED_BYTES), hearth: null };
-    try {
-      // ON THE PORT, NEVER ON THE VALUE. `both.hearth ?? await readHearth(...)`
-      // sent a combined port answering a nullish clock to the UNSHARED reader,
-      // which is the coupling this merge removes and, on the real host, a second
-      // read outside the transaction. A nullish load throws INTO the catch below
-      // and answers a cold clock, the same as any other unreadable clock.
-      const load = combined ? both.hearth : await ports.readHearth(accountId);
-      if (load === null) throw new Error('the durable port answered no hearth load');
-      return {
-        rowLoad: both.row,
-        hearth: load.kind === 'threw' ? coldHearth(load.error) : normalizeHearth(load),
-      };
-    } catch (err) {
-      return { rowLoad: both.row, hearth: coldHearth(err) };
-    }
-  }
-
+  // The two login reads (one client when the host offers one; a clock that
+  // cannot be read starts cold): server/freehold_hearth_load.ts.
   async function classify(accountId: number, ownerKey: string): Promise<LoadedFreehold> {
     // One permit covers both reads, so they run in sequence: two concurrent
     // queries would be two pool checkouts against one admission.
@@ -693,7 +644,7 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
     // text PostgreSQL renders back out of jsonb, which is wider than the JSON
     // that went in. Handing it FREEHOLD_MAX_OWNED_BYTES would refuse the
     // maximal record this realm is allowed to write.
-    const { rowLoad, hearth } = await readLoginPair(accountId);
+    const { rowLoad, hearth } = await readFreeholdLoginPair(ports, accountId);
     const entry = ensureEntry(ownerKey, accountId);
     // Remembered on the entry, not only returned: every later replay of this
     // entry has to answer with the same clock, and none of them reads again.
@@ -1392,6 +1343,7 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
   function settle(entry: FreeholdPersistEntry, committed: boolean): void {
     entry.running = false;
     entry.chain = null;
+    const freedRetrySlot = entry.retryInFlight;
     freeSlot(entry);
     // Clear ONLY what the write actually committed: an edit that landed while
     // the write was out is still dirty here, and re-arms exactly one more
@@ -1400,10 +1352,16 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
     const rearm = entry.pending || (committed && isDirty(entry));
     entry.pending = false;
     if (rearm && live(entry) && !blocked(entry) && retryDue(entry)) {
-      // Straight back into the slot this write just freed, so a re-arm is
-      // never pushed behind the deferred set it was already ahead of.
-      launch(entry);
-      return;
+      if (entry.retryAtMs === 0) {
+        // Straight back into the slot this write just freed, so a re-arm is
+        // never pushed behind the deferred set it was already ahead of; a retry
+        // slot this write freed is offered to a waiting retry at once.
+        launch(entry);
+        if (freedRetrySlot) pumpDeferredWrites();
+        return;
+      }
+      // A retry re-arms through the sub-cap like any other, never around it.
+      arm(entry);
     }
     releaseSettleWaiters(entry);
     // Cleared HERE and not above, so a RE-ARMED write inherits the capture: a
@@ -1450,8 +1408,9 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
           // A throw about the payload IS one, and quiesces as it always has.
           const onClock = entry.retryAtMs > 0;
           const outcome = noteThrownWrite(entry, ports.nowMs(), freeholdThrownWriteIsAnswer(err));
-          if (outcome === 'retrying') {
-            // A throw ON the clock is one line per sweep, not per owner.
+          if (outcome === 'retrying' && (intake || openDrains > 0)) {
+            // A throw ON the clock is one line per sweep (or per drain), not per
+            // owner; past the last drain no sweep follows, so it logs its own.
             retryThrows++;
             lastRetryError = boundedDatabaseError(err);
           } else {
@@ -1522,6 +1481,13 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
     (draining ? FREEHOLD_PERSIST_DRAIN_MAX_ACTIVE_WRITES : FREEHOLD_PERSIST_MAX_ACTIVE_WRITES) +
     (leaving ? FREEHOLD_PERSIST_LEAVE_WRITE_RESERVE : 0);
 
+  /** The retry sub-cap in force: FREEHOLD_PERSIST_RETRY_WRITE_CAP in steady state,
+   *  the whole cap while a drain is open (nothing else then competes, ordinary
+   *  writes are still pumped first, and each held owner's last attempt must fit
+   *  the drain's deadline). */
+  const retryCap = (): number =>
+    openDrains > 0 ? writeCap(false) : FREEHOLD_PERSIST_RETRY_WRITE_CAP;
+
   let pumping = false;
   function pumpDeferredWrites(): void {
     if (pumping) return;
@@ -1588,7 +1554,7 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
     while (
       deferredRetries.size > 0 &&
       activeWrites < writeCap(false) &&
-      activeRetries < FREEHOLD_PERSIST_RETRY_WRITE_CAP
+      activeRetries < retryCap()
     ) {
       const next = deferredRetries.values().next().value as FreeholdPersistEntry;
       undefer(next);
@@ -1618,7 +1584,7 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
     if (!entry.running && !retryDue(entry)) return;
     // Its own sub-cap and deferred set, so retries never hold every slot.
     if (!entry.running && entry.retryAtMs > 0) {
-      if (activeWrites < writeCap(false) && activeRetries < FREEHOLD_PERSIST_RETRY_WRITE_CAP) {
+      if (activeWrites < writeCap(false) && activeRetries < retryCap()) {
         launch(entry);
       } else {
         deferredRetries.add(entry);
@@ -1783,6 +1749,8 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
               // Treating it that way returned a mass disconnect's every logout in
               // milliseconds, spending none of the budget the deadline exists to
               // bound and leaving every entry resident.
+              // A leaver on the retry clock is never waited on here, launched or
+              // deferred: its capture is kept (owesWork), and the clock owns it.
               if (chain === null && !deferredWrites.has(entry)) break;
               const settled =
                 chain?.catch(() => undefined) ??
@@ -1906,10 +1874,18 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
       // at all. It was correct only by the shutdown ORDERING in server/main.ts
       // (game.stop, then saveFreeholds, then this), which is a property of
       // another file and not of the drain.
-      for (const entry of entries.values()) {
-        if (noteRevisionMoved(entry) || isDirty(entry)) arm(entry);
+      try {
+        for (const entry of entries.values()) {
+          if (noteRevisionMoved(entry) || isDirty(entry)) arm(entry);
+        }
+        pumpDeferredWrites();
+      } catch (err) {
+        // A throwing port must not leave the clock's drain exception open for
+        // the life of the store, nor make a drain that "never throws" throw.
+        openDrains--;
+        ports.error('freehold drain could not arm its writes:', err);
+        return Promise.resolve(false);
       }
-      pumpDeferredWrites();
       const bounded = Math.max(1, Math.floor(deadlineMs));
       return new Promise<boolean>((resolve) => {
         let settled = false;
@@ -1986,7 +1962,8 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
           retrying,
           retryingOffline,
           oldestDirtyAgeMs,
-          deferredWrites: deferredWrites.size + deferredRetries.size,
+          deferredWrites: deferredWrites.size,
+          deferredRetries: deferredRetries.size,
           activeWrites,
           leaveCaptures,
         },

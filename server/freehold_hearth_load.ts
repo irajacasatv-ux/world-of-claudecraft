@@ -9,9 +9,11 @@
 // and the login proceeds). Keeping that policy in one small named module is what
 // stops the next reader restoring symmetry by accident.
 
+import { FREEHOLD_MAX_STORED_BYTES } from '../src/sim/freehold/persisted';
+import { boundedDatabaseError } from './freehold_bounded_error';
 import type { FreeholdRowLoad } from './freehold_db';
 import type { FreeholdHearthLoad } from './freehold_hearth_db';
-import type { FreeholdHearthAnswer } from './freehold_persist';
+import type { FreeholdHearthAnswer, FreeholdPersistPorts } from './freehold_persist';
 
 /** The absent clock's revision, spelled through a constant on both sides: the
  *  plot fence and the hearth counter are different counters that share a value,
@@ -107,5 +109,47 @@ export async function readLoginDurables<Q>(
   } catch (error) {
     if (row === undefined) throw error;
     return { row, hearth: hearth ?? { kind: 'threw' as const, error } };
+  }
+}
+
+/** The two login reads, on one client when the host offers one. The row half
+ *  is allowed to throw, because the store's loadOnce turns that into a HOLD; the
+ *  clock half is not, because a clock the store cannot read starts COLD rather
+ *  than faulting the plot load beside it (a deliberate asymmetry carried as a
+ *  named gate). ONE PATH FOR BOTH PORT SHAPES, deliberately: written as two
+ *  returns, the combined arm normalized outside a `try` the fallback arm had, so a
+ *  malformed clock payload failed OPEN on one host and held the whole login on the
+ *  other. Which port a host binds must not decide that. Moved whole out of
+ *  server/freehold_persist.ts (its monolith ceiling): it reads ports, never the
+ *  store's state. */
+export async function readFreeholdLoginPair(
+  ports: Pick<FreeholdPersistPorts, 'readDurables' | 'readRow' | 'readHearth' | 'warn' | 'error'>,
+  accountId: number,
+): Promise<{ rowLoad: FreeholdRowLoad; hearth: FreeholdHearthReading }> {
+  const cold = (err: unknown): FreeholdHearthReading => {
+    ports.error(
+      'freehold hearth clock read failed; the cooldown starts cold:',
+      boundedDatabaseError(err),
+    );
+    return COLD_HEARTH;
+  };
+  const combined = ports.readDurables;
+  const both = combined
+    ? await combined(accountId, FREEHOLD_MAX_STORED_BYTES)
+    : { row: await ports.readRow(accountId, FREEHOLD_MAX_STORED_BYTES), hearth: null };
+  try {
+    // ON THE PORT, NEVER ON THE VALUE. `both.hearth ?? await readHearth(...)`
+    // sent a combined port answering a nullish clock to the UNSHARED reader,
+    // which is the coupling this merge removes and, on the real host, a second
+    // read outside the transaction. A nullish load throws INTO the catch below
+    // and answers a cold clock, the same as any other unreadable clock.
+    const load = combined ? both.hearth : await ports.readHearth(accountId);
+    if (load === null) throw new Error('the durable port answered no hearth load');
+    return {
+      rowLoad: both.row,
+      hearth: load.kind === 'threw' ? cold(load.error) : normalizeHearthLoad(load, ports.warn),
+    };
+  } catch (err) {
+    return { rowLoad: both.row, hearth: cold(err) };
   }
 }

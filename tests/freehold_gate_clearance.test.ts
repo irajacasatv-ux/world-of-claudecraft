@@ -69,6 +69,21 @@ const BED_OR_NODE_CLEARANCE = FREEHOLD_GATE_INTERACT_RANGE + INTERACT_RANGE;
 // An escortee answers the press anywhere within INTERACT_RANGE of it while it
 // stands within ESCORT_POST_RADIUS of its post (escort_interact.ts).
 const ESCORT_CLEARANCE = FREEHOLD_GATE_INTERACT_RANGE + INTERACT_RANGE + ESCORT_POST_RADIUS;
+// The worst-case clearance of one ambush ring from a point (the ring case below
+// explains the model): the nearest point of the leg into the waypoint and the leg
+// before it, less the arrival reach and the ring radius.
+const ringWorstClearance = (
+  at: P,
+  line: readonly P[],
+  atWaypoint: number,
+  radius: number,
+): number => {
+  const legs: Array<[P, P]> = [[line[atWaypoint], line[atWaypoint + 1]]];
+  if (atWaypoint > 0) legs.push([line[atWaypoint - 1], line[atWaypoint]]);
+  return (
+    Math.min(...legs.map(([a, b]) => segmentDistance(at, a, b))) - ESCORT_ARRIVE_RANGE - radius
+  );
+};
 // An escort route (and every ambush ring) keeps this far from the arch.
 const ROUTE_CLEARANCE = 12;
 // The collider-free ring round the arch the margins case pins on every seed.
@@ -261,19 +276,17 @@ describe('the Freehold Gate site', () => {
         const template = MOBS[ambush.mobId];
         expect(template, ambush.mobId).toBeDefined();
         const need = Math.max(ROUTE_CLEARANCE, template.aggroRadius);
-        // line[k + 1] is waypoints[k]; the leg into it starts at line[k], and the
-        // leg before that at line[k - 1] (none for the first waypoint).
-        const to = line[ambush.atWaypoint + 1];
-        expect(to, `${escort.id} wave at ${ambush.atWaypoint}`).toBeDefined();
-        const legs = [[line[ambush.atWaypoint], to]];
-        if (ambush.atWaypoint > 0)
-          legs.push([line[ambush.atWaypoint - 1], line[ambush.atWaypoint]]);
-        const reach = ESCORT_ARRIVE_RANGE + (ambush.radius ?? ESCORT_AMBUSH_RADIUS);
+        // line[k + 1] is waypoints[k]; the leg into it starts at line[k].
+        expect(
+          line[ambush.atWaypoint + 1],
+          `${escort.id} wave at ${ambush.atWaypoint}`,
+        ).toBeDefined();
+        const radius = ambush.radius ?? ESCORT_AMBUSH_RADIUS;
         for (const [name, at] of [
           ['arch', GATE],
           ['drop', DROP],
         ] as const) {
-          const clearance = Math.min(...legs.map(([a, b]) => segmentDistance(at, a, b))) - reach;
+          const clearance = ringWorstClearance(at, line, ambush.atWaypoint, radius);
           const where = `${escort.id} wave at ${ambush.atWaypoint}, ${name}`;
           expect(clearance, where).toBeGreaterThanOrEqual(need);
           if (clearance < closest.clearance) closest = { clearance, at: where };
@@ -288,6 +301,25 @@ describe('the Freehold Gate site', () => {
     // nearer the gate, even one that still clears it, is re-read here.
     expect(closest.at).toBe('esc_wq_eastbrook_caravan wave at 6, arch');
     expect(closest.clearance).toBeCloseTo(12.933, 3);
+  });
+
+  it('reads the LEG BEFORE a waypoint too, where a stuck arm can start the leg into it', () => {
+    // A synthetic line, since no shipped route puts only its earlier leg near the
+    // gate: the leg into waypoint 1 (line[1] to line[2]) stays 30 yd off, the leg
+    // before it (line[0] to line[1]) runs through the arch, so only that arm of
+    // the worst case sees it.
+    const line: P[] = [
+      { x: GATE.x - 30, z: GATE.z },
+      { x: GATE.x + 30, z: GATE.z },
+      { x: GATE.x + 40, z: GATE.z + 40 },
+    ];
+    expect(segmentDistance(GATE, line[1], line[2])).toBeCloseTo(30, 6);
+    expect(ringWorstClearance(GATE, line, 1, ESCORT_AMBUSH_RADIUS)).toBeLessThan(0);
+    // The first waypoint has no leg before it: only its own leg counts.
+    expect(ringWorstClearance(GATE, line, 0, ESCORT_AMBUSH_RADIUS)).toBeCloseTo(
+      segmentDistance(GATE, line[0], line[1]) - ESCORT_ARRIVE_RANGE - ESCORT_AMBUSH_RADIUS,
+      6,
+    );
   });
 
   it('keeps the gate, the live leave and the saved-inside rejoin inside the Eastbrook town circle', () => {

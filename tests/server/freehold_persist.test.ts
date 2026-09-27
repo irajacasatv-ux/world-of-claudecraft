@@ -8050,7 +8050,7 @@ describe('a run of thrown writes keeps its edits and retries them once per windo
     // rejoin always has.
     await h.login();
     expect(h.record()?.rev).toBe(8);
-    expect(h.store.stats().retrying).toBe(1);
+    expect(h.store.stats()).toMatchObject({ retrying: 1, retryingOffline: 0 });
     // retain released the capture: the live record carries it now, and the
     // retry writes the live record whenever one stands.
     expect(h.store.stats().leaveCaptures).toBe(0);
@@ -8123,21 +8123,20 @@ describe('a run of thrown writes keeps its edits and retries them once per windo
     // The drain ignores the clock (not due for a whole window yet) and attempts
     // it once; the database still throws, so the drain answers NOT drained as
     // soon as nothing is moving, never at its deadline.
+    const scheduledBefore = h.deadlines.length;
     let answer: boolean | undefined;
     const draining = h.store.idle(FREEHOLD_PERSIST_SHUTDOWN_DRAIN_MS).then((drained) => {
       answer = drained;
     });
     await tick(30);
-    // Settled inside a few microtasks, with the deadline scheduled and unfired.
+    // Settled inside a few microtasks: its OWN deadline was scheduled, never
+    // fired, and cancelled by the early answer.
     expect(answer).toBe(false);
     await draining;
     expect(h.writeCount()).toBe(writes + 1);
-    // The LAST job at that length: the login budget is 10 s too, and its
-    // cancelled deadlines come first.
-    const deadline = [...h.deadlines]
-      .reverse()
-      .find((job) => job.ms === FREEHOLD_PERSIST_SHUTDOWN_DRAIN_MS);
-    expect(deadline?.fired).toBe(false);
+    expect(h.deadlines.slice(scheduledBefore)).toMatchObject([
+      { ms: FREEHOLD_PERSIST_SHUTDOWN_DRAIN_MS, fired: false, cancelled: true },
+    ]);
     // The capture is still held: it ends with the process, R3's accepted bound.
     expect(h.store.stats().leaveCaptures).toBe(1);
   });
@@ -8321,6 +8320,7 @@ describe('a run of thrown writes keeps its edits and retries them once per windo
     return { h, hung };
   }
   const FOUR_ACCOUNTS = [ACCOUNT_ID, OTHER_ACCOUNT_ID, 700_001, 700_002];
+  const TEN_ACCOUNTS = [...FOUR_ACCOUNTS, 700_004, 700_005, 700_006, 700_007, 700_008, 700_009];
 
   it('holds retries to their own sub-cap, and an ordinary write still gets a slot', async () => {
     // A fault that makes every statement run to its timeout would otherwise let
@@ -8330,9 +8330,10 @@ describe('a run of thrown writes keeps its edits and retries them once per windo
     h.store.saveAllDirty();
     await tick(30);
     expect(hung).toHaveLength(FREEHOLD_PERSIST_RETRY_WRITE_CAP);
-    expect(h.store.stats().deferredWrites).toBe(
-      FOUR_ACCOUNTS.length - FREEHOLD_PERSIST_RETRY_WRITE_CAP,
-    );
+    expect(h.store.stats()).toMatchObject({
+      deferredWrites: 0,
+      deferredRetries: FOUR_ACCOUNTS.length - FREEHOLD_PERSIST_RETRY_WRITE_CAP,
+    });
     // A healthy owner off the clock: its write launches beside the two retries.
     await h.login(700_003);
     h.edit('account:700003', { rev: 8 });
@@ -8345,32 +8346,154 @@ describe('a run of thrown writes keeps its edits and retries them once per windo
     hung[0].reject(new Error('connection terminated unexpectedly'));
     await tick(60);
     expect(hung).toHaveLength(FREEHOLD_PERSIST_RETRY_WRITE_CAP + 2);
-    expect(h.store.stats().deferredWrites).toBe(
+    expect(h.store.stats().deferredRetries).toBe(
       FOUR_ACCOUNTS.length - FREEHOLD_PERSIST_RETRY_WRITE_CAP - 1,
     );
+    // Close every gate the case opened, so its settles run inside the case.
+    for (const gate of hung.splice(0)) gate.reject(new Error('connection terminated unexpectedly'));
+    await tick(60);
+  });
+
+  it('pumps a waiting ORDINARY write ahead of a waiting retry when a slot frees', async () => {
+    const { h, hung } = await hangingPosture(FOUR_ACCOUNTS);
+    h.setNow(START_MS + WINDOW);
+    h.store.saveAllDirty();
+    await tick(30);
+    // Two retries hold the sub-cap; two healthy owners fill the rest of the
+    // write cap, and a third waits.
+    for (const account of [700_010, 700_011, 700_012]) {
+      await h.login(account);
+      h.edit(`account:${account}`, { rev: 8 });
+      h.store.markDirty(`account:${account}`);
+      h.store.save(`account:${account}`);
+      await tick(10);
+    }
+    expect(h.store.stats()).toMatchObject({
+      activeWrites: 4,
+      deferredWrites: 1,
+      deferredRetries: 2,
+    });
+    // A retry settles: the freed slot goes to the waiting ORDINARY write, and the
+    // two waiting retries stay deferred.
+    hung[0].reject(new Error('connection terminated unexpectedly'));
+    await tick(60);
+    expect(h.writes.at(-1)?.accountId).toBe(700_012);
+    expect(h.store.stats()).toMatchObject({
+      activeWrites: 4,
+      deferredWrites: 0,
+      deferredRetries: 2,
+    });
+    for (const gate of hung.splice(0)) gate.reject(new Error('connection terminated unexpectedly'));
+    await tick(60);
+  });
+
+  it('reports every throw on the clock since the last sweep in ONE line, not one per owner', async () => {
+    const { h, hung } = await hangingPosture(FOUR_ACCOUNTS);
+    h.setNow(START_MS + WINDOW);
+    h.store.saveAllDirty();
+    await tick(30);
+    const before = h.errors.length;
+    // The two retries in flight throw, and the pump re-admits the other two,
+    // which hang in their turn.
+    for (const gate of hung.splice(0)) gate.reject(new Error('connection terminated unexpectedly'));
+    await tick(60);
+    h.store.saveAllDirty();
+    await tick(30);
+    const lines = h.errors.slice(before);
+    expect(lines.filter((line) => line.includes('write failed:'))).toEqual([]);
+    const summaries = lines.filter((line) =>
+      line.includes('retry writes threw since the last sweep'),
+    );
+    expect(summaries).toHaveLength(1);
+    expect(summaries[0]).toContain('freehold retry clock: 2 retry writes threw');
+    for (const gate of hung.splice(0)) gate.reject(new Error('connection terminated unexpectedly'));
+    await tick(60);
+  });
+
+  it('offers a retry slot freed by a committing retry to a waiting retry at once', async () => {
+    // A retry that commits with an edit pending re-arms as an ORDINARY write
+    // (the clock cleared on the commit), freeing its retry slot: a waiting retry
+    // takes it on that settle, not on some later one.
+    const { h, hung } = await hangingPosture(FOUR_ACCOUNTS);
+    h.setNow(START_MS + WINDOW);
+    h.store.saveAllDirty();
+    await tick(30);
+    expect(hung).toHaveLength(FREEHOLD_PERSIST_RETRY_WRITE_CAP);
+    // An edit lands for the first owner while its retry is out.
+    h.edit(OWNER_KEY, { rev: 9 });
+    h.store.saveAllDirty();
+    await tick(30);
+    expect(h.store.stats().pending).toBe(1);
+    hung[0].resolve({ kind: 'updated', durableRev: '8' });
+    await tick(60);
+    // The ordinary re-arm AND a waiting retry both launched on that settle.
+    expect(hung).toHaveLength(FREEHOLD_PERSIST_RETRY_WRITE_CAP + 2);
+    expect(h.store.stats().deferredRetries).toBe(
+      FOUR_ACCOUNTS.length - FREEHOLD_PERSIST_RETRY_WRITE_CAP - 1,
+    );
+    for (const gate of hung.splice(0)) gate.reject(new Error('connection terminated unexpectedly'));
+    await tick(60);
+  });
+
+  it('closes the clock exception again when a drain cannot arm its writes', async () => {
+    // A throwing port inside idle() must neither throw out of a drain that never
+    // throws nor leave every clock due for the life of the store.
+    const { h } = await onlineInPosture();
+    const liveRev = h.ports.liveRev;
+    h.ports.liveRev = () => {
+      throw new Error('liveness port fault');
+    };
+    expect(await h.store.idle(FREEHOLD_PERSIST_SHUTDOWN_DRAIN_MS)).toBe(false);
+    h.ports.liveRev = liveRev;
+    expect(h.errors.filter((line) => line.includes('drain could not arm its writes'))).toHaveLength(
+      1,
+    );
+    // Not due, and the drain is closed: the leave arms nothing.
+    const writes = h.writeCount();
+    await h.leave();
+    await tick(30);
+    expect(h.writeCount()).toBe(writes);
   });
 
   it("ends the drain's clock exception WITH the drain: no retry launches past its deadline", async () => {
     // R3 accepted a 10 s drain, not a tail after it: a retry still waiting when
     // the deadline fires must not launch when a slot frees afterwards.
-    const { h, hung } = await hangingPosture(FOUR_ACCOUNTS);
-    const drained = h.store.idle(FREEHOLD_PERSIST_SHUTDOWN_DRAIN_MS);
+    // More owners on the clock than the drain's cap, so some still wait when the
+    // deadline fires; the drain lifts the retry sub-cap to its own whole cap.
+    const { h, hung } = await hangingPosture(TEN_ACCOUNTS);
+    const scheduledBefore = h.deadlines.length;
+    let answer: boolean | undefined;
+    const drained = h.store.idle(FREEHOLD_PERSIST_SHUTDOWN_DRAIN_MS).then((result) => {
+      answer = result;
+      return result;
+    });
     await tick(30);
-    expect(hung).toHaveLength(FREEHOLD_PERSIST_RETRY_WRITE_CAP);
+    expect(hung).toHaveLength(FREEHOLD_PERSIST_DRAIN_MAX_ACTIVE_WRITES);
+    expect(h.store.stats().deferredRetries).toBe(
+      TEN_ACCOUNTS.length - FREEHOLD_PERSIST_DRAIN_MAX_ACTIVE_WRITES,
+    );
+    // Still waiting on the hung retries: only the deadline can answer it.
+    expect(answer).toBeUndefined();
     const writes = h.writeCount();
-    // The LAST job at that length: the login budget is 10 s too, and its
-    // cancelled deadlines come first.
-    const deadline = [...h.deadlines]
-      .reverse()
-      .find((job) => job.ms === FREEHOLD_PERSIST_SHUTDOWN_DRAIN_MS);
-    deadline?.fire();
+    const [deadline] = h.deadlines.slice(scheduledBefore);
+    expect(deadline).toMatchObject({ ms: FREEHOLD_PERSIST_SHUTDOWN_DRAIN_MS, fired: false });
+    deadline.fire();
     expect(await drained).toBe(false);
-    // The two hung retries now fail; their slots free, and nothing launches.
+    // The hung retries now fail; their slots free, and nothing launches. With no
+    // sweep left to report them, each throw logs its own line.
+    const before = h.errors.length;
     for (const gate of hung.splice(0)) gate.reject(new Error('connection terminated unexpectedly'));
     await tick(60);
     expect(h.writeCount()).toBe(writes);
-    expect(h.store.stats()).toMatchObject({ activeWrites: 0, deferredWrites: 0 });
-    expect(h.store.stats().retrying).toBe(FOUR_ACCOUNTS.length);
+    expect(h.store.stats()).toMatchObject({
+      activeWrites: 0,
+      deferredWrites: 0,
+      deferredRetries: 0,
+    });
+    expect(h.store.stats().retrying).toBe(TEN_ACCOUNTS.length);
+    expect(h.errors.slice(before).filter((line) => line.includes('write failed:'))).toHaveLength(
+      FREEHOLD_PERSIST_DRAIN_MAX_ACTIVE_WRITES,
+    );
   });
 
   it('still quiesces a run of throws that ANSWER about the payload, and releases the capture', async () => {

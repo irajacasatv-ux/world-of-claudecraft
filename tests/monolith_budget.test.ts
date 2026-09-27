@@ -1975,8 +1975,12 @@ const MONOLITHS: MonolithRow[] = [
     // and the offline gauge, paid for by moving the write-side and lifecycle
     // bounds with their reasoning (server/freehold_persist_bounds.ts, re-exported)
     // out whole and dropping four dead imports. Exact count, zero slack.
+    // LOWERED, 2011 -> 1988, by the fresh reads of that round: the drain-wide retry
+    // cap, the separate deferred-retries measure, the settle re-arm through the
+    // sub-cap and a guarded drain, paid for by moving the login-pair read
+    // (server/freehold_hearth_load.ts) out whole. Exact count, zero slack.
     file: 'server/freehold_persist.ts',
-    ceiling: 2011,
+    ceiling: 1988,
     seam: 'a sibling server module behind the store ports; see server/CLAUDE.md',
   },
   {

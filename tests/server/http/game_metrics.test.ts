@@ -2069,6 +2069,7 @@ describe('the housing persistence families', () => {
     reaskMsTotal: 73,
     joinVerdicts: { none: 81, refused: 82, entry: 83, superseded: 86, held: 84, withheld: 85 },
     deferredWrites: 17,
+    deferredRetries: 27,
     activeWrites: 18,
     leaveCaptures: 19,
   };
@@ -2103,6 +2104,7 @@ describe('the housing persistence families', () => {
     expect(labelled(text, WOC_FREEHOLD_PERSIST, 'oldest_dirty_age_ms')).toBe('41');
     expect(labelled(text, WOC_FREEHOLD_PERSIST, 'max_write_bytes')).toBe('52');
     expect(labelled(text, WOC_FREEHOLD_PERSIST, 'deferred_writes')).toBe('17');
+    expect(labelled(text, WOC_FREEHOLD_PERSIST, 'deferred_retries')).toBe('27');
     expect(labelled(text, WOC_FREEHOLD_PERSIST, 'active_writes')).toBe('18');
     expect(labelled(text, WOC_FREEHOLD_PERSIST, 'leave_captures')).toBe('19');
     // No cumulative total rides the gauge: rate() over a gauge gets no

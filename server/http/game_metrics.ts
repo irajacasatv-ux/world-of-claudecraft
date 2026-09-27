@@ -732,6 +732,9 @@ export function registerGameStateMetrics(
       // unobservable set makes that claim unfalsifiable in production.
       this.set({ measure: 'active_writes' }, state.activeWrites);
       this.set({ measure: 'deferred_writes' }, state.deferredWrites);
+      // The retry clock's own backlog, apart: an outage keeps it non-zero by
+      // design, so it must not fold into the ordinary saturation signal above.
+      this.set({ measure: 'deferred_retries' }, state.deferredRetries);
       // Each capture is a SECOND full record retained until its write lands, so
       // a retention that would otherwise only appear in a heap dump is a series
       // an operator can watch.
