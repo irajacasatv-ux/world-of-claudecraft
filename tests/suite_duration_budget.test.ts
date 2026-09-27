@@ -78,11 +78,18 @@ const FILE_ALLOWANCE_LEDGER: ReadonlyMap<string, number> = new Map([
   ['tests/ci_shard_plan.test.ts', 310_000],
   ['tests/discord_db_integration.test.ts', 420_000],
   ['tests/dragonkin_whelp_litter.test.ts', 420_000],
-  ['tests/druid_balance_probe.test.ts', 540_000],
+  // 570_000 since 2026-09-27: a 30s case in biome's trailing-comma shape was
+  // invisible to the parser until then, not new.
+  ['tests/druid_balance_probe.test.ts', 570_000],
   ['tests/emerald_deck_escape.test.ts', 540_000],
   ['tests/guild_bank_pg_integration.test.ts', 840_000],
+  // Lane-owned balance harness (diet arms: two 200s cases), invisible to the
+  // parser until the 2026-09-27 trailing-comma fix.
+  ['tests/hunter_dps_balance.test.ts', 400_000],
   ['tests/nythraxis_matrix.test.ts', 1_200_000],
   ['tests/owned_class_balance_dps_probes.test.ts', 360_000],
+  // Lane-owned raid harness, likewise unseen until the trailing-comma fix.
+  ['tests/owned_class_raid_armor_avoidance.test.ts', 360_000],
   // The shared PostgreSQL escrow fixture carries a 30s setup hook plus ten
   // independently bounded 30s cases. The exact row records that existing
   // parallelizable shape without promoting the suite into the measured lane.
@@ -135,8 +142,9 @@ describe('suite duration budget (declared-timeout ratchet)', () => {
     for (const [file, { unparsed }] of suite) {
       expect(
         unparsed,
-        `${file} declares a timeout behind an identifier this parser cannot resolve; bind it ` +
-          'to a same-file numeric const or inline the literal, so the ledger can see it',
+        `${file} declares a timeout behind an identifier or expression this parser cannot ` +
+          'size; bind it to a same-file numeric const or inline the literal, so the ledger can ' +
+          'see it',
       ).toEqual([]);
     }
   });
@@ -155,6 +163,17 @@ describe('suite duration budget (declared-timeout ratchet)', () => {
     expect(per(`vi.setConfig({ testTimeout: 30_000 });`)).toEqual([30_000]);
     expect(per(`const HOOK_MS = 60_000;\nbeforeAll(() => { seed(); }, HOOK_MS);`)).toEqual([
       60_000,
+    ]);
+    // Biome's multi-line call shape ends in a trailing comma, which is not an
+    // argument: before 2026-09-27 the parser read the empty tail as the last
+    // argument and every timeout in this shape went unseen.
+    expect(per(`it(\n  'm',\n  () => {\n    run();\n  },\n  420_000,\n);`)).toEqual([420_000]);
+    expect(
+      per(`it(\n  'n',\n  () => {\n    run();\n  },\n  FULL ? 2_400_000 : 420_000,\n);`),
+    ).toEqual([420_000]);
+    // A const bound to the FLAG ? full : diet form counts at its diet arm.
+    expect(per(`const T = FULL ? 480_000 : 200_000;\nit('o', () => { run(); }, T);`)).toEqual([
+      200_000,
     ]);
     // The forms that MUST NOT count: spawn options, ordinary call arguments,
     // fixture objects inside a body, string and comment text, and values at
@@ -179,6 +198,11 @@ describe('suite duration budget (declared-timeout ratchet)', () => {
     // Unresolvable identifiers surface instead of vanishing.
     expect(declaredTimeouts(`it('h', { timeout: IMPORTED_MS }, fn);`).unparsed).toHaveLength(1);
     expect(declaredTimeouts(`it('i', () => { run(); }, importedBudget);`).unparsed).toHaveLength(1);
+    // So does any other expression in the timeout slot.
+    expect(declaredTimeouts(`it('j', () => { run(); }, 2 * BUDGET);`).unparsed).toHaveLength(1);
+    expect(
+      declaredTimeouts(`it(\n  'k',\n  () => {\n    run();\n  },\n  2 * BUDGET,\n);`).unparsed,
+    ).toHaveLength(1);
     // The mask keeps template interpolations bracket-balanced.
     expect(maskCommentsAndStrings(`\`a \${b(1)} c\``).includes('b(1)')).toBe(true);
   });

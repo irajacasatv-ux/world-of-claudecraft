@@ -51,10 +51,6 @@ export const guildLetters = (events: SimEvent[], pid: number) =>
 export const letterDelay = (pairId: string): number =>
   GUILD_TREND_LETTERS[pairId]?.delaySeconds ?? 90;
 
-// These drive full mail-delivery windows through sim.tick(); give them real
-// headroom under worker-pool CPU contention (the mail.test.ts precedent).
-export const GUILD_DELIVERY_TEST_TIMEOUT_MS = 40_000;
-
 // A synthetic PlayerMeta carrying exactly the fields the predicate reads, plus
 // a spy ctx. Each of the three eligibility clauses gets a negative where ONLY
 // that clause disqualifies, so deleting any single guard line in

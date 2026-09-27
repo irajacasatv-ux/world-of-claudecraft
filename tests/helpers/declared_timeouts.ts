@@ -23,10 +23,13 @@
 //     file-wide testTimeout is a per-test allowance on every test in the
 //     file).
 // A timeout bound to a BARE identifier resolves through a same-file
-// `const NAME = <number>` binding when one exists (two suites declare their
-// hook budgets that way); anything unresolvable is reported in `unparsed`
-// rather than silently skipped, and the consumer fails the suite on it, so
-// moving an allowance behind an opaque constant cannot evade the ledger.
+// `const NAME = <number>` binding (or `const NAME = FLAG ? full : diet`, read at
+// its diet arm) when one exists; anything unresolvable, and any other
+// expression in the timeout slot after a function literal, is reported in
+// `unparsed` rather than silently skipped, and the consumer fails the suite on
+// it, so moving an allowance behind an opaque constant cannot evade the ledger.
+// A trailing comma after the last argument (biome's multi-line call shape) is
+// not an argument; until 2026-09-27 it hid every timeout written that way.
 //
 // Values at or below the repo default testTimeout (20s, vite.config.ts) are
 // ignored: a declaration that lowers a test's allowance is not added
@@ -175,7 +178,10 @@ function splitArgs(masked: string, start: number, end: number): { from: number; 
       from = i + 1;
     }
   }
-  if (end > from) args.push({ from, to: end });
+  // A trailing comma after the last argument is legal and is biome's multi-line
+  // call shape: the empty tail is not an argument, or the real last one (the
+  // timeout) would never be seen.
+  if (end > from && masked.slice(from, end).trim() !== '') args.push({ from, to: end });
   return args;
 }
 
@@ -194,8 +200,12 @@ export function declaredTimeouts(source: string): DeclaredTimeouts {
   };
   const resolveConst = (name: string): number | null => {
     const short = name.split('.').pop() ?? name;
+    // A numeric const, or a `FLAG ? full : diet` const read at its DIET arm, the
+    // same rule an inline ternary timeout follows.
     const binding = masked.match(
-      new RegExp(`\\bconst\\s+${short.replace(/\$/g, '\\$')}\\s*=\\s*([0-9][0-9_]*)\\s*[;\\n]`),
+      new RegExp(
+        `\\bconst\\s+${short.replace(/\$/g, '\\$')}\\s*=\\s*(?:[A-Za-z_$][\\w$.]*\\s*\\?\\s*[0-9][0-9_]*\\s*:\\s*)?([0-9][0-9_]*)\\s*[;\\n]`,
+      ),
     );
     return binding ? Number(binding[1].replace(/_/g, '')) : null;
   };
@@ -266,7 +276,17 @@ export function declaredTimeouts(source: string): DeclaredTimeouts {
         record(Number(ternary[2].replace(/_/g, '')));
         continue;
       }
+      const prevArg =
+        argIndex > 0 ? masked.slice(args[argIndex - 1].from, args[argIndex - 1].to).trim() : '';
+      const prevIsFunction = /^(?:async\b|function\b|\()/.test(prevArg);
       const ident = maskedArg.match(IDENT_ARG_RE);
+      // Anything else in the TIMEOUT SLOT (an expression such as `2 * BUDGET`)
+      // cannot be sized, so it surfaces instead of passing unseen: an exemption
+      // must be positive, never "not a shape this parser knows".
+      if (!ident && prevIsFunction && trimmed !== '') {
+        unparsed.push(`expression ${sourceArg.trim().slice(0, 40)}`);
+        continue;
+      }
       // A trailing bare identifier: POSITION decides whether it is a timeout,
       // not the name (a name gate was caught letting `it('x', fn, BUDGET)`
       // slip through green). When the PREVIOUS argument is a function literal,
@@ -276,9 +296,6 @@ export function declaredTimeouts(source: string): DeclaredTimeouts {
       // The timeout-looking-name check stays as a fallback trigger for
       // unusual shapes (a fn REFERENCE in the middle slot).
       if (ident && !isSetConfig) {
-        const prev =
-          argIndex > 0 ? masked.slice(args[argIndex - 1].from, args[argIndex - 1].to).trim() : '';
-        const prevIsFunction = /^(?:async\b|function\b|\()/.test(prev);
         if (prevIsFunction || /TIMEOUT|_MS$/i.test(ident[1])) {
           const resolved = resolveConst(ident[1]);
           if (resolved !== null) record(resolved);

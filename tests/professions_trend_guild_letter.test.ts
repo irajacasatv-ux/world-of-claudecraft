@@ -4,13 +4,12 @@
 
 import { describe, expect, it } from 'vitest';
 import type { SimEvent } from '../src/sim/types';
-import {
-  GUILD_DELIVERY_TEST_TIMEOUT_MS,
-  guildLetters,
-  letterDelay,
-  makeWorld,
-  tickFor,
-} from './professions_trend_util';
+import { guildLetters, letterDelay, makeWorld, tickFor } from './professions_trend_util';
+
+// Full mail-delivery windows through sim.tick() need real headroom under
+// worker-pool CPU contention (the mail.test.ts precedent). Bound in this file,
+// not imported, so tests/suite_duration_budget.test.ts can size it.
+const GUILD_DELIVERY_TEST_TIMEOUT_MS = 40_000;
 
 describe('the Guild letter through the real Sim', () => {
   it(
