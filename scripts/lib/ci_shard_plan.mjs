@@ -71,6 +71,11 @@ export const CI_GUARD_SUITES = Object.freeze([
   'tests/localization_fixes.test.ts',
   'tests/localization_coverage.test.ts',
   'tests/suite_duration_budget.test.ts',
+  // The lane rule's measured half (tests/suite_lane_threshold.test.ts): no file
+  // outside CI_LONG_SUITES may weigh more than LANE_THRESHOLD_MS in the shard
+  // weight table. A data check on every PR, since a weight row moves without
+  // any import edge `vitest related` could follow.
+  'tests/suite_lane_threshold.test.ts',
   'tests/world_api_parity.test.ts',
 ]);
 
@@ -83,7 +88,7 @@ export const CI_GUARD_PREFIXES = Object.freeze(['tests/parity/']);
  * CI_LONG_SUITE_HALVES half each) instead of inside the shard matrix, so a
  * single multi-minute file stops setting the slowest shard's wall clock.
  * Membership is measured, not automated: a file joins when it costs more than
- * the 90 second threshold inside a full-mode CI shard, and the next-longest
+ * the LANE_THRESHOLD_MS (90 second) threshold inside a full-mode CI shard, and the next-longest
  * file stays sharded (2026-08-06 full-mode run: the then-four members
  * measured 249.5 s, 143.9 s, 142.3 s, and 94.7 s in-shard; the next longest,
  * tests/corpse_harvest_sim.test.ts at 69.8 s, stays). One decided exception
@@ -100,6 +105,14 @@ export const CI_GUARD_PREFIXES = Object.freeze(['tests/parity/']);
  * release-gate is deliberately NOT lane-split: release/** pushes keep the
  * whole suite in their 8 shards, so the post-merge backstop is untouched.
  */
+/**
+ * The lane rule's threshold, in the unit of scripts/ci_shard_weights.generated.json
+ * (per-file ms inside a full-mode CI shard). tests/suite_lane_threshold.test.ts
+ * holds every file outside CI_LONG_SUITES under it, reading this constant rather
+ * than a literal of its own.
+ */
+export const LANE_THRESHOLD_MS = 90_000;
+
 export const CI_LONG_SUITES = Object.freeze([
   // 2026-08-13 remeasure (run 31732244215, both lanes fully loaded; figures
   // are IN-LANE and stay far under 90 even at the recorded 1.6x runner

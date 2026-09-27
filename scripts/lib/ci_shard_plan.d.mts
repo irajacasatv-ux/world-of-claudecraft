@@ -1,5 +1,6 @@
 export const CI_GUARD_SUITES: readonly string[];
 export const CI_GUARD_PREFIXES: readonly string[];
+export const LANE_THRESHOLD_MS: number;
 export const CI_LONG_SUITES: readonly string[];
 export const CI_LONG_SUITE_HALVES: { readonly a: readonly string[]; readonly b: readonly string[] };
 export const FLOOR_SANITY_MIN: number;
