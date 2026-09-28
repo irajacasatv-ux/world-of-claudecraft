@@ -64,7 +64,8 @@ describe('the lane threshold over the measured shard weights', () => {
     // The judgment the live case runs, over a synthetic table: a carried 23 s row is
     // over (92 s in CI time), a harvested 23 s row is not, a harvested 95 s row is, a
     // lane file is never judged however heavy, and a row exactly at the line (90 s, or a
-    // carried 22.5 s) is not over: the rule is strictly more than LANE_THRESHOLD_MS.
+    // carried 22.5 s) is not over while one a millisecond past it is: the rule is
+    // strictly more than LANE_THRESHOLD_MS.
     expect(
       laneThresholdOver(
         {
@@ -72,15 +73,21 @@ describe('the lane threshold over the measured shard weights', () => {
           'tests/carried_at_line.test.ts': 22_500,
           'tests/harvested.test.ts': 23_000,
           'tests/harvested_at_line.test.ts': 90_000,
+          'tests/harvested_past_line.test.ts': 90_001,
           'tests/heavy.test.ts': 95_000,
           'tests/lane.test.ts': 900_000,
         },
         {
-          'tests/carried.test.ts': { method: 'local-median' },
+          // A superseding row is a carried row too, and is scaled like any other.
+          'tests/carried.test.ts': { method: 'local-median', supersedes: 100_000 },
           'tests/carried_at_line.test.ts': { method: 'local-median' },
         },
         ['tests/lane.test.ts'],
       ),
-    ).toEqual(['tests/carried.test.ts 92000 ms', 'tests/heavy.test.ts 95000 ms']);
+    ).toEqual([
+      'tests/carried.test.ts 92000 ms',
+      'tests/harvested_past_line.test.ts 90001 ms',
+      'tests/heavy.test.ts 95000 ms',
+    ]);
   });
 });
