@@ -168,8 +168,8 @@ describe('open-world population never exceeds what the content authored', () => 
 
       // A dead copy never counts: a corpse is no leak. The copies make the template one
       // over by construction, so the check passing proves they were not counted.
-      oneOver(base.templateId, campAuthored(base.templateId));
-      expect(extras.length).toBeGreaterThan(0);
+      const liveRow = oneOver(base.templateId, campAuthored(base.templateId));
+      expect(overBudget('the copies alive')).toEqual(liveRow);
       for (const id of extras) {
         const copy = sim.entities.get(id);
         if (!copy) throw new Error(`copy ${id} is missing`);
