@@ -83,7 +83,7 @@ describe('the world population escort sweep shards', () => {
       const file = shardFileName(suffix);
       const raw = read(file);
       expect(raw, `${file} carries a CR, U+2028 or U+2029`).not.toMatch(/[\r\u2028\u2029]/);
-      expect(raw, `${file} carries a vitest pragma`).not.toMatch(/@vitest-/);
+      expect(raw, `${file} carries a test-runner pragma`).not.toMatch(/@(vitest|jest)-/);
       const body = raw.replace(/^(\/\/[^\n]*\n)+/, '');
       expect(body, `${file} carries a comment marker below its header`).not.toMatch(
         /\/\*|\*\/|\/\//,
@@ -108,29 +108,40 @@ describe('the world population escort sweep shards', () => {
       base,
       'the rule file imports assertPopulationSane by name from the population helper',
     ).toContain("import { assertPopulationSane } from './helpers/world_population';");
+    expect(base.match(/from '\.\/helpers\//g), 'the rule file imports one helper').toHaveLength(1);
   });
 
   it("pins the deal and one escort's rounds whole", () => {
+    // Compared statement by statement, so a failure's diff marks the changed statement.
+    // Both sides are comments stripped and whitespace flattened; to accept a deliberate
+    // edit, replace the constant with the Received text, split into lines only at spaces
+    // (the lines rejoin with one space each).
+    const statements = (text: string) => text.split('; ');
+    const howToUpdate = (constant: string) =>
+      `changed: update ${constant} in tests/world_population_shards.test.ts with the ` +
+      'Received text, split into lines only at spaces';
     expect(
-      flatCode('helpers/escort_shards.ts'),
-      'tests/helpers/escort_shards.ts changed: update ESCORT_SHARDS_MODULE with it',
-    ).toBe(ESCORT_SHARDS_MODULE);
+      statements(flatCode('helpers/escort_shards.ts')),
+      `tests/helpers/escort_shards.ts ${howToUpdate('ESCORT_SHARDS_MODULE')}`,
+    ).toEqual(statements(ESCORT_SHARDS_MODULE));
     const helper = stripComments(read('helpers/world_population.ts'));
     const start = helper.indexOf('export function runEscortRounds(');
     expect(start, 'runEscortRounds is declared').toBeGreaterThan(-1);
     expect(helper.split('function runEscortRounds(')).toHaveLength(2);
     expect(helper, 'the population helper must not deal escorts itself').not.toMatch(
-      /\bescortShard\b/,
+      /\bescortShard\b|export \* from/,
     );
     const end = helper.indexOf('\n}\n', start);
     expect(end, 'runEscortRounds closes').toBeGreaterThan(start);
     expect(
-      helper
-        .slice(start, end + 2)
-        .replace(/\s+/g, ' ')
-        .trim(),
-      'runEscortRounds changed: update RUN_ESCORT_ROUNDS with it',
-    ).toBe(RUN_ESCORT_ROUNDS);
+      statements(
+        helper
+          .slice(start, end + 2)
+          .replace(/\s+/g, ' ')
+          .trim(),
+      ),
+      `runEscortRounds ${howToUpdate('RUN_ESCORT_ROUNDS')}`,
+    ).toEqual(statements(RUN_ESCORT_ROUNDS));
   });
 
   it('leaves the escort-carrying files import-graph selected', () => {
