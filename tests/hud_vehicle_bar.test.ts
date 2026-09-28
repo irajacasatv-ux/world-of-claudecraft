@@ -12,7 +12,10 @@ describe('the HUD vehicle bar factory host seam', () => {
       'private optionsHooks: OptionsHooks | null = null;',
       'private peekGuard = new TouchPeekGuard();',
       'private readonly playerGroundAim = new GroundAimController({',
-      'private readonly empowerHold = new EmpowerHold();',
+      // The empowered hold lives on the action press controller; the Hud
+      // member the factory reads forwards to it.
+      'private get empowerHold(): EmpowerHold {',
+      'return this.actionPress.empowerHold;',
       '  attachTooltip(el: HTMLElement, html: () => string): void {',
       'this.vehicleBar ??= createHudVehicleBar(this);',
     ]) {

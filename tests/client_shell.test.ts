@@ -2859,10 +2859,13 @@ describe('client HTML shell', () => {
     // never while auto-attacking. Its fixed mobile control must not route through
     // the desktop slot 0, which can hold an assigned action.
     // The ring's construction lives behind the action_bar seam now
-    // (mobile_action_ring_controller.ts); Hud supplies the callbacks.
+    // (mobile_action_ring_controller.ts); Hud supplies the callbacks, the
+    // Attack toggle through the action press controller.
     expect(mobileActionRingTs).toContain('handleMobileAttackTap(');
     expect(mobileActionRingTs).toContain('activateAttack: () => deps.activateFixedAttackSlot(),');
-    expect(hudTs).toContain('activateFixedAttackSlot: () => this.activateFixedAttackSlot(),');
+    expect(hudTs).toContain(
+      'activateFixedAttackSlot: () => this.actionPress.activateFixedAttackSlot(),',
+    );
   });
 
   it('replaces the right-anchored quest tracker with the top-band strip on touch', () => {

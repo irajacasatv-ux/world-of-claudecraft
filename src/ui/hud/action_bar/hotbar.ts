@@ -56,6 +56,16 @@ export function isAbilityActionBarEligible(
   );
 }
 
+/** The ids of the known abilities a bar seat can hold, in known-list order: the
+ *  offer Hud.syncSlotMap makes the pad's cross hotbar as abilities are learned.
+ *  Eligibility alone filters it, so a stance (whose bar pad mode hides) is offered
+ *  and a passive is not. */
+export function actionBarEligibleKnownIds(
+  known: readonly { readonly def: Pick<AbilityDef, 'id' | 'passive' | 'hiddenFromPlayer'> }[],
+): string[] {
+  return known.filter((k) => isAbilityActionBarEligible(k.def)).map((k) => k.def.id);
+}
+
 export function sanitizeHotbarAction(
   action: HotbarAction,
   isAbilityEligible: (id: string) => boolean,

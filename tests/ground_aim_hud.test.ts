@@ -1,69 +1,28 @@
 // @vitest-environment happy-dom
 
+// The ground-aim flow of a position press, driven through the real
+// ActionPressController (src/ui/hud/action_bar/action_press_controller.ts,
+// extracted from Hud.castSlot / castCrossHotbarAction / castPositionAbility)
+// over the shared rig in tests/helpers/ground_aim_rig.ts. The Hud's own
+// ground-aim delegates and its page-flip cancel run against the real Hud in
+// tests/hud_coordinator_delegators.test.ts, over the same rig.
+
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
-
-vi.mock('../src/game/audio', () => ({
-  audio: { click: vi.fn() },
-}));
-vi.mock('../src/render/characters', () => ({ CharacterPreview: class {} }));
-vi.mock('../src/render/characters/assets', () => ({ preloadMechAssets: vi.fn() }));
-vi.mock('../src/render/characters/portrait', () => ({
-  onPortraitUpdate: vi.fn(),
-  onPortraitsReady: vi.fn(),
-  playerPortraitDataUrl: vi.fn(),
-  portraitsReady: vi.fn(() => false),
-  visualPortraitDataUrl: vi.fn(),
-}));
-// Additive, never bare (the reliquary_window_behavior lesson): the canvas
-// resolvers stay stubbed; every export the factory does not name passes
-// through, so hud.ts gaining a new icons import cannot red this suite.
-vi.mock('../src/ui/icons', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('../src/ui/icons')>()),
-  iconDataUrl: (kind: string, id: string) => `mock:${kind}:${id}`,
-  QUALITY_COLOR: {},
-  raidMarkerDataUrl: vi.fn(() => ''),
-  auraImageUrl: vi.fn(() => null),
-  cachedProceduralIconDataUrl: vi.fn((kind: string, id: string) => `mock:${kind}:${id}`),
-  hasAbilityIconIdentity: vi.fn(() => false),
-  hasAuraImageIdentity: vi.fn(() => false),
-  hasAuraRecipe: vi.fn(() => false),
-  proceduralIconDataUrl: vi.fn((kind: string, id: string) => `mock:${kind}:${id}`),
-}));
-
 import { ABILITIES } from '../src/sim/data';
-import type { ResolvedAbility } from '../src/sim/sim';
-import type { AbilityDef, Entity } from '../src/sim/types';
-import { Hud } from '../src/ui/hud';
-import {
-  type AimPoint,
-  quickGroundTarget,
-  selectedGroundAimPoint,
-  XHB_ONLY_AIM_SLOT,
-} from '../src/ui/hud/action_bar/ground_aim';
+import { ActionPressController } from '../src/ui/hud/action_bar/action_press_controller';
+import { type AimPoint, XHB_ONLY_AIM_SLOT } from '../src/ui/hud/action_bar/ground_aim';
 import { GroundAimController } from '../src/ui/hud/action_bar/ground_aim_controller';
+import {
+  entity,
+  type GroundAimRig,
+  type GroundAimRigOptions,
+  seedGroundAimRig,
+} from './helpers/ground_aim_rig';
 
-interface GroundAimHarness {
-  playerGroundAim: GroundAimController;
+interface GroundAimHarness extends GroundAimRig {
   groundAim: GroundAimController;
-  sim: {
-    player: Entity;
-    entities: Map<number, Entity>;
-    known: ResolvedAbility[];
-    castAbilityAt: ReturnType<typeof vi.fn>;
-    groundAimPlacementPreview: ReturnType<typeof vi.fn>;
-  };
-  renderer: { setGroundAimReticle: ReturnType<typeof vi.fn> };
-  optionsHooks: {
-    groundAimTargetAttackable?: (targetId: number) => boolean;
-    settings: { get(key: 'groundReticle' | 'touchPreciseGroundAim'): boolean };
-  } | null;
-  mobileActionPage: number;
-  actionForSlot(slot: number): { type: 'ability'; id: string } | null;
-  abilityForSlot(slot: number): ResolvedAbility | null;
-  groundReticleEnabled(abilityId: string): boolean;
-  flashActionSlot(slot: number): void;
   castSlot(slot: number): void;
   isGroundAimActive(): boolean;
   groundAimAbilityRange(): number | null;
@@ -78,127 +37,50 @@ interface GroundAimHarness {
   } | null;
   commitGroundAimAt(point?: AimPoint | null): boolean;
   commitGroundAim(): boolean;
-  cycleMobileActionPage(): void;
 }
 
-function resolvedPositionAbility(
-  abilityDef: AbilityDef = ABILITIES.flamestrike,
-  range = abilityDef.range,
-  minRange?: number,
-  cooldownId?: string,
-): ResolvedAbility {
-  const def = { ...abilityDef, range, minRange };
-  return {
-    def,
-    rank: 1,
-    cost: def.cost,
-    castTime: def.castTime,
-    cooldown: def.cooldown,
-    effects: def.effects,
-    threatFlat: 0,
-    threatMult: 1,
-    cooldownId,
-  };
-}
-
-function entity(id: number, x: number, z: number): Entity {
-  return {
-    id,
-    pos: { x, y: 0, z },
-    facing: 0,
-    targetId: null,
-    dead: false,
-    auras: [],
-    cooldowns: new Map(),
-  } as unknown as Entity;
-}
-
-function makeHud(
-  options: {
-    player?: Entity;
-    target?: Entity;
-    attackable?: boolean;
-    range?: number;
-    minRange?: number;
-    cooldownId?: string;
-    abilityDef?: AbilityDef;
-    mobileTouch?: boolean;
-    touchPrecise?: boolean;
-    desktopPreference?: boolean;
-    groundAimPlacementPreview?: (abilityId: string, point: AimPoint) => AimPoint;
-  } = {},
-): GroundAimHarness {
-  const player = options.player ?? entity(1, 0, 0);
-  const target = options.target;
-  if (target) player.targetId = target.id;
-  const abilityDef = options.abilityDef ?? ABILITIES.flamestrike;
-  const ability = resolvedPositionAbility(
-    abilityDef,
-    options.range ?? abilityDef.range,
-    options.minRange ?? abilityDef.minRange,
-    options.cooldownId,
-  );
-  const hud = Object.create(Hud.prototype) as unknown as GroundAimHarness;
-  document.body.classList.toggle('mobile-touch', options.mobileTouch ?? false);
-  hud.mobileActionPage = 0;
-  hud.sim = {
-    player,
-    entities: new Map(
-      [...[player, target].filter((value): value is Entity => !!value)].map((e) => [e.id, e]),
-    ),
-    known: [ability],
-    castAbilityAt: vi.fn(),
-    groundAimPlacementPreview: vi.fn(
-      options.groundAimPlacementPreview ?? ((_id: string, point: AimPoint) => point),
-    ),
-  };
-  hud.renderer = { setGroundAimReticle: vi.fn() };
-  // Mirrors Hud's field initializer, which Object.create(Hud.prototype) skips.
-  hud.playerGroundAim = new GroundAimController({
-    player: () => hud.sim.player,
-    resolveAbility: (id) => hud.sim.known.find((k) => k.def.id === id) ?? null,
-    seedTargetPoint: () =>
-      selectedGroundAimPoint(
-        hud.sim.player,
-        hud.sim.entities,
-        hud.optionsHooks?.groundAimTargetAttackable,
-      ),
-    fallbackPoint: () => quickGroundTarget(hud.sim.player, hud.sim.entities),
-    castAt: (id, point) => (hud.sim.castAbilityAt as (i: string, p: AimPoint) => void)(id, point),
-    clearReticle: () => (hud.renderer.setGroundAimReticle as (r: null) => void)(null),
-    projectPlacement: (id, point) =>
-      (hud.sim.groundAimPlacementPreview as (i: string, p: AimPoint) => AimPoint)(id, point),
+/** The press controller over a plain host seeded by the rig. The host carries
+ *  the Hud's thin ground-aim delegates, each a one-line forward to the live aim
+ *  (the player's: this rig has no vehicle session); the real ones are driven in
+ *  tests/hud_coordinator_delegators.test.ts. */
+function makeHud(options: GroundAimRigOptions = {}): GroundAimHarness & {
+  press: ActionPressController;
+} {
+  const rig = seedGroundAimRig({} as object, options);
+  const aim = rig.playerGroundAim;
+  const host = Object.assign(rig, {
+    groundAim: aim,
+    isGroundAimActive: () => aim.isActive(),
+    cancelGroundAim: () => aim.cancel(),
+    groundAimAbilityRange: () => aim.abilityRange(),
+    updateGroundAimPoint: (point: AimPoint | null) => aim.updatePoint(point),
+    nudgeGroundAimPoint: (dx: number, dz: number) => aim.nudge(dx, dz),
+    groundAimReticle: () => aim.reticle(),
+    commitGroundAimAt: (point?: AimPoint | null) => aim.commitAt(point),
+    commitGroundAim: () => aim.commitAt(),
   });
-  hud.optionsHooks = {
-    groundAimTargetAttackable: () => options.attackable ?? false,
-    settings: {
-      get: (key) =>
-        key === 'touchPreciseGroundAim'
-          ? (options.touchPrecise ?? true)
-          : (options.desktopPreference ?? true),
-    },
-  };
-  hud.actionForSlot = () => ({ type: 'ability', id: ability.def.id });
-  hud.abilityForSlot = () => ability;
-  hud.flashActionSlot = vi.fn();
-  return hud;
+  const press = new ActionPressController(host);
+  return Object.assign(host, { press, castSlot: (slot: number) => press.castSlot(slot) });
 }
 
 /** The same harness with an EMPTY bar, so castCrossHotbarAction takes the
  *  no-slot fallback and aim identity resolves by ability id. */
-function makeXhbOnlyHud(options: Parameters<typeof makeHud>[0] = {}): GroundAimHarness & {
+function makeXhbOnlyHud(options: GroundAimRigOptions = {}): GroundAimHarness & {
   hotbarActions: unknown[];
   castCrossHotbarAction(action: { type: 'ability' | 'item'; id: string }): void;
 } {
-  const hud = makeHud(options) as ReturnType<typeof makeXhbOnlyHud>;
-  // hotbarActions is a Hud accessor that forwards to the (absent) action bar
-  // controller, so shadow it with a plain own property for the slot-scan loop.
-  Object.defineProperty(hud, 'hotbarActions', { value: [], configurable: true });
+  const hud = makeHud(options);
   hud.actionForSlot = () => null;
-  return hud;
+  // The slot scan reads the bar length through the host (Hud's hotbarActions
+  // accessor over its action bar controller).
+  return Object.assign(hud, {
+    hotbarActions: [],
+    castCrossHotbarAction: (action: { type: 'ability' | 'item'; id: string }) =>
+      hud.press.castCrossHotbarAction(action),
+  });
 }
 
-describe('Hud ground aim behavior', () => {
+describe('ground aim press behavior', () => {
   it('enters precise touch aim for every non-self-centered position ability', () => {
     const positionAbilities = Object.values(ABILITIES).filter(
       (def) => def.targetMode === 'position' && !def.selfCentered,
@@ -364,22 +246,6 @@ describe('Hud ground aim behavior', () => {
     expect(hud.sim.castAbilityAt).toHaveBeenCalledWith('flamestrike', { x: 0, z: 15 });
   });
 
-  it('cancels active aim before flipping the mobile action page', () => {
-    const hud = makeHud({ mobileTouch: true });
-    hud.castSlot(3);
-    const pagesObservedWhileCancelling: number[] = [];
-    hud.renderer.setGroundAimReticle.mockImplementation((reticle) => {
-      if (reticle === null) pagesObservedWhileCancelling.push(hud.mobileActionPage);
-    });
-
-    hud.cycleMobileActionPage();
-
-    expect(hud.isGroundAimActive()).toBe(false);
-    expect(pagesObservedWhileCancelling).toEqual([0]);
-    expect(hud.mobileActionPage).toBe(1);
-    expect(hud.renderer.setGroundAimReticle).toHaveBeenCalledWith(null);
-  });
-
   it('marks a point inside the authored minimum range blocked, not dimmed', () => {
     const hud = makeHud({ minRange: 8 });
     hud.castSlot(3);
@@ -502,7 +368,7 @@ describe('Hud ground aim behavior', () => {
   });
 
   describe('placement projection', () => {
-    it('returns the world-projected placement dimmed through the Hud harness', () => {
+    it('returns the world-projected placement dimmed through the press harness', () => {
       const groundAimPlacementPreview = vi.fn((id: string, point: AimPoint) =>
         id === 'heroic_leap' ? { x: point.x + 3, z: point.z - 6 } : point,
       );

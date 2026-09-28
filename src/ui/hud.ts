@@ -1,6 +1,5 @@
 import { audio } from '../game/audio';
 import { corpseLootAvailabilityInWorld } from '../game/corpse_loot_availability';
-import { CROSS_HOTBAR_ATTACK_ID } from '../game/cross_hotbar';
 import { syncDeathControllerHints } from '../game/death_controller_hint';
 import { farmPressTarget } from '../game/farm_press_target_core';
 import type { GamepadKind } from '../game/gamepad_map';
@@ -227,7 +226,7 @@ import { DungeonFinderWindow } from './dungeon_finder_window';
 import { emoteIconUrl } from './emote_icons';
 import { appendEmoteWheelSeats, mountEmoteWheel, pointEmoteWheel } from './emote_wheel';
 import { EMOTE_WHEEL_LIMIT } from './emote_wheel_view';
-import { crossHotbarActionSlot, EmpowerHold } from './empower_hold_core';
+import type { EmpowerHold } from './empower_hold_core';
 import {
   combatAbilityName,
   delveDisplayName,
@@ -308,15 +307,13 @@ import {
 import {
   type ActionBarView,
   type ActionBarWorldInput,
-  actionBarCooldownRemaining,
   createActionBarView,
 } from './hud/action_bar/action_bar_view';
 import type { ActionBarVisibility } from './hud/action_bar/action_bar_visibility_core';
+import { ActionPressController } from './hud/action_bar/action_press_controller';
 import {
   confirmPendingAutoAttackEngage,
-  deferAutoAttackUntilCastEnd,
   hasAutoAttackTarget,
-  pressStartsAutoAttack,
 } from './hud/action_bar/attack_on_ability';
 import { BarEditorWindow } from './hud/action_bar/bar_editor';
 import {
@@ -328,14 +325,13 @@ import {
   type AimPoint,
   quickGroundTarget,
   selectedGroundAimPoint,
-  shouldUseGroundAim,
-  XHB_ONLY_AIM_SLOT,
 } from './hud/action_bar/ground_aim';
 import {
   GroundAimController,
   type GroundAimReticleView,
 } from './hud/action_bar/ground_aim_controller';
 import {
+  actionBarEligibleKnownIds,
   applyLoadoutBar as applyLoadoutBarActions,
   assignAttackSlotAction,
   attackDragDisposition,
@@ -343,7 +339,6 @@ import {
   type FreedAttackSlotAbility,
   freedAttackSlotDisplayAbility,
   type HotbarAction,
-  isAbilityActionBarEligible,
   loadoutKnownAbilityIds,
   placeAbilityOnSlot,
   placeItemOnSlot,
@@ -499,7 +494,7 @@ import { StanceBarController } from './hud/stance';
 import { closeOpenTouchMenu } from './hud/tap_menu';
 import { createTargetDotsView, type TargetDotsInput, TargetDotsPainter } from './hud/target_dots';
 import { FerryHudPainter } from './hud/transport';
-import { createHudVehicleBar, VehicleActionBarController } from './hud/vehicle';
+import { createHudVehicleBar, type VehicleActionBarController } from './hud/vehicle';
 import { dismissBuyQuantityPrompts } from './hud/vendor/buy_quantity_prompt_window';
 import { buildCrucibleVendorView } from './hud/vendor/crucible_vendor_view';
 import { renderCrucibleVendorWindow } from './hud/vendor/crucible_vendor_window';
@@ -723,7 +718,7 @@ import {
   MOTD_RESULT_KEYS,
 } from './result_code_keys';
 import { isTalentRowUnlockLevel } from './row_unlock_toast';
-import { localizeAuthoredYellSpeakerName, localizeAuthoredYellText, tSim } from './sim_i18n';
+import { localizeAuthoredYellSpeakerName, localizeAuthoredYellText } from './sim_i18n';
 import { openSimpleMenu } from './simple_context_menu';
 import { SocialWindow } from './social_window';
 import { SpellbookWindow } from './spellbook_window';
@@ -1184,7 +1179,18 @@ export class Hud {
     clearReticle: () => this.renderer.setGroundAimReticle(null),
     projectPlacement: (id, point) => this.sim.groundAimPlacementPreview(id, point),
   });
-  private readonly empowerHold = new EmpowerHold();
+  // Every bar seat's and cross hotbar cell's press, release and cast path
+  // (hud/action_bar/action_press_controller.ts), lazy like the banner slot so a
+  // bare-prototype rig still resolves it. It owns the empowered hold, which the
+  // vehicle bar cancels on entering a seat through the getter below.
+  private actionPressState: ActionPressController | undefined;
+  private get actionPress(): ActionPressController {
+    this.actionPressState ??= new ActionPressController(this);
+    return this.actionPressState;
+  }
+  private get empowerHold(): EmpowerHold {
+    return this.actionPress.empowerHold;
+  }
   private dragAction: {
     action: Exclude<HotbarAction, null>;
     sourceIndex: number | null;
@@ -4553,6 +4559,7 @@ export class Hud {
   // castSlot to redirect friendly abilities onto it. A RESOLVER rather than an
   // id, because the target-of-target frame's unit changes under a still cursor.
   // null whenever no frame is hovered.
+  // biome-ignore lint/correctness/noUnusedPrivateClassMembers: read through the action press controller's host (hud/action_bar/action_press_controller.ts).
   private hoveredCastUnit: (() => number | null) | null = null;
   // The party frames are N further instances of the unit_frame family, one per
   // member, behind a keyed node pool that replaces the old per-rebuild innerHTML wipe
@@ -6376,9 +6383,7 @@ export class Hud {
     // (Defensive Stance, the druid forms) is otherwise unreachable without the
     // arrange chord. Seeded ids are already marked seen, so this never re-offers.
     if (this.sim.actionBarReadOnly) return;
-    this.optionsHooks?.gamepad.syncCrossHotbarKnown(
-      this.sim.known.filter((k) => isAbilityActionBarEligible(k.def)).map((k) => k.def.id),
-    );
+    this.optionsHooks?.gamepad.syncCrossHotbarKnown(actionBarEligibleKnownIds(this.sim.known));
     this.mobileActionPage = this.currentMobileActionPage();
   }
 
@@ -6440,33 +6445,34 @@ export class Hud {
     );
   }
 
-  private empoweredAbilityIdForSlot(slot: number): string | null {
-    const known = this.abilityForSlot(slot);
-    return known?.def.empowerStages ? known.def.id : null;
-  }
-
-  // Slot key DOWN: every slot fires immediately (a tap is down + up, so this
-  // is the press).
+  // Slot key DOWN and UP, the pad's cross hotbar press and release edges, and
+  // the tap-shaped cast: the paths live in hud/action_bar/action_press_controller.ts.
+  // These stay public for main.ts (the keybinds and the mobile controls), the
+  // gamepad's pad_cast_routing and the action bar buttons.
   pressSlot(slot: number): void {
-    if (VehicleActionBarController.blocksPlayerActions(this.sim)) {
-      this.vehicleControls.chooseSlot(slot);
-      return;
-    }
-    if (this.empowerHold.press(slot, this.empoweredAbilityIdForSlot(slot), this.sim)) return;
-    this.castSlot(slot);
+    this.actionPress.pressSlot(slot);
   }
 
-  // Slot key UP: release an empowered hold. A non-charging slot already fired
-  // on press, so this is a no-op.
   releaseSlot(slot: number): void {
-    if (VehicleActionBarController.blocksPlayerActions(this.sim)) return;
-    this.empowerHold.releaseSlot(slot, this.sim, (released) => this.flashActionSlot(released));
+    this.actionPress.releaseSlot(slot);
+  }
+
+  pressCrossHotbarAction(action: { type: 'ability' | 'item'; id: string }): void {
+    this.actionPress.pressCrossHotbarAction(action);
+  }
+
+  releaseCrossHotbarAction(action: { type: 'ability' | 'item'; id: string }): void {
+    this.actionPress.releaseCrossHotbarAction(action);
+  }
+
+  castSlot(barSlot: number): void {
+    this.actionPress.castSlot(barSlot);
   }
 
   private bindEmpoweredActionHold(btn: HTMLButtonElement, resolveSlot: () => number): void {
     bindEmpoweredActionHold(btn, resolveSlot, {
       bindModeActive: () => this.actionBarBind.active,
-      empoweredAbilityIdForSlot: (slot) => this.empoweredAbilityIdForSlot(slot),
+      empoweredAbilityIdForSlot: (slot) => this.actionPress.empoweredAbilityIdForSlot(slot),
       chargeActive: () => this.empowerHold.active,
       pressSlot: (slot) => this.pressSlot(slot),
       releaseSlot: (slot) => this.releaseSlot(slot),
@@ -6474,14 +6480,6 @@ export class Hud {
         this.suppressNextActionClick = true;
       },
     });
-  }
-
-  private groundReticleEnabled(): boolean {
-    return shouldUseGroundAim(
-      document.body.classList.contains('mobile-touch'),
-      this.optionsHooks?.settings.get('groundReticle') ?? true,
-      this.optionsHooks?.settings.get('touchPreciseGroundAim') ?? true,
-    );
   }
 
   // Thin delegates over GroundAimController: the public surface stays stable.
@@ -6517,199 +6515,6 @@ export class Hud {
     return this.groundAim.commitAt();
   }
 
-  private activateFixedAttackSlot(): void {
-    if (this.sim.player.autoAttack) this.sim.stopAutoAttack();
-    else this.sim.startAutoAttack();
-    this.flashActionSlot(0);
-  }
-
-  // Pad press edge for a cross hotbar cell. Routed through pressSlot when the bar
-  // holds the action, so a pad press gets the SAME semantics a key press does
-  // (reticle, empower charge, mouseover cast, the auto-attack QoL) rather than a
-  // second cast path that would drift from it; the release edge is releaseCrossHotbarAction.
-  pressCrossHotbarAction(action: { type: 'ability' | 'item'; id: string }): void {
-    if (VehicleActionBarController.blocksPlayerActions(this.sim)) return;
-    if (action.id === CROSS_HOTBAR_ATTACK_ID || action.type === 'item') {
-      this.castCrossHotbarAction(action);
-      return;
-    }
-    const slot = crossHotbarActionSlot(action, this.hotbarActions.length, (barSlot) =>
-      this.actionForSlot(barSlot),
-    );
-    if (slot >= 0) {
-      this.pressSlot(slot);
-      return;
-    }
-    const known = this.sim.known.find((ability) => ability.def.id === action.id);
-    if (known?.def.empowerStages && this.empowerHold.press(-1, action.id, this.sim)) return;
-    this.castCrossHotbarAction(action);
-  }
-
-  releaseCrossHotbarAction(action: { type: 'ability' | 'item'; id: string }): void {
-    if (VehicleActionBarController.blocksPlayerActions(this.sim)) return;
-    this.empowerHold.releaseAction(action, this.sim, (slot) => this.flashActionSlot(slot));
-  }
-
-  // Tap-shaped cross hotbar fire (no hold edge available). The bar is seeded from
-  // the action bar, so the slot lookup almost always hits; an action arranged onto
-  // the pad and nowhere else falls back to a plain cast (position abilities keep
-  // the reticle via the ability-id aim identity) or the shared item-use seam.
-  castCrossHotbarAction(action: { type: 'ability' | 'item'; id: string }): void {
-    if (VehicleActionBarController.blocksPlayerActions(this.sim)) return;
-    // Attack is the fixed slot-0 toggle, not something the sim can cast by id.
-    if (action.id === CROSS_HOTBAR_ATTACK_ID) {
-      this.activateFixedAttackSlot();
-      return;
-    }
-    const slot = crossHotbarActionSlot(action, this.hotbarActions.length, (barSlot) =>
-      this.actionForSlot(barSlot),
-    );
-    if (slot >= 0) {
-      this.castSlot(slot);
-      return;
-    }
-    if (action.type === 'ability') {
-      // A pad-only position ability still gets the reticle: aim identity falls
-      // back to the ability id (XHB_ONLY_AIM_SLOT), so re-press still commits.
-      const known = this.sim.known.find((k) => k.def.id === action.id) ?? null;
-      if (known && known.def.targetMode === 'position' && !known.def.selfCentered) {
-        if (this.isGroundAimActive()) {
-          if (this.groundAim.activeAbilityId() === action.id) {
-            this.commitGroundAimAt();
-            return;
-          }
-          this.cancelGroundAim();
-        }
-        this.castPositionAbility(action.id, known, XHB_ONLY_AIM_SLOT);
-        return;
-      }
-      // The sim owns the refusal for an ability the player no longer knows.
-      this.sim.castAbility(action.id);
-      return;
-    }
-    if (this.tradeOpen) return;
-    if (this.isHotbarItemId(action.id)) {
-      this.useHotbarItem(action.id);
-      return;
-    }
-    // A cell left holding an item this client cannot use is a stale binding, so
-    // refuse it out loud rather than eating the press.
-    this.showError(tSim('error.noItem'));
-  }
-
-  // One decision for a position press (bar slots and the XHB-only fallback):
-  // enter aim when the reticle applies and the cast could start (alive, off
-  // cooldown; resources and the GCD change while aiming, so they never gate
-  // entry), else cast instantly. slotForAim is the re-press commit identity.
-  private castPositionAbility(
-    abilityId: string,
-    resolved: ResolvedAbility,
-    slotForAim: number,
-  ): void {
-    this.playerGroundAim.pressPosition(
-      abilityId,
-      slotForAim,
-      this.groundReticleEnabled() &&
-        !this.sim.player.dead &&
-        actionBarCooldownRemaining(this.sim.player, resolved) <= 0,
-      document.body.classList.contains('mobile-touch'),
-    );
-  }
-
-  castSlot(barSlot: number): void {
-    if (VehicleActionBarController.blocksPlayerActions(this.sim)) {
-      this.vehicleControls.chooseSlot(barSlot);
-      return;
-    }
-    if (this.isGroundAimActive()) {
-      if (this.groundAim.activeSlot() === barSlot) {
-        this.commitGroundAimAt();
-        this.flashActionSlot(barSlot);
-        return;
-      }
-      this.cancelGroundAim();
-    }
-    if (barSlot === 0 && this.attackSlotIsAttack()) {
-      this.activateFixedAttackSlot();
-      return;
-    }
-    const action = this.actionForSlot(barSlot);
-    if (action?.type === 'ability') {
-      // cast by ability id: the server validates against its own known list,
-      // so the client-side slot remap never desyncs slot semantics
-      const resolved = this.abilityForSlot(barSlot);
-      if (resolved) {
-        // A keyboard-generated button click has no pointer hold. Resolve it as
-        // a minimum-charge tap so an empowered spell can never stay stuck.
-        if (resolved.def.empowerStages) {
-          this.sim.castAbility(action.id);
-          this.sim.releaseEmpoweredAbility(action.id);
-          this.flashActionSlot(barSlot);
-          return;
-        }
-        // A self-centered channel (Bladestorm) casts at the caster's own feet:
-        // no ground-aim reticle, straight to the normal cast path.
-        if (resolved.def.targetMode === 'position' && !resolved.def.selfCentered) {
-          this.castPositionAbility(action.id, resolved, barSlot);
-        } else {
-          const mouseoverPid = this.focusTargets.castTarget(
-            resolved.def,
-            this.hoveredCastUnit?.() ?? null,
-            this.optionsHooks?.settings.get('mouseoverCast') ?? true,
-          );
-          if (mouseoverPid !== null) {
-            this.sim.castAbilityOn(action.id, mouseoverPid);
-          } else {
-            this.sim.castAbility(action.id);
-          }
-          // Optional QoL: also engage auto-attack when the ability is an offensive
-          // attack, so white swings start without a separate Attack press. Gated on
-          // the player setting; pressStartsAutoAttack skips heals/buffs, CC the swing
-          // would shatter, and a party-frame redirect. hasAutoAttackTarget keeps
-          // requiresTarget:false AOEs from tripping "Invalid attack target" and covers
-          // PvP player targets that never carry the mob-only `hostile` flag.
-          const tid = this.sim.player.targetId;
-          const target = tid !== null ? (this.sim.entities.get(tid) ?? null) : null;
-          if (
-            this.optionsHooks?.settings.get('startAttackOnAbilityUse') &&
-            pressStartsAutoAttack(resolved.effects, mouseoverPid !== null) &&
-            hasAutoAttackTarget(target, isPvpHostileTargetId(this.sim, tid))
-          ) {
-            // A TIMED cast must not engage yet (the aggro-before-damage bug). The
-            // recorded id only ARMS once castStart below confirms this exact cast
-            // began (a refused cast never reaches it); see
-            // confirmPendingAutoAttackEngage for why that matters. Instants still
-            // engage at once since their damage lands this same tick.
-            if (deferAutoAttackUntilCastEnd(resolved.castTime)) {
-              this.pendingAutoAttackAbilityId = action.id;
-            } else {
-              this.sim.startAutoAttack();
-            }
-          }
-        }
-        this.flashActionSlot(barSlot);
-      } else if (barSlot === 0 && this.freedAttackSlotAbility()) {
-        // The freed slot now visibly shows an assigned, named icon (dimmed) even
-        // while unusable, so a press must refuse out loud rather than eating the
-        // click silently, the same courtesy a stale item binding already gets
-        // (castCrossHotbarAction's tSim('error.noItem') a few dozen lines up).
-        this.showError(t('abilityUi.tooltip.unavailable'));
-      }
-    } else if (action?.type === 'item' && this.isHotbarItemId(action.id)) {
-      if (this.tradeOpen) return;
-      this.useHotbarItem(action.id);
-      this.flashActionSlot(barSlot);
-    }
-  }
-
-  // The one item-use path a bar press takes, keyboard or pad: gathering tools
-  // route through the interact-style handler first (#2343); everything else
-  // (and fishing implements) keeps the plain useItem command.
-  private useHotbarItem(itemId: string): void {
-    if (!this.tryGatherToolUse(itemId)) this.sim.useItem(itemId);
-    if ($('#bags').style.display !== 'none') this.renderBags();
-  }
-
   private currentMobileActionPage(): number {
     return clampMobilePage(this.mobileActionPage);
   }
@@ -6734,6 +6539,7 @@ export class Hud {
     this.mobileActionPage = nextMobilePage(this.mobileActionPage, MOBILE_ACTION_PAGE_COUNT);
   }
 
+  // biome-ignore lint/correctness/noUnusedPrivateClassMembers: read through the action press controller's host (hud/action_bar/action_press_controller.ts).
   private flashActionSlot(barSlot: number): void {
     const btn = this.abilityButtons[barSlot]?.btn;
     if (btn) this.flashActionButton(btn);
@@ -7199,7 +7005,7 @@ export class Hud {
       actionForSlot: (slot) => this.actionForSlot(slot),
       abilityForSlot: (slot) => this.abilityForSlot(slot),
       itemForSlot: (slot) => this.itemForSlot(slot),
-      empoweredAbilityIdForSlot: (slot) => this.empoweredAbilityIdForSlot(slot),
+      empoweredAbilityIdForSlot: (slot) => this.actionPress.empoweredAbilityIdForSlot(slot),
       bindModeActive: () => this.actionBarBind.active,
       takeSuppressedClick: () => {
         if (!this.suppressNextActionClick) return false;
@@ -7215,7 +7021,7 @@ export class Hud {
       cancelAim: () => this.cancelGroundAim(),
       castSlot: (slot) => this.castSlot(slot),
       cyclePage: () => this.cycleMobileActionPage(),
-      activateFixedAttackSlot: () => this.activateFixedAttackSlot(),
+      activateFixedAttackSlot: () => this.actionPress.activateFixedAttackSlot(),
       attackNearest: this.onMobileAttackNearest,
       attackTapState: () => {
         const p = this.sim.player;

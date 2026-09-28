@@ -21,7 +21,14 @@
 //   the same lines the router rig (tests/helpers/event_router_rig.ts) does;
 // - log(), appendChatItemLink() and the lazy profession-surface latch match
 //   what the chat-pane and router rigs transcribe, and playEventSfx hands the
-//   sfx router the Hud's own cast-loop set.
+//   sfx router the Hud's own cast-loop set;
+// - the press entry points (pressSlot, releaseSlot, castSlot and the pad's
+//   cross hotbar edges) reach ONE lazily built ActionPressController with their
+//   arguments, the ground-aim delegates reach the live aim (the player's, or
+//   the vehicle's during a session), the page flip cancels an armed aim first,
+//   and syncSlotMap offers the pad what actionBarEligibleKnownIds returns
+//   (tests/helpers/ground_aim_rig.ts is the rig tests/ground_aim_hud.test.ts
+//   drives the controller over).
 //
 // Its own file on purpose: importing the coordinator costs a suite several
 // hundred MB (tests/CLAUDE.md, "Test cost"), so these cases are kept out of the
@@ -30,7 +37,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { audio } from '../src/game/audio';
 import { sfx } from '../src/game/sfx';
-import { ITEMS } from '../src/sim/data';
+import { ABILITIES, ITEMS } from '../src/sim/data';
 import type { SimEvent } from '../src/sim/types';
 import {
   type BannerShowArgs,
@@ -40,12 +47,15 @@ import {
 } from '../src/ui/banner_slot';
 import { ErrorToastController } from '../src/ui/error_toast_controller';
 import { Hud } from '../src/ui/hud';
+import { ActionPressController } from '../src/ui/hud/action_bar/action_press_controller';
+import type { AimPoint } from '../src/ui/hud/action_bar/ground_aim';
 import type { ChatLogAppendDeps } from '../src/ui/hud/chat/chat_log_appender';
 import { ProfessionSurfaceRefresh } from '../src/ui/hud/professions/profession_surface_refresh';
 import { setLanguage } from '../src/ui/i18n';
 import { celebrationRig } from './helpers/celebration_rig';
 import { chatPane } from './helpers/chat_log_deps';
 import { chatLines, eventRouterRig } from './helpers/event_router_rig';
+import { seedGroundAimRig } from './helpers/ground_aim_rig';
 
 /** The Hud members these cases call or read, typed off the real public
  *  signatures where one exists; the private ones are named here and reached
@@ -673,5 +683,179 @@ describe('Hud.refreshOpenProfessionSurfacesIfChanged: the lazy convergence latch
     hud.refreshOpenProfessionSurfacesIfChanged();
     expect(renderIfOpen).toHaveBeenCalledTimes(2);
     expect(renderCrafting).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe('Hud press entry points: one lazily built ActionPressController', () => {
+  it('forwards pressSlot, releaseSlot, castSlot and the pad edges with their arguments', () => {
+    const methods = [
+      'pressSlot',
+      'releaseSlot',
+      'castSlot',
+      'pressCrossHotbarAction',
+      'releaseCrossHotbarAction',
+    ] as const;
+    const spies = Object.fromEntries(
+      methods.map((name) => [
+        name,
+        vi.spyOn(ActionPressController.prototype, name).mockImplementation(() => {}),
+      ]),
+    ) as Record<(typeof methods)[number], ReturnType<typeof vi.spyOn>>;
+    const hud = bareHud() as DelegatorRig & {
+      pressSlot: Hud['pressSlot'];
+      releaseSlot: Hud['releaseSlot'];
+      castSlot: Hud['castSlot'];
+      pressCrossHotbarAction: Hud['pressCrossHotbarAction'];
+      releaseCrossHotbarAction: Hud['releaseCrossHotbarAction'];
+    };
+    const cell = { type: 'ability' as const, id: 'glacial_front' };
+    const other = { type: 'item' as const, id: 'minor_healing_potion' };
+
+    hud.pressSlot(3);
+    hud.releaseSlot(4);
+    hud.castSlot(5);
+    hud.pressCrossHotbarAction(cell);
+    hud.releaseCrossHotbarAction(other);
+
+    expect(spies.pressSlot).toHaveBeenCalledExactlyOnceWith(3);
+    expect(spies.releaseSlot).toHaveBeenCalledExactlyOnceWith(4);
+    expect(spies.castSlot).toHaveBeenCalledExactlyOnceWith(5);
+    expect(spies.pressCrossHotbarAction).toHaveBeenCalledExactlyOnceWith(cell);
+    expect(spies.releaseCrossHotbarAction).toHaveBeenCalledExactlyOnceWith(other);
+    // A bare prototype resolves the controller lazily, builds it ONCE, and every
+    // call lands on that one instance (one empowered hold across all inputs).
+    const press = hud.actionPress;
+    expect(press).toBeInstanceOf(ActionPressController);
+    expect(hud.actionPress).toBe(press);
+    for (const name of methods) expect(spies[name].mock.contexts, name).toEqual([press]);
+    // The vehicle bar's cancel list reads the controller's own hold.
+    expect(hud.empowerHold).toBe((press as ActionPressController).empowerHold);
+  });
+});
+
+describe('Hud ground aim: the delegates and the page flip, over the ground-aim rig', () => {
+  interface AimHud {
+    castSlot: Hud['castSlot'];
+    isGroundAimActive: Hud['isGroundAimActive'];
+    cancelGroundAim: Hud['cancelGroundAim'];
+    groundAimAbilityRange: Hud['groundAimAbilityRange'];
+    updateGroundAimPoint: Hud['updateGroundAimPoint'];
+    nudgeGroundAimPoint: Hud['nudgeGroundAimPoint'];
+    groundAimReticle: Hud['groundAimReticle'];
+    commitGroundAimAt: Hud['commitGroundAimAt'];
+    commitGroundAim: Hud['commitGroundAim'];
+    cycleMobileActionPage(): void;
+  }
+  const aimHud = (options: Parameters<typeof seedGroundAimRig>[1] = {}) =>
+    seedGroundAimRig(bareHud() as unknown as AimHud, options);
+
+  afterEach(() => {
+    document.body.classList.remove('mobile-touch');
+  });
+
+  it('cancels active aim before flipping the mobile action page', () => {
+    const hud = aimHud({ mobileTouch: true });
+    hud.castSlot(3);
+    const pagesObservedWhileCancelling: number[] = [];
+    hud.renderer.setGroundAimReticle.mockImplementation((reticle) => {
+      if (reticle === null) pagesObservedWhileCancelling.push(hud.mobileActionPage);
+    });
+
+    hud.cycleMobileActionPage();
+
+    expect(hud.isGroundAimActive()).toBe(false);
+    expect(pagesObservedWhileCancelling).toEqual([0]);
+    expect(hud.mobileActionPage).toBe(1);
+    expect(hud.renderer.setGroundAimReticle).toHaveBeenCalledWith(null);
+  });
+
+  it('drives the player aim through the real castSlot and every delegate', () => {
+    const hud = aimHud({ range: 30 });
+
+    hud.castSlot(3);
+    expect(hud.isGroundAimActive()).toBe(true);
+    expect(hud.groundAimAbilityRange()).toBe(30);
+    hud.updateGroundAimPoint({ x: 10, z: 5 });
+    hud.nudgeGroundAimPoint(1, 0);
+    expect(hud.playerGroundAim.rawAimPoint()).toEqual({ x: 11, z: 5 });
+    expect(hud.groundAimReticle()?.point).toEqual({ x: 11, z: 5 });
+    expect(hud.commitGroundAim()).toBe(true);
+    expect(hud.sim.castAbilityAt).toHaveBeenCalledExactlyOnceWith('flamestrike', { x: 11, z: 5 });
+    expect(hud.isGroundAimActive()).toBe(false);
+
+    hud.castSlot(3);
+    expect(hud.commitGroundAimAt({ x: 4, z: 0 })).toBe(true);
+    expect(hud.sim.castAbilityAt).toHaveBeenLastCalledWith('flamestrike', { x: 4, z: 0 });
+    hud.castSlot(3);
+    expect(hud.cancelGroundAim()).toBe(true);
+    expect(hud.isGroundAimActive()).toBe(false);
+    expect(hud.sim.castAbilityAt).toHaveBeenCalledTimes(2);
+  });
+
+  it('reads the vehicle aim, and hands the vehicle bar the press, during a vehicle session', () => {
+    const hud = aimHud();
+    const point: AimPoint = { x: 5, z: 6 };
+    const aim = {
+      isActive: vi.fn(() => true),
+      cancel: vi.fn(() => true),
+      abilityRange: vi.fn(() => 12),
+      updatePoint: vi.fn(),
+      nudge: vi.fn(),
+      reticle: vi.fn(() => null),
+      commitAt: vi.fn(() => true),
+    };
+    const chooseSlot = vi.fn();
+    // The lazily built vehicle bar, pre-seated so the getter returns it.
+    Object.assign(hud, { vehicleBar: { aim, chooseSlot } });
+    Object.assign(hud.sim, { vehicleSession: { vehicleId: 1 } });
+
+    expect(hud.isGroundAimActive()).toBe(true);
+    expect(hud.cancelGroundAim()).toBe(true);
+    expect(hud.groundAimAbilityRange()).toBe(12);
+    hud.updateGroundAimPoint(point);
+    hud.nudgeGroundAimPoint(3, 4);
+    expect(hud.groundAimReticle()).toBeNull();
+    expect(hud.commitGroundAimAt(point)).toBe(true);
+    expect(hud.commitGroundAim()).toBe(true);
+    hud.castSlot(3);
+
+    expect(aim.isActive).toHaveBeenCalledTimes(1);
+    expect(aim.cancel).toHaveBeenCalledTimes(1);
+    expect(aim.abilityRange).toHaveBeenCalledTimes(1);
+    expect(aim.updatePoint).toHaveBeenCalledExactlyOnceWith(point);
+    expect(aim.nudge).toHaveBeenCalledExactlyOnceWith(3, 4);
+    expect(aim.reticle).toHaveBeenCalledTimes(1);
+    expect(aim.commitAt.mock.calls).toEqual([[point], []]);
+    expect(chooseSlot).toHaveBeenCalledExactlyOnceWith(3);
+    expect(hud.playerGroundAim.isActive()).toBe(false);
+    expect(hud.sim.castAbilityAt).not.toHaveBeenCalled();
+  });
+});
+
+describe('Hud.syncSlotMap: the pad offer is actionBarEligibleKnownIds of the known list', () => {
+  it('reseeds the bar, offers the eligible known ids in order, and repins the page', () => {
+    const hud = bareHud();
+    const syncKnownAbilities = vi.fn();
+    const syncCrossHotbarKnown = vi.fn();
+    Object.assign(hud, {
+      actionBarController: { syncKnownAbilities },
+      optionsHooks: { gamepad: { syncCrossHotbarKnown } },
+      // Real content records: a stance is offered, a passive is withheld.
+      sim: {
+        known: ['mortal_strike', 'measured_fury', 'defensive_stance'].map((id) => ({
+          def: ABILITIES[id],
+        })),
+      },
+      currentMobileActionPage: vi.fn(() => 1),
+    });
+
+    (hud as unknown as { syncSlotMap(): void }).syncSlotMap();
+
+    expect(syncKnownAbilities).toHaveBeenCalledTimes(1);
+    expect(syncCrossHotbarKnown).toHaveBeenCalledExactlyOnceWith([
+      'mortal_strike',
+      'defensive_stance',
+    ]);
+    expect(hud.mobileActionPage).toBe(1);
   });
 });

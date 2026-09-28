@@ -37,11 +37,16 @@ describe('pressStartsAutoAttack', () => {
   });
 
   it('is the predicate the HUD press path engages through, fed the redirect', () => {
-    // castSlot has no unit seam: pin the call site so the redirect flag cannot be
-    // dropped while the predicate above stays green.
-    const hud = readFileSync(new URL('../src/ui/hud.ts', import.meta.url), 'utf8');
-    expect(hud).toContain('pressStartsAutoAttack(resolved.effects, mouseoverPid !== null)');
-    expect(hud).not.toContain('abilityStartsAutoAttack(resolved.effects)');
+    // The press path's call site (castSlot, in the action press controller since
+    // it left hud.ts; its redirect arm is executed in
+    // tests/action_press_controller.test.ts): pinned so the redirect flag cannot
+    // be dropped while the predicate above stays green.
+    const press = readFileSync(
+      new URL('../src/ui/hud/action_bar/action_press_controller.ts', import.meta.url),
+      'utf8',
+    );
+    expect(press).toContain('pressStartsAutoAttack(resolved.effects, mouseoverPid !== null)');
+    expect(press).not.toContain('abilityStartsAutoAttack(resolved.effects)');
   });
 });
 

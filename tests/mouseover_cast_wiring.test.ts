@@ -8,8 +8,10 @@
 // neither proves the two HALVES meet (PR review caught exactly that gap: the
 // composition was only ever exercised for the party rows). So this file drives
 // the real controller into the real core through a stand-in consumer shaped like
-// Hud's, and then PINS hud.ts's own wiring to source, because a stand-in that
-// drifts from the coordinator would prove nothing.
+// Hud's, and then PINS hud.ts's own wiring (and the press path's read of it, in
+// src/ui/hud/action_bar/action_press_controller.ts since castSlot left hud.ts)
+// to source, because a stand-in that drifts from the coordinator would prove
+// nothing.
 import { readFileSync } from 'node:fs';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { type MouseoverCastAbility, mouseoverCastTarget } from '../src/ui/mouseover_cast_core';
@@ -120,13 +122,20 @@ describe('target-of-target mouseover cast, controller through core', () => {
 });
 
 // The stand-in above is only evidence while it matches the coordinator. These
-// pin the two hud.ts lines it stands in for, so moving either one fails here
-// instead of silently making the composition test fictional.
+// pin the lines it stands in for (the field in hud.ts, the castSlot read in the
+// action press controller, whose `this.hud` IS the Hud: its hoveredCastUnit
+// read is welded to that Hud field in tests/action_press_controller.test.ts),
+// so moving either one fails here instead of silently making the composition
+// test fictional.
 describe('hud.ts really wires the seam the test above stands in for', () => {
   const hud_ts = readFileSync(new URL('../src/ui/hud.ts', import.meta.url), 'utf8').replace(
     /\s+/g,
     ' ',
   );
+  const press_ts = readFileSync(
+    new URL('../src/ui/hud/action_bar/action_press_controller.ts', import.meta.url),
+    'utf8',
+  ).replace(/\s+/g, ' ');
 
   it('parks the target-of-target controller resolver on hoveredCastUnit', () => {
     expect(hud_ts).toContain('installTargetOfTargetControls(this.totFrameEl, {');
@@ -134,11 +143,13 @@ describe('hud.ts really wires the seam the test above stands in for', () => {
   });
 
   it('feeds that field back into the shared mouseover-cast path', () => {
-    expect(hud_ts).toContain('const mouseoverPid = this.focusTargets.castTarget(');
-    expect(hud_ts).toContain('this.hoveredCastUnit?.() ?? null');
+    expect(press_ts).toContain('const mouseoverPid = this.hud.focusTargets.castTarget(');
+    expect(press_ts).toContain('this.hud.hoveredCastUnit?.() ?? null');
     // The option gate travels with it, which is what makes the stand-in's
     // `enabled` input the same one the real call passes.
-    expect(hud_ts).toContain("this.optionsHooks?.settings.get('mouseoverCast') ?? true");
+    expect(press_ts).toContain("this.hud.optionsHooks?.settings.get('mouseoverCast') ?? true");
+    // And the controller's host is the Hud itself.
+    expect(hud_ts).toContain('this.actionPressState ??= new ActionPressController(this);');
   });
 
   it('keeps the party rows on the SAME field, so one seam serves both frames', () => {

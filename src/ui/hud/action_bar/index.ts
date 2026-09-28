@@ -11,6 +11,7 @@ export * from './action_bar_toggle_controller';
 export * from './action_bar_toggle_core';
 export * from './action_bar_view';
 export * from './action_bar_visibility_core';
+export * from './action_press_controller';
 export * from './attack_on_ability';
 export * from './consumable_bar_view';
 export * from './consumable_seat_controller';

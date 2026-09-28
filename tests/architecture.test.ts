@@ -2694,6 +2694,9 @@ const UI_DOM_MODULES = [
   'src/ui/hud/action_bar/bar_editor/bar_editor_window.ts',
   'src/ui/hud/action_bar/consumable_seat_controller.ts',
   'src/ui/hud/action_bar/mobile_action_ring_controller.ts',
+  // Every bar seat's and cross hotbar cell's press path (extracted from Hud):
+  // reads the body's mobile-touch class and the #bags window's open state.
+  'src/ui/hud/action_bar/action_press_controller.ts',
   'src/ui/hud/action_bar/radial_gesture_controller.ts',
   'src/ui/hud/menu/menu_control_controller.ts',
   'src/ui/hud/stance/stance_bar_controller.ts',

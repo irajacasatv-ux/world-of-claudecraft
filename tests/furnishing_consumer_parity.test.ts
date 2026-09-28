@@ -40,8 +40,8 @@ import type { ItemDef, ItemInstancePayload, PlayerClass, SimEvent } from '../src
 import { terrainHeight } from '../src/sim/world';
 import { type BagMode, bagItemAction } from '../src/ui/bags_view';
 import { paperdollDropAction } from '../src/ui/equip_drop_core';
-import { Hud } from '../src/ui/hud';
 import { ActionBarController } from '../src/ui/hud/action_bar/action_bar_controller';
+import { ActionPressController } from '../src/ui/hud/action_bar/action_press_controller';
 import type { IWorld } from '../src/world_api';
 import { FURNISHING } from './fixtures/furnishing_item';
 import { bareClient, broadcast, fakeWs, joinServer, lastSnap } from './helpers/bare_client';
@@ -205,7 +205,7 @@ describe('furnishing activation refusals', () => {
   });
 
   it.each(['keyboard', 'crossOnBar', 'crossOnly'] as const)(
-    'an existing %s item action refuses furnishing activation through real Hud dispatch',
+    'an existing %s item action refuses furnishing activation through the real press dispatch',
     (route) => {
       ITEMS[CONTROL_ID] = { ...ITEMS.minor_healing_potion, id: CONTROL_ID } as ItemDef;
       ITEMS[ID] = { ...FURNISHING, use: { type: 'fishing' }, potionHp: 500 } as unknown as ItemDef;
@@ -225,6 +225,8 @@ describe('furnishing activation refusals', () => {
       const use = vi.fn((itemId: string) => sim.useItem(itemId));
       const flash = vi.fn();
       const showError = vi.fn();
+      // The Hud members the press paths read (ActionPressHost), over the real
+      // action bar controller's item gate.
       const host = {
         // The release's vehicle bar gate (VehicleActionBarController) reads the
         // world first; the real Sim answers "not in a vehicle".
@@ -232,19 +234,20 @@ describe('furnishing activation refusals', () => {
         isGroundAimActive: () => false,
         actionForSlot: (slot: number) => (route !== 'crossOnly' && slot === 1 ? action : null),
         hotbarActions: [null],
-        castSlot: (slot: number) => Hud.prototype.castSlot.call(host as unknown as Hud, slot),
-        castCrossHotbarAction: (item: { type: 'item'; id: string }) =>
-          Hud.prototype.castCrossHotbarAction.call(host as unknown as Hud, item),
         showError,
         tradeOpen: false,
         isHotbarItemId: (itemId: string) => controller.isHotbarItemId(itemId),
-        useHotbarItem: use,
         flashActionSlot: flash,
       };
+      // The real castSlot, castCrossHotbarAction and pressCrossHotbarAction; the
+      // item-use seam they end in is stood in by the world call it wraps.
+      const press = new ActionPressController(host);
+      vi.spyOn(
+        press as unknown as { useHotbarItem(itemId: string): void },
+        'useHotbarItem',
+      ).mockImplementation(use);
       const run = () =>
-        route === 'keyboard'
-          ? Hud.prototype.castSlot.call(host as unknown as Hud, 1)
-          : Hud.prototype.pressCrossHotbarAction.call(host as unknown as Hud, action);
+        route === 'keyboard' ? press.castSlot(1) : press.pressCrossHotbarAction(action);
       noMutation(sim, run);
       expect(use).not.toHaveBeenCalled();
       expect(flash).not.toHaveBeenCalled();
