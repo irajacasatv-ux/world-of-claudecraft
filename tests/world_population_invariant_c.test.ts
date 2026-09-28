@@ -1,8 +1,9 @@
 // The world population invariant, escort shard c (of a to d): the same
 // per-escort run-and-kill rounds as tests/world_population_invariant.test.ts,
-// which carries the rule, the boot case and the pin that the shards partition
-// every shipped escort. Split for wall time only; the shared half lives in
-// tests/helpers/world_population.ts.
+// which carries the rule and the boot case. Split for wall time only: the shared
+// half lives in tests/helpers/world_population.ts, and
+// tests/world_population_shards.test.ts pins that the shards partition every
+// shipped escort.
 import { describe, it } from 'vitest';
 import { escortShard, runEscortRounds } from './helpers/world_population';
 

@@ -5,8 +5,8 @@
 // shipped escort weighed 167,875 ms in CI (the 2026-09-28 harvest, run
 // 36448553184), over the 90-second rule tests/suite_lane_threshold.test.ts holds.
 // escortShard deals the escorts round-robin, so a new escort lands in a shard
-// automatically and no escort can be left out; the partition is pinned in the
-// first file.
+// automatically and no escort can be left out; the partition is pinned in
+// tests/world_population_shards.test.ts.
 import { expect } from 'vitest';
 import {
   HEALING_DUMMY_CASTER_ID,

@@ -2,7 +2,7 @@
   "__provenance": {
     "run": "36448553184",
     "harvested": "2026-09-28",
-    "files": 5054,
+    "files": 5055,
     "harvestedFiles": 5048,
     "carried": {
       "tests/parity/coverage_c.test.ts": {
@@ -71,6 +71,17 @@
           7972,
           7843,
           7903
+        ]
+      },
+      "tests/world_population_shards.test.ts": {
+        "ms": 3,
+        "method": "local-median",
+        "measured": "2026-09-28",
+        "reason": "Split 2026-09-28 from tests/world_population_invariant.test.ts so the escort-carrying file stays import-graph selected; measured alone locally, pending the next green full-mode CI harvest.",
+        "runs": [
+          3,
+          3,
+          2
         ]
       }
     }
@@ -4993,6 +5004,7 @@
   "tests/world_population_invariant_b.test.ts": 16648,
   "tests/world_population_invariant_c.test.ts": 16514,
   "tests/world_population_invariant_d.test.ts": 7903,
+  "tests/world_population_shards.test.ts": 3,
   "tests/world_pvp.test.ts": 22884,
   "tests/world_pvp_rules.test.ts": 10,
   "tests/world_pvp_server_dispatch.test.ts": 2784,
