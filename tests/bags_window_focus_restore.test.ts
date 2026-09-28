@@ -57,7 +57,6 @@ function harness(inventory: InvSlot[]): { root: HTMLElement; w: BagsWindow; inv:
     insertItemChatLink: noop,
     showError: noop,
     setPendingPetFeed: noop,
-    resetPetBarSig: noop,
     isHotbarItemId: () => false,
     useGatherTool: () => false,
     setDragAction: noop,

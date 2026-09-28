@@ -86,7 +86,6 @@ function harness() {
     insertItemChatLink: noop,
     showError: noop,
     setPendingPetFeed: noop,
-    resetPetBarSig: noop,
     isHotbarItemId: (id) => id === 'healing_potion',
     useGatherTool: () => false,
     setDragAction: (action) => {

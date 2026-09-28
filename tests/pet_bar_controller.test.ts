@@ -13,7 +13,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { PetBarController, type PetBarHost } from '../src/ui/hud/pet_bar';
-import { t } from '../src/ui/i18n';
+import { t, tPlural } from '../src/ui/i18n';
 import { makeWriterFacet } from '../src/ui/painter_host';
 import { hudDeclares, interfaceMembers } from './helpers/hud_host_weld';
 import { stripComments } from './helpers/strip_comments';
@@ -21,6 +21,17 @@ import { stripComments } from './helpers/strip_comments';
 vi.mock('../src/game/audio', () => ({
   audio: { click: vi.fn() },
 }));
+// A pass-through t() that records its keys, so the cooldown case can tell the
+// catalog key from a concatenation that renders the same English.
+const tCalls = vi.hoisted(() => vi.fn());
+vi.mock('../src/ui/i18n', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../src/ui/i18n')>();
+  const recordingT: typeof actual.t = (key, values) => {
+    tCalls(key, values);
+    return actual.t(key, values);
+  };
+  return { ...actual, t: recordingT };
+});
 // Additive, never bare (the reliquary_window_behavior lesson): the canvas
 // resolvers stay stubbed; every export the factory does not name passes
 // through.
@@ -165,6 +176,7 @@ function makeHud(
 
 beforeEach(() => {
   document.body.innerHTML = '<div id="petbar"></div>';
+  tCalls.mockClear();
 });
 
 afterEach(() => {
@@ -289,6 +301,11 @@ describe('Hud Warlock pet signature bar', () => {
     expect(felbolt?.classList.contains('cooldown')).toBe(true);
     expect(felbolt?.querySelector('.cdtext')?.textContent).toBe('8');
     expect(felbolt?.getAttribute('aria-label')).toBe('Felbolt, 8 seconds remaining');
+    // The label is one catalog key with named values, never a concatenation.
+    expect(tCalls).toHaveBeenCalledWith('hudChrome.petBarButton.cooldownAria', {
+      name: 'Felbolt',
+      remaining: tPlural('hudChrome.plurals.secondsRemaining', 8),
+    });
     expect(felbolt?.getAttribute('aria-description')).toBe(
       'Autocast off. Right-click, touch-hold, or press Shift+Enter to turn it on.',
     );
@@ -425,7 +442,7 @@ describe('PetBarController: the latch, the presses and the host seam', () => {
     expect(groups()).toEqual(painted);
     expect(groups()[0]).toBe(painted[0]);
     expect(hud.attachTooltip).toHaveBeenCalledTimes(4);
-    // invalidate() is what the language switch and the bags feed pick call:
+    // invalidate() is what the language switch calls:
     // the next frame rebuilds, and the one after it holds again.
     hud.controller.invalidate();
     hud.renderPetBar(pet);
@@ -553,9 +570,9 @@ describe('PetBarController: the latch, the presses and the host seam', () => {
     expect(code).toContain('this.petBarState ??= new PetBarController(this, this.writerFacet);');
     // update() drives it with the pet it resolved once for the pet frame.
     expect(code).toContain('this.petBar.render(pet);');
-    // The bags window's feed pick and the language switch invalidate the bar;
-    // the feed mode itself is read and ended through the controller.
-    expect(code).toContain('resetPetBarSig: () => this.petBar.invalidate(),');
+    // Only the language switch invalidates the bar; the feed mode is read and
+    // ended through the controller, whose setFeedPending redraws on a flip.
+    expect(code).not.toContain('resetPetBarSig');
     expect(code.split('this.petBar.invalidate();').length - 1).toBe(1);
     expect(code).toContain('pendingPetFeed: () => this.petBar.feedPending,');
     expect(code).toContain('setPendingPetFeed: (active) => this.petBar.setFeedPending(active),');

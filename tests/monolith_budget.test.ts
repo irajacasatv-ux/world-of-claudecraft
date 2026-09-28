@@ -613,8 +613,9 @@ const MONOLITHS: MonolithRow[] = [
     // (two public-get, private-set accessors, paid for by moving
     // questSuggestedPlayersHtml and emoteLabel out and inlining wocBalanceHtml);
     // 14885 once the pet feed mode moved onto the bar and the itemIcon wrapper was
-    // inlined into its six adapters.
-    ceiling: 14885,
+    // inlined into its six adapters; 14883 once the bags window's redundant pet bar
+    // reset dep and a stale feed-mode comment left.
+    ceiling: 14883,
     seam: 'pure view core + thin painter on PainterHost (src/ui/CLAUDE.md)',
   },
   {

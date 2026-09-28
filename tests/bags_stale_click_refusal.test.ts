@@ -101,7 +101,6 @@ function harness(inventory: InvSlot[]): Harness {
     insertItemChatLink: noop,
     showError: (text: string) => errors.push(text),
     setPendingPetFeed: noop,
-    resetPetBarSig: noop,
     isHotbarItemId: () => false,
     useGatherTool: () => false,
     setDragAction: noop,

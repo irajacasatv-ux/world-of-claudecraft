@@ -8,11 +8,10 @@
 // Hud builds it lazily over itself as the host (so tsc checks the Hud against
 // PetBarHost) and its shared elided writer facet, drives render(pet) every frame
 // from update() with the pet it resolved once for the pet frame too, and calls
-// invalidate() wherever the bar must rebuild on the next frame: a language switch
-// (relocalizeCoordinatorMemos) and the bags window's feed pick. The food-selection
-// mode is the bar's own state: the Heal Pet press starts it, and the bags window
-// reads and ends it through Hud's bags deps; setFeedPending redraws the bar
-// whenever the mode flips.
+// invalidate() when the bar must rebuild on the next frame for a language switch
+// (relocalizeCoordinatorMemos). The food-selection mode is the bar's own state: the
+// Heal Pet press starts it, and the bags window reads and ends it through Hud's bags
+// deps; setFeedPending redraws the bar whenever the mode flips.
 //
 // A DOM module: it reads #petbar, toggles a body class and arms the touch-hold
 // timer on window.

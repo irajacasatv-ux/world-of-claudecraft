@@ -293,8 +293,8 @@ export interface BagsWindowDeps extends PainterHostPresentation {
   insertItemChatLink(itemId: string): void;
   /** Surface a deps-owned error toast (reins-use denials and drag rejects). */
   showError(text: string): void;
+  /** Enter or leave the pet bar's food-selection mode; leaving redraws the bar. */
   setPendingPetFeed(active: boolean): void;
-  resetPetBarSig(): void;
   /** Gathering-tool click routing (#2343): true when the interact-style
    *  handler consumed the use (nearest matching node + autorun stop); false
    *  falls back to the plain useItem command. */
@@ -489,9 +489,9 @@ export class BagsWindow {
    *  capture-and-return. Preserves the inline path's tooltip + pet-feed teardown. */
   close(): void {
     const el = this.deps.root();
-    // Early-return only when already hidden. Bags is shown as 'flex' (toggle / vendor) OR
-    // 'block' (the pet-feed path), so guard on 'none', not a specific shown value, or a
-    // 'block'-shown bags would never close.
+    // Early-return only when already hidden. Every opener (toggle, vendor, the pet-feed
+    // path) shows bags as 'flex' today; guard on 'none', not a specific shown value, so
+    // an opener that ever shows it another way still closes.
     if (el.style.display === 'none') return;
     // A discard / sell prompt is a modal CHILD of this window (it sets #bags inert). The
     // window can be force-closed out from under it (the bags keybind fires while the
@@ -1914,7 +1914,6 @@ export class BagsWindow {
         if (!at) return;
         this.deps.world().feedPet(s.itemId, at);
         this.deps.setPendingPetFeed(false);
-        this.deps.resetPetBarSig();
         this.render();
         break;
       }

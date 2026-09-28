@@ -94,7 +94,6 @@ function harness(startCopper = 1000, inventory: InvSlot[] = SWORD): Harness {
     insertItemChatLink: noop,
     showError: noop,
     setPendingPetFeed: noop,
-    resetPetBarSig: noop,
     isHotbarItemId: () => false,
     useGatherTool: () => false,
     setDragAction: noop,

@@ -76,7 +76,6 @@ function harness(
     insertItemChatLink: noop,
     showError: (msg: string) => errors.push(msg),
     setPendingPetFeed: noop,
-    resetPetBarSig: noop,
     isHotbarItemId: () => false,
     useGatherTool: () => false,
     setDragAction: noop,

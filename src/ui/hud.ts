@@ -1955,8 +1955,9 @@ export class Hud {
   private bootcamp = new BootcampOverlay();
   private noticeboardPopup = new NoticeboardPopup();
   private realmBuilderPopup = new RealmBuilderPopup();
-  // The pet action bar (hud/pet_bar/), lazy like the other extracted controllers
-  // so a bare-prototype rig still resolves it; update() drives it every frame.
+  // The pet action bar (hud/pet_bar/), built on first use; update() drives it every
+  // frame. A bare-prototype rig gets a bar with no writer facet (the field
+  // initializer never ran), so such a rig may set the feed mode but not render.
   private petBarState: PetBarController | undefined;
   private get petBar(): PetBarController {
     this.petBarState ??= new PetBarController(this, this.writerFacet);
@@ -1975,8 +1976,6 @@ export class Hud {
   // World Market collect indicator (slow-band, value-diffed; see updateMarketIndicator).
   private marketIndicatorEl: HTMLElement | null = null;
   private lastMarketCollectPending: boolean | null = null;
-  // Pet food-selection mode: started by the pet bar's Heal Pet button, read and
-  // ended by the bags window, so it lives here rather than in either.
   constructor(
     public readonly sim: IWorld,
     private renderer: Renderer,
@@ -4912,7 +4911,6 @@ export class Hud {
     insertItemChatLink: (itemId) => this.insertItemChatLink(itemId),
     showError: (text) => this.showError(text),
     setPendingPetFeed: (active) => this.petBar.setFeedPending(active),
-    resetPetBarSig: () => this.petBar.invalidate(),
     sellConfirmPolicy: () => vendorSellConfirmPolicyFrom((k) => this.optionsHooks?.settings.get(k)),
     isHotbarItemId: (itemId) => this.isHotbarItemId(itemId),
     useGatherTool: (item) => this.gatherToolUseHook?.(item) ?? false,
