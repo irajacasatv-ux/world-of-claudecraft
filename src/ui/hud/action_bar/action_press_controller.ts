@@ -201,16 +201,14 @@ export class ActionPressController {
     resolved: ResolvedAbility,
     slotForAim: number,
   ): void {
-    // The shock bomb is an item: its cooldown is the player's own entry under
-    // the item id, not an action-bar ability's cooldown read.
-    const cdReady =
-      abilityId === 'clockwork_shock_bomb'
-        ? (this.hud.sim.player.cooldowns.get(abilityId) ?? 0) <= 0
-        : actionBarCooldownRemaining(this.hud.sim.player, resolved) <= 0;
+    // The shock bomb reads the same way: its cooldown sits under its own id,
+    // and no cooldown bypass names it.
     this.hud.playerGroundAim.pressPosition(
       abilityId,
       slotForAim,
-      this.groundReticleEnabled() && !this.hud.sim.player.dead && cdReady,
+      this.groundReticleEnabled() &&
+        !this.hud.sim.player.dead &&
+        actionBarCooldownRemaining(this.hud.sim.player, resolved) <= 0,
       document.body.classList.contains('mobile-touch'),
     );
   }
