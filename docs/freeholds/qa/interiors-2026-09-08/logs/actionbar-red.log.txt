@@ -4,7 +4,7 @@ npm warn Unknown project config "strict-peer-dependencies". This will stop worki
 
  RUN  v4.1.10 /Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds
 
- ❯ tests/action_bar_controller.test.ts (65 tests | 1 failed | 64 skipped) 6ms
+ > tests/action_bar_controller.test.ts (65 tests | 1 failed | 64 skipped) 6ms
      × admits the permanent travel key while refusing forged and unusable item ids 5ms
 
 ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
@@ -18,7 +18,7 @@ AssertionError: expected false to be true // Object.is equality
 - true
 + false
 
- ❯ tests/action_bar_controller.test.ts:1206:53
+ > tests/action_bar_controller.test.ts:1206:53
     1204|   it('admits the permanent travel key while refusing forged and unusab…
     1205|     const { controller } = makeHarness('warrior', [], bar());
     1206|     expect(controller.isHotbarItemId('hearth_key')).toBe(true);

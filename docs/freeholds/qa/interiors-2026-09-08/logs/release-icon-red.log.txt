@@ -4,7 +4,7 @@ npm warn Unknown project config "strict-peer-dependencies". This will stop worki
 
  RUN  v4.1.10 /Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds
 
- ❯ tests/release_v039_icon_art.test.ts (5 tests | 1 failed) 17ms
+ > tests/release_v039_icon_art.test.ts (5 tests | 1 failed) 17ms
      × keeps the sealed historical totals while current production remains fully painted 6ms
 
 ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
@@ -18,7 +18,7 @@ AssertionError: production isHotbarItemId art-subject inventory (live minus ITEM
 - 97
 + 98
 
- ❯ tests/release_v039_icon_art.test.ts:496:7
+ > tests/release_v039_icon_art.test.ts:496:7
     494|       artSubjectHotbarItemIds,
     495|       'production isHotbarItemId art-subject inventory (live minus ITE…
     496|     ).toHaveLength(97);

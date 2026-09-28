@@ -10,7 +10,7 @@ npm warn Unknown project config "strict-peer-dependencies". This will stop worki
 stdout | tests/server/freehold_wire.test.ts
 [capi] META_CAPI_ACCESS_TOKEN unset; Conversions API disabled.
 
- ❯ tests/server/freehold_wire.test.ts (86 tests | 1 failed) 2591ms
+ > tests/server/freehold_wire.test.ts (86 tests | 1 failed) 2591ms
      × the env read sits behind the token short-circuit: a non-housing frame never touches the env 3ms
 (node:7117) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
 (Use `node --trace-warnings ...` to show where the warning was created)
@@ -26,7 +26,7 @@ AssertionError: expected false to be true // Object.is equality
 - true
 + false
 
- ❯ tests/server/freehold_wire.test.ts:426:71
+ > tests/server/freehold_wire.test.ts:426:71
     424|     expect(refusedRiftForgeCommand('freehold_enter', countingEnv)).toB…
     425|     expect(reads).toBe(0);
     426|     expect(refusedRiftForgeCommand('rift_upgrade_item', countingEnv)).…

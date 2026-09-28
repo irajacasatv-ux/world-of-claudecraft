@@ -3,7 +3,7 @@ COMMAND: npx vitest run tests/apex_pattern_channels.test.ts --maxWorkers=2 -t ev
 
  RUN  v4.1.10 /private/var/folders/w2/fg3_z30d42nfpjsy58cvh5z40000gn/T/freeholds-crafted-mutants-aaey2br3
 
- ❯ tests/apex_pattern_channels.test.ts (24 tests | 1 failed | 23 skipped) 7ms
+ > tests/apex_pattern_channels.test.ts (24 tests | 1 failed | 23 skipped) 7ms
      × every recipe teaching pattern appears in EXACTLY the channels its family assigns 6ms
 
 ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
@@ -19,7 +19,7 @@ AssertionError: recipe_freehold_clockwork_lamp has only the deterministic Marks 
 - ]
 + []
 
- ❯ tests/apex_pattern_channels.test.ts:254:81
+ > tests/apex_pattern_channels.test.ts:254:81
     252|       }
     253|       if (FURNISHING_RECIPES.includes(recipe)) {
     254|         expect(channels, `${recipe.id} has only the deterministic Mark…

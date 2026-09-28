@@ -72,6 +72,10 @@ The [per-file proof](log-normalization-result.json) records original/normalized
 byte counts and SHA-256 hashes, plus the unchanged non-whitespace hash. References
 in historical reports to raw logs mean this complete archived command output;
 the normalized archive is not claimed to retain byte-exact trailing whitespace.
+A later pass (2026-09-28) replaced the tools' emoji-range glyphs in seven of
+these logs with ASCII under the repository copy rule; its per-file before and
+after hashes are in
+[copy-glyph-normalization.json](../../../qa/persistence-2026-09-08/copy-glyph-normalization.json).
 
 The [final shared-gate runner](attachments/run-final-gate.mjs.txt) records exact
 argv, explicit disposable PostgreSQL environment, source commit/tree, timestamps

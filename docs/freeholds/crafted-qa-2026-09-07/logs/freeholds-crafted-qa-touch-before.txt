@@ -6,7 +6,7 @@ npm warn Unknown project config "strict-peer-dependencies". This will stop worki
 
 (node:28705) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
 (Use `node --trace-warnings ...` to show where the warning was created)
- ❯ tests/bags_window_use_routing.test.ts (31 tests | 12 failed) 64ms
+ > tests/bags_window_use_routing.test.ts (31 tests | 12 failed) 64ms
      × voices current realm availability undefined after touch Use 4ms
      × voices current realm availability false after touch Use 2ms
      × reads capability again when the already-open touch menu activates 2ms
@@ -38,7 +38,7 @@ AssertionError: expected [] to deeply equal [ Array(1) ]
 - ]
 + []
 
- ❯ tests/bags_window_use_routing.test.ts:173:22
+ > tests/bags_window_use_routing.test.ts:173:22
     171|     expect(h.usedItems).toEqual([]);
     172|     h.menuDefaults[0]();
     173|     expect(h.errors).toEqual(flag === true ? [] : ['Freeholds are not …
@@ -61,7 +61,7 @@ AssertionError: expected [] to deeply equal [ Array(1) ]
 - ]
 + []
 
- ❯ tests/bags_window_use_routing.test.ts:184:22
+ > tests/bags_window_use_routing.test.ts:184:22
     182|     cfg.freeholdsEnabled = false;
     183|     h.menuDefaults[0]();
     184|     expect(h.errors).toEqual(['Freeholds are not available on this rea…
@@ -84,7 +84,7 @@ AssertionError: expected [] to deeply equal [ Array(1) ]
 - ]
 + []
 
- ❯ tests/bags_window_use_routing.test.ts:196:22
+ > tests/bags_window_use_routing.test.ts:196:22
     194|     clickFirstCell(h.root);
     195|     expect(h.menuDefaults).toEqual([]);
     196|     expect(h.errors).toEqual(['Freeholds are not available on this rea…

@@ -3,7 +3,7 @@ npm warn Unknown project config "auto-install-peers". This will stop working in 
 npm warn Unknown project config "strict-peer-dependencies". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
 tests/deeds_content.test.ts format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ✖ File content differs from formatting output
+  x File content differs from formatting output
 
     1063 1063 │         digest: 'ec055f18eef91cea2132109bf9554b8e5f95b7321a6f31109422d46372c3f323',
     1064 1064 │       },
@@ -48,7 +48,7 @@ tests/deeds_content.test.ts format ━━━━━━━━━━━━━━━
 
 tests/furnishing_rift_admission.test.ts format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ✖ File content differs from formatting output
+  x File content differs from formatting output
 
      49  49 │   type Target = { slotIndex: number } | undefined;
      50  50 │   type ForgeWorld = {
@@ -169,4 +169,4 @@ Checked 375 files in 539ms. No fixes applied.
 Found 2 errors.
 ci ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ✖ Some errors were emitted while running checks.
+  x Some errors were emitted while running checks.

@@ -4,7 +4,7 @@ npm warn Unknown project config "strict-peer-dependencies". This will stop worki
 
  RUN  v4.1.10 /Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds
 
- ❯ tests/freehold_arrival.test.ts (8 tests | 8 failed) 198ms
+ > tests/freehold_arrival.test.ts (8 tests | 8 failed) 198ms
      × gate preserves empty entry and separates a same-account arrival without mutating its occupant 149ms
      × key preserves empty entry and separates a same-account arrival without mutating its occupant 5ms
      × gate refuses a full protected approach before claiming a vacant room or changing travel state 12ms
@@ -13,7 +13,7 @@ npm warn Unknown project config "strict-peer-dependencies". This will stop worki
      × key preserves empty entry and separates a same-account arrival without mutating its occupant 2ms
      × gate refuses a full protected approach before claiming a vacant room or changing travel state 10ms
      × key refuses a full protected approach before claiming a vacant room or changing travel state 8ms
- ❯ tests/freehold_gate_and_key.test.ts (51 tests | 1 failed) 975ms
+ > tests/freehold_gate_and_key.test.ts (51 tests | 1 failed) 975ms
      × preserves dead/combat/ownership precedence for dead=false combat=true 6ms
 
 ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 9 ⎯⎯⎯⎯⎯⎯⎯
@@ -23,14 +23,14 @@ npm warn Unknown project config "strict-peer-dependencies". This will stop worki
  FAIL  tests/freehold_arrival.test.ts > cottage occupied owner arrivals > gate preserves empty entry and separates a same-account arrival without mutating its occupant
  FAIL  tests/freehold_arrival.test.ts > cottage occupied owner arrivals > key preserves empty entry and separates a same-account arrival without mutating its occupant
 AssertionError: expected 0 to be greater than or equal to 1
- ❯ replay tests/freehold_arrival.test.ts:79:84
+ > replay tests/freehold_arrival.test.ts:79:84
      77|         const second = sim.entities.get(b)!;
      78|         expect(sim.ctx.instanceClaimIdAt(second.pos)).toBe(sim.ctx.ins…
      79|         expect(Math.hypot(second.pos.x - first.pos.x, second.pos.z - f…
        |                                                                                    ^
      80|         expectSafe(sim, second, origin, tier === 'inn_room' ? 6 : 10);
      81|         expect(first).toEqual(occupant);
- ❯ tests/freehold_arrival.test.ts:87:14
+ > tests/freehold_arrival.test.ts:87:14
 
 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/9]⎯
 
@@ -52,7 +52,7 @@ AssertionError: expected [ { type: 'log', …(3) } ] to deeply equal [ { type: '
     },
   ]
 
- ❯ tests/freehold_arrival.test.ts:115:33
+ > tests/freehold_arrival.test.ts:115:33
     113|       if (surface === 'gate') sim.freeholdEnter(b);
     114|       else sim.useItem('hearth_key', b);
     115|       expect(sim.drainEvents()).toEqual([{ type: 'freeholdDenied', pid…
@@ -80,7 +80,7 @@ AssertionError: expected [ { type: 'log', …(3) } ] to deeply equal [ { type: '
     },
   ]
 
- ❯ tests/freehold_arrival.test.ts:115:33
+ > tests/freehold_arrival.test.ts:115:33
     113|       if (surface === 'gate') sim.freeholdEnter(b);
     114|       else sim.useItem('hearth_key', b);
     115|       expect(sim.drainEvents()).toEqual([{ type: 'freeholdDenied', pid…
@@ -105,14 +105,14 @@ AssertionError: expected [ { type: 'freeholdDenied', …(2) } ] to deeply equal 
     },
   ]
 
- ❯ refusal tests/freehold_gate_and_key.test.ts:84:29
+ > refusal tests/freehold_gate_and_key.test.ts:84:29
      82|   sim.rng.setObserver(draws);
      83|   action();
      84|   expect(sim.drainEvents()).toEqual([{ type: 'freeholdDenied', pid: si…
        |                             ^
      85|   expect(travelState(sim)).toEqual(before);
      86|   expect(draws).not.toHaveBeenCalled();
- ❯ tests/freehold_gate_and_key.test.ts:462:7
+ > tests/freehold_gate_and_key.test.ts:462:7
 
 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/9]⎯
 

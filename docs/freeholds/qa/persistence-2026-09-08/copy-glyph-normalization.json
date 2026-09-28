@@ -1,0 +1,439 @@
+{
+  "date": "2026-09-28",
+  "reason": "The repository copy rule forbids emoji-range glyphs anywhere, and the pre-push copy scan refuses them; these archived logs carried the raw glyphs of the tools that printed them. Only those glyphs changed; every other byte is identical.",
+  "rule": {
+    "U+26A0": "!",
+    "U+2713": "+",
+    "U+276F": ">",
+    "U+2716": "x",
+    "U+26A1": "*",
+    "U+FE0F": "(removed)"
+  },
+  "filesChanged": 41,
+  "records": [
+    {
+      "path": "docs/freeholds/crafted-qa-2026-09-07/logs/freeholds-crafted-qa-biome-errors.txt",
+      "beforeBytes": 10873,
+      "afterBytes": 10867,
+      "beforeSha256": "aa0f38de8643ef08cc6fa0067d09ec8979818dd965aa4eab6c0b207ba5c03994",
+      "afterSha256": "7354d496e484db5c89063ae0d3fcf334f23c8142a9dcce80ff2a49053dddf253",
+      "replaced": {
+        "U+2716": 3
+      }
+    },
+    {
+      "path": "docs/freeholds/crafted-qa-2026-09-07/logs/freeholds-crafted-qa-ci-before-verdict.txt",
+      "beforeBytes": 224037,
+      "afterBytes": 223473,
+      "beforeSha256": "2688fbbcd3be698618027c1078fecca708c67a5f66c0e78afa437bfa74c26b2a",
+      "afterSha256": "e2c8ae1c484177123dafa988cd7e6d1b171d356523cb25b73ab2c6eb7a50b7d0",
+      "replaced": {
+        "U+26A0": 282
+      }
+    },
+    {
+      "path": "docs/freeholds/crafted-qa-2026-09-07/logs/freeholds-crafted-qa-ci-cone-before.txt",
+      "beforeBytes": 3022,
+      "afterBytes": 3016,
+      "beforeSha256": "2263feb0b831582c9238880dd1d44196040e3d24ad937fd4eafba78132b2194f",
+      "afterSha256": "f872dc610d96384db8e15818d3bbad07eb837da10af2a57349a79c6a6d849bec",
+      "replaced": {
+        "U+276F": 3
+      }
+    },
+    {
+      "path": "docs/freeholds/crafted-qa-2026-09-07/logs/freeholds-crafted-qa-fixes-scoped.txt",
+      "beforeBytes": 2378,
+      "afterBytes": 2374,
+      "beforeSha256": "225d41c21b7f86787813059df0c0e915331965f2d36aa8bdc5c378a324548436",
+      "afterSha256": "341ca6e813188cedc5a645f65b052258d6f11be7ad496893fc03f09791d7b7e5",
+      "replaced": {
+        "U+276F": 2
+      }
+    },
+    {
+      "path": "docs/freeholds/crafted-qa-2026-09-07/logs/freeholds-crafted-qa-gate-attempt1.txt",
+      "beforeBytes": 273397,
+      "afterBytes": 272835,
+      "beforeSha256": "abfb91d28df3116fde0a06f2449738a0a73de8b11fd92ae8a29fa5bcb07301ba",
+      "afterSha256": "7cbd92660fb1e19ebe66ac92d55699a1a2c259b36850602a2d1bc9bfdb91b731",
+      "replaced": {
+        "U+26A0": 280,
+        "U+2716": 1
+      }
+    },
+    {
+      "path": "docs/freeholds/crafted-qa-2026-09-07/logs/freeholds-crafted-qa-gate-attempt2.txt",
+      "beforeBytes": 570359,
+      "afterBytes": 569775,
+      "beforeSha256": "82c265848191b7f9f1a04f407688e0804a1eabe666ba728cfa931b19ba4d5207",
+      "afterSha256": "9cf406466d94fb3a6c2ee6776e2347556295ae736198d70db93f2d3e01466af6",
+      "replaced": {
+        "U+26A0": 282,
+        "U+276F": 10
+      }
+    },
+    {
+      "path": "docs/freeholds/crafted-qa-2026-09-07/logs/freeholds-crafted-qa-gate-attempt3.txt",
+      "beforeBytes": 612361,
+      "afterBytes": 611786,
+      "beforeSha256": "7d0f4bbdda4bf19a42768817922401e5bf09ba4be48783eab9b6570719017a6a",
+      "afterSha256": "c5a76ab2c58315da8370c807ae89f0f816fda1f9047c8a1d8f9e4b6695982762",
+      "replaced": {
+        "U+26A0": 283,
+        "U+2713": 2,
+        "U+26A1": 1,
+        "U+FE0F": 1
+      }
+    },
+    {
+      "path": "docs/freeholds/crafted-qa-2026-09-07/logs/freeholds-crafted-qa-guide-before.txt",
+      "beforeBytes": 16423,
+      "afterBytes": 16415,
+      "beforeSha256": "1454009d2a596a43b617643553e0ff149df4641f0837f8792577aa00680a7fcc",
+      "afterSha256": "a687cad4d3de62dc6b33dbd8698f61d12d4c0833925f98e58b7b2b4a69eba73c",
+      "replaced": {
+        "U+276F": 4
+      }
+    },
+    {
+      "path": "docs/freeholds/crafted-qa-2026-09-07/logs/freeholds-crafted-qa-integration-final.txt",
+      "beforeBytes": 2563,
+      "afterBytes": 2559,
+      "beforeSha256": "900218b7fb93f04a65b42499f01110f61915c60829f82bbc5e3d4fd04621bcef",
+      "afterSha256": "40b295d83ebe8b3718d07942e12108e7aa455e2d15cf1af8b6a6855115fe5e45",
+      "replaced": {
+        "U+276F": 2
+      }
+    },
+    {
+      "path": "docs/freeholds/crafted-qa-2026-09-07/logs/freeholds-crafted-qa-merge-pins.txt",
+      "beforeBytes": 4405,
+      "afterBytes": 4401,
+      "beforeSha256": "7620c086c7f02955af8ee062357e6bb7214ae45a11309f675fe40740aad71404",
+      "afterSha256": "b069ac660866b78cddd40f5dae20c1cd84c9041e646f64973ff247da541c60eb",
+      "replaced": {
+        "U+276F": 2
+      }
+    },
+    {
+      "path": "docs/freeholds/crafted-qa-2026-09-07/logs/freeholds-crafted-qa-missing-weight-run1.txt",
+      "beforeBytes": 243970,
+      "afterBytes": 242854,
+      "beforeSha256": "750de25cfb0ddbae507555fba864341a856c3b201b203a6c007ffc7534a552e2",
+      "afterSha256": "0b210309e7d70ffef54a1263509c93d502940f840f8ff75afd92409fca29f8cb",
+      "replaced": {
+        "U+2713": 558
+      }
+    },
+    {
+      "path": "docs/freeholds/crafted-qa-2026-09-07/logs/freeholds-crafted-qa-missing-weight-run2.txt",
+      "beforeBytes": 243896,
+      "afterBytes": 242782,
+      "beforeSha256": "97b5f8ca423977528e0c890bdf0b441783d8857084eddbdc9186a5fb864f0047",
+      "afterSha256": "8e5f5ff34c424ff7e8cd74b5d2085aa4b402ee472573221306e661ca8f81b371",
+      "replaced": {
+        "U+2713": 557
+      }
+    },
+    {
+      "path": "docs/freeholds/crafted-qa-2026-09-07/logs/freeholds-crafted-qa-missing-weight-run3.txt",
+      "beforeBytes": 243874,
+      "afterBytes": 242760,
+      "beforeSha256": "a41aa2ac9353c5ee59321b69b5c87e3b4b0050da8327b3846194c76dae58b480",
+      "afterSha256": "69a1491008b7918f80010df264e2fac803b2defeb022985168afbed5817bc300",
+      "replaced": {
+        "U+2713": 557
+      }
+    },
+    {
+      "path": "docs/freeholds/crafted-qa-2026-09-07/logs/freeholds-crafted-qa-pattern-tooltip-before.txt",
+      "beforeBytes": 11968,
+      "afterBytes": 11944,
+      "beforeSha256": "4ced0373fd06f4ce7b3dac28a89e7f86c747021b993c4a61dee74a8aa6040770",
+      "afterSha256": "b8bda7b6e75815758fefc1e2417d11e399e5031f6a3941f27003cf60c176bfd2",
+      "replaced": {
+        "U+276F": 12
+      }
+    },
+    {
+      "path": "docs/freeholds/crafted-qa-2026-09-07/logs/freeholds-crafted-qa-produce-mutant.txt",
+      "beforeBytes": 1486,
+      "afterBytes": 1482,
+      "beforeSha256": "537bdcdd90345b2958db5b8158efc10ddbc7883fc4732e2aedc012966517825d",
+      "afterSha256": "1032033c17b1efafb7721929965b5ae67aea3d1bc294bc0be56e28151284d0d7",
+      "replaced": {
+        "U+276F": 2
+      }
+    },
+    {
+      "path": "docs/freeholds/crafted-qa-2026-09-07/logs/freeholds-crafted-qa-quartermaster-mutant.txt",
+      "beforeBytes": 1648,
+      "afterBytes": 1644,
+      "beforeSha256": "cf558f28c528e993c42f83580534ad965763c5d88228b4ebfb92a1b80fa6e021",
+      "afterSha256": "db8652ade0d6962180d6e556ed8d37d4026a600243379d5c17cd8d19a0bdd023",
+      "replaced": {
+        "U+276F": 2
+      }
+    },
+    {
+      "path": "docs/freeholds/crafted-qa-2026-09-07/logs/freeholds-crafted-qa-toast-layer-before.txt",
+      "beforeBytes": 2178,
+      "afterBytes": 2174,
+      "beforeSha256": "ef402976a961b7a37425e6ae10ef6946b5a51fe14d04db98f432d1a970fa20d5",
+      "afterSha256": "f83196c39c28d5772ae781a231ec2204883d9db01d79c099be9e992ac6e4bd15",
+      "replaced": {
+        "U+276F": 2
+      }
+    },
+    {
+      "path": "docs/freeholds/crafted-qa-2026-09-07/logs/freeholds-crafted-qa-touch-after.txt",
+      "beforeBytes": 11463,
+      "afterBytes": 11459,
+      "beforeSha256": "bd77fab04d2de9531fa97c405d3e7295f674f5fa461269fd04eefa84bf707547",
+      "afterSha256": "77ae3257bbff2c46db43dbeb526f0f4ad8c150277c5e3b50c447bc2e96c7179e",
+      "replaced": {
+        "U+276F": 2
+      }
+    },
+    {
+      "path": "docs/freeholds/crafted-qa-2026-09-07/logs/freeholds-crafted-qa-touch-before.txt",
+      "beforeBytes": 5708,
+      "afterBytes": 5700,
+      "beforeSha256": "2121dfd39226fd1d93ace968b6807478ba73adf3afc2bad6edb66a603529d9ea",
+      "afterSha256": "7dc44374e24522b86abe0a1f38159acc961de0b5c2a90374f83c41dc7713fee3",
+      "replaced": {
+        "U+276F": 4
+      }
+    },
+    {
+      "path": "docs/freeholds/crafted-qa-reconciled-2026-09-07/receipts/mutation-assertions.txt",
+      "beforeBytes": 3567,
+      "afterBytes": 3559,
+      "beforeSha256": "9fd4a4e272561906dfa344e952e05c328f4fabd296f91b718cb216e49680b6a4",
+      "afterSha256": "07496149df2f9cf2f1be469658fd4709cf1bdd4188789b4efaa08b5abe14b3cd",
+      "replaced": {
+        "U+276F": 4
+      }
+    },
+    {
+      "path": "docs/freeholds/qa/interiors-2026-09-08/logs/actionbar-red.log.txt",
+      "beforeBytes": 1835,
+      "afterBytes": 1831,
+      "beforeSha256": "72a063f555e6d2c8c05953d7f27183db3c72ec06399ee0f6708efb46d1d1511f",
+      "afterSha256": "2b81355f4059502031ce79516fe6f5270077acf933ea48a33522d216580feb5c",
+      "replaced": {
+        "U+276F": 2
+      }
+    },
+    {
+      "path": "docs/freeholds/qa/interiors-2026-09-08/logs/bank-key-red.log.txt",
+      "beforeBytes": 2049,
+      "afterBytes": 2045,
+      "beforeSha256": "69f75fe1313588b773e8827b0eac9855b63b81a80b1916b37ab99ff56fa44f64",
+      "afterSha256": "60ab872fb8505c6d1f4a7d059cff21ffe9a141af596d01ccf2116b13234df55f",
+      "replaced": {
+        "U+276F": 2
+      }
+    },
+    {
+      "path": "docs/freeholds/qa/interiors-2026-09-08/logs/capture-red.log.txt",
+      "beforeBytes": 11149,
+      "afterBytes": 11103,
+      "beforeSha256": "5c863d3c1bd97e12c5d4850518f3c7ba9bd98fa9d6cb310ca7f7786ba752930c",
+      "afterSha256": "66165851c5ea7f0a8e150fed70427cc9cd0e5859e420f48cc0da4403b08d7038",
+      "replaced": {
+        "U+276F": 23
+      }
+    },
+    {
+      "path": "docs/freeholds/qa/interiors-2026-09-08/logs/loopback-red.log.txt",
+      "beforeBytes": 2007,
+      "afterBytes": 2003,
+      "beforeSha256": "9678c0cf623ec87ab5f7969efccfa74667eed54658cc0e8b109f5b6bbf17ffd5",
+      "afterSha256": "47a9625670249ced248813daa41e11a21c631ce8cf07d748661caa9bfb8068fe",
+      "replaced": {
+        "U+276F": 2
+      }
+    },
+    {
+      "path": "docs/freeholds/qa/interiors-2026-09-08/logs/release-icon-red.log.txt",
+      "beforeBytes": 1755,
+      "afterBytes": 1751,
+      "beforeSha256": "1dc5969fe5a12fb2832aeb694dba0f00dce8b6128b7166de7cf15b92de8d2346",
+      "afterSha256": "7aacd021d93c5da0409406d67aa078ea12cadd552d4a87f9c2316a390d55c07c",
+      "replaced": {
+        "U+276F": 2
+      }
+    },
+    {
+      "path": "docs/freeholds/qa/interiors-2026-09-08/logs/render-red.log.txt",
+      "beforeBytes": 3609,
+      "afterBytes": 3601,
+      "beforeSha256": "e7e2a2b5feb53c4436c179a6004c43f6e93127038802fa2d57eda4c41d34db8d",
+      "afterSha256": "69174468eb604d6a9691f1afefde3882baab4619dbc58a7e1b2c59e25170acf8",
+      "replaced": {
+        "U+276F": 4
+      }
+    },
+    {
+      "path": "docs/freeholds/qa/interiors-2026-09-08/logs/selected-gate-attempt-1.log.txt",
+      "beforeBytes": 3175180,
+      "afterBytes": 3174042,
+      "beforeSha256": "2116e7edaa00b37d111f1208b38e0030b32b3b8524c36aec96740746442f4d80",
+      "afterSha256": "77f846b383504910bb705ec328dde6a4bc518a23c911d54a8465bdd8eca99b7f",
+      "replaced": {
+        "U+26A0": 566,
+        "U+276F": 3
+      }
+    },
+    {
+      "path": "docs/freeholds/qa/interiors-2026-09-08/logs/selected-gate-attempt-2.log.txt",
+      "beforeBytes": 3258113,
+      "afterBytes": 3256973,
+      "beforeSha256": "f7fa57346042c82331c0a7d9ff9b0c4ac56a57d55fcb558500abaec45395edf3",
+      "afterSha256": "a252863f33b0d6741050137ec026f03566b88981ea5d5b5a55af83f713af0c10",
+      "replaced": {
+        "U+26A0": 566,
+        "U+276F": 4
+      }
+    },
+    {
+      "path": "docs/freeholds/qa/interiors-2026-09-08/logs/selected-gate-final.log.txt",
+      "beforeBytes": 3311469,
+      "afterBytes": 3310326,
+      "beforeSha256": "e0fb911703ba1f3e5d86fb66956a438b2f765274b1606829179193cf824c102f",
+      "afterSha256": "22adb25793a5ef5ab01b6696d4ec2be2162dfd92603b52a9806ca3cd50095331",
+      "replaced": {
+        "U+26A0": 567,
+        "U+2713": 2,
+        "U+26A1": 1,
+        "U+FE0F": 1
+      }
+    },
+    {
+      "path": "docs/freeholds/qa/interiors-2026-09-08/logs/server-red.log.txt",
+      "beforeBytes": 15806,
+      "afterBytes": 15794,
+      "beforeSha256": "a3dee9c7ba4fd50039209c28a9e13b664091408035f9e4030644ec3c113892c4",
+      "afterSha256": "d2cd614767fd7dff01c5a77c32a9a822105a1ea608a2ad55d3939fe4e4f9bd6a",
+      "replaced": {
+        "U+276F": 6
+      }
+    },
+    {
+      "path": "docs/freeholds/qa/interiors-2026-09-08/logs/sim-expanded-green.log.txt",
+      "beforeBytes": 2399,
+      "afterBytes": 2395,
+      "beforeSha256": "a05930622b6766dffc6d26fe6c5191db2fd5949bfefaf7a7ec68ca1a93bed19f",
+      "afterSha256": "91ac2bf2dd0a3f85a771c7dbb3a645e5f00001c0cd73ef34c842a4cd737634ae",
+      "replaced": {
+        "U+276F": 2
+      }
+    },
+    {
+      "path": "docs/freeholds/qa/interiors-2026-09-08/logs/sim-red.log.txt",
+      "beforeBytes": 6443,
+      "afterBytes": 6427,
+      "beforeSha256": "3253cc15c21137b2299fa034da9ff681523fb9329ecf750e6cf2de25de7df004",
+      "afterSha256": "8f05728ad654c08a12bcaf3095b2ba19e9b64e18749705b77b776e44f8fe7092",
+      "replaced": {
+        "U+276F": 8
+      }
+    },
+    {
+      "path": "docs/freeholds/qa/interiors-2026-09-08/logs/ui-browser-red.log.txt",
+      "beforeBytes": 104175,
+      "afterBytes": 104151,
+      "beforeSha256": "dc184fc84953a5cd7a930d63b335b11d1788c447b054369a29c3ddb1cd8d5129",
+      "afterSha256": "70b8dd3f6cb1a9aa5f4fc999ccc7abb09b1cd167eaf485c514224c93c4d2bb62",
+      "replaced": {
+        "U+276F": 12
+      }
+    },
+    {
+      "path": "docs/freeholds/qa/interiors-2026-09-08/logs/ui-guard-red.log.txt",
+      "beforeBytes": 1940,
+      "afterBytes": 1936,
+      "beforeSha256": "678d033050eb01b7c0f43be4b96fa5e2b67b15f56d2fcc5432bcc9f65aecd24d",
+      "afterSha256": "939ab7166479fcd7f7d88604a23387d04e44bc55526a56cee0ad82f10afd02cb",
+      "replaced": {
+        "U+276F": 2
+      }
+    },
+    {
+      "path": "docs/freeholds/reviews/furnishing-item-kind/qa/logs/ci-verdict-corrected.log.txt",
+      "beforeBytes": 911537,
+      "afterBytes": 911201,
+      "beforeSha256": "beac5911a00c253b32544ae94ecf293541218505bcab3bb0f62980b3bcaa16f8",
+      "afterSha256": "ac621665b7a2ffa931a9a142482e0aa1e2082ddfb4bbed17f86501868f513809",
+      "replaced": {
+        "U+26A0": 168
+      }
+    },
+    {
+      "path": "docs/freeholds/reviews/furnishing-item-kind/qa/logs/ci-verdict-first.log.txt",
+      "beforeBytes": 915853,
+      "afterBytes": 915513,
+      "beforeSha256": "63196acee6013dfcb7640a8dd369aa9eb7daed7cdad09c4e058bce245ed3aedb",
+      "afterSha256": "61d4a7b60af57f783a3786c6a9fdc5d4e5d1e6fa8b962de225751c460b7b1f4e",
+      "replaced": {
+        "U+26A0": 168,
+        "U+2716": 2
+      }
+    },
+    {
+      "path": "docs/freeholds/reviews/furnishing-item-kind/qa/logs/eastbrook-provenance-check.log.txt",
+      "beforeBytes": 2512,
+      "afterBytes": 2508,
+      "beforeSha256": "055b3622b83e25cca0b3a4584da90352b1d5893150f94816efc5884025aceb8f",
+      "afterSha256": "b3ef382b251071937205999c67d8bad5bc34eb3b574f4429214c50306689d6a8",
+      "replaced": {
+        "U+276F": 2
+      }
+    },
+    {
+      "path": "docs/freeholds/reviews/furnishing-item-kind/qa/logs/gate-final-resumed.log.txt",
+      "beforeBytes": 1284999,
+      "afterBytes": 1284652,
+      "beforeSha256": "4ff799e9059ba3f1dd39e1e5c2bc289f7a4dd82ec289285458813f7bd73a9f97",
+      "afterSha256": "d67d5c054158612397ea1a7639fa688e94a369ec789b4f4d48f48282952878cb",
+      "replaced": {
+        "U+26A0": 169,
+        "U+2713": 2,
+        "U+26A1": 1,
+        "U+FE0F": 1
+      }
+    },
+    {
+      "path": "docs/freeholds/reviews/furnishing-item-kind/qa/logs/gate-first-failure-excerpt.log.txt",
+      "beforeBytes": 2236,
+      "afterBytes": 2218,
+      "beforeSha256": "080f6a849623678dbc2321fee7dd1c5466365cdd992601fa18cbaedacd098e2e",
+      "afterSha256": "a6a3e23b2785017a81436bf80e3079c507cbbf99587d94b06a268127f02a4171",
+      "replaced": {
+        "U+276F": 9
+      }
+    },
+    {
+      "path": "docs/freeholds/reviews/furnishing-item-kind/qa/logs/pg-differential-config-green.log.txt",
+      "beforeBytes": 1914,
+      "afterBytes": 1906,
+      "beforeSha256": "139ef67e03d18a2cad15f0c63f5fe7830c3e5beb01b4c58099d2c26f21c8a740",
+      "afterSha256": "977a4d323e2a0ec57fecf7ae0db596a7725b8dee9dd297482f1746e3a730dd7c",
+      "replaced": {
+        "U+276F": 4
+      }
+    },
+    {
+      "path": "docs/freeholds/reviews/furnishing-item-kind/qa/logs/routes-first.log.txt",
+      "beforeBytes": 8568,
+      "afterBytes": 8554,
+      "beforeSha256": "3dae452d1720c1181ac6c156aba32e9f4f417a8ca0fcc4b613e13829b395db7c",
+      "afterSha256": "827d8027dfffd5ddb6d6d0801b3b68766aba22b43afb5da0a0ac6c20c19660fa",
+      "replaced": {
+        "U+276F": 7
+      }
+    }
+  ]
+}

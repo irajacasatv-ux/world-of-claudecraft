@@ -4,7 +4,7 @@ npm warn Unknown project config "strict-peer-dependencies". This will stop worki
 
  RUN  v4.1.10 /Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds
 
- ❯ tests/freehold_key_persistence.test.ts (6 tests | 2 failed) 617ms
+ > tests/freehold_key_persistence.test.ts (6 tests | 2 failed) 617ms
      × retains one banked key through JSON restore and gate entry before withdrawing it 6ms
      × retains one banked key through JSON restore and gate entry before withdrawing it 3ms
 
@@ -20,7 +20,7 @@ AssertionError: expected 1 to be +0 // Object.is equality
 - 0
 + 1
 
- ❯ tests/freehold_key_persistence.test.ts:188:64
+ > tests/freehold_key_persistence.test.ts:188:64
     186|     enterGate(restored.sim, restored.pid);
     187|     expect(dungeonAt(entity(restored.sim, restored.pid).pos.x)?.id).to…
     188|     expect(restored.sim.countItem('hearth_key', restored.pid)).toBe(0);

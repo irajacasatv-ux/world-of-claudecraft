@@ -802,7 +802,7 @@ stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate nativ
 [load-diag] 202 gltf done /models/weapons/tome_voidbound.glb
 stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on Cancel closes and returns the real opener
 [load-diag] 203 gltf done /models/weapons/varkhul_emberward.glb
- ❯ |chromium| tests/browser/freehold_gate_input.browser.test.ts (17 tests | 14 failed) 2132ms
+ > |chromium| tests/browser/freehold_gate_input.browser.test.ts (17 tests | 14 failed) 2132ms
      × Enter activates the own-home button once without chat or jump 651ms
      × Space activates the own-home button once without chat or jump 101ms
      × Enter keeps tab and Find Home activation native without entry 126ms
@@ -832,7 +832,7 @@ Failure screenshot:
 [32m- 0[39m
 [31m+ 1[39m
 
- ❯ tests/browser/freehold_gate_input.browser.test.ts:127:24
+ > tests/browser/freehold_gate_input.browser.test.ts:127:24
     125|     control('enter').focus();
     126|     await userEvent.keyboard(`[${key}]`);
     127|     expect(f.chatOpens).toBe(0);
@@ -854,7 +854,7 @@ Failure screenshot:
 [32m- false[39m
 [31m+ true[39m
 
- ❯ tests/browser/freehold_gate_input.browser.test.ts:128:39
+ > tests/browser/freehold_gate_input.browser.test.ts:128:39
     126|     await userEvent.keyboard(`[${key}]`);
     127|     expect(f.chatOpens).toBe(0);
     128|     expect(input.readMoveInput().jump).toBe(false);
@@ -872,7 +872,7 @@ Failure screenshots:
   - tests/browser/__screenshots__/freehold_gate_input.browser.test.ts/Freehold-gate-native-input-and-cancellation-Enter-keeps-tab-and-Find-Home-activation-native-without-entry-1.png
   - tests/browser/__screenshots__/freehold_gate_input.browser.test.ts/Freehold-gate-native-input-and-cancellation-Space-keeps-tab-and-Find-Home-activation-native-without-entry-1.png
 
- ❯ tests/browser/freehold_gate_input.browser.test.ts:144:19
+ > tests/browser/freehold_gate_input.browser.test.ts:144:19
     142|     control('lookup').focus();
     143|     await userEvent.keyboard(`[${key}]`);
     144|     expect(lookup).toHaveBeenCalledTimes(1);
@@ -894,7 +894,7 @@ Failure screenshot:
 [32m- 0[39m
 [31m+ 1[39m
 
- ❯ tests/browser/freehold_gate_input.browser.test.ts:159:24
+ > tests/browser/freehold_gate_input.browser.test.ts:159:24
     157|     select.focus();
     158|     await userEvent.keyboard(`[${key}]`);
     159|     expect(f.chatOpens).toBe(0);
@@ -916,7 +916,7 @@ Failure screenshot:
 [32m- false[39m
 [31m+ true[39m
 
- ❯ tests/browser/freehold_gate_input.browser.test.ts:160:39
+ > tests/browser/freehold_gate_input.browser.test.ts:160:39
     158|     await userEvent.keyboard(`[${key}]`);
     159|     expect(f.chatOpens).toBe(0);
     160|     expect(input.readMoveInput().jump).toBe(false);
@@ -940,14 +940,14 @@ Failure screenshots:
 [32m- false[39m
 [31m+ true[39m
 
- ❯ cancelled tests/browser/freehold_gate_input.browser.test.ts:114:26
+ > cancelled tests/browser/freehold_gate_input.browser.test.ts:114:26
     112|
     113| async function cancelled(f: ReturnType<typeof mount>, before: string) {
     114|   expect(f.prompt.isOpen).toBe(false);
        |                          ^
     115|   expect(f.root.style.display).toBe('none');
     116|   expect(f.enter).not.toHaveBeenCalled();
- ❯ tests/browser/freehold_gate_input.browser.test.ts:173:10
+ > tests/browser/freehold_gate_input.browser.test.ts:173:10
 
 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/14]⎯
 
@@ -963,14 +963,14 @@ Failure screenshot:
 [32m- false[39m
 [31m+ true[39m
 
- ❯ cancelled tests/browser/freehold_gate_input.browser.test.ts:114:26
+ > cancelled tests/browser/freehold_gate_input.browser.test.ts:114:26
     112|
     113| async function cancelled(f: ReturnType<typeof mount>, before: string) {
     114|   expect(f.prompt.isOpen).toBe(false);
        |                          ^
     115|   expect(f.root.style.display).toBe('none');
     116|   expect(f.enter).not.toHaveBeenCalled();
- ❯ tests/browser/freehold_gate_input.browser.test.ts:201:10
+ > tests/browser/freehold_gate_input.browser.test.ts:201:10
 
 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/14]⎯
 
@@ -986,7 +986,7 @@ Failure screenshot:
 [32m- true[39m
 [31m+ false[39m
 
- ❯ tests/browser/freehold_gate_input.browser.test.ts:248:27
+ > tests/browser/freehold_gate_input.browser.test.ts:248:27
     246|       });
     247|       await session.send('Input.dispatchTouchEvent', { type: 'touchEnd…
     248|       expect(trustedTouch).toBe(true);
@@ -1013,7 +1013,7 @@ Failure screenshots:
 
 [32m- This is unavailable right now.[39m
 
- ❯ tests/browser/freehold_gate_input.browser.test.ts:276:65
+ > tests/browser/freehold_gate_input.browser.test.ts:276:65
     274|     expect(f.enter).not.toHaveBeenCalled();
     275|     expect(travel(f.sim)).toBe(before);
     276|     expect(f.root.querySelector('[role="status"]')!.textContent).toBe(…

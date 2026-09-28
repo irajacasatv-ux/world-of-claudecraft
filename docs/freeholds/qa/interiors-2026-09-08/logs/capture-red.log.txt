@@ -6,13 +6,13 @@ npm warn Unknown project config "strict-peer-dependencies". This will stop worki
 
 (node:89089) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
 (Use `node --trace-warnings ...` to show where the warning was created)
- ❯ tests/perf_tour_entry.test.ts (4 tests | 1 failed) 1621ms
+ > tests/perf_tour_entry.test.ts (4 tests | 1 failed) 1621ms
    × pins the requested perf preset before first-run hardware detection 2ms
- ❯ tests/pr_shot_targets.test.ts (47 tests | 3 failed) 22ms
+ > tests/pr_shot_targets.test.ts (47 tests | 3 failed) 22ms
      × selects all three scenes and nine view variants for isolated src/render/dungeon_interior_resolver_core.ts changes 4ms
      × selects all three scenes and nine view variants for isolated src/render/dungeon_variant_core.ts changes 0ms
      × selects all three scenes and nine view variants for isolated src/render/ground_object.ts changes 0ms
- ❯ tests/freehold_interior_route.test.ts (41 tests | 18 failed) 2417ms
+ > tests/freehold_interior_route.test.ts (41 tests | 18 failed) 2417ms
    × derives acceptance from raw entry-through-end counters despite a stale zero delta 3ms
    × rejects invalid or contradictory arrival entryAtMs (undefined) 1ms
    × rejects invalid or contradictory arrival entryAtMs (NaN) 0ms
@@ -45,7 +45,7 @@ AssertionError: expected [] to deeply equal ArrayContaining{…}
 - ]
 + []
 
- ❯ tests/freehold_interior_route.test.ts:141:49
+ > tests/freehold_interior_route.test.ts:141:49
     139|   const samples = clean();
     140|   samples[0].sampleEvidence.end.gpuCounts['live-program']++;
     141|   expect(freeholdInteriorPerfFailures(samples)).toEqual(expect.arrayCo…
@@ -66,7 +66,7 @@ AssertionError: expected [] to not deeply equal []
 
 Compared values have no visual difference.
 
- ❯ tests/freehold_interior_route.test.ts:158:53
+ > tests/freehold_interior_route.test.ts:158:53
     156|   const samples = clean();
     157|   Object.assign(samples[0].arrival, { [field]: value });
     158|   expect(freeholdInteriorPerfFailures(samples)).not.toEqual([]);
@@ -83,7 +83,7 @@ AssertionError: expected [] to not deeply equal []
 
 Compared values have no visual difference.
 
- ❯ tests/freehold_interior_route.test.ts:168:62
+ > tests/freehold_interior_route.test.ts:168:62
     166|     entryRegresses[0].arrival.gpuAfter[kind] = 1;
     167|     entryRegresses[0].sampleEvidence.end.gpuCounts[kind] = 1;
     168|     expect(freeholdInteriorPerfFailures(entryRegresses)).not.toEqual([…
@@ -102,7 +102,7 @@ AssertionError: expected [] to not deeply equal []
 
 Compared values have no visual difference.
 
- ❯ tests/freehold_interior_route.test.ts:186:53
+ > tests/freehold_interior_route.test.ts:186:53
     184|   const samples = clean();
     185|   Object.assign(samples[0].sampleEvidence[edge], { [field]: value });
     186|   expect(freeholdInteriorPerfFailures(samples)).not.toEqual([]);
@@ -114,43 +114,43 @@ Compared values have no visual difference.
 
  FAIL  tests/freehold_interior_route.test.ts > walks using browser keyboard events with every exposed __game object read-only
 Error: direct __game mutation
- ❯ Proxy.rejectMutation tests/freehold_interior_route.test.ts:193:40
+ > Proxy.rejectMutation tests/freehold_interior_route.test.ts:193:40
     191|   const player = { pos: { x: startX, y: 0, z: 0 }, facing: Math.PI / 2…
     192|   let tick = 0;
     193|   const rejectMutation = () => { throw new Error('direct __game mutati…
        |                                        ^
     194|   const readonly = <T extends object>(value: T): T => new Proxy(value,…
     195|     set: rejectMutation,
- ❯ evalmachine.<anonymous>:2:27
- ❯ evalmachine.<anonymous>:4:7
- ❯ run tests/freehold_interior_route.test.ts:207:5
- ❯ Object.evaluate tests/freehold_interior_route.test.ts:209:80
- ❯ walkFreeholdRouteTo scripts/freehold_interior_route.mjs:69:16
- ❯ tests/freehold_interior_route.test.ts:231:3
+ > evalmachine.<anonymous>:2:27
+ > evalmachine.<anonymous>:4:7
+ > run tests/freehold_interior_route.test.ts:207:5
+ > Object.evaluate tests/freehold_interior_route.test.ts:209:80
+ > walkFreeholdRouteTo scripts/freehold_interior_route.mjs:69:16
+ > tests/freehold_interior_route.test.ts:231:3
 
 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/22]⎯
 
  FAIL  tests/freehold_interior_route.test.ts > leaves through the physical exit with read-only __game observations
 Error: direct __game mutation
- ❯ Proxy.rejectMutation tests/freehold_interior_route.test.ts:193:40
+ > Proxy.rejectMutation tests/freehold_interior_route.test.ts:193:40
     191|   const player = { pos: { x: startX, y: 0, z: 0 }, facing: Math.PI / 2…
     192|   let tick = 0;
     193|   const rejectMutation = () => { throw new Error('direct __game mutati…
        |                                        ^
     194|   const readonly = <T extends object>(value: T): T => new Proxy(value,…
     195|     set: rejectMutation,
- ❯ evalmachine.<anonymous>:3:13
- ❯ evalmachine.<anonymous>:6:5
- ❯ run tests/freehold_interior_route.test.ts:207:5
- ❯ Object.evaluate tests/freehold_interior_route.test.ts:209:80
- ❯ leaveFreeholdThroughExit scripts/freehold_interior_route.mjs:182:14
- ❯ tests/freehold_interior_route.test.ts:238:9
+ > evalmachine.<anonymous>:3:13
+ > evalmachine.<anonymous>:6:5
+ > run tests/freehold_interior_route.test.ts:207:5
+ > Object.evaluate tests/freehold_interior_route.test.ts:209:80
+ > leaveFreeholdThroughExit scripts/freehold_interior_route.mjs:182:14
+ > tests/freehold_interior_route.test.ts:238:9
 
 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/22]⎯
 
  FAIL  tests/perf_tour_entry.test.ts > pins the requested perf preset before first-run hardware detection
 TypeError: The URL must be of scheme file
- ❯ tests/perf_tour_entry.test.ts:129:18
+ > tests/perf_tour_entry.test.ts:129:18
     127|
     128| it('pins the requested perf preset before first-run hardware detection…
     129|   const script = readFileSync(new URL('../scripts/perf_tour.mjs', impo…
@@ -175,7 +175,7 @@ AssertionError: expected [] to deeply equal [ 'freehold-gate', …(2) ]
 - ]
 + []
 
- ❯ tests/pr_shot_targets.test.ts:1163:66
+ > tests/pr_shot_targets.test.ts:1163:66
     1161|       ['freehold-gate', 'freehold-inn', 'freehold-cottage'].includes(t…
     1162|     );
     1163|     expect(targets.map((target: { key: string }) => target.key)).toEqu…

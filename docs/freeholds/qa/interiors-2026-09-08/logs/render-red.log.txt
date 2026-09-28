@@ -9,7 +9,7 @@ npm warn Unknown project config "strict-peer-dependencies". This will stop worki
 stderr | tests/renderer_zone_dependency_lifecycle.test.ts
 [ktx2] no probe context; transcoding to uncompressed RGBA
 
- ❯ tests/renderer_zone_dependency_lifecycle.test.ts (9 tests | 3 failed) 221ms
+ > tests/renderer_zone_dependency_lifecycle.test.ts (9 tests | 3 failed) 221ms
      × releases a stalled zone dependency at the existing preparation deadline without publishing 5ms
      × settles shutdown and the prewarm while the shared asset fetch never settles 102ms
      × releases temporary interior instance handles once on retirement while retaining shared assets 57ms
@@ -18,7 +18,7 @@ stderr | tests/renderer_zone_dependency_lifecycle.test.ts
 
  FAIL  tests/renderer_zone_dependency_lifecycle.test.ts > renderer zone dependency lifetime > releases a stalled zone dependency at the existing preparation deadline without publishing
 AssertionError: expected undefined to be an instance of Error
- ❯ tests/renderer_zone_dependency_lifecycle.test.ts:116:20
+ > tests/renderer_zone_dependency_lifecycle.test.ts:116:20
     114|     });
     115|     await vi.advanceTimersByTimeAsync(5000);
     116|     expect(failed).toBeInstanceOf(Error);
@@ -37,7 +37,7 @@ AssertionError: expected false to be true // Object.is equality
 - true
 + false
 
- ❯ vi.waitFor.timeout tests/renderer_zone_dependency_lifecycle.test.ts:141:46
+ > vi.waitFor.timeout tests/renderer_zone_dependency_lifecycle.test.ts:141:46
     139|     });
     140|     try {
     141|       await vi.waitFor(() => expect(stopped).toBe(true), { timeout: 10…
@@ -49,7 +49,7 @@ AssertionError: expected false to be true // Object.is equality
 
  FAIL  tests/renderer_zone_dependency_lifecycle.test.ts > renderer zone dependency lifetime > releases temporary interior instance handles once on retirement while retaining shared assets
 AssertionError: expected "dispose" to be called once, but got 0 times
- ❯ tests/renderer_zone_dependency_lifecycle.test.ts:178:54
+ > tests/renderer_zone_dependency_lifecycle.test.ts:178:54
     176|     await rejection;
     177|     await renderer.shutdown();
     178|     for (const dispose of instances) expect(dispose).toHaveBeenCalledO…

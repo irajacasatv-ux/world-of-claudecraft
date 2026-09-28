@@ -6,7 +6,7 @@ npm warn Unknown project config "strict-peer-dependencies". This will stop worki
 
 (node:69104) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
 (Use `node --trace-warnings ...` to show where the warning was created)
- ❯ tests/guide_provisioning.test.ts (3 tests | 3 failed) 23ms
+ > tests/guide_provisioning.test.ts (3 tests | 3 failed) 23ms
      × classifies every generated cooking output from its live item kind 5ms
      × renders the actual supper table as ornamental and describes its lack of food or buffs 15ms
      × renders the furnishing classification for another item without a supper-table special case 2ms
@@ -28,7 +28,7 @@ AssertionError: expected [ { …(3) } ] to deeply equal [ { …(4) } ]
     },
   ]
 
- ❯ tests/guide_provisioning.test.ts:18:85
+ > tests/guide_provisioning.test.ts:18:85
      16|   it('classifies every generated cooking output from its live item kin…
      17|     const outputs = GUIDE_PROF_PROVISIONING.ladder.flatMap((rung) => r…
      18|     expect(outputs.filter((output) => ITEMS[output.itemId]?.kind === '…
@@ -112,7 +112,7 @@ AssertionError: expected '\n    <article class="guide-article g…' to contain '
 +   </nav>
 +     </article>
 
- ❯ tests/guide_provisioning.test.ts:36:18
+ > tests/guide_provisioning.test.ts:36:18
      34|   it('renders the actual supper table as ornamental and describes its …
      35|     const html = render();
      36|     expect(html).toContain('<li>Set Supper Table (ornamental furnishin…
@@ -196,7 +196,7 @@ AssertionError: expected '\n    <article class="guide-article g…' to contain '
 +   </nav>
 +     </article>
 
- ❯ tests/guide_provisioning.test.ts:58:24
+ > tests/guide_provisioning.test.ts:58:24
      56|     });
      57|     try {
      58|       expect(render()).toContain('<li>Weapon Rack (ornamental furnishi…

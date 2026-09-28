@@ -4,7 +4,7 @@ npm warn Unknown project config "strict-peer-dependencies". This will stop worki
 
  RUN  v4.1.10 /Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds
 
- ❯ tests/ci_workflow.test.ts (27 tests | 2 failed) 833ms
+ > tests/ci_workflow.test.ts (27 tests | 2 failed) 833ms
      × sparse-checkout on the test jobs covers every referenced screenshot subtree 759ms
      × classifies every CI job for the real-SQL merge bar: pg-wired, guarded DB-less, or test-free 20ms
 
@@ -29,7 +29,7 @@ AssertionError: expected [ 'admin-cheater-mark', …(31) ] to deeply equal [ 'ad
     "guild-pledge-board",
     "guild-social-v1",
 
- ❯ tests/ci_workflow.test.ts:551:36
+ > tests/ci_workflow.test.ts:551:36
     549|     // (a one-way floor with slack would let a quietly narrowed corpus…
     550|     // entries and stay green).
     551|     expect([...referenced].sort()).toEqual([...coneDirs].sort());
@@ -56,7 +56,7 @@ AssertionError: expected [ '.github/workflows/audit.yml', …(7) ] to deeply equ
     ".github/workflows/ota-publish.yml",
   ]
 
- ❯ tests/ci_workflow.test.ts:2144:20
+ > tests/ci_workflow.test.ts:2144:20
     2142|       '.github/workflows/ota-publish.yml',
     2143|     ];
     2144|     expect(listed).toEqual(

@@ -1,195 +1,195 @@
 
  RUN  v4.1.10 /Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds
 
- ✓ tests/v042_offense_packets.test.ts (18 tests) 11555ms
-       ✓ a low-Spell-Power Earthen Jolt (authored base dominates) scales by the literal 1.46 elemental total (mastery 0.15 + ability 0.18 + offense-only 0.13)  837ms
-       ✓ a full 5-charge Thunder bank vents Earthen Jolt for exactly the literal 2.25x on top of the already-elemental-scaled hit (no double count of the offense bonus)  622ms
-       ✓ ordinary pet: an owned imp firebolt scales by exactly the destruction petDmgPct 1.10, isolated from every other spec knob  2082ms
-       ✓ custom pet bypass: a real Pyre Colossus nova deals the literal fixed 66 (the explicit destruction-only fix, since this path bypasses petDmgPct entirely)  530ms
-       ✓ damage-derived copy: a Ruinous Brand copy is a fixed 0.5 fraction of the ALREADY offense-scaled origin hit, never re-scaled  641ms
-       ✓ the SP-rider delta (1200 vs 0 Spell Power) matches the literal 1.416 demonology total exactly (0.10 legacy + 0.096 ability + 0.22 offense-only, engine-constant formula, independent of resolveTalentHitMult)  730ms
-       ✓ ordinary pet: a real Reaping Command graveguard strike scales by exactly the demonology petDmgPct 1.42, isolated from every other spec knob  837ms
-       ✓ damage-derived copy: a Lich Soul Lance pierce is a fixed 0.5 fraction of the ALREADY offense-scaled landed hit, never re-scaled  529ms
-       ✓ Wicked Slash (sinister_strike, weaponStrike) scales by the literal 1.32 assassination total (0.22 legacy meleeDmgPct + 0.10 offense-only)  562ms
-       ✓ Rendclaw (claw, weaponStrike, cat form) scales by the literal 1.80 feral total (0.50 Primal Heart mastery meleeDmgPct + 0.15 ability dmgPct + 0.15 offense-only)  581ms
-       ✓ scales by the literal 1.45 survival total (0.30 legacy meleeDmgPct + 0.15 offense-only), matching the pinned hunterBloodhook/hunterShrapnel damageMult in tests/spec_baselines.test.ts  573ms
-       ✓ a low-Spell-Power Scouring Hymn scales by the literal 1.30 discipline total  771ms
-       ✓ Scouring Mercy's hostile damage half grows by the literal 1.30 Doctrine factor (SP-delta, engine-constant formula)  545ms
-       ✓ Scouring Mercy's heal half does NOT move: unaffected by Spell Power AND by Doctrine's offense-only bonus (both would move it if it leaked into healMult)  561ms
-       ✓ Necromancy's owner spell bonus grows Essence Reap but leaves Fiendhide's armor buff at its legacy (pre-offense) value  527ms
- ✓ tests/v042_ability_resolution.test.ts (23 tests) 12883ms
-     ✓ bakes the Dirge DoT total x1.1 for a shadow priest, matching Sim.resolvedAbility  700ms
-     ✓ rewrites Mindfracture (mind_blast) spell power coefficient for shadow  550ms
-     ✓ negative control: a non-shadow priest leaves both abilities byte-identical to `known`  545ms
-     ✓ doubles Measured Shot focus gain and discounts Long Draw inside the window, matching Sim  518ms
-     ✓ adds the Coldsight 2pc Measured Shot focus bonus from mods.selected  565ms
-     ✓ negative control: outside the window, both abilities stay byte-identical to `known`  527ms
-     ✓ transforms at 5 Verdance, bakes talent mods exactly once, and carries the primary-healing factor  525ms
-     ✓ negative control: below 5 stacks Swiftmend stays byte-identical to `known`  534ms
-     ✓ transforms at 3 Old Blood and bakes talent mods exactly once, matching Sim  523ms
-     ✓ negative control: an untransformed sibling (Rendclaw) stays byte-identical while Old Blood is stacked  517ms
-     ✓ transforms at 6 Venom Ritual and bakes talent mods exactly once, matching Sim  514ms
-     ✓ negative control: below 6 stacks Dirt Nap stays byte-identical to `known`  523ms
-     ✓ returns the identical reference for an ability with no actionReplacement rule  563ms
-     ✓ discounts Measured Fury (arms) by exactly 10%, rounded, only when the passive is known  524ms
-     ✓ negative control: a non-arms spec never gets the Measured Fury discount  525ms
-     ✓ negative control: removing the passive from known drops the discount even while spec stays arms  511ms
-     ✓ taxes cost by the HIGHEST of several active cost_tax auras, independent of aura order  1044ms
-     ✓ applies the Measured Fury discount BEFORE the cost_tax ceiling, not after  502ms
-     ✓ Aether Surge cost ramps geometrically per held Arcane Charge (2 charges = 4x)  519ms
-     ✓ negative control: held Arcane Charges never touch the cost of a different ability  528ms
-     ✓ applies cost_tax BEFORE the Aether Surge ramp, not after  534ms
-     ✓ the zero-cost Charge ability stays zero under both Measured Fury discount and cost_tax  530ms
-     ✓ an actual cast spends the Measured Fury discounted cost, not the raw known cost  560ms
- ✓ tests/v042_priest_dirge_refresh.test.ts (26 tests) 14802ms
-     ✓ does nothing on a first application (no prior own Dirge on the primary target)  734ms
-     ✓ refreshes every other living own-Dirge hostile within range on a genuine reapplication, with no cap  588ms
-     ✓ never spreads to or recreates a Dirge on a clean (never-dotted) hostile  536ms
-     ✓ never refreshes a Dirge owned by a different priest  560ms
-     ✓ includes a hostile exactly at the 30-yard boundary and excludes one just outside it  514ms
-     ✓ excludes a hostile with no line of sight to the priest  533ms
-     ✓ preserves each recipient own next-tick timing and same-tick Gloomtithe guard (never grants an instant tick)  547ms
-     ✓ carries a currently-live extension (remaining > 18) forward within the 24-second cap without resetting it  527ms
-     ✓ does NOT restore a stored extendedBy allowance once its live time already elapsed  524ms
-     ✓ carries currently-live time above 18s even with no extendedBy field recorded  502ms
-     ✓ keeps an already-bound own Effigy in step with its Dirge without rebinding or granting Gloomtithe  521ms
-     ✓ is inert for a non-Vespers-spec priest even with a prior own Dirge captured  542ms
-     ✓ is inert when the primary target is an enemy player rather than a mob  542ms
-     ✓ never spreads to an enemy player carrying the own Dirge, even if it is otherwise in range  523ms
-     ✓ does not fan out when the seam apply was rejected (the old aura object is retained)  540ms
-     ✓ may have its own recipient apply rejected; only syncs that recipient Effigy on proven success  541ms
-     ✓ accepts a caller-resolved range beyond the authored default  523ms
-     ✓ excludes with the authored default range when no custom range is supplied  537ms
-     ✓ exposes a 1.10 runtime SP multiplier for a Shadow priest, matching the authored VESPERS_DOT_DAMAGE_MULT  528ms
-     ✓ is a no-op factor of 1 for a non-Vespers priest spec  519ms
-     ✓ a real shadow_word_pain recast through castAbility refreshes a second hostile own Dirge about to expire  1146ms
-     ✓ a real recast also carries the runtime Spell Power correction into the refreshed field  1125ms
-     ✓ a real cast delta pins the Vespers SP correction, not just the exposed constant  563ms
-     ✓ fans out in ascending hostile-id order, not spatial-grid bucket order  528ms
-     ✓ ability_output_scaling.ts matches the imported dirge_refresh.ts id  555ms
- ✓ tests/v042_coldsight_read.test.ts (33 tests) 17478ms
-     ✓ grants a 10 sec visible opportunity after all six pulses land on a live target  694ms
-     ✓ refuses a pushback-shortened channel: fewer than six real pulses grants nothing  534ms
-     ✓ refuses when the target is dead at completion  552ms
-     ✓ refuses when there is no target at completion  539ms
-     ✓ ignores completion of any ability other than rapid_fire  537ms
-     ✓ never grants for a non-marksmanship hunter spec  531ms
-     ✓ a channel that never actually started (no pulses tracked) grants nothing even if reported complete  554ms
-     ✓ a repeated full completion refreshes, never stacks  518ms
-     ✓ a fresh channel start resets progress: a prior short channel cannot combine with a later one  536ms
-     ✓ reserves on an accepted Long Draw and consumes the armed opportunity  528ms
-     ✓ a rejected/ineligible cast never consumes the armed opportunity  527ms
-     ✓ reserving with nothing armed is a no-op  539ms
-     ✓ prevents a second queued action from spending the same opportunity  552ms
-     ✓ an interrupted Long Draw loses its reservation for good  522ms
-     ✓ leaves an unrelated cancelled cast alone  519ms
-     ✓ bakes +50% as damageMult into a reserved Long Draw, leaving min/max (and any AP scaling) untouched  525ms
-     ✓ bakes +75% for a reserved Fell Shot  526ms
-     ✓ composes with an existing damageMult rather than overwriting it  527ms
-     ✓ leaves the resolved ability unchanged (same reference) when nothing is reserved  506ms
-     ✓ leaves an ineligible ability unchanged even with a live reservation, and does not consume it  509ms
-     ✓ only consumes once: a second resolve of the same ability finds nothing left  553ms
-     ✓ channel start emits no aura event  536ms
-     ✓ channel completion emits only the real Coldsight Read grant  524ms
-     ✓ reserving at cast-accept emits only the real buff fade, never a marker gain  551ms
-     ✓ consuming the reservation on a landed hit emits no aura event  513ms
-     ✓ cancelling an accepted cast voids the reservation marker silently  570ms
-     ✓ cancelling a channel voids the progress marker silently  532ms
-     ✓ respec sweeps the progress marker silently  547ms
-     ✓ respec sweeps a live reservation marker silently  515ms
-     ✓ respec still emits one fade for a still-armed real Coldsight Read (positive control)  541ms
-     ✓ a marker forced to natural expiry (generic per-tick timer) emits no aura event  466ms
-     ✓ the real Coldsight Read buff naturally expiring still emits one fade  430ms
-     ✓ an unrelated internal_cd aura naturally expiring still emits one fade  424ms
- ✓ tests/corpse_harvest_scope.test.ts (17 tests) 7509ms
-     ✓ a real, correctly-owned claim (actor and corpse both in the SAME slot) is authorized  599ms
-     ✓ REGRESSION: two live slots sharing one partyKey must not authorize a corpse claimed by the WRONG slot  436ms
-     ✓ REGRESSION: a stranger merely standing at the owner's coordinates, never having entered the party, must not be authorized  416ms
-     ✓ REGRESSION: a claimed corpse dragged outside its own slot must not be authorized even for the slot's rightful owner  460ms
-     ✓ a real, correctly-owned rift corpse (registered in mobIds, actor a member) is authorized  427ms
-     ✓ REGRESSION: a mob merely standing in the region, absent from the instance mobIds roster, must not be authorized  434ms
-     ✓ REGRESSION: a member who has walked back to the open world (position off the active floor) must not be authorized  429ms
-     ✓ a real, correctly-owned delve corpse (registered in mobIds, actor the live occupant) is authorized  441ms
-     ✓ REGRESSION: an unrelated orphan wandering into an ABANDONED run's band must not have sameHarvestScope rebind the run onto them  446ms
-     ✓ REGRESSION: a non-finite actor position must never satisfy the band comparison (NaN is not <= 120)  435ms
-     ✓ REGRESSION: a registered delve corpse dragged outside its own run's band must not be authorized for the run's live occupant  418ms
-     ✓ REGRESSION: a non-finite CORPSE position must never satisfy the band comparison either  419ms
-     ✓ a non-finite actor Y position is rejected even for a real dungeon claim (y was never checked before)  442ms
-     ✓ a non-finite corpse Y position is rejected even for a real dungeon claim  420ms
-     ✓ a non-finite actor position is rejected in the open-world fallback too  417ms
-     ✓ REGRESSION: an actor standing in the instance plane with no claim, and an open-world corpse, must not be authorized  429ms
-     ✓ an ordinary open-world actor and corpse, both outside the instance plane with no claim, are authorized  439ms
- ✓ tests/v042_coldsight_integration.test.ts (14 tests) 6114ms
-     ✓ six real ticks through Sim.tick grant exactly one charge  610ms
-     ✓ a fully absorbed channel still grants Read after all six shots fire  459ms
-     ✓ an interrupted channel (silence/stun-shaped cancel) grants nothing  443ms
-     ✓ the target dying mid-channel cancels the cast and grants nothing  453ms
-     ✓ a pushback-shortened channel (fewer than six real pulses) grants nothing  420ms
-     ✓ an accepted Long Draw interrupted mid-cast has already spent it: no refund, no leak to a later cast  473ms
-     ✓ an ineligible spender never consumes the armed opportunity  420ms
-     ✓ Long Draw lands +50% and Fell Shot lands +75% versus an unarmed baseline  866ms
-     ✓ keeps one empowered Long Draw after pushback extends the cast beyond ten seconds  522ms
-     ✓ leaving marksmanship drops the armed opportunity, so another spec never sees it  423ms
-     ✓ one Rapid Fire channel plus one accepted Long Draw emits exactly two aura events  457ms
-     ✓ one Rapid Fire channel plus one accepted Fell Shot emits exactly two aura events  433ms
- ✓ tests/codex_hooks.test.ts (25 tests) 4452ms
-     ✓ does not install or mutate configuration after an effective-config lookup error  491ms
- ✓ tests/v042_doctrine_rescue.test.ts (21 tests) 10701ms
-     ✓ selects up to two OTHER injured party allies within 10 yards of the primary, nearest-to-death first  703ms
-     ✓ breaks a missing-health-fraction tie by stable entity id  537ms
-     ✓ excludes a full-health ally  522ms
-     ✓ includes an ally exactly at the 10-yard boundary and excludes one just outside it  508ms
-     ✓ excludes a living player who is not in the priest current group  519ms
-     ✓ excludes a dead ally  522ms
-     ✓ excludes a candidate the priest itself cannot see, even though it is within radius of the primary  526ms
-     ✓ heals each recipient for exactly 50% of the effective primary heal, noncrit  539ms
-     ✓ produces no copies when effectiveHeal is zero or negative  545ms
-     ✓ applies the target-side incoming-heal multiplier to a copy exactly once  529ms
-     ✓ does not force a tiny reduced rescue copy above zero (reduction 0.5)  522ms
-     ✓ does not apply a source-side healing bonus on the priest to a copy  525ms
-     ✓ still drains a healing absorb on the recipient  525ms
-     ✓ creates no new Doctrine link on the recipient  509ms
-     ✓ heals the primary plus up to two nearby injured allies, capping at three total recipients  551ms
-     ✓ is inert for a non-Discipline priest  528ms
-     ✓ produces no rescue copies for a fully overhealed primary  523ms
-     ✓ is inert when the primary is not a living friendly group member  512ms
-     ✓ is inert when the primary is outside Psalm reach of the priest  516ms
-     ✓ a real friendly Scouring Mercy cast also heals a nearby injured party ally  516ms
- ✓ tests/v042_rogue_stealth.test.ts (11 tests) 4450ms
-     ✓ is false for anything other than ambush  687ms
-     ✓ is false for a non-subtlety rogue even while genuinely stealthed  544ms
-     ✓ is false for subtlety when not actually stealthed (e.g. a veil-window opener)  517ms
-     ✓ is true for a genuinely stealthed subtlety Lurker's Strike  542ms
-     ✓ reads stealth as it stands at call time, matching the required capture-before-breakStealth order  548ms
-     ✓ rogueGloamDetonation refuses to arm Veiled Edge while actually stealthed  553ms
-     ✓ VEILED_EDGE_BONUS is 0.5, so consumeVeiledEdge returns 1.5 for a non-set wearer  513ms
-     ✓ Ashveil 4pc is halved too: +200% -> +100% (value 1, consume returns 2)  545ms
- ✓ tests/harvest_preference_sim.test.ts (15 tests) 4166ms
-     ✓ defaults a fresh character to All, on both the per-pid and primary readers  693ms
-     ✓ defaults an old row that never carried the field (sparse legacy save) to All  564ms
-     ✓ round trips a chosen material across a full re-add into a fresh Sim  555ms
-     ✓ keeps a retired material id through a real character load, verbatim  543ms
-     ✓ refuses a malformed persisted value to null, saves it as JSON null, and stays refused across a second load  1084ms
-     ✓ recovers a malformed refused preference with one explicit valid command  524ms
+ + tests/v042_offense_packets.test.ts (18 tests) 11555ms
+       + a low-Spell-Power Earthen Jolt (authored base dominates) scales by the literal 1.46 elemental total (mastery 0.15 + ability 0.18 + offense-only 0.13)  837ms
+       + a full 5-charge Thunder bank vents Earthen Jolt for exactly the literal 2.25x on top of the already-elemental-scaled hit (no double count of the offense bonus)  622ms
+       + ordinary pet: an owned imp firebolt scales by exactly the destruction petDmgPct 1.10, isolated from every other spec knob  2082ms
+       + custom pet bypass: a real Pyre Colossus nova deals the literal fixed 66 (the explicit destruction-only fix, since this path bypasses petDmgPct entirely)  530ms
+       + damage-derived copy: a Ruinous Brand copy is a fixed 0.5 fraction of the ALREADY offense-scaled origin hit, never re-scaled  641ms
+       + the SP-rider delta (1200 vs 0 Spell Power) matches the literal 1.416 demonology total exactly (0.10 legacy + 0.096 ability + 0.22 offense-only, engine-constant formula, independent of resolveTalentHitMult)  730ms
+       + ordinary pet: a real Reaping Command graveguard strike scales by exactly the demonology petDmgPct 1.42, isolated from every other spec knob  837ms
+       + damage-derived copy: a Lich Soul Lance pierce is a fixed 0.5 fraction of the ALREADY offense-scaled landed hit, never re-scaled  529ms
+       + Wicked Slash (sinister_strike, weaponStrike) scales by the literal 1.32 assassination total (0.22 legacy meleeDmgPct + 0.10 offense-only)  562ms
+       + Rendclaw (claw, weaponStrike, cat form) scales by the literal 1.80 feral total (0.50 Primal Heart mastery meleeDmgPct + 0.15 ability dmgPct + 0.15 offense-only)  581ms
+       + scales by the literal 1.45 survival total (0.30 legacy meleeDmgPct + 0.15 offense-only), matching the pinned hunterBloodhook/hunterShrapnel damageMult in tests/spec_baselines.test.ts  573ms
+       + a low-Spell-Power Scouring Hymn scales by the literal 1.30 discipline total  771ms
+       + Scouring Mercy's hostile damage half grows by the literal 1.30 Doctrine factor (SP-delta, engine-constant formula)  545ms
+       + Scouring Mercy's heal half does NOT move: unaffected by Spell Power AND by Doctrine's offense-only bonus (both would move it if it leaked into healMult)  561ms
+       + Necromancy's owner spell bonus grows Essence Reap but leaves Fiendhide's armor buff at its legacy (pre-offense) value  527ms
+ + tests/v042_ability_resolution.test.ts (23 tests) 12883ms
+     + bakes the Dirge DoT total x1.1 for a shadow priest, matching Sim.resolvedAbility  700ms
+     + rewrites Mindfracture (mind_blast) spell power coefficient for shadow  550ms
+     + negative control: a non-shadow priest leaves both abilities byte-identical to `known`  545ms
+     + doubles Measured Shot focus gain and discounts Long Draw inside the window, matching Sim  518ms
+     + adds the Coldsight 2pc Measured Shot focus bonus from mods.selected  565ms
+     + negative control: outside the window, both abilities stay byte-identical to `known`  527ms
+     + transforms at 5 Verdance, bakes talent mods exactly once, and carries the primary-healing factor  525ms
+     + negative control: below 5 stacks Swiftmend stays byte-identical to `known`  534ms
+     + transforms at 3 Old Blood and bakes talent mods exactly once, matching Sim  523ms
+     + negative control: an untransformed sibling (Rendclaw) stays byte-identical while Old Blood is stacked  517ms
+     + transforms at 6 Venom Ritual and bakes talent mods exactly once, matching Sim  514ms
+     + negative control: below 6 stacks Dirt Nap stays byte-identical to `known`  523ms
+     + returns the identical reference for an ability with no actionReplacement rule  563ms
+     + discounts Measured Fury (arms) by exactly 10%, rounded, only when the passive is known  524ms
+     + negative control: a non-arms spec never gets the Measured Fury discount  525ms
+     + negative control: removing the passive from known drops the discount even while spec stays arms  511ms
+     + taxes cost by the HIGHEST of several active cost_tax auras, independent of aura order  1044ms
+     + applies the Measured Fury discount BEFORE the cost_tax ceiling, not after  502ms
+     + Aether Surge cost ramps geometrically per held Arcane Charge (2 charges = 4x)  519ms
+     + negative control: held Arcane Charges never touch the cost of a different ability  528ms
+     + applies cost_tax BEFORE the Aether Surge ramp, not after  534ms
+     + the zero-cost Charge ability stays zero under both Measured Fury discount and cost_tax  530ms
+     + an actual cast spends the Measured Fury discounted cost, not the raw known cost  560ms
+ + tests/v042_priest_dirge_refresh.test.ts (26 tests) 14802ms
+     + does nothing on a first application (no prior own Dirge on the primary target)  734ms
+     + refreshes every other living own-Dirge hostile within range on a genuine reapplication, with no cap  588ms
+     + never spreads to or recreates a Dirge on a clean (never-dotted) hostile  536ms
+     + never refreshes a Dirge owned by a different priest  560ms
+     + includes a hostile exactly at the 30-yard boundary and excludes one just outside it  514ms
+     + excludes a hostile with no line of sight to the priest  533ms
+     + preserves each recipient own next-tick timing and same-tick Gloomtithe guard (never grants an instant tick)  547ms
+     + carries a currently-live extension (remaining > 18) forward within the 24-second cap without resetting it  527ms
+     + does NOT restore a stored extendedBy allowance once its live time already elapsed  524ms
+     + carries currently-live time above 18s even with no extendedBy field recorded  502ms
+     + keeps an already-bound own Effigy in step with its Dirge without rebinding or granting Gloomtithe  521ms
+     + is inert for a non-Vespers-spec priest even with a prior own Dirge captured  542ms
+     + is inert when the primary target is an enemy player rather than a mob  542ms
+     + never spreads to an enemy player carrying the own Dirge, even if it is otherwise in range  523ms
+     + does not fan out when the seam apply was rejected (the old aura object is retained)  540ms
+     + may have its own recipient apply rejected; only syncs that recipient Effigy on proven success  541ms
+     + accepts a caller-resolved range beyond the authored default  523ms
+     + excludes with the authored default range when no custom range is supplied  537ms
+     + exposes a 1.10 runtime SP multiplier for a Shadow priest, matching the authored VESPERS_DOT_DAMAGE_MULT  528ms
+     + is a no-op factor of 1 for a non-Vespers priest spec  519ms
+     + a real shadow_word_pain recast through castAbility refreshes a second hostile own Dirge about to expire  1146ms
+     + a real recast also carries the runtime Spell Power correction into the refreshed field  1125ms
+     + a real cast delta pins the Vespers SP correction, not just the exposed constant  563ms
+     + fans out in ascending hostile-id order, not spatial-grid bucket order  528ms
+     + ability_output_scaling.ts matches the imported dirge_refresh.ts id  555ms
+ + tests/v042_coldsight_read.test.ts (33 tests) 17478ms
+     + grants a 10 sec visible opportunity after all six pulses land on a live target  694ms
+     + refuses a pushback-shortened channel: fewer than six real pulses grants nothing  534ms
+     + refuses when the target is dead at completion  552ms
+     + refuses when there is no target at completion  539ms
+     + ignores completion of any ability other than rapid_fire  537ms
+     + never grants for a non-marksmanship hunter spec  531ms
+     + a channel that never actually started (no pulses tracked) grants nothing even if reported complete  554ms
+     + a repeated full completion refreshes, never stacks  518ms
+     + a fresh channel start resets progress: a prior short channel cannot combine with a later one  536ms
+     + reserves on an accepted Long Draw and consumes the armed opportunity  528ms
+     + a rejected/ineligible cast never consumes the armed opportunity  527ms
+     + reserving with nothing armed is a no-op  539ms
+     + prevents a second queued action from spending the same opportunity  552ms
+     + an interrupted Long Draw loses its reservation for good  522ms
+     + leaves an unrelated cancelled cast alone  519ms
+     + bakes +50% as damageMult into a reserved Long Draw, leaving min/max (and any AP scaling) untouched  525ms
+     + bakes +75% for a reserved Fell Shot  526ms
+     + composes with an existing damageMult rather than overwriting it  527ms
+     + leaves the resolved ability unchanged (same reference) when nothing is reserved  506ms
+     + leaves an ineligible ability unchanged even with a live reservation, and does not consume it  509ms
+     + only consumes once: a second resolve of the same ability finds nothing left  553ms
+     + channel start emits no aura event  536ms
+     + channel completion emits only the real Coldsight Read grant  524ms
+     + reserving at cast-accept emits only the real buff fade, never a marker gain  551ms
+     + consuming the reservation on a landed hit emits no aura event  513ms
+     + cancelling an accepted cast voids the reservation marker silently  570ms
+     + cancelling a channel voids the progress marker silently  532ms
+     + respec sweeps the progress marker silently  547ms
+     + respec sweeps a live reservation marker silently  515ms
+     + respec still emits one fade for a still-armed real Coldsight Read (positive control)  541ms
+     + a marker forced to natural expiry (generic per-tick timer) emits no aura event  466ms
+     + the real Coldsight Read buff naturally expiring still emits one fade  430ms
+     + an unrelated internal_cd aura naturally expiring still emits one fade  424ms
+ + tests/corpse_harvest_scope.test.ts (17 tests) 7509ms
+     + a real, correctly-owned claim (actor and corpse both in the SAME slot) is authorized  599ms
+     + REGRESSION: two live slots sharing one partyKey must not authorize a corpse claimed by the WRONG slot  436ms
+     + REGRESSION: a stranger merely standing at the owner's coordinates, never having entered the party, must not be authorized  416ms
+     + REGRESSION: a claimed corpse dragged outside its own slot must not be authorized even for the slot's rightful owner  460ms
+     + a real, correctly-owned rift corpse (registered in mobIds, actor a member) is authorized  427ms
+     + REGRESSION: a mob merely standing in the region, absent from the instance mobIds roster, must not be authorized  434ms
+     + REGRESSION: a member who has walked back to the open world (position off the active floor) must not be authorized  429ms
+     + a real, correctly-owned delve corpse (registered in mobIds, actor the live occupant) is authorized  441ms
+     + REGRESSION: an unrelated orphan wandering into an ABANDONED run's band must not have sameHarvestScope rebind the run onto them  446ms
+     + REGRESSION: a non-finite actor position must never satisfy the band comparison (NaN is not <= 120)  435ms
+     + REGRESSION: a registered delve corpse dragged outside its own run's band must not be authorized for the run's live occupant  418ms
+     + REGRESSION: a non-finite CORPSE position must never satisfy the band comparison either  419ms
+     + a non-finite actor Y position is rejected even for a real dungeon claim (y was never checked before)  442ms
+     + a non-finite corpse Y position is rejected even for a real dungeon claim  420ms
+     + a non-finite actor position is rejected in the open-world fallback too  417ms
+     + REGRESSION: an actor standing in the instance plane with no claim, and an open-world corpse, must not be authorized  429ms
+     + an ordinary open-world actor and corpse, both outside the instance plane with no claim, are authorized  439ms
+ + tests/v042_coldsight_integration.test.ts (14 tests) 6114ms
+     + six real ticks through Sim.tick grant exactly one charge  610ms
+     + a fully absorbed channel still grants Read after all six shots fire  459ms
+     + an interrupted channel (silence/stun-shaped cancel) grants nothing  443ms
+     + the target dying mid-channel cancels the cast and grants nothing  453ms
+     + a pushback-shortened channel (fewer than six real pulses) grants nothing  420ms
+     + an accepted Long Draw interrupted mid-cast has already spent it: no refund, no leak to a later cast  473ms
+     + an ineligible spender never consumes the armed opportunity  420ms
+     + Long Draw lands +50% and Fell Shot lands +75% versus an unarmed baseline  866ms
+     + keeps one empowered Long Draw after pushback extends the cast beyond ten seconds  522ms
+     + leaving marksmanship drops the armed opportunity, so another spec never sees it  423ms
+     + one Rapid Fire channel plus one accepted Long Draw emits exactly two aura events  457ms
+     + one Rapid Fire channel plus one accepted Fell Shot emits exactly two aura events  433ms
+ + tests/codex_hooks.test.ts (25 tests) 4452ms
+     + does not install or mutate configuration after an effective-config lookup error  491ms
+ + tests/v042_doctrine_rescue.test.ts (21 tests) 10701ms
+     + selects up to two OTHER injured party allies within 10 yards of the primary, nearest-to-death first  703ms
+     + breaks a missing-health-fraction tie by stable entity id  537ms
+     + excludes a full-health ally  522ms
+     + includes an ally exactly at the 10-yard boundary and excludes one just outside it  508ms
+     + excludes a living player who is not in the priest current group  519ms
+     + excludes a dead ally  522ms
+     + excludes a candidate the priest itself cannot see, even though it is within radius of the primary  526ms
+     + heals each recipient for exactly 50% of the effective primary heal, noncrit  539ms
+     + produces no copies when effectiveHeal is zero or negative  545ms
+     + applies the target-side incoming-heal multiplier to a copy exactly once  529ms
+     + does not force a tiny reduced rescue copy above zero (reduction 0.5)  522ms
+     + does not apply a source-side healing bonus on the priest to a copy  525ms
+     + still drains a healing absorb on the recipient  525ms
+     + creates no new Doctrine link on the recipient  509ms
+     + heals the primary plus up to two nearby injured allies, capping at three total recipients  551ms
+     + is inert for a non-Discipline priest  528ms
+     + produces no rescue copies for a fully overhealed primary  523ms
+     + is inert when the primary is not a living friendly group member  512ms
+     + is inert when the primary is outside Psalm reach of the priest  516ms
+     + a real friendly Scouring Mercy cast also heals a nearby injured party ally  516ms
+ + tests/v042_rogue_stealth.test.ts (11 tests) 4450ms
+     + is false for anything other than ambush  687ms
+     + is false for a non-subtlety rogue even while genuinely stealthed  544ms
+     + is false for subtlety when not actually stealthed (e.g. a veil-window opener)  517ms
+     + is true for a genuinely stealthed subtlety Lurker's Strike  542ms
+     + reads stealth as it stands at call time, matching the required capture-before-breakStealth order  548ms
+     + rogueGloamDetonation refuses to arm Veiled Edge while actually stealthed  553ms
+     + VEILED_EDGE_BONUS is 0.5, so consumeVeiledEdge returns 1.5 for a non-set wearer  513ms
+     + Ashveil 4pc is halved too: +200% -> +100% (value 1, consume returns 2)  545ms
+ + tests/harvest_preference_sim.test.ts (15 tests) 4166ms
+     + defaults a fresh character to All, on both the per-pid and primary readers  693ms
+     + defaults an old row that never carried the field (sparse legacy save) to All  564ms
+     + round trips a chosen material across a full re-add into a fresh Sim  555ms
+     + keeps a retired material id through a real character load, verbatim  543ms
+     + refuses a malformed persisted value to null, saves it as JSON null, and stays refused across a second load  1084ms
+     + recovers a malformed refused preference with one explicit valid command  524ms
 stdout | tests/furnishing_consumer_parity.test.ts
 [capi] META_CAPI_ACCESS_TOKEN unset; Conversions API disabled.
 
- ✓ tests/v042_healer_custom_scaling.test.ts (10 tests) 3947ms
-     ✓ reproduces and corrects the missing talent healing multiplier on the SP rider, then scales the complete tick and burst exactly once  711ms
-     ✓ threads aug_mending into the SP rider exactly once, alongside the independent Sunmender primary factor  553ms
-     ✓ reproduces and corrects the missing talent/hotHealPct multiplier on the replant rider, then scales the complete tick exactly once  528ms
-     ✓ scales the flat heal by 1.10 for holy while leaving the flat damage at its authored amount  544ms
-     ✓ transfers 50% of the Sunmender-scaled primary heal, not a second 1.10 factor on top  542ms
-     ✓ repeats 40% of the third proc's Sunmender-scaled effective heal, not a second 1.10 factor  518ms
-     ✓ harvests 60% of the stored (already Groveheart-scaled) remaining HoT healing, not a second 1.05 factor  524ms
- ✓ tests/v042_online_ability_resolution.test.ts (9 tests) 3976ms
-     ✓ a draining curse cost_tax aura taxes cost the same offline and online  612ms
-     ✓ the Measured Fury (arms) discount applies the same offline and online  552ms
-     ✓ control: without the arms passive, offline and online agree on the base cost  549ms
-     ✓ Aether Surge charges ramp cost the same offline and online  518ms
-     ✓ control: a zero-cost ability (Charge) shows zero both offline and online under discount and tax  518ms
-     ✓ the discount-then-tax order (never tax-then-discount) holds the same online  547ms
-     ✓ the tax-then-surge order (never surge-then-tax) holds the same online  531ms
+ + tests/v042_healer_custom_scaling.test.ts (10 tests) 3947ms
+     + reproduces and corrects the missing talent healing multiplier on the SP rider, then scales the complete tick and burst exactly once  711ms
+     + threads aug_mending into the SP rider exactly once, alongside the independent Sunmender primary factor  553ms
+     + reproduces and corrects the missing talent/hotHealPct multiplier on the replant rider, then scales the complete tick exactly once  528ms
+     + scales the flat heal by 1.10 for holy while leaving the flat damage at its authored amount  544ms
+     + transfers 50% of the Sunmender-scaled primary heal, not a second 1.10 factor on top  542ms
+     + repeats 40% of the third proc's Sunmender-scaled effective heal, not a second 1.10 factor  518ms
+     + harvests 60% of the stored (already Groveheart-scaled) remaining HoT healing, not a second 1.05 factor  524ms
+ + tests/v042_online_ability_resolution.test.ts (9 tests) 3976ms
+     + a draining curse cost_tax aura taxes cost the same offline and online  612ms
+     + the Measured Fury (arms) discount applies the same offline and online  552ms
+     + control: without the arms passive, offline and online agree on the base cost  549ms
+     + Aether Surge charges ramp cost the same offline and online  518ms
+     + control: a zero-cost ability (Charge) shows zero both offline and online under discount and tax  518ms
+     + the discount-then-tax order (never tax-then-discount) holds the same online  547ms
+     + the tax-then-surge order (never surge-then-tax) holds the same online  531ms
 stdout | tests/furnishing_tool_parity.test.ts
 [capi] META_CAPI_ACCESS_TOKEN unset; Conversions API disabled.
 
@@ -211,13 +211,13 @@ stdout | tests/furnishing_consumer_parity.test.ts > furnishing profession comman
 stdout | tests/furnishing_consumer_parity.test.ts > furnishing profession command parity > keeps 'salvage' refusal and eligible success through both world facades
 [bot-detector] suspicion-flag host: not accepted by this detector build
 
- ✓ tests/gather_attribution.test.ts (14 tests) 3900ms
-     ✓ derives an ONLINE gatherer from the authoritative character id, not from anything the save carries  1244ms
-     ✓ leaves a bare Sim UNKNOWN rather than inventing attribution from the seed or the entity id  577ms
-     ✓ carries the constructor-minted primary player its host identity  531ms
-     ✓ attributes every landed material unit to the gatherer, exactly once per unit  476ms
-     ✓ signs ONLY the premium yields, and the plain ones carry a gatherer with no signature  434ms
-     ✓ snapshots the name at MINT time, so a rename only reaches future gathers  431ms
+ + tests/gather_attribution.test.ts (14 tests) 3900ms
+     + derives an ONLINE gatherer from the authoritative character id, not from anything the save carries  1244ms
+     + leaves a bare Sim UNKNOWN rather than inventing attribution from the seed or the entity id  577ms
+     + carries the constructor-minted primary player its host identity  531ms
+     + attributes every landed material unit to the gatherer, exactly once per unit  476ms
+     + signs ONLY the premium yields, and the plain ones carry a gatherer with no signature  434ms
+     + snapshots the name at MINT time, so a rename only reaches future gathers  431ms
 stdout | tests/furnishing_consumer_parity.test.ts > furnishing profession command parity > keeps 'enchant' refusal and eligible success through both world facades
 [bot-detector] suspicion-flag host: not accepted by this detector build
 
@@ -245,12 +245,12 @@ stdout | tests/furnishing_consumer_parity.test.ts > furnishing profession comman
 stdout | tests/furnishing_consumer_parity.test.ts > furnishing storage mirrors > round-trips signed guild-bank contents through the real command and snapshot
 [bot-detector] suspicion-flag host: not accepted by this detector build
 
- ✓ tests/corpse_harvest_grant.test.ts (20 tests) 2923ms
-     ✓ mutating the original tags/chosen arrays and townFocus after the call leaves the snapshot untouched  680ms
-     ✓ captures the wield-requirement denial hint at admission; a later tool change never reaches the emitted event  522ms
-     ✓ the frozen town focus decides the grant; a later change to meta.townFocus is inert (seed 3)  505ms
-     ✓ a slot-full signed-family harvest keeps its source mark in a compatible stack (seed 30)  493ms
-     ✓ with exactly the reserved plain-stack slots, the jackpot truncates, never the plain yield (seed 6)  492ms
+ + tests/corpse_harvest_grant.test.ts (20 tests) 2923ms
+     + mutating the original tags/chosen arrays and townFocus after the call leaves the snapshot untouched  680ms
+     + captures the wield-requirement denial hint at admission; a later tool change never reaches the emitted event  522ms
+     + the frozen town focus decides the grant; a later change to meta.townFocus is inert (seed 3)  505ms
+     + a slot-full signed-family harvest keeps its source mark in a compatible stack (seed 30)  493ms
+     + with exactly the reserved plain-stack slots, the jackpot truncates, never the plain yield (seed 6)  492ms
 stdout | tests/furnishing_tool_parity.test.ts > furnishing tool command boundaries online > refuses a furnishing at a real ore node and admits the same harvest with an eligible pick
 [bot-detector] suspicion-flag host: not accepted by this detector build
 
@@ -260,9 +260,9 @@ stdout | tests/furnishing_tool_parity.test.ts > furnishing tool command boundari
 stdout | tests/furnishing_tool_parity.test.ts > furnishing tool command boundaries online > keeps a furnishing at bare-hands corpse yield and unlocks the premium specimen with a real tool
 [bot-detector] suspicion-flag host: not accepted by this detector build
 
- ✓ tests/furnishing_tool_parity.test.ts (12 tests) 2930ms
-     ✓ refuses forged charm metadata without spending a copy and slots the eligible charm  869ms
-     ✓ refuses forged charm metadata without spending a copy and slots the eligible charm  714ms
+ + tests/furnishing_tool_parity.test.ts (12 tests) 2930ms
+     + refuses forged charm metadata without spending a copy and slots the eligible charm  869ms
+     + refuses forged charm metadata without spending a copy and slots the eligible charm  714ms
 stdout | tests/furnishing_consumer_parity.test.ts > furnishing storage mirrors > mails a signed furnishing through both clients and retains omitted mail and inventory deltas
 [bot-detector] suspicion-flag host: not accepted by this detector build
 
@@ -272,10 +272,10 @@ stdout | tests/furnishing_consumer_parity.test.ts > furnishing storage mirrors >
 stdout | tests/furnishing_consumer_parity.test.ts > furnishing storage mirrors > does not resolve a forged furnishing set into ClientWorld ability power
 [bot-detector] suspicion-flag host: not accepted by this detector build
 
- ✓ tests/furnishing_consumer_parity.test.ts (29 tests) 3069ms
-     ✓ rejects independent 'legacy fishing' power with a successful useItem control  654ms
-     ✓ shares client-visible kind decisions between offline Sim and decoded ClientWorld  601ms
-     ✓ mails a signed furnishing through both clients and retains omitted mail and inventory deltas  424ms
+ + tests/furnishing_consumer_parity.test.ts (29 tests) 3069ms
+     + rejects independent 'legacy fishing' power with a successful useItem control  654ms
+     + shares client-visible kind decisions between offline Sim and decoded ClientWorld  601ms
+     + mails a signed furnishing through both clients and retains omitted mail and inventory deltas  424ms
 stdout | tests/server/freehold_wire.test.ts
 [capi] META_CAPI_ACCESS_TOKEN unset; Conversions API disabled.
 
@@ -450,19 +450,19 @@ stdout | tests/server/freehold_wire.test.ts > freeholds wire: lit realm dispatch
 stdout | tests/server/freehold_wire.test.ts > freeholds wire: lit realm dispatch reaches the dark Sim stubs > set_freehold_build_presence with a off-charset acceptedTransitionId (non-Latin) payload is refused at the type boundary
 [bot-detector] suspicion-flag host: not accepted by this detector build
 
- ✓ tests/corpse_harvest_rights.test.ts (9 tests) 1989ms
-     ✓ a live kill snapshots the killer and holds a bystander out for the window  534ms
-     ✓ an untapped, uncredited kill still records an (empty) snapshot: the corpse is public at once  364ms
-     ✓ holds a non-member out while the window is open and admits the recorded killer  343ms
-     ✓ a same-named bystander gets no priority a namesake killer earned  364ms
-     ✓ the same character reconnecting under a fresh entity id keeps its death-snapshot admission  374ms
+ + tests/corpse_harvest_rights.test.ts (9 tests) 1989ms
+     + a live kill snapshots the killer and holds a bystander out for the window  534ms
+     + an untapped, uncredited kill still records an (empty) snapshot: the corpse is public at once  364ms
+     + holds a non-member out while the window is open and admits the recorded killer  343ms
+     + a same-named bystander gets no priority a namesake killer earned  364ms
+     + the same character reconnecting under a fresh entity id keeps its death-snapshot admission  374ms
 stdout | tests/server/freehold_wire.test.ts > freeholds wire: lit realm dispatch reaches the dark Sim stubs > set_freehold_build_presence with a array-valued plotId payload is refused at the type boundary
 [bot-detector] suspicion-flag host: not accepted by this detector build
 
- ✓ tests/freehold_npc_spawn.test.ts (8 tests) 1808ms
-     ✓ the dark constructor preserves the pre-furnisher entity and rng fingerprint  693ms
-     ✓ the lit constructor adds exactly one furnisher with the complete isolated stock  607ms
-     ✓ adding the authored NPC does not alter static colliders, lamp sites or decoration output  504ms
+ + tests/freehold_npc_spawn.test.ts (8 tests) 1808ms
+     + the dark constructor preserves the pre-furnisher entity and rng fingerprint  693ms
+     + the lit constructor adds exactly one furnisher with the complete isolated stock  607ms
+     + adding the authored NPC does not alter static colliders, lamp sites or decoration output  504ms
 stdout | tests/server/freehold_wire.test.ts > freeholds wire: lit realm dispatch reaches the dark Sim stubs > set_freehold_build_presence with a missing active payload is refused at the type boundary
 [bot-detector] suspicion-flag host: not accepted by this detector build
 
@@ -493,11 +493,11 @@ stdout | tests/server/freehold_wire.test.ts > freeholds wire: lit realm dispatch
 stdout | tests/server/freehold_wire.test.ts > freeholds wire: lit realm dispatch reaches the dark Sim stubs > the dispatch sibling answers true only for its own ten tokens
 [bot-detector] suspicion-flag host: not accepted by this detector build
 
- ✓ tests/v042_balance_tooltips.test.ts (24 tests) 2552ms
-     ✓ Wildbloom (rejuvenation): the pure-HoT $d matches the actually deposited tick total  709ms
-     ✓ Regrowth (Second Bloom): the hybrid HoT rider still takes the primary-healing factor on its flat base  605ms
-     ✓ Gladesong (tranquility) channel: each pulse matches the actual per-tick channel coefficient  652ms
-     ✓ Swiftmend (consumeAura heal): the $d combined total matches the actual consumed-HoT heal  575ms
+ + tests/v042_balance_tooltips.test.ts (24 tests) 2552ms
+     + Wildbloom (rejuvenation): the pure-HoT $d matches the actually deposited tick total  709ms
+     + Regrowth (Second Bloom): the hybrid HoT rider still takes the primary-healing factor on its flat base  605ms
+     + Gladesong (tranquility) channel: each pulse matches the actual per-tick channel coefficient  652ms
+     + Swiftmend (consumeAura heal): the $d combined total matches the actual consumed-HoT heal  575ms
 stdout | tests/server/freehold_wire.test.ts > freeholds wire: a jailed session cannot step through its own door > on a DARK realm the jail arm answers first, so the housing counter under-counts a jailed prober
 [bot-detector] suspicion-flag host: not accepted by this detector build
 [bot-detector] suspicion-flag host: not accepted by this detector build
@@ -505,8 +505,8 @@ stdout | tests/server/freehold_wire.test.ts > freeholds wire: a jailed session c
 stdout | tests/server/freehold_wire.test.ts > freeholds wire: a jailed session cannot step through its own door > on a LIT realm, freehold_enter from a jailed session is refused before the stub and freehold_leave is not
 [bot-detector] suspicion-flag host: not accepted by this detector build
 
- ✓ tests/server/freehold_wire.test.ts (86 tests) 2446ms
-     ✓ freehold_enter: refused before the sim, ok:false per rid, one count per attempt, no heavy-self mark  741ms
+ + tests/server/freehold_wire.test.ts (86 tests) 2446ms
+     + freehold_enter: refused before the sim, ok:false per rid, one count per attempt, no heavy-self mark  741ms
 stdout | tests/furnishing_rift_admission.test.ts
 [capi] META_CAPI_ACCESS_TOKEN unset; Conversions API disabled.
 
@@ -534,27 +534,27 @@ stdout | tests/furnishing_commerce_parity.test.ts > furnishing online commerce c
 stdout | tests/furnishing_rift_admission.test.ts > furnishing Rift admission through ClientWorld and GameServer > 'socket' refuses a furnishing via 'legacy item id' and mirrors shell success
 [bot-detector] suspicion-flag host: not accepted by this detector build
 
- ✓ tests/furnishing_rift_admission.test.ts (8 tests) 1669ms
-     ✓ 'upgrade' refuses a furnishing via 'named slot' and accepts the shell  619ms
-     ✓ 'upgrade' refuses a furnishing via 'named slot' and mirrors shell success  675ms
+ + tests/furnishing_rift_admission.test.ts (8 tests) 1669ms
+     + 'upgrade' refuses a furnishing via 'named slot' and accepts the shell  619ms
+     + 'upgrade' refuses a furnishing via 'named slot' and mirrors shell success  675ms
 stdout | tests/furnishing_commerce_parity.test.ts > furnishing online commerce commands > lists plain furnishing and gear, recovers both copies, and refuses quest stock unchanged
 [bot-detector] suspicion-flag host: not accepted by this detector build
 
- ✓ tests/gathering_goal_runtime.test.ts (15 tests) 1555ms
-     ✓ tracks a collecting goal with an exact, hand-computed material bill  710ms
-     ✓ refuses an order still open (nobody has accepted it yet)  534ms
+ + tests/gathering_goal_runtime.test.ts (15 tests) 1555ms
+     + tracks a collecting goal with an exact, hand-computed material bill  710ms
+     + refuses an order still open (nobody has accepted it yet)  534ms
 stdout | tests/furnishing_commerce_parity.test.ts > furnishing two-client direct trade > transfers signer and armed=false custody through both offers and confirms
 [bot-detector] suspicion-flag host: not accepted by this detector build
 
 stdout | tests/furnishing_commerce_parity.test.ts > furnishing two-client direct trade > transfers signer and armed=true custody through both offers and confirms
 [bot-detector] suspicion-flag host: not accepted by this detector build
 
- ✓ tests/furnishing_commerce_parity.test.ts (10 tests) 1633ms
-     ✓ crafts signer-only furnishing with forced apex=false power and a gear control  619ms
-     ✓ crafts signer-only furnishing with forced apex=false power and a gear control  596ms
+ + tests/furnishing_commerce_parity.test.ts (10 tests) 1633ms
+     + crafts signer-only furnishing with forced apex=false power and a gear control  619ms
+     + crafts signer-only furnishing with forced apex=false power and a gear control  596ms
 [material-source-pg] {"label":"maximal-row","bankSlots":112,"bankSlotsWithSockets":208,"bagSlots":112,"vaultSpecialRows":117,"unitsPerSlot":20,"storedBytes":134052,"textBytes":3217229,"bankSubtreeBytes":617485,"toastChunks":68}
- ✓ tests/furnishing_item_kind.test.ts (154 tests) 1714ms
-     ✓ occupies one bag slot per copy  616ms
+ + tests/furnishing_item_kind.test.ts (154 tests) 1714ms
+     + occupies one bag slot per copy  616ms
 [material-source-pg] {"label":"node-serialization-projection-update-journal","stateBytes":2917033,"serializeMs":2.256791000000021,"projectionMs":0.17145800000002964,"journalMs":94.64204099999995,"journalWrites":1,"transaction":"same connection and transaction; timings are observational"}
 [material-source-pg] {"label":"preimage-vs-select1","bareBuffers":2,"bareSharedHit":2,"bareSharedRead":0,"bareNodes":["LockRows","Seq Scan"],"preimageBuffers":45,"preimageSharedHit":45,"preimageSharedRead":0,"preimageNodes":["LockRows","Seq Scan","Index Only Scan:material_source_containers_pkey","Index Only Scan:material_source_containers_pkey"],"extraBuffersPerSave":43}
 stdout | tests/corpse_harvest_command.test.ts
@@ -563,14 +563,14 @@ stdout | tests/corpse_harvest_command.test.ts
 [material-source-pg] {"label":"lock-mode","preimageLockMode":"FOR NO KEY UPDATE","fkChildInsertUnderPreimageLock":"committed","fkChildInsertUnderForUpdate":"55P03"}
 [material-source-pg] {"label":"cascade-index-feasibility","claim":"index CAN serve the lookup; not a planner-selection claim","seqscanDisabled":true,"ddlSource":"MATERIAL_SOURCE_JOURNAL_SCHEMA (production, applied verbatim)","anchorNodes":["Bitmap Heap Scan","Bitmap Index Scan:material_source_containers_character"],"journalNodes":["Index Only Scan:material_source_journal_pkey"],"journalRowsForOneContainer":25,"fixtureAnchorRows":2,"fixtureJournalRows":25}
 [material-source-pg] {"label":"anchor-probe-selection","fixtureAddedAnchors":10000,"seqscanDisabled":false,"rows":1,"buffers":74,"nodes":["LockRows","Index Scan:characters_pkey","Index Only Scan:material_source_containers_pkey","Index Only Scan:material_source_containers_pkey"]}
- ✓ tests/material_source_save_cost_pg_integration.test.ts (6 tests) 1481ms
-     ✓ FOR NO KEY UPDATE admits an FK-child insert that FOR UPDATE blocks  1053ms
+ + tests/material_source_save_cost_pg_integration.test.ts (6 tests) 1481ms
+     + FOR NO KEY UPDATE admits an FK-child insert that FOR UPDATE blocks  1053ms
 stdout | tests/corpse_harvest_command.test.ts > the harvestCorpse wire command (real GameServer.handleMessage) > a valid id-only command answers the outcome true before any grant lands
 [bot-detector] suspicion-flag host: not accepted by this detector build
 
- ✓ tests/freehold_crafted_availability.test.ts (17 tests) 1488ms
-     ✓ preserves catalog identity and existing content while hiding the ten new recipes  701ms
-     ✓ pattern_freehold_clockwork_lamp cannot be bought with Marks while dark  469ms
+ + tests/freehold_crafted_availability.test.ts (17 tests) 1488ms
+     + preserves catalog identity and existing content while hiding the ten new recipes  701ms
+     + pattern_freehold_clockwork_lamp cannot be bought with Marks while dark  469ms
 stdout | tests/corpse_harvest_command.test.ts > the harvestCorpse wire command (real GameServer.handleMessage) > derives pid from the session, never a forged payload pid
 [bot-detector] suspicion-flag host: not accepted by this detector build
 
@@ -599,14 +599,14 @@ stdout | tests/corpse_harvest_command.test.ts > GameServer.socketClosed cancels 
 stdout | tests/corpse_harvest_command.test.ts > GameServer.socketClosed cancels an in-flight corpse harvest before the grace save flush > an obsolete close from a pre-resume socket is a no-op and never touches the resumed session's live harvest
 [bot-detector] suspicion-flag host: not accepted by this detector build
 
- ✓ tests/furnishing_crafting.test.ts (26 tests) 1324ms
-     ✓ 'recipe_freehold_weapon_rack' completes for its exact bill and 40 copper with maker-only decor  697ms
+ + tests/furnishing_crafting.test.ts (26 tests) 1324ms
+     + 'recipe_freehold_weapon_rack' completes for its exact bill and 40 copper with maker-only decor  697ms
 stdout | tests/corpse_harvest_command.test.ts > GameServer.socketClosed cancels an in-flight corpse harvest before the grace save flush > a genuine drop cancels ONLY the corpse harvest, leaving an unrelated concurrent cast untouched
 [bot-detector] suspicion-flag host: not accepted by this detector build
 
- ✓ tests/corpse_harvest_command.test.ts (18 tests) 1453ms
-     ✓ grants nothing one tick short of HARVEST_CAST_SECONDS, then completes on the final tick  356ms
-     ✓ a valid id-only command answers the outcome true before any grant lands  588ms
+ + tests/corpse_harvest_command.test.ts (18 tests) 1453ms
+     + grants nothing one tick short of HARVEST_CAST_SECONDS, then completes on the final tick  356ms
+     + a valid id-only command answers the outcome true before any grant lands  588ms
 stdout | tests/freehold_command_chain_online.test.ts
 [capi] META_CAPI_ACCESS_TOKEN unset; Conversions API disabled.
 
@@ -649,9 +649,9 @@ stdout | tests/freehold_command_chain_online.test.ts > the captured frames reach
 stdout | tests/freehold_command_chain_online.test.ts > the captured frames reach the Sim stubs through the real dispatch on a LIT realm > all ten frames from one client session reach their stubs in the order the client sent them
 [bot-detector] suspicion-flag host: not accepted by this detector build
 
- ✓ tests/terrain_calm_anchor_freehold.test.ts (3 tests) 1339ms
-     ✓ keeps the pre-furnisher terrain on both host modes, seed 42  729ms
-     ✓ keeps the pre-furnisher terrain on both host modes, seed 2147483647  607ms
+ + tests/terrain_calm_anchor_freehold.test.ts (3 tests) 1339ms
+     + keeps the pre-furnisher terrain on both host modes, seed 42  729ms
+     + keeps the pre-furnisher terrain on both host modes, seed 2147483647  607ms
 stdout | tests/freehold_command_chain_online.test.ts > the same captured frame is refused on a DARK realm > 'freehold_enter': the stub is never reached, the refusal is booked, and a rid frame acks ok:false
 [bot-detector] suspicion-flag host: not accepted by this detector build
 
@@ -727,8 +727,8 @@ stdout | tests/harvest_preference_wire.test.ts > the set_harvest_preference comm
 stdout | tests/freehold_command_chain_online.test.ts > the build-presence frame carries the mirrored ids through the opaque-id bound > a base64 plus in acceptedTransitionId is refused at the type boundary on a LIT realm: the stub is never reached
 [bot-detector] suspicion-flag host: not accepted by this detector build
 
- ✓ tests/freehold_command_chain_online.test.ts (36 tests) 1325ms
-     ✓ 'freehold_enter' invokes 'freeholdEnter' once with the guarded args and the session pid, and no other stub  734ms
+ + tests/freehold_command_chain_online.test.ts (36 tests) 1325ms
+     + 'freehold_enter' invokes 'freeholdEnter' once with the guarded args and the session pid, and no other stub  734ms
 stdout | tests/harvest_preference_wire.test.ts > the set_harvest_preference command > leaves the current choice untouched on a bad raw: [object Object]
 [bot-detector] suspicion-flag host: not accepted by this detector build
 
@@ -747,9 +747,9 @@ stdout | tests/harvest_preference_wire.test.ts > the set_harvest_preference comm
 stdout | tests/nythraxis_full_fight_smoke.test.ts > Nythraxis full fight smoke (every mechanic fires) > heroic: a scripted raid sees every phase and every mechanic, then kills him
 [nythraxis smoke] heroic: killed=true in 291.6s; phases=1,transition,2,3; sigils=5; callouts=youAreImpaled,impaled,spikeBroken,dreadCurseSwap,sigilAppears,sigilBound,gravefireTarget,sigilUnbound,kingsWrath,boneStormBegins,boneStormCharge,boneStormEnds,crownEndures; damage=Grave Eruption,Grave Flame,Dread Curse,Bone Spike,Practice DPS,Gravefire,Soul Rend,Soulfire,Unbound,Deathless Rage,Bone Slam,Bone Storm,Gravebreaker; auras=Dread Curse,Impaled,Deathless Ascension,Bound,Shuddering Stomp,Soul Ward,Soul Rend,Deathless Rage Interrupted,Unbound,King's Wrath,Bone Storm,The Crown Endures; mobs=nythraxis_scourge_of_thornpeak,nythraxis_bone_spike
 
- ✓ tests/nythraxis_full_fight_smoke.test.ts (2 tests) 1291ms
-     ✓ normal: a scripted raid sees every phase and every mechanic, then kills him  734ms
-     ✓ heroic: a scripted raid sees every phase and every mechanic, then kills him  556ms
+ + tests/nythraxis_full_fight_smoke.test.ts (2 tests) 1291ms
+     + normal: a scripted raid sees every phase and every mechanic, then kills him  734ms
+     + heroic: a scripted raid sees every phase and every mechanic, then kills him  556ms
 stdout | tests/harvest_preference_wire.test.ts > the set_harvest_preference command > leaves the current choice untouched on a bad raw: hide
 [bot-detector] suspicion-flag host: not accepted by this detector build
 
@@ -768,8 +768,8 @@ stdout | tests/harvest_preference_wire.test.ts > the set_harvest_preference comm
 stdout | tests/harvest_preference_wire.test.ts > ClientWorld.setHarvestPreference sends the command only > the client-built send frame round-trips through the real server dispatch
 [bot-detector] suspicion-flag host: not accepted by this detector build
 
- ✓ tests/harvest_preference_wire.test.ts (29 tests) 1267ms
-     ✓ encodes the default All as the explicit token on the very first snapshot (never omitted)  732ms
+ + tests/harvest_preference_wire.test.ts (29 tests) 1267ms
+     + encodes the default All as the explicit token on the very first snapshot (never omitted)  732ms
 stdout | tests/corpse_harvest_info_transport.test.ts
 [capi] META_CAPI_ACCESS_TOKEN unset; Conversions API disabled.
 
@@ -812,41 +812,41 @@ stdout | tests/corpse_harvest_info_transport.test.ts > inspectCorpseHarvest tran
 stdout | tests/corpse_harvest_info_transport.test.ts > inspectCorpseHarvest transport (real ClientWorld <-> GameServer) > rejects locally (sends nothing) when the transport is not connected
 [bot-detector] suspicion-flag host: not accepted by this detector build
 
- ✓ tests/corpse_harvest_info_transport.test.ts (17 tests) 1169ms
-     ✓ a malformed frame (missing rid) is uncorrelatable: no reply at all  654ms
- ✓ tests/forgebreaker_quest.test.ts (22 tests) 1179ms
-     ✓ keeps the recovered relic, teaches once, and never grants a free replacement  713ms
- ✓ tests/freehold_module.test.ts (21 tests) 1122ms
-     ✓ reads null descriptors, an empty record map, and the farm clock base  732ms
- ✓ tests/crucible_healer_combat.test.ts (17 tests) 1089ms
-     ✓ a pure Groveheart cast wards its combat ally, survives ticking, and absorbs a real hit  712ms
+ + tests/corpse_harvest_info_transport.test.ts (17 tests) 1169ms
+     + a malformed frame (missing rid) is uncorrelatable: no reply at all  654ms
+ + tests/forgebreaker_quest.test.ts (22 tests) 1179ms
+     + keeps the recovered relic, teaches once, and never grants a free replacement  713ms
+ + tests/freehold_module.test.ts (21 tests) 1122ms
+     + reads null descriptors, an empty record map, and the farm clock base  732ms
+ + tests/crucible_healer_combat.test.ts (17 tests) 1089ms
+     + a pure Groveheart cast wards its combat ally, survives ticking, and absorbs a real hit  712ms
 stdout | tests/furnishing_feast_parity.test.ts
 [capi] META_CAPI_ACCESS_TOKEN unset; Conversions API disabled.
 
- ✓ tests/masterwrought_art_completion.test.ts (10 tests) 1006ms
-     ✓ passes the shared image audit with exact current shipping metadata and geometry  965ms
+ + tests/masterwrought_art_completion.test.ts (10 tests) 1006ms
+     + passes the shared image audit with exact current shipping metadata and geometry  965ms
 stdout | tests/furnishing_feast_parity.test.ts > furnishing feast commands through ClientWorld and GameServer > refuses the furnishing slot without mutation and places the eligible feast using the same client method
 [bot-detector] suspicion-flag host: not accepted by this detector build
 
 stdout | tests/furnishing_feast_parity.test.ts > furnishing feast commands through ClientWorld and GameServer > refuses a furnishing dish without spending a serving and mirrors the eligible meal through the same client method
 [bot-detector] suspicion-flag host: not accepted by this detector build
 
- ✓ tests/furnishing_feast_parity.test.ts (2 tests) 1080ms
-     ✓ refuses the furnishing slot without mutation and places the eligible feast using the same client method  906ms
- ✓ tests/corpse_harvest_cast.test.ts (43 tests) 1091ms
-     ✓ grants nothing before the cast completes and grants once it does  544ms
-     ✓ refuses to start when the persisted preference is malformed (no active choice)  374ms
- ✓ tests/gathering_goal_cache.test.ts (10 tests) 985ms
-     ✓ repeated reads within the window return the identical reference  713ms
- ✓ tests/headless_gathering_goal.test.ts (74 tests) 1005ms
-     ✓ refuses a malformed request as invalid_request against a real Sim too, leaving it untouched  750ms
- ✓ tests/combat_threat_modifiers.test.ts (11 tests) 1005ms
-       ✓ multiplies threat for a non-player source carrying a form aura  739ms
- ✓ tests/corpse_harvest_arena.test.ts (2 tests) 990ms
-     ✓ a ranked 1v1 arena seat mid-harvest releases the session and the corpse reservation  600ms
-     ✓ a Fiesta seat mid-harvest releases the session and the corpse reservation  389ms
- ✓ tests/quest_recipe_rewards.test.ts (11 tests) 958ms
-     ✓ learns through the quest source alongside an ordinary turn-in  721ms
+ + tests/furnishing_feast_parity.test.ts (2 tests) 1080ms
+     + refuses the furnishing slot without mutation and places the eligible feast using the same client method  906ms
+ + tests/corpse_harvest_cast.test.ts (43 tests) 1091ms
+     + grants nothing before the cast completes and grants once it does  544ms
+     + refuses to start when the persisted preference is malformed (no active choice)  374ms
+ + tests/gathering_goal_cache.test.ts (10 tests) 985ms
+     + repeated reads within the window return the identical reference  713ms
+ + tests/headless_gathering_goal.test.ts (74 tests) 1005ms
+     + refuses a malformed request as invalid_request against a real Sim too, leaving it untouched  750ms
+ + tests/combat_threat_modifiers.test.ts (11 tests) 1005ms
+       + multiplies threat for a non-player source carrying a form aura  739ms
+ + tests/corpse_harvest_arena.test.ts (2 tests) 990ms
+     + a ranked 1v1 arena seat mid-harvest releases the session and the corpse reservation  600ms
+     + a Fiesta seat mid-harvest releases the session and the corpse reservation  389ms
+ + tests/quest_recipe_rewards.test.ts (11 tests) 958ms
+     + learns through the quest source alongside an ordinary turn-in  721ms
 stdout | tests/perfecting_swap_wire.test.ts
 [capi] META_CAPI_ACCESS_TOKEN unset; Conversions API disabled.
 
@@ -869,107 +869,107 @@ stdout | tests/perfecting_swap_wire.test.ts > rank exchange through the real onl
 stdout | tests/perfecting_swap_wire.test.ts > rank exchange through the real online host > drops either unpinned copy before the sim or heavy-self mark
 [bot-detector] suspicion-flag host: not accepted by this detector build
 
- ✓ tests/perfecting_swap_wire.test.ts (21 tests) 902ms
-     ✓ captures missing refs consistently on direct offline and online IWorld calls  761ms
- ✓ tests/furnishing_recipes.test.ts (17 tests) 930ms
-     ✓ recipe_freehold_weapon_rack learns at its static station for one gold, preserving refusal and replay behavior  705ms
- ✓ tests/furnishing_feast_admission.test.ts (5 tests) 964ms
-     ✓ refuses direct furnishing placement via named slot and places the real feast  944ms
- ✓ tests/lastflame_enchant.test.ts (23 tests) 888ms
-     ✓ uses the un-hasted natural weapon speed for form_cat autos and specials  698ms
- ✓ tests/freehold_furnisher.test.ts (6 tests) 946ms
-     ✓ buys the complete set through the real vendor path, one cell per copy, with discovery  746ms
- ✓ tests/furnishing_persistence.test.ts (7 tests) 886ms
-     ✓ retains one signed crafted furnishing through a fresh character load from bags  631ms
- ✓ tests/trade_material_sources.test.ts (8 tests) 869ms
-     ✓ moves a whole mixed stack with every bucket intact  719ms
- ✓ tests/crafted_collection_effects.test.ts (26 tests) 933ms
-     ✓ banks hostile raid-mob damage but excludes friendly and environmental damage  718ms
- ✓ tests/furnishing_event_identity.test.ts (1 test) 869ms
- ✓ tests/material_inventory_hub.test.ts (7 tests) 856ms
-     ✓ mixes signed and unsigned grants in one normal stack  709ms
- ✓ tests/material_exchange_books.test.ts (3 tests) 808ms
-     ✓ keeps bulk listing sources through save, reload and cancellation  730ms
- ✓ tests/keyboard_map.test.ts (14 tests) 827ms
- ✓ tests/gathering_goal_once_use_recipe.test.ts (4 tests) 796ms
-     ✓ is unavailable before the quest unlock, even with a trackable goal  705ms
- ✓ tests/nythraxis_dev_raid.test.ts (3 tests) 777ms
-     ✓ reuses the roster on a second call and switches difficulty  462ms
- ✓ tests/server/gathering_goal_commands.test.ts (48 tests) 795ms
-     ✓ tracks only the authenticated pid; the wire roundtrip matches the direct read exactly  717ms
+ + tests/perfecting_swap_wire.test.ts (21 tests) 902ms
+     + captures missing refs consistently on direct offline and online IWorld calls  761ms
+ + tests/furnishing_recipes.test.ts (17 tests) 930ms
+     + recipe_freehold_weapon_rack learns at its static station for one gold, preserving refusal and replay behavior  705ms
+ + tests/furnishing_feast_admission.test.ts (5 tests) 964ms
+     + refuses direct furnishing placement via named slot and places the real feast  944ms
+ + tests/lastflame_enchant.test.ts (23 tests) 888ms
+     + uses the un-hasted natural weapon speed for form_cat autos and specials  698ms
+ + tests/freehold_furnisher.test.ts (6 tests) 946ms
+     + buys the complete set through the real vendor path, one cell per copy, with discovery  746ms
+ + tests/furnishing_persistence.test.ts (7 tests) 886ms
+     + retains one signed crafted furnishing through a fresh character load from bags  631ms
+ + tests/trade_material_sources.test.ts (8 tests) 869ms
+     + moves a whole mixed stack with every bucket intact  719ms
+ + tests/crafted_collection_effects.test.ts (26 tests) 933ms
+     + banks hostile raid-mob damage but excludes friendly and environmental damage  718ms
+ + tests/furnishing_event_identity.test.ts (1 test) 869ms
+ + tests/material_inventory_hub.test.ts (7 tests) 856ms
+     + mixes signed and unsigned grants in one normal stack  709ms
+ + tests/material_exchange_books.test.ts (3 tests) 808ms
+     + keeps bulk listing sources through save, reload and cancellation  730ms
+ + tests/keyboard_map.test.ts (14 tests) 827ms
+ + tests/gathering_goal_once_use_recipe.test.ts (4 tests) 796ms
+     + is unavailable before the quest unlock, even with a trackable goal  705ms
+ + tests/nythraxis_dev_raid.test.ts (3 tests) 777ms
+     + reuses the roster on a second call and switches difficulty  462ms
+ + tests/server/gathering_goal_commands.test.ts (48 tests) 795ms
+     + tracks only the authenticated pid; the wire roundtrip matches the direct read exactly  717ms
 stdout | tests/freehold_crafted_presentation.test.ts
 [capi] META_CAPI_ACCESS_TOKEN unset; Conversions API disabled.
 
- ✓ tests/material_slot_load.test.ts (7 tests) 795ms
-     ✓ round-trips carried and banked material sources through the live save loader  742ms
+ + tests/material_slot_load.test.ts (7 tests) 795ms
+     + round-trips carried and banked material sources through the live save loader  742ms
 stdout | tests/freehold_crafted_presentation.test.ts > crafted furnishing presentation availability > advertises only boot-time true on fresh and resumed hello (enabled false)
 [bot-detector] suspicion-flag host: not accepted by this detector build
 
 stdout | tests/freehold_crafted_presentation.test.ts > crafted furnishing presentation availability > advertises only boot-time true on fresh and resumed hello (enabled true)
 [bot-detector] suspicion-flag host: not accepted by this detector build
 
- ✓ tests/freehold_crafted_presentation.test.ts (14 tests) 792ms
-     ✓ advertises only boot-time true on fresh and resumed hello (enabled false)  747ms
- ✓ tests/material_signature_benefits.test.ts (4 tests) 775ms
-     ✓ expires the discount exactly when the final premium unit is consumed  723ms
- ✓ tests/material_exchange_custody.test.ts (5 tests) 765ms
-     ✓ matches a premium bucket and transfers its exact unit without a legacy signer on the carrier  716ms
- ✓ tests/material_stack_commands.test.ts (3 tests) 759ms
-     ✓ separates, sorts, reloads and explicitly combines without changing source totals  710ms
- ✓ tests/furnishing_pattern_items.test.ts (32 tests) 745ms
-     ✓ learns at skill 50, consumes only the clicked copy, and refuses the second learn  629ms
- ✓ tests/forgebreaker_commission.test.ts (3 tests) 751ms
-     ✓ rejects the undeliverable order without reserving inventory or spending gold  721ms
- ✓ tests/owned_balance_probe_setup.test.ts (2 tests) 741ms
-     ✓ runs a DPS setup once after the fixed equipment and talents are ready  714ms
- ✓ tests/headless_gathering_commands.test.ts (30 tests) 752ms
-     ✓ refuses a malformed request as invalid_request against a real Sim too, leaving it untouched  620ms
- ✓ tests/headless_gathering_goal_transport.test.ts (1 test) 728ms
-     ✓ pins one exact ordered request/reply sequence over one real subprocess  653ms
- ✓ tests/headless_gathering_transport.test.ts (1 test) 738ms
-     ✓ pins one exact ordered request/reply sequence over one real subprocess  656ms
- ✓ tests/materials_vault_sources.test.ts (46 tests) 719ms
-     ✓ stores 3 Ana + 5 Bru + 2 unrecorded as ONE row of ten with three buckets  604ms
- ✓ tests/feast_placement.test.ts (14 tests) 724ms
-     ✓ 'stonepot_feast' lands on open ground when placed during a jump  596ms
- ✓ tests/perfecting_swap.test.ts (74 tests) 721ms
-     ✓ round-trips the bounded contribution and permanent binding without sharing nested state  473ms
- ✓ tests/furnishing_market_catalog.test.ts (23 tests) 714ms
-     ✓ lists and reclaims the plain authored item freehold_weapon_rack without losing or duplicating inventory  632ms
- ✓ tests/furnishing_tooltip_view.test.ts (37 tests) 742ms
-     ✓ the actual armor hover compares against zero furnishing power and keeps real gear deltas  488ms
- ✓ tests/v042_stealth_integration.test.ts (7 tests) 723ms
-     ✓ the real cast chain preserves the Edge through a true-stealth opener too  573ms
- ✓ tests/furnishing_market_identity.test.ts (2 tests) 658ms
-     ✓ omits unsupported chosen names at purchase while preserving money, custody and named gear  642ms
- ✓ tests/feast_lifecycle.test.ts (9 tests) 637ms
-     ✓ 1v1 teardown removes its feasts and frees the owner without touching overworld tables  605ms
- ✓ tests/material_source_storage_selection.test.ts (36 tests) 659ms
-     ✓ moves only the selected descriptor with 'omitted count'  612ms
- ✓ tests/interact_loot_only.test.ts (4 tests) 636ms
-     ✓ loots without harvesting with targeted=true  625ms
- ✓ tests/furnishing_equipment_power.test.ts (11 tests) 637ms
-     ✓ restores typed copy stats without granting power or losing the saved copy  620ms
- ✓ tests/v042_healing_packets.test.ts (16 tests) 628ms
-     ✓ scales each primary area heal including the area power coefficient  464ms
- ✓ tests/freehold_deed_records.test.ts (4 tests) 621ms
-     ✓ keeps automatic evaluation inert and existing manual grants character-scoped and idempotent  618ms
- ✓ tests/field_kit_content.test.ts (4 tests) 623ms
-     ✓ can be bought through the real Sim vendor path for exactly 20 copper  619ms
- ✓ tests/move_toward.test.ts (16 tests) 603ms
-     ✓ the fixture really has a prop above the terrain (the precondition, measured)  567ms
- ✓ tests/furnishing_discovery.test.ts (6 tests) 612ms
-     ✓ retains an existing discovery ledger without treating the correction as a data scrub  597ms
- ✓ tests/feast_rift_lifecycle.test.ts (8 tests) 619ms
-     ✓ 'stonepot_feast' is removed when the empty run is reclaimed  459ms
- ✓ tests/corpse_harvest_inspection.test.ts (27 tests) 556ms
-     ✓ a fully eligible actor reads a null denial, matching a real successful start  499ms
- ✓ tests/ci_changed_entry.test.ts (1 test) 249ms
- ✓ tests/material_source_journal_pg_integration.test.ts (14 tests) 366ms
- ✓ tests/nythraxis_sigil_gravefire.test.ts (28 tests) 311ms
- ✓ tests/nythraxis_bone_spike.test.ts (20 tests) 235ms
+ + tests/freehold_crafted_presentation.test.ts (14 tests) 792ms
+     + advertises only boot-time true on fresh and resumed hello (enabled false)  747ms
+ + tests/material_signature_benefits.test.ts (4 tests) 775ms
+     + expires the discount exactly when the final premium unit is consumed  723ms
+ + tests/material_exchange_custody.test.ts (5 tests) 765ms
+     + matches a premium bucket and transfers its exact unit without a legacy signer on the carrier  716ms
+ + tests/material_stack_commands.test.ts (3 tests) 759ms
+     + separates, sorts, reloads and explicitly combines without changing source totals  710ms
+ + tests/furnishing_pattern_items.test.ts (32 tests) 745ms
+     + learns at skill 50, consumes only the clicked copy, and refuses the second learn  629ms
+ + tests/forgebreaker_commission.test.ts (3 tests) 751ms
+     + rejects the undeliverable order without reserving inventory or spending gold  721ms
+ + tests/owned_balance_probe_setup.test.ts (2 tests) 741ms
+     + runs a DPS setup once after the fixed equipment and talents are ready  714ms
+ + tests/headless_gathering_commands.test.ts (30 tests) 752ms
+     + refuses a malformed request as invalid_request against a real Sim too, leaving it untouched  620ms
+ + tests/headless_gathering_goal_transport.test.ts (1 test) 728ms
+     + pins one exact ordered request/reply sequence over one real subprocess  653ms
+ + tests/headless_gathering_transport.test.ts (1 test) 738ms
+     + pins one exact ordered request/reply sequence over one real subprocess  656ms
+ + tests/materials_vault_sources.test.ts (46 tests) 719ms
+     + stores 3 Ana + 5 Bru + 2 unrecorded as ONE row of ten with three buckets  604ms
+ + tests/feast_placement.test.ts (14 tests) 724ms
+     + 'stonepot_feast' lands on open ground when placed during a jump  596ms
+ + tests/perfecting_swap.test.ts (74 tests) 721ms
+     + round-trips the bounded contribution and permanent binding without sharing nested state  473ms
+ + tests/furnishing_market_catalog.test.ts (23 tests) 714ms
+     + lists and reclaims the plain authored item freehold_weapon_rack without losing or duplicating inventory  632ms
+ + tests/furnishing_tooltip_view.test.ts (37 tests) 742ms
+     + the actual armor hover compares against zero furnishing power and keeps real gear deltas  488ms
+ + tests/v042_stealth_integration.test.ts (7 tests) 723ms
+     + the real cast chain preserves the Edge through a true-stealth opener too  573ms
+ + tests/furnishing_market_identity.test.ts (2 tests) 658ms
+     + omits unsupported chosen names at purchase while preserving money, custody and named gear  642ms
+ + tests/feast_lifecycle.test.ts (9 tests) 637ms
+     + 1v1 teardown removes its feasts and frees the owner without touching overworld tables  605ms
+ + tests/material_source_storage_selection.test.ts (36 tests) 659ms
+     + moves only the selected descriptor with 'omitted count'  612ms
+ + tests/interact_loot_only.test.ts (4 tests) 636ms
+     + loots without harvesting with targeted=true  625ms
+ + tests/furnishing_equipment_power.test.ts (11 tests) 637ms
+     + restores typed copy stats without granting power or losing the saved copy  620ms
+ + tests/v042_healing_packets.test.ts (16 tests) 628ms
+     + scales each primary area heal including the area power coefficient  464ms
+ + tests/freehold_deed_records.test.ts (4 tests) 621ms
+     + keeps automatic evaluation inert and existing manual grants character-scoped and idempotent  618ms
+ + tests/field_kit_content.test.ts (4 tests) 623ms
+     + can be bought through the real Sim vendor path for exactly 20 copper  619ms
+ + tests/move_toward.test.ts (16 tests) 603ms
+     + the fixture really has a prop above the terrain (the precondition, measured)  567ms
+ + tests/furnishing_discovery.test.ts (6 tests) 612ms
+     + retains an existing discovery ledger without treating the correction as a data scrub  597ms
+ + tests/feast_rift_lifecycle.test.ts (8 tests) 619ms
+     + 'stonepot_feast' is removed when the empty run is reclaimed  459ms
+ + tests/corpse_harvest_inspection.test.ts (27 tests) 556ms
+     + a fully eligible actor reads a null denial, matching a real successful start  499ms
+ + tests/ci_changed_entry.test.ts (1 test) 249ms
+ + tests/material_source_journal_pg_integration.test.ts (14 tests) 366ms
+ + tests/nythraxis_sigil_gravefire.test.ts (28 tests) 311ms
+ + tests/nythraxis_bone_spike.test.ts (20 tests) 235ms
 [material-source-cost] {"label":"caps","materialIds":117,"widestMaterialStack":20,"widestMaterialId":"arcane_dust","bankSlotCeiling":208,"guildSlotCeiling":60,"vaultItemCeiling":200,"maxGathererNameChars":16,"maxGathererIdChars":64}
- ✓ tests/nythraxis_phase_three.test.ts (12 tests) 220ms
+ + tests/nythraxis_phase_three.test.ts (12 tests) 220ms
 [material-source-cost] {"label":"slot-bytes","stackUnits":20,"vaultUnits":200,"bareBytes":35,"normalBytes":138,"onlineMaxBytes":1995,"premiumMaxBytes":2555,"normalOverheadBytes":103,"premiumOverheadBytes":2520,"bytesPerBucketOnline":98,"bytesPerBucketPremium":126,"bytesPerBucketOfflineHypothetical":152}
 [material-source-cost] {"label":"container-only-bytes","scope":"bank+vault containers only, NOT a whole-character blob","wholeCharacterBaselineIncluded":false,"wholeCharacterBaselineOwner":"tests/professions_blob_growth.test.ts","bankSlots":208,"bankUnitsPerSlot":20,"vaultRows":117,"vaultUnitsPerRow":200,"bareBytes":13149,"normalBytes":46741,"onlineMaxBytes":2692969,"premiumMaxBytes":3464649,"preFeatureCompactStockBytes":2575,"characterWarnCeilingBytes":229376}
 [material-source-cost] {"label":"guild-book-bytes","scope":"the whole guild_banks row payload, directly comparable to the bound","guildSlots":60,"unitsPerSlot":20,"bareBytes":2466,"normalBytes":8646,"onlineMaxBytes":120066,"premiumMaxBytes":153666,"hardBoundBytes":262144,"premiumOverHardBound":false,"onlineOverHardBound":false,"premiumHeadroomBytes":108478,"maximalSlotsBeforeRefusal":102}
@@ -978,138 +978,138 @@ stdout | tests/freehold_crafted_presentation.test.ts > crafted furnishing presen
 [material-source-cost] {"label":"journal-parameter-bytes-maximal","container":"personal","containerSlots":1,"unitsPerSlot":20,"bucketShape":"premium (gatherer + signer), the widest the algebra accepts","parameterBytes":2854}
 [material-source-cost] {"label":"journal-parameter-bytes-maximal","container":"vault","containerSlots":1,"unitsPerSlot":200,"bucketShape":"premium (gatherer + signer), the widest the algebra accepts","parameterBytes":25352}
 [material-source-cost] {"label":"offline-save-statements","unchanged":4,"moved":5,"journalStatements":1,"sequence":["SET LOCAL lock_timeout = 2000","SET LOCAL idle_in_transaction_session_timeout = ","SELECT state->'bank' AS before_bank, state->'vau","UPDATE characters SET level = $2, state = $3, up","WITH input AS ("]}
- ✓ tests/material_source_writer_pg_integration.test.ts (11 tests) 171ms
+ + tests/material_source_writer_pg_integration.test.ts (11 tests) 171ms
 stdout | tests/material_source_storage_cost.test.ts > material source save paths: measured statement counts > the caller-owned escrow save issues its journal statement inside the priced transaction
 db pool: DB_POOL_MAX_CLIENTS=10 DB_POOL_CONNECT_TIMEOUT_MS=5000
 
 [material-source-cost] {"label":"escrow-save-statements","unchanged":1,"moved":2,"journalStatements":1,"sequence":["WITH previous AS MATERIALIZED (","WITH input AS ("]}
 [material-source-cost] {"label":"escrow-ladder","autosaveMs":30000,"deliveredSaveStatementTimeoutMs":60000,"pinnedBaseStatements":6,"sourceCountedDirectQueries":6,"sourceCountedSetLocals":3,"sourceCountedAccountLockStatements":1,"measuredSaveArmStatementsNoMovement":1,"measuredSaveArmStatementsWithMovement":2,"observedBaseStatementsNoMovement":5,"observedBaseStatementsWithMovement":6,"pinnedBaseCeilingMs":28000,"observedBaseCeilingMsNoMovement":24500,"observedBaseCeilingMsWithMovement":28000,"pinnedLedgerCeilingMs":31500,"pinnedMaxCeilingMs":52500,"pinnedBaseUnderAutosave":true,"observedBaseUnderAutosaveWithMovement":true,"escrowSaveArmCallSitesInFile":2,"charactersSavedPerTransaction":1,"deliveredSaveUsesHeavyBudget":true,"lockAndConnectTermsCountedOnce":true}
- ✓ tests/material_source_storage_cost.test.ts (11 tests) 209ms
- ✓ tests/furnishing_auto_equip.test.ts (12 tests) 169ms
- ✓ tests/nythraxis_spike_fire_rules.test.ts (8 tests) 167ms
- ✓ tests/gathering_goal_painter.test.ts (28 tests) 156ms
- ✓ tests/feast_object_lifecycle.test.ts (7 tests) 154ms
- ✓ tests/furnishing_worn_presentation.test.ts (7 tests) 179ms
- ✓ tests/gathering_goal_sources.test.ts (15 tests) 153ms
- ✓ tests/perfecting_copy.test.ts (10 tests) 149ms
- ✓ tests/collection_manuals.test.ts (6 tests) 146ms
- ✓ tests/gathering_goal_hud_integration.test.ts (21 tests) 149ms
- ✓ tests/harvest_preference_source_details.test.ts (8 tests) 149ms
- ✓ tests/v042_doctrine_wand.test.ts (3 tests) 140ms
- ✓ tests/perfecting_bonus.test.ts (13 tests) 139ms
- ✓ tests/field_kit_use.test.ts (7 tests) 142ms
- ✓ tests/furnishing_perfecting_collection.test.ts (3 tests) 136ms
- ✓ tests/gathering_source_locations.test.ts (24 tests) 133ms
- ✓ tests/enchant_formula.test.ts (7 tests) 142ms
- ✓ tests/harvest_preference_hud.test.ts (14 tests) 142ms
- ✓ tests/blank_entity.test.ts (6 tests) 44ms
- ✓ tests/keyboard_map_window.test.ts (4 tests) 62ms
- ✓ tests/nythraxis_grave_eruption_render.test.ts (12 tests) 43ms
- ✓ tests/freehold_crafted_art.test.ts (5 tests) 28ms
- ✓ tests/perfecting_swap_ui.test.ts (20 tests) 96ms
- ✓ tests/reliquary_hearth_window.test.ts (4 tests) 39ms
- ✓ tests/commission_order_window_track_goal.test.ts (7 tests) 36ms
- ✓ tests/mailbox_material_sources.test.ts (6 tests) 26ms
- ✓ tests/material_sources.test.ts (47 tests) 24ms
- ✓ tests/reliquary_empty_shelf.test.ts (2 tests) 24ms
- ✓ tests/material_sources_dialog_dom.test.ts (6 tests) 22ms
- ✓ tests/professions_window_harvest_body.test.ts (5 tests) 26ms
- ✓ tests/furnishing_dev_picker.test.ts (1 test) 21ms
- ✓ tests/freehold_snapshot_wire.test.ts (35 tests) 20ms
- ✓ tests/harvest_preference_controller.test.ts (31 tests) 26ms
- ✓ tests/crucible_balance_probe.test.ts (3 tests) 20ms
- ✓ tests/nythraxis_grave_flame_render.test.ts (11 tests) 19ms
- ✓ tests/nythraxis_gravefire_render.test.ts (10 tests) 20ms
- ✓ tests/freehold_art_admission.test.ts (10 tests) 19ms
- ✓ tests/nythraxis_bound_cage.test.ts (11 tests) 18ms
- ✓ tests/harvest_preference_window.test.ts (32 tests) 17ms
- ✓ tests/nythraxis_soul_rend_marker.test.ts (7 tests) 14ms
- ✓ tests/crafting_window_track_goal.test.ts (10 tests) 22ms
- ✓ tests/gathering_goal_track_row.test.ts (9 tests) 17ms
- ✓ tests/nythraxis_sigil_render.test.ts (10 tests) 14ms
- ✓ tests/drakelands_kit_assets.test.ts (3 tests) 15ms
- ✓ tests/corpse_harvest_popup_boundaries.test.ts (7 tests) 15ms
- ✓ tests/guide_crucible_professions.test.ts (3 tests) 15ms
- ✓ tests/command_outcome_transport.test.ts (2 tests) 13ms
- ✓ tests/guide_provisioning.test.ts (3 tests) 13ms
- ✓ tests/guide_reliquary_hearth.test.ts (2 tests) 12ms
- ✓ tests/freehold_content.test.ts (14 tests) 11ms
- ✓ tests/freehold_ledger_schedule.test.ts (5 tests) 11ms
- ✓ tests/furnishing_tool_effect_tooltip.test.ts (2 tests) 12ms
- ✓ tests/nameplate_corpse_marker.test.ts (9 tests) 11ms
- ✓ tests/crucible_collections.test.ts (7 tests) 11ms
- ✓ tests/helpers/save_fragment_keys.test.ts (19 tests) 11ms
- ✓ tests/nythraxis_soft_fire.test.ts (9 tests) 10ms
- ✓ tests/furnishing_asset_identity.test.ts (3 tests) 11ms
- ✓ tests/freehold_trial_geometry.test.ts (12 tests) 10ms
+ + tests/material_source_storage_cost.test.ts (11 tests) 209ms
+ + tests/furnishing_auto_equip.test.ts (12 tests) 169ms
+ + tests/nythraxis_spike_fire_rules.test.ts (8 tests) 167ms
+ + tests/gathering_goal_painter.test.ts (28 tests) 156ms
+ + tests/feast_object_lifecycle.test.ts (7 tests) 154ms
+ + tests/furnishing_worn_presentation.test.ts (7 tests) 179ms
+ + tests/gathering_goal_sources.test.ts (15 tests) 153ms
+ + tests/perfecting_copy.test.ts (10 tests) 149ms
+ + tests/collection_manuals.test.ts (6 tests) 146ms
+ + tests/gathering_goal_hud_integration.test.ts (21 tests) 149ms
+ + tests/harvest_preference_source_details.test.ts (8 tests) 149ms
+ + tests/v042_doctrine_wand.test.ts (3 tests) 140ms
+ + tests/perfecting_bonus.test.ts (13 tests) 139ms
+ + tests/field_kit_use.test.ts (7 tests) 142ms
+ + tests/furnishing_perfecting_collection.test.ts (3 tests) 136ms
+ + tests/gathering_source_locations.test.ts (24 tests) 133ms
+ + tests/enchant_formula.test.ts (7 tests) 142ms
+ + tests/harvest_preference_hud.test.ts (14 tests) 142ms
+ + tests/blank_entity.test.ts (6 tests) 44ms
+ + tests/keyboard_map_window.test.ts (4 tests) 62ms
+ + tests/nythraxis_grave_eruption_render.test.ts (12 tests) 43ms
+ + tests/freehold_crafted_art.test.ts (5 tests) 28ms
+ + tests/perfecting_swap_ui.test.ts (20 tests) 96ms
+ + tests/reliquary_hearth_window.test.ts (4 tests) 39ms
+ + tests/commission_order_window_track_goal.test.ts (7 tests) 36ms
+ + tests/mailbox_material_sources.test.ts (6 tests) 26ms
+ + tests/material_sources.test.ts (47 tests) 24ms
+ + tests/reliquary_empty_shelf.test.ts (2 tests) 24ms
+ + tests/material_sources_dialog_dom.test.ts (6 tests) 22ms
+ + tests/professions_window_harvest_body.test.ts (5 tests) 26ms
+ + tests/furnishing_dev_picker.test.ts (1 test) 21ms
+ + tests/freehold_snapshot_wire.test.ts (35 tests) 20ms
+ + tests/harvest_preference_controller.test.ts (31 tests) 26ms
+ + tests/crucible_balance_probe.test.ts (3 tests) 20ms
+ + tests/nythraxis_grave_flame_render.test.ts (11 tests) 19ms
+ + tests/nythraxis_gravefire_render.test.ts (10 tests) 20ms
+ + tests/freehold_art_admission.test.ts (10 tests) 19ms
+ + tests/nythraxis_bound_cage.test.ts (11 tests) 18ms
+ + tests/harvest_preference_window.test.ts (32 tests) 17ms
+ + tests/nythraxis_soul_rend_marker.test.ts (7 tests) 14ms
+ + tests/crafting_window_track_goal.test.ts (10 tests) 22ms
+ + tests/gathering_goal_track_row.test.ts (9 tests) 17ms
+ + tests/nythraxis_sigil_render.test.ts (10 tests) 14ms
+ + tests/drakelands_kit_assets.test.ts (3 tests) 15ms
+ + tests/corpse_harvest_popup_boundaries.test.ts (7 tests) 15ms
+ + tests/guide_crucible_professions.test.ts (3 tests) 15ms
+ + tests/command_outcome_transport.test.ts (2 tests) 13ms
+ + tests/guide_provisioning.test.ts (3 tests) 13ms
+ + tests/guide_reliquary_hearth.test.ts (2 tests) 12ms
+ + tests/freehold_content.test.ts (14 tests) 11ms
+ + tests/freehold_ledger_schedule.test.ts (5 tests) 11ms
+ + tests/furnishing_tool_effect_tooltip.test.ts (2 tests) 12ms
+ + tests/nameplate_corpse_marker.test.ts (9 tests) 11ms
+ + tests/crucible_collections.test.ts (7 tests) 11ms
+ + tests/helpers/save_fragment_keys.test.ts (19 tests) 11ms
+ + tests/nythraxis_soft_fire.test.ts (9 tests) 10ms
+ + tests/furnishing_asset_identity.test.ts (3 tests) 11ms
+ + tests/freehold_trial_geometry.test.ts (12 tests) 10ms
 stdout | tests/server/freehold_routes.test.ts
 db pool: DB_POOL_MAX_CLIENTS=10 DB_POOL_CONNECT_TIMEOUT_MS=5000
 
- ✓ tests/server/freehold_routes.test.ts (16 tests) 10ms
- ✓ tests/material_inventory_take.test.ts (51 tests) 9ms
- ✓ tests/material_bags.test.ts (43 tests) 9ms
- ✓ tests/guild_bank_material_sources.test.ts (35 tests) 9ms
- ✓ tests/server/general_chat_quota_connections.test.ts (4 tests) 9ms
- ✓ tests/material_source_ledger.test.ts (43 tests) 8ms
- ✓ tests/material_stack_packing.test.ts (33 tests) 7ms
+ + tests/server/freehold_routes.test.ts (16 tests) 10ms
+ + tests/material_inventory_take.test.ts (51 tests) 9ms
+ + tests/material_bags.test.ts (43 tests) 9ms
+ + tests/guild_bank_material_sources.test.ts (35 tests) 9ms
+ + tests/server/general_chat_quota_connections.test.ts (4 tests) 9ms
+ + tests/material_source_ledger.test.ts (43 tests) 8ms
+ + tests/material_stack_packing.test.ts (33 tests) 7ms
 stdout | tests/server/guild_bank_source_receipt.test.ts
 db pool: DB_POOL_MAX_CLIENTS=10 DB_POOL_CONNECT_TIMEOUT_MS=5000
 
- ✓ tests/server/guild_bank_source_receipt.test.ts (20 tests) 9ms
- ✓ tests/nythraxis_bone_spike_model.test.ts (3 tests) 8ms
- ✓ tests/material_source_journal_db.test.ts (41 tests) 8ms
- ✓ tests/material_item_custody.test.ts (31 tests) 7ms
- ✓ tests/action_bar_bind_controller.test.ts (8 tests) 8ms
- ✓ tests/material_stack.test.ts (46 tests) 7ms
- ✓ tests/crucible_content_obligations.test.ts (3 tests) 7ms
- ✓ tests/gathering_result_feedback.test.ts (11 tests) 8ms
- ✓ tests/material_source_tooltip_lines.test.ts (11 tests) 7ms
- ✓ tests/compass_strip_painter.test.ts (4 tests) 8ms
- ✓ tests/trade_offer_sources.test.ts (35 tests) 7ms
- ✓ tests/server/character_material_sources_db.test.ts (24 tests) 7ms
- ✓ tests/material_source_transfer_selection.test.ts (5 tests) 8ms
- ✓ tests/nythraxis_ground_telegraph_wire.test.ts (65 tests) 7ms
- ✓ tests/headless_gathering_protocol.test.ts (64 tests) 7ms
+ + tests/server/guild_bank_source_receipt.test.ts (20 tests) 9ms
+ + tests/nythraxis_bone_spike_model.test.ts (3 tests) 8ms
+ + tests/material_source_journal_db.test.ts (41 tests) 8ms
+ + tests/material_item_custody.test.ts (31 tests) 7ms
+ + tests/action_bar_bind_controller.test.ts (8 tests) 8ms
+ + tests/material_stack.test.ts (46 tests) 7ms
+ + tests/crucible_content_obligations.test.ts (3 tests) 7ms
+ + tests/gathering_result_feedback.test.ts (11 tests) 8ms
+ + tests/material_source_tooltip_lines.test.ts (11 tests) 7ms
+ + tests/compass_strip_painter.test.ts (4 tests) 8ms
+ + tests/trade_offer_sources.test.ts (35 tests) 7ms
+ + tests/server/character_material_sources_db.test.ts (24 tests) 7ms
+ + tests/material_source_transfer_selection.test.ts (5 tests) 8ms
+ + tests/nythraxis_ground_telegraph_wire.test.ts (65 tests) 7ms
+ + tests/headless_gathering_protocol.test.ts (64 tests) 7ms
 stdout | tests/furnishing_exchange_identity.test.ts
 db pool: DB_POOL_MAX_CLIENTS=10 DB_POOL_CONNECT_TIMEOUT_MS=5000
 
- ✓ tests/furnishing_exchange_identity.test.ts (5 tests) 7ms
- ✓ tests/material_goal_projection.test.ts (17 tests) 7ms
- ✓ tests/material_source_storage_selection_wire.test.ts (9 tests) 6ms
- ✓ tests/material_inventory_units.test.ts (23 tests) 6ms
- ✓ tests/perfecting_dormant_ui.test.ts (3 tests) 6ms
- ✓ tests/gathering_goal_wire.test.ts (36 tests) 6ms
- ✓ tests/nythraxis_callout.test.ts (30 tests) 7ms
- ✓ tests/nythraxis_grave_eruption.test.ts (24 tests) 6ms
- ✓ tests/seo_metadata.test.ts (4 tests) 7ms
- ✓ tests/corpse_harvest_info_request.test.ts (19 tests) 6ms
- ✓ tests/guide_wiki_audit_fills.test.ts (4 tests) 7ms
- ✓ tests/keyboard_map_core.test.ts (21 tests) 5ms
- ✓ tests/world_interaction_requests.test.ts (11 tests) 6ms
- ✓ tests/perfecting_candidate_view.test.ts (2 tests) 6ms
- ✓ tests/command_outcomes.test.ts (11 tests) 5ms
- ✓ tests/perfecting_item_level.test.ts (3 tests) 6ms
- ✓ tests/mount_glow.test.ts (4 tests) 5ms
- ✓ tests/crucible_public_uniqueness.test.ts (3 tests) 6ms
- ✓ tests/freehold_trial_economy.test.ts (5 tests) 5ms
- ✓ tests/material_source_writer.test.ts (22 tests) 5ms
- ✓ tests/server/character_signer_db.test.ts (8 tests) 6ms
- ✓ tests/gathering_supply_measurement.test.ts (34 tests) 5ms
- ✓ tests/reliquary_hearth_shelf.test.ts (5 tests) 5ms
- ✓ tests/server/town_focus_command.test.ts (22 tests) 5ms
- ✓ tests/gatherer_host_identity.test.ts (14 tests) 5ms
- ✓ tests/harvest_preference.test.ts (28 tests) 5ms
- ✓ tests/nythraxis_prop_assets.test.ts (5 tests) 5ms
- ✓ tests/professions_harvest_entry_controller.test.ts (2 tests) 5ms
- ✓ tests/perfecting_swap_view.test.ts (8 tests) 5ms
- ✓ tests/material_source_audit.test.ts (8 tests) 5ms
- ✓ tests/gathering_goal_view.test.ts (32 tests) 5ms
- ✓ tests/furnishing_material_source_journal.test.ts (6 tests) 5ms
- ✓ tests/material_stack_separation.test.ts (6 tests) 4ms
- ✓ tests/material_gatherer.test.ts (22 tests) 5ms
- ✓ tests/corpse_harvest_info_wire.test.ts (20 tests) 5ms
- ✓ tests/server/material_source_host.test.ts (9 tests) 5ms
- ✓ tests/material_mail_attachment_plan.test.ts (6 tests) 5ms
+ + tests/furnishing_exchange_identity.test.ts (5 tests) 7ms
+ + tests/material_goal_projection.test.ts (17 tests) 7ms
+ + tests/material_source_storage_selection_wire.test.ts (9 tests) 6ms
+ + tests/material_inventory_units.test.ts (23 tests) 6ms
+ + tests/perfecting_dormant_ui.test.ts (3 tests) 6ms
+ + tests/gathering_goal_wire.test.ts (36 tests) 6ms
+ + tests/nythraxis_callout.test.ts (30 tests) 7ms
+ + tests/nythraxis_grave_eruption.test.ts (24 tests) 6ms
+ + tests/seo_metadata.test.ts (4 tests) 7ms
+ + tests/corpse_harvest_info_request.test.ts (19 tests) 6ms
+ + tests/guide_wiki_audit_fills.test.ts (4 tests) 7ms
+ + tests/keyboard_map_core.test.ts (21 tests) 5ms
+ + tests/world_interaction_requests.test.ts (11 tests) 6ms
+ + tests/perfecting_candidate_view.test.ts (2 tests) 6ms
+ + tests/command_outcomes.test.ts (11 tests) 5ms
+ + tests/perfecting_item_level.test.ts (3 tests) 6ms
+ + tests/mount_glow.test.ts (4 tests) 5ms
+ + tests/crucible_public_uniqueness.test.ts (3 tests) 6ms
+ + tests/freehold_trial_economy.test.ts (5 tests) 5ms
+ + tests/material_source_writer.test.ts (22 tests) 5ms
+ + tests/server/character_signer_db.test.ts (8 tests) 6ms
+ + tests/gathering_supply_measurement.test.ts (34 tests) 5ms
+ + tests/reliquary_hearth_shelf.test.ts (5 tests) 5ms
+ + tests/server/town_focus_command.test.ts (22 tests) 5ms
+ + tests/gatherer_host_identity.test.ts (14 tests) 5ms
+ + tests/harvest_preference.test.ts (28 tests) 5ms
+ + tests/nythraxis_prop_assets.test.ts (5 tests) 5ms
+ + tests/professions_harvest_entry_controller.test.ts (2 tests) 5ms
+ + tests/perfecting_swap_view.test.ts (8 tests) 5ms
+ + tests/material_source_audit.test.ts (8 tests) 5ms
+ + tests/gathering_goal_view.test.ts (32 tests) 5ms
+ + tests/furnishing_material_source_journal.test.ts (6 tests) 5ms
+ + tests/material_stack_separation.test.ts (6 tests) 4ms
+ + tests/material_gatherer.test.ts (22 tests) 5ms
+ + tests/corpse_harvest_info_wire.test.ts (20 tests) 5ms
+ + tests/server/material_source_host.test.ts (9 tests) 5ms
+ + tests/material_mail_attachment_plan.test.ts (6 tests) 5ms
 stdout | tests/server/material_source_startup_options.test.ts
 db pool: DB_POOL_MAX_CLIENTS=10 DB_POOL_CONNECT_TIMEOUT_MS=5000
 
@@ -1131,80 +1131,80 @@ stdout | tests/server/material_source_startup_options.test.ts > every db.ts conn
 stdout | tests/server/material_source_startup_options.test.ts > every db.ts connection announces the writer capability > probes the capability on the pool as well as the boot client
 [material-source] writer capability guard applied; writers without the capability are refused, material_source_journal is live
 
- ✓ tests/server/material_source_startup_options.test.ts (4 tests) 4ms
- ✓ tests/harvest_admission.test.ts (21 tests) 4ms
- ✓ tests/mail_parcel_sources_view.test.ts (5 tests) 4ms
- ✓ tests/material_payload_identity.test.ts (28 tests) 4ms
- ✓ tests/character_effects_impaled.test.ts (6 tests) 4ms
- ✓ tests/item_instance_view.test.ts (24 tests) 4ms
- ✓ tests/gathering_supply_hints.test.ts (12 tests) 4ms
- ✓ tests/professions_self_mirror.test.ts (10 tests) 4ms
- ✓ tests/gathering_goal_persist.test.ts (25 tests) 4ms
- ✓ tests/dev_gear_selection.test.ts (32 tests) 4ms
- ✓ tests/kit_buildings.test.ts (5 tests) 4ms
- ✓ tests/material_sources_view.test.ts (12 tests) 4ms
- ✓ tests/server/corpse_harvest_inspection.test.ts (17 tests) 4ms
- ✓ tests/furnishing_enchant_picker.test.ts (12 tests) 4ms
- ✓ tests/nythraxis_binding_sigil.test.ts (6 tests) 4ms
- ✓ tests/nythraxis_enrage_clock.test.ts (5 tests) 4ms
- ✓ tests/material_bank_transfer.test.ts (5 tests) 4ms
- ✓ tests/v042_coldsight_visibility.test.ts (6 tests) 4ms
- ✓ tests/material_source_storage_actions.test.ts (2 tests) 4ms
- ✓ tests/server/corpse_harvest_commands.test.ts (16 tests) 4ms
- ✓ tests/keybind_action_names_core.test.ts (3 tests) 3ms
+ + tests/server/material_source_startup_options.test.ts (4 tests) 4ms
+ + tests/harvest_admission.test.ts (21 tests) 4ms
+ + tests/mail_parcel_sources_view.test.ts (5 tests) 4ms
+ + tests/material_payload_identity.test.ts (28 tests) 4ms
+ + tests/character_effects_impaled.test.ts (6 tests) 4ms
+ + tests/item_instance_view.test.ts (24 tests) 4ms
+ + tests/gathering_supply_hints.test.ts (12 tests) 4ms
+ + tests/professions_self_mirror.test.ts (10 tests) 4ms
+ + tests/gathering_goal_persist.test.ts (25 tests) 4ms
+ + tests/dev_gear_selection.test.ts (32 tests) 4ms
+ + tests/kit_buildings.test.ts (5 tests) 4ms
+ + tests/material_sources_view.test.ts (12 tests) 4ms
+ + tests/server/corpse_harvest_inspection.test.ts (17 tests) 4ms
+ + tests/furnishing_enchant_picker.test.ts (12 tests) 4ms
+ + tests/nythraxis_binding_sigil.test.ts (6 tests) 4ms
+ + tests/nythraxis_enrage_clock.test.ts (5 tests) 4ms
+ + tests/material_bank_transfer.test.ts (5 tests) 4ms
+ + tests/v042_coldsight_visibility.test.ts (6 tests) 4ms
+ + tests/material_source_storage_actions.test.ts (2 tests) 4ms
+ + tests/server/corpse_harvest_commands.test.ts (16 tests) 4ms
+ + tests/keybind_action_names_core.test.ts (3 tests) 3ms
 stdout | tests/account_export_state.test.ts
 db pool: DB_POOL_MAX_CLIENTS=10 DB_POOL_CONNECT_TIMEOUT_MS=5000
 
- ✓ tests/account_export_state.test.ts (14 tests) 4ms
- ✓ tests/server/live_location.test.ts (10 tests) 4ms
- ✓ tests/commission_order_feedback.test.ts (25 tests) 4ms
- ✓ tests/corpse_loot_state.test.ts (20 tests) 4ms
- ✓ tests/spec_output_tuning.test.ts (23 tests) 3ms
- ✓ tests/gathering_source_view.test.ts (9 tests) 4ms
- ✓ tests/agent_surface_paths.test.ts (22 tests) 3ms
- ✓ tests/material_storage_command.test.ts (5 tests) 4ms
- ✓ tests/nythraxis_gravefire.test.ts (6 tests) 3ms
- ✓ tests/corpse_harvest_localization.test.ts (8 tests) 4ms
- ✓ tests/crucible_reliquary.test.ts (1 test) 3ms
- ✓ tests/nythraxis_bone_storm.test.ts (5 tests) 3ms
- ✓ tests/material_inventory_sort.test.ts (3 tests) 3ms
- ✓ tests/server/material_source_connection.test.ts (11 tests) 3ms
- ✓ tests/furnishing_regalia.test.ts (7 tests) 3ms
- ✓ tests/fingerprint128.test.ts (19 tests) 3ms
- ✓ tests/keybind_transfer_core.test.ts (9 tests) 3ms
- ✓ tests/nameplate_harvest_icon.test.ts (2 tests) 3ms
- ✓ tests/harvest_body_pick.test.ts (8 tests) 3ms
- ✓ tests/material_slot_clone.test.ts (5 tests) 3ms
- ✓ tests/nythraxis_melee_tuning.test.ts (6 tests) 3ms
+ + tests/account_export_state.test.ts (14 tests) 4ms
+ + tests/server/live_location.test.ts (10 tests) 4ms
+ + tests/commission_order_feedback.test.ts (25 tests) 4ms
+ + tests/corpse_loot_state.test.ts (20 tests) 4ms
+ + tests/spec_output_tuning.test.ts (23 tests) 3ms
+ + tests/gathering_source_view.test.ts (9 tests) 4ms
+ + tests/agent_surface_paths.test.ts (22 tests) 3ms
+ + tests/material_storage_command.test.ts (5 tests) 4ms
+ + tests/nythraxis_gravefire.test.ts (6 tests) 3ms
+ + tests/corpse_harvest_localization.test.ts (8 tests) 4ms
+ + tests/crucible_reliquary.test.ts (1 test) 3ms
+ + tests/nythraxis_bone_storm.test.ts (5 tests) 3ms
+ + tests/material_inventory_sort.test.ts (3 tests) 3ms
+ + tests/server/material_source_connection.test.ts (11 tests) 3ms
+ + tests/furnishing_regalia.test.ts (7 tests) 3ms
+ + tests/fingerprint128.test.ts (19 tests) 3ms
+ + tests/keybind_transfer_core.test.ts (9 tests) 3ms
+ + tests/nameplate_harvest_icon.test.ts (2 tests) 3ms
+ + tests/harvest_body_pick.test.ts (8 tests) 3ms
+ + tests/material_slot_clone.test.ts (5 tests) 3ms
+ + tests/nythraxis_melee_tuning.test.ts (6 tests) 3ms
 stdout | tests/perfecting_peer_wire.test.ts
 [capi] META_CAPI_ACCESS_TOKEN unset; Conversions API disabled.
 
- ✓ tests/perfecting_peer_wire.test.ts (2 tests) 3ms
- ✓ tests/material_inventory_wire.test.ts (5 tests) 3ms
- ✓ tests/server/character_save_result.test.ts (8 tests) 3ms
- ✓ tests/surface_npc_bootstrap.test.ts (2 tests) 3ms
- ✓ tests/material_sources_dialog.test.ts (2 tests) 3ms
- ✓ tests/nythraxis_guide_prose.test.ts (7 tests) 2ms
- ✓ tests/nythraxis_hazard_palette.test.ts (6 tests) 3ms
- ✓ tests/recipe_visibility.test.ts (2 tests) 2ms
- ✓ tests/offline_world_config.test.ts (2 tests) 3ms
- ✓ tests/server/store_mount_grants.test.ts (4 tests) 3ms
- ✓ tests/nythraxis_kings_wrath.test.ts (3 tests) 2ms
- ✓ tests/keyboard_layout_pref_core.test.ts (3 tests) 2ms
- ✓ tests/lastflame_tooltip.test.ts (2 tests) 3ms
- ✓ tests/item_instance_stats.test.ts (3 tests) 2ms
- ✓ tests/nythraxis_gravefire_wire_precision.test.ts (4 tests) 2ms
- ✓ tests/dev_chat_hooks.test.ts (2 tests) 2ms
- ✓ tests/crucible_reagent_cost.test.ts (4 tests) 3ms
- ✓ tests/crucible_aura_names.test.ts (2 tests) 3ms
- ✓ tests/freehold_catalog_rollback.test.ts (1 test) 2ms
- ✓ tests/v042_primary_healing.test.ts (4 tests) 2ms
- ✓ tests/nythraxis_dread_curse_leaf.test.ts (2 tests) 2ms
- ✓ tests/server/clean_metadata_text.test.ts (3 tests) 2ms
- ✓ tests/keybind_conflict_prompt_core.test.ts (2 tests) 2ms
- ✓ tests/crucible_collection_armor.test.ts (1 test) 2ms
- ✓ tests/mount_tooltip_view.test.ts (4 tests) 2ms
- ✓ tests/learned_profession_name.test.ts (2 tests) 2ms
+ + tests/perfecting_peer_wire.test.ts (2 tests) 3ms
+ + tests/material_inventory_wire.test.ts (5 tests) 3ms
+ + tests/server/character_save_result.test.ts (8 tests) 3ms
+ + tests/surface_npc_bootstrap.test.ts (2 tests) 3ms
+ + tests/material_sources_dialog.test.ts (2 tests) 3ms
+ + tests/nythraxis_guide_prose.test.ts (7 tests) 2ms
+ + tests/nythraxis_hazard_palette.test.ts (6 tests) 3ms
+ + tests/recipe_visibility.test.ts (2 tests) 2ms
+ + tests/offline_world_config.test.ts (2 tests) 3ms
+ + tests/server/store_mount_grants.test.ts (4 tests) 3ms
+ + tests/nythraxis_kings_wrath.test.ts (3 tests) 2ms
+ + tests/keyboard_layout_pref_core.test.ts (3 tests) 2ms
+ + tests/lastflame_tooltip.test.ts (2 tests) 3ms
+ + tests/item_instance_stats.test.ts (3 tests) 2ms
+ + tests/nythraxis_gravefire_wire_precision.test.ts (4 tests) 2ms
+ + tests/dev_chat_hooks.test.ts (2 tests) 2ms
+ + tests/crucible_reagent_cost.test.ts (4 tests) 3ms
+ + tests/crucible_aura_names.test.ts (2 tests) 3ms
+ + tests/freehold_catalog_rollback.test.ts (1 test) 2ms
+ + tests/v042_primary_healing.test.ts (4 tests) 2ms
+ + tests/nythraxis_dread_curse_leaf.test.ts (2 tests) 2ms
+ + tests/server/clean_metadata_text.test.ts (3 tests) 2ms
+ + tests/keybind_conflict_prompt_core.test.ts (2 tests) 2ms
+ + tests/crucible_collection_armor.test.ts (1 test) 2ms
+ + tests/mount_tooltip_view.test.ts (4 tests) 2ms
+ + tests/learned_profession_name.test.ts (2 tests) 2ms
 
  Test Files  279 passed (279)
       Tests  3964 passed (3964)

@@ -6,7 +6,7 @@ npm warn Unknown project config "strict-peer-dependencies". This will stop worki
 
 (node:94040) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
 (Use `node --trace-warnings ...` to show where the warning was created)
- ❯ tests/panel_key_guard.test.ts (6 tests | 1 failed) 9ms
+ > tests/panel_key_guard.test.ts (6 tests | 1 failed) 9ms
      × protects native select activation from chat and jump while leaving arrows alone 3ms
 
 ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
@@ -20,7 +20,7 @@ AssertionError: expected false to be true // Object.is equality
 - true
 + false
 
- ❯ tests/panel_key_guard.test.ts:30:58
+ > tests/panel_key_guard.test.ts:30:58
      28|   it('protects native select activation from chat and jump while leavi…
      29|     const select = el('select');
      30|     expect(panelKeyGuardStops(select, 'Enter', 'Enter')).toBe(true);

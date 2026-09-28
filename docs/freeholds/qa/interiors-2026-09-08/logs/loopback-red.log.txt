@@ -4,7 +4,7 @@ npm warn Unknown project config "strict-peer-dependencies". This will stop worki
 
  RUN  v4.1.10 /Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds
 
- ❯ tests/loopback_guard.test.ts (37 tests | 1 failed) 171ms
+ > tests/loopback_guard.test.ts (37 tests | 1 failed) 171ms
      × pins the guarded set exhaustively so a new adopter joins the scan 116ms
 
 ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
@@ -28,7 +28,7 @@ AssertionError: expected [ …(24) ] to deeply equal [ …(23) ]
     "scripts/kick_clear_retry_e2e.mjs",
     "scripts/lib/perf_hitch_scenarios.mjs",
 
- ❯ tests/loopback_guard.test.ts:254:23
+ > tests/loopback_guard.test.ts:254:23
     252|       .filter((relPath) => scriptCode(relPath).includes('loopback_guar…
     253|       .sort();
     254|     expect(importers).toEqual([...GUARDED_SCRIPTS, ...URL_GUARDED_SCRI…

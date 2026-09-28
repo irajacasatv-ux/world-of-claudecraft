@@ -13,7 +13,7 @@ stdout | tests/furnishing_commerce_parity.test.ts > furnishing two-client direct
 stdout | tests/furnishing_commerce_parity.test.ts
 [capi] META_CAPI_ACCESS_TOKEN unset; Conversions API disabled.
 
- ❯ tests/furnishing_commerce_parity.test.ts (10 tests | 2 failed) 1601ms
+ > tests/furnishing_commerce_parity.test.ts (10 tests | 2 failed) 1601ms
      × transfers signer and armed=false custody through both offers and confirms 30ms
      × transfers signer and armed=true custody through both offers and confirms 28ms
 stdout | tests/furnishing_tool_parity.test.ts > furnishing tool command boundaries online > refuses a furnishing recharge tool and completes the eligible recharge for exactly two dust
@@ -28,7 +28,7 @@ stdout | tests/furnishing_tool_parity.test.ts > furnishing tool command boundari
 stdout | tests/furnishing_tool_parity.test.ts
 [capi] META_CAPI_ACCESS_TOKEN unset; Conversions API disabled.
 
- ❯ tests/furnishing_tool_parity.test.ts (12 tests | 6 failed) 3015ms
+ > tests/furnishing_tool_parity.test.ts (12 tests | 6 failed) 3015ms
      × refuses a furnishing recharge tool and completes the eligible recharge for exactly two dust 237ms
      × refuses a furnishing at a real ore node and admits the same harvest with an eligible pick 159ms
      × keeps a furnishing at bare-hands corpse yield and unlocks the premium specimen with a real tool 26ms
@@ -61,7 +61,7 @@ AssertionError: expected { items: [ { …(3) } ], copper: 11 } to deeply equal {
     ],
   }
 
- ❯ tests/furnishing_commerce_parity.test.ts:380:53
+ > tests/furnishing_commerce_parity.test.ts:380:53
     378|         expect(remote.client.tradeInfo?.myOffer).toEqual({ items: offe…
     379|         expect(receiver.client.tradeInfo?.theirOffer).toEqual({ items:…
     380|         expect(remote.client.tradeInfo?.theirOffer).toEqual({
@@ -93,7 +93,7 @@ AssertionError: expected [ { …(3) }, { …(2) }, { …(3) } ] to deeply equal 
     },
   ]
 
- ❯ tests/furnishing_tool_parity.test.ts:325:31
+ > tests/furnishing_tool_parity.test.ts:325:31
     323|     expect(slot.maxDurability).toBe(20);
     324|     expect(h.sim.countItem('arcane_dust', h.pid)).toBe(1);
     325|     expect(h.world.inventory).toEqual([furnished, tool, { itemId: 'arc…
@@ -125,7 +125,7 @@ AssertionError: expected [ { type: 'castStart', …(4) } ] to deep equally conta
   },
 ]
 
- ❯ tests/furnishing_tool_parity.test.ts:374:35
+ > tests/furnishing_tool_parity.test.ts:374:35
     372|     expect(h.player.gatherCastNodeId).toBe('ore_eastbrook_1');
     373|     expect(h.world.inventory).toEqual([furnished, tool]);
     374|     expect(h.world.drainEvents()).toContainEqual({
@@ -138,7 +138,7 @@ AssertionError: expected [ { type: 'castStart', …(4) } ] to deep equally conta
  FAIL  tests/furnishing_tool_parity.test.ts > furnishing tool command boundaries offline > keeps a furnishing at bare-hands corpse yield and unlocks the premium specimen with a real tool
  FAIL  tests/furnishing_tool_parity.test.ts > furnishing tool command boundaries online > keeps a furnishing at bare-hands corpse yield and unlocks the premium specimen with a real tool
 AssertionError: expected "next" to be called 2 times, but got 4 times
- ❯ tests/furnishing_tool_parity.test.ts:459:21
+ > tests/furnishing_tool_parity.test.ts:459:21
     457|       expect(h.sim.countItem('field_kit', h.pid)).toBe(1);
     458|       expect(mob.harvestClaimedBy).toBe(h.pid);
     459|       expect(draws).toHaveBeenCalledTimes(2);
@@ -170,7 +170,7 @@ AssertionError: expected [ { type: 'castStart', …(4) } ] to deep equally conta
   },
 ]
 
- ❯ tests/furnishing_tool_parity.test.ts:374:35
+ > tests/furnishing_tool_parity.test.ts:374:35
     372|     expect(h.player.gatherCastNodeId).toBe('ore_eastbrook_1');
     373|     expect(h.world.inventory).toEqual([furnished, tool]);
     374|     expect(h.world.drainEvents()).toContainEqual({

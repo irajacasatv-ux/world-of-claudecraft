@@ -98,7 +98,7 @@ account flair refresh failed: TypeError: Cannot read properties of null (reading
 stdout | tests/server/freehold_wire.test.ts
 [capi] META_CAPI_ACCESS_TOKEN unset; Conversions API disabled.
 
- ❯ tests/server/freehold_wire.test.ts (115 tests | 7 failed) 3216ms
+ > tests/server/freehold_wire.test.ts (115 tests | 7 failed) 3216ms
      × freehold_enter: a well-formed frame invokes the Sim method once with the guarded args and the pid 27ms
      × on a DARK realm the jail arm answers first, so the housing counter under-counts a jailed prober 29ms
      × jailed 'freehold_enter' returns only the personal busy denial and changes no travel state 31ms
@@ -118,7 +118,7 @@ AssertionError: expected true to be false // Object.is equality
 - false
 + true
 
- ❯ tests/server/freehold_wire.test.ts:593:38
+ > tests/server/freehold_wire.test.ts:593:38
     591|       expect(fc.sent.filter((m) => m.t === 'commandOutcome' && m.ok ==…
     592|       expect(refusals.count()).toBe(0);
     593|       expect(session.selfHeavyDirty).toBe(false);
@@ -148,7 +148,7 @@ AssertionError: expected [ { t: 'events', …(1) }, …(1) ] to deeply equal [ {
       "t": "events",
     },
 
- ❯ tests/server/freehold_wire.test.ts:827:21
+ > tests/server/freehold_wire.test.ts:827:21
     825|
     826|     server.handleMessage(session, JSON.stringify({ t: 'cmd', cmd: 'fre…
     827|     expect(fc.sent).toEqual([
@@ -178,7 +178,7 @@ AssertionError: expected [ { t: 'events', …(1) }, …(1) ] to deeply equal [ {
       "t": "events",
     },
 
- ❯ tests/server/freehold_wire.test.ts:1174:21
+ > tests/server/freehold_wire.test.ts:1174:21
     1172|       JSON.stringify({ t: 'cmd', ...frame, ownerKey: 'account:1', pid:…
     1173|     );
     1174|     expect(fc.sent).toEqual([
@@ -210,7 +210,7 @@ AssertionError: expected [ { t: 'events', …(1) }, …(1) ] to deeply equal [ {
     },
     {
 
- ❯ tests/server/freehold_wire.test.ts:1174:21
+ > tests/server/freehold_wire.test.ts:1174:21
     1172|       JSON.stringify({ t: 'cmd', ...frame, ownerKey: 'account:1', pid:…
     1173|     );
     1174|     expect(fc.sent).toEqual([
@@ -224,7 +224,7 @@ AssertionError: expected [ { t: 'events', …(1) }, …(1) ] to deeply equal [ {
  FAIL  tests/server/freehold_wire.test.ts > Freehold Gate inventory change drives heavy self snapshots > existing key refreshes heavy self only for a newly granted key
  FAIL  tests/server/freehold_wire.test.ts > Freehold Gate inventory change drives heavy self snapshots > full bags refreshes heavy self only for a newly granted key
 AssertionError: expected "ownedMountsFor" to be called +0 times, but got 1 times
- ❯ tests/server/freehold_wire.test.ts:1317:31
+ > tests/server/freehold_wire.test.ts:1317:31
     1315|       ).routeEvents(events);
     1316|       broadcast(server);
     1317|       expect(heavyProjection).toHaveBeenCalledTimes(outcome === 'new k…

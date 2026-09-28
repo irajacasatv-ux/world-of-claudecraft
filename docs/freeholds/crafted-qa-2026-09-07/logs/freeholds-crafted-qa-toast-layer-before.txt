@@ -5,7 +5,7 @@ npm warn Unknown project config "strict-peer-dependencies". This will stop worki
  RUN  v4.1.10 /Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds
 
 6:09:25 PM [vite] (client) Re-optimizing dependencies because lockfile has changed
- ❯ |chromium| tests/browser/error_toast_layer.browser.test.ts (2 tests | 1 failed) 96ms
+ > |chromium| tests/browser/error_toast_layer.browser.test.ts (2 tests | 1 failed) 96ms
      × paints above the overlapping sheet and remains pointer-inert 92ms
 
 ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
@@ -30,7 +30,7 @@ Failure screenshot:
 +   style="display: flex; z-index: 51;"
 + />
 
- ❯ tests/browser/error_toast_layer.browser.test.ts:55:46
+ > tests/browser/error_toast_layer.browser.test.ts:55:46
      53|     toast.style.pointerEvents = 'auto';
      54|     try {
      55|       expect(document.elementFromPoint(x, y)).toBe(toast);

@@ -5,31 +5,31 @@ Exact final failure section from gate-select.log; earlier repeated warnings omit
  FAIL  tests/server/client_perf_summary_sql.test.ts > clientPerfSummary differential vs the seven-statement spec (pg-gated)
  FAIL  tests/server/deeds_board_sql.test.ts > deedsBoardRanked differential vs computeDeedsBoard (pg-gated)
 error: password authentication failed for user "vitest"
- ❯ parseErrorMessage node_modules/pg-protocol/src/parser.ts:394:8
- ❯ Parser.handlePacket node_modules/pg-protocol/src/parser.ts:212:18
- ❯ Parser.parse node_modules/pg-protocol/src/parser.ts:105:29
- ❯ Socket.<anonymous> node_modules/pg-protocol/src/index.ts:7:47
+ > parseErrorMessage node_modules/pg-protocol/src/parser.ts:394:8
+ > Parser.handlePacket node_modules/pg-protocol/src/parser.ts:212:18
+ > Parser.parse node_modules/pg-protocol/src/parser.ts:105:29
+ > Socket.<anonymous> node_modules/pg-protocol/src/index.ts:7:47
 
 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
 
  FAIL  tests/server/client_perf_summary_sql.test.ts > clientPerfSummary differential vs the seven-statement spec (pg-gated)
 error: password authentication failed for user "vitest"
- ❯ node_modules/pg-pool/index.js:45:11
- ❯ cleanupRows tests/server/client_perf_summary_sql.test.ts:461:3
+ > node_modules/pg-pool/index.js:45:11
+ > cleanupRows tests/server/client_perf_summary_sql.test.ts:461:3
     459|
     460| async function cleanupRows(): Promise<void> {
     461|   await pool.query('DELETE FROM client_perf_reports WHERE session_id L…
        |   ^
     462| }
     463|
- ❯ tests/server/client_perf_summary_sql.test.ts:515:7
+ > tests/server/client_perf_summary_sql.test.ts:515:7
 
 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
 
  FAIL  tests/server/deeds_board_sql.test.ts > deedsBoardRanked differential vs computeDeedsBoard (pg-gated)
 error: password authentication failed for user "vitest"
- ❯ node_modules/pg-pool/index.js:45:11
- ❯ tests/server/deeds_board_sql.test.ts:354:20
+ > node_modules/pg-pool/index.js:45:11
+ > tests/server/deeds_board_sql.test.ts:354:20
     352|
     353|   afterAll(async () => {
     354|     const client = await pool.connect();

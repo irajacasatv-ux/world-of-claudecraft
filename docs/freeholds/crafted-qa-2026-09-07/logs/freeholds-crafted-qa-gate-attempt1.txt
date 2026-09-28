@@ -855,13 +855,13 @@ tests/professions_blob_growth.test.ts:2354:41 ]8;;https://biomejs.dev/linter/ru
 
 docs/freeholds/crafted-content-trial-2026-09-07/economy-measurements.json ci ━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ The size of the file is 1.8 MiB, which exceeds the configured maximum of 1.0 MiB for this project.
+  ! The size of the file is 1.8 MiB, which exceeds the configured maximum of 1.0 MiB for this project.
     Use the `files.maxSize` configuration to change the maximum size of files processed, or `files.includes` to ignore the file.
 
 
 headless/env_server.ts:223:14 ]8;;https://biomejs.dev/linter/rules/no-explicit-any\lint/suspicious/noExplicitAny]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Unexpected any. Specify a different type.
+  ! Unexpected any. Specify a different type.
 
     221 │     line = line.trim();
     222 │     if (!line) return;
@@ -875,7 +875,7 @@ headless/env_server.ts:223:14 ]8;;https://biomejs.dev/linter/rules/no-explicit-
 
 headless/env_server.ts:288:19 ]8;;https://biomejs.dev/linter/rules/no-explicit-any\lint/suspicious/noExplicitAny]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Unexpected any. Specify a different type.
+  ! Unexpected any. Specify a different type.
 
     286 │           send({ error: `unknown cmd: ${msg.cmd}` });
     287 │       }
@@ -889,7 +889,7 @@ headless/env_server.ts:288:19 ]8;;https://biomejs.dev/linter/rules/no-explicit-
 
 headless/env_server.ts:175:17 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     174 │   infoDict(): object {
   > 175 │     const sim = this.sim!;
@@ -900,7 +900,7 @@ headless/env_server.ts:175:17 ]8;;https://biomejs.dev/linter/rules/no-non-null-
 
 server/game.ts:1562:10 ]8;;https://biomejs.dev/linter/rules/no-unused-variables\lint/correctness/noUnusedVariables]8;;\  FIXABLE  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ This function delay is unused.
+  ! This function delay is unused.
 
     1560 │ }
     1561 │
@@ -923,7 +923,7 @@ server/game.ts:1562:10 ]8;;https://biomejs.dev/linter/rules/no-unused-variables
 
 server/game.ts:1576:64 ]8;;https://biomejs.dev/linter/rules/no-undeclared-env-vars\lint/suspicious/noUndeclaredEnvVars]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ The environment variable MAX_PLAYERS_PER_REALM is not listed as a dependency in turbo.json. Add this environment variable a task's 'env'/'passThroughEnv', or to 'globalEnv', 'globalPassThroughEnv', in your turbo.json(c) configuration to ensure correct caching behavior in Turborepo.
+  ! The environment variable MAX_PLAYERS_PER_REALM is not listed as a dependency in turbo.json. Add this environment variable a task's 'env'/'passThroughEnv', or to 'globalEnv', 'globalPassThroughEnv', in your turbo.json(c) configuration to ensure correct caching behavior in Turborepo.
 
     1574 │     createBankVaultLedgerGuardCoordinator(() => Date.now() / 1000, {
     1575 │       // Sized from the resolved realm player cap; cap<=0 (disabled) keeps the floor.
@@ -935,7 +935,7 @@ server/game.ts:1576:64 ]8;;https://biomejs.dev/linter/rules/no-undeclared-env-v
 
 server/ratelimit.ts:177:22 ]8;;https://biomejs.dev/linter/rules/no-undeclared-env-vars\lint/suspicious/noUndeclaredEnvVars]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ The environment variable TRUSTED_PROXY_IPS is not listed as a dependency in turbo.json. Add this environment variable a task's 'env'/'passThroughEnv', or to 'globalEnv', 'globalPassThroughEnv', in your turbo.json(c) configuration to ensure correct caching behavior in Turborepo.
+  ! The environment variable TRUSTED_PROXY_IPS is not listed as a dependency in turbo.json. Add this environment variable a task's 'env'/'passThroughEnv', or to 'globalEnv', 'globalPassThroughEnv', in your turbo.json(c) configuration to ensure correct caching behavior in Turborepo.
 
     176 │ function isTrustedProxy(ip: string): boolean {
   > 177 │   const configured = process.env.TRUSTED_PROXY_IPS;
@@ -946,7 +946,7 @@ server/ratelimit.ts:177:22 ]8;;https://biomejs.dev/linter/rules/no-undeclared-e
 
 server/woc_market_routes.ts:122:21 ]8;;https://biomejs.dev/linter/rules/no-undeclared-env-vars\lint/suspicious/noUndeclaredEnvVars]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ The environment variable WOC_MARKET_EXCLUDED_ITEM_IDS is not listed as a dependency in turbo.json. Add this environment variable a task's 'env'/'passThroughEnv', or to 'globalEnv', 'globalPassThroughEnv', in your turbo.json(c) configuration to ensure correct caching behavior in Turborepo.
+  ! The environment variable WOC_MARKET_EXCLUDED_ITEM_IDS is not listed as a dependency in turbo.json. Add this environment variable a task's 'env'/'passThroughEnv', or to 'globalEnv', 'globalPassThroughEnv', in your turbo.json(c) configuration to ensure correct caching behavior in Turborepo.
 
     121 │ export function wocMarketConfig(): WocMarketConfig {
   > 122 │   const excluded = (process.env.WOC_MARKET_EXCLUDED_ITEM_IDS ?? '')
@@ -957,7 +957,7 @@ server/woc_market_routes.ts:122:21 ]8;;https://biomejs.dev/linter/rules/no-unde
 
 server/woc_market_routes.ts:127:14 ]8;;https://biomejs.dev/linter/rules/no-undeclared-env-vars\lint/suspicious/noUndeclaredEnvVars]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ The environment variable WOC_MARKET_ENABLED is not listed as a dependency in turbo.json. Add this environment variable a task's 'env'/'passThroughEnv', or to 'globalEnv', 'globalPassThroughEnv', in your turbo.json(c) configuration to ensure correct caching behavior in Turborepo.
+  ! The environment variable WOC_MARKET_ENABLED is not listed as a dependency in turbo.json. Add this environment variable a task's 'env'/'passThroughEnv', or to 'globalEnv', 'globalPassThroughEnv', in your turbo.json(c) configuration to ensure correct caching behavior in Turborepo.
 
     125 │     .filter((s) => s !== '');
     126 │   return {
@@ -969,7 +969,7 @@ server/woc_market_routes.ts:127:14 ]8;;https://biomejs.dev/linter/rules/no-unde
 
 server/woc_market_routes.ts:105:15 ]8;;https://biomejs.dev/linter/rules/no-undeclared-env-vars\lint/suspicious/noUndeclaredEnvVars]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ The environment variable WOC_MARKET_CONFIRMING_REVIEW_HOURS is not listed as a dependency in turbo.json. Add this environment variable a task's 'env'/'passThroughEnv', or to 'globalEnv', 'globalPassThroughEnv', in your turbo.json(c) configuration to ensure correct caching behavior in Turborepo.
+  ! The environment variable WOC_MARKET_CONFIRMING_REVIEW_HOURS is not listed as a dependency in turbo.json. Add this environment variable a task's 'env'/'passThroughEnv', or to 'globalEnv', 'globalPassThroughEnv', in your turbo.json(c) configuration to ensure correct caching behavior in Turborepo.
 
     103 │  *  clamped with a one-time operator warning (dev channel). */
     104 │ function confirmingReviewMsFromEnv(): number {
@@ -981,7 +981,7 @@ server/woc_market_routes.ts:105:15 ]8;;https://biomejs.dev/linter/rules/no-unde
 
 src/net/online.ts:77:3 ]8;;https://biomejs.dev/linter/rules/no-unused-imports\lint/correctness/noUnusedImports]8;;\  FIXABLE  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Several of these imports are unused.
+  ! Several of these imports are unused.
 
     75 │ import type { ResolvedAbility } from '../sim/sim';
     76 │ import {
@@ -1003,7 +1003,7 @@ src/net/online.ts:77:3 ]8;;https://biomejs.dev/linter/rules/no-unused-imports\
 
 src/sim/guild_bank.ts:99:26 ]8;;https://biomejs.dev/linter/rules/no-accumulating-spread\lint/performance/noAccumulatingSpread]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Avoid the use of spread (`...`) syntax on accumulators.
+  ! Avoid the use of spread (`...`) syntax on accumulators.
 
      97 │ export const GUILD_BANK_LADDER_POSITIONS: readonly number[] = GUILD_BANK_RUNG_SLOTS.reduce<
      98 │   number[]
@@ -1019,7 +1019,7 @@ src/sim/guild_bank.ts:99:26 ]8;;https://biomejs.dev/linter/rules/no-accumulatin
 
 src/sim/items.ts:1057:57 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     1055 │     }
     1056 │     if (restoresMana) {
@@ -1031,7 +1031,7 @@ src/sim/items.ts:1057:57 ]8;;https://biomejs.dev/linter/rules/no-non-null-asser
 
 src/sim/items.ts:1659:17 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     1657 │   let soldCount = 0;
     1658 │   for (const { itemId, count } of junk) {
@@ -1043,7 +1043,7 @@ src/sim/items.ts:1659:17 ]8;;https://biomejs.dev/linter/rules/no-non-null-asser
 
 src/sim/professions/perfecting_swap.ts:102:47 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     100 │   if (payload?.perfected && payload.perfectingBonus === undefined) return false;
     101 │   if (payload?.perfected) {
@@ -1055,7 +1055,7 @@ src/sim/professions/perfecting_swap.ts:102:47 ]8;;https://biomejs.dev/linter/ru
 
 src/sim/professions/perfecting_swap.ts:144:18 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     143 │ function exchangedPayload(copy: SwapCopy, nextRank: number, pid: number): ItemInstancePayload {
   > 144 │   const recipe = recipeForResultItem(copy.itemId)!;
@@ -1066,7 +1066,7 @@ src/sim/professions/perfecting_swap.ts:144:18 ]8;;https://biomejs.dev/linter/ru
 
 src/sim/professions/perfecting_swap.ts:149:45 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     147 │   );
     148 │   const stats = { ...payload.rolled?.stats };
@@ -1078,7 +1078,7 @@ src/sim/professions/perfecting_swap.ts:149:45 ]8;;https://biomejs.dev/linter/ru
 
 src/sim/professions/perfecting_swap.ts:224:20 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     222 │   };
     223 │   if (result.ok) {
@@ -1090,7 +1090,7 @@ src/sim/professions/perfecting_swap.ts:224:20 ]8;;https://biomejs.dev/linter/ru
 
 src/sim/professions/perfecting_swap.ts:225:20 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     223 │   if (result.ok) {
     224 │     const source = copyAt(inputs, request.source)!;
@@ -1102,7 +1102,7 @@ src/sim/professions/perfecting_swap.ts:225:20 ]8;;https://biomejs.dev/linter/ru
 
 src/sim/professions/perfecting_swap.ts:65:7 ]8;;https://biomejs.dev/linter/rules/use-optional-chain\lint/complexity/useOptionalChain]8;;\  FIXABLE  ━━━━━━━━━━━━━
 
-  ⚠ Change to an optional chain.
+  ! Change to an optional chain.
 
     64 │ function copyAt(inputs: PerfectingCopyReads, ref: PerfectItemRef): SwapCopy | null {
   > 65 │   if (!ref || !ref.copy || !perfectingCopyMatches(inputs, ref)) return null;
@@ -1122,7 +1122,7 @@ src/sim/professions/perfecting_swap.ts:65:7 ]8;;https://biomejs.dev/linter/rule
 
 src/sim/professions/perfecting_swap.ts:73:9 ]8;;https://biomejs.dev/linter/rules/use-optional-chain\lint/complexity/useOptionalChain]8;;\  FIXABLE  ━━━━━━━━━━━━━
 
-  ⚠ Change to an optional chain.
+  ! Change to an optional chain.
 
     71 │   } else {
     72 │     const bagged = inputs.inventory[ref.bag];
@@ -1143,7 +1143,7 @@ src/sim/professions/perfecting_swap.ts:73:9 ]8;;https://biomejs.dev/linter/rule
 
 src/sim/professions/tools.ts:556:9 ]8;;https://biomejs.dev/linter/rules/use-optional-chain\lint/complexity/useOptionalChain]8;;\  FIXABLE  ━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Change to an optional chain.
+  ! Change to an optional chain.
 
     554 │     if (item?.kind === 'furnishing') continue;
     555 │     const use = item?.use;
@@ -1164,7 +1164,7 @@ src/sim/professions/tools.ts:556:9 ]8;;https://biomejs.dev/linter/rules/use-opt
 
 src/ui/reliquary_view.ts:85:12 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     83 │ export function curatorRankNameKey(rank: number): TranslationKey {
     84 │   if (Number.isInteger(rank) && rank >= 1 && rank <= CURATOR_RANK_NAME_KEYS.length) {
@@ -1176,7 +1176,7 @@ src/ui/reliquary_view.ts:85:12 ]8;;https://biomejs.dev/linter/rules/no-non-null
 
 tests/apex_pattern_items.test.ts:178:38 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\  FIXABLE  ━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     176 │       expect(taught, `${id} teaches ${def.teachesRecipeId}`).toBeDefined();
     177 │       const output = ITEMS[taught!.resultItemId];
@@ -1197,7 +1197,7 @@ tests/apex_pattern_items.test.ts:178:38 ]8;;https://biomejs.dev/linter/rules/no
 
 tests/apex_pattern_items.test.ts:189:25 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\  FIXABLE  ━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     187 │       const recipe = recipeById(def.teachesRecipeId);
     188 │       expect(recipe, `${id} teaches ${def.teachesRecipeId}`).toBeDefined();
@@ -1218,7 +1218,7 @@ tests/apex_pattern_items.test.ts:189:25 ]8;;https://biomejs.dev/linter/rules/no
 
 tests/apex_pattern_items.test.ts:190:14 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\  FIXABLE  ━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     188 │       expect(recipe, `${id} teaches ${def.teachesRecipeId}`).toBeDefined();
     189 │       expect(`pattern_${recipe!.resultItemId}`, id).toBe(id);
@@ -1239,7 +1239,7 @@ tests/apex_pattern_items.test.ts:190:14 ]8;;https://biomejs.dev/linter/rules/no
 
 tests/apex_pattern_items.test.ts:202:22 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     200 │       const def = ITEMS[id];
     201 │       if (def.kind !== 'recipe') throw new Error(`${id} must be kind recipe`);
@@ -1251,7 +1251,7 @@ tests/apex_pattern_items.test.ts:202:22 ]8;;https://biomejs.dev/linter/rules/no
 
 tests/apex_pattern_items.test.ts:308:29 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     306 │         recipe.skillReq,
     307 │         `${recipe.id}: skillReq above the ${recipe.professionId} cap`,
@@ -1263,7 +1263,7 @@ tests/apex_pattern_items.test.ts:308:29 ]8;;https://biomejs.dev/linter/rules/no
 
 tests/apex_pattern_items.test.ts:177:28 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\  FIXABLE  ━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     175 │       const taught = recipeById(def.teachesRecipeId);
     176 │       expect(taught, `${id} teaches ${def.teachesRecipeId}`).toBeDefined();
@@ -1284,7 +1284,7 @@ tests/apex_pattern_items.test.ts:177:28 ]8;;https://biomejs.dev/linter/rules/no
 
 tests/apex_pattern_items.test.ts:153:21 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     151 │     expect(formula.teachesRecipeIds).toBeUndefined();
     152 │     expect(recipeById(formula.teachesRecipeId)).toBeUndefined();
@@ -1296,7 +1296,7 @@ tests/apex_pattern_items.test.ts:153:21 ]8;;https://biomejs.dev/linter/rules/no
 
 tests/bags_window_instance_marker.test.ts:782:32 ]8;;https://biomejs.dev/linter/rules/no-template-curly-in-string\lint/suspicious/noTemplateCurlyInString]8;;\ ━━━━━━━━━━━
 
-  ⚠ Unexpected template string placeholder.
+  ! Unexpected template string placeholder.
 
     780 │     // the className template defers to bagRimClasses (code literal, so a
     781 │     // comment mentioning the name cannot satisfy this pin).
@@ -1310,7 +1310,7 @@ tests/bags_window_instance_marker.test.ts:782:32 ]8;;https://biomejs.dev/linter
 
 tests/bank_window_instance_marker.test.ts:352:32 ]8;;https://biomejs.dev/linter/rules/no-template-curly-in-string\lint/suspicious/noTemplateCurlyInString]8;;\ ━━━━━━━━━━━
 
-  ⚠ Unexpected template string placeholder.
+  ! Unexpected template string placeholder.
 
     350 │     expect(painter).toContain('bagFineMark(slot.itemId)');
     351 │     expect(painter).toContain('bagCornerMark(glyphKind, null, fineMark)');
@@ -1324,7 +1324,7 @@ tests/bank_window_instance_marker.test.ts:352:32 ]8;;https://biomejs.dev/linter
 
 tests/browser/vendor_keyboard.browser.test.ts:54:16 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     52 │   sim.player.pos = { ...npc.pos };
     53 │   sim.player.prevPos = { ...npc.pos };
@@ -1336,7 +1336,7 @@ tests/browser/vendor_keyboard.browser.test.ts:54:16 ]8;;https://biomejs.dev/lin
 
 tests/crucible_reliquary.test.ts:30:23 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     28 │     for (const collection of CRUCIBLE_COLLECTIONS) {
     29 │       for (const id of collection.itemIds) {
@@ -1348,7 +1348,7 @@ tests/crucible_reliquary.test.ts:30:23 ]8;;https://biomejs.dev/linter/rules/no-
 
 tests/freehold_furnisher.test.ts:84:19 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     82 │     const vendor = furnisherId(sim);
     83 │     const id = 'freehold_timber_bed';
@@ -1360,7 +1360,7 @@ tests/freehold_furnisher.test.ts:84:19 ]8;;https://biomejs.dev/linter/rules/no-
 
 tests/freehold_furnisher.test.ts:106:30 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     104 │     sim.buyItem(furnisherId(sim), id);
     105 │     expect(errors(sim)).toEqual([]);
@@ -1372,7 +1372,7 @@ tests/freehold_furnisher.test.ts:106:30 ]8;;https://biomejs.dev/linter/rules/no
 
 tests/freehold_furnisher.test.ts:139:20 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     137 │     const restored = new Sim({ seed: WORLD_SEED, playerClass: 'warrior', noPlayer: true });
     138 │     const pid = restored.addPlayer('warrior', 'Restored', { state: saved });
@@ -1384,7 +1384,7 @@ tests/freehold_furnisher.test.ts:139:20 ]8;;https://biomejs.dev/linter/rules/no
 
 tests/freehold_furnisher.test.ts:157:19 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     155 │   it('older rows with no discovery metadata restore without phantom Hearth completion', () => {
     156 │     const { sim } = readyBuyer(false);
@@ -1396,7 +1396,7 @@ tests/freehold_furnisher.test.ts:157:19 ]8;;https://biomejs.dev/linter/rules/no
 
 tests/freehold_furnisher.test.ts:164:20 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     162 │       state: JSON.parse(JSON.stringify(saved)),
     163 │     });
@@ -1408,7 +1408,7 @@ tests/freehold_furnisher.test.ts:164:20 ]8;;https://biomejs.dev/linter/rules/no
 
 tests/freehold_furnisher.test.ts:21:16 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     19 │ function readyBuyer(freeholdsEnabled = true) {
     20 │   const sim = new Sim({ seed: WORLD_SEED, playerClass: 'warrior', freeholdsEnabled });
@@ -1420,7 +1420,7 @@ tests/freehold_furnisher.test.ts:21:16 ]8;;https://biomejs.dev/linter/rules/no-
 
 tests/freehold_furnisher.test.ts:44:10 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     42 │   const page = RELIQUARY_PAGES.find((p) => p.id === 'hearth_basics');
     43 │   expect(page).toBeDefined();
@@ -1432,7 +1432,7 @@ tests/freehold_furnisher.test.ts:44:10 ]8;;https://biomejs.dev/linter/rules/no-
 
 tests/freehold_furnisher.test.ts:62:39 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     60 │     expect(meta.copper).toBe(
     61 │       1_000_000 -
@@ -1444,7 +1444,7 @@ tests/freehold_furnisher.test.ts:62:39 ]8;;https://biomejs.dev/linter/rules/no-
 
 tests/freehold_furnisher.test.ts:63:13 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     61 │       1_000_000 -
     62 │         IDS.reduce((sum, id) => sum + ITEMS[id].buyValue!, 0) -
@@ -1456,7 +1456,7 @@ tests/freehold_furnisher.test.ts:63:13 ]8;;https://biomejs.dev/linter/rules/no-
 
 tests/furnishing_auto_equip.test.ts:102:16 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     100 │     world: EMPTY_TEST_WORLD,
     101 │   });
@@ -1468,7 +1468,7 @@ tests/furnishing_auto_equip.test.ts:102:16 ]8;;https://biomejs.dev/linter/rules
 
 tests/furnishing_commerce_parity.test.ts:196:20 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     194 │       });
     195 │       const entry = host(mode);
@@ -1480,7 +1480,7 @@ tests/furnishing_commerce_parity.test.ts:196:20 ]8;;https://biomejs.dev/linter/
 
 tests/furnishing_commerce_parity.test.ts:253:18 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     251 │     ITEMS[ID] = { ...FURNISHING, teachesRiding: true } as unknown as ItemDef;
     252 │     const entry = host(mode);
@@ -1492,7 +1492,7 @@ tests/furnishing_commerce_parity.test.ts:253:18 ]8;;https://biomejs.dev/linter/
 
 tests/furnishing_commerce_parity.test.ts:312:41 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\  FIXABLE  ━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     310 │     );
     311 │     for (const itemId of [ID, GEAR.id]) {
@@ -1513,7 +1513,7 @@ tests/furnishing_commerce_parity.test.ts:312:41 ]8;;https://biomejs.dev/linter/
 
 tests/furnishing_commerce_parity.test.ts:329:14 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\  FIXABLE  ━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     327 │       expect(entry.sim.countItem(itemId, entry.pid)).toBe(1);
     328 │       expect(entry.sim.marketListings.some((row) => row.id === listing.id)).toBe(false);
@@ -1534,7 +1534,7 @@ tests/furnishing_commerce_parity.test.ts:329:14 ]8;;https://biomejs.dev/linter/
 
 tests/furnishing_commerce_parity.test.ts:331:45 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\  FIXABLE  ━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     329 │       expect(entry.sim.meta(entry.pid)!.inventory).toEqual(expect.arrayContaining(bagBefore));
     330 │       entry.sync();
@@ -1555,7 +1555,7 @@ tests/furnishing_commerce_parity.test.ts:331:45 ]8;;https://biomejs.dev/linter/
 
 tests/furnishing_commerce_parity.test.ts:354:22 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     352 │       const receiver = remote.join(9202, 'Commerce Recipient');
     353 │       atEntity(remote.sim, receiver.pid, remote.pid);
@@ -1567,7 +1567,7 @@ tests/furnishing_commerce_parity.test.ts:354:22 ]8;;https://biomejs.dev/linter/
 
 tests/furnishing_commerce_parity.test.ts:355:25 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     353 │       atEntity(remote.sim, receiver.pid, remote.pid);
     354 │       const sender = remote.sim.meta(remote.pid)!;
@@ -1579,7 +1579,7 @@ tests/furnishing_commerce_parity.test.ts:355:25 ]8;;https://biomejs.dev/linter/
 
 tests/furnishing_consumer_parity.test.ts:168:19 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     166 │   ...(['elixir', 'flask', 'scroll'] as const).map((kind) => ({
     167 │     name: kind,
@@ -1591,7 +1591,7 @@ tests/furnishing_consumer_parity.test.ts:168:19 ]8;;https://biomejs.dev/linter/
 
 tests/furnishing_consumer_parity.test.ts:613:20 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     611 │     ]) {
     612 │       ITEMS[ID] = structuredClone(FURNISHING);
@@ -1603,7 +1603,7 @@ tests/furnishing_consumer_parity.test.ts:613:20 ]8;;https://biomejs.dev/linter/
 
 tests/furnishing_consumer_parity.test.ts:105:16 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\  FIXABLE  ━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     103 │     entities: [...sim.entities],
     104 │     feasts: [...sim.ctx.feasts],
@@ -1624,7 +1624,7 @@ tests/furnishing_consumer_parity.test.ts:105:16 ]8;;https://biomejs.dev/linter/
 
 tests/furnishing_consumer_parity.test.ts:120:18 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     118 │ }
     119 │ function atEntity(sim: Sim, pid: number, entityId: number): void {
@@ -1636,7 +1636,7 @@ tests/furnishing_consumer_parity.test.ts:120:18 ]8;;https://biomejs.dev/linter/
 
 tests/furnishing_consumer_parity.test.ts:121:21 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\  FIXABLE  ━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     119 │ function atEntity(sim: Sim, pid: number, entityId: number): void {
     120 │   const player = sim.entities.get(pid)!;
@@ -1657,7 +1657,7 @@ tests/furnishing_consumer_parity.test.ts:121:21 ]8;;https://biomejs.dev/linter/
 
 tests/furnishing_consumer_parity.test.ts:163:19 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     161 │   {
     162 │     name: 'drink',
@@ -1669,7 +1669,7 @@ tests/furnishing_consumer_parity.test.ts:163:19 ]8;;https://biomejs.dev/linter/
 
 tests/furnishing_consumer_parity.test.ts:200:70 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\  FIXABLE  ━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     198 │       else if (row.outcome === 'drink') expect(sim.player.drinking).not.toBeNull();
     199 │       else if (row.outcome === 'buff') {
@@ -1690,7 +1690,7 @@ tests/furnishing_consumer_parity.test.ts:200:70 ]8;;https://biomejs.dev/linter/
 
 tests/furnishing_consumer_parity.test.ts:286:15 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     284 │         ...structuredClone(
     285 │           cls === 'mage'
@@ -1702,7 +1702,7 @@ tests/furnishing_consumer_parity.test.ts:286:15 ]8;;https://biomejs.dev/linter/
 
 tests/furnishing_consumer_parity.test.ts:307:3 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\  FIXABLE  ━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     305 │   const sim = (server as unknown as { sim: Sim }).sim;
     306 │   const pid = session.pid;
@@ -1723,7 +1723,7 @@ tests/furnishing_consumer_parity.test.ts:307:3 ]8;;https://biomejs.dev/linter/r
 
 tests/furnishing_consumer_parity.test.ts:308:3 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     306 │   const pid = session.pid;
     307 │   sim.meta(pid)!.inventory.splice(0);
@@ -1735,7 +1735,7 @@ tests/furnishing_consumer_parity.test.ts:308:3 ]8;;https://biomejs.dev/linter/r
 
 tests/furnishing_consumer_parity.test.ts:309:3 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     307 │   sim.meta(pid)!.inventory.splice(0);
     308 │   sim.meta(pid)!.equipment = {};
@@ -1747,7 +1747,7 @@ tests/furnishing_consumer_parity.test.ts:309:3 ]8;;https://biomejs.dev/linter/r
 
 tests/furnishing_consumer_parity.test.ts:310:3 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     308 │   sim.meta(pid)!.equipment = {};
     309 │   sim.meta(pid)!.equipmentInstance = {};
@@ -1759,7 +1759,7 @@ tests/furnishing_consumer_parity.test.ts:310:3 ]8;;https://biomejs.dev/linter/r
 
 tests/furnishing_consumer_parity.test.ts:340:16 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     338 │ }
     339 │ function visibleGates(host: IWorld) {
@@ -1771,7 +1771,7 @@ tests/furnishing_consumer_parity.test.ts:340:16 ]8;;https://biomejs.dev/linter/
 
 tests/furnishing_consumer_parity.test.ts:381:18 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     379 │     expect(visibleGates(remote.client)).toEqual(expected);
     380 │     // A real apex item supplies the recipe identity the facade resolves.
@@ -1783,7 +1783,7 @@ tests/furnishing_consumer_parity.test.ts:381:18 ]8;;https://biomejs.dev/linter/
 
 tests/furnishing_consumer_parity.test.ts:418:16 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\  FIXABLE  ━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     416 │         remote.sync();
     417 │         expect(remote.client.equipment.mainhand).toBe(GEAR.id);
@@ -1804,7 +1804,7 @@ tests/furnishing_consumer_parity.test.ts:418:16 ]8;;https://biomejs.dev/linter/
 
 tests/furnishing_consumer_parity.test.ts:422:9 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     420 │         ITEMS[CONTROL_ID] = { ...ITEMS.minor_healing_potion, id: CONTROL_ID } as ItemDef;
     421 │         give(remote.sim, CONTROL_ID, remote.pid);
@@ -1816,7 +1816,7 @@ tests/furnishing_consumer_parity.test.ts:422:9 ]8;;https://biomejs.dev/linter/r
 
 tests/furnishing_consumer_parity.test.ts:428:16 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\  FIXABLE  ━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     426 │         expect(remote.client.inventory.map((slot) => slot.itemId)).toEqual([ID]);
     427 │         expect(remote.client.player.hp).toBe(remote.client.player.maxHp);
@@ -1837,7 +1837,7 @@ tests/furnishing_consumer_parity.test.ts:428:16 ]8;;https://biomejs.dev/linter/
 
 tests/furnishing_consumer_parity.test.ts:435:20 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     433 │   it('round-trips signed personal-bank contents and retains them through omitted deltas', () => {
     434 │     const remote = online();
@@ -1852,7 +1852,7 @@ tests/furnishing_consumer_parity.test.ts:435:20 ]8;;https://biomejs.dev/linter/
 
 tests/furnishing_consumer_parity.test.ts:529:20 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     527 │       expect(host.inventory).toEqual([{ itemId: ID, count: 1, instance: SIGNED }]);
     528 │       let eligibleId = GEAR.id;
@@ -1864,7 +1864,7 @@ tests/furnishing_consumer_parity.test.ts:529:20 ]8;;https://biomejs.dev/linter/
 
 tests/furnishing_consumer_parity.test.ts:530:47 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\  FIXABLE  ━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     528 │       let eligibleId = GEAR.id;
     529 │       const meta = sim.meta(pid)!;
@@ -1885,7 +1885,7 @@ tests/furnishing_consumer_parity.test.ts:530:47 ]8;;https://biomejs.dev/linter/
 
 tests/furnishing_consumer_parity.test.ts:550:24 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     548 │       if (row.name === 'unbind') {
     549 │         const station = sim.stationPlacements[0];
@@ -1897,7 +1897,7 @@ tests/furnishing_consumer_parity.test.ts:550:24 ]8;;https://biomejs.dev/linter/
 
 tests/furnishing_discovery.test.ts:118:21 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     116 │       const sim = world();
     117 │       const pid = sim.addPlayer('warrior', 'Finder');
@@ -1909,7 +1909,7 @@ tests/furnishing_discovery.test.ts:118:21 ]8;;https://biomejs.dev/linter/rules/
 
 tests/furnishing_discovery.test.ts:125:51 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     123 │       const slot = { itemId: FURNISHING.id, count: 1, instance: COPY };
     124 │       if (container === 'inventory') state.inventory = [slot];
@@ -1921,7 +1921,7 @@ tests/furnishing_discovery.test.ts:125:51 ]8;;https://biomejs.dev/linter/rules/
 
 tests/furnishing_discovery.test.ts:134:20 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     132 │         state: JSON.parse(JSON.stringify(state)) as CharacterState,
     133 │       });
@@ -1933,7 +1933,7 @@ tests/furnishing_discovery.test.ts:134:20 ]8;;https://biomejs.dev/linter/rules/
 
 tests/furnishing_discovery.test.ts:54:19 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     52 │     const sim = world();
     53 │     const pid = sim.addPlayer('warrior', 'Finder');
@@ -1945,7 +1945,7 @@ tests/furnishing_discovery.test.ts:54:19 ]8;;https://biomejs.dev/linter/rules/n
 
 tests/furnishing_discovery.test.ts:62:22 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     60 │     const loaded = world();
     61 │     const restoredPid = loaded.addPlayer('warrior', 'Veteran', { state });
@@ -1957,7 +1957,7 @@ tests/furnishing_discovery.test.ts:62:22 ]8;;https://biomejs.dev/linter/rules/n
 
 tests/furnishing_discovery.test.ts:77:20 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     75 │       const sim = world();
     76 │       const pid = sim.addPlayer('warrior', 'Finder');
@@ -1969,7 +1969,7 @@ tests/furnishing_discovery.test.ts:77:20 ]8;;https://biomejs.dev/linter/rules/n
 
 tests/furnishing_discovery.test.ts:102:24 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     100 │       const loaded = world();
     101 │       const loadedPid = loaded.addPlayer('warrior', 'Finder', { state: saved });
@@ -1981,7 +1981,7 @@ tests/furnishing_discovery.test.ts:102:24 ]8;;https://biomejs.dev/linter/rules/
 
 tests/furnishing_exchange_identity.test.ts:173:27 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     171 │   const persisted = await h.db.listingById('Claudemoon', out.listing.id);
     172 │   expect(persisted).not.toBeNull();
@@ -1993,7 +1993,7 @@ tests/furnishing_exchange_identity.test.ts:173:27 ]8;;https://biomejs.dev/linte
 
 tests/furnishing_exchange_identity.test.ts:287:12 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\  FIXABLE  ━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     285 │     if (view.kind !== 'ready') throw new Error('missing ready market');
     286 │     expect(view.browse.rows.map((row) => row.quality)).toEqual(['rare', 'legendary']);
@@ -2014,7 +2014,7 @@ tests/furnishing_exchange_identity.test.ts:287:12 ]8;;https://biomejs.dev/linte
 
 tests/furnishing_exchange_identity.test.ts:288:12 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\  FIXABLE  ━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     286 │     expect(view.browse.rows.map((row) => row.quality)).toEqual(['rare', 'legendary']);
     287 │     expect(view.browse.detail!.row.quality).toBe('rare');
@@ -2035,7 +2035,7 @@ tests/furnishing_exchange_identity.test.ts:288:12 ]8;;https://biomejs.dev/linte
 
 tests/furnishing_exchange_identity.test.ts:336:11 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\  FIXABLE  ━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     334 │       account: { accountId: 7, scope: 'read' },
     335 │     });
@@ -2056,7 +2056,7 @@ tests/furnishing_exchange_identity.test.ts:336:11 ]8;;https://biomejs.dev/linte
 
 tests/furnishing_exchange_identity.test.ts:357:7 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     355 │       'rift-forged',
     356 │       'customized',
@@ -2068,7 +2068,7 @@ tests/furnishing_exchange_identity.test.ts:357:7 ]8;;https://biomejs.dev/linter
 
 tests/furnishing_feast_admission.test.ts:125:20 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     123 │     (selection) => {
     124 │       const sim = world();
@@ -2080,7 +2080,7 @@ tests/furnishing_feast_admission.test.ts:125:20 ]8;;https://biomejs.dev/linter/
 
 tests/furnishing_feast_admission.test.ts:154:18 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     152 │   it('refuses a furnishing dish before consuming a serving and accepts the food control', () => {
     153 │     const sim = world();
@@ -2092,7 +2092,7 @@ tests/furnishing_feast_admission.test.ts:154:18 ]8;;https://biomejs.dev/linter/
 
 tests/furnishing_item_kind.test.ts:614:22 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\  FIXABLE  ━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     612 │         equipment: {},
     613 │         equipmentInstances: {},
@@ -2113,7 +2113,7 @@ tests/furnishing_item_kind.test.ts:614:22 ]8;;https://biomejs.dev/linter/rules/
 
 tests/furnishing_item_kind.test.ts:1051:12 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\  FIXABLE  ━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     1049 │     sim.bankWithdraw(0, 1);
     1050 │     expect(sim.inventory).toEqual(before);
@@ -2134,7 +2134,7 @@ tests/furnishing_item_kind.test.ts:1051:12 ]8;;https://biomejs.dev/linter/rules
 
 tests/furnishing_item_kind.test.ts:195:3 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     193 │   });
     194 │   sim.inventory.splice(0);
@@ -2146,7 +2146,7 @@ tests/furnishing_item_kind.test.ts:195:3 ]8;;https://biomejs.dev/linter/rules/n
 
 tests/furnishing_item_kind.test.ts:207:18 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     205 │ }
     206 │ function moveTo(sim: Sim, entityId: number, pid = sim.playerId): void {
@@ -2158,7 +2158,7 @@ tests/furnishing_item_kind.test.ts:207:18 ]8;;https://biomejs.dev/linter/rules/
 
 tests/furnishing_item_kind.test.ts:208:18 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     206 │ function moveTo(sim: Sim, entityId: number, pid = sim.playerId): void {
     207 │   const target = sim.entities.get(entityId)!;
@@ -2170,7 +2170,7 @@ tests/furnishing_item_kind.test.ts:208:18 ]8;;https://biomejs.dev/linter/rules/
 
 tests/furnishing_item_kind.test.ts:215:18 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     213 │ }
     214 │ function atBank(sim: Sim): void {
@@ -2182,7 +2182,7 @@ tests/furnishing_item_kind.test.ts:215:18 ]8;;https://biomejs.dev/linter/rules/
 
 tests/furnishing_item_kind.test.ts:453:11 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     451 │       kind === 'furnishing'
     452 │         ? FURNISHING
@@ -2194,7 +2194,7 @@ tests/furnishing_item_kind.test.ts:453:11 ]8;;https://biomejs.dev/linter/rules/
 
 tests/furnishing_item_kind.test.ts:459:32 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\  FIXABLE  ━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     457 │     const slots = defs.map((def) => ({ itemId: def.id, count: 1 })).reverse();
     458 │     slots.sort((a, b) => compareBagStacks(a, b, lookup));
@@ -2215,7 +2215,7 @@ tests/furnishing_item_kind.test.ts:459:32 ]8;;https://biomejs.dev/linter/rules/
 
 tests/furnishing_item_kind.test.ts:566:22 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     564 │     expect(errors(sim)).toEqual(['Only raid-won epics can be sundered.']);
     565 │     // Raid provenance is keyed by the shipped encounter source index.
@@ -2227,7 +2227,7 @@ tests/furnishing_item_kind.test.ts:566:22 ]8;;https://biomejs.dev/linter/rules/
 
 tests/furnishing_item_kind.test.ts:585:5 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\  FIXABLE  ━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     583 │       resultItemId: GEAR.id,
     584 │     });
@@ -2248,7 +2248,7 @@ tests/furnishing_item_kind.test.ts:585:5 ]8;;https://biomejs.dev/linter/rules/n
 
 tests/furnishing_item_kind.test.ts:603:22 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\  FIXABLE  ━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     601 │         equipment: {},
     602 │         equipmentInstances: {},
@@ -2269,7 +2269,7 @@ tests/furnishing_item_kind.test.ts:603:22 ]8;;https://biomejs.dev/linter/rules/
 
 tests/furnishing_item_kind.test.ts:631:20 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     629 │     for (const apply of [evaluateApplyEnchantAdmission, resolveApplyEnchant]) {
     630 │       const sim = makeSim();
@@ -2281,7 +2281,7 @@ tests/furnishing_item_kind.test.ts:631:20 ]8;;https://biomejs.dev/linter/rules/
 
 tests/furnishing_item_kind.test.ts:756:5 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\  FIXABLE  ━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     754 │   it('crafts a signed furnishing without power', () => {
     755 │     const sim = makeSim();
@@ -2302,7 +2302,7 @@ tests/furnishing_item_kind.test.ts:756:5 ]8;;https://biomejs.dev/linter/rules/n
 
 tests/furnishing_item_kind.test.ts:826:18 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     824 │   });
     825 │   it('refuses furnishing copies as tool-effect charms', () => {
@@ -2318,7 +2318,7 @@ tests/furnishing_item_kind.test.ts:826:18 ]8;;https://biomejs.dev/linter/rules/
 
 tests/furnishing_item_kind.test.ts:886:18 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     884 │     } as unknown as ItemDef;
     885 │     const sim = makeSim();
@@ -2330,7 +2330,7 @@ tests/furnishing_item_kind.test.ts:886:18 ]8;;https://biomejs.dev/linter/rules/
 
 tests/furnishing_item_kind.test.ts:910:19 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     909 │   function furnishingVendor(sim: Sim): number {
   > 910 │     const marla = [...sim.entities.values()].find(
@@ -2344,7 +2344,7 @@ tests/furnishing_item_kind.test.ts:910:19 ]8;;https://biomejs.dev/linter/rules/
 
 tests/furnishing_item_kind.test.ts:918:5 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     916 │     moveTo(sim, marla.id);
     917 │     sim.setPlayerLevel(20);
@@ -2356,7 +2356,7 @@ tests/furnishing_item_kind.test.ts:918:5 ]8;;https://biomejs.dev/linter/rules/n
 
 tests/furnishing_item_kind.test.ts:938:18 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     936 │     const sim = makeSim();
     937 │     const vendorId = furnishingVendor(sim);
@@ -2368,7 +2368,7 @@ tests/furnishing_item_kind.test.ts:938:18 ]8;;https://biomejs.dev/linter/rules/
 
 tests/furnishing_item_kind.test.ts:957:18 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     955 │     const sim = makeSim();
     956 │     const vendorId = furnishingVendor(sim);
@@ -2380,7 +2380,7 @@ tests/furnishing_item_kind.test.ts:957:18 ]8;;https://biomejs.dev/linter/rules/
 
 tests/furnishing_item_kind.test.ts:1045:20 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\  FIXABLE  ━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     1043 │     give(sim, ID, row.instance);
     1044 │     const before = structuredClone(sim.inventory);
@@ -2401,7 +2401,7 @@ tests/furnishing_item_kind.test.ts:1045:20 ]8;;https://biomejs.dev/linter/rules
 
 tests/furnishing_item_kind.test.ts:1048:12 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\  FIXABLE  ━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     1046 │     sim.bankDeposit(0, 1);
     1047 │     expect(sim.inventory).toEqual([]);
@@ -2422,7 +2422,7 @@ tests/furnishing_item_kind.test.ts:1048:12 ]8;;https://biomejs.dev/linter/rules
 
 tests/furnishing_market_catalog.test.ts:37:3 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     35 │   });
     36 │   sim.inventory.splice(0, sim.inventory.length, ...structuredClone(inventory));
@@ -2434,7 +2434,7 @@ tests/furnishing_market_catalog.test.ts:37:3 ]8;;https://biomejs.dev/linter/rul
 
 tests/furnishing_market_identity.test.ts:123:5 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     121 │     atMerchant(sim, buyer);
     122 │     sim.meta(buyer)!.inventory.splice(0);
@@ -2446,7 +2446,7 @@ tests/furnishing_market_identity.test.ts:123:5 ]8;;https://biomejs.dev/linter/r
 
 tests/furnishing_market_identity.test.ts:108:10 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\  FIXABLE  ━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     106 │   const listing = sim.marketListings.find((row) => !row.house && row.itemId === itemId);
     107 │   expect(listing).toBeDefined();
@@ -2467,7 +2467,7 @@ tests/furnishing_market_identity.test.ts:108:10 ]8;;https://biomejs.dev/linter/
 
 tests/furnishing_market_identity.test.ts:49:3 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\  FIXABLE  ━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     47 │   const pid = sim.addPlayer('warrior', 'Seller', { characterId: 701 });
     48 │   atMerchant(sim, pid);
@@ -2488,7 +2488,7 @@ tests/furnishing_market_identity.test.ts:49:3 ]8;;https://biomejs.dev/linter/ru
 
 tests/furnishing_market_identity.test.ts:50:3 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     48 │   atMerchant(sim, pid);
     49 │   sim.meta(pid)!.inventory.splice(0);
@@ -2500,7 +2500,7 @@ tests/furnishing_market_identity.test.ts:50:3 ]8;;https://biomejs.dev/linter/ru
 
 tests/furnishing_market_identity.test.ts:56:18 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     54 │   const merchant = [...sim.entities.values()].find((e) => e.templateId === 'the_merchant');
     55 │   expect(merchant).toBeDefined();
@@ -2512,7 +2512,7 @@ tests/furnishing_market_identity.test.ts:56:18 ]8;;https://biomejs.dev/linter/r
 
 tests/furnishing_market_identity.test.ts:57:21 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\  FIXABLE  ━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     55 │   expect(merchant).toBeDefined();
     56 │   const player = sim.entities.get(pid)!;
@@ -2533,7 +2533,7 @@ tests/furnishing_market_identity.test.ts:57:21 ]8;;https://biomejs.dev/linter/r
 
 tests/furnishing_market_identity.test.ts:91:3 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\  FIXABLE  ━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     89 │   const collect = root.querySelector<HTMLButtonElement>('[data-tab="collect"]');
     90 │   expect(collect).not.toBeNull();
@@ -2554,7 +2554,7 @@ tests/furnishing_market_identity.test.ts:91:3 ]8;;https://biomejs.dev/linter/ru
 
 tests/furnishing_market_identity.test.ts:103:3 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\  FIXABLE  ━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     101 │ ): InvSlot {
     102 │   const slot: InvSlot = { itemId, count: 1, instance: structuredClone(COPY) };
@@ -2575,7 +2575,7 @@ tests/furnishing_market_identity.test.ts:103:3 ]8;;https://biomejs.dev/linter/r
 
 tests/furnishing_market_identity.test.ts:122:5 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\  FIXABLE  ━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     120 │     const buyer = sim.addPlayer('warrior', 'Buyer');
     121 │     atMerchant(sim, buyer);
@@ -2596,7 +2596,7 @@ tests/furnishing_market_identity.test.ts:122:5 ]8;;https://biomejs.dev/linter/r
 
 tests/furnishing_market_identity.test.ts:109:17 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\  FIXABLE  ━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     107 │   expect(listing).toBeDefined();
     108 │   expect(listing!.instance).toEqual(COPY);
@@ -2617,7 +2617,7 @@ tests/furnishing_market_identity.test.ts:109:17 ]8;;https://biomejs.dev/linter/
 
 tests/furnishing_market_identity.test.ts:126:12 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\  FIXABLE  ━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     124 │     const furnishing = purchase(sim, sellerId, buyer, FURNISHING.id, 1000);
     125 │     const gear = purchase(sim, sellerId, buyer, GEAR.id, 2000);
@@ -2638,7 +2638,7 @@ tests/furnishing_market_identity.test.ts:126:12 ]8;;https://biomejs.dev/linter/
 
 tests/furnishing_market_identity.test.ts:127:12 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\  FIXABLE  ━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     125 │     const gear = purchase(sim, sellerId, buyer, GEAR.id, 2000);
     126 │     expect(sim.meta(buyer)!.inventory).toEqual([furnishing, gear]);
@@ -2659,7 +2659,7 @@ tests/furnishing_market_identity.test.ts:127:12 ]8;;https://biomejs.dev/linter/
 
 tests/furnishing_market_identity.test.ts:128:12 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\  FIXABLE  ━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     126 │     expect(sim.meta(buyer)!.inventory).toEqual([furnishing, gear]);
     127 │     expect(sim.meta(buyer)!.copper).toBe(7000);
@@ -2680,7 +2680,7 @@ tests/furnishing_market_identity.test.ts:128:12 ]8;;https://biomejs.dev/linter/
 
 tests/furnishing_market_identity.test.ts:129:18 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     127 │     expect(sim.meta(buyer)!.copper).toBe(7000);
     128 │     expect(sim.meta(sellerId)!.copper).toBe(0);
@@ -2692,7 +2692,7 @@ tests/furnishing_market_identity.test.ts:129:18 ]8;;https://biomejs.dev/linter/
 
 tests/furnishing_market_identity.test.ts:146:20 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     144 │     const restoredSeller = seller(restored);
     145 │     restored.loadMarket(saved);
@@ -2704,7 +2704,7 @@ tests/furnishing_market_identity.test.ts:146:20 ]8;;https://biomejs.dev/linter/
 
 tests/furnishing_market_identity.test.ts:166:12 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\  FIXABLE  ━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     164 │     expect(root.querySelectorAll('.mkt-sale-buyer')).toHaveLength(2);
     165 │     restored.marketCollect(restoredSeller);
@@ -2725,7 +2725,7 @@ tests/furnishing_market_identity.test.ts:166:12 ]8;;https://biomejs.dev/linter/
 
 tests/furnishing_market_identity.test.ts:167:12 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\  FIXABLE  ━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     165 │     restored.marketCollect(restoredSeller);
     166 │     expect(restored.meta(restoredSeller)!.copper).toBe(2850);
@@ -2746,7 +2746,7 @@ tests/furnishing_market_identity.test.ts:167:12 ]8;;https://biomejs.dev/linter/
 
 tests/furnishing_market_identity.test.ts:105:10 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\  FIXABLE  ━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     103 │   sim.meta(sellerId)!.inventory.push(structuredClone(slot));
     104 │   sim.marketListInstance(itemId, price, COPY, sellerId);
@@ -2767,7 +2767,7 @@ tests/furnishing_market_identity.test.ts:105:10 ]8;;https://biomejs.dev/linter/
 
 tests/furnishing_market_identity.test.ts:175:5 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\  FIXABLE  ━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     173 │     const buyer = sim.addPlayer('warrior', 'Buyer');
     174 │     atMerchant(sim, buyer);
@@ -2788,7 +2788,7 @@ tests/furnishing_market_identity.test.ts:175:5 ]8;;https://biomejs.dev/linter/r
 
 tests/furnishing_market_identity.test.ts:111:20 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\  FIXABLE  ━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     109 │   sim.marketBuy(listing!.id, buyer);
     110 │   expect(sim.marketListings.some((row) => row.id === listing!.id)).toBe(false);
@@ -2809,7 +2809,7 @@ tests/furnishing_market_identity.test.ts:111:20 ]8;;https://biomejs.dev/linter/
 
 tests/furnishing_market_identity.test.ts:110:54 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\  FIXABLE  ━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     108 │   expect(listing!.instance).toEqual(COPY);
     109 │   sim.marketBuy(listing!.id, buyer);
@@ -2830,7 +2830,7 @@ tests/furnishing_market_identity.test.ts:110:54 ]8;;https://biomejs.dev/linter/
 
 tests/furnishing_perfecting_collection.test.ts:87:16 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     85 │     },
     86 │   });
@@ -2842,7 +2842,7 @@ tests/furnishing_perfecting_collection.test.ts:87:16 ]8;;https://biomejs.dev/li
 
 tests/furnishing_persistence.test.ts:77:16 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\  FIXABLE  ━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     75 │         sim.bankDeposit(0, 1, pid);
     76 │         expect(copies(sim, pid)).toEqual([]);
@@ -2863,7 +2863,7 @@ tests/furnishing_persistence.test.ts:77:16 ]8;;https://biomejs.dev/linter/rules
 
 tests/furnishing_persistence.test.ts:137:7 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\  FIXABLE  ━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     135 │       const recipient = sim.addPlayer('mage', 'Receiver', { characterId: 702 });
     136 │       const recipientState = savedCharacter(sim, recipient);
@@ -2884,7 +2884,7 @@ tests/furnishing_persistence.test.ts:137:7 ]8;;https://biomejs.dev/linter/rules
 
 tests/furnishing_persistence.test.ts:153:22 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     151 │             },
     152 │       );
@@ -2896,7 +2896,7 @@ tests/furnishing_persistence.test.ts:153:22 ]8;;https://biomejs.dev/linter/rule
 
 tests/furnishing_persistence.test.ts:186:7 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\  FIXABLE  ━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     184 │       const sim = world();
     185 │       const pid = keeper(sim);
@@ -2917,7 +2917,7 @@ tests/furnishing_persistence.test.ts:186:7 ]8;;https://biomejs.dev/linter/rules
 
 tests/furnishing_persistence.test.ts:188:50 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     186 │       sim.meta(pid)!.inventory.push(structuredClone(COPY));
     187 │       moveTo(sim, pid, sim.market.merchantIds[0]);
@@ -2929,7 +2929,7 @@ tests/furnishing_persistence.test.ts:188:50 ]8;;https://biomejs.dev/linter/rule
 
 tests/furnishing_persistence.test.ts:189:23 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     187 │       moveTo(sim, pid, sim.market.merchantIds[0]);
     188 │       sim.marketListInstance(FURNISHING.id, 100, COPY.instance!, pid);
@@ -2941,7 +2941,7 @@ tests/furnishing_persistence.test.ts:189:23 ]8;;https://biomejs.dev/linter/rule
 
 tests/furnishing_persistence.test.ts:79:42 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     77 │         expect(sim.meta(pid)!.bank.inventory).toEqual([COPY]);
     78 │       }
@@ -2953,7 +2953,7 @@ tests/furnishing_persistence.test.ts:79:42 ]8;;https://biomejs.dev/linter/rules
 
 tests/furnishing_persistence.test.ts:88:16 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\  FIXABLE  ━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     86 │       expect(save).toEqual(savedBefore);
     87 │       if (container === 'personal bank') {
@@ -2974,7 +2974,7 @@ tests/furnishing_persistence.test.ts:88:16 ]8;;https://biomejs.dev/linter/rules
 
 tests/furnishing_persistence.test.ts:92:16 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\  FIXABLE  ━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     90 │         atBank(restored, restoredPid);
     91 │         restored.bankWithdraw(0, 1, restoredPid);
@@ -2995,7 +2995,7 @@ tests/furnishing_persistence.test.ts:92:16 ]8;;https://biomejs.dev/linter/rules
 
 tests/furnishing_persistence.test.ts:107:5 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\  FIXABLE  ━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     105 │     sim.setPlayerGuildMembership(pid, { guildId: 7, rank: 'officer' });
     106 │     sim.loadGuildBank(7, { inventory: [], treasury: 0, purchasedSlots: 24 });
@@ -3016,7 +3016,7 @@ tests/furnishing_persistence.test.ts:107:5 ]8;;https://biomejs.dev/linter/rules
 
 tests/furnishing_persistence.test.ts:110:12 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\  FIXABLE  ━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     108 │     sim.guildBankDepositFor(pid, 0, 1);
     109 │     expect(copies(sim, pid)).toEqual([]);
@@ -3037,7 +3037,7 @@ tests/furnishing_persistence.test.ts:110:12 ]8;;https://biomejs.dev/linter/rule
 
 tests/furnishing_persistence.test.ts:120:12 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\  FIXABLE  ━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     118 │     restored.setPlayerGuildMembership(restoredPid, { guildId: 7, rank: 'officer' });
     119 │     restored.loadGuildBank(7, book);
@@ -3058,7 +3058,7 @@ tests/furnishing_persistence.test.ts:120:12 ]8;;https://biomejs.dev/linter/rule
 
 tests/furnishing_persistence.test.ts:35:5 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\  FIXABLE  ━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     33 │   const pid = sim.addPlayer('warrior', 'Keeper', { characterId: CHARACTER_ID, state });
     34 │   if (!state) {
@@ -3079,7 +3079,7 @@ tests/furnishing_persistence.test.ts:35:5 ]8;;https://biomejs.dev/linter/rules/
 
 tests/furnishing_persistence.test.ts:36:5 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     34 │   if (!state) {
     35 │     sim.meta(pid)!.inventory.splice(0);
@@ -3091,7 +3091,7 @@ tests/furnishing_persistence.test.ts:36:5 ]8;;https://biomejs.dev/linter/rules/
 
 tests/furnishing_persistence.test.ts:41:18 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     39 │ }
     40 │ function moveTo(sim: Sim, pid: number, targetId: number): void {
@@ -3103,7 +3103,7 @@ tests/furnishing_persistence.test.ts:41:18 ]8;;https://biomejs.dev/linter/rules
 
 tests/furnishing_persistence.test.ts:43:18 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     41 │   const target = sim.entities.get(targetId)!;
     42 │   expect(target).toBeDefined();
@@ -3115,7 +3115,7 @@ tests/furnishing_persistence.test.ts:43:18 ]8;;https://biomejs.dev/linter/rules
 
 tests/furnishing_persistence.test.ts:49:18 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     47 │ }
     48 │ function atBank(sim: Sim, pid: number): void {
@@ -3130,7 +3130,7 @@ tests/furnishing_persistence.test.ts:49:18 ]8;;https://biomejs.dev/linter/rules
 
 tests/furnishing_persistence.test.ts:55:10 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\  FIXABLE  ━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     53 │ }
     54 │ function copies(sim: Sim, pid: number): InvSlot[] {
@@ -3151,7 +3151,7 @@ tests/furnishing_persistence.test.ts:55:10 ]8;;https://biomejs.dev/linter/rules
 
 tests/furnishing_persistence.test.ts:63:20 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     61 │   const save = sim.serializeCharacter(pid);
     62 │   expect(save).not.toBeNull();
@@ -3163,7 +3163,7 @@ tests/furnishing_persistence.test.ts:63:20 ]8;;https://biomejs.dev/linter/rules
 
 tests/furnishing_persistence.test.ts:72:7 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\  FIXABLE  ━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     70 │       const sim = world();
     71 │       const pid = keeper(sim);
@@ -3184,7 +3184,7 @@ tests/furnishing_persistence.test.ts:72:7 ]8;;https://biomejs.dev/linter/rules/
 
 tests/furnishing_persistence.test.ts:123:12 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\  FIXABLE  ━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     121 │     atBank(restored, restoredPid);
     122 │     restored.guildBankWithdrawFor(restoredPid, 0, 1);
@@ -3205,7 +3205,7 @@ tests/furnishing_persistence.test.ts:123:12 ]8;;https://biomejs.dev/linter/rule
 
 tests/furnishing_rift_admission.test.ts:102:3 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\  FIXABLE  ━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     100 │   // Inject the malformed live copy deliberately: the save loader already rejects
     101 │   // Rift payloads on non-shell ids, but command admission must hold independently.
@@ -3229,7 +3229,7 @@ tests/furnishing_rift_admission.test.ts:102:3 ]8;;https://biomejs.dev/linter/ru
 
 tests/furnishing_rift_admission.test.ts:106:7 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\  FIXABLE  ━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     104 │     .inventory.splice(
     105 │       0,
@@ -3250,7 +3250,7 @@ tests/furnishing_rift_admission.test.ts:106:7 ]8;;https://biomejs.dev/linter/ru
 
 tests/furnishing_rift_admission.test.ts:146:16 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     144 │   expect(sim.countItem(RIFT_ESSENCE_ITEM_ID, pid)).toBe(row.essence);
     145 │   expect(sim.countItem(GEM_ID, pid)).toBe(row.gems);
@@ -3262,7 +3262,7 @@ tests/furnishing_rift_admission.test.ts:146:16 ]8;;https://biomejs.dev/linter/r
 
 tests/furnishing_rift_admission.test.ts:146:16 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\  FIXABLE  ━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     144 │   expect(sim.countItem(RIFT_ESSENCE_ITEM_ID, pid)).toBe(row.essence);
     145 │   expect(sim.countItem(GEM_ID, pid)).toBe(row.gems);
@@ -3283,7 +3283,7 @@ tests/furnishing_rift_admission.test.ts:146:16 ]8;;https://biomejs.dev/linter/r
 
 tests/furnishing_rift_admission.test.ts:172:27 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\  FIXABLE  ━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     170 │     expect(sim.drainEvents()).toEqual([{ type: 'riftForgeResult', pid, ...refusal(row.action) }]);
     171 │
@@ -3304,7 +3304,7 @@ tests/furnishing_rift_admission.test.ts:172:27 ]8;;https://biomejs.dev/linter/r
 
 tests/furnishing_rift_admission.test.ts:181:12 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\  FIXABLE  ━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     179 │     expectControl(sim, pid, controlId, row);
     180 │     expect(sim.inventory[0]).toEqual(copyBefore);
@@ -3325,7 +3325,7 @@ tests/furnishing_rift_admission.test.ts:181:12 ]8;;https://biomejs.dev/linter/r
 
 tests/furnishing_rift_admission.test.ts:263:27 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\  FIXABLE  ━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     261 │     ]);
     262 │
@@ -3346,7 +3346,7 @@ tests/furnishing_rift_admission.test.ts:263:27 ]8;;https://biomejs.dev/linter/r
 
 tests/furnishing_rift_admission.test.ts:270:12 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\  FIXABLE  ━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     268 │     expect(await controlOutcome).toBe(true);
     269 │     expectControl(sim, pid, controlId, row);
@@ -3367,7 +3367,7 @@ tests/furnishing_rift_admission.test.ts:270:12 ]8;;https://biomejs.dev/linter/r
 
 tests/furnishing_rift_admission.test.ts:271:38 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\  FIXABLE  ━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     269 │     expectControl(sim, pid, controlId, row);
     270 │     expect(sim.meta(pid)!.wireRev).toBeGreaterThan(wireRevBefore);
@@ -3388,7 +3388,7 @@ tests/furnishing_rift_admission.test.ts:271:38 ]8;;https://biomejs.dev/linter/r
 
 tests/game_state_metrics.test.ts:1512:76 ]8;;https://biomejs.dev/linter/rules/no-explicit-any\lint/suspicious/noExplicitAny]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Unexpected any. Specify a different type.
+  ! Unexpected any. Specify a different type.
 
     1510 │     setGameMetricsCounters(rec.sink);
     1511 │     const session = join(server, fakeWs(), 100, 1, 'Ayla');
@@ -3402,7 +3402,7 @@ tests/game_state_metrics.test.ts:1512:76 ]8;;https://biomejs.dev/linter/rules/n
 
 tests/game_state_metrics.test.ts:947:51 ]8;;https://biomejs.dev/linter/rules/no-explicit-any\lint/suspicious/noExplicitAny]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Unexpected any. Specify a different type.
+  ! Unexpected any. Specify a different type.
 
     945 │ function placeOnNpc(server: GameServer, pid: number, templateId: string): void {
     946 │   const sim = server.sim as unknown as Record<string, any>;
@@ -3416,7 +3416,7 @@ tests/game_state_metrics.test.ts:947:51 ]8;;https://biomejs.dev/linter/rules/no
 
 tests/game_state_metrics.test.ts:989:76 ]8;;https://biomejs.dev/linter/rules/no-explicit-any\lint/suspicious/noExplicitAny]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Unexpected any. Specify a different type.
+  ! Unexpected any. Specify a different type.
 
     987 │     setGameMetricsCounters(rec.sink);
     988 │     const session = join(server, fakeWs(), 100, 1, 'Ayla');
@@ -3430,7 +3430,7 @@ tests/game_state_metrics.test.ts:989:76 ]8;;https://biomejs.dev/linter/rules/no
 
 tests/game_state_metrics.test.ts:1007:76 ]8;;https://biomejs.dev/linter/rules/no-explicit-any\lint/suspicious/noExplicitAny]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Unexpected any. Specify a different type.
+  ! Unexpected any. Specify a different type.
 
     1005 │     setGameMetricsCounters(rec.sink);
     1006 │     const session = join(server, fakeWs(), 100, 1, 'Ayla');
@@ -3444,7 +3444,7 @@ tests/game_state_metrics.test.ts:1007:76 ]8;;https://biomejs.dev/linter/rules/n
 
 tests/game_state_metrics.test.ts:1010:64 ]8;;https://biomejs.dev/linter/rules/no-explicit-any\lint/suspicious/noExplicitAny]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Unexpected any. Specify a different type.
+  ! Unexpected any. Specify a different type.
 
     1008 │     placeOnNpc(server, session.pid, 'trader_wilkes');
     1009 │     meta.copper = 500;
@@ -3458,7 +3458,7 @@ tests/game_state_metrics.test.ts:1010:64 ]8;;https://biomejs.dev/linter/rules/n
 
 tests/game_state_metrics.test.ts:1011:11 ]8;;https://biomejs.dev/linter/rules/no-explicit-any\lint/suspicious/noExplicitAny]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Unexpected any. Specify a different type.
+  ! Unexpected any. Specify a different type.
 
     1009 │     meta.copper = 500;
     1010 │     const npcId = [...(server.sim as unknown as Record<string, any>).entities.values()].find(
@@ -3472,7 +3472,7 @@ tests/game_state_metrics.test.ts:1011:11 ]8;;https://biomejs.dev/linter/rules/n
 
 tests/game_state_metrics.test.ts:1046:76 ]8;;https://biomejs.dev/linter/rules/no-explicit-any\lint/suspicious/noExplicitAny]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Unexpected any. Specify a different type.
+  ! Unexpected any. Specify a different type.
 
     1044 │     setGameMetricsCounters(rec.sink);
     1045 │     const session = join(server, fakeWs(), 100, 1, 'Ayla');
@@ -3486,7 +3486,7 @@ tests/game_state_metrics.test.ts:1046:76 ]8;;https://biomejs.dev/linter/rules/n
 
 tests/game_state_metrics.test.ts:1049:64 ]8;;https://biomejs.dev/linter/rules/no-explicit-any\lint/suspicious/noExplicitAny]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Unexpected any. Specify a different type.
+  ! Unexpected any. Specify a different type.
 
     1047 │     placeOnNpc(server, session.pid, 'trader_wilkes');
     1048 │     meta.copper = 500;
@@ -3500,7 +3500,7 @@ tests/game_state_metrics.test.ts:1049:64 ]8;;https://biomejs.dev/linter/rules/n
 
 tests/game_state_metrics.test.ts:1050:11 ]8;;https://biomejs.dev/linter/rules/no-explicit-any\lint/suspicious/noExplicitAny]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Unexpected any. Specify a different type.
+  ! Unexpected any. Specify a different type.
 
     1048 │     meta.copper = 500;
     1049 │     const npcId = [...(server.sim as unknown as Record<string, any>).entities.values()].find(
@@ -3514,7 +3514,7 @@ tests/game_state_metrics.test.ts:1050:11 ]8;;https://biomejs.dev/linter/rules/n
 
 tests/game_state_metrics.test.ts:1083:76 ]8;;https://biomejs.dev/linter/rules/no-explicit-any\lint/suspicious/noExplicitAny]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Unexpected any. Specify a different type.
+  ! Unexpected any. Specify a different type.
 
     1081 │     setGameMetricsCounters(rec.sink);
     1082 │     const session = join(server, fakeWs(), 100, 1, 'Ayla');
@@ -3528,7 +3528,7 @@ tests/game_state_metrics.test.ts:1083:76 ]8;;https://biomejs.dev/linter/rules/n
 
 tests/game_state_metrics.test.ts:1108:42 ]8;;https://biomejs.dev/linter/rules/no-explicit-any\lint/suspicious/noExplicitAny]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Unexpected any. Specify a different type.
+  ! Unexpected any. Specify a different type.
 
     1106 │     // so a starter-zone bare-hands node and a tool-gated vein in the same
     1107 │     // zone land on different series.
@@ -3542,7 +3542,7 @@ tests/game_state_metrics.test.ts:1108:42 ]8;;https://biomejs.dev/linter/rules/n
 
 tests/game_state_metrics.test.ts:1132:42 ]8;;https://biomejs.dev/linter/rules/no-explicit-any\lint/suspicious/noExplicitAny]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Unexpected any. Specify a different type.
+  ! Unexpected any. Specify a different type.
 
     1130 │     // hardcoded): ONE zone carrying two different tiers must produce two
     1131 │     // different label pairs, which is the whole R31 traveler-versus-capped read.
@@ -3556,7 +3556,7 @@ tests/game_state_metrics.test.ts:1132:42 ]8;;https://biomejs.dev/linter/rules/n
 
 tests/game_state_metrics.test.ts:1152:42 ]8;;https://biomejs.dev/linter/rules/no-explicit-any\lint/suspicious/noExplicitAny]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Unexpected any. Specify a different type.
+  ! Unexpected any. Specify a different type.
 
     1150 │     // deed and levelup arms in this same loop filter on this.clients; the
     1151 │     // harvest counter deliberately does not, because it measures the world.
@@ -3570,7 +3570,7 @@ tests/game_state_metrics.test.ts:1152:42 ]8;;https://biomejs.dev/linter/rules/n
 
 tests/game_state_metrics.test.ts:1254:76 ]8;;https://biomejs.dev/linter/rules/no-explicit-any\lint/suspicious/noExplicitAny]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Unexpected any. Specify a different type.
+  ! Unexpected any. Specify a different type.
 
     1252 │     const entity = server.sim.entities.get(session.pid);
     1253 │     if (!entity) throw new Error('no entity for the joined session');
@@ -3584,7 +3584,7 @@ tests/game_state_metrics.test.ts:1254:76 ]8;;https://biomejs.dev/linter/rules/n
 
 tests/game_state_metrics.test.ts:1518:57 ]8;;https://biomejs.dev/linter/rules/no-explicit-any\lint/suspicious/noExplicitAny]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Unexpected any. Specify a different type.
+  ! Unexpected any. Specify a different type.
 
     1516 │     // command that moved coin and then blew up must not be silently unbooked.
     1517 │     // Stub the sim call the 'buy' arm makes so it debits and then throws.
@@ -3598,7 +3598,7 @@ tests/game_state_metrics.test.ts:1518:57 ]8;;https://biomejs.dev/linter/rules/n
 
 tests/game_state_metrics.test.ts:1540:57 ]8;;https://biomejs.dev/linter/rules/no-explicit-any\lint/suspicious/noExplicitAny]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Unexpected any. Specify a different type.
+  ! Unexpected any. Specify a different type.
 
     1538 │     setGameMetricsCounters(rec.sink);
     1539 │     const session = join(server, fakeWs(), 100, 1, 'Ayla');
@@ -3612,7 +3612,7 @@ tests/game_state_metrics.test.ts:1540:57 ]8;;https://biomejs.dev/linter/rules/n
 
 tests/game_state_metrics.test.ts:1541:76 ]8;;https://biomejs.dev/linter/rules/no-explicit-any\lint/suspicious/noExplicitAny]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Unexpected any. Specify a different type.
+  ! Unexpected any. Specify a different type.
 
     1539 │     const session = join(server, fakeWs(), 100, 1, 'Ayla');
     1540 │     const sim = server.sim as unknown as Record<string, any>;
@@ -3626,7 +3626,7 @@ tests/game_state_metrics.test.ts:1541:76 ]8;;https://biomejs.dev/linter/rules/n
 
 tests/game_state_metrics.test.ts:946:55 ]8;;https://biomejs.dev/linter/rules/no-explicit-any\lint/suspicious/noExplicitAny]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Unexpected any. Specify a different type.
+  ! Unexpected any. Specify a different type.
 
     944 │ /** Put the player on top of an NPC so the vendor proximity checks pass. */
     945 │ function placeOnNpc(server: GameServer, pid: number, templateId: string): void {
@@ -3640,7 +3640,7 @@ tests/game_state_metrics.test.ts:946:55 ]8;;https://biomejs.dev/linter/rules/no
 
 tests/guild_bank_window_instance_marker.test.ts:307:27 ]8;;https://biomejs.dev/linter/rules/no-template-curly-in-string\lint/suspicious/noTemplateCurlyInString]8;;\ ━━━━━━━━━━
 
-  ⚠ Unexpected template string placeholder.
+  ! Unexpected template string placeholder.
 
     305 │     expect(painter).toContain('bagFineMark(slot.itemId)');
     306 │     expect(painter).toContain('bagCornerMark(glyphKind, null, fineMark)');
@@ -3654,7 +3654,7 @@ tests/guild_bank_window_instance_marker.test.ts:307:27 ]8;;https://biomejs.dev/
 
 tests/helpers/bare_client.ts:291:9 ]8;;https://biomejs.dev/linter/rules/no-explicit-any\lint/suspicious/noExplicitAny]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Unexpected any. Specify a different type.
+  ! Unexpected any. Specify a different type.
 
     290 │ export interface FakeClient {
   > 291 │   sent: any[];
@@ -3667,7 +3667,7 @@ tests/helpers/bare_client.ts:291:9 ]8;;https://biomejs.dev/linter/rules/no-expl
 
 tests/heroic_vendor.test.ts:539:36 ]8;;https://biomejs.dev/linter/rules/no-explicit-any\lint/suspicious/noExplicitAny]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Unexpected any. Specify a different type.
+  ! Unexpected any. Specify a different type.
 
     537 │     sim.setDungeonDifficulty('heroic', pid);
     538 │     enterDungeon(sim.ctx, 'hollow_crypt', pid);
@@ -3681,7 +3681,7 @@ tests/heroic_vendor.test.ts:539:36 ]8;;https://biomejs.dev/linter/rules/no-expl
 
 tests/heroic_vendor.test.ts:324:36 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\  FIXABLE  ━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     322 │         // was missing from the union above.
     323 │         expect(taught, `${itemId} teaches ${def.teachesRecipeId}`).toBeDefined();
@@ -3702,7 +3702,7 @@ tests/heroic_vendor.test.ts:324:36 ]8;;https://biomejs.dev/linter/rules/no-non-
 
 tests/heroic_vendor.test.ts:325:50 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\  FIXABLE  ━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     323 │         expect(taught, `${itemId} teaches ${def.teachesRecipeId}`).toBeDefined();
     324 │         const taughtOutput = ITEMS[taught!.resultItemId];
@@ -3723,7 +3723,7 @@ tests/heroic_vendor.test.ts:325:50 ]8;;https://biomejs.dev/linter/rules/no-non-
 
 tests/heroic_vendor.test.ts:438:29 ]8;;https://biomejs.dev/linter/rules/no-explicit-any\lint/suspicious/noExplicitAny]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Unexpected any. Specify a different type.
+  ! Unexpected any. Specify a different type.
 
     436 │     expect(sim.countItem(HEROIC_MARK_ITEM_ID, pid)).toBe(3); // 15 - 12
     437 │     expect(
@@ -3737,7 +3737,7 @@ tests/heroic_vendor.test.ts:438:29 ]8;;https://biomejs.dev/linter/rules/no-expl
 
 tests/heroic_vendor.test.ts:26:36 ]8;;https://biomejs.dev/linter/rules/no-explicit-any\lint/suspicious/noExplicitAny]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Unexpected any. Specify a different type.
+  ! Unexpected any. Specify a different type.
 
     24 │ import { VENDOR_TEST_WORLD } from './sim_shared';
     25 │
@@ -3751,7 +3751,7 @@ tests/heroic_vendor.test.ts:26:36 ]8;;https://biomejs.dev/linter/rules/no-expli
 
 tests/heroic_vendor.test.ts:559:39 ]8;;https://biomejs.dev/linter/rules/no-explicit-any\lint/suspicious/noExplicitAny]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Unexpected any. Specify a different type.
+  ! Unexpected any. Specify a different type.
 
     557 │     expect(sim.countItem(HEROIC_MARK_ITEM_ID, pid)).toBe(1);
     558 │     expect(
@@ -3765,7 +3765,7 @@ tests/heroic_vendor.test.ts:559:39 ]8;;https://biomejs.dev/linter/rules/no-expl
 
 tests/heroic_vendor.test.ts:584:18 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     582 │     const pid = sim.addPlayer('warrior', 'Resetter');
     583 │     const morthen = killHeroicMorthen(sim, pid);
@@ -3777,7 +3777,7 @@ tests/heroic_vendor.test.ts:584:18 ]8;;https://biomejs.dev/linter/rules/no-non-
 
 tests/heroic_vendor.test.ts:601:18 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     599 │     const sim = makeSim(25);
     600 │     const pid = sim.addPlayer('warrior', 'Circuit');
@@ -3789,7 +3789,7 @@ tests/heroic_vendor.test.ts:601:18 ]8;;https://biomejs.dev/linter/rules/no-non-
 
 tests/heroic_vendor.test.ts:612:38 ]8;;https://biomejs.dev/linter/rules/no-explicit-any\lint/suspicious/noExplicitAny]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Unexpected any. Specify a different type.
+  ! Unexpected any. Specify a different type.
 
     610 │     for (const dungeonId of circuit) {
     611 │       enterDungeon(sim.ctx, dungeonId, pid);
@@ -3803,7 +3803,7 @@ tests/heroic_vendor.test.ts:612:38 ]8;;https://biomejs.dev/linter/rules/no-expl
 
 tests/heroic_vendor.test.ts:633:19 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     631 │     const sim = makeSim(23);
     632 │     const pid = sim.addPlayer('warrior', 'Saver');
@@ -3815,7 +3815,7 @@ tests/heroic_vendor.test.ts:633:19 ]8;;https://biomejs.dev/linter/rules/no-non-
 
 tests/heroic_vendor.test.ts:638:45 ]8;;https://biomejs.dev/linter/rules/no-explicit-any\lint/suspicious/noExplicitAny]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Unexpected any. Specify a different type.
+  ! Unexpected any. Specify a different type.
 
     636 │     const sim2 = makeSim(24);
     637 │     const pid2 = sim2.addPlayer('warrior', 'Saver', { state });
@@ -3829,7 +3829,7 @@ tests/heroic_vendor.test.ts:638:45 ]8;;https://biomejs.dev/linter/rules/no-expl
 
 tests/heroic_vendor.test.ts:27:42 ]8;;https://biomejs.dev/linter/rules/no-explicit-any\lint/suspicious/noExplicitAny]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Unexpected any. Specify a different type.
+  ! Unexpected any. Specify a different type.
 
     26 │ type AnySim = Sim & Record<string, any>;
   > 27 │ type AnyEntity = Entity & Record<string, any>;
@@ -3842,7 +3842,7 @@ tests/heroic_vendor.test.ts:27:42 ]8;;https://biomejs.dev/linter/rules/no-expli
 
 tests/heroic_vendor.test.ts:264:47 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\  FIXABLE  ━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     262 │         const taught = ALL_RECIPES.find((r) => r.id === def.teachesRecipeId);
     263 │         expect(taught, `${itemId} must teach a real recipe`).toBeDefined();
@@ -3863,7 +3863,7 @@ tests/heroic_vendor.test.ts:264:47 ]8;;https://biomejs.dev/linter/rules/no-non-
 
 tests/heroic_vendor.test.ts:50:32 ]8;;https://biomejs.dev/linter/rules/no-explicit-any\lint/suspicious/noExplicitAny]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Unexpected any. Specify a different type.
+  ! Unexpected any. Specify a different type.
 
     49 │ function errorTexts(sim: AnySim): string[] {
   > 50 │   return (sim.drainEvents() as any[]).flatMap((e) => (e.type === 'error' ? [e.text] : []));
@@ -3876,7 +3876,7 @@ tests/heroic_vendor.test.ts:50:32 ]8;;https://biomejs.dev/linter/rules/no-expli
 
 tests/perfecting_bonus.test.ts:51:21 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     49 │       const def = CRUCIBLE_COLLECTION_ITEMS[recipe.resultItemId];
     50 │       expect(recipe.level).toBe(29);
@@ -3888,7 +3888,7 @@ tests/perfecting_bonus.test.ts:51:21 ]8;;https://biomejs.dev/linter/rules/no-no
 
 tests/perfecting_bonus.test.ts:101:29 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\  FIXABLE  ━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
      99 │       meta.archetype.activeArchetype = 'armorcrafting';
     100 │       meta.knownRecipes.add(recipe.id);
@@ -3909,7 +3909,7 @@ tests/perfecting_bonus.test.ts:101:29 ]8;;https://biomejs.dev/linter/rules/no-n
 
 tests/professions_blob_growth.test.ts:772:13 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     770 │ function armNonProfessionsFields(sim: Sim): void {
     771 │   const meta = sim.players.get(sim.playerId) as PlayerMeta;
@@ -3921,7 +3921,7 @@ tests/professions_blob_growth.test.ts:772:13 ]8;;https://biomejs.dev/linter/rul
 
 tests/professions_blob_growth.test.ts:942:44 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     940 │       expect(inst?.perfectingBound, `${slot} keeps permanent binding`).toBe(true);
     941 │       expect(inst?.perfectingBonus).toEqual(
@@ -3933,7 +3933,7 @@ tests/professions_blob_growth.test.ts:942:44 ]8;;https://biomejs.dev/linter/rul
 
 tests/professions_blob_growth.test.ts:1635:13 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     1633 │   armNonProfessionsFields(sim);
     1634 │   const meta = sim.players.get(sim.playerId) as PlayerMeta;
@@ -3945,7 +3945,7 @@ tests/professions_blob_growth.test.ts:1635:13 ]8;;https://biomejs.dev/linter/ru
 
 tests/professions_blob_growth.test.ts:1996:48 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     1994 │       expect(row.instance?.perfected).toBe(true);
     1995 │       expect(row.instance?.perfectingBonus).toEqual(
@@ -3957,7 +3957,7 @@ tests/professions_blob_growth.test.ts:1996:48 ]8;;https://biomejs.dev/linter/ru
 
 tests/professions_craft_xp.test.ts:74:40 ]8;;https://biomejs.dev/linter/rules/no-explicit-any\lint/suspicious/noExplicitAny]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Unexpected any. Specify a different type.
+  ! Unexpected any. Specify a different type.
 
     72 │     const before = meta.lifetimeXp;
     73 │
@@ -3971,7 +3971,7 @@ tests/professions_craft_xp.test.ts:74:40 ]8;;https://biomejs.dev/linter/rules/n
 
 tests/professions_craft_xp.test.ts:90:41 ]8;;https://biomejs.dev/linter/rules/no-explicit-any\lint/suspicious/noExplicitAny]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Unexpected any. Specify a different type.
+  ! Unexpected any. Specify a different type.
 
     88 │     // And it stays zero on repeat: the bound holds craft after craft.
     89 │     grantMantleMats(sim, pid);
@@ -3985,7 +3985,7 @@ tests/professions_craft_xp.test.ts:90:41 ]8;;https://biomejs.dev/linter/rules/n
 
 tests/professions_craft_xp.test.ts:108:20 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     106 │     setMajors(meta, 'engineering', 'armorcrafting');
     107 │     meta.craftSkills.engineering = craftMaxSkillFor('engineering');
@@ -3997,7 +3997,7 @@ tests/professions_craft_xp.test.ts:108:20 ]8;;https://biomejs.dev/linter/rules/
 
 tests/professions_craft_xp.test.ts:120:41 ]8;;https://biomejs.dev/linter/rules/no-explicit-any\lint/suspicious/noExplicitAny]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Unexpected any. Specify a different type.
+  ! Unexpected any. Specify a different type.
 
     118 │     const before = meta.lifetimeXp;
     119 │
@@ -4011,7 +4011,7 @@ tests/professions_craft_xp.test.ts:120:41 ]8;;https://biomejs.dev/linter/rules/
 
 tests/professions_craft_xp.test.ts:139:41 ]8;;https://biomejs.dev/linter/rules/no-explicit-any\lint/suspicious/noExplicitAny]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Unexpected any. Specify a different type.
+  ! Unexpected any. Specify a different type.
 
     137 │     const beforeLifetime = meta.lifetimeXp;
     138 │
@@ -4025,7 +4025,7 @@ tests/professions_craft_xp.test.ts:139:41 ]8;;https://biomejs.dev/linter/rules/
 
 tests/professions_craft_xp.test.ts:163:41 ]8;;https://biomejs.dev/linter/rules/no-explicit-any\lint/suspicious/noExplicitAny]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Unexpected any. Specify a different type.
+  ! Unexpected any. Specify a different type.
 
     161 │     const before = meta.lifetimeXp;
     162 │
@@ -4039,7 +4039,7 @@ tests/professions_craft_xp.test.ts:163:41 ]8;;https://biomejs.dev/linter/rules/
 
 tests/professions_craft_xp.test.ts:182:41 ]8;;https://biomejs.dev/linter/rules/no-explicit-any\lint/suspicious/noExplicitAny]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Unexpected any. Specify a different type.
+  ! Unexpected any. Specify a different type.
 
     180 │     const before = meta.xp;
     181 │
@@ -4053,7 +4053,7 @@ tests/professions_craft_xp.test.ts:182:41 ]8;;https://biomejs.dev/linter/rules/
 
 tests/professions_craft_xp.test.ts:200:41 ]8;;https://biomejs.dev/linter/rules/no-explicit-any\lint/suspicious/noExplicitAny]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Unexpected any. Specify a different type.
+  ! Unexpected any. Specify a different type.
 
     198 │     const before = meta.lifetimeXp;
     199 │
@@ -4067,7 +4067,7 @@ tests/professions_craft_xp.test.ts:200:41 ]8;;https://biomejs.dev/linter/rules/
 
 tests/professions_craft_xp.test.ts:231:50 ]8;;https://biomejs.dev/linter/rules/no-explicit-any\lint/suspicious/noExplicitAny]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Unexpected any. Specify a different type.
+  ! Unexpected any. Specify a different type.
 
     229 │     const before = meta.lifetimeXp;
     230 │
@@ -4081,7 +4081,7 @@ tests/professions_craft_xp.test.ts:231:50 ]8;;https://biomejs.dev/linter/rules/
 
 tests/professions_craft_xp.test.ts:249:41 ]8;;https://biomejs.dev/linter/rules/no-explicit-any\lint/suspicious/noExplicitAny]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Unexpected any. Specify a different type.
+  ! Unexpected any. Specify a different type.
 
     247 │     const before = meta.lifetimeXp;
     248 │
@@ -4095,7 +4095,7 @@ tests/professions_craft_xp.test.ts:249:41 ]8;;https://biomejs.dev/linter/rules/
 
 tests/professions_craft_xp.test.ts:291:43 ]8;;https://biomejs.dev/linter/rules/no-explicit-any\lint/suspicious/noExplicitAny]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Unexpected any. Specify a different type.
+  ! Unexpected any. Specify a different type.
 
     289 │       const skillBefore = meta.craftSkills[recipe.professionId];
     290 │
@@ -4109,7 +4109,7 @@ tests/professions_craft_xp.test.ts:291:43 ]8;;https://biomejs.dev/linter/rules/
 
 tests/professions_craft_xp.test.ts:30:24 ]8;;https://biomejs.dev/linter/rules/no-explicit-any\lint/suspicious/noExplicitAny]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Unexpected any. Specify a different type.
+  ! Unexpected any. Specify a different type.
 
     29 │ function mustMeta(sim: Sim, pid: number): PlayerMeta {
   > 30 │   const meta = (sim as any).players.get(pid);
@@ -4122,7 +4122,7 @@ tests/professions_craft_xp.test.ts:30:24 ]8;;https://biomejs.dev/linter/rules/n
 
 tests/professions_craft_xp.test.ts:40:26 ]8;;https://biomejs.dev/linter/rules/no-explicit-any\lint/suspicious/noExplicitAny]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Unexpected any. Specify a different type.
+  ! Unexpected any. Specify a different type.
 
     38 │   if (!recipe.stationType) return;
     39 │   const station = stationsOfType(STATIONS, recipe.stationType)[0];
@@ -4136,7 +4136,7 @@ tests/professions_craft_xp.test.ts:40:26 ]8;;https://biomejs.dev/linter/rules/n
 
 tests/professions_craft_xp.test.ts:55:16 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     53 │ }
     54 │
@@ -4148,7 +4148,7 @@ tests/professions_craft_xp.test.ts:55:16 ]8;;https://biomejs.dev/linter/rules/n
 
 tests/professions_crafting_hub.test.ts:339:41 ]8;;https://biomejs.dev/linter/rules/no-explicit-any\lint/suspicious/noExplicitAny]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Unexpected any. Specify a different type.
+  ! Unexpected any. Specify a different type.
 
     337 │     expect(meta.mobileStation).toBe(station);
     338 │
@@ -4162,7 +4162,7 @@ tests/professions_crafting_hub.test.ts:339:41 ]8;;https://biomejs.dev/linter/ru
 
 tests/professions_crafting_hub.test.ts:292:41 ]8;;https://biomejs.dev/linter/rules/no-explicit-any\lint/suspicious/noExplicitAny]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Unexpected any. Specify a different type.
+  ! Unexpected any. Specify a different type.
 
     290 │     grantPickReagents(sim, pid);
     291 │
@@ -4176,7 +4176,7 @@ tests/professions_crafting_hub.test.ts:292:41 ]8;;https://biomejs.dev/linter/ru
 
 tests/professions_crafting_hub.test.ts:307:41 ]8;;https://biomejs.dev/linter/rules/no-explicit-any\lint/suspicious/noExplicitAny]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Unexpected any. Specify a different type.
+  ! Unexpected any. Specify a different type.
 
     305 │     grantPickReagents(sim, pid);
     306 │
@@ -4190,7 +4190,7 @@ tests/professions_crafting_hub.test.ts:307:41 ]8;;https://biomejs.dev/linter/ru
 
 tests/professions_crafting_hub.test.ts:321:41 ]8;;https://biomejs.dev/linter/rules/no-explicit-any\lint/suspicious/noExplicitAny]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Unexpected any. Specify a different type.
+  ! Unexpected any. Specify a different type.
 
     319 │     grantPickReagents(sim, pid);
     320 │
@@ -4204,7 +4204,7 @@ tests/professions_crafting_hub.test.ts:321:41 ]8;;https://biomejs.dev/linter/ru
 
 tests/professions_crafting_hub.test.ts:333:26 ]8;;https://biomejs.dev/linter/rules/no-explicit-any\lint/suspicious/noExplicitAny]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Unexpected any. Specify a different type.
+  ! Unexpected any. Specify a different type.
 
     331 │     placeAt(sim, pid, NOWHERE);
     332 │     grantPickReagents(sim, pid);
@@ -4218,7 +4218,7 @@ tests/professions_crafting_hub.test.ts:333:26 ]8;;https://biomejs.dev/linter/ru
 
 tests/professions_crafting_hub.test.ts:335:57 ]8;;https://biomejs.dev/linter/rules/no-explicit-any\lint/suspicious/noExplicitAny]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Unexpected any. Specify a different type.
+  ! Unexpected any. Specify a different type.
 
     333 │     const meta = (sim as any).players.get(pid);
     334 │     meta.craftSkills.engineering = 75; // specialized: placement is gated on it
@@ -4232,7 +4232,7 @@ tests/professions_crafting_hub.test.ts:335:57 ]8;;https://biomejs.dev/linter/ru
 
 tests/professions_crafting_hub.test.ts:350:26 ]8;;https://biomejs.dev/linter/rules/no-explicit-any\lint/suspicious/noExplicitAny]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Unexpected any. Specify a different type.
+  ! Unexpected any. Specify a different type.
 
     348 │     placeAt(sim, pid, NOWHERE);
     349 │     grantPickReagents(sim, pid);
@@ -4246,7 +4246,7 @@ tests/professions_crafting_hub.test.ts:350:26 ]8;;https://biomejs.dev/linter/ru
 
 tests/professions_crafting_hub.test.ts:352:48 ]8;;https://biomejs.dev/linter/rules/no-explicit-any\lint/suspicious/noExplicitAny]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Unexpected any. Specify a different type.
+  ! Unexpected any. Specify a different type.
 
     350 │     const meta = (sim as any).players.get(pid);
     351 │     meta.craftSkills.cooking = 75;
@@ -4260,7 +4260,7 @@ tests/professions_crafting_hub.test.ts:352:48 ]8;;https://biomejs.dev/linter/ru
 
 tests/professions_crafting_hub.test.ts:354:33 ]8;;https://biomejs.dev/linter/rules/no-explicit-any\lint/suspicious/noExplicitAny]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Unexpected any. Specify a different type.
+  ! Unexpected any. Specify a different type.
 
     352 │     expect(placeMobileStationForPlayer((sim as any).ctx, 'cooking', pid)).toBeDefined();
     353 │     // kitchens is not toolworks: the wrong-craft mobile station denies.
@@ -4274,7 +4274,7 @@ tests/professions_crafting_hub.test.ts:354:33 ]8;;https://biomejs.dev/linter/ru
 
 tests/professions_crafting_hub.test.ts:358:21 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     356 │     // The right craft, but expired: force the tick-domain expiry into the past.
     357 │     meta.craftSkills.engineering = 75;
@@ -4286,7 +4286,7 @@ tests/professions_crafting_hub.test.ts:358:21 ]8;;https://biomejs.dev/linter/ru
 
 tests/professions_crafting_hub.test.ts:358:57 ]8;;https://biomejs.dev/linter/rules/no-explicit-any\lint/suspicious/noExplicitAny]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Unexpected any. Specify a different type.
+  ! Unexpected any. Specify a different type.
 
     356 │     // The right craft, but expired: force the tick-domain expiry into the past.
     357 │     meta.craftSkills.engineering = 75;
@@ -4300,7 +4300,7 @@ tests/professions_crafting_hub.test.ts:358:57 ]8;;https://biomejs.dev/linter/ru
 
 tests/professions_crafting_hub.test.ts:360:33 ]8;;https://biomejs.dev/linter/rules/no-explicit-any\lint/suspicious/noExplicitAny]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Unexpected any. Specify a different type.
+  ! Unexpected any. Specify a different type.
 
     358 │     const station = placeMobileStationForPlayer((sim as any).ctx, 'engineering', pid)!;
     359 │     station.expiresAtTick = 0;
@@ -4314,7 +4314,7 @@ tests/professions_crafting_hub.test.ts:360:33 ]8;;https://biomejs.dev/linter/ru
 
 tests/professions_crafting_hub.test.ts:366:26 ]8;;https://biomejs.dev/linter/rules/no-explicit-any\lint/suspicious/noExplicitAny]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Unexpected any. Specify a different type.
+  ! Unexpected any. Specify a different type.
 
     364 │     const sim = makeSim();
     365 │     const pid = sim.playerId;
@@ -4328,7 +4328,7 @@ tests/professions_crafting_hub.test.ts:366:26 ]8;;https://biomejs.dev/linter/ru
 
 tests/professions_crafting_hub.test.ts:367:48 ]8;;https://biomejs.dev/linter/rules/no-explicit-any\lint/suspicious/noExplicitAny]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Unexpected any. Specify a different type.
+  ! Unexpected any. Specify a different type.
 
     365 │     const pid = sim.playerId;
     366 │     const meta = (sim as any).players.get(pid);
@@ -4342,7 +4342,7 @@ tests/professions_crafting_hub.test.ts:367:48 ]8;;https://biomejs.dev/linter/ru
 
 tests/professions_crafting_hub.test.ts:384:43 ]8;;https://biomejs.dev/linter/rules/no-explicit-any\lint/suspicious/noExplicitAny]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Unexpected any. Specify a different type.
+  ! Unexpected any. Specify a different type.
 
     382 │         grantItem(sim, reagent.itemId, reagent.count, pid);
     383 │       }
@@ -4356,7 +4356,7 @@ tests/professions_crafting_hub.test.ts:384:43 ]8;;https://biomejs.dev/linter/ru
 
 tests/professions_crafting_hub.test.ts:392:26 ]8;;https://biomejs.dev/linter/rules/no-explicit-any\lint/suspicious/noExplicitAny]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Unexpected any. Specify a different type.
+  ! Unexpected any. Specify a different type.
 
     390 │     const sim = makeSim();
     391 │     const pid = sim.playerId;
@@ -4370,7 +4370,7 @@ tests/professions_crafting_hub.test.ts:392:26 ]8;;https://biomejs.dev/linter/ru
 
 tests/professions_crafting_hub.test.ts:394:48 ]8;;https://biomejs.dev/linter/rules/no-explicit-any\lint/suspicious/noExplicitAny]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Unexpected any. Specify a different type.
+  ! Unexpected any. Specify a different type.
 
     392 │     const meta = (sim as any).players.get(pid);
     393 │     meta.craftSkills.engineering = 75;
@@ -4384,7 +4384,7 @@ tests/professions_crafting_hub.test.ts:394:48 ]8;;https://biomejs.dev/linter/ru
 
 tests/professions_crafting_hub.test.ts:406:25 ]8;;https://biomejs.dev/linter/rules/no-explicit-any\lint/suspicious/noExplicitAny]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Unexpected any. Specify a different type.
+  ! Unexpected any. Specify a different type.
 
     404 │     const reloaded = makeSim(7);
     405 │     const reloadedPid = reloaded.addPlayer('warrior', 'Reloaded', { state: state ?? undefined });
@@ -4398,7 +4398,7 @@ tests/professions_crafting_hub.test.ts:406:25 ]8;;https://biomejs.dev/linter/ru
 
 tests/professions_crafting_hub.test.ts:412:26 ]8;;https://biomejs.dev/linter/rules/no-explicit-any\lint/suspicious/noExplicitAny]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Unexpected any. Specify a different type.
+  ! Unexpected any. Specify a different type.
 
     410 │     const sim = makeSim();
     411 │     const pid = sim.playerId;
@@ -4412,7 +4412,7 @@ tests/professions_crafting_hub.test.ts:412:26 ]8;;https://biomejs.dev/linter/ru
 
 tests/professions_crafting_hub.test.ts:414:57 ]8;;https://biomejs.dev/linter/rules/no-explicit-any\lint/suspicious/noExplicitAny]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Unexpected any. Specify a different type.
+  ! Unexpected any. Specify a different type.
 
     412 │     const meta = (sim as any).players.get(pid);
     413 │     meta.craftSkills.engineering = 75;
@@ -4426,7 +4426,7 @@ tests/professions_crafting_hub.test.ts:414:57 ]8;;https://biomejs.dev/linter/ru
 
 tests/professions_crafting_hub.test.ts:55:26 ]8;;https://biomejs.dev/linter/rules/no-explicit-any\lint/suspicious/noExplicitAny]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Unexpected any. Specify a different type.
+  ! Unexpected any. Specify a different type.
 
     54 │ function placeAt(sim: Sim, pid: number, pos: { x: number; z: number }) {
   > 55 │   const entity = (sim as any).entities.get(pid);
@@ -4439,7 +4439,7 @@ tests/professions_crafting_hub.test.ts:55:26 ]8;;https://biomejs.dev/linter/rul
 
 tests/provisioning_supply_line_apex.test.ts:613:18 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\  FIXABLE  ━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     611 │     );
     612 │     expect(fishRow, "11i's fish row is on the plate").toBeDefined();
@@ -4460,7 +4460,7 @@ tests/provisioning_supply_line_apex.test.ts:613:18 ]8;;https://biomejs.dev/lint
 
 tests/provisioning_supply_line_apex.test.ts:613:52 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\  FIXABLE  ━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     611 │     );
     612 │     expect(fishRow, "11i's fish row is on the plate").toBeDefined();
@@ -4481,7 +4481,7 @@ tests/provisioning_supply_line_apex.test.ts:613:52 ]8;;https://biomejs.dev/lint
 
 tests/provisioning_supply_line_apex.test.ts:70:7 ]8;;https://biomejs.dev/linter/rules/use-optional-chain\lint/complexity/useOptionalChain]8;;\  FIXABLE  ━━━━━━━━━━
 
-  ⚠ Change to an optional chain.
+  ! Change to an optional chain.
 
     68 │ function foodDef(id: string): { foodHp?: number; wellFed?: { value: number; duration: number } } {
     69 │   const def = ITEMS[id];
@@ -4502,7 +4502,7 @@ tests/provisioning_supply_line_apex.test.ts:70:7 ]8;;https://biomejs.dev/linter
 
 tests/provisioning_supply_line_apex.test.ts:77:7 ]8;;https://biomejs.dev/linter/rules/use-optional-chain\lint/complexity/useOptionalChain]8;;\  FIXABLE  ━━━━━━━━━━
 
-  ⚠ Change to an optional chain.
+  ! Change to an optional chain.
 
     75 │ function flaskDef(id: string): { elixir?: { value: number; duration: number } } {
     76 │   const def = ITEMS[id];
@@ -4523,7 +4523,7 @@ tests/provisioning_supply_line_apex.test.ts:77:7 ]8;;https://biomejs.dev/linter
 
 tests/reliquary_content.test.ts:2009:28 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\  FIXABLE  ━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     2007 │       if (!page.desc) continue;
     2008 │       const named = Object.keys(MOBS)
@@ -4544,7 +4544,7 @@ tests/reliquary_content.test.ts:2009:28 ]8;;https://biomejs.dev/linter/rules/no
 
 tests/reliquary_content.test.ts:887:11 ]8;;https://biomejs.dev/linter/rules/use-optional-chain\lint/complexity/useOptionalChain]8;;\  FIXABLE  ━━━━━━━━━━━━━━━━━━
 
-  ⚠ Change to an optional chain.
+  ! Change to an optional chain.
 
     885 │     for (const page of RELIQUARY_PAGES) {
     886 │       const src = page.clearSource;
@@ -4565,7 +4565,7 @@ tests/reliquary_content.test.ts:887:11 ]8;;https://biomejs.dev/linter/rules/use
 
 tests/reliquary_content.test.ts:1671:12 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\  FIXABLE  ━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     1669 │     const pages = RELIQUARY_ITEM_TO_PAGES.get('deathlord_warplate');
     1670 │     expect(pages).toBeDefined();
@@ -4586,7 +4586,7 @@ tests/reliquary_content.test.ts:1671:12 ]8;;https://biomejs.dev/linter/rules/no
 
 tests/reliquary_content.test.ts:2357:41 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     2355 │       const relic = page.relics.find((r) => r.kind === 'item' && r.itemId === rodId);
     2356 │       expect(relic, rodId).toBeDefined();
@@ -4598,7 +4598,7 @@ tests/reliquary_content.test.ts:2357:41 ]8;;https://biomejs.dev/linter/rules/no
 
 tests/reliquary_content.test.ts:2384:39 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     2382 │     const relic = page.relics.find((r) => r.kind === 'item' && r.itemId === rodId);
     2383 │     expect(relic).toBeDefined();
@@ -4610,7 +4610,7 @@ tests/reliquary_content.test.ts:2384:39 ]8;;https://biomejs.dev/linter/rules/no
 
 tests/reliquary_content.test.ts:4641:42 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     4639 │     );
     4640 │     expect(korzulRelic, 'fang_of_korzul').toBeDefined();
@@ -4622,7 +4622,7 @@ tests/reliquary_content.test.ts:4641:42 ]8;;https://biomejs.dev/linter/rules/no
 
 tests/reliquary_content.test.ts:4663:42 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     4661 │     const helm = sanctum.relics.find((r) => r.kind === 'item' && r.itemId === 'boundstone_helm');
     4662 │     expect(helm, 'boundstone_helm').toBeDefined();
@@ -4634,7 +4634,7 @@ tests/reliquary_content.test.ts:4663:42 ]8;;https://biomejs.dev/linter/rules/no
 
 tests/reliquary_content.test.ts:871:11 ]8;;https://biomejs.dev/linter/rules/use-optional-chain\lint/complexity/useOptionalChain]8;;\  FIXABLE  ━━━━━━━━━━━━━━━━━━
 
-  ⚠ Change to an optional chain.
+  ! Change to an optional chain.
 
     869 │     for (const page of RELIQUARY_PAGES) {
     870 │       const src = page.clearSource;
@@ -4655,7 +4655,7 @@ tests/reliquary_content.test.ts:871:11 ]8;;https://biomejs.dev/linter/rules/use
 
 tests/reliquary_content.test.ts:879:11 ]8;;https://biomejs.dev/linter/rules/use-optional-chain\lint/complexity/useOptionalChain]8;;\  FIXABLE  ━━━━━━━━━━━━━━━━━━
 
-  ⚠ Change to an optional chain.
+  ! Change to an optional chain.
 
     877 │     for (const page of RELIQUARY_PAGES) {
     878 │       const src = page.clearSource;
@@ -4676,7 +4676,7 @@ tests/reliquary_content.test.ts:879:11 ]8;;https://biomejs.dev/linter/rules/use
 
 tests/reliquary_state.test.ts:87:13 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     85 │ function primary(sim: Sim) {
     86 │   const meta = sim.players.get(sim.playerId)!;
@@ -4688,7 +4688,7 @@ tests/reliquary_state.test.ts:87:13 ]8;;https://biomejs.dev/linter/rules/no-non
 
 tests/reliquary_state.test.ts:86:16 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     85 │ function primary(sim: Sim) {
   > 86 │   const meta = sim.players.get(sim.playerId)!;
@@ -4699,7 +4699,7 @@ tests/reliquary_state.test.ts:86:16 ]8;;https://biomejs.dev/linter/rules/no-non
 
 tests/reliquary_state.test.ts:113:19 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     111 │     expect(isReliquaryStateEmpty(meta.reliquary)).toBe(true);
     112 │
@@ -4711,7 +4711,7 @@ tests/reliquary_state.test.ts:113:19 ]8;;https://biomejs.dev/linter/rules/no-no
 
 tests/reliquary_state.test.ts:218:18 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     216 │   it('counts discovered items as owned even when firstFind is absent', () => {
     217 │     const owned = new Set([CATALOGUE_RELIC]);
@@ -4723,7 +4723,7 @@ tests/reliquary_state.test.ts:218:18 ]8;;https://biomejs.dev/linter/rules/no-no
 
 tests/reliquary_state.test.ts:250:18 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     248 │     const sim = makeSim();
     249 │     const pid = sim.addPlayer('warrior', 'Veteran', { state: held });
@@ -4735,7 +4735,7 @@ tests/reliquary_state.test.ts:250:18 ]8;;https://biomejs.dev/linter/rules/no-no
 
 tests/reliquary_state.test.ts:257:18 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     256 │     // Pure completion still sees the item as owned (partial page is fine).
   > 257 │     const page = RELIQUARY_PAGES.find((p) => p.id === 'conquerors_hollow_crypt')!;
@@ -4746,7 +4746,7 @@ tests/reliquary_state.test.ts:257:18 ]8;;https://biomejs.dev/linter/rules/no-no
 
 tests/reliquary_state.test.ts:282:19 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     280 │     expect(meta.reliquary.counts[CATALOGUE_RELIC]).toBe(2);
     281 │
@@ -4758,7 +4758,7 @@ tests/reliquary_state.test.ts:282:19 ]8;;https://biomejs.dev/linter/rules/no-no
 
 tests/reliquary_state.test.ts:286:12 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\  FIXABLE  ━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     284 │     // The tally rides folded ONTO the entry (count), never as a fourth
     285 │     // top-level key; pageId is gone.
@@ -4779,7 +4779,7 @@ tests/reliquary_state.test.ts:286:12 ]8;;https://biomejs.dev/linter/rules/no-no
 
 tests/reliquary_state.test.ts:287:12 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\  FIXABLE  ━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     285 │     // top-level key; pageId is gone.
     286 │     expect(state.reliquary!.firstFind?.[CATALOGUE_RELIC]).toEqual({ clears: 2, count: 2 });
@@ -4800,7 +4800,7 @@ tests/reliquary_state.test.ts:287:12 ]8;;https://biomejs.dev/linter/rules/no-no
 
 tests/reliquary_state.test.ts:295:15 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\  FIXABLE  ━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     293 │       reliquary: {
     294 │         firstFind: {
@@ -4821,7 +4821,7 @@ tests/reliquary_state.test.ts:295:15 ]8;;https://biomejs.dev/linter/rules/no-no
 
 tests/reliquary_state.test.ts:304:16 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     302 │     const sim2 = makeSim();
     303 │     const pid = sim2.addPlayer('warrior', 'Reload', { state: dirty });
@@ -4833,7 +4833,7 @@ tests/reliquary_state.test.ts:304:16 ]8;;https://biomejs.dev/linter/rules/no-no
 
 tests/reliquary_state.test.ts:450:19 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     448 │     const { meta } = primary(sim);
     449 │     noteReliquaryMark(sim.ctx, meta, FIELD_NOTE);
@@ -4845,7 +4845,7 @@ tests/reliquary_state.test.ts:450:19 ]8;;https://biomejs.dev/linter/rules/no-no
 
 tests/reliquary_state.test.ts:464:16 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     462 │     const sim2 = makeSim();
     463 │     const pid = sim2.addPlayer('warrior', 'Reload', { state: dirty });
@@ -4857,7 +4857,7 @@ tests/reliquary_state.test.ts:464:16 ]8;;https://biomejs.dev/linter/rules/no-no
 
 tests/reliquary_state.test.ts:496:18 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     495 │   it('pageCompletion counts mark ownership for profession pages', () => {
   > 496 │     const page = RELIQUARY_PAGES.find((p) => p.id === 'professions_field_notes')!;
@@ -4868,7 +4868,7 @@ tests/reliquary_state.test.ts:496:18 ]8;;https://biomejs.dev/linter/rules/no-no
 
 tests/reliquary_state.test.ts:536:24 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     535 │   it('pageCompletion owns mounts / skins / titles from live seams only', () => {
   > 536 │     const mountsPage = RELIQUARY_PAGES.find((p) => p.id === 'horizons_mounts')!;
@@ -4879,7 +4879,7 @@ tests/reliquary_state.test.ts:536:24 ]8;;https://biomejs.dev/linter/rules/no-no
 
 tests/reliquary_state.test.ts:537:23 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     535 │   it('pageCompletion owns mounts / skins / titles from live seams only', () => {
     536 │     const mountsPage = RELIQUARY_PAGES.find((p) => p.id === 'horizons_mounts')!;
@@ -4891,7 +4891,7 @@ tests/reliquary_state.test.ts:537:23 ]8;;https://biomejs.dev/linter/rules/no-no
 
 tests/reliquary_state.test.ts:538:24 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     536 │     const mountsPage = RELIQUARY_PAGES.find((p) => p.id === 'horizons_mounts')!;
     537 │     const skinsPage = RELIQUARY_PAGES.find((p) => p.id === 'horizons_weapon_skins')!;
@@ -4903,7 +4903,7 @@ tests/reliquary_state.test.ts:538:24 ]8;;https://biomejs.dev/linter/rules/no-no
 
 tests/reliquary_state.test.ts:551:24 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\  FIXABLE  ━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     549 │     expect(pageCompletion(titlesPage, empty).owned).toBe(0);
     550 │
@@ -4924,7 +4924,7 @@ tests/reliquary_state.test.ts:551:24 ]8;;https://biomejs.dev/linter/rules/no-no
 
 tests/reliquary_state.test.ts:552:23 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\  FIXABLE  ━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     551 │     const firstMount = mountsPage.relics.find((r) => r.kind === 'mount')!.mountId;
   > 552 │     const firstSkin = skinsPage.relics.find((r) => r.kind === 'weapon_skin')!.skinId;
@@ -4944,7 +4944,7 @@ tests/reliquary_state.test.ts:552:23 ]8;;https://biomejs.dev/linter/rules/no-no
 
 tests/reliquary_state.test.ts:553:24 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\  FIXABLE  ━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     551 │     const firstMount = mountsPage.relics.find((r) => r.kind === 'mount')!.mountId;
     552 │     const firstSkin = skinsPage.relics.find((r) => r.kind === 'weapon_skin')!.skinId;
@@ -4965,7 +4965,7 @@ tests/reliquary_state.test.ts:553:24 ]8;;https://biomejs.dev/linter/rules/no-no
 
 tests/reliquary_state.test.ts:783:12 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\  FIXABLE  ━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     781 │     // never land in marks, so the derived-arm assertions below would be
     782 │     // vacuous without it).
@@ -4986,7 +4986,7 @@ tests/reliquary_state.test.ts:783:12 ]8;;https://biomejs.dev/linter/rules/no-no
 
 tests/reliquary_view.test.ts:1048:18 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     1046 │ describe('page grid cells', () => {
     1047 │   it('lists mark cells owned vs missing without inventing firstFind clears', () => {
@@ -4998,7 +4998,7 @@ tests/reliquary_view.test.ts:1048:18 ]8;;https://biomejs.dev/linter/rules/no-no
 
 tests/reliquary_view.test.ts:1216:18 ]8;;https://biomejs.dev/linter/rules/no-non-null-assertion\lint/style/noNonNullAssertion]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Forbidden non-null assertion.
+  ! Forbidden non-null assertion.
 
     1214 │     // happens to appear in the record must stay silent: the same rule the
     1215 │     // firstFind stamp above follows.
@@ -5010,7 +5010,7 @@ tests/reliquary_view.test.ts:1216:18 ]8;;https://biomejs.dev/linter/rules/no-no
 
 tests/reliquary_window_behavior.test.ts:3294:9 ]8;;https://biomejs.dev/linter/rules/use-optional-chain\lint/complexity/useOptionalChain]8;;\  FIXABLE  ━━━━━━━━━━
 
-  ⚠ Change to an optional chain.
+  ! Change to an optional chain.
 
     3292 │     await landRarity(rig);
     3293 │     const other = pageDef(PAGE_ID).relics[1];
@@ -5031,7 +5031,7 @@ tests/reliquary_window_behavior.test.ts:3294:9 ]8;;https://biomejs.dev/linter/r
 
 tests/reliquary_window_behavior.test.ts:3390:9 ]8;;https://biomejs.dev/linter/rules/use-optional-chain\lint/complexity/useOptionalChain]8;;\  FIXABLE  ━━━━━━━━━━
 
-  ⚠ Change to an optional chain.
+  ! Change to an optional chain.
 
     3388 │     const itemRig = openPage(baseState(), PAGE_ID);
     3389 │     const itemRelic = pageDef(PAGE_ID).relics[0];
@@ -5052,7 +5052,7 @@ tests/reliquary_window_behavior.test.ts:3390:9 ]8;;https://biomejs.dev/linter/r
 
 tests/reliquary_window_behavior.test.ts:3260:9 ]8;;https://biomejs.dev/linter/rules/use-optional-chain\lint/complexity/useOptionalChain]8;;\  FIXABLE  ━━━━━━━━━━
 
-  ⚠ Change to an optional chain.
+  ! Change to an optional chain.
 
     3258 │   function seededState(): { state: WorldState; relicId: string } {
     3259 │     const relic = pageDef(PAGE_ID).relics[0];
@@ -5073,7 +5073,7 @@ tests/reliquary_window_behavior.test.ts:3260:9 ]8;;https://biomejs.dev/linter/r
 
 tests/server/http/error_codes.test.ts:180:72 ]8;;https://biomejs.dev/linter/rules/no-comma-operator\lint/complexity/noCommaOperator]8;;\ ━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ The comma operator is disallowed.
+  ! The comma operator is disallowed.
 
     178 │     expect(keys.length).toBe(Object.keys(ERROR_CODES).length);
     179 │     const seen = new Set<string>();
@@ -5087,7 +5087,7 @@ tests/server/http/error_codes.test.ts:180:72 ]8;;https://biomejs.dev/linter/rul
 
 tests/server/tunables.test.ts:1208:25 ]8;;https://biomejs.dev/linter/rules/no-template-curly-in-string\lint/suspicious/noTemplateCurlyInString]8;;\ ━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Unexpected template string placeholder.
+  ! Unexpected template string placeholder.
 
     1206 │     // so a reversion of a single arm reddens this too.
     1207 │     expect(count(body, '${LIFETIME_XP_EXPR} >')).toBe(2);
@@ -5101,7 +5101,7 @@ tests/server/tunables.test.ts:1208:25 ]8;;https://biomejs.dev/linter/rules/no-t
 
 tests/server/tunables.test.ts:1225:30 ]8;;https://biomejs.dev/linter/rules/no-template-curly-in-string\lint/suspicious/noTemplateCurlyInString]8;;\ ━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Unexpected template string placeholder.
+  ! Unexpected template string placeholder.
 
     1223 │     expect(globalStart).toBeGreaterThan(idxStart);
     1224 │     const idxRegion = dbSrc.slice(idxStart, dbSrc.indexOf(';', globalStart) + 1);
@@ -5115,7 +5115,7 @@ tests/server/tunables.test.ts:1225:30 ]8;;https://biomejs.dev/linter/rules/no-t
 
 tests/server/tunables.test.ts:1332:44 ]8;;https://biomejs.dev/linter/rules/no-template-curly-in-string\lint/suspicious/noTemplateCurlyInString]8;;\ ━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Unexpected template string placeholder.
+  ! Unexpected template string placeholder.
 
     1330 │     // biome-ignore lint/suspicious/noTemplateCurlyInString: pins compose's own substitution syntax
     1331 │     expect(gameService).toContain(
@@ -5129,7 +5129,7 @@ tests/server/tunables.test.ts:1332:44 ]8;;https://biomejs.dev/linter/rules/no-t
 
 tests/server/tunables.test.ts:1330:5 suppressions/unused ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Suppression comment has no effect. Remove the suppression or make sure you are suppressing the correct rule.
+  ! Suppression comment has no effect. Remove the suppression or make sure you are suppressing the correct rule.
 
     1328 │     // default then disagrees with the raised singleton and the boot DO block
     1329 │     // raises 22023, so every realm fails to boot.
@@ -5141,7 +5141,7 @@ tests/server/tunables.test.ts:1330:5 suppressions/unused ━━━━━━━�
 
 tests/server/tunables.test.ts:1207:25 ]8;;https://biomejs.dev/linter/rules/no-template-curly-in-string\lint/suspicious/noTemplateCurlyInString]8;;\ ━━━━━━━━━━━━━━━━━━━━━━
 
-  ⚠ Unexpected template string placeholder.
+  ! Unexpected template string placeholder.
 
     1205 │     // One WHERE filter and one ORDER BY per arm (realm and global): two each,
     1206 │     // so a reversion of a single arm reddens this too.
@@ -5159,7 +5159,7 @@ Found 398 warnings.
 Found 9 infos.
 ci ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  ✖ Some errors were emitted while running checks.
+  x Some errors were emitted while running checks.
 
 
 

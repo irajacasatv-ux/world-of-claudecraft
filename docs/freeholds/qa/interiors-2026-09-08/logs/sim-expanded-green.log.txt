@@ -10,7 +10,7 @@ stdout | tests/freehold_instance_online.test.ts > freehold claim online: the ref
 stdout | tests/freehold_instance_online.test.ts
 [capi] META_CAPI_ACCESS_TOKEN unset; Conversions API disabled.
 
- ❯ tests/freehold_instance_online.test.ts (24 tests | 1 failed) 1679ms
+ > tests/freehold_instance_online.test.ts (24 tests | 1 failed) 1679ms
      × a jailed session receives exact gate feedback without movement, claims or Sim dispatch 28ms
 
 ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
@@ -35,7 +35,7 @@ AssertionError: expected [ { t: 'events', …(1) }, …(1) ] to deeply equal [ {
       "t": "events",
     },
 
- ❯ tests/freehold_instance_online.test.ts:508:39
+ > tests/freehold_instance_online.test.ts:508:39
     506|     enter(server, s, 21);
     507|
     508|     expect(fc.sent.slice(sentBefore)).toEqual([

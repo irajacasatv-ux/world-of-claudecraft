@@ -4,7 +4,7 @@ npm warn Unknown project config "strict-peer-dependencies". This will stop worki
 
  RUN  v4.1.10 /Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds
 
- ❯ tests/eastbrook_polish_capture_contract.test.ts (16 tests | 1 failed) 625ms
+ > tests/eastbrook_polish_capture_contract.test.ts (16 tests | 1 failed) 625ms
      × pins baseline revision provenance and hashes every v2 polish input separately 35ms
 
 ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
@@ -21,7 +21,7 @@ AssertionError: Eastbrook polish composite fingerprint mismatch.
   above everywhere (local and CI), the pin is stale, and a re-mint is legitimate.
   One-step re-mint (recomputes all three pinned literals and sweeps the evidence seals):
     node scripts/assets/eastbrook_grand_armoury/remint_polish_provenance.mjs
- ❯ tests/eastbrook_polish_capture_contract.test.ts:906:14
+ > tests/eastbrook_polish_capture_contract.test.ts:906:14
     904|       // when a pin is already stale stays unit-tested with injected
     905|       // seal-reader and git (tests/eastbrook_provenance_diagnostics.t…
     906|       expect.fail(

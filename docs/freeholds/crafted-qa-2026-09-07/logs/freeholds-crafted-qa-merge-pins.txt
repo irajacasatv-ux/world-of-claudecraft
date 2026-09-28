@@ -19,7 +19,7 @@ stdout | tests/furnishing_rift_admission.test.ts > furnishing Rift admission thr
 stdout | tests/furnishing_rift_admission.test.ts
 [capi] META_CAPI_ACCESS_TOKEN unset; Conversions API disabled.
 
- ❯ tests/furnishing_rift_admission.test.ts (8 tests | 4 failed) 1826ms
+ > tests/furnishing_rift_admission.test.ts (8 tests | 4 failed) 1826ms
      × 'upgrade' refuses a furnishing via 'named slot' and mirrors shell success 726ms
      × 'upgrade' refuses a furnishing via 'legacy item id' and mirrors shell success 112ms
      × 'socket' refuses a furnishing via 'named slot' and mirrors shell success 109ms
@@ -44,7 +44,7 @@ undefined
 + Received:
 Promise {}
 
- ❯ tests/furnishing_rift_admission.test.ts:243:7
+ > tests/furnishing_rift_admission.test.ts:243:7
     241|     expect(
     242|       withoutMutation(sim, pid, () => row.invoke(client, ID, named ? {…
     243|     ).toBeUndefined();
