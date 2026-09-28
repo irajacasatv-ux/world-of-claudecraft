@@ -4490,3 +4490,140 @@ place one. Those wait on a production read.
   this branch's own `tests/freehold_capture_contract.test.ts` hashes 67 live source files.
 - HUD imports: 49 runtime importers can drop `src/ui/hud` (about 658 MiB retained each) through
   nine extraction batches.
+
+### WHAT WAS DELETED OR CHANGED, BY SURFACE
+
+Screenshots (the corpus 2.5 GB to about 1.27 GB tracked; 4,410 files to 2,233):
+- Browser capture is opt-in: six suites rewrote 21 tracked PNGs on every run; they now capture
+  through `tests/browser/_evidence.ts` only under `VITE_EVIDENCE_CAPTURE=1`, guarded by
+  `tests/browser_evidence_capture.test.ts` (`31db9e8c6e`, hardened `9da81cd426`).
+- Evidence byte-seals removed: two whole files, five cases, a four-case describe (the freehold
+  interiors block that hashed 67 live files) and the skill icons evidence loop, each beside the
+  shipped-asset pins that stay (`080134f22c`); the capture receipt refusal matrix runs
+  in-process (6.3 s to 3.7 s, `20b45d5974`).
+- 411 directories and 67 loose files nothing referenced deleted, each checked by name
+  (`f6fdfdd4ed`; its message says 412: `nythraxis-playtest-tuning` came back in `9da81cd426`
+  because a `pr_shot_targets.mjs` comment points at it).
+
+GLBs and assets (1,416 GLBs to 1,409; 25 shipped files deleted):
+- The Eastbrook polish seal over the live tree, its diagnostics and the re-mint scripts retired;
+  the capture rig's derivation keeps a synthetic, literal-pinned test (`52f7a72714`).
+- `pnpm-lock.yaml` and `package.json` out of every GLB source fingerprint, 48 GLBs re-stamped
+  once, the re-mint tool and its registry test deleted, guard
+  `tests/asset_fingerprint_inputs.test.ts` (`e1ab71b5d1`). The Ignivar herald owed item closes:
+  its shipping GLB carries no stamp.
+- The retired Rallycart mount: model, 17 SFX clips, store art, seven wheeled-vehicle modules and
+  their nine tests, the scripts; the reins item, icon and locale rows stay (`9ceb5ee7e3`).
+- Six wreckage GLBs (replaced by the shipwreck set, never in the editor palette) and the
+  unimported grand forge adapter (`6f960f50e0`); two dead renderer imports (`7495a08bc6`).
+- Test cost: Fenbridge's per-float expects (6.9 to 1.4 s) and the loader's real retry sleeps
+  (9.4 to 0.7 s) (`2fdf76984f`, `7bdde01716`).
+
+The HUD import (`src/ui/hud.ts` 18,045 to 14,885 lines; runtime importers under tests/ 49 to 3):
+nine batches (`63e4681bcd` B0/B1, `349d8038cd` B3/B2, `53a70db7eb` B6, `c73bc70767` B4,
+`5f3f17410a` B5, `d01f6c8749` B8, `8a7dec2554` B7 plus the consolidation), each with its review
+round (`fd897ab3f6`, `0320aedd6a`, `e037b45abd` typed hosts, `c4a113d518` visibility,
+`748c79f557` the pet bar's feed mode and shared writer). The two
+coordinator suites that still import Hud pay it once each; freed files retain 10 to 490 MiB,
+from about 560 to 670.
+
+Player-facing fixes found on the way, each failing-first:
+- The emote wheel's Edit button and seat gap were author pixels compared with screen distances,
+  so they drifted under a UI scale other than 1 (`0320aedd6a`).
+- The masterwork and tier-up craft plate rode the ambient banner and a later ambient line could
+  replace it behind a live level-up; it is a queued `deed` celebration now (`79a0ce3e0e`).
+
+### THE REVIEWS
+
+No reviewer or read found a blocking issue. In order:
+- The deletions, four fresh lanes (test coverage, gate integrity, render performance, frontend
+  seams) plus a coverage follow-up: one should-fix (the capture guard passed a helper that
+  screenshots unconditionally after its gate, since a missing `return;` read as index -1) and
+  nits, all applied (`9da81cd426`, `7bdde01716`, which also proves the loader's retry mock
+  applies).
+- A frontend seam review after every HUD batch, each round applied: B0 to B3 (ten items,
+  `fd897ab3f6`: the tooltip parity over Sim and a bare client, the delegator pins, the lazy
+  banner slot, one quest progress text home); B6 (the overstated emote claim, and the real
+  UI-scale drift it surfaced, `0320aedd6a`); B4 with the plate fix (the host welds checked
+  member names only while the routers cast Hud, answered by typed hosts that tsc checks,
+  `e037b45abd`); B5, the typed hosts and B8 (members public without `readonly`,
+  `c4a113d518`); B7 with the consolidation (the pet bar's per-frame raw display write and
+  re-query, a concatenated aria label, a feed flag any importer could write, two overclaiming
+  titles, `748c79f557`; the fifth, a moved `beforeEach` not clearing two map spies, was judged
+  moot: those spies exist only in `tests/hud_map_marker_lifecycle.test.ts`, whose own
+  `beforeEach` clears them). A fresh read of that round: one should-fix (a stale Hud comment
+  still calling the feed mode Hud's) and four nits (a bags dep made redundant, a comment
+  promising bare rigs could render, no pin on the aria key, a bags comment naming a `'block'`
+  display nothing writes), all applied (`4acf8cc00a`); its mutation pass found the bags
+  window's feed pick unpinned, now pinned (`cec4ebceed`). Two narrower reads
+  followed: the first (on `4acf8cc00a` and `cec4ebceed`) found three nits (the invalidate
+  weld bound to one call form, the fed copy unasserted, a latch clear redundant with the
+  signature) and an older wording gap in the fan-out row, all applied (`ba44157555`); the
+  second (on `ba44157555`) found five notes: the weld's claim wider than its check, the same
+  double mechanism on the stance menu, the leave-and-return path unpinned and two omissions in
+  the fan-out row, all applied (`206720229b`, mutation-checked, not read again), and one
+  older behavior recorded below as a follow-up.
+- The QA checklist over Part 3: ready once three should-fix items landed: weight rows for the
+  new suites (`9b240ed70f`), notes still pointing at deleted work, and a size figure that would
+  rot (`e8250212dc`).
+
+MUTANTS: 39 in Part 3 killed, plus one tsc mutant proving the typed hosts catch a signature
+drift; 167 across the session. One more survived first and was the finding: dropping the bags
+window's feed-pick end left every suite green, so the pick got its pin (`cec4ebceed`) and the
+same mutant was then killed.
+
+### CORRECTIONS TO COMMIT MESSAGES (the commits stay as written; the record is here)
+
+- `53a70db7eb` says a filtered emote wheel "could send a non-emote". Both writers of the slot
+  list already sanitize it, so the one-list change is defensive, not a live bug; the module
+  header says so since `0320aedd6a`.
+- `f6fdfdd4ed` says 412 directories; 411 stayed deleted (`nythraxis-playtest-tuning` came
+  back in `9da81cd426`).
+- `52f7a72714` says "the three re-mint scripts"; it deleted two re-mint scripts
+  (`remint_polish_provenance.mjs`, `rerecord_polish_provenance.mjs`) and the diagnostics
+  script with its declaration file.
+- `e037b45abd`'s subject names only the typed hosts; its body also carries two review items
+  for `79a0ce3e0e` (the craft plate's tier-up case and the banner queue's limit note).
+
+### FOLLOW-UPS, NOT DONE (none is a defect today)
+
+- Five extracted modules sit flat in `src/ui/` (`confirm_dialog_controller.ts`,
+  `resurrection_prompt.ts`, `keeper_revive_dialog.ts`, `tool_effect_confirm.ts`,
+  `town_focus_controller.ts`) while the heroic purchase confirm went to `hud/vendor/`; the
+  Crucible purchase confirm still lives on Hud beside where the heroic one was.
+- `ActionPressController.pressSlot` calls the controller's own `castSlot`, not
+  `Hud.castSlot`, so a future wrapper or spy on `hud.castSlot` would be bypassed; none exists.
+- The capture receipt CLI's success path (print, exit 0) is reached by no test: the synthetic
+  set always stops at the baseline check. It was so before `20b45d5974`.
+- A pet dying or despawning hides the pet bar but does not end the food-selection mode, so the
+  bags window stays in feed mode (a pick is then refused by the sim). Older than this work;
+  changing it is a behavior decision.
+
+### THE ARMED GATE
+
+`node scripts/gate_select.mjs` with Postgres armed (`tests/server/freehold_db.pg.test.ts` 16 of
+16 first, each time), the full-suite fallback at 8 workers: green on all 12 steps at
+`e8250212dc` (72,937 tests, 866.77 s), and after the last review rounds at the code tip
+`206720229b`: 4,964 files and 72,939 tests passed (2 expected fails, 28 skipped) in 845.93 s.
+Part 2 closed at 856.75 s; the two runs here differ by 21 s with no suite change between them
+worth that, so the wall clock is not evidence either way. The browser suite 541 of 541 with no
+tracked screenshot rewritten, the malware scan, typecheck and every build.
+
+### OWED, FOR FERNANDO
+
+- 490 GLBs (19.61 MB) are referenced by nothing in the repo but the generated editor palette.
+  Player maps live on the server and place models by `assetId`, so they need a production read
+  before deletion:
+  `SELECT p->>'assetId' AS asset_id, count(*) AS placements, count(DISTINCT m.id) AS maps FROM
+  maps m, jsonb_array_elements(m.doc->'placements') p GROUP BY 1 ORDER BY 3 DESC;`
+  Any listed id with no row is unused and can go; the list is `palette-orphan-glbs.txt` beside
+  this ledger.
+- Recommendation, not done: exact GLB sha pins repeat what the media manifest and a binary diff
+  already show; the image-to-glb skill mandates them, so dropping them is your call.
+- Recommendation, not done: the sparse CI cone still pulls 49 directories (about 895 MB) of
+  referenced evidence into each sparse job; scoping it to what tests read is a CI decision.
+- The next full-mode harvest replaces the 25 local-median rows the new suites carry
+  (`9b240ed70f`). The 42 weighted suites that dropped their Hud import keep their rows on purpose: measured
+  against six unchanged suites (CI over local 1.6 to 3.9, median about 2.5) they sit inside the
+  same band (0.9 to 3.7), because the Hud import they shed was collect time, which these
+  weights never counted.

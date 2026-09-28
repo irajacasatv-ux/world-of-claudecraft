@@ -67,6 +67,24 @@ Only what the next session needs. Update at the end of every phase and QA.
 
 ## Current phase
 
+**PART 3, UNUSED ASSETS AND TEST NECESSITY, DONE 2026-09-27, LOCAL.** Fernando ruled that every
+screenshot and GLB test must earn its place and that anything with no use at all be deleted.
+Screenshots: browser suites capture only under `VITE_EVIDENCE_CAPTURE=1`, the evidence
+byte-seals are gone, and 411 unreferenced directories plus 67 files were pruned (tracked corpus
+2.5 GB to about 1.27 GB). GLBs and assets: the Eastbrook polish seal and its re-mint scripts
+retired, the lockfile out of every GLB fingerprint (48 GLBs re-stamped once), the retired
+Rallycart's model, audio and vehicle code and six replaced wreckage GLBs deleted (1,416 GLBs to
+1,409). The HUD import: nine extraction batches took `src/ui/hud.ts` from 18,045 to 14,883
+lines and its runtime importers under `tests/` from 49 to 3, with two player-facing fixes found
+on the way (the emote wheel's hit zones under a UI scale, the craft plate queued as a
+celebration). Every batch had a frontend seam review and every round of fixes a fresh read;
+nothing blocking; all findings applied or recorded; 39 mutants killed; the armed gate is green
+on all 12 steps at the code tip `206720229b` (72,939 tests, browser 541). OWED: 490 GLBs listed
+only by the editor palette wait on a production read of the editor maps (the SQL and the list
+are in the ledger); the Part 2 CI items still stand. Detail: [the
+ledger](qa/persistence-2026-09-08/findings.md), PART 3, UNUSED ASSETS AND TEST NECESSITY.
+
+(Superseded 2026-09-27 by the paragraph above: Part 3 is done.)
 **PART 2, THE REPO-WIDE TEST COST, DONE 2026-09-27, LOCAL.** Every item of the brief landed on
 this branch in order, each measured before and after (the table is in the ledger): the
 `@vitest/spy` retention patch and `releasedSpyOn`, the Svelte setup scoped out of the global
