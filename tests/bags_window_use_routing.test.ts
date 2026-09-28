@@ -14,7 +14,12 @@ import type { IWorld } from '../src/world_api';
 function harness(
   inventory: InvSlot[],
   useGatherTool: (item: ItemDef) => boolean,
-  options: { cfg?: { freeholdsEnabled?: boolean }; touch?: boolean; trade?: boolean } = {},
+  options: {
+    cfg?: { freeholdsEnabled?: boolean };
+    touch?: boolean;
+    trade?: boolean;
+    petFeed?: boolean;
+  } = {},
 ): {
   root: HTMLElement;
   usedItems: string[];
@@ -23,6 +28,8 @@ function harness(
   errors: string[];
   menuDefaults: (() => void)[];
   tradedItems: string[];
+  fedItems: string[];
+  feedModeWrites: boolean[];
 } {
   const usedItems: string[] = [];
   const gatherToolCalls: ItemDef[] = [];
@@ -30,6 +37,9 @@ function harness(
   const errors: string[] = [];
   const menuDefaults: (() => void)[] = [];
   const tradedItems: string[] = [];
+  const fedItems: string[] = [];
+  const feedModeWrites: boolean[] = [];
+  let petFeed = options.petFeed === true;
   const world = {
     cfg: options.cfg ?? {},
     inventory,
@@ -41,6 +51,9 @@ function harness(
     },
     placeFeast: () => {
       feastPlacements.push(1);
+    },
+    feedPet: (itemId: string) => {
+      fedItems.push(itemId);
     },
   } as unknown as IWorld;
   const root = document.createElement('div');
@@ -71,7 +84,7 @@ function harness(
     isPersonalBankTab: () => false,
     isGuildBankTab: () => false,
     isVaultBankTab: () => false,
-    pendingPetFeed: () => false,
+    pendingPetFeed: () => petFeed,
     closeVendor: noop,
     closeBank: noop,
     onClosed: noop,
@@ -81,7 +94,10 @@ function harness(
     stageMailParcel: noop,
     insertItemChatLink: noop,
     showError: (message) => errors.push(message),
-    setPendingPetFeed: noop,
+    setPendingPetFeed: (active) => {
+      feedModeWrites.push(active);
+      petFeed = active;
+    },
     isHotbarItemId: () => false,
     useGatherTool: (item) => {
       gatherToolCalls.push(item);
@@ -100,7 +116,17 @@ function harness(
       menuDefaults.push(runDefault),
   };
   new BagsWindow(deps).render();
-  return { root, usedItems, gatherToolCalls, feastPlacements, errors, menuDefaults, tradedItems };
+  return {
+    root,
+    usedItems,
+    gatherToolCalls,
+    feastPlacements,
+    errors,
+    menuDefaults,
+    tradedItems,
+    fedItems,
+    feedModeWrites,
+  };
 }
 
 function clickFirstCell(root: HTMLElement): void {
@@ -226,3 +252,18 @@ describe.each(['pattern_ironhusk_flask', 'pattern_crucible_str_mail', 'formula_l
     });
   },
 );
+
+describe('bags pet-feed pick', () => {
+  it('feeds the picked food and ends the pet bar feed mode, which alone redraws the bar', () => {
+    const { root, fedItems, feedModeWrites, usedItems, gatherToolCalls } = harness(
+      [{ itemId: 'baked_bread', count: 1 }],
+      () => false,
+      { petFeed: true },
+    );
+    clickFirstCell(root);
+    expect(fedItems).toEqual(['baked_bread']);
+    expect(feedModeWrites).toEqual([false]);
+    expect(usedItems).toEqual([]);
+    expect(gatherToolCalls).toEqual([]);
+  });
+});
