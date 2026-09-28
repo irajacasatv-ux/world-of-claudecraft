@@ -969,10 +969,15 @@ describe('client HTML shell', () => {
       "if (closeMobileBags) { dismissBagPrompts(); const bags = $('#bags'); bags.style.display = 'none'; bags.inert = false; this.cancelPetFeed(); } else { this.renderBagsIfOpen(); }";
     const closeMobileBagsRead =
       "const closeMobileBags = touchBagsShown(document.body.classList, $('#bags').style.display);";
+    // Declarations are counted by name, not by the exact opener text, so a real
+    // declaration that drifts from that form (a modifier, a changed parameter) cannot
+    // leave a decoy copy in a literal as the only exact match.
+    const declarations = (name: string) =>
+      [...code.matchAll(new RegExp(`(?<![.\\w$])${name}\\s*\\(`, 'g'))].length;
     const methodBody = (signature: string) => {
-      const opener = `\n  ${signature} {\n`;
-      expect(code.split(opener), `${signature} is declared once`).toHaveLength(2);
-      return flat(span(code, opener, '\n  }\n')).trim();
+      const name = /(\w+)\(/.exec(signature)?.[1] as string;
+      expect(declarations(name), `${name} is declared once`).toBe(1);
+      return flat(span(code, `\n  ${signature} {\n`, '\n  }\n')).trim();
     };
     const vendor = methodBody('closeVendor(): void');
     expect(vendor, 'closeVendor names renderBags').not.toMatch(/\brenderBags\b/);
@@ -999,7 +1004,11 @@ describe('client HTML shell', () => {
     for (const ctor of ['new MarketWindow({', 'new MailboxWindow({']) {
       // Read inside the window's own constructor block, so one window's arm can never be
       // read for the other's.
-      expect(code.split(ctor), `${ctor} appears once`).toHaveLength(2);
+      const windowClass = /new (\w+)\(/.exec(ctor)?.[1] as string;
+      expect(
+        [...code.matchAll(new RegExp(`\\bnew\\s+${windowClass}\\b`, 'g'))],
+        `${windowClass} is constructed once`,
+      ).toHaveLength(1);
       const config = span(code, ctor, '\n  });\n');
       expect(flat(span(config, 'syncBags: (open) => {', '\n    },')), ctor).toBe(
         "syncBags: (open) => { if (open) { this.renderBags(); $('#bags').style.display = 'flex'; } else { this.renderBagsIfOpen(); }",
