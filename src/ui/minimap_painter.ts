@@ -434,6 +434,28 @@ function drawSemanticRankPips(
   }
 }
 
+/** The half-arch door with a dark doorway: the delve entrance's route mark,
+ *  and the Freehold Gate's, as the world map paints them both. */
+function drawHalfArchDoor(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  radius: number,
+  core: number,
+  colors: MinimapColors,
+): void {
+  ctx.fillStyle = colors.portal;
+  ctx.beginPath();
+  ctx.arc(x, y, radius, Math.PI, FULL_CIRCLE);
+  ctx.lineTo(x + radius, y + radius);
+  ctx.lineTo(x - radius, y + radius);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  ctx.fillStyle = colors.outline;
+  ctx.fillRect(x - core, y, core * 2, radius);
+}
+
 /** Generated-art loading/error fallback for entity-free overworld routes. */
 function drawStableNavigationFallback(
   ctx: CanvasRenderingContext2D,
@@ -448,18 +470,11 @@ function drawStableNavigationFallback(
   ctx.fillStyle = colors.portal;
   ctx.strokeStyle = colors.outline;
   ctx.lineWidth = geometry.markerOutlineWidth;
-  ctx.beginPath();
   if (navigation === 'delve-entrance') {
-    ctx.arc(x, y, radius, Math.PI, FULL_CIRCLE);
-    ctx.lineTo(x + radius, y + radius);
-    ctx.lineTo(x - radius, y + radius);
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
-    ctx.fillStyle = colors.outline;
-    ctx.fillRect(x - core, y, core * 2, radius);
+    drawHalfArchDoor(ctx, x, y, radius, core, colors);
     return;
   }
+  ctx.beginPath();
   ctx.moveTo(x - radius, y - radius);
   ctx.lineTo(x, y);
   ctx.lineTo(x - radius, y + radius);
@@ -488,6 +503,9 @@ function drawSemanticObjectFallback(
   ctx.lineWidth = geometry.markerOutlineWidth;
 
   switch (semantic.kind) {
+    case 'freehold-gate':
+      drawHalfArchDoor(ctx, x, y, radius, core, colors);
+      return;
     case 'hoard-entrance': {
       for (let pass = 0; pass < 2; pass++) {
         ctx.strokeStyle = pass === 0 ? colors.outline : colors.objectLoot;
@@ -774,6 +792,11 @@ function drawSemanticObjectFallback(
         ctx.fill();
       }
       return;
+    }
+    default: {
+      // Every family paints: a new one fails to compile here, never goes blank.
+      const unpainted: never = semantic;
+      return unpainted;
     }
   }
 }

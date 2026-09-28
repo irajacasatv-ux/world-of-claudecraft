@@ -968,6 +968,7 @@ describe('minimap_painter: tiny procedural symbols carry identity without hue', 
 
   it('draws every semantic-object family and rift mechanic without canvas text', () => {
     const semantics: MinimapObjectSemantic[] = [
+      { kind: 'freehold-gate' },
       { kind: 'hoard-entrance' },
       { kind: 'rift-entrance', rank: 'S' },
       { kind: 'rift-descent' },
@@ -999,6 +1000,23 @@ describe('minimap_painter: tiny procedural symbols carry identity without hue', 
       { kind: 'rift-mechanic', mechanic: 'orb', state: 'active' },
       { kind: 'rift-mechanic', mechanic: 'roller', state: 'hazard' },
     ];
+    // Every family in the union is listed: a family added to MinimapObjectSemantic
+    // with no case here fails to type-check, so its fallback cannot go unpainted.
+    const families = {
+      'freehold-gate': true,
+      'hoard-entrance': true,
+      'rift-entrance': true,
+      'rift-descent': true,
+      'rift-return': true,
+      'rift-reward': true,
+      'rift-mechanic': true,
+      'delve-passage': true,
+      'delve-surface': true,
+      'delve-reward': true,
+    } satisfies Record<MinimapObjectSemantic['kind'], true>;
+    expect(new Set(semantics.map((semantic) => semantic.kind))).toEqual(
+      new Set(Object.keys(families)),
+    );
     for (const semantic of semantics) {
       const trace = drawSymbols([{ kind: 'semantic-object', mx: 20, my: 30, semantic }]);
       const operations =
@@ -1010,6 +1028,22 @@ describe('minimap_painter: tiny procedural symbols carry identity without hue', 
       expect(trace.minimapTextCalls, JSON.stringify(semantic)).toBe(0);
       expect(trace.minimapFontWrites, JSON.stringify(semantic)).toBe(0);
     }
+  });
+
+  it('draws the Freehold Gate fallback as the half-arch door the world map uses', () => {
+    const gate = drawSymbols([
+      { kind: 'semantic-object', mx: 20, my: 30, semantic: { kind: 'freehold-gate' } },
+    ]);
+    const door = drawSymbols([
+      { kind: 'stable-navigation', mx: 20, my: 30, navigation: 'delve-entrance' },
+    ]);
+    expect(gate.filledArcs.length + gate.strokedArcs.length).toBeGreaterThan(0);
+    expect(gate.rects.length).toBeGreaterThan(0);
+    expect(gate.segments).toEqual(door.segments);
+    expect(gate.filledArcs).toEqual(door.filledArcs);
+    expect(gate.strokedArcs).toEqual(door.strokedArcs);
+    expect(gate.rects).toEqual(door.rects);
+    expect(gate.minimapTextCalls).toBe(0);
   });
 
   it('draws the Buried Hoard as a treasure X without requesting Rift art', () => {
