@@ -13,6 +13,7 @@ import path from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
 import { ITEMS } from '../src/sim/data';
 import type { ItemInstancePayload } from '../src/sim/types';
+import { esc } from '../src/ui/esc';
 import { t } from '../src/ui/i18n';
 import { itemNumber } from '../src/ui/item_instance_tooltip';
 import { itemTooltipHtml } from '../src/ui/item_tooltip_view';
@@ -99,5 +100,26 @@ describe('the Hud half of the seam (source pin)', () => {
     expect(body).toContain(
       'return itemTooltipHtml(item, deps, compare, instance, materialSources);',
     );
+  });
+});
+
+describe('the faction quartermaster goods (ported from the release Hud card)', () => {
+  it('carries each good its use line on the composed card', () => {
+    const html = itemTooltipHtml(ITEMS.clockwork_shock_bomb, itemTooltipDeps(), false);
+    expect(html).toContain(esc(t('hudChrome.factionRewards.shockBombUse')));
+  });
+
+  it('reads the hearthstone attunement from the world, unattuned where the world has none', () => {
+    const line = (hub: string) =>
+      esc(t('hudChrome.factionRewards.alliedHearthstoneAttuned', { hub }));
+    const none = itemTooltipHtml(ITEMS.allied_hearthstone, itemTooltipDeps(), false);
+    expect(none).toContain(line(t('hudChrome.factionRewards.hub_none')));
+    const attuned = itemTooltipHtml(
+      ITEMS.allied_hearthstone,
+      itemTooltipDeps({ world: { alliedHearthstoneAttunement: 'rift_watch' } }),
+      false,
+    );
+    expect(attuned).toContain(line(t('hudChrome.factionRewards.hub_rift_watch')));
+    expect(attuned).not.toContain(line(t('hudChrome.factionRewards.hub_none')));
   });
 });

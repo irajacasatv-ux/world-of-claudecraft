@@ -10,7 +10,8 @@
 // them reached (the vehicle gate on every entry point, the fixed Attack toggle,
 // the keyboard empowered tap, the mouseover redirect, the auto-attack QoL and
 // its timed-cast deferral, the freed Attack seat's refusal, the bar item arm and
-// its open-bags repaint) and the weld to the private Hud members it reads.
+// its open-bags repaint, the ground-aimed shock bomb's seat, cooldown and bag
+// click) and the weld to the private Hud members it reads.
 
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -19,6 +20,7 @@ import { ABILITIES } from '../src/sim/data';
 import type { AbilityDef, Entity } from '../src/sim/types';
 import type { ActionPressHost } from '../src/ui/hud/action_bar/action_press_controller';
 import { ActionPressController } from '../src/ui/hud/action_bar/action_press_controller';
+import { XHB_ONLY_AIM_SLOT } from '../src/ui/hud/action_bar/ground_aim';
 import { t } from '../src/ui/i18n';
 import { hudDeclares, interfaceMembers } from './helpers/hud_host_weld';
 import { stripComments } from './helpers/strip_comments';
@@ -328,6 +330,60 @@ describe('ActionPressController.castSlot: the item arm', () => {
     expect(stale.sim.useItem).not.toHaveBeenCalled();
     expect(stale.host.showError).not.toHaveBeenCalled();
     expect(stale.host.flashActionSlot).not.toHaveBeenCalled();
+  });
+});
+
+describe('ActionPressController: the ground-aimed shock bomb (ported from the release Hud)', () => {
+  const bomb = { type: 'item' as const, id: 'clockwork_shock_bomb' };
+  const withCooldowns = (r: ReturnType<typeof rig>, cooldowns: [string, number][] = []) => {
+    (r.sim.player as { cooldowns?: Map<string, number> }).cooldowns = new Map(cooldowns);
+    return r;
+  };
+
+  it('takes the position press from its bar seat, never the plain item use', () => {
+    const { host, sim, press } = withCooldowns(rig({ bar: { 5: bomb }, usableItemIds: [bomb.id] }));
+
+    press.castSlot(5);
+
+    expect(host.playerGroundAim.pressPosition).toHaveBeenCalledExactlyOnceWith(
+      bomb.id,
+      5,
+      true,
+      false,
+    );
+    expect(sim.useItem).not.toHaveBeenCalled();
+    expect(host.tryGatherToolUse).not.toHaveBeenCalled();
+    expect(host.flashActionSlot).toHaveBeenCalledExactlyOnceWith(5);
+  });
+
+  it('reads its own cooldown entry: on cooldown it casts without the reticle', () => {
+    const { host, press } = withCooldowns(rig({ bar: { 5: bomb }, usableItemIds: [bomb.id] }), [
+      [bomb.id, 3],
+    ]);
+
+    press.castSlot(5);
+
+    expect(host.playerGroundAim.pressPosition).toHaveBeenCalledExactlyOnceWith(
+      bomb.id,
+      5,
+      false,
+      false,
+    );
+  });
+
+  it('enters the bag click aim under the pad-only identity, and declines every other item', () => {
+    const { host, sim, press } = withCooldowns(rig());
+
+    expect(press.startItemGroundAim('minor_healing_potion')).toBe(false);
+    expect(host.playerGroundAim.pressPosition).not.toHaveBeenCalled();
+    expect(press.startItemGroundAim(bomb.id)).toBe(true);
+    expect(host.playerGroundAim.pressPosition).toHaveBeenCalledExactlyOnceWith(
+      bomb.id,
+      XHB_ONLY_AIM_SLOT,
+      true,
+      false,
+    );
+    expect(sim.useItem).not.toHaveBeenCalled();
   });
 });
 
