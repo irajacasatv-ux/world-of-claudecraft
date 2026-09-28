@@ -97,7 +97,11 @@ export function combineDruidSeedRuns(
   return first.map((cell, i) => {
     for (const run of runs) {
       const other = run[i];
-      if (!other || other.profile !== cell.profile || other.capstone !== cell.capstone) {
+      if (
+        other.profile !== cell.profile ||
+        other.capstone !== cell.capstone ||
+        other.metric !== cell.metric
+      ) {
         throw new Error(`combineDruidSeedRuns: seed runs disagree at cell ${i}`);
       }
     }

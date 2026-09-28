@@ -157,7 +157,7 @@ function fixtureEquipment(
 describe('Druid v0.29 balance and live-mob harness', () => {
   it('defines the PDF-required 123-second, eight-seed, all-capstone matrix', () => {
     expect(DRUID_PROBE_SECONDS).toBe(123);
-    expect(DRUID_PROBE_SEEDS).toHaveLength(8);
+    expect(DRUID_PROBE_SEEDS).toEqual([4242, 777, 1313, 99, 2024, 555, 31337, 8080]);
     expect(Object.keys(DRUID_CAPSTONES)).toEqual(['naturesFury', 'wildApex', 'quickening']);
     expect(MATRIX_SEEDS).toEqual(FULL_SWEEP ? [...DRUID_PROBE_SEEDS] : [DRUID_PROBE_SEEDS[0]]);
   });
@@ -190,11 +190,12 @@ describe('Druid v0.29 balance and live-mob harness', () => {
   // 36444280897, 2026-09-28). Each seed's 12 profile x capstone combos over a 123 s
   // window take about 90 to 125 s solo (the eight measured 994 s together on
   // 2026-09-27); in the long-sims lane (workers=2) two heavy suites share the runner,
-  // roughly doubling wall time (run 31288946173 killed one at 150 s mid-matrix). The
-  // nightly bound is per seed, 900 s, about 2.9x the more than 300 s a seed averaged in
-  // that nightly, so the sweep's total allowance is 8 x 900 = 7,200 s, inside the
-  // nightly job's 300-minute limit. A probe runs synchronously, so a bound fails an
-  // over-long case when it finishes rather than cutting it short.
+  // roughly doubling wall time (run 31288946173 failed one against a 150 s bound). The
+  // nightly bound is per seed, 900 s, under 3x the more than 300 s a seed averaged in
+  // that nightly. A probe runs synchronously, so a bound fails an over-long case when it
+  // finishes rather than cutting it short: 8 x 900 = 7,200 s is the most a passing sweep
+  // may take, not a cap on its wall time, which the nightly job's 300-minute limit (shared
+  // with the rest of that job) bounds.
   it.each(MATRIX_SEEDS.map((seed, index) => [seed, index + 1]))(
     'runs the matrix at seed %i (run %i)',
     (seed) => {
@@ -206,7 +207,11 @@ describe('Druid v0.29 balance and live-mob harness', () => {
 
   it('lands every profile and capstone, and the best builds inside their bands', () => {
     expect(seedRuns, 'every seed case ran').toHaveLength(MATRIX_SEEDS.length);
-    expect(ranSeeds, 'each case ran its own seed, in order').toEqual([...MATRIX_SEEDS]);
+    expect(ranSeeds, 'each case received its own seed, in order').toEqual([...MATRIX_SEEDS]);
+    // ...and ran it: distinct seeds give distinct runs.
+    if (MATRIX_SEEDS.length > 1) {
+      expect(new Set(seedRuns.map((run) => JSON.stringify(run))).size).toBeGreaterThan(1);
+    }
     const results = combineDruidSeedRuns(seedRuns);
     expect(results).toHaveLength(12);
     expect(new Set(results.map((result) => result.profile))).toEqual(
