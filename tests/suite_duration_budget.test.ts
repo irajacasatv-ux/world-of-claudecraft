@@ -93,10 +93,10 @@ const FILE_ALLOWANCE_LEDGER: ReadonlyMap<string, number> = new Map([
   // The shared PostgreSQL escrow fixture carries a 120s setup hook and a 30s
   // pool-closing teardown, plus two 30s cases (the deadlock probe, the transaction
   // cost) and two 120s cases (the material-source saves, the maximum ledger prefix),
-  // each independently bounded. The exact row records that parallelizable shape without promoting the
-  // suite into the measured lane. 450_000 since 2026-09-28: one 120s measurement
-  // case, whose template interpolation holds an object literal, was invisible to the
-  // parser until then, not new.
+  // each independently bounded. The exact row records that parallelizable shape
+  // without promoting the suite into the measured lane. 450_000 since 2026-09-28:
+  // one 120s measurement case, whose template interpolation holds an object
+  // literal, was invisible to the parser until then, not new.
   ['tests/woc_market_delivery_pg_integration.test.ts', 450_000],
   // The 2026-08-23 warlock viability round doubled each anchor file's scope
   // (the heroic Nythraxis contract plus the historical level-20 tripwire,
