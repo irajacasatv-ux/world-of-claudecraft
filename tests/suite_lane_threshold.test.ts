@@ -18,6 +18,7 @@ import {
   CI_LONG_SUITES,
   ciTimeWeight,
   LANE_THRESHOLD_MS,
+  laneThresholdOver,
 } from '../scripts/lib/ci_shard_plan.mjs';
 import { carriedRows } from '../scripts/lib/ci_shard_weight_carry.mjs';
 
@@ -27,15 +28,9 @@ const CARRIED = carriedRows(
   ),
 );
 
-/** A live row's weight in CI time (ciTimeWeight over the committed carried map). */
-const ciWeight = (file: string, ms: number): number => ciTimeWeight(ms, CARRIED[file]);
-
 describe('the lane threshold over the measured shard weights', () => {
   it('keeps every file outside the lane under the threshold', () => {
-    const lane = new Set(CI_LONG_SUITES);
-    const over = Object.entries(MEASURED_WEIGHTS)
-      .filter(([file, ms]) => !lane.has(file) && ciWeight(file, ms) > LANE_THRESHOLD_MS)
-      .map(([file, ms]) => `${file} ${ciWeight(file, ms)} ms`);
+    const over = laneThresholdOver(MEASURED_WEIGHTS, CARRIED, CI_LONG_SUITES);
     expect(
       over,
       'a suite outside CI_LONG_SUITES weighs more than LANE_THRESHOLD_MS: lane it, split it, or ' +
@@ -63,5 +58,23 @@ describe('the lane threshold over the measured shard weights', () => {
     expect(ciTimeWeight(20_000, undefined)).toBe(20_000);
     // A local 23 s row is over the line in CI time though under it as recorded.
     expect(ciTimeWeight(23_000, { method: 'local-median' })).toBeGreaterThan(LANE_THRESHOLD_MS);
+  });
+
+  it('judges a table through the CI-time weight, outside the lane only', () => {
+    // The judgment the live case runs, over a synthetic table: a carried 23 s row is
+    // over (92 s in CI time), a harvested 23 s row is not, a harvested 95 s row is, and
+    // a lane file is never judged however heavy.
+    expect(
+      laneThresholdOver(
+        {
+          'tests/carried.test.ts': 23_000,
+          'tests/harvested.test.ts': 23_000,
+          'tests/heavy.test.ts': 95_000,
+          'tests/lane.test.ts': 900_000,
+        },
+        { 'tests/carried.test.ts': { method: 'local-median' } },
+        ['tests/lane.test.ts'],
+      ),
+    ).toEqual(['tests/carried.test.ts 92000 ms', 'tests/heavy.test.ts 95000 ms']);
   });
 });

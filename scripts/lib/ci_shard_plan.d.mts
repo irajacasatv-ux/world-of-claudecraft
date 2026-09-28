@@ -3,6 +3,11 @@ export const CI_GUARD_PREFIXES: readonly string[];
 export const LANE_THRESHOLD_MS: number;
 export const CARRIED_LOCAL_TO_CI_RATIO: number;
 export function ciTimeWeight(ms: number, carriedRow: object | undefined): number;
+export function laneThresholdOver(
+  weights: Readonly<Record<string, number>>,
+  carried: Readonly<Record<string, object>>,
+  lane: readonly string[],
+): string[];
 export const CI_LONG_SUITES: readonly string[];
 export const CI_LONG_SUITE_HALVES: { readonly a: readonly string[]; readonly b: readonly string[] };
 export const FLOOR_SANITY_MIN: number;

@@ -124,7 +124,8 @@ export const LANE_THRESHOLD_MS = 90_000;
  * Measured at the 2026-09-28 harvest (run 36448553184). The files near the line
  * are what matter: the two families split that day ran 3.13x (coverage_c,
  * 108,657 ms in CI against 34,686 ms for its halves locally) and 2.91x (the
- * world population sweep, 167,875 against 57,736), and over the 47 replaced
+ * world population sweep, 167,875 against 57,736 for the four files it first
+ * split into, locally), and over the 47 replaced
  * local-median rows of 5 s or more locally CI over local had a 90th percentile
  * of 3.36 and a maximum of 7.75 (tests/hill.test.ts). 4 sits above the families
  * and about the heavy 90th to 95th percentile; a hill-like outlier passes until
@@ -133,7 +134,9 @@ export const LANE_THRESHOLD_MS = 90_000;
  * The shard packer deliberately does NOT apply this: scripts/ci_shard_partition.mjs
  * weightForTestFile packs carried rows as recorded, so a carried file is packed
  * lighter than it runs until the next harvest. That only moves where a file runs,
- * never whether it runs.
+ * never whether it runs, though the shard that draws one runs longer than it was
+ * packed for (a few hundred seconds across all eight shards at the 2026-09-28
+ * carry).
  */
 export const CARRIED_LOCAL_TO_CI_RATIO = 4;
 
@@ -148,6 +151,29 @@ export const CARRIED_LOCAL_TO_CI_RATIO = 4;
  */
 export function ciTimeWeight(ms, carriedRow) {
   return carriedRow === undefined ? ms : ms * CARRIED_LOCAL_TO_CI_RATIO;
+}
+
+/**
+ * The lane rule's judgment: every file outside `lane` whose weight in CI time
+ * (ciTimeWeight over `carried`, the table's `__provenance.carried` map) is over
+ * LANE_THRESHOLD_MS, as `file ms` lines. Pure, so tests/suite_lane_threshold.test.ts
+ * pins it over a synthetic table and judges the committed one through it.
+ *
+ * @param {Readonly<Record<string, number>>} weights
+ * @param {Readonly<Record<string, object>>} carried
+ * @param {readonly string[]} lane
+ * @returns {string[]}
+ */
+export function laneThresholdOver(weights, carried, lane) {
+  const inLane = new Set(lane);
+  return Object.entries(weights)
+    .filter(([file]) => !inLane.has(file))
+    .map(([file, ms]) => [
+      file,
+      ciTimeWeight(ms, Object.hasOwn(carried, file) ? carried[file] : undefined),
+    ])
+    .filter(([, ms]) => ms > LANE_THRESHOLD_MS)
+    .map(([file, ms]) => `${file} ${ms} ms`);
 }
 
 export const CI_LONG_SUITES = Object.freeze([

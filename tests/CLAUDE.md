@@ -229,7 +229,8 @@ Every file is paid for twice, in a CI shard's wall clock and in a worker's memor
 guards hold the line, each naming its own remedy:
 - **Measured time.** `tests/suite_lane_threshold.test.ts` (every PR) holds each file outside
   `CI_LONG_SUITES` under `LANE_THRESHOLD_MS` in `scripts/ci_shard_weights.generated.json`, a
-  carried (locally measured) row scaled into CI time by `CARRIED_LOCAL_TO_CI_RATIO` first. Over
+  carried row (one the newest harvest did not measure) scaled into CI time by
+  `CARRIED_LOCAL_TO_CI_RATIO` first. Over
   it: split the file along its cost clusters, make it cheaper, or lane it (a measured decision in
   `scripts/lib/ci_shard_plan.mjs`). A file whose shape changed re-measures its row with
   `node scripts/ci_shard_weights_harvest.mjs --carry-local --supersede --reason "..."`.
