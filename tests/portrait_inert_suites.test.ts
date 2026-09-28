@@ -47,7 +47,9 @@ const SUITES = [
 // names realFetch and fetched exactly five times each, the uses those blocks hold: so the
 // captured real fetch cannot be put back or called around the recorder, however the
 // target is spelled, nor the list emptied before the check. This pin does not see a fetch
-// captured or built under another spelling, and it trusts the scanner below.
+// captured or built under another spelling, nor a '/' the scanner misreads: it guesses
+// between a regex literal and a division from the character before, so a misread slash
+// can still hide or keep code.
 const RECORDER =
   /^const \{ fetched, inertPortraitChip, realFetch \} = vi\.hoisted\(\(\) => \{\n {2}const fetched: string\[\] = \[\];\n {2}const realFetch = globalThis\.fetch;\n {2}globalThis\.fetch = \(\(input: RequestInfo \| URL, init\?: RequestInit\) => \{\n {4}fetched\.push\(typeof input === 'string' \? input : input instanceof URL \? input\.href : input\.url\);\n {4}return realFetch\(input, init\);\n {2}\}\) as typeof fetch;(?:\n(?:(?![^\n]*\breturn\b) {2}[^\n]*)?)*?\n {2}return \{ fetched, inertPortraitChip, realFetch \};\n\}\);$/m;
 const CHIP_STUB = /^vi\.mock\('\.\.\/src\/ui\/portrait_chip', \(\) => inertPortraitChip\);$/m;
@@ -55,16 +57,20 @@ const AFTER_ALL =
   /^afterAll\(\(\) => \{\n {2}globalThis\.fetch = realFetch;\n {2}expect\(fetched, 'this suite starts no fetch'\)\.toEqual\(\[\]\);\n\}\);$/m;
 
 /** Whether some match of a block pattern is live code, not inside a comment or a string:
- *  the file's masking over the match's span must equal the match's own masking. */
+ *  the file's masking over the match's span must equal the match's own masking, and the
+ *  match must leave the scanner back in code (a trailing statement it would mask means a
+ *  comment or string opened inside the match runs past its end). */
 const isLive = (raw: string, code: string, pattern: RegExp): boolean =>
   [...raw.matchAll(new RegExp(pattern.source, `${pattern.flags}g`))].some(
-    (m) => code.slice(m.index, m.index + m[0].length) === maskCommentsAndStrings(m[0]),
+    (m) =>
+      code.slice(m.index, m.index + m[0].length) === maskCommentsAndStrings(m[0]) &&
+      maskCommentsAndStrings(`${m[0]}\n;`).endsWith(';'),
   );
 
 /** The checks a suite's raw source fails; the suites and the controls both run it. The
- *  source is read through the repo's tokenizing scanner (maskCommentsAndStrings, whose
- *  fixtures pin it in tests/suite_duration_budget.test.ts): it blanks comments and string
- *  contents but understands strings, templates and regex literals, so a comment marker
+ *  source is read through maskCommentsAndStrings (tests/helpers/declared_timeouts.ts,
+ *  pinned by the fixtures in tests/suite_duration_budget.test.ts): a scanner that blanks
+ *  comments and string contents and tracks strings and templates, so a comment marker
  *  inside a string can neither hide code nor keep a commented-out block. */
 const failedChecks = (raw: string): string[] => {
   const code = maskCommentsAndStrings(raw);
@@ -130,11 +136,23 @@ describe('the portrait-inert suites', () => {
       expect(failedChecks(raw.replace(close, `\n${early}${close}`)), early).toEqual([recorder]);
     }
     expect(failedChecks(raw.replace(CHIP_STUB, ''))).toEqual(['the chip stub']);
+    // The recorder's own return commented out or quoted from inside the match, with a
+    // decoy return after it that keeps the counts balanced.
+    const after = '\n  return { fetched: [] as string[], inertPortraitChip, realFetch };\n});';
+    for (const [open, shut] of [
+      ['\n  /*', '\n*/'],
+      ['\n  const text = `', '\n`;'],
+    ]) {
+      expect(failedChecks(raw.replace(close, `${open}${close}${shut}${after}`)), open).toEqual([
+        recorder,
+      ]);
+    }
     // A block that is not live code: commented out, commented out behind a string that
-    // holds a comment marker, or wrapped in a template string.
+    // holds a comment marker or behind a `/*/` opener, or wrapped in a template string.
     for (const hide of [
       (block: string) => `/*\n${block}\n*/`,
       (block: string) => `const url = '//'; /*\n${block}\n*/`,
+      (block: string) => `/*/\n${block}\n*/`,
       (block: string) => `const text = \`\n${block}\n\`;`,
     ]) {
       expect(failedChecks(raw.replace(AFTER_ALL, hide))).toContain(
