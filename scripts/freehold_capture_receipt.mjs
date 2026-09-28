@@ -14,7 +14,9 @@ import {
 import { baselineRuntimeRefusal, outputPlacementRefusal } from './lib/freehold_receipt_guards.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const baselineCommit = '654071354172b3e252cfc03a1e85efde2daddaa6';
+/** The release commit the before captures must be produced on. */
+export const FREEHOLD_RECEIPT_BASELINE_COMMIT = '654071354172b3e252cfc03a1e85efde2daddaa6';
+const baselineCommit = FREEHOLD_RECEIPT_BASELINE_COMMIT;
 const views = { desktop: [1600, 900], compact: [874, 402], tablet: [1180, 820] };
 const targets = ['freehold-gate', 'freehold-inn', 'freehold-cottage'];
 // Keep the original capture seal order stable, then append newly participating sources.
@@ -115,7 +117,7 @@ const formatted = (value) =>
 const requireEvidence = (condition, message) => {
   if (!condition) throw new Error(message);
 };
-const git = (cwd, ...args) => execFileSync('git', args, { cwd, encoding: 'utf8' }).trimEnd();
+const gitCli = (cwd, ...args) => execFileSync('git', args, { cwd, encoding: 'utf8' }).trimEnd();
 const lines = (text) => (text ? text.split('\n') : []);
 const read = (file) => {
   const bytes = fs.readFileSync(file);
@@ -124,12 +126,14 @@ const read = (file) => {
 
 /**
  * Seal one completed capture set (the CLI's arguments), or throw the refusal. Exported so
- * the refusal matrix runs in-process instead of spawning a Node process per case.
+ * the refusal matrix runs in-process instead of spawning a Node process per case. `git`
+ * reads the two checkouts; a test answers it for a baseline no checkout here can hold.
  *
  * @param {string[]} args
+ * @param {{ git?: (cwd: string, ...args: string[]) => string }} [io]
  * @returns {string} the success line the CLI prints
  */
-export function sealFreeholdCaptures(args) {
+export function sealFreeholdCaptures(args, { git = gitCli } = {}) {
   const allowed = ['before', 'after', 'performance', 'output', 'baseline-root', 'baseline-url'];
   const options = {};
   for (let i = 0; i < args.length; i += 2) {
@@ -449,11 +453,23 @@ export function sealFreeholdCaptures(args) {
   return `Sealed ${captures.length} matched captures and ${rawFiles.length} unmodified producer records in ${output}`;
 }
 
-if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+/**
+ * The CLI: print the success line and answer 0, or print the refusal and answer 1.
+ *
+ * @param {string[]} argv
+ * @param {{ log?: (line: string) => void, error?: (line: string) => void, git?: (cwd: string, ...args: string[]) => string }} [io]
+ * @returns {number} the exit code
+ */
+export function runReceiptCli(argv, { log = console.log, error = console.error, git } = {}) {
   try {
-    console.log(sealFreeholdCaptures(process.argv.slice(2)));
-  } catch (error) {
-    console.error(error instanceof Error ? error.message : String(error));
-    process.exitCode = 1;
+    log(sealFreeholdCaptures(argv, { git }));
+    return 0;
+  } catch (failure) {
+    error(failure instanceof Error ? failure.message : String(failure));
+    return 1;
   }
+}
+
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  process.exitCode = runReceiptCli(process.argv.slice(2));
 }

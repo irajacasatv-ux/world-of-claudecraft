@@ -1,9 +1,15 @@
 import { spawnSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { sealFreeholdCaptures } from '../scripts/freehold_capture_receipt.mjs';
+import {
+  FREEHOLD_RECEIPT_BASELINE_COMMIT,
+  type ReceiptGit,
+  runReceiptCli,
+  sealFreeholdCaptures,
+} from '../scripts/freehold_capture_receipt.mjs';
 import { FREEHOLD_GATE_STANCE } from '../scripts/freehold_interior_route.mjs';
 import {
   baselineRuntimeRefusal,
@@ -489,6 +495,93 @@ describe('Freehold capture receipt refusal', () => {
     expect(wrote).toBe(false);
   });
 
+  it('seals a clean set: one success line, exit 0, every record written byte for byte', () => {
+    // The success arm no checkout here can reach (no baseline sits at the
+    // release commit), driven through the CLI's own exit and print wrapper
+    // with git answered for the two checkouts it reads.
+    const root = mkdtempSync(join(tmpdir(), 'freehold-receipt-'));
+    const [before, after, baseline] = ['before', 'after', 'baseline'].map((d) => join(root, d));
+    const output = join(root, 'receipt');
+    for (const dir of [before, after, baseline]) mkdirSync(dir);
+    const sha256 = (bytes: Buffer) => createHash('sha256').update(bytes).digest('hex');
+    const produced: Record<string, string[]> = {};
+    const producerState = () =>
+      [before, after].flatMap((dir) =>
+        [...produced[dir], 'manifest.json', 'performance.json']
+          .filter((file) => existsSync(join(dir, file)))
+          .map((file) => sha256(readFileSync(join(dir, file)))),
+      );
+    const calls: string[][] = [];
+    const git: ReceiptGit = (cwd, ...args) => {
+      calls.push([cwd, ...args]);
+      if (args[0] === 'rev-parse')
+        return cwd === baseline ? FREEHOLD_RECEIPT_BASELINE_COMMIT : 'head';
+      if (args[0] === 'ls-tree') return '040000 tree 1a2b3c\tsrc';
+      return '';
+    };
+    const logs: string[] = [];
+    const errors: string[] = [];
+    try {
+      produced[before] = stage(before, 'before') as string[];
+      produced[after] = stage(after, 'after') as string[];
+      writeFileSync(join(before, 'performance.json'), JSON.stringify(performance()));
+      const producers = producerState();
+      const args = [...receiptArgs(before, after, output).slice(0, -1), baseline];
+      const code = runReceiptCli(args, {
+        log: (line) => logs.push(line),
+        error: (line) => errors.push(line),
+        git,
+      });
+      expect(errors).toEqual([]);
+      expect(code).toBe(0);
+      expect(logs).toEqual([
+        `Sealed 18 matched captures and 3 unmodified producer records in ${resolve(output)}`,
+      ]);
+      const acceptance = JSON.parse(readFileSync(join(output, 'acceptance.json'), 'utf8'));
+      expect(acceptance.baselineCommit).toBe(FREEHOLD_RECEIPT_BASELINE_COMMIT);
+      expect(acceptance.sourceIdentity.baselineRuntime.head).toBe(FREEHOLD_RECEIPT_BASELINE_COMMIT);
+      expect(acceptance.sourceIdentity.current.head).toBe('head');
+      expect(acceptance.captures).toHaveLength(18);
+      for (const capture of acceptance.captures) {
+        const [side, ...rest] = capture.file.split('-');
+        const sourceDir = side === 'before' ? before : after;
+        const producer = produced[sourceDir].find((file) => file.endsWith(`-${rest.join('-')}`));
+        expect(producer, capture.file).toBeDefined();
+        const copy = readFileSync(join(output, capture.file));
+        expect(copy.equals(readFileSync(join(sourceDir, producer as string)))).toBe(true);
+        expect(sha256(copy)).toBe(capture.sha256);
+        expect(sha256(readFileSync(join(output, capture.evidence)))).toBe(capture.evidenceSha256);
+      }
+      expect(acceptance.rawFiles.map((raw: { file: string }) => raw.file)).toEqual([
+        'before-manifest.raw.json',
+        'after-manifest.raw.json',
+        'performance.raw.json',
+      ]);
+      for (const raw of acceptance.rawFiles) {
+        const bytes = readFileSync(join(output, raw.file));
+        expect(sha256(bytes)).toBe(raw.sha256);
+        expect(JSON.parse(readFileSync(join(output, raw.formattedFile), 'utf8'))).toEqual(
+          JSON.parse(bytes.toString('utf8')),
+        );
+      }
+      expect(
+        readFileSync(join(output, 'before-manifest.raw.json')).equals(
+          readFileSync(join(before, 'manifest.json')),
+        ),
+      ).toBe(true);
+      expect(acceptance.performance.sha256).toBe(
+        sha256(readFileSync(join(output, 'performance.json'))),
+      );
+      // The baseline was read at the declared commit, and no producer changed.
+      expect(calls).toContainEqual(
+        expect.arrayContaining([baseline, 'diff', '--name-only', FREEHOLD_RECEIPT_BASELINE_COMMIT]),
+      );
+      expect(producerState()).toEqual(producers);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   it.each(Object.keys(REFUSALS))('refuses %s before publishing any evidence', (defect) => {
     const { result, wrote } = run(defect);
     expect(result.status).toBe(1);
@@ -538,9 +631,10 @@ describe('Freehold capture receipt placement guards', () => {
   });
 
   it('feeds both guards what it read, and writes nothing before they clear', () => {
-    // The synthetic sets stop at the release HEAD check (no checkout here sits
-    // at the release commit), so the receipt's second baseline call and its
-    // placement call are held on its own source, comments stripped.
+    // The order, held on the receipt's own source with comments stripped: the
+    // refusal matrix stops at the release HEAD check, and the success case above
+    // answers git for the baseline, so neither can show that the second baseline
+    // call and the placement call run BEFORE the first write.
     const flat = readFileSync('scripts/freehold_capture_receipt.mjs', 'utf8')
       .replace(/\/\*[\s\S]*?\*\//g, '')
       .replace(/(^|[^:])\/\/.*$/gm, '$1')
