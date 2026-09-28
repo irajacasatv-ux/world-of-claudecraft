@@ -18,7 +18,8 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 const read = (file: string) => fs.readFileSync(path.join(HERE, file), 'utf8');
 // A suite that writes and deletes a scratch file under tests/ while this walk runs
 // must not fail it: a file or directory gone between the listing and the read is
-// skipped, never one of the three suites checked below.
+// skipped. The three suites checked below are still read strictly in the second test
+// and must each be listed, so a missing one still fails.
 const orGone = <T>(read: () => T, gone: T): T => {
   try {
     return read();
@@ -27,15 +28,26 @@ const orGone = <T>(read: () => T, gone: T): T => {
     throw error;
   }
 };
+// Each suite and whether the gate's always-run floor holds it (char_window reads
+// source, so it is floored whatever its stub; the other two must stay graph-selected).
 const SUITES = [
-  'char_window_drag_render_defer.test.ts',
-  'quest_dialog_controller.test.ts',
-  'char_window.test.ts',
+  { file: 'char_window_drag_render_defer.test.ts', floored: false },
+  { file: 'quest_dialog_controller.test.ts', floored: false },
+  { file: 'char_window.test.ts', floored: true },
 ];
+
+// The recorder, installed in vi.hoisted before any import runs, and the afterAll that
+// restores fetch and asserts the list is empty, each matched as one block so no line
+// can move out of it, and the chip stub between them.
+const RECORDER =
+  /^ {2}const realFetch = globalThis\.fetch;\n {2}globalThis\.fetch = \(\(input: RequestInfo \| URL, init\?: RequestInit\) => \{\n {4}fetched\.push\(typeof input === 'string' \? input : input instanceof URL \? input\.href : input\.url\);\n {4}return realFetch\(input, init\);\n {2}\}\) as typeof fetch;$/m;
+const CHIP_STUB = /^vi\.mock\('\.\.\/src\/ui\/portrait_chip', \(\) => inertPortraitChip\);$/m;
+const AFTER_ALL =
+  /^afterAll\(\(\) => \{\n {2}globalThis\.fetch = realFetch;\n {2}expect\(fetched, 'this suite starts no fetch'\)\.toEqual\(\[\]\);\n\}\);$/m;
 
 describe('the portrait-inert suites', () => {
   it('stay where the selective gate put them', () => {
-    const { alwaysRun } = collectSuiteVisibility({
+    const { testFiles, alwaysRun } = collectSuiteVisibility({
       root: path.join(HERE, '..'),
       readdirSync: (dir, options) => orGone(() => fs.readdirSync(dir, options), []),
       readFileSync: (file, encoding) => orGone(() => fs.readFileSync(file, encoding), ''),
@@ -44,31 +56,20 @@ describe('the portrait-inert suites', () => {
       sep: path.sep,
     });
     const floor = new Set(alwaysRun);
-    expect(floor.has('tests/char_window_drag_render_defer.test.ts')).toBe(false);
-    expect(floor.has('tests/quest_dialog_controller.test.ts')).toBe(false);
-    // Already in the floor for reading source, so its place never depended on the stub.
-    expect(floor.has('tests/char_window.test.ts')).toBe(true);
+    for (const { file, floored } of SUITES) {
+      // Listed first, so a renamed suite cannot leave its floor check passing vacuously.
+      expect(testFiles, file).toContain(`tests/${file}`);
+      expect(floor.has(`tests/${file}`), file).toBe(floored);
+    }
   });
 
   it('each install the recorder, stub the chip, and pin zero fetches', () => {
-    // Over comment-stripped text and anchored to whole lines, so neither a line nor a
-    // block commented out counts.
-    for (const file of SUITES) {
+    // Over comment-stripped text, so neither a line nor a block commented out counts.
+    for (const { file } of SUITES) {
       const source = stripComments(read(file));
-      expect(source, file).toMatch(
-        /^ {2}globalThis\.fetch = \(\(input: RequestInfo \| URL, init\?: RequestInit\) => \{$/m,
-      );
-      expect(source, file).toMatch(
-        /^ {4}fetched\.push\(typeof input === 'string' \? input : input instanceof URL \? input\.href : input\.url\);$/m,
-      );
-      expect(source, file).toMatch(
-        /^vi\.mock\('\.\.\/src\/ui\/portrait_chip', \(\) => inertPortraitChip\);$/m,
-      );
-      expect(source, file).toMatch(/^afterAll\(\(\) => \{$/m);
-      expect(source, file).toMatch(/^ {2}globalThis\.fetch = realFetch;$/m);
-      expect(source, file).toMatch(
-        /^ {2}expect\(fetched, 'this suite starts no fetch'\)\.toEqual\(\[\]\);$/m,
-      );
+      expect(source, file).toMatch(RECORDER);
+      expect(source, file).toMatch(CHIP_STUB);
+      expect(source, file).toMatch(AFTER_ALL);
     }
   });
 });
