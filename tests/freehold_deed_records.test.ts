@@ -18,9 +18,11 @@ describe('Freehold manual deed records', () => {
   it('appends the two routine cosmetic milestones after the existing tail', () => {
     // The release's Eastbrook ferry deed (exp_harbor_to_harbor) sits behind
     // hid_forgebreaker since the 2026-09-26 sync, and behind the release's Clue
-    // Scroll casket pair since the aaff789813 sync; the two milestones stay last.
-    expect(DEED_ORDER.slice(-4)).toEqual([
+    // Scroll casket pair since the aaff789813 sync, and behind the release's
+    // Coinsack deed since the release/v0.45.0 sync; the two milestones stay last.
+    expect(DEED_ORDER.slice(-5)).toEqual([
       'exp_clue_ten_caskets',
+      'cmb_coinsack_caught',
       'exp_harbor_to_harbor',
       FURNISHING,
       COTTAGE,

@@ -573,14 +573,16 @@ describe('bags_window: touch peek + bank-cluster close', () => {
       /case 'petFeed':[\s\S]{0,200}?const at = this\.copyRefFor\(s\);\s*if \(!at\) return;\s*this\.deps\.world\(\)\.feedPet\(s\.itemId, at\);/,
     );
     // Within the use case, available items retain gathering-tool routing and
-    // its plain-use fallback. Bound the scan to this case's own break rather
-    // than a character count that changes when a refusal guard is added.
+    // its plain-use fallback. Bound the scan to this case's LAST break before
+    // the next case rather than a character count that changes when a refusal
+    // guard is added: the ground-aimed item arm ends in an earlier break of its
+    // own, ahead of the plain use.
     const useCase = stripComments(body).match(
-      /case 'use': \{((?:(?!\bcase\b)[\s\S])*?)\bbreak;/,
+      /case 'use': \{((?:(?!\bcase\b)[\s\S])*)\bbreak;/,
     )?.[1];
     expect(useCase).toBeDefined();
     expect(useCase).toMatch(
-      /if \(!item \|\| !this\.deps\.useGatherTool\(item\)\) \{[\s\S]{0,300}?this\.deps\.world\(\)\.useItem\(s\.itemId, at\);/,
+      /if \(this\.deps\.startGroundAimForItem\?\.\(s\.itemId\)\) \{\s*this\.deps\.hideTooltip\(\);\s*break;\s*\}[\s\S]*?if \(!item \|\| !this\.deps\.useGatherTool\(item\)\) \{[\s\S]{0,300}?this\.deps\.world\(\)\.useItem\(s\.itemId, at\);/,
     );
   });
 

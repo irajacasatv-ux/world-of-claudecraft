@@ -70,6 +70,10 @@ describe('authored furnisher construction and world geometry', () => {
     // own tree measures this exact fingerprint (1053 entities, both digests,
     // the same nextId and rng cursor), so the dark merged world still adds
     // nothing; the 21 new entities (four of them before the player) are the release's.
+    // RE-MEASURED at the release/v0.45.0 sync at ac9ed4db24: the release tip's
+    // own tree measures this exact fingerprint (1058 entities, both digests,
+    // the same nextId and rng cursor), so the dark merged world still adds
+    // nothing; the five new entities are the release's.
     const sim = new Sim({ seed: 1, playerClass: 'warrior' });
     expect({
       nextId: sim.nextId,
@@ -92,8 +96,8 @@ describe('authored furnisher construction and world geometry', () => {
       primaryId: 1003,
       merchants: [1, 33],
       bankers: [9, 22, 34, 95],
-      entityCount: 1053,
-      positionHash: 'd945ea64e75faa0560b87f47f2a4caa074f7a18df9f2caaef9fc8220a0e22c77',
+      entityCount: 1058,
+      positionHash: '449e14b532ef7dd6577e5d6ff13f3a1c6b343753c02666dbf9c6414ed135bafd',
       rngNext: 0.30275995447300375,
     });
     expect(sim.entities.get(1000000003)?.templateId).toBe('crucible_quartermaster');
@@ -109,7 +113,7 @@ describe('authored furnisher construction and world geometry', () => {
             hp: e.hp,
           })),
       ),
-    ).toBe('e97a97edcb0de3379fa60ebd3de8ec4e8fc46eaad95dccb7b04f8ed76b18a895');
+    ).toBe('7a19f37f9d509edbc35dfa772d77f8f16d5966eb271ad5feb121c05f430c028a');
     expect([...sim.entities.values()].some((e) => e.templateId === 'freehold_furnisher')).toBe(
       false,
     );
