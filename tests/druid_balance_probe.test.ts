@@ -177,6 +177,10 @@ describe('Druid v0.29 balance and live-mob harness', () => {
     expect(() => combineDruidSeedRuns([[cell(1)], [otherProfile]])).toThrow(
       'seed runs disagree at cell 0',
     );
+    const otherMetric = { ...cell(1), metric: 'hps' } as DruidBalanceResult;
+    expect(() => combineDruidSeedRuns([[cell(1)], [otherMetric]])).toThrow(
+      'seed runs disagree at cell 0',
+    );
     // A run missing a cell, or carrying one more than the first, is refused, never
     // silently trimmed.
     expect(() => combineDruidSeedRuns([[cell(1)], []])).toThrow('seed runs differ in length');
