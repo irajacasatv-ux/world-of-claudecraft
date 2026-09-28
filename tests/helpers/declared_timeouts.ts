@@ -94,8 +94,12 @@ export function maskCommentsAndStrings(source: string): string {
       } else if (ch === "'") state = 'single';
       else if (ch === '"') state = 'double';
       else if (ch === '`') state = 'template';
-      else if (ch === '}' && stack.length > 0) {
-        // Close of a template interpolation: back into the template.
+      else if (ch === '{' && stack.length > 0) {
+        // A brace opened inside an interpolation is code; it must close before the
+        // interpolation can.
+        stack.push('code');
+      } else if (ch === '}' && stack.length > 0) {
+        // The brace that balances an interpolation's `${` returns to its template.
         state = stack.pop() as State;
       }
       if (state === 'code' && !/\s/.test(ch)) lastCode = ch;

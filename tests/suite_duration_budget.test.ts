@@ -90,10 +90,13 @@ const FILE_ALLOWANCE_LEDGER: ReadonlyMap<string, number> = new Map([
   ['tests/owned_class_balance_dps_probes.test.ts', 360_000],
   // Lane-owned raid harness, likewise unseen until the trailing-comma fix.
   ['tests/owned_class_raid_armor_avoidance.test.ts', 360_000],
-  // The shared PostgreSQL escrow fixture carries a 30s setup hook plus ten
-  // independently bounded 30s cases. The exact row records that existing
-  // parallelizable shape without promoting the suite into the measured lane.
-  ['tests/woc_market_delivery_pg_integration.test.ts', 330_000],
+  // The shared PostgreSQL escrow fixture carries a 120s setup hook and a 30s drop,
+  // plus two 30s escrow cases and two 120s measurement cases, each independently
+  // bounded. The exact row records that parallelizable shape without promoting the
+  // suite into the measured lane. 450_000 since 2026-09-28: one 120s measurement
+  // case, whose template interpolation holds an object literal, was invisible to the
+  // parser until then, not new.
+  ['tests/woc_market_delivery_pg_integration.test.ts', 450_000],
   // The 2026-08-23 warlock viability round doubled each anchor file's scope
   // (the heroic Nythraxis contract plus the historical level-20 tripwire,
   // four probe runs each); same suite family as the druid/owned probes above.
@@ -210,6 +213,14 @@ describe('suite duration budget (declared-timeout ratchet)', () => {
     // text inside it stays masked.
     expect(per(`/*/ x */ it('z', () => { run(); }, 90_000);`)).toEqual([90_000]);
     expect(maskCommentsAndStrings('/*/ it(1) */ a')).toBe(`${' '.repeat(13)}a`);
+    // A brace inside a template interpolation is code: the interpolation ends only at
+    // the `}` that balances its own `${`, so a case inside it still counts.
+    expect(
+      per(
+        `const s = \`\${(() => { if (a) {} it('z', () => { run(); }, 90_000); return ''; })()}\`;`,
+      ),
+    ).toEqual([90_000]);
+    expect(maskCommentsAndStrings(`\`\${ {a: 1}.a } b\``)).toBe('` { {a: 1}.a }  `');
   });
 
   it('caps every single declared test timeout at the worker-chain bound', () => {
