@@ -7,6 +7,7 @@ import {
 } from '../src/ui/hud/quest/quest_strip_core';
 import { shellStrings } from '../src/ui/i18n.catalog/shell';
 import { es_ES, fr_CA } from '../src/ui/i18n.resolved.generated';
+import { stripComments } from './helpers/strip_comments';
 
 const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8').replace(/\r\n/g, '\n');
 // The CSS extraction moved the :root tokens and the reset/base
@@ -935,27 +936,28 @@ describe('client HTML shell', () => {
   it('keeps the four close-path bags repaints gated, neither unconditional nor dropped', () => {
     // The forbidden raw guards above cannot see an arm reverted to a bare renderBags() or
     // deleted, so each close path's own arm is pinned in place: the vendor and bank
-    // close-else arms, and the market and mailbox syncBags(false) arms.
+    // close-else arms, and the market and mailbox syncBags(false) arms. Comments are
+    // stripped first, so a commented-out arm cannot satisfy a pin.
+    const code = stripComments(hudTs);
     const flat = (text: string) => text.replace(/\s+/g, ' ');
-    const methodBody = (signature: string) => {
-      const start = hudTs.indexOf(`\n  ${signature} {\n`);
-      expect(start, signature).toBeGreaterThan(-1);
-      return flat(hudTs.slice(start, hudTs.indexOf('\n  }\n', start)));
-    };
-    const syncBags = (windowId: string) => {
-      const anchor = hudTs.indexOf(`closeOthers: () => this.closeOtherWindows('${windowId}')`);
-      expect(anchor, windowId).toBeGreaterThan(-1);
-      const start = hudTs.indexOf('syncBags: (open) => {', anchor);
-      return flat(hudTs.slice(start, hudTs.indexOf('\n    },', start)));
+    const span = (text: string, opener: string, closer: string) => {
+      const start = text.indexOf(opener);
+      expect(start, opener).toBeGreaterThan(-1);
+      const end = text.indexOf(closer, start);
+      expect(end, `${opener} closer`).toBeGreaterThan(start);
+      return text.slice(start, end);
     };
     for (const signature of ['closeVendor(): void', 'private onBankClosed(): void']) {
-      // The gated repaint is the method's closing else arm.
-      expect(methodBody(signature), signature).toMatch(
-        /\} else \{ this\.renderBagsIfOpen\(\); \}$/,
-      );
+      const body = flat(span(code, `\n  ${signature} {\n`, '\n  }\n'));
+      // The gated repaint is the method's closing else arm, and nothing else in it repaints.
+      expect(body, signature).toMatch(/\} else \{ this\.renderBagsIfOpen\(\); \}$/);
+      expect(body, signature).not.toContain('this.renderBags()');
     }
-    for (const windowId of ['#market-window', '#mailbox-window']) {
-      expect(syncBags(windowId), windowId).toBe(
+    for (const ctor of ['new MarketWindow({', 'new MailboxWindow({']) {
+      // Read inside the window's own constructor block, so one window's arm can never be
+      // read for the other's.
+      const config = span(code, ctor, '\n  });\n');
+      expect(flat(span(config, 'syncBags: (open) => {', '\n    },')), ctor).toBe(
         "syncBags: (open) => { if (open) { this.renderBags(); $('#bags').style.display = 'flex'; } else { this.renderBagsIfOpen(); }",
       );
     }

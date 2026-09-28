@@ -15,10 +15,11 @@ import { generateDecorations, groundHeight, roadDistance, waterLevel } from '../
 import { WORLD_SEED } from '../src/sim/world_seed';
 
 const digest = (value: unknown) => createHash('sha256').update(JSON.stringify(value)).digest('hex');
-// Positions and facings are rounded to a micro-yard before they are hashed: the
-// same Node build measured warlord_drogmar's spawn height one ulp apart on arm64
-// and x64 (3.7256669298810356 against 3.725666929881035), so a raw digest pinned
-// on one host fails on the other. A micro-yard still catches any moved spawn.
+// Positions are rounded to a micro-yard and facings to a micro-radian before they
+// are hashed: the same Node release (26.10.0) measured warlord_drogmar's spawn
+// height one ulp apart on arm64 and x64 (3.7256669298810356 against
+// 3.725666929881035), so a raw digest pinned on one host fails on the other. A
+// spawn that moves by a micro-yard or more always changes the digest.
 const quantize = (v: number) => Math.round(v * 1e6) / 1e6;
 const spawnRow = (e: Entity) => ({
   id: e.id,
@@ -90,7 +91,8 @@ describe('authored furnisher construction and world geometry', () => {
     // RE-EXPRESSED on 2026-09-28 at micro-yard precision (spawnRow above), the
     // same world: the raw digests matched the release tip on arm64, and the
     // quantized ones were measured identical on arm64 macOS, arm64 Linux and
-    // x64 Linux, the host CI runs on.
+    // x64 Linux, the host CI runs on. Every CI vitest runner is x64, so measure
+    // any re-pin there too (docker --platform linux/amd64), not only on macOS.
     const sim = new Sim({ seed: 1, playerClass: 'warrior' });
     expect({
       nextId: sim.nextId,
