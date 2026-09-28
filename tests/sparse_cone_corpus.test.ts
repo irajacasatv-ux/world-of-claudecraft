@@ -50,6 +50,8 @@ const FILES: Record<string, string> = {
     'for (const file of walk(root)) await import(file);',
   ].join('\n'),
   'scripts/walked/one/fingerprint.mjs': "const out = 'docs/screenshots/walked/';",
+  'tests/template.test.ts': 'const mod = await import(`../src/dyn/${name}.ts`);',
+  'src/dyn/one.ts': '',
   'tests/names_only.test.ts': "const root = '../scripts/listed';",
   'scripts/listed/only_listed.mjs': "const out = 'docs/screenshots/listed/';",
   'scripts/orphan_shot.mjs': "const out = 'docs/screenshots/orphan/';",
@@ -84,6 +86,7 @@ describe('sparseConeCorpus', () => {
     ['a ../-prefixed new URL path', 'scripts/url_named.mjs'],
     ['a path inside a command string', 'scripts/cmd_named.mjs'],
     ['a file under a root imported by a computed specifier', 'scripts/walked/one/fingerprint.mjs'],
+    ['a file under a template import prefix', 'src/dyn/one.ts'],
   ])('takes %s', (_, file) => {
     expect(corpus).toContain(file);
   });
@@ -103,8 +106,8 @@ describe('sparseConeCorpus', () => {
     ]) {
       expect(corpus, file).not.toContain(file);
     }
-    // The six unit-test seeds, the thirteen files they reach, and the one JSON.
-    expect(corpus).toHaveLength(20);
+    // The seven unit-test seeds, the fourteen files they reach, and the one JSON.
+    expect(corpus).toHaveLength(22);
   });
 
   it('honors the caller exclusion and follows nothing through an excluded file', () => {

@@ -5,6 +5,7 @@
 // The projection is the one pinned end to end here, because it was a copy of
 // the hub's walk that missed the furnishing stop when the two sides merged.
 
+import { readFileSync } from 'node:fs';
 import { afterEach, describe, expect, it } from 'vitest';
 import type { CharacterState } from '../src/sim/character_state';
 import { ITEMS } from '../src/sim/data';
@@ -12,6 +13,7 @@ import { restoreDeedStats } from '../src/sim/deeds';
 import { creditDef, creditedParentId, creditsViaTier } from '../src/sim/item_credit_chain';
 import { projectHoardRewardCollections } from '../src/sim/rift/hoard_reward_save';
 import type { ItemDef } from '../src/sim/types';
+import { stripComments } from './helpers/strip_comments';
 
 const PIECE = 'collapsar_band_of_nyxaris';
 const TIER = 'rare_collapsar_band_of_nyxaris';
@@ -73,4 +75,16 @@ describe('the hoard grant save projection walks the same chain', () => {
     expect([...stats.itemsDiscovered]).toEqual([SYNTHETIC]);
     expect(stats.visited.size).toBe(0);
   });
+});
+
+describe('the three walks read through the one lookup', () => {
+  it.each(['src/sim/deeds.ts', 'src/sim/reliquary.ts', 'src/sim/rift/hoard_reward_save.ts'])(
+    '%s reads each def with creditDef and steps with creditedParentId',
+    (file) => {
+      const source = stripComments(readFileSync(file, 'utf8'));
+      expect(source).toContain('creditDef(ITEMS, id)');
+      expect(source).toContain('creditedParentId(def)');
+      expect(source).not.toMatch(/=\s*ITEMS\[id\]/);
+    },
+  );
 });

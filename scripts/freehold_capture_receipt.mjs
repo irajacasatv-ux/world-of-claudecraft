@@ -89,7 +89,8 @@ const sourcePaths = [
   'src/game/camera_follow.ts',
   'src/game/offline_world_config.ts',
 ];
-const runtimePaths = [
+/** The application paths the baseline checkout must hold unchanged at the release. */
+export const FREEHOLD_RECEIPT_RUNTIME_PATHS = Object.freeze([
   'src',
   'public',
   'server',
@@ -100,7 +101,8 @@ const runtimePaths = [
   'pnpm-lock.yaml',
   'patches',
   'vite.config.ts',
-];
+]);
+const runtimePaths = FREEHOLD_RECEIPT_RUNTIME_PATHS;
 const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex');
 // The evidence directory is excluded from Biome scans. Use an in-root JSON stdin
 // path so normalized copies follow the repository formatter without touching raw producers.

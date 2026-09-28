@@ -6,6 +6,7 @@ import { join, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
   FREEHOLD_RECEIPT_BASELINE_COMMIT,
+  FREEHOLD_RECEIPT_RUNTIME_PATHS,
   type ReceiptGit,
   runReceiptCli,
   sealFreeholdCaptures,
@@ -495,32 +496,48 @@ describe('Freehold capture receipt refusal', () => {
     expect(wrote).toBe(false);
   });
 
-  /** A strict fake of the receipt's git reads: exactly the command shapes the
-   *  receipt issues, answered for a clean baseline at the declared release
-   *  unless `dirty` says otherwise; any other command throws, so a receipt that
-   *  started reading something else fails here rather than passing on ''. */
+  /** A strict fake of the receipt's git reads: exactly the commands the receipt
+   *  issues, whole argument lists and runtime path scope included, answered for
+   *  a clean baseline at the declared release unless `dirty` says otherwise; any
+   *  other command, or a baseline read aimed at another checkout, throws, so a
+   *  receipt that started reading something else fails here rather than passing
+   *  on ''. */
   function baselineGit(
     baseline: string,
     calls: string[][],
     dirty: { head?: string; diff?: string; untracked?: string } = {},
   ): ReceiptGit {
+    const paths = ['--', ...FREEHOLD_RECEIPT_RUNTIME_PATHS].join(' ');
+    const base = FREEHOLD_RECEIPT_BASELINE_COMMIT;
     return (cwd, ...args) => {
       calls.push([cwd, ...args]);
-      const command = args.slice(0, 3).join(' ');
-      if (args.join(' ') === 'rev-parse HEAD')
-        return cwd === baseline ? (dirty.head ?? FREEHOLD_RECEIPT_BASELINE_COMMIT) : 'head';
-      if (command === `diff --name-only ${FREEHOLD_RECEIPT_BASELINE_COMMIT}`)
-        return dirty.diff ?? '';
-      if (command === 'ls-files --others --exclude-standard') return dirty.untracked ?? '';
+      const command = args.join(' ');
+      if (command === 'rev-parse HEAD') return cwd === baseline ? (dirty.head ?? base) : 'head';
       if (command === 'status --porcelain=v1 --untracked-files=all') return '';
-      if (command === `ls-tree ${FREEHOLD_RECEIPT_BASELINE_COMMIT} --`)
-        return '040000 tree 1a2b3c\tsrc';
-      throw new Error(`unexpected git read: ${args.join(' ')}`);
+      if (cwd === baseline) {
+        if (command === `diff --name-only ${base} ${paths}`) return dirty.diff ?? '';
+        if (command === `ls-files --others --exclude-standard ${paths}`)
+          return dirty.untracked ?? '';
+        if (command === `ls-tree ${base} ${paths}`) return '040000 tree 1a2b3c\tsrc';
+      }
+      throw new Error(`unexpected git read in ${cwd}: ${command}`);
     };
   }
 
-  it('declares the release commit the before captures are produced on', () => {
+  it('declares the release commit the before captures are produced on, and its runtime scope', () => {
     expect(FREEHOLD_RECEIPT_BASELINE_COMMIT).toBe('654071354172b3e252cfc03a1e85efde2daddaa6');
+    expect(FREEHOLD_RECEIPT_RUNTIME_PATHS).toEqual([
+      'src',
+      'public',
+      'server',
+      'headless',
+      'index.html',
+      'play.html',
+      'package.json',
+      'pnpm-lock.yaml',
+      'patches',
+      'vite.config.ts',
+    ]);
   });
 
   it.each([

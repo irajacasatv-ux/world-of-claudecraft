@@ -916,16 +916,18 @@ describe('client HTML shell', () => {
 
   it('reconciles every #bags display show-site to flex and every read-guard to !== none', () => {
     // #bags is a flex-column layout (components.css flex-direction: column). Every show-site
-    // must set display = 'flex' (a 'block' drops the column), and every render read-guard must
-    // test !== 'none' (an === 'block' guard never fired when bags was opened via the common
-    // flex path). No '#bags' 'block' display write or read survives, in either the $('#bags')
-    // or the cached-var (drag drop-target) form.
+    // must set display = 'flex' (a 'block' drops the column), and every render read-guard goes
+    // through bagsWindowShown (an === 'block' guard never fired when bags was opened via the
+    // common flex path, and a raw !== 'none' counts a never-opened window as open). No '#bags'
+    // 'block' display write or read survives, in either the $('#bags') or the cached-var (drag
+    // drop-target) form.
     expect(hudTs).not.toContain("#bags').style.display = 'block'");
     expect(hudTs).not.toContain("#bags').style.display === 'block'");
     expect(hudTs).not.toContain("bags.style.display = 'block'");
     expect(hudTs).not.toContain("bags.style.display !== 'block'");
     expect(hudTs).toContain("$('#bags').style.display = 'flex';");
-    expect(hudTs).toContain("$('#bags').style.display !== 'none'");
+    expect(hudTs).toContain("if (bagsWindowShown($('#bags').style.display)) this.renderBags();");
+    expect(hudTs).not.toContain("#bags').style.display !== 'none'");
     expect(hudTs).toContain("bags.style.display !== 'flex'");
   });
 

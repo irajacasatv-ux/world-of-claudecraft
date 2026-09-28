@@ -4977,8 +4977,8 @@ export class Hud {
       if (open) {
         this.renderBags();
         $('#bags').style.display = 'flex';
-      } else if ($('#bags').style.display !== 'none') {
-        this.renderBags();
+      } else {
+        this.renderBagsIfOpen();
       }
     },
     confirmDialog: (title, body, okText, cancelText, onOk) =>
@@ -5000,8 +5000,8 @@ export class Hud {
       if (open) {
         this.renderBags();
         $('#bags').style.display = 'flex';
-      } else if ($('#bags').style.display !== 'none') {
-        this.renderBags();
+      } else {
+        this.renderBagsIfOpen();
       }
     },
   });
@@ -11998,8 +11998,8 @@ export class Hud {
       bags.style.display = 'none';
       bags.inert = false;
       this.cancelPetFeed();
-    } else if ($('#bags').style.display !== 'none') {
-      this.renderBags();
+    } else {
+      this.renderBagsIfOpen();
     }
   }
 
@@ -12673,8 +12673,8 @@ export class Hud {
       bags.style.display = 'none';
       bags.inert = false;
       this.cancelPetFeed();
-    } else if ($('#bags').style.display !== 'none') {
-      this.renderBags();
+    } else {
+      this.renderBagsIfOpen();
     }
   }
 

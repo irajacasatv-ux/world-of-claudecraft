@@ -684,6 +684,19 @@ describe('the close transition', () => {
     // The bags stayed open through the trade, so the close repaints them.
     expect(r.host.bagRenders).toBe(rendersAfterOpen + 1);
   });
+
+  it('repaints no bags window that is closed or was never opened', () => {
+    for (const display of ['none', '']) {
+      const r = rig();
+      openTrade(r);
+      const bags = document.querySelector<HTMLElement>('#bags') as HTMLElement;
+      bags.style.display = display;
+      const rendersBeforeClose = r.host.bagRenders;
+      r.host.tradeInfo = null;
+      r.controller.updateTradeWindow();
+      expect(r.host.bagRenders, JSON.stringify(display)).toBe(rendersBeforeClose);
+    }
+  });
 });
 
 type FinishRow = { id: number; usdCents: number; role: 'buyer' | 'seller'; itemId: string | null };

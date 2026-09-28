@@ -306,6 +306,16 @@ describe('ActionPressController.castSlot: the item arm', () => {
     expect(host.flashActionSlot).toHaveBeenCalledExactlyOnceWith(4);
   });
 
+  it('repaints no bags window that was never opened', () => {
+    const { host, sim, press } = rig({ bar: { 4: potion }, usableItemIds: [potion.id] });
+    (document.getElementById('bags') as HTMLElement).style.display = '';
+
+    press.castSlot(4);
+
+    expect(sim.useItem).toHaveBeenCalledExactlyOnceWith(potion.id);
+    expect(host.renderBags).not.toHaveBeenCalled();
+  });
+
   it('repaints the bags only while the bags window is open', () => {
     const { host, sim, press } = rig({
       bar: { 4: potion },

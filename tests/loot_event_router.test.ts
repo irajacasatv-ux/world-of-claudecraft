@@ -58,6 +58,14 @@ describe('applyLootEventPresentation', () => {
     });
     expect(rig.log.mock.calls[0][1]).toBe(HUD_LOG.GOOD);
     expect(rig.renderBags).not.toHaveBeenCalled();
+    // A window that was never opened carries no inline display at all.
+    (document.getElementById('bags') as HTMLElement).style.display = '';
+    applyLootEventPresentation(rig, {
+      type: 'loot',
+      text: 'You receive: Copper Ore x3.',
+      pid: PLAYER_ID,
+    });
+    expect(rig.renderBags).not.toHaveBeenCalled();
     (document.getElementById('bags') as HTMLElement).style.display = 'block';
     applyLootEventPresentation(rig, {
       type: 'loot',

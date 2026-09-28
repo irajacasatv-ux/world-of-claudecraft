@@ -148,7 +148,7 @@ describe('the unbindResult event arm (source pins)', () => {
     expect(arm).toContain('h.renderUnbind();');
     expect(arm).toContain('h.renderBags();');
     expect(arm).toContain("$('#unbind-window').style.display === 'block'");
-    expect(arm).toContain("$('#bags').style.display !== 'none'");
+    expect(arm).toContain("bagsWindowShown($('#bags').style.display)");
   });
 });
 
