@@ -83,8 +83,11 @@ export function maskCommentsAndStrings(source: string): string {
         state = 'line';
         out[i] = ' ';
       } else if (ch === '/' && next === '*') {
+        // Consume the opener's star too, so `/*/` cannot close on its own star.
         state = 'block';
         out[i] = ' ';
+        out[i + 1] = ' ';
+        i++;
       } else if (ch === '/' && (lastCode === '' || /[(,=:[!&|?{};+\-*%<>~^]/.test(lastCode))) {
         state = 'regex';
         inClass = false;

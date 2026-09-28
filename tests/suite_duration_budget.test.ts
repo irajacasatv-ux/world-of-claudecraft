@@ -205,6 +205,11 @@ describe('suite duration budget (declared-timeout ratchet)', () => {
     ).toHaveLength(1);
     // The mask keeps template interpolations bracket-balanced.
     expect(maskCommentsAndStrings(`\`a \${b(1)} c\``).includes('b(1)')).toBe(true);
+    // A block comment's opening star is not also its closing star: `/*/` opens a
+    // comment that runs to the next `*/`, so the case after it still counts, and
+    // text inside it stays masked.
+    expect(per(`/*/ x */ it('z', () => { run(); }, 90_000);`)).toEqual([90_000]);
+    expect(maskCommentsAndStrings('/*/ it(1) */ a')).toBe(`${' '.repeat(13)}a`);
   });
 
   it('caps every single declared test timeout at the worker-chain bound', () => {
