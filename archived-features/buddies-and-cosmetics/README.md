@@ -77,3 +77,9 @@ remains a no-op for older clients; new clients have no cosmetic command or state
 
 Acquisition and local test commands for the retained buddies are documented in
 `docs/design/buddy-acquisition.md` at the repository root.
+
+## Recovered original PR history
+
+`recovered-pr-3737/` preserves The Mummy and the late Buddy bag source changes
+from PoorInfz's original PR #3737. These remain inactive; all original commits
+are also retained in this branch's Git ancestry. See that folder for provenance.
