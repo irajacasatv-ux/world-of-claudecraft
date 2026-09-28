@@ -41,7 +41,19 @@
 // - handleEvents routes a resurrection offer to the lazily built
 //   ResurrectionPrompt and prints the respawn line (moved from
 //   tests/hud_resurrection_prompt.test.ts; the prompt is
-//   tests/resurrection_prompt.test.ts).
+//   tests/resurrection_prompt.test.ts);
+// - handleEvents' harvestPreferenceOpen arm holds the pid gate AND the
+//   spectator gate (moved from tests/harvest_preference_hud.test.ts);
+// - appendChatItemLink threads a copy's instance payload into the link, so a
+//   furnishing's forged loot-quality tier never names it (moved from
+//   tests/furnishing_tooltip_view.test.ts);
+// - cancelPetFeed ends the shared feed mode and invalidates the lazily built
+//   pet bar (src/ui/hud/pet_bar/, whose own suites are
+//   tests/pet_bar_controller.test.ts and tests/pet_bar_view.test.ts).
+//
+// The window-management cases (closeAll, the managed closes, the map window
+// lifecycle, buildActionBar's listeners) live in the sibling coordinator file
+// tests/hud_window_coordination.test.ts.
 //
 // Its own file on purpose: importing the coordinator costs a suite several
 // hundred MB (tests/CLAUDE.md, "Test cost"), so these cases are kept out of the
@@ -51,7 +63,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { audio } from '../src/game/audio';
 import { sfx } from '../src/game/sfx';
 import { ABILITIES, ITEMS, ZONES } from '../src/sim/data';
-import type { SimEvent } from '../src/sim/types';
+import type { ItemInstancePayload, SimEvent } from '../src/sim/types';
 import {
   type BannerShowArgs,
   BannerSlot,
@@ -64,9 +76,11 @@ import { Hud } from '../src/ui/hud';
 import { ActionPressController } from '../src/ui/hud/action_bar/action_press_controller';
 import type { AimPoint } from '../src/ui/hud/action_bar/ground_aim';
 import type { ChatLogAppendDeps } from '../src/ui/hud/chat/chat_log_appender';
+import { PetBarController } from '../src/ui/hud/pet_bar';
 import { ProfessionSurfaceRefresh } from '../src/ui/hud/professions/profession_surface_refresh';
 import { setLanguage, t } from '../src/ui/i18n';
 import { TOWN_FOCUS_COMPONENTS } from '../src/ui/town_focus_view';
+import { FURNISHING } from './fixtures/furnishing_item';
 import { celebrationRig } from './helpers/celebration_rig';
 import { chatPane } from './helpers/chat_log_deps';
 import { chatLines, eventRouterRig } from './helpers/event_router_rig';
@@ -1107,5 +1121,158 @@ describe('the respawn chat line through handleEvents', () => {
     expect(plain.log).toHaveBeenCalledTimes(1);
     expect(plain.log.mock.calls[0][0]).toBe(t('hud.system.respawn'));
     expect(plain.log.mock.calls[0][0]).not.toMatch(/weaker|Toll/);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// The pet food-selection mode's end through the Hud. pendingPetFeed stays a
+// Hud field because the bags window shares it, so ending it is the Hud's, and
+// the pet bar (built lazily over the Hud) must repaint its Heal Pet button.
+// ---------------------------------------------------------------------------
+
+describe('Hud.cancelPetFeed: ends the shared feed mode and invalidates the pet bar', () => {
+  it('clears the flag and invalidates the one lazily built bar, and a second call is a no-op', () => {
+    const invalidate = vi.spyOn(PetBarController.prototype, 'invalidate');
+    const hud = bareHud() as DelegatorRig & {
+      pendingPetFeed: boolean;
+      cancelPetFeed: Hud['cancelPetFeed'];
+    };
+    hud.pendingPetFeed = true;
+    hud.cancelPetFeed();
+    expect(hud.pendingPetFeed).toBe(false);
+    expect(invalidate).toHaveBeenCalledTimes(1);
+    const bar = hud.petBar;
+    expect(bar).toBeInstanceOf(PetBarController);
+    expect(hud.petBar).toBe(bar);
+    expect(invalidate.mock.contexts).toEqual([bar]);
+    // Not in the mode: nothing changed, so nothing repaints.
+    hud.cancelPetFeed();
+    expect(invalidate).toHaveBeenCalledTimes(1);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// The harvest preference picker's personal event through the real
+// handleEvents (moved whole from tests/harvest_preference_hud.test.ts).
+// ---------------------------------------------------------------------------
+
+describe('the spectator bug: the generic pid gate is not enough for harvestPreferenceOpen', () => {
+  // Online, the server's event router maps a spectating moderator's session
+  // to the ANCHOR's pid and delivers the anchor's personal events; ClientWorld's
+  // applySnapshot re-anchors `playerId` to that same pid while spectating (see
+  // src/net/CLAUDE.md, applySnapshot). So the generic `ev.pid !== sim.playerId`
+  // gate at the top of handleEvents PASSES the anchor's own harvestPreferenceOpen
+  // event straight through to a spectating moderator, who never asked for it.
+  // This drives the real Hud.prototype.handleEvents (no test-local routing
+  // stand-in) against a bare Object.create fixture, stubbing only the
+  // per-event side effects this event's siblings might otherwise touch.
+  const ANCHOR_PID = 7;
+
+  // A standalone structural type, deliberately NOT intersected with `Hud`
+  // itself: `Hud & { sim: unknown; ... }` collapses to `never` because
+  // several of these field names (prevCraftSkills, craftTierUpDrains, ...)
+  // are PRIVATE on the real class, and TS refuses an intersection where a
+  // private member's declaring class differs. `handleEvents` is typed off
+  // `Hud['handleEvents']` so the call below is the REAL public method's
+  // exact signature; every other field the method body touches is named
+  // here as `unknown` and assigned through it, never read back as Hud.
+  interface HudTestHarness {
+    handleEvents: Hud['handleEvents'];
+    sim: unknown;
+    renderer: unknown;
+    meters: unknown;
+    harvestPreferenceController: unknown;
+    isNythraxisEvent: unknown;
+    playEventSfx: unknown;
+    prevCraftSkills: unknown;
+    prevCraftSkillLevels: unknown;
+    prevGatheringSkillLevels: unknown;
+    craftTierUpDrains: unknown;
+  }
+
+  function makeHud(spectating: string | null): {
+    hud: HudTestHarness;
+    open: ReturnType<typeof vi.fn>;
+  } {
+    const open = vi.fn();
+    const sim = {
+      playerId: ANCHOR_PID,
+      spectating,
+      entities: new Map(),
+      craftingIdentity: { synced: false },
+      craftSkills: {},
+      gatheringProficiency: {},
+    };
+    // Object.create(Hud.prototype) puts the REAL Hud.prototype.handleEvents
+    // on the returned object's prototype chain; only the instance fields
+    // that method's body reaches are stamped on directly.
+    const hud = Object.create(Hud.prototype) as HudTestHarness;
+    hud.sim = sim;
+    hud.renderer = { handleEvent: vi.fn() };
+    hud.meters = { onEvent: vi.fn() };
+    hud.harvestPreferenceController = { open };
+    hud.isNythraxisEvent = () => false;
+    hud.playEventSfx = () => {};
+    hud.prevCraftSkills = null;
+    hud.prevCraftSkillLevels = null;
+    hud.prevGatheringSkillLevels = null;
+    hud.craftTierUpDrains = 0;
+    return { hud, open };
+  }
+
+  const evFor = (pid: number): SimEvent[] => [{ type: 'harvestPreferenceOpen', pid }];
+
+  it("opens for the viewer's own pid event, not spectating", () => {
+    const { hud, open } = makeHud(null);
+    hud.handleEvents(evFor(ANCHOR_PID));
+    expect(open).toHaveBeenCalledTimes(1);
+  });
+
+  it('never opens for a foreign pid event, not spectating', () => {
+    const { hud, open } = makeHud(null);
+    hud.handleEvents(evFor(ANCHOR_PID + 1));
+    expect(open).not.toHaveBeenCalled();
+  });
+
+  it("never opens for the spectated anchor's own event while spectating", () => {
+    const { hud, open } = makeHud('SomeAnchorName');
+    // The generic gate alone would pass this: sim.playerId reads the anchor's
+    // pid while spectating, matching the event's pid exactly.
+    hud.handleEvents(evFor(ANCHOR_PID));
+    expect(open).not.toHaveBeenCalled();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// A furnishing's chat item link through the real Hud.appendChatItemLink (moved
+// whole from tests/furnishing_tooltip_view.test.ts).
+// ---------------------------------------------------------------------------
+
+describe('furnishing chat item links', () => {
+  function linkText(itemId: string, instance?: ItemInstancePayload): string {
+    const hud = Object.create(Hud.prototype) as {
+      attachTooltip: () => void;
+      appendChatItemLink(parent: HTMLElement, id: string, copy?: ItemInstancePayload): void;
+    };
+    hud.attachTooltip = () => {};
+    const parent = document.createElement('div');
+    hud.appendChatItemLink(parent, itemId, instance);
+    return parent.textContent ?? '';
+  }
+
+  it('never names a forged loot-quality tier on a furnishing link', () => {
+    const rolled: ItemInstancePayload = {
+      lootQuality: { version: 1, tier: 4, weights: [4, 900, 200, 6, 7] },
+    };
+    const previous = ITEMS[FURNISHING.id];
+    ITEMS[FURNISHING.id] = FURNISHING;
+    try {
+      expect(linkText(FURNISHING.id, rolled)).toBe(linkText(FURNISHING.id));
+      // Control: the same roll on real gear does change the link's name.
+      expect(linkText('worn_sword', rolled)).not.toBe(linkText('worn_sword'));
+    } finally {
+      if (previous === undefined) delete ITEMS[FURNISHING.id];
+      else ITEMS[FURNISHING.id] = previous;
+    }
   });
 });

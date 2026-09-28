@@ -8,25 +8,17 @@ import type { PlayerEquipment, PlayerEquipmentInstances } from '../src/sim/entit
 import { Sim } from '../src/sim/sim';
 import type { FurnishingItemDef, ItemDef, ItemInstancePayload } from '../src/sim/types';
 import { charStatModel } from '../src/ui/char_stat_model_core';
-import { Hud } from '../src/ui/hud';
-import {
-  ACTION_BAR_ABILITY_SLOTS,
-  ActionBarController,
-} from '../src/ui/hud/action_bar/action_bar_controller';
-import { HOTBAR_ACTION_MIME, type HotbarAction } from '../src/ui/hud/action_bar/hotbar';
 import { furnishingTooltipLines, furnishingTooltipRows } from '../src/ui/hud/housing';
 import { buildPlayerCardData } from '../src/ui/hud/player_card/player_card_data';
 import { setLanguage } from '../src/ui/i18n';
 import { hudChromeStrings } from '../src/ui/i18n.catalog/hud_chrome';
 import { itemTooltipHtml } from '../src/ui/item_tooltip_view';
-import { makeWriterFacet } from '../src/ui/painter_host';
 import type { StatId, StatTooltipModel } from '../src/ui/stat_tooltip';
 import type { IWorld } from '../src/world_api';
-import { FURNISHING } from './fixtures/furnishing_item';
 import { EMPTY_TEST_WORLD } from './sim_shared';
 
-// The tooltip and action-bar paths do not render character previews. Keep the
-// real HUD methods while avoiding unrelated GLB preloads in the DOM test host.
+// The tooltip paths do not render character previews: avoid unrelated GLB
+// preloads in the DOM test host.
 vi.mock('../src/render/characters', () => ({ CharacterPreview: class {} }));
 vi.mock('../src/render/characters/assets', () => ({ preloadMechAssets: vi.fn() }));
 vi.mock('../src/render/characters/portrait', () => ({
@@ -53,7 +45,10 @@ const furnishing: FurnishingItemDef = {
 
 // The composed item card (src/ui/item_tooltip_view.ts) over a real world, with
 // the Show Item Level setting off (the value the old Hud prototype rig read).
-// Only the action-bar drag and chat-link cases below still need the Hud.
+// The two furnishing cases that need the real Hud moved out: the action-bar
+// drag refusal (buildActionBar's live listeners) to
+// tests/hud_window_coordination.test.ts, the chat item link
+// (Hud.appendChatItemLink) to tests/hud_coordinator_delegators.test.ts.
 function composedTooltip(
   item: ItemDef,
   instance?: ItemInstancePayload,
@@ -585,178 +580,5 @@ describe('loaded furnishings in equipment display projections', () => {
       value: (10.5 + control.player.attackPower / 14).toFixed(1),
     });
     expect(world.equipment.mainhand).toBe(furnishing.id);
-  });
-});
-
-describe('furnishing drops through the live HUD action-bar handlers', () => {
-  it.each([
-    { name: 'normal slot, external bag payload', slot: 2, source: 'external' },
-    { name: 'normal slot, stale attack drag', slot: 2, source: 'attack' },
-    { name: 'freed attack slot, external bag payload', slot: 0, source: 'external' },
-    { name: 'freed attack slot, stale normal drag', slot: 0, source: 'normal' },
-  ] as const)('refuses $name without saving or moving other actions', ({ slot, source }) => {
-    const previousDef = ITEMS[FURNISHING.id];
-    ITEMS[FURNISHING.id] = FURNISHING;
-    const root = document.createElement('div');
-    root.innerHTML =
-      '<div id="actionbar"></div><div id="actionbar2"></div><div id="actionbar3"></div>';
-    document.body.append(root);
-    try {
-      const values = new Map<string, string>();
-      const storage = {
-        getItem: (key: string) => values.get(key) ?? null,
-        setItem: vi.fn((key: string, value: string) => {
-          values.set(key, value);
-        }),
-        removeItem: vi.fn((key: string) => {
-          values.delete(key);
-        }),
-      };
-      const sendLayout = vi.fn();
-      const settingsWrite = vi.fn();
-      const controller = new ActionBarController({
-        storage,
-        playerClass: 'warrior',
-        playerName: 'FurnishingDropTester',
-        playerLevel: () => 20,
-        talentSpec: () => null,
-        knownAbilityIds: () => ['sunder_armor'],
-        hasAura: () => false,
-        showAttackButton: () => false,
-        persistLayout: sendLayout,
-      });
-      controller.init();
-      const actions: HotbarAction[] = Array.from({ length: ACTION_BAR_ABILITY_SLOTS }, () => null);
-      actions[0] = { type: 'ability', id: 'sunder_armor' };
-      actions[1] = { type: 'item', id: 'reins_valorsteed' };
-      controller.replaceActions(actions);
-      controller.replaceAttackAction({ type: 'ability', id: 'sunder_armor' });
-      controller.saveActions();
-      controller.saveAttackAction();
-      const noop = () => {};
-      const runtimeHud = Object.assign(Object.create(Hud.prototype), {
-        actionBarController: controller,
-        abilityButtons: [],
-        actionbarEl: root.querySelector('#actionbar'),
-        keybinds: { primaryLabel: () => '' },
-        sim: { known: [] },
-        optionsHooks: { settings: { get: () => false, set: settingsWrite } },
-        writerFacet: makeWriterFacet(
-          new WeakMap(),
-          new WeakMap(),
-          new WeakMap(),
-          new WeakMap(),
-          noop,
-          noop,
-        ),
-        bindEmpoweredActionHold: noop,
-        attachTooltip: noop,
-        hideTooltip: noop,
-        buildMobileActionRing: noop,
-        buildMobileConsumableSeat: noop,
-        buildStanceBar: noop,
-        dragAction: null,
-      }) as {
-        buildActionBar(): void;
-        abilityButtons: { btn: HTMLButtonElement }[];
-        dragAction: {
-          action: Exclude<HotbarAction, null>;
-          sourceIndex: number | null;
-          sourceAttackSlot?: boolean;
-        } | null;
-      };
-      runtimeHud.buildActionBar();
-      const target = runtimeHud.abilityButtons[slot].btn;
-      const dispatch = (kind: 'dragover' | 'drop', action: Exclude<HotbarAction, null>): Event => {
-        const event = new Event(kind, { bubbles: true, cancelable: true });
-        Object.defineProperty(event, 'dataTransfer', {
-          value: {
-            types: [HOTBAR_ACTION_MIME],
-            getData: (mime: string) => (mime === HOTBAR_ACTION_MIME ? JSON.stringify(action) : ''),
-            dropEffect: 'none',
-          },
-        });
-        target.dispatchEvent(event);
-        return event;
-      };
-      const resetCalls = () => {
-        storage.setItem.mockClear();
-        storage.removeItem.mockClear();
-        sendLayout.mockClear();
-        settingsWrite.mockClear();
-      };
-      resetCalls();
-      const before = {
-        actions: structuredClone(controller.actions),
-        attack: structuredClone(controller.attackAction),
-        storage: [...values],
-      };
-      const rejected: Exclude<HotbarAction, null> = { type: 'item', id: FURNISHING.id };
-      if (source !== 'external') {
-        // A stale or malformed in-memory drag must be refused before it can
-        // clear the valid source slot or configured attack action.
-        runtimeHud.dragAction = {
-          action: rejected,
-          sourceIndex: source === 'normal' ? 0 : null,
-          sourceAttackSlot: source === 'attack',
-        };
-      }
-      expect(dispatch('dragover', rejected).defaultPrevented).toBe(false);
-      expect(target.classList.contains('drop-target')).toBe(false);
-      dispatch('drop', rejected);
-      expect(controller.actions).toEqual(before.actions);
-      expect(controller.actions[0]).toEqual({ type: 'ability', id: 'sunder_armor' });
-      expect(controller.actions[1]).toEqual({ type: 'item', id: 'reins_valorsteed' });
-      expect(controller.attackAction).toEqual(before.attack);
-      expect([...values]).toEqual(before.storage);
-      expect(storage.setItem).not.toHaveBeenCalled();
-      expect(storage.removeItem).not.toHaveBeenCalled();
-      expect(sendLayout).not.toHaveBeenCalled();
-      expect(settingsWrite).not.toHaveBeenCalled();
-
-      // Positive control: the same mounted listeners accept and save an
-      // eligible item, so the rejected drop's silence cannot be a dead fixture.
-      runtimeHud.dragAction = null;
-      const accepted: Exclude<HotbarAction, null> = { type: 'item', id: 'reins_valorsteed' };
-      expect(dispatch('dragover', accepted).defaultPrevented).toBe(true);
-      expect(target.classList.contains('drop-target')).toBe(true);
-      dispatch('drop', accepted);
-      expect(storage.setItem).toHaveBeenCalled();
-      expect(sendLayout).toHaveBeenCalled();
-      expect(target.classList.contains('drop-target')).toBe(false);
-    } finally {
-      root.remove();
-      if (previousDef === undefined) delete ITEMS[FURNISHING.id];
-      else ITEMS[FURNISHING.id] = previousDef;
-    }
-  });
-});
-
-describe('furnishing chat item links', () => {
-  function linkText(itemId: string, instance?: ItemInstancePayload): string {
-    const hud = Object.create(Hud.prototype) as {
-      attachTooltip: () => void;
-      appendChatItemLink(parent: HTMLElement, id: string, copy?: ItemInstancePayload): void;
-    };
-    hud.attachTooltip = () => {};
-    const parent = document.createElement('div');
-    hud.appendChatItemLink(parent, itemId, instance);
-    return parent.textContent ?? '';
-  }
-
-  it('never names a forged loot-quality tier on a furnishing link', () => {
-    const rolled: ItemInstancePayload = {
-      lootQuality: { version: 1, tier: 4, weights: [4, 900, 200, 6, 7] },
-    };
-    const previous = ITEMS[FURNISHING.id];
-    ITEMS[FURNISHING.id] = FURNISHING;
-    try {
-      expect(linkText(FURNISHING.id, rolled)).toBe(linkText(FURNISHING.id));
-      // Control: the same roll on real gear does change the link's name.
-      expect(linkText('worn_sword', rolled)).not.toBe(linkText('worn_sword'));
-    } finally {
-      if (previous === undefined) delete ITEMS[FURNISHING.id];
-      else ITEMS[FURNISHING.id] = previous;
-    }
   });
 });

@@ -11,15 +11,15 @@
 // file cannot drive directly (the event-routing case, the closeAll case, the
 // relocalize fan-out, the professions dep wiring) is proven by a source scan
 // against the real file, the same "hud wires..." idiom that precedent uses,
-// never by an invented stand-in function.
+// never by an invented stand-in function. The spectator gate on the event
+// (the real Hud.handleEvents over a bare prototype) lives with the other
+// coordinator cases in tests/hud_coordinator_delegators.test.ts.
 
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { HarvestPreference } from '../src/sim/professions/harvest_preference';
-import type { SimEvent } from '../src/sim/types';
 import { FocusManager } from '../src/ui/focus_manager';
-import { Hud } from '../src/ui/hud';
 import { HarvestPreferenceController } from '../src/ui/hud/professions/harvest_preference_controller';
 import {
   harvestPreferenceEntryHtml,
@@ -179,92 +179,5 @@ describe('hud.ts wiring (source scan against the real file, the farming_windows_
     expect(hud.slice(start, end)).toContain(
       'openHarvestPreference: () => this.harvestPreferenceController.open()',
     );
-  });
-});
-
-describe('the spectator bug: the generic pid gate is not enough for harvestPreferenceOpen', () => {
-  // Online, the server's event router maps a spectating moderator's session
-  // to the ANCHOR's pid and delivers the anchor's personal events; ClientWorld's
-  // applySnapshot re-anchors `playerId` to that same pid while spectating (see
-  // src/net/CLAUDE.md, applySnapshot). So the generic `ev.pid !== sim.playerId`
-  // gate at the top of handleEvents PASSES the anchor's own harvestPreferenceOpen
-  // event straight through to a spectating moderator, who never asked for it.
-  // This drives the real Hud.prototype.handleEvents (no test-local routing
-  // stand-in) against a bare Object.create fixture, stubbing only the
-  // per-event side effects this event's siblings might otherwise touch.
-  const ANCHOR_PID = 7;
-
-  // A standalone structural type, deliberately NOT intersected with `Hud`
-  // itself: `Hud & { sim: unknown; ... }` collapses to `never` because
-  // several of these field names (prevCraftSkills, craftTierUpDrains, ...)
-  // are PRIVATE on the real class, and TS refuses an intersection where a
-  // private member's declaring class differs. `handleEvents` is typed off
-  // `Hud['handleEvents']` so the call below is the REAL public method's
-  // exact signature; every other field the method body touches is named
-  // here as `unknown` and assigned through it, never read back as Hud.
-  interface HudTestHarness {
-    handleEvents: Hud['handleEvents'];
-    sim: unknown;
-    renderer: unknown;
-    meters: unknown;
-    harvestPreferenceController: unknown;
-    isNythraxisEvent: unknown;
-    playEventSfx: unknown;
-    prevCraftSkills: unknown;
-    prevCraftSkillLevels: unknown;
-    prevGatheringSkillLevels: unknown;
-    craftTierUpDrains: unknown;
-  }
-
-  function makeHud(spectating: string | null): {
-    hud: HudTestHarness;
-    open: ReturnType<typeof vi.fn>;
-  } {
-    const open = vi.fn();
-    const sim = {
-      playerId: ANCHOR_PID,
-      spectating,
-      entities: new Map(),
-      craftingIdentity: { synced: false },
-      craftSkills: {},
-      gatheringProficiency: {},
-    };
-    // Object.create(Hud.prototype) puts the REAL Hud.prototype.handleEvents
-    // on the returned object's prototype chain; only the instance fields
-    // that method's body reaches are stamped on directly.
-    const hud = Object.create(Hud.prototype) as HudTestHarness;
-    hud.sim = sim;
-    hud.renderer = { handleEvent: vi.fn() };
-    hud.meters = { onEvent: vi.fn() };
-    hud.harvestPreferenceController = { open };
-    hud.isNythraxisEvent = () => false;
-    hud.playEventSfx = () => {};
-    hud.prevCraftSkills = null;
-    hud.prevCraftSkillLevels = null;
-    hud.prevGatheringSkillLevels = null;
-    hud.craftTierUpDrains = 0;
-    return { hud, open };
-  }
-
-  const evFor = (pid: number): SimEvent[] => [{ type: 'harvestPreferenceOpen', pid }];
-
-  it("opens for the viewer's own pid event, not spectating", () => {
-    const { hud, open } = makeHud(null);
-    hud.handleEvents(evFor(ANCHOR_PID));
-    expect(open).toHaveBeenCalledTimes(1);
-  });
-
-  it('never opens for a foreign pid event, not spectating', () => {
-    const { hud, open } = makeHud(null);
-    hud.handleEvents(evFor(ANCHOR_PID + 1));
-    expect(open).not.toHaveBeenCalled();
-  });
-
-  it("never opens for the spectated anchor's own event while spectating", () => {
-    const { hud, open } = makeHud('SomeAnchorName');
-    // The generic gate alone would pass this: sim.playerId reads the anchor's
-    // pid while spectating, matching the event's pid exactly.
-    hud.handleEvents(evFor(ANCHOR_PID));
-    expect(open).not.toHaveBeenCalled();
   });
 });

@@ -2,8 +2,8 @@
   "__provenance": {
     "run": "34168361798",
     "harvested": "2026-09-08",
-    "files": 4924,
-    "harvestedFiles": 3900,
+    "files": 4923,
+    "harvestedFiles": 3899,
     "carried": {
       "tests/ability_imbue_text.test.ts": {
         "ms": 1954,
@@ -12583,7 +12583,6 @@
   "tests/persisted_position_escape.test.ts": 4740,
   "tests/persistence_round_trip.test.ts": 4389,
   "tests/persistent_aura.test.ts": 3,
-  "tests/pet_action_bar_hud.test.ts": 104,
   "tests/pet_action_icons.test.ts": 18,
   "tests/pet_afk_farm.test.ts": 2999,
   "tests/pet_ai.test.ts": 2781,

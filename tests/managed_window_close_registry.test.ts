@@ -391,8 +391,9 @@ describe('closeManagedWindow case registry', () => {
 
   it('routes #lockpick-panel through the controller, not a bare hide (#2517)', () => {
     // The regression this registry was written for. The behavioral proof lives in
-    // tests/lockpick_managed_close.test.ts; this is the source-level half, so deleting the
-    // case fails here even if someone also deletes that suite's harness.
+    // tests/hud_window_coordination.test.ts (the real closeAll route) and
+    // tests/lockpick_managed_close.test.ts (the controller's latch); this is the source-level
+    // half, so deleting the case fails here even if someone also deletes that rig.
     //
     // Over the parsed STATEMENTS, not a raw slice of the source. A slice from the label to
     // the first `break;` swallows the arm's own comment, so the pin would be satisfiable by

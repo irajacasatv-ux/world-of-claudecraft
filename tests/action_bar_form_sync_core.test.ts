@@ -3,7 +3,8 @@
 // cases in tests/action_bar_hud_facade.test.ts moved here: which syncs run, in
 // which order, and what each combination owes the HUD. The Hud's application
 // of the outcome (the spellbook refresh, the drag drop and the page re-clamp,
-// all Hud fields) stays there as its one coordinator case.
+// all Hud fields) is its one coordinator case, in
+// tests/hud_window_coordination.test.ts.
 
 import { describe, expect, it } from 'vitest';
 import {

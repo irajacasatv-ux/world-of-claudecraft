@@ -10,7 +10,7 @@ describe('the HUD vehicle bar factory host seam', () => {
       'private keybinds: Keybinds,',
       'private readonly writerFacet = makeWriterFacet(',
       'optionsHooks: OptionsHooks | null = null;',
-      'private peekGuard = new TouchPeekGuard();',
+      'readonly peekGuard = new TouchPeekGuard();',
       'readonly playerGroundAim = new GroundAimController({',
       // The empowered hold lives on the action press controller; the Hud
       // member the factory reads forwards to it.

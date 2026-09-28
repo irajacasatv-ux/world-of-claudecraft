@@ -658,7 +658,7 @@ const HUD_UPDATE_DRIVES: readonly DriveRow[] = [
     band: 'frame',
     gate: '',
     surface: 'none',
-    why: 'resolves the player-owned pet out of the entity roster ONCE per frame (findOwnPet, pet_frame_view.ts, early-returning), shared by the pet frame here and renderPetBar below, which takes it as a parameter; ungated on purpose because the pet BAR needs it whatever showPetFrame says, and it replaces the scan renderPetBar previously did itself, so the frame costs no extra walk',
+    why: 'resolves the player-owned pet out of the entity roster ONCE per frame (findOwnPet, pet_frame_view.ts, early-returning), shared by the pet frame here and petBar.render below, which takes it as a parameter; ungated on purpose because the pet BAR needs it whatever showPetFrame says, and it replaces the scan the pet bar previously did itself, so the frame costs no extra walk',
   },
   {
     call: 'this.petFramePainter.paint',
@@ -736,11 +736,11 @@ const HUD_UPDATE_DRIVES: readonly DriveRow[] = [
     why: 'the Cooldown Manager groups, facet-routed: its pure core ticks the action bar view over the tracked spells (reusing the same world snapshot), then the painter writes through the elided writers, so a steady frame writes nothing; must run every frame for the ready-cue edges even when the groups are hidden',
   },
   {
-    call: 'this.renderPetBar',
+    call: 'this.petBar.render',
     band: 'frame',
     gate: '',
     surface: 'chrome',
-    why: 'the pet bar; rebuilds its buttons behind a signature latch',
+    why: 'the pet bar (hud/pet_bar/pet_bar_controller.ts); rebuilds its buttons behind a signature latch',
   },
   {
     call: 'this.renderStanceBar',

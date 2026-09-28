@@ -1,26 +1,28 @@
 // @vitest-environment jsdom
 
+// The pet action bar's DOM half (src/ui/hud/pet_bar/pet_bar_controller.ts),
+// driven over a fake PetBarHost. The cases under "the Warlock pet signature
+// bar" moved here whole from tests/pet_action_bar_hud.test.ts, which drove the
+// same code as Hud.renderPetBar on a bare Hud.prototype rig (and paid the
+// coordinator import for it); their bodies are unchanged. The harness keeps the
+// old rig's member names: `renderPetBar` is the controller's render and
+// `petModeMenuOpen` its stance-menu toggle. The pure half is
+// tests/pet_bar_view.test.ts.
+
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { PetBarController, type PetBarHost } from '../src/ui/hud/pet_bar';
+import { t } from '../src/ui/i18n';
+import { hudDeclares, interfaceMembers } from './helpers/hud_host_weld';
+import { stripComments } from './helpers/strip_comments';
 
 vi.mock('../src/game/audio', () => ({
   audio: { click: vi.fn() },
 }));
-vi.mock('../src/render/characters', () => ({ CharacterPreview: class {} }));
-vi.mock('../src/render/characters/assets', () => ({ preloadMechAssets: vi.fn() }));
-vi.mock('../src/render/characters/portrait', () => ({
-  onPortraitUpdate: vi.fn(),
-  onPortraitsReady: vi.fn(),
-  playerPortraitDataUrl: vi.fn(),
-  portraitsReady: vi.fn(() => false),
-  visualPortraitDataUrl: vi.fn(),
-}));
 // Additive, never bare (the reliquary_window_behavior lesson): the canvas
 // resolvers stay stubbed; every export the factory does not name passes
-// through, so hud.ts dereferencing a NEW icons export at module scope (the
-// createAuraIconResolver hunt this mock's history records) can never again
-// throw "No export is defined" from a file the change never touched.
+// through.
 vi.mock('../src/ui/icons', async (importOriginal) => ({
   ...(await importOriginal<typeof import('../src/ui/icons')>()),
   iconDataUrl: (kind: string, id: string) => `mock:${kind}:${id}`,
@@ -34,8 +36,6 @@ vi.mock('../src/ui/icons', async (importOriginal) => ({
   proceduralIconDataUrl: vi.fn((kind: string, id: string) => `mock:${kind}:${id}`),
 }));
 
-import { Hud } from '../src/ui/hud';
-
 type PetTemplateId = 'emberkin' | 'forest_wolf' | 'gloomshade' | 'water_elemental';
 type PetOwnerClass = 'hunter' | 'mage' | 'warlock';
 
@@ -44,6 +44,7 @@ interface PetBarHarness {
     cfg: { playerClass: PetOwnerClass };
     entities: Map<number, Record<string, unknown>>;
     playerId: number;
+    inventory: { itemId: string; count: number }[];
     petSpecialCommandsSupported: boolean;
     petAttack: ReturnType<typeof vi.fn>;
     petSpecial: ReturnType<typeof vi.fn>;
@@ -55,18 +56,18 @@ interface PetBarHarness {
     setPetAutoWaterJet: ReturnType<typeof vi.fn>;
     setPetMode: ReturnType<typeof vi.fn>;
   };
-  lastPetPresent: boolean;
-  lastPetBarSig: string;
   pendingPetFeed: boolean;
+  /** The controller's stance-menu toggle (private state, reached for the rig). */
   petModeMenuOpen: boolean;
   peekGuard: { consume(): boolean };
-  attachTooltip(): void;
-  hideTooltip(): void;
-  hasPetFood(): boolean;
-  cancelPetFeed(): void;
-  renderBags(): void;
-  showError(): void;
+  attachTooltip: ReturnType<typeof vi.fn>;
+  hideTooltip: ReturnType<typeof vi.fn>;
+  cancelPetFeed: ReturnType<typeof vi.fn>;
+  renderBags: ReturnType<typeof vi.fn>;
+  showError: ReturnType<typeof vi.fn>;
+  /** PetBarController.render. */
   renderPetBar(pet: unknown): void;
+  controller: PetBarController;
 }
 
 function pointerEvent(type: string): Event {
@@ -90,7 +91,6 @@ function makeHud(
   } = {},
   ownerClass: PetOwnerClass = 'warlock',
 ): PetBarHarness {
-  const hud = Object.create(Hud.prototype) as unknown as PetBarHarness;
   const owner = { id: 1, kind: 'player', ownerId: null, auras: [] };
   const pet = {
     id: 2,
@@ -108,36 +108,53 @@ function makeHud(
     petAutoSkill: true,
     ...petState,
   };
-  hud.sim = {
-    cfg: { playerClass: ownerClass },
-    entities: new Map<number, Record<string, unknown>>([
-      [1, owner],
-      [2, pet],
-    ]),
-    playerId: 1,
-    petSpecialCommandsSupported: capability,
-    petAttack: vi.fn(),
-    petSpecial: vi.fn(),
-    petTaunt: vi.fn(),
-    petWaterJet: vi.fn(),
-    healPet: vi.fn(),
-    setPetAutoSpecial: vi.fn(),
-    setPetAutoTaunt: vi.fn(),
-    setPetAutoWaterJet: vi.fn(),
-    setPetMode: vi.fn(),
+  const host = {
+    sim: {
+      cfg: { playerClass: ownerClass },
+      entities: new Map<number, Record<string, unknown>>([
+        [1, owner],
+        [2, pet],
+      ]),
+      playerId: 1,
+      // One edible stack, so the Heal Pet food check passes (the old rig
+      // stubbed hasPetFood to true; the check is bagsHoldPetFood now).
+      inventory: [{ itemId: 'baked_bread', count: 1 }],
+      petSpecialCommandsSupported: capability,
+      petAttack: vi.fn(),
+      petSpecial: vi.fn(),
+      petTaunt: vi.fn(),
+      petWaterJet: vi.fn(),
+      healPet: vi.fn(),
+      setPetAutoSpecial: vi.fn(),
+      setPetAutoTaunt: vi.fn(),
+      setPetAutoWaterJet: vi.fn(),
+      setPetMode: vi.fn(),
+    },
+    pendingPetFeed: false,
+    peekGuard: { consume: () => false },
+    attachTooltip: vi.fn(),
+    hideTooltip: vi.fn(),
+    cancelPetFeed: vi.fn(),
+    renderBags: vi.fn(),
+    showError: vi.fn(),
   };
-  hud.lastPetPresent = false;
-  hud.lastPetBarSig = '';
-  hud.pendingPetFeed = false;
-  hud.petModeMenuOpen = false;
-  hud.peekGuard = { consume: () => false };
-  hud.attachTooltip = vi.fn();
-  hud.hideTooltip = vi.fn();
-  hud.hasPetFood = () => true;
-  hud.cancelPetFeed = vi.fn();
-  hud.renderBags = vi.fn();
-  hud.showError = vi.fn();
-  return hud;
+  // The fake host is cast at this one boundary; the controller reads it through
+  // PetBarHost, which tsc holds the real Hud to.
+  const controller = new PetBarController(host as unknown as PetBarHost);
+  const menu = controller as unknown as { modeMenuOpen: boolean };
+  return Object.defineProperties(host, {
+    controller: { value: controller },
+    renderPetBar: {
+      value: (petArg: unknown) =>
+        controller.render(petArg as Parameters<PetBarController['render']>[0]),
+    },
+    petModeMenuOpen: {
+      get: () => menu.modeMenuOpen,
+      set: (open: boolean) => {
+        menu.modeMenuOpen = open;
+      },
+    },
+  }) as unknown as PetBarHarness;
 }
 
 beforeEach(() => {
@@ -385,5 +402,110 @@ describe('Hud Warlock pet signature bar', () => {
     expect(forcedColors).toContain('.pet-btn.autocast');
     expect(forcedColors).toContain('outline: 3px double Highlight');
     expect(forcedColors).toContain('content: "↻"');
+  });
+});
+
+describe('PetBarController: the latch, the presses and the host seam', () => {
+  const groups = () => [...document.querySelectorAll('#petbar .petbar-group')];
+
+  it('holds a steady frame on its signature, and invalidate() forces exactly one rebuild', () => {
+    const hud = makeHud('forest_wolf', true, { hp: 50, maxHp: 100 }, 'hunter');
+    const pet = hud.sim.entities.get(2) ?? null;
+    hud.renderPetBar(pet);
+    const painted = groups();
+    expect(painted).toHaveLength(2);
+    // An unchanged frame keeps the very same nodes: nothing was rebuilt.
+    hud.renderPetBar(pet);
+    expect(groups()).toEqual(painted);
+    expect(groups()[0]).toBe(painted[0]);
+    expect(hud.attachTooltip).toHaveBeenCalledTimes(4);
+    // invalidate() is what the language switch and the feed-mode end call:
+    // the next frame rebuilds, and the one after it holds again.
+    hud.controller.invalidate();
+    hud.renderPetBar(pet);
+    const rebuilt = groups();
+    expect(rebuilt[0]).not.toBe(painted[0]);
+    expect(hud.attachTooltip).toHaveBeenCalledTimes(8);
+    hud.renderPetBar(pet);
+    expect(groups()[0]).toBe(rebuilt[0]);
+  });
+
+  it('toggles the stance menu, and a picked mode is sent and closes it', () => {
+    const hud = makeHud('forest_wolf', true, {}, 'hunter');
+    const pet = hud.sim.entities.get(2) ?? null;
+    hud.renderPetBar(pet);
+    expect(document.querySelector('[data-focus-key="stance-passive"]')).toBeNull();
+    document.querySelector<HTMLButtonElement>('[data-focus-key="stance-menu"]')?.click();
+    expect(hud.petModeMenuOpen).toBe(true);
+    hud.renderPetBar(pet);
+    const passive = document.querySelector<HTMLButtonElement>('[data-focus-key="stance-passive"]');
+    expect(passive).not.toBeNull();
+    // The worn mode is the pressed one of the three.
+    expect(
+      document.querySelector('[data-focus-key="stance-defensive"]')?.getAttribute('aria-pressed'),
+    ).toBe('true');
+    expect(passive?.hasAttribute('aria-pressed')).toBe(false);
+    passive?.click();
+    expect(hud.sim.setPetMode).toHaveBeenCalledExactlyOnceWith('passive');
+    expect(hud.petModeMenuOpen).toBe(false);
+    hud.renderPetBar(pet);
+    expect(document.querySelector('[data-focus-key="stance-passive"]')).toBeNull();
+  });
+
+  it('Heal Pet starts the feed mode, cancels a pending one, and refuses with no food', () => {
+    document.body.innerHTML = '<div id="petbar"></div><div id="bags" style="display:none"></div>';
+    const hud = makeHud('forest_wolf', true, { hp: 50, maxHp: 100 }, 'hunter');
+    const pet = hud.sim.entities.get(2) ?? null;
+    const feed = () => document.querySelector<HTMLButtonElement>('[data-focus-key="pet_feed"]');
+    hud.renderPetBar(pet);
+    feed()?.click();
+    expect(hud.pendingPetFeed).toBe(true);
+    expect(document.getElementById('bags')?.style.display).toBe('flex');
+    expect(hud.renderBags).toHaveBeenCalledTimes(1);
+    // The pending mode joins the signature: the button repaints pressed.
+    hud.renderPetBar(pet);
+    expect(feed()?.getAttribute('aria-pressed')).toBe('true');
+    // A second press hands the cancel to the Hud, which owns the shared flag.
+    feed()?.click();
+    expect(hud.cancelPetFeed).toHaveBeenCalledTimes(1);
+    expect(hud.renderBags).toHaveBeenCalledTimes(1);
+
+    // No food: the button is inert, and a press that still reaches the guard
+    // (the bags emptied after the paint) says so instead of starting the mode.
+    hud.pendingPetFeed = false;
+    hud.renderPetBar(pet);
+    hud.sim.inventory = [];
+    feed()?.click();
+    expect(hud.showError).toHaveBeenCalledExactlyOnceWith(t('hud.pet.noPetFood'));
+    expect(hud.pendingPetFeed).toBe(false);
+    hud.renderPetBar(pet);
+    expect(feed()?.getAttribute('aria-disabled')).toBe('true');
+  });
+
+  it('stays welded to the Hud members PetBarHost names, and the Hud builds one over itself', () => {
+    const controllerSource = readFileSync(
+      resolve(process.cwd(), 'src/ui/hud/pet_bar/pet_bar_controller.ts'),
+      'utf8',
+    );
+    const hudSource = readFileSync(resolve(process.cwd(), 'src/ui/hud.ts'), 'utf8');
+    const members = interfaceMembers(controllerSource, 'PetBarHost');
+    expect(members).toEqual([
+      'sim',
+      'pendingPetFeed',
+      'peekGuard',
+      'cancelPetFeed',
+      'showError',
+      'renderBags',
+      'hideTooltip',
+      'attachTooltip',
+    ]);
+    for (const member of members) expect(hudDeclares(hudSource, member), member).toBe(true);
+    const code = stripComments(hudSource);
+    expect(code).toContain('this.petBarState ??= new PetBarController(this);');
+    // update() drives it with the pet it resolved once for the pet frame.
+    expect(code).toContain('this.petBar.render(pet);');
+    // The two Hud paths that end or restart the feed invalidate the bar.
+    expect(code).toContain('resetPetBarSig: () => this.petBar.invalidate(),');
+    expect(code.split('this.petBar.invalidate();').length - 1).toBe(2);
   });
 });

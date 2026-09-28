@@ -15,296 +15,29 @@
 // escape is the reachable path: `dispatchGamepadAction('escape')` in `src/main.ts` calls
 // `hud.closeAll()` directly, with no DOM event for that capture handler to intercept.
 //
-// So the routing cases drive `closeAll()` (not a synthetic key event) over a REAL controller
-// and a REAL window, and pin that the two dismissal paths produce the same observable teardown,
-// plus one end-to-end latch case (three closeAll calls: what a repeat sweep sees returned).
-// The other latch cases drive `LockpickController.requestClose()`, the one method the
+// The latch cases here drive `LockpickController.requestClose()`, the one method the
 // managed-window arm calls (`requestClose()` then `hideTooltip()`, nothing else), directly:
 // they pin the controller's own withdraw / hedge / close rules, which need no Hud around them.
+// The routing cases that drive the real `closeAll()` over the same rig (the topmost scan, the
+// withdraw and its tooltip hide, the three-call sweep, and the keyboard / gamepad teardown
+// parity) live in tests/hud_window_coordination.test.ts, which pays the coordinator import;
+// the rig is tests/helpers/lockpick_rig.ts.
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { SimEvent } from '../src/sim/types';
-import type { FocusTrapHandle } from '../src/ui/focus_manager';
-import { Hud } from '../src/ui/hud';
-import { LockpickController } from '../src/ui/hud/delve/lockpick_controller';
-import type { LockpickView } from '../src/world_api';
-
-const LIVE: LockpickView = {
-  sessionId: 'lp_9_0',
-  objectId: 9,
-  w: 4,
-  h: 4,
-  col: 0,
-  row: 2,
-  page: 1,
-  pageCount: 2,
-  tries: 2,
-  triesTotal: 2,
-  lootTier: 'premium',
-  allowed: ['set', 'steady', 'ease'],
-  visible: [],
-  stepTimeoutMs: 15000,
-};
-
-// Only the members closeAll -> closeManagedWindow actually read; closeManagedWindow is
-// private, so the bare-prototype harness is the hud_coordinator_delegators / profession_tutorial
-// precedent. `windowDragController` is deliberately left undefined: the real field is
-// optional-chained, and Object.create skips field initializers.
-interface CloseAllHarness {
-  lockpickController: LockpickController;
-  lootWindow: { hasOpenChest: boolean };
-  playerCard: { isOpen: boolean };
-  emoteWheelOpen: boolean;
-  syncAnyWindowOpenState(): void;
-  hideTooltip(): void;
-  closeAll(): boolean;
-  topmostOpenWindow(): HTMLElement | null;
-}
-
-// Every controller a case builds, so afterEach can drop its capture-phase window keydown
-// listener. Without this a controller left OPEN by one case (which is exactly what the bug
-// under test does) keeps a live handler on the shared jsdom window, and its
-// stopImmediatePropagation eats the next case's Escape before the new controller sees it.
-const built: LockpickController[] = [];
-
-/**
- * @param host which IWorld the deps model, and the distinction is the whole point.
- *   'online' (the default): `abort` only sends, so `getState()` keeps returning the live view
- *   and the panel is still up when requestClose returns, exactly like ClientWorld waiting on
- *   the server's lockpickEnd. 'offline': `abort` does what Sim does, emitting lockpickEnd
- *   into the drain that `submitAbort`'s own `flushEvents()` reads, so the whole teardown
- *   lands inside the one closeAll call.
- */
-function harness(initial: LockpickView | null, host: 'online' | 'offline' = 'online') {
-  // closeAll reads #ctx-menu and #delve-rite-panel before it ever reaches the topmost
-  // scan, and `$` returns null for a missing id, so both must exist.
-  document.body.innerHTML =
-    '<div id="ctx-menu" style="display:none"></div>' +
-    '<div id="delve-rite-panel" class="window panel" style="display:none"></div>' +
-    '<div id="lockpick-panel" class="window panel" style="display:none"></div>';
-  const panel = document.getElementById('lockpick-panel') as HTMLElement;
-  const release = vi.fn();
-  const trap: FocusTrapHandle = { focusFirst: vi.fn(), release, opener: vi.fn(() => null) };
-  // Two spies for ATTRIBUTION only. Production wires the dep as
-  // `hideTooltip: () => this.hideTooltip()` where the controller is built, so in the client
-  // these ARE one call; splitting them here lets a case say which caller owed the hide, and
-  // never claims the two can diverge.
-  const hudHideTooltip = vi.fn();
-  const depsHideTooltip = vi.fn();
-  let state: LockpickView | null = initial;
-  let pending: SimEvent[] = [];
-  const queued: SimEvent[] = [];
-  const abort = vi.fn(() => {
-    if (queued.length > 0) {
-      pending.push(...queued.splice(0));
-      return;
-    }
-    if (host !== 'offline') return;
-    // What src/sim/delves/lockpick_controller.ts does: ABANDON the session and emit, both
-    // synchronously, so drainEvents returns it inside the same call stack.
-    state = null;
-    pending.push({ type: 'lockpickEnd', sessionId: LIVE.sessionId, outcome: 'abandoned' });
-  });
-  const controller = new LockpickController({
-    panel,
-    keyboardTarget: window,
-    openFocusTrap: () => trap,
-    getState: () => state,
-    engage: vi.fn(),
-    act: vi.fn(),
-    abort,
-    drainEvents: () => {
-      const out = pending;
-      pending = [];
-      return out;
-    },
-    // The one arm of Hud.handleEvents this path reaches, transcribed from
-    // src/ui/hud.ts's `case 'lockpickEnd': this.endLockpick(...)` ->
-    // controller.end(outcome, tier, sessionId). Transcribed, NOT pinned: no guard ties this
-    // fake to that switch, so a rewrite there would leave these cases green against a mapping
-    // the client no longer has.
-    handleEvents: (events) => {
-      for (const ev of events) {
-        if (ev.type === 'lockpickEnd') controller.end(ev.outcome, undefined, ev.sessionId);
-        // hud.ts's `case 'lockpickSession': this.openLockpickBoard()`. Faithful because the
-        // repeat arm's statement ORDER depends on it: a drained event can re-open this panel.
-        if (ev.type === 'lockpickSession') controller.openBoard();
-      }
-    },
-    showBanner: vi.fn(),
-    log: vi.fn(),
-    hideTooltip: depsHideTooltip,
-  });
-  built.push(controller);
-  const hud = Object.create(Hud.prototype) as unknown as CloseAllHarness;
-  hud.lockpickController = controller;
-  hud.lootWindow = { hasOpenChest: false };
-  hud.playerCard = { isOpen: false };
-  hud.emoteWheelOpen = false;
-  hud.syncAnyWindowOpenState = vi.fn();
-  hud.hideTooltip = hudHideTooltip;
-  return {
-    controller,
-    hud,
-    panel,
-    release,
-    abort,
-    hudHideTooltip,
-    depsHideTooltip,
-    bar: () => panel.querySelector<HTMLElement>('.lp-timer-bar'),
-    setState(next: LockpickView | null): void {
-      state = next;
-    },
-    /** Make the NEXT abort's flushEvents drain carry these events. */
-    queueOnAbort(...events: SimEvent[]): void {
-      queued.push(...events);
-    },
-  };
-}
-
-function tick(ticks: number): void {
-  for (let i = 0; i < ticks; i++) vi.advanceTimersByTime(100);
-}
-
-/** The observable teardown a dismissal must produce, whichever path asked for it. */
-function teardown(h: ReturnType<typeof harness>) {
-  return {
-    aborts: h.abort.mock.calls.length,
-    releases: h.release.mock.calls.length,
-    timers: vi.getTimerCount(),
-    display: h.panel.style.display,
-  };
-}
+import { closeBuiltLockpicks, lockpickRig as harness, LIVE } from './helpers/lockpick_rig';
 
 beforeEach(() => {
   vi.useFakeTimers();
   vi.setSystemTime(0);
 });
 afterEach(() => {
-  for (const controller of built.splice(0)) controller.close(false);
+  closeBuiltLockpicks();
   // Not the inline mockRestore()s a failing expect would skip: a spy left on the shared
   // jsdom window turns one red case into a cascade in every case after it.
   vi.restoreAllMocks();
   vi.useRealTimers();
   document.body.innerHTML = '';
-});
-
-describe('lockpick panel: Hud.closeAll (the gamepad escape path)', () => {
-  it('is the topmost scan hit while the board is up, and leaves the scan once closed', () => {
-    // If the scan did not select it, every other case below would pass vacuously by
-    // closing something else (or nothing).
-    const h = harness(LIVE);
-    h.controller.openBoard();
-    expect(h.hud.topmostOpenWindow()).toBe(h.panel);
-    // The other side of the scan, which the requestClose latch cases below rely on
-    // when they read a hidden panel as "the sweep moves on": once the panel is
-    // closed it is no longer the topmost hit, and a closeAll with nothing else up
-    // reports that it closed nothing.
-    h.controller.close();
-    expect(h.hud.topmostOpenWindow()).not.toBe(h.panel);
-    expect(h.hud.closeAll(), 'nothing left for this harness to close').toBe(false);
-  });
-
-  it('withdraws from the live session and stops the 100ms countdown', () => {
-    const h = harness(LIVE);
-    h.controller.openBoard();
-    // Exactly one pending timer: the countdown startTimer armed.
-    expect(vi.getTimerCount(), 'the board arms its countdown').toBe(1);
-    const bar = h.bar() as HTMLElement;
-    tick(20);
-    const frozen = bar.style.width;
-    expect(frozen).not.toBe('100%');
-
-    expect(h.hud.closeAll(), 'closeAll reports it closed something').toBe(true);
-
-    // The server is told to withdraw, so the attempt is preserved instead of being
-    // burned down by a per-step clock the player can no longer see.
-    expect(h.abort).toHaveBeenCalledTimes(1);
-    // Asserted as "the clock is GONE", not "nothing throws": painting a detached or
-    // hidden subtree throws nothing at all, so a no-throw assertion passes with the
-    // whole fix reverted.
-    expect(vi.getTimerCount(), 'the countdown interval is cleared').toBe(0);
-    tick(20);
-    expect(bar.style.width, 'the hidden subtree stops being repainted').toBe(frozen);
-
-    // The post-condition a reader most needs, and it is deliberate rather than a shortfall:
-    // the withdrawal does NOT close. Online the panel stands and the trap stays armed until
-    // the server's lockpickEnd, which is what the offline case below drives to completion.
-    expect(h.release, 'the trap is released by end(), not by the withdraw').not.toHaveBeenCalled();
-    expect(h.panel.style.display, 'still up until lockpickEnd lands').toBe('block');
-    // The arm owes its own tooltip hide, since close() (which would have done it) has not run.
-    expect(h.hudHideTooltip).toHaveBeenCalledTimes(1);
-    expect(
-      h.depsHideTooltip,
-      'close() has not run, so the controller owed no hide',
-    ).not.toHaveBeenCalled();
-  });
-
-  it('three closeAll calls in a row: withdraw, re-send and close, then nothing, never a wedge', () => {
-    // The end-to-end form of the latch cases below, through the Hud this time.
-    // SkinEventController.open() sweeps `for (i < 20 && closeTop())` and closeTop IS
-    // closeAll, so what the sweep sees is closeAll's RETURN: true while the panel is
-    // still up to close, then false once it has left the scan. A managed arm that
-    // reported false on the re-send call would stop the sweep with the windows
-    // underneath still open; one that kept reporting true would spin it. Three calls,
-    // not two: the third proves the panel actually left the scan, not merely that it
-    // stopped aborting.
-    const h = harness(LIVE);
-    h.controller.openBoard();
-
-    expect(h.hud.closeAll(), 'first: withdraw').toBe(true);
-    expect(h.abort).toHaveBeenCalledTimes(1);
-    expect(h.panel.style.display).toBe('block');
-
-    expect(h.hud.closeAll(), 'second: re-send, then close').toBe(true);
-    expect(h.abort).toHaveBeenCalledTimes(2);
-    expect(h.panel.style.display).toBe('none');
-    expect(h.release).toHaveBeenCalledWith(true);
-    expect(h.hud.topmostOpenWindow(), 'the sweep can move on').not.toBe(h.panel);
-
-    expect(h.hud.closeAll(), 'third: nothing left for this harness to close').toBe(false);
-    expect(h.abort, 'and no third abort on the way out').toHaveBeenCalledTimes(2);
-  });
-
-  it('produces the same teardown as the Escape key, live board and ante selector alike', () => {
-    // The two paths are the same funnel or they drift: the keyboard one aborts a live
-    // session and closes an idle one, and the pad must not do something else.
-    //
-    // SCOPED to what `teardown()` reads. The paths are NOT byte-identical: the managed-window
-    // arm adds its own `this.hideTooltip()`, which the controller's keydown handler has no
-    // way to reach. That difference is deliberate (the arm owes the hide the default arm used
-    // to guarantee) and is pinned in the live case above, not here.
-    for (const initial of [LIVE, null]) {
-      const viaKey = harness(initial);
-      if (initial) viaKey.controller.openBoard();
-      else viaKey.controller.openAnte(9);
-      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', cancelable: true }));
-      const keyResult = teardown(viaKey);
-      viaKey.controller.close();
-
-      const viaPad = harness(initial);
-      if (initial) viaPad.controller.openBoard();
-      else viaPad.controller.openAnte(9);
-      expect(
-        viaPad.hud.closeAll(),
-        `closeAll reports it closed something (live=${initial !== null})`,
-      ).toBe(true);
-      const padResult = teardown(viaPad);
-      viaPad.controller.close();
-
-      expect(padResult, `gamepad and keyboard must agree (live=${initial !== null})`).toEqual(
-        keyResult,
-      );
-      // The comparison alone is RELATIVE: both paths run the same funnel, so it survives any
-      // change made to the funnel itself, including inverting it (close a live board, abort an
-      // idle one) which keeps the two sides equal and non-empty. Pin the absolute shape too.
-      expect(keyResult, `the shape itself (live=${initial !== null})`).toEqual(
-        initial
-          ? { aborts: 1, releases: 0, timers: 0, display: 'block' }
-          : { aborts: 0, releases: 1, timers: 0, display: 'none' },
-      );
-    }
-  });
 });
 
 describe('lockpick panel: LockpickController.requestClose (the managed-close latch)', () => {
@@ -324,8 +57,8 @@ describe('lockpick panel: LockpickController.requestClose (the managed-close lat
     expect(h.release).toHaveBeenCalledWith(true);
     expect(vi.getTimerCount()).toBe(0);
     // Nothing is left selectable: the panel is hidden, and a hidden panel leaves the
-    // managed-window scan (pinned on the Hud in the topmost-scan case), so a repeat sweep
-    // moves on to the next window.
+    // managed-window scan (pinned on the Hud in tests/hud_window_coordination.test.ts), so a
+    // repeat sweep moves on to the next window.
   });
 
   it('withdraws, re-sends once, then closes, so a repeat request cannot wedge on the panel', () => {
@@ -333,7 +66,7 @@ describe('lockpick panel: LockpickController.requestClose (the managed-close lat
     // a roll reveal, and closeTop IS closeAll. Online the withdrawal leaves the panel up, so
     // without the per-session latch this spins all 20 iterations here, fires 20 aborts, and
     // never reaches the windows underneath. The panel ends HIDDEN, not merely silent: a hidden
-    // panel is what the Hud's topmost scan skips (pinned in the topmost-scan case).
+    // panel is what the Hud's topmost scan skips (pinned in tests/hud_window_coordination.test.ts).
     const h = harness(LIVE);
     h.controller.openBoard();
 

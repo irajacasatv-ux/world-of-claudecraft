@@ -261,8 +261,8 @@ describe('active-world noticeboard service', () => {
     // the renderer.handleEvent pass-through (and the arm opening the board) in
     // "hands the viewer's own and pid-less events to the renderer, and runs
     // their arm", the pid gate in "drops another player's personal event
-    // before the renderer or any arm sees it". The gate is also held by
-    // tests/harvest_preference_hud.test.ts ("never opens for a foreign pid
+    // before the renderer or any arm sees it". The gate is also held by the
+    // harvest preference cases in the same file ("never opens for a foreign pid
     // event, not spectating").
     const popup = { show: vi.fn() };
     const rankings = { openGliderRankings: vi.fn() };

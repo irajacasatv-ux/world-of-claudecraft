@@ -24,7 +24,7 @@ export const PET_ACTION_IMAGE_IDS: ReadonlySet<string> = new Set(Object.values(P
 
 /**
  * The icon ids the edit mode's force-shown pet-bar placeholder previews for a
- * class, mirroring the real renderPetBar button set: attack, the class's
+ * class, mirroring the real pet bar button set: attack, the class's
  * signature command (the hunter beast's Growl, the frost mage elemental's
  * Water Jet, the warlock demon's Felbolt), the heal command (Feed Pet, or
  * Mend Demon for the warlock), and the stance toggle. Only the three pet

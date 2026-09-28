@@ -630,8 +630,12 @@ const ANSWERED: readonly AnsweredSurface[] = [
     why: 'the Loot Settings repaint signature: a master-loot boolean, the looter and leader pids, the threshold ID and the member pid:name list. Every one of those is text-independent, and past the gate the whole window is rebuilt from t() (the title, the Loot Method and Roll Threshold labels, the method and threshold options, the read-only member view). Cleared to the empty string, which no real signature can equal because every real one carries separators',
   },
   {
-    file: 'hud.ts',
-    memos: ['lastPetBarSig'],
+    // Moved with the pet bar out of hud.ts (it was the coordinator's
+    // lastPetBarSig). The coordinator arm still answers it, now through the
+    // controller's invalidate(); the delegated-clear check in half 2 pins both
+    // the call and what invalidate() clears.
+    file: 'hud/pet_bar/pet_bar_controller.ts',
+    memos: ['lastSig'],
     answer: 'this.relocalizeCoordinatorMemos',
     why: "the pet action bar signature: pet id, primary or secondary, owner class, mode id, two cooldown signatures of integer seconds and autocast flags, plus two booleans. Past the gate the bar's DOM is rebuilt from scratch and every button caption and both tooltip halves are fresh t() calls. Cleared to the empty string, which no real signature can equal",
   },
@@ -869,10 +873,11 @@ const NOT_A_LANGUAGE_GATE: ReadonlyArray<{
       "lastMarketCollectPending latches one boolean, marketCollectIndicatorView(sim.marketCollectPending).visible, the streamed proceeds-waiting bit, and the entire guarded block is `el.hidden = !view.visible`: a visibility property, not a string. Nothing localized is written under the gate, so there is no text for a switch to strand. Every string on the coin is repainted by a path the memo cannot reach: index.html gives #market-indicator data-i18n-title and data-i18n-aria, which main.ts's translatePage re-stamps on every locale switch whether the badge is hidden or shown, and initMarketIndicator attaches the HUD tooltip as a lazy callback that resolves t('hudChrome.marketIndicator.tip') at hover time. Deliberately unlike its #mail-indicator sibling, whose labels interpolate the unread count and therefore have to be written from inside a count-gated update; if this coin ever grows an interpolated label written past line 9930, it becomes that same hazard and this exemption is void.",
   },
   {
-    file: 'hud.ts',
-    memos: ['lastPetPresent'],
+    // Moved with the pet bar out of hud.ts (it was the coordinator's lastPetPresent).
+    file: 'hud/pet_bar/pet_bar_controller.ts',
+    memos: ['lastPresent'],
     reason:
-      "lastPetPresent is a plain boolean value-diff over 'a living pet is shown', and it gates exactly one write: document.body.classList.toggle('mobile-pet-active', petPresent), a CSS state class the mobile top-band layout keys on. The class name is a fixed literal and no t()/tPlural()/tEntity() call or view module sits inside the transition, so there is no string for a locale switch to leave stale; the only thing that moves the gate is the pet itself appearing, dying or despawning (including the fall-through to a living Necromancy secondary). The pet bar's localized captions are gated by lastPetBarSig further down the same method, not by this flag",
+      "lastPresent is a plain boolean value-diff over 'a living pet is shown', and it gates exactly one write: document.body.classList.toggle('mobile-pet-active', petPresent), a CSS state class the mobile top-band layout keys on. The class name is a fixed literal and no t()/tPlural()/tEntity() call or view module sits inside the transition, so there is no string for a locale switch to leave stale; the only thing that moves the gate is the pet itself appearing, dying or despawning (including the fall-through to a living Necromancy secondary). The pet bar's localized captions are gated by lastSig further down the same method, not by this flag",
   },
   {
     file: 'hud.ts',
@@ -1409,7 +1414,6 @@ describe('language fan-out: half 2, every signature-gated src/ui surface is clas
       lastAnnouncedTargetId: { value: 'null', why: 'a real target id is a number' },
       lastMailUnread: { value: '-1', why: 'mailIndicatorView clamps the count at 0' },
       lastLootSettingsSig: { value: "''", why: 'every real sig carries / separators' },
-      lastPetBarSig: { value: "''", why: 'every real sig starts with the pet id and a colon' },
       lastCompassFacing: { value: 'Number.NaN', why: 'facing is a float; NaN never equals itself' },
       lastCompassHeading: { value: "''", why: 'a heading is one of the eight rose ids' },
     };
@@ -1447,6 +1451,46 @@ describe('language fan-out: half 2, every signature-gated src/ui surface is clas
       if (!claimedSet.has(memo)) {
         failures.push(
           `${memo}: cleared by the coordinator arm but not claimed by any ANSWERED row`,
+        );
+      }
+    }
+    // THE DELEGATED CLEARS. A memo that LEFT hud.ts with its surface is still
+    // answered by this arm, through the owning controller's invalidate(), which
+    // the reverse sweep above cannot see (a call, not an assignment). Each such
+    // row needs an entry here: the arm must make the call, and invalidate()
+    // must clear the memo to the one sentinel its field can never hold.
+    const DELEGATED_CLEARS: Readonly<
+      Record<string, { call: string; memo: string; value: string; why: string }>
+    > = {
+      'hud/pet_bar/pet_bar_controller.ts': {
+        call: 'this.petBar.invalidate()',
+        memo: 'lastSig',
+        value: "''",
+        why: 'every real sig starts with the pet id and a colon',
+      },
+    };
+    const delegatedRows = ANSWERED.filter(
+      (row) => row.file !== 'hud.ts' && row.answer === 'this.relocalizeCoordinatorMemos',
+    );
+    expect(delegatedRows.length, 'no delegated row left to check').toBeGreaterThanOrEqual(1);
+    for (const row of delegatedRows) {
+      const delegated = DELEGATED_CLEARS[row.file];
+      if (!delegated) {
+        failures.push(`${row.file}: answered by the coordinator arm with no delegated clear`);
+        continue;
+      }
+      if (!body.includes(delegated.call)) {
+        failures.push(`${row.file}: the coordinator arm never calls ${delegated.call}`);
+      }
+      if (row.memos.join(',') !== delegated.memo) {
+        failures.push(`${row.file}: the row claims ${row.memos.join(',')}, not ${delegated.memo}`);
+      }
+      const owner = uiSources.find((s) => s.file === row.file);
+      const invalidate = owner ? methodBody(owner.source, '  invalidate(): void {') : '';
+      const cleared = invalidate.match(new RegExp(`this\\.${delegated.memo}\\s*=\\s*([^;]+);`));
+      if (cleared?.[1].trim() !== delegated.value) {
+        failures.push(
+          `${row.file}: invalidate() does not clear ${delegated.memo} to ${delegated.value} (${delegated.why})`,
         );
       }
     }

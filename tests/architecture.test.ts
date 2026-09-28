@@ -363,6 +363,9 @@ const UI_PURE_CORES = [
   'src/ui/hud/quest/prof_intro_hint_core.ts',
   'src/ui/hud/quest/clue_step_row_view.ts',
   'src/ui/hud/pet_bar_core.ts',
+  // The pet action bar's facts, signature, button set and food check
+  // (extracted from Hud.renderPetBar beside pet_bar_controller.ts).
+  'src/ui/hud/pet_bar/pet_bar_view.ts',
   'src/ui/hud/warlock/doom_meter_view.ts',
   'src/ui/hud/aura_tracks/aura_track_catalog.ts',
   'src/ui/hud/aura_tracks/aura_track_descriptors.ts',
@@ -2654,6 +2657,10 @@ const UI_DOM_MODULES = [
   // hides the #town-focus-window root. The view and painter stay in
   // town_focus_view.ts and town_focus_window.ts.
   'src/ui/town_focus_controller.ts',
+  // The pet action bar (extracted from Hud.renderPetBar): reads #petbar and
+  // #bags, toggles the body's mobile-pet-active class and arms the touch-hold
+  // timer on window. The facts and buttons stay in the pure pet_bar_view.ts.
+  'src/ui/hud/pet_bar/pet_bar_controller.ts',
   'src/ui/frame_presets_live.ts',
   'src/ui/frame_editor_deps.ts',
   'src/ui/frame_presets_controls.ts',

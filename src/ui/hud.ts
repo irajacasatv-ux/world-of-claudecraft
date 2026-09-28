@@ -78,7 +78,6 @@ import {
 import { specialRoleColor } from '../sim/discord_roles';
 import type { Ante, PickAction } from '../sim/lockpick';
 import type { MaterialComposition } from '../sim/material_sources';
-import { petCanForceTaunt } from '../sim/pet/pet_taunt_gate';
 import { inRangeStationTypes, stationTypesSignature } from '../sim/professions/stations';
 import { TIER_SKILL_STEP, tierForSkill } from '../sim/professions/wheel';
 import { questObjectivesForMob } from '../sim/quest_targets';
@@ -100,7 +99,6 @@ import {
   type ItemInstancePayload,
   isMechWearer,
   MAX_LEVEL,
-  type PetMode,
   type PlayerClass,
   type ResourceType,
   SALVAGE_CAST_ID,
@@ -260,7 +258,6 @@ import { fctSpawnShape } from './fct_event';
 import { FctPainter } from './fct_painter';
 import { ferryBellHomeNoteToOpen, writeEastbrookGuidanceChoice } from './ferry_bell_home_note';
 import { FocusManager, type FocusTrapHandle } from './focus_manager';
-import { captureFocusKey, restoreFirstEnabled } from './focus_restore';
 import { FocusTargetsController } from './focus_targets_controller';
 import { frameDimension } from './frame_dimensions';
 import { chatFrameContextTargets, frameEditorMenuDeps } from './frame_editor_deps';
@@ -428,7 +425,7 @@ import {
 import { MapSidebarCollapse } from './hud/map/map_sidebar_collapse';
 import { resolveMapZone } from './hud/map/map_zone_focus_core';
 import { refreshSideButtonLabels } from './hud/menu/side_buttons';
-import { livingSecondaryPet } from './hud/pet_bar_core';
+import { PetBarController } from './hud/pet_bar';
 import { CARD_POSES } from './hud/player_card/player_card';
 import { PlayerCardController } from './hud/player_card/player_card_controller';
 import { CelebrationDrainObserver } from './hud/professions/celebration_drain_observer';
@@ -631,12 +628,7 @@ import {
 } from './party_frames';
 import { PartyFramesPainter } from './party_frames_painter';
 import type { PerfOverlayHooks } from './perf_overlay_settings';
-import {
-  PET_ACTION_ICONS,
-  petBarPreviewIconIds,
-  petFeedButtonState,
-  petSpecialButtonState,
-} from './pet_action_icons';
+import { petBarPreviewIconIds } from './pet_action_icons';
 import { isControllableOwnedPet, ownedCombatSourceOwnerId } from './pet_entity';
 import { bindPetFrameInput } from './pet_frame_input';
 import { findOwnPet, findPetsByOwner, petFrameDescriptorInto } from './pet_frame_view';
@@ -980,16 +972,6 @@ const MOB_TOOLTIP_VIEW_DEPS: MobTooltipI18n = {
 // above); the Thornhollow Fields finish-line log colors live in hud_tones.ts
 // (BG_END_LOG_COLORS, also imported above), and the remaining-time call's own
 // gold folded into HUD_LOG.CALL.
-const PET_MODE_LABEL_KEYS: Record<PetMode, TranslationKey> = {
-  passive: 'hud.pet.passive',
-  defensive: 'hud.pet.defensive',
-  aggressive: 'hud.pet.aggressive',
-};
-const PET_MODE_DESC_KEYS: Record<PetMode, TranslationKey> = {
-  passive: 'hud.pet.passiveDesc',
-  defensive: 'hud.pet.defensiveDesc',
-  aggressive: 'hud.pet.aggressiveDesc',
-};
 // Classic class colors (CLASSES[cls].color is a 0xRRGGBB number) as a CSS
 // string, used to color-code party members on the minimap and in the frames.
 const classCss = (cls: string): string =>
@@ -1064,7 +1046,6 @@ export class Hud {
   // shares one hotbarActions array, so drag/drop, persistence, and keybind
   // dispatch work across them with no per-row bookkeeping.
   private static readonly BAR_ABILITY_SLOTS = ACTION_BAR_ABILITY_SLOTS;
-  private static readonly PET_AUTOCAST_TOUCH_HOLD_MS = 2000;
   private static ddSeq = 0; // monotonic id source for buildDropdown listbox/option ARIA wiring
   private abilityButtons: {
     btn: HTMLButtonElement;
@@ -1297,7 +1278,7 @@ export class Hud {
   // re-resolve its own tooltip instead of trailing the stale one (#1626).
   private readonly tooltipOwner = new SharedTooltipOwner<HTMLElement>();
   // Distinguishes a touch long-press "peek" (inspect, no action) from a tap.
-  private peekGuard = new TouchPeekGuard();
+  readonly peekGuard = new TouchPeekGuard();
   // The world entity whose hover tooltip is currently shown, so main.ts can call
   // its show method every frame without rebuilding unchanged HTML.
   private lastHoverTooltipId: string | null = null;
@@ -1968,11 +1949,13 @@ export class Hud {
   private bootcamp = new BootcampOverlay();
   private noticeboardPopup = new NoticeboardPopup();
   private realmBuilderPopup = new RealmBuilderPopup();
-  private lastPetBarSig = '';
-  // Value-diffed body-class flag: true while a live pet bar is shown. The mobile
-  // top-band layout reads body.mobile-pet-active to yield the top-centre line to the
-  // pet bar (the sideways consumables row and the Vale Cup indicator drop a band).
-  private lastPetPresent = false;
+  // The pet action bar (hud/pet_bar/), lazy like the other extracted controllers
+  // so a bare-prototype rig still resolves it; update() drives it every frame.
+  private petBarState: PetBarController | undefined;
+  private get petBar(): PetBarController {
+    this.petBarState ??= new PetBarController(this);
+    return this.petBarState;
+  }
   // Proc auras whose gain event arrived before the aura itself appeared in the
   // mirrored aura list (online: the event can beat the snapshot). Retried each
   // frame until the aura shows, then flushed as an FCT self-note.
@@ -1986,8 +1969,9 @@ export class Hud {
   // World Market collect indicator (slow-band, value-diffed; see updateMarketIndicator).
   private marketIndicatorEl: HTMLElement | null = null;
   private lastMarketCollectPending: boolean | null = null;
-  private pendingPetFeed = false;
-  private petModeMenuOpen = false;
+  // Pet food-selection mode: started by the pet bar's Heal Pet button, read and
+  // ended by the bags window, so it lives here rather than in either.
+  pendingPetFeed = false;
   constructor(
     public sim: IWorld,
     private renderer: Renderer,
@@ -4923,9 +4907,7 @@ export class Hud {
     setPendingPetFeed: (active) => {
       this.pendingPetFeed = active;
     },
-    resetPetBarSig: () => {
-      this.lastPetBarSig = '';
-    },
+    resetPetBarSig: () => this.petBar.invalidate(),
     sellConfirmPolicy: () => vendorSellConfirmPolicyFrom((k) => this.optionsHooks?.settings.get(k)),
     isHotbarItemId: (itemId) => this.isHotbarItemId(itemId),
     useGatherTool: (item) => this.gatherToolUseHook?.(item) ?? false,
@@ -6135,7 +6117,7 @@ export class Hud {
     this.lastAnnouncedTargetId = null;
     this.lastMailUnread = -1;
     this.lastLootSettingsSig = '';
-    this.lastPetBarSig = '';
+    this.petBar.invalidate();
     this.lastCompassFacing = Number.NaN;
     this.lastCompassHeading = '';
     relabelCompassMarks(this.compassMarks);
@@ -7120,447 +7102,6 @@ export class Hud {
     this.stanceBar.render();
   }
 
-  // `pet` is resolved ONCE per frame by update() and passed in, shared with the pet
-  // frame above it: both surfaces need the same entity, and each resolving its own
-  // would walk the interest-scoped roster twice per frame.
-  // The pet bar is a movable frame ('petBar'), so its rebuild wipes only its
-  // OWN group children: an innerHTML clear would destroy the mover's chrome.
-  private clearPetBarGroups(bar: HTMLElement): void {
-    for (const group of bar.querySelectorAll('.petbar-group')) group.remove();
-  }
-
-  private renderPetBar(pet: Entity | null): void {
-    const bar = $('#petbar') as HTMLElement;
-    // Keep commandable Necromancy secondaries visible after Graveguard is gone.
-    const primaryPetShown = !!pet && !pet.dead;
-    if (!primaryPetShown) pet = livingSecondaryPet(this.sim.entities.values(), this.sim.playerId);
-    // Value-diffed body-class flag (see field doc): toggled only on a real
-    // transition so the per-frame path stays write-free, and on EVERY host so
-    // a desktop-to-touch flip never sees it stale.
-    const petPresent = !!pet && !pet.dead;
-    if (petPresent !== this.lastPetPresent) {
-      this.lastPetPresent = petPresent;
-      document.body.classList.toggle('mobile-pet-active', petPresent);
-    }
-    if (!pet || pet.dead) {
-      bar.style.display = 'none';
-      if (this.lastPetBarSig !== '') {
-        this.clearPetBarGroups(bar);
-        this.lastPetBarSig = '';
-      }
-      return;
-    }
-    const mode = pet.petMode ?? 'defensive';
-    const petTemplate = MOBS[pet.templateId];
-    const cd = Math.ceil(Math.max(0, pet.petTauntTimer));
-    const autoTaunt = pet.petAutoTaunt === true;
-    const autoWaterJet = pet.petAutoWaterJet === true;
-    const canTaunt = petCanForceTaunt(pet.templateId);
-    const special = this.sim.petSpecialCommandsSupported
-      ? petSpecialButtonState(petTemplate, pet.petSkillTimer, pet.petAutoSkill)
-      : null;
-    const ownerClass = this.sim.cfg.playerClass;
-    const actionCooldownSig =
-      pet.templateId === 'water_elemental'
-        ? `water-jet:${cd}:${autoWaterJet ? 'auto' : 'manual'}`
-        : canTaunt
-          ? `${cd}:${autoTaunt ? 'auto' : 'manual'}`
-          : 'no-taunt';
-    const specialCooldownSig = special
-      ? `${special.iconId}:${special.cooldown}:${special.autocast ? 'auto' : 'manual'}`
-      : 'no-special';
-    // Feed-button reason (full HP / no food) folds in so the pet bar redraws
-    // when either flips, even while the pet stays otherwise unchanged.
-    const feedSig =
-      ownerClass === 'warlock'
-        ? ''
-        : (petFeedButtonState(pet.hp, pet.maxHp, this.hasPetFood()).reasonKey ?? 'ok');
-    const sig = `${pet.id}:${primaryPetShown ? 'primary' : 'secondary'}:${ownerClass}:${mode}:${actionCooldownSig}:${specialCooldownSig}:${this.pendingPetFeed ? 'feed' : ''}:${this.petModeMenuOpen ? 'modes' : ''}:${feedSig}`;
-    bar.style.display = 'flex';
-    if (sig === this.lastPetBarSig) return;
-    this.lastPetBarSig = sig;
-    // Focus carry-across through the shared helper (focus_restore.ts, #2528):
-    // captureFocusKey owns the activeElement narrowing and the containment
-    // check, so this rebuild never steals focus from another open window that
-    // happens to reuse the same data-focus-key value.
-    const focusedPetActionKey = captureFocusKey(bar);
-    this.clearPetBarGroups(bar);
-    const commands = document.createElement('div');
-    commands.className = 'petbar-group';
-    const stances = document.createElement('div');
-    stances.className = 'petbar-group';
-    bar.append(commands, stances);
-    const petTooltip = (title: string, desc: string): string =>
-      `<div class="tt-title">${esc(title)}</div><div class="tt-desc">${esc(desc)}</div>`;
-    const petModeLabel = (m: PetMode): string => t(PET_MODE_LABEL_KEYS[m]);
-    const addButton = (
-      parent: HTMLElement,
-      iconId: string,
-      title: string,
-      tooltip: string,
-      onClick: () => void,
-      opts: {
-        active?: boolean;
-        autocast?: boolean;
-        cooldownText?: string;
-        onContextMenu?: () => void;
-        onTouchHold?: () => void;
-        focusKey?: string;
-        // Kept visible (never hidden) but greyed and inert while set. The
-        // accessible name (`title`, which also feeds aria-label) STAYS the
-        // action name; the WHY is carried by the rich hover tooltip
-        // (`tooltip`), so a screen reader still announces the action, not the
-        // disabled reason.
-        disabled?: boolean;
-      } = {},
-    ) => {
-      const btn = document.createElement('button');
-      btn.className = 'pet-btn ui-socket';
-      btn.dataset.focusKey = opts.focusKey ?? iconId;
-      if (opts.active) btn.classList.add('active', 'is-on');
-      if (opts.autocast) btn.classList.add('autocast');
-      if (opts.cooldownText) btn.classList.add('cooldown');
-      if (opts.disabled) btn.classList.add('disabled');
-      btn.title = title;
-      btn.setAttribute(
-        'aria-label',
-        opts.cooldownText
-          ? `${title}, ${tPlural('hudChrome.plurals.secondsRemaining', Number(opts.cooldownText))}`
-          : title,
-      );
-      if (opts.disabled) btn.setAttribute('aria-disabled', 'true');
-      if (opts.active) btn.setAttribute('aria-pressed', 'true');
-      if (opts.onContextMenu) {
-        // Primary activation casts the skill; it does not toggle autocast. Do
-        // not expose this as aria-pressed (which promises the opposite button
-        // contract). Announce the secondary mode as descriptive state instead.
-        btn.setAttribute(
-          'aria-description',
-          t(opts.autocast ? 'hud.pet.autocastOn' : 'hud.pet.autocastOff'),
-        );
-        btn.setAttribute('aria-keyshortcuts', 'Shift+Enter');
-      }
-      const icon = document.createElement('span');
-      icon.className = 'icon-label ui-socket-art';
-      icon.style.backgroundImage = `url(${iconDataUrl('ability', iconId)})`;
-      btn.appendChild(icon);
-      if (opts.cooldownText) {
-        const cdText = document.createElement('span');
-        cdText.className = 'cdtext ui-socket-cd-text';
-        cdText.textContent = opts.cooldownText;
-        btn.appendChild(cdText);
-      }
-      let suppressNextClick = false;
-      let touchHoldTimer: number | undefined;
-      let touchHoldPointerId: number | null = null;
-      let touchHoldStartX = 0;
-      let touchHoldStartY = 0;
-      let touchHoldTriggered = false;
-      let touchHoldCanceled = false;
-      const clearTouchHoldTimer = () => {
-        if (touchHoldTimer !== undefined) window.clearTimeout(touchHoldTimer);
-        touchHoldTimer = undefined;
-      };
-      const runClickAction = () => {
-        if (opts.cooldownText || opts.disabled) return;
-        audio.click();
-        onClick();
-      };
-      btn.addEventListener('click', () => {
-        if (suppressNextClick) {
-          suppressNextClick = false;
-          this.peekGuard.consume();
-          this.hideTooltip();
-          btn.blur();
-          return;
-        }
-        if (this.peekGuard.consume()) {
-          this.hideTooltip();
-          btn.blur();
-          return;
-        }
-        runClickAction();
-      });
-      if (opts.onContextMenu) {
-        btn.addEventListener('keydown', (event) => {
-          if (event.key !== 'Enter' || !event.shiftKey || event.repeat || opts.disabled) return;
-          event.preventDefault();
-          event.stopPropagation();
-          audio.click();
-          opts.onContextMenu?.();
-        });
-        btn.addEventListener('contextmenu', (event) => {
-          event.preventDefault();
-          if (document.body.classList.contains('mobile-touch')) return;
-          if (opts.disabled) return; // an inert button fires no secondary action
-          audio.click();
-          opts.onContextMenu?.();
-        });
-      }
-      if (opts.onTouchHold) {
-        btn.addEventListener('pointerdown', (event) => {
-          if (!document.body.classList.contains('mobile-touch') || event.pointerType !== 'touch') {
-            return;
-          }
-          if (opts.disabled) return; // an inert button fires no long-press action
-          event.preventDefault();
-          clearTouchHoldTimer();
-          suppressNextClick = false;
-          touchHoldTriggered = false;
-          touchHoldCanceled = false;
-          touchHoldPointerId = event.pointerId;
-          touchHoldStartX = event.clientX;
-          touchHoldStartY = event.clientY;
-          try {
-            btn.setPointerCapture?.(event.pointerId);
-          } catch {
-            /* pointer already released */
-          }
-          touchHoldTimer = window.setTimeout(() => {
-            if (touchHoldPointerId !== event.pointerId || touchHoldCanceled) return;
-            touchHoldTriggered = true;
-            suppressNextClick = true;
-            audio.click();
-            opts.onTouchHold?.();
-            this.hideTooltip();
-            this.peekGuard.consume();
-            btn.blur();
-          }, Hud.PET_AUTOCAST_TOUCH_HOLD_MS);
-        });
-        btn.addEventListener('pointermove', (event) => {
-          if (touchHoldPointerId !== event.pointerId) return;
-          const moved = Math.hypot(
-            event.clientX - touchHoldStartX,
-            event.clientY - touchHoldStartY,
-          );
-          if (moved > 9) {
-            touchHoldCanceled = true;
-            clearTouchHoldTimer();
-          }
-        });
-        const finishTouchHold = (event: PointerEvent, canceled: boolean) => {
-          if (touchHoldPointerId !== event.pointerId) return;
-          event.preventDefault();
-          const triggered = touchHoldTriggered;
-          const movedAway = touchHoldCanceled || canceled;
-          clearTouchHoldTimer();
-          touchHoldPointerId = null;
-          touchHoldTriggered = false;
-          touchHoldCanceled = false;
-          suppressNextClick = true;
-          if (triggered || movedAway) {
-            this.peekGuard.consume();
-            return;
-          }
-          if (this.peekGuard.consume()) {
-            this.hideTooltip();
-            btn.blur();
-            return;
-          }
-          runClickAction();
-          btn.blur();
-        };
-        btn.addEventListener('pointerup', (event) => finishTouchHold(event, false));
-        btn.addEventListener('pointercancel', (event) => finishTouchHold(event, true));
-      }
-      this.attachTooltip(btn, () => tooltip);
-      parent.appendChild(btn);
-    };
-    const restorePetBarFocus = () => {
-      if (!focusedPetActionKey) return;
-      // Finding the rebuilt equivalent stays the caller's own ladder (the
-      // shared helper only owns the walk + disabled skip); the pet bar has no
-      // degradation rungs, just the one exact action the player was on.
-      const replacement = [...bar.querySelectorAll<HTMLButtonElement>('.pet-btn')].find(
-        (button) => button.dataset.focusKey === focusedPetActionKey,
-      );
-      // suppressFocusTooltip is attachTooltip's own side channel (below), kept
-      // as a direct write on the resolved button. Dropping the prior
-      // `{ preventScroll: true }` is safe: restoreFirstEnabled's bare focus()
-      // is the seam's policy, and #petbar is fixed HUD chrome outside any
-      // scrollable ancestor, so a re-focused button never needs a scroll
-      // correction.
-      if (replacement) replacement.dataset.suppressFocusTooltip = 'true';
-      restoreFirstEnabled([replacement]);
-    };
-    addButton(
-      commands,
-      PET_ACTION_ICONS.attack,
-      t('hud.pet.attack'),
-      petTooltip(t('hud.pet.petAttackTitle'), t('hud.pet.petAttackDesc')),
-      () => this.sim.petAttack(),
-    );
-    if (pet.templateId === 'water_elemental') {
-      addButton(
-        commands,
-        PET_ACTION_ICONS.waterJet,
-        t('hud.pet.waterJet'),
-        petTooltip(t('hud.pet.waterJetTitle'), t('hud.pet.waterJetDesc')),
-        () => this.sim.petWaterJet(),
-        {
-          autocast: autoWaterJet,
-          cooldownText: cd > 0 ? `${cd}` : undefined,
-          // Right-click (desktop) or touch-hold (mobile) toggles autocast: the pet
-          // then fires Water Jet on cooldown on its own, the same as pet Growl.
-          onContextMenu: () => {
-            this.sim.setPetAutoWaterJet(!autoWaterJet);
-            this.lastPetBarSig = '';
-          },
-          onTouchHold: () => {
-            this.sim.setPetAutoWaterJet(!autoWaterJet);
-            this.lastPetBarSig = '';
-          },
-        },
-      );
-    }
-    if (special) {
-      addButton(
-        commands,
-        special.iconId,
-        t(special.labelKey),
-        petTooltip(t(special.titleKey), t(special.descKey)),
-        () => this.sim.petSpecial(),
-        {
-          autocast: special.autocast,
-          cooldownText: special.cooldown > 0 ? `${special.cooldown}` : undefined,
-          onContextMenu: () => {
-            this.sim.setPetAutoSpecial(!special.autocast);
-            this.lastPetBarSig = '';
-          },
-          onTouchHold: () => {
-            this.sim.setPetAutoSpecial(!special.autocast);
-            this.lastPetBarSig = '';
-          },
-        },
-      );
-    }
-    if (canTaunt) {
-      addButton(
-        commands,
-        PET_ACTION_ICONS.taunt,
-        t('hud.pet.taunt'),
-        petTooltip(t('hud.pet.petTauntTitle'), t('hud.pet.petTauntDesc')),
-        () => this.sim.petTaunt(),
-        {
-          autocast: autoTaunt,
-          cooldownText: cd > 0 ? `${cd}` : undefined,
-          onContextMenu: () => {
-            this.sim.setPetAutoTaunt(!autoTaunt);
-            this.lastPetBarSig = '';
-          },
-          onTouchHold: () => {
-            this.sim.setPetAutoTaunt(!autoTaunt);
-            this.lastPetBarSig = '';
-          },
-        },
-      );
-    }
-    if (ownerClass === 'warlock' && primaryPetShown) {
-      addButton(
-        commands,
-        PET_ACTION_ICONS.healDemon,
-        t('hud.pet.healDemon'),
-        petTooltip(t('hud.pet.healDemon'), t('hud.pet.healDemonDesc')),
-        () => {
-          this.sim.healPet();
-        },
-      );
-    } else {
-      const feedState = petFeedButtonState(pet.hp, pet.maxHp, this.hasPetFood());
-      addButton(
-        commands,
-        PET_ACTION_ICONS.feed,
-        // Accessible name stays "Heal Pet" even when disabled; the disabled
-        // reason lives in the rich tooltip below, never in the aria-label.
-        t('hud.pet.healPet'),
-        feedState.reasonKey
-          ? petTooltip(t('hud.pet.healPet'), t(feedState.reasonKey))
-          : petTooltip(t('hud.pet.healPet'), t('hud.pet.healPetDesc')),
-        () => {
-          // Toggle: a second click cancels the pending feed instead of trapping
-          // the player in food-selection mode. Reaching this handler at all
-          // means feedState.disabled was false (the button no-ops while
-          // disabled), so the food check below is now just a defensive guard.
-          if (this.pendingPetFeed) {
-            this.cancelPetFeed();
-            return;
-          }
-          if (!this.hasPetFood()) {
-            this.showError(t('hud.pet.noPetFood'));
-            return;
-          }
-          this.pendingPetFeed = true;
-          this.lastPetBarSig = '';
-          $('#bags').style.display = 'flex';
-          this.renderBags();
-        },
-        // A pending feed stays clickable so the toggle can CANCEL it, even once
-        // the pet has regenerated back to full HP (which would otherwise flip
-        // feedState.disabled true and trap the player in food-selection mode).
-        {
-          active: this.pendingPetFeed,
-          disabled: feedState.disabled && !this.pendingPetFeed,
-        },
-      );
-    }
-    const modes: {
-      mode: PetMode;
-      labelKey: TranslationKey;
-      descKey: TranslationKey;
-    }[] = [
-      {
-        mode: 'passive',
-        labelKey: PET_MODE_LABEL_KEYS.passive,
-        descKey: PET_MODE_DESC_KEYS.passive,
-      },
-      {
-        mode: 'defensive',
-        labelKey: PET_MODE_LABEL_KEYS.defensive,
-        descKey: PET_MODE_DESC_KEYS.defensive,
-      },
-      {
-        mode: 'aggressive',
-        labelKey: PET_MODE_LABEL_KEYS.aggressive,
-        descKey: PET_MODE_DESC_KEYS.aggressive,
-      },
-    ];
-    const modeIcons: Record<PetMode, string> = {
-      passive: PET_ACTION_ICONS.passive,
-      defensive: PET_ACTION_ICONS.defensive,
-      aggressive: PET_ACTION_ICONS.aggressive,
-    };
-    addButton(
-      stances,
-      modeIcons[mode],
-      petModeLabel(mode),
-      petTooltip(`${t('hud.pet.stanceTitle')}: ${petModeLabel(mode)}`, t('hud.pet.stanceDesc')),
-      () => {
-        this.petModeMenuOpen = !this.petModeMenuOpen;
-        this.lastPetBarSig = '';
-      },
-      { active: true, focusKey: 'stance-menu' },
-    );
-    if (!this.petModeMenuOpen) {
-      restorePetBarFocus();
-      return;
-    }
-    for (const entry of modes) {
-      addButton(
-        stances,
-        modeIcons[entry.mode],
-        t(entry.labelKey),
-        petTooltip(t(entry.labelKey), t(entry.descKey)),
-        () => {
-          this.sim.setPetMode(entry.mode);
-          this.petModeMenuOpen = false;
-          this.lastPetBarSig = '';
-        },
-        { active: mode === entry.mode, focusKey: `stance-${entry.mode}` },
-      );
-    }
-    restorePetBarFocus();
-  }
-
   // -------------------------------------------------------------------------
   // Frame update
   // -------------------------------------------------------------------------
@@ -8125,8 +7666,8 @@ export class Hud {
     // pet whose health has not moved costs zero DOM mutations. When the player has no
     // pet (six of the nine classes, always) or the option is off, this paints hidden,
     // which also resets the painter's portrait gate for the next summon or tame.
-    // ONE roster scan per frame, shared with renderPetBar below (it takes `pet` as a
-    // parameter for exactly this reason): the pet bar already resolved the pet every
+    // ONE roster scan per frame, shared with the pet bar below (petBar.render takes
+    // `pet` as a parameter for exactly this reason): the pet bar already resolved the pet every
     // frame before this change, so the frame adds a surface, not a second walk.
     const pet = this.ownPet();
     const framedPet = this.showPetFrame ? pet : null;
@@ -8281,7 +7822,7 @@ export class Hud {
       this.actionBarWorldInput = actionBarWorld;
     }
     this.cooldownManager.paint(actionBarWorld);
-    this.renderPetBar(pet);
+    this.petBar.render(pet);
     this.renderStanceBar();
     this.flushPendingProcAuraNotes();
     if (this.spellbookWindow.isOpen) this.spellbookWindow.tickOpen();
@@ -13349,22 +12890,12 @@ export class Hud {
   // Bags
   // -------------------------------------------------------------------------
 
-  // True when the player has at least one edible food stack — mirrors the
-  // food check in Sim.feedPet so the pet-feed flow never starts when it can't
-  // possibly complete.
-  private hasPetFood(): boolean {
-    return this.sim.inventory.some((s) => {
-      const item = ITEMS[s.itemId];
-      return !!item && item.kind === 'food' && !!item.foodHp && s.count > 0;
-    });
-  }
-
   // Leave pet food-selection mode. Safe to call unconditionally; it only
   // redraws the pet bar when something actually changed.
-  private cancelPetFeed(): void {
+  cancelPetFeed(): void {
     if (!this.pendingPetFeed) return;
     this.pendingPetFeed = false;
-    this.lastPetBarSig = '';
+    this.petBar.invalidate();
   }
 
   toggleBags(): void {

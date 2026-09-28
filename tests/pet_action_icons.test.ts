@@ -180,7 +180,7 @@ describe('petFeedButtonState', () => {
 
 describe('petBarPreviewIconIds', () => {
   // The edit mode's pet-bar placeholder previews the CLASS's real command
-  // set, mirroring renderPetBar's buttons: the warlock demon mends instead of
+  // set, mirroring the pet bar's buttons: the warlock demon mends instead of
   // feeding and leads with Felbolt; the frost mage elemental jets water; the
   // hunter beast growls and feeds.
   it('previews each pet class with its own command icons', () => {
@@ -205,7 +205,7 @@ describe('petBarPreviewIconIds', () => {
   });
 
   it('previews the warlock special with a real templated pet ability id', () => {
-    // emberkin_felbolt is the id renderPetBar shows for the Emberkin; the
+    // emberkin_felbolt is the id the pet bar shows for the Emberkin; the
     // preview must track a live id so icons.ts resolves real art.
     expect(MOBS.emberkin?.petRanged?.ability).toBe('emberkin_felbolt');
   });

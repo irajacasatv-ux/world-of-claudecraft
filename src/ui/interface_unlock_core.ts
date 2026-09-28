@@ -216,7 +216,7 @@ export const HUD_FRAME_SPECS: readonly HudFrameSpec[] = [
   // The pet ACTION bar, the command half of #pet-cluster. Its own row rather
   // than a cluster-wide frame so the two halves place independently (the
   // shipped mobile layout splits them the same way) and the pet frame's saved
-  // spots stay valid. renderPetBar wipes only its .petbar-group children, so
+  // spots stay valid. PetBarController wipes only its .petbar-group children, so
   // the mover chrome minted beside them survives every rebuild.
   {
     id: 'petBar',

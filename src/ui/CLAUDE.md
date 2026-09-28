@@ -584,8 +584,8 @@ same file), and each module's header carries its own contract.
 - **unit_portrait.ts** / **unit_portrait_painter.ts**: the canonical template pair (DOM-free
   geometry + crest-id core, thin DPR-aware painter); player and target frames share it.
 - **pet_frame_view.ts** (+ **pet_entity.ts**, **hud/pet_bar_core.ts**, **pet_action_icons.ts**):
-  the pet unit frame and pet action bar. The pet frame is a further INSTANCE of the
-  `unit_frame.ts` / `unit_frame_painter.ts` family: the pure core only decides WHICH roster
+  the pet unit frame and pet action bar (the bar itself is `hud/pet_bar/`). The pet frame is a
+  further INSTANCE of the `unit_frame.ts` / `unit_frame_painter.ts` family: the pure core only decides WHICH roster
   entity is the pet (a pet is an ordinary mob whose `ownerId` is its owner's entity id) and
   fills a caller-owned descriptor. The resolution rule has ONE authority, the sim's
   `isPrimaryOwnedPetEntity` (`src/sim/pet/pet_selection.ts`): `hud/pet_bar_core.ts` imports it

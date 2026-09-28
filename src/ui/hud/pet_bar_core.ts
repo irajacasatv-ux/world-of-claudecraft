@@ -12,7 +12,7 @@ export function primaryOwnedPet(entities: Iterable<Entity>, ownerId: number): En
 }
 
 /** Mirror of isLivingSecondaryPetEntity for the pet ACTION BAR's fallback anchor
- *  (renderPetBar in hud.ts): the first living temporary Necromancy summon the
+ *  (hud/pet_bar/pet_bar_controller.ts): the first living temporary Necromancy summon the
  *  owner still commands, used only once the primary pet is dead or gone. Never
  *  read by the pet FRAME or the target-pet keybind, which stay on
  *  primaryOwnedPet as their one authority (src/ui/CLAUDE.md). */
