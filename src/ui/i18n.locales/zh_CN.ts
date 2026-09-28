@@ -15916,233 +15916,125 @@ export const zh_CN: Partial<Record<TranslationKey, string>> = {
   'hudChrome.perfecting.nameSubmitBusy': '铸造中',
   'hudChrome.perfecting.nameCancel': '取消',
   'crucibleShop.balanceEntry': '{name} x{count}',
-  'entities.mobs.buddy_alpaca.name':
-    '羊驼',
+  'entities.mobs.buddy_alpaca.name': '羊驼',
   'entities.mobs.buddy_sapling.name': '小树苗',
   'entities.items.whistle_sapling.name': '小树苗的哨子',
   'hudChrome.collections.presence.sapling': '细小的树根在你身后轻快地踏过，拨动了落叶。',
   'hudChrome.collections.buddyLore.sapling':
     '一株树皮上带着笑容、紫色眼睛里满是好奇的小树。无论你走到哪里，它都会迈着树根，欢快地摇摇摆摆跟上。',
-  'entities.mobs.buddy_horse.name':
-    '马',
-  'entities.mobs.buddy_ansem.name':
-    '安塞姆',
-  'entities.mobs.buddy_crimson_claw_crab.name':
-    '赤钳蟹',
-  'entities.mobs.buddy_crystal_lich.name':
-    '水晶巫妖',
-  'entities.mobs.buddy_crystal_tide.name':
-    '水晶潮汐',
-  'entities.mobs.buddy_ember_fox.name':
-    '余烬狐',
-  'entities.mobs.buddy_emerald_wolf.name':
-    '翡翠狼',
-  'entities.mobs.buddy_forgemaw.name':
-    '熔颚·熔融者',
-  'entities.mobs.buddy_frostfire.name':
-    '霜火',
-  'entities.mobs.buddy_golden_sentinel.name':
-    '黄金哨兵',
-  'entities.mobs.buddy_kekius.name':
-    '凯基乌斯',
-  'entities.mobs.buddy_loot_goblin.name':
-    '战利品哥布林',
-  'entities.mobs.buddy_nightfang.name':
-    '夜牙',
-  'entities.mobs.buddy_penny_goldspark.name':
-    '潘妮·金火花',
-  'entities.mobs.buddy_phantom.name':
-    '幻魂',
-  'entities.mobs.buddy_proud_grunt.name':
-    '骄傲的步兵',
-  'entities.mobs.buddy_raptor.name':
-    '迅猛龙',
-  'entities.mobs.buddy_rocky.name':
-    '岩仔',
-  'entities.mobs.buddy_skeleton.name':
-    '骷髅',
-  'entities.mobs.buddy_solbot.name':
-    '索尔机偶',
-  'entities.mobs.buddy_spider.name':
-    '蜘蛛',
-  'entities.mobs.buddy_tiger.name':
-    '猛虎',
-  'entities.mobs.buddy_triple_t.name':
-    '三重T',
-  'entities.mobs.buddy_trollface.name':
-    '巨魔脸',
-  'entities.mobs.buddy_tuskhorn_boar.name':
-    '獠角野猪',
-  'entities.items.whistle_alon.name':
-    '阿隆的哨子',
-  'entities.items.whistle_alpaca.name':
-    '羊驼的哨子',
-  'entities.items.whistle_horse.name':
-    '马的哨子',
-  'entities.items.whistle_ansem.name':
-    '安塞姆的哨子',
-  'entities.items.whistle_bull.name':
-    '公牛的哨子',
-  'entities.items.whistle_cate_coin.name':
-    '钱币猫的哨子',
-  'entities.items.whistle_crimson_claw_crab.name':
-    '赤钳蟹的哨子',
-  'entities.items.whistle_crystal_lich.name':
-    '水晶巫妖的哨子',
-  'entities.items.whistle_crystal_tide.name':
-    '水晶潮汐的哨子',
-  'entities.items.whistle_ember_fox.name':
-    '余烬狐的哨子',
-  'entities.items.whistle_emerald_wolf.name':
-    '翡翠狼的哨子',
-  'entities.items.whistle_forgemaw.name':
-    '熔颚·熔融者的哨子',
-  'entities.items.whistle_frog.name':
-    '青蛙的哨子',
-  'entities.items.whistle_frostfire.name':
-    '霜火的哨子',
-  'entities.items.whistle_golden_sentinel.name':
-    '黄金哨兵的哨子',
-  'entities.items.whistle_kekius.name':
-    '凯基乌斯的哨子',
-  'entities.items.whistle_loot_goblin.name':
-    '战利品哥布林的哨子',
-  'entities.items.whistle_moss_hare.name':
-    '苔藓野兔的哨子',
-  'entities.items.whistle_nightfang.name':
-    '夜牙的哨子',
-  'entities.items.whistle_penny_goldspark.name':
-    '潘妮·金火花的哨子',
-  'entities.items.whistle_phantom.name':
-    '幻魂的哨子',
-  'entities.items.whistle_proud_grunt.name':
-    '骄傲步兵的哨子',
-  'entities.items.whistle_raptor.name':
-    '迅猛龙的哨子',
-  'entities.items.whistle_rocky.name':
-    '岩仔的哨子',
-  'entities.items.whistle_skeleton.name':
-    '骷髅的哨子',
-  'entities.items.whistle_solbot.name':
-    '索尔机偶的哨子',
-  'entities.items.whistle_spider.name':
-    '蜘蛛的哨子',
-  'entities.items.whistle_stag.name':
-    '雄鹿的哨子',
-  'entities.items.whistle_tiger.name':
-    '猛虎的哨子',
-  'entities.items.whistle_triple_t.name':
-    '三重T的哨子',
-  'entities.items.whistle_trollface.name':
-    '巨魔脸的哨子',
-  'entities.items.whistle_tuskhorn_boar.name':
-    '獠角野猪的哨子',
-  'hudChrome.buddyMenu.autolootEnable':
-    '开启自动拾取',
-  'hudChrome.buddyMenu.autolootDisable':
-    '关闭自动拾取',
-  'hudChrome.buddyMenu.autolootHint':
-    '你的伙伴会去拾取 30 码内属于你自己的尸体上的战利品。',
-  'hudChrome.buddyMenu.cancel':
-    '取消',
-  'hudChrome.collections.title':
-    '狩猎',
-  'hudChrome.collections.close':
-    '关闭狩猎',
-  'hudChrome.collections.keybindLabel':
-    '狩猎',
-  'hudChrome.collections.launcherTitle':
-    '狩猎：伙伴、坐骑与套装',
-  'hudChrome.collections.tabs.buddies':
-    '伙伴',
-  'hudChrome.collections.tabs.mounts':
-    '坐骑',
-  'hudChrome.collections.state.owned':
-    '已收集',
-  'hudChrome.collections.state.notOwned':
-    '未收集',
-  'hudChrome.collections.state.unavailable':
-    '尚无法获得',
-  'hudChrome.collections.petKind.beast':
-    '野兽',
-  'hudChrome.collections.petKind.humanoid':
-    '人型生物',
-  'hudChrome.collections.petKind.elemental':
-    '元素生物',
-  'hudChrome.collections.petKind.undead':
-    '亡灵',
-  'hudChrome.collections.petKind.celebrity':
-    '名流',
-  'hudChrome.collections.armor.cloth':
-    '布甲',
-  'hudChrome.collections.armor.leather':
-    '皮甲',
-  'hudChrome.collections.stat.strength':
-    '力量',
-  'hudChrome.collections.stat.agility':
-    '敏捷',
-  'hudChrome.collections.stat.intellect':
-    '智力',
-  'hudChrome.collections.stat.mixed':
-    '混合',
-  'hudChrome.collections.set.owned':
-    '{total} 件中已收集 {owned} 件',
-  'hudChrome.collections.set.bonusLabel':
-    '{pieces} 件套',
-  'hudChrome.collections.set.itemLevel':
-    '装等 {level}',
-  'hudChrome.collections.detail.dropLabel':
-    '掉落自',
-  'hudChrome.collections.detail.drop':
-    '{mob}（{location}），每次击杀 {chance}%',
+  'entities.mobs.buddy_horse.name': '马',
+  'entities.mobs.buddy_ansem.name': '安塞姆',
+  'entities.mobs.buddy_crimson_claw_crab.name': '赤钳蟹',
+  'entities.mobs.buddy_crystal_lich.name': '水晶巫妖',
+  'entities.mobs.buddy_crystal_tide.name': '水晶潮汐',
+  'entities.mobs.buddy_ember_fox.name': '余烬狐',
+  'entities.mobs.buddy_emerald_wolf.name': '翡翠狼',
+  'entities.mobs.buddy_forgemaw.name': '熔颚·熔融者',
+  'entities.mobs.buddy_frostfire.name': '霜火',
+  'entities.mobs.buddy_golden_sentinel.name': '黄金哨兵',
+  'entities.mobs.buddy_kekius.name': '凯基乌斯',
+  'entities.mobs.buddy_loot_goblin.name': '战利品哥布林',
+  'entities.mobs.buddy_nightfang.name': '夜牙',
+  'entities.mobs.buddy_penny_goldspark.name': '潘妮·金火花',
+  'entities.mobs.buddy_phantom.name': '幻魂',
+  'entities.mobs.buddy_proud_grunt.name': '骄傲的步兵',
+  'entities.mobs.buddy_raptor.name': '迅猛龙',
+  'entities.mobs.buddy_rocky.name': '岩仔',
+  'entities.mobs.buddy_skeleton.name': '骷髅',
+  'entities.mobs.buddy_solbot.name': '索尔机偶',
+  'entities.mobs.buddy_spider.name': '蜘蛛',
+  'entities.mobs.buddy_tiger.name': '猛虎',
+  'entities.mobs.buddy_triple_t.name': '三重T',
+  'entities.mobs.buddy_trollface.name': '巨魔脸',
+  'entities.mobs.buddy_tuskhorn_boar.name': '獠角野猪',
+  'entities.items.whistle_alon.name': '阿隆的哨子',
+  'entities.items.whistle_alpaca.name': '羊驼的哨子',
+  'entities.items.whistle_horse.name': '马的哨子',
+  'entities.items.whistle_ansem.name': '安塞姆的哨子',
+  'entities.items.whistle_bull.name': '公牛的哨子',
+  'entities.items.whistle_cate_coin.name': '钱币猫的哨子',
+  'entities.items.whistle_crimson_claw_crab.name': '赤钳蟹的哨子',
+  'entities.items.whistle_crystal_lich.name': '水晶巫妖的哨子',
+  'entities.items.whistle_crystal_tide.name': '水晶潮汐的哨子',
+  'entities.items.whistle_ember_fox.name': '余烬狐的哨子',
+  'entities.items.whistle_emerald_wolf.name': '翡翠狼的哨子',
+  'entities.items.whistle_forgemaw.name': '熔颚·熔融者的哨子',
+  'entities.items.whistle_frog.name': '青蛙的哨子',
+  'entities.items.whistle_frostfire.name': '霜火的哨子',
+  'entities.items.whistle_golden_sentinel.name': '黄金哨兵的哨子',
+  'entities.items.whistle_kekius.name': '凯基乌斯的哨子',
+  'entities.items.whistle_loot_goblin.name': '战利品哥布林的哨子',
+  'entities.items.whistle_moss_hare.name': '苔藓野兔的哨子',
+  'entities.items.whistle_nightfang.name': '夜牙的哨子',
+  'entities.items.whistle_penny_goldspark.name': '潘妮·金火花的哨子',
+  'entities.items.whistle_phantom.name': '幻魂的哨子',
+  'entities.items.whistle_proud_grunt.name': '骄傲步兵的哨子',
+  'entities.items.whistle_raptor.name': '迅猛龙的哨子',
+  'entities.items.whistle_rocky.name': '岩仔的哨子',
+  'entities.items.whistle_skeleton.name': '骷髅的哨子',
+  'entities.items.whistle_solbot.name': '索尔机偶的哨子',
+  'entities.items.whistle_spider.name': '蜘蛛的哨子',
+  'entities.items.whistle_stag.name': '雄鹿的哨子',
+  'entities.items.whistle_tiger.name': '猛虎的哨子',
+  'entities.items.whistle_triple_t.name': '三重T的哨子',
+  'entities.items.whistle_trollface.name': '巨魔脸的哨子',
+  'entities.items.whistle_tuskhorn_boar.name': '獠角野猪的哨子',
+  'hudChrome.buddyMenu.autolootEnable': '开启自动拾取',
+  'hudChrome.buddyMenu.autolootDisable': '关闭自动拾取',
+  'hudChrome.buddyMenu.autolootHint': '你的伙伴会去拾取 30 码内属于你自己的尸体上的战利品。',
+  'hudChrome.buddyMenu.cancel': '取消',
+  'hudChrome.collections.title': '狩猎',
+  'hudChrome.collections.close': '关闭狩猎',
+  'hudChrome.collections.keybindLabel': '狩猎',
+  'hudChrome.collections.launcherTitle': '狩猎：伙伴、坐骑与套装',
+  'hudChrome.collections.tabs.buddies': '伙伴',
+  'hudChrome.collections.tabs.mounts': '坐骑',
+  'hudChrome.collections.state.owned': '已收集',
+  'hudChrome.collections.state.notOwned': '未收集',
+  'hudChrome.collections.state.unavailable': '尚无法获得',
+  'hudChrome.collections.petKind.beast': '野兽',
+  'hudChrome.collections.petKind.humanoid': '人型生物',
+  'hudChrome.collections.petKind.elemental': '元素生物',
+  'hudChrome.collections.petKind.undead': '亡灵',
+  'hudChrome.collections.petKind.celebrity': '名流',
+  'hudChrome.collections.armor.cloth': '布甲',
+  'hudChrome.collections.armor.leather': '皮甲',
+  'hudChrome.collections.stat.strength': '力量',
+  'hudChrome.collections.stat.agility': '敏捷',
+  'hudChrome.collections.stat.intellect': '智力',
+  'hudChrome.collections.stat.mixed': '混合',
+  'hudChrome.collections.set.owned': '{total} 件中已收集 {owned} 件',
+  'hudChrome.collections.set.bonusLabel': '{pieces} 件套',
+  'hudChrome.collections.set.itemLevel': '装等 {level}',
+  'hudChrome.collections.detail.dropLabel': '掉落自',
+  'hudChrome.collections.detail.drop': '{mob}（{location}），每次击杀 {chance}%',
   'hudChrome.collections.detail.dropWithHeroic':
     '{mob}（{location}），每次击杀 {chance}%，英雄难度 {heroicChance}%',
   'hudChrome.collections.detail.heroicDrop':
     '{mob}（{location}），仅限英雄难度，每次击杀 {chance}%',
   'hudChrome.collections.detail.globalDrop':
     '任意敌人，每次击杀 {chance}%，同稀有度 {count} 件中的一件',
-  'hudChrome.collections.detail.fishingDrop':
-    '任意水域钓鱼，每次上钩 {chance}%',
-  'hudChrome.collections.detail.noSource':
-    '游戏中尚无获取途径',
-  'hudChrome.collections.detail.noItem':
-    '尚无物品可以获得',
-  'hudChrome.collections.detail.bindLabel':
-    '绑定',
-  'hudChrome.collections.detail.soulbound':
-    '灵魂绑定',
-  'hudChrome.collections.detail.tradeable':
-    '可交易',
-  'hudChrome.collections.detail.sellLabel':
-    '商人收购价',
-  'hudChrome.collections.detail.noSell':
-    '无法出售',
-  'hudChrome.collections.detail.setLabel':
-    '已收集',
-  'hudChrome.collections.detail.marketLabel':
-    '世界市场',
-  'hudChrome.collections.detail.marketNone':
-    '无上架',
-  'hudChrome.collections.detail.marketChecking':
-    '查询中…',
-  'hudChrome.collections.detail.marketAtMerchant':
-    '在商人处查看',
-  'hudChrome.collections.detail.exchangeLabel':
-    '$WOC 交易所',
-  'hudChrome.collections.detail.exchangeNone':
-    '无上架',
-  'hudChrome.collections.detail.exchangeUnavailable':
-    '此客户端不支持',
-  'hudChrome.collections.detail.honorPrice':
-    '{amount} 荣誉',
-  'hudChrome.collections.detail.marksPrice':
-    '{amount} 英雄徽记',
-  'hudChrome.options.showPetNames':
-    '显示宠物名称',
-  'hudChrome.warfareShop.companions':
-    '伙伴',
-  'itemUi.kind.buddy':
-    '伙伴',
+  'hudChrome.collections.detail.fishingDrop': '任意水域钓鱼，每次上钩 {chance}%',
+  'hudChrome.collections.detail.noSource': '游戏中尚无获取途径',
+  'hudChrome.collections.detail.noItem': '尚无物品可以获得',
+  'hudChrome.collections.detail.bindLabel': '绑定',
+  'hudChrome.collections.detail.soulbound': '灵魂绑定',
+  'hudChrome.collections.detail.tradeable': '可交易',
+  'hudChrome.collections.detail.sellLabel': '商人收购价',
+  'hudChrome.collections.detail.noSell': '无法出售',
+  'hudChrome.collections.detail.setLabel': '已收集',
+  'hudChrome.collections.detail.marketLabel': '世界市场',
+  'hudChrome.collections.detail.marketNone': '无上架',
+  'hudChrome.collections.detail.marketChecking': '查询中…',
+  'hudChrome.collections.detail.marketAtMerchant': '在商人处查看',
+  'hudChrome.collections.detail.exchangeLabel': '$WOC 交易所',
+  'hudChrome.collections.detail.exchangeNone': '无上架',
+  'hudChrome.collections.detail.exchangeUnavailable': '此客户端不支持',
+  'hudChrome.collections.detail.honorPrice': '{amount} 荣誉',
+  'hudChrome.collections.detail.marksPrice': '{amount} 英雄徽记',
+  'hudChrome.options.showPetNames': '显示宠物名称',
+  'hudChrome.warfareShop.companions': '伙伴',
+  'itemUi.kind.buddy': '伙伴',
   'hudChrome.collections.buddyLore.alon':
     '一位旅人的吉祥物，来自任何地图都不肯承认的道路，总在计划出岔子的地方现身。它看着，它点头，然后什么忙也不帮。',
   'hudChrome.collections.buddyLore.alpaca':
@@ -16207,10 +16099,8 @@ export const zh_CN: Partial<Record<TranslationKey, string>> = {
     '怨灵林放出来、又不肯收回去的一张咧嘴笑脸。每一次试图描述它的尝试，都以描述者自己笑场放弃告终。',
   'hudChrome.collections.buddyLore.tuskhorn_boar':
     '荆峰高地的种，被牧人刻意育成短腿，图的是一头拱不倒篱笆的野猪。脾气倒是原封不动地留下来了。',
-  'entities.mobs.buddy_emberfall_phoenix.name':
-    '烬落凤凰',
-  'entities.items.whistle_emberfall_phoenix.name':
-    '烬落凤凰的哨子',
+  'entities.mobs.buddy_emberfall_phoenix.name': '烬落凤凰',
+  'entities.items.whistle_emberfall_phoenix.name': '烬落凤凰的哨子',
   'hudChrome.collections.buddyLore.emberfall_phoenix':
     '每逢秋天它便燃尽成一粒余烬，到了春天又从自己的灰里重新升起——关于它，谁也说不出更多了。从没有人找到过它的巢，也从没有人捉到过同一只两次。',
   'hudChrome.collections.state.pending': '有什么在跟着你',
@@ -16269,8 +16159,10 @@ export const zh_CN: Partial<Record<TranslationKey, string>> = {
   'hudChrome.collections.looks.none': '这个伙伴还没有可用的外观',
   'hudChrome.collections.source.bossLabel': '首领宠物',
   'hudChrome.collections.source.bossDrop': '{mob}（{location}），每次击杀每位玩家{chance}%',
-  'hudChrome.collections.source.bossDropWithHeroic': '{mob}（{location}），每位玩家{chance}%，英雄难度{heroicChance}%',
-  'hudChrome.collections.source.bossDropHeroicOnly': '{mob}（{location}），仅限英雄难度，每位玩家{chance}%',
+  'hudChrome.collections.source.bossDropWithHeroic':
+    '{mob}（{location}），每位玩家{chance}%，英雄难度{heroicChance}%',
+  'hudChrome.collections.source.bossDropHeroicOnly':
+    '{mob}（{location}），仅限英雄难度，每位玩家{chance}%',
   'hudChrome.collections.source.rollNote': '每位玩家单独掷骰；不会有人因队友而失去机会。',
   'hudChrome.collections.source.deedLabel': '获取途径',
   'hudChrome.collections.source.deed': '功绩：{deed}',

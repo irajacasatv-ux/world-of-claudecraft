@@ -16720,233 +16720,127 @@ export const ko_KR: Partial<Record<TranslationKey, string>> = {
   'hudChrome.perfecting.nameSubmitBusy': '벼려내는 중',
   'hudChrome.perfecting.nameCancel': '취소',
   'crucibleShop.balanceEntry': '{name} x{count}',
-  'entities.mobs.buddy_alpaca.name':
-    '알파카',
+  'entities.mobs.buddy_alpaca.name': '알파카',
   'entities.mobs.buddy_sapling.name': '어린 나무',
   'entities.items.whistle_sapling.name': '어린 나무의 호루라기',
-  'hudChrome.collections.presence.sapling': '작은 뿌리들이 뒤에서 종종걸음을 치며 낙엽을 흩뜨립니다.',
+  'hudChrome.collections.presence.sapling':
+    '작은 뿌리들이 뒤에서 종종걸음을 치며 낙엽을 흩뜨립니다.',
   'hudChrome.collections.buddyLore.sapling':
     '나무껍질에 미소를 띠고 호기심 가득한 보랏빛 눈을 가진 어린 나무입니다. 뿌리로 즐겁게 뒤뚱거리며 어디든 당신을 따라갑니다.',
-  'entities.mobs.buddy_horse.name':
-    '말',
-  'entities.mobs.buddy_ansem.name':
-    '안셈',
-  'entities.mobs.buddy_crimson_claw_crab.name':
-    '진홍 집게 게',
-  'entities.mobs.buddy_crystal_lich.name':
-    '수정 리치',
-  'entities.mobs.buddy_crystal_tide.name':
-    '수정 물결',
-  'entities.mobs.buddy_ember_fox.name':
-    '잉걸불 여우',
-  'entities.mobs.buddy_emerald_wolf.name':
-    '에메랄드 늑대',
-  'entities.mobs.buddy_forgemaw.name':
-    '용융의 화로아귀',
-  'entities.mobs.buddy_frostfire.name':
-    '서리불꽃',
-  'entities.mobs.buddy_golden_sentinel.name':
-    '황금 파수병',
-  'entities.mobs.buddy_kekius.name':
-    '케키우스',
-  'entities.mobs.buddy_loot_goblin.name':
-    '전리품 고블린',
-  'entities.mobs.buddy_nightfang.name':
-    '밤엄니',
-  'entities.mobs.buddy_penny_goldspark.name':
-    '페니 골드스파크',
-  'entities.mobs.buddy_phantom.name':
-    '팬텀',
-  'entities.mobs.buddy_proud_grunt.name':
-    '자랑스러운 병졸',
-  'entities.mobs.buddy_raptor.name':
-    '랩터',
-  'entities.mobs.buddy_rocky.name':
-    '로키',
-  'entities.mobs.buddy_skeleton.name':
-    '해골',
-  'entities.mobs.buddy_solbot.name':
-    '솔봇',
-  'entities.mobs.buddy_spider.name':
-    '거미',
-  'entities.mobs.buddy_tiger.name':
-    '호랑이',
-  'entities.mobs.buddy_triple_t.name':
-    '트리플 T',
-  'entities.mobs.buddy_trollface.name':
-    '트롤페이스',
-  'entities.mobs.buddy_tuskhorn_boar.name':
-    '엄니뿔 멧돼지',
-  'entities.items.whistle_alon.name':
-    '알론의 호루라기',
-  'entities.items.whistle_alpaca.name':
-    '알파카의 호루라기',
-  'entities.items.whistle_horse.name':
-    '말의 호루라기',
-  'entities.items.whistle_ansem.name':
-    '안셈의 호루라기',
-  'entities.items.whistle_bull.name':
-    '황소의 호루라기',
-  'entities.items.whistle_cate_coin.name':
-    '케이트 코인의 호루라기',
-  'entities.items.whistle_crimson_claw_crab.name':
-    '진홍 집게 게의 호루라기',
-  'entities.items.whistle_crystal_lich.name':
-    '수정 리치의 호루라기',
-  'entities.items.whistle_crystal_tide.name':
-    '수정 물결의 호루라기',
-  'entities.items.whistle_ember_fox.name':
-    '잉걸불 여우의 호루라기',
-  'entities.items.whistle_emerald_wolf.name':
-    '에메랄드 늑대의 호루라기',
-  'entities.items.whistle_forgemaw.name':
-    '용융의 화로아귀의 호루라기',
-  'entities.items.whistle_frog.name':
-    '개구리의 호루라기',
-  'entities.items.whistle_frostfire.name':
-    '서리불꽃의 호루라기',
-  'entities.items.whistle_golden_sentinel.name':
-    '황금 파수병의 호루라기',
-  'entities.items.whistle_kekius.name':
-    '케키우스의 호루라기',
-  'entities.items.whistle_loot_goblin.name':
-    '전리품 고블린의 호루라기',
-  'entities.items.whistle_moss_hare.name':
-    '이끼 산토끼의 호루라기',
-  'entities.items.whistle_nightfang.name':
-    '밤엄니의 호루라기',
-  'entities.items.whistle_penny_goldspark.name':
-    '페니 골드스파크의 호루라기',
-  'entities.items.whistle_phantom.name':
-    '팬텀의 호루라기',
-  'entities.items.whistle_proud_grunt.name':
-    '자랑스러운 병졸의 호루라기',
-  'entities.items.whistle_raptor.name':
-    '랩터의 호루라기',
-  'entities.items.whistle_rocky.name':
-    '로키의 호루라기',
-  'entities.items.whistle_skeleton.name':
-    '해골의 호루라기',
-  'entities.items.whistle_solbot.name':
-    '솔봇의 호루라기',
-  'entities.items.whistle_spider.name':
-    '거미의 호루라기',
-  'entities.items.whistle_stag.name':
-    '수사슴의 호루라기',
-  'entities.items.whistle_tiger.name':
-    '호랑이의 호루라기',
-  'entities.items.whistle_triple_t.name':
-    '트리플 T의 호루라기',
-  'entities.items.whistle_trollface.name':
-    '트롤페이스의 호루라기',
-  'entities.items.whistle_tuskhorn_boar.name':
-    '엄니뿔 멧돼지의 호루라기',
-  'hudChrome.buddyMenu.autolootEnable':
-    '자동 전리품 켜기',
-  'hudChrome.buddyMenu.autolootDisable':
-    '자동 전리품 끄기',
+  'entities.mobs.buddy_horse.name': '말',
+  'entities.mobs.buddy_ansem.name': '안셈',
+  'entities.mobs.buddy_crimson_claw_crab.name': '진홍 집게 게',
+  'entities.mobs.buddy_crystal_lich.name': '수정 리치',
+  'entities.mobs.buddy_crystal_tide.name': '수정 물결',
+  'entities.mobs.buddy_ember_fox.name': '잉걸불 여우',
+  'entities.mobs.buddy_emerald_wolf.name': '에메랄드 늑대',
+  'entities.mobs.buddy_forgemaw.name': '용융의 화로아귀',
+  'entities.mobs.buddy_frostfire.name': '서리불꽃',
+  'entities.mobs.buddy_golden_sentinel.name': '황금 파수병',
+  'entities.mobs.buddy_kekius.name': '케키우스',
+  'entities.mobs.buddy_loot_goblin.name': '전리품 고블린',
+  'entities.mobs.buddy_nightfang.name': '밤엄니',
+  'entities.mobs.buddy_penny_goldspark.name': '페니 골드스파크',
+  'entities.mobs.buddy_phantom.name': '팬텀',
+  'entities.mobs.buddy_proud_grunt.name': '자랑스러운 병졸',
+  'entities.mobs.buddy_raptor.name': '랩터',
+  'entities.mobs.buddy_rocky.name': '로키',
+  'entities.mobs.buddy_skeleton.name': '해골',
+  'entities.mobs.buddy_solbot.name': '솔봇',
+  'entities.mobs.buddy_spider.name': '거미',
+  'entities.mobs.buddy_tiger.name': '호랑이',
+  'entities.mobs.buddy_triple_t.name': '트리플 T',
+  'entities.mobs.buddy_trollface.name': '트롤페이스',
+  'entities.mobs.buddy_tuskhorn_boar.name': '엄니뿔 멧돼지',
+  'entities.items.whistle_alon.name': '알론의 호루라기',
+  'entities.items.whistle_alpaca.name': '알파카의 호루라기',
+  'entities.items.whistle_horse.name': '말의 호루라기',
+  'entities.items.whistle_ansem.name': '안셈의 호루라기',
+  'entities.items.whistle_bull.name': '황소의 호루라기',
+  'entities.items.whistle_cate_coin.name': '케이트 코인의 호루라기',
+  'entities.items.whistle_crimson_claw_crab.name': '진홍 집게 게의 호루라기',
+  'entities.items.whistle_crystal_lich.name': '수정 리치의 호루라기',
+  'entities.items.whistle_crystal_tide.name': '수정 물결의 호루라기',
+  'entities.items.whistle_ember_fox.name': '잉걸불 여우의 호루라기',
+  'entities.items.whistle_emerald_wolf.name': '에메랄드 늑대의 호루라기',
+  'entities.items.whistle_forgemaw.name': '용융의 화로아귀의 호루라기',
+  'entities.items.whistle_frog.name': '개구리의 호루라기',
+  'entities.items.whistle_frostfire.name': '서리불꽃의 호루라기',
+  'entities.items.whistle_golden_sentinel.name': '황금 파수병의 호루라기',
+  'entities.items.whistle_kekius.name': '케키우스의 호루라기',
+  'entities.items.whistle_loot_goblin.name': '전리품 고블린의 호루라기',
+  'entities.items.whistle_moss_hare.name': '이끼 산토끼의 호루라기',
+  'entities.items.whistle_nightfang.name': '밤엄니의 호루라기',
+  'entities.items.whistle_penny_goldspark.name': '페니 골드스파크의 호루라기',
+  'entities.items.whistle_phantom.name': '팬텀의 호루라기',
+  'entities.items.whistle_proud_grunt.name': '자랑스러운 병졸의 호루라기',
+  'entities.items.whistle_raptor.name': '랩터의 호루라기',
+  'entities.items.whistle_rocky.name': '로키의 호루라기',
+  'entities.items.whistle_skeleton.name': '해골의 호루라기',
+  'entities.items.whistle_solbot.name': '솔봇의 호루라기',
+  'entities.items.whistle_spider.name': '거미의 호루라기',
+  'entities.items.whistle_stag.name': '수사슴의 호루라기',
+  'entities.items.whistle_tiger.name': '호랑이의 호루라기',
+  'entities.items.whistle_triple_t.name': '트리플 T의 호루라기',
+  'entities.items.whistle_trollface.name': '트롤페이스의 호루라기',
+  'entities.items.whistle_tuskhorn_boar.name': '엄니뿔 멧돼지의 호루라기',
+  'hudChrome.buddyMenu.autolootEnable': '자동 전리품 켜기',
+  'hudChrome.buddyMenu.autolootDisable': '자동 전리품 끄기',
   'hudChrome.buddyMenu.autolootHint':
     '버디가 30야드 이내에 있는 당신 소유의 시체에서 전리품을 가져옵니다.',
-  'hudChrome.buddyMenu.cancel':
-    '취소',
-  'hudChrome.collections.title':
-    '사냥',
-  'hudChrome.collections.close':
-    '사냥 닫기',
-  'hudChrome.collections.keybindLabel':
-    '사냥',
-  'hudChrome.collections.launcherTitle':
-    '사냥: 버디, 탈것, 아이템 세트',
-  'hudChrome.collections.tabs.buddies':
-    '버디',
-  'hudChrome.collections.tabs.mounts':
-    '탈것',
-  'hudChrome.collections.state.owned':
-    '수집함',
-  'hudChrome.collections.state.notOwned':
-    '수집 안 함',
-  'hudChrome.collections.state.unavailable':
-    '아직 획득 불가',
-  'hudChrome.collections.petKind.beast':
-    '야수',
-  'hudChrome.collections.petKind.humanoid':
-    '인간형',
-  'hudChrome.collections.petKind.elemental':
-    '정령',
-  'hudChrome.collections.petKind.undead':
-    '언데드',
-  'hudChrome.collections.petKind.celebrity':
-    '유명 인사',
-  'hudChrome.collections.armor.cloth':
-    '천',
-  'hudChrome.collections.armor.leather':
-    '가죽',
-  'hudChrome.collections.stat.strength':
-    '힘',
-  'hudChrome.collections.stat.agility':
-    '민첩성',
-  'hudChrome.collections.stat.intellect':
-    '지능',
-  'hudChrome.collections.stat.mixed':
-    '혼합',
-  'hudChrome.collections.set.owned':
-    '{total}개 중 {owned}개',
-  'hudChrome.collections.set.bonusLabel':
-    '{pieces}개 세트',
-  'hudChrome.collections.set.itemLevel':
-    '아이템 레벨 {level}',
-  'hudChrome.collections.detail.dropLabel':
-    '드롭 출처',
-  'hudChrome.collections.detail.drop':
-    '{mob}({location}), 처치당 {chance}%',
+  'hudChrome.buddyMenu.cancel': '취소',
+  'hudChrome.collections.title': '사냥',
+  'hudChrome.collections.close': '사냥 닫기',
+  'hudChrome.collections.keybindLabel': '사냥',
+  'hudChrome.collections.launcherTitle': '사냥: 버디, 탈것, 아이템 세트',
+  'hudChrome.collections.tabs.buddies': '버디',
+  'hudChrome.collections.tabs.mounts': '탈것',
+  'hudChrome.collections.state.owned': '수집함',
+  'hudChrome.collections.state.notOwned': '수집 안 함',
+  'hudChrome.collections.state.unavailable': '아직 획득 불가',
+  'hudChrome.collections.petKind.beast': '야수',
+  'hudChrome.collections.petKind.humanoid': '인간형',
+  'hudChrome.collections.petKind.elemental': '정령',
+  'hudChrome.collections.petKind.undead': '언데드',
+  'hudChrome.collections.petKind.celebrity': '유명 인사',
+  'hudChrome.collections.armor.cloth': '천',
+  'hudChrome.collections.armor.leather': '가죽',
+  'hudChrome.collections.stat.strength': '힘',
+  'hudChrome.collections.stat.agility': '민첩성',
+  'hudChrome.collections.stat.intellect': '지능',
+  'hudChrome.collections.stat.mixed': '혼합',
+  'hudChrome.collections.set.owned': '{total}개 중 {owned}개',
+  'hudChrome.collections.set.bonusLabel': '{pieces}개 세트',
+  'hudChrome.collections.set.itemLevel': '아이템 레벨 {level}',
+  'hudChrome.collections.detail.dropLabel': '드롭 출처',
+  'hudChrome.collections.detail.drop': '{mob}({location}), 처치당 {chance}%',
   'hudChrome.collections.detail.dropWithHeroic':
     '{mob}({location}), 처치당 {chance}%, 영웅 난이도에서 {heroicChance}%',
   'hudChrome.collections.detail.heroicDrop':
     '{mob}({location}), 영웅 난이도 전용, 처치당 {chance}%',
   'hudChrome.collections.detail.globalDrop':
     '아무 적, 처치당 {chance}%, 같은 등급 {count}종 중 하나',
-  'hudChrome.collections.detail.fishingDrop':
-    '아무 곳에서나 낚시, 낚을 때마다 {chance}%',
-  'hudChrome.collections.detail.noSource':
-    '아직 게임 내 획득처가 없습니다',
-  'hudChrome.collections.detail.noItem':
-    '아직 이를 주는 아이템이 없습니다',
-  'hudChrome.collections.detail.bindLabel':
-    '귀속',
-  'hudChrome.collections.detail.soulbound':
-    '귀속',
-  'hudChrome.collections.detail.tradeable':
-    '거래 가능',
-  'hudChrome.collections.detail.sellLabel':
-    '상인 지불액',
-  'hudChrome.collections.detail.noSell':
-    '판매 불가',
-  'hudChrome.collections.detail.setLabel':
-    '수집함',
-  'hudChrome.collections.detail.marketLabel':
-    '월드 마켓',
-  'hudChrome.collections.detail.marketNone':
-    '등록된 물품 없음',
-  'hudChrome.collections.detail.marketChecking':
-    '확인 중…',
-  'hudChrome.collections.detail.marketAtMerchant':
-    '상인에게서 확인',
-  'hudChrome.collections.detail.exchangeLabel':
-    '$WOC 거래소',
-  'hudChrome.collections.detail.exchangeNone':
-    '등록된 물품 없음',
-  'hudChrome.collections.detail.exchangeUnavailable':
-    '이 클라이언트에서는 사용할 수 없습니다',
-  'hudChrome.collections.detail.honorPrice':
-    '명예 {amount}',
-  'hudChrome.collections.detail.marksPrice':
-    '영웅의 징표 {amount}',
-  'hudChrome.options.showPetNames':
-    '펫 이름 표시',
-  'hudChrome.warfareShop.companions':
-    '동료',
-  'itemUi.kind.buddy':
-    '버디',
+  'hudChrome.collections.detail.fishingDrop': '아무 곳에서나 낚시, 낚을 때마다 {chance}%',
+  'hudChrome.collections.detail.noSource': '아직 게임 내 획득처가 없습니다',
+  'hudChrome.collections.detail.noItem': '아직 이를 주는 아이템이 없습니다',
+  'hudChrome.collections.detail.bindLabel': '귀속',
+  'hudChrome.collections.detail.soulbound': '귀속',
+  'hudChrome.collections.detail.tradeable': '거래 가능',
+  'hudChrome.collections.detail.sellLabel': '상인 지불액',
+  'hudChrome.collections.detail.noSell': '판매 불가',
+  'hudChrome.collections.detail.setLabel': '수집함',
+  'hudChrome.collections.detail.marketLabel': '월드 마켓',
+  'hudChrome.collections.detail.marketNone': '등록된 물품 없음',
+  'hudChrome.collections.detail.marketChecking': '확인 중…',
+  'hudChrome.collections.detail.marketAtMerchant': '상인에게서 확인',
+  'hudChrome.collections.detail.exchangeLabel': '$WOC 거래소',
+  'hudChrome.collections.detail.exchangeNone': '등록된 물품 없음',
+  'hudChrome.collections.detail.exchangeUnavailable': '이 클라이언트에서는 사용할 수 없습니다',
+  'hudChrome.collections.detail.honorPrice': '명예 {amount}',
+  'hudChrome.collections.detail.marksPrice': '영웅의 징표 {amount}',
+  'hudChrome.options.showPetNames': '펫 이름 표시',
+  'hudChrome.warfareShop.companions': '동료',
+  'itemUi.kind.buddy': '버디',
   'hudChrome.collections.buddyLore.alon':
     '어떤 지도에도 없는 길에서 온 여행자의 마스코트로, 일이 틀어지는 곳이면 어디든 나타난다. 지켜보고, 고개를 끄덕이고, 도움은 전혀 주지 않는다.',
   'hudChrome.collections.buddyLore.alpaca':
@@ -17011,26 +16905,31 @@ export const ko_KR: Partial<Record<TranslationKey, string>> = {
     '망령숲이 내놓고는 도로 거두어들이려 하지 않은, 히죽 웃는 것. 이를 설명하려는 시도는 매번 설명하던 사람이 웃음을 터뜨리고 포기하는 것으로 끝난다.',
   'hudChrome.collections.buddyLore.tuskhorn_boar':
     '쏜피크 고지의 혈통으로, 울타리를 무너뜨리지 못하는 멧돼지를 원한 목동들이 다리를 짧게 개량한 것이다. 성질은 그대로 남았다.',
-  'entities.mobs.buddy_emberfall_phoenix.name':
-    '잿불낙하 불사조',
-  'entities.items.whistle_emberfall_phoenix.name':
-    '잿불낙하 불사조의 호루라기',
+  'entities.mobs.buddy_emberfall_phoenix.name': '잿불낙하 불사조',
+  'entities.items.whistle_emberfall_phoenix.name': '잿불낙하 불사조의 호루라기',
   'hudChrome.collections.buddyLore.emberfall_phoenix':
     '가을마다 타들어가 한 점 잉걸불이 되었다가, 봄이면 제 재에서 다시 솟아오른다. 누구에게 물어도 할 수 있는 말은 그것이 전부다. 둥지를 찾아낸 사람도 없고, 같은 개체를 두 번 붙잡은 사람도 없다.',
   'hudChrome.collections.state.pending': '무언가가 당신을 따라옵니다',
   'hudChrome.collections.presenceDefault': '무언가가 당신을 지켜보는 기척이 느껴집니다.',
   'hudChrome.collections.revealed': '{name}이(가) 당신을 따르기로 했습니다.',
   'hudChrome.collections.cosmeticUnlocked': '{name}의 새로운 모습: {look}.',
-  'hudChrome.collections.presence.ember_fox': '작고 따뜻한 무언가가 당신 뒤를 살금살금 따라오고 있습니다.',
-  'hudChrome.collections.presence.moss_hare': '이탄 속의 바스락 소리가 당신의 발걸음에 맞춰 따라옵니다.',
-  'hudChrome.collections.presence.frog': '당신이 한 걸음 내디딜 때마다 축축한 개구리 울음이 답합니다.',
-  'hudChrome.collections.presence.crimson_claw_crab': '시야 바로 밖에서 무언가가 딸깍거리며 종종걸음칩니다.',
-  'hudChrome.collections.presence.golden_sentinel': '풀숲에서 희미한 금빛 반짝임이 당신을 지켜봅니다.',
+  'hudChrome.collections.presence.ember_fox':
+    '작고 따뜻한 무언가가 당신 뒤를 살금살금 따라오고 있습니다.',
+  'hudChrome.collections.presence.moss_hare':
+    '이탄 속의 바스락 소리가 당신의 발걸음에 맞춰 따라옵니다.',
+  'hudChrome.collections.presence.frog':
+    '당신이 한 걸음 내디딜 때마다 축축한 개구리 울음이 답합니다.',
+  'hudChrome.collections.presence.crimson_claw_crab':
+    '시야 바로 밖에서 무언가가 딸깍거리며 종종걸음칩니다.',
+  'hudChrome.collections.presence.golden_sentinel':
+    '풀숲에서 희미한 금빛 반짝임이 당신을 지켜봅니다.',
   'hudChrome.collections.presence.nightfang': '보이지 않는 곳에서 소리 없는 발이 따라옵니다.',
-  'hudChrome.collections.presence.tuskhorn_boar': '콧김과 발구름 소리. 고집 센 무언가가 당신을 따라옵니다.',
+  'hudChrome.collections.presence.tuskhorn_boar':
+    '콧김과 발구름 소리. 고집 센 무언가가 당신을 따라옵니다.',
   'hudChrome.collections.presence.emerald_wolf': '덤불 속에서 초록 눈이 깜빡이더니 따라옵니다.',
   'hudChrome.collections.presence.tiger': '시야 가장자리에서 줄무늬가 움직입니다.',
-  'hudChrome.collections.presence.cate_coin': '당신 것이 아닌 동전이 희미하게 울리는 소리가 들립니다.',
+  'hudChrome.collections.presence.cate_coin':
+    '당신 것이 아닌 동전이 희미하게 울리는 소리가 들립니다.',
   'hudChrome.collections.presence.alon': '누군가 지켜보며 조용히 인정해 주는 느낌이 듭니다.',
   'hudChrome.collections.presence.trollface': '당신 뒤 어딘가에서 무언가가 씩 웃고 있습니다.',
   'hudChrome.collections.presence.ansem': '문과 어둠의 속삭임이 당신을 따라옵니다.',
@@ -17039,21 +16938,28 @@ export const ko_KR: Partial<Record<TranslationKey, string>> = {
   'hudChrome.collections.presence.solbot': '부드러운 째깍 소리가 당신의 보폭에 맞춰 울립니다.',
   'hudChrome.collections.presence.frostfire': '증기와 서리가 당신의 뒤에서 소용돌이칩니다.',
   'hudChrome.collections.presence.rocky': '바람도 없는데 뒤에서 자갈이 움직입니다.',
-  'hudChrome.collections.presence.proud_grunt': '당신 뒤 어딘가에서 군화가 차렷 자세로 발을 구릅니다.',
+  'hudChrome.collections.presence.proud_grunt':
+    '당신 뒤 어딘가에서 군화가 차렷 자세로 발을 구릅니다.',
   'hudChrome.collections.presence.loot_goblin': '무언가가 당신의 동전을 소곤소곤 세고 있습니다.',
-  'hudChrome.collections.presence.penny_goldspark': '당신 것이 아닌 주머니에서 작은 도구들이 짤랑거립니다.',
+  'hudChrome.collections.presence.penny_goldspark':
+    '당신 것이 아닌 주머니에서 작은 도구들이 짤랑거립니다.',
   'hudChrome.collections.presence.stag': '뿔 달린 그림자가 당신의 길 위에 드리웁니다.',
   'hudChrome.collections.presence.alpaca': '털북숭이에 느긋한 무언가가 함께 가기로 했습니다.',
-  'hudChrome.collections.presence.horse': '어딘가 뒤에서 발굽이 느긋하고 끈기 있는 박자를 맞춥니다.',
+  'hudChrome.collections.presence.horse':
+    '어딘가 뒤에서 발굽이 느긋하고 끈기 있는 박자를 맞춥니다.',
   'hudChrome.collections.presence.bull': '낮은 콧김이 당신 뒤의 먼지를 일으킵니다.',
   'hudChrome.collections.presence.spider': '거미줄 한 가닥이 당신의 어깨를 스칩니다.',
   'hudChrome.collections.presence.raptor': '재빠른 발톱이 당신 뒤꿈치의 돌 위를 톡톡 두드립니다.',
   'hudChrome.collections.presence.skeleton': '마른 뼈가 당신의 걸음에 맞춰 덜그럭거립니다.',
-  'hudChrome.collections.presence.crystal_lich': '잔해에서 차가운 웅웅거림이 피어오르고, 그것이 당신을 지켜봅니다.',
-  'hudChrome.collections.presence.forgemaw': '용광로의 열기가 아직 당신을 떠나지 않았습니다. 무언가가 그것과 함께 걸어 나왔습니다.',
-  'hudChrome.collections.presence.crystal_tide': '바닷물 한 방울이 당신의 낚싯줄에서 떨어지기를 거부합니다.',
+  'hudChrome.collections.presence.crystal_lich':
+    '잔해에서 차가운 웅웅거림이 피어오르고, 그것이 당신을 지켜봅니다.',
+  'hudChrome.collections.presence.forgemaw':
+    '용광로의 열기가 아직 당신을 떠나지 않았습니다. 무언가가 그것과 함께 걸어 나왔습니다.',
+  'hudChrome.collections.presence.crystal_tide':
+    '바닷물 한 방울이 당신의 낚싯줄에서 떨어지기를 거부합니다.',
   'hudChrome.collections.presence.phantom': '당신 뒤의 공기가 조금 지나치게 고요합니다.',
-  'hudChrome.collections.presence.emberfall_phoenix': '재에 묻은 불처럼 은근한 온기가 당신의 등 뒤에 내려앉습니다.',
+  'hudChrome.collections.presence.emberfall_phoenix':
+    '재에 묻은 불처럼 은근한 온기가 당신의 등 뒤에 내려앉습니다.',
   'hudChrome.collections.cosmetic.crystal_lich_frostbound': '서리결속',
   'hudChrome.collections.cosmetic.crystal_lich_voltaic': '전광',
   'hudChrome.collections.cosmetic.forgemaw_ashen': '잿빛',
@@ -17073,9 +16979,12 @@ export const ko_KR: Partial<Record<TranslationKey, string>> = {
   'hudChrome.collections.looks.none': '이 동료에게는 아직 준비된 모습이 없습니다',
   'hudChrome.collections.source.bossLabel': '보스 펫',
   'hudChrome.collections.source.bossDrop': '{mob} ({location}), 처치 시 플레이어마다 {chance}%',
-  'hudChrome.collections.source.bossDropWithHeroic': '{mob} ({location}), 플레이어마다 {chance}%, 영웅 난이도 {heroicChance}%',
-  'hudChrome.collections.source.bossDropHeroicOnly': '{mob} ({location}), 영웅 난이도 전용, 플레이어마다 {chance}%',
-  'hudChrome.collections.source.rollNote': '모든 플레이어가 각자 굴립니다. 파티원 때문에 기회를 잃는 일은 없습니다.',
+  'hudChrome.collections.source.bossDropWithHeroic':
+    '{mob} ({location}), 플레이어마다 {chance}%, 영웅 난이도 {heroicChance}%',
+  'hudChrome.collections.source.bossDropHeroicOnly':
+    '{mob} ({location}), 영웅 난이도 전용, 플레이어마다 {chance}%',
+  'hudChrome.collections.source.rollNote':
+    '모든 플레이어가 각자 굴립니다. 파티원 때문에 기회를 잃는 일은 없습니다.',
   'hudChrome.collections.source.deedLabel': '획득 조건',
   'hudChrome.collections.source.deed': '업적: {deed}',
   'hudChrome.collections.source.challengeLabel': '도전',

@@ -16759,233 +16759,126 @@ export const ja_JP: Partial<Record<TranslationKey, string>> = {
   'hudChrome.perfecting.nameSubmitBusy': '鍛造中',
   'hudChrome.perfecting.nameCancel': 'キャンセル',
   'crucibleShop.balanceEntry': '{name} x{count}',
-  'entities.mobs.buddy_alpaca.name':
-    'アルパカ',
+  'entities.mobs.buddy_alpaca.name': 'アルパカ',
   'entities.mobs.buddy_sapling.name': '若木',
   'entities.items.whistle_sapling.name': '若木の笛',
   'hudChrome.collections.presence.sapling': '小さな根が後ろで軽い足音を立て、落ち葉を揺らす。',
   'hudChrome.collections.buddyLore.sapling':
     '樹皮に笑顔を浮かべ、好奇心に満ちた紫の瞳を持つ若木。根を足にして楽しげによちよちと歩き、どこへでもついてくる。',
-  'entities.mobs.buddy_horse.name':
-    '馬',
-  'entities.mobs.buddy_ansem.name':
-    'アンセム',
-  'entities.mobs.buddy_crimson_claw_crab.name':
-    '紅爪ガニ',
-  'entities.mobs.buddy_crystal_lich.name':
-    'クリスタルリッチ',
-  'entities.mobs.buddy_crystal_tide.name':
-    'クリスタルタイド',
-  'entities.mobs.buddy_ember_fox.name':
-    '燃えさし狐',
-  'entities.mobs.buddy_emerald_wolf.name':
-    'エメラルドウルフ',
-  'entities.mobs.buddy_forgemaw.name':
-    '溶けたフォージモウ',
-  'entities.mobs.buddy_frostfire.name':
-    'フロストファイア',
-  'entities.mobs.buddy_golden_sentinel.name':
-    '黄金の歩哨',
-  'entities.mobs.buddy_kekius.name':
-    'ケキウス',
-  'entities.mobs.buddy_loot_goblin.name':
-    '戦利品ゴブリン',
-  'entities.mobs.buddy_nightfang.name':
-    'ナイトファング',
-  'entities.mobs.buddy_penny_goldspark.name':
-    'ペニー・ゴールドスパーク',
-  'entities.mobs.buddy_phantom.name':
-    'ファントム',
-  'entities.mobs.buddy_proud_grunt.name':
-    '誇り高きグラント',
-  'entities.mobs.buddy_raptor.name':
-    'ラプター',
-  'entities.mobs.buddy_rocky.name':
-    'ロッキー',
-  'entities.mobs.buddy_skeleton.name':
-    'スケルトン',
-  'entities.mobs.buddy_solbot.name':
-    'ソルボット',
-  'entities.mobs.buddy_spider.name':
-    'クモ',
-  'entities.mobs.buddy_tiger.name':
-    'トラ',
-  'entities.mobs.buddy_triple_t.name':
-    'トリプルT',
-  'entities.mobs.buddy_trollface.name':
-    'トロールフェイス',
-  'entities.mobs.buddy_tuskhorn_boar.name':
-    'タスクホーン・ボア',
-  'entities.items.whistle_alon.name':
-    'アロンの笛',
-  'entities.items.whistle_alpaca.name':
-    'アルパカの笛',
-  'entities.items.whistle_horse.name':
-    '馬の笛',
-  'entities.items.whistle_ansem.name':
-    'アンセムの笛',
-  'entities.items.whistle_bull.name':
-    '雄牛の笛',
-  'entities.items.whistle_cate_coin.name':
-    'ケイトコインの笛',
-  'entities.items.whistle_crimson_claw_crab.name':
-    '紅爪ガニの笛',
-  'entities.items.whistle_crystal_lich.name':
-    'クリスタルリッチの笛',
-  'entities.items.whistle_crystal_tide.name':
-    'クリスタルタイドの笛',
-  'entities.items.whistle_ember_fox.name':
-    '燃えさし狐の笛',
-  'entities.items.whistle_emerald_wolf.name':
-    'エメラルドウルフの笛',
-  'entities.items.whistle_forgemaw.name':
-    '溶けたフォージモウの笛',
-  'entities.items.whistle_frog.name':
-    'カエルの笛',
-  'entities.items.whistle_frostfire.name':
-    'フロストファイアの笛',
-  'entities.items.whistle_golden_sentinel.name':
-    '黄金の歩哨の笛',
-  'entities.items.whistle_kekius.name':
-    'ケキウスの笛',
-  'entities.items.whistle_loot_goblin.name':
-    '戦利品ゴブリンの笛',
-  'entities.items.whistle_moss_hare.name':
-    'コケウサギの笛',
-  'entities.items.whistle_nightfang.name':
-    'ナイトファングの笛',
-  'entities.items.whistle_penny_goldspark.name':
-    'ペニー・ゴールドスパークの笛',
-  'entities.items.whistle_phantom.name':
-    'ファントムの笛',
-  'entities.items.whistle_proud_grunt.name':
-    '誇り高きグラントの笛',
-  'entities.items.whistle_raptor.name':
-    'ラプターの笛',
-  'entities.items.whistle_rocky.name':
-    'ロッキーの笛',
-  'entities.items.whistle_skeleton.name':
-    'スケルトンの笛',
-  'entities.items.whistle_solbot.name':
-    'ソルボットの笛',
-  'entities.items.whistle_spider.name':
-    'クモの笛',
-  'entities.items.whistle_stag.name':
-    '牡鹿の笛',
-  'entities.items.whistle_tiger.name':
-    'トラの笛',
-  'entities.items.whistle_triple_t.name':
-    'トリプルTの笛',
-  'entities.items.whistle_trollface.name':
-    'トロールフェイスの笛',
-  'entities.items.whistle_tuskhorn_boar.name':
-    'タスクホーン・ボアの笛',
-  'hudChrome.buddyMenu.autolootEnable':
-    '自動収集を有効化',
-  'hudChrome.buddyMenu.autolootDisable':
-    '自動収集を無効化',
+  'entities.mobs.buddy_horse.name': '馬',
+  'entities.mobs.buddy_ansem.name': 'アンセム',
+  'entities.mobs.buddy_crimson_claw_crab.name': '紅爪ガニ',
+  'entities.mobs.buddy_crystal_lich.name': 'クリスタルリッチ',
+  'entities.mobs.buddy_crystal_tide.name': 'クリスタルタイド',
+  'entities.mobs.buddy_ember_fox.name': '燃えさし狐',
+  'entities.mobs.buddy_emerald_wolf.name': 'エメラルドウルフ',
+  'entities.mobs.buddy_forgemaw.name': '溶けたフォージモウ',
+  'entities.mobs.buddy_frostfire.name': 'フロストファイア',
+  'entities.mobs.buddy_golden_sentinel.name': '黄金の歩哨',
+  'entities.mobs.buddy_kekius.name': 'ケキウス',
+  'entities.mobs.buddy_loot_goblin.name': '戦利品ゴブリン',
+  'entities.mobs.buddy_nightfang.name': 'ナイトファング',
+  'entities.mobs.buddy_penny_goldspark.name': 'ペニー・ゴールドスパーク',
+  'entities.mobs.buddy_phantom.name': 'ファントム',
+  'entities.mobs.buddy_proud_grunt.name': '誇り高きグラント',
+  'entities.mobs.buddy_raptor.name': 'ラプター',
+  'entities.mobs.buddy_rocky.name': 'ロッキー',
+  'entities.mobs.buddy_skeleton.name': 'スケルトン',
+  'entities.mobs.buddy_solbot.name': 'ソルボット',
+  'entities.mobs.buddy_spider.name': 'クモ',
+  'entities.mobs.buddy_tiger.name': 'トラ',
+  'entities.mobs.buddy_triple_t.name': 'トリプルT',
+  'entities.mobs.buddy_trollface.name': 'トロールフェイス',
+  'entities.mobs.buddy_tuskhorn_boar.name': 'タスクホーン・ボア',
+  'entities.items.whistle_alon.name': 'アロンの笛',
+  'entities.items.whistle_alpaca.name': 'アルパカの笛',
+  'entities.items.whistle_horse.name': '馬の笛',
+  'entities.items.whistle_ansem.name': 'アンセムの笛',
+  'entities.items.whistle_bull.name': '雄牛の笛',
+  'entities.items.whistle_cate_coin.name': 'ケイトコインの笛',
+  'entities.items.whistle_crimson_claw_crab.name': '紅爪ガニの笛',
+  'entities.items.whistle_crystal_lich.name': 'クリスタルリッチの笛',
+  'entities.items.whistle_crystal_tide.name': 'クリスタルタイドの笛',
+  'entities.items.whistle_ember_fox.name': '燃えさし狐の笛',
+  'entities.items.whistle_emerald_wolf.name': 'エメラルドウルフの笛',
+  'entities.items.whistle_forgemaw.name': '溶けたフォージモウの笛',
+  'entities.items.whistle_frog.name': 'カエルの笛',
+  'entities.items.whistle_frostfire.name': 'フロストファイアの笛',
+  'entities.items.whistle_golden_sentinel.name': '黄金の歩哨の笛',
+  'entities.items.whistle_kekius.name': 'ケキウスの笛',
+  'entities.items.whistle_loot_goblin.name': '戦利品ゴブリンの笛',
+  'entities.items.whistle_moss_hare.name': 'コケウサギの笛',
+  'entities.items.whistle_nightfang.name': 'ナイトファングの笛',
+  'entities.items.whistle_penny_goldspark.name': 'ペニー・ゴールドスパークの笛',
+  'entities.items.whistle_phantom.name': 'ファントムの笛',
+  'entities.items.whistle_proud_grunt.name': '誇り高きグラントの笛',
+  'entities.items.whistle_raptor.name': 'ラプターの笛',
+  'entities.items.whistle_rocky.name': 'ロッキーの笛',
+  'entities.items.whistle_skeleton.name': 'スケルトンの笛',
+  'entities.items.whistle_solbot.name': 'ソルボットの笛',
+  'entities.items.whistle_spider.name': 'クモの笛',
+  'entities.items.whistle_stag.name': '牡鹿の笛',
+  'entities.items.whistle_tiger.name': 'トラの笛',
+  'entities.items.whistle_triple_t.name': 'トリプルTの笛',
+  'entities.items.whistle_trollface.name': 'トロールフェイスの笛',
+  'entities.items.whistle_tuskhorn_boar.name': 'タスクホーン・ボアの笛',
+  'hudChrome.buddyMenu.autolootEnable': '自動収集を有効化',
+  'hudChrome.buddyMenu.autolootDisable': '自動収集を無効化',
   'hudChrome.buddyMenu.autolootHint':
     'バディが30ヤード以内にあるあなた自身の死体から戦利品を回収します。',
-  'hudChrome.buddyMenu.cancel':
-    'キャンセル',
-  'hudChrome.collections.title':
-    'ハンティング',
-  'hudChrome.collections.close':
-    'ハンティングを閉じる',
-  'hudChrome.collections.keybindLabel':
-    'ハンティング',
-  'hudChrome.collections.launcherTitle':
-    'ハンティング：バディ、マウント、装備セット',
-  'hudChrome.collections.tabs.buddies':
-    'バディ',
-  'hudChrome.collections.tabs.mounts':
-    'マウント',
-  'hudChrome.collections.state.owned':
-    '収集済み',
-  'hudChrome.collections.state.notOwned':
-    '未収集',
-  'hudChrome.collections.state.unavailable':
-    'まだ入手不可',
-  'hudChrome.collections.petKind.beast':
-    'ビースト',
-  'hudChrome.collections.petKind.humanoid':
-    'ヒューマノイド',
-  'hudChrome.collections.petKind.elemental':
-    'エレメンタル',
-  'hudChrome.collections.petKind.undead':
-    'アンデッド',
-  'hudChrome.collections.petKind.celebrity':
-    'セレブリティ',
-  'hudChrome.collections.armor.cloth':
-    '布',
-  'hudChrome.collections.armor.leather':
-    '革',
-  'hudChrome.collections.stat.strength':
-    '筋力',
-  'hudChrome.collections.stat.agility':
-    '敏捷性',
-  'hudChrome.collections.stat.intellect':
-    '知力',
-  'hudChrome.collections.stat.mixed':
-    'ハイブリッド',
-  'hudChrome.collections.set.owned':
-    '{total}部位中{owned}部位',
-  'hudChrome.collections.set.bonusLabel':
-    '{pieces}部位',
-  'hudChrome.collections.set.itemLevel':
-    'アイテムレベル {level}',
-  'hudChrome.collections.detail.dropLabel':
-    'ドロップ元',
-  'hudChrome.collections.detail.drop':
-    '{mob}（{location}）、討伐ごとに{chance}%',
+  'hudChrome.buddyMenu.cancel': 'キャンセル',
+  'hudChrome.collections.title': 'ハンティング',
+  'hudChrome.collections.close': 'ハンティングを閉じる',
+  'hudChrome.collections.keybindLabel': 'ハンティング',
+  'hudChrome.collections.launcherTitle': 'ハンティング：バディ、マウント、装備セット',
+  'hudChrome.collections.tabs.buddies': 'バディ',
+  'hudChrome.collections.tabs.mounts': 'マウント',
+  'hudChrome.collections.state.owned': '収集済み',
+  'hudChrome.collections.state.notOwned': '未収集',
+  'hudChrome.collections.state.unavailable': 'まだ入手不可',
+  'hudChrome.collections.petKind.beast': 'ビースト',
+  'hudChrome.collections.petKind.humanoid': 'ヒューマノイド',
+  'hudChrome.collections.petKind.elemental': 'エレメンタル',
+  'hudChrome.collections.petKind.undead': 'アンデッド',
+  'hudChrome.collections.petKind.celebrity': 'セレブリティ',
+  'hudChrome.collections.armor.cloth': '布',
+  'hudChrome.collections.armor.leather': '革',
+  'hudChrome.collections.stat.strength': '筋力',
+  'hudChrome.collections.stat.agility': '敏捷性',
+  'hudChrome.collections.stat.intellect': '知力',
+  'hudChrome.collections.stat.mixed': 'ハイブリッド',
+  'hudChrome.collections.set.owned': '{total}部位中{owned}部位',
+  'hudChrome.collections.set.bonusLabel': '{pieces}部位',
+  'hudChrome.collections.set.itemLevel': 'アイテムレベル {level}',
+  'hudChrome.collections.detail.dropLabel': 'ドロップ元',
+  'hudChrome.collections.detail.drop': '{mob}（{location}）、討伐ごとに{chance}%',
   'hudChrome.collections.detail.dropWithHeroic':
     '{mob}（{location}）、討伐ごとに{chance}%、ヒロイックでは{heroicChance}%',
   'hudChrome.collections.detail.heroicDrop':
     '{mob}（{location}）、ヒロイック限定、討伐ごとに{chance}%',
   'hudChrome.collections.detail.globalDrop':
     '任意の敵、討伐ごとに{chance}%、同レアリティ{count}種のうち1つ',
-  'hudChrome.collections.detail.fishingDrop':
-    'どこでも釣り、釣り上げるごとに{chance}%',
-  'hudChrome.collections.detail.noSource':
-    'ゲーム内に入手手段はまだありません',
-  'hudChrome.collections.detail.noItem':
-    'これを与えるアイテムはまだありません',
-  'hudChrome.collections.detail.bindLabel':
-    '装備制限',
-  'hudChrome.collections.detail.soulbound':
-    '魂縛',
-  'hudChrome.collections.detail.tradeable':
-    '取引可能',
-  'hudChrome.collections.detail.sellLabel':
-    '商人の買取額',
-  'hudChrome.collections.detail.noSell':
-    '売却不可',
-  'hudChrome.collections.detail.setLabel':
-    '収集済み',
-  'hudChrome.collections.detail.marketLabel':
-    'ワールドマーケット',
-  'hudChrome.collections.detail.marketNone':
-    '出品なし',
-  'hudChrome.collections.detail.marketChecking':
-    '確認中…',
-  'hudChrome.collections.detail.marketAtMerchant':
-    '商人のところで表示',
-  'hudChrome.collections.detail.exchangeLabel':
-    '$WOC取引所',
-  'hudChrome.collections.detail.exchangeNone':
-    '出品なし',
-  'hudChrome.collections.detail.exchangeUnavailable':
-    'このクライアントでは利用できません',
-  'hudChrome.collections.detail.honorPrice':
-    '名誉{amount}',
-  'hudChrome.collections.detail.marksPrice':
-    '英雄の証{amount}',
-  'hudChrome.options.showPetNames':
-    'ペット名を表示',
-  'hudChrome.warfareShop.companions':
-    'コンパニオン',
-  'itemUi.kind.buddy':
-    'バディ',
+  'hudChrome.collections.detail.fishingDrop': 'どこでも釣り、釣り上げるごとに{chance}%',
+  'hudChrome.collections.detail.noSource': 'ゲーム内に入手手段はまだありません',
+  'hudChrome.collections.detail.noItem': 'これを与えるアイテムはまだありません',
+  'hudChrome.collections.detail.bindLabel': '装備制限',
+  'hudChrome.collections.detail.soulbound': '魂縛',
+  'hudChrome.collections.detail.tradeable': '取引可能',
+  'hudChrome.collections.detail.sellLabel': '商人の買取額',
+  'hudChrome.collections.detail.noSell': '売却不可',
+  'hudChrome.collections.detail.setLabel': '収集済み',
+  'hudChrome.collections.detail.marketLabel': 'ワールドマーケット',
+  'hudChrome.collections.detail.marketNone': '出品なし',
+  'hudChrome.collections.detail.marketChecking': '確認中…',
+  'hudChrome.collections.detail.marketAtMerchant': '商人のところで表示',
+  'hudChrome.collections.detail.exchangeLabel': '$WOC取引所',
+  'hudChrome.collections.detail.exchangeNone': '出品なし',
+  'hudChrome.collections.detail.exchangeUnavailable': 'このクライアントでは利用できません',
+  'hudChrome.collections.detail.honorPrice': '名誉{amount}',
+  'hudChrome.collections.detail.marksPrice': '英雄の証{amount}',
+  'hudChrome.options.showPetNames': 'ペット名を表示',
+  'hudChrome.warfareShop.companions': 'コンパニオン',
+  'itemUi.kind.buddy': 'バディ',
   'hudChrome.collections.buddyLore.alon':
     'どの地図も認めない道から来た旅人のマスコット。計画が狂っている場所に必ず現れる。見て、うなずいて、助けは一切しない。',
   'hudChrome.collections.buddyLore.alpaca':
@@ -17050,23 +16943,26 @@ export const ja_JP: Partial<Record<TranslationKey, string>> = {
     'レイスウッドが世に出し、二度と引き取ろうとしなかった、にやりと笑うもの。これを説明しようとする試みは、いつも説明する側が笑い出して諦めるところで終わる。',
   'hudChrome.collections.buddyLore.tuskhorn_boar':
     'ソーンピーク高地の血統。柵を倒せない猪が欲しかった羊飼いたちによって、脚を短く掛け合わされた。気性のほうはそのまま残った。',
-  'entities.mobs.buddy_emberfall_phoenix.name':
-    'エンバーフォール・フェニックス',
-  'entities.items.whistle_emberfall_phoenix.name':
-    'エンバーフォール・フェニックスの笛',
+  'entities.mobs.buddy_emberfall_phoenix.name': 'エンバーフォール・フェニックス',
+  'entities.items.whistle_emberfall_phoenix.name': 'エンバーフォール・フェニックスの笛',
   'hudChrome.collections.buddyLore.emberfall_phoenix':
     '秋ごとに燃え尽きて一粒の燃えさしとなり、春には自らの灰から立ち上がってくる。誰に訊いても言えるのはそれだけだ。巣を見つけた者はおらず、同じ個体を二度捕らえた者もいない。',
   'hudChrome.collections.state.pending': '何かが付いてきている',
   'hudChrome.collections.presenceDefault': '何かに見られている気がする。',
   'hudChrome.collections.revealed': '{name}があなたに付いていくことに決めた。',
   'hudChrome.collections.cosmeticUnlocked': '{name}の新しい姿：{look}。',
-  'hudChrome.collections.presence.ember_fox': '小さく温かい何かが、あなたの後ろをそっと歩いている。',
-  'hudChrome.collections.presence.moss_hare': '泥炭の中のかさかさという音が、あなたの歩みに合わせて続く。',
+  'hudChrome.collections.presence.ember_fox':
+    '小さく温かい何かが、あなたの後ろをそっと歩いている。',
+  'hudChrome.collections.presence.moss_hare':
+    '泥炭の中のかさかさという音が、あなたの歩みに合わせて続く。',
   'hudChrome.collections.presence.frog': 'あなたの一歩ごとに、湿った鳴き声が応える。',
-  'hudChrome.collections.presence.crimson_claw_crab': '視界の端で、何かがカチカチと音を立てて走り回る。',
-  'hudChrome.collections.presence.golden_sentinel': '草むらから、かすかな金色の光がこちらを見ている。',
+  'hudChrome.collections.presence.crimson_claw_crab':
+    '視界の端で、何かがカチカチと音を立てて走り回る。',
+  'hudChrome.collections.presence.golden_sentinel':
+    '草むらから、かすかな金色の光がこちらを見ている。',
   'hudChrome.collections.presence.nightfang': '見えないところを、音のない足が付いてくる。',
-  'hudChrome.collections.presence.tuskhorn_boar': '鼻息とひづめの音。頑固な何かがあなたを追ってくる。',
+  'hudChrome.collections.presence.tuskhorn_boar':
+    '鼻息とひづめの音。頑固な何かがあなたを追ってくる。',
   'hudChrome.collections.presence.emerald_wolf': '下草の中で緑の目が瞬き、そして付いてくる。',
   'hudChrome.collections.presence.tiger': '視界の端で縞模様が動く。',
   'hudChrome.collections.presence.cate_coin': '自分のものではない硬貨の、かすかな音が聞こえる。',
@@ -17078,21 +16974,28 @@ export const ja_JP: Partial<Record<TranslationKey, string>> = {
   'hudChrome.collections.presence.solbot': '柔らかな時を刻む音が、あなたの歩幅に合わせて鳴る。',
   'hudChrome.collections.presence.frostfire': '蒸気と霜があなたの後ろで渦を巻く。',
   'hudChrome.collections.presence.rocky': '風もないのに、後ろで小石が動く。',
-  'hudChrome.collections.presence.proud_grunt': 'あなたの後ろのどこかで、軍靴が気をつけの音を鳴らす。',
+  'hudChrome.collections.presence.proud_grunt':
+    'あなたの後ろのどこかで、軍靴が気をつけの音を鳴らす。',
   'hudChrome.collections.presence.loot_goblin': '何かがあなたの硬貨をぼそぼそと数えている。',
-  'hudChrome.collections.presence.penny_goldspark': '自分のものではないポケットで、小さな道具がかちゃかちゃ鳴る。',
+  'hudChrome.collections.presence.penny_goldspark':
+    '自分のものではないポケットで、小さな道具がかちゃかちゃ鳴る。',
   'hudChrome.collections.presence.stag': '角のある影が、あなたの道に落ちる。',
-  'hudChrome.collections.presence.alpaca': '毛むくじゃらで急がない何かが、一緒に来ることに決めたようだ。',
+  'hudChrome.collections.presence.alpaca':
+    '毛むくじゃらで急がない何かが、一緒に来ることに決めたようだ。',
   'hudChrome.collections.presence.horse': 'どこか後ろで、蹄がゆったりと辛抱強い拍子を刻んでいる。',
   'hudChrome.collections.presence.bull': '低い鼻息が、あなたの後ろの土埃を舞い上げる。',
   'hudChrome.collections.presence.spider': '一筋の糸があなたの肩をかすめる。',
   'hudChrome.collections.presence.raptor': 'すばやい爪が、あなたのかかとのそばで石を鳴らす。',
   'hudChrome.collections.presence.skeleton': '乾いた骨があなたの歩みに合わせてかたかた鳴る。',
-  'hudChrome.collections.presence.crystal_lich': '残骸から冷たいうなりが立ちのぼり、それがあなたを見ている。',
-  'hudChrome.collections.presence.forgemaw': '炉の熱がまだあなたから離れない。何かがそれと共に歩き出た。',
-  'hudChrome.collections.presence.crystal_tide': '海のひとしずくが、あなたの釣り糸から落ちようとしない。',
+  'hudChrome.collections.presence.crystal_lich':
+    '残骸から冷たいうなりが立ちのぼり、それがあなたを見ている。',
+  'hudChrome.collections.presence.forgemaw':
+    '炉の熱がまだあなたから離れない。何かがそれと共に歩き出た。',
+  'hudChrome.collections.presence.crystal_tide':
+    '海のひとしずくが、あなたの釣り糸から落ちようとしない。',
   'hudChrome.collections.presence.phantom': 'あなたの後ろの空気が、ほんの少し静かすぎる。',
-  'hudChrome.collections.presence.emberfall_phoenix': '埋み火のような温もりが、あなたの背に落ち着く。',
+  'hudChrome.collections.presence.emberfall_phoenix':
+    '埋み火のような温もりが、あなたの背に落ち着く。',
   'hudChrome.collections.cosmetic.crystal_lich_frostbound': '霜縛り',
   'hudChrome.collections.cosmetic.crystal_lich_voltaic': '雷光',
   'hudChrome.collections.cosmetic.forgemaw_ashen': '灰燼',
@@ -17112,9 +17015,12 @@ export const ja_JP: Partial<Record<TranslationKey, string>> = {
   'hudChrome.collections.looks.none': 'この相棒にはまだ姿が用意されていない',
   'hudChrome.collections.source.bossLabel': 'ボスのペット',
   'hudChrome.collections.source.bossDrop': '{mob}（{location}）、討伐ごとにプレイヤー各自{chance}%',
-  'hudChrome.collections.source.bossDropWithHeroic': '{mob}（{location}）、プレイヤー各自{chance}%、ヒロイックでは{heroicChance}%',
-  'hudChrome.collections.source.bossDropHeroicOnly': '{mob}（{location}）、ヒロイック限定、プレイヤー各自{chance}%',
-  'hudChrome.collections.source.rollNote': '判定はプレイヤーごとに別々に行われ、パーティメンバーに機会を奪われることはない。',
+  'hudChrome.collections.source.bossDropWithHeroic':
+    '{mob}（{location}）、プレイヤー各自{chance}%、ヒロイックでは{heroicChance}%',
+  'hudChrome.collections.source.bossDropHeroicOnly':
+    '{mob}（{location}）、ヒロイック限定、プレイヤー各自{chance}%',
+  'hudChrome.collections.source.rollNote':
+    '判定はプレイヤーごとに別々に行われ、パーティメンバーに機会を奪われることはない。',
   'hudChrome.collections.source.deedLabel': '入手条件',
   'hudChrome.collections.source.deed': '功績「{deed}」',
   'hudChrome.collections.source.challengeLabel': 'チャレンジ',
