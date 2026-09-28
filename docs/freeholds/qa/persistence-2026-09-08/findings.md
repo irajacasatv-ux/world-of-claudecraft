@@ -4764,14 +4764,20 @@ still pinned the router's old raw bags check), fixed in `3d87dd0e5c`.
   order; and pr-gate's bound. Every such finding was proven with a mutant before it was fixed
   and killed after.
 
-MUTANTS: 149 run this session, each behind a control run, restored by `git checkout` with the
-file verified equal to HEAD before the next: 148 killed. The one survivor was a finding: the
-release's direct cooldown read for the shock bomb and the action bar's read agree on every
-input, so the two were unified (`ac91cd18f2`) and the uniform read stays pinned by the
-bomb-on-cooldown case. Not counted: two must-pass controls (they passed, as designed), one
+MUTANTS: 224 run this session, each behind a control run, restored by `git checkout` with the
+file verified equal to HEAD before the next: 222 killed, 2 equivalent. The first equivalent
+was a finding: the release's direct cooldown read for the shock bomb and the action bar's read
+agree on every input, so the two were unified (`ac91cd18f2`) and the uniform read stays pinned
+by the bomb-on-cooldown case. The second is the selective gate's own gap: a side-effect-only
+import of an fs-touching helper does not floor a suite (FOLLOW-UPS, below), so the
+portrait-inert pin, which asks the gate's discovery, rightly agreed with it; the same mutant as
+a named import was killed. Not counted: two must-pass controls (they passed, as designed), one
 invalid mutant (a decoy placed in a comment, which the pin strips; re-run as a real decoy and
 killed), and one batch discarded whole because a transient git lock failed a restore mid-run
-(re-run clean).
+(re-run clean). A later lock failed one more restore after its mutant's result was read; the
+file was restored by hand and verified before the next mutant. This paragraph read 149 and
+148 at the Part 4 commit, a mid-session count it did not update; state.md and progress.md
+carried the right 169 and 168 then.
 
 ### THE FIRST CI RUNS (the branch had never run CI)
 
@@ -4883,11 +4889,64 @@ failed 7 files of 5,067:
   assertion now prints the server's error (`545aacb91f`) so a repeat says why.
 - `tests/corpse_harvest_sim.test.ts`: the #2514 family sweep (7.2 s locally, a release-owned
   case this branch does not change) overran its 20 s default under the nightly's contention,
-  which this branch's longer druid arm raised. Judged on the final nightly below.
+  which this branch's longer druid arm raised. It then failed PR shard 1 of CI run
+  36487204792 at 20.65 s, and the release's own CI runs it at 19.0 and 20.0 s (runs
+  36387797087 and 36392492012), so it is a release case at the edge of its default, not
+  contention alone. `7667b93502` gives it the 60 s its sibling sweep (the same fresh Sim per
+  harvest) already declares; the file stays inside its declared allowance. A timeout has no
+  pin to mutate: the evidence is the CI walls above.
 
 The final nightly at the pushed tip: THE FINAL RUNS, at the end of this part.
 
+### AFTER THE PART 4 COMMIT: THE PORTRAIT-INERT SUITES
 
+CI run 36480347471 at `0313c4272d`, the tip the Part 4 commit pushed, failed shard 8 on four
+unhandled `ProgressEvent` rejections from `tests/char_window_drag_render_defer.test.ts`, the
+same four the release nightly logs; its browser job's checkout stalled at the step's limit (the
+known transient); every other job passed. The cause: the real portrait chip
+(`src/ui/portrait_chip.ts`) starts GLB fetches (16 in that suite, measured; about 470 each in
+`tests/char_window.test.ts` and `tests/quest_dialog_controller.test.ts`, the same latent flake)
+that outlive happy-dom's teardown.
+- The fix (`d576e273cf`, `b5dff2a233`, `41a96bc6c2`): the three suites stub the chip inline in
+  `vi.hoisted`, install a fetch recorder there before any import runs, and restore fetch in an
+  `afterAll` that asserts no fetch started. No dynamic import, so the two import-graph
+  selected suites stay selected (`tests/char_window.test.ts` was already partial: it reads
+  source).
+- The pin (`748bdc1e19`, `94e498c448`, `95927b4831`, `162def31a9`, `f25fb17657`,
+  `5ca5aad003`, `384913b740`, `ed2b36f07e`, `9c33bc285b`, `e2870cc06b`, `b5c31f53fb`,
+  `2923d3f8b9`):
+  `tests/portrait_inert_suites.test.ts` holds each suite's shape: the recorder inside its
+  `vi.hoisted` callback and returned by that callback's first return, the chip stub, the
+  `afterAll`, no `vi.stubGlobal` of fetch, and `globalThis.fetch`, `realFetch` and `fetched`
+  named only where those blocks name them, so the real fetch cannot be put back or called
+  around the recorder, nor the list emptied. It reads the source through the repo's
+  tokenizing scanner (`maskCommentsAndStrings` in `tests/helpers/declared_timeouts.ts`),
+  not the regex comment stripper, which reads a `//` inside a string as a comment and so
+  could both hide code and keep a commented-out block: each block must be live code (the
+  file's masking over its span equals its own, and the match ends back in code), and the
+  counts read code only. Every check has a positive control that edits a real suite and runs
+  it through the same function. A fetch captured or built under another spelling, and a
+  slash the scanner misreads (it guesses regex against division), are beyond a text pin, as
+  the file says. The pin also asks the gate's own discovery (`collectSuiteVisibility`) which
+  of the three are always run, so a helper import or a stray comment that floored a selected
+  suite fails here.
+- The scanner itself, found by the same reads. `maskCommentsAndStrings` closed a block
+  comment at `/*/`, reading the opener's star as the closer's, so `/*/ x */ it('x', fn,
+  90_000)` hid a 90-second allowance from the declared-timeout ratchet
+  (`tests/suite_duration_budget.test.ts`) (`743fbf4f7b`; no file's allowance moved). And it
+  ended a `${...}` interpolation at its first `}`, so an object literal inside one flipped the
+  rest of the line into template text (`b0fbc05104`): that one had hidden a real 120-second
+  case in `tests/woc_market_delivery_pg_integration.test.ts` (its interpolation holds
+  `JSON.stringify({ ... })`), whose exact ledger row rises from 330,000 to 450,000, the
+  allowance it always had; only that line's mask changed (old and new parses diffed). And its
+  regex-or-division guess ignored a closed string and a `${` (`7ce630b590`; no test file's
+  parse or mask moved across all 5,141). Each fixed test-first, the fixtures seen red, then
+  green; `27d04d7952` rewraps the new row comment inside the line width (comment only).
+- Fifteen fresh test-coverage reads, one per round (two of them also covering `7667b93502`
+  and the scanner commits), each round's findings (should-fix and nits) applied and mutated
+  before the next read. The fifteenth, of `7ce630b590`, found no blocking or should-fix issue;
+  its one nit is `27d04d7952`. Each intermediate tip's CI run was cancelled by the next
+  dispatch, as the workflow's per-ref concurrency group does.
 
 ### THE ARMED GATE
 
@@ -4926,6 +4985,41 @@ a fix round was still landing in the tree, and none of their results is counted.
 - `204289ccba` says "all seven sweeps"; they are seven escort cases in four sweep files.
 - `e0d973363b` says seeds "collapsing onto one run past the first pair" passed the old check;
   it passed whenever any one pair differed.
+- `b5dff2a233` says the inline stubs let "each" suite keep its gate classification;
+  `tests/char_window.test.ts` was already partial, as `41a96bc6c2` states.
+- `748bdc1e19` says the pin "holds their classes"; it asked `classifyTestSource` alone, blind to
+  an fs-helper import the gate's discovery floors, until `94e498c448`. Neither message names the
+  carried weight row both add to `scripts/ci_shard_weights.generated.json`.
+- `94e498c448` says the recorder, the chip stub and the zero-fetch assertion are checked "as whole
+  lines"; a block-commented copy still matched until `95927b4831` read stripped source.
+- `95927b4831` says the discovery walk "skips" a scratch file deleted mid-walk; a vanished file
+  reads as empty and a vanished directory lists nothing (worded so in `f25fb17657`).
+- `162def31a9` says the recorder is "matched as a whole block"; the block left out its
+  `vi.hoisted` wrapper, so a top-level recorder installed after the imports passed, until
+  `f25fb17657`.
+- `f25fb17657`'s comment says that with two fetch assignments and no `vi.stubGlobal` "no window
+  of a suite can run unrecorded"; `window.fetch = realFetch`, a direct `realFetch` call or a
+  cleared list still passed, and its positive control tested the stripping helper rather than
+  the scan, until `5ca5aad003`.
+- `5ca5aad003`'s comment says no line between the recorder and its return reaches column 0 "so
+  the callback cannot close early", and that the real fetch cannot be put back "however it is
+  spelled"; a decoy return, an indented close and a second capture were outside both claims,
+  and three of its checks had no control, until `384913b740`.
+- `384913b740` says the recorder must return "at its callback's first return"; a one-line
+  `if` return or a return in a nested block still passed, and its comment gave the wrong cause
+  for an early close failing, until `ed2b36f07e`.
+- `ed2b36f07e` says no line before the recorder's return "may now hold a return in any form";
+  a return behind a `//` inside a string passed, since the check read only stripped text,
+  until `9c33bc285b`.
+- `9c33bc285b` holds every check over the raw and the stripped text; a `'//'` string before a
+  real `/*` still kept a commented-out block in both, until `e2870cc06b` read the source
+  through the tokenizing scanner.
+- `e2870cc06b` says each block "must be live code"; a comment or template opened inside the
+  recorder's free lines and closed after the match still passed, and the scanner's `/*/`
+  hole kept a commented-out block live, until `b5c31f53fb` and `743fbf4f7b`.
+- `b5c31f53fb` says each block must "end in live code"; a block in a template nested inside an
+  interpolation after an object literal still read as live, through the scanner's brace gap,
+  until `b0fbc05104` and `2923d3f8b9`.
 
 ### RELEASE-OWNED FINDINGS, FOR THE RELEASE OWNER (the same on `release/v0.45.0`; not changed here)
 
@@ -4952,6 +5046,15 @@ a fix round was still landing in the tree, and none of their results is counted.
   a 191 cap on the fixed low-SP probe) on `release/v0.45.0` and `main` alike (scheduled
   nightly run 36414582084), so the nightly verdict is red on every ref until it is re-banded
   or the balance moves.
+- `tests/corpse_harvest_sim.test.ts`'s #2514 family sweep ran within 25 ms of its 20 s default
+  on the release's own CI; given its sibling's 60 s here (`7667b93502`), which the release
+  takes with this branch or on its own.
+- `maskCommentsAndStrings` (`tests/helpers/declared_timeouts.ts`), the declared-timeout
+  ratchet's scanner, closed a comment at `/*/` and ended an interpolation at its first `}`;
+  the second hid a 120-second case in `tests/woc_market_delivery_pg_integration.test.ts` and
+  understated its exact row by 120,000. Fixed here with fixtures (`743fbf4f7b`, `b0fbc05104`,
+  the row now 450,000, and `7ce630b590` for its slash guess), which the release takes with this
+  branch or on its own.
 - The SFX Studio server trims a refusal's error from the front (`.slice(0, 1200)` in
   `scripts/sfx_studio/server.mjs`), while `scripts/sfx_studio/audio_io.mjs` keeps the END of
   ffmpeg's stderr, so a long failure can lose the line that says why.
@@ -4966,6 +5069,13 @@ a fix round was still landing in the tree, and none of their results is counted.
 - Nothing at the PR tier proves `runDruidBalanceSeed` forwards its seed into the probe (the
   one-seed diet cannot); the nightly's one-run-per-seed check is where a seed-plumbing break
   would show.
+- The selective gate's discovery floors a suite that imports an fs-touching helper with a
+  `from` clause, but not one that imports it for its side effects only (`import
+  './helpers/x';`): `buildHelperImportPattern` in `scripts/lib/test_visibility.mjs` matches
+  `from` forms alone. Measured here by mutant (the side-effect form stayed import-graph
+  selected; the named form was floored). No suite imports a helper that way today; a fix would
+  add the bare-import form to the pattern, pinned beside its existing cases in
+  `tests/gate_select_plan.test.ts`. For the gate owner; the file is the release's.
 - The shard packer packs carried rows as recorded rather than in CI time
   (`CARRIED_LOCAL_TO_CI_RATIO` is applied only by the lane rule); one shared helper would give
   the table one reading, at the cost of re-pinning the partition digest.
@@ -4981,8 +5091,8 @@ a fix round was still landing in the tree, and none of their results is counted.
 - release-gate's 36 (from a 16.43 minute wall) was not re-measured: release pushes run full
   mode with the lane files inside the shards, and full-mode shards here reached 22.12 minutes
   without them. Re-derive from the first release push after this branch lands.
-- The next full-mode harvest replaces the eight carried rows (the split files and the pin
-  file), measured locally.
+- The next full-mode harvest replaces the nine carried rows (the split files and the two pin
+  files), measured locally.
 - The release-owned list above, for the release owner.
 - The upstream `@vitest/spy` issue from Part 2 remains your call (drafted, not filed).
 
