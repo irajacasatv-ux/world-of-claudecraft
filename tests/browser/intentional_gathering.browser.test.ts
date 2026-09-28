@@ -14,7 +14,7 @@ import { tryNearbyInteraction } from '../../src/game/nearby_interaction';
 import { FARM_CROPS } from '../../src/sim/content/farm_crops';
 import type { HarvestPreference } from '../../src/sim/professions/harvest_preference';
 import type { Entity } from '../../src/sim/types';
-import { type ConfirmDialogHost, showConfirmDialog } from '../../src/ui/confirm_dialog_controller';
+import { type ConfirmDialogHost, showConfirmDialog } from '../../src/ui/hud/dialog/confirm_dialog_controller';
 import { FocusManager } from '../../src/ui/focus_manager';
 import {
   LootWindowController,

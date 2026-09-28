@@ -188,11 +188,6 @@ import {
   paintCompassMarks,
   relabelCompassMarks,
 } from './compass_strip_painter';
-import {
-  type ConfirmDialogArgs,
-  fireConfirmCancel,
-  showConfirmDialog,
-} from './confirm_dialog_controller';
 import { ContinentMapPainter } from './continent_map_painter';
 import { type ContinentZoneRegion, continentZoneAt } from './continent_map_view';
 import { formatMinimapCoords } from './coords';
@@ -409,6 +404,7 @@ import { DelveMapPainter } from './hud/delve/delve_map_painter';
 import { DelveTrackerController } from './hud/delve/delve_tracker_controller';
 import { LockpickController } from './hud/delve/lockpick_controller';
 import { RiteController } from './hud/delve/rite_controller';
+import { type ConfirmDialogArgs, fireConfirmCancel, showConfirmDialog } from './hud/dialog';
 import { FiestaController } from './hud/fiesta/fiesta_controller';
 import { GuildBoardWindow } from './hud/guild_board';
 import { buildHillBarView, HillBar } from './hud/hill';
@@ -430,6 +426,7 @@ import { refreshSideButtonLabels } from './hud/menu/side_buttons';
 import { PetBarController } from './hud/pet_bar';
 import { CARD_POSES } from './hud/player_card/player_card';
 import { PlayerCardController } from './hud/player_card/player_card_controller';
+import { askToolEffectConfirm } from './hud/professions';
 import { CelebrationDrainObserver } from './hud/professions/celebration_drain_observer';
 import { commissionOrderResultLine } from './hud/professions/commission_order_feedback';
 import { buildCommissionOrderBoardModel } from './hud/professions/commission_order_view';
@@ -484,12 +481,14 @@ import { parseChatSegments } from './hud/quest/quest_link';
 import { QuestProgressBanner } from './hud/quest/quest_progress_banner';
 import { QuestTrackerController } from './hud/quest/quest_tracker_controller';
 import { QuestLogWindow } from './hud/quest/questlog_window';
+import { ResurrectionPrompt, runKeeperRevive } from './hud/revive';
 import { RiftMapPainter } from './hud/rift';
 import { RiftFloorTrackerController } from './hud/rift/rift_floor_tracker_controller';
 import { RiftForgeWindow, riftForgeInReach } from './hud/rift_forge';
 import { StanceBarController } from './hud/stance';
 import { closeOpenTouchMenu } from './hud/tap_menu';
 import { createTargetDotsView, type TargetDotsInput, TargetDotsPainter } from './hud/target_dots';
+import { TownFocusController } from './hud/town_focus';
 import { FerryHudPainter } from './hud/transport';
 import { TreasureMapWindow } from './hud/treasure';
 import { createHudVehicleBar, type VehicleActionBarController } from './hud/vehicle';
@@ -541,7 +540,6 @@ import { ItemDragState } from './item_drag_state';
 import { itemSetMemberCounts } from './item_set_tooltip_view';
 import { itemSlotLabel as itemSlotName } from './item_slot_labels';
 import { itemTooltipHtml } from './item_tooltip_view';
-import { runKeeperRevive } from './keeper_revive_dialog';
 import { bindActionDisplayName } from './keybind_action_names_core';
 import { knownItemDef, ownEntry } from './known_item';
 import { LeaderboardWindow } from './leaderboard_window';
@@ -711,7 +709,6 @@ import {
   MOTD_RESULT_FALLBACK_KEY,
   MOTD_RESULT_KEYS,
 } from './result_code_keys';
-import { ResurrectionPrompt } from './resurrection_prompt';
 import { isTalentRowUnlockLevel } from './row_unlock_toast';
 import { localizeAuthoredYellSpeakerName, localizeAuthoredYellText } from './sim_i18n';
 import { openSimpleMenu } from './simple_context_menu';
@@ -733,7 +730,6 @@ import { targetPortraitSourceId, targetPortraitUrl } from './target_portrait_vie
 import { targetRankView, targetUsesEliteFrame } from './target_rank_view';
 import { TargetSwingTimerBars } from './target_swing_timer_bars';
 import type { PresetId, ThemeKnob, ThemeState } from './theme';
-import { askToolEffectConfirm } from './tool_effect_confirm';
 import { type TooltipViewport, tooltipPlacementAt } from './tooltip_clamp_core';
 import { SharedTooltipOwner } from './tooltip_owner';
 import {
@@ -744,7 +740,6 @@ import { installTargetOfTargetControls } from './totarget_frame_controller';
 import { attachTouchFrameDrags, type TouchFrameDrags } from './touch_frame_drag';
 import { TOOLTIP_PEEK_MS, TouchPeekGuard } from './touch_peek';
 import { bindTouchDoubleTap, bindTouchTap } from './touch_tap';
-import { TownFocusController } from './town_focus_controller';
 import { trackerCollapseSettings } from './tracker_collapse_settings';
 import { wireTrackerHeader } from './tracker_header_wiring';
 import { installTrackerStackAnchor } from './tracker_stack_anchor';

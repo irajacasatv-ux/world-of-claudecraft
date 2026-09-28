@@ -362,7 +362,7 @@ const HUD_UPDATE_DRIVES: readonly DriveRow[] = [
     // The panel's latch moved with it out of the Hud (town_focus_controller.ts).
     guard: {
       kind: 'module',
-      module: 'town_focus_controller.ts',
+      module: 'hud/town_focus/town_focus_controller.ts',
       proof: 'if (sig === this.lastSig) return;',
     },
     why: 'rebuilds the Town Focus window when the allocation draft or the in-town flag moves. The standing exception of this table until #2500, when the open check was the whole gate and an idle panel rebuilt its whole subtree twice a second, restoring scrollTop but destroying keyboard focus',
@@ -1995,7 +1995,7 @@ describe('Hud.update() drives exactly the registered set, on the registered band
         'spellbook_window.ts: if (this.knownChanged(this.deps.world().known)) {',
         'target_auras_window.ts: if (this.cleared) return;',
         // The Town Focus latch, moved with the panel out of hud.ts (#2500's guard).
-        'town_focus_controller.ts: if (sig === this.lastSig) return;',
+        'hud/town_focus/town_focus_controller.ts: if (sig === this.lastSig) return;',
         'weekly_quests_window.ts: if (sig === this.lastSig) return;',
         'woc_market_window.ts: if (sig === this.lastSig && !this.walletRepaintDue) return;',
       ].sort(),

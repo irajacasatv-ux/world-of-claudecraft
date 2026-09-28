@@ -19,11 +19,11 @@
 // managed-close registry (CODE_BUILT) records it as the confirm half of that
 // shared id.
 
-import { audio } from '../game/audio';
-import { bindDialogKeyActivation } from './dialog_key_activation';
-import { esc } from './esc';
-import type { FocusManager, FocusTrapHandle } from './focus_manager';
-import { svgIcon } from './ui_icons';
+import { audio } from '../../../game/audio';
+import { bindDialogKeyActivation } from '../../dialog_key_activation';
+import { esc } from '../../esc';
+import type { FocusManager, FocusTrapHandle } from '../../focus_manager';
+import { svgIcon } from '../../ui_icons';
 
 /** The confirm dialog's arguments, in order: the one shape every
  *  confirm-gated flow calls. `onCancel` is the no-choice callback. */

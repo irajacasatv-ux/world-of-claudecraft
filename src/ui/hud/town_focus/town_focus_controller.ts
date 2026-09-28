@@ -17,17 +17,17 @@
 //
 // A DOM module: it reads and hides the #town-focus-window root.
 
-import { zoneAt } from '../sim/data';
+import { zoneAt } from '../../../sim/data';
 import {
   computeRespecCost,
   FOCUS_POINT_BUDGET,
   isInTownZone,
   type RespecPaymentTier,
-} from '../sim/professions/focus';
-import type { IWorld } from '../world_api';
+} from '../../../sim/professions/focus';
+import type { IWorld } from '../../../world_api';
+import type { WindowFocusBridge } from '../../window_focus';
 import { buildTownFocusView, stepTownFocus, townFocusRenderSig } from './town_focus_view';
 import { renderTownFocusWindow } from './town_focus_window';
-import type { WindowFocusBridge } from './window_focus';
 
 const $ = <T extends HTMLElement = HTMLElement>(sel: string): T => document.querySelector(sel) as T;
 

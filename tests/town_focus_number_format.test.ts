@@ -41,8 +41,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { FOCUS_POINT_BUDGET } from '../src/sim/professions/focus';
 import { ensureLocaleLoaded, setLanguage, supportedLanguages } from '../src/ui/i18n';
-import { buildTownFocusView, TOWN_FOCUS_COMPONENTS } from '../src/ui/town_focus_view';
-import { renderTownFocusWindow } from '../src/ui/town_focus_window';
+import { buildTownFocusView, TOWN_FOCUS_COMPONENTS } from '../src/ui/hud/town_focus/town_focus_view';
+import { renderTownFocusWindow } from '../src/ui/hud/town_focus/town_focus_window';
 
 /** Rows keep TOWN_FOCUS_COMPONENTS order, so this one owns the FIRST .tf-points. */
 const COMPONENT = TOWN_FOCUS_COMPONENTS[0];

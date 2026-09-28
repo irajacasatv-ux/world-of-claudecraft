@@ -9,8 +9,8 @@
 // interaction layer calls, and passes itself as the host, so tsc checks the
 // Hud against KeeperReviveHost.
 
-import type { ConfirmDialogArgs } from './confirm_dialog_controller';
-import { t } from './i18n';
+import { t } from '../../i18n';
+import type { ConfirmDialogArgs } from '../dialog';
 import { keeperReviveConfirm, keeperReviveDialogue } from './keeper_revive_dialog_core';
 
 /** The Hud members the revive flow drives. */

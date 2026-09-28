@@ -377,7 +377,7 @@ describe('renderCorpseHarvestPanel: dispatch', () => {
 });
 
 // Preserved unchanged by the Intentional Gathering PR3 harvest-status rework:
-// Town Focus (src/ui/town_focus_window.ts) still reads the sibling
+// Town Focus (src/ui/hud/town_focus/town_focus_window.ts) still reads the sibling
 // `hudChrome.corpseHarvest.components.*` keys directly via componentLabel's
 // own key map, pinned by tests/town_focus_i18n.test.ts against the real set
 // of componentTags used across mob content.

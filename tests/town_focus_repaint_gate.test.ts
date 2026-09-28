@@ -18,7 +18,7 @@
 //     the painter's own source, so a row that starts rendering another view
 //     field cannot silently leave the gate behind.
 //  3. The probe's behavior, driven on the TownFocusController it moved into
-//     out of the Hud (src/ui/town_focus_controller.ts; update() is still not
+//     out of the Hud (src/ui/hud/town_focus/town_focus_controller.ts; update() is still not
 //     drivable in a unit test, so its slow-band call is a source pin): cold
 //     latch, elision, the in/out-of-town edge, and that a closed panel reads
 //     nothing at all.
@@ -47,14 +47,14 @@ import { FOCUS_POINT_BUDGET } from '../src/sim/professions/focus';
 import type { TownFocusPendingView } from '../src/sim/professions/town_focus_pending';
 import { FOCUSABLE_SELECTOR, FocusManager } from '../src/ui/focus_manager';
 import { t } from '../src/ui/i18n';
-import { TownFocusController, type TownFocusHost } from '../src/ui/town_focus_controller';
+import { TownFocusController, type TownFocusHost } from '../src/ui/hud/town_focus/town_focus_controller';
 import {
   buildTownFocusView,
   TOWN_FOCUS_COMPONENTS,
   type TownFocusView,
   townFocusRenderSig,
-} from '../src/ui/town_focus_view';
-import { renderTownFocusWindow, type TownFocusRespecPreview } from '../src/ui/town_focus_window';
+} from '../src/ui/hud/town_focus/town_focus_view';
+import { renderTownFocusWindow, type TownFocusRespecPreview } from '../src/ui/hud/town_focus/town_focus_window';
 import { makeWindowFocus, type WindowFocusBridge } from '../src/ui/window_focus';
 
 const COMPONENT = TOWN_FOCUS_COMPONENTS[0];
@@ -257,10 +257,10 @@ function stripComments(src: string): string {
 }
 
 const painterSrc = stripComments(
-  readFileSync(path.resolve(process.cwd(), 'src/ui/town_focus_window.ts'), 'utf8'),
+  readFileSync(path.resolve(process.cwd(), 'src/ui/hud/town_focus/town_focus_window.ts'), 'utf8'),
 );
 const sigSrc = stripComments(
-  readFileSync(path.resolve(process.cwd(), 'src/ui/town_focus_view.ts'), 'utf8'),
+  readFileSync(path.resolve(process.cwd(), 'src/ui/hud/town_focus/town_focus_view.ts'), 'utf8'),
 );
 
 function readsOf(src: string, receiver: string): string[] {
@@ -767,7 +767,7 @@ describe('renderTownFocusWindow carries keyboard focus across its own wipe', () 
 
 const hudSrc = stripComments(readFileSync(path.resolve(process.cwd(), 'src/ui/hud.ts'), 'utf8'));
 const controllerSrc = stripComments(
-  readFileSync(path.resolve(process.cwd(), 'src/ui/town_focus_controller.ts'), 'utf8'),
+  readFileSync(path.resolve(process.cwd(), 'src/ui/hud/town_focus/town_focus_controller.ts'), 'utf8'),
 );
 
 /** Source between two unique anchors, asserted to exist so a rename fails
@@ -782,7 +782,7 @@ function regionIn(src: string, from: string, to: string): string {
 
 /** A region of src/ui/hud.ts (the coordinator wiring). */
 const region = (from: string, to: string): string => regionIn(hudSrc, from, to);
-/** A region of src/ui/town_focus_controller.ts (the panel it moved into). */
+/** A region of src/ui/hud/town_focus/town_focus_controller.ts (the panel it moved into). */
 const controllerRegion = (from: string, to: string): string => regionIn(controllerSrc, from, to);
 
 describe('Town Focus repaint-gate wiring (source pins)', () => {

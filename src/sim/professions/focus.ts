@@ -49,7 +49,7 @@ export const EMPTY_FOCUS_ALLOCATION: FocusAllocation = {};
  * The component families a town-focus allocation may name (#2511).
  *
  * Exactly the families HARVEST_COMPONENT_ITEMS maps to an item, in content
- * order, which is also every row the focus panel offers: src/ui/town_focus_view.ts
+ * order, which is also every row the focus panel offers: src/ui/hud/town_focus/town_focus_view.ts
  * re-exports THIS constant rather than deriving the same list a second time,
  * so the panel cannot come to offer a family the validator below rejects. It
  * is defined here, in the sim, because the sim is the authority on what it

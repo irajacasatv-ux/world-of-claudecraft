@@ -10,9 +10,9 @@
 // Hud keeps confirmToolEffectUse as the public entry point the interact key
 // reaches (src/game/interact_key_gather.ts), and passes itself as the host.
 
-import type { ConfirmDialogArgs } from './confirm_dialog_controller';
-import { formatNumber, t } from './i18n';
-import { toolEffectNameKey } from './tool_effect_name';
+import { formatNumber, t } from '../../i18n';
+import { toolEffectNameKey } from '../../tool_effect_name';
+import type { ConfirmDialogArgs } from '../dialog';
 
 /** The Hud member the effect confirm drives. */
 export interface ToolEffectConfirmHost {

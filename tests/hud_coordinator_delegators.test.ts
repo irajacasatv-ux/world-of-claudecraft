@@ -79,7 +79,7 @@ import type { ChatLogAppendDeps } from '../src/ui/hud/chat/chat_log_appender';
 import { PetBarController } from '../src/ui/hud/pet_bar';
 import { ProfessionSurfaceRefresh } from '../src/ui/hud/professions/profession_surface_refresh';
 import { setLanguage, t } from '../src/ui/i18n';
-import { TOWN_FOCUS_COMPONENTS } from '../src/ui/town_focus_view';
+import { TOWN_FOCUS_COMPONENTS } from '../src/ui/hud/town_focus/town_focus_view';
 import { FURNISHING } from './fixtures/furnishing_item';
 import { celebrationRig } from './helpers/celebration_rig';
 import { chatPane } from './helpers/chat_log_deps';

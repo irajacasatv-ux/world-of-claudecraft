@@ -1,4 +1,4 @@
-// The R40 per-use effect confirm (src/ui/tool_effect_confirm.ts), moved whole
+// The R40 per-use effect confirm (src/ui/hud/professions/tool_effect_confirm.ts), moved whole
 // from tests/hud_confirm_gates.test.ts when askToolEffectConfirm left
 // Hud.confirmToolEffectUse. It rides the same confirm-dialog family as the
 // Keeper and Marks gates, but unlike them its cancel PATHS all answer
@@ -6,8 +6,8 @@
 // player's answer on OK, cancel, and every no-choice dismissal.
 
 import { describe, expect, it, vi } from 'vitest';
-import type { ConfirmDialogArgs } from '../src/ui/confirm_dialog_controller';
-import { askToolEffectConfirm } from '../src/ui/tool_effect_confirm';
+import type { ConfirmDialogArgs } from '../src/ui/hud/dialog/confirm_dialog_controller';
+import { askToolEffectConfirm } from '../src/ui/hud/professions/tool_effect_confirm';
 
 interface EffectConfirmCall {
   title: string;

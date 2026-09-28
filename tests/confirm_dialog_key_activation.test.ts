@@ -135,9 +135,9 @@ describe('bindDialogKeyActivation (confirm-dialog family keyboard repair)', () =
     // A destroy confirm's body is what dies, what is refunded, and what it
     // costs. Focus lands on OK, so without aria-describedby a screen reader
     // announces the name and the button and never the warning. The dialog moved
-    // whole out of Hud.confirmDialog into src/ui/confirm_dialog_controller.ts
+    // whole out of Hud.confirmDialog into src/ui/hud/dialog/confirm_dialog_controller.ts
     // (whose own suite also asserts the attribute on the painted dialog).
-    const dialog = readFileSync(join(process.cwd(), 'src/ui/confirm_dialog_controller.ts'), 'utf8');
+    const dialog = readFileSync(join(process.cwd(), 'src/ui/hud/dialog/confirm_dialog_controller.ts'), 'utf8');
     expect(dialog).toContain(`el.setAttribute('aria-describedby', 'confirm-dialog-body')`);
     expect(dialog).toContain('<div class="cd-body" id="confirm-dialog-body">');
   });
@@ -155,13 +155,13 @@ describe('bindDialogKeyActivation (confirm-dialog family keyboard repair)', () =
   it('both confirmDialog and inputDialog wire the binder (source pin)', () => {
     // cwd-relative: vitest's jsdom transform rewrites import.meta.url to a
     // non-file scheme, so the sibling suites' URL idiom cannot work here.
-    // The confirm half moved into src/ui/confirm_dialog_controller.ts; Hud's
+    // The confirm half moved into src/ui/hud/dialog/confirm_dialog_controller.ts; Hud's
     // inputDialog delegator still hands the binder to the input modal.
     const count = (rel: string): number =>
       (readFileSync(join(process.cwd(), rel), 'utf8').match(/bindDialogKeyActivation\(el\)/g) ?? [])
         .length;
     const hud = count('src/ui/hud.ts');
-    const dialog = count('src/ui/confirm_dialog_controller.ts');
+    const dialog = count('src/ui/hud/dialog/confirm_dialog_controller.ts');
     // Exactly the two family dialogs (confirmDialog + inputDialog): a moved
     // or third call site is a deliberate change, re-pin it here.
     expect(hud + dialog).toBe(2);

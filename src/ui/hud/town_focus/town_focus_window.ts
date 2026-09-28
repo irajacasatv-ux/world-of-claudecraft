@@ -10,14 +10,14 @@ import {
   RESPEC_MATERIAL_ITEM_ID,
   type RespecCost,
   type RespecPaymentTier,
-} from '../sim/professions/focus';
-import { markDialogRoot } from './dialog_root';
-import { tEntity } from './entity_i18n';
-import { esc } from './esc';
-import { captureFocusKey, restoreFirstEnabled } from './focus_restore';
-import { formatDuration, formatMoney, formatNumber, t } from './i18n';
+} from '../../../sim/professions/focus';
+import { markDialogRoot } from '../../dialog_root';
+import { tEntity } from '../../entity_i18n';
+import { esc } from '../../esc';
+import { captureFocusKey, restoreFirstEnabled } from '../../focus_restore';
+import { formatDuration, formatMoney, formatNumber, t } from '../../i18n';
+import { svgIcon } from '../../ui_icons';
 import type { TownFocusView } from './town_focus_view';
-import { svgIcon } from './ui_icons';
 
 export interface TownFocusWindowDeps {
   onStep(component: string, delta: 1 | -1): void;

@@ -32,7 +32,7 @@ import { HARVEST_CAST_SECONDS } from '../src/sim/professions/harvest_admission';
 import type { PlayerMeta } from '../src/sim/sim';
 import { Sim } from '../src/sim/sim';
 import { CORPSE_HARVEST_CAST_ID, DT, type Entity } from '../src/sim/types';
-import { stepTownFocus } from '../src/ui/town_focus_view';
+import { stepTownFocus } from '../src/ui/hud/town_focus/town_focus_view';
 import { grantCorpseHarvestOnMob } from './helpers/corpse_harvest_grant';
 import { UNMAPPED_FAMILY } from './helpers/unmapped_family';
 

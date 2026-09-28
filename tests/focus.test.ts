@@ -16,7 +16,7 @@ import {
   setTownFocus,
   TOWN_FOCUS_COMPONENTS,
 } from '../src/sim/professions/focus';
-import { TOWN_FOCUS_COMPONENTS as PANEL_COMPONENTS } from '../src/ui/town_focus_view';
+import { TOWN_FOCUS_COMPONENTS as PANEL_COMPONENTS } from '../src/ui/hud/town_focus/town_focus_view';
 import { UNMAPPED_FAMILY, UNMAPPED_FAMILY_2 } from './helpers/unmapped_family';
 
 const ZONE1 = ZONES[0];
@@ -273,7 +273,7 @@ describe('setTownFocus rejects a key that is not a real component family (#2511)
       gills: 'mudfin_scale',
     });
     // ONE definition, stated as the identity it is: the panel re-exports the
-    // sim's binding (src/ui/town_focus_view.ts), so this reds the moment the UI
+    // sim's binding (src/ui/hud/town_focus/town_focus_view.ts), so this reds the moment the UI
     // derives its own list at all, faithfully or not. A structural toEqual
     // would not: a faithful re-derivation would still pass.
     expect(PANEL_COMPONENTS).toBe(TOWN_FOCUS_COMPONENTS);

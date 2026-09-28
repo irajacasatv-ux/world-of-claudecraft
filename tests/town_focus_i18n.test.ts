@@ -4,7 +4,7 @@ import { MOBS } from '../src/sim/data';
 import { componentLabel } from '../src/ui/hud/loot/corpse_harvest_window';
 import { t } from '../src/ui/i18n';
 
-// Town Focus (src/ui/town_focus_window.ts) builds a component label key
+// Town Focus (src/ui/hud/town_focus/town_focus_window.ts) builds a component label key
 // dynamically as `hudChrome.corpseHarvest.components.${component}` for every
 // key of HARVEST_COMPONENT_ITEMS. The label map (i18n.catalog/hud_chrome.ts
 // corpseHarvest.components) is a hand-maintained sibling list that must cover

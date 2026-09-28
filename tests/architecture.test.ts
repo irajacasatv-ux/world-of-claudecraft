@@ -237,7 +237,7 @@ const UI_PURE_CORES = [
   'src/ui/zone_entry_line_core.ts',
   // The Pale Keeper's two-step revive copy (dialogue, then a level-aware confirm);
   // hud.ts resolves the keys and owns the dialog DOM.
-  'src/ui/keeper_revive_dialog_core.ts',
+  'src/ui/hud/revive/keeper_revive_dialog_core.ts',
   // The one clamp and disabled rule the source picker's row steppers and the
   // bank quantity prompt share (quantity_stepper.ts is their DOM consumer).
   'src/ui/quantity_step_core.ts',
@@ -747,7 +747,7 @@ const UI_PURE_CORES = [
   'src/ui/gpu_notice_view.ts',
   'src/ui/perf_nudge_view.ts',
   'src/ui/hud/loot/corpse_harvest_view.ts',
-  'src/ui/town_focus_view.ts',
+  'src/ui/hud/town_focus/town_focus_view.ts',
   'src/ui/mount_race_view.ts',
   'src/ui/pet_action_icons.ts',
   'src/ui/pet_frame_view.ts',
@@ -2695,11 +2695,11 @@ const UI_DOM_MODULES = [
   'src/ui/emote_wheel.ts',
   // The shared #confirm-dialog modal (extracted from Hud.confirmDialog): mints
   // the dialog root, installs its trap and binds its keys.
-  'src/ui/confirm_dialog_controller.ts',
+  'src/ui/hud/dialog/confirm_dialog_controller.ts',
   // The Town Focus panel's state and lifecycle (extracted from Hud): reads and
   // hides the #town-focus-window root. The view and painter stay in
   // town_focus_view.ts and town_focus_window.ts.
-  'src/ui/town_focus_controller.ts',
+  'src/ui/hud/town_focus/town_focus_controller.ts',
   // The pet action bar (extracted from Hud.renderPetBar): reads #petbar and
   // #bags, toggles the body's mobile-pet-active class and arms the touch-hold
   // timer on window. The facts and buttons stay in the pure pet_bar_view.ts.
@@ -2983,7 +2983,7 @@ const UI_DOM_MODULES = [
   'src/ui/touch_frame_drag.ts',
   'src/ui/touch_item_drag.ts',
   'src/ui/touch_tap.ts',
-  'src/ui/town_focus_window.ts',
+  'src/ui/hud/town_focus/town_focus_window.ts',
   // The tracker-stack seat applier: owns a resize listener and bounded
   // getBoundingClientRect reads by design (the module comment carries the
   // cadence contract); the seat math itself is the tracker_stack_anchor_core

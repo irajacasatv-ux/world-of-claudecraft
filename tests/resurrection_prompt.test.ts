@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 
-// The resurrection offer prompt (src/ui/resurrection_prompt.ts), extracted
+// The resurrection offer prompt (src/ui/hud/revive/resurrection_prompt.ts), extracted
 // from the Hud's handleEvents 'resurrectionOffer' arm and its
 // closeResurrectionPrompt. Driven over a plain host shaped like the Hud members
 // it reads (ResurrectionPromptHost). The prompt markup itself is showStackPrompt
@@ -10,7 +10,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { t } from '../src/ui/i18n';
 import { PROMPT_TIMEOUT_MS } from '../src/ui/prompt_dialog';
-import { ResurrectionPrompt } from '../src/ui/resurrection_prompt';
+import { ResurrectionPrompt } from '../src/ui/hud/revive/resurrection_prompt';
 
 function rig(dead = true) {
   const respondToResurrection = vi.fn();

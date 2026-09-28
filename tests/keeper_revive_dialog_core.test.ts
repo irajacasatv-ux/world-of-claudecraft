@@ -11,7 +11,7 @@ import {
   keeperReviveConfirm,
   keeperReviveDialogue,
   keeperTollSpared,
-} from '../src/ui/keeper_revive_dialog_core';
+} from '../src/ui/hud/revive/keeper_revive_dialog_core';
 
 describe('keeper_revive_dialog_core', () => {
   it('a levelled character hears the Toll and the free walk back, never the waiver', () => {

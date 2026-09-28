@@ -29,7 +29,7 @@ const INPUT_DIALOG_SRC = readFileSync(join(process.cwd(), 'src/ui/input_controll
 // match, moved whole into its own module too (Hud keeps a delegator), so the
 // no-bare-span refusal below covers it where it now lives.
 const CONFIRM_DIALOG_SRC = readFileSync(
-  join(process.cwd(), 'src/ui/confirm_dialog_controller.ts'),
+  join(process.cwd(), 'src/ui/hud/dialog/confirm_dialog_controller.ts'),
   'utf8',
 );
 

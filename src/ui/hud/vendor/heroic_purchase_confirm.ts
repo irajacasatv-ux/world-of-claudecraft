@@ -10,9 +10,9 @@
 
 import { HEROIC_VENDOR_STOCK } from '../../../sim/content/heroic_vendor';
 import { ITEMS } from '../../../sim/data';
-import type { ConfirmDialogArgs } from '../../confirm_dialog_controller';
 import { itemDisplayName } from '../../entity_i18n';
 import { formatNumber, t } from '../../i18n';
+import type { ConfirmDialogArgs } from '../dialog';
 
 /** The Hud members the purchase confirmation drives. */
 export interface HeroicPurchaseHost {

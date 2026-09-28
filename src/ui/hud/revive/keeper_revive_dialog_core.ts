@@ -7,8 +7,8 @@
 // resolves the keys through t() in keeper_revive_dialog.ts, and the dialog DOM is
 // the shared confirm (confirm_dialog_controller.ts).
 
-import { RES_SICKNESS_MIN_LEVEL } from '../sim/resurrection';
-import type { TranslationKey } from './i18n';
+import { RES_SICKNESS_MIN_LEVEL } from '../../../sim/resurrection';
+import type { TranslationKey } from '../../i18n';
 
 export interface KeeperDialogStep {
   titleKey: TranslationKey;

@@ -10,7 +10,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { HEROIC_VENDOR_STOCK } from '../src/sim/content/heroic_vendor';
 import { ITEMS } from '../src/sim/data';
-import type { ConfirmDialogArgs } from '../src/ui/confirm_dialog_controller';
+import type { ConfirmDialogArgs } from '../src/ui/hud/dialog/confirm_dialog_controller';
 import { requestHeroicPurchase } from '../src/ui/hud/vendor/heroic_purchase_confirm';
 
 interface ConfirmCall {

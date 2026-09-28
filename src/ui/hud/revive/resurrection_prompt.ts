@@ -7,10 +7,10 @@
 // check; it builds this lazily over itself as the host, so tsc checks the Hud
 // against ResurrectionPromptHost and a bare Hud.prototype rig resolves it.
 
-import { audio } from '../game/audio';
-import { esc } from './esc';
-import { t } from './i18n';
-import { showStackPrompt } from './prompt_dialog';
+import { audio } from '../../../game/audio';
+import { esc } from '../../esc';
+import { t } from '../../i18n';
+import { showStackPrompt } from '../../prompt_dialog';
 
 /** The Hud members the offer prompt reads. */
 export interface ResurrectionPromptHost {

@@ -516,7 +516,7 @@ const MONOLITHS: MonolithRow[] = [
     // core read on one dependency line). Exact count, zero slack.
     // LOWERED 18286 -> 18276 at the release/v0.44.0 sync of the Pale Keeper
     // revive change: the Keeper dialog copy moved out to
-    // src/ui/keeper_revive_dialog_core.ts and the ghost prompt lost its
+    // src/ui/hud/revive/keeper_revive_dialog_core.ts and the ghost prompt lost its
     // per-frame healer-range scan (the Keeper is talked to). wc -l on the
     // merged tree. Exact count, zero slack.
     // LOWERED 18276 -> 18263 with the character-select raid lockouts: the
@@ -618,7 +618,9 @@ const MONOLITHS: MonolithRow[] = [
     // RE-PINNED at the Freeholds sync of release/v0.45.0 at ac9ed4db24: wc -l on the
     // merged tree measures 14891 (this branch 14883, the release 18093). Exact merged
     // count, zero slack.
-    ceiling: 14891,
+    // LOWERED 14891 -> 14886 once the confirm dialog, the two revive flows, the
+    // tool-effect confirm and Town Focus moved into hud/ domains behind barrels.
+    ceiling: 14886,
     seam: 'pure view core + thin painter on PainterHost (src/ui/CLAUDE.md)',
   },
   {

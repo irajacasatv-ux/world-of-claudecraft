@@ -7,8 +7,8 @@
 // can give one back) and the remaining-point count. Rendering lives in
 // town_focus_window.ts.
 
-import { isTownFocusComponent, TOWN_FOCUS_COMPONENTS } from '../sim/professions/focus';
-import type { TownFocusPendingView } from '../sim/professions/town_focus_pending';
+import { isTownFocusComponent, TOWN_FOCUS_COMPONENTS } from '../../../sim/professions/focus';
+import type { TownFocusPendingView } from '../../../sim/professions/town_focus_pending';
 
 export interface TownFocusRow {
   component: string;

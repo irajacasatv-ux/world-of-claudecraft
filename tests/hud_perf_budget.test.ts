@@ -1337,7 +1337,11 @@ const COLD_PAINTER_ALLOWANCES: ReadonlyArray<ColdPainter> = [
     },
     driverAllow: {},
   },
-  { file: 'town_focus_window.ts', reflowAllow: { '.scrollTop': 2 }, driverAllow: {} },
+  {
+    file: 'hud/town_focus/town_focus_window.ts',
+    reflowAllow: { '.scrollTop': 2 },
+    driverAllow: {},
+  },
   // The scroll pair again, and TWO containers behind it (the panel body and the
   // detail pane) rather than one, which is why the count is still 2: the painter
   // walks a SCROLL_KEEPERS table, so both share a single read site and a single

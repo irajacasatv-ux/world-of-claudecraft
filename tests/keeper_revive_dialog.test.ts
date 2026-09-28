@@ -1,4 +1,4 @@
-// The Pale Keeper revive gate (src/ui/keeper_revive_dialog.ts), moved whole
+// The Pale Keeper revive gate (src/ui/hud/revive/keeper_revive_dialog.ts), moved whole
 // from tests/hud_confirm_gates.test.ts when runKeeperRevive left
 // Hud.requestSpiritHealerResurrect. The revive is irreversible and applies The
 // Keeper's Toll, so it is exercised with a mock confirmDialog (the
@@ -8,8 +8,8 @@
 // tests/confirm_dialog_controller.test.ts.
 
 import { describe, expect, it, vi } from 'vitest';
-import type { ConfirmDialogArgs } from '../src/ui/confirm_dialog_controller';
-import { type KeeperReviveHost, runKeeperRevive } from '../src/ui/keeper_revive_dialog';
+import type { ConfirmDialogArgs } from '../src/ui/hud/dialog/confirm_dialog_controller';
+import { type KeeperReviveHost, runKeeperRevive } from '../src/ui/hud/revive/keeper_revive_dialog';
 
 interface ConfirmCall {
   title: string;

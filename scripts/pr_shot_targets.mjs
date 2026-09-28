@@ -2784,8 +2784,8 @@ export const TARGETS = [
     key: 'town-focus',
     label: 'Town Focus panel: a queued free-tier re-spec (the Saved line and the countdown)',
     when: [
-      'ui/town_focus_view.ts',
-      'ui/town_focus_window.ts',
+      'ui/hud/town_focus/town_focus_view.ts',
+      'ui/hud/town_focus/town_focus_window.ts',
       'sim/professions/town_focus_pending.ts',
       'sim/professions/town_focus_commands.ts',
     ],
@@ -15092,8 +15092,8 @@ export const TARGETS = [
     label: 'Confirm dialogs: spirit-healer revive + marks purchases',
     when: [
       'ui/hud/delve/delve_board_controller',
-      'ui/confirm_dialog_controller',
-      'ui/keeper_revive_dialog',
+      'ui/hud/dialog/confirm_dialog_controller',
+      'ui/hud/revive/keeper_revive_dialog',
       'ui/hud/vendor/heroic_purchase_confirm',
     ],
     variants: [

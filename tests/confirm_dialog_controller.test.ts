@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 
-// The shared #confirm-dialog modal (src/ui/confirm_dialog_controller.ts),
+// The shared #confirm-dialog modal (src/ui/hud/dialog/confirm_dialog_controller.ts),
 // extracted from Hud.confirmDialog. Driven over a plain host shaped like the
 // Hud's slot (ConfirmDialogHost), so this suite needs no coordinator import.
 // The R40 no-choice callback contract: every dismissal that is not the OK
@@ -15,7 +15,7 @@ import {
   type ConfirmDialogHost,
   fireConfirmCancel,
   showConfirmDialog,
-} from '../src/ui/confirm_dialog_controller';
+} from '../src/ui/hud/dialog/confirm_dialog_controller';
 
 /** The slot a bare Hud carries, with the trap and window plumbing stubbed. */
 function host(): ConfirmDialogHost & { trapReleases: boolean[] } {

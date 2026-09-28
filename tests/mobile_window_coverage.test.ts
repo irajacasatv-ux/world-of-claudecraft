@@ -239,10 +239,10 @@ describe('mobile window coverage (Phase 5 parity)', () => {
     // and it is the arm the recursion widens: a fourth module joins this list in
     // the same change that gives its window a mobile rule or an exception below.
     expect(dyn.windowClassFiles).toEqual([
+      'dev_command_window.ts',
       // The extracted confirm modal (moved whole out of Hud.confirmDialog): one
       // half of the shared #confirm-dialog id; the exception row below covers it.
-      'confirm_dialog_controller.ts',
-      'dev_command_window.ts',
+      'hud/dialog/confirm_dialog_controller.ts',
       'hud/housing/gate_prompt_controller.ts',
       // The Perfecting window (Masterwrought phase 14) mints its own root and
       // carries the four-edge body.mobile-touch pin in hud.mobile.css.
