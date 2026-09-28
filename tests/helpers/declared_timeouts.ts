@@ -143,14 +143,21 @@ export function maskCommentsAndStrings(source: string): string {
       i++;
       continue;
     }
-    if (state === 'single' && ch === "'") state = 'code';
-    else if (state === 'double' && ch === '"') state = 'code';
-    else if (state === 'template' && ch === '`') state = 'code';
-    else if (state === 'template' && ch === '$' && next === '{') {
+    if (
+      (state === 'single' && ch === "'") ||
+      (state === 'double' && ch === '"') ||
+      (state === 'template' && ch === '`')
+    ) {
+      // A closed string is a value, so a `/` after it divides.
+      state = 'code';
+      lastCode = ch;
+    } else if (state === 'template' && ch === '$' && next === '{') {
       out[i] = ' ';
-      // Leave the `{` visible so bracket depth stays balanced with the `}`.
+      // Leave the `{` visible so bracket depth stays balanced with the `}`. An
+      // interpolation opens an expression, so a `/` right after it is a regex.
       stack.push('template');
       state = 'code';
+      lastCode = '{';
       i++;
     } else if (ch !== '\n') out[i] = ' ';
   }
