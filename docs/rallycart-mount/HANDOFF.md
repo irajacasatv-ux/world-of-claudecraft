@@ -1,5 +1,11 @@
 # Rallycart RXT: full handoff
 
+> **Retired.** The Rallycart skin was retired on 2026-09-10 (nothing sells, wears or
+> renders it), and on 2026-09-27 its model, audio, store art, wheeled-vehicle modules,
+> tests and tooling were deleted on `feature/freeholds` (commit 9ceb5ee7e3). The reins
+> item, its icon and locale rows stay, since a save can carry them. This folder is kept
+> as history only; most paths it names no longer exist in the tree.
+
 Written 2026-08-16. This is the authoritative pickup document. It assumes you
 are starting cold.
 

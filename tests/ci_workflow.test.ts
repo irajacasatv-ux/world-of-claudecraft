@@ -306,8 +306,8 @@ describe('CI workflow parity', () => {
   it('sparse-checkout on the test jobs covers every referenced screenshot subtree', () => {
     // The five sparse test-job checkouts (pr-gate, both long-sims lanes,
     // release-gate, release-i18n) exclude docs/screenshots DIRECTORIES
-    // (about 1.2 GB of committed PR evidence after the 2026-09-27 prune; the
-    // measured 11m21s checkout pathology scales with the blob payload) except
+    // (the committed PR evidence, the largest blob payload in the tree; the
+    // measured 11m21s checkout pathology scales with that payload) except
     // every subtree the repo actually references. The coupling corpus is EVERY tracked
     // reference-carrying file outside docs/screenshots, enumerated from the
     // git index rather than a curated root list: a test-literal-only

@@ -2533,9 +2533,8 @@ inherits the reasoning rather than re-deriving it:
 - The offline `farmNowMs` returns the sim clock and the online one `Date.now()`: a house
   timer follows the facet's clock-base contract (`housingNowMs()`), never subtracting any
   other clock.
-- Eastbrook re-mint: ANY byte changed in `src/render/renderer.ts` moves the polish
-  fingerprint leaf; re-run `scripts/assets/eastbrook_grand_armoury/remint_polish_provenance.mjs`
-  and update the four pinned literals in their own commit.
+- Eastbrook polish seal: retired in Part 3 (commit 52f7a72714) with its re-mint scripts,
+  so a `src/render/renderer.ts` edit no longer owes a re-mint or any pinned literal.
 - Screenshots: seed the lowest graphics preset AND `graphicsDefaultApplied` before
   `page.goto`, or the device probe overwrites it; never locate elements by English text.
 - Mobile shots: the iPhone UA locks the material tier; shots needing graded light emulate

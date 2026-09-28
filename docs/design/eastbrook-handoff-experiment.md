@@ -105,7 +105,7 @@ Current revision checks (counts overlap; these are not a unique total):
 | Command / scope | Result |
 | --- | --- |
 | `npx vitest run tests/options_view.test.ts tests/eastbrook_wolves_guidance_core.test.ts tests/eastbrook_guidance_choice.test.ts tests/managed_window_close_registry.test.ts tests/mobile_window_coverage.test.ts` | 85 passed |
-| `npx vitest run tests/terrain_chunk_geometry.test.ts tests/terrain_height_parity.test.ts tests/eastbrook_polish_capture_contract.test.ts tests/eastbrook_polish_artifact_integrity.test.ts tests/monolith_budget.test.ts` | 54 passed |
+| `npx vitest run tests/terrain_chunk_geometry.test.ts tests/terrain_height_parity.test.ts tests/eastbrook_polish_capture_contract.test.ts tests/eastbrook_polish_artifact_integrity.test.ts tests/monolith_budget.test.ts` | 54 passed (the artifact-integrity suite has since been retired with the polish seal, 2026-09-27) |
 | Trainer labels, real nameplate painter, ambient markers, entity display and architecture | 160 passed |
 | Generic minimap/map/nameplate marker regressions | 199 passed |
 | Canvas, heraldry and dialogue regressions | 91 passed |

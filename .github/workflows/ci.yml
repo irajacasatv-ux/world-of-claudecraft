@@ -608,8 +608,8 @@ jobs:
         uses: actions/checkout@v6
         with:
           # Blobless sparse checkout (the sparse-checkout input implies
-          # filter=blob:none in actions/checkout): docs/screenshots is
-          # about 1.2 GB of committed PR evidence (after the 2026-09-27 prune)
+          # filter=blob:none in actions/checkout): docs/screenshots is the
+          # committed PR evidence, the largest blob payload in the tree, which
           # the test jobs never read except the referenced subtrees below, and
           # the measured checkout pathology
           # (run 31741012359: lane A spent 11m21s fetching before an 8m25s
