@@ -1008,10 +1008,17 @@ describe('combat SFX policy', () => {
     expect(sink).toHaveBeenCalledOnce();
 
     const hud = readFileSync(new URL('../src/ui/hud.ts', import.meta.url), 'utf8');
+    const sfxRouter = readFileSync(
+      new URL('../src/ui/event_sfx_router.ts', import.meta.url),
+      'utf8',
+    );
     expect(hud).toContain("case 'varkhulCallout'");
     // The HUD arm is shared with the Nythraxis callouts: dispatchRaidCalloutSfx
-    // routes a varkhulCallout event through dispatchVarkhulCalloutSfx.
-    expect(hud).toContain('dispatchRaidCalloutSfx(');
+    // routes a varkhulCallout event through dispatchVarkhulCalloutSfx. The
+    // spatial sound arm lives in the HUD's sound router (Hud.playEventSfx
+    // forwards every event there), beside its own varkhulCallout case.
+    expect(sfxRouter).toContain("case 'varkhulCallout'");
+    expect(sfxRouter).toContain('dispatchRaidCalloutSfx(');
   });
 
   it('gives every new Nythraxis warning an existing sampled cue', () => {

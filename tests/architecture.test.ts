@@ -2754,6 +2754,13 @@ const UI_DOM_MODULES = [
   'src/ui/hud/professions/perfecting_window.ts',
   'src/ui/hud/professions/perfecting_swap_controller.ts',
   'src/ui/hud/professions/legendary_naming_controller.ts',
+  // The profession result arms of the Hud's event switch (extracted whole):
+  // the open-window reads ($ over document), the reduced-motion query and the
+  // announcer's performance.now() stamp.
+  'src/ui/hud/professions/profession_event_router.ts',
+  // The Character and Crafting convergence latch (extracted from Hud): reads
+  // #crafting-window's open state.
+  'src/ui/hud/professions/profession_surface_refresh.ts',
   'src/ui/input_controller.ts',
   'src/ui/hud.ts',
   'src/ui/hud/action_bar/action_bar_toggle_controller.ts',
@@ -2769,6 +2776,9 @@ const UI_DOM_MODULES = [
   'src/ui/hud/delve/rite_window.ts',
   'src/ui/hud/fiesta/fiesta_controller.ts',
   'src/ui/hud/loot/corpse_harvest_window.ts',
+  // The Hud event switch's 'loot' arm (extracted whole): the open-bags read
+  // ($ over document) and the receipt body minted on document.
+  'src/ui/hud/loot/loot_event_router.ts',
   'src/ui/hud/loot/loot_roll_controller.ts',
   'src/ui/hud/loot/loot_window_controller.ts',
   'src/ui/hud/player_card/player_card.ts',

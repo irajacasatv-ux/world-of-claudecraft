@@ -636,9 +636,13 @@ const ANSWERED: readonly AnsweredSurface[] = [
   },
   {
     file: 'hud.ts',
-    memos: ['lastCharSheetSig', 'lastProfessionSurfaceSig'],
+    // The profession surface signature that sat beside it moved to
+    // hud/professions/profession_surface_refresh.ts, which emits no text of its
+    // own (it only calls charWindow.renderIfOpen and renderCrafting, both
+    // answered here), so the sweep does not classify it.
+    memos: ['lastCharSheetSig'],
     answer: 'this.charWindow.renderIfOpen',
-    why: "the character sheet's stat signature and the profession surface signature: stat numbers, ids, ranks and counts, none of which a locale moves. Both gate the same window, and the fan-out drives charWindow.renderIfOpen(), which rebuilds it wholesale with fresh t() when it is open",
+    why: "the character sheet's stat signature: stat numbers, ids, ranks and counts, none of which a locale moves. The fan-out drives charWindow.renderIfOpen(), which rebuilds the sheet wholesale with fresh t() when it is open",
   },
   {
     file: 'hud.ts',

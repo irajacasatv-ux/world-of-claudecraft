@@ -1,23 +1,18 @@
-// Pins the hud.ts half of the Meteor anti-doubling fix (see
+// Pins the HUD half of the Meteor anti-doubling fix (see
 // tests/ability_audio_defers_to_recordings.test.ts for the sfx.ts and painter
 // halves): the meteorFall telegraph, which fires ~2s before the ground tick
 // lands, must kick off sfx.preload('meteor') so the first cast of a session
-// doesn't race the fetch+decode and drop the landing recording silently.
+// doesn't race the fetch+decode and drop the landing recording silently. The
+// arm lives in the HUD's spatial sound router (src/ui/event_sfx_router.ts),
+// which Hud.playEventSfx forwards every event to.
 import { describe, expect, it, vi } from 'vitest';
 import { sfx } from '../src/game/sfx';
-import { Hud } from '../src/ui/hud';
+import { playEventSfx } from '../src/ui/event_sfx_router';
 
-// The noticeboard/resurrection-prompt suites' Object.create idiom: stub only
-// the fields playEventSfx's spellfxAt arm touches.
-interface PlayEventSfxHarness {
-  sim: unknown;
-  playEventSfx(ev: unknown): void;
-}
-
-function harness(): PlayEventSfxHarness {
-  const hud = Object.create(Hud.prototype) as unknown as PlayEventSfxHarness;
-  hud.sim = {};
-  return hud;
+// Only the members the router's host interface names; the spellfxAt arm
+// touches none of them before it returns.
+function harness(): { sim: unknown; castLoopIds: Set<number>; mobAggroed: Set<number> } {
+  return { sim: {}, castLoopIds: new Set(), mobAggroed: new Set() };
 }
 
 describe('HUD meteorFall telegraph preloads the meteor recording', () => {
@@ -25,7 +20,7 @@ describe('HUD meteorFall telegraph preloads the meteor recording', () => {
     const preload = vi.spyOn(sfx, 'preload').mockImplementation(() => {});
     try {
       const hud = harness();
-      (hud as unknown as { playEventSfx: (ev: unknown) => void }).playEventSfx({
+      playEventSfx(hud, {
         type: 'spellfxAt',
         x: 0,
         z: 0,

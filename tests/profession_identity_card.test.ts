@@ -1087,8 +1087,18 @@ describe('crafting window station-range repaint liveness (source pins)', () => {
 
 describe('craftResult deny toast names the station (source pins)', () => {
   // Comment-stripped through the shared helper: a pinned token inside a
-  // comment must never satisfy a pin about live code (review round).
-  const hud = codeOnly(readFileSync(path.resolve(process.cwd(), 'src/ui/hud.ts'), 'utf8'));
+  // comment must never satisfy a pin about live code (review round). The
+  // craftResult arm left hud.ts for the profession event router, so the HUD
+  // side read here is the coordinator plus that router: the positives land in
+  // the router, and the negatives hold over both.
+  const hud =
+    codeOnly(readFileSync(path.resolve(process.cwd(), 'src/ui/hud.ts'), 'utf8')) +
+    codeOnly(
+      readFileSync(
+        path.resolve(process.cwd(), 'src/ui/hud/professions/profession_event_router.ts'),
+        'utf8',
+      ),
+    );
 
   it("the denial routes through the deny core with the event's own recipe id", () => {
     // The reason-to-key mapping moved into a pure core at the Phase 07 review

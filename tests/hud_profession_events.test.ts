@@ -2,28 +2,32 @@
 
 // The HUD render sink for the four Professions 2.0 text-free
 // SimEvents (profTrendNudge, profTierTutorial, attuned, attunedZone). The sim
-// emits ids and names only; handleProfessionEvent must resolve the LOCALIZED
+// emits ids and names only; the profession event router's handleProfessionEvent
+// (hud/professions/profession_event_router.ts) must resolve the LOCALIZED
 // archetype title and master name (never leak the raw pairId, whose '+'
 // separator is the wire spelling, not player copy) and execute exactly the
 // plan's one render action per arm: a chat line, the tutorial panel, or the
 // celebration banner family (banner + polite announcer + one achievement
-// cue). Exercised via a bare Hud prototype (the profession_tutorial_window /
-// hud_confirm_gates precedent) since handleProfessionEvent is private.
+// cue). Driven through applyProfessionEventPresentation (the router's public
+// entry, which routes all four to that handler) over the router host rig
+// (tests/helpers/event_router_rig.ts), no Hud coordinator import.
 
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { audio } from '../src/game/audio';
 import { ARCHETYPE_PAIR_TARGETS } from '../src/sim/professions/archetype';
-import { archetypeTitleText } from '../src/ui/char_window';
+import type { SimEvent } from '../src/sim/types';
 import { tEntity } from '../src/ui/entity_i18n';
-import { Hud } from '../src/ui/hud';
+import { archetypeTitleText } from '../src/ui/hud/professions/craft_name_view';
 import {
   attunementMasterForPair,
   type ProfessionEventInput,
 } from '../src/ui/hud/professions/profession_event_lines_core';
+import { applyProfessionEventPresentation } from '../src/ui/hud/professions/profession_event_router';
 import { t } from '../src/ui/i18n';
 import type { CraftingIdentityView } from '../src/world_api/professions';
+import { type EventRouterRig, eventRouterRig } from './helpers/event_router_rig';
 
 // jsdom ships no matchMedia; the handler reads only `.matches` to derive the
 // reduced-motion flag. A never-matching stub keeps motion on (the desktop
@@ -31,57 +35,51 @@ import type { CraftingIdentityView } from '../src/world_api/professions';
 window.matchMedia = ((query: string) =>
   ({ matches: false, media: query }) as MediaQueryList) as typeof window.matchMedia;
 
-interface ProfessionEventHarness {
-  log: ReturnType<typeof vi.fn>;
-  showBanner: ReturnType<typeof vi.fn>;
-  combatAnnouncer: { push: ReturnType<typeof vi.fn> };
+interface ProfessionEventHarness extends EventRouterRig {
   sim: {
     craftingIdentity: CraftingIdentityView;
     professionsState: { skills: readonly { professionId: string; skill: number }[] };
   };
-  charWindow: { renderIfOpen: ReturnType<typeof vi.fn> };
-  renderCrafting: ReturnType<typeof vi.fn>;
-  openProfessionTutorial: ReturnType<typeof vi.fn>;
-  questDialog: { refreshIfChanged: ReturnType<typeof vi.fn> };
+  /** The four events through the router's public entry. */
   handleProfessionEvent(ev: ProfessionEventInput): void;
 }
 
 function makeHud(): ProfessionEventHarness {
-  const hud = Object.create(Hud.prototype) as unknown as ProfessionEventHarness;
-  hud.log = vi.fn();
-  hud.showBanner = vi.fn();
-  hud.combatAnnouncer = { push: vi.fn() };
-  hud.sim = {
-    craftingIdentity: {
-      version: 1,
-      synced: true,
-      craftSkills: {},
-      activeArchetype: 'leatherworking',
-      pairedMajor: 'tailoring',
-      hobbyCraft: null,
-      attunedPairs: ['leatherworking+tailoring'],
-      switchCount: 0,
-      amendsProgress: 0,
-      amendsRequired: 5,
-      knownRecipes: [],
+  const hud = eventRouterRig({
+    sim: {
+      craftingIdentity: {
+        version: 1,
+        synced: true,
+        craftSkills: {},
+        activeArchetype: 'leatherworking',
+        pairedMajor: 'tailoring',
+        hobbyCraft: null,
+        attunedPairs: ['leatherworking+tailoring'],
+        switchCount: 0,
+        amendsProgress: 0,
+        amendsRequired: 5,
+        knownRecipes: [],
+      },
+      professionsState: { skills: [] },
     },
-    professionsState: { skills: [] },
+    // The log sink stays a bare spy (the old bare-prototype rig's stub): these
+    // cases read its arguments, never a rendered pane.
+    log: vi.fn(),
+  }) as ProfessionEventHarness;
+  hud.handleProfessionEvent = (ev) => {
+    expect(applyProfessionEventPresentation(hud, ev as SimEvent)).toBe(true);
   };
-  hud.charWindow = { renderIfOpen: vi.fn() };
-  hud.renderCrafting = vi.fn();
   // The attuned arm also probes the gossip dialog's intro-hint staleness
   // (attunement retires the hint); the dialog's own behavior is pinned in
-  // quest_dialog_controller.test.ts, this harness only has to ROUTE there.
-  hud.questDialog = { refreshIfChanged: vi.fn() };
+  // quest_dialog_controller.test.ts, this harness only has to ROUTE there
+  // (the rig's questDialog.refreshIfChanged spy).
   document.getElementById('crafting-window')?.remove();
   const craftingWindow = document.createElement('div');
   craftingWindow.id = 'crafting-window';
   craftingWindow.style.display = 'none';
   document.body.appendChild(craftingWindow);
-  // Instance stub shadows the private prototype method: the tierTutorial arm
-  // only has to ROUTE here; the panel itself is pinned in
-  // profession_tutorial_window.test.ts.
-  hud.openProfessionTutorial = vi.fn();
+  // The tierTutorial arm only has to ROUTE to the rig's openProfessionTutorial
+  // spy; the panel itself is pinned in profession_tutorial_window.test.ts.
   return hud;
 }
 
@@ -95,7 +93,7 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe('Hud.handleProfessionEvent', () => {
+describe('the profession event router: handleProfessionEvent', () => {
   it('profTrendNudge logs the localized master line: archetype title + master name, no raw pairId', () => {
     const hud = makeHud();
     hud.handleProfessionEvent({ type: 'profTrendNudge', pairId: MASTER_PAIR });
@@ -224,18 +222,21 @@ describe('Hud.handleProfessionEvent', () => {
   });
 });
 
-// No test instantiates the full Hud event loop, so the sim-event switch wiring
-// is held by a source pin (the craft_celebration_view.test.ts precedent): all
-// four profession event types must fall through to the ONE handler above, so a
-// new arm cannot silently drop one of them.
-describe('sim-event switch routing (source pin)', () => {
+// The four event types must fall through to the ONE handler above in the
+// router's switch, so a new arm cannot silently drop one of them. The cases
+// above drive that switch for real; this source pin (the
+// craft_celebration_view.test.ts precedent) holds the fall-through shape.
+describe('profession event router switch routing (source pin)', () => {
   // join(process.cwd()) rather than import.meta.url: under jsdom the module
   // URL is not a file: scheme (the confirm_dialog_key_activation precedent).
-  const hudSource = readFileSync(join(process.cwd(), 'src/ui/hud.ts'), 'utf8');
+  const routerSource = readFileSync(
+    join(process.cwd(), 'src/ui/hud/professions/profession_event_router.ts'),
+    'utf8',
+  );
 
   it('all four SimEvent types route to handleProfessionEvent', () => {
-    expect(hudSource).toMatch(
-      /case 'profTrendNudge':\n\s*case 'profTierTutorial':\n\s*case 'attuned':\n\s*case 'attunedZone':(?:\n\s*\/\/[^\n]*)*\n\s*this\.handleProfessionEvent\(ev\);/,
+    expect(routerSource).toMatch(
+      /case 'profTrendNudge':\n\s*case 'profTierTutorial':\n\s*case 'attuned':\n\s*case 'attunedZone':(?:\n\s*\/\/[^\n]*)*\n\s*handleProfessionEvent\(h, ev\);/,
     );
   });
 });

@@ -1421,7 +1421,12 @@ const HUD_UPDATE_DRIVES: readonly DriveRow[] = [
     band: 'slow',
     gate: '',
     surface: 'window',
-    guard: { kind: 'hud', proof: 'if (sig === this.lastProfessionSurfaceSig) return;' },
+    // A one-line Hud forward into its lazy latch, which holds the signature.
+    guard: {
+      kind: 'module',
+      module: 'hud/professions/profession_surface_refresh.ts',
+      proof: SIG_RETURN,
+    },
     why: 'repaints the character window and the crafting window when a profession number moves',
   },
   {
@@ -1896,12 +1901,14 @@ describe('Hud.update() drives exactly the registered set, on the registered band
       // loot window's corpse arm moved OUT of the `none` bucket below into
       // this one: it gained a corpseSig latch when the popup started
       // refreshing instead of only closing.
-      module: 28,
+      // Up one (and hud down one) when the profession surface latch left
+      // hud.ts for hud/professions/profession_surface_refresh.ts.
+      module: 29,
       // Phase 20's refreshCharSheetIfChanged and its siblings. Their latches are
       // HUD fields (lastCharSheetSig et al) because the cold char_window painter
       // holds no signature of its own to diff. The release's trade row left this
       // bucket when its lastTradeSig latch moved into the woc_trade module.
-      hud: 6,
+      hud: 5,
       // Up to 12 with the crucible vendor's out-of-range close: the same
       // callsite-guarded shape as the copper and heroic vendor closes.
       // Up one more on the release arm's own callsite-guarded row, beside the
@@ -1955,7 +1962,6 @@ describe('Hud.update() drives exactly the registered set, on the registered band
         'hud.ts: if (sig !== this.lastLootSettingsSig) {',
         // Phase 20: the progression-block latch for the open character sheet.
         'hud.ts: if (sig === this.lastCharSheetSig) return;',
-        'hud.ts: if (sig === this.lastProfessionSurfaceSig) return;',
         'hud.ts: if (sig === this.lastTownFocusSig) return;',
         'hud/woc_trade/woc_trade_controller.ts: if (sig === this.lastTradeSig) return;',
         'hud/delve/lockpick_window.ts: if (lockpickRenderSig(view) !== this.lastSig) this.renderBoard();',
@@ -1973,6 +1979,7 @@ describe('Hud.update() drives exactly the registered set, on the registered band
         // The professions guard hashes the freshly built input inline (no local
         // sig binding): render() re-latches lastSig from the one input it
         // painted, so the band never re-acts on a stale signature.
+        'hud/professions/profession_surface_refresh.ts: if (sig === this.lastSig) return;',
         'hud/professions/professions_window.ts: const input = this.buildInput(); const sig = professionsRefreshSig(input, harvestPreferenceLocalSig(this.deps.world().harvestPreference)); if (sig === this.lastSig) return;',
         'reliquary_window.ts: const input = this.buildInput(); const sig = this.sigFromInput(input); if (sig === this.lastSig) return;',
         'social_window.ts: if (struct !== this.lastStruct) {',
@@ -2008,6 +2015,12 @@ describe('Hud.update() drives exactly the registered set, on the registered band
     expect(modules.filter((m) => !adapterName.test(m)).sort()).toEqual([
       'dungeon_finder_proposal_popup.ts',
       'hud/battleground/battleground_proposal_popup.ts',
+      // Not a painter: the profession surface latch writes no DOM itself. It
+      // diffs a signature and calls the two cold windows' own repaints
+      // (charWindow.renderIfOpen, renderCrafting), so there is no write or
+      // driver here for the painter gate to police; the name stays paired with
+      // tests/profession_surface_refresh.test.ts.
+      'hud/professions/profession_surface_refresh.ts',
       'meters.ts',
       'mount_race_controls.ts',
       'mount_race_strip.ts',

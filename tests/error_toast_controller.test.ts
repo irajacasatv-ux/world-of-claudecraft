@@ -1,39 +1,37 @@
 // @vitest-environment happy-dom
 
+// The held-loot warning and the roll-win banner through the HUD's loot arm
+// (src/ui/hud/loot/loot_event_router.ts), over a real toast controller and a
+// real #banner slot. The personal-event gate in front of it (another player's
+// loot event never reaches the arm) is the coordinator's, so that case lives
+// in tests/hud_coordinator_delegators.test.ts.
+
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { audio } from '../src/game/audio';
 import type { SimEvent } from '../src/sim/types';
+import { type BannerShowArgs, BannerSlot } from '../src/ui/banner_slot';
 import { ErrorToastController } from '../src/ui/error_toast_controller';
 import { heldLootWarningText } from '../src/ui/held_loot_warning_view';
-import { Hud } from '../src/ui/hud';
 import { ensureLocaleLoaded, setLanguage } from '../src/ui/i18n';
+import { eventRouterRig } from './helpers/event_router_rig';
 
 const heldText = 'Your bags are full; [[i:greyjaw_hide_boots]] is waiting on the corpse for you.';
 
 function rig() {
   const el = document.createElement('div');
   // The #banner element the Hud's lazy slot (banner_slot.ts) resolves on its
-  // first banner, as the drain tail's celebration observer builds itself.
+  // first banner; showBanner is Hud.showBanner's one-line forward into it.
   const bannerEl = document.createElement('div');
   bannerEl.id = 'banner';
   document.body.append(bannerEl);
-  const hud = Object.assign(Object.create(Hud.prototype), {
-    sim: {
-      playerId: 7,
-      player: { name: 'LootTester' },
-      craftingIdentity: { synced: false },
-      craftSkills: {},
-      gatheringProficiency: {},
-    },
-    renderer: { handleEvent: vi.fn() },
-    playEventSfx: vi.fn(),
-    meters: { onEvent: vi.fn() },
-    isNythraxisEvent: vi.fn(() => false),
-    lootRolls: { closeForItem: vi.fn() },
+  const slot = new BannerSlot(bannerEl);
+  const hud = eventRouterRig({
+    sim: { playerId: 7, player: { name: 'LootTester' } },
     errorToast: new ErrorToastController(el),
+    showBanner: vi.fn((...args: BannerShowArgs) => slot.show(...args)),
     log: vi.fn(),
   });
-  return { el, bannerEl, hud, send: (events: SimEvent[]) => hud.handleEvents(events) };
+  return { el, bannerEl, hud, send: (events: SimEvent[]) => hud.routeEvents(events) };
 }
 
 describe('held loot error toast through the HUD', () => {
@@ -78,16 +76,6 @@ describe('held loot error toast through the HUD', () => {
     expect(el.style.opacity).toBe('1');
     vi.advanceTimersByTime(1);
     expect(el.style.opacity).toBe('0');
-  });
-
-  it('does not warn for someone else or for a normal successful roll', () => {
-    const { el, hud, send } = rig();
-    send([{ type: 'loot', text: heldText, pid: 8 }]);
-    expect(hud.log).not.toHaveBeenCalled();
-    send([{ type: 'loot', text: 'Aaa wins [[i:greyjaw_hide_boots]] (100)', pid: 7 }]);
-    expect(el.textContent).toBe('');
-    expect(vi.getTimerCount()).toBe(0);
-    expect(hud.lootRolls.closeForItem).toHaveBeenCalledTimes(1);
   });
 
   it('shows the win for five seconds and keeps the lower full-bag warning for 7.5 seconds', () => {

@@ -1,7 +1,11 @@
 // Source pins over the Hud's Maker's Bond integration (the
 // train_window_hud.test.ts style: the wiring lives in the hud.ts coordinator,
 // so these pin the load-bearing snippets instead of booting the whole Hud):
-//  - the unbindResult event arm logs exactly one localized line per outcome,
+//  - the unbindResult event arm (in the profession event router,
+//    src/ui/hud/professions/profession_event_router.ts, where the Hud is the
+//    host `h`; its rendered lines and cue silence are driven for real in
+//    tests/professions_single_line_grants.test.ts) logs exactly one localized
+//    line per outcome,
 //    with NO banner/toast/audio (the trainResult single-surface rule), maps
 //    every deny reason to ITS OWN key, and repaints the unbind window + bags
 //    (the single-copy unbind clears boundTo in place with no loot event);
@@ -16,15 +20,20 @@ import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 const hudSource = readFileSync(resolve(__dirname, '../src/ui/hud.ts'), 'utf8');
+const routerSource = readFileSync(
+  resolve(__dirname, '../src/ui/hud/professions/profession_event_router.ts'),
+  'utf8',
+);
 
 function unbindResultArm(): string {
-  const start = hudSource.indexOf("case 'unbindResult': {");
-  // The arm sits between trainResult and masterwork in drainEvents; slicing
-  // to the NEXT case keeps the single-surface pins scoped to this arm alone
-  // (a future arm inserted between them must update this anchor).
-  const end = hudSource.indexOf("case 'masterwork': {", start);
-  expect(start, 'unbindResult case arm present in handleEvents').toBeGreaterThan(-1);
-  expect(end, 'unbindResult arm precedes the masterwork arm').toBeGreaterThan(start);
+  const start = routerSource.indexOf("case 'unbindResult': {");
+  // The arm sits between craftResult and masterworkZone in the router's
+  // switch; slicing to the NEXT case keeps the single-surface pins scoped to
+  // this arm alone (a future arm inserted between them must update this
+  // anchor).
+  const end = routerSource.indexOf("case 'masterworkZone': {", start);
+  expect(start, 'unbindResult case arm present in the profession router').toBeGreaterThan(-1);
+  expect(end, 'unbindResult arm precedes the masterworkZone arm').toBeGreaterThan(start);
   // Comments stripped from the slice (`://` protocol slashes preserved), the
   // repo's raw-source-pin idiom (the codeOnly helper in
   // tests/professions_silent_loot.test.ts). This arm's whole subject is what
@@ -32,13 +41,13 @@ function unbindResultArm(): string {
   // or a toast here are high, and it would turn the negative pins below red
   // for the wrong reason; on the other side a commented-out key would satisfy
   // the positive pins.
-  return hudSource
+  return routerSource
     .slice(start, end)
     .replace(/\/\*[\s\S]*?\*\//g, '')
     .replace(/(^|[^:])\/\/.*$/gm, '$1');
 }
 
-describe('hud.ts unbindResult event arm (source pins)', () => {
+describe('the unbindResult event arm (source pins)', () => {
   it('logs the unbound line on ok and renders every deny through the one reason map', () => {
     // Since Masterwrought phase 12 the reason-to-key pairing is the total
     // UNBIND_DENY_KEY record in src/ui/hud/vendor/unbind_view.ts (pinned
@@ -91,7 +100,7 @@ describe('hud.ts unbindResult event arm (source pins)', () => {
 
   it('stays single-surface: chat log only, no banner, toast, or audio cue in the arm', () => {
     const arm = unbindResultArm();
-    expect(arm.match(/this\.log\(/g)?.length, 'exactly the ok + deny log call sites').toBe(2);
+    expect(arm.match(/\bh\.log\(/g)?.length, 'exactly the ok + deny log call sites').toBe(2);
     // ALLOWLIST, not a blocklist, and that is the whole point. This pin spent
     // two rounds losing an arms race it could not win: it began as an
     // alternation of this.audio / playSfx / playCue / showToast, all four of
@@ -100,9 +109,9 @@ describe('hud.ts unbindResult event arm (source pins)', () => {
     // would have passed the whole repo. Naming the live idioms instead just
     // moved the goalposts: hud.ts reaches sound through audio.<cue>(, and
     // sfx.playUi( / playAt( / crowdRoar( / unloop( / loop( / goalHorn(, and
-    // voice.play(, and three private wrappers of its own (this.combat, a
-    // route straight onto sfx.playAt, plus playEventSfx and
-    // playAttackerSfx); its out-of-chat surfaces run to showBanner,
+    // voice.play(, and the sound router's wrappers (playCombatSfx, a route
+    // straight onto sfx.playAt, plus playEventSfx and its attacker helper,
+    // src/ui/event_sfx_router.ts); its out-of-chat surfaces run to showBanner,
     // showError (itself BOTH a toast and a cue, since it calls audio.error),
     // showPrompt, showSelfNote, showSubzone, confirmDialog, inputDialog,
     // combatLog and flashActionSlot. Neither list is closed, and that is the
@@ -113,13 +122,16 @@ describe('hud.ts unbindResult event arm (source pins)', () => {
     // three calls, and #2458 made "one chat line and nothing else" the
     // load-bearing contract on BOTH unbind arms, so anything a contributor
     // adds here has to show up in this list and be argued for by name.
-    const selfCalls = [...new Set(arm.match(/\bthis\.\w+\(/g) ?? [])].sort();
+    // The Hud is the router's host `h` now, so its method surface is the
+    // `h.` calls (and the arm reaches no `this` at all).
+    const selfCalls = [...new Set(arm.match(/\bh\.\w+\(/g) ?? [])].sort();
     expect(selfCalls, 'the arm calls nothing but the chat line and the two repaints').toEqual([
-      'this.log(',
-      'this.renderBags(',
-      'this.renderUnbind(',
+      'h.log(',
+      'h.renderBags(',
+      'h.renderUnbind(',
     ]);
-    // The allowlist cannot see a call with no `this.` receiver, which is
+    expect(arm).not.toMatch(/\bthis\./);
+    // The allowlist cannot see a call with no `h.` receiver, which is
     // exactly how every module-level cue is spelled, so the receiver pin
     // stays as its complement. Between them: no bare audio/sfx/voice call,
     // and no method of the Hud beyond the three named above.
@@ -133,8 +145,8 @@ describe('hud.ts unbindResult event arm (source pins)', () => {
 
   it('repaints the open unbind window AND the open bags (no loot event repaints for us)', () => {
     const arm = unbindResultArm();
-    expect(arm).toContain('this.renderUnbind();');
-    expect(arm).toContain('this.renderBags();');
+    expect(arm).toContain('h.renderUnbind();');
+    expect(arm).toContain('h.renderBags();');
     expect(arm).toContain("$('#unbind-window').style.display === 'block'");
     expect(arm).toContain("$('#bags').style.display !== 'none'");
   });

@@ -45,11 +45,11 @@ import type { Rng } from '../src/sim/rng';
 import { Sim } from '../src/sim/sim';
 import type { Entity, SimEvent } from '../src/sim/types';
 import { itemDisplayName } from '../src/ui/entity_i18n';
-import { Hud } from '../src/ui/hud';
 import { MASTERWORK_SEAL_IMAGE_URL } from '../src/ui/hud/professions/profession_art';
 import { t } from '../src/ui/i18n';
 import { QUALITY_COLOR } from '../src/ui/icons';
 import { runCraft } from './helpers/enchant_family_cast';
+import { type EventRouterRig, eventRouterRig } from './helpers/event_router_rig';
 
 const RECIPE_ID = 'recipe_eastbrook_ritual_vestments';
 const ITEM_ID = 'eastbrook_ritual_vestments';
@@ -324,45 +324,11 @@ describe('masterworkZone over the live GameServer wire (session routing)', () =>
   });
 });
 
-interface MasterworkZoneHudHarness {
-  sim: {
-    playerId: number;
-    craftingIdentity: { synced: boolean };
-    craftSkills: Record<string, number>;
-    gatheringProficiency: Record<string, number>;
-  };
-  renderer: { handleEvent: ReturnType<typeof vi.fn> };
-  playEventSfx: ReturnType<typeof vi.fn>;
-  meters: { onEvent: ReturnType<typeof vi.fn> };
-  isNythraxisEvent: ReturnType<typeof vi.fn>;
-  chatLogEl: HTMLElement;
-  chatTimestamps: boolean;
-  chatWindow: { hideIfFiltered: ReturnType<typeof vi.fn> };
-  chatAnnouncer: { push: ReturnType<typeof vi.fn> };
-  prevCraftSkills: Record<string, number> | null;
-  craftTierUpDrains: number;
-  handleEvents(events: SimEvent[]): void;
-}
-
-function masterworkZoneHud(): MasterworkZoneHudHarness {
-  const hud = Object.create(Hud.prototype) as unknown as MasterworkZoneHudHarness;
-  hud.sim = {
-    playerId: 9,
-    craftingIdentity: { synced: false },
-    craftSkills: {},
-    gatheringProficiency: {},
-  };
-  hud.renderer = { handleEvent: vi.fn() };
-  hud.playEventSfx = vi.fn();
-  hud.meters = { onEvent: vi.fn() };
-  hud.isNythraxisEvent = vi.fn(() => false);
-  hud.chatLogEl = document.createElement('div');
-  hud.chatTimestamps = false;
-  hud.chatWindow = { hideIfFiltered: vi.fn() };
-  hud.chatAnnouncer = { push: vi.fn() };
-  hud.prevCraftSkills = null;
-  hud.craftTierUpDrains = 0;
-  return hud;
+// The zone copy's HUD arm, driven through the REAL profession event router
+// (hud/professions/profession_event_router.ts) over a real chat pane
+// (tests/helpers/event_router_rig.ts), no Hud coordinator import.
+function masterworkZoneHud(): EventRouterRig {
+  return eventRouterRig({ sim: { playerId: 9 } });
 }
 
 afterEach(() => {
@@ -371,16 +337,19 @@ afterEach(() => {
 });
 
 describe('hud masterworkZone arm', () => {
-  const hud = readFileSync(join(process.cwd(), 'src/ui/hud.ts'), 'utf8');
+  const router = readFileSync(
+    join(process.cwd(), 'src/ui/hud/professions/profession_event_router.ts'),
+    'utf8',
+  );
   const hudCss = readFileSync(join(process.cwd(), 'src/styles/hud.css'), 'utf8');
-  const arm = hud.slice(
-    hud.indexOf("case 'masterworkZone': {"),
-    hud.indexOf('break;', hud.indexOf("case 'masterworkZone': {")),
+  const arm = router.slice(
+    router.indexOf("case 'masterworkZone': {"),
+    router.indexOf('break;', router.indexOf("case 'masterworkZone': {")),
   );
 
   it('renders a decorative seal while preserving the exact visible and announced text', () => {
     const clientHud = masterworkZoneHud();
-    clientHud.handleEvents([
+    clientHud.routeEvents([
       {
         type: 'masterworkZone',
         pid: 9,
@@ -409,10 +378,13 @@ describe('hud masterworkZone arm', () => {
     expect(line.style.color).toBe(colorProbe.style.color);
     expect(clientHud.chatAnnouncer.push).toHaveBeenCalledTimes(1);
     expect(clientHud.chatAnnouncer.push.mock.calls[0][0]).toBe(expected);
-    expect(clientHud.chatWindow.hideIfFiltered).toHaveBeenCalledWith(line, 'system');
+    expect(clientHud.hideIfFiltered).toHaveBeenCalledWith(line, 'system');
   });
 
   it('plays no audio cue for the zone copy (the personal plan owns the sound)', () => {
+    // Positive control: the slice found the arm (a missing anchor would slice
+    // an empty string and pass the negatives below vacuously).
+    expect(arm).toContain('masterworkZoneLine(ev.crafterName, ev.itemId)');
     expect(arm).not.toContain('audio.');
     expect(arm).not.toContain('playSound');
   });

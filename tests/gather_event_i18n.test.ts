@@ -158,7 +158,8 @@ describe('hudChrome.gathering corpse-harvest lines (#2457)', () => {
 });
 
 describe('the single-line grant contract (#2430)', () => {
-  // The load-bearing half of the fix lives in hud.ts's `case 'loot':` arm: the
+  // The load-bearing half of the fix lives in the `case 'loot':` arm (the loot
+  // event router, src/ui/hud/loot/loot_event_router.ts, since it left hud.ts): the
   // hub's log() call is the ONE thing a callerLogs grant elides. A regression
   // that widens the guard (eliding the loot-roll close or the bag refresh with
   // it) or narrows it back out (printing the hub line again) leaves every
@@ -169,12 +170,12 @@ describe('the single-line grant contract (#2430)', () => {
   // TEXT, and commenting a call out in place is the ordinary way to disable
   // one, which would otherwise leave the call's own words sitting in the arm
   // and every assertion here green.
-  const hudSource = () =>
-    readFileSync(path.resolve(process.cwd(), 'src/ui/hud.ts'), 'utf8')
+  const lootRouterSource = () =>
+    readFileSync(path.resolve(process.cwd(), 'src/ui/hud/loot/loot_event_router.ts'), 'utf8')
       .replace(/\/\*[\s\S]*?\*\//g, '')
       .replace(/(^|[^:])\/\/.*$/gm, '$1');
   const lootArm = () => {
-    const source = hudSource();
+    const source = lootRouterSource();
     const start = source.indexOf("case 'loot': {");
     expect(start).toBeGreaterThan(-1);
     return source.slice(start, source.indexOf('break;', start));
@@ -182,18 +183,18 @@ describe('the single-line grant contract (#2430)', () => {
 
   it('the hub log call is the only thing the callerLogs guard elides', () => {
     const arm = lootArm();
-    // The guard and the log are ONE statement: `if (!ev.callerLogs) this.log(`.
+    // The guard and the log are ONE statement: `if (!ev.callerLogs) h.log(`.
     // Pinning the exact adjacency is what stops the "guard inserted above an
     // unguarded log" shape, which would keep an index-order pin green while
     // printing both lines again.
-    expect(arm).toContain('if (!ev.callerLogs) this.log(');
+    expect(arm).toContain('if (!ev.callerLogs) h.log(');
     const guard = arm.indexOf('if (!ev.callerLogs)');
     // The loot-roll close and the bag refresh must sit AFTER the one-statement
     // guard, so they still run for a professions grant.
-    expect(arm.indexOf('this.lootRolls.closeForItem(')).toBeGreaterThan(guard);
-    expect(arm.indexOf('this.renderBags()')).toBeGreaterThan(guard);
+    expect(arm.indexOf('h.lootRolls.closeForItem(')).toBeGreaterThan(guard);
+    expect(arm.indexOf('h.renderBags()')).toBeGreaterThan(guard);
     // Exactly one log() call in the arm, and it is the guarded one.
-    expect(arm.match(/this\.log\(/g)).toHaveLength(1);
+    expect(arm.match(/\bh\.log\(/g)).toHaveLength(1);
   });
 
   it('the audio guard stays independent of the text guard', () => {
@@ -275,7 +276,11 @@ describe('hud event switch stays wired to the ids', () => {
   });
 
   it('the gatherResult case adds no second loot cue (the loot event owns the cue)', () => {
-    const source = readFileSync(path.resolve(process.cwd(), 'src/ui/hud.ts'), 'utf8');
+    // The case left hud.ts for the profession event router.
+    const source = readFileSync(
+      path.resolve(process.cwd(), 'src/ui/hud/professions/profession_event_router.ts'),
+      'utf8',
+    );
     const caseStart = source.indexOf("case 'gatherResult'");
     expect(caseStart).toBeGreaterThan(-1);
     const block = source.slice(caseStart, source.indexOf('break;', caseStart));
@@ -381,7 +386,11 @@ describe('hudChrome.gathering catch line (Professions 2.0)', () => {
   });
 
   it('the fishingResult case is wired, quality-colored, and plays only the reel cue', () => {
-    const source = readFileSync(path.resolve(process.cwd(), 'src/ui/hud.ts'), 'utf8');
+    // The case left hud.ts for the profession event router.
+    const source = readFileSync(
+      path.resolve(process.cwd(), 'src/ui/hud/professions/profession_event_router.ts'),
+      'utf8',
+    );
     const caseStart = source.indexOf("case 'fishingResult'");
     expect(caseStart).toBeGreaterThan(-1);
     const block = source.slice(caseStart, source.indexOf('break;', caseStart));

@@ -149,7 +149,9 @@ describe('hud.ts wiring (source scan against the real file, the farming_windows_
   it('routes the personal harvestPreferenceOpen event to the controller', () => {
     const start = hud.indexOf("case 'harvestPreferenceOpen':");
     expect(start, 'harvestPreferenceOpen case found').toBeGreaterThan(-1);
-    const end = hud.indexOf("case 'harvestResult':", start);
+    // The next arm in the switch since harvestResult left for the profession
+    // event router.
+    const end = hud.indexOf("case 'gatherDenied':", start);
     expect(end, 'end anchor past start').toBeGreaterThan(start);
     expect(hud.slice(start, end)).toContain('this.harvestPreferenceController.open();');
   });

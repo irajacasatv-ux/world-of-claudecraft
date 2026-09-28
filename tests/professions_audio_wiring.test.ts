@@ -7,11 +7,15 @@
 // addItemInstance opts.silent and opts.callerLogs, see
 // tests/professions_silent_loot.test.ts) so neither the generic ding nor the
 // generic "You receive:" line stacks on top of the profession's own cue and
-// line; the corresponding hud.ts case 'loot' halves of that contract are
-// pinned below. gatherResult/harvestResult's OWN cue+line behavior now lives
-// behind the extracted gathering_result_feedback.ts executor and is pinned
-// there (tests/gathering_result_feedback.test.ts); this file keeps only the
-// hud.ts dispatch weld to it (see below).
+// line; the corresponding case 'loot' halves of that contract are pinned
+// below. The loot arm and the profession result arms left hud.ts for the two
+// event routers (src/ui/hud/loot/loot_event_router.ts,
+// src/ui/hud/professions/profession_event_router.ts, where the Hud is the host
+// `h`), so those pins read the router that owns each arm now.
+// gatherResult/harvestResult's OWN cue+line behavior now lives behind the
+// extracted gathering_result_feedback.ts executor and is pinned there
+// (tests/gathering_result_feedback.test.ts); this file keeps only the
+// dispatch weld to it (see below).
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
@@ -22,9 +26,13 @@ import { describe, expect, it } from 'vitest';
 // why), so without this a comment naming a call keeps a pin green after the call
 // itself is gone. Stripped once here rather than per block, so the older arms
 // below get the same protection.
-const hud = readFileSync(join(__dirname, '../src/ui/hud.ts'), 'utf8')
-  .replace(/\/\*[\s\S]*?\*\//g, '')
-  .replace(/(^|[^:])\/\/.*$/gm, '$1');
+const codeOnly = (rel: string) =>
+  readFileSync(join(__dirname, rel), 'utf8')
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/(^|[^:])\/\/.*$/gm, '$1');
+const hud = codeOnly('../src/ui/hud.ts');
+const lootRouter = codeOnly('../src/ui/hud/loot/loot_event_router.ts');
+const professionRouter = codeOnly('../src/ui/hud/professions/profession_event_router.ts');
 
 // gatherResult and harvestResult used to be inline hud.ts arms (a
 // audio.gather(ev.nodeType) call and a for-loop over ev.yields plus one
@@ -39,29 +47,29 @@ const hud = readFileSync(join(__dirname, '../src/ui/hud.ts'), 'utf8')
 // file can see everything a hud.ts source-text scan could and drives real
 // function calls instead of matching strings, so the behavior pins moved
 // there rather than being restated here. What a body-side scan of the
-// executor's OWN file cannot see is whether hud.ts's case bodies still wire
-// to it, so that is all this guard checks: the two cases call the real
-// handlers, imported from the real module, with `this` (the Hud host) as the
-// second argument.
+// executor's OWN file cannot see is whether the event switch's case bodies
+// still wire to it, so that is all this guard checks: the two cases (now in
+// the profession event router) call the real handlers, imported from the real
+// module, with `h` (the Hud host) as the second argument.
 describe('gatherResult / harvestResult dispatch weld (#2457, extracted to gathering_result_feedback.ts)', () => {
   it('imports both handlers from the extracted module', () => {
-    expect(hud).toContain("from './hud/professions/gathering_result_feedback'");
-    expect(hud).toContain('handleGatherResult');
-    expect(hud).toContain('handleHarvestResult');
+    expect(professionRouter).toContain("from './gathering_result_feedback'");
+    expect(professionRouter).toContain('handleGatherResult');
+    expect(professionRouter).toContain('handleHarvestResult');
   });
 
-  it("case 'gatherResult' delegates to handleGatherResult(ev, this)", () => {
-    const start = hud.indexOf("case 'gatherResult':");
+  it("case 'gatherResult' delegates to handleGatherResult(ev, h)", () => {
+    const start = professionRouter.indexOf("case 'gatherResult':");
     expect(start).toBeGreaterThan(-1);
-    const body = hud.slice(start, hud.indexOf('break;', start));
-    expect(body).toContain('handleGatherResult(ev, this)');
+    const body = professionRouter.slice(start, professionRouter.indexOf('break;', start));
+    expect(body).toContain('handleGatherResult(ev, h)');
   });
 
-  it("case 'harvestResult' delegates to handleHarvestResult(ev, this)", () => {
-    const start = hud.indexOf("case 'harvestResult':");
+  it("case 'harvestResult' delegates to handleHarvestResult(ev, h)", () => {
+    const start = professionRouter.indexOf("case 'harvestResult':");
     expect(start).toBeGreaterThan(-1);
-    const body = hud.slice(start, hud.indexOf('break;', start));
-    expect(body).toContain('handleHarvestResult(ev, this)');
+    const body = professionRouter.slice(start, professionRouter.indexOf('break;', start));
+    expect(body).toContain('handleHarvestResult(ev, h)');
   });
 });
 
@@ -106,9 +114,9 @@ describe('craftResult audio wiring', () => {
   // every arm in between; the corpse-harvest arm (#2457), which legitimately
   // plays audio.lootItem() once, is what surfaced it.
   const craftArm = () => {
-    const start = hud.indexOf("case 'craftResult':");
+    const start = professionRouter.indexOf("case 'craftResult':");
     expect(start).toBeGreaterThan(-1);
-    return hud.slice(start, hud.indexOf('break;', start));
+    return professionRouter.slice(start, professionRouter.indexOf('break;', start));
   };
 
   it('resolves the recipe to its craft family instead of always playing the loot ding', () => {
@@ -144,10 +152,10 @@ describe('legendaryForged audio wiring (Masterwrought phase 14)', () => {
 
 describe('the generic loot cue respects ev.silent', () => {
   it('skips both audio.coin() and audio.lootItem() when the loot event is silent', () => {
-    const start = hud.indexOf("case 'loot':");
+    const start = lootRouter.indexOf("case 'loot':");
     expect(start).toBeGreaterThan(-1);
-    const end = hud.indexOf('break;', start);
-    const body = hud.slice(start, end);
+    const end = lootRouter.indexOf('break;', start);
+    const body = lootRouter.slice(start, end);
     expect(body).toContain('if (!ev.silent)');
     // Both generic cues sit INSIDE the silent guard, and nothing else does:
     // a professions grant suppresses the ding without suppressing anything
@@ -167,32 +175,35 @@ describe('the generic loot LINE respects ev.callerLogs', () => {
   // would have stayed GREEN under this change while asserting a contract the
   // code no longer has, so it is replaced rather than adjusted.
   it('the hub log call sits inside a callerLogs guard, as one statement', () => {
-    const start = hud.indexOf("case 'loot':");
-    const body = hud.slice(start, hud.indexOf('break;', start));
+    const start = lootRouter.indexOf("case 'loot':");
+    expect(start).toBeGreaterThan(-1);
+    const body = lootRouter.slice(start, lootRouter.indexOf('break;', start));
     // One statement, not a guard placed above an unguarded log: the adjacency
     // is what makes this pin fail if the line ever prints unconditionally
     // again.
-    expect(body).toContain('if (!ev.callerLogs) this.log(');
-    expect(body.match(/this\.log\(/g)).toHaveLength(1);
+    expect(body).toContain('if (!ev.callerLogs) h.log(');
+    expect(body.match(/\bh\.log\(/g)).toHaveLength(1);
   });
 
   it('the bag refresh and the loot-roll close stay OUTSIDE the callerLogs guard', () => {
     // A professions grant still moves items, so the online bag mirror must
     // still repaint, and a loot-roll line must still close its prompt. Only
     // the duplicate TEXT is elided.
-    const start = hud.indexOf("case 'loot':");
-    const body = hud.slice(start, hud.indexOf('break;', start));
+    const start = lootRouter.indexOf("case 'loot':");
+    expect(start).toBeGreaterThan(-1);
+    const body = lootRouter.slice(start, lootRouter.indexOf('break;', start));
     const guard = body.indexOf('if (!ev.callerLogs)');
     expect(guard).toBeGreaterThan(-1);
-    expect(body.indexOf('this.lootRolls.closeForItem(')).toBeGreaterThan(guard);
-    expect(body.indexOf('this.renderBags()')).toBeGreaterThan(guard);
+    expect(body.indexOf('h.lootRolls.closeForItem(')).toBeGreaterThan(guard);
+    expect(body.indexOf('h.renderBags()')).toBeGreaterThan(guard);
   });
 
   it('the two flags stay independent conditions', () => {
     // Merging them would tie a caller's cue ownership to its line ownership;
     // they are deliberately separate (a caller can own one without the other).
-    const start = hud.indexOf("case 'loot':");
-    const body = hud.slice(start, hud.indexOf('break;', start));
+    const start = lootRouter.indexOf("case 'loot':");
+    expect(start).toBeGreaterThan(-1);
+    const body = lootRouter.slice(start, lootRouter.indexOf('break;', start));
     expect(body).not.toContain('!ev.silent && !ev.callerLogs');
     expect(body).not.toContain('!ev.callerLogs && !ev.silent');
   });
@@ -203,10 +214,10 @@ describe('disenchantResult audio wiring', () => {
   // (src/ui/bag_item_action_menu.ts); the success (toast.sink === 'log') arm
   // plays audio.disenchant(), a denial (showError) never does.
   it('plays the disenchant cue on a successful disenchant, not on a denial', () => {
-    const start = hud.indexOf("case 'disenchantResult':");
+    const start = professionRouter.indexOf("case 'disenchantResult':");
     expect(start).toBeGreaterThan(-1);
-    const end = hud.indexOf('break;', start);
-    const body = hud.slice(start, end);
+    const end = professionRouter.indexOf('break;', start);
+    const body = professionRouter.slice(start, end);
     expect(body).toContain("if (toast.sink === 'log') {");
     expect(body).toContain('audio.disenchant();');
     // The disenchant call must sit inside the log (success) arm, before the
@@ -219,10 +230,10 @@ describe('salvageResult audio wiring', () => {
   // salvageItem is called from the bag item action menu, same shape as
   // disenchantResult above.
   it('plays the salvage cue on a successful salvage, not on a denial', () => {
-    const start = hud.indexOf("case 'salvageResult':");
+    const start = professionRouter.indexOf("case 'salvageResult':");
     expect(start).toBeGreaterThan(-1);
-    const end = hud.indexOf('break;', start);
-    const body = hud.slice(start, end);
+    const end = professionRouter.indexOf('break;', start);
+    const body = professionRouter.slice(start, end);
     expect(body).toContain("if (toast.sink === 'log') {");
     expect(body).toContain('audio.salvage();');
     expect(body.indexOf('audio.salvage();')).toBeLessThan(body.indexOf('else'));
@@ -233,10 +244,10 @@ describe('enchantResult audio wiring', () => {
   // applyEnchant is called from the bag item action menu, same shape as
   // disenchantResult above.
   it('plays the enchant cue on a successful apply-enchant, not on a denial', () => {
-    const start = hud.indexOf("case 'enchantResult':");
+    const start = professionRouter.indexOf("case 'enchantResult':");
     expect(start).toBeGreaterThan(-1);
-    const end = hud.indexOf('break;', start);
-    const body = hud.slice(start, end);
+    const end = professionRouter.indexOf('break;', start);
+    const body = professionRouter.slice(start, end);
     expect(body).toContain("if (toast.sink === 'log') {");
     expect(body).toContain('audio.enchant();');
     expect(body.indexOf('audio.enchant();')).toBeLessThan(body.indexOf('else'));

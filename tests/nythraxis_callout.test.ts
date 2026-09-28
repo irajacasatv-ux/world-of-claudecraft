@@ -210,7 +210,14 @@ describe('Nythraxis encounter callouts', () => {
 
     const hud = hudSource();
     expect(hud).toContain("case 'nythraxisCallout'");
-    expect(hud).toContain('dispatchRaidCalloutSfx(');
+    // The spatial sound arm left hud.ts for the HUD's sound router, which
+    // Hud.playEventSfx forwards every event to.
+    const sfxRouter = readFileSync(
+      new URL('../src/ui/event_sfx_router.ts', import.meta.url),
+      'utf8',
+    );
+    expect(sfxRouter).toContain("case 'nythraxisCallout'");
+    expect(sfxRouter).toContain('dispatchRaidCalloutSfx(');
   });
 });
 

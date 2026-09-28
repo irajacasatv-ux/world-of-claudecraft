@@ -1,78 +1,29 @@
 // @vitest-environment happy-dom
 
 // The toolEffectResult HUD arm (the acquisition craft's one result surface),
-// driven through the REAL hud event switch: two success shapes, the deny
+// driven through the REAL profession event router
+// (hud/professions/profession_event_router.ts): two success shapes, the deny
 // reasons a player can actually see, the unknown-id fallbacks, and the
 // window repaint hook. The event is text-free (ids only), so every line a
 // player reads is minted HERE; a mis-mapped reason or a dropped id renders
 // the wrong sentence with every sim-side assertion still green, which is why
 // these arms pin the rendered text and not the event.
 //
-// Rig copied from tests/professions_single_line_grants.test.ts (the sibling
-// single-surface contract), trimmed to the fields this arm's path reads,
-// plus the professionsWindow stub the repaint hook needs.
+// Rig: the sibling single-surface contract's router host
+// (tests/helpers/event_router_rig.ts, as in
+// tests/professions_single_line_grants.test.ts), whose professionsWindow stub
+// the repaint hook reads.
 
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import type { SimEvent } from '../src/sim/types';
-import { Hud } from '../src/ui/hud';
+import { type EventRouterRig, eventRouterRig } from './helpers/event_router_rig';
 
 const PLAYER_ID = 7;
 
-interface ToolEffectLineHarness {
-  sim: {
-    playerId: number;
-    craftingIdentity: { synced: boolean };
-    craftSkills: Record<string, number>;
-    gatheringProficiency: Record<string, number>;
-  };
-  renderer: { handleEvent: ReturnType<typeof vi.fn> };
-  playEventSfx: ReturnType<typeof vi.fn>;
-  meters: { onEvent: ReturnType<typeof vi.fn> };
-  isNythraxisEvent: ReturnType<typeof vi.fn>;
-  lootRolls: { closeForItem: ReturnType<typeof vi.fn> };
-  chatLogEl: HTMLElement;
-  chatTimestamps: boolean;
-  chatWindow: { hideIfFiltered: ReturnType<typeof vi.fn> };
-  chatAnnouncer: { push: ReturnType<typeof vi.fn> };
-  prevCraftSkills: Record<string, number> | null;
-  craftTierUpDrains: number;
-  openUnbindNpcId: number | null;
-  renderBags: ReturnType<typeof vi.fn>;
-  renderCrafting: ReturnType<typeof vi.fn>;
-  showError: ReturnType<typeof vi.fn>;
-  attachTooltip: ReturnType<typeof vi.fn>;
-  itemTooltip: ReturnType<typeof vi.fn>;
-  professionsWindow: { isOpen: boolean; render: ReturnType<typeof vi.fn> };
-  handleEvents(events: SimEvent[]): void;
-}
+type ToolEffectLineHarness = EventRouterRig;
 
 function makeHud(): ToolEffectLineHarness {
-  const hud = Object.create(Hud.prototype) as unknown as ToolEffectLineHarness;
-  hud.sim = {
-    playerId: PLAYER_ID,
-    craftingIdentity: { synced: false },
-    craftSkills: {},
-    gatheringProficiency: {},
-  };
-  hud.renderer = { handleEvent: vi.fn() };
-  hud.playEventSfx = vi.fn();
-  hud.meters = { onEvent: vi.fn() };
-  hud.isNythraxisEvent = vi.fn(() => false);
-  hud.lootRolls = { closeForItem: vi.fn() };
-  hud.chatLogEl = document.createElement('div');
-  hud.chatTimestamps = false;
-  hud.chatWindow = { hideIfFiltered: vi.fn() };
-  hud.chatAnnouncer = { push: vi.fn() };
-  hud.prevCraftSkills = null;
-  hud.craftTierUpDrains = 0;
-  hud.openUnbindNpcId = null;
-  hud.renderBags = vi.fn();
-  hud.renderCrafting = vi.fn();
-  hud.showError = vi.fn();
-  hud.attachTooltip = vi.fn();
-  hud.itemTooltip = vi.fn();
-  hud.professionsWindow = { isOpen: false, render: vi.fn() };
-  return hud;
+  return eventRouterRig({ sim: { playerId: PLAYER_ID } });
 }
 
 const lines = (hud: ToolEffectLineHarness): string[] =>
@@ -88,7 +39,7 @@ beforeEach(() => {
 describe('the toolEffectResult chat arm', () => {
   it('a slot success renders ONE line naming the effect and the profession', () => {
     const hud = makeHud();
-    hud.handleEvents([
+    hud.routeEvents([
       ev({ action: 'slot', ok: true, professionId: 'mining', effectId: 'gatherers_cache' }),
     ]);
     expect(lines(hud)).toHaveLength(1);
@@ -98,7 +49,7 @@ describe('the toolEffectResult chat arm', () => {
 
   it('a recharge success renders ONE line with the material link and the formatted count', () => {
     const hud = makeHud();
-    hud.handleEvents([
+    hud.routeEvents([
       ev({
         action: 'recharge',
         ok: true,
@@ -140,7 +91,7 @@ describe('the toolEffectResult chat arm', () => {
       ['busy', { action: 'recharge', professionId: 'mining', effectId: 'gatherers_cache' }],
     ];
     for (const [reason, body] of denies) {
-      hud.handleEvents([ev({ ok: false, reason, ...body })]);
+      hud.routeEvents([ev({ ok: false, reason, ...body })]);
     }
     const rendered = lines(hud);
     expect(rendered).toHaveLength(denies.length);
@@ -171,7 +122,7 @@ describe('the toolEffectResult chat arm', () => {
     // The stale-content doctrine for result lines: the player just acted on
     // this id, so an unlocalized identifier beats a nameless sentence.
     const hud = makeHud();
-    hud.handleEvents([
+    hud.routeEvents([
       ev({
         action: 'slot',
         ok: false,
@@ -186,7 +137,7 @@ describe('the toolEffectResult chat arm', () => {
 
   it("prototype-key ids ('constructor') render as raw text, never resolved from the tables", () => {
     const hud = makeHud();
-    hud.handleEvents([
+    hud.routeEvents([
       ev({
         action: 'slot',
         ok: false,
@@ -203,12 +154,12 @@ describe('the toolEffectResult chat arm', () => {
 
   it('repaints an OPEN professions window once per event, and never a closed one', () => {
     const hud = makeHud();
-    hud.handleEvents([
+    hud.routeEvents([
       ev({ action: 'slot', ok: true, professionId: 'mining', effectId: 'gatherers_cache' }),
     ]);
     expect(hud.professionsWindow.render).not.toHaveBeenCalled();
     hud.professionsWindow.isOpen = true;
-    hud.handleEvents([
+    hud.routeEvents([
       ev({
         action: 'recharge',
         ok: false,

@@ -63,7 +63,6 @@ import { resolveActiveWeaponSkin } from '../sim/content/weapon_skin_rules';
 import type { ZoneDef } from '../sim/data';
 import {
   ABILITIES,
-  ALL_RECIPES,
   CLASSES,
   DUNGEON_X_THRESHOLD,
   dungeonAt,
@@ -173,7 +172,7 @@ import { charBagsPaired } from './char_bags_pairing_core';
 import { charSheetRefreshSigFor } from './char_sheet_sig_core';
 import { type CharSkinPainterHost, paintCharSkinPicker } from './char_skin_window';
 import { charStatModel } from './char_stat_model_core';
-import { archetypeTitleText, CharWindow, craftNameText } from './char_window';
+import { CharWindow, craftNameText } from './char_window';
 import { activeCharacterAppearancePreview } from './character_appearance';
 import { progressionHtml } from './character_progression_view';
 import { chatBubbleStyle } from './chat_bubble_style';
@@ -190,23 +189,7 @@ import { createClaudiumPurchaseFacet } from './claudium_purchase_bridge';
 import { type ClaudiumRail, type ClaudiumSnapshot, ClaudiumWindow } from './claudium_window';
 import { formatClockTimeMemo } from './clock';
 import { CombatAnnouncer } from './combat_announcer';
-import {
-  auraApplyCue,
-  castCueForAbility,
-  dispatchRaidCalloutSfx,
-  groundTickAbilityCue,
-  healAudioPlan,
-  impactCueForDamage,
-  mobVoiceActionForDamage,
-  mobVoiceCueWithFallback,
-  novaAbilityCue,
-  playerSwingCueForDamage,
-  playerVoiceCue,
-  shouldPlayCombatImpactForTarget,
-  shouldPlayCritSfxForTarget,
-  shouldPlayMobVoiceSfxForEntity,
-  spellFxCue,
-} from './combat_sfx';
+import { playerVoiceCue } from './combat_sfx';
 import { compassView } from './compass';
 import {
   buildCompassMarks,
@@ -274,6 +257,7 @@ import {
 import { ErrorToastController } from './error_toast_controller';
 import { ERROR_LOG_CHAN, ERROR_LOG_COLOR, shouldMirrorErrorToast } from './error_toast_log';
 import { esc } from './esc';
+import { playCombatSfx, playEventSfx, TEMPORAL_CLOCK_GAIN } from './event_sfx_router';
 import { blockFctAmountText } from './fct_core';
 import { fctSpawnShape } from './fct_event';
 import { FctPainter } from './fct_painter';
@@ -292,7 +276,6 @@ import {
 import { applySavedFrameLayout } from './frame_presets_live';
 import { gatherRareEventFeedback } from './gather_rare_event_feedback';
 import { generalChatQuotaView } from './general_chat_quota_view';
-import { craftedLineKey, grantItemToken, grantQtyText } from './grant_line_view';
 import { decideGuildMotdLine } from './guild_motd_login';
 import {
   healLandingFloatTextKey,
@@ -300,7 +283,6 @@ import {
   shouldFloatHealLanding,
   shouldShowHealLanding,
 } from './heal_landing_feedback_core';
-import { heldLootWarningText } from './held_loot_warning_view';
 import { honorFloatText } from './honor_float_view';
 import { ActionBarBindController } from './hud/action_bar/action_bar_bind_controller';
 import {
@@ -439,6 +421,7 @@ import { FiestaController } from './hud/fiesta/fiesta_controller';
 import { GuildBoardWindow } from './hud/guild_board';
 import { buildHillBarView, HillBar } from './hud/hill';
 import { FreeholdGatePrompt, freeholdGateRoot, handleFreeholdEvent } from './hud/housing';
+import { applyLootEventPresentation } from './hud/loot/loot_event_router';
 import { LootRollController } from './hud/loot/loot_roll_controller';
 import { lootSettingsView } from './hud/loot/loot_settings_view';
 import { renderLootSettingsWindow } from './hud/loot/loot_settings_window';
@@ -468,9 +451,7 @@ import type { CraftCelebrationHost } from './hud/professions/craft_celebration_p
 import {
   legendaryForgedLine,
   legendaryZoneLine,
-  masterworkZoneLine,
 } from './hud/professions/craft_celebration_text_view';
-import { craftDenyMessage } from './hud/professions/crafting_deny_core';
 import { parseCraftingTab, serializeCraftingTab } from './hud/professions/crafting_tab_pref';
 import {
   buildCraftingView,
@@ -484,45 +465,27 @@ import {
   renderCraftingWindow,
   stationNameText,
 } from './hud/professions/crafting_window';
-import {
-  applyEnchantResultToast,
-  disenchantResultToast,
-  disenchantSecondaryLineKey,
-  salvageResultToast,
-} from './hud/professions/enchanting_view';
 import { handleFarmEvent } from './hud/professions/farm_event_feedback';
 import { FarmPressAffordanceController } from './hud/professions/farm_press_affordance_controller';
 import { PlantSheetWindow } from './hud/professions/farming_plant_sheet_window';
 import { handleGatheringDenial } from './hud/professions/gathering_denial_feedback';
 import { GatheringGoalController } from './hud/professions/gathering_goal_controller';
-import { gatheringProfessionNameKey } from './hud/professions/gathering_profession_name';
-import {
-  handleGatherResult,
-  handleHarvestResult,
-} from './hud/professions/gathering_result_feedback';
-import { buildGatheringProficiencyRows } from './hud/professions/gathering_view';
 import { HarvestJournalWindow } from './hud/professions/harvest_journal_window';
 import { HarvestPreferenceController } from './hud/professions/harvest_preference_controller';
 import { learnedProfessionMessage } from './hud/professions/learned_profession_name';
 import { PerfectingWindow } from './hud/professions/perfecting_window';
-import {
-  isSunderCompletionLog,
-  type ProfessionEventInput,
-  planProfessionEvent,
-} from './hud/professions/profession_event_lines_core';
-import {
-  buildProfessionIdentityView,
-  professionSurfaceRefreshSig,
-} from './hud/professions/profession_identity_view';
+import { isSunderCompletionLog } from './hud/professions/profession_event_lines_core';
+import { applyProfessionEventPresentation } from './hud/professions/profession_event_router';
+import { buildProfessionIdentityView } from './hud/professions/profession_identity_view';
 import {
   PROF_LOG_DENY,
   PROF_LOG_GRANT,
   PROF_LOG_MISS,
 } from './hud/professions/profession_log_tones';
+import { ProfessionSurfaceRefresh } from './hud/professions/profession_surface_refresh';
 import { buildProfessionTutorialModel } from './hud/professions/profession_tutorial_view';
 import { renderProfessionTutorial } from './hud/professions/profession_tutorial_window';
 import { ProfessionsWindow } from './hud/professions/professions_window';
-import { toolEffectResultLine } from './hud/professions/tool_effect_result_view';
 import { QuestDialogController } from './hud/quest/quest_dialog_controller';
 import { applyQuestEventPresentation } from './hud/quest/quest_event_router';
 import { parseChatSegments } from './hud/quest/quest_link';
@@ -545,7 +508,7 @@ import { renderHeroicVendorWindow } from './hud/vendor/heroic_vendor_window';
 import { TrainLearnTracker } from './hud/vendor/train_learn_core';
 import { buildTrainView, isRecipeKnownForViewer } from './hud/vendor/train_view';
 import { renderTrainWindow } from './hud/vendor/train_window';
-import { buildUnbindView, unbindDenyKey } from './hud/vendor/unbind_view';
+import { buildUnbindView } from './hud/vendor/unbind_view';
 import { renderUnbindWindow } from './hud/vendor/unbind_window';
 import {
   buildVendorView,
@@ -590,9 +553,6 @@ import { knownItemDef, ownEntry } from './known_item';
 import { LeaderboardWindow } from './leaderboard_window';
 import { ReannounceMarker } from './live_region_reannounce';
 import { chatBubbleKind, isCombatFlavorLog } from './log_event_route';
-import { lootQualityReceiptBody } from './loot_quality_receipt';
-import { lootRollWinBanner } from './loot_roll_win_view';
-import { localizeLootText } from './loot_text_i18n_core';
 import { lowHealthVignette } from './low_health';
 import { type LowResourceView, lowResourceViewInto } from './low_resource';
 import { mailIndicatorView } from './mailbox_view';
@@ -1087,16 +1047,6 @@ function localizeChatBody(ev: Extract<SimEvent, { type: 'chat' }>): string {
 const MAP_BG_RES = 480;
 // MAP_MAX_ZOOM (zoomMap clamp) and MAP_DETAIL_ZOOM live in map_window_view.ts now,
 // alongside the overworld map geometry that uses them.
-
-// --- spatial sound-effect mapping (clips generated by scripts/gen_sfx.mjs;
-// engine in src/game/sfx.ts) ------------------------------------------------
-// One shared multiplier for the whole combat/spell/creature SFX layer, on top
-// of each key's own resolved gain-map value. At 1.0 (unchanged) since the
-// per-key computed gain ceilings (scripts/sfx/sfx_gain_ceiling.mjs) already
-// carry each custom recording to its own safe maximum; lower this if the
-// layer as a whole needs trimming back under movement/ambience again.
-const COMBAT_GAIN = 1.0;
-const TEMPORAL_CLOCK_GAIN = 0.72;
 
 /** Append an inline span child (className '' for a plain text slot) and return
  *  it; used to split a pre-existing single-text element into separately
@@ -1712,11 +1662,18 @@ export class Hud {
   private craftCastStripLabel = '';
   // Per-recipe qty stepper values (HUD-held so window repaints keep the pick).
   private readonly craftQtyByRecipe = new Map<string, number>();
-  // Character and Crafting are cold painters. Diff the local crafting
-  // identity plus the gathering proficiency rows on the slow band so a late
-  // online cprof or professions snapshot replaces stale archetype art/title
-  // and Gathering numbers without repainting for attunedZone bystanders.
-  private lastProfessionSurfaceSig = '';
+  // The Character and Crafting windows' profession convergence latch
+  // (hud/professions/profession_surface_refresh.ts), lazy like the banner
+  // slot so a bare-prototype rig still resolves it.
+  private professionSurfacesState: ProfessionSurfaceRefresh | undefined;
+  private get professionSurfaces(): ProfessionSurfaceRefresh {
+    this.professionSurfacesState ??= new ProfessionSurfaceRefresh({
+      world: () => this.sim,
+      renderCharWindowIfOpen: () => this.charWindow.renderIfOpen(),
+      renderCrafting: () => this.renderCrafting(),
+    });
+    return this.professionSurfacesState;
+  }
   // The character sheet's WORN cosmetic rows (active title line, border badge
   // worn state) are painted from the same cold path, and the Book of Deeds
   // picker repaints only itself when the player wears a different one. Latch the
@@ -10046,263 +10003,10 @@ export class Hud {
     }
   }
 
-  // Spatial sound for a sim event — positioned at the relevant entity so nearby
-  // players' and creatures' combat attenuates with distance and pans correctly.
-  // Personal/UI sounds stay on the sampled audio.* facade in handleEvents.
-  // All combat/spell/creature SFX route through here so the whole layer can be
-  // balanced with the single COMBAT_GAIN knob (kept under movement/ambience).
-  private combat(
-    key: string,
-    x: number,
-    y: number,
-    z: number,
-    gain: number,
-    opts?: { rate?: number; cooldown?: number; jitter?: boolean },
-  ): void {
-    sfx.playAt(key, x, y, z, {
-      gain: gain * COMBAT_GAIN,
-      rate: opts?.rate,
-      cooldown: opts?.cooldown,
-      jitter: opts?.jitter,
-    });
-  }
-
+  // Spatial sound for a sim event (event_sfx_router.ts); a method so the
+  // handleEvents rigs can stub it.
   private playEventSfx(ev: SimEvent): void {
-    const sim = this.sim;
-    switch (ev.type) {
-      case 'damage': {
-        const tgt = sim.entities.get(ev.targetId);
-        if (!tgt) return;
-        const tp = tgt.pos;
-        const src = sim.entities.get(ev.sourceId) ?? null;
-        const swing = playerSwingCueForDamage(ev, src);
-        if (swing && src) {
-          this.combat(swing, src.pos.x, src.pos.y, src.pos.z, 1.0, {
-            cooldown: 0.08,
-          });
-        }
-        if ((ev.absorbed ?? 0) > 0 || ev.kind === 'block')
-          this.combat('combat_block', tp.x, tp.y, tp.z, 0.55);
-        // The miss/dodge/resist/parry/evade "avoid" cues are interface feedback (they
-        // report an outcome, not a world impact), so the Interface & Feedback Sounds
-        // toggle silences them. The early return stays either way, so a muted avoid
-        // never falls through to an impact sound.
-        if (
-          ev.kind === 'miss' ||
-          ev.kind === 'dodge' ||
-          ev.kind === 'resist' ||
-          ev.kind === 'evade'
-        ) {
-          if (audio.feedbackEnabled) this.combat('combat_dodge', tp.x, tp.y, tp.z, 0.5);
-          return;
-        }
-        if (ev.kind === 'parry') {
-          if (audio.feedbackEnabled) this.combat('combat_parry', tp.x, tp.y, tp.z, 0.6);
-          return;
-        }
-        if (src?.kind === 'mob') this.playAttackerSfx(src);
-        // a struck mob vocalizes its aggro alert the first time it's engaged
-        // (camp engage), whether you hit it or it hits you.
-        if (tgt.kind === 'mob') this.ensureMobEngaged(tgt);
-        const impact = impactCueForDamage(ev, tgt);
-        if (shouldPlayCombatImpactForTarget(tgt)) {
-          if (impact) this.combat(impact, tp.x, tp.y, tp.z, 1.0, { cooldown: 0.05 });
-        }
-        if (ev.crit && shouldPlayCritSfxForTarget(tgt))
-          this.combat('combat_crit', tp.x, tp.y, tp.z, 1.0);
-        // pain vocalization only on a crit, never on ordinary hits. Voiced per
-        // the target's own authored gender (playerVoiceCue): a female look gets
-        // the female takes, everything else keeps the shipped male ones.
-        if (ev.crit && ev.targetId === sim.playerId) {
-          const cue = playerVoiceCue(tgt?.modularAppearance, 'hurt', sfxHasCue);
-          this.combat(cue, tp.x, tp.y, tp.z, 1.0, { cooldown: 0.3 });
-        } else {
-          const mobAction = mobVoiceActionForDamage(ev, tgt);
-          if (mobAction && shouldPlayMobVoiceSfxForEntity(tgt)) {
-            const voice = mobVoiceCueWithFallback(
-              tgt.templateId,
-              mobAction,
-              (key) => sfx.hasVariants(key),
-              (key) => sfx.isBuffered(key),
-            );
-            if (voice) this.combat(voice, tp.x, tp.y, tp.z, 1.0, { cooldown: 0.1 });
-          }
-        }
-        return;
-      }
-      case 'castStart': {
-        const ent = sim.entities.get(ev.entityId);
-        // Chain Heal uses a custom one-shot healing cast clip (cast_chain_heal)
-        // instead of the earthy nature cast loop its school would otherwise pick.
-        if (ent && ev.ability === 'chain_heal') {
-          this.combat('cast_chain_heal', ent.pos.x, ent.pos.y, ent.pos.z, 1.0);
-          return;
-        }
-        const key = castCueForAbility(ev.ability);
-        if (ent && key) {
-          sfx.loop(`cast:${ev.entityId}`, key, 1.0 * COMBAT_GAIN, ent.pos.x, ent.pos.y, ent.pos.z);
-          this.castLoopIds.add(ev.entityId);
-        }
-        return;
-      }
-      case 'castStop':
-        sfx.unloop(`cast:${ev.entityId}`, 0.2);
-        this.castLoopIds.delete(ev.entityId);
-        return;
-      case 'varkhulCallout':
-      case 'nythraxisCallout': {
-        dispatchRaidCalloutSfx(
-          ev,
-          (entityId) => sim.entities.get(entityId),
-          (cue, x, y, z, gain, opts) => this.combat(cue, x, y, z, gain, opts),
-        );
-        return;
-      }
-      case 'spellfx': {
-        if (ev.fx === 'temporalClock') {
-          const source = sim.entities.get(ev.sourceId) ?? sim.entities.get(ev.targetId);
-          if (source)
-            this.combat(
-              'temporal_clock',
-              source.pos.x,
-              source.pos.y,
-              source.pos.z,
-              TEMPORAL_CLOCK_GAIN,
-              {
-                jitter: false,
-              },
-            );
-          return;
-        }
-        const cue = spellFxCue(ev);
-        const anchor = cue ? sim.entities.get(cue.anchorId) : null;
-        if (cue && anchor) this.combat(cue.key, anchor.pos.x, anchor.pos.y, anchor.pos.z, 1.0);
-        return;
-      }
-      case 'spellfxAt': {
-        // Meteor's landing recording is preloaded lazily (SFX_CLIPS entries
-        // preload: 'lazy' by default), so a first-cast-of-session player can
-        // hit the fx:'tick' below before the fetch+decode finishes and
-        // playAt's 0.12s unbuffered-oneshot race drops it silently. The
-        // meteorFall telegraph fires here about 2s before the ground tick
-        // lands (effect_dispatch.ts), which is exactly enough lead time to
-        // warm the buffer if we kick the preload off now.
-        if (ev.fx === 'meteorFall') {
-          sfx.preload('meteor');
-          return;
-        }
-        // A ground-zone pulse (Consecration, Blizzard's damage tick, Meteor's
-        // one delayed hit): a dedicated recording (Meteor) is the whole read;
-        // every other zone stays silent here and keeps its procedural
-        // VFX-synth voice (ability_sfx_coverage.ts).
-        if (ev.fx === 'tick') {
-          const tickKey = groundTickAbilityCue(ev.ability);
-          if (tickKey) this.combat(tickKey, ev.x, sim.player.pos.y, ev.z, 1.0, { cooldown: 0.08 });
-          return;
-        }
-        // Ground-anchored bursts (ground-target detonations, the citadel's Blood
-        // Orb flare, the portcullis release nova) were silent: give novas the
-        // shared burst layered with a school-flavored impact, so the orb's fire
-        // flare reads differently from the gate's holy release. The listener is
-        // on the same floor, so the player's own y is the right height anchor.
-        const y = sim.player.pos.y;
-        // A fixed custom recording (rift mechanics: riftFx in src/sim/rift/fx.ts)
-        // replaces the generic nova/burst sound entirely, for both fx variants,
-        // not just nova.
-        if (ev.sfxKey) {
-          this.combat(ev.sfxKey, ev.x, y, ev.z, 1.0, { cooldown: 0.08 });
-          return;
-        }
-        if (ev.fx !== 'nova') return;
-        // A per-ability nova recording is the whole read on the aimed path
-        // too, at the same 1.0 the entity-anchored spellfx path plays it;
-        // the generic burst keeps its school-flavored layer.
-        const novaKey = novaAbilityCue(ev.ability);
-        if (novaKey !== 'spell_nova') {
-          this.combat(novaKey, ev.x, y, ev.z, 1.0, { cooldown: 0.08 });
-          return;
-        }
-        this.combat('spell_nova', ev.x, y, ev.z, 0.6, { cooldown: 0.08 });
-        this.combat(`impact_${ev.school}`, ev.x, y, ev.z, 0.5, { rate: 0.8, cooldown: 0.08 });
-        return;
-      }
-      case 'heal':
-      case 'heal2': {
-        const tgt = sim.entities.get(ev.targetId);
-        if (!tgt) return;
-        const plan = healAudioPlan(ev);
-        if (!plan) return;
-        this.combat(plan.cue, tgt.pos.x, tgt.pos.y, tgt.pos.z, plan.gain, { cooldown: 0.1 });
-        return;
-      }
-      case 'aura': {
-        if (ev.targetId !== sim.playerId) return; // only your own buffs/debuffs, else it's spammy
-        const target = sim.entities.get(ev.targetId);
-        const aura = ev.gained
-          ? (target?.auras.find((entry) => entry.name === ev.name) ?? null)
-          : null;
-        const cue = auraApplyCue(ev, aura);
-        if (!cue) return;
-        const p = sim.player.pos;
-        this.combat(cue, p.x, p.y, p.z, 1.0, {
-          cooldown: 0.1,
-        });
-        return;
-      }
-      case 'death': {
-        sfx.unloop(`cast:${ev.entityId}`, 0);
-        this.castLoopIds.delete(ev.entityId);
-        const ent = sim.entities.get(ev.entityId);
-        if (!ent) return;
-        const p = ent.pos;
-        if (ent.kind === 'mob') {
-          this.mobAggroed.delete(ev.entityId);
-          const voice = availableMobVoiceCue(ent.templateId, 'death');
-          if (voice && shouldPlayMobVoiceSfxForEntity(ent)) this.combat(voice, p.x, p.y, p.z, 1.0);
-        } else if (ent.kind === 'player' && ev.entityId !== sim.playerId) {
-          // This branch is OTHER players dying; your OWN character's death
-          // sound is a separate trigger site, audio.playerDeath() in
-          // src/game/audio.ts. Voiced per the dying player's own authored
-          // gender, which rides their identity wire, so a female character you
-          // watch die sounds female to you.
-          const cue = playerVoiceCue(ent.modularAppearance, 'death', sfxHasCue);
-          this.combat(cue, p.x, p.y, p.z, 1.0);
-        }
-        return;
-      }
-    }
-  }
-
-  // First contact with a mob (it hits you, or you hit it) plays its aggro alert
-  // once — the "engage" sound. Returns true if this call fired it. Cleared on
-  // death / when the mob leaves interest (reconcileSfx).
-  private ensureMobEngaged(mob: Entity): boolean {
-    if (this.mobAggroed.has(mob.id)) return false;
-    this.mobAggroed.add(mob.id);
-    const voice = availableMobVoiceCue(mob.templateId, 'aggro');
-    if (voice && shouldPlayMobVoiceSfxForEntity(mob))
-      this.combat(voice, mob.pos.x, mob.pos.y, mob.pos.z, 1.0);
-    return true;
-  }
-
-  // Attacker side of a mob damage event: it roars on engage, then grunts on
-  // subsequent strikes. Player swings are resolved earlier from the damage event.
-  private playAttackerSfx(src: Entity): void {
-    if (src.kind === 'mob') {
-      if (this.ensureMobEngaged(src)) return; // just fired the aggro alert
-      const voice = availableMobVoiceCue(src.templateId, 'attack');
-      if (voice && shouldPlayMobVoiceSfxForEntity(src)) {
-        this.combat(voice, src.pos.x, src.pos.y, src.pos.z, 1.0, {
-          cooldown: 0.25,
-        });
-        // Warm the crit-only hurt cue alongside the frequently-played attack
-        // bark, so it is resident well before a crit could ever need it. Gated
-        // the same as the play above (a muted Nythraxis mob never plays it)
-        // and short-circuited once warm so this doesn't re-scan every hit.
-        const hurtVoice = availableMobVoiceCue(src.templateId, 'hurt');
-        if (hurtVoice && !sfx.isBuffered(hurtVoice)) sfx.preload(hurtVoice);
-      }
-    }
+    playEventSfx(this, ev);
   }
 
   private isNythraxisEntity(id: number | null | undefined): boolean {
@@ -10360,6 +10064,8 @@ export class Hud {
       if (applyQuestEventPresentation(this, ev)) continue;
       if (ev.type === 'worldQuestInvestigationDialogue') this.questDialog.open(ev.targetId);
       if (ev.type === 'worldQuestWeeklyOpen') this.weeklyQuestsWindow.open();
+      if (applyLootEventPresentation(this, ev)) continue;
+      if (applyProfessionEventPresentation(this, ev)) continue;
       switch (ev.type) {
         case 'damage': {
           const src = sim.entities.get(ev.sourceId);
@@ -10726,110 +10432,6 @@ export class Hud {
           break; // logged by sim
         case 'comboPoint':
           break;
-        case 'loot': {
-          const heldWarning = heldLootWarningText(ev.text);
-          if (heldWarning) this.errorToast.show(heldWarning, 7500, true);
-          const wonBanner = lootRollWinBanner(ev.text, sim.player?.name);
-          if (wonBanner) this.showBanner(...wonBanner);
-          // callerLogs: a professions grant whose own result event (gatherResult
-          // / fishingResult / craftResult / disenchantResult / salvageResult /
-          // enchantResult) renders the player-visible line for this same grant,
-          // richer than this one (rolled quality color, quantity, a clickable
-          // item link). The hub line stands down so one action prints one line
-          // (#2430). Everything else in this arm still runs for those grants:
-          // the loot-roll close below, the bag refresh, and the independent
-          // audio guard.
-          // The body is the localized line, or, for a quality-rolled copy, the
-          // nodes whose item link carries that exact copy (lootReceiptBody).
-          if (!ev.callerLogs) this.log(this.lootReceiptBody(ev), HUD_LOG.GOOD);
-          if (
-            / wins .+ \(\d+\)$/.test(ev.text) ||
-            /^Everyone passed on .+\.$/.test(ev.text) ||
-            / assigned .+ to .+\.$/.test(ev.text) ||
-            /^.+ was not assigned and is free for all\.$/.test(ev.text)
-          )
-            this.lootRolls.closeForItem(ev.text, ev.rollId);
-          // silent: the audio half of the same idea, and independent of it (a
-          // caller can own the cue without owning the line). A professions
-          // grant sets this when it owns the cue for the same grant: it has a
-          // dedicated one and the generic ding would stack on top, or it
-          // replays that same ding itself exactly once for a whole multi-item
-          // command (the harvestResult arm below), or its result event is
-          // cue-free by contract and the ding would be the only sound at all
-          // (the Maker's Bond unbind, #2458).
-          if (!ev.silent) {
-            if (
-              ev.text.includes('loot') ||
-              ev.text.includes('Sold') ||
-              ev.text.includes('Bought back')
-            )
-              audio.coin();
-            else audio.lootItem();
-          }
-          if ($('#bags').style.display !== 'none') this.renderBags();
-          break;
-        }
-        case 'craftResult': {
-          // A result (grant or denial) means the in-flight cast RESOLVED:
-          // a session that later drops without one was cancelled. The paint
-          // band re-arms the flag while a session stays active (mid-batch).
-          this.craftCastExpectingResult = false;
-          if (ev.ok && ev.itemId && this.craftingWindowEl?.style.display === 'flex') {
-            const craftedItem = ITEMS[ev.itemId];
-            // No display name resolves: say nothing (a raw internal id read
-            // aloud is worse than silence).
-            if (craftedItem) {
-              this.announceCraftCast(
-                t('hudChrome.crafting.announceComplete', {
-                  name: itemDisplayName(craftedItem),
-                }),
-              );
-            }
-          }
-          // Arm the drain tail's tier-up state check (armCraftTierUps says why
-          // a bounded window rather than a per-frame poll).
-          this.celebrationDrain.armCraftTierUps();
-          if (ev.ok && ev.itemId) {
-            // The ONLY line for the craft grant: the hub's 'loot' events are
-            // emitted both silent and callerLogs for every craft-output grant
-            // (see crafting.ts), so this line has to carry what they used to,
-            // the output count of a resultCount > 1 recipe included (#2430).
-            // The line keeps its loot-family green; the output's quality now
-            // rides the item link's own color, which is where a player reads
-            // it everywhere else in chat.
-            this.log(
-              t(craftedLineKey(ev.count), {
-                name: grantItemToken(ev.itemId),
-                qty: grantQtyText(ev.count),
-              }),
-              PROF_LOG_GRANT,
-            );
-            const recipe = ALL_RECIPES.find((r) => r.id === ev.recipeId);
-            audio.craftSuccess(recipe?.professionId ?? '');
-            // Masterwork layers alongside the family cue above, never replaces
-            // it: craftResult.masterwork mirrors the standalone 'masterwork'
-            // event (see src/sim/types.ts), so this one check covers both.
-            if (ev.masterwork) audio.masterwork();
-          } else if (!ev.ok) {
-            // Key selection lives in crafting_deny_core, which resolves the
-            // recipe and delegates to craft_denial_line_view's exhaustive
-            // Record (its header carries why the two modules exist); this
-            // stays the thin render, and the core's key is LIVE for the
-            // station arm too (a hardcoded key here left that row dead data).
-            const denial = craftDenyMessage(ev.reason, ev.recipeId, ev.retryAfterSeconds);
-            this.log(
-              t(
-                denial.key,
-                denial.stationType
-                  ? { station: stationNameText(denial.stationType) }
-                  : denial.params,
-              ),
-              PROF_LOG_DENY,
-            );
-          }
-          if ($('#crafting-window').style.display === 'flex') this.renderCrafting();
-          break;
-        }
         case 'trainResult': {
           // Recipe training outcome (Professions 2.0). The event is
           // text-free: the recipe name, craft, and tier threshold all derive
@@ -10878,52 +10480,15 @@ export class Hud {
         case 'perfectingSwapResult':
           this.perfectingWindow?.onSwapResult(ev);
           break;
-        case 'unbindResult': {
-          // Maker's Bond unbind outcome (Professions 2.0). The
-          // event is text-free: the item name derives from itemId plus static
-          // content and the fee formats locally, identical in both worlds.
-          // ONE chat line either way (the trainResult single-surface rule:
-          // no toast, no extra sound cue).
-          const unboundItem = ITEMS[ev.itemId];
-          const unboundName = unboundItem ? itemDisplayName(unboundItem) : ev.itemId;
-          if (ev.ok) {
-            this.log(
-              t('hudChrome.unbind.unbound', {
-                name: unboundName,
-                fee: formatLocalizedMoney(ev.fee),
-              }),
-              PROF_LOG_GRANT,
-            );
-          } else if (ev.reason) {
-            // A reason-less deny is the malformed-item-id probe arm
-            // (resolveUnbind's silent arm): nothing legible to render. The
-            // reason-to-key pairing is the total UNBIND_DENY_KEY record in
-            // hud/vendor/unbind_view.ts, never a chain here.
-            this.log(t(unbindDenyKey(ev.reason)), PROF_LOG_DENY);
-          }
-          // Refresh the service rows and the bags (the single-copy unbind
-          // clears boundTo in place, so no loot event repaints them for us).
-          if (this.openUnbindNpcId !== null && $('#unbind-window').style.display === 'block')
-            this.renderUnbind();
-          if ($('#bags').style.display !== 'none') this.renderBags();
-          break;
-        }
         case 'masterwork': {
           // Personal masterwork proc (Professions 2.0). The craftResult arm
-          // above already logged the crafted line and played the craft cue,
-          // and since #2430 that line is the only one for the craft grant (the
-          // grant hub's own line and ding stand down for it), so this arm
-          // re-logs no grant and re-cues no lootItem: it only feeds the
-          // drain-end celebration plan (banner + toast + ONE audio.achievement).
+          // (profession_event_router.ts) already logged the crafted line and
+          // played the craft cue, and since #2430 that line is the only one
+          // for the craft grant (the grant hub's own line and ding stand down
+          // for it), so this arm re-logs no grant and re-cues no lootItem: it
+          // only feeds the drain-end celebration plan (banner + toast + ONE
+          // audio.achievement).
           masterworkItemId = ev.itemId;
-          break;
-        }
-        case 'masterworkZone': {
-          // Soft zone broadcast (the gatherRareEvent pattern): every recipient
-          // in zone INCLUDING the crafter logs the line; NO audio cue for
-          // anyone (the crafter's cue rides the personal 'masterwork' plan).
-          const l = masterworkZoneLine(ev.crafterName, ev.itemId);
-          this.log(l.text, l.color, l.icon);
           break;
         }
         case 'legendaryForged': {
@@ -10962,40 +10527,6 @@ export class Hud {
           if (ev.action === 'deliver' && $('#bags').style.display !== 'none') this.renderBags();
           break;
         }
-        case 'toolEffectResult': {
-          // Slot/recharge outcome for the acquisition craft. The event is
-          // text-free: the effect and profession names derive from their ids
-          // (TOOL_EFFECT_NAME_KEYS / GATHERING_PROFESSION_NAME_KEYS) and the
-          // recharge material splices as a clickable item link, identical in
-          // both worlds. ONE chat line either way (the trainResult
-          // single-surface rule: no toast, no extra sound cue). Unknown ids
-          // render raw rather than crash, the stale-content doctrine: a
-          // yet-unknown effect id still names itself legibly.
-          // The shared hasOwn-safe getters enforce the prototype-key rule:
-          // the deny arms echo the SENDER's own command strings back as
-          // these ids, so a bare index on a frame naming 'constructor' would
-          // resolve a prototype member and hand a non-key to t().
-          const effectKey = ev.effectId !== undefined ? toolEffectNameKey(ev.effectId) : undefined;
-          const effectName = effectKey ? t(effectKey) : (ev.effectId ?? '');
-          const professionKey = gatheringProfessionNameKey(ev.professionId);
-          const professionName = professionKey ? t(professionKey) : ev.professionId;
-          const materialToken = ev.materialItemId ? grantItemToken(ev.materialItemId) : '';
-          const countText = formatNumber(ev.count ?? 0, { maximumFractionDigits: 0 });
-          // Which line, its values, and its tone: tool_effect_result_view's
-          // exhaustive table (the craft_denial_line_view shape).
-          const line = toolEffectResultLine(ev, {
-            effect: effectName,
-            profession: professionName,
-            material: materialToken,
-            count: countText,
-          });
-          this.log(t(line.key, line.params), line.tone);
-          // The slot rows live in the professions window; repaint an open one
-          // so charges/effects flip without a manual reopen (the trainResult
-          // idiom above).
-          if (this.professionsWindow.isOpen) this.professionsWindow.render();
-          break;
-        }
         case 'ferryBellHome': {
           // The island bell just set this player down in town: the guidance
           // choice while the wolves are ahead, else the return-bell hint once
@@ -11015,21 +10546,6 @@ export class Hud {
             this.onIslandFirstArrival?.();
           }
           break;
-        case 'profTrendNudge':
-        case 'profTierTutorial':
-        case 'attuned':
-        case 'attunedZone':
-          // The four Professions 2.0 text-free events, rendered
-          // through the profession_event_lines plan (chat line / banner /
-          // tutorial panel). Thin: the plan owns every decision, this arm only
-          // executes it.
-          this.handleProfessionEvent(ev);
-          break;
-        case 'gatherResult':
-          // Node-harvest feedback: line, cue, and rare-tier stinger (extracted
-          // to gathering_result_feedback.ts; Hud is the host seam).
-          handleGatherResult(ev, this);
-          break;
         case 'harvestPreferenceOpen':
           // A settings action, never a harvest. `!sim.spectating` because the
           // server routes the SPECTATED anchor's own personal events to a
@@ -11038,50 +10554,11 @@ export class Hud {
           // spectator who never asked for it.
           if (!sim.spectating) this.harvestPreferenceController.open();
           break;
-        case 'harvestResult':
-          // Corpse-harvest feedback: one line per distinct yield, one cue for
-          // the whole command (extracted beside gatherResult above).
-          handleHarvestResult(ev, this);
-          break;
         case 'gatherDenied':
         case 'gatherToolNoNode':
         case 'gatherDowngrade':
           handleGatheringDenial(ev, this);
           break;
-        case 'disenchantResult': {
-          // Enchanting disenchant outcome (Professions 2.0): text-free,
-          // so enchanting_view.ts maps the event to its key + sink and the
-          // names interpolate. The success line is the ONLY line for the whole
-          // action now that the hub's 'loot' events stand down for it
-          // (callerLogs, see enchanting.ts resolveDisenchant), so it names both
-          // the piece that was consumed and the material that came back; a
-          // rare+ yield's typed secondary is a different item, so it takes one
-          // extra line rather than being folded into this one (#2430).
-          // Item-link tokens only expand on the chat log, never in showError,
-          // so the deny arm stays name-free.
-          const toast = disenchantResultToast(ev);
-          if (toast.sink === 'log') {
-            this.log(
-              t(toast.key, {
-                item: grantItemToken(ev.itemId),
-                material: ev.materialItemId ? grantItemToken(ev.materialItemId) : '',
-                qty: grantQtyText(ev.count),
-              }),
-              PROF_LOG_GRANT,
-            );
-            const secondary = disenchantSecondaryLineKey(ev);
-            if (secondary && ev.secondaryItemId)
-              this.log(
-                t(secondary, {
-                  material: grantItemToken(ev.secondaryItemId),
-                  qty: grantQtyText(ev.secondaryCount),
-                }),
-                PROF_LOG_GRANT,
-              );
-            audio.disenchant();
-          } else this.showError(t(toast.key));
-          break;
-        }
         case 'loadoutGearResult': {
           // A loadout with a captured gear set was applied. The sim sends COUNTS
           // only, so all the copy lives here. Two separate lines rather than one
@@ -11117,66 +10594,6 @@ export class Hud {
               HUD_LOG.SHORTFALL,
             );
           }
-          break;
-        }
-        case 'salvageResult': {
-          // Enchanting salvage outcome (Professions 2.0): same shape as
-          // disenchantResult above, minus the secondary (salvage yields one
-          // material). Its success line names the consumed piece and the
-          // reclaimed material for the same reason.
-          const toast = salvageResultToast(ev);
-          if (toast.sink === 'log') {
-            this.log(
-              t(toast.key, {
-                item: grantItemToken(ev.itemId),
-                material: ev.materialItemId ? grantItemToken(ev.materialItemId) : '',
-                qty: grantQtyText(ev.count),
-              }),
-              PROF_LOG_GRANT,
-            );
-            audio.salvage();
-          } else this.showError(t(toast.key));
-          break;
-        }
-        case 'enchantResult': {
-          // Apply-enchant outcome (Professions 2.0): the success line
-          // names the item AND the enchant (enchantName.<id>, its first render
-          // sink); every deny is an error toast. The ONLY line for the action:
-          // the bagged arms re-mint the player's own copy through the grant
-          // hub, whose "You receive:" line claimed they had received an item
-          // that never left their bags, and now stands down (#2430). The WORN
-          // arm never reaches the hub at all, so both arms print exactly this.
-          const toast = applyEnchantResultToast(ev);
-          if (toast.sink === 'log') {
-            this.log(
-              t(toast.key, {
-                item: grantItemToken(ev.itemId),
-                enchant: t(`hudChrome.enchantName.${ev.enchantId}` as TranslationKey),
-              }),
-              PROF_LOG_GRANT,
-            );
-            audio.enchant();
-          } else {
-            this.showError(t(toast.key));
-          }
-          break;
-        }
-        case 'fishingResult': {
-          // Reel-in feedback line (Professions 2.0), colored by the
-          // caught item's quality. Identical on every graphics tier (player
-          // feedback is never profile-gated). This is the ONLY line for the
-          // catch grant, and the reel cue (the splash-and-crank of the landed
-          // reel) its only cue: the grant hub's 'loot' event is emitted both
-          // silent and callerLogs for a landed catch (see fishing.ts
-          // completeFishing), which is what stopped a catch printing three
-          // lines and playing two cues (#2430).
-          this.log(
-            t('hudChrome.gathering.catchLine', {
-              name: grantItemToken(ev.itemId),
-            }),
-            QUALITY_COLOR[ev.quality],
-          );
-          audio.fishReel();
           break;
         }
         case 'fishingBite': {
@@ -12459,7 +11876,7 @@ export class Hud {
           const auraName = auraDisplayNameFromSource(ev.name);
           if (ev.name === 'Polymorph' && ev.gained) audio.sheep();
           if (ev.name === ABILITIES.temporal_hourglass.name && ev.gained && tgt)
-            this.combat('temporal_clock', tgt.pos.x, tgt.pos.y, tgt.pos.z, TEMPORAL_CLOCK_GAIN, {
+            playCombatSfx('temporal_clock', tgt.pos.x, tgt.pos.y, tgt.pos.z, TEMPORAL_CLOCK_GAIN, {
               jitter: false,
             });
           if (ev.targetId === sim.playerId) {
@@ -12495,72 +11912,11 @@ export class Hud {
     );
   }
 
-  // The four Professions 2.0 text-free events, rendered through the
-  // pure plan (profession_event_lines.ts). Thin consumer: the plan decides which
-  // chat line / banner / panel; this only resolves the localized archetype title
-  // and master/celebrant names and paints. The banner arm reuses the
-  // craft-celebration render family (showBanner + polite announcer + one
-  // achievement cue, motion trimmed under reduced motion).
-  private handleProfessionEvent(ev: ProfessionEventInput): void {
-    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const plan = planProfessionEvent(ev, reducedMotion);
-    switch (plan.kind) {
-      case 'trendNudge': {
-        const archetype = archetypeTitleText(plan.pairId);
-        this.log(
-          plan.masterNpcId !== null
-            ? t('hudChrome.crafting.trendNudge', {
-                archetype,
-                master: tEntity({
-                  kind: 'npc',
-                  id: plan.masterNpcId,
-                  field: 'name',
-                }),
-              })
-            : t('hudChrome.crafting.trendNudgeNoMaster', { archetype }),
-          HUD_LOG.HINT,
-        );
-        break;
-      }
-      case 'tierTutorial':
-        this.openProfessionTutorial();
-        break;
-      case 'attunedZone':
-        this.log(
-          t('hudChrome.crafting.attunedZoneLine', {
-            name: plan.celebrantName,
-            archetype: archetypeTitleText(plan.pairId),
-          }),
-          QUALITY_COLOR.epic,
-        );
-        break;
-      case 'attunement': {
-        const text = t('hudChrome.crafting.attunedBanner', {
-          title: archetypeTitleText(plan.pairId),
-        });
-        // Deed hook: a per-archetype deed unlock will fire from this
-        // same attunement moment; today it is a pure celebration banner,
-        // and it RIDES the celebration class (the phase 14 QA): classed
-        // ambient it could vanish in the latest-wins pending seat behind a
-        // live level-up. The attunedZone epic log line stays the durable
-        // record either way.
-        this.showCelebrationBanner(text, 'deed', 'default', plan.motion);
-        this.combatAnnouncer.push(text, performance.now());
-        if (plan.playSound) audio.achievement();
-        // Offline identity is already mutated when this personal event drains,
-        // so refresh immediately. If online cprof lands later, the slow-band
-        // signature above catches that second edge and converges then.
-        this.refreshOpenProfessionSurfacesIfChanged();
-        this.questDialog.refreshIfChanged();
-        break;
-      }
-    }
-  }
-
   // The one-time first-tier tutorial modal: fired by profTierTutorial
   // (the sim guarantees once-ever). Reuses the confirm-dialog modal family via
   // the profession_tutorial_window painter; the Hud owns the focus trap and the
   // z-index floor above the mobile sheet, the confirmDialog precedent.
+  // biome-ignore lint/correctness/noUnusedPrivateClassMembers: reached through the profession event router's host (hud/professions/profession_event_router.ts).
   private openProfessionTutorial(): void {
     this.professionTutorialTrap?.release(false);
     this.professionTutorialTrap = null;
@@ -12648,15 +12004,6 @@ export class Hud {
    *  text node. */
   private logNodes(nodes: readonly Node[], color: string): void {
     this.appendLog(this.chatLogEl, '', color, true, 'system', undefined, false, nodes);
-  }
-
-  /** The generic grant line's body (src/ui/loot_quality_receipt.ts): the
-   *  localized text, or for a quality-rolled copy the nodes whose item link
-   *  opens that exact copy rather than the catalogue definition. */
-  private lootReceiptBody(ev: Extract<SimEvent, { type: 'loot' }>): string | Node[] {
-    return lootQualityReceiptBody(document, ev, localizeLootText, (parent, id, copy) =>
-      this.appendChatItemLink(parent, id, copy),
-    );
   }
 
   private noteProcAuraGain(name: string): void {
@@ -14628,37 +13975,7 @@ export class Hud {
   }
 
   private refreshOpenProfessionSurfacesIfChanged(): void {
-    // Unlike the isOpen-gated siblings on the slow band, the signature is
-    // computed even with both surfaces closed: at the 2 Hz slow cadence the
-    // stringify is negligible, and keeping the signature warm means reopening
-    // a surface (which always paints fresh) is not followed by a redundant
-    // signature-diff repaint on the next slow tick.
-    const sig = professionSurfaceRefreshSig(
-      this.sim.craftingIdentity,
-      buildGatheringProficiencyRows(this.sim),
-    );
-    if (sig === this.lastProfessionSurfaceSig) return;
-    this.lastProfessionSurfaceSig = sig;
-    this.charWindow.renderIfOpen();
-    if ($('#crafting-window').style.display === 'flex') this.renderCrafting();
-    // The open VENDOR window deliberately does NOT ride this signature, even
-    // though a gathering counter is one of the things its goods rows are now
-    // painted from (the tool gate, sim/content/vendor_row_gates.ts). No
-    // player-reachable path crosses a threshold while that window is up: it
-    // closes past NPC_WINDOW_CLOSE_RANGE of the merchant, a harvest needs the
-    // player within INTERACT_RANGE of a node, and no node sits close enough to
-    // a counter stocking a gated tool for both to hold at once. The separation
-    // is asserted against those two constants in
-    // tests/professions_tool_gate.test.ts rather than trusted, so content that
-    // moves a node or a merchant into that gap fails there instead of silently
-    // becoming a stale lock.
-    //
-    // The one exception is the `/dev gather` cheat, which grants proficiency
-    // from anywhere on a dev realm. Cosmetic only: the lock is advisory, the
-    // buy path re-runs the same resolver, and proficiency only ever rises in
-    // session, so a stale row is over-locked rather than wrongly open. (The
-    // sole decrement anywhere is the one-time mastery reset, which runs inside
-    // applyState at character load, when no window can be open.)
+    this.professionSurfaces.refreshIfChanged();
   }
 
   // The progression-block sibling of refreshOpenProfessionSurfacesIfChanged:

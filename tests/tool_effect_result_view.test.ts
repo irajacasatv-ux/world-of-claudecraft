@@ -100,16 +100,20 @@ describe('toolEffectResultLine', () => {
     expect(Object.getPrototypeOf(line.params)).toBe(Object.prototype);
   });
 
-  it('hud.ts is the thin consumer: it resolves the names and logs the model once', () => {
-    // Source pin (the coordinator cannot be unit-driven): the arm calls the
-    // model with the four resolved names and renders key + params + tone, and
-    // the old inline reason ternary is gone.
-    const hud = readFileSync(new URL('../src/ui/hud.ts', import.meta.url), 'utf8');
-    const start = hud.indexOf("case 'toolEffectResult': {");
+  it('the HUD arm is the thin consumer: it resolves the names and logs the model once', () => {
+    // Source pin: the arm (in the profession event router, which
+    // tests/tool_effect_result_lines.test.ts drives for real) calls the model
+    // with the four resolved names and renders key + params + tone through the
+    // Hud host `h`, and the old inline reason ternary is gone.
+    const router = readFileSync(
+      new URL('../src/ui/hud/professions/profession_event_router.ts', import.meta.url),
+      'utf8',
+    );
+    const start = router.indexOf("case 'toolEffectResult': {");
     expect(start).toBeGreaterThan(-1);
-    const arm = hud.slice(start, hud.indexOf('break;', start));
+    const arm = router.slice(start, router.indexOf('break;', start));
     expect(arm).toContain('const line = toolEffectResultLine(ev, {');
-    expect(arm).toContain('this.log(t(line.key, line.params), line.tone);');
+    expect(arm).toContain('h.log(t(line.key, line.params), line.tone);');
     expect(arm).not.toContain("ev.reason === 'no_tool'");
     expect(arm).not.toContain('toolEffectRechargeNoSlot');
   });

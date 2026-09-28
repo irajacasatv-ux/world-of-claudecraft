@@ -1,5 +1,6 @@
 export * from './corpse_harvest_view';
 export * from './corpse_harvest_window';
+export * from './loot_event_router';
 export * from './loot_roll_controller';
 export * from './loot_roll_reconcile';
 export * from './loot_roll_status_view';

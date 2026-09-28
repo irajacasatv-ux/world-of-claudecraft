@@ -24,14 +24,25 @@ describe('Chronomancy clock audio', () => {
   it('routes Rewind and Hourglass through the same clock clip', () => {
     const rewind = source('../src/sim/combat/rewind.ts');
     const hud = source('../src/ui/hud.ts');
+    // The Rewind arm's spatial sound left hud.ts for the HUD's sound router
+    // (Hud.playEventSfx forwards there), which also owns the gain; the
+    // Hourglass aura arm stays in hud.ts and imports both from it.
+    const sfxRouter = source('../src/ui/event_sfx_router.ts');
 
     expect(rewind.match(/fx: 'temporalClock'/g)).toHaveLength(1);
     expect(rewind).toContain("fx: 'temporalRewindNova'");
     expect(rewind).not.toContain("fx: 'nova'");
-    expect(hud).toContain("if (ev.fx === 'temporalClock')");
-    expect(hud.match(/'temporal_clock'/g)).toHaveLength(2);
-    expect(hud).toContain('const TEMPORAL_CLOCK_GAIN = 0.72;');
-    expect(hud.match(/TEMPORAL_CLOCK_GAIN/g)).toHaveLength(3);
+    expect(sfxRouter).toContain("if (ev.fx === 'temporalClock')");
+    // One clip key per arm: the Rewind spellfx arm and the Hourglass aura arm.
+    expect(sfxRouter.match(/'temporal_clock'/g)).toHaveLength(1);
+    expect(hud.match(/'temporal_clock'/g)).toHaveLength(1);
+    expect(sfxRouter).toContain('export const TEMPORAL_CLOCK_GAIN = 0.72;');
+    // The declaration plus the Rewind arm's use; the import plus the aura arm's.
+    expect(sfxRouter.match(/TEMPORAL_CLOCK_GAIN/g)).toHaveLength(2);
+    expect(hud.match(/TEMPORAL_CLOCK_GAIN/g)).toHaveLength(2);
+    expect(hud).toContain(
+      "import { playCombatSfx, playEventSfx, TEMPORAL_CLOCK_GAIN } from './event_sfx_router';",
+    );
     expect(hud).toContain('ev.name === ABILITIES.temporal_hourglass.name && ev.gained');
   });
 });

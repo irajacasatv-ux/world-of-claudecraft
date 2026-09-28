@@ -1,7 +1,9 @@
 // @vitest-environment happy-dom
 
-// The single-line grant contract (#2430), tested through the REAL hud event
-// switch rather than through source-text pins.
+// The single-line grant contract (#2430), tested through the REAL loot and
+// profession event arms (hud/loot/loot_event_router.ts,
+// hud/professions/profession_event_router.ts) rather than through source-text
+// pins.
 //
 // Before: every profession action produced TWO chat lines for one grant. The
 // grant hub (Sim.addItem/addItemInstance) emitted a 'loot' SimEvent whose flat
@@ -16,9 +18,10 @@
 // [[i:id]] chat link, which the chat log renders as a bracketed,
 // quality-colored, tooltipped span.
 //
-// This file drives hud.handleEvents with the exact event BURST the sim emits
-// for each of the seven flows and counts the rendered chat lines, which is the
-// thing a player actually sees and the thing no source-text pin can prove.
+// This file drives the router pass of hud.handleEvents with the exact event
+// BURST the sim emits for each of the seven flows and counts the rendered chat
+// lines, which is the thing a player actually sees and the thing no
+// source-text pin can prove.
 // The sim half of the contract (which grants carry the flags) is pinned in
 // tests/professions_silent_loot.test.ts and tests/professions_fishing.test.ts.
 //
@@ -35,8 +38,8 @@ import { ITEMS } from '../src/sim/data';
 import type { HarvestYield } from '../src/sim/professions/harvest_yields';
 import type { SimEvent } from '../src/sim/types';
 import { itemDisplayName } from '../src/ui/entity_i18n';
-import { Hud } from '../src/ui/hud';
 import { QUALITY_COLOR } from '../src/ui/icons';
+import { type EventRouterRig, eventRouterRig } from './helpers/event_router_rig';
 
 const PLAYER_ID = 7;
 // Real content ids so the item links resolve through the same ITEMS table the
@@ -64,67 +67,22 @@ const cssColor = (hex: string): string => {
   return probe.style.color;
 };
 
-interface GrantLineHarness {
-  sim: {
-    playerId: number;
-    craftingIdentity: { synced: boolean };
-    craftSkills: Record<string, number>;
-    gatheringProficiency: Record<string, number>;
-  };
-  renderer: { handleEvent: ReturnType<typeof vi.fn> };
-  playEventSfx: ReturnType<typeof vi.fn>;
-  meters: { onEvent: ReturnType<typeof vi.fn> };
-  isNythraxisEvent: ReturnType<typeof vi.fn>;
-  lootRolls: { closeForItem: ReturnType<typeof vi.fn> };
-  chatLogEl: HTMLElement;
-  chatTimestamps: boolean;
-  chatWindow: { hideIfFiltered: ReturnType<typeof vi.fn> };
-  chatAnnouncer: { push: ReturnType<typeof vi.fn> };
-  prevCraftSkills: Record<string, number> | null;
-  craftTierUpDrains: number;
-  openUnbindNpcId: number | null;
-  renderBags: ReturnType<typeof vi.fn>;
-  renderCrafting: ReturnType<typeof vi.fn>;
-  showError: ReturnType<typeof vi.fn>;
-  attachTooltip: ReturnType<typeof vi.fn>;
-  itemTooltip: ReturnType<typeof vi.fn>;
-  handleEvents(events: SimEvent[]): void;
-}
+// The loot and profession event routers over a real chat pane
+// (tests/helpers/event_router_rig.ts): the same stubs the bare Hud.prototype
+// rig stamped (a closed unbind window, so the unbindResult arm's service-row
+// refresh short-circuits before it reaches $('#unbind-window'), which this
+// harness does not mount; a no-op tooltip binding, so the LINK construction
+// runs without the tooltip host), driven through the router pass of
+// Hud.handleEvents.
+type GrantLineHarness = EventRouterRig;
 
 function makeHud(): GrantLineHarness {
-  const hud = Object.create(Hud.prototype) as unknown as GrantLineHarness;
-  hud.sim = {
-    playerId: PLAYER_ID,
-    craftingIdentity: { synced: false },
-    craftSkills: {},
-    gatheringProficiency: {},
-  };
-  hud.renderer = { handleEvent: vi.fn() };
-  hud.playEventSfx = vi.fn();
-  hud.meters = { onEvent: vi.fn() };
-  hud.isNythraxisEvent = vi.fn(() => false);
-  hud.lootRolls = { closeForItem: vi.fn() };
-  hud.chatLogEl = document.createElement('div');
-  hud.chatTimestamps = false;
-  hud.chatWindow = { hideIfFiltered: vi.fn() };
-  hud.chatAnnouncer = { push: vi.fn() };
-  hud.prevCraftSkills = null;
-  hud.craftTierUpDrains = 0;
-  // null so the unbindResult arm's service-row refresh short-circuits before
-  // it reaches $('#unbind-window'), which this harness does not mount.
-  hud.openUnbindNpcId = null;
-  hud.renderBags = vi.fn();
-  hud.renderCrafting = vi.fn();
-  hud.showError = vi.fn();
-  // appendChatItemLink attaches a real tooltip; stub the binding so the test
-  // exercises the LINK construction without the tooltip host.
-  hud.attachTooltip = vi.fn();
-  hud.itemTooltip = vi.fn();
-  return hud;
+  return eventRouterRig({ sim: { playerId: PLAYER_ID } });
 }
 
-// case 'loot' reads `$('#bags').style.display` unconditionally, and $ is an
-// unchecked querySelector cast, so the element has to exist or the arm throws.
+// The loot arm (hud/loot/loot_event_router.ts) reads `$('#bags').style.display`
+// unconditionally, and $ is an unchecked querySelector cast, so the element has
+// to exist or the arm throws.
 function mountBags(): void {
   const bags = document.createElement('div');
   bags.id = 'bags';
@@ -212,7 +170,7 @@ afterEach(() => {
 describe('one profession action prints exactly one grant line', () => {
   it('a harvest prints the gather line only, with the quantity and an item link', () => {
     const hud = makeHud();
-    hud.handleEvents([
+    hud.routeEvents([
       professionGrant(ORE, 5),
       {
         type: 'gatherResult',
@@ -233,7 +191,7 @@ describe('one profession action prints exactly one grant line', () => {
 
   it('a single-unit harvest prints no x1', () => {
     const hud = makeHud();
-    hud.handleEvents([
+    hud.routeEvents([
       professionGrant(ORE, 1),
       {
         type: 'gatherResult',
@@ -252,7 +210,7 @@ describe('one profession action prints exactly one grant line', () => {
 
   it('a landed catch prints the reel-in line only, and plays exactly one cue', () => {
     const hud = makeHud();
-    hud.handleEvents([
+    hud.routeEvents([
       professionGrant(ORE, 1),
       // Fully-populated union member (no shape-hiding cast): a future
       // required-field addition must red this fixture, not skip it.
@@ -277,7 +235,7 @@ describe('one profession action prints exactly one grant line', () => {
     const hud = makeHud();
     // A resultCount 3 recipe can reach the hub as several internal grant calls;
     // every one of them is elided and the single craft line carries the count.
-    hud.handleEvents([
+    hud.routeEvents([
       professionGrant(SWORD, 1),
       professionGrant(SWORD, 2),
       {
@@ -295,7 +253,7 @@ describe('one profession action prints exactly one grant line', () => {
 
   it('a single-output craft prints no x1', () => {
     const hud = makeHud();
-    hud.handleEvents([
+    hud.routeEvents([
       professionGrant(SWORD, 1),
       {
         type: 'craftResult',
@@ -312,7 +270,7 @@ describe('one profession action prints exactly one grant line', () => {
 
   it('a sub-rare disenchant prints ONE line naming both the piece and the yield', () => {
     const hud = makeHud();
-    hud.handleEvents([
+    hud.routeEvents([
       professionGrant(DUST, 2),
       {
         type: 'disenchantResult',
@@ -337,7 +295,7 @@ describe('one profession action prints exactly one grant line', () => {
     if (!secondary) throw new Error('no second content item');
     // The sim grants the secondary one unit per call, so an epic yield of 2
     // emits TWO hub loot events; both are elided and the count rides one line.
-    hud.handleEvents([
+    hud.routeEvents([
       professionGrant(DUST, 1),
       professionGrant(secondary, 1),
       professionGrant(secondary, 1),
@@ -360,7 +318,7 @@ describe('one profession action prints exactly one grant line', () => {
 
   it('a salvage prints ONE line naming both the piece and the yield', () => {
     const hud = makeHud();
-    hud.handleEvents([
+    hud.routeEvents([
       professionGrant(DUST, 3),
       {
         type: 'salvageResult',
@@ -383,7 +341,7 @@ describe('one profession action prints exactly one grant line', () => {
     // stacked on top of the unbind line. A single-copy unbind clears in place
     // and never reaches the hub, so only the stacked arm ever double-logged.
     const hud = makeHud();
-    hud.handleEvents(unbindBurst('stacked'));
+    hud.routeEvents(unbindBurst('stacked'));
     const rendered = lines(hud);
     expect(rendered).toHaveLength(1);
     expect(rendered[0]).not.toContain('You receive');
@@ -411,12 +369,12 @@ describe('one profession action prints exactly one grant line', () => {
     // too. What it adds is the cross-arm equality, so the sim pin in
     // tests/professions_commissions.test.ts stays the decisive one.
     const stacked = makeHud();
-    stacked.handleEvents(unbindBurst('stacked'));
+    stacked.routeEvents(unbindBurst('stacked'));
     const stackedCues = firedCues();
     vi.clearAllMocks();
 
     const lone = makeHud();
-    lone.handleEvents(unbindBurst('lone'));
+    lone.routeEvents(unbindBurst('lone'));
     const loneCues = firedCues();
 
     const rendered = lines(lone);
@@ -434,7 +392,7 @@ describe('one profession action prints exactly one grant line', () => {
     // [Sword] into ." This drives the arm end to end so the two halves cannot
     // drift apart silently.
     const hud = makeHud();
-    hud.handleEvents([
+    hud.routeEvents([
       { type: 'disenchantResult', pid: PLAYER_ID, ok: true, itemId: SWORD } as SimEvent,
     ]);
     expect(lines(hud)).toEqual([`You disenchant [${itemDisplayName(ITEMS[SWORD])}].`]);
@@ -442,7 +400,7 @@ describe('one profession action prints exactly one grant line', () => {
 
   it('a yield-free salvage success renders no dangling empty operand either', () => {
     const hud = makeHud();
-    hud.handleEvents([
+    hud.routeEvents([
       { type: 'salvageResult', pid: PLAYER_ID, ok: true, itemId: SWORD } as SimEvent,
     ]);
     expect(lines(hud)).toEqual([`You salvage [${itemDisplayName(ITEMS[SWORD])}].`]);
@@ -450,7 +408,7 @@ describe('one profession action prints exactly one grant line', () => {
 
   it('applying an enchant never says the player received an item they already held', () => {
     const hud = makeHud();
-    hud.handleEvents([
+    hud.routeEvents([
       professionGrant(SWORD, 1),
       {
         type: 'enchantResult',
@@ -489,7 +447,7 @@ describe('a corpse harvest prints one line per DISTINCT granted item (#2457)', (
 
   it('a two-component harvest prints two lines and plays exactly ONE cue', () => {
     const hud = makeHud();
-    hud.handleEvents(
+    hud.routeEvents(
       harvestBurst([
         { itemId: HIDE, qty: 1, rarity: 'common', kind: 'plain' },
         { itemId: FANG, qty: 2, rarity: 'common', kind: 'plain' },
@@ -510,7 +468,7 @@ describe('a corpse harvest prints one line per DISTINCT granted item (#2457)', (
 
   it('a specimen proc adds its OWN line beside the component, still on one cue', () => {
     const hud = makeHud();
-    hud.handleEvents(
+    hud.routeEvents(
       harvestBurst([
         { itemId: HIDE, qty: 1, rarity: 'rare', kind: 'plain' },
         { itemId: FANG, qty: 1, rarity: 'uncommon', kind: 'plain' },
@@ -535,7 +493,7 @@ describe('a corpse harvest prints one line per DISTINCT granted item (#2457)', (
     // issue measures at four lines and four dings. It is still four items, so
     // still four lines, but one command is now one ding.
     const hud = makeHud();
-    hud.handleEvents(
+    hud.routeEvents(
       harvestBurst([
         { itemId: HIDE, qty: 2, rarity: 'rare', kind: 'plain' },
         { itemId: MEAT, qty: 2, rarity: 'rare', kind: 'plain' },
@@ -559,12 +517,12 @@ describe('a corpse harvest prints one line per DISTINCT granted item (#2457)', (
     // discriminant still rides the event, so a deliberate divergence later has
     // to come here and say so.
     const hud = makeHud();
-    hud.handleEvents(harvestBurst([{ itemId: FANG, qty: 1, rarity: 'rare', kind: 'signed' }]));
+    hud.routeEvents(harvestBurst([{ itemId: FANG, qty: 1, rarity: 'rare', kind: 'signed' }]));
     const signed = lines(hud);
     document.body.replaceChildren();
     mountBags();
     const plainHud = makeHud();
-    plainHud.handleEvents(harvestBurst([{ itemId: FANG, qty: 1, rarity: 'rare', kind: 'plain' }]));
+    plainHud.routeEvents(harvestBurst([{ itemId: FANG, qty: 1, rarity: 'rare', kind: 'plain' }]));
     expect(signed).toEqual(lines(plainHud));
     expect(signed).toEqual([`You harvest: [${itemDisplayName(ITEMS[FANG])}].`]);
   });
@@ -577,12 +535,12 @@ describe('a corpse harvest prints one line per DISTINCT granted item (#2457)', (
     // has to survive a count, and a line that dropped it would under-report
     // what the player just received.
     const hud = makeHud();
-    hud.handleEvents(harvestBurst([{ itemId: FANG, qty: 3, rarity: 'rare', kind: 'signed' }]));
+    hud.routeEvents(harvestBurst([{ itemId: FANG, qty: 3, rarity: 'rare', kind: 'signed' }]));
     const signed = lines(hud);
     document.body.replaceChildren();
     mountBags();
     const plainHud = makeHud();
-    plainHud.handleEvents(harvestBurst([{ itemId: FANG, qty: 3, rarity: 'rare', kind: 'plain' }]));
+    plainHud.routeEvents(harvestBurst([{ itemId: FANG, qty: 3, rarity: 'rare', kind: 'plain' }]));
     expect(signed).toEqual(lines(plainHud));
     expect(signed).toEqual([`You harvest: [${itemDisplayName(ITEMS[FANG])}] x3.`]);
   });
@@ -594,7 +552,7 @@ describe('a corpse harvest prints one line per DISTINCT granted item (#2457)', (
     // followed the roll would claim the hide itself got rarer. Two entries at
     // two different rolls, so a single flat color cannot pass.
     const hud = makeHud();
-    hud.handleEvents(
+    hud.routeEvents(
       harvestBurst([
         { itemId: HIDE, qty: 2, rarity: 'rare', kind: 'plain' },
         { itemId: MEAT, qty: 1, rarity: 'common', kind: 'plain' },
@@ -621,7 +579,7 @@ describe('a corpse harvest prints one line per DISTINCT granted item (#2457)', (
     // and the announced text has to carry the item's bracketed name rather than
     // an unspoken link element.
     const hud = makeHud();
-    hud.handleEvents(
+    hud.routeEvents(
       harvestBurst([
         { itemId: HIDE, qty: 2, rarity: 'rare', kind: 'plain' },
         { itemId: HIDE_SPECIMEN, qty: 1, rarity: 'rare', kind: 'specimen' },
@@ -640,7 +598,7 @@ describe('non-profession grants are untouched', () => {
     // trade all reach the hub with no flags, and none of them has a result
     // event of its own, so the hub line is their only feedback.
     const hud = makeHud();
-    hud.handleEvents([
+    hud.routeEvents([
       { type: 'loot', text: 'You receive: Copper Ore x3.', pid: PLAYER_ID } as SimEvent,
     ]);
     expect(lines(hud)).toHaveLength(1);
@@ -650,7 +608,7 @@ describe('non-profession grants are untouched', () => {
 
   it('a money loot line still prints and plays the coin cue', () => {
     const hud = makeHud();
-    hud.handleEvents([{ type: 'loot', text: 'You loot 12s 30c.', pid: PLAYER_ID } as SimEvent]);
+    hud.routeEvents([{ type: 'loot', text: 'You loot 12s 30c.', pid: PLAYER_ID } as SimEvent]);
     expect(lines(hud)).toHaveLength(1);
     expect(audio.coin).toHaveBeenCalledTimes(1);
   });
@@ -659,7 +617,7 @@ describe('non-profession grants are untouched', () => {
     // A caller that owns the CUE but not the LINE must keep its line. This is
     // the arm that fails if the two flags are ever collapsed into one.
     const hud = makeHud();
-    hud.handleEvents([
+    hud.routeEvents([
       { type: 'loot', text: 'You receive: Copper Ore.', pid: PLAYER_ID, silent: true } as SimEvent,
     ]);
     expect(lines(hud)).toHaveLength(1);
@@ -670,7 +628,7 @@ describe('non-profession grants are untouched', () => {
     // closeForItem sits OUTSIDE the callerLogs guard on purpose: a flagged
     // event must still drive the non-text side effects.
     const hud = makeHud();
-    hud.handleEvents([
+    hud.routeEvents([
       {
         type: 'loot',
         text: 'Everyone passed on [[i:copper_ore]].',
@@ -704,7 +662,7 @@ describe('non-profession grants are untouched', () => {
 describe('the grant line renders a real, clickable item link', () => {
   it('the granted item is a chat-item-link span, not plain text', () => {
     const hud = makeHud();
-    hud.handleEvents([
+    hud.routeEvents([
       professionGrant(ORE, 1),
       {
         type: 'gatherResult',
@@ -737,7 +695,7 @@ describe('the grant line renders a real, clickable item link', () => {
     // the link painted everything white.
     const craftedLinkColor = (itemId: string): string => {
       const hud = makeHud();
-      hud.handleEvents([
+      hud.routeEvents([
         professionGrant(itemId, 1),
         {
           type: 'craftResult',
@@ -761,7 +719,7 @@ describe('the grant line renders a real, clickable item link', () => {
 
   it('a disenchant line renders BOTH operands as links', () => {
     const hud = makeHud();
-    hud.handleEvents([
+    hud.routeEvents([
       professionGrant(DUST, 1),
       {
         type: 'disenchantResult',
@@ -783,7 +741,7 @@ describe('the grant line renders a real, clickable item link', () => {
     // showError does not go through the chat log, so an item token there would
     // print as literal "[[i:...]]" source text to the player.
     const hud = makeHud();
-    hud.handleEvents([
+    hud.routeEvents([
       {
         type: 'disenchantResult',
         pid: PLAYER_ID,

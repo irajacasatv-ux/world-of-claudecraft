@@ -120,12 +120,18 @@ describe('the Hud side of the drain (source pins)', () => {
   });
 
   it('the craftResult arm arms the tier-up window, and nothing else does', () => {
-    const arm = hud.slice(
-      hud.indexOf("case 'craftResult': {"),
-      hud.indexOf("case 'masterwork': {"),
+    // The arm left hud.ts for the profession event router, which reaches the
+    // Hud's lazy celebrationDrain through its host `h`.
+    const router = stripComments(
+      readFileSync(join(__dirname, '../src/ui/hud/professions/profession_event_router.ts'), 'utf8'),
     );
-    expect(arm).toContain('this.celebrationDrain.armCraftTierUps();');
-    expect(hud.match(/armCraftTierUps\(\)/g)).toHaveLength(1);
+    const start = router.indexOf("case 'craftResult': {");
+    expect(start).toBeGreaterThan(-1);
+    const arm = router.slice(start, router.indexOf("case 'unbindResult': {", start));
+    expect(arm).toContain('h.celebrationDrain.armCraftTierUps();');
+    // Calls only (the leading dot): the host interface declares the member too.
+    expect(router.match(/\.armCraftTierUps\(\)/g)).toHaveLength(1);
+    expect(hud.match(/armCraftTierUps\(\)/g)).toBeNull();
   });
 
   it('the observer is created lazily, so a bare-prototype drain rig still resolves', () => {
