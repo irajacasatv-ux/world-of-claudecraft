@@ -6,9 +6,9 @@
 // long-sims lane (a CI_LONG_SUITES entry), gets split or made cheaper and its row
 // re-measured (the carry tool's --supersede, with the reason), or the threshold moves as
 // a maintainer decision in scripts/lib/ci_shard_plan.mjs, never here. A carried row is
-// not in CI ms (the newest harvest did not measure it), so ciTimeWeight scales it by
-// CARRIED_LOCAL_TO_CI_RATIO into CI time before it is judged; a harvested row is judged
-// as measured.
+// a local measurement standing in for the harvest's (a file the harvest did not see, or
+// a superseded row), not CI ms, so ciTimeWeight scales it by CARRIED_LOCAL_TO_CI_RATIO
+// into CI time before it is judged; a harvested row is judged as measured.
 
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
@@ -62,17 +62,23 @@ describe('the lane threshold over the measured shard weights', () => {
 
   it('judges a table through the CI-time weight, outside the lane only', () => {
     // The judgment the live case runs, over a synthetic table: a carried 23 s row is
-    // over (92 s in CI time), a harvested 23 s row is not, a harvested 95 s row is, and
-    // a lane file is never judged however heavy.
+    // over (92 s in CI time), a harvested 23 s row is not, a harvested 95 s row is, a
+    // lane file is never judged however heavy, and a row exactly at the line (90 s, or a
+    // carried 22.5 s) is not over: the rule is strictly more than LANE_THRESHOLD_MS.
     expect(
       laneThresholdOver(
         {
           'tests/carried.test.ts': 23_000,
+          'tests/carried_at_line.test.ts': 22_500,
           'tests/harvested.test.ts': 23_000,
+          'tests/harvested_at_line.test.ts': 90_000,
           'tests/heavy.test.ts': 95_000,
           'tests/lane.test.ts': 900_000,
         },
-        { 'tests/carried.test.ts': { method: 'local-median' } },
+        {
+          'tests/carried.test.ts': { method: 'local-median' },
+          'tests/carried_at_line.test.ts': { method: 'local-median' },
+        },
         ['tests/lane.test.ts'],
       ),
     ).toEqual(['tests/carried.test.ts 92000 ms', 'tests/heavy.test.ts 95000 ms']);

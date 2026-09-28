@@ -115,8 +115,9 @@ export const LANE_THRESHOLD_MS = 90_000;
 
 /**
  * How much slower a file runs inside a full-mode CI shard than alone on a
- * developer machine. A carried row is one the newest harvest did not measure,
- * so it is not in CI ms (a `local-median` row is local ms by definition), and
+ * developer machine. A carried row is a local measurement standing in for the
+ * harvest's (a file the harvest did not see, or a superseded row), so it is not in
+ * CI ms (a `local-median` row is local ms by definition), and
  * judged against LANE_THRESHOLD_MS unscaled it would understate the file until
  * the next harvest replaces it; ciTimeWeight scales every carried row by this
  * factor for tests/suite_lane_threshold.test.ts.
