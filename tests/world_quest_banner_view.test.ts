@@ -87,9 +87,10 @@ describe('world quest banner: the timing half of the collision rule', () => {
   });
 
   it('holds for less than the ambient deferral window, so a parked zone name is never aged out', () => {
-    const hud = read('src/ui/hud.ts');
-    const gap = Number(/const BANNER_ADVANCE_GAP_MS = (\d+);/.exec(hud)?.[1]);
-    const maxDefer = Number(/const AMBIENT_MAX_DEFER_MS = (\d+);/.exec(hud)?.[1]);
+    // Both constants moved with the banner slot out of the Hud.
+    const slot = read('src/ui/banner_slot.ts');
+    const gap = Number(/const BANNER_ADVANCE_GAP_MS = (\d+);/.exec(slot)?.[1]);
+    const maxDefer = Number(/const AMBIENT_MAX_DEFER_MS = (\d+);/.exec(slot)?.[1]);
     expect(gap).toBeGreaterThan(0);
     expect(maxDefer).toBeGreaterThan(0);
     expect(WORLD_QUEST_BANNER_MS + gap).toBeLessThan(maxDefer);
@@ -106,14 +107,11 @@ describe('world quest banner: the space half of the collision rule', () => {
   const hudTs = read('src/ui/hud.ts');
 
   it('paints the plate class from the worldQuest variant and clears the flash lane', () => {
-    expect(hudTs).toContain(
-      "this.bannerEl.classList.toggle('banner-world-quest', variant === 'worldQuest');",
-    );
-    // Where the plate actually paints (a queued plate included), the yellow
-    // quest-progress flash above it yields for the plate's hold.
-    expect(hudTs).toContain(
-      "if (variant === 'worldQuest') this.questBanner.yieldToPlate(durationMs);",
-    );
+    // The paint moved with the banner slot (src/ui/banner_slot.ts): the plate
+    // class and the yield of the yellow quest-progress flash, where the plate
+    // actually paints (a queued plate included), are pinned by behavior in
+    // tests/banner_slot.test.ts. Here: the Hud hands the slot the real flash.
+    expect(hudTs).toContain("new BannerSlot($('#banner'), this.questBanner)");
   });
 
   it('keeps a touch title on one line so the upward-growing plate stays on screen', () => {

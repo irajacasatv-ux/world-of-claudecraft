@@ -3,9 +3,10 @@
 // The live half of the shared #banner slot (src/ui/banner_slot.ts, extracted
 // from Hud): the celebration argument defaults, the subtext normalization the
 // paint reads, the reused element shedding the previous banner's classes, the
-// bounded queue's drop outcome, and the unstuck and takeover arms. The R38
-// policy itself is pinned in tests/banner_queue.test.ts, and the end-to-end
-// deed collision and ambient-defer timing in tests/deeds_window.test.ts.
+// bounded queue's drop outcome, the World Quest plate's yield of the quest
+// flash lane, and the unstuck and takeover arms. The R38 policy itself is
+// pinned in tests/banner_queue.test.ts, and the end-to-end deed collision and
+// ambient-defer timing in tests/deeds_window.test.ts.
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { BANNER_QUEUE_LIMIT } from '../src/ui/banner_queue';
@@ -107,5 +108,34 @@ describe('BannerSlot.clearUnstuck and hideImmediately', () => {
     expect(slot.show('3')).toBe('show');
     expect(el.style.display).toBe('');
     expect(el.textContent).toBe('3');
+  });
+});
+
+describe('the World Quest plate', () => {
+  it('paints its class and yields the quest flash lane for exactly its hold', () => {
+    const lane = { yieldToPlate: vi.fn() };
+    const plate = new BannerSlot(el, lane);
+    plate.show('Wisp Maze', true, undefined, 'worldQuest', undefined, 3200, null, 'deed');
+    expect(el.classList.contains('banner-world-quest')).toBe(true);
+    expect(lane.yieldToPlate).toHaveBeenCalledTimes(1);
+    expect(lane.yieldToPlate).toHaveBeenCalledWith(3200);
+    // The reused element sheds the plate on the next banner, which yields nothing.
+    vi.advanceTimersByTime(3200 + 250);
+    plate.show('Eastbrook', true, undefined, 'deed', undefined, 2600, null, 'deed');
+    expect(el.classList.contains('banner-world-quest')).toBe(false);
+    expect(lane.yieldToPlate).toHaveBeenCalledTimes(1);
+  });
+
+  it('yields when a queued plate paints, not when it is enqueued', () => {
+    const lane = { yieldToPlate: vi.fn() };
+    const plate = new BannerSlot(el, lane);
+    plate.show('Level 4!', true, undefined, 'default', undefined, 2600, null, 'levelup');
+    expect(
+      plate.show('Wisp Maze', true, undefined, 'worldQuest', undefined, 3200, null, 'deed'),
+    ).toBe('queued');
+    expect(lane.yieldToPlate).not.toHaveBeenCalled();
+    vi.advanceTimersByTime(2600 + 250);
+    expect(el.textContent).toBe('Wisp Maze');
+    expect(lane.yieldToPlate).toHaveBeenCalledWith(3200);
   });
 });
