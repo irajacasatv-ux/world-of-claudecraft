@@ -615,14 +615,14 @@ jobs:
           # (run 31741012359: lane A spent 11m21s fetching before an 8m25s
           # test step) scales with the blob payload. Non-cone patterns,
           # last match wins: everything in, screenshot DIRECTORIES out (the
-          # trailing slash leaves root-level files in), every subtree the
-          # repo actually references back in. The list is DERIVED and
-          # COUPLED: tests/ci_workflow.test.ts rescrapes every tracked file
-          # outside docs/screenshots (enumerated from the git index, so new
-          # directories join the corpus automatically) and requires SET
-          # EQUALITY with this list, so a reference this cone omits, or a
-          # cone entry nothing references anymore, fails the pin in the same
-          # change. pr-checks, browser-gate, release-checks, and
+          # trailing slash leaves root-level files in), every subtree a unit
+          # test job can reach back in. The list is DERIVED and COUPLED:
+          # tests/ci_workflow.test.ts rescrapes the test-reachable corpus
+          # (the unit tests, what they import or name, every JSON; never
+          # markdown prose or the browser suite, from the git index, so new
+          # files join automatically) and requires SET EQUALITY with this
+          # list, so a reference this cone omits, or a cone entry nothing
+          # reaches anymore, fails the pin in the same change. pr-checks, browser-gate, release-checks, and
           # release-version-gate deliberately keep the full tree.
           sparse-checkout: |
             /*
@@ -630,55 +630,23 @@ jobs:
             /docs/screenshots/admin-cheater-mark/
             /docs/screenshots/admin-guild-bank-panel/
             /docs/screenshots/aura-tracks/
-            /docs/screenshots/bank-storage-charters/
-            /docs/screenshots/bank-vault-tab/
-            /docs/screenshots/buried-hoard-entrance/
-            /docs/screenshots/buried-hoard-valley/
-            /docs/screenshots/clue-character-panel/
-            /docs/screenshots/cosmetics-window/
-            /docs/screenshots/confection-cascade/
-            /docs/screenshots/confection-cascade-v3/
-            /docs/screenshots/confection-cascade-v4/
-            /docs/screenshots/confection-cascade-v5/
-            /docs/screenshots/confection-cascade-v6/
-            /docs/screenshots/confection-cascade-v7/
-            /docs/screenshots/deed-border-cartouche/
-            /docs/screenshots/eastbrook-grand-armoury/
+            /docs/screenshots/charselect-zone/
             /docs/screenshots/eastbrook-vale-rebuild/
-            /docs/screenshots/far-foliage-impostors/
             /docs/screenshots/fenbridge-rebuild/
             /docs/screenshots/freehold-content-2026-09-07/
             /docs/screenshots/freehold-crafted-content-2026-09-07/
-            /docs/screenshots/freehold-interiors-2026-09-08/
             /docs/screenshots/freeholds-06-key/
-            /docs/screenshots/freeholds-06-presentation/
-            /docs/screenshots/furnishing-item-kind/
-            /docs/screenshots/guild-bank-history/
-            /docs/screenshots/guild-bank-tab/
             /docs/screenshots/guild-pledge-board/
-            /docs/screenshots/guild-social-v1/
-            /docs/screenshots/harvest-button-refresh/
             /docs/screenshots/ignivar-raid/
             /docs/screenshots/ignivar-raid-expansion/
             /docs/screenshots/intentional-gathering-pr1/
             /docs/screenshots/intentional-gathering-pr2/
-            /docs/screenshots/interface-redesign/
-            /docs/screenshots/item-art-consistency-2026-08-09/
-            /docs/screenshots/ley-beam-v1/
-            /docs/screenshots/market-house-redesign/
-            /docs/screenshots/masterwrought-art-completion-2026-09-02/
-            /docs/screenshots/placeholder-art-completion-2026-08-09/
             /docs/screenshots/r35-admin-professions-inspector/
             /docs/screenshots/release-v036-skill-normalization-2026-08-10/
             /docs/screenshots/target-dots/
             /docs/screenshots/touch-ui-rework/
-            /docs/screenshots/vault-fine-mark/
             /docs/screenshots/wildheart/
             /docs/screenshots/woc-market/
-            /docs/screenshots/world-quest-cannon/
-            /docs/screenshots/world-quest-horde/
-            /docs/screenshots/world-quest-investigation/
-            /docs/screenshots/world-quest-puzzle-polish/
           sparse-checkout-cone-mode: false
           # Explicit for the reader; the sparse-checkout input
           # already implies it (matching the changes job's step).
@@ -878,55 +846,23 @@ jobs:
             /docs/screenshots/admin-cheater-mark/
             /docs/screenshots/admin-guild-bank-panel/
             /docs/screenshots/aura-tracks/
-            /docs/screenshots/bank-storage-charters/
-            /docs/screenshots/bank-vault-tab/
-            /docs/screenshots/buried-hoard-entrance/
-            /docs/screenshots/buried-hoard-valley/
-            /docs/screenshots/clue-character-panel/
-            /docs/screenshots/cosmetics-window/
-            /docs/screenshots/confection-cascade/
-            /docs/screenshots/confection-cascade-v3/
-            /docs/screenshots/confection-cascade-v4/
-            /docs/screenshots/confection-cascade-v5/
-            /docs/screenshots/confection-cascade-v6/
-            /docs/screenshots/confection-cascade-v7/
-            /docs/screenshots/deed-border-cartouche/
-            /docs/screenshots/eastbrook-grand-armoury/
+            /docs/screenshots/charselect-zone/
             /docs/screenshots/eastbrook-vale-rebuild/
-            /docs/screenshots/far-foliage-impostors/
             /docs/screenshots/fenbridge-rebuild/
             /docs/screenshots/freehold-content-2026-09-07/
             /docs/screenshots/freehold-crafted-content-2026-09-07/
-            /docs/screenshots/freehold-interiors-2026-09-08/
             /docs/screenshots/freeholds-06-key/
-            /docs/screenshots/freeholds-06-presentation/
-            /docs/screenshots/furnishing-item-kind/
-            /docs/screenshots/guild-bank-history/
-            /docs/screenshots/guild-bank-tab/
             /docs/screenshots/guild-pledge-board/
-            /docs/screenshots/guild-social-v1/
-            /docs/screenshots/harvest-button-refresh/
             /docs/screenshots/ignivar-raid/
             /docs/screenshots/ignivar-raid-expansion/
             /docs/screenshots/intentional-gathering-pr1/
             /docs/screenshots/intentional-gathering-pr2/
-            /docs/screenshots/interface-redesign/
-            /docs/screenshots/item-art-consistency-2026-08-09/
-            /docs/screenshots/ley-beam-v1/
-            /docs/screenshots/market-house-redesign/
-            /docs/screenshots/masterwrought-art-completion-2026-09-02/
-            /docs/screenshots/placeholder-art-completion-2026-08-09/
             /docs/screenshots/r35-admin-professions-inspector/
             /docs/screenshots/release-v036-skill-normalization-2026-08-10/
             /docs/screenshots/target-dots/
             /docs/screenshots/touch-ui-rework/
-            /docs/screenshots/vault-fine-mark/
             /docs/screenshots/wildheart/
             /docs/screenshots/woc-market/
-            /docs/screenshots/world-quest-cannon/
-            /docs/screenshots/world-quest-horde/
-            /docs/screenshots/world-quest-investigation/
-            /docs/screenshots/world-quest-puzzle-polish/
           sparse-checkout-cone-mode: false
           # Explicit for the reader; the sparse-checkout input
           # already implies it (matching the changes job's step).
@@ -1008,55 +944,23 @@ jobs:
             /docs/screenshots/admin-cheater-mark/
             /docs/screenshots/admin-guild-bank-panel/
             /docs/screenshots/aura-tracks/
-            /docs/screenshots/bank-storage-charters/
-            /docs/screenshots/bank-vault-tab/
-            /docs/screenshots/buried-hoard-entrance/
-            /docs/screenshots/buried-hoard-valley/
-            /docs/screenshots/clue-character-panel/
-            /docs/screenshots/cosmetics-window/
-            /docs/screenshots/confection-cascade/
-            /docs/screenshots/confection-cascade-v3/
-            /docs/screenshots/confection-cascade-v4/
-            /docs/screenshots/confection-cascade-v5/
-            /docs/screenshots/confection-cascade-v6/
-            /docs/screenshots/confection-cascade-v7/
-            /docs/screenshots/deed-border-cartouche/
-            /docs/screenshots/eastbrook-grand-armoury/
+            /docs/screenshots/charselect-zone/
             /docs/screenshots/eastbrook-vale-rebuild/
-            /docs/screenshots/far-foliage-impostors/
             /docs/screenshots/fenbridge-rebuild/
             /docs/screenshots/freehold-content-2026-09-07/
             /docs/screenshots/freehold-crafted-content-2026-09-07/
-            /docs/screenshots/freehold-interiors-2026-09-08/
             /docs/screenshots/freeholds-06-key/
-            /docs/screenshots/freeholds-06-presentation/
-            /docs/screenshots/furnishing-item-kind/
-            /docs/screenshots/guild-bank-history/
-            /docs/screenshots/guild-bank-tab/
             /docs/screenshots/guild-pledge-board/
-            /docs/screenshots/guild-social-v1/
-            /docs/screenshots/harvest-button-refresh/
             /docs/screenshots/ignivar-raid/
             /docs/screenshots/ignivar-raid-expansion/
             /docs/screenshots/intentional-gathering-pr1/
             /docs/screenshots/intentional-gathering-pr2/
-            /docs/screenshots/interface-redesign/
-            /docs/screenshots/item-art-consistency-2026-08-09/
-            /docs/screenshots/ley-beam-v1/
-            /docs/screenshots/market-house-redesign/
-            /docs/screenshots/masterwrought-art-completion-2026-09-02/
-            /docs/screenshots/placeholder-art-completion-2026-08-09/
             /docs/screenshots/r35-admin-professions-inspector/
             /docs/screenshots/release-v036-skill-normalization-2026-08-10/
             /docs/screenshots/target-dots/
             /docs/screenshots/touch-ui-rework/
-            /docs/screenshots/vault-fine-mark/
             /docs/screenshots/wildheart/
             /docs/screenshots/woc-market/
-            /docs/screenshots/world-quest-cannon/
-            /docs/screenshots/world-quest-horde/
-            /docs/screenshots/world-quest-investigation/
-            /docs/screenshots/world-quest-puzzle-polish/
           sparse-checkout-cone-mode: false
           # Explicit for the reader; the sparse-checkout input
           # already implies it (matching the changes job's step).
@@ -1328,55 +1232,23 @@ jobs:
             /docs/screenshots/admin-cheater-mark/
             /docs/screenshots/admin-guild-bank-panel/
             /docs/screenshots/aura-tracks/
-            /docs/screenshots/bank-storage-charters/
-            /docs/screenshots/bank-vault-tab/
-            /docs/screenshots/buried-hoard-entrance/
-            /docs/screenshots/buried-hoard-valley/
-            /docs/screenshots/clue-character-panel/
-            /docs/screenshots/cosmetics-window/
-            /docs/screenshots/confection-cascade/
-            /docs/screenshots/confection-cascade-v3/
-            /docs/screenshots/confection-cascade-v4/
-            /docs/screenshots/confection-cascade-v5/
-            /docs/screenshots/confection-cascade-v6/
-            /docs/screenshots/confection-cascade-v7/
-            /docs/screenshots/deed-border-cartouche/
-            /docs/screenshots/eastbrook-grand-armoury/
+            /docs/screenshots/charselect-zone/
             /docs/screenshots/eastbrook-vale-rebuild/
-            /docs/screenshots/far-foliage-impostors/
             /docs/screenshots/fenbridge-rebuild/
             /docs/screenshots/freehold-content-2026-09-07/
             /docs/screenshots/freehold-crafted-content-2026-09-07/
-            /docs/screenshots/freehold-interiors-2026-09-08/
             /docs/screenshots/freeholds-06-key/
-            /docs/screenshots/freeholds-06-presentation/
-            /docs/screenshots/furnishing-item-kind/
-            /docs/screenshots/guild-bank-history/
-            /docs/screenshots/guild-bank-tab/
             /docs/screenshots/guild-pledge-board/
-            /docs/screenshots/guild-social-v1/
-            /docs/screenshots/harvest-button-refresh/
             /docs/screenshots/ignivar-raid/
             /docs/screenshots/ignivar-raid-expansion/
             /docs/screenshots/intentional-gathering-pr1/
             /docs/screenshots/intentional-gathering-pr2/
-            /docs/screenshots/interface-redesign/
-            /docs/screenshots/item-art-consistency-2026-08-09/
-            /docs/screenshots/ley-beam-v1/
-            /docs/screenshots/market-house-redesign/
-            /docs/screenshots/masterwrought-art-completion-2026-09-02/
-            /docs/screenshots/placeholder-art-completion-2026-08-09/
             /docs/screenshots/r35-admin-professions-inspector/
             /docs/screenshots/release-v036-skill-normalization-2026-08-10/
             /docs/screenshots/target-dots/
             /docs/screenshots/touch-ui-rework/
-            /docs/screenshots/vault-fine-mark/
             /docs/screenshots/wildheart/
             /docs/screenshots/woc-market/
-            /docs/screenshots/world-quest-cannon/
-            /docs/screenshots/world-quest-horde/
-            /docs/screenshots/world-quest-investigation/
-            /docs/screenshots/world-quest-puzzle-polish/
           sparse-checkout-cone-mode: false
           # Explicit for the reader; the sparse-checkout input
           # already implies it (matching the changes job's step).
@@ -1456,55 +1328,23 @@ jobs:
             /docs/screenshots/admin-cheater-mark/
             /docs/screenshots/admin-guild-bank-panel/
             /docs/screenshots/aura-tracks/
-            /docs/screenshots/bank-storage-charters/
-            /docs/screenshots/bank-vault-tab/
-            /docs/screenshots/buried-hoard-entrance/
-            /docs/screenshots/buried-hoard-valley/
-            /docs/screenshots/clue-character-panel/
-            /docs/screenshots/cosmetics-window/
-            /docs/screenshots/confection-cascade/
-            /docs/screenshots/confection-cascade-v3/
-            /docs/screenshots/confection-cascade-v4/
-            /docs/screenshots/confection-cascade-v5/
-            /docs/screenshots/confection-cascade-v6/
-            /docs/screenshots/confection-cascade-v7/
-            /docs/screenshots/deed-border-cartouche/
-            /docs/screenshots/eastbrook-grand-armoury/
+            /docs/screenshots/charselect-zone/
             /docs/screenshots/eastbrook-vale-rebuild/
-            /docs/screenshots/far-foliage-impostors/
             /docs/screenshots/fenbridge-rebuild/
             /docs/screenshots/freehold-content-2026-09-07/
             /docs/screenshots/freehold-crafted-content-2026-09-07/
-            /docs/screenshots/freehold-interiors-2026-09-08/
             /docs/screenshots/freeholds-06-key/
-            /docs/screenshots/freeholds-06-presentation/
-            /docs/screenshots/furnishing-item-kind/
-            /docs/screenshots/guild-bank-history/
-            /docs/screenshots/guild-bank-tab/
             /docs/screenshots/guild-pledge-board/
-            /docs/screenshots/guild-social-v1/
-            /docs/screenshots/harvest-button-refresh/
             /docs/screenshots/ignivar-raid/
             /docs/screenshots/ignivar-raid-expansion/
             /docs/screenshots/intentional-gathering-pr1/
             /docs/screenshots/intentional-gathering-pr2/
-            /docs/screenshots/interface-redesign/
-            /docs/screenshots/item-art-consistency-2026-08-09/
-            /docs/screenshots/ley-beam-v1/
-            /docs/screenshots/market-house-redesign/
-            /docs/screenshots/masterwrought-art-completion-2026-09-02/
-            /docs/screenshots/placeholder-art-completion-2026-08-09/
             /docs/screenshots/r35-admin-professions-inspector/
             /docs/screenshots/release-v036-skill-normalization-2026-08-10/
             /docs/screenshots/target-dots/
             /docs/screenshots/touch-ui-rework/
-            /docs/screenshots/vault-fine-mark/
             /docs/screenshots/wildheart/
             /docs/screenshots/woc-market/
-            /docs/screenshots/world-quest-cannon/
-            /docs/screenshots/world-quest-horde/
-            /docs/screenshots/world-quest-investigation/
-            /docs/screenshots/world-quest-puzzle-polish/
           sparse-checkout-cone-mode: false
           filter: blob:none
 

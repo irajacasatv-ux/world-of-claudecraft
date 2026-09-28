@@ -25,6 +25,7 @@ import {
 } from '../scripts/lib/gate_steps.mjs';
 import { PLAYWRIGHT_INSTALL_BLOCK } from './helpers/playwright_install_block';
 import { expectScansOnlyThroughSharedWalkers } from './helpers/scan_guard_self_audit';
+import { sparseConeCorpus } from './helpers/sparse_cone_corpus';
 import { stripComments } from './helpers/strip_comments';
 import { tsFilesUnder } from './helpers/ts_files_under';
 
@@ -308,12 +309,13 @@ describe('CI workflow parity', () => {
     // release-gate, release-i18n) exclude docs/screenshots DIRECTORIES
     // (the committed PR evidence, the largest blob payload in the tree; the
     // measured 11m21s checkout pathology scales with that payload) except
-    // every subtree the repo actually references. The coupling corpus is EVERY tracked
-    // reference-carrying file outside docs/screenshots, enumerated from the
-    // git index rather than a curated root list: a test-literal-only
-    // coupling shipped and missed two acceptance manifests on its first CI
-    // run, and a curated four-root walk is the same failure shape one level
-    // up (a reference from a root nobody curated in stays invisible).
+    // every subtree a unit-test job can reach. The coupling corpus is the
+    // TEST-REACHABLE closure over the git index (tests/helpers/
+    // sparse_cone_corpus.ts): the unit tests, everything they import or name
+    // by repo path, and every tracked JSON, since a test-literal-only coupling
+    // once missed two acceptance manifests on its first CI run. Markdown prose
+    // and the browser suite (full tree in browser-gate) stay out: a traced full
+    // unit run (2026-09-28) read screenshots under three subtrees, all inside.
     // Existence comes from the GIT INDEX, not the working tree: under the
     // very cone this verifies, an excluded directory does not exist on disk.
     const SPARSE_CONE = [
@@ -323,55 +325,23 @@ describe('CI workflow parity', () => {
       '            /docs/screenshots/admin-cheater-mark/',
       '            /docs/screenshots/admin-guild-bank-panel/',
       '            /docs/screenshots/aura-tracks/',
-      '            /docs/screenshots/bank-storage-charters/',
-      '            /docs/screenshots/bank-vault-tab/',
-      '            /docs/screenshots/buried-hoard-entrance/',
-      '            /docs/screenshots/buried-hoard-valley/',
-      '            /docs/screenshots/clue-character-panel/',
-      '            /docs/screenshots/cosmetics-window/',
-      '            /docs/screenshots/confection-cascade/',
-      '            /docs/screenshots/confection-cascade-v3/',
-      '            /docs/screenshots/confection-cascade-v4/',
-      '            /docs/screenshots/confection-cascade-v5/',
-      '            /docs/screenshots/confection-cascade-v6/',
-      '            /docs/screenshots/confection-cascade-v7/',
-      '            /docs/screenshots/deed-border-cartouche/',
-      '            /docs/screenshots/eastbrook-grand-armoury/',
+      '            /docs/screenshots/charselect-zone/',
       '            /docs/screenshots/eastbrook-vale-rebuild/',
-      '            /docs/screenshots/far-foliage-impostors/',
       '            /docs/screenshots/fenbridge-rebuild/',
       '            /docs/screenshots/freehold-content-2026-09-07/',
       '            /docs/screenshots/freehold-crafted-content-2026-09-07/',
-      '            /docs/screenshots/freehold-interiors-2026-09-08/',
       '            /docs/screenshots/freeholds-06-key/',
-      '            /docs/screenshots/freeholds-06-presentation/',
-      '            /docs/screenshots/furnishing-item-kind/',
-      '            /docs/screenshots/guild-bank-history/',
-      '            /docs/screenshots/guild-bank-tab/',
       '            /docs/screenshots/guild-pledge-board/',
-      '            /docs/screenshots/guild-social-v1/',
-      '            /docs/screenshots/harvest-button-refresh/',
       '            /docs/screenshots/ignivar-raid/',
       '            /docs/screenshots/ignivar-raid-expansion/',
       '            /docs/screenshots/intentional-gathering-pr1/',
       '            /docs/screenshots/intentional-gathering-pr2/',
-      '            /docs/screenshots/interface-redesign/',
-      '            /docs/screenshots/item-art-consistency-2026-08-09/',
-      '            /docs/screenshots/ley-beam-v1/',
-      '            /docs/screenshots/market-house-redesign/',
-      '            /docs/screenshots/masterwrought-art-completion-2026-09-02/',
-      '            /docs/screenshots/placeholder-art-completion-2026-08-09/',
       '            /docs/screenshots/r35-admin-professions-inspector/',
       '            /docs/screenshots/release-v036-skill-normalization-2026-08-10/',
       '            /docs/screenshots/target-dots/',
       '            /docs/screenshots/touch-ui-rework/',
-      '            /docs/screenshots/vault-fine-mark/',
       '            /docs/screenshots/wildheart/',
       '            /docs/screenshots/woc-market/',
-      '            /docs/screenshots/world-quest-cannon/',
-      '            /docs/screenshots/world-quest-horde/',
-      '            /docs/screenshots/world-quest-investigation/',
-      '            /docs/screenshots/world-quest-puzzle-polish/',
       '          sparse-checkout-cone-mode: false',
     ].join('\n');
     // Job-anchored, not a bare workflow-wide count: each sparse job carries
@@ -502,17 +472,7 @@ describe('CI workflow parity', () => {
     // the coupling even over an otherwise empty corpus (the
     // release_i18n_tier_coverage SELF idiom).
     const SELF = 'tests/ci_workflow.test.ts';
-    const REFERENCE_EXTENSIONS = [
-      '.ts',
-      '.mts',
-      '.cts',
-      '.tsx',
-      '.mjs',
-      '.cjs',
-      '.js',
-      '.json',
-      '.md',
-    ];
+    const CORPUS_FLOOR = 10_430;
     const referenced = new Set<string>();
     {
       const ls = spawnSync('git', ['ls-files', '-z'], {
@@ -523,17 +483,12 @@ describe('CI workflow parity', () => {
       expect(ls.status).toBe(0);
       const repoRoot = fileURLToPath(repoRootUrl);
       const tracked = ls.stdout.split('\0').filter((file) => file.length > 0);
-      const corpusCandidates = tracked.filter(
-        (file) =>
-          file !== SELF &&
-          !file.startsWith('docs/screenshots/') &&
-          REFERENCE_EXTENSIONS.some((ext) => file.endsWith(ext)),
-      );
       // In a local unstaged feature tree, a retired tracked file is absent by
       // design until the user stages the deletion. Derive that set from Git
       // instead of keeping a path allowlist that could become a permanent hole.
-      // Sparse-checkout omissions carry skip-worktree, not a deletion diff, so
-      // an unexpectedly absent corpus candidate in CI still fails loudly.
+      // Sparse-checkout omissions carry skip-worktree, not a deletion diff, and
+      // no corpus file sits under docs/screenshots, so an unexpectedly absent
+      // corpus file in CI still fails loudly.
       const deleted = spawnSync('git', ['diff', '--name-only', '--diff-filter=D', '-z', '--'], {
         cwd: repoRoot,
         encoding: 'utf8',
@@ -543,19 +498,28 @@ describe('CI workflow parity', () => {
       const pendingDeletions = new Set(
         deleted.stdout.split('\0').filter((file) => file.length > 0),
       );
-      const missing = corpusCandidates.filter((file) => !existsSync(join(repoRoot, file)));
+      const missing: string[] = [];
+      const read = (file: string): string => {
+        if (existsSync(join(repoRoot, file))) return readFileSync(join(repoRoot, file), 'utf8');
+        if (!pendingDeletions.has(file)) missing.push(file);
+        return '';
+      };
+      // The TEST-REACHABLE corpus (tests/helpers/sparse_cone_corpus.ts, pinned
+      // by tests/sparse_cone_corpus.test.ts): unit tests, what they import or
+      // name, and every JSON; never markdown prose, never the browser suite
+      // (browser-gate keeps the full tree), never code no unit test reaches.
+      const corpus = sparseConeCorpus(tracked, read, new Set([SELF]));
       expect(
-        missing.filter((file) => !pendingDeletions.has(file)),
-        `unexpected tracked paths are missing from the screenshot-reference corpus: ${missing.join(', ')}`,
+        missing,
+        `unexpected tracked paths are missing from the corpus: ${missing.join(', ')}`,
       ).toEqual([]);
-      const corpus = corpusCandidates.filter((file) => existsSync(join(repoRoot, file)));
-      // 10,729 reference-bearing files at the v0.44.0 sync close (2026-09-23;
-      // 9,404 at snapshot ea3b62fad1, 2026-09-07). The 10,853 pinned at the sync
-      // merge was never that merge's own count, which is 10,709 by `git ls-tree`.
-      // An emptied or truncated enumeration must not green the coupling.
-      expect(corpus.length).toBeGreaterThanOrEqual(10_729);
+      // CORPUS_FLOOR files at the release/v0.45.0 sync (2026-09-28), the day the
+      // corpus narrowed from every reference-bearing file (10,729 at the v0.44.0
+      // close) to the test-reachable ones. An emptied or truncated closure must
+      // not green the coupling.
+      expect(corpus.length).toBeGreaterThanOrEqual(CORPUS_FLOOR);
       for (const file of corpus) {
-        const source = readFileSync(join(repoRoot, file), 'utf8');
+        const source = read(file);
         for (const match of source.matchAll(/docs\/screenshots\/([A-Za-z0-9._-]+)/g)) {
           if (indexDirs.has(match[1])) referenced.add(match[1]);
         }
@@ -566,21 +530,7 @@ describe('CI workflow parity', () => {
     // a cone entry nothing references anymore is dead weight that must leave
     // (a one-way floor with slack would let a quietly narrowed corpus drop
     // entries and stay green).
-    // v0.43 release batches cannot update workflow files with their current
-    // push credentials. Keep discovering this reference, but do not require
-    // the sparse cone to grow until a workflow-scoped follow-up can land it.
-    const workflowScopedFollowup = new Set([
-      'charselect-zone',
-      'dash-speed-stack',
-      'nythraxis-dread-curse-swap',
-    ]);
-    for (const dir of workflowScopedFollowup) {
-      expect(referenced.has(dir), `${dir} remains a real referenced screenshot subtree`).toBe(true);
-      expect(coneDirs.has(dir), `${dir} is intentionally absent from the sparse cone`).toBe(false);
-    }
-    expect([...referenced].filter((dir) => !workflowScopedFollowup.has(dir)).sort()).toEqual(
-      [...coneDirs].sort(),
-    );
+    expect([...referenced].sort()).toEqual([...coneDirs].sort());
   });
 
   it('performs no hand-rolled directory reads (the corpus is the git index)', () => {
