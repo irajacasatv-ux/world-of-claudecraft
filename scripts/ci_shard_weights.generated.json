@@ -29,14 +29,14 @@
         ]
       },
       "tests/portrait_inert_suites.test.ts": {
-        "ms": 3,
+        "ms": 920,
         "method": "local-median",
         "measured": "2026-09-28",
-        "reason": "New 2026-09-28: pins that the three portrait-inert suites keep their gate classification and their zero-fetch stub; measured alone locally, pending the next green full-mode CI harvest.",
+        "reason": "New 2026-09-28: pins that the three portrait-inert suites keep their place in the selective gate (through its own discovery) and their zero-fetch stub; measured alone locally, pending the next green full-mode CI harvest.",
         "runs": [
-          5,
-          3,
-          3
+          1272,
+          920,
+          499
         ]
       },
       "tests/world_population_invariant.test.ts": {
@@ -3243,7 +3243,7 @@
   "tests/portrait_chip_defer.test.ts": 5,
   "tests/portrait_encode_worker.test.ts": 11,
   "tests/portrait_framing.test.ts": 4,
-  "tests/portrait_inert_suites.test.ts": 3,
+  "tests/portrait_inert_suites.test.ts": 920,
   "tests/portrait_live_capture.test.ts": 1777,
   "tests/portrait_prewarm_core.test.ts": 12,
   "tests/portrait_readback_core.test.ts": 17,
