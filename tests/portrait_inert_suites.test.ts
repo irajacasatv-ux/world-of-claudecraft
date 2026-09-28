@@ -39,16 +39,17 @@ const SUITES = [
 // The recorder, installed in vi.hoisted (so before any import runs) and returned by the
 // callback's first return, the chip stub, and the afterAll that restores fetch and asserts
 // the list is empty, each matched as one block so no line can move out of it. No line
-// between the recorder and its return may reach column 0 or return; an indented early
-// close would leave the destructured bindings undefined, which throws when the suite
-// loads. Each suite also names globalThis.fetch exactly three times (the capture, the
-// install and the restore), never stubs fetch through vi.stubGlobal, and names realFetch
-// and fetched exactly five times each, the uses those blocks hold: so the captured real
-// fetch cannot be put back or called around the recorder, however the target is spelled,
-// nor the list emptied before the check. The counts read words, strings included. A text
-// pin cannot see fetch captured under another spelling before the recorder installs.
+// between the recorder and its return may reach column 0 or hold a return; an indented
+// early close either destructures undefined or breaks vitest's hoisting, and both fail
+// when the suite loads. Each suite also names globalThis.fetch exactly three times (the
+// capture, the install and the restore), never stubs fetch through vi.stubGlobal, and
+// names realFetch and fetched exactly five times each, the uses those blocks hold: so the
+// captured real fetch cannot be put back or called around the recorder, however the
+// target is spelled, nor the list emptied before the check. The counts read words,
+// strings included. This pin does not see a fetch captured or built under another
+// spelling before the recorder installs, nor the blocks wrapped inside a string.
 const RECORDER =
-  /^const \{ fetched, inertPortraitChip, realFetch \} = vi\.hoisted\(\(\) => \{\n {2}const fetched: string\[\] = \[\];\n {2}const realFetch = globalThis\.fetch;\n {2}globalThis\.fetch = \(\(input: RequestInfo \| URL, init\?: RequestInit\) => \{\n {4}fetched\.push\(typeof input === 'string' \? input : input instanceof URL \? input\.href : input\.url\);\n {4}return realFetch\(input, init\);\n {2}\}\) as typeof fetch;(?:\n(?:(?! {2}return\b) {2}[^\n]*)?)*?\n {2}return \{ fetched, inertPortraitChip, realFetch \};\n\}\);$/m;
+  /^const \{ fetched, inertPortraitChip, realFetch \} = vi\.hoisted\(\(\) => \{\n {2}const fetched: string\[\] = \[\];\n {2}const realFetch = globalThis\.fetch;\n {2}globalThis\.fetch = \(\(input: RequestInfo \| URL, init\?: RequestInit\) => \{\n {4}fetched\.push\(typeof input === 'string' \? input : input instanceof URL \? input\.href : input\.url\);\n {4}return realFetch\(input, init\);\n {2}\}\) as typeof fetch;(?:\n(?:(?![^\n]*\breturn\b) {2}[^\n]*)?)*?\n {2}return \{ fetched, inertPortraitChip, realFetch \};\n\}\);$/m;
 const CHIP_STUB = /^vi\.mock\('\.\.\/src\/ui\/portrait_chip', \(\) => inertPortraitChip\);$/m;
 const AFTER_ALL =
   /^afterAll\(\(\) => \{\n {2}globalThis\.fetch = realFetch;\n {2}expect\(fetched, 'this suite starts no fetch'\)\.toEqual\(\[\]\);\n\}\);$/m;
@@ -107,8 +108,15 @@ describe('the portrait-inert suites', () => {
     expect(failedChecks(raw.replace(close, `\n});\nvi.hoisted(() => {${close}`))).toEqual([
       recorder,
     ]);
-    const decoy = "  return { ['fetch' + 'ed']: [], inertPortraitChip, ['real' + 'Fetch']: null };";
-    expect(failedChecks(raw.replace(close, `\n${decoy}${close}`))).toEqual([recorder]);
+    // An earlier return in any form, placed before the recorder's own.
+    const decoy = "{ ['fetch' + 'ed']: [], inertPortraitChip, ['real' + 'Fetch']: null }";
+    for (const early of [
+      `  return ${decoy};`,
+      `  if (true) return ${decoy};`,
+      `  {\n    return ${decoy};\n  }`,
+    ]) {
+      expect(failedChecks(raw.replace(close, `\n${early}${close}`)), early).toEqual([recorder]);
+    }
     expect(failedChecks(raw.replace(CHIP_STUB, ''))).toEqual(['the chip stub']);
     expect(failedChecks(raw.replace(AFTER_ALL, (block) => `/*\n${block}\n*/`))).toContain(
       'the afterAll restore and zero-fetch assertion',
