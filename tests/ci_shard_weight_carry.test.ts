@@ -346,6 +346,34 @@ describe('applyLocalCarry', () => {
     expect(carriedDefects(out, { fallbackMs: 31, requireMap: true })).toEqual([]);
   });
 
+  it('keeps the superseded CI weight when a superseding row is re-carried', () => {
+    const once = applyLocalCarry(base, [{ file: 'tests/a.test.ts', runs: [4, 3, 5] }], {
+      measured: '2026-09-27',
+      reason: 'split after the harvest',
+      supersede: ['tests/a.test.ts'],
+    });
+    const again = applyLocalCarry(once, [{ file: 'tests/a.test.ts', runs: [6, 6, 7] }], {
+      measured: '2026-09-28',
+      reason: 'reshaped again',
+    });
+    expect(carriedRows(again)['tests/a.test.ts']).toEqual({
+      ms: 6,
+      method: 'local-median',
+      measured: '2026-09-28',
+      reason: 'reshaped again',
+      runs: [6, 6, 7],
+      supersedes: 10,
+    });
+    expect(provenanceOf(again).harvestedFiles).toBe(0);
+    expect(carriedDefects(again, { fallbackMs: 31, requireMap: true })).toEqual([]);
+    // A plain carried row gains no supersedes on a re-carry.
+    const plain = applyLocalCarry(base, [{ file: 'tests/old.test.ts', runs: [6, 7, 8] }], {
+      measured: '2026-08-31',
+      reason: 'pending harvest',
+    });
+    expect(carriedRows(plain)['tests/old.test.ts']).not.toHaveProperty('supersedes');
+  });
+
   it('refuses a supersede that names no harvested row or an unmeasured file', () => {
     const opts = { measured: '2026-09-27', reason: 'split' };
     // A new file is not a harvested row: the exception cannot carry it.

@@ -254,13 +254,22 @@ export function applyLocalCarry(table, measurements, opts) {
     }
     const ms = medianMs(m.runs);
     rows[m.file] = ms;
+    // A re-carry of a row that already superseded a CI weight keeps that record: the
+    // row still stands in for the harvest's figure, and the attribution must not be
+    // lost to a re-measure.
+    const priorSupersedes =
+      replaces === null && m.file in carried ? carried[m.file].supersedes : undefined;
     carried[m.file] = {
       ms,
       method: 'local-median',
       measured: opts.measured,
       reason: opts.reason.trim(),
       runs: [...m.runs],
-      ...(replaces !== null ? { supersedes: replaces } : {}),
+      ...(replaces !== null
+        ? { supersedes: replaces }
+        : priorSupersedes !== undefined
+          ? { supersedes: priorSupersedes }
+          : {}),
     };
     if (replaces !== null) superseded += 1;
   }
