@@ -31,8 +31,8 @@ tooltips, ARIA, focus keys and press paths.
 - **The feed mode is the bar's.** The Heal Pet press starts it and opens the bags
   through `PetBarHost.openBagsForFeed`; the bags window reads it and ends it
   through Hud's bags deps (`feedPending`, `setFeedPending`), and the Hud's
-  `cancelPetFeed` ends it on a bags close. `setFeedPending` redraws the bar only
-  when the mode actually flips.
+  `cancelPetFeed` ends it on a bags close. The mode is part of the repaint
+  signature, so a flip redraws the bar and a repeated set changes nothing.
 - **A language switch invalidates, it does not rebuild in place.** The
   coordinator arm (`relocalizeCoordinatorMemos`) calls `invalidate()`, and the
   next frame rebuilds every caption (`tests/language_fanout_registry.test.ts`).

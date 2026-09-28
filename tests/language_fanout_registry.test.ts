@@ -637,7 +637,7 @@ const ANSWERED: readonly AnsweredSurface[] = [
     file: 'hud/pet_bar/pet_bar_controller.ts',
     memos: ['lastSig'],
     answer: 'this.relocalizeCoordinatorMemos',
-    why: "the pet action bar signature: pet id, primary or secondary, owner class, mode id, two cooldown signatures of integer seconds and autocast flags, plus two booleans. Past the gate the bar's DOM is rebuilt from scratch and every button caption and both tooltip halves are fresh t() calls. Cleared to the empty string, which no real signature can equal",
+    why: "the pet action bar signature: pet id, primary or secondary, owner class, mode id, two cooldown signatures of integer seconds and autocast flags, the feed-mode and stance-menu flags, and the Heal Pet button's refusal-reason key (an id, not text). Past the gate the bar's DOM is rebuilt from scratch and every button caption and both tooltip halves are fresh t() calls. Cleared to the empty string, which no real signature can equal",
   },
   {
     file: 'hud.ts',

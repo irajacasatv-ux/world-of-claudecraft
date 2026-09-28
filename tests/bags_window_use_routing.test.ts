@@ -28,7 +28,7 @@ function harness(
   errors: string[];
   menuDefaults: (() => void)[];
   tradedItems: string[];
-  fedItems: string[];
+  fed: { itemId: string; at: unknown }[];
   feedModeWrites: boolean[];
 } {
   const usedItems: string[] = [];
@@ -37,7 +37,7 @@ function harness(
   const errors: string[] = [];
   const menuDefaults: (() => void)[] = [];
   const tradedItems: string[] = [];
-  const fedItems: string[] = [];
+  const fed: { itemId: string; at: unknown }[] = [];
   const feedModeWrites: boolean[] = [];
   let petFeed = options.petFeed === true;
   const world = {
@@ -52,8 +52,8 @@ function harness(
     placeFeast: () => {
       feastPlacements.push(1);
     },
-    feedPet: (itemId: string) => {
-      fedItems.push(itemId);
+    feedPet: (itemId: string, at: unknown) => {
+      fed.push({ itemId, at });
     },
   } as unknown as IWorld;
   const root = document.createElement('div');
@@ -124,7 +124,7 @@ function harness(
     errors,
     menuDefaults,
     tradedItems,
-    fedItems,
+    fed,
     feedModeWrites,
   };
 }
@@ -254,14 +254,22 @@ describe.each(['pattern_ironhusk_flask', 'pattern_crucible_str_mail', 'formula_l
 );
 
 describe('bags pet-feed pick', () => {
-  it('feeds the picked food and ends the pet bar feed mode, which alone redraws the bar', () => {
-    const { root, fedItems, feedModeWrites, usedItems, gatherToolCalls } = harness(
-      [{ itemId: 'baked_bread', count: 1 }],
+  it('feeds the picked copy and ends the pet bar feed mode exactly once', () => {
+    const { root, fed, feedModeWrites, usedItems, gatherToolCalls } = harness(
+      [
+        { itemId: 'baked_bread', count: 1 },
+        { itemId: 'baked_bread', count: 2 },
+      ],
       () => false,
       { petFeed: true },
     );
-    clickFirstCell(root);
-    expect(fedItems).toEqual(['baked_bread']);
+    // The SECOND of two same-id stacks: the feed names that cell, not the first.
+    const cells = root.querySelectorAll('button.bag-item');
+    expect(cells).toHaveLength(2);
+    cells[1].dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    expect(fed).toHaveLength(1);
+    expect(fed[0].itemId).toBe('baked_bread');
+    expect(fed[0].at).toMatchObject({ slotIndex: 1 });
     expect(feedModeWrites).toEqual([false]);
     expect(usedItems).toEqual([]);
     expect(gatherToolCalls).toEqual([]);

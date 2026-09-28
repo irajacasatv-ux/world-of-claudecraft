@@ -570,10 +570,11 @@ describe('PetBarController: the latch, the presses and the host seam', () => {
     expect(code).toContain('this.petBarState ??= new PetBarController(this, this.writerFacet);');
     // update() drives it with the pet it resolved once for the pet frame.
     expect(code).toContain('this.petBar.render(pet);');
-    // Only the language switch invalidates the bar; the feed mode is read and
-    // ended through the controller, whose setFeedPending redraws on a flip.
+    // Only the language switch invalidates the bar, in any call form; the feed
+    // mode is read and ended through the controller, whose signature carries it.
     expect(code).not.toContain('resetPetBarSig');
-    expect(code.split('this.petBar.invalidate();').length - 1).toBe(1);
+    expect(code.split('this.petBar.invalidate(').length - 1).toBe(1);
+    expect(code).toContain('this.petBar.invalidate();');
     expect(code).toContain('pendingPetFeed: () => this.petBar.feedPending,');
     expect(code).toContain('setPendingPetFeed: (active) => this.petBar.setFeedPending(active),');
     expect(code).toContain('this.petBar.setFeedPending(false);');

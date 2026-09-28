@@ -1131,7 +1131,7 @@ describe('the respawn chat line through handleEvents', () => {
 // ---------------------------------------------------------------------------
 
 describe('Hud.cancelPetFeed: ends the feed mode on the pet bar that owns it', () => {
-  it('ends the mode on the one lazily built bar, and a second call repaints nothing', () => {
+  it('ends the mode on the one lazily built bar, and a second call leaves it ended', () => {
     const setFeed = vi.spyOn(PetBarController.prototype, 'setFeedPending');
     const hud = bareHud() as DelegatorRig & {
       cancelPetFeed: Hud['cancelPetFeed'];
@@ -1140,19 +1140,16 @@ describe('Hud.cancelPetFeed: ends the feed mode on the pet bar that owns it', ()
     const bar = hud.petBar;
     expect(bar).toBeInstanceOf(PetBarController);
     bar.setFeedPending(true);
-    const latch = bar as unknown as { lastSig: string };
-    latch.lastSig = 'painted';
     hud.cancelPetFeed();
     expect(bar.feedPending).toBe(false);
-    expect(latch.lastSig).toBe('');
     expect(hud.petBar).toBe(bar);
     expect(setFeed.mock.calls).toEqual([[true], [false]]);
     expect(setFeed.mock.contexts).toEqual([bar, bar]);
-    // Not in the mode: nothing changed, so the latch holds and nothing repaints.
-    latch.lastSig = 'painted';
+    // The redraw is the bar's own (the mode is in its signature,
+    // tests/pet_bar_controller.test.ts); a second call only restates the end.
     hud.cancelPetFeed();
-    expect(latch.lastSig).toBe('painted');
     expect(bar.feedPending).toBe(false);
+    expect(setFeed.mock.calls).toEqual([[true], [false], [false]]);
   });
 });
 

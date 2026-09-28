@@ -11,7 +11,7 @@
 // invalidate() when the bar must rebuild on the next frame for a language switch
 // (relocalizeCoordinatorMemos). The food-selection mode is the bar's own state: the
 // Heal Pet press starts it, and the bags window reads and ends it through Hud's bags
-// deps; setFeedPending redraws the bar whenever the mode flips.
+// deps; the mode is part of the signature, so a flip redraws the bar.
 //
 // A DOM module: it reads #petbar, toggles a body class and arms the touch-hold
 // timer on window.
@@ -112,11 +112,10 @@ export class PetBarController {
     return this.feedActive;
   }
 
-  /** Enter or leave food selection; leaving redraws the bar. */
+  /** Enter or leave food selection. The mode is part of the bar's signature, so
+   *  a flip redraws the bar on the next frame and a repeated set changes nothing. */
   setFeedPending(active: boolean): void {
-    if (active === this.feedActive) return;
     this.feedActive = active;
-    this.lastSig = '';
   }
 
   // `pet` is resolved ONCE per frame by Hud.update() and passed in, shared with the
