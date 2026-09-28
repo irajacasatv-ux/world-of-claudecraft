@@ -62,6 +62,10 @@
 // tests/professions_blob_growth.test.ts), 692 past the old value, so the
 // smallest 32-KiB step above it is 262,144, which now meets the guild-bank row
 // scale rather than sitting one step below it. 32,076 bytes of headroom.
+// The release reached the same 262,144 on its own at the 2026-09-28 Buried
+// Hoards merge (its fixture 233,360: 227,869 plus the hoard and
+// faction-quartermaster content, +5,491). At the Freeholds sync of
+// release/v0.45.0 the merged fixture measures 235,559, still under it.
 export const CHARACTER_BLOB_WARN_BYTES = 262_144;
 
 // The decision, kept pure so it is unit-testable without a database: returns the

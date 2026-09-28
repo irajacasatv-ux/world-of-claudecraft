@@ -150,8 +150,11 @@ describe('audited launch totals (literals: update deliberately with the catalog)
     // 320 / 3545 with the Freeholds branch's two manual milestones
     // (homesteader_first_furnishing, homesteader_first_cottage, five Renown
     // each) appended behind the ferry deed, MEASURED on the merged tree.
-    expect(DEED_ORDER.length).toBe(320);
-    expect(ALL.reduce((sum, d) => sum + d.renown, 0)).toBe(3545);
+    // RE-PINNED at the Freeholds sync of release/v0.45.0 (ac9ed4db24): 320 / 3545
+    // + the release's Buried Hoard cmb_coinsack_caught (renown 10) = 321 / 3555,
+    // measured on the merged tree.
+    expect(DEED_ORDER.length).toBe(321);
+    expect(ALL.reduce((sum, d) => sum + d.renown, 0)).toBe(3555);
   });
 
   it('ships the audited per-category counts', () => {
@@ -172,7 +175,8 @@ describe('audited launch totals (literals: update deliberately with the catalog)
       // allied faction plus the all-factions meta), then
       // +2 the Freeholds branch's two Homesteader milestones.
       progression: 77,
-      combat: 10,
+      // +1 the Buried Hoard goblin catch (cmb_coinsack_caught).
+      combat: 11,
       // +2 Rift coverage deeds (dgn_rift, dgn_rift_s_rank), +5 Crucible raid
       // deeds (per-boss clear pairs plus the Varkhul flawless task).
       dungeon: 36,
@@ -408,6 +412,8 @@ describe('audited launch totals (literals: update deliberately with the catalog)
       // (the first casket and the tenth, which grants Treasure Hunter).
       'exp_clue_first_casket',
       'exp_clue_ten_caskets',
+      // The Buried Hoard's Coinsack Scurrier, caught once (hoardGoblinKills).
+      'cmb_coinsack_caught',
       // The release's Eastbrook ferry round trip, appended last at the fourth
       // release/v0.44.0 base merge.
       'exp_harbor_to_harbor',
@@ -1047,7 +1053,12 @@ describe('frozen trigger + renown catalog (design rule 9: never retro-edit a tri
   // the 2026-09-26 sync of release/v0.44.0 at aaff789813: the release's literal
   // 8749b988... rotated down into PRE_APPEND_CATALOG_SHA256, and the proof below
   // reproduces it exactly by stripping the two. MEASURED on the merged tree.
-  const FROZEN_CATALOG_SHA256 = 'ffa267a5bc691eab2f5d14ff7171c023afe137e6a8d9a8373787278a60515d34';
+  // Re-baselined at the 2026-09-28 release merge into feature/buried-hoards: one NEW
+  // deed (cmb_coinsack_caught) joins; no existing trigger or renown changed.
+  // RE-PINNED at the Freeholds sync of release/v0.45.0 (ac9ed4db24): the release's
+  // 765c2ea1... literal rotated down into PRE_APPEND_CATALOG_SHA256 (stripping the
+  // two Homesteader milestones reproduces it), measured on the merged tree.
+  const FROZEN_CATALOG_SHA256 = 'f4f78f73190611b2db24f32be6a900b814b8b964bb7f8fb156c8fb1f728dda97';
 
   it('every shipped deed keeps its trigger and renown unchanged', () => {
     const canonical = JSON.stringify(
@@ -1120,8 +1131,14 @@ describe('frozen trigger + renown catalog (design rule 9: never retro-edit a tri
   // set is the branch's two Homesteader milestones behind the ferry deed, so the
   // release parent is a pure prefix of the merged table. The branch parent's
   // proof (strip the release's seventeen new deeds) is the it.each below.
+  //
+  // The Freeholds sync of release/v0.45.0 (ac9ed4db24): the release seated its
+  // Buried Hoard cmb_coinsack_caught between exp_clue_ten_caskets and the ferry
+  // deed, so the previous mint is the release's own 765c2ea1... literal and the
+  // append set is still the two Homesteader milestones at the true tail. The
+  // branch parent's proof (strip cmb_coinsack_caught) is the it.each below.
   const PRE_APPEND_CATALOG_SHA256 =
-    '8749b988a2135b7b3c0dee2065b54e6491660e86ce51bf7880924ff763ae1a25';
+    '765c2ea13a8a87d5b43a3f725ab56e1c58464f850dc2ec0e10048adc12f67829';
   const APPENDED_SINCE: readonly string[] = [
     'homesteader_first_furnishing',
     'homesteader_first_cottage',
@@ -1133,11 +1150,12 @@ describe('frozen trigger + renown catalog (design rule 9: never retro-edit a tri
       expect(DEED_ORDER.includes(id), `${id} is in the live catalog`).toBe(true);
     }
     // The branch's two milestones sit at the true tail behind the release's
-    // ferry deed, which follows the Clue Scroll casket pair: an append into a
-    // known seat, never a scattered insert or a retro-edit (the digest below
-    // proves it).
-    expect(DEED_ORDER.slice(-2 - APPENDED_SINCE.length)).toEqual([
+    // ferry deed, which follows the release's Buried Hoard goblin catch and the
+    // Clue Scroll casket pair: an append into a known seat, never a scattered
+    // insert or a retro-edit (the digest below proves it).
+    expect(DEED_ORDER.slice(-3 - APPENDED_SINCE.length)).toEqual([
       'exp_clue_ten_caskets',
+      'cmb_coinsack_caught',
       'exp_harbor_to_harbor',
       ...APPENDED_SINCE,
     ]);
@@ -1200,6 +1218,10 @@ describe('frozen trigger + renown catalog (design rule 9: never retro-edit a tri
   // seventeen world-quest, faction standing and Clue Scroll deeds ahead of the
   // ferry deed, so every older proof strips them as well, and the fourth row is
   // that sync's branch parent (20209e4c21), reproduced by stripping only them.
+  // The Freeholds sync of release/v0.45.0 (ac9ed4db24) seats the release's
+  // cmb_coinsack_caught ahead of the ferry deed, so every older proof strips it
+  // too, and the fifth row is that sync's branch parent (0a30c79d55), reproduced
+  // by stripping only it.
   const RELEASE_WORLD_QUEST_DEED_IDS: readonly string[] = [
     'exp_arcane_calligraphy',
     'exp_arcane_calligraphy_gold',
@@ -1222,7 +1244,12 @@ describe('frozen trigger + renown catalog (design rule 9: never retro-edit a tri
   it.each([
     {
       parent: 'Freeholds',
-      appended: ['col_set_bramblehide', 'exp_harbor_to_harbor', ...RELEASE_WORLD_QUEST_DEED_IDS],
+      appended: [
+        'col_set_bramblehide',
+        'exp_harbor_to_harbor',
+        'cmb_coinsack_caught',
+        ...RELEASE_WORLD_QUEST_DEED_IDS,
+      ],
       projectOut: RELEASE_RETIRED_DEED_IDS,
       digest: '7c4f0428a2b613e9d99e0809f916655e008e8e333672021b8ba0a691a56f7b7c',
     },
@@ -1232,6 +1259,7 @@ describe('frozen trigger + renown catalog (design rule 9: never retro-edit a tri
         'homesteader_first_furnishing',
         'homesteader_first_cottage',
         'exp_harbor_to_harbor',
+        'cmb_coinsack_caught',
         ...RELEASE_WORLD_QUEST_DEED_IDS,
       ],
       projectOut: [],
@@ -1239,15 +1267,21 @@ describe('frozen trigger + renown catalog (design rule 9: never retro-edit a tri
     },
     {
       parent: 'Freeholds at the first 2026-09-26 sync',
-      appended: ['exp_harbor_to_harbor', ...RELEASE_WORLD_QUEST_DEED_IDS],
+      appended: ['exp_harbor_to_harbor', 'cmb_coinsack_caught', ...RELEASE_WORLD_QUEST_DEED_IDS],
       projectOut: [],
       digest: 'c2746308010adebae5345ae0d0f54d2230172fe12a6097a7411f0a7a0baddffa',
     },
     {
       parent: 'Freeholds at the second 2026-09-26 sync',
-      appended: RELEASE_WORLD_QUEST_DEED_IDS,
+      appended: ['cmb_coinsack_caught', ...RELEASE_WORLD_QUEST_DEED_IDS],
       projectOut: [],
       digest: 'fb106a9c99da5b493f3c8c649effdd20d3f33e5d44e65cdb337b182a01f1ce3a',
+    },
+    {
+      parent: 'Freeholds at the release/v0.45.0 sync',
+      appended: ['cmb_coinsack_caught'],
+      projectOut: [],
+      digest: 'ffa267a5bc691eab2f5d14ff7171c023afe137e6a8d9a8373787278a60515d34',
     },
   ])(
     'preserves every $parent trigger and Renown value through the merge',
@@ -1471,9 +1505,13 @@ describe('table shape', () => {
     // The one-time Forgebreaker quest's hidden celebration appends after it,
     // then the world-quest block, then the faction standing ladder, then the
     // Clue Scroll casket pair, then the release's ferry round trip, then this
-    // branch's two Homesteader milestones at the true tail.
-    expect(DEED_ORDER.slice(-4)).toEqual([
+    // branch's two Homesteader milestones at the true tail. RE-PINNED at the
+    // Freeholds sync of release/v0.45.0 (ac9ed4db24): the release's Buried Hoard
+    // cmb_coinsack_caught sits between the casket pair and the ferry deed,
+    // measured on the merged tree.
+    expect(DEED_ORDER.slice(-5)).toEqual([
       'exp_clue_ten_caskets',
+      'cmb_coinsack_caught',
       'exp_harbor_to_harbor',
       'homesteader_first_furnishing',
       'homesteader_first_cottage',

@@ -197,7 +197,11 @@ describe('profile page Reliquary pair + Curator rank lines', () => {
     // 434 with the trinket slot's seventeen character-scoped relics (PR 4173).
     // 453 with the Freeholds branch's Homesteader title and eighteen Hearth
     // furnishings (+19; the branch alone read 431 over the release's 412).
-    expect(catalogTotal).toBe(453);
+    // 466 at the release/v0.44.0 merge into feature/buried-hoards (2026-09-28): the 32 Buried Hoard pieces
+    // (character-scoped items), the same +32 as reliquary_content.test.ts's pair.
+    // Freeholds sync of release/v0.45.0 at ac9ed4db24: 485 (453 + the 32 hoard
+    // pieces), measured on the merged catalog.
+    expect(catalogTotal).toBe(485);
     // The Warfare Season 2 Vanguard Gallery is class-personal and sits outside
     // completion, so it moves nothing here.
   });

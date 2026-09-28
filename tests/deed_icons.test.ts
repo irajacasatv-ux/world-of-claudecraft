@@ -493,9 +493,14 @@ describe('Book of Deeds webp icons', () => {
     // The release's Eastbrook ferry round trip (exp_harbor_to_harbor) joins the
     // pending set on the exploration crest: 318 live, still 289 painted.
     // Both Freehold crests are painted: 320 live, 291 painted, 29 pending.
-    expect(DEED_ORDER, 'the merged live deed catalog').toHaveLength(320);
+    // The Buried Hoards Coinsack catch (cmb_coinsack_caught) joins on the combat
+    // crest beside the ferry round trip: 319 live, still 289 painted.
+    // RE-PINNED at the Freeholds sync of release/v0.45.0 (ac9ed4db24): 320 live +
+    // the release's pending cmb_coinsack_caught = 321 live, 291 painted, 30
+    // pending, measured on the merged tree.
+    expect(DEED_ORDER, 'the merged live deed catalog').toHaveLength(321);
     expect(DEED_IMAGE_IDS.size, 'every live deed but the pending set is painted').toBe(291);
-    expect(DEED_ART_PENDING_IDS).toHaveLength(29);
+    expect(DEED_ART_PENDING_IDS).toHaveLength(30);
     expect(DEED_ART_PENDING_IDS.at(-1)).toBe('exp_harbor_to_harbor');
     expect(DEED_ORDER.length - DEED_IMAGE_IDS.size).toBe(DEED_ART_PENDING_IDS.length);
     for (const id of artless) {

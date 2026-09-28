@@ -164,7 +164,7 @@ describe('buildManifest', () => {
     expect(manifest).toContain('cast_lightning_bolt');
   });
 
-  it('keeps release mount/UI cues and Warrior recordings in one 377-key inventory', () => {
+  it('keeps release mount/UI cues, Warrior recordings, and hoard cues in one 383-key inventory', () => {
     // Combine the release farming/crafting cues with the candidate mount cues.
     // Release inventory: 319 total, 92 UI, 34 mount. A mount may share
     // player footfalls or have several cues, so this is not a mount count.
@@ -179,8 +179,21 @@ describe('buildManifest', () => {
     // 377 drops the retired Rallycart RXT's ten keys with its deleted takes
     // (summon, idle, start, loop, stop, the reverse trio, takeoff, touchdown).
     // Mount cues 40 -> 30; UI is unchanged.
+    // The six Buried Hoard cues (the entrance open/hum pair and the four
+    // tide-wave boss cues) bring that total to 393 (release/v0.44.0 merge
+    // into feature/buried-hoards).
+    // Freeholds sync of release/v0.45.0 at ac9ed4db24: 383 on the merged
+    // catalog, measured (the release's 393 less the ten Rallycart keys).
     const keys = new Set(SFX.map((entry) => entry.key));
-    expect(keys.size).toBe(377);
+    expect(keys.size).toBe(383);
+    expect([...keys].filter((key) => key.startsWith('hoard_')).sort()).toEqual([
+      'hoard_entrance_hum',
+      'hoard_entrance_open',
+      'hoard_tide_build',
+      'hoard_tide_crash',
+      'hoard_tide_hit',
+      'hoard_tide_rush',
+    ]);
     expect([...keys].filter((key) => key.includes('_warrior_'))).toHaveLength(60);
     expect([...keys].filter((key) => key.includes('_masterwork_'))).toEqual([
       'impact_masterwork_execution',
@@ -282,7 +295,7 @@ describe('buildManifest', () => {
     // purely filesystem-discovered.
     const mobFamilyKeys = [...keys].filter((key) => key.startsWith('mob_'));
     expect(mobFamilyKeys).toHaveLength(65); // 13 families x 5 actions
-    expect(SFX_FIXED_CATALOG_KEYS).toHaveLength(377);
+    expect(SFX_FIXED_CATALOG_KEYS).toHaveLength(383);
     expect([...SFX_FIXED_CATALOG_KEYS].sort()).toEqual([...keys].sort());
   });
 });

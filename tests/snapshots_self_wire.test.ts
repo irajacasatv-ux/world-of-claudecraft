@@ -1,8 +1,9 @@
 // Self-record wire round trips: the in-combat bit, stats, talents, spectate POV,
 // per-session isolation, raid lockouts, the Combat Mech held weapon, channel
 // target, pet signature skill, swing timer, account flair, corpse harvest claim,
-// ledge climb, loot FFA lapse, corpse decay and the combat-rating scalars behind
-// the delta gate. Split out of tests/snapshots.test.ts on 2026-09-27.
+// ledge climb, loot FFA lapse, corpse decay, the buried hoard rarity identity
+// wire and the combat-rating scalars behind the delta gate. Split out of
+// tests/snapshots.test.ts on 2026-09-27.
 
 import { describe, expect, it, vi } from 'vitest';
 
@@ -13,11 +14,55 @@ import { GameServer, wireEntity } from '../server/game';
 import { corpseLootAvailability } from '../src/game/corpse_loot_availability';
 import { mechHeldWeaponOverride, visualKeyFor } from '../src/render/characters/manifest';
 import { MOBS } from '../src/sim/data';
-import { createMob } from '../src/sim/entity';
+import { createGroundObject, createMob } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
 import type { PlayerClass } from '../src/sim/types';
 import { bareClient, broadcast, fakeWs, joinServer, lastSnap } from './helpers/bare_client';
 import { WIRE_TEST_WORLD } from './helpers/snapshot_wire';
+
+describe('buried hoard rarity identity wire', () => {
+  it.each(['common', 'rare', 'epic', 'legendary'] as const)('round-trips %s', (rarity) => {
+    const entrance = createGroundObject(90_003, '', 'Buried Hoard', { x: 2, y: 0, z: 3 });
+    entrance.templateId = 'hoard_entrance';
+    entrance.vaultRarity = rarity;
+    const client = bareClient(-1);
+    (client as any).applySnapshot({ t: 'snap', ents: [wireEntity(entrance)] });
+    expect(client.entities.get(entrance.id)?.vaultRarity).toBe(rarity);
+  });
+
+  it('ignores an unknown quality from a newer server', () => {
+    const entrance = createGroundObject(90_004, '', 'Buried Hoard', { x: 2, y: 0, z: 3 });
+    const client = bareClient(-1);
+    (client as any).applySnapshot({ t: 'snap', ents: [{ ...wireEntity(entrance), vr: 'future' }] });
+    expect(client.entities.get(entrance.id)?.vaultRarity).toBeUndefined();
+  });
+
+  it('round-trips vr, preserves it across a lite record, and clears it on a later full record', () => {
+    const entrance = createGroundObject(90_001, '', 'Buried Hoard', { x: 2, y: 0, z: 3 });
+    entrance.templateId = 'hoard_entrance';
+    entrance.vaultRarity = 'legendary';
+
+    const full = wireEntity(entrance);
+    expect(full.vr).toBe('legendary');
+
+    const client = bareClient(-1);
+    (client as any).applySnapshot({ t: 'snap', ents: [full] });
+    expect(client.entities.get(entrance.id)?.vaultRarity).toBe('legendary');
+
+    (client as any).applySnapshot({
+      t: 'snap',
+      ents: [{ id: entrance.id, x: 2.5, y: 0, z: 3, f: 0, hp: 1, mhp: 1 }],
+    });
+    expect(client.entities.get(entrance.id)?.vaultRarity).toBe('legendary');
+
+    entrance.vaultRarity = undefined;
+    const cleared = wireEntity(entrance);
+    expect(cleared.k).toBe('object');
+    expect(cleared).not.toHaveProperty('vr');
+    (client as any).applySnapshot({ t: 'snap', ents: [cleared] });
+    expect(client.entities.get(entrance.id)?.vaultRarity).toBeUndefined();
+  });
+});
 
 describe('self in-combat bit (cbt) wire round-trip', () => {
   it('ships the sim flag on the self record and ClientWorld mirrors it, then elides until it flips', () => {

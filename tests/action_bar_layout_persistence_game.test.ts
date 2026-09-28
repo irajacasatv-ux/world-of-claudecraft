@@ -499,6 +499,7 @@ describe('the auth handshake: a queued write that settles between the row reads 
           durableRev: '0',
         },
       }),
+      guestPayoutsForCycle: async () => 0,
     } as unknown as Parameters<typeof createWsAuth>[0];
   }
 

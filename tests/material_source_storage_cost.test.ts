@@ -296,7 +296,9 @@ describe('material source storage cost: the real caps', () => {
     // the same rule at the Freeholds sync of release/v0.44.0 at aaff789813
     // (server/character_blob_size.ts); this is a warning-only threshold, never a
     // save limit. The whole-character suite verifies this warning remains above
-    // its combined gear fixture.
+    // its combined gear fixture. The release re-minted to the same 262,144 on
+    // its own at the 2026-09-28 Buried Hoards merge; the Freeholds sync of
+    // release/v0.45.0 (ac9ed4db24) keeps it.
     expect(CHARACTER_BLOB_WARN_BYTES).toBe(262_144);
 
     // Per-container unit ceilings, which differ and must not be conflated:

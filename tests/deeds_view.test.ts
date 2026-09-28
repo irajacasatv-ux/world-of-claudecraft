@@ -876,12 +876,18 @@ describe('real catalog integration', () => {
     // 286 with the release's ferry round trip (exp_harbor_to_harbor), plus the
     // two visible Homesteader milestones this branch appends
     // (homesteader_first_furnishing, homesteader_first_cottage): 288.
-    expect(view.summary.visibleTotal).toBe(288);
+    // 287 with the Buried Hoards Coinsack catch (cmb_coinsack_caught, visible).
+    // RE-PINNED at the Freeholds sync of release/v0.45.0 (ac9ed4db24): 288 + the
+    // release's visible cmb_coinsack_caught = 289, measured on the merged tree.
+    expect(view.summary.visibleTotal).toBe(289);
     // The bucket sum adds the feat-flagged rows back on top (hidden-unearned
     // deeds never enter a bucket at all, so only the 22 feats separate this
     // from visibleTotal): 268 + 22 = 290, then 298, 305, 307 and 308 by the same
-    // four appends, and 310 with the two Homesteader milestones.
-    expect(view.categories.reduce((n, c) => n + c.visible, 0)).toBe(310);
+    // four appends, and 310 with the two Homesteader milestones (the release
+    // alone read 309 with the Buried Hoards Coinsack catch). RE-PINNED at the
+    // Freeholds sync of release/v0.45.0 (ac9ed4db24): 310 + the Coinsack catch =
+    // 311, measured on the merged tree.
+    expect(view.categories.reduce((n, c) => n + c.visible, 0)).toBe(311);
   });
 
   it('offers exactly the live catalog border deeds once they are earned', () => {

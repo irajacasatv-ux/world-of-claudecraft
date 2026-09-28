@@ -3795,8 +3795,12 @@ describe('Guide professions pages and routes', () => {
     const rows = GUIDE_PROF_CRAFTS.flatMap((c) =>
       c.recipes.map((r) => ({ cap: c.maxSkill, gain: r.gain })),
     );
-    // 33 Crucible crafts and the one-time Forgebreaker quest recipe.
-    expect(rows.length, 'published recipe rows').toBe(214);
+    // 33 Crucible crafts and the one-time Forgebreaker quest recipe. 209 with
+    // the five recipes the faction quartermasters sell
+    // (src/sim/content/faction_vendors.ts).
+    // Freeholds sync of release/v0.45.0 at ac9ed4db24: 219, measured on the
+    // merged tree (the branch's 214 plus the release's five).
+    expect(rows.length, 'published recipe rows').toBe(219);
     expect(
       rows.filter((r) => r.gain.zeroAt > r.cap).length,
       'rows carrying at least one unreachable boundary',

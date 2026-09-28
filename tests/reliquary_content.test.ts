@@ -18,6 +18,7 @@ import {
   RETIRED_HEROIC_ITEMS,
 } from '../src/sim/content/heroic_loot';
 import { HEROIC_VENDOR_STOCK } from '../src/sim/content/heroic_vendor';
+import { HOARD_BASE_ITEM_IDS } from '../src/sim/content/hoard_loot';
 import { IGNIVAR_DROP_PLACEHOLDER_IDS } from '../src/sim/content/ignivar_drops';
 import {
   SET_WARFARE_ASHSTALKER,
@@ -382,12 +383,15 @@ describe('Reliquary Conqueror catalog structure', () => {
     // closeout of docs/prd/ignivar-raid-loot.md) + the Roots' Bramblehide
     // set page (the eighth epic armor family).
     // +1: conquerors_vanguard_gallery (Warfare Season 2).
-    expect(CONQUEROR_PAGES.length).toBe(33);
+    expect(CONQUEROR_PAGES.length).toBe(34);
     expect(PROFESSION_PAGES.length).toBe(5);
     expect(HORIZON_PAGES.length).toBe(5);
     expect(HEARTH_PAGES.map((page) => page.id)).toEqual(['hearth_basics', 'hearth_first_crafts']);
     // Literal: update when product adds a page.
-    expect(RELIQUARY_PAGES.length).toBe(45);
+    // RE-PINNED at the Freeholds sync of release/v0.45.0 (ac9ed4db24): the
+    // branch's 45 (two Hearth pages) + the release's conquerors_buried_hoards
+    // page = 46, measured on the merged tree.
+    expect(RELIQUARY_PAGES.length).toBe(46);
     expect(
       RELIQUARY_PAGES.every(
         (p) =>
@@ -477,7 +481,10 @@ describe('Reliquary Conqueror catalog structure', () => {
     // the Viridian Valestrider's reins (PR 4175, release/v0.44.0 base merge) takes a horizons_mounts slot: 446.
     // the trinket slot's 18 trinkets (PR 4173): twelve item relics plus the five Crucible raid trinkets: 463.
     // Freeholds adds both Hearth cohorts and Homesteader (nineteen relics): 482.
-    expect(full).toEqual({ owned: 482, total: 482 });
+    // The release's Buried Hoards page adds its 32 pieces (the release alone read
+    // 495). RE-PINNED at the Freeholds sync of release/v0.45.0 (ac9ed4db24):
+    // 482 + 32 = 514, measured on the merged tree.
+    expect(full).toEqual({ owned: 514, total: 514 });
     // The Warfare Season 2 Vanguard Gallery (135 set pieces and four weapons)
     // is class-personal and sits outside completion, so it moves neither pair.
     const character = catalogCharacterCompletion({
@@ -511,7 +518,10 @@ describe('Reliquary Conqueror catalog structure', () => {
     // 415 with the three faction standing Champion title slots. 416 with the
     // Clue Scroll Treasure Hunter title slot. 417 with the Viridian Valestrider's reins (PR 4175, release/v0.44.0 base merge). 434 with the trinket slot's 18 trinkets (PR 4173).
     // Hearth and Homesteader are character-scoped too (+19): 453.
-    expect(character).toEqual({ owned: 453, total: 453 });
+    // The Buried Hoards pieces are character-scoped items (+32; the release alone
+    // read 466). RE-PINNED at the Freeholds sync of release/v0.45.0 (ac9ed4db24):
+    // 453 + 32 = 485, measured on the merged tree.
+    expect(character).toEqual({ owned: 485, total: 485 });
     // The Warfare Season 2 page is class-personal, outside completion.
   });
 
@@ -567,7 +577,9 @@ describe('Reliquary Conqueror catalog structure', () => {
     // one titles-page slot at the release/v0.43.0 merge into feature/world-quests:
     // 484. The three faction standing Champion titles add three more: 487.
     // The Clue Scroll Treasure Hunter title adds one more: 488. Homesteader and
-    // eighteen Hearth items add nineteen slots on the Freeholds side.
+    // eighteen Hearth items add nineteen slots on the Freeholds side. The Buried
+    // Hoards page adds 32: 520. The release's Viridian Valestrider
+    // horizons_mounts slot joins at the release/v0.44.0 merge: 521.
     expect(
       slots,
       `slot total moved; per page: ${RELIQUARY_PAGES.map((p) => `${p.id}=${p.relics.length}`).join(', ')}`,
@@ -575,7 +587,10 @@ describe('Reliquary Conqueror catalog structure', () => {
       // +139 at the second release/v0.44.0 base merge: the Warfare Season 2 page: 650.
       // + the Freeholds branch's nineteen slots (Homesteader and eighteen Hearth
       // items): 669.
-    ).toBe(669);
+      // +32 at the 2026-09-28 merge into feature/buried-hoards: the Buried Hoards page: 682.
+      // RE-PINNED at the Freeholds sync of release/v0.45.0 (ac9ed4db24): 669 + the
+      // release's 32 Buried Hoards slots = 701, measured on the merged tree.
+    ).toBe(701);
     // Distinct mark ids: the 10 shipped before Phase 21, the 19 rare-slain
     // proofs of conquerors_rares_of_the_realm, the two craft masterwork
     // marks (masterwork:jewelcrafting, masterwork:inscription), and the
@@ -850,7 +865,10 @@ describe('Reliquary relic item ids resolve in ITEMS', () => {
     // Heroic page, one id each): 350.
     // +139: the Warfare Season 2 page (second release/v0.44.0 base merge): 489.
     // Plus the Freeholds branch's eighteen Hearth items: 507.
-    expect(RELIQUARY_ITEM_TO_PAGES.size).toBe(507);
+    // Plus the release's 32 Buried Hoards piece ids (the release alone read 521).
+    // RE-PINNED at the Freeholds sync of release/v0.45.0 (ac9ed4db24): 507 + 32 =
+    // 539, measured on the merged tree.
+    expect(RELIQUARY_ITEM_TO_PAGES.size).toBe(539);
     for (const [id, pages] of RELIQUARY_ITEM_TO_PAGES) {
       expect(pages.length, `catalogued id ${id} maps to an empty page list`).toBeGreaterThan(0);
     }
@@ -2885,6 +2903,10 @@ const ACTIVITY_AWARDS: Readonly<Record<string, readonly string[]>> = {
   // mint literals live in shellForClass); the mint-site arm in the Rift page
   // describe pins it over every class.
   rift_first_clear: RIFT_GEAR_ITEM_IDS,
+  // Derived from the live piece list: treasure_vault.ts payOne rolls one piece
+  // (at the tier the map buys, each tier discovering its piece through
+  // ItemDef.relicOf) when an entrant opens a hoard's reward chest.
+  buried_hoard: HOARD_BASE_ITEM_IDS,
 };
 
 /**
@@ -3246,7 +3268,9 @@ const EXPECTED_DISTINCT_SOURCES: Record<string, number> = {
   // 29 = 27 distinct rift mobs across the ten rare multi-hints (eight theme
   // bosses + both citadel bosses + 17 trash carriers), plus the B and S rank
   // doors. The rift_first_clear activity left with the bands.
-  conquerors_the_rift: 29,
+  conquerors_the_rift: 30,
+  // The one reward-chest activity door, on all 32 pieces.
+  conquerors_buried_hoards: 1,
   // The one first-clear activity door, on all three bands (Phase 21).
   horizons_riftbound: 1,
   // 24 = the 19 rares plus the 5 zones they camp across (vale, marsh, peaks,
@@ -3891,6 +3915,7 @@ describe('Reliquary source hints resolve against live content', () => {
       'corpse_harvest',
       'masterwork_craft',
       'rift_first_clear',
+      'buried_hoard',
     ]);
   });
 

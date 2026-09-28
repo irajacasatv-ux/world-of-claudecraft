@@ -14,6 +14,7 @@
 
 import { ITEMS, QUESTS } from '../sim/data';
 import { canEquipItem, isUniqueEquipped, weaponHand } from '../sim/equipment_rules';
+import type { FactionId } from '../sim/factions';
 import { isItemLevelEligible, itemInstanceLevel, itemScore } from '../sim/item_level';
 import type { MaterialComposition } from '../sim/material_sources';
 import { CONSUME_DURATION, type ItemDef, type ItemInstancePayload } from '../sim/types';
@@ -23,6 +24,7 @@ import { questObjectiveLabel, questTitle } from './entity_display_core';
 import { classDisplayName, itemDisplayName, itemSetBonusField, tEntity } from './entity_i18n';
 import { esc } from './esc';
 import { gatherToolTooltipLines } from './gather_tool_tooltip';
+import { factionRewardTooltipLines } from './hud/faction_reward_tooltip_view';
 import { furnishingItemTooltip, hearthKeyTooltipLines } from './hud/housing';
 import { cookingCatchHintKey } from './hud/professions/cooking_catch_hint_view';
 import { elixirTooltipLines } from './hud/professions/elixir_tooltip_view';
@@ -294,6 +296,13 @@ export function itemTooltipHtml(
   // useItem), from the pure sibling view so bags, bank, crafting, vendor,
   // and market all state what the elixir does.
   html += elixirTooltipLines(item);
+  // The faction quartermaster goods (hud/faction_reward_tooltip_view.ts). The
+  // attunement is a Sim-only read the release takes structurally, so a world
+  // without it (ClientWorld today) shows the unattuned line.
+  html += factionRewardTooltipLines(
+    item,
+    (world as { alliedHearthstoneAttunement?: FactionId }).alliedHearthstoneAttunement,
+  );
   // Patterns share their realm, skill and knownness gates across item surfaces.
   // Gate the identity read by kind: Sim copies and sorts this projection;
   // other item hovers should not pay for it. ClientWorld mirrors it directly.

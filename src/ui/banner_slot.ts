@@ -25,7 +25,7 @@ import { decorativeArtImg } from './decorative_art';
  *  players reading routine gathering progress as leveling. 'skill' is the
  *  gathering skill milestone plate: copper craft framing with the profession
  *  crest, so a Mining 50 plate can never steal the character level-up reading. */
-export type BannerVariant = 'default' | 'deed' | 'skill';
+export type BannerVariant = 'default' | 'deed' | 'skill' | 'worldQuest';
 
 /** Everything one banner paint needs, held whole so a queued banner (R38)
  *  renders later exactly as it would have rendered immediately. */
@@ -93,7 +93,12 @@ export class BannerSlot {
   private readonly queue = new BannerQueue<BannerPayload>();
   private source: 'unstuck' | null = null;
 
-  constructor(private readonly el: HTMLElement) {}
+  constructor(
+    private readonly el: HTMLElement,
+    /** The quest progress banner: it yields its lane for as long as a World
+     *  Quest plate paints, so the two never collide (yieldToPlate). */
+    private readonly questLane?: { yieldToPlate(plateMs: number): void },
+  ) {}
 
   show(
     text: string,
@@ -216,6 +221,8 @@ export class BannerSlot {
     // would otherwise inherit the previous one's visual language.
     this.el.classList.toggle('banner-deed', variant === 'deed');
     this.el.classList.toggle('banner-skill', variant === 'skill');
+    this.el.classList.toggle('banner-world-quest', variant === 'worldQuest');
+    if (variant === 'worldQuest') this.questLane?.yieldToPlate(durationMs);
     this.el.classList.toggle('banner-loot', payload.bannerClass === 'loot');
     // Reduced-motion celebrations (craft plan.motion) show and hide the
     // banner without the fade transition: identical text and duration, no

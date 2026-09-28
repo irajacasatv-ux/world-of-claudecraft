@@ -7,9 +7,10 @@ import type { RiftTier } from '../sim/types';
 export type MapMarkerSemantic =
   | { kind: 'freehold-gate' }
   | { kind: 'dungeon'; role: 'entrance' | 'exit' }
+  | { kind: 'hoard-entrance' }
   | { kind: 'rift-entrance'; rank: RiftTier | null }
   | { kind: 'rift-descent' }
-  | { kind: 'rift-return'; route: 'beacon' | 'egress'; rank: RiftTier | null }
+  | { kind: 'rift-return'; route: 'beacon' | 'egress' | 'hoard'; rank: RiftTier | null }
   | { kind: 'rift-reward'; reward: 'treasure' | 'cache'; state: RiftRewardState }
   | RiftMechanicSemantic
   | { kind: 'delve-passage'; state: 'sealed' | 'open' }
@@ -78,6 +79,8 @@ export function classifyMapObjectMarker(
       return { kind: 'dungeon', role: 'entrance' };
     case 'dungeon_exit':
       return { kind: 'dungeon', role: 'exit' };
+    case 'hoard_entrance':
+      return { kind: 'hoard-entrance' };
     case 'rift_portal':
       return { kind: 'rift-entrance', rank: entity.riftTier ?? null };
     case 'rift_descent':
@@ -161,6 +164,7 @@ export function mapMarkerSemanticLayer(semantic: MapMarkerSemantic): MapMarkerSe
     case 'delve-reward':
       return 'reward';
     case 'freehold-gate':
+    case 'hoard-entrance':
     case 'dungeon':
     case 'rift-entrance':
     case 'rift-descent':

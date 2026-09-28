@@ -30,7 +30,7 @@ import {
   hasAutoAttackTarget,
   pressStartsAutoAttack,
 } from './attack_on_ability';
-import { shouldUseGroundAim, XHB_ONLY_AIM_SLOT } from './ground_aim';
+import { resolveGroundAimAbility, shouldUseGroundAim, XHB_ONLY_AIM_SLOT } from './ground_aim';
 import type { GroundAimController } from './ground_aim_controller';
 import type { FreedAttackSlotAbility, HotbarAction } from './hotbar';
 
@@ -201,14 +201,27 @@ export class ActionPressController {
     resolved: ResolvedAbility,
     slotForAim: number,
   ): void {
+    // The shock bomb is an item: its cooldown is the player's own entry under
+    // the item id, not an action-bar ability's cooldown read.
+    const cdReady =
+      abilityId === 'clockwork_shock_bomb'
+        ? (this.hud.sim.player.cooldowns.get(abilityId) ?? 0) <= 0
+        : actionBarCooldownRemaining(this.hud.sim.player, resolved) <= 0;
     this.hud.playerGroundAim.pressPosition(
       abilityId,
       slotForAim,
-      this.groundReticleEnabled() &&
-        !this.hud.sim.player.dead &&
-        actionBarCooldownRemaining(this.hud.sim.player, resolved) <= 0,
+      this.groundReticleEnabled() && !this.hud.sim.player.dead && cdReady,
       document.body.classList.contains('mobile-touch'),
     );
+  }
+
+  /** A bag click on the ground-aimed item (the shock bomb) enters its aim under
+   *  the pad-only aim identity; false for every other item, which keeps useItem. */
+  startItemGroundAim(itemId: string): boolean {
+    const resolved = resolveGroundAimAbility(this.hud.sim.known, itemId);
+    if (!resolved || itemId !== 'clockwork_shock_bomb') return false;
+    this.castPositionAbility(itemId, resolved, XHB_ONLY_AIM_SLOT);
+    return true;
   }
 
   castSlot(barSlot: number): void {
@@ -292,7 +305,14 @@ export class ActionPressController {
       }
     } else if (action?.type === 'item' && this.hud.isHotbarItemId(action.id)) {
       if (this.hud.tradeOpen) return;
-      this.useHotbarItem(action.id);
+      // The shock bomb takes the position press like an ability (reticle and
+      // re-press commit); an armed aim was already committed or dropped above.
+      const aimed =
+        action.id === 'clockwork_shock_bomb'
+          ? resolveGroundAimAbility(this.hud.sim.known, action.id)
+          : null;
+      if (aimed) this.castPositionAbility(action.id, aimed, barSlot);
+      else this.useHotbarItem(action.id);
       this.hud.flashActionSlot(barSlot);
     }
   }

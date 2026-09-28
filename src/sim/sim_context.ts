@@ -109,7 +109,10 @@ export type RuntimeSimConfig = Required<
     | 'gathererIdentity'
   >
 > &
-  Pick<SimConfig, 'world' | 'perfLap' | 'respawnSeconds'>;
+  Pick<SimConfig, 'world' | 'perfLap' | 'respawnSeconds'> & {
+    vaultOpenNeedsSave?: boolean;
+    vaultRewardNeedsSave?: boolean;
+  };
 
 export interface DamageResolution {
   landedHpLoss: number;

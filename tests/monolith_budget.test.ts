@@ -615,7 +615,10 @@ const MONOLITHS: MonolithRow[] = [
     // 14885 once the pet feed mode moved onto the bar and the itemIcon wrapper was
     // inlined into its six adapters; 14883 once the bags window's redundant pet bar
     // reset dep and a stale feed-mode comment left.
-    ceiling: 14883,
+    // RE-PINNED at the Freeholds sync of release/v0.45.0 at ac9ed4db24: wc -l on the
+    // merged tree measures 14891 (this branch 14883, the release 18093). Exact merged
+    // count, zero slack.
+    ceiling: 14891,
     seam: 'pure view core + thin painter on PainterHost (src/ui/CLAUDE.md)',
   },
   {
@@ -1084,7 +1087,10 @@ const MONOLITHS: MonolithRow[] = [
     // LOWERED 12675 -> 12659 on 2026-09-27: the retired Rallycart's wheeled-vehicle
     // branch (suspension, lamps, piped exhaust, engine phase) was deleted as unused,
     // then to 12658 with two imports nothing read (MountBeacon, floorVfxRenderOrder).
-    ceiling: 12658,
+    // RE-PINNED at the Freeholds sync of release/v0.45.0 at ac9ed4db24: wc -l on the
+    // merged tree measures 12666 (this branch 12658, the release 12688). Exact merged
+    // count, zero slack.
+    ceiling: 12666,
     seam: 'a new src/render/<thing>.ts module the renderer calls (src/render/CLAUDE.md)',
   },
   {
@@ -1908,7 +1914,10 @@ const MONOLITHS: MonolithRow[] = [
     // RE-PINNED at the Freeholds sync of release/v0.44.0 at aaff789813: wc -l on the
     // merged tree measures 9694 (this branch 9700, the release 9827). Exact merged
     // count, zero slack.
-    ceiling: 9694,
+    // RE-PINNED at the Freeholds sync of release/v0.45.0 at ac9ed4db24: wc -l on the
+    // merged tree measures 9707 (this branch 9694, the release 9840). Exact merged
+    // count, zero slack.
+    ceiling: 9707,
     seam: 'a sibling server module; see the hot-path seams in server/CLAUDE.md',
   },
   {
@@ -2207,7 +2216,10 @@ const MONOLITHS: MonolithRow[] = [
     // RE-PINNED at the Freeholds sync of release/v0.44.0 at aaff789813: wc -l on the
     // merged tree measures 5428 (this branch 5441, the release 5354). Exact merged
     // count, zero slack.
-    ceiling: 5428,
+    // RE-PINNED at the Freeholds sync of release/v0.45.0 at ac9ed4db24: wc -l on the
+    // merged tree measures 5430 (this branch 5428, the release 5356). Exact merged
+    // count, zero slack.
+    ceiling: 5430,
     seam: 'a src/net sibling module (the refactor/net-online split is the template)',
   },
   {
@@ -2260,7 +2272,10 @@ const MONOLITHS: MonolithRow[] = [
     // RE-PINNED at the Freeholds sync of release/v0.44.0 at aaff789813: wc -l on the
     // merged tree measures 5151 (this branch 5160, the release 5179). Exact merged
     // count, zero slack.
-    ceiling: 5151,
+    // RE-PINNED at the Freeholds sync of release/v0.45.0 at ac9ed4db24: wc -l on the
+    // merged tree measures 5154 (this branch 5151, the release 5182: its wisp maze
+    // pad import and call). Exact merged count, zero slack.
+    ceiling: 5154,
     seam: 'zone/terrain data as content records; logic as sim sibling modules',
   },
   {

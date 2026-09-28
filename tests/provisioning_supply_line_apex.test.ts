@@ -851,6 +851,11 @@ describe('masterwrought Phase 11h GATE C: the flask crop', () => {
       recipe_sunpetal_mana_draught: 3,
       recipe_venomfire_elixir: 1,
       recipe_warboar_flask: 2,
+      // The 2026-09-28 release/v0.44.0 merge into feature/buried-hoards: the
+      // two FACTION_REWARD_RECIPES alchemy rows the quartermasters teach
+      // (silverleaf 3; silverleaf 3 + goldleaf 3), pure additions.
+      recipe_elixir_of_mana_regeneration: 3,
+      recipe_potion_of_invisibility: 6,
     };
     const liveAlchemyHerb: Record<string, number> = {};
     for (const recipe of ALL_RECIPES) {
@@ -870,10 +875,13 @@ describe('masterwrought Phase 11h GATE C: the flask crop', () => {
     // the 11l QA from recipe_healing_potion) added goldleaf 1 (a
     // pure addition, so R18's no-reduction direction still holds).
     // The furnishing lamp adds one sunpetal herb without reducing an existing bill.
+    // 55 at the Freeholds sync of release/v0.45.0 (ac9ed4db24): the branch's
+    // 46 plus the release's two quartermaster alchemy rows above (3 + 6, pure
+    // additions; 45 to 54 on the release alone), measured on the merged tree.
     expect(
       Object.values(alchemyHerbPerRecipe).reduce((t, n) => t + n, 0),
       "alchemy's whole herb demand",
-    ).toBe(46);
+    ).toBe(55);
   });
 
   it('every apex alchemy row that took a crop still consumes an herb', () => {
@@ -1474,6 +1482,11 @@ describe('masterwrought Phase 11h: what it did NOT touch', () => {
     // Then 170 at the merge of release/v0.41.0 (tip e19d832b47): the
     // release's four Bank Storage BAG_RECIPES join ALL_RECIPES; this branch
     // minted nothing at the sync.
+    // Then 175 at the 2026-09-28 release/v0.44.0 merge into
+    // feature/buried-hoards: the five FACTION_REWARD_RECIPES rows the faction
+    // quartermasters teach (two alchemy, one leatherworking, one engineering,
+    // one weaponcrafting), each with a NEW output item id authored in
+    // content/faction_vendors.ts: ALL_RECIPES alone, upward, no apex row.
     // The Crucible integration adds eleven three-slot collections and one
     // quest hammer, not provisioning rows. Preserve the old universe separately.
     expect(CRUCIBLE_COLLECTION_RECIPES).toHaveLength(33);
@@ -1487,9 +1500,12 @@ describe('masterwrought Phase 11h: what it did NOT touch', () => {
           !FORGEBREAKER_RECIPES.includes(recipe) &&
           !FURNISHING_RECIPES.includes(recipe),
       ),
-    ).toHaveLength(170);
+    ).toHaveLength(175);
     expect(FURNISHING_RECIPES).toHaveLength(10);
-    expect(ALL_RECIPES).toHaveLength(214);
+    // 219 at the Freeholds sync of release/v0.45.0 (ac9ed4db24): the branch's
+    // ten FURNISHING_RECIPES plus the release's five FACTION_REWARD_RECIPES on
+    // the shared 204, measured on the merged tree.
+    expect(ALL_RECIPES).toHaveLength(219);
     for (const row of APEX_ROWS) {
       expect(requireRecipe(row.id).skillReq, `${row.id} rung`).toBe(row.rung);
     }

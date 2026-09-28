@@ -206,6 +206,10 @@ const NON_PROFESSIONS_BLOB_FIELDS = [
   // Faction standing rows (src/sim/factions.ts), persisted beside the
   // world-quest log they are earned from.
   'factions',
+  // Faction currencies (src/sim/factions.ts awardFactionCurrency), the
+  // world-quest payout spent at the faction quartermasters: persisted beside
+  // the standing rows, world-quest state, never professions state.
+  'factionCurrencies',
   // The weekly emissary's pick (src/sim/weekly_quests.ts), beside the world
   // quests it stands next to.
   'weeklyQuest',
@@ -899,11 +903,19 @@ describe('the professions blob growth bound (phase 16)', () => {
     expect(s2.knownRecipes ?? []).toHaveLength(RETAINABLE_KNOWN_IDS.size);
     expect(new Set(s2.knownRecipes)).toEqual(RETAINABLE_KNOWN_IDS);
     expect(MAX_KNOWN_RECIPE_IDS).toBe(512);
-    expect(new Set(ALL_RECIPES.map((recipe) => recipe.id)).size).toBe(214);
-    // 219 with the release's four learned faction formulas (content/enchants.ts),
-    // each a retained `acquisition: 'drop'` enchant id like Zeal, on top of the
-    // branch's ten crafted furnishing recipes (215).
-    expect(RETAINABLE_KNOWN_IDS.size).toBe(219);
+    // RE-BASED at the Freeholds sync of release/v0.45.0 (ac9ed4db24): the
+    // branch's ten crafted furnishing recipes (204 to 214) plus the release's
+    // five faction quartermaster recipes (src/sim/content/faction_vendors.ts,
+    // the Buried Hoards merge: 204 to 209 on the release alone), measured on
+    // the merged tree.
+    expect(new Set(ALL_RECIPES.map((recipe) => recipe.id)).size).toBe(219);
+    // 219 on this branch before the sync: the release's four learned faction
+    // formulas (content/enchants.ts), each a retained `acquisition: 'drop'`
+    // enchant id like Zeal, on top of the branch's ten crafted furnishing
+    // recipes. The release/v0.45.0 sync adds its eight faction quartermaster
+    // ids (five recipes and three formula-taught etchings sold for faction
+    // marks; 209 to 217 on the release alone), measured on the merged tree.
+    expect(RETAINABLE_KNOWN_IDS.size).toBe(227);
     expect(RETAINABLE_KNOWN_IDS.size).toBeLessThan(MAX_KNOWN_RECIPE_IDS);
     expect(s2.knownRecipes).toContain('enchant_weapon_lastflame_zeal');
     // Derived from the refusal policy so a profession becoming slottable
@@ -1199,9 +1211,14 @@ describe('the professions blob growth bound (phase 16)', () => {
     // own +145 (its four learned faction formulas and the trinket slot: 18,830 to
     // 18,975, both measured on the release parent and its base alone): 19,154 +
     // 145 = 19,299 on the merged tree, measured; same band width.
-    expect(bytes).toBe(19299);
-    expect(bytes).toBeGreaterThan(18919);
-    expect(bytes).toBeLessThan(19300);
+    // RE-BASED at the Freeholds sync of release/v0.45.0 (ac9ed4db24): the
+    // release's +247 at the faction quartermasters (Buried Hoards merge: the
+    // five vendor recipe ids and three vendor enchant ids in knownRecipes,
+    // 18,975 to 19,222 on the release alone): 19,299 + 247 = 19,546, measured
+    // on the merged tree; same band width.
+    expect(bytes).toBe(19546);
+    expect(bytes).toBeGreaterThan(19166);
+    expect(bytes).toBeLessThan(19547);
     // Strictly dominated by the band's upper edge while the band holds:
     // kept as documentation that the structural ceiling also bounds this
     // state, never the live guard.
@@ -1986,8 +2003,8 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
     // professions arm pins, so the two measurements can never describe
     // different fixtures.
     const professions = professionsBytes(s2);
-    expect(professions).toBeGreaterThan(18919);
-    expect(professions).toBeLessThan(19300);
+    expect(professions).toBeGreaterThan(19166);
+    expect(professions).toBeLessThan(19547);
 
     // Every container really reached its ceiling through the load (the
     // `field in state` and non-empty pins above are the pattern): a load clamp
@@ -2229,7 +2246,12 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
     // figure in this chain by the release's +2,815 (its world-quest, faction,
     // weekly, Clue Scroll, faction ladder and trinket rows, attributed in the
     // growth equation below), which no remover here strips.
-    expect(beforeHearthKeyBytes).toBe(230055);
+    // RE-BASED at the Freeholds sync of release/v0.45.0 (ac9ed4db24): every
+    // absolute figure in this chain moves by the release's +5,491 (its faction
+    // quartermaster and Buried Hoards rows, attributed in the growth equation
+    // below), which no remover here strips; each figure measured on the merged
+    // tree.
+    expect(beforeHearthKeyBytes).toBe(235546);
     const FREEHOLD_ROOM_IDS = ['freehold_inn_room', 'freehold_cottage'] as const;
     const withoutFreeholdRooms = structuredClone(beforeHearthKey);
     for (const id of FREEHOLD_ROOM_IDS) {
@@ -2264,7 +2286,7 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
         freeholdRoomsDelta.deedStats +
         freeholdRoomsDelta.heroicDaily,
     ).toBe(beforeHearthKeyBytes - withoutFreeholdRoomsBytes);
-    expect(withoutFreeholdRoomsBytes).toBe(229841);
+    expect(withoutFreeholdRoomsBytes).toBe(235332);
     // Isolate the accepted crafted cohort before checking older catalog baselines.
     const craftedRecipeIds = FURNISHING_RECIPES.map((recipe) => recipe.id);
     const craftedItemIds = [
@@ -2300,9 +2322,9 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
     );
     expect(craftedDelta).toEqual({ knownRecipes: 324, deedStats: 355, reliquary: 576 });
     const beforeCraftedBytes = Buffer.byteLength(JSON.stringify(beforeCrafted), 'utf8');
-    expect(beforeCraftedBytes).toBe(228586);
+    expect(beforeCraftedBytes).toBe(234077);
     expect(withoutFreeholdRoomsBytes - beforeCraftedBytes).toBe(1255);
-    expect(bytes).toBe(230068);
+    expect(bytes).toBe(235559);
     const fixtureBaseline = {
       equipment: 273,
       equipmentInstance: 1593,
@@ -2336,7 +2358,9 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
       vendorBuyback: 756,
       // 62 + 134: the four learned faction formula ids retained in
       // knownRecipes (content/enchants.ts, the faction ladder rework).
-      knownRecipes: 196,
+      // 196 + 247: the faction quartermasters' five recipe ids and three enchant
+      // ids in knownRecipes (itemized at the professions band above).
+      knownRecipes: 443,
     });
     // field_kit (below) is the ONE Field Kit deedStats entry inside this same
     // settled state; the fixture-repair deltas above are Crucible-only and
@@ -2401,7 +2425,7 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
     ).toBe(444);
     const beforeFurnishingsBytes = Buffer.byteLength(JSON.stringify(withoutFurnishings), 'utf8');
     expect(beforeCraftedBytes - beforeFurnishingsBytes).toBe(632);
-    expect(beforeFurnishingsBytes).toBe(227954);
+    expect(beforeFurnishingsBytes).toBe(233445);
     const withoutFurnishingsAndFieldKit: CharacterState = {
       ...withoutFurnishings,
       deedStats: {
@@ -2415,7 +2439,7 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
       JSON.stringify(withoutFurnishingsAndFieldKit),
       'utf8',
     );
-    expect(beforeHomesteaderBytes).toBe(227942);
+    expect(beforeHomesteaderBytes).toBe(233433);
     const withoutHomesteaderDeeds: CharacterState = {
       ...withoutFurnishingsAndFieldKit,
       deeds: { ...withoutFurnishingsAndFieldKit.deeds },
@@ -2434,8 +2458,8 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
     }
     const historicalBytes = Buffer.byteLength(JSON.stringify(withoutHomesteaderDeeds), 'utf8');
     expect(beforeHomesteaderBytes - historicalBytes).toBe(85);
-    expect(counterfactualBytes).toBe(228574);
-    expect(beforeCraftedBytes).toBe(228586);
+    expect(counterfactualBytes).toBe(234065);
+    expect(beforeCraftedBytes).toBe(234077);
 
     // The one-time hammer recipe/proof content adds against the pre-hammer,
     // field-kit-excluded fixture (156144): the Crucible fixture-repair deltas
@@ -2583,7 +2607,19 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
         13496 +
         // Plus 154 at the fourth release/v0.44.0 base merge (the ferry deed and
         // its four visit marks, attributed above).
-        154,
+        154 +
+        // Plus 533 at the faction currency stock (Buried Hoards merge): the 19 new
+        // faction quartermaster item ids (recipes, formulas, their crafted goods,
+        // cartographers_ink, the allied conveniences) in deedStats.itemsDiscovered.
+        // Its other mover, the eight retainable recipe and enchant ids in
+        // knownRecipes (+247), is already inside fixtureDelta.knownRecipes above.
+        533 +
+        // Plus 4,711 at the Buried Hoards content: cmb_coinsack_caught in the deeds
+        // row (+35), the 96 hoard gear ids and the four treasure_map_* ids in
+        // itemsDiscovered (+2,889), the hoardGoblinKills counter (+26), and the 32
+        // hoard gear reliquary.firstFind rows plus the conquerors_buried_hoards page
+        // (+1,761), Blaine's itemization; MEASURED on the 2026-09-28 merged tree.
+        4711,
     );
     const forgeBaseline = {
       questsDone: 4606,
@@ -2613,7 +2649,18 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
       // +640 (the world-quest +285, faction standing +282 and Clue Scroll +73
       // deed rows), deedStats +1,192 (+90, +358, +17, +32, +371 and +324) and
       // reliquary +812 (the trinket pages); this branch never moved the row.
-    ).toEqual({ questsDone: 100, knownRecipes: 164, deeds: 708, deedStats: 5979, reliquary: 9740 });
+      // RE-BASED at the Freeholds sync of release/v0.45.0 (ac9ed4db24) by the
+      // release's own row at the 2026-09-28 Buried Hoards merge: knownRecipes
+      // +247, deeds +35, deedStats +3,448 (533 + 2,889 + 26) and reliquary
+      // +1,761 (the +533, +4,711 and fixtureDelta +247 above), measured on the
+      // merged tree; this branch still never moves the row.
+    ).toEqual({
+      questsDone: 100,
+      knownRecipes: 411,
+      deeds: 743,
+      deedStats: 9427,
+      reliquary: 11501,
+    });
     // Removing both packet cohorts, Homesteader, field_kit, the three dev-mount
     // reins and the Bramblehide/Nythgap release rows reproduces the historical
     // baseline: 209,474 at the crafted-content close, 209,524 once the hub
@@ -2624,19 +2671,26 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
     // stock (+13,496, the 139 honor item ids attributed above), and 223,423
     // with the Eastbrook ferry's deed and visit marks (+154), and 226,238 with the
     // release's +2,815 at the Freeholds sync of release/v0.44.0 at aaff789813 (the
-    // release parent measures the same figure on its own tree).
+    // release parent measures the same figure on its own tree), and 231,729 with
+    // the release's +5,491 at the Freeholds sync of release/v0.45.0 (ac9ed4db24):
+    // the faction quartermaster and Buried Hoards rows attributed above, measured
+    // on the merged tree (the release parent reads the same figure on its own).
     expect(
       Buffer.byteLength(JSON.stringify(preReleaseCounterfactual), 'utf8'),
       'both branch additions removed, preserves the recorded Crucible+hammer baseline',
-    ).toBe(226238);
+    ).toBe(231729);
     // Packet additions and field_kit removed, retaining the Bramblehide release
     // content, the hub practice quests, the three dev-mount reins, the Warfare
     // Season 2 stock, the ferry rows and the release's +2,815 at the aaff789813
     // sync: 226,238 + 1,548 + 71 = 227,857 (the release parent's own figure).
+    // RE-BASED at the Freeholds sync of release/v0.45.0 (ac9ed4db24) by the
+    // release's +5,491 (its faction quartermaster and Buried Hoards rows, kept
+    // here): 231,729 + 1,548 + 71 = 233,348, measured on the merged tree (the
+    // release parent's own field_kit-removed figure).
     expect(
       historicalBytes,
       'packet additions and field_kit removed, retains the Bramblehide release content',
-    ).toBe(227857);
+    ).toBe(233348);
     const priorContent = withoutCrucibleContent(s2);
     const contentDelta = Object.fromEntries(
       (['knownRecipes', 'deedStats', 'reliquary'] as const).map((key) => [
@@ -2708,8 +2762,17 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
     // its base read), so 227,253 becomes 230,068 and every absolute figure in
     // the isolation chain moves by the same 2,815. Same standing rule, same 381
     // width: 229,688..230,069.
-    expect(bytes, reMint).toBeGreaterThan(229688);
-    expect(bytes, reMint).toBeLessThan(230069);
+    // RE-BASED at the Freeholds sync of release/v0.45.0 (ac9ed4db24) by the
+    // release's +5,491 at the 2026-09-28 Buried Hoards merge (the faction
+    // quartermasters' eight retainable ids in knownRecipes, +247, and their 19
+    // item ids in deedStats.itemsDiscovered, +533; the Buried Hoards content,
+    // +4,711; all attributed in the growth equation above; the release parent
+    // measures 233,360 on its own tree, 5,491 over its 227,869), so 230,068
+    // becomes 235,559, measured on the merged tree, and every absolute figure
+    // in the isolation chain moves by the same 5,491. Same standing rule, same
+    // 381 width: 235,179..235,560.
+    expect(bytes, reMint).toBeGreaterThan(235179);
+    expect(bytes, reMint).toBeLessThan(235560);
 
     // The Crucible database review approved 229,376 bytes (224 KiB), the first
     // 32-KiB step above the corrected 209,261-byte pre-field-kit fixture it was
@@ -2722,7 +2785,11 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
     // aaff789813 the merged fixture measures 230,068 bytes, 692 PAST 229,376 (the
     // release's +2,815 on this branch's 227,253), so the threshold was re-minted
     // by its own rule to 262,144 (256 KiB), the smallest 32-KiB step above:
-    // 32,076 bytes of headroom (server/character_blob_size.ts).
+    // 32,076 bytes of headroom (server/character_blob_size.ts). The release
+    // reached the same 262,144 on its own at the Buried Hoards merge (233,360).
+    // At the Freeholds sync of release/v0.45.0 (ac9ed4db24) the merged fixture
+    // measures 235,559 bytes (the release's +5,491 on this branch's 230,068),
+    // 26,585 bytes under it.
     // A content change must be attributed and the narrow band re-measured,
     // never widened. This is warning-only; save-path tests prove oversized
     // saves stay whole.

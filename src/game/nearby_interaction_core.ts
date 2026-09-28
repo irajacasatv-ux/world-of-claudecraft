@@ -157,7 +157,7 @@ export function resolveNearbyInteractionCandidate(
             world.worldQuestLog ?? new Map(),
           )
         : !isQuestGatedGroundObjectHidden(entity, world.questLog) &&
-          !isObjectOpenedByViewer(entity, world.questLog)) &&
+          !isObjectOpenedByViewer(entity, world.questLog, world.worldQuestLog)) &&
       distance <= objectInteractionRange(entity) &&
       (distance < bestObjectDistance || (bestObject === null && distance === bestObjectDistance))
     ) {

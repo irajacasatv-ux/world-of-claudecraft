@@ -53,6 +53,7 @@ import {
 import { isOwnAura } from '../sim/aura_classify';
 import { bagPools } from '../sim/bags';
 import { DEEDS } from '../sim/content/deeds';
+import { vendorFactionForNpc } from '../sim/content/faction_vendors';
 import { CRUCIBLE_VENDOR_STOCK } from '../sim/content/ignivar_loot';
 import { isOnMountRaceStartPlatform } from '../sim/content/mounts';
 import { recipeById } from '../sim/content/recipes';
@@ -157,7 +158,7 @@ import { CalendarWindow } from './calendar_window';
 import { require2dContext } from './canvas_context';
 import { CardDuelWindow } from './card_duel_window';
 import { CastBarPainter, type CastBarPaintInput } from './cast_bar_painter';
-import { castDisplayName } from './cast_display_name';
+import { castDisplayName, targetCastDisplayName } from './cast_display_name';
 import { charBagsPaired } from './char_bags_pairing_core';
 import { charSheetRefreshSigFor } from './char_sheet_sig_core';
 import { type CharSkinPainterHost, paintCharSkinPicker } from './char_skin_window';
@@ -319,6 +320,7 @@ import { bindEmpoweredActionHold } from './hud/action_bar/empowered_hold';
 import {
   type AimPoint,
   quickGroundTarget,
+  resolveGroundAimAbility,
   selectedGroundAimPoint,
 } from './hud/action_bar/ground_aim';
 import {
@@ -489,6 +491,7 @@ import { StanceBarController } from './hud/stance';
 import { closeOpenTouchMenu } from './hud/tap_menu';
 import { createTargetDotsView, type TargetDotsInput, TargetDotsPainter } from './hud/target_dots';
 import { FerryHudPainter } from './hud/transport';
+import { TreasureMapWindow } from './hud/treasure';
 import { createHudVehicleBar, type VehicleActionBarController } from './hud/vehicle';
 import { requestHeroicPurchase } from './hud/vendor';
 import { dismissBuyQuantityPrompts } from './hud/vendor/buy_quantity_prompt_window';
@@ -1147,7 +1150,7 @@ export class Hud {
   }
   readonly playerGroundAim = new GroundAimController({
     player: () => this.sim.player,
-    resolveAbility: (id) => this.sim.known.find((k) => k.def.id === id) ?? null,
+    resolveAbility: (id) => resolveGroundAimAbility(this.sim.known, id),
     seedTargetPoint: () =>
       selectedGroundAimPoint(
         this.sim.player,
@@ -1155,7 +1158,10 @@ export class Hud {
         this.optionsHooks?.groundAimTargetAttackable,
       ),
     fallbackPoint: () => quickGroundTarget(this.sim.player, this.sim.entities),
-    castAt: (id, point) => this.sim.castAbilityAt(id, point),
+    castAt: (id, pt) =>
+      id === 'clockwork_shock_bomb'
+        ? this.sim.useItem(id, { aim: pt })
+        : this.sim.castAbilityAt(id, pt),
     clearReticle: () => this.renderer.setGroundAimReticle(null),
     projectPlacement: (id, point) => this.sim.groundAimPlacementPreview(id, point),
   });
@@ -1176,12 +1182,7 @@ export class Hud {
     sourceIndex: number | null;
     sourceAttackSlot?: boolean;
   } | null = null;
-  // Set while dragging an equipped piece out of the paperdoll onto the bags window.
   private dragUnequipSlot: EquipSlot | null = null;
-  // The mirror gesture: the bag stack currently being dragged OUT of the bags, read
-  // by its two drop targets (a paperdoll socket equips it, the world destroys it).
-  // The windows publish and read it through their deps; the state itself is a shared
-  // module, not another cross-window field cluster on this coordinator.
   private readonly itemDragState = new ItemDragState();
   private suppressNextActionClick = false;
   private optionsHooksState: OptionsHooks | null = null;
@@ -1590,7 +1591,7 @@ export class Hud {
   // lazy: several rigs build a bare Hud prototype whose field initializers never ran.
   private bannerSlotState: BannerSlot | undefined;
   private get bannerSlot(): BannerSlot {
-    this.bannerSlotState ??= new BannerSlot($('#banner'));
+    this.bannerSlotState ??= new BannerSlot($('#banner'), this.questBanner);
     return this.bannerSlotState;
   }
   private celebrationDrainState: CelebrationDrainObserver | undefined;
@@ -1983,7 +1984,10 @@ export class Hud {
     private readonly features: HudFeatures = { dailyRewardsEnabled: true },
   ) {
     hydrateCrestImageFallbacks(document);
-    this.mapMarkerTooltipContent = new MapMarkerTooltipContent(this.sim);
+    // A world quest's item reward embeds the same card the bags show.
+    this.mapMarkerTooltipContent = new MapMarkerTooltipContent(this.sim, {
+      itemTooltip: (item) => this.itemTooltip(item, false),
+    });
     this.mapMarkerInteraction = new MapMarkerInteractionController({
       names: {
         zone: zoneDisplayName,
@@ -2217,7 +2221,13 @@ export class Hud {
       element: $('#qt-body'),
       document,
       world: () => this.sim,
-      settings: trackerCollapseSettings(() => this.optionsHooks, 'questTrackerCollapsed'),
+      settings: {
+        ...trackerCollapseSettings(() => this.optionsHooks, 'questTrackerCollapsed'),
+        worldQuestsCollapsed: () =>
+          (this.optionsHooks?.settings.get('worldQuestTrackerCollapsed') ?? false) === true,
+        setWorldQuestsCollapsed: (collapsed) =>
+          this.optionsHooks?.settings.set('worldQuestTrackerCollapsed', collapsed),
+      },
       questTitle,
       objectiveLabel: questObjectiveLabel,
       click: () => audio.click(),
@@ -2702,7 +2712,7 @@ export class Hud {
     // on touch.
     wireTrackerHeader($('#quest-tracker'), {
       header: '.qt-header',
-      toggle: () => this.toggleQuestTrackerCollapsed(),
+      toggle: (header) => this.questTracker.toggleHeader(header),
       rows: {
         selector: '.qt-title',
         activate: (row) => {
@@ -4414,11 +4424,11 @@ export class Hud {
       timer: this.targetCastbarTimerEl,
     },
     {
-      // The release's Ignivar raid pass localizes every cast through
-      // abilityDisplayNameFromSource (the boss mechanic names ride the
-      // aura/mechanic matcher there). The Phase 14 farming arm that used to
-      // sit in front of it went with the farming plant cast itself.
-      resolveCastLabel: (s) => abilityDisplayNameFromSource(s.label),
+      // Hoard and rift boss cast IDs resolve to their localized wind-up name,
+      // then every other label through abilityDisplayNameFromSource (the boss
+      // mechanic names ride the aura/mechanic matcher there), so a cave boss
+      // never shows its raw cast id (cast_display_name.ts).
+      resolveCastLabel: (s) => targetCastDisplayName(s.label),
     },
   );
   // Second unit-frame painter instance; heraldry hosts are player identity only.
@@ -4914,6 +4924,7 @@ export class Hud {
     sellConfirmPolicy: () => vendorSellConfirmPolicyFrom((k) => this.optionsHooks?.settings.get(k)),
     isHotbarItemId: (itemId) => this.isHotbarItemId(itemId),
     useGatherTool: (item) => this.gatherToolUseHook?.(item) ?? false,
+    startGroundAimForItem: (itemId) => this.actionPress.startItemGroundAim(itemId),
     setDragAction: (action) => {
       this.dragAction = action ? { action, sourceIndex: null } : null;
     },
@@ -5676,6 +5687,7 @@ export class Hud {
     insertQuestChatLink: (questId) => this.insertQuestChatLink(questId),
     showOnMap: (x, z) => this.showFinderOnMap(x, z),
   });
+  private readonly treasureMapWindow = new TreasureMapWindow({ world: () => this.sim });
   private readonly worldQuestPuzzleWindow = new WorldQuestPuzzleWindow({
     document,
     world: () => this.sim,
@@ -8320,12 +8332,6 @@ export class Hud {
   private updateQuestTracker(now: number): void {
     this.questTracker.update(now);
     this.worldQuestPuzzleWindow.refreshIfChanged();
-  }
-
-  /** Flip the persisted tracker-collapsed preference (the header click/keyboard
-   *  activation), preserving keyboard focus across the innerHTML rebuild. */
-  private toggleQuestTrackerCollapsed(): void {
-    this.questTracker.toggleCollapsed();
   }
 
   // -------------------------------------------------------------------------
@@ -11840,6 +11846,8 @@ export class Hud {
           // from the mirrored clears map.
           gatheringProficiency: this.sim.gatheringProficiency,
           factions: this.sim.factions,
+          factionCurrencies: this.sim.factionCurrencies,
+          vendorFactionId: vendorFactionForNpc(npc.templateId),
         },
         this.vendorQtyMultiple,
       ),

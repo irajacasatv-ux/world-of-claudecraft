@@ -57,7 +57,7 @@ import { isLiveMapEntityDisclosed } from './map_entity_disclosure_core';
 import { MAP_MARKER_SIZES } from './map_marker_icon_art';
 import type { MapMarkerProfile } from './map_marker_profile_core';
 import {
-  isNearbyLiveRiftZoneMapEntity,
+  classifyNearbyLiveZoneMapEntrance,
   STABLE_MAP_NAVIGATION_LANDMARKS,
 } from './map_navigation_landmarks_core';
 import {
@@ -330,6 +330,7 @@ export interface MapServiceMarker {
  * entity inside the host-fair disclosure range. */
 export type MapNavigationMarker =
   | { kind: 'freehold-gate'; mx: number; my: number }
+  | { kind: 'hoard-entrance'; mx: number; my: number }
   | {
       kind: 'delve-entrance';
       mx: number;
@@ -1227,10 +1228,15 @@ export function buildOverworldMapModel(input: OverworldMapInput): OverworldMapMo
       if (placed) navigation.push({ kind: 'freehold-gate', ...placed });
       continue;
     }
-    if (!isNearbyLiveRiftZoneMapEntity(entity, p.pos)) continue;
+    const kind = classifyNearbyLiveZoneMapEntrance(entity, p.pos);
+    if (!kind) continue;
     if (!inZone(entity.pos.x, entity.pos.z)) continue;
     const placed = placeNavigation(entity.pos.x, entity.pos.z);
     if (!placed) continue;
+    if (kind === 'hoard-entrance') {
+      navigation.push({ kind, mx: placed.mx, my: placed.my });
+      continue;
+    }
     navigation.push({
       kind: 'rift-entrance',
       mx: placed.mx,

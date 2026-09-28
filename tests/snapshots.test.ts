@@ -24,6 +24,7 @@ import { EMPTY_MST_CRAFTS } from '../src/net/crafting_wire';
 import { CLUE_HUNTS } from '../src/sim/content/clue_hunts';
 import { CRAFT_RING, STATION_RADIUS } from '../src/sim/content/professions';
 import { COMBO_RECIPES } from '../src/sim/content/recipes';
+import { TREASURE_SITES } from '../src/sim/content/treasure_maps';
 import { NORTH_WATCH_CANNON } from '../src/sim/content/vehicle_stations';
 import { DELVES, GATHER_NODES, ITEMS, WORLD_QUESTS } from '../src/sim/data';
 import { emptySaleLog } from '../src/sim/market_sale_log';
@@ -60,6 +61,7 @@ const DELTA_KEYS = [
   'wqexp',
   'wqlog',
   'fac',
+  'facCur',
   'wqrr',
   'wqrep',
   'cluh',
@@ -1250,6 +1252,7 @@ const ALL_DELTA_KEYS = [
   'ench',
   'equip',
   'fac',
+  'facCur',
   'fplot',
   'ggoal',
   'gprof',
@@ -1298,6 +1301,7 @@ const ALL_DELTA_KEYS = [
   'tal',
   'tfocus',
   'tfpend',
+  'tmap',
   'trade',
   'tslot',
   'vault',
@@ -1387,6 +1391,7 @@ const TERSE_TO_IWORLD: Record<string, string> = {
   ench: 'lastEnchantResult',
   equip: 'equipment',
   fac: 'factions',
+  facCur: 'factionCurrencies',
   fplot: 'myFarmPlots',
   ggoal: 'gatheringGoal',
   gprof: 'gatheringProficiency',
@@ -1428,6 +1433,7 @@ const TERSE_TO_IWORLD: Record<string, string> = {
   sp: 'spellPower',
   tfocus: 'townFocus',
   tfpend: 'townFocusPending',
+  tmap: 'treasureMap',
   tslot: 'toolEffectSlots',
   vault: 'vaultInfo',
   vehicle: 'vehicleSession',
@@ -1565,6 +1571,8 @@ function dirtyEveryDeltaField(): {
   // `cluh`: an active clue hunt on a shipped hunt id (the client decoder
   // drops an id the pool does not know, so a made-up one would mirror null).
   meta.clueHunt = { huntId: CLUE_HUNTS[0].id, step: 1 };
+  meta.factionCurrencies = { rift_watch: 17, church_order: 29, automatons: 41 };
+  meta.treasureMap = { rarity: 'epic', siteId: TREASURE_SITES[0].id, seed: 78123 };
   server.sim.worldQuestExpiresAtMs = FAR_FUTURE_MS;
   meta.worldQuestLog.set('wq_eastbrook_bandits', {
     questId: 'wq_eastbrook_bandits',
@@ -1990,6 +1998,10 @@ describe('full self-state snapshot delta fixture', () => {
     broadcast(server);
     const client = bareClient(leader.pid);
     (client as any).applySnapshot(lastSnap(fc.sent));
+
+    expect(client.factionCurrencies).toEqual({ rift_watch: 17, church_order: 29, automatons: 41 });
+    expect(client.treasureMap).toEqual({ rarity: 'epic', siteId: TREASURE_SITES[0].id });
+    expect(lastSnap(fc.sent).self.tmap).not.toHaveProperty('seed');
 
     // --- fields that decode onto the player ENTITY (client.player), not the client ---
     expect(client.player.cooldowns.get('heroic_strike')).toBe(5); // cds -> e.cooldowns
@@ -2584,7 +2596,7 @@ describe('full self-state snapshot delta fixture', () => {
 });
 
 describe('delta-key contract pins (anti-drift)', () => {
-  it('ALL_DELTA_KEYS contains exactly 111 unique keys in sorted order', () => {
+  it('ALL_DELTA_KEYS contains exactly 113 unique keys in sorted order', () => {
     // 109 plus the release batch's pending Town Focus and Spell Crit core keys.
     // +1: guildBank (Guild Bank Phase 2), +1: the battleground bg key, +1: the
     // commission order board's corder key (issue #1298), +1: the character
@@ -2642,8 +2654,8 @@ describe('delta-key contract pins (anti-drift)', () => {
     // The release batch's pending Town Focus and the Spell Crit sheet cell's
     // shared crit core scb (server/self_scalar_wire.ts), at the third
     // release/v0.44.0 base merge, for 111.
-    expect(ALL_DELTA_KEYS).toHaveLength(111);
-    expect(new Set(ALL_DELTA_KEYS).size).toBe(111);
+    expect(ALL_DELTA_KEYS).toHaveLength(113);
+    expect(new Set(ALL_DELTA_KEYS).size).toBe(113);
     expect([...ALL_DELTA_KEYS]).toEqual([...ALL_DELTA_KEYS].sort());
   });
 
@@ -2819,7 +2831,7 @@ describe('delta-key contract pins (anti-drift)', () => {
     // The Weekly Vault's weeklyRewards self key (PR 4052) makes 107.
     // The World PvP readout wpvp and the King of the Hill readout hill make 109.
     // The release batch's pending Town Focus and Spell Crit core keys make 111.
-    expect(scraped.size).toBe(111);
+    expect(scraped.size).toBe(113);
     expect([...scraped].sort()).toEqual([...ALL_DELTA_KEYS].sort());
   });
 

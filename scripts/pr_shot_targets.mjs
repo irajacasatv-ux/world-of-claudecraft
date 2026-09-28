@@ -8,6 +8,7 @@
 
 import { dismissEntryOverlays, entryOverlayPass, GREETING_DECLINE } from './enter_offline_game.mjs';
 import { freeholdReviewTargets } from './lib/pr_shot_freeholds.mjs';
+import { hoardTideReviewTargets } from './lib/pr_shot_hoard_tide.mjs';
 import { masterwroughtReviewTargets } from './lib/pr_shot_masterwrought.mjs';
 
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -1227,6 +1228,7 @@ async function stageWheelBinds(page) {
 }
 
 export const TARGETS = [
+  ...hoardTideReviewTargets(),
   // World quests round 2: the forge workshop panel moved off the bottom-pinned
   // vehicle-bar family into the centred window family, so it no longer covers
   // the unit frames and the action bar. /dev forge arms the quest beside Smith

@@ -2719,8 +2719,11 @@ describe('Reliquary catalog index memo', () => {
     // A hand-carried literal, not the production filter restated (which would
     // prove nothing): 45 pages minus the vault, riftbound, personal
     // Forgebreaker and personal Vanguard Gallery flags. Both Hearth pages and
-    // Bramblehide count.
-    expect(first?.length).toBe(41);
+    // Bramblehide count. The release's Buried Hoards page (2026-09-28 merge)
+    // scores too (the release alone read 40). RE-PINNED at the Freeholds sync of
+    // release/v0.45.0 (ac9ed4db24): 41 + conquerors_buried_hoards = 42, measured
+    // on the merged tree.
+    expect(first?.length).toBe(42);
     expect(first?.filter((page) => page.shelf === 'hearth').map((page) => page.id)).toEqual([
       'hearth_basics',
       'hearth_first_crafts',

@@ -83,12 +83,16 @@ describe('reliquary_i18n English resolution', () => {
     // render English to a CJK or Cyrillic reader. Forty earlier pages
     // include Bramblehide; Crucible, Forgebreaker, the Warfare Season 2
     // Vanguard Gallery and both Hearth pages add five more.
-    expect(pageCount).toBe(45);
-    expect(descCount).toBe(45);
-    expect(manifest.length).toBe(90);
+    // The Buried Hoards page joins them (the release alone read 44).
+    // RE-PINNED at the Freeholds sync of release/v0.45.0 (ac9ed4db24): 45 + the
+    // release's conquerors_buried_hoards = 46 pages and 46 descs (92 rows),
+    // measured on the merged tree.
+    expect(pageCount).toBe(46);
+    expect(descCount).toBe(46);
+    expect(manifest.length).toBe(92);
     expect(manifest.length).toBe(pageCount + descCount);
-    expect(manifest.filter((row) => row.field === 'name').length).toBe(45);
-    expect(manifest.filter((row) => row.field === 'desc').length).toBe(45);
+    expect(manifest.filter((row) => row.field === 'name').length).toBe(46);
+    expect(manifest.filter((row) => row.field === 'desc').length).toBe(46);
     expect(manifest).toContainEqual({
       id: 'hearth_first_crafts',
       field: 'name',
@@ -191,8 +195,8 @@ describe('reliquary locale chunks (all shipped locales)', () => {
 
   it('carries only real catalog page ids, and no empty values', () => {
     for (const lang of tableLocales()) {
-      // Preserve the 40 original pages plus the Warfare Season 2 page, and both
-      // profession pages, in every locale. Release fill includes all names and
+      // Preserve the 40 original pages plus the Warfare Season 2 and Buried Hoards
+      // pages, and both profession pages, in every locale. Release fill includes all names and
       // narrative descriptions. First Hearth Crafts also ships its name in every
       // locale.
       expect(
@@ -205,7 +209,10 @@ describe('reliquary locale chunks (all shipped locales)', () => {
             !NEW_PROFESSION_PAGES.has(id) && !M16_NEW_PAGES.has(id) && id !== 'hearth_first_crafts',
         ).length,
         `${lang} original row count`,
-      ).toBe(41);
+        // RE-PINNED at the Freeholds sync of release/v0.45.0 (ac9ed4db24): 41 +
+        // the release's all-locale conquerors_buried_hoards row = 42, measured on
+        // the merged tree.
+      ).toBe(42);
       for (const id of M16_NEW_PAGES) {
         expect(Object.hasOwn(tables[lang], id), `${lang}.${id}`).toBe(M16_LOCALES.has(lang));
       }

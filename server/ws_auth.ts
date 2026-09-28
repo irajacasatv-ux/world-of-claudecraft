@@ -16,6 +16,7 @@ import type { EventEmitter } from 'node:events';
 import type * as http from 'node:http';
 import type { WebSocket, WebSocketServer } from 'ws';
 import { type AccountLedger, freshAccountLedger } from '../src/sim/account_ledger';
+import { worldQuestCycleForResetDay } from '../src/sim/world_quest_rotation';
 import {
   type BankBonusSource,
   DUNGEON_ENTRY_FACING_WIRE_VERSION,
@@ -169,6 +170,7 @@ export interface WsAuthDeps {
   // so a database problem costs the player their housing for that session
   // rather than the handshake.
   freeholdForAccount: (accountId: number, opts?: FreeholdPreloadOptions) => Promise<LoadedFreehold>;
+  guestPayoutsForCycle: (characterId: number, cycle: string) => Promise<number>;
 }
 
 export interface WsAuthHandlers {
@@ -199,6 +201,7 @@ export function createWsAuth(deps: WsAuthDeps): WsAuthHandlers {
     releaseCharacterLease,
     bankBonusForAccount,
     freeholdForAccount,
+    guestPayoutsForCycle,
   } = deps;
 
   // Character ids whose lease-acquire-through-join section is in flight in THIS
@@ -571,6 +574,23 @@ export function createWsAuth(deps: WsAuthDeps): WsAuthHandlers {
               leaseNonce = undefined;
               throw err;
             }
+            // The hoard guest payout count is read BEFORE the re-ask, so the re-ask
+            // stays the last await before the join.
+            const vaultGuestCycle = worldQuestCycleForResetDay(game.sim.resetDay);
+            let vaultGuestPayouts = 0;
+            try {
+              if (vaultGuestCycle)
+                vaultGuestPayouts = await guestPayoutsForCycle(
+                  admittedCharacter.id,
+                  vaultGuestCycle,
+                );
+            } catch (error) {
+              await releaseCharacterLease(character.id, leaseNonce).catch((releaseError) =>
+                console.error('lease release failed:', releaseError),
+              );
+              leaseNonce = undefined;
+              throw error;
+            }
             // THE RE-ASK (ruling (b) for the twelfth path): the first answer was
             // read before the lease and the character read, and another session
             // of this account can join, edit, leave and be evicted inside those
@@ -614,6 +634,7 @@ export function createWsAuth(deps: WsAuthDeps): WsAuthHandlers {
                 leaseNonce,
                 bankBonus,
                 freehold: freeholdAtJoin,
+                vaultGuestUsage: { cycle: vaultGuestCycle, payouts: vaultGuestPayouts },
                 mutedUntil: moderation.mutedUntil,
                 reason: moderation.reason,
                 chatStrikes: moderation.strikes,

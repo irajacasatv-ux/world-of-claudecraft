@@ -492,14 +492,22 @@ describe('release v0.39 icon-art second-pass lineage', () => {
     // The trinket slot (PR 4173) admits its 18 usable trinkets to the hotbar
     // (isHotbarItemId), each with committed painted art: 120.
     // The permanent Hearth Key joins with committed painted art too: 121.
-    expect(liveHotbarItemIds, 'production isHotbarItemId inventory').toHaveLength(121);
+    // The Buried Hoards quartermaster consumables (the 2026-09-28 release/v0.44.0
+    // merge into feature/buried-hoards: potion_of_invisibility and
+    // elixir_of_mana_regeneration) ship committed painted art: 122 on the release.
+    // RE-PINNED at the Freeholds sync of release/v0.45.0 (ac9ed4db24): 1 + 122 =
+    // 123, measured on the merged tree.
+    expect(liveHotbarItemIds, 'production isHotbarItemId inventory').toHaveLength(123);
     expect(artSubjectHotbarItemIds).toContain('hearth_key');
     expect(
       artSubjectHotbarItemIds,
       'production isHotbarItemId art-subject inventory (live minus ITEM_ART_PENDING)',
       // Both parents moved this line on their own additions (the Hearth Key;
       // the Valestrider's reins and the 18 trinkets), so merged: 102 + 1 + 18 = 121.
-    ).toHaveLength(121);
+      // RE-PINNED at the Freeholds sync of release/v0.45.0 (ac9ed4db24): the
+      // release's two Buried Hoards consumables join: 121 + 2 = 123, measured on
+      // the merged tree.
+    ).toHaveLength(123);
     expect(pendingHotbarItemIds, 'ITEM_ART_PENDING hotbar items').toHaveLength(0);
     expect(
       pendingHotbarItemIds.filter((id) => shippingImageExists(`/ui/items/${id}.webp`)),

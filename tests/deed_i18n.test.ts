@@ -99,16 +99,25 @@ describe('deed_i18n English resolution', () => {
     // 320 with the Freehold pair (homesteader_first_furnishing and
     // homesteader_first_cottage), each a name and a desc; the Homesteader title
     // joins the titles.
-    expect(manifest.filter((row) => row.field === 'name').length).toBe(320);
+    // 319 with the Buried Hoards Coinsack catch (cmb_coinsack_caught: a name and a
+    // desc, no title) at the 2026-09-28 merge into feature/buried-hoards.
+    // RE-PINNED at the Freeholds sync of release/v0.45.0 (ac9ed4db24): 320 + the
+    // release's cmb_coinsack_caught = 321, measured on the merged tree.
+    expect(manifest.filter((row) => row.field === 'name').length).toBe(321);
     // 289 descs at the release/v0.43.0 merge: plus the eight world-quest deeds.
     // 296 with the seven faction standing deeds. 298 with the two Clue Scroll
-    // casket deeds. 301 with the Freehold pair.
-    expect(manifest.filter((row) => row.field === 'desc').length).toBe(301);
+    // casket deeds. 301 with the Freehold pair. RE-PINNED at the Freeholds sync
+    // of release/v0.45.0 (ac9ed4db24): 301 + the release's Coinsack desc = 302,
+    // measured on the merged tree.
+    expect(manifest.filter((row) => row.field === 'desc').length).toBe(302);
     // 668 rows: 318 names + 299 descs + 51 titles (the three faction Champion
     // titles Riftwarden, Dawnkeeper and Forgemaster join the 47, then the
     // Clue Scroll Treasure Hunter title), then the Freehold pair's Homesteader
-    // title: 320 + 301 + 52 = 673.
-    expect(manifest.length).toBe(673);
+    // title: 320 + 301 + 52 = 673. The release alone read 670 with the Coinsack
+    // deed's name and desc. RE-PINNED at the Freeholds sync of release/v0.45.0
+    // (ac9ed4db24): 673 + the Coinsack name and desc = 675 (titles stay 52),
+    // measured on the merged tree.
+    expect(manifest.length).toBe(675);
     expect(manifest.filter((row) => row.field === 'title').length).toBe(52);
     expect(manifest.filter((row) => row.id === 'hid_forgebreaker')).toEqual([
       { id: 'hid_forgebreaker', field: 'name', source: 'A Spring Unchained' },

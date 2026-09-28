@@ -116,7 +116,11 @@ describe('characterBlobSizeWarning: the pure decision', () => {
     // and one 32-KiB step below the 262,144-byte guild-bank row scale; the
     // database review approved that re-mint from 163,840. The Freeholds sync of
     // release/v0.44.0 at aaff789813 re-minted it by the same rule to 262,144
-    // (256 KiB), the smallest step above the merged 230,068-byte fixture.
+    // (256 KiB), the smallest step above the merged 230,068-byte fixture. The
+    // release re-minted to the same 262,144 on its own at the 2026-09-28 Buried
+    // Hoards merge (its whole-character fixture measured 233,360 bytes). At the
+    // Freeholds sync of release/v0.45.0 (ac9ed4db24) the merged fixture measures
+    // 235,559 bytes, still under it (server/character_blob_size.ts).
     // Moving it means re-measuring.
     expect(CHARACTER_BLOB_WARN_BYTES).toBe(262_144);
   });
@@ -126,6 +130,7 @@ describe('characterBlobSizeWarning: the pure decision', () => {
     expect(characterBlobSizeWarning(1, 38_900)).toBeNull();
     expect(characterBlobSizeWarning(1, 209_261)).toBeNull();
     expect(characterBlobSizeWarning(1, 230_068)).toBeNull();
+    expect(characterBlobSizeWarning(1, 235_559)).toBeNull();
     expect(characterBlobSizeWarning(1, 262_143)).toBeNull();
     expect(characterBlobSizeWarning(1, 262_144)).toBeNull();
   });

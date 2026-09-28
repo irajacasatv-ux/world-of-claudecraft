@@ -866,29 +866,34 @@ describe('item-art audit builder', () => {
       // release's 1345 / 1363 plus the branch's 22 furnishing and Hearth Key ids
       // (a 27th group and a 33rd sheet page), sha and bytes re-measured with
       // `--verify-only` on the merged tree.
-      catalogSha256: '5f8a6369f62c8651ab755f4e503d83997fd7706a2f3d4c8cdc5e7f6001c3444e',
-      catalogBytes: 745014,
+      // 1464 / 1482 at the 2026-09-28 release/v0.44.0 merge into feature/buried-hoards
+      // (the hoard boss loot and map paintings on 36 sheet pages), re-measured the same way.
+      // RE-PINNED at the Freeholds sync of release/v0.45.0 (ac9ed4db24): 22 + 1464 / 1482
+      // = 1486 / 1504 on 27 groups and 37 sheet pages, sha and bytes measured with
+      // `--verify-only` on the merged tree.
+      catalogSha256: '68d5e5cc90b0429ffdff72cc0100a9ecbb2afed8b9100ef392359539bfd8a9a9',
+      catalogBytes: 813743,
       rendererFingerprint: '41f5404c4d6d9643c8f03b9d88a8546e44564cc03a1baabdd4a72cb9258a2da7',
-      catalogCount: 1367,
-      liveItemCount: 1385,
+      catalogCount: 1486,
+      liveItemCount: 1504,
       generatedHeroicDefinitions: 78,
       heroicDefinitionsWithOwnWebp: 59,
       heroicWeaponArtAliases: 19,
       groupCount: 27,
-      sheetPageCount: 33,
-      sheetCount: 264,
+      sheetPageCount: 37,
+      sheetCount: 296,
       sheetModeCounts: {
-        '128-color': 33,
-        '40-color': 33,
-        '28-color': 33,
-        '22-color': 33,
-        '28-grayscale': 33,
-        '64-circle': 33,
-        'small-multiview': 33,
-        identity: 33,
+        '128-color': 37,
+        '40-color': 37,
+        '28-color': 37,
+        '22-color': 37,
+        '28-grayscale': 37,
+        '64-circle': 37,
+        'small-multiview': 37,
+        identity: 37,
       },
       sheetSetSha256: null,
-      shippingCatalogSha256: 'dce78aee9f5c5b75a8301bbfc10ea6d72dc40fdbb7620fef27ab0a279f369034',
+      shippingCatalogSha256: '75b7613610a8193428b6b115600d5694557cef4ad8d82928aa34581b2f88aedc',
       machineChecksPassed: true,
       verdict: null,
     });

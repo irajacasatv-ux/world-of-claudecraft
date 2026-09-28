@@ -153,6 +153,7 @@ import {
 } from './content/graveyards';
 import { GROUND_PICKUP_LINES } from './content/ground_pickup_lines';
 import { HEALING_TRAINING_MOBS } from './content/healing_training';
+import { HOARD_ITEMS } from './content/hoard_loot';
 import {
   IGNIVAR_RAID_LORE_NPCS,
   IGNIVAR_RAID_LORE_QUEST_ORDER,
@@ -230,7 +231,7 @@ import {
   TOOL_RECIPES as TOOL_RECIPES_CONTENT,
 } from './content/recipes';
 import { RIFT_ITEMS } from './content/rift/items';
-import { RIFT_MOBS } from './content/rift/mobs';
+import { HOARD_MOBS, RIFT_MOBS } from './content/rift/mobs';
 import {
   TEMPLE_CAMPS,
   TEMPLE_DUNGEON_DEFS,
@@ -434,6 +435,7 @@ export const ITEMS: Record<string, ItemDef> = mergeItems(
   FACTION_VENDOR_ITEMS,
   FREEHOLD_FURNISHINGS,
   FREEHOLD_ITEMS,
+  HOARD_ITEMS,
 );
 
 export type { AggregatedSetEffect } from './content/item_sets';
@@ -454,6 +456,7 @@ export const MOBS: Record<string, MobTemplate> = {
   ...TEMPLE_DUNGEON_MOBS,
   ...DELVE_MOBS,
   ...RIFT_MOBS,
+  ...HOARD_MOBS,
   ...YUMI_MOBS,
   ...REALM_MOBS,
   ...DRAKELANDS_MOBS,

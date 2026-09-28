@@ -368,6 +368,8 @@ describe('closeManagedWindow case registry', () => {
       // The gate's explicit entry dialog owns one runtime root and close lifecycle.
       'ui/hud/housing/gate_prompt_controller.ts': 1,
       'ui/world_quest_puzzle_window.ts': 1,
+      // The Buried Hoard treasure map parchment mints its own root (no markup entry).
+      'ui/hud/treasure/treasure_map_window.ts': 1,
     });
     for (const id of Object.keys(CODE_BUILT)) expect(caseIds).toContain(id);
   });
