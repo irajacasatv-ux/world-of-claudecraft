@@ -18,8 +18,8 @@ import { page, userEvent } from 'vitest/browser';
 import { corpseLootAvailabilityInWorld } from '../../src/game/corpse_loot_availability';
 import type { HarvestPreference } from '../../src/sim/professions/harvest_preference';
 import type { Entity } from '../../src/sim/types';
-import { FocusManager, type FocusTrapHandle } from '../../src/ui/focus_manager';
-import { Hud } from '../../src/ui/hud';
+import { type ConfirmDialogHost, showConfirmDialog } from '../../src/ui/confirm_dialog_controller';
+import { FocusManager } from '../../src/ui/focus_manager';
 import {
   LootWindowController,
   type LootWindowControllerDeps,
@@ -132,18 +132,18 @@ function mount(mobile: boolean, info: CorpseHarvestInfo | null, now = () => Date
     el.style.top = Math.max(10, (innerHeight - rect.height) / 2) + 'px';
     el.style.transform = 'none';
   };
-  const modalHost = {
+  // The shipped confirm dialog (showConfirmDialog, the body Hud.confirmDialog
+  // delegates to) over a host shaped like the Hud's #confirm-dialog slot.
+  const modalHost: ConfirmDialogHost = {
     focusManager: fm,
-    confirmTrap: null as FocusTrapHandle | null,
-    confirmOnCancel: null as (() => void) | null,
-    fireConfirmCancel: vi.fn(),
+    confirmTrap: null,
+    confirmOnCancel: null,
     bringWindowToFront: (el: HTMLElement) => {
       el.style.zIndex = '60';
     },
   };
-  const confirm = (
-    Hud.prototype as unknown as { confirmDialog: LootWindowControllerDeps['confirm'] }
-  ).confirmDialog.bind(modalHost);
+  const confirm: LootWindowControllerDeps['confirm'] = (...args) =>
+    showConfirmDialog(modalHost, ...args);
   // Mirrors real hud.ts wiring: opening the picker's closeOthers is a no-op
   // (Hud.closeOtherWindows only clears transient overlays, never a sibling
   // window), so the corpse popup underneath a Change press must stay open.

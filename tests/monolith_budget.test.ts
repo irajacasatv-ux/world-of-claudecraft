@@ -606,8 +606,10 @@ const MONOLITHS: MonolithRow[] = [
     // then 16595 -> 15912 with the loot and profession event routers, the profession
     // surface latch and the event sfx router; 15911 once the craft plate left the
     // ambient banner form; 15717 with ActionPressController (the press paths);
-    // 15710 once the router and press hosts were typed (their lint suppressions left).
-    ceiling: 15710,
+    // 15710 once the router and press hosts were typed (their lint suppressions left);
+    // 15358 with the confirm dialog, keeper revive, tool-effect confirm, heroic purchase,
+    // stack and resurrection prompts and TownFocusController.
+    ceiling: 15358,
     seam: 'pure view core + thin painter on PainterHost (src/ui/CLAUDE.md)',
   },
   {

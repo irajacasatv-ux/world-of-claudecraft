@@ -16,22 +16,63 @@
 // registry uses. The helper's contract is the assertion: a call inside a callback is
 // NOT a direct evaluation of the enclosing method, so `buyItem` appearing in the
 // direct-call list is exactly the regression this guards.
+//
+// The Marks gate moved out of the Hud into a module function
+// (src/ui/hud/vendor/heroic_purchase_confirm.ts, requestHeroicPurchase), so each
+// row names the file and owner it is read from; the function's body is lifted
+// into a one-method synthetic class for the SAME walk (readFunctionCallSites).
 
 import { readFileSync } from 'node:fs';
+import ts from 'typescript';
 import { describe, expect, it } from 'vitest';
 import { ITEMS, NPCS } from '../src/sim/data';
-import { readMethodCallSites } from './helpers/method_call_sites';
+import { type MethodScan, readMethodCallSites } from './helpers/method_call_sites';
 
 const HUD_PATH = new URL('../src/ui/hud.ts', import.meta.url);
 const HUD_SRC = readFileSync(HUD_PATH, 'utf8');
+const HEROIC_PATH = 'src/ui/hud/vendor/heroic_purchase_confirm.ts';
+const HEROIC_SRC = readFileSync(new URL(`../${HEROIC_PATH}`, import.meta.url), 'utf8');
 
-function scan(method: string) {
-  return readMethodCallSites('src/ui/hud.ts', HUD_SRC, 'Hud', method);
+/** A module function by name, located by the compiler (never a text search);
+ *  throws on a rename so the guard is re-pointed rather than silently empty. */
+function moduleFunction(file: string, source: string, name: string) {
+  const sf = ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+  const fn = sf.statements.find(
+    (s): s is ts.FunctionDeclaration => ts.isFunctionDeclaration(s) && s.name?.text === name,
+  );
+  if (!fn?.body) {
+    throw new Error(
+      `function ${name}() not found in ${file}: it was renamed or moved. Re-point the guard at its new home rather than deleting the read.`,
+    );
+  }
+  return { sf, fn, body: fn.body };
 }
 
-/** Source text of one `Hud` method, for the presence half of each check. */
-function methodSource(method: string): string {
-  const from = HUD_SRC.slice(HUD_SRC.indexOf(`private ${method}`));
+/** The shared walker reads class methods; an extracted flow is a module
+ *  function. Lift its body, verbatim, into a one-method synthetic class so the
+ *  SAME walk (and its callback-is-not-a-direct-call contract) scans it. */
+function readFunctionCallSites(file: string, source: string, name: string): MethodScan {
+  const { sf, fn, body } = moduleFunction(file, source, name);
+  const params = fn.parameters.map((p) => p.name.getText(sf)).join(', ');
+  const lifted = `class Extracted {\n  ${name}(${params}) ${body.getText(sf)}\n}\n`;
+  return readMethodCallSites(file, lifted, 'Extracted', name);
+}
+
+type PurchaseRow = (typeof CONFIRMED_PURCHASES)[number];
+
+function scan(row: PurchaseRow): MethodScan {
+  return row.file === 'src/ui/hud.ts'
+    ? readMethodCallSites('src/ui/hud.ts', HUD_SRC, 'Hud', row.method)
+    : readFunctionCallSites(row.file, HEROIC_SRC, row.method);
+}
+
+/** Source text of the row's method or function, for the presence half of each check. */
+function methodSource(row: PurchaseRow): string {
+  if (row.file !== 'src/ui/hud.ts') {
+    const { sf, fn } = moduleFunction(row.file, HEROIC_SRC, row.method);
+    return fn.getText(sf);
+  }
+  const from = HUD_SRC.slice(HUD_SRC.indexOf(`private ${row.method}`));
   return from.slice(0, from.indexOf('\n  }\n') + 4);
 }
 
@@ -44,23 +85,36 @@ function methodSource(method: string): string {
 // Parameterizing removes the whole class of mistake: each row now says the one
 // call it forbids, and the vacuity assertion below proves that call is really in
 // the method it names.
+//
+// `file` and `confirm` say where each gate lives and how it spells the dialog
+// call: the Warfare gate is still a Hud method, the Marks gate a module
+// function over its typed host.
 const CONFIRMED_PURCHASES = [
-  { method: 'requestWarfarePurchase', command: 'buyItem', label: 'Warfare (honor)' },
   {
-    method: 'requestHeroicVendorPurchase',
+    method: 'requestWarfarePurchase',
+    command: 'buyItem',
+    label: 'Warfare (honor)',
+    file: 'src/ui/hud.ts',
+    confirm: 'this.confirmDialog',
+  },
+  {
+    method: 'requestHeroicPurchase',
     command: 'buyHeroicVendorItem',
     label: 'Heroic Marks',
+    file: HEROIC_PATH,
+    confirm: 'host.confirmDialog',
   },
 ] as const;
 
 describe('Warfare purchases are gated behind the confirm dialog', () => {
   it.each(CONFIRMED_PURCHASES)(
     'routes the $label buy through confirmDialog, never calling $command directly',
-    ({ method, command }) => {
-      const calls = scan(method).sites.map((s) => s.call);
+    (row) => {
+      const { method, command } = row;
+      const calls = scan(row).sites.map((s) => s.call);
 
       // The dialog IS evaluated by the method.
-      expect(calls, `${method} must open the confirm dialog`).toContain('this.confirmDialog');
+      expect(calls, `${method} must open the confirm dialog`).toContain(row.confirm);
 
       // The purchase is NOT. It lives in the accept callback, which the walk
       // deliberately does not count as a direct evaluation, so hoisting it out of
@@ -74,12 +128,13 @@ describe('Warfare purchases are gated behind the confirm dialog', () => {
 
   it.each(CONFIRMED_PURCHASES)(
     'names a $command that really exists in $method, so the row cannot be vacuous',
-    ({ method, command }) => {
+    (row) => {
+      const { method, command } = row;
       // Guards the guard, in both directions. An empty method, a renamed command,
       // or a typo in the table would each satisfy the assertion above by matching
       // nothing at all. This is exactly what the original single-command version
       // lacked for the heroic row.
-      const source = methodSource(method);
+      const source = methodSource(row);
       expect(source, `${method} must still perform ${command} somewhere`).toContain(command);
       expect(source, `${method} must still open a confirm dialog`).toContain('confirmDialog');
     },

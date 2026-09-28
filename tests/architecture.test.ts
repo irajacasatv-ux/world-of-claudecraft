@@ -2647,6 +2647,13 @@ const UI_DOM_MODULES = [
   // #ui, paints the seats, reads the wheel rect and marks the seat under the
   // pointer. The geometry stays in the pure emote_wheel_view.ts.
   'src/ui/emote_wheel.ts',
+  // The shared #confirm-dialog modal (extracted from Hud.confirmDialog): mints
+  // the dialog root, installs its trap and binds its keys.
+  'src/ui/confirm_dialog_controller.ts',
+  // The Town Focus panel's state and lifecycle (extracted from Hud): reads and
+  // hides the #town-focus-window root. The view and painter stay in
+  // town_focus_view.ts and town_focus_window.ts.
+  'src/ui/town_focus_controller.ts',
   'src/ui/frame_presets_live.ts',
   'src/ui/frame_editor_deps.ts',
   'src/ui/frame_presets_controls.ts',

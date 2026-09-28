@@ -41,7 +41,7 @@ const playHtml = readFileSync(`${root}play.html`, 'utf8');
  */
 const CODE_BUILT: Record<string, string> = {
   'confirm-dialog':
-    'src/ui/hud.ts (confirmDialog) + src/ui/input_controller.ts (the extracted input modal); the two share the one id',
+    'src/ui/confirm_dialog_controller.ts (the extracted confirm modal) + src/ui/input_controller.ts (the extracted input modal); the two share the one id',
   'profession-tutorial': 'src/ui/hud/professions/profession_tutorial_window.ts',
   'tutorial-greeting': 'src/ui/tutorial_greeting_window.ts',
   'world-quest-puzzle-window': 'src/ui/world_quest_puzzle_window.ts',
@@ -353,7 +353,10 @@ describe('closeManagedWindow case registry', () => {
       'ui/keyboard_map_window.ts': 1,
       // The live ferry-note renderer mints the managed #tutorial-greeting shell.
       'ui/tutorial_greeting_window.ts': 1,
-      'ui/hud.ts': 1, // confirmDialog's half of the shared #confirm-dialog id
+      // The extracted confirm modal (moved whole out of Hud.confirmDialog): one
+      // half of the shared #confirm-dialog id, named *_controller so the painter
+      // gate's filename sweep covers it (tests/hud_perf_budget.test.ts).
+      'ui/confirm_dialog_controller.ts': 1,
       // The extracted input modal (Masterwrought phase 14): the other half of
       // the shared #confirm-dialog id, moved whole out of Hud.inputDialog.
       // Named *_controller since the Phase 18 sweep so the painter gate's

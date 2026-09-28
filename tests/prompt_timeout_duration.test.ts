@@ -27,7 +27,10 @@ describe('the prompt countdown bar and its timeout agree', () => {
     // Anti-vacuity: a plausible real duration, not a zero that would satisfy any
     // constant, and the constant is what actually dismisses the prompt.
     expect(PROMPT_TIMEOUT_MS).toBe(28_000);
-    expect(read('src/ui/hud.ts')).toContain('}, PROMPT_TIMEOUT_MS);');
+    // The dismiss moved with the stack prompt out of Hud.showPrompt into
+    // showStackPrompt beside the constant (tests/prompt_dialog.test.ts drives it
+    // across the boundary).
+    expect(read('src/ui/prompt_dialog.ts')).toContain('}, PROMPT_TIMEOUT_MS);');
   });
 
   it('animates the fill from the token rather than a second literal', () => {

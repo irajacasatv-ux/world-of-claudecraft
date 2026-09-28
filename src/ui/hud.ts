@@ -53,7 +53,6 @@ import {
 import { isOwnAura } from '../sim/aura_classify';
 import { bagPools } from '../sim/bags';
 import { DEEDS } from '../sim/content/deeds';
-import { HEROIC_VENDOR_STOCK } from '../sim/content/heroic_vendor';
 import { CRUCIBLE_VENDOR_STOCK } from '../sim/content/ignivar_loot';
 import { isOnMountRaceStartPlatform } from '../sim/content/mounts';
 import { recipeById } from '../sim/content/recipes';
@@ -80,12 +79,6 @@ import { specialRoleColor } from '../sim/discord_roles';
 import type { Ante, PickAction } from '../sim/lockpick';
 import type { MaterialComposition } from '../sim/material_sources';
 import { petCanForceTaunt } from '../sim/pet/pet_taunt_gate';
-import {
-  computeRespecCost,
-  FOCUS_POINT_BUDGET,
-  isInTownZone,
-  type RespecPaymentTier,
-} from '../sim/professions/focus';
 import { inRangeStationTypes, stationTypesSignature } from '../sim/professions/stations';
 import { TIER_SKILL_STEP, tierForSkill } from '../sim/professions/wheel';
 import { questObjectivesForMob } from '../sim/quest_targets';
@@ -196,6 +189,11 @@ import {
   paintCompassMarks,
   relabelCompassMarks,
 } from './compass_strip_painter';
+import {
+  type ConfirmDialogArgs,
+  fireConfirmCancel,
+  showConfirmDialog,
+} from './confirm_dialog_controller';
 import { ContinentMapPainter } from './continent_map_painter';
 import { type ContinentZoneRegion, continentZoneAt } from './continent_map_view';
 import { formatMinimapCoords } from './coords';
@@ -495,6 +493,7 @@ import { closeOpenTouchMenu } from './hud/tap_menu';
 import { createTargetDotsView, type TargetDotsInput, TargetDotsPainter } from './hud/target_dots';
 import { FerryHudPainter } from './hud/transport';
 import { createHudVehicleBar, type VehicleActionBarController } from './hud/vehicle';
+import { requestHeroicPurchase } from './hud/vendor';
 import { dismissBuyQuantityPrompts } from './hud/vendor/buy_quantity_prompt_window';
 import { buildCrucibleVendorView } from './hud/vendor/crucible_vendor_view';
 import { renderCrucibleVendorWindow } from './hud/vendor/crucible_vendor_window';
@@ -542,7 +541,7 @@ import { ItemDragState } from './item_drag_state';
 import { itemSetMemberCounts } from './item_set_tooltip_view';
 import { itemSlotLabel as itemSlotName } from './item_slot_labels';
 import { itemTooltipHtml } from './item_tooltip_view';
-import { keeperReviveConfirm, keeperReviveDialogue } from './keeper_revive_dialog_core';
+import { runKeeperRevive } from './keeper_revive_dialog';
 import { bindActionDisplayName } from './keybind_action_names_core';
 import { knownItemDef, ownEntry } from './known_item';
 import { LeaderboardWindow } from './leaderboard_window';
@@ -671,7 +670,7 @@ import {
   procOverlayState,
 } from './proc_overlay_view';
 import { maskProfanity } from './profanity';
-import { createPromptTimeoutBar, PROMPT_TIMEOUT_MS } from './prompt_dialog';
+import { showStackPrompt } from './prompt_dialog';
 import { isPvpHostilePlayer, isPvpHostileTargetId } from './pvp_hostile_core';
 import { questProgressText } from './quest_progress_text';
 import { RaidBossGuideWindow, raidBossGuideContextFallback } from './raid_boss_guide_window';
@@ -717,6 +716,7 @@ import {
   MOTD_RESULT_FALLBACK_KEY,
   MOTD_RESULT_KEYS,
 } from './result_code_keys';
+import { ResurrectionPrompt } from './resurrection_prompt';
 import { isTalentRowUnlockLevel } from './row_unlock_toast';
 import { localizeAuthoredYellSpeakerName, localizeAuthoredYellText } from './sim_i18n';
 import { openSimpleMenu } from './simple_context_menu';
@@ -738,7 +738,7 @@ import { targetPortraitSourceId, targetPortraitUrl } from './target_portrait_vie
 import { targetRankView, targetUsesEliteFrame } from './target_rank_view';
 import { TargetSwingTimerBars } from './target_swing_timer_bars';
 import type { PresetId, ThemeKnob, ThemeState } from './theme';
-import { toolEffectNameKey } from './tool_effect_name';
+import { askToolEffectConfirm } from './tool_effect_confirm';
 import { type TooltipViewport, tooltipPlacementAt } from './tooltip_clamp_core';
 import { SharedTooltipOwner } from './tooltip_owner';
 import {
@@ -749,8 +749,7 @@ import { installTargetOfTargetControls } from './totarget_frame_controller';
 import { attachTouchFrameDrags, type TouchFrameDrags } from './touch_frame_drag';
 import { TOOLTIP_PEEK_MS, TouchPeekGuard } from './touch_peek';
 import { bindTouchDoubleTap, bindTouchTap } from './touch_tap';
-import { buildTownFocusView, stepTownFocus, townFocusRenderSig } from './town_focus_view';
-import { renderTownFocusWindow } from './town_focus_window';
+import { TownFocusController } from './town_focus_controller';
 import { trackerCollapseSettings } from './tracker_collapse_settings';
 import { wireTrackerHeader } from './tracker_header_wiring';
 import { installTrackerStackAnchor } from './tracker_stack_anchor';
@@ -1271,7 +1270,7 @@ export class Hud {
   // return-to-opener, unifying the former ad-hoc Hud focus helpers. See
   // ./focus_manager. Escape is NOT handled here: it stays with the existing unified
   // dispatcher (main.ts game input -> hud.closeAll()), so there is one Escape path.
-  private readonly focusManager = new FocusManager();
+  readonly focusManager = new FocusManager();
   private readonly mobileMoreDialog = new MobileMoreDialogController(this.focusManager, {
     trigger: () => document.getElementById('mobile-more'),
     dialog: () => document.getElementById('mobile-extra-controls'),
@@ -1442,9 +1441,14 @@ export class Hud {
   private deathRecapBtnEl = $('#death-recap-btn');
   private deathRecapDialog!: DeathRecapDialog;
   private ghostPromptEl = $('#ghost-prompt');
-  private resurrectionPromptEl: HTMLElement | null = null;
   private guildInvitePromptEl: HTMLElement | null = null;
-  private promptSequence = 0;
+  // The resurrection offer prompt (resurrection_prompt.ts), built lazily so a
+  // bare Hud.prototype rig resolves it too.
+  private resurrectionPromptState: ResurrectionPrompt | undefined;
+  private get resurrectionPrompt(): ResurrectionPrompt {
+    this.resurrectionPromptState ??= new ResurrectionPrompt(this);
+    return this.resurrectionPromptState;
+  }
   private resurrectCorpseBtnEl = $('#resurrect-corpse-btn');
   // The standing top-of-screen ghost line (both ways back); shown for a ghost only.
   private ghostHintEl = $('#ghost-hint');
@@ -1950,15 +1954,11 @@ export class Hud {
   // Pending lazy-load of the mech GLB + chromas; the reveal waits on it.
   private mechAssetsPromise: Promise<void> | null = null;
   private readonly playerCard: PlayerCardController;
-  // Shared by the confirm + input modals (one #confirm-dialog id; they never coexist).
-  private confirmTrap: FocusTrapHandle | null = null;
-  // The pending no-choice callback of the OPEN confirm dialog (R40 family):
-  // fired exactly once on ANY dismissal that is not the OK button (cancel
-  // click, Esc through closeManagedWindow, replacement by a newer modal), so
-  // a flow that must always answer (the per-use effect confirm sends the
-  // harvest either way) can never hang on a dismissed dialog. Null for every
-  // dialog that passed no onCancel; cleared BEFORE onOk runs.
-  private confirmOnCancel: (() => void) | null = null;
+  // The shared #confirm-dialog slot (the confirm + input modals; they never
+  // coexist): its trap and the open confirm's pending no-choice callback
+  // (the R40 family), documented on ConfirmSlot in confirm_dialog_controller.ts.
+  confirmTrap: FocusTrapHandle | null = null;
+  confirmOnCancel: (() => void) | null = null;
   // The first-tier tutorial modal's focus trap (#profession-tutorial).
   private professionTutorialTrap: FocusTrapHandle | null = null;
   private tutorialGreetingTrap: FocusTrapHandle | null = null;
@@ -3176,7 +3176,7 @@ export class Hud {
     syncWindowOpenBodyClasses((el) => this.isWindowVisible(el));
   }
 
-  private bringWindowToFront(el: HTMLElement): void {
+  bringWindowToFront(el: HTMLElement): void {
     // The scoped-popup modals are topmost by definition and never join the
     // 50-89 window band: banding one (a pointerdown raise, or the normalize
     // sweep) drops it BEHIND the armory inspect overlay (z 90) AND the
@@ -3311,7 +3311,7 @@ export class Hud {
         el.remove();
         // Esc/closeAll is a dismissal without a choice: the pending
         // no-choice callback (the R40 family) must still answer.
-        this.fireConfirmCancel();
+        fireConfirmCancel(this);
         break;
       case 'profession-tutorial':
         // Route through closeProfessionTutorial so the focus trap is released
@@ -3451,7 +3451,7 @@ export class Hud {
         this.closeUnbind();
         break;
       case 'town-focus-window':
-        this.closeTownFocus();
+        this.townFocus.close();
         break;
       case 'crafting-window':
         this.closeCrafting();
@@ -4864,7 +4864,7 @@ export class Hud {
     hideTooltip: () => this.hideTooltip(),
     ...this.windowFocus('#social-window'),
     showPrompt: (text, acceptLabel, onAccept, onDecline) =>
-      this.showPrompt(text, acceptLabel, onAccept, onDecline),
+      showStackPrompt(text, acceptLabel, onAccept, onDecline, t('hud.prompts.decline')),
     startWhisper: (name) => this.startWhisper(name),
   });
   // Set by main.ts once the realm's /api/status advert answers, which lands AFTER
@@ -6215,7 +6215,7 @@ export class Hud {
     // slow-band probe would leave the panel in the old locale until the player
     // edited it. Force one rebuild with fresh t(), the arena / Vale Cup
     // relocalize arm (#2500).
-    if (this.townFocusOpen) this.renderTownFocus();
+    if (this.townFocus.isOpen) this.townFocus.render();
     if (this.marketWindow.isOpen) this.marketWindow.render();
     if (this.bankWindow.isOpen) this.bankWindow.render();
     if (this.deedsWindow.isOpen) this.deedsWindow.render();
@@ -7783,14 +7783,14 @@ export class Hud {
     // gate) only ever shows/works while standing in a town hub. Cheap zone
     // check, gated to the slow tier since it changes only on foot travel.
     if (slowHud) {
-      const inTown = this.isInTown();
+      const inTown = this.townFocus.isInTown();
       const townFocusBtn = document.getElementById('mm-town-focus');
       if (townFocusBtn) townFocusBtn.style.display = inTown ? '' : 'none';
       // An open panel converges on the same band, behind its own invalidation
       // signature (#2500): the probe reads cheaply and rebuilds only when what
       // the panel shows moves. Walking in or out of town is one of the inputs
       // it carries, so the panel's disabled state follows the button above.
-      this.refreshOpenTownFocusIfChanged();
+      this.townFocus.refreshIfChanged();
       // Crafting window staleness: the
       // window is a cold painter, so an open window repaints only when the
       // in-range station-type set changes (walking in/out of a station's
@@ -8365,7 +8365,7 @@ export class Hud {
     const ghostInBgMatch = !!this.sim.bgInfo?.match;
     if (p.dead) syncDeathControllerHints(this.optionsHooks?.gamepad ?? null);
     if (!p.dead) {
-      this.closeResurrectionPrompt();
+      this.resurrectionPrompt.close();
       if (this.deathRecapDialog.isOpen()) this.deathRecapDialog.close();
     }
     document.body.classList.toggle('spirit-mode', ghost);
@@ -10890,18 +10890,19 @@ export class Hud {
         }
         case 'partyInvite':
           audio.partyInvite();
-          this.showPrompt(
+          showStackPrompt(
             t('hud.prompts.partyInvite', {
               name: `<b>${esc(ev.fromName)}</b>`,
             }),
             t('hud.prompts.joinParty'),
             () => this.sim.partyAccept(),
             () => this.sim.partyDecline(),
+            t('hud.prompts.decline'),
           );
           break;
         case 'readyCheckStart':
           audio.readyCheck();
-          this.showPrompt(
+          showStackPrompt(
             t('hudChrome.readyCheck.prompt', {
               name: `<b>${esc(ev.fromName)}</b>`,
             }),
@@ -10918,47 +10919,12 @@ export class Hud {
           this.readyCheckLeaderWindow.update(ev);
           break;
         case 'resurrectionOffer':
-          // An offer completing against a player who is no longer dead (they
-          // released, respawned, or accepted another healer's rez while this
-          // cast was in flight, all ordinary in online group play) is
-          // unanswerable: the sim keeps offers only for dead players. Showing
-          // it anyway painted the centred prompt for exactly one frame before
-          // the per-frame `!p.dead` closer below removed it, a split-second
-          // dark-panel flash. The guard reads the same mirror the closer does,
-          // so the two can never disagree.
-          if (!sim.player.dead) break;
-          // Same "someone is asking you to respond to a prompt" vocabulary as
-          // party/guild invite; questAccept() was retired, see invitePrompt().
-          audio.invitePrompt();
-          // The sim keeps one authoritative latest offer per dead player. Mirror
-          // that singleton in the HUD so an older prompt can never answer a newer
-          // Chronomancer's offer.
-          this.closeResurrectionPrompt();
-          this.resurrectionPromptEl = this.showPrompt(
-            t('hud.prompts.resurrectionOffer', {
-              name: `<b>${esc(ev.fromName)}</b>`,
-            }),
-            t('hud.prompts.acceptResurrection'),
-            () => {
-              this.resurrectionPromptEl = null;
-              this.sim.respondToResurrection(true);
-            },
-            () => {
-              this.resurrectionPromptEl = null;
-              this.sim.respondToResurrection(false);
-            },
-            t('hud.prompts.decline'),
-            () => {
-              this.resurrectionPromptEl = null;
-              this.sim.respondToResurrection(false);
-            },
-            true,
-          );
+          this.resurrectionPrompt.offer(ev.fromName);
           break;
         case 'guildInvite':
           audio.levelUp();
           this.guildInvitePromptEl?.remove();
-          this.guildInvitePromptEl = this.showPrompt(
+          this.guildInvitePromptEl = showStackPrompt(
             t('hud.prompts.guildInvite', {
               name: `<b>${esc(ev.fromName)}</b>`,
               guild: `<span class="gold">&lt;${esc(ev.guildName)}&gt;</span>`,
@@ -10995,7 +10961,7 @@ export class Hud {
         }
         case 'tradeRequest':
           audio.click();
-          this.showPrompt(
+          showStackPrompt(
             t('hud.prompts.tradeRequest', {
               name: `<b>${esc(ev.fromName)}</b>`,
             }),
@@ -11004,17 +10970,19 @@ export class Hud {
             () => {
               /* let it expire */
             },
+            t('hud.prompts.decline'),
           );
           break;
         case 'duelRequest':
           audio.duelChallenge();
-          this.showPrompt(
+          showStackPrompt(
             t('hud.prompts.duelRequest', {
               name: `<b>${esc(ev.fromName)}</b>`,
             }),
             t('hud.prompts.acceptDuel'),
             () => this.sim.duelAccept(),
             () => this.sim.duelDecline(),
+            t('hud.prompts.decline'),
           );
           break;
         case 'duelCountdown': {
@@ -12405,7 +12373,7 @@ export class Hud {
       {
         ...this.presentationBag,
         hideTooltip: () => this.hideTooltip(),
-        onBuy: (itemId) => this.requestHeroicVendorPurchase(itemId),
+        onBuy: (itemId) => requestHeroicPurchase(this, itemId),
         onClose: () => this.closeHeroicVendor(),
       },
     );
@@ -12724,161 +12692,23 @@ export class Hud {
   // the allocation and lets it be edited even out of town (so a player can see
   // what they have), but disables the steppers/save outside town: the real
   // gate is server-side in Sim.setTownFocus, this is a cosmetic usability gate.
+  // The panel's state and lifecycle live in TownFocusController
+  // (town_focus_controller.ts), built lazily over this Hud and the panel's
+  // windowFocus bridge (#2525) over the ONE shared FocusManager.
   // -------------------------------------------------------------------------
 
-  private townFocusDraft: Record<string, number> | null = null;
-
-  /** The #1144 re-spec payment tier the panel's Save will charge. Defaults to
-   *  'time', the free tier, so an untouched picker never surprises the player
-   *  with a charge; reset alongside townFocusDraft on every fresh open. */
-  private townFocusRespecTier: RespecPaymentTier = 'time';
-
-  /** The signature of what the panel currently shows (#2500). `''` until the
-   *  first paint arms it, which no real signature can spell (every one carries
-   *  the in-town flag, the budget and a row per component). */
-  private lastTownFocusSig = '';
-
-  // Standalone trapping window (#2525): the train / unbind shape, one
-  // windowFocus bridge plus one opener field. The panel was outside the shared
-  // focus system entirely: absent from every windowFocus(rootSel) call site and
-  // not one of the two documented opt-outs (#bags and #bank-window, which pair
-  // with a second window and must stay Tab-passable), so it had no Tab trap and
-  // no return-to-opener. It was not the last out (vendor, trade and map still
-  // are; crafting joined at #2876, report at qr-19-report-window-focus-trap-carveout);
-  // it is the one that became REACHABLE, because
-  // #2500 stopped the panel rebuilding itself twice a second and focus started
-  // surviving long enough for the missing hand-back to matter.
-  private readonly townFocusWindowFocus = this.windowFocus('#town-focus-window');
-  private townFocusOpenerFocus: HTMLElement | null = null;
-
-  private isInTown(): boolean {
-    const pos = this.sim.player.pos;
-    return isInTownZone(pos, zoneAt(pos.x, pos.z));
+  private townFocusState: TownFocusController | undefined;
+  private get townFocus(): TownFocusController {
+    this.townFocusState ??= new TownFocusController(this, this.windowFocus('#town-focus-window'));
+    return this.townFocusState;
   }
 
   toggleTownFocus(): void {
-    const el = $('#town-focus-window');
-    if (el.style.display === 'block') {
-      this.closeTownFocus();
-      return;
-    }
-    this.closeOtherWindows('#town-focus-window');
-    // Open on the QUEUED allocation when one waits: re-saving it never restarts the clock.
-    this.townFocusDraft = { ...(this.sim.townFocusPending?.allocation ?? this.sim.townFocus) };
-    this.townFocusRespecTier = 'time';
-    this.renderTownFocus();
-    // AFTER the first paint, the train / unbind ordering: captureFocus records
-    // the opener (the minimap button) and installs the trap over a root that is
-    // by then populated and displayed. The one case where AFTER would be worse
-    // than BEFORE is unreachable: if the paint could leave focus INSIDE the
-    // panel, captureFocus would record an in-window opener and the bridge's
-    // in-window arm would then decline to release the trap on close. It cannot,
-    // because the root is display:none until this paint, so a browser has
-    // already blurred its stale children to <body>, and activeFocusable()
-    // rejects <body>.
-    this.townFocusOpenerFocus = this.townFocusWindowFocus.captureFocus();
-  }
-
-  private renderTownFocus(): void {
-    const inTown = this.isInTown();
-    const allocation = this.townFocusDraft ?? this.sim.townFocus;
-    const pending = this.sim.townFocusPending;
-    const view = buildTownFocusView(allocation, FOCUS_POINT_BUDGET, inTown, pending);
-    // Re-arm the latch on EVERY paint, whatever caused it (the open, a step, a
-    // language switch), so the slow-band probe below elides against the state
-    // actually on screen rather than against the last thing the probe itself
-    // painted.
-    this.lastTownFocusSig = townFocusRenderSig(view);
-    // #1144: the cost preview for the CHOSEN tier, priced off the committed
-    // allocation vs the draft (never the raw request), the same pair
-    // Sim.setTownFocus charges against server-side.
-    const cost = computeRespecCost(this.sim.townFocus, allocation, this.townFocusRespecTier);
-    renderTownFocusWindow(
-      $('#town-focus-window'),
-      view,
-      { tier: this.townFocusRespecTier, cost },
-      {
-        onStep: (component, delta) => {
-          this.townFocusDraft = stepTownFocus(
-            this.townFocusDraft ?? this.sim.townFocus,
-            component,
-            delta,
-            FOCUS_POINT_BUDGET,
-          );
-          this.renderTownFocus();
-        },
-        onTierChange: (tier) => {
-          this.townFocusRespecTier = tier;
-          this.renderTownFocus();
-        },
-        onSave: () => {
-          this.sim.setTownFocus(this.townFocusDraft ?? {}, this.townFocusRespecTier);
-          this.townFocusDraft = null;
-          this.closeTownFocus();
-        },
-        onClose: () => this.closeTownFocus(),
-      },
-    );
-  }
-
-  /** Slow-band staleness check for an OPEN panel (#2500). The panel used to
-   *  repaint on the open check alone, so an idle one discarded and rebuilt its
-   *  entire subtree twice a second: wasted work, and it destroyed the keyboard
-   *  user's focused control on a timer. Rebuild only when what the panel shows
-   *  actually moves (an edit to the draft, or walking in or out of town). The
-   *  open check comes FIRST so a closed panel costs nothing at all, and
-   *  renderTownFocus() owns the re-arm so every other paint cause arms it too. */
-  private refreshOpenTownFocusIfChanged(): void {
-    if (!this.townFocusOpen) return;
-    const sig = townFocusRenderSig(
-      buildTownFocusView(
-        this.townFocusDraft ?? this.sim.townFocus,
-        FOCUS_POINT_BUDGET,
-        this.isInTown(),
-        this.sim.townFocusPending,
-      ),
-    );
-    if (sig === this.lastTownFocusSig) return;
-    this.renderTownFocus();
-  }
-
-  /** The ONE close path: the X and Save go through onClose/onSave, Escape and
-   *  the gamepad go through closeAll -> closeManagedWindow's `town-focus-window`
-   *  case, and the toggle re-press comes straight here. So releasing the trap and
-   *  handing focus back once, here, covers every one of them.
-   *
-   *  Deliberately NOT guarded on `townFocusOpen` the way closeTrain/closeUnbind
-   *  guard on their npc id: those hold open state in a field, this panel reads
-   *  it off the DOM, every caller is already guarded, and a redundant call is a
-   *  no-op (the opener is nulled below, and releasing a released trap does
-   *  nothing). A guard would also make the "a later close cannot re-steal focus"
-   *  test pass for the wrong reason.
-   *
-   *  KNOWN EDGE, NOT fixed here, and the obvious local fix is a trap. The panel
-   *  is deliberately readable out of town while the slow band hides
-   *  #mm-town-focus out of town, so a player can open it in town, walk out, and
-   *  close with the opener no longer rendered. FocusManager then refuses the
-   *  hand-back (no client rects: moving focus somewhere invisible is a WCAG
-   *  2.4.11 failure), focus is left standing, and the browser drops it to <body>
-   *  with the panel. That is the pre-#2525 outcome, never worse, and the trap is
-   *  released either way.
-   *  Do NOT "fix" it by keeping the button visible while townFocusOpen: the
-   *  hand-back lands, then the next slow tick (<=500ms later) hides the button
-   *  again now that the panel is closed, and focus drops anyway. A flicker
-   *  instead of a loss. The real fix is a fallback destination, which
-   *  makeWindowFocus passes for NO window (closeTrain / closeUnbind hand back to
-   *  a gossip button that is already gone), so it belongs to the bridge and the
-   *  whole family, not to this one caller. */
-  closeTownFocus(): void {
-    $('#town-focus-window').style.display = 'none';
-    this.townFocusDraft = null;
-    this.hideTooltip();
-    this.townFocusWindowFocus.restoreFocus(this.townFocusOpenerFocus);
-    this.townFocusOpenerFocus = null;
+    this.townFocus.toggle();
   }
 
   get townFocusOpen(): boolean {
-    return $('#town-focus-window').style.display === 'block';
+    return this.townFocus.isOpen;
   }
 
   // -------------------------------------------------------------------------
@@ -14056,37 +13886,11 @@ export class Hud {
     );
   }
 
-  // Talking to the Pale Keeper (world click, interact key) opens its dialogue, and
-  // Revive Me there opens a level-aware confirmation (keeper_revive_dialog_core.ts):
-  // the raise is irreversible and charges The Keeper's Toll from level 10 up. Only
-  // the second OK sends the command; cancel/Escape at either step sends nothing.
+  // Talking to the Pale Keeper opens its dialogue, then a level-aware revive
+  // confirmation (runKeeperRevive in keeper_revive_dialog.ts); the
+  // interaction layer calls this entry point.
   requestSpiritHealerResurrect(): void {
-    const talk = keeperReviveDialogue(this.sim.player.level);
-    this.confirmDialog(t(talk.titleKey), t(talk.bodyKey), t(talk.okKey), t(talk.cancelKey), () => {
-      const sure = keeperReviveConfirm(this.sim.player.level);
-      this.confirmDialog(t(sure.titleKey), t(sure.bodyKey), t(sure.okKey), t(sure.cancelKey), () =>
-        this.onResurrectAtSpiritHealer?.(),
-      );
-    });
-  }
-
-  // Heroic Quartermaster purchases debit Heroic Marks with no buyback recorded
-  // (gold vendors are the only buyback source), so a mis-tap is unrefundable:
-  // confirm before sending the exact pre-existing buy command.
-  private requestHeroicVendorPurchase(itemId: string): void {
-    const offer = HEROIC_VENDOR_STOCK.find((candidate) => candidate.itemId === itemId);
-    const item = ITEMS[itemId];
-    if (!offer || !item) return;
-    this.confirmDialog(
-      t('heroicShop.buyConfirmTitle'),
-      t('heroicShop.buyConfirmBody', {
-        item: itemDisplayName(item),
-        marks: formatNumber(offer.marks, { maximumFractionDigits: 0 }),
-      }),
-      t('heroicShop.buyConfirmAccept'),
-      t('heroicShop.buyConfirmCancel'),
-      () => this.sim.buyHeroicVendorItem(itemId),
-    );
+    runKeeperRevive(this);
   }
 
   // Crucible Quartermaster redemptions consume a sigil with no buyback
@@ -14109,115 +13913,20 @@ export class Hud {
     );
   }
 
-  // Minimal modal confirm dialog (reuses the .window/.panel chrome). Built on
-  // demand and removed on dismiss.
-  private confirmDialog(
-    title: string,
-    body: string,
-    okText: string,
-    cancelText: string,
-    onOk: () => void,
-    onCancel?: () => void,
-  ): void {
-    this.confirmTrap?.release(false);
-    this.confirmTrap = null;
-    // A replaced dialog was dismissed without a choice: its pending
-    // no-choice callback (if any) fires before the new one takes the slot.
-    this.fireConfirmCancel();
-    document.getElementById('confirm-dialog')?.remove();
-    this.confirmOnCancel = onCancel ?? null;
-    const el = document.createElement('div');
-    el.id = 'confirm-dialog';
-    el.className = 'window panel';
-    el.style.display = 'block';
-    // Kept inline rather than folded onto markDialogRoot: that helper would also set
-    // tabindex=-1 on the root, which this focusManager-trapped prompt does not use
-    // (byte-preserving on the trap). The dialog is named via aria-labelledby.
-    el.setAttribute('role', 'dialog');
-    el.setAttribute('aria-modal', 'true');
-    el.setAttribute('aria-labelledby', 'confirm-dialog-title');
-    // The body is the DESCRIPTION, not decoration: on a destroy confirm it
-    // carries what dies, whether anything is refunded, and what it costs. With
-    // focus landing on OK, a screen reader announces the dialog name and the
-    // focused control, so without this association the warning is never read
-    // aloud and the accept is one keypress away.
-    el.setAttribute('aria-describedby', 'confirm-dialog-body');
-    el.innerHTML =
-      `<div class="panel-title"><span id="confirm-dialog-title">${esc(title)}</span><button type="button" class="x-btn" data-cancel aria-label="${esc(cancelText)}">${svgIcon('close')}</button></div>` +
-      `<div class="cd-body" id="confirm-dialog-body">${esc(body)}</div>` +
-      `<div class="cd-actions"><button type="button" class="btn" data-cancel>${esc(cancelText)}</button><button type="button" class="btn cd-ok" data-ok>${esc(okText)}</button></div>`;
-    document.body.appendChild(el);
-    this.bringWindowToFront(el);
-    // A confirm prompt is the topmost modal by definition: the window band tops
-    // out at 89 and the armory inspect overlay sits at 90, so floor it above
-    // both or a purchase confirmation opens invisibly underneath.
-    el.style.zIndex = String(Math.max(Number(el.style.zIndex) || 0, 95));
-    this.confirmTrap = this.focusManager.open({ root: () => el });
-    bindDialogKeyActivation(el);
-    el.querySelector<HTMLElement>('[data-ok]')?.focus();
-    const close = () => {
-      this.confirmTrap?.release();
-      this.confirmTrap = null;
-      el.remove();
-    };
-    el.querySelectorAll('[data-cancel]').forEach((b) => {
-      b.addEventListener('click', () => {
-        audio.click();
-        close();
-        this.fireConfirmCancel();
-      });
-    });
-    el.querySelector('[data-ok]')?.addEventListener('click', () => {
-      // A made choice: the no-choice callback must NOT fire on the removal.
-      this.confirmOnCancel = null;
-      close();
-      onOk();
-    });
+  // Minimal modal confirm dialog (reuses the .window/.panel chrome): the whole
+  // body is showConfirmDialog in confirm_dialog_controller.ts, over this Hud's
+  // shared #confirm-dialog slot.
+  confirmDialog(...args: ConfirmDialogArgs): void {
+    showConfirmDialog(this, ...args);
   }
 
-  /** Fire-and-clear the open confirm dialog's no-choice callback (see the
-   *  field doc). Safe to call when none is pending. */
-  private fireConfirmCancel(): void {
-    const pending = this.confirmOnCancel;
-    this.confirmOnCancel = null;
-    pending?.();
-  }
-
-  // The R40 per-use effect confirm (gather_node_interact.ts
-  // GatherEffectConfirmGate.ask): rides the one confirm-dialog family, so
-  // the focus trap, dialog key activation, aria naming, gamepad A/B, and
-  // mobile tap treatment are all inherited. OK confirms the spend; the
-  // cancel button, the X, and Esc all decline, and DECLINING STILL GATHERS
-  // (the ruling's letter: prompt mode gates the charge, never the gather),
-  // which is why the body copy says so and why `proceed` runs on every
-  // dismissal path via the onCancel hook.
+  // The R40 per-use effect confirm (askToolEffectConfirm in
+  // tool_effect_confirm.ts); the interact key reaches it here.
   confirmToolEffectUse(
     prompt: { effectId: string; charges: number },
     proceed: (confirmed: boolean) => void,
   ): void {
-    const nameKey = toolEffectNameKey(prompt.effectId);
-    // An unknown effect id (a newer server's catalog) cannot compose the
-    // ask: degrade to an unconfirmed harvest rather than a broken dialog.
-    if (nameKey === undefined) {
-      proceed(false);
-      return;
-    }
-    let answered = false;
-    const answer = (confirmed: boolean) => {
-      if (answered) return;
-      answered = true;
-      proceed(confirmed);
-    };
-    this.confirmDialog(
-      t('hudChrome.professions.toolEffectConfirmTitle', { effect: t(nameKey) }),
-      t('hudChrome.professions.toolEffectConfirmBody', {
-        charges: formatNumber(prompt.charges, { maximumFractionDigits: 0 }),
-      }),
-      t('hudChrome.professions.toolEffectConfirmAccept'),
-      t('hudChrome.professions.toolEffectConfirmDecline'),
-      () => answer(true),
-      () => answer(false),
-    );
+    askToolEffectConfirm(this, prompt, proceed);
   }
 
   // In-app text-input modal (reuses the confirm-dialog chrome); the whole
@@ -14230,7 +13939,7 @@ export class Hud {
         replaceStandingDialog: () => {
           this.confirmTrap?.release(false);
           this.confirmTrap = null;
-          this.fireConfirmCancel();
+          fireConfirmCancel(this);
         },
         trapOpen: (el) => {
           this.confirmTrap = this.focusManager.open({ root: () => el });
@@ -15431,67 +15140,6 @@ export class Hud {
   }
 
   // -------------------------------------------------------------------------
-  // Prompts (party invite / trade request / duel challenge)
-  // -------------------------------------------------------------------------
-
-  private closeResurrectionPrompt(): void {
-    this.resurrectionPromptEl?.remove();
-    this.resurrectionPromptEl = null;
-  }
-  private showPrompt(
-    text: string,
-    acceptLabel: string,
-    onAccept: () => void,
-    onDecline: () => void,
-    declineLabel: string = t('hud.prompts.decline'),
-    // Fired only when the prompt auto-dismisses after the wall-clock timeout.
-    // Defaults to onDecline so existing callers stay byte-identical; callers that
-    // want an ignored prompt to mean "no response" (ready check) pass a no-op and
-    // let their own server-side timeout own the outcome.
-    onTimeout: () => void = onDecline,
-    focusFirst = false,
-  ): HTMLElement {
-    const stack = $('#prompt-stack');
-    const prompt = document.createElement('div');
-    prompt.className = 'prompt panel ui-panel-strong';
-    prompt.innerHTML = `<div class="prompt-text">${text}</div>`;
-    prompt.setAttribute('role', 'alertdialog');
-    prompt.setAttribute('aria-modal', 'false');
-    const promptText = prompt.querySelector('.prompt-text') as HTMLElement;
-    promptText.id = `hud-prompt-title-${this.promptSequence++}`;
-    prompt.setAttribute('aria-labelledby', promptText.id);
-    const accept = document.createElement('button');
-    accept.className = 'btn ui-btn ui-btn--red';
-    accept.type = 'button';
-    accept.textContent = acceptLabel;
-    const decline = document.createElement('button');
-    decline.className = 'btn ui-btn';
-    decline.type = 'button';
-    decline.textContent = declineLabel;
-    accept.addEventListener('click', () => {
-      prompt.remove();
-      onAccept();
-    });
-    decline.addEventListener('click', () => {
-      prompt.remove();
-      onDecline();
-    });
-    const actions = document.createElement('div');
-    actions.className = 'prompt-actions';
-    actions.append(accept, decline);
-    prompt.append(actions, createPromptTimeoutBar());
-    stack.appendChild(prompt);
-    if (focusFirst) accept.focus();
-    window.setTimeout(() => {
-      if (prompt.isConnected) {
-        prompt.remove();
-        onTimeout();
-      }
-    }, PROMPT_TIMEOUT_MS);
-    return prompt;
-  }
-
-  // -------------------------------------------------------------------------
   // Trade window
   // -------------------------------------------------------------------------
 
@@ -15643,7 +15291,7 @@ export class Hud {
 
   // Historical name retained for the existing call sites. Opening a window no
   // longer closes its siblings; it only clears transient overlays.
-  private closeOtherWindows(_keep?: string | string[]): void {
+  closeOtherWindows(_keep?: string | string[]): void {
     this.closeContextMenu();
     this.hideTooltip();
   }

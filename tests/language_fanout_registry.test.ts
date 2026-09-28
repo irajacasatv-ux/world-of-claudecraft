@@ -191,7 +191,14 @@ const FANOUT_ARMS: readonly string[] = [
   // guards are pinned by tests/train_window_hud.test.ts, since this half only
   // sees refreshLocalizedDynamicUi's OWN statement-position calls.
   'this.repaintOpenServiceWindows|',
-  'this.renderTownFocus|this.townFocusOpen',
+  // The Town Focus panel (town_focus_controller.ts): its repaint signature is
+  // the allocation, the budget and the in-town flag, all text-independent, so
+  // the switch alone never moves it and the arm forces one rebuild while the
+  // panel is open. NOT in half 2's ANSWERED list since the panel left hud.ts:
+  // the controller calls no t() itself (every string is the separate
+  // town_focus_window.ts painter's), so the discovery sweep never finds its
+  // lastSig memo (the gathering goal controller's shape above).
+  'this.townFocus.render|this.townFocus.isOpen',
   'this.marketWindow.render|this.marketWindow.isOpen',
   'this.bankWindow.render|this.bankWindow.isOpen',
   'this.deedsWindow.render|this.deedsWindow.isOpen',
@@ -649,12 +656,6 @@ const ANSWERED: readonly AnsweredSurface[] = [
     memos: ['lastPartySig'],
     answer: 'this.partyFramesPainter.relocalize',
     why: "the party roster signature: member pids, hp and resource numbers and role ids. The localized text on those frames is repainted by the partyFramesPainter.relocalize() arm the fan-out already drives, which clears the painter's own memo rather than relying on this one",
-  },
-  {
-    file: 'hud.ts',
-    memos: ['lastTownFocusSig'],
-    answer: 'this.renderTownFocus',
-    why: "the Town Focus signature: the allocation, the budget and the in-town flag, all text-independent by design. The fan-out's own arm re-renders the panel when it is open, which was added for exactly this reason (the slow-band probe would otherwise leave it in the old locale until the player edited it)",
   },
 ];
 

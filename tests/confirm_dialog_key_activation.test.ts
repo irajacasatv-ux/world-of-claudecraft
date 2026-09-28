@@ -134,10 +134,12 @@ describe('bindDialogKeyActivation (confirm-dialog family keyboard repair)', () =
   it('the confirm dialog associates its BODY as the accessible description', () => {
     // A destroy confirm's body is what dies, what is refunded, and what it
     // costs. Focus lands on OK, so without aria-describedby a screen reader
-    // announces the name and the button and never the warning.
-    const hud = readFileSync(join(process.cwd(), 'src/ui/hud.ts'), 'utf8');
-    expect(hud).toContain(`el.setAttribute('aria-describedby', 'confirm-dialog-body')`);
-    expect(hud).toContain('<div class="cd-body" id="confirm-dialog-body">');
+    // announces the name and the button and never the warning. The dialog moved
+    // whole out of Hud.confirmDialog into src/ui/confirm_dialog_controller.ts
+    // (whose own suite also asserts the attribute on the painted dialog).
+    const dialog = readFileSync(join(process.cwd(), 'src/ui/confirm_dialog_controller.ts'), 'utf8');
+    expect(dialog).toContain(`el.setAttribute('aria-describedby', 'confirm-dialog-body')`);
+    expect(dialog).toContain('<div class="cd-body" id="confirm-dialog-body">');
   });
 
   it('non-activation keys are left for the game layer even on a focused button', () => {
@@ -153,10 +155,16 @@ describe('bindDialogKeyActivation (confirm-dialog family keyboard repair)', () =
   it('both confirmDialog and inputDialog wire the binder (source pin)', () => {
     // cwd-relative: vitest's jsdom transform rewrites import.meta.url to a
     // non-file scheme, so the sibling suites' URL idiom cannot work here.
-    const hud = readFileSync(join(process.cwd(), 'src/ui/hud.ts'), 'utf8');
-    const calls = hud.match(/bindDialogKeyActivation\(el\)/g) ?? [];
+    // The confirm half moved into src/ui/confirm_dialog_controller.ts; Hud's
+    // inputDialog delegator still hands the binder to the input modal.
+    const count = (rel: string): number =>
+      (readFileSync(join(process.cwd(), rel), 'utf8').match(/bindDialogKeyActivation\(el\)/g) ?? [])
+        .length;
+    const hud = count('src/ui/hud.ts');
+    const dialog = count('src/ui/confirm_dialog_controller.ts');
     // Exactly the two family dialogs (confirmDialog + inputDialog): a moved
     // or third call site is a deliberate change, re-pin it here.
-    expect(calls.length).toBe(2);
+    expect(hud + dialog).toBe(2);
+    expect({ hud, dialog }).toEqual({ hud: 1, dialog: 1 });
   });
 });

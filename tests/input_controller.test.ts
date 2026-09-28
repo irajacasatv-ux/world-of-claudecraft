@@ -8,7 +8,7 @@
 // The extracted field is now named by the visible dialog title. The Hud-side
 // delegator behavior (the pending no-choice cancel
 // firing when the input modal takes the slot) stays pinned in
-// tests/hud_confirm_gates.test.ts, which now exercises the delegator.
+// tests/hud_coordinator_delegators.test.ts, which exercises the delegator.
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 

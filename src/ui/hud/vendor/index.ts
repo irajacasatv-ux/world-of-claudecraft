@@ -1,4 +1,5 @@
 export * from './buy_quantity_prompt_window';
+export * from './heroic_purchase_confirm';
 export * from './heroic_vendor_view';
 export * from './heroic_vendor_window';
 export * from './train_learn_core';

@@ -348,18 +348,23 @@ const HUD_UPDATE_DRIVES: readonly DriveRow[] = [
     why: "the micro-menu rail's open-window ring and unspent-point badge; every write goes through the elided facet, so a steady rail costs no DOM mutation",
   },
   {
-    call: 'this.isInTown',
+    call: 'this.townFocus.isInTown',
     band: 'slow',
     gate: '',
     surface: 'none',
     why: 'the zone read behind the Town Focus button and the open panel gate; no DOM write',
   },
   {
-    call: 'this.refreshOpenTownFocusIfChanged',
+    call: 'this.townFocus.refreshIfChanged',
     band: 'slow',
     gate: '',
     surface: 'window',
-    guard: { kind: 'hud', proof: 'if (sig === this.lastTownFocusSig) return;' },
+    // The panel's latch moved with it out of the Hud (town_focus_controller.ts).
+    guard: {
+      kind: 'module',
+      module: 'town_focus_controller.ts',
+      proof: 'if (sig === this.lastSig) return;',
+    },
     why: 'rebuilds the Town Focus window when the allocation draft or the in-town flag moves. The standing exception of this table until #2500, when the open check was the whole gate and an idle panel rebuilt its whole subtree twice a second, restoring scrollTop but destroying keyboard focus',
   },
   {
@@ -820,11 +825,11 @@ const HUD_UPDATE_DRIVES: readonly DriveRow[] = [
     why: 'TTL-recycles the floating-combat-text pool; returns immediately when empty',
   },
   {
-    call: 'this.closeResurrectionPrompt',
+    call: 'this.resurrectionPrompt.close',
     band: 'frame',
     gate: '!p.dead',
     surface: 'chrome',
-    why: 'removes the resurrection prompt node once the player is alive',
+    why: 'removes the resurrection prompt node once the player is alive (resurrection_prompt.ts)',
   },
   {
     call: 'this.deathRecapDialog.close',
@@ -1881,7 +1886,7 @@ describe('Hud.update() drives exactly the registered set, on the registered band
     ).toEqual({ window: 51, chrome: 97, none: 18 });
     const windows = HUD_UPDATE_DRIVES.filter((r) => r.surface === 'window');
     expect(windows.map((r) => r.call)).toContain('this.spellbookWindow.tickOpen');
-    expect(windows.map((r) => r.call)).toContain('this.refreshOpenTownFocusIfChanged');
+    expect(windows.map((r) => r.call)).toContain('this.townFocus.refreshIfChanged');
     // The guard KINDS are pinned the same way and for the same reason: `kind` is otherwise a
     // free-text opt-out, so a row could keep `surface: 'window'`, keep the counts above
     // intact, and swap `module` for a plausible-sounding `none` while the real guard was
@@ -1902,13 +1907,15 @@ describe('Hud.update() drives exactly the registered set, on the registered band
       // this one: it gained a corpseSig latch when the popup started
       // refreshing instead of only closing.
       // Up one (and hud down one) when the profession surface latch left
-      // hud.ts for hud/professions/profession_surface_refresh.ts.
-      module: 29,
+      // hud.ts for hud/professions/profession_surface_refresh.ts, and again when
+      // the Town Focus latch left for town_focus_controller.ts.
+      module: 30,
       // Phase 20's refreshCharSheetIfChanged and its siblings. Their latches are
       // HUD fields (lastCharSheetSig et al) because the cold char_window painter
       // holds no signature of its own to diff. The release's trade row left this
-      // bucket when its lastTradeSig latch moved into the woc_trade module.
-      hud: 5,
+      // bucket when its lastTradeSig latch moved into the woc_trade module, and
+      // the Town Focus row when its lastTownFocusSig moved into the controller.
+      hud: 4,
       // Up to 12 with the crucible vendor's out-of-range close: the same
       // callsite-guarded shape as the copper and heroic vendor closes.
       // Up one more on the release arm's own callsite-guarded row, beside the
@@ -1962,7 +1969,6 @@ describe('Hud.update() drives exactly the registered set, on the registered band
         'hud.ts: if (sig !== this.lastLootSettingsSig) {',
         // Phase 20: the progression-block latch for the open character sheet.
         'hud.ts: if (sig === this.lastCharSheetSig) return;',
-        'hud.ts: if (sig === this.lastTownFocusSig) return;',
         'hud/woc_trade/woc_trade_controller.ts: if (sig === this.lastTradeSig) return;',
         'hud/delve/lockpick_window.ts: if (lockpickRenderSig(view) !== this.lastSig) this.renderBoard();',
         // The corpse popup's own latch. `force` is the relocalize arm, which
@@ -1988,6 +1994,8 @@ describe('Hud.update() drives exactly the registered set, on the registered band
         // per-frame allocation.
         'spellbook_window.ts: if (this.knownChanged(this.deps.world().known)) {',
         'target_auras_window.ts: if (this.cleared) return;',
+        // The Town Focus latch, moved with the panel out of hud.ts (#2500's guard).
+        'town_focus_controller.ts: if (sig === this.lastSig) return;',
         'weekly_quests_window.ts: if (sig === this.lastSig) return;',
         'woc_market_window.ts: if (sig === this.lastSig && !this.walletRepaintDue) return;',
       ].sort(),

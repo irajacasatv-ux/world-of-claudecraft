@@ -47,7 +47,7 @@ const LIVE: LockpickView = {
 };
 
 // Only the members closeAll -> closeManagedWindow actually read; closeManagedWindow is
-// private, so the bare-prototype harness is the hud_confirm_gates / profession_tutorial
+// private, so the bare-prototype harness is the hud_coordinator_delegators / profession_tutorial
 // precedent. `windowDragController` is deliberately left undefined: the real field is
 // optional-chained, and Object.create skips field initializers.
 interface CloseAllHarness {

@@ -74,6 +74,12 @@ Maker's Bond unbind service, and the WARFARE quartermaster honor shop
   root while open, all teardown through `dismiss()`);
   `dismissBuyQuantityPrompts` is the force-close backstop the Hud close path
   calls so the vendor root is never left inert while hidden.
+- `heroic_purchase_confirm.ts` (`requestHeroicPurchase`) is the Heroic
+  Quartermaster's confirm-before-buy gate, moved out of the Hud: Marks
+  purchases record no buyback, so the buy command fires ONLY from the shared
+  confirm dialog's OK callback. It takes the Hud as a typed host. Pinned by
+  `tests/heroic_purchase_confirm.test.ts` and, as a call walk, by
+  `tests/warfare_purchase_confirm.test.ts`.
 
 ## Cascade trap (this family specifically)
 Vendor-family rules with a pseudo-class (`.vendor-item:disabled:hover` and

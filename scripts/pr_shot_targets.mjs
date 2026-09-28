@@ -15088,7 +15088,12 @@ export const TARGETS = [
   {
     key: 'confirm-gates',
     label: 'Confirm dialogs: spirit-healer revive + marks purchases',
-    when: ['ui/hud/delve/delve_board_controller', 'tests/hud_confirm_gates'],
+    when: [
+      'ui/hud/delve/delve_board_controller',
+      'ui/confirm_dialog_controller',
+      'ui/keeper_revive_dialog',
+      'ui/hud/vendor/heroic_purchase_confirm',
+    ],
     variants: [
       { key: 'healer-desktop', scene: 'healer' },
       { key: 'heroic-desktop', scene: 'heroic' },

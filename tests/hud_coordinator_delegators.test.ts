@@ -28,7 +28,20 @@
 //   the vehicle's during a session), the page flip cancels an armed aim first,
 //   and syncSlotMap offers the pad what actionBarEligibleKnownIds returns
 //   (tests/helpers/ground_aim_rig.ts is the rig tests/ground_aim_hud.test.ts
-//   drives the controller over).
+//   drives the controller over);
+// - the shared #confirm-dialog slot's two Hud-only no-choice routes: the Esc
+//   route through closeManagedWindow's confirm arm (plus replacement through the
+//   real confirmDialog delegator), and the input modal taking the slot through
+//   inputDialog (moved from tests/hud_confirm_gates.test.ts; the dialog itself
+//   is tests/confirm_dialog_controller.test.ts);
+// - the Town Focus panel's Escape / closeAll route: closeManagedWindow's
+//   town-focus arm reaches the lazily built TownFocusController, whose bridge
+//   the Hud builds over its own FocusManager (moved from
+//   tests/town_focus_repaint_gate.test.ts);
+// - handleEvents routes a resurrection offer to the lazily built
+//   ResurrectionPrompt and prints the respawn line (moved from
+//   tests/hud_resurrection_prompt.test.ts; the prompt is
+//   tests/resurrection_prompt.test.ts).
 //
 // Its own file on purpose: importing the coordinator costs a suite several
 // hundred MB (tests/CLAUDE.md, "Test cost"), so these cases are kept out of the
@@ -37,7 +50,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { audio } from '../src/game/audio';
 import { sfx } from '../src/game/sfx';
-import { ABILITIES, ITEMS } from '../src/sim/data';
+import { ABILITIES, ITEMS, ZONES } from '../src/sim/data';
 import type { SimEvent } from '../src/sim/types';
 import {
   type BannerShowArgs,
@@ -46,12 +59,14 @@ import {
   celebrationBannerArgs,
 } from '../src/ui/banner_slot';
 import { ErrorToastController } from '../src/ui/error_toast_controller';
+import { FocusManager } from '../src/ui/focus_manager';
 import { Hud } from '../src/ui/hud';
 import { ActionPressController } from '../src/ui/hud/action_bar/action_press_controller';
 import type { AimPoint } from '../src/ui/hud/action_bar/ground_aim';
 import type { ChatLogAppendDeps } from '../src/ui/hud/chat/chat_log_appender';
 import { ProfessionSurfaceRefresh } from '../src/ui/hud/professions/profession_surface_refresh';
-import { setLanguage } from '../src/ui/i18n';
+import { setLanguage, t } from '../src/ui/i18n';
+import { TOWN_FOCUS_COMPONENTS } from '../src/ui/town_focus_view';
 import { celebrationRig } from './helpers/celebration_rig';
 import { chatPane } from './helpers/chat_log_deps';
 import { chatLines, eventRouterRig } from './helpers/event_router_rig';
@@ -857,5 +872,240 @@ describe('Hud.syncSlotMap: the pad offer is actionBarEligibleKnownIds of the kno
       'defensive_stance',
     ]);
     expect(hud.mobileActionPage).toBe(1);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// The shared #confirm-dialog slot: the two no-choice routes that run through
+// the Hud (moved whole from tests/hud_confirm_gates.test.ts). The REAL
+// confirmDialog delegator, closeManagedWindow's confirm arm and the inputDialog
+// delegator, over a bare prototype with the trap and window plumbing stubbed.
+// ---------------------------------------------------------------------------
+
+interface RealDialogHud {
+  confirmDialog: Hud['confirmDialog'];
+  closeManagedWindow(el: HTMLElement): void;
+  inputDialog(opts: { title: string }): void;
+}
+
+function realDialogHud(): RealDialogHud {
+  const hud = Object.create(Hud.prototype) as Record<string, unknown>;
+  hud.focusManager = { open: () => ({ release: () => {} }) };
+  hud.bringWindowToFront = () => {};
+  hud.confirmTrap = null;
+  hud.confirmOnCancel = null;
+  return hud as unknown as RealDialogHud;
+}
+
+describe('confirmDialog no-choice callback through the Hud (the R40 family contract)', () => {
+  it('fires on the Esc route (closeManagedWindow) and on replacement by a newer dialog', () => {
+    document.body.innerHTML = '';
+    const hud = realDialogHud();
+    const onCancel = vi.fn();
+    hud.confirmDialog('T', 'B', 'OK', 'Cancel', vi.fn(), onCancel);
+    const el = document.getElementById('confirm-dialog');
+    if (!el) throw new Error('dialog not painted');
+    hud.closeManagedWindow(el);
+    expect(onCancel).toHaveBeenCalledTimes(1);
+    expect(document.getElementById('confirm-dialog')).toBeNull();
+
+    const replaced = vi.fn();
+    hud.confirmDialog('T1', 'B', 'OK', 'Cancel', vi.fn(), replaced);
+    hud.confirmDialog('T2', 'B', 'OK', 'Cancel', vi.fn());
+    expect(replaced).toHaveBeenCalledTimes(1);
+    // The second dialog carried no onCancel: dismissing it fires nothing more.
+    const second = document.getElementById('confirm-dialog');
+    if (!second) throw new Error('second dialog not painted');
+    hud.closeManagedWindow(second);
+    expect(replaced).toHaveBeenCalledTimes(1);
+  });
+
+  it('fires when the INPUT modal takes the shared slot (the fourth no-choice route)', () => {
+    // inputDialog shares the #confirm-dialog element, so a rename prompt
+    // (or any input modal) replacing an open R40 ask is a dismissal without
+    // a choice: the pending callback must answer before the modal takes it.
+    document.body.innerHTML = '';
+    const hud = realDialogHud();
+    const replaced = vi.fn();
+    hud.confirmDialog('T', 'B', 'OK', 'Cancel', vi.fn(), replaced);
+    hud.inputDialog({
+      title: 'Rename',
+    });
+    expect(replaced).toHaveBeenCalledTimes(1);
+    // The input modal itself carries no confirm callback: closing it fires
+    // nothing more.
+    const el = document.getElementById('confirm-dialog');
+    if (!el) throw new Error('input modal not painted');
+    hud.closeManagedWindow(el);
+    expect(replaced).toHaveBeenCalledTimes(1);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// The Town Focus panel's managed close (moved whole from
+// tests/town_focus_repaint_gate.test.ts, section 6). The Hud builds the
+// TownFocusController lazily over itself and the panel's windowFocus bridge
+// over its ONE FocusManager, seeded here for real, so the case drives the
+// shipped wiring end to end: the toggle delegator, the lazy build, the
+// bridge, closeManagedWindow's town-focus arm and the townFocusOpen getter.
+// ---------------------------------------------------------------------------
+
+describe('the Town Focus panel through the Hud: the Escape / closeAll route', () => {
+  const COMPONENT = TOWN_FOCUS_COMPONENTS[0];
+
+  function makeFocusHud(allocation: Record<string, number> = { [COMPONENT]: 2 }) {
+    document.body.innerHTML = '';
+    // The real opener: the minimap button whose click handler calls toggleTownFocus.
+    const opener = document.createElement('button');
+    opener.id = 'mm-town-focus';
+    document.body.appendChild(opener);
+    const el = document.createElement('div');
+    el.id = 'town-focus-window';
+    el.className = 'window panel';
+    document.body.appendChild(el);
+    // Standing on a real town hub, so the panel paints its steppers enabled.
+    const hub = ZONES[0].hub;
+    const hud = bareHud() as DelegatorRig & {
+      toggleTownFocus: Hud['toggleTownFocus'];
+      readonly townFocusOpen: boolean;
+      closeManagedWindow(el: HTMLElement): void;
+    };
+    Object.assign(hud, {
+      sim: {
+        player: { pos: { x: hub.x, z: hub.z } },
+        townFocus: { ...allocation },
+        townFocusPending: null,
+        setTownFocus: vi.fn(),
+      },
+      focusManager: new FocusManager(),
+      closeContextMenu: vi.fn(),
+      hideTooltip: vi.fn(),
+    });
+    return { hud, el, opener };
+  }
+
+  const stepButton = (el: HTMLElement, component: string, role: 'dec' | 'inc') => {
+    const btn = el.querySelector<HTMLButtonElement>(`[data-focus-key="${component}:${role}"]`);
+    expect(btn, `no ${role} stepper for ${component}`).not.toBeNull();
+    return btn as HTMLButtonElement;
+  };
+
+  let restoreRects: () => void;
+  beforeEach(() => {
+    // FocusManager.restore defers focus a tick; the manager reads
+    // getClientRects().length to mean "rendered", and the DOM lays nothing
+    // out, so report one rect (tests/town_focus_repaint_gate.test.ts section 6
+    // explains the stub and its consequences).
+    const spy = vi
+      .spyOn(Element.prototype, 'getClientRects')
+      .mockReturnValue([{}] as unknown as DOMRectList);
+    restoreRects = () => spy.mockRestore();
+  });
+  afterEach(() => {
+    restoreRects();
+    document.body.innerHTML = '';
+  });
+
+  it('returns focus to the opener through closeManagedWindow, the Escape / closeAll route', () => {
+    const { hud, el, opener } = makeFocusHud();
+    opener.focus();
+    hud.toggleTownFocus();
+    expect(stepButton(el, COMPONENT, 'inc').disabled).toBe(false);
+    stepButton(el, COMPONENT, 'inc').focus();
+    // Escape and the gamepad both land in closeAll -> closeManagedWindow, whose
+    // `town-focus-window` case is the only thing standing between them and a
+    // focus drop to <body>.
+    hud.closeManagedWindow(el);
+    vi.runAllTimers();
+    expect(hud.townFocusOpen).toBe(false);
+    expect(document.activeElement).toBe(opener);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// The resurrection offer and the respawn line through the real handleEvents
+// (moved whole from tests/hud_resurrection_prompt.test.ts). A minimal Hud able
+// to run those arms (the noticeboard suite's Object.create idiom; stub every
+// field the drain touches).
+// ---------------------------------------------------------------------------
+
+function eventHarness(player: { dead: boolean }) {
+  const hud = bareHud() as DelegatorRig & { log: ReturnType<typeof vi.fn> };
+  Object.assign(hud, {
+    sim: {
+      playerId: 17,
+      player: { dead: player.dead, pos: { x: 0, z: 0 } },
+      craftingIdentity: { synced: false },
+      craftSkills: {},
+      gatheringProficiency: {},
+      respondToResurrection: vi.fn(),
+    },
+    renderer: { handleEvent: vi.fn() },
+    playEventSfx: vi.fn(),
+    meters: { onEvent: vi.fn() },
+    isNythraxisEvent: vi.fn(() => false),
+    showBanner: vi.fn(),
+    log: vi.fn(),
+  });
+  return hud;
+}
+
+/** The Hud's lazily built resurrection prompt's live element. */
+const resurrectionPromptEl = (hud: DelegatorRig): HTMLElement | null =>
+  (hud as unknown as { resurrectionPrompt: { element: HTMLElement | null } }).resurrectionPrompt
+    .element;
+
+function offerEvent(): SimEvent {
+  return { type: 'resurrectionOffer', fromName: 'Lumina', pid: 17 } as SimEvent;
+}
+
+describe('HUD resurrection confirmation prompt through handleEvents', () => {
+  beforeEach(() => {
+    document.body.innerHTML = '<div id="prompt-stack"></div>';
+  });
+
+  it('an offer arriving while the player is alive never paints a prompt', () => {
+    // Online, a rez can complete against a player who is no longer dead (they
+    // released, respawned, or took another healer's rez while this cast was in
+    // flight). The arm used to show the centred prompt unconditionally, and
+    // the per-frame `!p.dead` closer removed it on the very next frame: a
+    // one-frame dark-panel flash at 34% centre, and an offer that was
+    // unanswerable anyway (the sim keeps offers only for dead players).
+    const hud = eventHarness({ dead: false });
+
+    hud.handleEvents([offerEvent()]);
+
+    expect(document.querySelector('#prompt-stack')?.childElementCount).toBe(0);
+    expect(resurrectionPromptEl(hud)).toBe(null);
+  });
+
+  it('an offer arriving while dead still shows the prompt', () => {
+    // The guard must not eat the real thing: the normal online order delivers
+    // the death snapshot ticks before any rez can finish casting.
+    const hud = eventHarness({ dead: true });
+
+    hud.handleEvents([offerEvent()]);
+
+    expect(document.querySelector('#prompt-stack')?.childElementCount).toBe(1);
+    expect(resurrectionPromptEl(hud)).not.toBe(null);
+  });
+});
+
+describe('the respawn chat line through handleEvents', () => {
+  // The sim tags a Keeper revive's respawn event with sickness: 'resurrection'
+  // exactly when The Keeper's Toll landed; the HUD reads that tag to say the
+  // character is back but weaker, and keeps the penalty-free line otherwise.
+  it('says weaker for a tagged respawn and rested for a plain one', () => {
+    const tagged = eventHarness({ dead: false });
+    tagged.handleEvents([{ type: 'respawn', pid: 17, sickness: 'resurrection' } as SimEvent]);
+    expect(tagged.log).toHaveBeenCalledTimes(1);
+    expect(tagged.log.mock.calls[0][0]).toBe(t('hud.system.respawnKeeperToll'));
+    expect(tagged.log.mock.calls[0][0]).toMatch(/weaker/);
+
+    const plain = eventHarness({ dead: false });
+    plain.handleEvents([{ type: 'respawn', pid: 17 } as SimEvent]);
+    expect(plain.log).toHaveBeenCalledTimes(1);
+    expect(plain.log.mock.calls[0][0]).toBe(t('hud.system.respawn'));
+    expect(plain.log.mock.calls[0][0]).not.toMatch(/weaker|Toll/);
   });
 });

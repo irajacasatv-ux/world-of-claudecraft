@@ -17,10 +17,11 @@
 //  2. That the sig's term set really is the painter's read set, scanned out of
 //     the painter's own source, so a row that starts rendering another view
 //     field cannot silently leave the gate behind.
-//  3. The HUD probe's behavior, driven on a bare Hud prototype (the
-//     crafting_reagent_refresh precedent, since the probe is private and
-//     update() is not drivable in a unit test): cold latch, elision, the
-//     in/out-of-town edge, and that a closed panel reads nothing at all.
+//  3. The probe's behavior, driven on the TownFocusController it moved into
+//     out of the Hud (src/ui/town_focus_controller.ts; update() is still not
+//     drivable in a unit test, so its slow-band call is a source pin): cold
+//     latch, elision, the in/out-of-town edge, and that a closed panel reads
+//     nothing at all.
 //  4. The real painter in a real DOM: an unchanged poll rebuilds nothing and
 //     keyboard focus survives it, and the rebuild that DOES happen (a step)
 //     hands focus back to the rebuilt equivalent instead of dropping it to
@@ -33,18 +34,20 @@
 // outside the shared FocusManager entirely, so it had no Tab trap, no
 // return-to-opener and no dialog role. That gap was unreachable while the panel
 // rebuilt itself at 2Hz (focus never survived long enough to be handed back),
-// which is why it lands here, against the same painter and the same Hud
-// methods, rather than in a file of its own.
+// which is why it lands here, against the same painter and the same
+// controller, rather than in a file of its own. The one case that needs the
+// Hud itself (the Escape / closeAll route through closeManagedWindow) runs
+// over the real delegators in tests/hud_coordinator_delegators.test.ts.
 
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { HARVEST_COMPONENT_ITEMS } from '../src/sim/content/professions';
-import { FOCUS_POINT_BUDGET, type RespecPaymentTier } from '../src/sim/professions/focus';
+import { FOCUS_POINT_BUDGET } from '../src/sim/professions/focus';
 import type { TownFocusPendingView } from '../src/sim/professions/town_focus_pending';
 import { FOCUSABLE_SELECTOR, FocusManager } from '../src/ui/focus_manager';
-import { Hud } from '../src/ui/hud';
 import { t } from '../src/ui/i18n';
+import { TownFocusController, type TownFocusHost } from '../src/ui/town_focus_controller';
 import {
   buildTownFocusView,
   TOWN_FOCUS_COMPONENTS,
@@ -106,7 +109,7 @@ describe('townFocusRenderSig', () => {
   });
 
   it('is never the empty string, so the cold latch cannot collide with a real panel', () => {
-    // Hud arms `lastTownFocusSig` from '' and every guard in the family leans
+    // TownFocusController arms its `lastSig` from '' and every guard in the family leans
     // on that sentinel being unreachable.
     expect(townFocusRenderSig(viewOf({}))).not.toBe('');
     expect(townFocusRenderSig(viewOf({ [COMPONENT]: FOCUS_POINT_BUDGET }, false))).not.toBe('');
@@ -351,21 +354,34 @@ describe('the signature covers exactly what the painter renders', () => {
 });
 
 // ---------------------------------------------------------------------------
-// 3. The HUD probe, on a bare Hud prototype.
+// 3. The probe, on the TownFocusController (moved off the Hud).
 // ---------------------------------------------------------------------------
 
+/** The controller's private state and the methods these cases drive, reached
+ *  through a cast at the test boundary. */
 interface TownFocusProbeHarness {
-  sim: { townFocus: Record<string, number> };
-  townFocusDraft: Record<string, number> | null;
-  lastTownFocusSig: string;
+  draft: Record<string, number> | null;
+  lastSig: string;
   isInTown(): boolean;
-  renderTownFocus(): void;
-  refreshOpenTownFocusIfChanged(): void;
-  readonly townFocusOpen: boolean;
+  render(): void;
+  refreshIfChanged(): void;
+  readonly isOpen: boolean;
 }
 
-function makeProbeHud(draft: Record<string, number> | null = {}): {
-  hud: TownFocusProbeHarness;
+/** A host shaped like the Hud members the controller reads (TownFocusHost). */
+function panelHost(sim: object): TownFocusHost {
+  return {
+    sim: sim as TownFocusHost['sim'],
+    closeOtherWindows: vi.fn(),
+    hideTooltip: vi.fn(),
+  };
+}
+
+/** The probe and the painter never reach the focus bridge. */
+const NO_BRIDGE: WindowFocusBridge = { captureFocus: () => null, restoreFocus: () => {} };
+
+function makeProbePanel(draft: Record<string, number> | null = {}): {
+  panel: TownFocusProbeHarness;
   window: HTMLElement;
   /** How many times the probe has read the allocation: the "a closed panel
    *  costs nothing" claim is about this, not about the repaint count. */
@@ -373,36 +389,38 @@ function makeProbeHud(draft: Record<string, number> | null = {}): {
   townChecks(): number;
   setInTown(next: boolean): void;
 } {
-  const hud = Object.create(Hud.prototype) as unknown as TownFocusProbeHarness;
   let reads = 0;
   let townChecks = 0;
   let inTown = true;
-  hud.sim = {
-    get townFocus() {
-      reads++;
-      return {};
-    },
-  } as TownFocusProbeHarness['sim'];
-  hud.townFocusDraft = draft;
-  // Object.create skips field initializers, so seed the latch the way the real
-  // field declares it ('' until the first paint arms it).
-  hud.lastTownFocusSig = '';
-  hud.isInTown = () => {
+  const panel = new TownFocusController(
+    panelHost({
+      get townFocus() {
+        reads++;
+        return {};
+      },
+    }),
+    NO_BRIDGE,
+  ) as unknown as TownFocusProbeHarness;
+  // A constructed controller runs its field initializers, so the latch starts
+  // at its declared cold sentinel ('' until the first paint arms it).
+  expect(panel.lastSig).toBe('');
+  panel.draft = draft;
+  panel.isInTown = () => {
     townChecks++;
     return inTown;
   };
-  hud.renderTownFocus = vi.fn(() => {
-    hud.lastTownFocusSig = townFocusRenderSig(
-      buildTownFocusView(hud.townFocusDraft ?? {}, FOCUS_POINT_BUDGET, inTown),
+  panel.render = vi.fn(() => {
+    panel.lastSig = townFocusRenderSig(
+      buildTownFocusView(panel.draft ?? {}, FOCUS_POINT_BUDGET, inTown),
     );
-  }) as unknown as TownFocusProbeHarness['renderTownFocus'];
+  }) as unknown as TownFocusProbeHarness['render'];
   document.getElementById('town-focus-window')?.remove();
   const el = document.createElement('div');
   el.id = 'town-focus-window';
   el.style.display = 'block';
   document.body.appendChild(el);
   return {
-    hud,
+    panel,
     window: el,
     allocationReads: () => reads,
     townChecks: () => townChecks,
@@ -412,51 +430,51 @@ function makeProbeHud(draft: Record<string, number> | null = {}): {
   };
 }
 
-describe('refreshOpenTownFocusIfChanged', () => {
+describe('TownFocusController.refreshIfChanged', () => {
   it('latches on the first probe, then elides an unchanged panel', () => {
-    const { hud } = makeProbeHud({ [COMPONENT]: 2 });
-    hud.refreshOpenTownFocusIfChanged();
-    expect(hud.renderTownFocus).toHaveBeenCalledTimes(1);
-    hud.refreshOpenTownFocusIfChanged();
-    hud.refreshOpenTownFocusIfChanged();
-    hud.refreshOpenTownFocusIfChanged();
+    const { panel } = makeProbePanel({ [COMPONENT]: 2 });
+    panel.refreshIfChanged();
+    expect(panel.render).toHaveBeenCalledTimes(1);
+    panel.refreshIfChanged();
+    panel.refreshIfChanged();
+    panel.refreshIfChanged();
     // The whole issue: four slow ticks over an idle panel, one rebuild.
-    expect(hud.renderTownFocus).toHaveBeenCalledTimes(1);
+    expect(panel.render).toHaveBeenCalledTimes(1);
   });
 
   it('repaints when the draft moves under it', () => {
-    const { hud } = makeProbeHud({ [COMPONENT]: 2 });
-    hud.refreshOpenTownFocusIfChanged();
-    hud.townFocusDraft = { [COMPONENT]: 3 };
-    hud.refreshOpenTownFocusIfChanged();
-    expect(hud.renderTownFocus).toHaveBeenCalledTimes(2);
+    const { panel } = makeProbePanel({ [COMPONENT]: 2 });
+    panel.refreshIfChanged();
+    panel.draft = { [COMPONENT]: 3 };
+    panel.refreshIfChanged();
+    expect(panel.render).toHaveBeenCalledTimes(2);
   });
 
   it('repaints when the player walks out of town (the panel disables)', () => {
-    const { hud, setInTown } = makeProbeHud({ [COMPONENT]: 2 });
-    hud.refreshOpenTownFocusIfChanged();
+    const { panel, setInTown } = makeProbePanel({ [COMPONENT]: 2 });
+    panel.refreshIfChanged();
     setInTown(false);
-    hud.refreshOpenTownFocusIfChanged();
-    expect(hud.renderTownFocus).toHaveBeenCalledTimes(2);
+    panel.refreshIfChanged();
+    expect(panel.render).toHaveBeenCalledTimes(2);
     // ...and then settles again rather than repainting every tick out of town.
-    hud.refreshOpenTownFocusIfChanged();
-    expect(hud.renderTownFocus).toHaveBeenCalledTimes(2);
+    panel.refreshIfChanged();
+    expect(panel.render).toHaveBeenCalledTimes(2);
   });
 
   it('falls back to the sim allocation when there is no draft', () => {
-    const { hud, allocationReads } = makeProbeHud(null);
-    hud.refreshOpenTownFocusIfChanged();
-    expect(hud.renderTownFocus).toHaveBeenCalledTimes(1);
+    const { panel, allocationReads } = makeProbePanel(null);
+    panel.refreshIfChanged();
+    expect(panel.render).toHaveBeenCalledTimes(1);
     expect(allocationReads()).toBeGreaterThan(0);
   });
 
   it('reads nothing at all while the panel is CLOSED', () => {
-    const { hud, window, allocationReads, townChecks } = makeProbeHud(null);
+    const { panel, window, allocationReads, townChecks } = makeProbePanel(null);
     window.style.display = 'none';
-    hud.refreshOpenTownFocusIfChanged();
-    hud.townFocusDraft = { [COMPONENT]: 5 };
-    hud.refreshOpenTownFocusIfChanged();
-    expect(hud.renderTownFocus).not.toHaveBeenCalled();
+    panel.refreshIfChanged();
+    panel.draft = { [COMPONENT]: 5 };
+    panel.refreshIfChanged();
+    expect(panel.render).not.toHaveBeenCalled();
     // The open check must come FIRST: a guard reorder that built the signature
     // before testing display would cost every closed player a zone check and an
     // allocation fold per slow tick, and a repaint-count assertion alone would
@@ -471,41 +489,37 @@ describe('refreshOpenTownFocusIfChanged', () => {
 // ---------------------------------------------------------------------------
 
 interface TownFocusRenderHarness {
-  sim: { townFocus: Record<string, number>; setTownFocus(next: Record<string, number>): void };
-  townFocusDraft: Record<string, number> | null;
-  townFocusRespecTier: RespecPaymentTier;
-  lastTownFocusSig: string;
+  draft: Record<string, number> | null;
+  lastSig: string;
   isInTown(): boolean;
-  renderTownFocus(): void;
-  refreshOpenTownFocusIfChanged(): void;
-  closeTownFocus(): void;
-  hideTooltip(): void;
+  render(): void;
+  refreshIfChanged(): void;
+  close(): void;
 }
 
-/** The real Hud methods on a bare prototype: no stubbed painter, so what these
- *  assert is the shipped render path end to end. */
-function makeRenderHud(allocation: Record<string, number>): {
-  hud: TownFocusRenderHarness;
+/** The real controller: no stubbed painter, so what these assert is the
+ *  shipped render path end to end. */
+function makeRenderPanel(allocation: Record<string, number>): {
+  panel: TownFocusRenderHarness;
   el: HTMLElement;
   setInTown(next: boolean): void;
 } {
-  const hud = Object.create(Hud.prototype) as unknown as TownFocusRenderHarness;
   let inTown = true;
-  hud.sim = { townFocus: {}, setTownFocus: vi.fn() } as unknown as TownFocusRenderHarness['sim'];
-  hud.townFocusDraft = { ...allocation };
-  // Object.create skips field initializers (the class declares 'time' as the
-  // default), so seed it by hand like every other field this harness carries.
-  hud.townFocusRespecTier = 'time';
-  hud.lastTownFocusSig = '';
-  hud.isInTown = () => inTown;
-  hud.closeTownFocus = vi.fn() as unknown as TownFocusRenderHarness['closeTownFocus'];
-  hud.hideTooltip = vi.fn() as unknown as TownFocusRenderHarness['hideTooltip'];
+  // A constructed controller runs its field initializers, so the re-spec tier
+  // starts at its declared free 'time' default and the latch at ''.
+  const panel = new TownFocusController(
+    panelHost({ townFocus: {}, setTownFocus: vi.fn() }),
+    NO_BRIDGE,
+  ) as unknown as TownFocusRenderHarness;
+  panel.draft = { ...allocation };
+  panel.isInTown = () => inTown;
+  panel.close = vi.fn() as unknown as TownFocusRenderHarness['close'];
   document.getElementById('town-focus-window')?.remove();
   const el = document.createElement('div');
   el.id = 'town-focus-window';
   document.body.appendChild(el);
   return {
-    hud,
+    panel,
     el,
     setInTown: (next) => {
       inTown = next;
@@ -539,10 +553,10 @@ describe('an open Town Focus panel on the slow band', () => {
     // its subtree away. Without a gate this is what ran twice a second. It is
     // also what makes the identity comparisons below the only honest ones: a
     // rebuild here is structurally indistinguishable from no rebuild at all.
-    const { hud, el } = makeRenderHud({ [COMPONENT]: 2 });
-    hud.renderTownFocus();
+    const { panel, el } = makeRenderPanel({ [COMPONENT]: 2 });
+    panel.render();
     const first = [...el.children];
-    hud.renderTownFocus();
+    panel.render();
     const second = [...el.children];
     expect(second.length).toBe(first.length);
     for (let i = 0; i < first.length; i++) expect(second[i]).not.toBe(first[i]);
@@ -552,46 +566,46 @@ describe('an open Town Focus panel on the slow band', () => {
   });
 
   it('rebuilds NOTHING across repeated idle polls', () => {
-    const { hud, el } = makeRenderHud({ [COMPONENT]: 2 });
-    hud.renderTownFocus();
+    const { panel, el } = makeRenderPanel({ [COMPONENT]: 2 });
+    panel.render();
     const before = [...el.querySelectorAll('*')];
-    hud.refreshOpenTownFocusIfChanged();
-    hud.refreshOpenTownFocusIfChanged();
-    hud.refreshOpenTownFocusIfChanged();
+    panel.refreshIfChanged();
+    panel.refreshIfChanged();
+    panel.refreshIfChanged();
     expectSameNodes([...el.querySelectorAll('*')], before);
   });
 
   it('leaves a keyboard user parked on a stepper exactly where they were', () => {
     // The consequence the issue is really about: the element under the
     // keyboard user was destroyed and replaced on a timer.
-    const { hud, el } = makeRenderHud({ [COMPONENT]: 2 });
-    hud.renderTownFocus();
+    const { panel, el } = makeRenderPanel({ [COMPONENT]: 2 });
+    panel.render();
     const plus = stepButton(el, COMPONENT, 'inc');
     plus.focus();
     expect(document.activeElement).toBe(plus);
-    hud.refreshOpenTownFocusIfChanged();
-    hud.refreshOpenTownFocusIfChanged();
+    panel.refreshIfChanged();
+    panel.refreshIfChanged();
     expect(document.activeElement).toBe(plus);
     expect(plus.isConnected).toBe(true);
   });
 
   it('still converges the panel when the player leaves town', () => {
-    const { hud, el, setInTown } = makeRenderHud({ [COMPONENT]: 2 });
-    hud.renderTownFocus();
+    const { panel, el, setInTown } = makeRenderPanel({ [COMPONENT]: 2 });
+    panel.render();
     expect(stepButton(el, COMPONENT, 'inc').disabled).toBe(false);
     setInTown(false);
-    hud.refreshOpenTownFocusIfChanged();
+    panel.refreshIfChanged();
     expect(stepButton(el, COMPONENT, 'inc').disabled).toBe(true);
     expect(el.querySelector('.town-focus-not-in-town')).not.toBeNull();
   });
 
   it('repaints once, not twice, for one real change', () => {
-    const { hud, el } = makeRenderHud({ [COMPONENT]: 2 });
-    hud.renderTownFocus();
-    hud.townFocusDraft = { [COMPONENT]: 3 };
-    hud.refreshOpenTownFocusIfChanged();
+    const { panel, el } = makeRenderPanel({ [COMPONENT]: 2 });
+    panel.render();
+    panel.draft = { [COMPONENT]: 3 };
+    panel.refreshIfChanged();
     const painted = [...el.querySelectorAll('*')];
-    hud.refreshOpenTownFocusIfChanged();
+    panel.refreshIfChanged();
     expectSameNodes([...el.querySelectorAll('*')], painted);
   });
 });
@@ -621,7 +635,7 @@ describe('renderTownFocusWindow carries keyboard focus across its own wipe', () 
   it('hands focus to the rebuilt equivalent of the stepper that was pressed', () => {
     const { el } = paint(viewOf({ [COMPONENT]: 2 }));
     stepButton(el, COMPONENT, 'inc').focus();
-    // The step handler repaints the panel, exactly as Hud.renderTownFocus does.
+    // The step handler repaints the panel, exactly as TownFocusController.render does.
     renderTownFocusWindow(el, viewOf({ [COMPONENT]: 3 }), NO_COST_RESPEC, {
       onStep: vi.fn(),
       onTierChange: vi.fn(),
@@ -752,32 +766,41 @@ describe('renderTownFocusWindow carries keyboard focus across its own wipe', () 
 // ---------------------------------------------------------------------------
 
 const hudSrc = stripComments(readFileSync(path.resolve(process.cwd(), 'src/ui/hud.ts'), 'utf8'));
+const controllerSrc = stripComments(
+  readFileSync(path.resolve(process.cwd(), 'src/ui/town_focus_controller.ts'), 'utf8'),
+);
 
 /** Source between two unique anchors, asserted to exist so a rename fails
  *  loudly here instead of silently slicing an empty (vacuously passing) span. */
-function region(from: string, to: string): string {
-  const start = hudSrc.indexOf(from);
+function regionIn(src: string, from: string, to: string): string {
+  const start = src.indexOf(from);
   expect(start, `anchor not found: ${from}`).toBeGreaterThan(-1);
-  const end = hudSrc.indexOf(to, start + from.length);
+  const end = src.indexOf(to, start + from.length);
   expect(end, `anchor not found after ${from}: ${to}`).toBeGreaterThan(start);
-  return hudSrc.slice(start, end);
+  return src.slice(start, end);
 }
 
+/** A region of src/ui/hud.ts (the coordinator wiring). */
+const region = (from: string, to: string): string => regionIn(hudSrc, from, to);
+/** A region of src/ui/town_focus_controller.ts (the panel it moved into). */
+const controllerRegion = (from: string, to: string): string => regionIn(controllerSrc, from, to);
+
 describe('Town Focus repaint-gate wiring (source pins)', () => {
-  it('renderTownFocus re-arms the latch on EVERY paint, whatever caused it', () => {
+  it('render re-arms the latch on EVERY paint, whatever caused it', () => {
     // Scoped to the method: moving the re-arm into the probe would leave every
     // other paint cause (the open, a step, the language switch) un-armed, so
     // the next poll would repaint once for no reason, and a whole-file pin
     // would not notice.
-    const render = region('private renderTownFocus(): void {', 'private refreshOpenTownFocus');
-    expect(render).toContain('this.lastTownFocusSig = townFocusRenderSig(view);');
+    const render = controllerRegion('render(): void {', 'refreshIfChanged(): void {');
+    expect(render).toContain('this.lastSig = townFocusRenderSig(view);');
   });
 
   it('the slow band drives the PROBE, never the bare painter', () => {
     // Anchored INSIDE the `if (slowHud)` guard. The whole issue was that this
     // line used to be the unguarded `if (this.townFocusOpen)
     // this.renderTownFocus();`, so pin both halves: the probe is here, and the
-    // unguarded call is not.
+    // unguarded call is not (refused in any spelling of the bare paint on the
+    // controller the panel moved into).
     //
     // The two NEGATIVE halves are the weak ones and are deliberately kept as
     // belt to the registry's braces: the exact-text refusal is defeated by the
@@ -788,31 +811,27 @@ describe('Town Focus repaint-gate wiring (source pins)', () => {
     // evaluates against an AST walk BOTH ways: mutation testing confirmed it is
     // the gate that kills both of those, not these two lines.
     const slowBand = region('if (slowHud) {', 'this.playerFramePainter');
-    expect(slowBand).toContain('this.refreshOpenTownFocusIfChanged();');
-    expect(slowBand).not.toContain('if (this.townFocusOpen) this.renderTownFocus();');
+    expect(slowBand).toContain('this.townFocus.refreshIfChanged();');
+    expect(slowBand).not.toContain('this.townFocus.render(');
     const perFrame = region('const slowHud =', 'if (slowHud) {');
-    expect(perFrame).not.toContain('refreshOpenTownFocusIfChanged');
+    expect(perFrame).not.toContain('townFocus.refreshIfChanged');
   });
 
   it('declares the cold latch as the empty sentinel no real signature can spell', () => {
-    // Both harnesses build the Hud with Object.create, which skips field
-    // initializers, so they seed the latch by hand and no behavioral test in
-    // this file can see the DECLARED value. Pin the declaration itself, or
-    // changing it to a plausible-looking non-empty string would arm the panel
-    // with a signature it never painted and leave the suite green.
-    expect(hudSrc).toContain("private lastTownFocusSig = '';");
+    // The harnesses construct the controller now, so the probe harness also
+    // reads the declared value behaviorally; the declaration stays pinned as
+    // the belt, since changing it to a plausible-looking non-empty string would
+    // arm the panel with a signature it never painted.
+    expect(controllerSrc).toContain("private lastSig = '';");
   });
 
   it('the probe tests the open flag before it reads anything', () => {
-    const probe = region(
-      'private refreshOpenTownFocusIfChanged(): void {',
-      'closeTownFocus(): void {',
-    );
-    expect(probe.indexOf('if (!this.townFocusOpen) return;')).toBeGreaterThan(-1);
-    expect(probe.indexOf('if (!this.townFocusOpen) return;')).toBeLessThan(
+    const probe = controllerRegion('refreshIfChanged(): void {', 'close(): void {');
+    expect(probe.indexOf('if (!this.isOpen) return;')).toBeGreaterThan(-1);
+    expect(probe.indexOf('if (!this.isOpen) return;')).toBeLessThan(
       probe.indexOf('townFocusRenderSig'),
     );
-    expect(probe).toContain('if (sig === this.lastTownFocusSig) return;');
+    expect(probe).toContain('if (sig === this.lastSig) return;');
   });
 
   it('a language switch still repaints the open panel', () => {
@@ -824,7 +843,7 @@ describe('Town Focus repaint-gate wiring (source pins)', () => {
       'private refreshLocalizedDynamicUi(): void {',
       'private previewResolvedAbility(',
     );
-    expect(relocalize).toContain('if (this.townFocusOpen) this.renderTownFocus();');
+    expect(relocalize).toContain('if (this.townFocus.isOpen) this.townFocus.render();');
   });
 });
 
@@ -836,36 +855,28 @@ describe('Town Focus repaint-gate wiring (source pins)', () => {
 // with a second window and must stay Tab-passable), and never called
 // markDialogRoot: no Tab trap, no return-to-opener, no role=dialog. Everything
 // below is driven over the REAL bridge (src/ui/window_focus.ts) and a REAL
-// FocusManager, the same two pieces the Hud field initializer wires, so none of
-// it is asserted against a stand-in for the shipped glue.
+// FocusManager, the same two pieces the Hud hands the controller it builds, so
+// none of it is asserted against a stand-in for the shipped glue.
 // ---------------------------------------------------------------------------
 
 interface TownFocusFocusHarness {
-  sim: {
-    townFocus: Record<string, number>;
-    setTownFocus(next: Record<string, number>, tier: RespecPaymentTier): void;
-  };
-  townFocusDraft: Record<string, number> | null;
-  lastTownFocusSig: string;
-  townFocusWindowFocus: WindowFocusBridge;
-  townFocusOpenerFocus: HTMLElement | null;
+  draft: Record<string, number> | null;
+  openerFocus: HTMLElement | null;
   isInTown(): boolean;
-  renderTownFocus(): void;
-  toggleTownFocus(): void;
-  closeTownFocus(): void;
-  closeManagedWindow(el: HTMLElement): void;
-  closeContextMenu(): void;
-  hideTooltip(): void;
-  readonly townFocusOpen: boolean;
+  render(): void;
+  toggle(): void;
+  close(): void;
+  readonly isOpen: boolean;
 }
 
-function makeFocusHud(
+function makeFocusPanel(
   allocation: Record<string, number> = { [COMPONENT]: 2 },
   inTown = true,
 ): {
-  hud: TownFocusFocusHarness;
+  panel: TownFocusFocusHarness;
   el: HTMLElement;
   opener: HTMLButtonElement;
+  setTownFocus: ReturnType<typeof vi.fn>;
 } {
   document.body.innerHTML = '';
   // The real opener: the minimap button whose click handler calls toggleTownFocus.
@@ -877,25 +888,20 @@ function makeFocusHud(
   el.className = 'window panel';
   document.body.appendChild(el);
 
-  const hud = Object.create(Hud.prototype) as unknown as TownFocusFocusHarness;
-  hud.sim = {
-    townFocus: { ...allocation },
-    setTownFocus: vi.fn(),
-  } as unknown as TownFocusFocusHarness['sim'];
-  hud.townFocusDraft = null;
-  hud.lastTownFocusSig = '';
-  // Object.create skips field initializers, so build the bridge by hand out of
-  // the SAME two pieces the field declares: makeWindowFocus over a FocusManager.
-  // Two things this seeding cannot see, both covered by source pins below
-  // instead: WHICH root the bridge is built over, and that the shipped
-  // `windowFocus` helper resolves the ONE manager shared by every window rather
-  // than minting a private one per window as this harness does.
-  hud.townFocusWindowFocus = makeWindowFocus(new FocusManager(), () => el);
-  hud.townFocusOpenerFocus = null;
-  hud.isInTown = () => inTown;
-  hud.closeContextMenu = vi.fn() as unknown as TownFocusFocusHarness['closeContextMenu'];
-  hud.hideTooltip = vi.fn() as unknown as TownFocusFocusHarness['hideTooltip'];
-  return { hud, el, opener };
+  const setTownFocus = vi.fn();
+  // The bridge is built out of the SAME two pieces the Hud hands the controller:
+  // makeWindowFocus over a FocusManager. Two things this seeding cannot see,
+  // both covered by source pins below instead: WHICH root the Hud builds the
+  // bridge over, and that the shipped `windowFocus` helper resolves the ONE
+  // manager shared by every window rather than minting a private one per window
+  // as this harness does. (The Hud's own lazy build runs for real in the
+  // Escape-route case in tests/hud_coordinator_delegators.test.ts.)
+  const panel = new TownFocusController(
+    panelHost({ townFocus: { ...allocation }, setTownFocus }),
+    makeWindowFocus(new FocusManager(), () => el),
+  ) as unknown as TownFocusFocusHarness;
+  panel.isInTown = () => inTown;
+  return { panel, el, opener, setTownFocus };
 }
 
 function pressTab(shift = false): KeyboardEvent {
@@ -947,15 +953,15 @@ describe('the Town Focus panel is wired into the shared focus system', () => {
   });
 
   it('captures the opener at open and hands focus back on close', () => {
-    const { hud, el, opener } = makeFocusHud();
+    const { panel, el, opener } = makeFocusPanel();
     opener.focus();
-    hud.toggleTownFocus();
-    expect(hud.townFocusOpen).toBe(true);
+    panel.toggle();
+    expect(panel.isOpen).toBe(true);
     const plus = stepButton(el, COMPONENT, 'inc');
     plus.focus();
     expect(document.activeElement).toBe(plus);
-    hud.closeTownFocus();
-    expect(hud.townFocusOpen).toBe(false);
+    panel.close();
+    expect(panel.isOpen).toBe(false);
     // Deferred, not synchronous: before the tick the old focus is still standing.
     expect(document.activeElement).not.toBe(opener);
     vi.runAllTimers();
@@ -963,21 +969,21 @@ describe('the Town Focus panel is wired into the shared focus system', () => {
   });
 
   it('drops the recorded opener after the hand-back, so a later close cannot re-steal focus', () => {
-    const { hud, el, opener } = makeFocusHud();
+    const { panel, el, opener } = makeFocusPanel();
     opener.focus();
-    hud.toggleTownFocus();
+    panel.toggle();
     stepButton(el, COMPONENT, 'inc').focus();
-    hud.closeTownFocus();
+    panel.close();
     vi.runAllTimers();
     expect(document.activeElement).toBe(opener);
-    expect(hud.townFocusOpenerFocus).toBeNull();
+    expect(panel.openerFocus).toBeNull();
     // Without the null the stale opener survives, and the next close (a
     // closeAll sweep, a second toggle) yanks the player off whatever they moved
     // to and back onto the minimap button.
     const elsewhere = document.createElement('button');
     document.body.appendChild(elsewhere);
     elsewhere.focus();
-    hud.closeTownFocus();
+    panel.close();
     vi.runAllTimers();
     expect(document.activeElement).toBe(elsewhere);
   });
@@ -989,9 +995,9 @@ describe('the Town Focus panel is wired into the shared focus system', () => {
     // runs target-nearest. That is true of every window in this family (no
     // windowFocus window is in Hud.isModalOpen()), it is not something this
     // change introduced, and nothing here covers it. Claim only what is driven.
-    const { hud, el, opener } = makeFocusHud();
+    const { panel, el, opener } = makeFocusPanel();
     opener.focus();
-    hud.toggleTownFocus();
+    panel.toggle();
     const focusables = [...el.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)];
     // This list is derived from the manager's OWN selector, so it pins order,
     // wrapping and preventDefault but says nothing about MEMBERSHIP: a Save
@@ -1014,9 +1020,9 @@ describe('the Town Focus panel is wired into the shared focus system', () => {
   });
 
   it('leaves Tab alone while focus is OUTSIDE the panel, so the game keeps its target key', () => {
-    const { hud, opener } = makeFocusHud();
+    const { panel, opener } = makeFocusPanel();
     opener.focus();
-    hud.toggleTownFocus();
+    panel.toggle();
     // Opening records the opener and installs the trap; it does NOT pull focus
     // in (the train / unbind shape). So the player is still on the minimap
     // button, outside the panel, where Tab is target-nearest and must not be
@@ -1028,13 +1034,13 @@ describe('the Town Focus panel is wired into the shared focus system', () => {
   });
 
   it('keeps the trap installed across the rebuild the step ladder drives', () => {
-    const { hud, el, opener } = makeFocusHud();
+    const { panel, el, opener } = makeFocusPanel();
     opener.focus();
-    hud.toggleTownFocus();
+    panel.toggle();
     const plus = stepButton(el, COMPONENT, 'inc');
     plus.focus();
-    hud.townFocusDraft = { [COMPONENT]: 3 };
-    hud.renderTownFocus();
+    panel.draft = { [COMPONENT]: 3 };
+    panel.render();
     // The #2500 ladder hands focus to the REBUILT equivalent of the control the
     // player was on...
     const rebuilt = stepButton(el, COMPONENT, 'inc');
@@ -1056,9 +1062,9 @@ describe('the Town Focus panel is wired into the shared focus system', () => {
     // is out of FOCUSABLE_SELECTOR: the ring collapses to the X alone. Worth
     // driving rather than assuming, because a one-element ring is the case where
     // nextFocusIndex could plausibly return -1 and let Tab escape the panel.
-    const { hud, el, opener } = makeFocusHud({ [COMPONENT]: 2 }, false);
+    const { panel, el, opener } = makeFocusPanel({ [COMPONENT]: 2 }, false);
     opener.focus();
-    hud.toggleTownFocus();
+    panel.toggle();
     const focusables = [...el.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)];
     expect(el.querySelector<HTMLButtonElement>('.town-focus-save')?.disabled).toBe(true);
     expect(focusables).not.toContain(el.querySelector('.town-focus-save'));
@@ -1073,80 +1079,66 @@ describe('the Town Focus panel is wired into the shared focus system', () => {
     // <button> on click, so activeFocusable() returns null at capture and the
     // opener field is null at close. The bridge must still take its
     // release-the-trap branch rather than treating null as an in-window refocus.
-    const { hud, el } = makeFocusHud();
+    const { panel, el } = makeFocusPanel();
     expect(document.activeElement).toBe(document.body);
-    hud.toggleTownFocus();
-    expect(hud.townFocusOpenerFocus).toBeNull();
+    panel.toggle();
+    expect(panel.openerFocus).toBeNull();
     const plus = stepButton(el, COMPONENT, 'inc');
     plus.focus();
-    hud.closeTownFocus();
+    panel.close();
     vi.runAllTimers();
-    expect(hud.townFocusOpen).toBe(false);
+    expect(panel.isOpen).toBe(false);
     plus.focus();
     expect(pressTab().defaultPrevented).toBe(false);
   });
 
   it('returns focus to the opener through Save', () => {
-    const { hud, el, opener } = makeFocusHud();
+    const { panel, el, opener, setTownFocus } = makeFocusPanel();
     opener.focus();
-    hud.toggleTownFocus();
+    panel.toggle();
     const save = el.querySelector<HTMLButtonElement>('.town-focus-save');
     expect(save).not.toBeNull();
     save?.focus();
     save?.click();
     vi.runAllTimers();
-    // 'time': toggleTownFocus resets the #1144 tier picker to the free
+    // 'time': toggle() resets the #1144 tier picker to the free
     // default on every fresh open, and this test never touches the select.
-    expect(hud.sim.setTownFocus).toHaveBeenCalledWith({ [COMPONENT]: 2 }, 'time');
-    expect(hud.townFocusOpen).toBe(false);
+    expect(setTownFocus).toHaveBeenCalledWith({ [COMPONENT]: 2 }, 'time');
+    expect(panel.isOpen).toBe(false);
     expect(document.activeElement).toBe(opener);
   });
 
   it('returns focus to the opener through the X button', () => {
-    const { hud, el, opener } = makeFocusHud();
+    const { panel, el, opener } = makeFocusPanel();
     opener.focus();
-    hud.toggleTownFocus();
+    panel.toggle();
     const close = el.querySelector<HTMLButtonElement>('[data-close]');
     expect(close).not.toBeNull();
     close?.focus();
     close?.click();
     vi.runAllTimers();
-    expect(hud.townFocusOpen).toBe(false);
-    expect(document.activeElement).toBe(opener);
-  });
-
-  it('returns focus to the opener through closeManagedWindow, the Escape / closeAll route', () => {
-    const { hud, el, opener } = makeFocusHud();
-    opener.focus();
-    hud.toggleTownFocus();
-    stepButton(el, COMPONENT, 'inc').focus();
-    // Escape and the gamepad both land in closeAll -> closeManagedWindow, whose
-    // `town-focus-window` case is the only thing standing between them and a
-    // focus drop to <body>.
-    hud.closeManagedWindow(el);
-    vi.runAllTimers();
-    expect(hud.townFocusOpen).toBe(false);
+    expect(panel.isOpen).toBe(false);
     expect(document.activeElement).toBe(opener);
   });
 
   it('returns focus to the opener when the toggle is pressed a second time', () => {
-    const { hud, el, opener } = makeFocusHud();
+    const { panel, el, opener } = makeFocusPanel();
     opener.focus();
-    hud.toggleTownFocus();
+    panel.toggle();
     stepButton(el, COMPONENT, 'inc').focus();
-    hud.toggleTownFocus();
+    panel.toggle();
     vi.runAllTimers();
-    expect(hud.townFocusOpen).toBe(false);
+    expect(panel.isOpen).toBe(false);
     expect(document.activeElement).toBe(opener);
   });
 
   it('releases the trap on close, over repeated open/close cycles', () => {
-    const { hud, el, opener } = makeFocusHud();
+    const { panel, el, opener } = makeFocusPanel();
     for (let i = 0; i < 2; i++) {
       opener.focus();
-      hud.toggleTownFocus();
+      panel.toggle();
       stepButton(el, COMPONENT, 'inc').focus();
-      hud.closeTownFocus();
+      panel.close();
       vi.runAllTimers();
     }
     // A closed panel is hidden, not emptied, and jsdom lays nothing out, so its
@@ -1167,15 +1159,15 @@ describe('the Town Focus panel is wired into the shared focus system', () => {
     // bridge's behavior for any window whose opener can vanish (closeTrain and
     // closeUnbind hand back to a gossip button that is already gone by then),
     // and it is exactly the pre-#2525 outcome, never worse.
-    const { hud, el, opener } = makeFocusHud();
+    const { panel, el, opener } = makeFocusPanel();
     opener.focus();
-    hud.toggleTownFocus();
+    panel.toggle();
     const plus = stepButton(el, COMPONENT, 'inc');
     plus.focus();
     // A per-element override: the blanket stub in beforeEach reports one rect
     // for everything, which is what makes this case unrepresentable by default.
     vi.spyOn(opener, 'getClientRects').mockReturnValue([] as unknown as DOMRectList);
-    hud.closeTownFocus();
+    panel.close();
     vi.runAllTimers();
     // jsdom does not blur on display:none, so focus is simply left standing
     // where it was; a real browser drops it to <body> at the same moment.
@@ -1188,9 +1180,9 @@ describe('the Town Focus panel is wired into the shared focus system', () => {
   });
 
   it('marks the root as a dialog with exactly ONE accessible name', () => {
-    const { hud, el, opener } = makeFocusHud();
+    const { panel, el, opener } = makeFocusPanel();
     opener.focus();
-    hud.toggleTownFocus();
+    panel.toggle();
     expect(el.getAttribute('role')).toBe('dialog');
     expect(el.getAttribute('aria-modal')).toBe('false');
     expect(el.getAttribute('tabindex')).toBe('-1');
@@ -1213,22 +1205,22 @@ describe('the Town Focus panel is wired into the shared focus system', () => {
     // The painter marks the root before its own innerHTML wipe, so a rebuild
     // cannot strip the attributes; this pins that placement behaviorally rather
     // than trusting the source pin below, which only proves the call exists.
-    const { hud, el, opener } = makeFocusHud();
+    const { panel, el, opener } = makeFocusPanel();
     opener.focus();
-    hud.toggleTownFocus();
+    panel.toggle();
     el.removeAttribute('role');
     el.removeAttribute('aria-label');
-    hud.townFocusDraft = { [COMPONENT]: 3 };
-    hud.renderTownFocus();
+    panel.draft = { [COMPONENT]: 3 };
+    panel.render();
     expect(el.getAttribute('role')).toBe('dialog');
     expect(el.getAttribute('aria-label')).toBe(t('hudChrome.townFocus.title'));
     expect(el.getAttribute('tabindex')).toBe('-1');
   });
 
   it('keeps the dialog root itself out of the Tab cycle it wraps', () => {
-    const { hud, el, opener } = makeFocusHud();
+    const { panel, el, opener } = makeFocusPanel();
     opener.focus();
-    hud.toggleTownFocus();
+    panel.toggle();
     // tabindex="-1" is programmatically focusable but deliberately OUT of the
     // Tab sequence. This match is the WHOLE test: the manager derives its ring
     // from root.querySelectorAll, which can never return the root itself, so a
@@ -1242,14 +1234,14 @@ describe('the Town Focus panel is wired into the shared focus system', () => {
 
 describe('Town Focus focus-system wiring (source pins)', () => {
   it('declares ONE windowFocus bridge for the panel root, plus its opener field', () => {
-    // Both harnesses build the Hud with Object.create, which skips field
-    // initializers and seeds these by hand, so no behavioral test in this file
-    // can see the DECLARED wiring. Pin it, or the panel could be trapped against
-    // some other root with everything above still green.
+    // The harness above hands the controller its own bridge, so no behavioral
+    // test in this file can see the bridge the Hud DECLARES for it. Pin it, or
+    // the panel could be trapped against some other root with everything above
+    // still green.
     expect(hudSrc).toContain(
-      "private readonly townFocusWindowFocus = this.windowFocus('#town-focus-window');",
+      "this.townFocusState ??= new TownFocusController(this, this.windowFocus('#town-focus-window'));",
     );
-    expect(hudSrc).toContain('private townFocusOpenerFocus: HTMLElement | null = null;');
+    expect(controllerSrc).toContain('private openerFocus: HTMLElement | null = null;');
   });
 
   it('builds that bridge over the ONE FocusManager every window shares', () => {
@@ -1264,15 +1256,15 @@ describe('Town Focus focus-system wiring (source pins)', () => {
     );
     expect(helper).toContain('return makeWindowFocus(this.focusManager, () => $(rootSel));');
     expect(helper).not.toContain('new FocusManager(');
-    expect(hudSrc).toContain('private readonly focusManager = new FocusManager();');
+    expect(hudSrc).toContain('readonly focusManager = new FocusManager();');
+    // ...and the controller takes that bridge, it never mints a manager of its own.
+    expect(controllerSrc).not.toContain('new FocusManager(');
   });
 
   it('captures the opener AFTER the first paint, the train / unbind ordering', () => {
-    const toggle = region('toggleTownFocus(): void {', 'private renderTownFocus(): void {');
-    const painted = toggle.indexOf('this.renderTownFocus();');
-    const captured = toggle.indexOf(
-      'this.townFocusOpenerFocus = this.townFocusWindowFocus.captureFocus();',
-    );
+    const toggle = controllerRegion('toggle(): void {', 'render(): void {');
+    const painted = toggle.indexOf('this.render();');
+    const captured = toggle.indexOf('this.openerFocus = this.windowFocus.captureFocus();');
     expect(painted).toBeGreaterThan(-1);
     expect(captured).toBeGreaterThan(painted);
   });
@@ -1281,9 +1273,9 @@ describe('Town Focus focus-system wiring (source pins)', () => {
     // Scoped to the method: every close route (X, Save, Escape, the toggle
     // re-press) funnels here, so this is the single place the hand-back has to
     // live. Moving it into one caller would silently drop the others.
-    const close = region('closeTownFocus(): void {', 'get townFocusOpen(): boolean {');
-    expect(close).toContain('this.townFocusWindowFocus.restoreFocus(this.townFocusOpenerFocus);');
-    expect(close).toContain('this.townFocusOpenerFocus = null;');
+    const close = controllerRegion('close(): void {', 'get isOpen(): boolean {');
+    expect(close).toContain('this.windowFocus.restoreFocus(this.openerFocus);');
+    expect(close).toContain('this.openerFocus = null;');
   });
 
   it('routes the managed close (Escape / closeAll / gamepad) through that one path', () => {
@@ -1292,11 +1284,12 @@ describe('Town Focus focus-system wiring (source pins)', () => {
     // half LOUDLY rather than passing it vacuously, so this is maintenance cost
     // and not a coverage hole.
     const arm = region("case 'town-focus-window':", "case 'crafting-window':");
-    expect(arm).toContain('this.closeTownFocus();');
+    expect(arm).toContain('this.townFocus.close();');
     // Pure belt, and worth naming as such so nobody upgrades it thinking it is
     // the gate: the refusal has obvious dead alternates (`el.hidden = true`, a
     // class toggle, a different spacing). What actually kills every spelling is
-    // the behavioral closeManagedWindow test above.
+    // the behavioral closeManagedWindow test (in
+    // tests/hud_coordinator_delegators.test.ts since the controller move).
     expect(arm).not.toContain("style.display = 'none'");
   });
 

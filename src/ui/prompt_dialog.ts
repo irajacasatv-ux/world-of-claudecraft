@@ -178,3 +178,70 @@ export function installPromptDialog(
   });
   return { dismiss, dismissAndReturn };
 }
+
+// Monotonic id source for the stack prompts' aria-labelledby target (moved
+// with showStackPrompt off the Hud, which kept it as a per-instance field; the
+// HUD is a singleton, so the id sequence is the same).
+let stackPromptSeq = 0;
+
+/**
+ * Mount a timed accept/decline prompt into #prompt-stack (party invite, trade
+ * request, duel challenge, ready check, guild invite, resurrection offer),
+ * moved whole out of Hud.showPrompt. A non-modal alertdialog named by its
+ * text, accept before decline, and a countdown bar; it auto-dismisses after
+ * PROMPT_TIMEOUT_MS. Returns the prompt so a caller holding a singleton can
+ * remove it early. `text` is trusted HTML: every caller escapes the names it
+ * interpolates. The labels are the caller's (this module stays i18n-free).
+ */
+export function showStackPrompt(
+  text: string,
+  acceptLabel: string,
+  onAccept: () => void,
+  onDecline: () => void,
+  declineLabel: string,
+  // Fired only when the prompt auto-dismisses after the wall-clock timeout.
+  // Defaults to onDecline so existing callers stay byte-identical; callers that
+  // want an ignored prompt to mean "no response" (ready check) pass a no-op and
+  // let their own server-side timeout own the outcome.
+  onTimeout: () => void = onDecline,
+  focusFirst = false,
+): HTMLElement {
+  const stack = document.querySelector('#prompt-stack') as HTMLElement;
+  const prompt = document.createElement('div');
+  prompt.className = 'prompt panel ui-panel-strong';
+  prompt.innerHTML = `<div class="prompt-text">${text}</div>`;
+  prompt.setAttribute('role', 'alertdialog');
+  prompt.setAttribute('aria-modal', 'false');
+  const promptText = prompt.querySelector('.prompt-text') as HTMLElement;
+  promptText.id = `hud-prompt-title-${stackPromptSeq++}`;
+  prompt.setAttribute('aria-labelledby', promptText.id);
+  const accept = document.createElement('button');
+  accept.className = 'btn ui-btn ui-btn--red';
+  accept.type = 'button';
+  accept.textContent = acceptLabel;
+  const decline = document.createElement('button');
+  decline.className = 'btn ui-btn';
+  decline.type = 'button';
+  decline.textContent = declineLabel;
+  accept.addEventListener('click', () => {
+    prompt.remove();
+    onAccept();
+  });
+  decline.addEventListener('click', () => {
+    prompt.remove();
+    onDecline();
+  });
+  const actions = document.createElement('div');
+  actions.className = 'prompt-actions';
+  actions.append(accept, decline);
+  prompt.append(actions, createPromptTimeoutBar());
+  stack.appendChild(prompt);
+  if (focusFirst) accept.focus();
+  window.setTimeout(() => {
+    if (prompt.isConnected) {
+      prompt.remove();
+      onTimeout();
+    }
+  }, PROMPT_TIMEOUT_MS);
+  return prompt;
+}

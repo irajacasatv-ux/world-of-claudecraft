@@ -25,6 +25,13 @@ const HUD_SRC = readFileSync(join(process.cwd(), 'src/ui/hud.ts'), 'utf8');
 // where it now lives (input_controller.ts since the Phase 18 rename that put
 // it under the painter gate's filename sweep).
 const INPUT_DIALOG_SRC = readFileSync(join(process.cwd(), 'src/ui/input_controller.ts'), 'utf8');
+// confirmDialog, the button-semantics precedent both stragglers were fixed to
+// match, moved whole into its own module too (Hud keeps a delegator), so the
+// no-bare-span refusal below covers it where it now lives.
+const CONFIRM_DIALOG_SRC = readFileSync(
+  join(process.cwd(), 'src/ui/confirm_dialog_controller.ts'),
+  'utf8',
+);
 
 interface CloseControl {
   tag: string;
@@ -89,7 +96,7 @@ describe('emote editor + inputDialog title-bar close controls have real button s
   });
 
   it('neither title-bar close control regresses to a bare <span> (the original bug shape)', () => {
-    for (const src of [HUD_SRC, INPUT_DIALOG_SRC]) {
+    for (const src of [HUD_SRC, INPUT_DIALOG_SRC, CONFIRM_DIALOG_SRC]) {
       expect(src).not.toMatch(/<span class="x-btn" data-close>/);
       expect(src).not.toMatch(/<span class="x-btn" data-cancel>/);
     }

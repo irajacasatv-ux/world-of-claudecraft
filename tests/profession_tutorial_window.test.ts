@@ -10,7 +10,7 @@ import { renderProfessionTutorial } from '../src/ui/hud/professions/profession_t
 // closeManagedWindow) must route the tutorial modal through
 // closeProfessionTutorial, releasing the focus trap and returning focus to the
 // opener, the same contract every other managed window honors. Exercised via a
-// bare Hud prototype (the hud_confirm_gates precedent) since closeManagedWindow
+// bare Hud prototype (the hud_coordinator_delegators precedent) since closeManagedWindow
 // is private.
 interface CloseHarness {
   professionTutorialTrap: { release: ReturnType<typeof vi.fn>; focusFirst: () => void } | null;

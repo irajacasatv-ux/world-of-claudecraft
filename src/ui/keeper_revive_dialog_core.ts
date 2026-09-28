@@ -4,7 +4,8 @@
 // Toll will land on hears only the price and the free walk back (never that a
 // waiver exists), a character below RES_SICKNESS_MIN_LEVEL is told the Toll
 // exists but that they are spared it as a newcomer. Pure key selection; the HUD
-// resolves the keys through t() and owns the dialog DOM (Hud.confirmDialog).
+// resolves the keys through t() in keeper_revive_dialog.ts, and the dialog DOM is
+// the shared confirm (confirm_dialog_controller.ts).
 
 import { RES_SICKNESS_MIN_LEVEL } from '../sim/resurrection';
 import type { TranslationKey } from './i18n';

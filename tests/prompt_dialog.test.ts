@@ -4,9 +4,15 @@
 // bank, and vendor quantity/confirm prompts. The three windows pin their
 // DELEGATION to the module (source pins plus the vendor painter's behavioral
 // drive); this suite pins the recipe itself, so a semantic break that keeps
-// the source tokens still fails somewhere.
-import { describe, expect, it } from 'vitest';
-import { dismissInstalledPrompt, installPromptDialog } from '../src/ui/prompt_dialog';
+// the source tokens still fails somewhere. It also holds the timed
+// #prompt-stack accept/decline prompt (showStackPrompt, moved off the Hud).
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+  dismissInstalledPrompt,
+  installPromptDialog,
+  PROMPT_TIMEOUT_MS,
+  showStackPrompt,
+} from '../src/ui/prompt_dialog';
 
 function rig(withInputAriaLabel = false) {
   const root = document.createElement('div');
@@ -234,5 +240,84 @@ describe('dismissInstalledPrompt: the element-keyed teardown registry', () => {
     document.body.appendChild(stray);
     dismissInstalledPrompt(stray);
     expect(stray.isConnected).toBe(false);
+  });
+});
+
+describe('showStackPrompt: the timed #prompt-stack accept / decline prompt', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    document.body.innerHTML = '<div id="prompt-stack"></div>';
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    document.body.replaceChildren();
+  });
+
+  it('is an accessible yes/no dialog, focuses Yes, and accepts only after the click', () => {
+    // Moved whole from tests/hud_resurrection_prompt.test.ts (it drove the
+    // real Hud.showPrompt on a bare prototype; the body now lives here).
+    const onAccept = vi.fn();
+    const onDecline = vi.fn();
+    const prompt = showStackPrompt(
+      'A mage wants to resurrect you.',
+      'Yes',
+      onAccept,
+      onDecline,
+      'No',
+      vi.fn(),
+      true,
+    );
+
+    expect(prompt.getAttribute('role')).toBe('alertdialog');
+    expect(prompt.getAttribute('aria-modal')).toBe('false');
+    const titleId = prompt.getAttribute('aria-labelledby');
+    expect(titleId).toBeTruthy();
+    expect(document.getElementById(titleId ?? '')?.textContent).toBe(
+      'A mage wants to resurrect you.',
+    );
+    const [accept, decline] = [...prompt.querySelectorAll('button')];
+    expect(accept.textContent).toBe('Yes');
+    expect(decline.textContent).toBe('No');
+    expect(document.activeElement).toBe(accept);
+    expect(onAccept).not.toHaveBeenCalled();
+
+    accept.click();
+    expect(onAccept).toHaveBeenCalledOnce();
+    expect(onDecline).not.toHaveBeenCalled();
+    expect(prompt.isConnected).toBe(false);
+  });
+
+  it('declines on the decline click, and titles every prompt with its own id', () => {
+    const onDecline = vi.fn();
+    const first = showStackPrompt('One', 'Yes', vi.fn(), onDecline, 'No');
+    const second = showStackPrompt('Two', 'Yes', vi.fn(), vi.fn(), 'No');
+    expect(first.getAttribute('aria-labelledby')).not.toBe(second.getAttribute('aria-labelledby'));
+    // Not focused unless asked: an unfocused prompt leaves the player where they were.
+    expect(document.activeElement).not.toBe(first.querySelector('button'));
+    (first.querySelectorAll('button')[1] as HTMLElement).click();
+    expect(onDecline).toHaveBeenCalledOnce();
+    expect(first.isConnected).toBe(false);
+    expect(second.isConnected).toBe(true);
+  });
+
+  it('times out into onDecline by default, into onTimeout when given, and never after an answer', () => {
+    const declined = vi.fn();
+    showStackPrompt('Default', 'Yes', vi.fn(), declined, 'No');
+    const timedOut = vi.fn();
+    const ownDecline = vi.fn();
+    showStackPrompt('Ready?', 'Ready', vi.fn(), ownDecline, 'Not Ready', timedOut);
+    const answered = vi.fn();
+    const early = showStackPrompt('Answered', 'Yes', vi.fn(), answered, 'No');
+    (early.querySelectorAll('button')[0] as HTMLElement).click();
+
+    vi.advanceTimersByTime(PROMPT_TIMEOUT_MS - 1);
+    expect(declined).not.toHaveBeenCalled();
+    vi.advanceTimersByTime(1);
+    expect(declined).toHaveBeenCalledOnce();
+    expect(timedOut).toHaveBeenCalledOnce();
+    expect(ownDecline).not.toHaveBeenCalled();
+    expect(answered).not.toHaveBeenCalled();
+    expect(document.querySelector('#prompt-stack')?.childElementCount).toBe(0);
   });
 });

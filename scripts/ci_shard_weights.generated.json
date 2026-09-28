@@ -2,8 +2,8 @@
   "__provenance": {
     "run": "34168361798",
     "harvested": "2026-09-08",
-    "files": 4926,
-    "harvestedFiles": 3902,
+    "files": 4924,
+    "harvestedFiles": 3900,
     "carried": {
       "tests/ability_imbue_text.test.ts": {
         "ms": 1954,
@@ -11505,7 +11505,6 @@
   "tests/hub_lesson_view.test.ts": 5,
   "tests/hub_training_dummy.test.ts": 805,
   "tests/hud_chrome_i18n.test.ts": 22,
-  "tests/hud_confirm_gates.test.ts": 48,
   "tests/hud_frame_coverage.test.ts": 608,
   "tests/hud_frame_groups.test.ts": 86,
   "tests/hud_frames.test.ts": 22,
@@ -11513,7 +11512,6 @@
   "tests/hud_meteor_fall_preload.test.ts": 6,
   "tests/hud_perf_budget.test.ts": 233,
   "tests/hud_profession_events.test.ts": 21,
-  "tests/hud_resurrection_prompt.test.ts": 26,
   "tests/hud_tones.test.ts": 23,
   "tests/hud_touch_drop_routing.test.ts": 9,
   "tests/hud_update_drive.test.ts": 129,

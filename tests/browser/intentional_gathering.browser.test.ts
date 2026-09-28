@@ -14,8 +14,8 @@ import { tryNearbyInteraction } from '../../src/game/nearby_interaction';
 import { FARM_CROPS } from '../../src/sim/content/farm_crops';
 import type { HarvestPreference } from '../../src/sim/professions/harvest_preference';
 import type { Entity } from '../../src/sim/types';
-import { FocusManager, type FocusTrapHandle } from '../../src/ui/focus_manager';
-import { Hud } from '../../src/ui/hud';
+import { type ConfirmDialogHost, showConfirmDialog } from '../../src/ui/confirm_dialog_controller';
+import { FocusManager } from '../../src/ui/focus_manager';
 import {
   LootWindowController,
   type LootWindowControllerDeps,
@@ -181,21 +181,19 @@ function mount(mobile: boolean) {
     el.style.transform = 'none';
   };
   const errors = vi.fn();
-  // Exercise the shipped confirm method without booting the HUD or renderer.
-  const modalHost = {
+  // Exercise the shipped confirm dialog without booting the HUD or renderer:
+  // showConfirmDialog, the body Hud.confirmDialog delegates to, over a host
+  // shaped like the Hud's #confirm-dialog slot.
+  const modalHost: ConfirmDialogHost = {
     focusManager: fm,
-    confirmTrap: null as FocusTrapHandle | null,
-    confirmOnCancel: null as (() => void) | null,
-    fireConfirmCancel: vi.fn(),
+    confirmTrap: null,
+    confirmOnCancel: null,
     bringWindowToFront: (el: HTMLElement) => {
       el.style.zIndex = '60';
     },
   };
-  const confirm = (
-    Hud.prototype as unknown as {
-      confirmDialog: LootWindowControllerDeps['confirm'];
-    }
-  ).confirmDialog.bind(modalHost);
+  const confirm: LootWindowControllerDeps['confirm'] = (...args) =>
+    showConfirmDialog(modalHost, ...args);
   // The real shared picker (Intentional Gathering PR3), wired the way hud.ts
   // wires it: closeOthers is a no-op like the real Hud.closeOtherWindows
   // (siblings are never closed by opening another window), so a corpse Change
