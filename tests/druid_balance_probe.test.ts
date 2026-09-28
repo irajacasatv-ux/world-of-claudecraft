@@ -212,10 +212,9 @@ describe('Druid v0.29 balance and live-mob harness', () => {
   it('lands every profile and capstone, and the best builds inside their bands', () => {
     expect(seedRuns, 'every seed case ran').toHaveLength(MATRIX_SEEDS.length);
     expect(ranSeeds, 'each case received its own seed, in order').toEqual([...MATRIX_SEEDS]);
-    // ...and ran it: distinct seeds give distinct runs.
-    if (MATRIX_SEEDS.length > 1) {
-      expect(new Set(seedRuns.map((run) => JSON.stringify(run))).size).toBeGreaterThan(1);
-    }
+    // ...and ran it: every seed gives its own run (two seeds giving byte-identical
+    // runs of twelve floats would mean the seed never reached the probe).
+    expect(new Set(seedRuns.map((run) => JSON.stringify(run))).size).toBe(MATRIX_SEEDS.length);
     const results = combineDruidSeedRuns(seedRuns);
     expect(results).toHaveLength(12);
     expect(new Set(results.map((result) => result.profile))).toEqual(
