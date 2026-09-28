@@ -82,8 +82,7 @@ export interface ProfessionEventHost extends GatherResultFeedbackHost {
 
 /** Present one sim event through its profession arm. True when it was one of
  *  the events above, so the HUD's per-event switch skips it. */
-export function applyProfessionEventPresentation(hud: object, ev: SimEvent): boolean {
-  const h = hud as ProfessionEventHost;
+export function applyProfessionEventPresentation(h: ProfessionEventHost, ev: SimEvent): boolean {
   switch (ev.type) {
     case 'craftResult': {
       // A result (grant or denial) means the in-flight cast RESOLVED:

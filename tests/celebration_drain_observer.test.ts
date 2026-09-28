@@ -135,7 +135,7 @@ describe('the Hud side of the drain (source pins)', () => {
   });
 
   it('the observer is created lazily, so a bare-prototype drain rig still resolves', () => {
-    expect(methodBody(hud, '  private get celebrationDrain(')).toContain(
+    expect(methodBody(hud, '  get celebrationDrain(')).toContain(
       'this.celebrationDrainState ??= new CelebrationDrainObserver();',
     );
   });

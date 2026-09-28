@@ -7,6 +7,7 @@
 // which Hud.playEventSfx forwards every event to.
 import { describe, expect, it, vi } from 'vitest';
 import { sfx } from '../src/game/sfx';
+import type { EventSfxHost } from '../src/ui/event_sfx_router';
 import { playEventSfx } from '../src/ui/event_sfx_router';
 
 // Only the members the router's host interface names; the spellfxAt arm
@@ -20,7 +21,7 @@ describe('HUD meteorFall telegraph preloads the meteor recording', () => {
     const preload = vi.spyOn(sfx, 'preload').mockImplementation(() => {});
     try {
       const hud = harness();
-      playEventSfx(hud, {
+      playEventSfx(hud as unknown as EventSfxHost, {
         type: 'spellfxAt',
         x: 0,
         z: 0,

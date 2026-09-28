@@ -400,7 +400,7 @@ describe('crafting window bag-freshness wiring (source pins)', () => {
     // other paint cause (the station edge, a craft, a tab switch, the open
     // itself) un-armed, and a whole-file pin would not notice.
     const renderCrafting = region(
-      'private renderCrafting(focusReturnRecipeId = ',
+      '  renderCrafting(focusReturnRecipeId = ',
       'closeCrafting(): void {',
     );
     // Phase 04 (craft-from-vault) moved this pin: the latch now carries the

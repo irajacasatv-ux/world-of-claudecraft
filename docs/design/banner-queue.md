@@ -55,6 +55,8 @@ the Hud drives with its own timers). Two behavior classes:
 - The masterwork and tier-up craft plate rides the same `deed` class for the
   same reason (it predated the queue and was the last celebration left on the
   ambient form; migrated 2026-09-27, pinned in `tests/craft_celebration_view.test.ts`).
+  Like every celebration it can be dropped behind a full queue
+  (`BANNER_QUEUE_LIMIT`); its chat line and polite announcement still carry it.
 - Accessibility is unchanged: the banner div carries no live semantics;
   the polite `#combat-live` region push and the chat-log line stay the
   announced and durable records, emitted before the banner is scheduled.

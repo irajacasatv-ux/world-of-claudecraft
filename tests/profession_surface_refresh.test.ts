@@ -194,7 +194,7 @@ describe('Hud profession-surface convergence wiring', () => {
     // The Hud method is the one-line forward into its lazy latch, built over
     // the live world and the two cold surfaces.
     expect(hud).toContain(
-      '  private refreshOpenProfessionSurfacesIfChanged(): void {\n' +
+      '  refreshOpenProfessionSurfacesIfChanged(): void {\n' +
         '    this.professionSurfaces.refreshIfChanged();\n' +
         '  }',
     );

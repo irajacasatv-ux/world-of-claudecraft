@@ -169,7 +169,7 @@ describe('hud.ts wiring (source scan against the real file, the farming_windows_
   });
 
   it('the Professions window is wired to open the SAME controller', () => {
-    const start = hud.indexOf('private readonly professionsWindow = new ProfessionsWindow({');
+    const start = hud.indexOf('  readonly professionsWindow = new ProfessionsWindow({');
     expect(start, 'professionsWindow construction found').toBeGreaterThan(-1);
     const end = hud.indexOf(
       'private readonly harvestPreferenceController = new HarvestPreferenceController({',

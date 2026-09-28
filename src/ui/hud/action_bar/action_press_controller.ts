@@ -76,8 +76,8 @@ export class ActionPressController {
   readonly empowerHold = new EmpowerHold();
   private readonly hud: ActionPressHost;
 
-  constructor(hud: object) {
-    this.hud = hud as ActionPressHost;
+  constructor(hud: ActionPressHost) {
+    this.hud = hud;
   }
 
   empoweredAbilityIdForSlot(slot: number): string | null {

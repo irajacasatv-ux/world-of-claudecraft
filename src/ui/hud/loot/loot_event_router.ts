@@ -35,8 +35,7 @@ export interface LootEventHost {
 
 /** Present one sim event through the loot arm. True when it was a 'loot'
  *  event, so the HUD's per-event switch skips it. */
-export function applyLootEventPresentation(hud: object, ev: SimEvent): boolean {
-  const h = hud as LootEventHost;
+export function applyLootEventPresentation(h: LootEventHost, ev: SimEvent): boolean {
   switch (ev.type) {
     case 'loot': {
       const heldWarning = heldLootWarningText(ev.text);

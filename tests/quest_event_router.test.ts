@@ -42,11 +42,11 @@ describe('quest event router', () => {
     expect(HUD_LOG.PROGRESS).toBeTruthy();
   });
 
-  it('stays welded to the private Hud members it drives', () => {
+  it('stays welded to the Hud members it drives', () => {
     const hudSource = readFileSync(new URL('../src/ui/hud.ts', import.meta.url), 'utf8');
     for (const anchor of [
       "private readonly questBanner = new QuestProgressBanner($('#quest-banner'));",
-      'private readonly questDialog: QuestDialogController;',
+      '  readonly questDialog: QuestDialogController;',
       'private readonly worldQuestPuzzleWindow = new WorldQuestPuzzleWindow({',
       // The release/v0.44.0 permanent loot quality change gave log() a node
       // body arm (the exact-copy loot receipt link), so the anchor is the

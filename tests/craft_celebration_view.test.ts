@@ -218,6 +218,18 @@ describe('craft celebration HUD behavior', () => {
     );
   });
 
+  it('keeps a tier-up plate queued behind a live level-up the same way', () => {
+    vi.spyOn(audio, 'achievement').mockImplementation(() => {});
+    const hud = celebrationHud();
+    hud.showCelebrationBanner('Level 20', 'levelup');
+    paintCraftCelebrations(hud.host, null, [{ craftId: 'cooking', toTier: 2 }]);
+    hud.slot.show('Zone line');
+    vi.advanceTimersByTime(2600 + 250 + 1);
+    expect(hud.bannerEl.querySelector('.banner-copy')?.textContent).toBe(
+      craftBannerText({ kind: 'tierUp', craftId: 'cooking', toTier: 2 }),
+    );
+  });
+
   it('clears a previous variant class so the shared slot never inherits it', () => {
     // #banner is ONE reused element: a deed plate followed by an ordinary
     // celebration must not leave the next banner wearing the deed language.

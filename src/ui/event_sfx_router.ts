@@ -73,8 +73,7 @@ export function playCombatSfx(
 }
 
 /** The spatial sound for one sim event, for everyone nearby. */
-export function playEventSfx(hud: object, ev: SimEvent): void {
-  const h = hud as EventSfxHost;
+export function playEventSfx(h: EventSfxHost, ev: SimEvent): void {
   const sim = h.sim;
   switch (ev.type) {
     case 'damage': {

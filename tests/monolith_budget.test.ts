@@ -605,8 +605,9 @@ const MONOLITHS: MonolithRow[] = [
     // reliquary tracker frame, window reflow), then to 16595 in its review round,
     // then 16595 -> 15912 with the loot and profession event routers, the profession
     // surface latch and the event sfx router; 15911 once the craft plate left the
-    // ambient banner form; 15717 with ActionPressController (the press paths).
-    ceiling: 15717,
+    // ambient banner form; 15717 with ActionPressController (the press paths);
+    // 15710 once the router and press hosts were typed (their lint suppressions left).
+    ceiling: 15710,
     seam: 'pure view core + thin painter on PainterHost (src/ui/CLAUDE.md)',
   },
   {

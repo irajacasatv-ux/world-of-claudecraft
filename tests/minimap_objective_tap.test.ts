@@ -26,10 +26,10 @@ describe('minimap objective tap probe', () => {
     expect(minimapTapProbe(0, 0, { left: 0, top: 0, width: 120, height: 0 }, canvas)).toBeNull();
   });
 
-  it('stays welded to the private Hud members it reads and writes', () => {
+  it('stays welded to the Hud members it reads and writes', () => {
     const hudSource = readFileSync(new URL('../src/ui/hud.ts', import.meta.url), 'utf8');
     for (const anchor of [
-      'private sim: IWorld,',
+      'public sim: IWorld,',
       'private readonly minimapPainter = new MinimapPainter(',
       "private mapLevel: MapLevel = 'zone';",
       'private mapZoneOverride: string | null = null;',

@@ -11,6 +11,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
 import { ABILITIES } from '../src/sim/data';
+import type { ActionPressHost } from '../src/ui/hud/action_bar/action_press_controller';
 import { ActionPressController } from '../src/ui/hud/action_bar/action_press_controller';
 import { type AimPoint, XHB_ONLY_AIM_SLOT } from '../src/ui/hud/action_bar/ground_aim';
 import { GroundAimController } from '../src/ui/hud/action_bar/ground_aim_controller';
@@ -59,7 +60,7 @@ function makeHud(options: GroundAimRigOptions = {}): GroundAimHarness & {
     commitGroundAimAt: (point?: AimPoint | null) => aim.commitAt(point),
     commitGroundAim: () => aim.commitAt(),
   });
-  const press = new ActionPressController(host);
+  const press = new ActionPressController(host as unknown as ActionPressHost);
   return Object.assign(host, { press, castSlot: (slot: number) => press.castSlot(slot) });
 }
 

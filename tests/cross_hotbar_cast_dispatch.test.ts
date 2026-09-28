@@ -24,6 +24,7 @@ import { ABILITIES } from '../src/sim/data';
 import type { AbilityDef } from '../src/sim/types';
 import type { EmpowerHold } from '../src/ui/empower_hold_core';
 import { ACTION_BAR_ABILITY_SLOTS } from '../src/ui/hud/action_bar/action_bar_layout_core';
+import type { ActionPressHost } from '../src/ui/hud/action_bar/action_press_controller';
 import { ActionPressController } from '../src/ui/hud/action_bar/action_press_controller';
 import { actionBarEligibleKnownIds } from '../src/ui/hud/action_bar/hotbar';
 import { tSim } from '../src/ui/sim_i18n';
@@ -96,7 +97,7 @@ function makeHud(
     tryGatherToolUse: vi.fn(() => opts.gatherToolHandled ?? false),
     renderBags: vi.fn(),
   };
-  const press = new ActionPressController(host);
+  const press = new ActionPressController(host as unknown as ActionPressHost);
   return {
     press,
     sim,
@@ -222,7 +223,7 @@ describe('slot hold routing', () => {
       ),
       flashActionSlot: vi.fn(),
     };
-    const press = new ActionPressController(host);
+    const press = new ActionPressController(host as unknown as ActionPressHost);
     return {
       press,
       empowerHold: press.empowerHold,

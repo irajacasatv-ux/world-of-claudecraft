@@ -278,7 +278,7 @@ describe('hud.ts crafting window wiring (source pins; Hud is a monolith no test 
 
   it('openCrafting captures the opener AFTER the paint, mirroring openTrain/openUnbind', () => {
     const start = hudSource.indexOf('openCrafting(craftId?: string): void {');
-    const end = hudSource.indexOf('private renderCrafting(focusReturnRecipeId = ');
+    const end = hudSource.indexOf('  renderCrafting(focusReturnRecipeId = ');
     expect(start).toBeGreaterThan(-1);
     expect(end).toBeGreaterThan(start);
     const body = hudSource.slice(start, end);

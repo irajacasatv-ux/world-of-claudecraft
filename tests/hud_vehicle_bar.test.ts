@@ -2,16 +2,16 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
 describe('the HUD vehicle bar factory host seam', () => {
-  it('stays welded to the private Hud members the factory reads', () => {
+  it('stays welded to the Hud members the factory reads', () => {
     const hudSource = readFileSync(new URL('../src/ui/hud.ts', import.meta.url), 'utf8');
     for (const anchor of [
-      'private sim: IWorld,',
+      'public sim: IWorld,',
       'private renderer: Renderer,',
       'private keybinds: Keybinds,',
       'private readonly writerFacet = makeWriterFacet(',
-      'private optionsHooks: OptionsHooks | null = null;',
+      'optionsHooks: OptionsHooks | null = null;',
       'private peekGuard = new TouchPeekGuard();',
-      'private readonly playerGroundAim = new GroundAimController({',
+      'readonly playerGroundAim = new GroundAimController({',
       // The empowered hold lives on the action press controller; the Hud
       // member the factory reads forwards to it.
       'private get empowerHold(): EmpowerHold {',

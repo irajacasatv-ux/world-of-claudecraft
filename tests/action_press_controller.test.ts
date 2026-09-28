@@ -17,6 +17,7 @@ import { join } from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ABILITIES } from '../src/sim/data';
 import type { AbilityDef, Entity } from '../src/sim/types';
+import type { ActionPressHost } from '../src/ui/hud/action_bar/action_press_controller';
 import { ActionPressController } from '../src/ui/hud/action_bar/action_press_controller';
 import { t } from '../src/ui/i18n';
 import { hudDeclares, interfaceMembers } from './helpers/hud_host_weld';
@@ -96,7 +97,7 @@ function rig(opts: RigOptions = {}) {
     tryGatherToolUse: vi.fn(() => false),
     renderBags: vi.fn(),
   };
-  return { host, sim, press: new ActionPressController(host) };
+  return { host, sim, press: new ActionPressController(host as unknown as ActionPressHost) };
 }
 
 const ability = (id: string): BarAction => ({ type: 'ability', id });

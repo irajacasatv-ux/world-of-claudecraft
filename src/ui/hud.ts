@@ -1145,10 +1145,10 @@ export class Hud {
   private readonly actionBarController: ActionBarController;
   // One-shot latch for the login-time action-bar layout reconciliation.
   private actionBarLayoutRestored = false;
-  private get hotbarActions(): HotbarAction[] {
+  get hotbarActions(): HotbarAction[] {
     return this.actionBarController.actions;
   }
-  private set hotbarActions(actions: HotbarAction[]) {
+  set hotbarActions(actions: HotbarAction[]) {
     this.actionBarController.replaceActions(actions);
   }
   private get attackSlotAction(): HotbarAction {
@@ -1158,14 +1158,14 @@ export class Hud {
     this.actionBarController.replaceAttackAction(action);
   }
   private vehicleBar: VehicleActionBarController | null = null;
-  private get vehicleControls(): VehicleActionBarController {
+  get vehicleControls(): VehicleActionBarController {
     this.vehicleBar ??= createHudVehicleBar(this);
     return this.vehicleBar;
   }
-  private get groundAim() {
+  get groundAim() {
     return this.sim.vehicleSession ? this.vehicleControls.aim : this.playerGroundAim;
   }
-  private readonly playerGroundAim = new GroundAimController({
+  readonly playerGroundAim = new GroundAimController({
     player: () => this.sim.player,
     resolveAbility: (id) => this.sim.known.find((k) => k.def.id === id) ?? null,
     seedTargetPoint: () =>
@@ -1204,7 +1204,7 @@ export class Hud {
   // module, not another cross-window field cluster on this coordinator.
   private readonly itemDragState = new ItemDragState();
   private suppressNextActionClick = false;
-  private optionsHooks: OptionsHooks | null = null;
+  optionsHooks: OptionsHooks | null = null;
   // The world-quest board opener: opens the map and unfolds the atlas rail on
   // the release's mapAtlasSidebarCollapsed preference (the toggle lives in
   // the rail, src/ui/map_sidebar_controller.ts).
@@ -1239,7 +1239,7 @@ export class Hud {
   // world / game canvas is OUT of accessibility scope (not screen-readable), so this
   // announces only the combat-log text, never the game world.
   private combatLiveEl = $('#combat-live');
-  private readonly combatAnnouncer = new CombatAnnouncer((summary) => {
+  readonly combatAnnouncer = new CombatAnnouncer((summary) => {
     this.combatLiveEl.textContent = summary;
   });
   // Off-screen polite live region for the current target's name, announced once per target
@@ -1281,7 +1281,7 @@ export class Hud {
   // outside-click closer can defer to that opener's own toggle click. Cleared on
   // every close path (closeContextMenu + item activation).
   private ctxMenuOpener: HTMLElement | null = null;
-  private errorToast = new ErrorToastController($('#error-msg'));
+  errorToast = new ErrorToastController($('#error-msg'));
   // The WoW-style quest-progress flash (quest_progress_banner.ts): yellow
   // top-center lines fed by the questProgress event, aria-hidden decoration
   // (the chat log + live region carry the announced copy).
@@ -1359,7 +1359,7 @@ export class Hud {
   // Target of Target refs are resolved once, like the target refs above.
   // The mini-frame shares the unit_frame painter family with the other unit frames.
   private totFrameEl = $('#totarget-frame');
-  private focusTargets!: FocusTargetsController;
+  focusTargets!: FocusTargetsController;
 
   focusTarget(slot: number, assign: boolean): void {
     this.focusTargets.action(slot, assign);
@@ -1527,7 +1527,7 @@ export class Hud {
   // Delve schematic caches: static background (floor/pillars/tombs/dais/exit)
   // keyed by module id, redrawn only when the module changes.
   private readonly lootWindow: LootWindowController;
-  private readonly lootRolls: LootRollController;
+  readonly lootRolls: LootRollController;
   private openVendorNpcId: number | null = null;
   private openHeroicVendorNpcId: number | null = null;
   private openCrucibleVendorNpcId: number | null = null;
@@ -1583,7 +1583,7 @@ export class Hud {
   private trainOpenerFocus: HTMLElement | null = null;
   // Maker's Bond unbind window (Professions 2.0): the same
   // standalone trapping-window shape as the train window above.
-  private openUnbindNpcId: number | null = null;
+  openUnbindNpcId: number | null = null;
   private readonly unbindWindowFocus = this.windowFocus('#unbind-window');
   private unbindOpenerFocus: HTMLElement | null = null;
   // The crafting window (#1127) was the one standalone-window holdout that
@@ -1603,7 +1603,7 @@ export class Hud {
     return this.bannerSlotState;
   }
   private celebrationDrainState: CelebrationDrainObserver | undefined;
-  private get celebrationDrain(): CelebrationDrainObserver {
+  get celebrationDrain(): CelebrationDrainObserver {
     this.celebrationDrainState ??= new CelebrationDrainObserver();
     return this.celebrationDrainState;
   }
@@ -1645,7 +1645,7 @@ export class Hud {
   // True while a craft-cast session is live (re-armed each active frame),
   // cleared by every craftResult. A session that drops with this still set
   // produced no result: a movement cancel, announced as cancelled.
-  private craftCastExpectingResult = false;
+  craftCastExpectingResult = false;
   // The static #crafting-live region (index.html/play.html): a polite live
   // region inside the rebuilt window subtree would be wiped by the same task
   // that writes it, so announcements ride this never-rebuilt node instead.
@@ -1655,7 +1655,7 @@ export class Hud {
   private readonly craftCastReannounce = new ReannounceMarker();
   // #crafting-window, cached once: paintOpenCraftingCastProgress runs on the
   // frame band, and a per-frame $() query is barred there (src/ui/CLAUDE.md).
-  private readonly craftingWindowEl: HTMLElement | null = $('#crafting-window') ?? null;
+  readonly craftingWindowEl: HTMLElement | null = $('#crafting-window') ?? null;
   // Per-frame strip painter over the CURRENT strip nodes, rebuilt after every
   // full crafting-window paint (the rebuild replaces the elements). Writes go
   // through the PainterHost elided writers (CastBarPainter), so identical
@@ -1716,7 +1716,7 @@ export class Hud {
   private readonly lockpickController: LockpickController;
   private readonly riteController: RiteController;
   private readonly questTracker: QuestTrackerController;
-  private readonly questDialog: QuestDialogController;
+  readonly questDialog: QuestDialogController;
   private lastLowResourceInput = Number.NaN;
   private lastLowResourceMax = Number.NaN;
   private lastLowResourceType: ResourceType | null | undefined;
@@ -1773,7 +1773,7 @@ export class Hud {
   // mob ids that have already vocalized their aggro alert (so the first strike
   // roars and subsequent strikes use the attack vocalization). Cleared on death
   // or when the entity leaves interest (reconcileSfx).
-  private mobAggroed = new Set<number>();
+  mobAggroed = new Set<number>();
   // entity id -> performance.now() of its last successful idle bark (see
   // sweepMobIdleBarks). Only stamped when sfx.playAt reports the sound
   // actually played, not merely attempted (see pickIdleBarkCandidates' doc
@@ -1782,7 +1782,7 @@ export class Hud {
   private lastIdleSweepAt = 0;
   // entity ids with a sustained cast-loop SFX playing, so reconcileSfx can stop
   // loops for casters that left interest mid-channel (no castStop/death arrives).
-  private castLoopIds = new Set<number>();
+  castLoopIds = new Set<number>();
   private lastNythraxisCombatEventAt = 0;
   private lastResting: boolean | null = false;
   private lastZoneId = '';
@@ -1989,7 +1989,7 @@ export class Hud {
   private pendingPetFeed = false;
   private petModeMenuOpen = false;
   constructor(
-    private sim: IWorld,
+    public sim: IWorld,
     private renderer: Renderer,
     private keybinds: Keybinds,
     private readonly features: HudFeatures = { dailyRewardsEnabled: true },
@@ -4524,7 +4524,7 @@ export class Hud {
   // aggros the target before its damage lands, and a refused cast never leaks a
   // stale engage into whatever unrelated cast completes next (see
   // confirmPendingAutoAttackEngage).
-  private pendingAutoAttackAbilityId: string | null = null;
+  pendingAutoAttackAbilityId: string | null = null;
   // The party rows' mini aura strips share these deps (each row builds its own
   // view + painter instance over them). The wire summaries carry no remaining
   // time (Infinity reaches the core, so the duration label stays blank), which
@@ -4559,8 +4559,7 @@ export class Hud {
   // castSlot to redirect friendly abilities onto it. A RESOLVER rather than an
   // id, because the target-of-target frame's unit changes under a still cursor.
   // null whenever no frame is hovered.
-  // biome-ignore lint/correctness/noUnusedPrivateClassMembers: read through the action press controller's host (hud/action_bar/action_press_controller.ts).
-  private hoveredCastUnit: (() => number | null) | null = null;
+  hoveredCastUnit: (() => number | null) | null = null;
   // The party frames are N further instances of the unit_frame family, one per
   // member, behind a keyed node pool that replaces the old per-rebuild innerHTML wipe
   // + click/contextmenu re-attach. The pool owns #party-frames; updatePartyFrames
@@ -5071,7 +5070,7 @@ export class Hud {
   // craft-wheel identity browser over IWorldProfessions, plus the tool-effect
   // slot/recharge senders the acquisition craft opened. A standalone
   // trapping window (windowFocus), the deeds shape exactly.
-  private readonly professionsWindow = new ProfessionsWindow({
+  readonly professionsWindow = new ProfessionsWindow({
     ...this.presentationBag,
     root: () => $('#professions-window'),
     world: () => this.sim,
@@ -6319,7 +6318,7 @@ export class Hud {
   // shortcuts. Abilities are keyed by id (known is class-ordered and shifts on
   // level-up, so indices would not survive). Persisted per class+character,
   // with separate form/stealth layouts because each state has a different kit.
-  private isHotbarItemId(itemId: string): boolean {
+  isHotbarItemId(itemId: string): boolean {
     return this.actionBarController.isHotbarItemId(itemId);
   }
 
@@ -6387,7 +6386,7 @@ export class Hud {
     this.mobileActionPage = this.currentMobileActionPage();
   }
 
-  private attackSlotIsAttack(): boolean {
+  attackSlotIsAttack(): boolean {
     return this.actionBarController.isAttackSlotFixed();
   }
 
@@ -6395,7 +6394,7 @@ export class Hud {
     this.actionBarController.saveAttackAction();
   }
 
-  private actionForSlot(barSlot: number): HotbarAction {
+  actionForSlot(barSlot: number): HotbarAction {
     return this.actionBarController.actionForSlot(barSlot);
   }
 
@@ -6419,7 +6418,7 @@ export class Hud {
   // no-per-frame-allocation contract).
   private freedAttackSlotAbilityCache: { id: string; ability: FreedAttackSlotAbility } | null =
     null;
-  private freedAttackSlotAbility(): FreedAttackSlotAbility | null {
+  freedAttackSlotAbility(): FreedAttackSlotAbility | null {
     const action = this.actionForSlot(0);
     const id = action?.type === 'ability' ? action.id : null;
     if (id === null) {
@@ -6539,8 +6538,7 @@ export class Hud {
     this.mobileActionPage = nextMobilePage(this.mobileActionPage, MOBILE_ACTION_PAGE_COUNT);
   }
 
-  // biome-ignore lint/correctness/noUnusedPrivateClassMembers: read through the action press controller's host (hud/action_bar/action_press_controller.ts).
-  private flashActionSlot(barSlot: number): void {
+  flashActionSlot(barSlot: number): void {
     const btn = this.abilityButtons[barSlot]?.btn;
     if (btn) this.flashActionButton(btn);
     // Mirror the used-flash onto the mobile ring (the desktop bar is
@@ -11721,8 +11719,7 @@ export class Hud {
   // (the sim guarantees once-ever). Reuses the confirm-dialog modal family via
   // the profession_tutorial_window painter; the Hud owns the focus trap and the
   // z-index floor above the mobile sheet, the confirmDialog precedent.
-  // biome-ignore lint/correctness/noUnusedPrivateClassMembers: reached through the profession event router's host (hud/professions/profession_event_router.ts).
-  private openProfessionTutorial(): void {
+  openProfessionTutorial(): void {
     this.professionTutorialTrap?.release(false);
     this.professionTutorialTrap = null;
     const el = renderProfessionTutorial(buildProfessionTutorialModel(), {
@@ -12005,11 +12002,7 @@ export class Hud {
 
   // Render a [[i:id]] chat segment as a quality-colored, inspectable item link
   // (chatItemLinkEl in hud/chat/chat_log_appender.ts).
-  private appendChatItemLink(
-    parent: HTMLElement,
-    itemId: string,
-    instance?: ItemInstancePayload,
-  ): void {
+  appendChatItemLink(parent: HTMLElement, itemId: string, instance?: ItemInstancePayload): void {
     parent.append(chatItemLinkEl(document, itemId, this.chatItemLinkDeps(), instance));
   }
 
@@ -12682,7 +12675,7 @@ export class Hud {
     this.unbindOpenerFocus = this.unbindWindowFocus.captureFocus();
   }
 
-  private renderUnbind(): void {
+  renderUnbind(): void {
     if (this.openUnbindNpcId === null) return;
     const npc = this.sim.entities.get(this.openUnbindNpcId);
     if (!npc) return;
@@ -12957,7 +12950,7 @@ export class Hud {
   /** Write one polite line into the static #crafting-live region. The
    *  ReannounceMarker forces a byte-different string when the same line
    *  repeats (two cancels in a row must both announce). */
-  private announceCraftCast(text: string): void {
+  announceCraftCast(text: string): void {
     if (this.craftingLiveEl) {
       this.craftingLiveEl.textContent = this.craftCastReannounce.mark(text);
     }
@@ -13011,7 +13004,7 @@ export class Hud {
     });
   }
 
-  private renderCrafting(focusReturnRecipeId = ''): void {
+  renderCrafting(focusReturnRecipeId = ''): void {
     // Station range for station-bound rows: the same pure in-range
     // set the sim's station_required deny composes (physical stations plus
     // the own active mobile station plus in-range party-shared stations),
@@ -13779,7 +13772,7 @@ export class Hud {
     }
   }
 
-  private refreshOpenProfessionSurfacesIfChanged(): void {
+  refreshOpenProfessionSurfacesIfChanged(): void {
     this.professionSurfaces.refreshIfChanged();
   }
 

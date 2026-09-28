@@ -41,6 +41,7 @@ import { terrainHeight } from '../src/sim/world';
 import { type BagMode, bagItemAction } from '../src/ui/bags_view';
 import { paperdollDropAction } from '../src/ui/equip_drop_core';
 import { ActionBarController } from '../src/ui/hud/action_bar/action_bar_controller';
+import type { ActionPressHost } from '../src/ui/hud/action_bar/action_press_controller';
 import { ActionPressController } from '../src/ui/hud/action_bar/action_press_controller';
 import type { IWorld } from '../src/world_api';
 import { FURNISHING } from './fixtures/furnishing_item';
@@ -241,7 +242,7 @@ describe('furnishing activation refusals', () => {
       };
       // The real castSlot, castCrossHotbarAction and pressCrossHotbarAction; the
       // item-use seam they end in is stood in by the world call it wraps.
-      const press = new ActionPressController(host);
+      const press = new ActionPressController(host as unknown as ActionPressHost);
       vi.spyOn(
         press as unknown as { useHotbarItem(itemId: string): void },
         'useHotbarItem',
