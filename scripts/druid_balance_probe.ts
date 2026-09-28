@@ -73,10 +73,41 @@ function average(values: readonly number[]): number {
   return sample.reduce((sum, value) => sum + value, 0) / sample.length;
 }
 
+/** The profile x capstone matrix over `seeds`, each value the seeds' average (the
+ *  zero-drop rule above). Built from one run per seed, so a caller that runs the seeds
+ *  apart (the nightly sweep, one test case per seed) and combines them with
+ *  combineDruidSeedRuns gets exactly these numbers. */
 export function runDruidBalanceMatrix(
   seeds: readonly number[] = DRUID_PROBE_SEEDS,
   seconds = DRUID_PROBE_SECONDS,
 ): DruidBalanceResult[] {
+  return combineDruidSeedRuns(seeds.map((seed) => runDruidBalanceSeed(seed, seconds)));
+}
+
+/** Combines per-seed runs (runDruidBalanceSeed's output, in seed order) into the
+ *  matrix: each profile x capstone value the average of its per-seed values. */
+export function combineDruidSeedRuns(
+  runs: readonly (readonly DruidBalanceResult[])[],
+): DruidBalanceResult[] {
+  const [first] = runs;
+  if (!first) return [];
+  return first.map((cell, i) => {
+    for (const run of runs) {
+      const other = run[i];
+      if (!other || other.profile !== cell.profile || other.capstone !== cell.capstone) {
+        throw new Error(`combineDruidSeedRuns: seed runs disagree at cell ${i}`);
+      }
+    }
+    return { ...cell, value: average(runs.map((run) => run[i].value)) };
+  });
+}
+
+/** One seed's matrix: twelve profile x capstone cells, each that seed's raw figure. */
+export function runDruidBalanceSeed(
+  seed: number,
+  seconds = DRUID_PROBE_SECONDS,
+): DruidBalanceResult[] {
+  const seeds = [seed];
   const results: DruidBalanceResult[] = [];
   for (const [capstone, talentId] of Object.entries(DRUID_CAPSTONES) as [DruidCapstone, string][]) {
     const row = { 20: talentId };
