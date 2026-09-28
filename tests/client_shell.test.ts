@@ -960,26 +960,46 @@ describe('client HTML shell', () => {
     };
     // The mobile-bags guard's block and its else close each method verbatim. Nothing in
     // either method names renderBags directly (a call, .call, or a bracket read), and
-    // nothing ahead of the guard can skip it: onBankClosed is pinned whole, and
-    // closeVendor keeps exactly its one sanctioned early return and the statement that
-    // precedes the guard, with the guard appearing once.
+    // nothing ahead of the guard can skip or decide it: onBankClosed is pinned whole, and
+    // closeVendor keeps exactly its one sanctioned early return followed by the guard's
+    // own touchBagsShown read, no throw, the guard appearing once and the statement that
+    // precedes it. Each method (and each window constructor) is declared once, so the
+    // span read is the real one, never an earlier copy inside a literal.
     const guardArm =
       "if (closeMobileBags) { dismissBagPrompts(); const bags = $('#bags'); bags.style.display = 'none'; bags.inert = false; this.cancelPetFeed(); } else { this.renderBagsIfOpen(); }";
-    const methodBody = (signature: string) =>
-      flat(span(code, `\n  ${signature} {\n`, '\n  }\n')).trim();
+    const closeMobileBagsRead =
+      "const closeMobileBags = touchBagsShown(document.body.classList, $('#bags').style.display);";
+    const methodBody = (signature: string) => {
+      const opener = `\n  ${signature} {\n`;
+      expect(code.split(opener), `${signature} is declared once`).toHaveLength(2);
+      return flat(span(code, opener, '\n  }\n')).trim();
+    };
     const vendor = methodBody('closeVendor(): void');
-    expect(vendor).not.toMatch(/\brenderBags\b/);
-    expect(vendor.endsWith(`this.vendorOpenerFocus = null; ${guardArm}`), vendor).toBe(true);
-    expect(vendor.split('if (closeMobileBags)')).toHaveLength(2);
-    expect([...vendor.matchAll(/\breturn\b/g)]).toHaveLength(1);
-    expect(vendor).toContain('closeVendor(): void { if (this.openVendorNpcId === null) return; ');
+    expect(vendor, 'closeVendor names renderBags').not.toMatch(/\brenderBags\b/);
+    expect(
+      vendor.endsWith(`this.vendorOpenerFocus = null; ${guardArm}`),
+      `closeVendor must end with the statement before the guard and the exact guard arm: ${vendor}`,
+    ).toBe(true);
+    expect(vendor.split('if (closeMobileBags)'), 'closeVendor guards once').toHaveLength(2);
+    expect([...vendor.matchAll(/\breturn\b/g)], 'closeVendor returns only early').toHaveLength(1);
+    expect(vendor, 'closeVendor throws').not.toMatch(/\bthrow\b/);
+    expect(
+      [...vendor.matchAll(/\bcloseMobileBags\b/g)],
+      'closeVendor reads then guards',
+    ).toHaveLength(2);
+    expect(
+      vendor.startsWith(
+        `closeVendor(): void { if (this.openVendorNpcId === null) return; ${closeMobileBagsRead} `,
+      ),
+      `closeVendor must open with its early return and the mobile-bags read: ${vendor}`,
+    ).toBe(true);
     expect(methodBody('private onBankClosed(): void')).toBe(
-      "private onBankClosed(): void { const closeMobileBags = touchBagsShown(document.body.classList, $('#bags').style.display); document.body.classList.remove('bank-open', 'weekly-vault-open'); " +
-        guardArm,
+      `private onBankClosed(): void { ${closeMobileBagsRead} document.body.classList.remove('bank-open', 'weekly-vault-open'); ${guardArm}`,
     );
     for (const ctor of ['new MarketWindow({', 'new MailboxWindow({']) {
       // Read inside the window's own constructor block, so one window's arm can never be
       // read for the other's.
+      expect(code.split(ctor), `${ctor} appears once`).toHaveLength(2);
       const config = span(code, ctor, '\n  });\n');
       expect(flat(span(config, 'syncBags: (open) => {', '\n    },')), ctor).toBe(
         "syncBags: (open) => { if (open) { this.renderBags(); $('#bags').style.display = 'flex'; } else { this.renderBagsIfOpen(); }",
