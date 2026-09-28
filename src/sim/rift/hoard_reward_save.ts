@@ -5,7 +5,7 @@
 import type { CharacterState } from '../character_state';
 import { ITEMS } from '../data';
 import { restoreDeedStats, serializeDeedStats } from '../deeds';
-import { creditedParentId, creditsViaTier } from '../item_credit_chain';
+import { creditDef, creditedParentId, creditsViaTier } from '../item_credit_chain';
 import {
   noteRelicItemFind,
   noteRelicObtain,
@@ -30,7 +30,7 @@ export function projectHoardRewardCollections(
     // through the step both share (item_credit_chain.ts), so a furnishing stops
     // here too. Its event/deed side effects run on the live Sim.
     for (let depth = 0; id !== undefined && depth < 3; depth++) {
-      const def: ItemDef | undefined = Object.hasOwn(ITEMS, id) ? ITEMS[id] : undefined;
+      const def: ItemDef | undefined = creditDef(ITEMS, id);
       if (!def) break;
       if (!deedStats.itemsDiscovered.has(id)) {
         deedStats.itemsDiscovered.add(id);

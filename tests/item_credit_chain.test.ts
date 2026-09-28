@@ -9,7 +9,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import type { CharacterState } from '../src/sim/character_state';
 import { ITEMS } from '../src/sim/data';
 import { restoreDeedStats } from '../src/sim/deeds';
-import { creditedParentId, creditsViaTier } from '../src/sim/item_credit_chain';
+import { creditDef, creditedParentId, creditsViaTier } from '../src/sim/item_credit_chain';
 import { projectHoardRewardCollections } from '../src/sim/rift/hoard_reward_save';
 import type { ItemDef } from '../src/sim/types';
 
@@ -32,6 +32,19 @@ describe('creditedParentId and creditsViaTier', () => {
     expect(creditsViaTier(heroic)).toBe(false);
     expect(creditedParentId(ITEMS[PIECE])).toBeUndefined();
     expect(creditsViaTier(ITEMS[PIECE])).toBe(false);
+  });
+
+  it('reads only an own entry, so a tampered id reads nothing', () => {
+    expect(creditDef(ITEMS, TIER)).toBe(ITEMS[TIER]);
+    for (const id of ['__proto__', 'toString', 'constructor', 'hasOwnProperty']) {
+      expect(creditDef(ITEMS, id), id).toBeUndefined();
+    }
+  });
+
+  it('credits the heroic base first when a def names both parents', () => {
+    const both = { ...ITEMS[TIER], heroicOf: 'heroic_base', relicOf: PIECE } as ItemDef;
+    expect(creditedParentId(both)).toBe('heroic_base');
+    expect(creditsViaTier(both)).toBe(false);
   });
 
   it('stops at a furnishing even when it names a parent', () => {

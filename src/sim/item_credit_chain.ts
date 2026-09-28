@@ -3,9 +3,20 @@
 // tier its piece (content/hoard_loot.ts); a furnishing credits nothing past
 // itself, whatever its def names. Three walks share it, so they cannot drift:
 // markItemDiscovered (deeds.ts), the Reliquary obtain tally (reliquary.ts) and
-// the Buried Hoard grant's save projection (rift/hoard_reward_save.ts).
+// the Buried Hoard grant's save projection (rift/hoard_reward_save.ts), which
+// also read each def the same guarded way (creditDef).
 
 import type { ItemDef } from './types';
+
+/** The def the walk reads for `id`: an own entry of `items` only, so a
+ *  tampered id like '__proto__' or 'toString' reads nothing rather than an
+ *  inherited value. */
+export function creditDef(
+  items: Readonly<Record<string, ItemDef>>,
+  id: string,
+): ItemDef | undefined {
+  return Object.hasOwn(items, id) ? items[id] : undefined;
+}
 
 /** The id a found `def` also credits, or undefined where the walk stops. */
 export function creditedParentId(def: ItemDef): string | undefined {

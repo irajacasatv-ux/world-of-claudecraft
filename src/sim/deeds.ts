@@ -33,7 +33,7 @@ import { GATHERING_PROFESSION_IDS } from './content/professions';
 import { pointsSpent } from './content/talents';
 import { ITEMS, MOBS, zoneAt } from './data';
 import { canWearDevBadgeTitle, devBadgeTitleTier } from './dev_badge_titles';
-import { creditedParentId, creditsViaTier } from './item_credit_chain';
+import { creditDef, creditedParentId, creditsViaTier } from './item_credit_chain';
 import { LAUNCH_PAPERDOLL_SLOTS } from './launch_paperdoll_slots';
 import {
   accountReliquaryOwnership,
@@ -738,7 +738,7 @@ export function markItemDiscovered(
     // hasOwn, not truthiness: ITEMS carries Object.prototype, so a tampered
     // container key like '__proto__' or 'toString' indexes an inherited value
     // and would otherwise enter the PERSISTED discovery ledger as a real id.
-    const def: ItemDef | undefined = Object.hasOwn(ITEMS, id) ? ITEMS[id] : undefined;
+    const def: ItemDef | undefined = creditDef(ITEMS, id);
     if (!def) return; // bounded by construction: only real item ids enter the set
     if (!meta.deedStats.itemsDiscovered.has(id)) {
       meta.deedStats.itemsDiscovered.add(id);

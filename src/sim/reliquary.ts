@@ -42,7 +42,7 @@ import {
   type ReliquaryRelicDef,
 } from './content/reliquary';
 import { ITEMS } from './data';
-import { creditedParentId } from './item_credit_chain';
+import { creditDef, creditedParentId } from './item_credit_chain';
 import { ownedMounts as ownedMountKeys } from './mounts';
 import type { PlayerMeta } from './sim';
 import type { SimContext } from './sim_context';
@@ -619,7 +619,7 @@ export function noteRelicObtain(
   for (let depth = 0; id !== undefined && depth < 3; depth++) {
     // Annotated for the same reason deeds.ts annotates its walk: indexing by
     // the reassigned `id` would otherwise infer circularly through heroicOf.
-    const def: ItemDef | undefined = ITEMS[id];
+    const def: ItemDef | undefined = creditDef(ITEMS, id);
     if (!def) break;
     if (isCataloguedRelicItem(id)) {
       state.counts[id] = Math.min((state.counts[id] ?? 0) + units, RELIQUARY_OBTAIN_COUNT_CAP);
