@@ -2,7 +2,7 @@
   "__provenance": {
     "run": "36448553184",
     "harvested": "2026-09-28",
-    "files": 5055,
+    "files": 5056,
     "harvestedFiles": 5048,
     "carried": {
       "tests/parity/coverage_c.test.ts": {
@@ -29,16 +29,27 @@
         ]
       },
       "tests/world_population_invariant.test.ts": {
-        "ms": 16671,
+        "ms": 731,
         "method": "local-median",
         "measured": "2026-09-28",
-        "reason": "Split 2026-09-28 after the run 36448553184 harvest put coverage_c (108657 ms) and world_population_invariant (167875 ms) over LANE_THRESHOLD_MS; each reshaped file measured alone locally, pending the next green full-mode CI harvest.",
+        "reason": "Split 2026-09-28 after the run 36448553184 harvest put world_population_invariant (167875 ms) over LANE_THRESHOLD_MS; shard 0 moved to its own file so all four shard files share one pinned template; measured alone locally, pending the next green full-mode CI harvest.",
         "runs": [
-          16693,
-          16671,
-          16441
+          745,
+          729,
+          731
         ],
         "supersedes": 167875
+      },
+      "tests/world_population_invariant_a.test.ts": {
+        "ms": 16080,
+        "method": "local-median",
+        "measured": "2026-09-28",
+        "reason": "Split 2026-09-28 after the run 36448553184 harvest put world_population_invariant (167875 ms) over LANE_THRESHOLD_MS; shard 0 moved to its own file so all four shard files share one pinned template; measured alone locally, pending the next green full-mode CI harvest.",
+        "runs": [
+          16080,
+          16083,
+          15688
+        ]
       },
       "tests/world_population_invariant_b.test.ts": {
         "ms": 16648,
@@ -5000,7 +5011,8 @@
   "tests/world_guidance.test.ts": 74,
   "tests/world_interaction_requests.test.ts": 14,
   "tests/world_object_bootstrap.test.ts": 9,
-  "tests/world_population_invariant.test.ts": 16671,
+  "tests/world_population_invariant.test.ts": 731,
+  "tests/world_population_invariant_a.test.ts": 16080,
   "tests/world_population_invariant_b.test.ts": 16648,
   "tests/world_population_invariant_c.test.ts": 16514,
   "tests/world_population_invariant_d.test.ts": 7903,

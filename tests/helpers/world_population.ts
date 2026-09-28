@@ -1,5 +1,5 @@
 // The world population invariant's shared half (tests/world_population_invariant.test.ts
-// and its _b to _d siblings): the budget arithmetic, and one escort's repeated
+// and its _a to _d escort shards): the budget arithmetic, and one escort's repeated
 // run-and-kill rounds. The escort sweep is split across four files ONLY for wall
 // time: each case builds and ticks the whole world, and one file holding every
 // shipped escort weighed 167,875 ms in CI (the 2026-09-28 harvest, run

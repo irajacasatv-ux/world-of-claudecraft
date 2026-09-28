@@ -49,8 +49,8 @@ import {
   SCENARIOS,
 } from './scenarios';
 
-// Explicit suite timeout, the run_scenarios.ts gate precedent: every case here
-// re-records its scenario (druid_engines and priest_codex are the heaviest
+// Explicit suite timeout, the run_scenarios.ts gate precedent: the cases here
+// re-record their scenarios (druid_engines and priest_codex are the heaviest
 // here), and the heavy recordings brush the global 20s budget under
 // parallel-worker contention while green standalone (the same pathology the
 // gate's 90s per-test timeouts were minted for). Assertions are unchanged; a

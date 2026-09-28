@@ -1,4 +1,4 @@
-// The world population invariant, escort shard b (of a to d): one quarter of
+// The world population invariant, escort shard a (of a to d): one quarter of
 // the per-escort run-and-kill rounds, dealt round-robin. The rule and the boot
 // case live in tests/world_population_invariant.test.ts, the shared half in
 // tests/helpers/world_population.ts, and tests/world_population_shards.test.ts
@@ -8,7 +8,7 @@ import { describe, it } from 'vitest';
 import { escortShard, runEscortRounds } from './helpers/world_population';
 
 describe('open-world population never exceeds what the content authored', () => {
-  it.each(escortShard(1))(
+  it.each(escortShard(0))(
     'holds after $id is run and its wave is killed, repeatedly',
     runEscortRounds,
     120_000,

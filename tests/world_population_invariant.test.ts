@@ -10,25 +10,19 @@
 // Deliberately driven through the real Sim and the real content tables: the
 // point is to exercise every shipped escort, not a fixture.
 //
-// The escort sweep is dealt across this file and its _b to _d siblings for wall
-// time only; the shared half lives in tests/helpers/world_population.ts, and
+// The escort sweep itself runs in the _a to _d siblings, split for wall time only;
+// the shared half lives in tests/helpers/world_population.ts, and
 // tests/world_population_shards.test.ts pins the partition.
 import { describe, expect, it } from 'vitest';
 import { ESCORTS, MOBS } from '../src/sim/data';
 import { Sim } from '../src/sim/sim';
-import { assertPopulationSane, escortShard, runEscortRounds } from './helpers/world_population';
+import { assertPopulationSane } from './helpers/world_population';
 
 describe('open-world population never exceeds what the content authored', () => {
   it('holds at world generation', () => {
     const sim = new Sim({ seed: 20061, playerClass: 'warrior', noPlayer: true });
     assertPopulationSane(sim, 'at boot');
   });
-
-  it.each(escortShard(0))(
-    'holds after $id is run and its wave is killed, repeatedly',
-    runEscortRounds,
-    120_000,
-  );
 
   it('names the escort ambush templates it is protecting, so the sweep is visible', () => {
     // Every shipped escort wave template, spelled out. If a new escort ships,
