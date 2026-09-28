@@ -48,8 +48,8 @@ const SUITES = [
 // captured real fetch cannot be put back or called around the recorder, however the
 // target is spelled, nor the list emptied before the check. This pin does not see a fetch
 // captured or built under another spelling, nor a '/' the scanner misreads: it guesses
-// between a regex literal and a division from the character before, so a misread slash
-// can still hide or keep code.
+// between a regex literal and a division from the last non-space code character before
+// it, so a misread slash can still hide or keep code.
 const RECORDER =
   /^const \{ fetched, inertPortraitChip, realFetch \} = vi\.hoisted\(\(\) => \{\n {2}const fetched: string\[\] = \[\];\n {2}const realFetch = globalThis\.fetch;\n {2}globalThis\.fetch = \(\(input: RequestInfo \| URL, init\?: RequestInit\) => \{\n {4}fetched\.push\(typeof input === 'string' \? input : input instanceof URL \? input\.href : input\.url\);\n {4}return realFetch\(input, init\);\n {2}\}\) as typeof fetch;(?:\n(?:(?![^\n]*\breturn\b) {2}[^\n]*)?)*?\n {2}return \{ fetched, inertPortraitChip, realFetch \};\n\}\);$/m;
 const CHIP_STUB = /^vi\.mock\('\.\.\/src\/ui\/portrait_chip', \(\) => inertPortraitChip\);$/m;
@@ -148,12 +148,14 @@ describe('the portrait-inert suites', () => {
       ]);
     }
     // A block that is not live code: commented out, commented out behind a string that
-    // holds a comment marker or behind a `/*/` opener, or wrapped in a template string.
+    // holds a comment marker or behind a `/*/` opener, or wrapped in a template string,
+    // including one nested in an interpolation after an object literal's braces.
     for (const hide of [
       (block: string) => `/*\n${block}\n*/`,
       (block: string) => `const url = '//'; /*\n${block}\n*/`,
       (block: string) => `/*/\n${block}\n*/`,
       (block: string) => `const text = \`\n${block}\n\`;`,
+      (block: string) => `const text = \`\${ {}.x + \`\n${block}\n\` }\`;`,
     ]) {
       expect(failedChecks(raw.replace(AFTER_ALL, hide))).toContain(
         'the afterAll restore and zero-fetch assertion',
