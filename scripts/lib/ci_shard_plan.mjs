@@ -113,6 +113,19 @@ export const CI_GUARD_PREFIXES = Object.freeze(['tests/parity/']);
  */
 export const LANE_THRESHOLD_MS = 90_000;
 
+/**
+ * How much slower a file runs inside a full-mode CI shard than alone on a
+ * developer machine. A carried `local-median` row holds LOCAL ms, so judged
+ * against LANE_THRESHOLD_MS unscaled it would understate the file by this
+ * factor until the next harvest replaces it; tests/suite_lane_threshold.test.ts
+ * scales carried rows by it. Measured at the 2026-09-28 harvest (run
+ * 36448553184): over the 1,049 local-median rows that harvest replaced, CI over
+ * local had a median of 1.74 and a 95th percentile of 3.73, so 4 sits above
+ * nearly all of them. Outliers remain (tests/hill.test.ts measured 7.75); the
+ * next harvest judges those in CI time.
+ */
+export const CARRIED_LOCAL_TO_CI_RATIO = 4;
+
 export const CI_LONG_SUITES = Object.freeze([
   // 2026-08-13 remeasure (run 31732244215, both lanes fully loaded; figures
   // are IN-LANE and stay far under 90 even at the recorded 1.6x runner
