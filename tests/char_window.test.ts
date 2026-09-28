@@ -5,13 +5,15 @@ import { join } from 'node:path';
 import { afterAll, afterEach, describe, expect, it, vi } from 'vitest';
 
 // This suite asserts nothing about portraits. The real portrait chip imports the
-// portrait renderer, whose asset modules start hundreds of GLB fetches on import, about
-// 470 measured from the char window suite on 2026-09-28; they outlive happy-dom teardown
-// and fail the run with unhandled ProgressEvent rejections after green assertions. The
-// chip is inert here and the suite pins that it starts no fetch. The stand-in is defined
-// inline in vi.hoisted (the inspect window suite's shape) because a dynamic import would
-// move this file off the selective gate's import graph.
-const { fetched, inertPortraitChip } = vi.hoisted(() => {
+// portrait renderer, whose asset modules start hundreds of GLB fetches on import;
+// about 470 were measured from this suite on 2026-09-28. They can outlive happy-dom
+// teardown and fail the run with unhandled ProgressEvent rejections after green
+// assertions, as they did from the char window drag suite.
+// The chip is inert here and the suite pins that it starts no fetch. The stand-in is
+// inline, like the inspect window suite's factory, and in vi.hoisted because the fetch
+// recorder must be installed before the static imports run; this file is already
+// partial (it reads source), so it simply matches its siblings.
+const { fetched, inertPortraitChip, realFetch } = vi.hoisted(() => {
   const fetched: string[] = [];
   const realFetch = globalThis.fetch;
   globalThis.fetch = ((input: RequestInfo | URL, init?: RequestInit) => {
@@ -26,10 +28,11 @@ const { fetched, inertPortraitChip } = vi.hoisted(() => {
     onPortraitUpdate: () => undefined,
     portraitChipHtml: () => '',
   };
-  return { fetched, inertPortraitChip };
+  return { fetched, inertPortraitChip, realFetch };
 });
 vi.mock('../src/ui/portrait_chip', () => inertPortraitChip);
 afterAll(() => {
+  globalThis.fetch = realFetch;
   expect(fetched, 'this suite starts no fetch').toEqual([]);
 });
 

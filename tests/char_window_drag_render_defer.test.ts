@@ -17,13 +17,15 @@
 import { afterAll, describe, expect, it, vi } from 'vitest';
 
 // This suite asserts nothing about portraits. The real portrait chip imports the
-// portrait renderer, whose asset modules start hundreds of GLB fetches on import, about
-// 470 measured from the char window suite on 2026-09-28; they outlive happy-dom teardown
-// and fail the run with unhandled ProgressEvent rejections after green assertions. The
-// chip is inert here and the suite pins that it starts no fetch. The stand-in is defined
-// inline in vi.hoisted (the inspect window suite's shape) because a dynamic import would
-// move this file off the selective gate's import graph.
-const { fetched, inertPortraitChip } = vi.hoisted(() => {
+// portrait renderer, whose asset modules start hundreds of GLB fetches on import;
+// such fetches outlive happy-dom teardown and failed CI shard 8 of run 36480347471 with
+// four unhandled ProgressEvent rejections from this file, the same four the release
+// nightly logs.
+// The chip is inert here and the suite pins that it starts no fetch. The stand-in is
+// inline, like the inspect window suite's factory, and in vi.hoisted because the fetch
+// recorder must be installed before the static imports run; a shared helper would need a
+// dynamic import, which would put this file into the selective gate's always-run floor.
+const { fetched, inertPortraitChip, realFetch } = vi.hoisted(() => {
   const fetched: string[] = [];
   const realFetch = globalThis.fetch;
   globalThis.fetch = ((input: RequestInfo | URL, init?: RequestInit) => {
@@ -38,10 +40,11 @@ const { fetched, inertPortraitChip } = vi.hoisted(() => {
     onPortraitUpdate: () => undefined,
     portraitChipHtml: () => '',
   };
-  return { fetched, inertPortraitChip };
+  return { fetched, inertPortraitChip, realFetch };
 });
 vi.mock('../src/ui/portrait_chip', () => inertPortraitChip);
 afterAll(() => {
+  globalThis.fetch = realFetch;
   expect(fetched, 'this suite starts no fetch').toEqual([]);
 });
 
