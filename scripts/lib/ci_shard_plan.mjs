@@ -225,10 +225,12 @@ const CI_LONG_SUITE_HALF_A = Object.freeze([
   'tests/owned_class_balance_dps_probes.test.ts',
   'tests/owned_class_balance_druid_bands.test.ts',
   // 2026-09-28: moved from b by the first CI harvest of the lane files (run
-  // 36448553184, in-lane ms). Before, a summed 1,274 s and b 1,632 s, and
-  // two-worker LPT put b's busier worker at about 884 s; with this file here
-  // the halves sum to 1,449 s and 1,457 s and the busier worker of either half
-  // sits near 738 s.
+  // 36448553184, in-lane ms). The halves summed 1,274 s and 1,632 s and now
+  // 1,449 s and 1,457 s. Modelled as the lane runs them (one uncached vitest
+  // leg per half at two workers, which starts the LARGEST FILE BY BYTES first,
+  // not the heaviest), the busier half's worker went from about 841 s (b) to
+  // about 773 s (now a). An exhaustive split search finds about 730 s, but only
+  // by reshuffling most of both halves, so the single move stands.
   'tests/owned_class_balance_healer_contract.test.ts',
   'tests/owned_class_balance_healer_probes.test.ts',
   'tests/owned_class_balance_role_bands.test.ts',
