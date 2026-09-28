@@ -560,14 +560,19 @@ jobs:
     # run 36448553184 walls 17.0 to 20.3 healthy (shard 8's 25.68 held a
     # 15.5 minute stall, excluded). 22.12 x 1.60 x 1.37 = 48.5, so 49; the
     # queue's critical path becomes 8 + 49 = 57 against its 90 minute
-    # ceiling (docs/merge-queue.md). 49 is PROVISIONAL for selective mode:
-    # the 2026-08-14 base found selective about 1.44x full on that tree,
-    # and no selective wall has been measured on this one, so it is right
-    # for the queue (always full) and unproven for ordinary PRs. This
-    # supersedes the 2026-08-14 instruction to re-derive only from
-    # selective walls: re-derive from BOTH modes, at the first selective
-    # PR runs on the harvested table that do not touch ci.yml (a ci.yml
-    # change always widens to full) and from full-mode walls on that table.
+    # ceiling (docs/merge-queue.md). 49 is right for the queue (always
+    # full) and PROVISIONAL, and predicted SHORT, for selective PRs: the
+    # 2026-08-14 base found selective about 1.44x full on that tree, which
+    # would put a selective shard near 31.9 minutes (22.12 x 1.44) and its
+    # bound near 70. No selective wall exists on this tree, and a bound
+    # sized from an extrapolation is what the lanes' history forbids, so 49
+    # stands until one is measured; a selective pr-gate cancelled at 49
+    # minutes is that prediction coming true. This supersedes the
+    # 2026-08-14 instruction to re-derive only from selective walls:
+    # re-derive from BOTH modes, from the first selective PR runs on the
+    # harvested table that do not touch ci.yml (a ci.yml change always
+    # widens to full) and from the first green full-mode run on that table
+    # (the next dispatch or queue run).
     timeout-minutes: 49
     runs-on: ubuntu-latest
 
