@@ -397,9 +397,13 @@ describe.sequential('SFX Studio server security', () => {
       }),
     });
     const body = Buffer.from(await allowed.arrayBuffer());
-    // A refused export answers 400 with the thrown error as JSON: print it, so a failure
-    // (one seen only under the nightly's contention, 2026-09-28) says why.
-    expect(allowed.status, body.toString('utf8').slice(0, 1600)).toBe(200);
+    // A refused export answers 400 with the thrown error as JSON (the server caps the
+    // error at 1,200 characters, so 1,600 holds all of it): print it on failure, so a
+    // repeat of the one refusal seen only under the nightly's contention (2026-09-28)
+    // says why. A passing export's zip is never decoded.
+    expect(allowed.status, allowed.status === 200 ? '' : body.toString('utf8').slice(0, 1600)).toBe(
+      200,
+    );
     expect(allowed.headers.get('content-type')).toBe('application/zip');
     expect(allowed.headers.get('content-disposition')).toMatch(
       /^attachment; filename="world-of-claudecraft-sfx-[a-f0-9]{16}\.zip"$/,
