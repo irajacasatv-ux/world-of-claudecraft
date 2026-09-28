@@ -213,14 +213,14 @@ export class PetBarController {
       case 'feed':
         this.toggleFeed();
         return;
+      // The menu flag is part of the signature, like the feed mode, so the next
+      // frame redraws the bar without a latch clear.
       case 'modeMenu':
         this.modeMenuOpen = !this.modeMenuOpen;
-        this.lastSig = '';
         return;
       case 'setMode':
         sim.setPetMode(press.mode);
         this.modeMenuOpen = false;
-        this.lastSig = '';
         return;
     }
   }
