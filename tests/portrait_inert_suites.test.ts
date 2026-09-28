@@ -47,29 +47,39 @@ const SUITES = [
 // captured real fetch cannot be put back or called around the recorder, however the
 // target is spelled, nor the list emptied before the check. The counts read words,
 // strings included. This pin does not see a fetch captured or built under another
-// spelling before the recorder installs, nor the blocks wrapped inside a string.
+// spelling, nor the blocks wrapped inside a string.
 const RECORDER =
   /^const \{ fetched, inertPortraitChip, realFetch \} = vi\.hoisted\(\(\) => \{\n {2}const fetched: string\[\] = \[\];\n {2}const realFetch = globalThis\.fetch;\n {2}globalThis\.fetch = \(\(input: RequestInfo \| URL, init\?: RequestInit\) => \{\n {4}fetched\.push\(typeof input === 'string' \? input : input instanceof URL \? input\.href : input\.url\);\n {4}return realFetch\(input, init\);\n {2}\}\) as typeof fetch;(?:\n(?:(?![^\n]*\breturn\b) {2}[^\n]*)?)*?\n {2}return \{ fetched, inertPortraitChip, realFetch \};\n\}\);$/m;
 const CHIP_STUB = /^vi\.mock\('\.\.\/src\/ui\/portrait_chip', \(\) => inertPortraitChip\);$/m;
 const AFTER_ALL =
   /^afterAll\(\(\) => \{\n {2}globalThis\.fetch = realFetch;\n {2}expect\(fetched, 'this suite starts no fetch'\)\.toEqual\(\[\]\);\n\}\);$/m;
 
-/** The checks a suite's raw source fails, read over comment-stripped text so neither a
- *  line nor a block commented out counts. The suites and the controls both run it. */
+/** The checks a suite's raw source fails. The suites and the controls both run it. Each
+ *  check must hold over the raw text AND the comment-stripped text: stripped, so a line or
+ *  block commented out does not count; raw, because the stripper reads a '//' or '/*'
+ *  inside a string as a comment and would hide the code after it. */
 const failedChecks = (raw: string): string[] => {
-  const source = stripComments(raw);
+  const texts = [raw, stripComments(raw)];
+  const everywhere = (holds: (text: string) => boolean) => texts.every(holds);
   const counted = (name: string, pattern: RegExp, want: number): [string, boolean] => {
-    const found = source.match(pattern)?.length ?? 0;
-    return [`${name} ${found} times, want ${want} (words in strings count too)`, found === want];
+    const found = texts.map((text) => text.match(pattern)?.length ?? 0);
+    return [
+      `${name} ${found.join(' and ')} times (raw, then comment-stripped), want ${want} ` +
+        '(words in strings and comments count too)',
+      found.every((n) => n === want),
+    ];
   };
   const checks: [string, boolean][] = [
-    ['the recorder, in vi.hoisted and returned by its first return', RECORDER.test(source)],
-    ['the chip stub', CHIP_STUB.test(source)],
-    ['the afterAll restore and zero-fetch assertion', AFTER_ALL.test(source)],
+    [
+      'the recorder, in vi.hoisted and returned by its first return',
+      everywhere((text) => RECORDER.test(text)),
+    ],
+    ['the chip stub', everywhere((text) => CHIP_STUB.test(text))],
+    ['the afterAll restore and zero-fetch assertion', everywhere((text) => AFTER_ALL.test(text))],
     counted('globalThis.fetch named', /\bglobalThis\.fetch\b/g, 3),
     counted('realFetch named', /\brealFetch\b/g, 5),
     counted('fetched named', /\bfetched\b/g, 5),
-    ['no vi.stubGlobal of fetch', !/stubGlobal\(\s*['"`]fetch/.test(source)],
+    ['no vi.stubGlobal of fetch', everywhere((text) => !/stubGlobal\(\s*['"`]fetch/.test(text))],
   ];
   return checks.filter(([, holds]) => !holds).map(([name]) => name);
 };
@@ -108,12 +118,14 @@ describe('the portrait-inert suites', () => {
     expect(failedChecks(raw.replace(close, `\n});\nvi.hoisted(() => {${close}`))).toEqual([
       recorder,
     ]);
-    // An earlier return in any form, placed before the recorder's own.
+    // An earlier return in any form, placed before the recorder's own, including one the
+    // comment stripper would hide behind a '//' inside a string.
     const decoy = "{ ['fetch' + 'ed']: [], inertPortraitChip, ['real' + 'Fetch']: null }";
     for (const early of [
       `  return ${decoy};`,
       `  if (true) return ${decoy};`,
       `  {\n    return ${decoy};\n  }`,
+      `  const url = '//'; return ${decoy};`,
     ]) {
       expect(failedChecks(raw.replace(close, `\n${early}${close}`)), early).toEqual([recorder]);
     }
@@ -121,17 +133,26 @@ describe('the portrait-inert suites', () => {
     expect(failedChecks(raw.replace(AFTER_ALL, (block) => `/*\n${block}\n*/`))).toContain(
       'the afterAll restore and zero-fetch assertion',
     );
+    const counts = (name: string, found: string, want: number) =>
+      `${name} ${found} times (raw, then comment-stripped), want ${want} ` +
+      '(words in strings and comments count too)';
     expect(failedChecks(`${raw}\nbeforeAll(() => {\n  globalThis.fetch = vi.fn();\n});\n`)).toEqual(
-      ['globalThis.fetch named 4 times, want 3 (words in strings count too)'],
+      [counts('globalThis.fetch named', '4 and 4', 3)],
     );
     expect(failedChecks(`${raw}\nwindow.fetch = realFetch;\n`)).toEqual([
-      'realFetch named 6 times, want 5 (words in strings count too)',
+      counts('realFetch named', '6 and 6', 5),
+    ]);
+    expect(failedChecks(`${raw}\nconst url = '//'; void realFetch(url);\n`)).toEqual([
+      counts('realFetch named', '6 and 5', 5),
     ]);
     expect(failedChecks(`${raw}\nafterEach(() => {\n  fetched.length = 0;\n});\n`)).toEqual([
-      'fetched named 6 times, want 5 (words in strings count too)',
+      counts('fetched named', '6 and 6', 5),
     ]);
-    expect(failedChecks(`${raw}\nvi.stubGlobal('fetch', vi.fn());\n`)).toEqual([
-      'no vi.stubGlobal of fetch',
-    ]);
+    for (const stub of [
+      "vi.stubGlobal('fetch', vi.fn());",
+      "const url = '//'; vi.stubGlobal('fetch', vi.fn());",
+    ]) {
+      expect(failedChecks(`${raw}\n${stub}\n`), stub).toEqual(['no vi.stubGlobal of fetch']);
+    }
   });
 });
