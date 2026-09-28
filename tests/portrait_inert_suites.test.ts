@@ -36,17 +36,36 @@ const SUITES = [
   { file: 'char_window.test.ts', floored: true },
 ];
 
-// The recorder, installed in vi.hoisted (so before any import runs) and returned from
-// it, the chip stub, and the afterAll that restores fetch and asserts the list is
-// empty, each matched as one block so no line can move out of it. Each suite assigns
-// fetch exactly twice (the install and the restore) and never stubs it any other way,
-// so no window of a suite can run unrecorded.
+// The recorder, installed in vi.hoisted (so before any import runs) and returned at the
+// end of the same callback (no line between reaches column 0, so the callback cannot
+// close early), the chip stub, and the afterAll that restores fetch and asserts the list
+// is empty, each matched as one block so no line can move out of it. Each suite also
+// assigns globalThis.fetch exactly twice (the install and the restore), never stubs fetch
+// through vi.stubGlobal, and names realFetch and fetched exactly five times each, the
+// uses those blocks hold: so the captured real fetch cannot be put back or called around
+// the recorder, however it is spelled, nor the list emptied before the check.
 const RECORDER =
-  /^const \{ fetched, inertPortraitChip, realFetch \} = vi\.hoisted\(\(\) => \{\n {2}const fetched: string\[\] = \[\];\n {2}const realFetch = globalThis\.fetch;\n {2}globalThis\.fetch = \(\(input: RequestInfo \| URL, init\?: RequestInit\) => \{\n {4}fetched\.push\(typeof input === 'string' \? input : input instanceof URL \? input\.href : input\.url\);\n {4}return realFetch\(input, init\);\n {2}\}\) as typeof fetch;$/m;
-const HOISTED_RETURN = /^ {2}return \{ fetched, inertPortraitChip, realFetch \};\n\}\);$/m;
+  /^const \{ fetched, inertPortraitChip, realFetch \} = vi\.hoisted\(\(\) => \{\n {2}const fetched: string\[\] = \[\];\n {2}const realFetch = globalThis\.fetch;\n {2}globalThis\.fetch = \(\(input: RequestInfo \| URL, init\?: RequestInit\) => \{\n {4}fetched\.push\(typeof input === 'string' \? input : input instanceof URL \? input\.href : input\.url\);\n {4}return realFetch\(input, init\);\n {2}\}\) as typeof fetch;(?:\n(?: {2}[^\n]*)?)*?\n {2}return \{ fetched, inertPortraitChip, realFetch \};\n\}\);$/m;
 const CHIP_STUB = /^vi\.mock\('\.\.\/src\/ui\/portrait_chip', \(\) => inertPortraitChip\);$/m;
 const AFTER_ALL =
   /^afterAll\(\(\) => \{\n {2}globalThis\.fetch = realFetch;\n {2}expect\(fetched, 'this suite starts no fetch'\)\.toEqual\(\[\]\);\n\}\);$/m;
+
+/** The checks a suite's raw source fails, read over comment-stripped text so neither a
+ *  line nor a block commented out counts. The suites and the controls both run it. */
+const failedChecks = (raw: string): string[] => {
+  const source = stripComments(raw);
+  const count = (pattern: RegExp) => source.match(pattern)?.length ?? 0;
+  const checks: [string, boolean][] = [
+    ['the recorder, in vi.hoisted and returned from it', RECORDER.test(source)],
+    ['the chip stub', CHIP_STUB.test(source)],
+    ['the afterAll restore and zero-fetch assertion', AFTER_ALL.test(source)],
+    ['globalThis.fetch assigned exactly twice', count(/globalThis\.fetch =/g) === 2],
+    ['realFetch named exactly five times', count(/\brealFetch\b/g) === 5],
+    ['fetched named exactly five times', count(/\bfetched\b/g) === 5],
+    ['no vi.stubGlobal of fetch', !/stubGlobal\(\s*['"`]fetch/.test(source)],
+  ];
+  return checks.filter(([, holds]) => !holds).map(([name]) => name);
+};
 
 describe('the portrait-inert suites', () => {
   it('stay where the selective gate put them', () => {
@@ -67,27 +86,24 @@ describe('the portrait-inert suites', () => {
   });
 
   it('each install the recorder, stub the chip, and pin zero fetches', () => {
-    // Over comment-stripped text, so neither a line nor a block commented out counts.
-    for (const { file } of SUITES) {
-      const source = stripComments(read(file));
-      expect(source, file).toMatch(RECORDER);
-      expect(source, file).toMatch(HOISTED_RETURN);
-      expect(source, file).toMatch(CHIP_STUB);
-      expect(source, file).toMatch(AFTER_ALL);
-      expect(source.match(/globalThis\.fetch =/g), file).toHaveLength(2);
-      expect(source, file).not.toMatch(/stubGlobal\(\s*['"`]fetch/);
-    }
+    for (const { file } of SUITES) expect(failedChecks(read(file)), file).toEqual([]);
   });
 
-  it('strips a commented-out block before matching (positive control)', () => {
-    const block = [
-      'afterAll(() => {',
-      '  globalThis.fetch = realFetch;',
-      "  expect(fetched, 'this suite starts no fetch').toEqual([]);",
-      '});',
-    ].join('\n');
-    expect(block).toMatch(AFTER_ALL);
-    expect(stripComments(`/*\n${block}\n*/`)).not.toMatch(AFTER_ALL);
-    expect(stripComments(block.replace(/^/gm, '// '))).not.toMatch(AFTER_ALL);
+  it('fails a suite with a block commented out or worked around (positive controls)', () => {
+    // Each control edits a real suite and runs it through the same failedChecks.
+    const raw = read('char_window.test.ts');
+    expect(failedChecks(raw)).toEqual([]);
+    expect(failedChecks(raw.replace(AFTER_ALL, (block) => `/*\n${block}\n*/`))).toContain(
+      'the afterAll restore and zero-fetch assertion',
+    );
+    expect(failedChecks(`${raw}\nwindow.fetch = realFetch;\n`)).toEqual([
+      'realFetch named exactly five times',
+    ]);
+    expect(failedChecks(`${raw}\nafterEach(() => {\n  fetched.length = 0;\n});\n`)).toEqual([
+      'fetched named exactly five times',
+    ]);
+    expect(failedChecks(`${raw}\nvi.stubGlobal('fetch', vi.fn());\n`)).toEqual([
+      'no vi.stubGlobal of fetch',
+    ]);
   });
 });
