@@ -29,14 +29,14 @@
         ]
       },
       "tests/world_population_invariant.test.ts": {
-        "ms": 731,
+        "ms": 738,
         "method": "local-median",
         "measured": "2026-09-28",
-        "reason": "Split 2026-09-28 after the run 36448553184 harvest put world_population_invariant (167875 ms) over LANE_THRESHOLD_MS; shard 0 moved to its own file so all four shard files share one pinned template; measured alone locally, pending the next green full-mode CI harvest.",
+        "reason": "Split 2026-09-28 after the run 36448553184 harvest put world_population_invariant (167875 ms) over LANE_THRESHOLD_MS; shard 0 moved to its own file and the rule's file gained the overpopulation control; measured alone locally, pending the next green full-mode CI harvest.",
         "runs": [
-          745,
-          729,
-          731
+          781,
+          728,
+          738
         ],
         "supersedes": 167875
       },
@@ -85,13 +85,13 @@
         ]
       },
       "tests/world_population_shards.test.ts": {
-        "ms": 3,
+        "ms": 4,
         "method": "local-median",
         "measured": "2026-09-28",
-        "reason": "Split 2026-09-28 from tests/world_population_invariant.test.ts so the escort-carrying file stays import-graph selected; re-measured after the pin gained its template, helper and classification cases; measured alone locally, pending the next green full-mode CI harvest.",
+        "reason": "Split 2026-09-28 from tests/world_population_invariant.test.ts so the escort-carrying files stay import-graph selected; the row is test time only (the table excludes collect time, about 0.7 s here, the content tables' import); measured alone locally, pending the next green full-mode CI harvest.",
         "runs": [
           4,
-          3,
+          4,
           3
         ]
       }
@@ -5011,12 +5011,12 @@
   "tests/world_guidance.test.ts": 74,
   "tests/world_interaction_requests.test.ts": 14,
   "tests/world_object_bootstrap.test.ts": 9,
-  "tests/world_population_invariant.test.ts": 731,
+  "tests/world_population_invariant.test.ts": 738,
   "tests/world_population_invariant_a.test.ts": 16080,
   "tests/world_population_invariant_b.test.ts": 16648,
   "tests/world_population_invariant_c.test.ts": 16514,
   "tests/world_population_invariant_d.test.ts": 7903,
-  "tests/world_population_shards.test.ts": 3,
+  "tests/world_population_shards.test.ts": 4,
   "tests/world_pvp.test.ts": 22884,
   "tests/world_pvp_rules.test.ts": 10,
   "tests/world_pvp_server_dispatch.test.ts": 2784,

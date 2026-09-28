@@ -14,14 +14,27 @@
 // the shared half lives in tests/helpers/world_population.ts, and
 // tests/world_population_shards.test.ts pins the partition.
 import { describe, expect, it } from 'vitest';
-import { ESCORTS, MOBS } from '../src/sim/data';
+import { CAMPS, ESCORTS, MOBS } from '../src/sim/data';
 import { Sim } from '../src/sim/sim';
 import { assertPopulationSane } from './helpers/world_population';
 
 describe('open-world population never exceeds what the content authored', () => {
-  it('holds at world generation', () => {
+  it('holds at world generation, and flags one camp mob more than its camps author', () => {
     const sim = new Sim({ seed: 20061, playerClass: 'warrior', noPlayer: true });
     assertPopulationSane(sim, 'at boot');
+    // The negative control every escort round depends on: one live copy past the
+    // authored count must fail the check, or the sweep's passes prove nothing.
+    const campMobIds = new Set(CAMPS.map((camp) => camp.mobId));
+    const mob = [...sim.entities.values()].find(
+      (e) => e.kind === 'mob' && !e.dead && campMobIds.has(e.templateId),
+    );
+    if (!mob) throw new Error('the boot world holds no live camp mob');
+    const extraId = Math.max(...sim.entities.keys()) + 1;
+    sim.entities.set(extraId, { ...mob, id: extraId });
+    // Exactly one template over budget, reported under the round's label.
+    expect(() => assertPopulationSane(sim, 'one extra')).toThrow(
+      'one extra: expected [ Array(1) ] to deeply equal []',
+    );
   });
 
   it('names the escort ambush templates it is protecting, so the sweep is visible', () => {

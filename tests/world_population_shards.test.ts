@@ -6,20 +6,58 @@
 // text stays cheap and the escort-carrying files stay import-graph selected.
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { classifyTestSource } from '../scripts/lib/test_visibility.mjs';
+import { classifyTestSource, HELPER_FS_PATTERN } from '../scripts/lib/test_visibility.mjs';
 import { ESCORTS } from '../src/sim/data';
 import { ESCORT_SHARD_COUNT, escortShard } from './helpers/escort_shards';
 import { stripComments } from './helpers/strip_comments';
 
 const read = (file: string) => readFileSync(new URL(`./${file}`, import.meta.url), 'utf8');
+const flatCode = (file: string) => stripComments(read(file)).replace(/\s+/g, ' ').trim();
 const SUFFIXES = ['a', 'b', 'c', 'd'];
 const shardFileName = (suffix: string) => `world_population_invariant_${suffix}.test.ts`;
 
 /** The one shard-file template, with only the shard index varying. */
 const shardFile = (index: number) =>
-  "import { describe, it } from 'vitest'; import { escortShard, runEscortRounds } from './helpers/world_population'; " +
+  "import { describe, it } from 'vitest'; import { escortShard } from './helpers/escort_shards'; " +
+  "import { runEscortRounds } from './helpers/world_population'; " +
   "describe('open-world population never exceeds what the content authored', () => { " +
   `it.each(escortShard(${index}))( 'holds after $id is run and its wave is killed, repeatedly', runEscortRounds, 120_000, ); });`;
+
+// The deal module and one escort's rounds, each pinned whole (comments stripped,
+// whitespace flattened): an early continue, break, return or swallowed assertion in the
+// rounds, or any change to the deal, fails here. A deliberate edit to either updates the
+// matching constant below in the same change.
+const RUN_ESCORT_ROUNDS = [
+  'export function runEscortRounds(def: EscortDef): void { const sim = new Sim({ seed:',
+  "424242, playerClass: 'warrior', playerName: 'Escorter', respawnSeconds: 2, });",
+  'sim.setPlayerLevel(20); let ranAtLeastOne = false; for (let round = 0; round < 2;',
+  'round++) { sim.player.dead = false; sim.player.hp = sim.player.maxHp;',
+  'sim.targetEntity(null); if (def.worldQuestId !== undefined) { const meta =',
+  "sim.meta(sim.playerId); if (!meta) throw new Error('Missing player metadata');",
+  "meta.devWorldQuestCycle = worldQuestCycleOfferingQuest('wq3_0', def.worldQuestId);",
+  'const start = sim.groundPos(def.start.x, def.start.z); sim.player.pos = { ...start',
+  '}; sim.player.prevPos = { ...start }; sim.tick(); } else {',
+  "sim.questLog.set(def.questId, { questId: def.questId, counts: [0], state: 'active'",
+  '}); } const escortee = findByTemplate(sim, def.npcMobId); if (!escortee) continue;',
+  'const pos = sim.groundPos(escortee.pos.x, escortee.pos.z + 2); sim.player.pos = {',
+  '...pos }; sim.player.prevPos = { ...pos }; sim.interact(); if',
+  '(!sim.escortRuns.get(def.id)?.run) continue; ranAtLeastOne = true; let ids: number[]',
+  '= []; for (let i = 0; i < 60 * 20 && ids.length === 0; i++) { sim.tick(); ids =',
+  '[...(sim.escortRuns.get(def.id)?.run?.ambushIds ?? [])]; } for (const id of ids) {',
+  'const mob = sim.entities.get(id); if (mob) sim.dealDamage(null, mob, mob.hp, false,',
+  "'physical', null, 'hit'); } const walker = findByTemplate(sim, def.npcMobId); if",
+  "(walker) sim.dealDamage(null, walker, walker.hp, false, 'physical', null, 'hit');",
+  'for (let i = 0; i < 50 * 20; i++) sim.tick(); assertPopulationSane(sim, `${def.id}',
+  "round ${round + 1}`); } expect(ranAtLeastOne, 'no escort actually ran, so this",
+  "proved nothing').toBe(true); }",
+].join(' ');
+
+const ESCORT_SHARDS_MODULE = [
+  "import { ESCORTS } from '../../src/sim/data'; import type { EscortDef } from",
+  "'../../src/sim/types'; export const ESCORT_SHARD_COUNT = 4; export function",
+  'escortShard(index: number): EscortDef[] { return Object.values(ESCORTS).filter((_,',
+  'i) => i % ESCORT_SHARD_COUNT === index); }',
+].join(' ');
 
 describe('the world population escort sweep shards', () => {
   it('deals every shipped escort to exactly one shard, and none is empty', () => {
@@ -36,12 +74,17 @@ describe('the world population escort sweep shards', () => {
     // must equal the template with only its shard index substituted, and carry no
     // comment marker at all: comment stripping cannot see string literals, so a marker
     // split across two strings could otherwise blank real code out of the comparison.
+    // The whole file carries no line terminator a line comment would end at (a lone CR,
+    // U+2028, U+2029), so no code can hide inside the header, and no vitest pragma.
     // No options object, hook, wrapper, modifier, shadowed callback or swapped import
     // survives this, so every registration is live and runs the real callback.
     expect(ESCORT_SHARD_COUNT).toBe(SUFFIXES.length);
     for (const [index, suffix] of SUFFIXES.entries()) {
       const file = shardFileName(suffix);
-      const body = read(file).replace(/^(\/\/[^\n]*\n)+/, '');
+      const raw = read(file);
+      expect(raw, `${file} carries a CR, U+2028 or U+2029`).not.toMatch(/[\r\u2028\u2029]/);
+      expect(raw, `${file} carries a vitest pragma`).not.toMatch(/@vitest-/);
+      const body = raw.replace(/^(\/\/[^\n]*\n)+/, '');
       expect(body, `${file} carries a comment marker below its header`).not.toMatch(
         /\/\*|\*\/|\/\//,
       );
@@ -51,33 +94,52 @@ describe('the world population escort sweep shards', () => {
           'the four shard files and that template change together',
       ).toBe(shardFile(index));
     }
-    // The rule's own file registers no shard and reaches the helper only for the budget
-    // check, through one named import.
+    // The rule's own file registers no shard and reaches the helpers only for the
+    // budget check, through one named import.
     const base = stripComments(read('world_population_invariant.test.ts'));
-    expect(base).not.toMatch(/escortShard|runEscortRounds|import \*/);
-    expect(base.split("from './helpers/")).toHaveLength(2);
-    expect(base).toContain("import { assertPopulationSane } from './helpers/world_population';");
+    expect(base, 'the rule file must not run or deal escorts').not.toMatch(
+      /escortShard|runEscortRounds|escort_shards/,
+    );
+    expect(
+      base,
+      'the rule file must not reach the escort helpers through a namespace import',
+    ).not.toMatch(/import \* as \w+ from '\.\/helpers\/(world_population|escort_shards)'/);
+    expect(
+      base,
+      'the rule file imports assertPopulationSane by name from the population helper',
+    ).toContain("import { assertPopulationSane } from './helpers/world_population';");
   });
 
-  it('keeps the deal and the per-escort rounds free of an escape', () => {
-    // The deal is round-robin over the content table and nothing else, and one escort's
-    // rounds cannot end early and quietly: their loops skip with continue, a return
-    // would drop an escort's assertions unseen, and a throw fails the case loudly.
-    expect(stripComments(read('helpers/escort_shards.ts'))).toContain(
-      'return Object.values(ESCORTS).filter((_, i) => i % ESCORT_SHARD_COUNT === index);',
-    );
+  it("pins the deal and one escort's rounds whole", () => {
+    expect(
+      flatCode('helpers/escort_shards.ts'),
+      'tests/helpers/escort_shards.ts changed: update ESCORT_SHARDS_MODULE with it',
+    ).toBe(ESCORT_SHARDS_MODULE);
     const helper = stripComments(read('helpers/world_population.ts'));
-    const rounds = helper.slice(helper.indexOf('export function runEscortRounds('));
-    expect(rounds.length).toBeGreaterThan(0);
-    expect(rounds).not.toMatch(/\breturn\b/);
-    expect(rounds).toContain(
-      "expect(ranAtLeastOne, 'no escort actually ran, so this proved nothing').toBe(true);",
+    const start = helper.indexOf('export function runEscortRounds(');
+    expect(start, 'runEscortRounds is declared').toBeGreaterThan(-1);
+    expect(helper.split('function runEscortRounds(')).toHaveLength(2);
+    expect(helper, 'the population helper must not deal escorts itself').not.toMatch(
+      /\bescortShard\b/,
     );
+    const end = helper.indexOf('\n}\n', start);
+    expect(end, 'runEscortRounds closes').toBeGreaterThan(start);
+    expect(
+      helper
+        .slice(start, end + 2)
+        .replace(/\s+/g, ' ')
+        .trim(),
+      'runEscortRounds changed: update RUN_ESCORT_ROUNDS with it',
+    ).toBe(RUN_ESCORT_ROUNDS);
   });
 
   it('leaves the escort-carrying files import-graph selected', () => {
     // Reading source text makes a file partial (always run on a selective PR); only this
-    // cheap file may, never the files that build and tick the world.
+    // cheap file may, never the files that build and tick the world. Discovery also
+    // floors a test that imports an fs-touching helper, so neither helper may touch fs.
+    for (const helper of ['helpers/world_population.ts', 'helpers/escort_shards.ts']) {
+      expect(HELPER_FS_PATTERN.test(read(helper)), `${helper} touches fs`).toBe(false);
+    }
     for (const file of ['world_population_invariant.test.ts', ...SUFFIXES.map(shardFileName)]) {
       expect(classifyTestSource(read(file)).klass, file).toBe('graph');
     }

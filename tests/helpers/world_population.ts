@@ -4,9 +4,9 @@
 // time: each case builds and ticks the whole world, and one file holding every
 // shipped escort weighed 167,875 ms in CI (the 2026-09-28 harvest, run
 // 36448553184), over the 90-second rule tests/suite_lane_threshold.test.ts holds.
-// escortShard deals the escorts round-robin, so a new escort lands in a shard
-// automatically and no escort can be left out; the partition is pinned in
-// tests/world_population_shards.test.ts.
+// The deal (escortShard, round-robin, so a new escort lands in a shard
+// automatically) lives in the Sim-free tests/helpers/escort_shards.ts, and the
+// partition is pinned in tests/world_population_shards.test.ts.
 import { expect } from 'vitest';
 import {
   HEALING_DUMMY_CASTER_ID,
@@ -23,10 +23,6 @@ import { CAMPS, DUNGEON_X_THRESHOLD, ESCORTS, MOBS } from '../../src/sim/data';
 import { Sim } from '../../src/sim/sim';
 import type { Entity, EscortDef } from '../../src/sim/types';
 import { worldQuestCycleOfferingQuest } from '../../src/sim/world_quest_rotation';
-
-// The deal lives in its own Sim-free module; re-exported here so the shard files
-// import one helper.
-export { ESCORT_SHARD_COUNT, escortShard } from './escort_shards';
 
 /** Authored standing population per template, from the camp tables. */
 function authoredCounts(): Map<string, number> {

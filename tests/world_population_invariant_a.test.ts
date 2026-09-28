@@ -5,7 +5,8 @@
 // pins that the four shard files partition every shipped escort. Split for wall
 // time only.
 import { describe, it } from 'vitest';
-import { escortShard, runEscortRounds } from './helpers/world_population';
+import { escortShard } from './helpers/escort_shards';
+import { runEscortRounds } from './helpers/world_population';
 
 describe('open-world population never exceeds what the content authored', () => {
   it.each(escortShard(0))(
