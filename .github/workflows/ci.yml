@@ -622,8 +622,9 @@ jobs:
           # markdown prose or the browser suite, from the git index, so new
           # files join automatically) and requires SET EQUALITY with this
           # list, so a reference this cone omits, or a cone entry nothing
-          # reaches anymore, fails the pin in the same change. pr-checks, browser-gate, release-checks, and
-          # release-version-gate deliberately keep the full tree.
+          # reaches anymore, fails the pin in the same change. pr-checks,
+          # browser-gate, release-checks, and release-version-gate
+          # deliberately keep the full tree.
           sparse-checkout: |
             /*
             !/docs/screenshots/*/

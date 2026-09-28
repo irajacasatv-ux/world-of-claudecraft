@@ -80,6 +80,10 @@ Maker's Bond unbind service, and the WARFARE quartermaster honor shop
   confirm dialog's OK callback. It takes the Hud as a typed host. Pinned by
   `tests/heroic_purchase_confirm.test.ts` and, as a call walk, by
   `tests/warfare_purchase_confirm.test.ts`.
+- `crucible_purchase_confirm.ts` (`requestCruciblePurchase`) is its twin for
+  the Crucible Quartermaster: a sigil redemption records no buyback, so the
+  buy fires ONLY from the confirm's OK callback, over a typed host. Pinned by
+  `tests/crucible_purchase_confirm.test.ts` and the same call walk.
 
 ## Cascade trap (this family specifically)
 Vendor-family rules with a pseudo-class (`.vendor-item:disabled:hover` and
