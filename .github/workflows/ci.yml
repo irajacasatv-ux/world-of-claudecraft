@@ -630,21 +630,33 @@ jobs:
             /docs/screenshots/admin-cheater-mark/
             /docs/screenshots/admin-guild-bank-panel/
             /docs/screenshots/aura-tracks/
+            /docs/screenshots/bank-storage-charters/
+            /docs/screenshots/bank-vault-tab/
+            /docs/screenshots/buried-hoard-entrance/
+            /docs/screenshots/buried-hoard-valley/
             /docs/screenshots/charselect-zone/
+            /docs/screenshots/dash-speed-stack/
+            /docs/screenshots/eastbrook-grand-armoury/
             /docs/screenshots/eastbrook-vale-rebuild/
             /docs/screenshots/fenbridge-rebuild/
             /docs/screenshots/freehold-content-2026-09-07/
             /docs/screenshots/freehold-crafted-content-2026-09-07/
             /docs/screenshots/freeholds-06-key/
+            /docs/screenshots/guild-bank-history/
+            /docs/screenshots/guild-bank-tab/
             /docs/screenshots/guild-pledge-board/
             /docs/screenshots/ignivar-raid/
             /docs/screenshots/ignivar-raid-expansion/
             /docs/screenshots/intentional-gathering-pr1/
             /docs/screenshots/intentional-gathering-pr2/
+            /docs/screenshots/item-art-consistency-2026-08-09/
+            /docs/screenshots/market-house-redesign/
+            /docs/screenshots/nythraxis-dread-curse-swap/
             /docs/screenshots/r35-admin-professions-inspector/
             /docs/screenshots/release-v036-skill-normalization-2026-08-10/
             /docs/screenshots/target-dots/
             /docs/screenshots/touch-ui-rework/
+            /docs/screenshots/vault-fine-mark/
             /docs/screenshots/wildheart/
             /docs/screenshots/woc-market/
           sparse-checkout-cone-mode: false
@@ -846,21 +858,33 @@ jobs:
             /docs/screenshots/admin-cheater-mark/
             /docs/screenshots/admin-guild-bank-panel/
             /docs/screenshots/aura-tracks/
+            /docs/screenshots/bank-storage-charters/
+            /docs/screenshots/bank-vault-tab/
+            /docs/screenshots/buried-hoard-entrance/
+            /docs/screenshots/buried-hoard-valley/
             /docs/screenshots/charselect-zone/
+            /docs/screenshots/dash-speed-stack/
+            /docs/screenshots/eastbrook-grand-armoury/
             /docs/screenshots/eastbrook-vale-rebuild/
             /docs/screenshots/fenbridge-rebuild/
             /docs/screenshots/freehold-content-2026-09-07/
             /docs/screenshots/freehold-crafted-content-2026-09-07/
             /docs/screenshots/freeholds-06-key/
+            /docs/screenshots/guild-bank-history/
+            /docs/screenshots/guild-bank-tab/
             /docs/screenshots/guild-pledge-board/
             /docs/screenshots/ignivar-raid/
             /docs/screenshots/ignivar-raid-expansion/
             /docs/screenshots/intentional-gathering-pr1/
             /docs/screenshots/intentional-gathering-pr2/
+            /docs/screenshots/item-art-consistency-2026-08-09/
+            /docs/screenshots/market-house-redesign/
+            /docs/screenshots/nythraxis-dread-curse-swap/
             /docs/screenshots/r35-admin-professions-inspector/
             /docs/screenshots/release-v036-skill-normalization-2026-08-10/
             /docs/screenshots/target-dots/
             /docs/screenshots/touch-ui-rework/
+            /docs/screenshots/vault-fine-mark/
             /docs/screenshots/wildheart/
             /docs/screenshots/woc-market/
           sparse-checkout-cone-mode: false
@@ -944,21 +968,33 @@ jobs:
             /docs/screenshots/admin-cheater-mark/
             /docs/screenshots/admin-guild-bank-panel/
             /docs/screenshots/aura-tracks/
+            /docs/screenshots/bank-storage-charters/
+            /docs/screenshots/bank-vault-tab/
+            /docs/screenshots/buried-hoard-entrance/
+            /docs/screenshots/buried-hoard-valley/
             /docs/screenshots/charselect-zone/
+            /docs/screenshots/dash-speed-stack/
+            /docs/screenshots/eastbrook-grand-armoury/
             /docs/screenshots/eastbrook-vale-rebuild/
             /docs/screenshots/fenbridge-rebuild/
             /docs/screenshots/freehold-content-2026-09-07/
             /docs/screenshots/freehold-crafted-content-2026-09-07/
             /docs/screenshots/freeholds-06-key/
+            /docs/screenshots/guild-bank-history/
+            /docs/screenshots/guild-bank-tab/
             /docs/screenshots/guild-pledge-board/
             /docs/screenshots/ignivar-raid/
             /docs/screenshots/ignivar-raid-expansion/
             /docs/screenshots/intentional-gathering-pr1/
             /docs/screenshots/intentional-gathering-pr2/
+            /docs/screenshots/item-art-consistency-2026-08-09/
+            /docs/screenshots/market-house-redesign/
+            /docs/screenshots/nythraxis-dread-curse-swap/
             /docs/screenshots/r35-admin-professions-inspector/
             /docs/screenshots/release-v036-skill-normalization-2026-08-10/
             /docs/screenshots/target-dots/
             /docs/screenshots/touch-ui-rework/
+            /docs/screenshots/vault-fine-mark/
             /docs/screenshots/wildheart/
             /docs/screenshots/woc-market/
           sparse-checkout-cone-mode: false
@@ -1232,21 +1268,33 @@ jobs:
             /docs/screenshots/admin-cheater-mark/
             /docs/screenshots/admin-guild-bank-panel/
             /docs/screenshots/aura-tracks/
+            /docs/screenshots/bank-storage-charters/
+            /docs/screenshots/bank-vault-tab/
+            /docs/screenshots/buried-hoard-entrance/
+            /docs/screenshots/buried-hoard-valley/
             /docs/screenshots/charselect-zone/
+            /docs/screenshots/dash-speed-stack/
+            /docs/screenshots/eastbrook-grand-armoury/
             /docs/screenshots/eastbrook-vale-rebuild/
             /docs/screenshots/fenbridge-rebuild/
             /docs/screenshots/freehold-content-2026-09-07/
             /docs/screenshots/freehold-crafted-content-2026-09-07/
             /docs/screenshots/freeholds-06-key/
+            /docs/screenshots/guild-bank-history/
+            /docs/screenshots/guild-bank-tab/
             /docs/screenshots/guild-pledge-board/
             /docs/screenshots/ignivar-raid/
             /docs/screenshots/ignivar-raid-expansion/
             /docs/screenshots/intentional-gathering-pr1/
             /docs/screenshots/intentional-gathering-pr2/
+            /docs/screenshots/item-art-consistency-2026-08-09/
+            /docs/screenshots/market-house-redesign/
+            /docs/screenshots/nythraxis-dread-curse-swap/
             /docs/screenshots/r35-admin-professions-inspector/
             /docs/screenshots/release-v036-skill-normalization-2026-08-10/
             /docs/screenshots/target-dots/
             /docs/screenshots/touch-ui-rework/
+            /docs/screenshots/vault-fine-mark/
             /docs/screenshots/wildheart/
             /docs/screenshots/woc-market/
           sparse-checkout-cone-mode: false
@@ -1328,21 +1376,33 @@ jobs:
             /docs/screenshots/admin-cheater-mark/
             /docs/screenshots/admin-guild-bank-panel/
             /docs/screenshots/aura-tracks/
+            /docs/screenshots/bank-storage-charters/
+            /docs/screenshots/bank-vault-tab/
+            /docs/screenshots/buried-hoard-entrance/
+            /docs/screenshots/buried-hoard-valley/
             /docs/screenshots/charselect-zone/
+            /docs/screenshots/dash-speed-stack/
+            /docs/screenshots/eastbrook-grand-armoury/
             /docs/screenshots/eastbrook-vale-rebuild/
             /docs/screenshots/fenbridge-rebuild/
             /docs/screenshots/freehold-content-2026-09-07/
             /docs/screenshots/freehold-crafted-content-2026-09-07/
             /docs/screenshots/freeholds-06-key/
+            /docs/screenshots/guild-bank-history/
+            /docs/screenshots/guild-bank-tab/
             /docs/screenshots/guild-pledge-board/
             /docs/screenshots/ignivar-raid/
             /docs/screenshots/ignivar-raid-expansion/
             /docs/screenshots/intentional-gathering-pr1/
             /docs/screenshots/intentional-gathering-pr2/
+            /docs/screenshots/item-art-consistency-2026-08-09/
+            /docs/screenshots/market-house-redesign/
+            /docs/screenshots/nythraxis-dread-curse-swap/
             /docs/screenshots/r35-admin-professions-inspector/
             /docs/screenshots/release-v036-skill-normalization-2026-08-10/
             /docs/screenshots/target-dots/
             /docs/screenshots/touch-ui-rework/
+            /docs/screenshots/vault-fine-mark/
             /docs/screenshots/wildheart/
             /docs/screenshots/woc-market/
           sparse-checkout-cone-mode: false

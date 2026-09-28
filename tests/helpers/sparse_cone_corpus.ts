@@ -5,16 +5,21 @@
 // tree in browser-gate), so a screenshot subtree needs to be in the cone only if a
 // file those jobs can reach names it. Reachable means:
 //   - every test file outside tests/browser/ (the seeds);
-//   - every code module a reachable file imports by a relative specifier;
-//   - every code or JSON file a reachable file names by a repo path literal
-//     (`scripts/...`, `src/...`, `server/...`, `headless/...`), which is how a
-//     test spawns a script or loads a data manifest;
+//   - every code module a reachable file imports by a relative specifier, in any
+//     form (`from`, a side-effect `import '...'`, `import(...)`, `require(...)`);
+//   - every code or JSON file a reachable file names by a repo path, with or
+//     without a leading `./` or `../` chain (`new URL('../scripts/x.mjs', ...)`)
+//     and in a command string (`'node scripts/x.mjs'`), which is how a test
+//     spawns a script or loads a data manifest;
+//   - every code file under a repo directory a reachable file names, when that
+//     file imports a computed specifier (a walked root it imports from, like the
+//     fingerprint guard over scripts/assets, or a template like
+//     `../src/ui/i18n.locales/${locale}.ts`);
 //   - every tracked JSON file outside docs/screenshots, whoever names it, because
 //     acceptance manifests are read by path fragments no literal scan can follow
 //     (a test-literal-only coupling once missed two of them on its first CI run).
-// Markdown is never corpus: it is prose, and a traced full unit run (2026-09-28)
-// read no screenshot a markdown file alone names. The closure only ever ADDS files,
-// so a reference it cannot see fails loud in CI (a missing file), never silent.
+// Markdown is never corpus: it is prose, and a traced full unit run (2026-09-28,
+// lane files on, Postgres armed) read no screenshot a markdown file alone names.
 //
 // Pure: the caller supplies the git index listing and a reader, so a fixture can
 // drive it without a repo (tests/sparse_cone_corpus.test.ts).
@@ -25,8 +30,17 @@ const CODE_EXTENSIONS = ['.ts', '.mts', '.cts', '.tsx', '.mjs', '.cjs', '.js'] a
 
 const IMPORT_SPECIFIER =
   /(?:\bfrom\s*|\bimport\s*\(\s*|\brequire\(\s*|\bimport\s+)['"](\.{1,2}\/[^'"]+)['"]/g;
-const REPO_PATH_LITERAL =
-  /['"`]((?:scripts|src|server|headless)\/[A-Za-z0-9._/-]+\.(?:mjs|cjs|js|mts|cts|ts|tsx|json))['"`]/g;
+const REPO_ROOTS = '(?:scripts|src|server|headless)';
+const REPO_PATH_LITERAL = new RegExp(
+  `(?<=^|['"\`\\s(])(?:\\.{1,2}/)*(${REPO_ROOTS}/[A-Za-z0-9._/-]+\\.(?:mjs|cjs|js|mts|cts|ts|tsx|json))\\b`,
+  'gm',
+);
+const REPO_DIRECTORY_LITERAL = new RegExp(
+  `(?<=^|['"\`\\s(])(?:\\.{1,2}/)*(${REPO_ROOTS}(?:/[A-Za-z0-9._-]+)*)(?=/?(?:['"\`]|\\$\\{))`,
+  'gm',
+);
+/** An import whose specifier is computed: a template, a variable, a call. */
+const COMPUTED_IMPORT = /\bimport\s*\(\s*(?!['"][^'"]*['"]\s*\))/;
 
 const isCode = (file: string): boolean => CODE_EXTENSIONS.some((ext) => file.endsWith(ext));
 const isScreenshot = (file: string): boolean => file.startsWith('docs/screenshots/');
@@ -80,6 +94,14 @@ export function sparseConeCorpus(
     }
     for (const [, literal] of source.matchAll(REPO_PATH_LITERAL)) {
       if (index.has(literal)) admit(literal);
+    }
+    if (COMPUTED_IMPORT.test(source)) {
+      for (const [, dir] of source.matchAll(REPO_DIRECTORY_LITERAL)) {
+        const prefix = `${dir}/`;
+        for (const candidate of tracked) {
+          if (candidate.startsWith(prefix) && isCode(candidate)) admit(candidate);
+        }
+      }
     }
   }
   return [...corpus].sort();

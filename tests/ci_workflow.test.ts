@@ -325,21 +325,33 @@ describe('CI workflow parity', () => {
       '            /docs/screenshots/admin-cheater-mark/',
       '            /docs/screenshots/admin-guild-bank-panel/',
       '            /docs/screenshots/aura-tracks/',
+      '            /docs/screenshots/bank-storage-charters/',
+      '            /docs/screenshots/bank-vault-tab/',
+      '            /docs/screenshots/buried-hoard-entrance/',
+      '            /docs/screenshots/buried-hoard-valley/',
       '            /docs/screenshots/charselect-zone/',
+      '            /docs/screenshots/dash-speed-stack/',
+      '            /docs/screenshots/eastbrook-grand-armoury/',
       '            /docs/screenshots/eastbrook-vale-rebuild/',
       '            /docs/screenshots/fenbridge-rebuild/',
       '            /docs/screenshots/freehold-content-2026-09-07/',
       '            /docs/screenshots/freehold-crafted-content-2026-09-07/',
       '            /docs/screenshots/freeholds-06-key/',
+      '            /docs/screenshots/guild-bank-history/',
+      '            /docs/screenshots/guild-bank-tab/',
       '            /docs/screenshots/guild-pledge-board/',
       '            /docs/screenshots/ignivar-raid/',
       '            /docs/screenshots/ignivar-raid-expansion/',
       '            /docs/screenshots/intentional-gathering-pr1/',
       '            /docs/screenshots/intentional-gathering-pr2/',
+      '            /docs/screenshots/item-art-consistency-2026-08-09/',
+      '            /docs/screenshots/market-house-redesign/',
+      '            /docs/screenshots/nythraxis-dread-curse-swap/',
       '            /docs/screenshots/r35-admin-professions-inspector/',
       '            /docs/screenshots/release-v036-skill-normalization-2026-08-10/',
       '            /docs/screenshots/target-dots/',
       '            /docs/screenshots/touch-ui-rework/',
+      '            /docs/screenshots/vault-fine-mark/',
       '            /docs/screenshots/wildheart/',
       '            /docs/screenshots/woc-market/',
       '          sparse-checkout-cone-mode: false',
@@ -472,7 +484,7 @@ describe('CI workflow parity', () => {
     // the coupling even over an otherwise empty corpus (the
     // release_i18n_tier_coverage SELF idiom).
     const SELF = 'tests/ci_workflow.test.ts';
-    const CORPUS_FLOOR = 10_430;
+    const CORPUS_FLOOR = 11_038;
     const referenced = new Set<string>();
     {
       const ls = spawnSync('git', ['ls-files', '-z'], {
@@ -509,13 +521,10 @@ describe('CI workflow parity', () => {
       // name, and every JSON; never markdown prose, never the browser suite
       // (browser-gate keeps the full tree), never code no unit test reaches.
       const corpus = sparseConeCorpus(tracked, read, new Set([SELF]));
-      expect(
-        missing,
-        `unexpected tracked paths are missing from the corpus: ${missing.join(', ')}`,
-      ).toEqual([]);
       // CORPUS_FLOOR files at the release/v0.45.0 sync (2026-09-28), the day the
       // corpus narrowed from every reference-bearing file (10,729 at the v0.44.0
-      // close) to the test-reachable ones. An emptied or truncated closure must
+      // close) to the test-reachable ones (11,038: the walked-root arm reaches
+      // more code than the markdown it drops). An emptied or truncated closure must
       // not green the coupling.
       expect(corpus.length).toBeGreaterThanOrEqual(CORPUS_FLOOR);
       for (const file of corpus) {
@@ -524,6 +533,12 @@ describe('CI workflow parity', () => {
           if (indexDirs.has(match[1])) referenced.add(match[1]);
         }
       }
+      // After the scan, not before: the closure reads only code, so a JSON file
+      // is first read in the loop above, and a missing one must still fail here.
+      expect(
+        missing,
+        `unexpected tracked paths are missing from the corpus: ${missing.join(', ')}`,
+      ).toEqual([]);
     }
     // SET EQUALITY, both directions in one assertion: a referenced subtree
     // missing from the cone is the missing-evidence-in-a-shard failure, and

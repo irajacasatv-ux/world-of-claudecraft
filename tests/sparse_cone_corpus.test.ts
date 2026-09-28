@@ -1,7 +1,10 @@
 // The sparse cone's corpus rule (tests/helpers/sparse_cone_corpus.ts) over a
-// fixture index, one case per arm: what enters (unit tests, their imports, the
-// repo files they name, every JSON) and what never does (browser tests,
-// markdown, code nothing reaches, the screenshots themselves).
+// fixture index, one seeded case per reach arm and per resolution candidate, so
+// a broken alternation drops a named file here rather than quietly shrinking
+// the real cone: what enters (unit tests, their imports in every form, the repo
+// files they name, the roots they import from by a computed specifier, every
+// JSON) and what never does (browser tests, markdown, code nothing reaches, the
+// screenshots themselves).
 
 import { describe, expect, it } from 'vitest';
 import { sparseConeCorpus } from './helpers/sparse_cone_corpus';
@@ -18,6 +21,37 @@ const FILES: Record<string, string> = {
   'scripts/lib/tool.mjs': "export const lib = 'docs/screenshots/tool-output/';",
   'scripts/capture_shot.mjs': "import { run } from './lib/runner.mjs'; run();",
   'scripts/lib/runner.mjs': 'export const run = () => {};',
+  // One seed per remaining import form and resolution candidate.
+  'tests/forms.test.ts': [
+    "const lazy = await import('../src/lazy');",
+    "const legacy = require('../src/legacy.cjs');",
+    "import '../src/side_effect';",
+    "export * from '../src/barrel';",
+    "import { typed } from '../scripts/typed.mjs';",
+    "import { View } from '../src/view_tsx';",
+  ].join('\n'),
+  'src/lazy.ts': '',
+  'src/legacy.cjs': '',
+  'src/side_effect.ts': '',
+  'src/barrel/index.ts': '',
+  'scripts/typed.mts': '',
+  'src/view_tsx.tsx': '',
+  // Repo paths named with a ../ chain and inside a command string.
+  'tests/named.test.ts': [
+    "const url = new URL('../scripts/url_named.mjs', import.meta.url);",
+    "spawnSync('sh', ['-c', 'node scripts/cmd_named.mjs --flag']);",
+  ].join('\n'),
+  'scripts/url_named.mjs': '',
+  'scripts/cmd_named.mjs': '',
+  // A walked root imported by a computed specifier admits the files under it;
+  // the same directory literal without a computed import admits nothing.
+  'tests/walk.test.ts': [
+    "const root = new URL('../scripts/walked', import.meta.url);",
+    'for (const file of walk(root)) await import(file);',
+  ].join('\n'),
+  'scripts/walked/one/fingerprint.mjs': "const out = 'docs/screenshots/walked/';",
+  'tests/names_only.test.ts': "const root = '../scripts/listed';",
+  'scripts/listed/only_listed.mjs': "const out = 'docs/screenshots/listed/';",
   'scripts/orphan_shot.mjs': "const out = 'docs/screenshots/orphan/';",
   'tests/browser/b.browser.test.ts': "import '../../scripts/browser_only.mjs';",
   'scripts/browser_only.mjs': "const out = 'docs/screenshots/browser/';",
@@ -35,17 +69,23 @@ const read = (file: string): string => {
 describe('sparseConeCorpus', () => {
   const corpus = sparseConeCorpus(tracked, read);
 
-  it('takes every unit test, what it imports, and the repo files it names', () => {
-    expect(corpus).toEqual(
-      expect.arrayContaining([
-        'tests/a.test.ts',
-        'tests/helpers/h.ts',
-        'src/ui/view.ts',
-        'scripts/lib/tool.mjs',
-        'scripts/capture_shot.mjs',
-        'scripts/lib/runner.mjs',
-      ]),
-    );
+  it.each([
+    ['a static from import, extensionless to .ts', 'tests/helpers/h.ts'],
+    ['an export-from with a .js specifier naming a .ts', 'src/ui/view.ts'],
+    ['a static import of an .mjs', 'scripts/lib/tool.mjs'],
+    ['a repo path literal', 'scripts/capture_shot.mjs'],
+    ['an import inside a named script', 'scripts/lib/runner.mjs'],
+    ['a dynamic import()', 'src/lazy.ts'],
+    ['a require()', 'src/legacy.cjs'],
+    ['a side-effect import', 'src/side_effect.ts'],
+    ['a directory import resolving to index.ts', 'src/barrel/index.ts'],
+    ['an .mjs specifier naming an .mts', 'scripts/typed.mts'],
+    ['an extensionless specifier naming a .tsx', 'src/view_tsx.tsx'],
+    ['a ../-prefixed new URL path', 'scripts/url_named.mjs'],
+    ['a path inside a command string', 'scripts/cmd_named.mjs'],
+    ['a file under a root imported by a computed specifier', 'scripts/walked/one/fingerprint.mjs'],
+  ])('takes %s', (_, file) => {
+    expect(corpus).toContain(file);
   });
 
   it('takes every JSON outside docs/screenshots, whoever names it', () => {
@@ -53,16 +93,18 @@ describe('sparseConeCorpus', () => {
     expect(corpus).not.toContain('docs/screenshots/accepted/manifest.json');
   });
 
-  it('never takes a browser test, markdown, or code no unit test reaches', () => {
+  it('never takes a browser test, markdown, an unimported root, or code no unit test reaches', () => {
     for (const file of [
       'tests/browser/b.browser.test.ts',
       'scripts/browser_only.mjs',
       'docs/design/notes.md',
+      'scripts/listed/only_listed.mjs',
       'scripts/orphan_shot.mjs',
     ]) {
       expect(corpus, file).not.toContain(file);
     }
-    expect(corpus).toHaveLength(7);
+    // The six unit-test seeds, the thirteen files they reach, and the one JSON.
+    expect(corpus).toHaveLength(20);
   });
 
   it('honors the caller exclusion and follows nothing through an excluded file', () => {
