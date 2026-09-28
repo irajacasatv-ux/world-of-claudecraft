@@ -88,11 +88,11 @@
         "ms": 3,
         "method": "local-median",
         "measured": "2026-09-28",
-        "reason": "Split 2026-09-28 from tests/world_population_invariant.test.ts so the escort-carrying file stays import-graph selected; measured alone locally, pending the next green full-mode CI harvest.",
+        "reason": "Split 2026-09-28 from tests/world_population_invariant.test.ts so the escort-carrying file stays import-graph selected; re-measured after the pin gained its template, helper and classification cases; measured alone locally, pending the next green full-mode CI harvest.",
         "runs": [
+          4,
           3,
-          3,
-          2
+          3
         ]
       }
     }

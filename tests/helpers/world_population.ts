@@ -24,13 +24,9 @@ import { Sim } from '../../src/sim/sim';
 import type { Entity, EscortDef } from '../../src/sim/types';
 import { worldQuestCycleOfferingQuest } from '../../src/sim/world_quest_rotation';
 
-/** How many files the escort sweep is dealt across. */
-export const ESCORT_SHARD_COUNT = 4;
-
-/** The shipped escorts shard `index` runs: every ESCORT_SHARD_COUNT-th, round-robin. */
-export function escortShard(index: number): EscortDef[] {
-  return Object.values(ESCORTS).filter((_, i) => i % ESCORT_SHARD_COUNT === index);
-}
+// The deal lives in its own Sim-free module; re-exported here so the shard files
+// import one helper.
+export { ESCORT_SHARD_COUNT, escortShard } from './escort_shards';
 
 /** Authored standing population per template, from the camp tables. */
 function authoredCounts(): Map<string, number> {
