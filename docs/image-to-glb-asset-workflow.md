@@ -508,18 +508,15 @@ provide.
 
 Every Eastbrook-era GLB carries a sha256 fingerprint over a pinned input list
 (`scripts/assets/<asset>/source_fingerprint.mjs`): the factory, entry, exporter, spec,
-`build_assets.mjs`, the reference turnarounds and shared atlas where applicable, and
-`pnpm-lock.yaml`. Contract tests recompute it live and compare it to the stamped GLB. The town family's
-polish integrity test instead pins the provenance recorded in capture evidence JSONs
-against the frozen values the evidence itself carries (the evidence predates later
-rebuilds and is never recaptured); the mailbox and noticeboard families still bind to
-live values. Consequences:
+`build_assets.mjs`, and the reference turnarounds and shared atlas where applicable. The
+lockfile and `package.json` are never inputs (`tests/asset_fingerprint_inputs.test.ts` reads
+every source under `scripts/assets`, inline lists included). Contract tests recompute it
+live and compare it to the stamped GLB. Consequences:
 
-- Changing ANY fingerprinted input, including a lockfile-only dependency bump or a release
-  merge that touches `pnpm-lock.yaml`, requires re-exporting the affected families
+- Changing ANY fingerprinted input requires re-exporting the affected families
   (`--no-preview` keeps evidence untouched), regenerating the media manifest, and
-  re-pinning the sha256 and fingerprint literals in tests, design-doc tables, and evidence
-  JSONs in the same change.
+  re-pinning the fingerprint literals in tests and design-doc tables in the same change. Tests do not pin the shipped GLB's sha256: the media manifest freshness
+  check and the binary diff cover the shipped bytes.
 - A fingerprint-only re-export must not change byte sizes; only hashes move. If a size
   moves, something else changed, so stop and diff before re-pinning.
 - Keep committed evidence lean: full capture matrices are accepted visually, then pruned
@@ -543,7 +540,7 @@ live values. Consequences:
 - [ ] Capture desktop and mobile in-game evidence.
 - [ ] Run focused tests, typecheck, the full gate, and the aggregate asset report.
 - [ ] Record provenance in `CREDITS.md`.
-- [ ] Stamp a source fingerprint and pin it (plus the shipped sha256) in the contract test.
+- [ ] Stamp a source fingerprint and pin it in the contract test (never the shipped sha256).
 - [ ] After any fingerprinted-input change, re-export, regen the manifest, and re-pin.
 - [ ] Prune capture evidence to contacts, metadata, and hero views once the wave settles.
 

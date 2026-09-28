@@ -14,8 +14,8 @@ import { VISUALS } from '../src/render/characters/manifest';
 // the source-fingerprint-in-extras half.
 //
 // That omission is a DELIBERATE, OWNER-ACCEPTED gap (ruled 2026-08-11, PR
-// #3293 round-6 review), not an oversight. What it costs: the byte pin below
-// catches a silent re-export, but nothing catches the REVERSE direction, i.e.
+// #3293 round-6 review), not an oversight. What it costs: the manifest check
+// below catches a silent re-export, but nothing catches the REVERSE direction, i.e.
 // editing model.js or surface_maps.mjs WITHOUT re-exporting, which leaves
 // source and shipped GLB diverged while every test stays green. What buying
 // the cover would cost: a re-export to stamp the fingerprint into extras,
@@ -26,14 +26,14 @@ import { VISUALS } from '../src/render/characters/manifest';
 // re-exports for its own reasons, add the fingerprint pin then, since the
 // cost is already paid at that point.
 //
-// What this DOES pin: the exact shipped bytes (so any future re-export is a
-// deliberate, reviewed change, not a silent drift), the real structural shape
+// What this DOES pin: a media manifest entry keyed to the shipped bytes (so a
+// re-export without a manifest regen fails here, and the binary diff shows any
+// byte change in review), the real structural shape
 // (materials, UVs, COLOR_0, wheel nodes, no skin/animation) a change to
 // model.js or the exporter could otherwise break without any test noticing,
 // and both new VisualDefs' height fields against the GLBs they measure.
 const REPO_ROOT = path.join(__dirname, '..');
 const ASSET_PATH = path.join(REPO_ROOT, 'public/models/mounts/rickshaw_mount.glb');
-const EXPECTED_ASSET_SHA256 = '5f539e1f2ad40fe41987201673acc0a2977c5bd0a25deb81dffa023ef285d8cd';
 // The four procedural PBR material families this mount ships, plus the
 // untextured emissive lantern-glow material (not in RICKSHAW_MATERIAL_CONTRACT:
 // it has no surface maps, see model.js's makeMaterials).
@@ -56,11 +56,10 @@ describe('rickshaw mount asset pipeline', () => {
     }
   });
 
-  it('ships the exact bytes this test pins, changed only by a deliberate re-export', async () => {
+  it('ships bytes the media manifest entry is fresh for', async () => {
     await MeshoptDecoder.ready;
     const bytes = readFileSync(ASSET_PATH);
     const sha256 = createHash('sha256').update(bytes).digest('hex');
-    expect(sha256).toBe(EXPECTED_ASSET_SHA256);
     expect(MEDIA_ASSETS['models/mounts/rickshaw_mount.glb']).toBe(
       `/media/models/mounts/rickshaw_mount.${sha256.slice(0, 12)}.glb`,
     );

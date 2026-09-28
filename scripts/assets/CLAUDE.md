@@ -62,7 +62,9 @@ For reference-image reconstruction and procedural GLB authoring, read the living
   pinned input list (factory/entry/exporter/spec, `build_assets.mjs`, reference
   turnarounds, the shared atlas) into the GLB extras, and tests recompute it live. Any
   change to a fingerprinted input means re-exporting the affected family (`--no-preview`),
-  regenerating the media manifest, and re-pinning its literals in the same change. The
+  regenerating the media manifest, and re-pinning its fingerprint literals in the same change
+  (tests never pin a shipped GLB's sha256; the manifest freshness check and the binary diff
+  cover the bytes). The
   lockfile and `package.json` are NOT inputs (`tests/asset_fingerprint_inputs.test.ts`):
   they once were, and every dependency bump was answered by swapping the new hash into
   the shipped GLBs in place, a stamp that attested no rebuild; that tool is retired.
@@ -110,13 +112,13 @@ For reference-image reconstruction and procedural GLB authoring, read the living
   simplified to a species triangle budget while the source GLBs stay byte-identical for their
   other consumers; the table, the stage invariants and the catalog skip rule
   (`isFoliageFieldCopyCatalogId`, read by `gen_asset_catalog.mjs`) live in the module;
-  `tests/foliage_field_bark_decimation.test.ts` pins every source and output sha256 and the
+  `tests/foliage_field_bark_decimation.test.ts` pins the table's paths and budgets and the
   media manifest rows, rebuilds each copy from its source through the stage and compares the
-  bytes, checks each committed copy against its source (bark counts and material, leaves,
+  bytes to the committed copy, checks each committed copy against its source (bark counts and material, leaves,
   textures, extensions, bounds), triggers the stage guards on small built documents, and
   scans `src/` so only the field model table and the media manifest name a copy; after an
-  intended change run `--write-pins`, paste the printed pins into the table and the test's
-  `EXPECTED` with the printed bark counts, then `node scripts/build_media_manifest.mjs
+  intended change run `--write-pins`, paste the printed pins into the table and the printed
+  bark counts into the test's `EXPECTED`, then `node scripts/build_media_manifest.mjs
   generate`, the steps the script prints), `decimated_prop_swap.mjs` (lands a
   Blender decimation pass over shipped scatter props: transplants only the export's
   primitive geometry onto the shipped GLB so names, materials and bounds stay what

@@ -93,8 +93,8 @@ if (repinned.length > 0) {
   console.log(
     [
       '\nRemaining re-pin steps:',
-      '  1. paste the same outputSha256 values into EXPECTED in',
-      '     tests/foliage_field_bark_decimation.test.ts, with the bark tris and verts printed above',
+      '  1. paste the bark tris and verts printed above into EXPECTED in',
+      '     tests/foliage_field_bark_decimation.test.ts',
       '  2. node scripts/build_media_manifest.mjs generate',
       '  3. npx vitest run tests/foliage_field_bark_decimation.test.ts',
     ].join('\n'),

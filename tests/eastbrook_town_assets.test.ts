@@ -44,7 +44,6 @@ interface AssetContract {
   rootName: string;
   dimensions: readonly [number, number, number];
   bytes: number;
-  sha256: string;
   triangles: number;
   primitiveTriangles: readonly [number, number];
   triangleCeiling: number;
@@ -61,7 +60,6 @@ const ASSETS: readonly AssetContract[] = [
     rootName: 'EastbrookBank',
     dimensions: [7, 7.8, 5.5],
     bytes: 52_508,
-    sha256: 'a07ac3d8f94058c347230b1539be3a07bd1d1d9b7a7d39b6363a4c54b827a6f2',
     triangles: 3104,
     primitiveTriangles: [2928, 176],
     triangleCeiling: 6000,
@@ -89,7 +87,6 @@ const ASSETS: readonly AssetContract[] = [
     rootName: 'EastbrookSmithy',
     dimensions: [7, 7.5, 5.5],
     bytes: 40_352,
-    sha256: '1cef7c77fb9d671912c9f4817bcc20934f0929ab632b056e9b6e7e6920583ea5',
     triangles: 2410,
     primitiveTriangles: [2282, 128],
     triangleCeiling: 6000,
@@ -117,7 +114,6 @@ const ASSETS: readonly AssetContract[] = [
     rootName: 'EastbrookInn',
     dimensions: [7.5, 8.5, 6],
     bytes: 67_768,
-    sha256: '9a4ed0543323c02289390927834e19445aa6e74ab63068f32de8693c82114145',
     triangles: 4348,
     primitiveTriangles: [4004, 344],
     triangleCeiling: 6000,
@@ -145,7 +141,6 @@ const ASSETS: readonly AssetContract[] = [
     rootName: 'EastbrookChapel',
     dimensions: [5.5, 7, 6],
     bytes: 66_132,
-    sha256: '526d08d3581ec606232e63ab63d39281861e78553c48de0f26e86acc00090581',
     triangles: 4120,
     primitiveTriangles: [3800, 320],
     triangleCeiling: 6000,
@@ -173,7 +168,6 @@ const ASSETS: readonly AssetContract[] = [
     rootName: 'EastbrookWeavingWorkshop',
     dimensions: [5.5, 5.8, 4.5],
     bytes: 40_392,
-    sha256: 'b7ae8899cd22d4d1b96dc962c7176c603a33fa9e20225f6f247bfd134c226126',
     triangles: 2412,
     primitiveTriangles: [2272, 140],
     triangleCeiling: 6000,
@@ -201,7 +195,6 @@ const ASSETS: readonly AssetContract[] = [
     rootName: 'EastbrookToolworks',
     dimensions: [5.5, 5.8, 4.5],
     bytes: 39_920,
-    sha256: 'cb81a9012d826d8e452bfbfe104dab68fe5302b57163eabbe6831626a90442e1',
     triangles: 2320,
     primitiveTriangles: [2180, 140],
     triangleCeiling: 6000,
@@ -229,7 +222,6 @@ const ASSETS: readonly AssetContract[] = [
     rootName: 'EastbrookCivicWellBeacon',
     dimensions: [3.2, 3.1, 3.2],
     bytes: 13_216,
-    sha256: '8791e6880e72a3995619ea4d0c8563c0798fdb53cef09b5318647571d2e5893b',
     triangles: 464,
     primitiveTriangles: [456, 8],
     triangleCeiling: 3000,
@@ -257,7 +249,6 @@ const ASSETS: readonly AssetContract[] = [
     rootName: 'EastbrookMarketStall',
     dimensions: [2.8, 2.7, 2.2],
     bytes: 27_072,
-    sha256: '6ee4191a113c6585070900f1644bbcc8cf91eb085ec76695a3e0eb756cad7f3d',
     triangles: 1314,
     primitiveTriangles: [1294, 20],
     triangleCeiling: 3000,
@@ -285,7 +276,6 @@ const ASSETS: readonly AssetContract[] = [
     rootName: 'EastbrookWallWing',
     dimensions: [6.5, 2.7, 0.65],
     bytes: 8352,
-    sha256: 'b81d6ec76d34039db6b839407044d493f26abe6f49a44ad1a3d9e0d833312151',
     triangles: 206,
     primitiveTriangles: [196, 10],
     triangleCeiling: 206,
@@ -532,7 +522,7 @@ describe('Eastbrook shared surface atlas', () => {
 });
 
 describe('Eastbrook town shipping GLBs', () => {
-  it('pins all nine generated media-manifest mappings to their optimized hashes', () => {
+  it('pins all nine generated media-manifest mappings to the hashes of their shipped bytes', () => {
     const actual = Object.fromEntries(
       ASSETS.map((asset) => {
         const key = `models/props/${asset.file}`;
@@ -542,9 +532,12 @@ describe('Eastbrook town shipping GLBs', () => {
     const expected = Object.fromEntries(
       ASSETS.map((asset) => {
         const stem = asset.file.replace(/\.glb$/, '');
+        const sha256 = createHash('sha256')
+          .update(readFileSync(path.join(PROPS_ROOT, asset.file)))
+          .digest('hex');
         return [
           `models/props/${asset.file}`,
-          `/media/models/props/${stem}.${asset.sha256.slice(0, 12)}.glb`,
+          `/media/models/props/${stem}.${sha256.slice(0, 12)}.glb`,
         ];
       }),
     );
@@ -611,7 +604,6 @@ describe('Eastbrook town shipping GLBs', () => {
       expect(bytes.toString('utf8', 0, 4)).toBe('glTF');
       expect(bytes.readUInt32LE(4)).toBe(2);
       expect(bytes.length).toBe(asset.bytes);
-      expect(createHash('sha256').update(bytes).digest('hex')).toBe(asset.sha256);
       expect(bytes.length).toBeLessThanOrEqual(asset.byteCeiling);
 
       const document = await io.readBinary(bytes);

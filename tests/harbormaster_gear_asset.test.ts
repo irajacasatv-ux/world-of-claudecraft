@@ -26,19 +26,14 @@ import {
 // the spyglass on the hips bone. Pins the bytes, the one identity root the game parents to the
 // bone, the named parts, the texture-free vertex-coloured materials, the triangle budget, the
 // source fingerprint, the fit against the modular body's measured head and coat, and the
-// manifest wiring (every graphics tier loads and shows both). Re-pin the sha256 and size
-// literals only with a re-export.
+// manifest wiring (every graphics tier loads and shows both). Re-pin the size literals only
+// with a re-export; the media manifest freshness check and the binary diff cover any other
+// byte change.
 
 const ROOT = path.join(__dirname, '..');
-const SHIPPED: Record<string, { sha256: string; bytes: number }> = {
-  'public/models/chars/npc_gear/harbormaster_tricorne.glb': {
-    sha256: 'c02cc2676b5ec85cc050a3a9cb044760b670b8f5040b35caa252f841536acba5',
-    bytes: 40512,
-  },
-  'public/models/chars/npc_gear/harbormaster_spyglass.glb': {
-    sha256: '74aa429a1aed82725ab54ce8c9409f67075b213698b5277bc38c8fdc8e4f8df7',
-    bytes: 11024,
-  },
+const SHIPPED: Record<string, { bytes: number }> = {
+  'public/models/chars/npc_gear/harbormaster_tricorne.glb': { bytes: 40512 },
+  'public/models/chars/npc_gear/harbormaster_spyglass.glb': { bytes: 11024 },
 };
 /** Triangles per named part, from the Blender build report. */
 const TRIANGLES: Record<string, number> = { Tricorne: 2022, Pipe: 180, Spyglass: 472 };
@@ -145,9 +140,6 @@ describe('harbormaster gear GLBs', () => {
     for (const asset of HARBORMASTER_GEAR_ASSETS) {
       const bytes = readFileSync(path.join(ROOT, asset.target));
       expect(bytes.length, asset.target).toBe(SHIPPED[asset.target].bytes);
-      expect(createHash('sha256').update(bytes).digest('hex'), asset.target).toBe(
-        SHIPPED[asset.target].sha256,
-      );
       expect(bytes.toString('latin1')).toContain('EXT_meshopt_compression');
       const key = asset.target.replace(/^public\//, '');
       const base = path.basename(key, '.glb');
@@ -227,8 +219,9 @@ describe('harbormaster gear GLBs', () => {
   it('rebuilds byte for byte from the committed Blender source', async () => {
     for (const asset of HARBORMASTER_GEAR_ASSETS) {
       const bytes = await buildHarbormasterGear(asset);
+      const shipped = readFileSync(path.join(ROOT, asset.target));
       expect(createHash('sha256').update(bytes).digest('hex'), asset.target).toBe(
-        SHIPPED[asset.target].sha256,
+        createHash('sha256').update(shipped).digest('hex'),
       );
     }
   });

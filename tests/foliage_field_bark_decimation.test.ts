@@ -39,90 +39,70 @@ const TWISTED = { bark: 'Bark_TwistedTree', leaves: ['Leaves_TwistedTree'] };
 const EXPECTED = [
   {
     model: 'pine_1',
-    sourceSha256: '18d21cee2d4141a31ca6c238836e66242d4ca259a874eb2c53c120ba94491f2d',
     budget: 1200,
-    outputSha256: 'b2de7d8d93daa807835d42ea92aa0fb5817adce00a57e7c9e1365fbedf15a1b0',
     materials: PINE,
     sourceBark: { triangles: 3121, vertices: 2126 },
     bark: { triangles: 1200, vertices: 890 },
   },
   {
     model: 'pine_2',
-    sourceSha256: 'e3c2d2a2b06b7ad2fb9d186e72797a00287b786d595539c0994880cbcc944bb5',
     budget: 1200,
-    outputSha256: 'bac6680a8c26a13d19ff5bb58a8ec0331b7976978e2213ed81959a0191474da7',
     materials: PINE,
     sourceBark: { triangles: 2827, vertices: 1866 },
     bark: { triangles: 1200, vertices: 854 },
   },
   {
     model: 'pine_4',
-    sourceSha256: '25b84be096d31f1ff8d542fd4c5fadb7b1c68f9aa15e3e558625d0ecde5378be',
     budget: 1200,
-    outputSha256: '26982681dd59ecfb996ad77a3f764eb276b99074fd88f9edb06afd36f8be9618',
     materials: PINE,
     sourceBark: { triangles: 2125, vertices: 1511 },
     bark: { triangles: 1200, vertices: 890 },
   },
   {
     model: 'oak_1',
-    sourceSha256: '9510f3ba02e6395e7ea0b4f766652d9159efcd9593ac56b5f907f7553d6dc5e1',
     budget: 1600,
-    outputSha256: '81898a4faeb28a10a0a6b9afea6e3a5ea6fa311990555043a9b2453bdfea881d',
     materials: OAK,
     sourceBark: { triangles: 4312, vertices: 2862 },
     bark: { triangles: 1600, vertices: 1124 },
   },
   {
     model: 'oak_2',
-    sourceSha256: 'eeea227bbd3779ed6b932aa75d9170b49a601743af2eee055e52ef97803f7bc6',
     budget: 1600,
-    outputSha256: '261c498990b3a6e653b1e9be8ec7df32996ab3e7d04585c39aacc7badb22bc03',
     materials: OAK,
     sourceBark: { triangles: 4274, vertices: 2776 },
     bark: { triangles: 1600, vertices: 1099 },
   },
   {
     model: 'oak_4',
-    sourceSha256: 'a8d015f28af796a92bbfa083f50b5d53f187c9db12bc04ebefe8a3b8269fb0e7',
     budget: 1600,
-    outputSha256: 'a460a56a29ff568587bd7bc56a2fc8c4012aed8267b8111ea853413a91506a9c',
     materials: OAK,
     sourceBark: { triangles: 3252, vertices: 2110 },
     bark: { triangles: 1600, vertices: 1080 },
   },
   {
     model: 'oak_5',
-    sourceSha256: '6de684b3a783d6406444c351bc55fedd2a467ddc71840174c9bf9c45438173ae',
     budget: 1600,
-    outputSha256: '6cc4d1c19cc6a44e331866e60e40121d5d10605d62264fb1783b888bde060c05',
     materials: OAK,
     sourceBark: { triangles: 1862, vertices: 1188 },
     bark: { triangles: 1600, vertices: 1032 },
   },
   {
     model: 'twisted_1',
-    sourceSha256: '1f63852b64aa9cb4401325da3c7044c8c4e6039a3392956585523177d508afba',
     budget: 1800,
-    outputSha256: '9e6114cac7cfcab7310453aab1e3419548c100a5353adc477a14b0ca2fc042bf',
     materials: TWISTED,
     sourceBark: { triangles: 7152, vertices: 9317 },
     bark: { triangles: 1800, vertices: 1262 },
   },
   {
     model: 'twisted_2',
-    sourceSha256: '6ff31dcb2a9c36ea57c039a1902d2521cc4a3a980bf3c255817ab0a17cb260cd',
     budget: 1800,
-    outputSha256: '9e1f2b279fb020e967c7df18d549aa6f134e91593f3f804113f54171966faaed',
     materials: TWISTED,
     sourceBark: { triangles: 6741, vertices: 8685 },
     bark: { triangles: 1799, vertices: 1233 },
   },
   {
     model: 'twisted_3',
-    sourceSha256: '1f337078cda9d799c289159b53e62f00237115e9d7b1253a0ebb3920057fec41',
     budget: 1800,
-    outputSha256: '6573b1ffdabfd42b0c19f06be24908cacdd9e2318479b530051e6f954c2856ba',
     materials: TWISTED,
     sourceBark: { triangles: 7327, vertices: 9362 },
     bark: { triangles: 1800, vertices: 1241 },
@@ -320,13 +300,17 @@ describe('foliage field bark decimation', () => {
   });
 
   it('keeps the stage table complete and independently pinned', () => {
-    expect(FOLIAGE_FIELD_BARK_ASSETS).toEqual(
-      EXPECTED.map(({ model, sourceSha256, budget, outputSha256 }) => ({
+    expect(
+      FOLIAGE_FIELD_BARK_ASSETS.map(({ sourcePath, barkTriangleBudget, outputPath }) => ({
+        sourcePath,
+        barkTriangleBudget,
+        outputPath,
+      })),
+    ).toEqual(
+      EXPECTED.map(({ model, budget }) => ({
         sourcePath: sourceUrl(model),
-        sourceSha256,
         barkTriangleBudget: budget,
         outputPath: fieldUrl(model),
-        outputSha256,
       })),
     );
     expect(FOLIAGE_BARK_TRIANGLE_SHORTFALL).toBe(4);
@@ -394,9 +378,9 @@ describe('foliage field bark decimation', () => {
         `${fieldUrl(asset.model)} no longer matches a rebuild of ${sourceUrl(asset.model)} ` +
           'through decimateFoliageBarkDocument. If the change is intended: run ' +
           '`node scripts/assets/decimate_foliage_bark.mjs --write-pins`, paste the printed pins ' +
-          'into FOLIAGE_FIELD_BARK_ASSETS and into EXPECTED here with the printed bark counts, ' +
+          'into FOLIAGE_FIELD_BARK_ASSETS and the printed bark counts into EXPECTED here, ' +
           'then run `node scripts/build_media_manifest.mjs generate`.',
-      ).toBe(asset.outputSha256);
+      ).toBe(fileSha256(fieldUrl(asset.model)));
       expect({ triangles: report.sourceTriangles, vertices: report.sourceVertices }).toEqual(
         asset.sourceBark,
       );
@@ -406,9 +390,7 @@ describe('foliage field bark decimation', () => {
     });
 
     it(`ships ${asset.model}_field with decimated bark and untouched leaves and textures`, async () => {
-      expect(fileSha256(sourceUrl(asset.model))).toBe(asset.sourceSha256);
       const outputSha256 = fileSha256(fieldUrl(asset.model));
-      expect(outputSha256).toBe(asset.outputSha256);
       expect(MEDIA_ASSETS[fieldUrl(asset.model)]).toBe(
         `/media/models/foliage/${asset.model}_field.${outputSha256.slice(0, 12)}.glb`,
       );

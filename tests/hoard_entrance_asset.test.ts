@@ -10,7 +10,6 @@ import { MEDIA_ASSETS } from '../src/render/assets/manifest.generated';
 
 const ROOT = path.join(__dirname, '..');
 const URL = 'models/props/hoard_entrance.glb';
-const SHA = '0552cfedf0ce923b1c067359fa0fcd9c2e6ce2f5e6bf073ee50fc19ab6f83e46';
 const BYTES = 93520;
 // Re-exported at each release/v0.44.0 merge into feature/buried-hoards: the
 // release moved pnpm-lock.yaml (a fingerprinted build input; at the 2026-09-28
@@ -22,13 +21,13 @@ const BYTES = 93520;
 const FINGERPRINT = 'a300dd3f6c3325d55f8e5d84477ff1123cff7ede00cca09b474ea915931f74e5';
 
 describe('Buried Hoard entrance shipping asset', () => {
-  it('pins exact bytes, live authoring fingerprint and manifest version', async () => {
+  it('pins byte size, live authoring fingerprint and manifest version', async () => {
     const bytes = readFileSync(path.join(ROOT, 'public', URL));
     expect(bytes.length).toBe(BYTES);
     expect(bytes.length).toBeLessThanOrEqual(96 * 1024);
-    expect(createHash('sha256').update(bytes).digest('hex')).toBe(SHA);
     expect(hoardEntranceSourceFingerprint(ROOT)).toBe(FINGERPRINT);
-    expect(MEDIA_ASSETS[URL]).toBe(`/media/models/props/hoard_entrance.${SHA.slice(0, 12)}.glb`);
+    const sha256 = createHash('sha256').update(bytes).digest('hex');
+    expect(MEDIA_ASSETS[URL]).toBe(`/media/models/props/hoard_entrance.${sha256.slice(0, 12)}.glb`);
     const spec = JSON.parse(
       readFileSync(path.join(ROOT, 'scripts/assets/specs/hoard_entrance.json'), 'utf8'),
     );

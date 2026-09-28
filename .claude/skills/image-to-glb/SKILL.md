@@ -62,10 +62,14 @@ exporter, spec, tests, and optimized GLB stay the reproducible source of truth.
    per-critical-feature threshold; a global average never excuses a failed identity
    feature. Reject cardboard: silhouette must hold from front, side, three-quarter, and
    grazing views.
-7. **Pin the contract in a test.** Parse the shipped GLB and pin bytes, sha256, triangles,
-   primitives, materials, COLOR_0, zero textures/animations/skins, meshopt present, bounds
-   floor-seated and centered, and live source-fingerprint equality (pattern:
-   `tests/eastbrook_mailbox_asset.test.ts`, `tests/render_glb_replacement_assets.test.ts`).
+7. **Pin the contract in a test.** Parse the shipped GLB and pin its structure: byte length
+   and size budget, triangles, primitives, materials, COLOR_0, zero
+   textures/animations/skins, meshopt present, bounds floor-seated and centered, live
+   source-fingerprint equality, and a media manifest entry keyed to a hash the test
+   computes from the shipped bytes (pattern: `tests/eastbrook_mailbox_asset.test.ts`,
+   `tests/render_glb_replacement_assets.test.ts`). Never pin the shipped file's sha256 as a
+   literal: the media manifest freshness check and the binary diff already show any byte
+   change.
 8. **Integrate behind a render module** (`src/render/<asset>.ts`), never inline in
    `renderer.ts`: register the preload, clone only transforms from one template, convert
    materials through `surfaceMat` (Standard and Lambert tiers), respect click targets,
@@ -80,15 +84,15 @@ exporter, spec, tests, and optimized GLB stay the reproducible source of truth.
 ## The fingerprint contract (do not skip)
 
 Every eastbrook-style asset stamps a sha256 source fingerprint over a pinned file list
-(factory, entry, exporter, spec, `build_assets.mjs`, reference turnarounds, the shared
-atlas, and `pnpm-lock.yaml`). Tests recompute it live and compare against the GLB.
-Consequences:
+(factory, entry, exporter, spec, `build_assets.mjs`, reference turnarounds and the shared
+atlas). The lockfile and `package.json` are never inputs, however the list is written
+(`tests/asset_fingerprint_inputs.test.ts` reads every source under `scripts/assets`).
+Tests recompute it live and compare against the GLB. Consequences:
 
-- Editing ANY fingerprinted file (including a lockfile-only dependency bump or a release
-  merge that touches `pnpm-lock.yaml`) requires re-exporting every affected asset
-  family with `--no-preview`, regenerating the manifest, and re-pinning the sha256 and
-  fingerprint literals in tests, design-doc tables, and the capture evidence JSONs (the
-  polish integrity test cross-checks stored provenance against live values).
+- Editing ANY fingerprinted file requires re-exporting every affected asset family with
+  `--no-preview`, regenerating the manifest, and re-pinning the fingerprint literals in
+  tests and design-doc tables. The shipped bytes carry no sha256 pin in tests: the media
+  manifest freshness check and the binary diff cover them.
 - Byte sizes stay stable across a fingerprint-only re-export; only hashes move. If sizes
   move, something else changed; stop and diff.
 - Batch refactors to shared exporter code so all families re-export once, not per change.

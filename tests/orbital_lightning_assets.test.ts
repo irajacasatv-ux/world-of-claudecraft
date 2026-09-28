@@ -20,7 +20,6 @@ const ASSETS = [
   {
     kind: 'orb',
     bytes: 20488,
-    sha: '8ef8018eecf808cf9e8c5da684a1c3c271231f7abff0634bcb715942e62fd5d9',
     names: ['Core', 'LocalArcs', 'OuterEnergy', 'Sparks'],
     triangles: [80, 732, 1068, 108],
     min: [-0.844265, -0.540179, -0.906207],
@@ -29,7 +28,6 @@ const ASSETS = [
   {
     kind: 'impact',
     bytes: 18452,
-    sha: '30c7171c1dff5321831af792c26b5bd4a8e908aa5132192931062219057963be',
     names: ['Crown', 'GroundArcs', 'ImpactCore', 'RadialBurst', 'Sparks'],
     triangles: [168, 612, 80, 516, 108],
     min: [-1.02133, -0.1232, -1.051493],
@@ -44,10 +42,10 @@ describe('Orbital Lightning approved Blender components', () => {
       const bytes = readFileSync(path.join(ROOT, 'public', url));
       expect(bytes.length).toBe(spec.bytes);
       expect(bytes.length).toBeLessThan(24 * 1024);
-      expect(createHash('sha256').update(bytes).digest('hex')).toBe(spec.sha);
       expect(Buffer.from(await buildComponent(spec.kind, ROOT)).equals(bytes)).toBe(true);
+      const sha256 = createHash('sha256').update(bytes).digest('hex');
       expect(MEDIA_ASSETS[url]).toBe(
-        `/media/vfx/orbital-lightning/${spec.kind}.${spec.sha.slice(0, 12)}.glb`,
+        `/media/vfx/orbital-lightning/${spec.kind}.${sha256.slice(0, 12)}.glb`,
       );
       await MeshoptDecoder.ready;
       const doc = await new NodeIO()

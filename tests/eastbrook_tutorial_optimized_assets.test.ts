@@ -13,7 +13,6 @@ import { MEDIA_ASSETS } from '../src/render/assets/manifest.generated';
 const ASSETS = [
   {
     file: 'quest/supply_crate',
-    sha256: 'dfb220bc3b93d7ed962639a102b05d597be4c0596ea7a0a6cd021fb1fd891d56',
     triangles: 2311,
     byteCap: 330000,
     min: [-0.949722, -0.663891, -0.605672],
@@ -26,7 +25,6 @@ const ASSETS = [
   },
   {
     file: 'quest/weathered_ledger_page',
-    sha256: '4c86be654583ec1b80cc88155dc329ecb3770d91e749f33c97e3da8da6593e5f',
     triangles: 4413,
     byteCap: 110000,
     min: [-0.950768, -0.61745, -0.145558],
@@ -36,7 +34,6 @@ const ASSETS = [
   },
   {
     file: 'quest/gravecaller_sigil',
-    sha256: '560b9287dac9613856f87e7bba333b6799cbd35974e6831583061670175fa7af',
     triangles: 4364,
     byteCap: 125000,
     min: [-0.721574, -0.950755, -0.720308],
@@ -46,7 +43,6 @@ const ASSETS = [
   },
   {
     file: 'foliage/dead_1',
-    sha256: '7f2dea31d5493a304d836a772c9489626c8430e594fc9c81fa782b0ecee8d4f0',
     triangles: 3249,
     byteCap: 350000,
     min: [-2.592215, -0.335555, -2.903571],
@@ -56,7 +52,6 @@ const ASSETS = [
   },
   {
     file: 'foliage/dead_2',
-    sha256: 'cc1f3832b267f98cb17a7f515c7809fbd1a192eefc76823b618cf62dc0d6ba21',
     triangles: 3625,
     byteCap: 350000,
     min: [-2.332279, -0.335555, -2.52305],
@@ -66,7 +61,6 @@ const ASSETS = [
   },
   {
     file: 'foliage/dead_3',
-    sha256: '309c59cf4030a65f12d5b75fdc11eb1b08e60a9e411ed1821449ef87a9d45771',
     triangles: 3544,
     byteCap: 350000,
     min: [-3.84773, -0.335555, -3.386694],
@@ -95,10 +89,9 @@ describe('Eastbrook and Tutorial Island optimized shipping assets', () => {
       const rel = `models/${asset.file}.glb`;
       const file = path.join(__dirname, '..', 'public', rel);
       const bytes = readFileSync(file);
-      expect(sha256(bytes)).toBe(asset.sha256);
       expect(bytes.length).toBeLessThanOrEqual(asset.byteCap);
       expect(MEDIA_ASSETS[rel]).toBe(
-        `/media/models/${asset.file}.${asset.sha256.slice(0, 12)}.glb`,
+        `/media/models/${asset.file}.${sha256(bytes).slice(0, 12)}.glb`,
       );
       const json = JSON.parse(bytes.subarray(20, 20 + bytes.readUInt32LE(12)).toString());
       expect(json.extensionsRequired).toEqual(

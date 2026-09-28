@@ -12,18 +12,18 @@
 // `CREDITS.md`.
 //
 // What stands in for the missing fingerprint is this file: each shipped binary is
-// pinned BOTH by sha256 of its exact committed bytes AND by parsed shape, so a
-// silent re-export, a recompression, or an optimizer pass that changes what the
-// pads actually are turns red instead of landing unnoticed. If an exporter is ever
-// written for them, replace the sha256 pins with source-fingerprint pins and drop
-// the exemption note.
+// pinned by its exact byte length, its container chunk table and its parsed shape,
+// and its media-manifest url must match a hash of the committed bytes, so a silent
+// re-export, a recompression, or an optimizer pass that changes what the pads
+// actually are turns red instead of landing unnoticed (any other byte change shows
+// in the media manifest freshness check and the binary diff). If an exporter is
+// ever written for them, add source-fingerprint pins and drop the exemption note.
 //
-// The parsed half is deliberately not a hash restatement: it reads the GLB
-// container by hand (header, chunk table), then re-reads the same file through
-// glTF-Transform and pins mesh/primitive/node/material/texture shape, the KTX2
-// (`KHR_texture_basisu`) encoding the shipping base mandates
-// (`tests/glb_texture_compression.test.ts`), and a byte budget that survives a
-// deliberate re-pin of the hashes.
+// The parsed half reads the GLB container by hand (header, chunk table), then
+// re-reads the same file through glTF-Transform and pins
+// mesh/primitive/node/material/texture shape, the KTX2 (`KHR_texture_basisu`)
+// encoding the shipping base mandates (`tests/glb_texture_compression.test.ts`),
+// and a byte budget that survives a deliberate re-pin of the byte lengths.
 import { createHash } from 'node:crypto';
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
@@ -46,7 +46,7 @@ const CHUNK_JSON = 0x4e4f534a; // 'JSON'
 const CHUNK_BIN = 0x004e4942; // 'BIN\0'
 const MANIFEST_HASH_LENGTH = 12;
 
-// The budget, as distinct from the exact byte pins below: the pins move whenever a
+// The budget, as distinct from the exact byte-length pins below: the pins move whenever a
 // re-export is consciously accepted, this does not. KTX2 payloads are LARGER on
 // disk than the webp they replaced (they stay GPU-compressed in memory), so the
 // floor guards against a stripped or texture-less re-export and the ceiling still
@@ -61,7 +61,6 @@ interface RuneAssetContract {
   readonly id: BgRuneType;
   readonly url: string;
   readonly bytes: number;
-  readonly sha256: string;
   /** Container chunk table: JSON chunk first, then the single BIN chunk. */
   readonly jsonChunkBytes: number;
   readonly binChunkBytes: number;
@@ -85,7 +84,6 @@ const RUNE_CONTRACTS: readonly RuneAssetContract[] = [
     id: 'damage',
     url: '/models/battleground/rune_damage.glb',
     bytes: 75_316,
-    sha256: '1e789f53a60751c8208025e403665cb730e93db13422d5b2224aed12f590de49',
     jsonChunkBytes: 1504,
     binChunkBytes: 73_784,
     nodeName: 'tripo_node_de6c7805',
@@ -104,7 +102,6 @@ const RUNE_CONTRACTS: readonly RuneAssetContract[] = [
     id: 'defense',
     url: '/models/battleground/rune_defense.glb',
     bytes: 55_684,
-    sha256: 'b9dddf0ebfdfaeb75f00b6d38eaf48bd9df36d6c3d95bb5e8e25db6a7b8b011a',
     jsonChunkBytes: 1464,
     binChunkBytes: 54_192,
     nodeName: 'shield',
@@ -123,7 +120,6 @@ const RUNE_CONTRACTS: readonly RuneAssetContract[] = [
     id: 'sprint',
     url: '/models/battleground/rune_sprint.glb',
     bytes: 80_292,
-    sha256: '05d9eb844529730c1c8c05d667d2137d53530a23ab56dacd470f8d37098c6aba',
     jsonChunkBytes: 1536,
     binChunkBytes: 78_728,
     nodeName: 'powerup speed',
@@ -242,7 +238,7 @@ describe('Thornhollow Fields rune pad GLB contract (documented exporter exemptio
   });
 
   it.each(RUNE_CONTRACTS)(
-    '$id pad ships the pinned bytes, sha256, and media-manifest hash',
+    '$id pad ships the pinned byte length and a fresh media-manifest hash',
     (contract) => {
       const assetPath = assetPathFor(contract.url);
       expect(existsSync(assetPath), `${contract.url} should exist under public/`).toBe(true);
@@ -253,12 +249,6 @@ describe('Thornhollow Fields rune pad GLB contract (documented exporter exemptio
       expect(bytes.length).toBeLessThanOrEqual(RUNE_BYTE_CEILING);
 
       const sha256 = createHash('sha256').update(bytes).digest('hex');
-      expect(sha256).toBe(contract.sha256);
-      // Prove the pin discriminates rather than restating a constant: one flipped
-      // bit anywhere in the payload has to move it.
-      const mutated = Buffer.from(bytes);
-      mutated[Math.floor(mutated.length / 2)] ^= 1;
-      expect(createHash('sha256').update(mutated).digest('hex')).not.toBe(contract.sha256);
 
       // The content-hashed manifest url is derived from these exact bytes, so a
       // re-export that skipped `build_media_manifest.mjs` fails here.

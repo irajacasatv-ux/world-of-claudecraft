@@ -15,24 +15,18 @@ const MODELS = [
     name: 'Crucible Warden',
     file: 'crucible_warden.glb',
     maxBytes: 1_600_000,
-    sha256: '03d02c97cde096423b49be95be0c74e6f448bc6de801e3abfff80004d3c306f6',
-    productionUrl: '/media/models/creatures/crucible_warden.03d02c97cde0.glb',
     clips: ['Attack', 'Death', 'Hit', 'Idle', 'JumpSlam', 'Run', 'Walk'],
   },
   {
     name: 'Ember Sentinel',
     file: 'ember_sentinel.glb',
     maxBytes: 1_600_000,
-    sha256: 'dcdcf7e8bb77c6d8bc7cd6de8558793e9dbbfdcffc2e8a0d74316ebc38b6068e',
-    productionUrl: '/media/models/creatures/ember_sentinel.dcdcf7e8bb77.glb',
     clips: ['Attack', 'Death', 'Hit', 'Idle', 'Run', 'Walk'],
   },
   {
     name: 'Cinder Artificer',
     file: 'cinder_artificer.glb',
     maxBytes: 1_600_000,
-    sha256: '3bb3e1d1cc51bed6b5c8873e3c7f18b7ac213185d40c3364ef6a9226dde94366',
-    productionUrl: '/media/models/creatures/cinder_artificer.3bb3e1d1cc51.glb',
     clips: [
       'Attack',
       'Channel',
@@ -53,8 +47,10 @@ describe('Varkhul add models', () => {
     const relativePath = `models/creatures/${model.file}`;
     const bytes = readFileSync(path.join(REPO_ROOT, 'public', relativePath));
     expect(bytes.byteLength).toBeLessThan(model.maxBytes);
-    expect(createHash('sha256').update(bytes).digest('hex')).toBe(model.sha256);
-    expect(MEDIA_ASSETS[relativePath]).toBe(model.productionUrl);
+    const sha256 = createHash('sha256').update(bytes).digest('hex');
+    expect(MEDIA_ASSETS[relativePath]).toBe(
+      `/media/models/creatures/${model.file.replace(/\.glb$/, '')}.${sha256.slice(0, 12)}.glb`,
+    );
     expect(manifestUrls()).toContain(relativePath);
 
     const root = (

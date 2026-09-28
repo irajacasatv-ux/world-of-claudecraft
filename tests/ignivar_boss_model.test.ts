@@ -32,7 +32,6 @@ const RETIRED_HEART_ASSET_PATH = path.join(
   REPO_ROOT,
   'public/models/creatures/ignivar_heart_of_the_end.glb',
 );
-const ASHCALLER_SHA256 = '0f92aa55d5f031cc2ae1c9368102edde96a3345827592cb3c56351d1b4fd4396';
 const SHIPPED_CLIPS = [
   'Attack',
   'Channel',
@@ -105,7 +104,6 @@ describe('Ignivar boss model', () => {
     const bytes = readFileSync(ASHCALLER_ASSET_PATH);
     const sha256 = createHash('sha256').update(bytes).digest('hex');
     expect(bytes.byteLength).toBeLessThan(3_000_000);
-    expect(sha256).toBe(ASHCALLER_SHA256);
     expect(MEDIA_ASSETS['models/creatures/ignivar_ashcaller.glb']).toBe(
       `/media/models/creatures/ignivar_ashcaller.${sha256.slice(0, 12)}.glb`,
     );

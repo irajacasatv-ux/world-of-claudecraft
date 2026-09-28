@@ -25,7 +25,6 @@ const ACCEPTED_ASSETS = [
   {
     name: 'frostveil_ice_spire',
     height: 3.2,
-    sha256: '607eaf953ec4454d0317ec0c0b490a2ba9096da4fc74d9e86caaa408ef05c5f4',
     materials: 1,
     glass: false,
     socket: false,
@@ -34,7 +33,6 @@ const ACCEPTED_ASSETS = [
   {
     name: 'streetlamp_amberfall_crystal',
     height: 5.5,
-    sha256: '0bc09ff610e99db7df715dbf5101e8517fd7e8d0278e2372755475be797c446f',
     materials: 3,
     glass: true,
     socket: true,
@@ -43,7 +41,6 @@ const ACCEPTED_ASSETS = [
   {
     name: 'streetlamp_drakelands_brazier',
     height: 5.5,
-    sha256: '9fe8cf7385bc3c794cbaf109b01a864392592e7c371d020c3114d14b070a654c',
     materials: 2,
     glass: false,
     socket: true,
@@ -52,7 +49,6 @@ const ACCEPTED_ASSETS = [
   {
     name: 'streetlamp_eastbrook_civic',
     height: 5.5,
-    sha256: '3b5160907428faeae3ad8379a8f325337ffd9c8c1f208a8598f6982bf20415e0',
     materials: 3,
     glass: true,
     socket: true,
@@ -61,7 +57,6 @@ const ACCEPTED_ASSETS = [
   {
     name: 'streetlamp_evergarden_flower',
     height: 5.5,
-    sha256: '84a3827897d07736c75e74e1392aa02c1af79c49466bf71a8f8c795fbac100a9',
     materials: 3,
     glass: true,
     socket: true,
@@ -70,7 +65,6 @@ const ACCEPTED_ASSETS = [
   {
     name: 'streetlamp_farshore_coral',
     height: 5.5,
-    sha256: '0033541a6120a4da5b17362f0dc37dfabdd6a8b7d1e20e3c2dd7f0cd67f79c11',
     materials: 3,
     glass: true,
     socket: true,
@@ -79,7 +73,6 @@ const ACCEPTED_ASSETS = [
   {
     name: 'streetlamp_frostveil_icicle',
     height: 5.5,
-    sha256: '85ac6e8f01443791b6ad253b0bae5bf810f1ce3340c4df43e8fcb01f07d041a0',
     materials: 3,
     glass: true,
     socket: true,
@@ -88,7 +81,6 @@ const ACCEPTED_ASSETS = [
   {
     name: 'streetlamp_galecrest_mast',
     height: 5.5,
-    sha256: '463796a266ae7a3e1992e02ea0de0a88db301b5c737c9606b20ef76d0c3b639f',
     materials: 3,
     glass: true,
     socket: true,
@@ -97,7 +89,6 @@ const ACCEPTED_ASSETS = [
   {
     name: 'streetlamp_mirefen_witchflame',
     height: 5.5,
-    sha256: 'bfb8da17a055a0b9cc6f53db6850b1ff41d378ac18467fd22afe71350fca769a',
     materials: 3,
     glass: true,
     socket: true,
@@ -106,7 +97,6 @@ const ACCEPTED_ASSETS = [
   {
     name: 'streetlamp_nightbloom_moonflower',
     height: 5.5,
-    sha256: '8e71c9717f93d0ff4a6e9ce9502741d9ca4c324a1f58a42984c926586481ef89',
     materials: 3,
     glass: true,
     socket: true,
@@ -115,7 +105,6 @@ const ACCEPTED_ASSETS = [
   {
     name: 'streetlamp_palmreach_totem',
     height: 5.5,
-    sha256: 'a9555fe643d670e19b89c2036d678549c85a1859b6bacb7aa7d59e26252843ec',
     materials: 2,
     glass: false,
     socket: true,
@@ -124,7 +113,6 @@ const ACCEPTED_ASSETS = [
   {
     name: 'streetlamp_thornpeak_beacon',
     height: 5.5,
-    sha256: '2ee14635a078fa2cb10a8bd181877e63ec979797a51d81889b3dc1397de057a3',
     materials: 3,
     glass: true,
     socket: true,
@@ -133,7 +121,6 @@ const ACCEPTED_ASSETS = [
   {
     name: 'streetlamp_veiled_crystal',
     height: 5.5,
-    sha256: 'e54add53c52729a6219a2882c21ce02ea0c3d9cacb9948a4ab7c789e692bbb32',
     materials: 3,
     glass: true,
     socket: true,
@@ -142,7 +129,6 @@ const ACCEPTED_ASSETS = [
   {
     name: 'streetlamp_willowfen_reed',
     height: 5.5,
-    sha256: '2ade5a40188423148f7c6c96da94a32919494c269c98f625dbe80c5f98f2a97c',
     materials: 3,
     glass: true,
     socket: true,
@@ -151,7 +137,6 @@ const ACCEPTED_ASSETS = [
   {
     name: 'streetlamp_wraithwood_ghost',
     height: 5.5,
-    sha256: 'd6cf06f1a113d167a5a6fe6a37ccd089732be1c051ac49b67191ac1afb1b4c30',
     materials: 3,
     glass: true,
     socket: true,
@@ -289,7 +274,7 @@ describe('accepted Tripo streetlamp and Frostveil ice asset wave', () => {
     expect(panes).toBe(ACCEPTED_ASSETS.filter((a) => a.glass).length);
   });
 
-  it('pins the reviewed bytes, optimized topology, KTX2 textures, and grounded bounds', async () => {
+  it('pins the reviewed byte budget, optimized topology, KTX2 textures, and grounded bounds', async () => {
     await MeshoptDecoder.ready;
     const io = new NodeIO()
       .registerExtensions(ALL_EXTENSIONS)
@@ -301,10 +286,10 @@ describe('accepted Tripo streetlamp and Frostveil ice asset wave', () => {
       const assetPath = path.join(ROOT, 'public', relativePath);
       const bytes = readFileSync(assetPath);
       totalBytes += bytes.length;
-      expect(createHash('sha256').update(bytes).digest('hex'), accepted.name).toBe(accepted.sha256);
       expect(bytes.length, `${accepted.name} shipping bytes`).toBeLessThanOrEqual(128 * 1024);
+      const sha256 = createHash('sha256').update(bytes).digest('hex');
       expect(MEDIA_ASSETS[relativePath]).toBe(
-        `/media/models/props/${accepted.name}.${accepted.sha256.slice(0, 12)}.glb`,
+        `/media/models/props/${accepted.name}.${sha256.slice(0, 12)}.glb`,
       );
       expect(CREDITS).toContain(
         `| Generated prop model (${accepted.name}) | World of ClaudeCraft | Project-generated via scripts/asset_pipeline (Tripo AI 3D) | Project asset | With the project only |`,

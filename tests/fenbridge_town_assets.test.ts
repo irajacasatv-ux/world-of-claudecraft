@@ -46,7 +46,6 @@ const RENDERER_HARD_CEILING = 88_000;
 
 interface ExpectedArtifact {
   bytes: number;
-  sha256: string;
   triangles: number;
   primitiveTriangles: readonly number[];
 }
@@ -54,85 +53,71 @@ interface ExpectedArtifact {
 const EXPECTED_ARTIFACTS: Readonly<Record<string, ExpectedArtifact>> = {
   warden_gatehouse: {
     bytes: 141_848,
-    sha256: 'fb111006ebdd464d89950ee04079602fe4c85344feae52c22820138ee45ac3a9',
     triangles: 8_766,
     primitiveTriangles: [8_695, 71],
   },
   crooked_reed_inn: {
     bytes: 149_080,
-    sha256: '3fddbc1616826d31fc9b700455f828c2605ecfb00d4e0ca58f59084782e24f86',
     triangles: 8_949,
     primitiveTriangles: [8_807, 142],
   },
   lantern_chapel: {
     bytes: 107_392,
-    sha256: '3a59d9d4f51a2546b71a0adee7096ccae585e6d284ee7608b4fed5d1f8326a7a',
     triangles: 6_671,
     primitiveTriangles: [6_486, 185],
   },
   moonwort_apothecary: {
     bytes: 104_468,
-    sha256: '94f1ee02903c777e38d97b92aa31a33c08d2ba4440338519e3551189ea464009',
     triangles: 6_086,
     primitiveTriangles: [6_017, 69],
   },
   gilded_strongbox: {
     bytes: 69_908,
-    sha256: '7e19a2707989265ac08625fa5854f9f8b4f966984c09ace3454348b499936a80',
     triangles: 4_133,
     primitiveTriangles: [4_033, 100],
   },
   hesk_tannery: {
     bytes: 198_908,
-    sha256: 'eafd78c5cb9200a75ee85b8cd92a87d4cac16dc28804d2a6d221a8fa495bb522',
     triangles: 12_740,
     primitiveTriangles: [12_581, 159],
   },
   scout_lodge: {
     bytes: 110_556,
-    sha256: '7a8664c6eec7da0bef2cc50faaf829ff88606b524237ddc93151ae4ca8445d6b',
     triangles: 6_507,
     primitiveTriangles: [6_431, 76],
   },
   mirelight_cistern: {
     bytes: 48_940,
-    sha256: 'e97fa553db26f4f8d7d0db66b171f492465abadd828cc4d796b26f269055cf29',
     triangles: 2_388,
     primitiveTriangles: [2_328, 60],
   },
   provision_stall: {
     bytes: 26_332,
-    sha256: '456f0df6da4bdf59253e0380b3cdbdf2f4e0f9901387877e2c209cacd6ea6182',
     triangles: 1_304,
     primitiveTriangles: [1_280, 24],
   },
   palisade_wing: {
     bytes: 15_680,
-    sha256: 'f087384499582c53320c44b99686cf7cef81d7e2fbecf049fe004b7028bd6570',
     triangles: 766,
     primitiveTriangles: [766],
   },
   gate_arch: {
     bytes: 24_276,
-    sha256: 'fde727cae2aae66a5d559362f86ffd701d4fbd0cca2b25e9642b61effac67893',
     triangles: 1_216,
     primitiveTriangles: [1_192, 24],
   },
   boardwalk: {
     bytes: 9_264,
-    sha256: '4b74e361e66e667ef134b99bae14863709251d236fb31d9f348488c3ee07fd3e',
     triangles: 376,
     primitiveTriangles: [376],
   },
   muster_board: {
     bytes: 17_480,
-    sha256: '186836ff8bd8d1f0b1ff6b18b66f1618f19b929a724d42560f203a0965a0bf41',
     triangles: 760,
     primitiveTriangles: [736, 24],
   },
   muster_order: {
     bytes: 6_888,
-    sha256: 'ebbe82d88beb8760fdd03c64d5b05460041d41f624c2951e709d80927bc21a9c',
     triangles: 204,
     primitiveTriangles: [204],
   },
@@ -584,7 +569,6 @@ describe('Fenbridge shipping asset family', () => {
       expect(bytes.toString('utf8', 0, 4)).toBe('glTF');
       expect(bytes.readUInt32LE(4)).toBe(2);
       expect(bytes.length).toBe(expected.bytes);
-      expect(sha256(bytes)).toBe(expected.sha256);
       expect(bytes.length).toBeLessThanOrEqual(contract.byteCeiling);
 
       const document = await io.readBinary(bytes);

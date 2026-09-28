@@ -32,7 +32,6 @@ interface TomePin {
   itemId: string;
   rootName: string;
   bytes: number;
-  sha256: string;
   triangles: number;
   bounds: { min: [number, number, number]; max: [number, number, number] };
 }
@@ -42,7 +41,6 @@ const TOME_PINS: Record<string, TomePin> = {
     itemId: 'silverleaf_primer',
     rootName: 'InscriptionTomeSilverleaf',
     bytes: 11_136,
-    sha256: 'f06e8e5ebf527ad7c4e67392deb964b151ca0f018f03049a91a5f531b6b93cf1',
     triangles: 404,
     bounds: { min: [-0.1763, -0.1, -0.0555], max: [0.163, 0.3, 0.0622] },
   },
@@ -50,7 +48,6 @@ const TOME_PINS: Record<string, TomePin> = {
     itemId: 'goldleaf_folio',
     rootName: 'InscriptionTomeGoldleaf',
     bytes: 12_948,
-    sha256: '2a3139d31d8d9b015f2d1431ecfe8232569e8b8fb74d12927513f746afe80f5d',
     triangles: 512,
     bounds: { min: [-0.1866, -0.1668, -0.0605], max: [0.1705, 0.33, 0.0672] },
   },
@@ -58,7 +55,6 @@ const TOME_PINS: Record<string, TomePin> = {
     itemId: 'sunpetal_grimoire',
     rootName: 'InscriptionTomeSunpetal',
     bytes: 13_956,
-    sha256: '8a9c276ec18e701dc94d31218fb341ef693321d27137aedf4d7f1751992371a3',
     triangles: 584,
     bounds: { min: [-0.2007, -0.1668, -0.068], max: [0.1805, 0.36, 0.0863] },
   },
@@ -69,7 +65,6 @@ const TOME_PINS: Record<string, TomePin> = {
     itemId: 'voidbound_grimoire',
     rootName: 'InscriptionTomeVoidbound',
     bytes: 16_556,
-    sha256: 'a30da80e9a3427ad92c700d2ab2a5e62b4e95fbe681ad0a1fe247ee2f8fdb450',
     triangles: 724,
     bounds: { min: [-0.211, -0.1, -0.073], max: [0.188, 0.38, 0.086] },
   },
@@ -122,12 +117,11 @@ describe('inscription tome held models', () => {
   });
 
   for (const [key, pin] of Object.entries(TOME_PINS)) {
-    it(`${key}: bytes, hash, topology, budget, and fingerprint hold`, async () => {
+    it(`${key}: bytes, topology, budget, and fingerprint hold`, async () => {
       const filePath = path.join(REPO_ROOT, `public/models/weapons/${key}.glb`);
       const bytes = readFileSync(filePath);
       expect(bytes.length).toBe(pin.bytes);
       expect(bytes.length).toBeLessThanOrEqual(BYTE_CEILING);
-      expect(createHash('sha256').update(bytes).digest('hex')).toBe(pin.sha256);
 
       const document = await readGlb(key);
       const root = document.getRoot();
@@ -204,8 +198,10 @@ describe('inscription tome held models', () => {
     });
 
     it(`${key}: registered in the media manifest with its content hash`, () => {
+      const bytes = readFileSync(path.join(REPO_ROOT, `public/models/weapons/${key}.glb`));
+      const sha256 = createHash('sha256').update(bytes).digest('hex');
       expect(MEDIA_ASSETS[`models/weapons/${key}.glb`]).toBe(
-        `/media/models/weapons/${key}.${pin.sha256.slice(0, 12)}.glb`,
+        `/media/models/weapons/${key}.${sha256.slice(0, 12)}.glb`,
       );
     });
   }

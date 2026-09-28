@@ -174,22 +174,16 @@ describe('Thornhollow art manifest: every group loads a model that exists', () =
   });
 
   it('ships new Thornhollow GLBs meshopt-compressed with fresh media hashes', () => {
-    const assets = {
-      'models/city/wall_tower.glb':
-        'f492b537c35f217e38f409f7e53fa76dee62db29b651f7f5c6a94b078a83517f',
-      'models/medieval_village_v2/buildings/CastleBase_03.glb':
-        '39d2d944a0a18010b488a2df22fded156a567b81299a4e7f0f1496a9cda32b2b',
-      'models/medieval_village_v2/buildings/CastleStairs_03.glb':
-        '1dd5b842c0df60f12a04c4723fcf614355a983ff47e6214d20702f46f2ddc405',
-      'models/medieval_village_v2/buildings/Stairs_01.glb':
-        'df7c179971609353af4508e62b01be56af63234358eecba25296e54be17f4b3d',
-    } as const;
-    for (const [asset, expectedHash] of Object.entries(assets)) {
+    const assets = [
+      'models/city/wall_tower.glb',
+      'models/medieval_village_v2/buildings/CastleBase_03.glb',
+      'models/medieval_village_v2/buildings/CastleStairs_03.glb',
+      'models/medieval_village_v2/buildings/Stairs_01.glb',
+    ] as const;
+    for (const asset of assets) {
       const bytes = readFileSync(publicFile(asset));
       expect(bytes.toString('utf8')).toContain('EXT_meshopt_compression');
-      const fullHash = createHash('sha256').update(bytes).digest('hex');
-      expect(fullHash).toBe(expectedHash);
-      const hash = fullHash.slice(0, 12);
+      const hash = createHash('sha256').update(bytes).digest('hex').slice(0, 12);
       expect(MEDIA_ASSETS[asset]).toBe(`/media/${asset.replace(/\.glb$/, `.${hash}.glb`)}`);
     }
   });

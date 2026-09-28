@@ -1,4 +1,3 @@
-import { createHash } from 'node:crypto';
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { NodeIO } from '@gltf-transform/core';
@@ -40,17 +39,15 @@ const ASSET_PATH = path.join(REPO_ROOT, 'public/models/vfx/trinket_relics.glb');
 // build_trinket_relics.py, then build_assets.mjs with specs/trinket_relics.json):
 // the exporter's vertex order is not byte-stable, the structure below is.
 const ASSET_BYTES = 25_656;
-const ASSET_SHA256 = '216d378566265de3629f40c3b81e4c04a834335bc58106105909108f711163d6';
 
 function aura(id: string, remaining: number, extra: Partial<Aura> = {}): Aura {
   return { id, name: id, kind: 'buff', remaining, duration: 12, value: 0, ...extra } as Aura;
 }
 
 describe('trinket relic GLB (Blender-authored, texture-free)', () => {
-  it('pins the shipped artifact: bytes, sha256 and a small ceiling', () => {
+  it('pins the shipped artifact: bytes and a small ceiling', () => {
     const bytes = readFileSync(ASSET_PATH);
     expect(bytes.length).toBe(ASSET_BYTES);
-    expect(createHash('sha256').update(bytes).digest('hex')).toBe(ASSET_SHA256);
     expect(bytes.length).toBeLessThanOrEqual(32 * 1024);
   });
 

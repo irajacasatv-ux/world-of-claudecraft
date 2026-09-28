@@ -59,19 +59,19 @@ else under `public/models/` that this branch ships was produced by a committed
 deterministic exporter and is fingerprinted against it.
 
 What stands in for the missing exporter is
-**`tests/battleground_rune_models.test.ts`**, which pins each shipped binary two
-ways: by sha256 of the exact committed bytes, and by parsed GLB shape (container
-header and chunk layout, mesh and primitive counts, node names, material and
-texture counts, the KTX2 / `KHR_texture_basisu` texture encoding the shipping base
-mandates, and a byte-size ceiling). A silent re-export, a recompression, or an
-optimizer pass that changes what the pads actually are therefore fails CI rather
-than landing unnoticed.
+**`tests/battleground_rune_models.test.ts`**, which pins each shipped binary by its
+exact byte length and a media manifest entry keyed to a hash of its committed bytes,
+and by parsed GLB shape (container header and chunk layout, mesh and primitive
+counts, node names, material and texture counts, the KTX2 / `KHR_texture_basisu`
+texture encoding the shipping base mandates, and a byte-size ceiling). A silent
+re-export, a recompression, or an optimizer pass that changes what the pads actually
+are therefore fails CI rather than landing unnoticed; any other byte change shows in
+the media manifest freshness check and the binary diff.
 
 **If these are ever regenerated, the exemption ends.** Land a deterministic
 procedural factory plus exporter under `scripts/assets/` per
-`docs/image-to-glb-asset-workflow.md` and the `image-to-glb` skill, replace the
-sha256 pins with source-fingerprint pins against that exporter, and delete this
-section. Do not add a fourth rune model under the exemption.
+`docs/image-to-glb-asset-workflow.md` and the `image-to-glb` skill, add
+source-fingerprint pins against that exporter, and delete this section. Do not add a fourth rune model under the exemption.
 
 ## Never
 
