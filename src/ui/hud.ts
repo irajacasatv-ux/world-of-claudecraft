@@ -9275,7 +9275,7 @@ export class Hud {
   // -------------------------------------------------------------------------
 
   // Prune spatial-audio state for entities that left interest without a clean
-  // death/castStop (online interest churn, leash, despawn) — stops orphaned cast
+  // death/castStop (online interest churn, leash, despawn): stops orphaned cast
   // loops and frees the aggro Set. Throttled (~10 Hz) from update().
   private reconcileSfx(): void {
     const sim = this.sim;
