@@ -4627,3 +4627,366 @@ tracked screenshot rewritten, the malware scan, typecheck and every build.
   against six unchanged suites (CI over local 1.6 to 3.9, median about 2.5) they sit inside the
   same band (0.9 to 3.7), because the Hud import they shed was collect time, which these
   weights never counted.
+
+## PART 4, THE RELEASE/V0.45.0 SYNC, THE OWED ITEMS AND THE FIRST CI RUNS, 2026-09-28
+
+### THE RULINGS (Fernando, 2026-09-28), RECORDED VERBATIM
+
+Asked at the session's start, with recommendations, all four answered as recommended:
+- "(a) Push go: may I push feature/freeholds to origin (a NEW branch there, no PR) so the Part 2
+  CI items can close (green run under the 2 GiB cap, nightly druid 8-seed, lane bound, weight
+  harvest)?" answered "Yes, push (Recommended)".
+- "(b) Exact GLB sha256 pins in tests (the image-to-glb skill mandates them): drop or keep?"
+  answered "Drop, update skill (Recommended)".
+- "(c) The sparse CI checkout cone pulls about 895 MB of referenced evidence into every sparse
+  job. Re-scope it?" answered "Re-scope, with a guard (Recommended)".
+- "(d) When the pet dies or despawns while the bags are in feed mode, should the feed mode
+  end?" answered "Yes, end it (Recommended)".
+
+Asked again before the first push, because the branch was not yet on origin and carries
+counsel-bound drafts (`docs/prd/woc/freehold-counsel-memo.md`,
+`docs/freeholds/phase-44b-final-legal-handoff.md`, the Terms amendment and the
+territory and authority schedule), which a standing rule keeps out of the public repo. The
+recommendation was a one-commit CI snapshot without those two files; Fernando answered "Push
+the branch as is". On the production read (below) he answered "Record it as owed
+(Recommended)".
+
+### THE SYNC
+
+Merge `555d16f445` takes `release/v0.45.0` at `ac9ed4db24` (179 commits, the Buried Hoards
+release; 1,350 files changed; 96 conflicts by hand). The release's `src/ui/hud.ts` edits were
+ported into the modules the branch had already extracted them to (the World Quest plate into
+`src/ui/banner_slot.ts`, the faction goods lines into `src/ui/item_tooltip_view.ts`, the shock
+bomb's bar press, bag-click aim and cooldown into
+`src/ui/hud/action_bar/action_press_controller.ts`). The hoard guest payout read in
+`server/ws_auth.ts` now runs before the freehold re-ask, so the re-ask stays the last await
+before the join, and `server/game.ts` applies the guest usage inside the branch's guarded join
+window. The deeds and Reliquary walks compose the release's `relicOf` tier rule with the
+branch's furnishing stop. Retired seals and re-mint tooling stayed retired. The terrain corpus
+is the release's body plus the branch's owner-room tail, byte for byte: 254 of 305,824 heights
+changed in the release (value-aligned after the 20-byte header; merge lane 1's figure of 298
+was an unaligned eight-byte window count and is not the number).
+
+Four audit lanes (server and sim, UI and render ports, new surfaces, CI and doc premises) read
+the merge from git objects: 0 blocking, 0 should-fix caused by the merge. Their notes, each
+handled below: the hoard save projection had copied the discovery walk without the furnishing
+stop; the minimap fallback had no arm for the Freehold Gate (older than the merge); a doc
+figure for the cone (49 directories, about 895 MB) had gone stale; the release's 101 new test
+files carry no shard weight rows yet. Neither `patches/` nor the lockfile moved (the release
+changed only the `package.json` version), so no reinstall was owed.
+
+The full armed suite on the merge then found what no conflict marker shows, fixed in
+`052c2c7357`, `a126c5e8e5`, `c9d0350ab5` and `58e23ed574`: release pins reading `hud.ts`
+source for paint the banner slot now owns, three ported Hud edits no test reached, the
+release's ten Buried Hoard GLB families hashing `pnpm-lock.yaml` (seven listed it inline in a
+build script the per-list guard never read, so the guard now reads every source under
+`scripts/assets`; fifteen GLBs rebuilt by their own builders, only stamp bytes moved, four
+portraits re-rendered under a receipt), and four branch pins the release moved without a
+conflict (the bags use-case scan, the deed tail, the dark world fingerprint re-measured on the
+release tip's own tree at 1,058 entities, and the freehold claim golden gaining only the
+release's two new player fields).
+
+### STEP 2: BLOCKED, RECORDED AS OWED
+
+The production host (10.2.0.150, through the production proxy) refused this machine's key
+("Permission denied (publickey)"); its host key still matched, so the key was most likely
+removed in a rotation. Nothing was read and nothing deleted: the 490 palette-only GLBs stay,
+and the query and the list stand as PART 3 records them.
+
+### STEP 3 AND THE RULINGS, BUILT
+
+- (a) The five flat HUD modules moved behind `index.ts` barrels (`c6412e4280`): the confirm
+  dialog to `src/ui/hud/dialog/`, the resurrection offer and the Pale Keeper revive with its
+  core to `src/ui/hud/revive/`, the tool-effect confirm to `src/ui/hud/professions/`, and Town
+  Focus with its view and painter to `src/ui/hud/town_focus/`, each partner moving with the
+  one module that alone imports it.
+- (b) The Crucible purchase confirm left Hud for `src/ui/hud/vendor/crucible_purchase_confirm.ts`
+  as `requestCruciblePurchase` over a typed host, beside the heroic one, with its own behavior
+  suite (`87ce5902a6`). `src/ui/hud.ts` ceiling lowered to 14,866.
+- (c) The capture receipt's success path is reached (`312b2f9670`): its two git reads go
+  through an injectable reader and the CLI body is `runReceiptCli`, so one case seals a
+  synthetic set end to end.
+- (d) The pet feed mode ends the frame the primary pet dies, despawns or is dismissed, and
+  open bags repaint out of it (`d521d17b62`), built test-first.
+- Ruling (b): the exact sha256 pins on shipped GLBs dropped, structure, size, fingerprint and
+  rebuild equality kept, the image-to-glb skill and docs updated (`d2094c9b34`); then every
+  manifest URL and both foliage scripts' enforced sha tables tied to the bytes on disk
+  (`755177e9d5`).
+- Ruling (c): the sparse cone is derived from the unit-test-reachable closure
+  (`tests/helpers/sparse_cone_corpus.ts`, with its own fixture suite), still coupled to
+  `.github/workflows/ci.yml` by set equality in `tests/ci_workflow.test.ts`: 52 subtrees
+  (about 1 GB) to 32 (about 596 MB) (`59310287cd`, widened by `5a6f707928`). A traced full unit
+  run (lane files on, Postgres armed, not the release i18n tier) read nothing outside it.
+- From the merge audit: one credit step for every found-item walk
+  (`src/sim/item_credit_chain.ts`, `508d788524`, then one guarded def lookup `ec289473cc`),
+  and the Freehold Gate's minimap fallback with an exhaustive switch (`efc1e623a5`).
+
+### THE REVIEWS
+
+Five fresh reviewers over the session diff, then a fresh read of every fix round and the QA
+checklist. No reviewer or read found a blocking issue in the branch's own code except one: the
+first fresh read caught a fix round that would have turned CI red (`tests/unbind_window_hud.test.ts`
+still pinned the router's old raw bags check), fixed in `3d87dd0e5c`.
+- Architecture: 0 blocking, 0 should-fix, 2 nits (the Reliquary tally's bare `ITEMS[id]`,
+  applied in `ec289473cc`; a synthetic `ITEMS` row in `tests/item_credit_chain.test.ts` against
+  caches, judged moot: the Reliquary memos key on the page table and the state, and no cache on
+  that path derives from `ITEMS`).
+- Content obligations: nothing owed by the branch; the findings are release-owned (below).
+- Frontend seams: 1 should-fix (release-owned, below), 3 nits and 2 notes: the bags repaint
+  helper's raw display read and its four domain copies (all through `bagsWindowShown`,
+  `f205bf24fe`, `3d87dd0e5c`), the fan-out row's empty gate (the helper's own body is pinned),
+  the half-arch door relying on its caller's stroke (it sets its own). The two notes are
+  follow-ups below.
+- Gate integrity: 2 should-fix and a nit (reach forms the corpus could not see, unseeded
+  alternations, the trace environment unrecorded), all applied in `5a6f707928`.
+- Test coverage: 7 should-fix and 3 nits (unenforced foliage sha tables, five manifest checks
+  left on a bare regex, a missing corpus JSON failing too late, unseeded corpus arms, no literal
+  pin on the receipt baseline, a Crucible dismissal that never dismissed, one of nine faction
+  goods asserted, the aim-slot constant, uncommented source pins, the heroic precedence), all
+  applied (`755177e9d5`, `5a6f707928`, `c93325ff23`, `ec289473cc`).
+- Fresh reads of the session's fix rounds: of the review round (1 blocking above, 6 nits, all
+  applied in `3d87dd0e5c`); of that round (3 nits, `0bdc0b7721`, and the half-applied one
+  finished in `49d14616d5`).
+- QA checklist over the session: ready with notes, 2 doc nits, applied (`dd812ff990`).
+- After the first CI runs, every change (the two CI fixes, the bound and weight work, the splits
+  and their pins) went through fresh reads round by round: a test-coverage reader on every test
+  commit and a gate-integrity reader on every CI or gate commit, each round's findings applied
+  in full and the fixes read again, until a round came back clean (the last, on `e0d973363b` and
+  `8c8454cb19`: no blocking or should-fix finding, its two comment nits applied in `d4ba1a019c`,
+  comment only). The readers found, and this ledger records as fixed: the close-path bags pins
+  passing a commented-out copy, an arm left dead, a decoy copy of a method inside a literal, a
+  constant `closeMobileBags`, and a drifted declaration; the escort pins passing a skip hook
+  through an options object, a `beforeEach`, a wrapper, a shadowed callback, a comment marker
+  split across strings, a line terminator inside a header, a re-export the shard files called
+  but the pin never read, and a `continue` that skipped every round's assertion; the weight
+  guard judging local rows in CI units, depending on the table carrying rows, failing open on an
+  unknown method, and leaving its boundary unpinned; the lane rebalance modelled in the wrong
+  order; and pr-gate's bound. Every such finding was proven with a mutant before it was fixed
+  and killed after.
+
+MUTANTS: 149 run this session, each behind a control run, restored by `git checkout` with the
+file verified equal to HEAD before the next: 148 killed. The one survivor was a finding: the
+release's direct cooldown read for the shock bomb and the action bar's read agree on every
+input, so the two were unified (`ac91cd18f2`) and the uniform read stays pinned by the
+bomb-on-cooldown case. Not counted: two must-pass controls (they passed, as designed), one
+invalid mutant (a decoy placed in a comment, which the pin strips; re-run as a real decoy and
+killed), and one batch discarded whole because a transient git lock failed a restore mid-run
+(re-run clean).
+
+### THE FIRST CI RUNS (the branch had never run CI)
+
+CI runs only on pull requests, merge groups, pushes to `main`, `dev-*` and `release/**`, and
+dispatch, so a push of this branch runs nothing: each run below was dispatched.
+- The push itself met the pre-push floor's copy scan, which diffs against `@{upstream}`, then
+  `origin/feature/masterwrought`: it reached 41 archived QA logs carrying tool glyphs and one
+  em dash. The glyphs were normalized by a recorded mapping with every file's before and after
+  hash (`copy-glyph-normalization.json` beside this ledger, `5997d7cc9f`), the dash removed
+  (`16131786f9`).
+- Run 36444276927 at `16131786f9`: three real reds and one cancel. Shard 5,
+  `tests/unbind_window_hud.test.ts` (already fixed locally in `3d87dd0e5c`). Shard 2,
+  `tests/focus_restore.test.ts` still naming `town_focus_window.ts` by its old flat path
+  (`7df6aad13f`). Shard 6, `tests/freehold_npc_spawn.test.ts`: the dark world's position digest
+  differs on x64. Measured with a bundled probe on the same Node 26.10.0: exactly one entity of
+  1,058 differs, `warlord_drogmar` (id 332), whose spawn height is 3.7256669298810356 on arm64
+  and 3.725666929881035 on x64, one ulp. Positions and facings now round to a micro-yard before
+  hashing; both digests measured identical on arm64 macOS, arm64 Linux and x64 Linux
+  (`13710714d1`). Lint was CANCELLED at its 15-minute limit: its depth-1 checkout fetch took 14
+  minutes while PR checks finished its whole job in 3, a transient stall (the next run's
+  checkout took 73 s).
+- Run 36448553184 at `13710714d1`: fully green, full mode: all eight shards, both lanes,
+  browser, checks and lint.
+- The final full-mode run at the pushed tip: THE FINAL RUNS, at the end of this part.
+
+### THE PART 2 CI ITEMS, CLOSED FROM THOSE RUNS, AND WHAT THEY TURNED UP
+
+Both dispatched runs were full mode (the classifier logs `test_mode=full` for any non-PR
+event). Every vitest leg ran under the 2 GiB worker cap `vite.config.ts` sets.
+
+- The lane bound (`9a2a038a41`). Lane JOB walls: run 1, lane A 12.95 minutes, lane B 23.40 of
+  which 10.88 was a stalled checkout (excluded, as release-gate excludes its stall walls; lane
+  B's test step took 12.07); run 2, lane A 13.43, lane B 16.22. The workflow's formula, worst
+  healthy wall x 1.60 x 1.37: 16.22 x 1.60 x 1.37 = 35.6, so both halves 28 to 36.
+- The shard weights (`f2fd057f59`). A full harvest from run 36448553184 measured all 5,050 unit
+  test files: the 1,049 carried rows (Part 2's 25 among them) are CI-measured, the release's
+  101 new files are weighed for the first time, nothing was dropped (the tables diffed; the
+  tool's provenance warning was checked, not trusted).
+- What the harvest found (`c3d93d162a`, then hardened). Two files outside the lane weighed over
+  the 90-second rule: `tests/parity/coverage_c.test.ts` at 108.7 s (84.2 s at the 2026-09-08
+  harvest) and `tests/world_population_invariant.test.ts` at 167.9 s (43.3 s), the risk merge
+  lane 4 named. Locally 33 and 54 s, the usual CI to local band, so the cost is real. Laning
+  them would have pushed the lanes past pr-gate's bound, so both split along their cost
+  clusters: `coverage_c` into contiguous c and d halves (every case body byte for byte, 504
+  assertions before and after), and the escort sweep into four round-robin shard files
+  `tests/world_population_invariant_a` to `_d` beside the rule's own file, over
+  `tests/helpers/world_population.ts` and the Sim-free deal in
+  `tests/helpers/escort_shards.ts`, pinned by `tests/world_population_shards.test.ts` (the
+  shard files one exact template, the deal and one escort's rounds pinned whole, the sweep
+  files kept import-graph selected) and by a live control in the rule's file that each term
+  of the population budget fails one mob over. The reshaped files carry local medians until
+  the next harvest.
+- The pr-gate bound (`1253afcd00`, `d7b4d7a849`), found by the gate-integrity read of the
+  above: its 37 was sized from a 2026-08-14 selective base while full mode, which the merge
+  queue always runs, now out-walks it. Worst healthy full-mode shard wall 22.12 minutes (run
+  36444276927 shard 7; two stalled walls excluded): 22.12 x 1.60 x 1.37 = 48.5, so 49, and the
+  queue's critical path is 8 + 49 = 57 against its 90-minute ceiling. It is PREDICTED SHORT
+  for selective PRs (the old 1.44 selective to full ratio puts a selective shard near 32
+  minutes and its bound near 70), but no selective wall exists on this tree and a bound sized
+  from an extrapolation is what the lanes' history forbids, so 49 stands until one is measured.
+- The lane halves (`3366d49a99`, `289ff1c1cd`): `owned_class_balance_healer_contract` moved
+  from b to a; modelled the way the lane runs (one uncached vitest leg per half at two
+  workers, largest file by bytes first) the busier half goes from about 841 s to about 773 s.
+- The lane rule in CI time (`38db43a873`, `714894ef6d`, `b82d10a2b7`, `577d07920f`): a
+  carried row is a local measurement standing in for the harvest's, so the rule now judges it
+  scaled by `CARRIED_LOCAL_TO_CI_RATIO` (4, above the split families' 3.13 and 2.91 and about
+  the heavy files' 90th to 95th percentile) through `laneThresholdOver`, pinned over a
+  synthetic table including rows exactly at the line. The shard packer deliberately still
+  packs carried rows as recorded.
+
+The first run's lint was a transient stall; the second run's lint passed. That pass is no
+evidence, and neither is any recent one: see THE CI LINT JOB CHECKS NOTHING below.
+
+### THE CI LINT JOB CHECKS NOTHING (found here, for the CI owner; not changed on this branch)
+
+The "Lint (changed files)" job printed `Checked 0 files` and passed on this branch's
+dispatched run, and, checked against the repository's recent history, on a pull request run
+(35825423349, PR #4167, 72 changed .ts files) and a merge-queue run (36390343586, PR #4243).
+The probable mechanism (the gate-integrity reader's reading of Biome, not yet reproduced): the
+job checks out at depth 1 and fetches the base at depth 1, so `biome ci --changed
+--since=<base>` diffs `<base>...HEAD` with no merge base, git fails, Biome keeps only the empty
+stdout, and `--no-errors-on-unmatched` turns zero files into a pass. The workflow comment's
+premise that the job "only needs the base commit object" is the false one. Until it is fixed,
+the only changed-files Biome check that runs is the local pre-push floor (`npm run
+ci:changed`), which `--no-verify` bypasses. The reader's proposed fix: fetch the merge
+commit's first parent (depth 2), pass Biome an explicit two-dot file list, and fail closed
+when the list is non-empty but Biome checks nothing. Opening an issue for it is an outward
+act, offered to Fernando rather than done.
+
+### THE NIGHTLY
+
+The first nightly of this branch (run 36444280897, dispatched at `16131786f9`, 3 h 27 min)
+failed 7 files of 5,067:
+- Three already fixed by then (`tests/focus_restore.test.ts`, the spawn digest,
+  `tests/unbind_window_hud.test.ts`).
+- The eight-seed druid arm, the Part 2 item this nightly was owed for, TIMED OUT: the
+  release nightly runs the matrix at one seed (the whole file 373 s), Part 2 made the nightly
+  run all eight, and that one case overran its 2,400 s bound under the nightly's contention.
+  The figures were in band (a local eight-seed run: best Moongrove single-target 149.3, best
+  Wildfang 191.9). Fixed in `ffcd04292b`: the matrix is built from per-seed runs combined by
+  the same zero-drop average (two seeds measured bit-identical to the old code), and the test
+  runs one seed per case, each bounded at 900 s in the full sweep, then asserts the unchanged
+  bands over the combined runs.
+- `tests/owned_class_balance_druid_bands.test.ts` (194.32 against a 191 cap, full sweep only)
+  fails identically on the scheduled `release/v0.45.0` and `main` nightlies (run 36414582084):
+  release-owned, listed below.
+- `tests/sfx_studio_server_security.test.ts`: one production export answered 400. It passes in
+  the PR shards and locally alone, in sequence and concurrently with its sibling suite; the
+  assertion now prints the server's error (`545aacb91f`) so a repeat says why.
+- `tests/corpse_harvest_sim.test.ts`: the #2514 family sweep (7.2 s locally, a release-owned
+  case this branch does not change) overran its 20 s default under the nightly's contention,
+  which this branch's longer druid arm raised. Judged on the final nightly below.
+
+The final nightly at the pushed tip: THE FINAL RUNS, at the end of this part.
+
+
+
+### THE ARMED GATE
+
+`node scripts/gate_select.mjs` with Postgres armed (`tests/server/freehold_db.pg.test.ts` 16 of
+16 first, each time). Green on all 12 steps at `6821930bf9` (73,981 tests), at `0ac0a048a3`
+(73,984), and at the last code commit `8c8454cb19`: 5,072 files and 73,984 tests passed (2
+expected fails, 28 skipped), the browser suite 554 of 554, 1,040 s. The tip after it,
+`d4ba1a019c`, changes two comment lines only. Two earlier runs were stopped mid-way because
+a fix round was still landing in the tree, and none of their results is counted.
+
+### CORRECTIONS TO COMMIT MESSAGES (the commits stay as written; the record is here)
+
+- `d521d17b62` says the bags repaint check "has one home, Hud.renderBagsIfOpen". Four domain
+  copies and four `hud.ts` sites still read the raw display until `f205bf24fe` and
+  `3d87dd0e5c`.
+- `59310287cd` says 20 subtrees and about 467 MB; `5a6f707928` widened the cone to 32 subtrees
+  and about 596 MB before anything was pushed.
+- `d2094c9b34` says manifest entries are "checked against a hash of the bytes"; five harbor and
+  ferry tests kept a bare hex regex until `755177e9d5`.
+- `13710714d1`'s comment said a micro-yard "still catches any moved spawn"; the guarantee is a
+  change of more than a micro-yard in any one coordinate (stated so since `abfd3d55ea`).
+- `3de2bbf1c4` says the pin "requires each to run exactly the shard its suffix names", and
+  `85e0a8c2bd` that each file "must register its shard as a live it.each with no modifier";
+  both counted text an options object, hook or wrapper could defeat, until the exact
+  template (`c57e17484f`) and the raw comparison (`f4001572a9`, `85855ac381`).
+- `3366d49a99` gives the rebalance as 884 to 738 s, an LPT model; the lane runs files largest
+  by bytes first, where it is 841 to 773 s (`289ff1c1cd`).
+- `38db43a873` says the ratio of 4 sits above the 95th percentile of all 1,049 replaced rows;
+  the population that matters is the heavy files near the line (`714894ef6d`).
+- `c57e17484f` also rewords a `tests/parity/coverage_d.test.ts` comment its body does not name.
+- `ad99b558e7` says "control every term of the population budget"; it controlled four of five
+  (the hub practice yard and an active run's walker had none) until `204289ccba`.
+- `8b14d71f20` says the SFX failure message "is sliced as text so a long error keeps its
+  tail"; a head slice keeps the head (corrected in `767f0fc41f`), and the commit also mixes
+  that SFX change into a `test(parity)` scope.
+- `204289ccba` says "all seven sweeps"; they are seven escort cases in four sweep files.
+- `e0d973363b` says seeds "collapsing onto one run past the first pair" passed the old check;
+  it passed whenever any one pair differed.
+
+### RELEASE-OWNED FINDINGS, FOR THE RELEASE OWNER (the same on `release/v0.45.0`; not changed here)
+
+- The Allied Hearthstone works from inside instances: `useAlliedHearthstone` checks only dead,
+  combat, cooldown and busy, then `displacePlayer` (an overworld teleport) moves the player out
+  of a dungeon, rift, hoard vault, arena, battleground or freehold room without `leaveDungeon`.
+  The freehold claim frees on the next position sweep; battleground and arena effects were not
+  checked. The release's own target dummy refuses instances; the hearthstone likely should too.
+- The jail table (`server/freehold_wire.ts` here, `server/game.ts` on the release) blocks
+  `unstuck` and the Hearth Key but not the Allied Hearthstone.
+- `ClientWorld.useItem` drops the `aim` argument `Sim.useItem` honors, and the server `use`
+  dispatch parses none.
+- The Allied Hearthstone attunement is `Sim`-only and read through a cast in
+  `src/ui/item_tooltip_view.ts`, so every online player sees "not attuned"; it belongs on a
+  `src/world_api/` facet in both worlds with a parity pin.
+- `t(hubKey as any)` in `src/ui/hud/faction_reward_tooltip_view.ts` hides the key from the typed
+  check.
+- CREDITS gaps: no row for `public/models/props/wisp_maze_kit.glb`, the 15 hoard mob portraits or
+  `rift_marrow_golem.webp`; three currency icons covered only by an older batch's glob; six hoard
+  clips marked `custom: true` but credited by the ElevenLabs and FFmpeg catch-all row.
+- `cmb_coinsack_caught` was inserted mid-table in `src/sim/content/deeds.ts` (both ids are
+  unshipped, so no shipped order moved).
+- `tests/owned_class_balance_druid_bands.test.ts` fails the nightly full sweep (194.32 against
+  a 191 cap on the fixed low-SP probe) on `release/v0.45.0` and `main` alike (scheduled
+  nightly run 36414582084), so the nightly verdict is red on every ref until it is re-banded
+  or the balance moves.
+- The SFX Studio server trims a refusal's error from the front (`.slice(0, 1200)` in
+  `scripts/sfx_studio/server.mjs`), while `scripts/sfx_studio/audio_io.mjs` keeps the END of
+  ffmpeg's stderr, so a long failure can lose the line that says why.
+
+### FOLLOW-UPS, NOT DONE (none is a defect today)
+
+- A Necromancer whose primary pet dies while a secondary lives leaves feed mode with the bar
+  still up (as ruled); online, a pet missing from the synced world for one frame (a teleport)
+  would also end it. Neither has a test.
+- A text pin cannot see a call in the middle of `closeVendor` that throws before the bags arm
+  (a known limit of source pins; only a DOM behavior test could).
+- Nothing at the PR tier proves `runDruidBalanceSeed` forwards its seed into the probe (the
+  one-seed diet cannot); the nightly's one-run-per-seed check is where a seed-plumbing break
+  would show.
+- The shard packer packs carried rows as recorded rather than in CI time
+  (`CARRIED_LOCAL_TO_CI_RATIO` is applied only by the lane rule); one shared helper would give
+  the table one reading, at the cost of re-pinning the partition digest.
+
+### OWED, FOR FERNANDO
+
+- Step 2, the palette orphan read: the production host refuses this machine's key. The SQL
+  and the 490-id list stand as PART 3 records them; nothing was deleted.
+- The CI lint job checks nothing on pull requests and queue runs (THE CI LINT JOB CHECKS
+  NOTHING, above): a fix in its own PR with the CI owner, and an issue if you want one opened.
+- pr-gate's 49 is predicted short for selective PRs; re-derive from the first selective PR
+  runs on the harvested table, and from the next full-mode walls.
+- release-gate's 36 (from a 16.43 minute wall) was not re-measured: release pushes run full
+  mode with the lane files inside the shards, and full-mode shards here reached 22.12 minutes
+  without them. Re-derive from the first release push after this branch lands.
+- The next full-mode harvest replaces the eight carried rows (the split files and the pin
+  file), measured locally.
+- The release-owned list above, for the release owner.
+- The upstream `@vitest/spy` issue from Part 2 remains your call (drafted, not filed).
+
+### THE FINAL RUNS
+
+Dispatched at the pushed tip once this part was committed; their results are added here by the
+next docs commit.

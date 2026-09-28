@@ -67,6 +67,24 @@ Only what the next session needs. Update at the end of every phase and QA.
 
 ## Current phase
 
+**PART 4, THE RELEASE/V0.45.0 SYNC AND THE FIRST CI RUNS, DONE 2026-09-28, PUSHED.** Fernando
+ruled all four Step 0 questions as recommended (push; drop the exact GLB sha pins; re-scope the
+CI cone with a guard; end the pet feed mode) and "Push the branch as is" when told the branch
+carries counsel-bound drafts. Merge `555d16f445` takes `release/v0.45.0` at `ac9ed4db24` (179
+commits, 96 conflicts by hand, four audit lanes). Step 3 landed: the five flat HUD modules behind
+`hud/` barrels, the Crucible confirm in `hud/vendor/`, the capture receipt's success path
+reached, the feed mode ending with its pet. Step 2 is blocked: the production host refuses this
+machine's key, so nothing was deleted. The branch's first CI runs found and fixed a one-ulp
+arm64 against x64 spawn height, re-derived the lane bound (28 to 36) and pr-gate's (37 to 49),
+harvested every shard weight (splitting two files the harvest put over the 90-second rule), and
+the first nightly exposed the eight-seed druid arm overrunning one case, now one case per seed.
+Every change had fresh reads round by round until a round came back without a should-fix;
+169 mutants ran, 168 killed (the survivor was an equivalent read, unified). The armed gate is green on all 12 steps at the last code commit `8c8454cb19` (73,984 tests, browser 554); CI run 36448553184 was fully green in full mode at `13710714d1`, and the final CI and nightly at the pushed tip are recorded in the ledger. OWED: the
+production palette read, the vacuous CI lint job (found here, repo-wide), pr-gate and
+release-gate re-derivations, and the release-owned list. Detail: [the
+ledger](qa/persistence-2026-09-08/findings.md), PART 4.
+
+(Superseded 2026-09-28 by the paragraph above: Part 4 is done.)
 **PART 3, UNUSED ASSETS AND TEST NECESSITY, DONE 2026-09-27, LOCAL.** Fernando ruled that every
 screenshot and GLB test must earn its place and that anything with no use at all be deleted.
 Screenshots: browser suites capture only under `VITE_EVIDENCE_CAPTURE=1`, the evidence
