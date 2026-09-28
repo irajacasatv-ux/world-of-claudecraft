@@ -554,7 +554,7 @@ describe('the data-focus-key namespace has exactly one reader', () => {
     const readers = uiFiles.filter((f) => TOUCHES_NAMESPACE.test(f.code));
     // Named literals rather than a count, so migrating a third window is not a test edit.
     expect(readers.map((f) => f.file)).toContain('mailbox_window.ts');
-    expect(readers.map((f) => f.file)).toContain('town_focus_window.ts');
+    expect(readers.map((f) => f.file)).toContain('hud/town_focus/town_focus_window.ts');
     // And the constant's own spelling, which the two above do not use.
     expect(readers.map((f) => f.file)).toContain('restart_strip_painter.ts');
   });
