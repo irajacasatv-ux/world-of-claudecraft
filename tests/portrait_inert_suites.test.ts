@@ -36,16 +36,19 @@ const SUITES = [
   { file: 'char_window.test.ts', floored: true },
 ];
 
-// The recorder, installed in vi.hoisted (so before any import runs) and returned at the
-// end of the same callback (no line between reaches column 0, so the callback cannot
-// close early), the chip stub, and the afterAll that restores fetch and asserts the list
-// is empty, each matched as one block so no line can move out of it. Each suite also
-// assigns globalThis.fetch exactly twice (the install and the restore), never stubs fetch
-// through vi.stubGlobal, and names realFetch and fetched exactly five times each, the
-// uses those blocks hold: so the captured real fetch cannot be put back or called around
-// the recorder, however it is spelled, nor the list emptied before the check.
+// The recorder, installed in vi.hoisted (so before any import runs) and returned by the
+// callback's first return, the chip stub, and the afterAll that restores fetch and asserts
+// the list is empty, each matched as one block so no line can move out of it. No line
+// between the recorder and its return may reach column 0 or return; an indented early
+// close would leave the destructured bindings undefined, which throws when the suite
+// loads. Each suite also names globalThis.fetch exactly three times (the capture, the
+// install and the restore), never stubs fetch through vi.stubGlobal, and names realFetch
+// and fetched exactly five times each, the uses those blocks hold: so the captured real
+// fetch cannot be put back or called around the recorder, however the target is spelled,
+// nor the list emptied before the check. The counts read words, strings included. A text
+// pin cannot see fetch captured under another spelling before the recorder installs.
 const RECORDER =
-  /^const \{ fetched, inertPortraitChip, realFetch \} = vi\.hoisted\(\(\) => \{\n {2}const fetched: string\[\] = \[\];\n {2}const realFetch = globalThis\.fetch;\n {2}globalThis\.fetch = \(\(input: RequestInfo \| URL, init\?: RequestInit\) => \{\n {4}fetched\.push\(typeof input === 'string' \? input : input instanceof URL \? input\.href : input\.url\);\n {4}return realFetch\(input, init\);\n {2}\}\) as typeof fetch;(?:\n(?: {2}[^\n]*)?)*?\n {2}return \{ fetched, inertPortraitChip, realFetch \};\n\}\);$/m;
+  /^const \{ fetched, inertPortraitChip, realFetch \} = vi\.hoisted\(\(\) => \{\n {2}const fetched: string\[\] = \[\];\n {2}const realFetch = globalThis\.fetch;\n {2}globalThis\.fetch = \(\(input: RequestInfo \| URL, init\?: RequestInit\) => \{\n {4}fetched\.push\(typeof input === 'string' \? input : input instanceof URL \? input\.href : input\.url\);\n {4}return realFetch\(input, init\);\n {2}\}\) as typeof fetch;(?:\n(?:(?! {2}return\b) {2}[^\n]*)?)*?\n {2}return \{ fetched, inertPortraitChip, realFetch \};\n\}\);$/m;
 const CHIP_STUB = /^vi\.mock\('\.\.\/src\/ui\/portrait_chip', \(\) => inertPortraitChip\);$/m;
 const AFTER_ALL =
   /^afterAll\(\(\) => \{\n {2}globalThis\.fetch = realFetch;\n {2}expect\(fetched, 'this suite starts no fetch'\)\.toEqual\(\[\]\);\n\}\);$/m;
@@ -54,14 +57,17 @@ const AFTER_ALL =
  *  line nor a block commented out counts. The suites and the controls both run it. */
 const failedChecks = (raw: string): string[] => {
   const source = stripComments(raw);
-  const count = (pattern: RegExp) => source.match(pattern)?.length ?? 0;
+  const counted = (name: string, pattern: RegExp, want: number): [string, boolean] => {
+    const found = source.match(pattern)?.length ?? 0;
+    return [`${name} ${found} times, want ${want} (words in strings count too)`, found === want];
+  };
   const checks: [string, boolean][] = [
-    ['the recorder, in vi.hoisted and returned from it', RECORDER.test(source)],
+    ['the recorder, in vi.hoisted and returned by its first return', RECORDER.test(source)],
     ['the chip stub', CHIP_STUB.test(source)],
     ['the afterAll restore and zero-fetch assertion', AFTER_ALL.test(source)],
-    ['globalThis.fetch assigned exactly twice', count(/globalThis\.fetch =/g) === 2],
-    ['realFetch named exactly five times', count(/\brealFetch\b/g) === 5],
-    ['fetched named exactly five times', count(/\bfetched\b/g) === 5],
+    counted('globalThis.fetch named', /\bglobalThis\.fetch\b/g, 3),
+    counted('realFetch named', /\brealFetch\b/g, 5),
+    counted('fetched named', /\bfetched\b/g, 5),
     ['no vi.stubGlobal of fetch', !/stubGlobal\(\s*['"`]fetch/.test(source)],
   ];
   return checks.filter(([, holds]) => !holds).map(([name]) => name);
@@ -90,17 +96,31 @@ describe('the portrait-inert suites', () => {
   });
 
   it('fails a suite with a block commented out or worked around (positive controls)', () => {
-    // Each control edits a real suite and runs it through the same failedChecks.
+    // Each control edits a real suite and runs it through the same failedChecks; an edit
+    // that finds nothing to replace leaves the suite passing, so its control fails.
     const raw = read('char_window.test.ts');
+    const recorder = 'the recorder, in vi.hoisted and returned by its first return';
+    const opener = 'const { fetched, inertPortraitChip, realFetch } = vi.hoisted(() => {';
+    const close = '\n  return { fetched, inertPortraitChip, realFetch };\n});';
     expect(failedChecks(raw)).toEqual([]);
+    expect(failedChecks(raw.replace(opener, opener.replace('vi.hoisted', '')))).toEqual([recorder]);
+    expect(failedChecks(raw.replace(close, `\n});\nvi.hoisted(() => {${close}`))).toEqual([
+      recorder,
+    ]);
+    const decoy = "  return { ['fetch' + 'ed']: [], inertPortraitChip, ['real' + 'Fetch']: null };";
+    expect(failedChecks(raw.replace(close, `\n${decoy}${close}`))).toEqual([recorder]);
+    expect(failedChecks(raw.replace(CHIP_STUB, ''))).toEqual(['the chip stub']);
     expect(failedChecks(raw.replace(AFTER_ALL, (block) => `/*\n${block}\n*/`))).toContain(
       'the afterAll restore and zero-fetch assertion',
     );
+    expect(failedChecks(`${raw}\nbeforeAll(() => {\n  globalThis.fetch = vi.fn();\n});\n`)).toEqual(
+      ['globalThis.fetch named 4 times, want 3 (words in strings count too)'],
+    );
     expect(failedChecks(`${raw}\nwindow.fetch = realFetch;\n`)).toEqual([
-      'realFetch named exactly five times',
+      'realFetch named 6 times, want 5 (words in strings count too)',
     ]);
     expect(failedChecks(`${raw}\nafterEach(() => {\n  fetched.length = 0;\n});\n`)).toEqual([
-      'fetched named exactly five times',
+      'fetched named 6 times, want 5 (words in strings count too)',
     ]);
     expect(failedChecks(`${raw}\nvi.stubGlobal('fetch', vi.fn());\n`)).toEqual([
       'no vi.stubGlobal of fetch',
