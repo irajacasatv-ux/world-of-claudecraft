@@ -5,16 +5,26 @@
 // tests/helpers/escort_shards.ts; it builds no world, so the file that reads source
 // text stays cheap and the escort-carrying files stay import-graph selected.
 import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { classifyTestSource, HELPER_FS_PATTERN } from '../scripts/lib/test_visibility.mjs';
 import { ESCORTS } from '../src/sim/data';
 import { ESCORT_SHARD_COUNT, escortShard } from './helpers/escort_shards';
 import { stripComments } from './helpers/strip_comments';
 
-const read = (file: string) => readFileSync(new URL(`./${file}`, import.meta.url), 'utf8');
+// Resolved as a path, not a `new URL(...)` over import.meta.url: Vite rewrites a
+// templated `./${file}` URL into a glob lookup, which misses files it did not expect.
+const HERE = dirname(fileURLToPath(import.meta.url));
+const read = (file: string) => readFileSync(join(HERE, file), 'utf8');
 const flatCode = (file: string) => stripComments(read(file)).replace(/\s+/g, ' ').trim();
 const SUFFIXES = ['a', 'b', 'c', 'd'];
 const shardFileName = (suffix: string) => `world_population_invariant_${suffix}.test.ts`;
+
+// Every form of importing a test helper: a from clause, a side-effect import and a
+// dynamic import. And the pragmas vitest reads from a leading comment.
+const HELPER_IMPORT = /(?:\bfrom\s*|\bimport\s*\(\s*|\bimport\s+)'\.\/helpers\//g;
+const RUNNER_PRAGMA = /@(?:vitest|jest)-/;
 
 /** The one shard-file template, with only the shard index varying. */
 const shardFile = (index: number) =>
@@ -83,7 +93,7 @@ describe('the world population escort sweep shards', () => {
       const file = shardFileName(suffix);
       const raw = read(file);
       expect(raw, `${file} carries a CR, U+2028 or U+2029`).not.toMatch(/[\r\u2028\u2029]/);
-      expect(raw, `${file} carries a test-runner pragma`).not.toMatch(/@(vitest|jest)-/);
+      expect(raw, `${file} carries a test-runner pragma`).not.toMatch(RUNNER_PRAGMA);
       const body = raw.replace(/^(\/\/[^\n]*\n)+/, '');
       expect(body, `${file} carries a comment marker below its header`).not.toMatch(
         /\/\*|\*\/|\/\//,
@@ -108,18 +118,21 @@ describe('the world population escort sweep shards', () => {
       base,
       'the rule file imports assertPopulationSane by name from the population helper',
     ).toContain("import { assertPopulationSane } from './helpers/world_population';");
-    expect(base.match(/from '\.\/helpers\//g), 'the rule file imports one helper').toHaveLength(1);
+    expect(
+      base.match(HELPER_IMPORT),
+      'the rule file imports one helper, in any import form',
+    ).toHaveLength(1);
   });
 
   it("pins the deal and one escort's rounds whole", () => {
-    // Compared statement by statement, so a failure's diff marks the changed statement.
-    // Both sides are comments stripped and whitespace flattened; to accept a deliberate
-    // edit, replace the constant with the Received text, split into lines only at spaces
-    // (the lines rejoin with one space each).
+    // Both sides are comments stripped and whitespace flattened, then split into
+    // fragments at every '; ', so a failure's diff marks the changed fragment. To accept
+    // a deliberate edit, change that fragment in the constant (its lines rejoin with one
+    // space each, so keep a line break only where the flattened text has a space).
     const statements = (text: string) => text.split('; ');
     const howToUpdate = (constant: string) =>
-      `changed: update ${constant} in tests/world_population_shards.test.ts with the ` +
-      'Received text, split into lines only at spaces';
+      `changed: edit the marked fragment in ${constant} in ` +
+      "tests/world_population_shards.test.ts (fragments are split at '; ')";
     expect(
       statements(flatCode('helpers/escort_shards.ts')),
       `tests/helpers/escort_shards.ts ${howToUpdate('ESCORT_SHARDS_MODULE')}`,
@@ -129,7 +142,7 @@ describe('the world population escort sweep shards', () => {
     expect(start, 'runEscortRounds is declared').toBeGreaterThan(-1);
     expect(helper.split('function runEscortRounds(')).toHaveLength(2);
     expect(helper, 'the population helper must not deal escorts itself').not.toMatch(
-      /\bescortShard\b|export \* from/,
+      /\bescortShard\b|export \*/,
     );
     const end = helper.indexOf('\n}\n', start);
     expect(end, 'runEscortRounds closes').toBeGreaterThan(start);
@@ -142,6 +155,17 @@ describe('the world population escort sweep shards', () => {
       ),
       `runEscortRounds ${howToUpdate('RUN_ESCORT_ROUNDS')}`,
     ).toEqual(statements(RUN_ESCORT_ROUNDS));
+  });
+
+  it('bans what it says it bans (positive controls for the text checks)', () => {
+    const helperImports = (text: string) => text.match(HELPER_IMPORT)?.length ?? 0;
+    expect(helperImports("import { a } from './helpers/x';")).toBe(1);
+    expect(helperImports("import './helpers/x';")).toBe(1);
+    expect(helperImports("await import('./helpers/x');")).toBe(1);
+    expect(helperImports("import { a } from '../src/sim/data';")).toBe(0);
+    expect('// @vitest-environment happy-dom').toMatch(RUNNER_PRAGMA);
+    expect('// @jest-environment node').toMatch(RUNNER_PRAGMA);
+    expect("export * as deal from './escort_shards';").toMatch(/export \*/);
   });
 
   it('leaves the escort-carrying files import-graph selected', () => {

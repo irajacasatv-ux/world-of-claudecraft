@@ -14,31 +14,54 @@
 // the shared half lives in tests/helpers/world_population.ts, and
 // tests/world_population_shards.test.ts pins the partition.
 import { describe, expect, it } from 'vitest';
+import { HUB_TRAINING_DUMMY_ID } from '../src/sim/content/practice_dummies';
 import { CAMPS, DUNGEON_X_THRESHOLD, ESCORTS, MOBS } from '../src/sim/data';
 import { Sim } from '../src/sim/sim';
 import type { EscortRunState } from '../src/sim/types';
 import { assertPopulationSane } from './helpers/world_population';
 
 describe('open-world population never exceeds what the content authored', () => {
+  // One boot world, shared by the boot check and the budget controls that follow it.
+  let world: Sim | undefined;
+  const bootWorld = () => {
+    world ??= new Sim({ seed: 20061, playerClass: 'warrior', noPlayer: true });
+    return world;
+  };
+
   it('holds at world generation', () => {
-    const sim = new Sim({ seed: 20061, playerClass: 'warrior', noPlayer: true });
-    assertPopulationSane(sim, 'at boot');
+    assertPopulationSane(bootWorld(), 'at boot');
   });
 
   it('flags one open-world mob over each budget term, and none within it', () => {
     // The negative controls every escort round depends on: one live copy past each
-    // term of the budget (the camps, an idle escortee, a wave with no run active, and an
-    // active run's wave) must fail the check, and an active run's exact wave must not,
-    // or the sweep's passes prove nothing. The Fisher Bram escort's wave template
-    // (breach_wretch) belongs to no other escort, so its terms are isolated.
-    const sim = new Sim({ seed: 20061, playerClass: 'warrior', noPlayer: true });
-    const campMobIds = new Set(CAMPS.map((camp) => camp.mobId));
-    const openWorldMob = (match: (templateId: string) => boolean) =>
-      [...sim.entities.values()].find(
+    // term of the budget (the camps, an idle escortee, the hub practice yard, a wave
+    // with no run active, and an active run's wave and walker) must fail the check,
+    // and an active run's exact wave must not, or the sweep's passes prove nothing.
+    // The Fisher Bram escort's wave template (breach_wretch) belongs to no other
+    // escort, though Farshore's camps also place it, so each case adds one past the
+    // summed budget; the expected rows are counted here, independently of the helper.
+    const sim = bootWorld();
+    const openWorldLive = (templateId: string) =>
+      [...sim.entities.values()].filter(
         (e) =>
-          e.kind === 'mob' && !e.dead && e.spawnPos.x <= DUNGEON_X_THRESHOLD && match(e.templateId),
+          e.kind === 'mob' &&
+          !e.dead &&
+          e.spawnPos.x <= DUNGEON_X_THRESHOLD &&
+          e.templateId === templateId,
+      ).length;
+    const campAuthored = (templateId: string) =>
+      CAMPS.filter((camp) => camp.mobId === templateId && MOBS[camp.mobId]).reduce(
+        (sum, camp) => sum + camp.count,
+        0,
       );
-    const base = openWorldMob((templateId) => campMobIds.has(templateId));
+    const campMobIds = new Set(CAMPS.map((camp) => camp.mobId));
+    const base = [...sim.entities.values()].find(
+      (e) =>
+        e.kind === 'mob' &&
+        !e.dead &&
+        e.spawnPos.x <= DUNGEON_X_THRESHOLD &&
+        campMobIds.has(e.templateId),
+    );
     if (!base) throw new Error('the boot world holds no live open-world camp mob');
     const extras: number[] = [];
     const addCopies = (templateId: string, count: number) => {
@@ -51,6 +74,12 @@ describe('open-world population never exceeds what the content authored', () => 
     const clearCopies = () => {
       for (const id of extras.splice(0)) sim.entities.delete(id);
     };
+    // Tops a template up to `allowed + 1` live and returns the one row the check must
+    // report for it.
+    const oneOver = (templateId: string, allowed: number) => {
+      addCopies(templateId, allowed + 1 - openWorldLive(templateId));
+      return [`${templateId}: ${allowed + 1} live vs ${allowed} allowed`];
+    };
     // The rows the check reported over budget, or none.
     const overBudget = (label: string): unknown => {
       try {
@@ -61,32 +90,51 @@ describe('open-world population never exceeds what the content authored', () => 
       }
       return [];
     };
-    const oneRowOver = (templateId: string) => [
-      expect.stringMatching(new RegExp(`^${templateId}: \\d+ live vs \\d+ allowed$`)),
-    ];
     const bram = ESCORTS.esc_fs_bram;
     const wave = bram.ambushes[0];
     expect(wave.mobId).toBe('breach_wretch');
     expect(overBudget('boot')).toEqual([]);
 
-    addCopies(base.templateId, 1);
-    expect(overBudget('a camp')).toEqual(oneRowOver(base.templateId));
+    const campRow = oneOver(base.templateId, campAuthored(base.templateId));
+    expect(overBudget('a camp')).toEqual(campRow);
     clearCopies();
 
-    addCopies(bram.npcMobId, 1);
-    expect(overBudget('an idle escortee')).toEqual(oneRowOver(bram.npcMobId));
+    const escorteeRow = oneOver(bram.npcMobId, 1);
+    expect(overBudget('an idle escortee')).toEqual(escorteeRow);
     clearCopies();
 
-    addCopies(wave.mobId, 1);
-    expect(overBudget('a wave with no run active')).toEqual(oneRowOver(wave.mobId));
+    const hubRow = oneOver(HUB_TRAINING_DUMMY_ID, 1);
+    expect(overBudget('the hub practice yard')).toEqual(hubRow);
+    clearCopies();
+
+    const idleWaveRow = oneOver(wave.mobId, campAuthored(wave.mobId));
+    expect(overBudget('a wave with no run active')).toEqual(idleWaveRow);
     clearCopies();
 
     const idle = sim.escortRuns.get(bram.id);
-    sim.escortRuns.set(bram.id, { ...idle, run: {} } as EscortRunState);
-    addCopies(wave.mobId, wave.count);
+    if (!idle) throw new Error('the boot world seeds no Fisher Bram escort state');
+    const run: EscortRunState['run'] = {
+      waypointIndex: 0,
+      startedAt: 0,
+      ambushIds: [],
+      fired: [],
+      lastX: 0,
+      lastZ: 0,
+      stuckTicks: 0,
+    };
+    sim.escortRuns.set(bram.id, { ...idle, run });
+    const activeWave = campAuthored(wave.mobId) + wave.count;
+    addCopies(wave.mobId, activeWave - openWorldLive(wave.mobId));
     expect(overBudget('an active run, its exact wave')).toEqual([]);
-    addCopies(wave.mobId, 1);
-    expect(overBudget('an active run, one past its wave')).toEqual(oneRowOver(wave.mobId));
+    const activeWaveRow = oneOver(wave.mobId, activeWave);
+    expect(overBudget('an active run, one past its wave')).toEqual(activeWaveRow);
+    clearCopies();
+    // The walker is the escortee entity itself, so a run allows no second one.
+    const walkerRow = oneOver(bram.npcMobId, 1);
+    expect(overBudget('an active run, a second walker')).toEqual(walkerRow);
+    clearCopies();
+    sim.escortRuns.set(bram.id, idle);
+    expect(overBudget('restored')).toEqual([]);
   });
 
   it('names the escort ambush templates it is protecting, so the sweep is visible', () => {

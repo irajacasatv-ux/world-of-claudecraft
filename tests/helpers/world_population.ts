@@ -45,7 +45,10 @@ function liveCounts(sim: Sim): Map<string, number> {
   return out;
 }
 
-/** Templates a run is allowed to add to the world WHILE it is active. */
+/** Templates a run is allowed to add to the world WHILE it is active: its ambush
+ *  waves. The walker is the escortee entity itself (escort.ts isActiveEscortee reads
+ *  the run's npcId), already inside the idle escortee's allowance, so a run adds no
+ *  escortee of its own. */
 function activeWaveAllowance(sim: Sim): Map<string, number> {
   const out = new Map<string, number>();
   for (const def of Object.values(ESCORTS)) {
@@ -54,8 +57,6 @@ function activeWaveAllowance(sim: Sim): Map<string, number> {
     for (const ambush of def.ambushes) {
       out.set(ambush.mobId, (out.get(ambush.mobId) ?? 0) + ambush.count);
     }
-    // The escortee itself is a live mob while the run walks.
-    out.set(def.npcMobId, (out.get(def.npcMobId) ?? 0) + 1);
   }
   return out;
 }
