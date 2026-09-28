@@ -1178,6 +1178,15 @@ describe('language fan-out: half 1, the arms of refreshLocalizedDynamicUi', () =
     expect(observedArms).toHaveLength(FANOUT_ARMS.length);
   });
 
+  it('keeps the bags arm gated, inside the helper it calls', () => {
+    // The bags arm is an ungated call to Hud.renderBagsIfOpen, whose own open
+    // check is the gate: pinned here so dropping it cannot pass as an
+    // unconditional arm.
+    expect(stripComments(methodBody(hudSource, '  renderBagsIfOpen(): void {'))).toContain(
+      "if (bagsWindowShown($('#bags').style.display)) this.renderBags();",
+    );
+  });
+
   it('finds the call shapes a narrowed walk would lose', () => {
     // One unconditional arm, one behind an isOpen gate, one behind a raw DOM
     // display check, and one optional-chained call: a walk that dropped any of

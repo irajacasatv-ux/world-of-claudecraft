@@ -21,6 +21,7 @@ import type { MaterialComposition } from '../../../sim/material_sources';
 import type { InvSlot, ItemDef, ItemInstancePayload } from '../../../sim/types';
 import type { IWorld } from '../../../world_api';
 import { userFacingApiError } from '../../api_error_i18n';
+import { bagsWindowShown } from '../../bags_view';
 import { showQuantityPrompt } from '../../bank_quantity_prompt';
 import { itemDisplayName } from '../../entity_i18n';
 import { esc } from '../../esc';
@@ -35,7 +36,6 @@ import {
   closeMaterialSourcesDialogForOwner,
   type MaterialSourcesDialogOpener,
 } from '../../material_sources_dialog';
-
 import { dismissInstalledPrompt, installPromptDialog } from '../../prompt_dialog';
 import { termsUrlFor } from '../../terms_link';
 import {
@@ -1343,7 +1343,7 @@ export class WocTradeController {
         this.wocTradeSigning = false;
         this.wocTradeResolving = false;
         this.lastTradeSig = '';
-        if ($('#bags').style.display !== 'none') this.renderBags();
+        if (bagsWindowShown($('#bags').style.display)) this.renderBags();
       }
       return;
     }

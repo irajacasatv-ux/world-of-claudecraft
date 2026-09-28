@@ -443,8 +443,11 @@ function drawHalfArchDoor(
   radius: number,
   core: number,
   colors: MinimapColors,
+  geometry: MinimapPaintGeometry,
 ): void {
   ctx.fillStyle = colors.portal;
+  ctx.strokeStyle = colors.outline;
+  ctx.lineWidth = geometry.markerOutlineWidth;
   ctx.beginPath();
   ctx.arc(x, y, radius, Math.PI, FULL_CIRCLE);
   ctx.lineTo(x + radius, y + radius);
@@ -471,7 +474,7 @@ function drawStableNavigationFallback(
   ctx.strokeStyle = colors.outline;
   ctx.lineWidth = geometry.markerOutlineWidth;
   if (navigation === 'delve-entrance') {
-    drawHalfArchDoor(ctx, x, y, radius, core, colors);
+    drawHalfArchDoor(ctx, x, y, radius, core, colors, geometry);
     return;
   }
   ctx.beginPath();
@@ -504,7 +507,7 @@ function drawSemanticObjectFallback(
 
   switch (semantic.kind) {
     case 'freehold-gate':
-      drawHalfArchDoor(ctx, x, y, radius, core, colors);
+      drawHalfArchDoor(ctx, x, y, radius, core, colors, geometry);
       return;
     case 'hoard-entrance': {
       for (let pass = 0; pass < 2; pass++) {

@@ -20,6 +20,7 @@
 import { audio } from '../../../game/audio';
 import { ALL_RECIPES, ITEMS } from '../../../sim/data';
 import type { SimEvent } from '../../../sim/types';
+import { bagsWindowShown } from '../../bags_view';
 import type { BannerVariant } from '../../banner_slot';
 import { itemDisplayName, tEntity } from '../../entity_i18n';
 import { craftedLineKey, grantItemToken, grantQtyText } from '../../grant_line_view';
@@ -171,7 +172,7 @@ export function applyProfessionEventPresentation(h: ProfessionEventHost, ev: Sim
       // clears boundTo in place, so no loot event repaints them for us).
       if (h.openUnbindNpcId !== null && $('#unbind-window').style.display === 'block')
         h.renderUnbind();
-      if ($('#bags').style.display !== 'none') h.renderBags();
+      if (bagsWindowShown($('#bags').style.display)) h.renderBags();
       break;
     }
     case 'masterworkZone': {

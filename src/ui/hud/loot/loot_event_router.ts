@@ -10,6 +10,7 @@
 
 import { audio } from '../../../game/audio';
 import type { ItemInstancePayload, SimEvent } from '../../../sim/types';
+import { bagsWindowShown } from '../../bags_view';
 import type { BannerShowArgs } from '../../banner_slot';
 import { heldLootWarningText } from '../../held_loot_warning_view';
 import { HUD_LOG } from '../../hud_tones';
@@ -73,7 +74,7 @@ export function applyLootEventPresentation(h: LootEventHost, ev: SimEvent): bool
           audio.coin();
         else audio.lootItem();
       }
-      if ($('#bags').style.display !== 'none') h.renderBags();
+      if (bagsWindowShown($('#bags').style.display)) h.renderBags();
       break;
     }
     default:

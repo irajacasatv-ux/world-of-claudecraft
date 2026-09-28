@@ -12892,7 +12892,7 @@ export class Hud {
   }
 
   renderBagsIfOpen(): void {
-    if ($('#bags').style.display !== 'none') this.renderBags();
+    if (bagsWindowShown($('#bags').style.display)) this.renderBags();
   }
 
   toggleBags(): void {

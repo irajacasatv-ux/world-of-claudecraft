@@ -18,6 +18,7 @@ import { CROSS_HOTBAR_ATTACK_ID } from '../../../game/cross_hotbar';
 import type { Settings } from '../../../game/settings';
 import type { ResolvedAbility } from '../../../sim/sim';
 import type { IWorld } from '../../../world_api';
+import { bagsWindowShown } from '../../bags_view';
 import { crossHotbarActionSlot, EmpowerHold } from '../../empower_hold_core';
 import type { FocusTargetsController } from '../../focus_targets_controller';
 import { t } from '../../i18n';
@@ -320,6 +321,6 @@ export class ActionPressController {
   // (and fishing implements) keeps the plain useItem command.
   private useHotbarItem(itemId: string): void {
     if (!this.hud.tryGatherToolUse(itemId)) this.hud.sim.useItem(itemId);
-    if ($('#bags').style.display !== 'none') this.hud.renderBags();
+    if (bagsWindowShown($('#bags').style.display)) this.hud.renderBags();
   }
 }
