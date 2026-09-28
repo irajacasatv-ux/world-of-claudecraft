@@ -12,7 +12,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { collectSuiteVisibility } from '../scripts/lib/gate_discovery.mjs';
-import { stripComments } from './helpers/strip_comments';
+import { maskCommentsAndStrings } from './helpers/declared_timeouts';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const read = (file: string) => fs.readFileSync(path.join(HERE, file), 'utf8');
@@ -38,48 +38,48 @@ const SUITES = [
 
 // The recorder, installed in vi.hoisted (so before any import runs) and returned by the
 // callback's first return, the chip stub, and the afterAll that restores fetch and asserts
-// the list is empty, each matched as one block so no line can move out of it. No line
-// between the recorder and its return may reach column 0 or hold a return; an indented
-// early close either destructures undefined or breaks vitest's hoisting, and both fail
-// when the suite loads. Each suite also names globalThis.fetch exactly three times (the
+// the list is empty, each matched as one block so no line can move out of it, and each
+// required to be live code. No line between the recorder and its return may reach column
+// 0 or mention return (in a comment or string too, which fails closed); an indented early
+// close either destructures undefined or breaks vitest's hoisting, and both fail when the
+// suite loads. Each suite's code also names globalThis.fetch exactly three times (the
 // capture, the install and the restore), never stubs fetch through vi.stubGlobal, and
 // names realFetch and fetched exactly five times each, the uses those blocks hold: so the
 // captured real fetch cannot be put back or called around the recorder, however the
-// target is spelled, nor the list emptied before the check. The counts read words,
-// strings included. This pin does not see a fetch captured or built under another
-// spelling, nor the blocks wrapped inside a string.
+// target is spelled, nor the list emptied before the check. This pin does not see a fetch
+// captured or built under another spelling, and it trusts the scanner below.
 const RECORDER =
   /^const \{ fetched, inertPortraitChip, realFetch \} = vi\.hoisted\(\(\) => \{\n {2}const fetched: string\[\] = \[\];\n {2}const realFetch = globalThis\.fetch;\n {2}globalThis\.fetch = \(\(input: RequestInfo \| URL, init\?: RequestInit\) => \{\n {4}fetched\.push\(typeof input === 'string' \? input : input instanceof URL \? input\.href : input\.url\);\n {4}return realFetch\(input, init\);\n {2}\}\) as typeof fetch;(?:\n(?:(?![^\n]*\breturn\b) {2}[^\n]*)?)*?\n {2}return \{ fetched, inertPortraitChip, realFetch \};\n\}\);$/m;
 const CHIP_STUB = /^vi\.mock\('\.\.\/src\/ui\/portrait_chip', \(\) => inertPortraitChip\);$/m;
 const AFTER_ALL =
   /^afterAll\(\(\) => \{\n {2}globalThis\.fetch = realFetch;\n {2}expect\(fetched, 'this suite starts no fetch'\)\.toEqual\(\[\]\);\n\}\);$/m;
 
-/** The checks a suite's raw source fails. The suites and the controls both run it. Each
- *  check must hold over the raw text AND the comment-stripped text: stripped, so a line or
- *  block commented out does not count; raw, because the stripper reads a '//' or '/*'
- *  inside a string as a comment and would hide the code after it. */
+/** Whether some match of a block pattern is live code, not inside a comment or a string:
+ *  the file's masking over the match's span must equal the match's own masking. */
+const isLive = (raw: string, code: string, pattern: RegExp): boolean =>
+  [...raw.matchAll(new RegExp(pattern.source, `${pattern.flags}g`))].some(
+    (m) => code.slice(m.index, m.index + m[0].length) === maskCommentsAndStrings(m[0]),
+  );
+
+/** The checks a suite's raw source fails; the suites and the controls both run it. The
+ *  source is read through the repo's tokenizing scanner (maskCommentsAndStrings, whose
+ *  fixtures pin it in tests/suite_duration_budget.test.ts): it blanks comments and string
+ *  contents but understands strings, templates and regex literals, so a comment marker
+ *  inside a string can neither hide code nor keep a commented-out block. */
 const failedChecks = (raw: string): string[] => {
-  const texts = [raw, stripComments(raw)];
-  const everywhere = (holds: (text: string) => boolean) => texts.every(holds);
+  const code = maskCommentsAndStrings(raw);
   const counted = (name: string, pattern: RegExp, want: number): [string, boolean] => {
-    const found = texts.map((text) => text.match(pattern)?.length ?? 0);
-    return [
-      `${name} ${found.join(' and ')} times (raw, then comment-stripped), want ${want} ` +
-        '(words in strings and comments count too)',
-      found.every((n) => n === want),
-    ];
+    const found = code.match(pattern)?.length ?? 0;
+    return [`${name} ${found} times in code, want ${want}`, found === want];
   };
   const checks: [string, boolean][] = [
-    [
-      'the recorder, in vi.hoisted and returned by its first return',
-      everywhere((text) => RECORDER.test(text)),
-    ],
-    ['the chip stub', everywhere((text) => CHIP_STUB.test(text))],
-    ['the afterAll restore and zero-fetch assertion', everywhere((text) => AFTER_ALL.test(text))],
+    ['the recorder, in vi.hoisted and returned by its first return', isLive(raw, code, RECORDER)],
+    ['the chip stub', isLive(raw, code, CHIP_STUB)],
+    ['the afterAll restore and zero-fetch assertion', isLive(raw, code, AFTER_ALL)],
     counted('globalThis.fetch named', /\bglobalThis\.fetch\b/g, 3),
     counted('realFetch named', /\brealFetch\b/g, 5),
     counted('fetched named', /\bfetched\b/g, 5),
-    ['no vi.stubGlobal of fetch', everywhere((text) => !/stubGlobal\(\s*['"`]fetch/.test(text))],
+    ['no vi.stubGlobal of fetch', !isLive(raw, code, /\bstubGlobal\(\s*(['"`])fetch\1/)],
   ];
   return checks.filter(([, holds]) => !holds).map(([name]) => name);
 };
@@ -118,8 +118,8 @@ describe('the portrait-inert suites', () => {
     expect(failedChecks(raw.replace(close, `\n});\nvi.hoisted(() => {${close}`))).toEqual([
       recorder,
     ]);
-    // An earlier return in any form, placed before the recorder's own, including one the
-    // comment stripper would hide behind a '//' inside a string.
+    // An earlier return in any form, placed before the recorder's own, including one
+    // behind a comment marker inside a string.
     const decoy = "{ ['fetch' + 'ed']: [], inertPortraitChip, ['real' + 'Fetch']: null }";
     for (const early of [
       `  return ${decoy};`,
@@ -130,23 +130,27 @@ describe('the portrait-inert suites', () => {
       expect(failedChecks(raw.replace(close, `\n${early}${close}`)), early).toEqual([recorder]);
     }
     expect(failedChecks(raw.replace(CHIP_STUB, ''))).toEqual(['the chip stub']);
-    expect(failedChecks(raw.replace(AFTER_ALL, (block) => `/*\n${block}\n*/`))).toContain(
-      'the afterAll restore and zero-fetch assertion',
-    );
-    const counts = (name: string, found: string, want: number) =>
-      `${name} ${found} times (raw, then comment-stripped), want ${want} ` +
-      '(words in strings and comments count too)';
+    // A block that is not live code: commented out, commented out behind a string that
+    // holds a comment marker, or wrapped in a template string.
+    for (const hide of [
+      (block: string) => `/*\n${block}\n*/`,
+      (block: string) => `const url = '//'; /*\n${block}\n*/`,
+      (block: string) => `const text = \`\n${block}\n\`;`,
+    ]) {
+      expect(failedChecks(raw.replace(AFTER_ALL, hide))).toContain(
+        'the afterAll restore and zero-fetch assertion',
+      );
+    }
+    const counts = (name: string, found: number, want: number) =>
+      `${name} ${found} times in code, want ${want}`;
     expect(failedChecks(`${raw}\nbeforeAll(() => {\n  globalThis.fetch = vi.fn();\n});\n`)).toEqual(
-      [counts('globalThis.fetch named', '4 and 4', 3)],
+      [counts('globalThis.fetch named', 4, 3)],
     );
-    expect(failedChecks(`${raw}\nwindow.fetch = realFetch;\n`)).toEqual([
-      counts('realFetch named', '6 and 6', 5),
-    ]);
-    expect(failedChecks(`${raw}\nconst url = '//'; void realFetch(url);\n`)).toEqual([
-      counts('realFetch named', '6 and 5', 5),
-    ]);
+    for (const call of ['window.fetch = realFetch;', "const url = '//'; void realFetch(url);"]) {
+      expect(failedChecks(`${raw}\n${call}\n`), call).toEqual([counts('realFetch named', 6, 5)]);
+    }
     expect(failedChecks(`${raw}\nafterEach(() => {\n  fetched.length = 0;\n});\n`)).toEqual([
-      counts('fetched named', '6 and 6', 5),
+      counts('fetched named', 6, 5),
     ]);
     for (const stub of [
       "vi.stubGlobal('fetch', vi.fn());",
@@ -154,5 +158,11 @@ describe('the portrait-inert suites', () => {
     ]) {
       expect(failedChecks(`${raw}\n${stub}\n`), stub).toEqual(['no vi.stubGlobal of fetch']);
     }
+    // Words in comments and strings are not code, so they neither count nor stub.
+    expect(
+      failedChecks(
+        `${raw}\n// vi.stubGlobal('fetch', realFetch) with fetched\nconst t = 'realFetch';\n`,
+      ),
+    ).toEqual([]);
   });
 });
