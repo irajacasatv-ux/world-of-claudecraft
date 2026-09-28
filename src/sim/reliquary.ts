@@ -42,6 +42,7 @@ import {
   type ReliquaryRelicDef,
 } from './content/reliquary';
 import { ITEMS } from './data';
+import { creditedParentId } from './item_credit_chain';
 import { ownedMounts as ownedMountKeys } from './mounts';
 import type { PlayerMeta } from './sim';
 import type { SimContext } from './sim_context';
@@ -635,7 +636,7 @@ export function noteRelicObtain(
       wrote = true;
     }
     // A relicOf tier (content/hoard_loot.ts) tallies on its piece the same way.
-    id = def.kind === 'furnishing' ? undefined : (def.heroicOf ?? def.relicOf);
+    id = creditedParentId(def);
   }
   if (wrote) bumpReliquaryWireRev(state);
 }

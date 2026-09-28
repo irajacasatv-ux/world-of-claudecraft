@@ -5,6 +5,7 @@
 import type { CharacterState } from '../character_state';
 import { ITEMS } from '../data';
 import { restoreDeedStats, serializeDeedStats } from '../deeds';
+import { creditedParentId, creditsViaTier } from '../item_credit_chain';
 import {
   noteRelicItemFind,
   noteRelicObtain,
@@ -25,8 +26,9 @@ export function projectHoardRewardCollections(
   for (const item of items) {
     let id: string | undefined = item.itemId;
     let viaTier = false;
-    // Keep the same capped heroic/relicOf walk and quality rule as the real
-    // markItemDiscovered hub. Its event/deed side effects run on the live Sim.
+    // The same capped walk and quality rule as the real markItemDiscovered hub,
+    // through the step both share (item_credit_chain.ts), so a furnishing stops
+    // here too. Its event/deed side effects run on the live Sim.
     for (let depth = 0; id !== undefined && depth < 3; depth++) {
       const def: ItemDef | undefined = Object.hasOwn(ITEMS, id) ? ITEMS[id] : undefined;
       if (!def) break;
@@ -38,8 +40,8 @@ export function projectHoardRewardCollections(
       if (!viaTier && (quality === 'rare' || quality === 'epic' || quality === 'legendary')) {
         deedStats.visited.add(`quality:${quality}`);
       }
-      viaTier = def.heroicOf === undefined && def.relicOf !== undefined;
-      id = def.heroicOf ?? def.relicOf;
+      viaTier = creditsViaTier(def);
+      id = creditedParentId(def);
     }
     noteRelicObtain(meta, item.itemId, item.count);
   }

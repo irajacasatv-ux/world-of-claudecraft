@@ -33,6 +33,7 @@ import { GATHERING_PROFESSION_IDS } from './content/professions';
 import { pointsSpent } from './content/talents';
 import { ITEMS, MOBS, zoneAt } from './data';
 import { canWearDevBadgeTitle, devBadgeTitleTier } from './dev_badge_titles';
+import { creditedParentId, creditsViaTier } from './item_credit_chain';
 import { LAUNCH_PAPERDOLL_SLOTS } from './launch_paperdoll_slots';
 import {
   accountReliquaryOwnership,
@@ -752,8 +753,8 @@ export function markItemDiscovered(
     if (!viaTier && (quality === 'rare' || quality === 'epic' || quality === 'legendary')) {
       markVisited(ctx, meta, `quality:${quality}`);
     }
-    viaTier = def.heroicOf === undefined && def.relicOf !== undefined;
-    id = def.kind === 'furnishing' ? undefined : (def.heroicOf ?? def.relicOf);
+    viaTier = creditsViaTier(def);
+    id = creditedParentId(def);
   }
 }
 
