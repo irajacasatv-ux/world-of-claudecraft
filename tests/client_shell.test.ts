@@ -927,9 +927,10 @@ describe('client HTML shell', () => {
     expect(hudTs).not.toContain("bags.style.display = 'block'");
     expect(hudTs).not.toContain("bags.style.display !== 'block'");
     expect(hudTs).toContain("$('#bags').style.display = 'flex';");
-    // The helper's own body, exactly: the same line also sits in onInventoryChanged, so a
-    // whole-file match could not tell the helper's gate apart.
-    expect(hudTs).toContain(
+    // The helper's own body, exactly, over comment-stripped text (a commented-out copy
+    // beside an unconditional helper must not satisfy it): the same line also sits in
+    // onInventoryChanged, so a whole-file match could not tell the helper's gate apart.
+    expect(stripComments(hudTs)).toContain(
       "  renderBagsIfOpen(): void {\n    if (bagsWindowShown($('#bags').style.display)) this.renderBags();\n  }\n",
     );
     expect(hudTs).not.toContain("#bags').style.display !== 'none'");
@@ -953,15 +954,27 @@ describe('client HTML shell', () => {
     };
     for (const signature of ['closeVendor(): void', 'private onBankClosed(): void']) {
       const body = flat(span(code, `\n  ${signature} {\n`, '\n  }\n')).trimEnd();
-      // The gated repaint is the method's closing else arm, nothing else in it names
-      // renderBags by any spelling, and the arm stays reachable: its guard is the
-      // mobile-bags read alone.
-      expect(body, signature).toMatch(/\} else \{ this\.renderBagsIfOpen\(\); \}$/);
+      // Nothing in the method names renderBags by any spelling, and the gated repaint is
+      // the else of the ONE mobile-bags guard, closing the method: the guard's block is
+      // brace-matched and everything after it must be exactly that else, so no second
+      // guard, else-if or dead condition can narrow or strand the arm.
       expect(body, signature).not.toMatch(/\brenderBags\b/);
       expect(body, signature).toContain(
         "const closeMobileBags = touchBagsShown(document.body.classList, $('#bags').style.display);",
       );
-      expect(body, signature).toContain('if (closeMobileBags) {');
+      const guard = 'if (closeMobileBags) {';
+      expect(body.split(guard), signature).toHaveLength(2);
+      let depth = 0;
+      let close = -1;
+      for (let i = body.indexOf(guard) + guard.length - 1; i < body.length; i++) {
+        if (body[i] === '{') depth++;
+        if (body[i] === '}' && --depth === 0) {
+          close = i;
+          break;
+        }
+      }
+      expect(close, signature).toBeGreaterThan(-1);
+      expect(body.slice(close + 1), signature).toBe(' else { this.renderBagsIfOpen(); }');
     }
     for (const ctor of ['new MarketWindow({', 'new MailboxWindow({']) {
       // Read inside the window's own constructor block, so one window's arm can never be

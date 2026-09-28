@@ -44,16 +44,20 @@ describe('open-world population never exceeds what the content authored', () => 
     expect(dealt.flat().sort()).toEqual(Object.keys(ESCORTS).sort());
     expect(new Set(dealt.flat()).size).toBe(dealt.flat().length);
     // ...and every shard is run by exactly one file: this one and its _b to _d
-    // siblings each run the shard their suffix names, so a changed shard count or a
-    // dropped or doubled call leaves a shard unrun and fails here.
+    // siblings each register the shard their suffix names as a live it.each with the
+    // real callback, so a changed shard count, a dropped, doubled or skipped
+    // registration, or a swapped callback leaves a shard unrun and fails here.
+    const registration =
+      /\bit\.each\(escortShard\((\d+)\)\)\(\s*'holds after \$id is run and its wave is killed, repeatedly',\s*runEscortRounds,\s*120_000,?\s*\)/g;
     const shardRuns = ['', '_b', '_c', '_d'].map((suffix) => {
-      const source = stripComments(
-        readFileSync(
-          new URL(`./world_population_invariant${suffix}.test.ts`, import.meta.url),
-          'utf8',
-        ),
-      );
-      return [...source.matchAll(/\bescortShard\((\d+)\)/g)].map((m) => Number(m[1]));
+      const file = `world_population_invariant${suffix}.test.ts`;
+      const source = stripComments(readFileSync(new URL(`./${file}`, import.meta.url), 'utf8'));
+      const runs = [...source.matchAll(registration)].map((m) => Number(m[1]));
+      // Every numbered shard token is one of those registrations, and no modifier can
+      // skip, defer or narrow one.
+      expect([...source.matchAll(/\bescortShard\(\d+\)/g)], file).toHaveLength(runs.length);
+      expect(source, file).not.toMatch(/\.(skip|todo|skipIf|runIf|only)\b/);
+      return runs;
     });
     expect(shardRuns).toEqual([[0], [1], [2], [3]]);
     expect(ESCORT_SHARD_COUNT).toBe(shardRuns.length);

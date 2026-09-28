@@ -50,8 +50,8 @@ import {
 } from './scenarios';
 
 // Explicit suite timeout, the run_scenarios.ts gate precedent: every case here
-// re-records its scenario (nythraxis_full_pull alone records a full raid
-// pull), and the heavy recordings brush the global 20s budget under
+// re-records its scenario (druid_engines and priest_codex are the heaviest
+// here), and the heavy recordings brush the global 20s budget under
 // parallel-worker contention while green standalone (the same pathology the
 // gate's 90s per-test timeouts were minted for). Assertions are unchanged; a
 // genuine hang still fails, with room to finish under suite load.
