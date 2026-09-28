@@ -19,6 +19,17 @@ import { Sim } from '../src/sim/sim';
 import type { EscortRunState } from '../src/sim/types';
 import { assertPopulationSane, HUB_PRACTICE_IDS } from './helpers/world_population';
 
+// The Eastbrook hub practice yard's standing targets, typed by hand (sorted).
+const HUB_PRACTICE_TEMPLATES = [
+  'healing_dummy_caster',
+  'healing_dummy_ranger',
+  'healing_dummy_scout',
+  'healing_dummy_soldier',
+  'healing_dummy_tank',
+  'hub_healing_dummy',
+  'hub_training_dummy',
+];
+
 describe('open-world population never exceeds what the content authored', () => {
   // One boot world, shared by the boot check and the budget controls that follow it.
   let world: Sim | undefined;
@@ -33,14 +44,14 @@ describe('open-world population never exceeds what the content authored', () => 
 
   it('flags one open-world mob over each budget term, and none within it', () => {
     // The negative controls every escort round depends on: one live copy past each
-    // term of the budget (the camps, a tracked escortee and an untracked caravan, every
-    // hub practice target, a wave with no run active, and an active run's wave and
-    // walker) must fail the check,
-    // and an active run's exact wave must not, or the sweep's passes prove nothing.
-    // The Fisher Bram escort's wave template (breach_wretch) belongs to no other
-    // escort, though Farshore's camps also place it, so each case adds one past the
-    // summed budget. Live counts and camp sums are counted here, independently of the
-    // helper; the escortee, caravan and hub allowances are stated literals.
+    // term of the budget (the camps, a tracked escortee, an escort tracking none in each
+    // of its three shapes, every hub practice target, a wave with no run active, and an
+    // active run's wave and walker) must fail the check, an active run's exact wave must
+    // not, and a dead copy never counts, or the sweep's passes prove nothing. The Fisher
+    // Bram escort's wave template (breach_wretch) belongs to no other escort, though
+    // Farshore's camps also place it, so each case adds one past the summed budget. Live
+    // counts and camp sums are counted here, independently of the helper; the escortee,
+    // caravan and hub allowances, and the hub list itself, are stated literals.
     const sim = bootWorld();
     const openWorldLive = (templateId: string) =>
       [...sim.entities.values()].filter(
@@ -100,6 +111,7 @@ describe('open-world population never exceeds what the content authored', () => 
     expect(wave.mobId).toBe('breach_wretch');
     const idle = sim.escortRuns.get(bram.id);
     if (!idle) throw new Error('the boot world seeds no Fisher Bram escort state');
+    const caravan = ESCORTS.esc_wq_eastbrook_caravan;
     try {
       expect(overBudget('boot')).toEqual([]);
 
@@ -112,22 +124,38 @@ describe('open-world population never exceeds what the content authored', () => 
       clearCopies();
 
       // A caravan tracks no escortee until a player enters its area, so it is allowed none.
-      const caravan = ESCORTS.esc_wq_eastbrook_caravan;
       expect(sim.escortRuns.get(caravan.id)?.npcId ?? null).toBeNull();
       const caravanRow = oneOver(caravan.npcMobId, 0);
       expect(overBudget('a caravan not materialized')).toEqual(caravanRow);
       clearCopies();
 
-      // An escort whose state exists but tracks no escortee (a run ended, its escortee
-      // not yet respawned: the state every ticked world holds) is allowed none, so its
-      // one live escortee is one over.
+      // An escort whose state exists but tracks no escortee is allowed none: a caravan
+      // whose world quest is inactive holds that state from the first tick on (escort.ts
+      // creates every def's state each tick), and an escort whose run ended holds it until
+      // its escortee respawns. Each shape makes a live escortee one over.
+      sim.escortRuns.set(caravan.id, {
+        escortId: caravan.id,
+        npcId: null,
+        respawnAt: 0,
+        run: null,
+      });
+      const caravanStateRow = oneOver(caravan.npcMobId, 0);
+      expect(overBudget('a caravan state tracking none')).toEqual(caravanStateRow);
+      clearCopies();
+      sim.escortRuns.delete(caravan.id);
       sim.escortRuns.set(bram.id, { ...idle, npcId: null, respawnAt: 30 });
-      expect(overBudget('an escort tracking no escortee')).toEqual([
+      expect(overBudget('an ended run, its escortee not yet respawned')).toEqual([
         `${bram.npcMobId}: 1 live vs 0 allowed`,
       ]);
       sim.escortRuns.set(bram.id, idle);
 
+      // The hub list is pinned by hand, like the wave templates below, so a boot-time
+      // leak cannot be whitelisted by adding its template to the helper's list; each
+      // target stands exactly once at boot.
+      expect([...HUB_PRACTICE_IDS].sort()).toEqual(HUB_PRACTICE_TEMPLATES);
+
       for (const hubId of HUB_PRACTICE_IDS) {
+        expect(openWorldLive(hubId), hubId).toBe(1);
         const hubRow = oneOver(hubId, 1);
         expect(overBudget(`the hub practice yard (${hubId})`)).toEqual(hubRow);
         clearCopies();
@@ -135,6 +163,15 @@ describe('open-world population never exceeds what the content authored', () => 
 
       const idleWaveRow = oneOver(wave.mobId, campAuthored(wave.mobId));
       expect(overBudget('a wave with no run active')).toEqual(idleWaveRow);
+      clearCopies();
+
+      // A dead copy never counts: a corpse is no leak.
+      addCopies(base.templateId, 1);
+      for (const id of extras) {
+        const copy = sim.entities.get(id);
+        if (copy) copy.dead = true;
+      }
+      expect(overBudget('a dead copy')).toEqual([]);
       clearCopies();
 
       const run: EscortRunState['run'] = {
@@ -160,6 +197,7 @@ describe('open-world population never exceeds what the content authored', () => 
       // Restored whatever happened above, so the shared world stays the boot world.
       clearCopies();
       sim.escortRuns.set(bram.id, idle);
+      sim.escortRuns.delete(caravan.id);
     }
     expect(overBudget('restored')).toEqual([]);
   });
