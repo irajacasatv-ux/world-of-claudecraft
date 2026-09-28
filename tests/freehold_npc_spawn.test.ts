@@ -10,10 +10,23 @@ import { BUILTIN_WORLD, NPCS, setActiveWorldContent } from '../src/sim/data';
 import { shouldSpawnSurfaceNpc } from '../src/sim/freehold';
 import { npcRoleFor, vendorRoleForStock } from '../src/sim/npc_role';
 import { Sim } from '../src/sim/sim';
+import type { Entity } from '../src/sim/types';
 import { generateDecorations, groundHeight, roadDistance, waterLevel } from '../src/sim/world';
 import { WORLD_SEED } from '../src/sim/world_seed';
 
 const digest = (value: unknown) => createHash('sha256').update(JSON.stringify(value)).digest('hex');
+// Positions and facings are rounded to a micro-yard before they are hashed: the
+// same Node build measured warlord_drogmar's spawn height one ulp apart on arm64
+// and x64 (3.7256669298810356 against 3.725666929881035), so a raw digest pinned
+// on one host fails on the other. A micro-yard still catches any moved spawn.
+const quantize = (v: number) => Math.round(v * 1e6) / 1e6;
+const spawnRow = (e: Entity) => ({
+  id: e.id,
+  templateId: e.templateId,
+  pos: { x: quantize(e.pos.x), y: quantize(e.pos.y), z: quantize(e.pos.z) },
+  facing: quantize(e.facing),
+  hp: e.hp,
+});
 
 afterEach(() => setActiveWorldContent(null));
 
@@ -74,6 +87,10 @@ describe('authored furnisher construction and world geometry', () => {
     // own tree measures this exact fingerprint (1058 entities, both digests,
     // the same nextId and rng cursor), so the dark merged world still adds
     // nothing; the five new entities are the release's.
+    // RE-EXPRESSED on 2026-09-28 at micro-yard precision (spawnRow above), the
+    // same world: the raw digests matched the release tip on arm64, and the
+    // quantized ones were measured identical on arm64 macOS, arm64 Linux and
+    // x64 Linux, the host CI runs on.
     const sim = new Sim({ seed: 1, playerClass: 'warrior' });
     expect({
       nextId: sim.nextId,
@@ -81,15 +98,7 @@ describe('authored furnisher construction and world geometry', () => {
       merchants: sim.market.merchantIds,
       bankers: sim.bankerIds,
       entityCount: sim.entities.size,
-      positionHash: digest(
-        [...sim.entities.values()].map((e) => ({
-          id: e.id,
-          templateId: e.templateId,
-          pos: e.pos,
-          facing: e.facing,
-          hp: e.hp,
-        })),
-      ),
+      positionHash: digest([...sim.entities.values()].map(spawnRow)),
       rngNext: sim.rng.next(),
     }).toEqual({
       nextId: 1011,
@@ -97,23 +106,13 @@ describe('authored furnisher construction and world geometry', () => {
       merchants: [1, 33],
       bankers: [9, 22, 34, 95],
       entityCount: 1058,
-      positionHash: '449e14b532ef7dd6577e5d6ff13f3a1c6b343753c02666dbf9c6414ed135bafd',
+      positionHash: 'c9ec5fbf91aa3358185f921c7f378f4ff222cb9cf1f4bd82a1930e455f82967e',
       rngNext: 0.30275995447300375,
     });
     expect(sim.entities.get(1000000003)?.templateId).toBe('crucible_quartermaster');
     expect(
-      digest(
-        [...sim.entities.values()]
-          .filter((e) => e.id !== 1000000003)
-          .map((e) => ({
-            id: e.id,
-            templateId: e.templateId,
-            pos: e.pos,
-            facing: e.facing,
-            hp: e.hp,
-          })),
-      ),
-    ).toBe('7a19f37f9d509edbc35dfa772d77f8f16d5966eb271ad5feb121c05f430c028a');
+      digest([...sim.entities.values()].filter((e) => e.id !== 1000000003).map(spawnRow)),
+    ).toBe('6763ebb0bcd34906234e8e5334a7a41fdb3a097b9db572307837df47e3dda8bd');
     expect([...sim.entities.values()].some((e) => e.templateId === 'freehold_furnisher')).toBe(
       false,
     );
