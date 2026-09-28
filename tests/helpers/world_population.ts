@@ -47,7 +47,7 @@ function liveCounts(sim: Sim): Map<string, number> {
 
 /** Templates a run is allowed to add to the world WHILE it is active: its ambush
  *  waves. The walker is the escortee entity itself (escort.ts isActiveEscortee reads
- *  the run's npcId), already inside the idle escortee's allowance, so a run adds no
+ *  the run state's npcId), already inside the escortee allowance, so a run adds no
  *  escortee of its own. */
 function activeWaveAllowance(sim: Sim): Map<string, number> {
   const out = new Map<string, number>();
@@ -61,10 +61,13 @@ function activeWaveAllowance(sim: Sim): Map<string, number> {
   return out;
 }
 
-/** Escortees stand idle in the world between runs; that is authored, not a leak. */
-function idleEscorteeAllowance(): Map<string, number> {
+/** Each escort tracks at most one escortee entity (its run state's npcId), idle or
+ *  walking; that one is authored, never a leak. An escort tracking none (a caravan not
+ *  yet materialized, a walker between its death and its respawn) is allowed none. */
+function escorteeAllowance(sim: Sim): Map<string, number> {
   const out = new Map<string, number>();
   for (const def of Object.values(ESCORTS)) {
+    if ((sim.escortRuns.get(def.id)?.npcId ?? null) === null) continue;
     out.set(def.npcMobId, (out.get(def.npcMobId) ?? 0) + 1);
   }
   return out;
@@ -88,7 +91,7 @@ function hubPracticeAllowance(): Map<string, number> {
 export function assertPopulationSane(sim: Sim, label: string): void {
   const authored = authoredCounts();
   const wave = activeWaveAllowance(sim);
-  const idle = idleEscorteeAllowance();
+  const idle = escorteeAllowance(sim);
   const hubPractice = hubPracticeAllowance();
   const over: string[] = [];
   for (const [templateId, live] of liveCounts(sim)) {

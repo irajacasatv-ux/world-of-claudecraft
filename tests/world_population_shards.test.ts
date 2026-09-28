@@ -23,8 +23,11 @@ const shardFileName = (suffix: string) => `world_population_invariant_${suffix}.
 
 // Every form of importing a test helper: a from clause, a side-effect import and a
 // dynamic import. And the pragmas vitest reads from a leading comment.
-const HELPER_IMPORT = /(?:\bfrom\s*|\bimport\s*\(\s*|\bimport\s+)'\.\/helpers\//g;
+const HELPER_IMPORT = /(?:\bfrom\s*|\bimport\s*\(\s*|\bimport\s+)['"`]\.\/helpers\//g;
 const RUNNER_PRAGMA = /@(?:vitest|jest)-/;
+// What the population helper must not do: deal escorts itself, or re-export anything
+// wholesale (which could hand the shard files a second deal).
+const HELPER_DEALS = /\bescortShard\b|export \*/;
 
 /** The one shard-file template, with only the shard index varying. */
 const shardFile = (index: number) =>
@@ -141,9 +144,7 @@ describe('the world population escort sweep shards', () => {
     const start = helper.indexOf('export function runEscortRounds(');
     expect(start, 'runEscortRounds is declared').toBeGreaterThan(-1);
     expect(helper.split('function runEscortRounds(')).toHaveLength(2);
-    expect(helper, 'the population helper must not deal escorts itself').not.toMatch(
-      /\bescortShard\b|export \*/,
-    );
+    expect(helper, 'the population helper must not deal escorts itself').not.toMatch(HELPER_DEALS);
     const end = helper.indexOf('\n}\n', start);
     expect(end, 'runEscortRounds closes').toBeGreaterThan(start);
     expect(
@@ -165,7 +166,11 @@ describe('the world population escort sweep shards', () => {
     expect(helperImports("import { a } from '../src/sim/data';")).toBe(0);
     expect('// @vitest-environment happy-dom').toMatch(RUNNER_PRAGMA);
     expect('// @jest-environment node').toMatch(RUNNER_PRAGMA);
-    expect("export * as deal from './escort_shards';").toMatch(/export \*/);
+    expect(helperImports('await import("./helpers/x");')).toBe(1);
+    expect("export * from './escort_shards';").toMatch(HELPER_DEALS);
+    expect("export * as deal from './escort_shards';").toMatch(HELPER_DEALS);
+    expect('const shard = escortShard(0);').toMatch(HELPER_DEALS);
+    expect("export { a } from './x';").not.toMatch(HELPER_DEALS);
   });
 
   it('leaves the escort-carrying files import-graph selected', () => {
