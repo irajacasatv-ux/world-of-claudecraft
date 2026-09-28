@@ -604,6 +604,9 @@ export const tr_TR: EnTranslations = {
       "shotTiming": "Süre: {cooldown} saniye. Darbe {flight} saniye sonra iner. Tüm atışlar {recovery} saniye iyileşme paylaşır.",
       "shotRules": "İşaretli alan içine nişan al. Mana maliyeti yok. Hasar donanım veya yetenekle ölçeklenmez."
     },
+    "petBarButton": {
+      "cooldownAria": "{name}, {remaining}"
+    },
     "warlock": {
       "doomLabel": "Mahkûmiyet",
       "fateThreadsLabel": "Kader İplikleri",

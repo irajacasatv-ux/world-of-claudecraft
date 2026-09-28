@@ -604,6 +604,9 @@ export const nl_NL: EnTranslations = {
       "shotTiming": "Afkoelingstijd: {cooldown} sec. Inslag na {flight} sec. Alle schoten delen {recovery} sec herstelduur.",
       "shotRules": "Richt binnen het gemarkeerde veld. Geen mana-kosten. Schade tegen andere spelers telt niet mee. Niet geblokkeerd. Een Zilveren medaille en beter verslaat alle vijanden automatisch."
     },
+    "petBarButton": {
+      "cooldownAria": "{name}, {remaining}"
+    },
     "warlock": {
       "doomLabel": "Verdoemenis",
       "fateThreadsLabel": "Lotsdraden",

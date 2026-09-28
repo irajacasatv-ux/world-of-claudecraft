@@ -604,6 +604,9 @@ export const cs_CZ: EnTranslations = {
       "shotTiming": "Cooldown: {cooldown} s. Dopad po {flight} s. Všechny výstřely sdílí {recovery} s zotavení.",
       "shotRules": "Miř do vyznačeného pole. Bez nákladů many. Poškození neroste s výbavou ani talenty."
     },
+    "petBarButton": {
+      "cooldownAria": "{name}, {remaining}"
+    },
     "warlock": {
       "doomLabel": "Odsouzení",
       "fateThreadsLabel": "Nitě osudu",

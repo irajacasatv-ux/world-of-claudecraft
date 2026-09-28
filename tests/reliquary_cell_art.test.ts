@@ -767,10 +767,12 @@ describe('ReliquaryWindow cell markup', () => {
       .map((line) => line.replace(/\s\/\/.*$/, ''))
       .join('\n');
     // The dep widened at the phase 13 QA (the copy's effective quality rides
-    // to the rim); the delegation to knownItemIconHtml is the pinned half.
+    // to the rim); the delegation to knownItemIconHtml is the pinned half. The
+    // window takes it from the shared presentation bag it spreads.
     expect(hud).toMatch(
-      /private itemIcon\(item: ItemDef, quality\?: ItemDef\['quality'\]\): string \{\s*return knownItemIconHtml\(item, quality\);/,
+      /private readonly presentationBag: PainterHostPresentation = \{[^}]*?itemIcon: \(item, quality\) => knownItemIconHtml\(item, quality\),/,
     );
+    expect(hud).toMatch(/reliquaryWindow = new ReliquaryWindow\(\{\s*\.\.\.this\.presentationBag,/);
   });
 
   it('paints a mount cell as the reins art in the item-icon shape', () => {

@@ -169,6 +169,11 @@ export const hudChromeStrings = {
     shotRules:
       'Aim inside the marked field. No mana cost. Damage does not scale with gear or talents.',
   },
+  petBarButton: {
+    // A pet bar button on cooldown: its name, then the time left (the
+    // hudChrome.plurals.secondsRemaining phrase), as one accessible name.
+    cooldownAria: '{name}, {remaining}',
+  },
   warlock: {
     doomLabel: 'Condemnation',
     fateThreadsLabel: 'Fate Threads',

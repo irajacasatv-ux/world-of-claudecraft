@@ -604,6 +604,9 @@ export const pl_PL: EnTranslations = {
       "shotTiming": "Czas odnowienia: {cooldown} sek. Uderzenie po {flight} sek. Wszystkie strzały dzielą {recovery} sek regeneracji.",
       "shotRules": "Celujesz wewnątrz zaznaczonego pola. Bez kosztu many. Obrażenia nie skalują się wraz z ekwipunkiem ani zdolnościami."
     },
+    "petBarButton": {
+      "cooldownAria": "{name}, {remaining}"
+    },
     "warlock": {
       "doomLabel": "Potępienie",
       "fateThreadsLabel": "Nici Przeznaczenia",

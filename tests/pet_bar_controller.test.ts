@@ -14,6 +14,7 @@ import { resolve } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { PetBarController, type PetBarHost } from '../src/ui/hud/pet_bar';
 import { t } from '../src/ui/i18n';
+import { makeWriterFacet } from '../src/ui/painter_host';
 import { hudDeclares, interfaceMembers } from './helpers/hud_host_weld';
 import { stripComments } from './helpers/strip_comments';
 
@@ -56,14 +57,12 @@ interface PetBarHarness {
     setPetAutoWaterJet: ReturnType<typeof vi.fn>;
     setPetMode: ReturnType<typeof vi.fn>;
   };
-  pendingPetFeed: boolean;
   /** The controller's stance-menu toggle (private state, reached for the rig). */
   petModeMenuOpen: boolean;
   peekGuard: { consume(): boolean };
   attachTooltip: ReturnType<typeof vi.fn>;
   hideTooltip: ReturnType<typeof vi.fn>;
-  cancelPetFeed: ReturnType<typeof vi.fn>;
-  renderBags: ReturnType<typeof vi.fn>;
+  openBagsForFeed: ReturnType<typeof vi.fn>;
   showError: ReturnType<typeof vi.fn>;
   /** PetBarController.render. */
   renderPetBar(pet: unknown): void;
@@ -130,17 +129,24 @@ function makeHud(
       setPetAutoWaterJet: vi.fn(),
       setPetMode: vi.fn(),
     },
-    pendingPetFeed: false,
     peekGuard: { consume: () => false },
     attachTooltip: vi.fn(),
     hideTooltip: vi.fn(),
-    cancelPetFeed: vi.fn(),
-    renderBags: vi.fn(),
+    openBagsForFeed: vi.fn(),
     showError: vi.fn(),
   };
   // The fake host is cast at this one boundary; the controller reads it through
-  // PetBarHost, which tsc holds the real Hud to.
-  const controller = new PetBarController(host as unknown as PetBarHost);
+  // PetBarHost, which tsc holds the real Hud to. A private facet per rig: the
+  // Hud hands its shared one over in production.
+  const writers = makeWriterFacet(
+    new Map(),
+    new Map(),
+    new Map(),
+    new Map(),
+    () => {},
+    () => {},
+  );
+  const controller = new PetBarController(host as unknown as PetBarHost, writers);
   const menu = controller as unknown as { modeMenuOpen: boolean };
   return Object.defineProperties(host, {
     controller: { value: controller },
@@ -419,7 +425,7 @@ describe('PetBarController: the latch, the presses and the host seam', () => {
     expect(groups()).toEqual(painted);
     expect(groups()[0]).toBe(painted[0]);
     expect(hud.attachTooltip).toHaveBeenCalledTimes(4);
-    // invalidate() is what the language switch and the feed-mode end call:
+    // invalidate() is what the language switch and the bags feed pick call:
     // the next frame rebuilds, and the one after it holds again.
     hud.controller.invalidate();
     hud.renderPetBar(pet);
@@ -453,33 +459,78 @@ describe('PetBarController: the latch, the presses and the host seam', () => {
   });
 
   it('Heal Pet starts the feed mode, cancels a pending one, and refuses with no food', () => {
-    document.body.innerHTML = '<div id="petbar"></div><div id="bags" style="display:none"></div>';
     const hud = makeHud('forest_wolf', true, { hp: 50, maxHp: 100 }, 'hunter');
     const pet = hud.sim.entities.get(2) ?? null;
     const feed = () => document.querySelector<HTMLButtonElement>('[data-focus-key="pet_feed"]');
     hud.renderPetBar(pet);
     feed()?.click();
-    expect(hud.pendingPetFeed).toBe(true);
-    expect(document.getElementById('bags')?.style.display).toBe('flex');
-    expect(hud.renderBags).toHaveBeenCalledTimes(1);
+    expect(hud.controller.feedPending).toBe(true);
+    expect(hud.openBagsForFeed).toHaveBeenCalledTimes(1);
     // The pending mode joins the signature: the button repaints pressed.
     hud.renderPetBar(pet);
     expect(feed()?.getAttribute('aria-pressed')).toBe('true');
-    // A second press hands the cancel to the Hud, which owns the shared flag.
+    // A second press ends the mode the bar owns, redraws it unpressed, and
+    // opens nothing.
     feed()?.click();
-    expect(hud.cancelPetFeed).toHaveBeenCalledTimes(1);
-    expect(hud.renderBags).toHaveBeenCalledTimes(1);
+    expect(hud.controller.feedPending).toBe(false);
+    expect(hud.openBagsForFeed).toHaveBeenCalledTimes(1);
+    hud.renderPetBar(pet);
+    expect(feed()?.hasAttribute('aria-pressed')).toBe(false);
 
     // No food: the button is inert, and a press that still reaches the guard
     // (the bags emptied after the paint) says so instead of starting the mode.
-    hud.pendingPetFeed = false;
-    hud.renderPetBar(pet);
     hud.sim.inventory = [];
     feed()?.click();
     expect(hud.showError).toHaveBeenCalledExactlyOnceWith(t('hud.pet.noPetFood'));
-    expect(hud.pendingPetFeed).toBe(false);
+    expect(hud.controller.feedPending).toBe(false);
+    expect(hud.openBagsForFeed).toHaveBeenCalledTimes(1);
     hud.renderPetBar(pet);
     expect(feed()?.getAttribute('aria-disabled')).toBe('true');
+  });
+
+  it('setFeedPending redraws only on a flip, which is how the bags window ends the mode', () => {
+    const hud = makeHud('forest_wolf', true, { hp: 50, maxHp: 100 }, 'hunter');
+    const pet = hud.sim.entities.get(2) ?? null;
+    hud.renderPetBar(pet);
+    const painted = groups();
+    // Setting the mode it already holds leaves the latch alone.
+    hud.controller.setFeedPending(false);
+    hud.renderPetBar(pet);
+    expect(groups()[0]).toBe(painted[0]);
+    hud.controller.setFeedPending(true);
+    hud.renderPetBar(pet);
+    const pressed = groups();
+    expect(pressed[0]).not.toBe(painted[0]);
+    hud.controller.setFeedPending(false);
+    hud.renderPetBar(pet);
+    expect(groups()[0]).not.toBe(pressed[0]);
+    expect(hud.controller.feedPending).toBe(false);
+  });
+
+  it('writes the bar display through the elided facet, on the element it resolved once', () => {
+    const hud = makeHud('forest_wolf', true, {}, 'hunter');
+    const pet = hud.sim.entities.get(2) ?? null;
+    const bar = document.getElementById('petbar') as HTMLElement;
+    hud.renderPetBar(pet);
+    expect(bar.style.display).toBe('flex');
+    // A foreign write survives steady frames: nothing rewrites an unchanged value.
+    bar.style.display = 'grid';
+    hud.renderPetBar(pet);
+    hud.renderPetBar(pet);
+    expect(bar.style.display).toBe('grid');
+    // A real change writes, both ways.
+    hud.renderPetBar(null);
+    expect(bar.style.display).toBe('none');
+    hud.renderPetBar(pet);
+    expect(bar.style.display).toBe('flex');
+    // The element is not re-queried per frame: a swapped-in #petbar is never read.
+    bar.id = '';
+    const swapped = document.createElement('div');
+    swapped.id = 'petbar';
+    document.body.appendChild(swapped);
+    hud.renderPetBar(null);
+    expect(bar.style.display).toBe('none');
+    expect(swapped.style.display).toBe('');
   });
 
   it('stays welded to the Hud members PetBarHost names, and the Hud builds one over itself', () => {
@@ -491,21 +542,23 @@ describe('PetBarController: the latch, the presses and the host seam', () => {
     const members = interfaceMembers(controllerSource, 'PetBarHost');
     expect(members).toEqual([
       'sim',
-      'pendingPetFeed',
       'peekGuard',
-      'cancelPetFeed',
+      'openBagsForFeed',
       'showError',
-      'renderBags',
       'hideTooltip',
       'attachTooltip',
     ]);
     for (const member of members) expect(hudDeclares(hudSource, member), member).toBe(true);
     const code = stripComments(hudSource);
-    expect(code).toContain('this.petBarState ??= new PetBarController(this);');
+    expect(code).toContain('this.petBarState ??= new PetBarController(this, this.writerFacet);');
     // update() drives it with the pet it resolved once for the pet frame.
     expect(code).toContain('this.petBar.render(pet);');
-    // The two Hud paths that end or restart the feed invalidate the bar.
+    // The bags window's feed pick and the language switch invalidate the bar;
+    // the feed mode itself is read and ended through the controller.
     expect(code).toContain('resetPetBarSig: () => this.petBar.invalidate(),');
-    expect(code.split('this.petBar.invalidate();').length - 1).toBe(2);
+    expect(code.split('this.petBar.invalidate();').length - 1).toBe(1);
+    expect(code).toContain('pendingPetFeed: () => this.petBar.feedPending,');
+    expect(code).toContain('setPendingPetFeed: (active) => this.petBar.setFeedPending(active),');
+    expect(code).toContain('this.petBar.setFeedPending(false);');
   });
 });

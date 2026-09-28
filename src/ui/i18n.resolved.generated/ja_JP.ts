@@ -604,6 +604,9 @@ export const ja_JP: EnTranslations = {
       "shotTiming": "クールダウン：{cooldown}秒。{flight}秒後に着弾。全弾種で{recovery}秒の回復時間を共有する。",
       "shotRules": "印のついた範囲内を狙う。マナ消費なし。ダメージは装備やタレントの影響を受けない。"
     },
+    "petBarButton": {
+      "cooldownAria": "{name}, {remaining}"
+    },
     "warlock": {
       "doomLabel": "断罪",
       "fateThreadsLabel": "運命の糸",

@@ -604,6 +604,9 @@ export const vi_VN: EnTranslations = {
       "shotTiming": "Thời gian hồi chiêu: {cooldown} giây. Tác động sau {flight} giây. Tất cả các phát bắn chia sẻ {recovery} giây hồi phục.",
       "shotRules": "Nhắm vào bên trong vùng đánh dấu. Không tốn mana. Sát thương không tăng theo trang bị hoặc kỹ năng."
     },
+    "petBarButton": {
+      "cooldownAria": "{name}, {remaining}"
+    },
     "warlock": {
       "doomLabel": "Kết Án",
       "fateThreadsLabel": "Sợi Định Mệnh",

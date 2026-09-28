@@ -604,6 +604,9 @@ export const en: EnTranslations = {
       "shotTiming": "Cooldown: {cooldown} sec. Impact after {flight} sec. All shots share {recovery} sec recovery.",
       "shotRules": "Aim inside the marked field. No mana cost. Damage does not scale with gear or talents."
     },
+    "petBarButton": {
+      "cooldownAria": "{name}, {remaining}"
+    },
     "warlock": {
       "doomLabel": "Condemnation",
       "fateThreadsLabel": "Fate Threads",

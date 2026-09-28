@@ -512,7 +512,8 @@ describe('elision key composition stays banished (hud.ts + painter_host.ts sourc
     // (worn_item_cell_view.ts) hands each painter the copy's EFFECTIVE quality
     // and the painter asks its `itemIcon` dep for the rim with it, but the
     // Hud's adapter arrows were written 1-ary (`(item) => this.itemIcon(item)`)
-    // and silently swallowed the argument, so every promoted copy's icon rim
+    // and silently swallowed the argument (the arrows now call knownItemIconHtml
+    // directly, the one-line private wrapper having been inlined), so every promoted copy's icon rim
     // fell back to the def's tier on every surface while the pure-core suites
     // stayed green (the seam under test lives in the Hud, which no rig
     // constructs). Comment-stripped so a commented-out arrow cannot count.
@@ -520,7 +521,7 @@ describe('elision key composition stays banished (hud.ts + painter_host.ts sourc
       source.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:'"`])\/\/.*$/gm, '$1');
     const hud = strip(read('../src/ui/hud.ts'));
     const forwarding = hud.match(
-      /itemIcon: \(item, quality\) => this\.itemIcon\(item, quality\),/g,
+      /itemIcon: \(item, quality\) => knownItemIconHtml\(item, quality\),/g,
     );
     // Every itemIcon KEY in the Hud is one of the forwarding arrows: the total
     // bounds the set, so an adapter spelled with other parameter names cannot

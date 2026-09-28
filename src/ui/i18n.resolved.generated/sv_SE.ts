@@ -604,6 +604,9 @@ export const sv_SE: EnTranslations = {
       "shotTiming": "Cooldown: {cooldown} sek. Påverkan efter {flight} sek. Alla skott delar {recovery} sek återhämtning.",
       "shotRules": "Sikta innanför det markerade området. Ingen manakostnad. Skada skalas inte med utrustning eller talanger."
     },
+    "petBarButton": {
+      "cooldownAria": "{name}, {remaining}"
+    },
     "warlock": {
       "doomLabel": "Fördömelse",
       "fateThreadsLabel": "Ödestrådar",

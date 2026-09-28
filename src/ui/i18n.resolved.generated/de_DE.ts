@@ -604,6 +604,9 @@ export const de_DE: EnTranslations = {
       "shotTiming": "Abklingzeit: {cooldown} Sek. Einschlag nach {flight} Sek. Alle Schüsse teilen sich {recovery} Sek. Erholung.",
       "shotRules": "Ziele innerhalb des markierten Feldes. Kein Manaverbrauch. Der Schaden skaliert nicht mit Ausrüstung oder Talenten."
     },
+    "petBarButton": {
+      "cooldownAria": "{name}, {remaining}"
+    },
     "warlock": {
       "doomLabel": "Verdammnis",
       "fateThreadsLabel": "Schicksalsfäden",

@@ -604,6 +604,9 @@ export const en_XA: EnTranslations = {
       "shotTiming": "[Çóóļðóŵñ: {cooldown} šéç. Íɱþáçţ áƒţéŕ {flight} šéç. Áļļ šĥóţš šĥáŕé {recovery} šéç ŕéçóʋéŕý.]",
       "shotRules": "[Áíɱ íñšíðé ţĥé ɱáŕķéð ƒíéļð. Ñó ɱáñá çóšţ. Ðáɱáĝé ðóéš ñóţ šçáļé ŵíţĥ ĝéáŕ óŕ ţáļéñţš.]"
     },
+    "petBarButton": {
+      "cooldownAria": "[{name}, {remaining}]"
+    },
     "warlock": {
       "doomLabel": "[Çóñðéɱñáţíóñ]",
       "fateThreadsLabel": "[Ƒáţé Ţĥŕéáðš]",

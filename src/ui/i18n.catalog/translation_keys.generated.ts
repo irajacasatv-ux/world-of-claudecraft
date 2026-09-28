@@ -12471,6 +12471,7 @@ export type TranslationKeyFlat =
   | 'hudChrome.perfecting.title'
   | 'hudChrome.perfecting.unknownItem'
   | 'hudChrome.perfecting.wornChip'
+  | 'hudChrome.petBarButton.cooldownAria'
   | 'hudChrome.petFeed.disabledFullHp'
   | 'hudChrome.petFeed.disabledNoFood'
   | 'hudChrome.playerCard.showWalletBadge'

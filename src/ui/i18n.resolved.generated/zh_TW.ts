@@ -604,6 +604,9 @@ export const zh_TW: EnTranslations = {
       "shotTiming": "冷卻時間：{cooldown} 秒。{flight} 秒後命中。所有砲彈共用 {recovery} 秒的恢復時間。",
       "shotRules": "在標記區域內瞄準。不消耗法力。傷害不隨裝備或天賦提升。"
     },
+    "petBarButton": {
+      "cooldownAria": "{name}, {remaining}"
+    },
     "warlock": {
       "doomLabel": "譴罪",
       "fateThreadsLabel": "命運絲線",

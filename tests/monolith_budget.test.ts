@@ -611,8 +611,10 @@ const MONOLITHS: MonolithRow[] = [
     // stack and resurrection prompts and TownFocusController; 14889 with
     // PetBarController (src/ui/hud/pet_bar/); 14888 after the host visibility round
     // (two public-get, private-set accessors, paid for by moving
-    // questSuggestedPlayersHtml and emoteLabel out and inlining wocBalanceHtml).
-    ceiling: 14888,
+    // questSuggestedPlayersHtml and emoteLabel out and inlining wocBalanceHtml);
+    // 14885 once the pet feed mode moved onto the bar and the itemIcon wrapper was
+    // inlined into its six adapters.
+    ceiling: 14885,
     seam: 'pure view core + thin painter on PainterHost (src/ui/CLAUDE.md)',
   },
   {

@@ -604,6 +604,9 @@ export const es: EnTranslations = {
       "shotTiming": "Reutilización: {cooldown} s. Impacto tras {flight} s. Todos los disparos comparten {recovery} s de recuperación.",
       "shotRules": "Apunta dentro del área marcada. Sin coste de maná. El daño no escala con el equipo ni los talentos."
     },
+    "petBarButton": {
+      "cooldownAria": "{name}, {remaining}"
+    },
     "warlock": {
       "doomLabel": "Condena",
       "fateThreadsLabel": "Hilos del destino",

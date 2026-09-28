@@ -47,8 +47,8 @@
 // - appendChatItemLink threads a copy's instance payload into the link, so a
 //   furnishing's forged loot-quality tier never names it (moved from
 //   tests/furnishing_tooltip_view.test.ts);
-// - cancelPetFeed ends the shared feed mode and invalidates the lazily built
-//   pet bar (src/ui/hud/pet_bar/, whose own suites are
+// - cancelPetFeed ends the feed mode on the lazily built pet bar, which owns
+//   it (src/ui/hud/pet_bar/, whose own suites are
 //   tests/pet_bar_controller.test.ts and tests/pet_bar_view.test.ts).
 //
 // The window-management cases (closeAll, the managed closes, the map window
@@ -1125,29 +1125,34 @@ describe('the respawn chat line through handleEvents', () => {
 });
 
 // ---------------------------------------------------------------------------
-// The pet food-selection mode's end through the Hud. pendingPetFeed stays a
-// Hud field because the bags window shares it, so ending it is the Hud's, and
-// the pet bar (built lazily over the Hud) must repaint its Heal Pet button.
+// The pet food-selection mode's end through the Hud. The mode is the pet bar's
+// own state; the bags window and the bag closes end it through this delegator,
+// and the bar (built lazily over the Hud) repaints its Heal Pet button.
 // ---------------------------------------------------------------------------
 
-describe('Hud.cancelPetFeed: ends the shared feed mode and invalidates the pet bar', () => {
-  it('clears the flag and invalidates the one lazily built bar, and a second call is a no-op', () => {
-    const invalidate = vi.spyOn(PetBarController.prototype, 'invalidate');
+describe('Hud.cancelPetFeed: ends the feed mode on the pet bar that owns it', () => {
+  it('ends the mode on the one lazily built bar, and a second call repaints nothing', () => {
+    const setFeed = vi.spyOn(PetBarController.prototype, 'setFeedPending');
     const hud = bareHud() as DelegatorRig & {
-      pendingPetFeed: boolean;
       cancelPetFeed: Hud['cancelPetFeed'];
+      petBar: PetBarController;
     };
-    hud.pendingPetFeed = true;
-    hud.cancelPetFeed();
-    expect(hud.pendingPetFeed).toBe(false);
-    expect(invalidate).toHaveBeenCalledTimes(1);
     const bar = hud.petBar;
     expect(bar).toBeInstanceOf(PetBarController);
-    expect(hud.petBar).toBe(bar);
-    expect(invalidate.mock.contexts).toEqual([bar]);
-    // Not in the mode: nothing changed, so nothing repaints.
+    bar.setFeedPending(true);
+    const latch = bar as unknown as { lastSig: string };
+    latch.lastSig = 'painted';
     hud.cancelPetFeed();
-    expect(invalidate).toHaveBeenCalledTimes(1);
+    expect(bar.feedPending).toBe(false);
+    expect(latch.lastSig).toBe('');
+    expect(hud.petBar).toBe(bar);
+    expect(setFeed.mock.calls).toEqual([[true], [false]]);
+    expect(setFeed.mock.contexts).toEqual([bar, bar]);
+    // Not in the mode: nothing changed, so the latch holds and nothing repaints.
+    latch.lastSig = 'painted';
+    hud.cancelPetFeed();
+    expect(latch.lastSig).toBe('painted');
+    expect(bar.feedPending).toBe(false);
   });
 });
 

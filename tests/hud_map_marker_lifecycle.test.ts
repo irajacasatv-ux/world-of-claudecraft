@@ -54,7 +54,7 @@ beforeEach(() => {
 
 afterEach(() => vi.unstubAllGlobals());
 
-describe('Hud zone-map marker interaction', () => {
+describe('zone-map marker interaction over the host rig', () => {
   it('selects only a clicked world-quest emblem and clears the disclosure on a miss', () => {
     const canvas = canvasFixture();
     const { hud } = markerHarness();
@@ -141,7 +141,7 @@ describe('Hud zone-map marker interaction', () => {
     expect(paint).toHaveBeenCalledTimes(1);
   });
 
-  it('fills the Hud-owned quest scratch only when quest areas can answer the pointer', () => {
+  it('fills the host-owned quest scratch only when quest areas can answer the pointer', () => {
     const canvas = canvasFixture();
     const { hud, paint } = markerHarness();
     hud.mapMarkerInteraction.refreshGeometry(canvas);

@@ -604,6 +604,9 @@ export const it_IT: EnTranslations = {
       "shotTiming": "Ricarica: {cooldown} sec. Impatto dopo {flight} sec. Tutti i colpi condividono {recovery} sec di recupero.",
       "shotRules": "Mira dentro il campo segnato. Nessun costo in mana. I danni non scalano con equipaggiamento o talenti."
     },
+    "petBarButton": {
+      "cooldownAria": "{name}, {remaining}"
+    },
     "warlock": {
       "doomLabel": "Condanna",
       "fateThreadsLabel": "Filamenti del Fato",

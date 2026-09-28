@@ -14,8 +14,8 @@ tooltips, ARIA, focus keys and press paths.
   Heal Pet food check (a mirror of `Sim.feedPet`'s).
 - `pet_bar_controller.ts` owns the nodes, the listeners (click, Shift+Enter,
   right-click and the touch-hold autocast flip), the focus carry across a
-  rebuild and the stance-menu toggle. It takes the Hud as a typed
-  `PetBarHost`.
+  rebuild, the stance-menu toggle and the food-selection mode. It takes the
+  Hud as a typed `PetBarHost` plus the Hud's shared elided writer facet.
 
 ## Load-bearing rules
 
@@ -24,12 +24,15 @@ tooltips, ARIA, focus keys and press paths.
   back to a living Necromancy secondary itself (`../pet_bar_core.ts`), never a
   second roster walk of its own for the primary.
 - **The signature is the whole per-frame gate.** A steady frame computes the
-  facts and the signature and writes nothing past the display and body-class
-  flags; a rebuild runs only when the signature moves or `invalidate()` cleared
+  facts and the signature and writes nothing past the display (through the
+  shared facet, so an unchanged value never reaches the DOM) and the body-class
+  flag; a rebuild runs only when the signature moves or `invalidate()` cleared
   it. Anything a rebuild's buttons read joins the signature.
-- **`pendingPetFeed` is the Hud's**, because the bags window reads and writes it
-  too. The controller starts the mode and the Hud's `cancelPetFeed` ends it;
-  both invalidate the bar.
+- **The feed mode is the bar's.** The Heal Pet press starts it and opens the bags
+  through `PetBarHost.openBagsForFeed`; the bags window reads it and ends it
+  through Hud's bags deps (`feedPending`, `setFeedPending`), and the Hud's
+  `cancelPetFeed` ends it on a bags close. `setFeedPending` redraws the bar only
+  when the mode actually flips.
 - **A language switch invalidates, it does not rebuild in place.** The
   coordinator arm (`relocalizeCoordinatorMemos`) calls `invalidate()`, and the
   next frame rebuilds every caption (`tests/language_fanout_registry.test.ts`).

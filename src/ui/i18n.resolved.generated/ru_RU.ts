@@ -604,6 +604,9 @@ export const ru_RU: EnTranslations = {
       "shotTiming": "Восстановление: {cooldown} сек. Попадание через {flight} сек. Общее восстановление всех выстрелов: {recovery} сек.",
       "shotRules": "Цельтесь внутри отмеченного поля. Не расходует ману. Урон не зависит от снаряжения и талантов."
     },
+    "petBarButton": {
+      "cooldownAria": "{name}, {remaining}"
+    },
     "warlock": {
       "doomLabel": "Осуждение",
       "fateThreadsLabel": "Нити судьбы",

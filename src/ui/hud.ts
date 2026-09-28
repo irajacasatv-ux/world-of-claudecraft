@@ -1959,7 +1959,7 @@ export class Hud {
   // so a bare-prototype rig still resolves it; update() drives it every frame.
   private petBarState: PetBarController | undefined;
   private get petBar(): PetBarController {
-    this.petBarState ??= new PetBarController(this);
+    this.petBarState ??= new PetBarController(this, this.writerFacet);
     return this.petBarState;
   }
   // Proc auras whose gain event arrived before the aura itself appeared in the
@@ -1977,7 +1977,6 @@ export class Hud {
   private lastMarketCollectPending: boolean | null = null;
   // Pet food-selection mode: started by the pet bar's Heal Pet button, read and
   // ended by the bags window, so it lives here rather than in either.
-  pendingPetFeed = false;
   constructor(
     public readonly sim: IWorld,
     private renderer: Renderer,
@@ -2153,7 +2152,7 @@ export class Hud {
       closeOtherWindows: (selector) => this.closeOtherWindows(selector),
       hideTooltip: () => this.hideTooltip(),
       attachTooltip: (element, html) => this.attachTooltip(element, html),
-      itemIcon: (item, quality) => this.itemIcon(item, quality),
+      itemIcon: (item, quality) => knownItemIconHtml(item, quality),
       itemTooltip: (item, instance?: ItemInstancePayload) => this.itemTooltip(item, true, instance),
       delveName: delveDisplayName,
       preloadInterior: (event) => this.renderer.handleEvent(event),
@@ -2246,7 +2245,7 @@ export class Hud {
       openFocusTrap: (root) => this.focusManager.open({ root }),
       closeTransient: () => this.closeOtherWindows('#quest-dialog'),
       hideTooltip: () => this.hideTooltip(),
-      itemIcon: (item, quality) => this.itemIcon(item, quality),
+      itemIcon: (item, quality) => knownItemIconHtml(item, quality),
       itemTooltip: (item, instance?: ItemInstancePayload) => this.itemTooltip(item, true, instance),
       attachTooltip: (element, html) => this.attachTooltip(element, html),
       openChronicles: () => this.openDeeds('chronicle'),
@@ -2280,7 +2279,7 @@ export class Hud {
       entityName: entityDisplayName,
       money: (copper) => moneyHtml(copper),
       coinIconUrl: () => iconDataUrl('item', 'coin_gold'),
-      itemIcon: (item, quality) => this.itemIcon(item, quality),
+      itemIcon: (item, quality) => knownItemIconHtml(item, quality),
       itemTooltip: (item, instance?: ItemInstancePayload) => this.itemTooltip(item, true, instance),
       attachTooltip: (element, html) => this.attachTooltip(element, html),
       confirm: (title, body, okText, cancelText, onOk) =>
@@ -2303,7 +2302,7 @@ export class Hud {
       world: () => this.sim,
       now: () => performance.now(),
       isMobileLayout: () => this.isMobileLayout(),
-      itemIcon: (item, quality) => this.itemIcon(item, quality),
+      itemIcon: (item, quality) => knownItemIconHtml(item, quality),
       itemTooltip: (item, instance?: ItemInstancePayload) => this.itemTooltip(item, true, instance),
       attachTooltip: (element, html) => this.attachTooltip(element, html),
       hideTooltip: () => this.hideTooltip(),
@@ -4808,7 +4807,7 @@ export class Hud {
   );
   private readonly presentationBag: PainterHostPresentation = {
     openMaterialSources: openMaterialSourcesDialog,
-    itemIcon: (item, quality) => this.itemIcon(item, quality),
+    itemIcon: (item, quality) => knownItemIconHtml(item, quality),
     moneyHtml: (copper) => moneyHtml(copper),
     itemTooltip: (item, instance, materialSources) =>
       this.itemTooltip(item, true, instance, materialSources),
@@ -4901,7 +4900,7 @@ export class Hud {
     isPersonalBankTab: () => this.bankWindow.personalTabActive,
     isGuildBankTab: () => this.bankWindow.guildTabActive,
     isVaultBankTab: () => this.bankWindow.vaultTabActive,
-    pendingPetFeed: () => this.pendingPetFeed,
+    pendingPetFeed: () => this.petBar.feedPending,
     closeVendor: () => this.closeVendor(),
     closeBank: () => this.closeBank(),
     onClosed: () => this.onBagsClosed(),
@@ -4912,9 +4911,7 @@ export class Hud {
     stageMailParcel: (itemId, instance) => this.mailboxWindow.stageParcel(itemId, instance),
     insertItemChatLink: (itemId) => this.insertItemChatLink(itemId),
     showError: (text) => this.showError(text),
-    setPendingPetFeed: (active) => {
-      this.pendingPetFeed = active;
-    },
+    setPendingPetFeed: (active) => this.petBar.setFeedPending(active),
     resetPetBarSig: () => this.petBar.invalidate(),
     sellConfirmPolicy: () => vendorSellConfirmPolicyFrom((k) => this.optionsHooks?.settings.get(k)),
     isHotbarItemId: (itemId) => this.isHotbarItemId(itemId),
@@ -5507,7 +5504,7 @@ export class Hud {
     pushTradeOffer: () => this.pushTradeOffer(),
     refreshWocBalance: () => this.optionsHooks?.refreshWocBalance(),
     log: (text, color) => this.log(text, color),
-    itemIcon: (item, quality) => this.itemIcon(item, quality),
+    itemIcon: (item, quality) => knownItemIconHtml(item, quality),
     attachTooltip: (el, html) => this.attachTooltip(el, html),
     itemTooltip: (item, compare, instance, materialSources) =>
       this.itemTooltip(item, compare, instance, materialSources),
@@ -5816,10 +5813,6 @@ export class Hud {
   targetOwnPet(): void {
     const pet = this.ownPet();
     if (pet) this.sim.targetEntity(pet.id);
-  }
-
-  private itemIcon(item: ItemDef, quality?: ItemDef['quality']): string {
-    return knownItemIconHtml(item, quality);
   }
 
   // The connected wallet's $WOC balance, shown left of the coins in the bag
@@ -12892,9 +12885,13 @@ export class Hud {
   // Leave pet food-selection mode. Safe to call unconditionally; it only
   // redraws the pet bar when something actually changed.
   cancelPetFeed(): void {
-    if (!this.pendingPetFeed) return;
-    this.pendingPetFeed = false;
-    this.petBar.invalidate();
+    this.petBar.setFeedPending(false);
+  }
+
+  /** The pet bar's Heal Pet feed pick: the bags open where the food is chosen. */
+  openBagsForFeed(): void {
+    $('#bags').style.display = 'flex';
+    this.renderBags();
   }
 
   toggleBags(): void {

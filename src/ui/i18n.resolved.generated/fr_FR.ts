@@ -604,6 +604,9 @@ export const fr_FR: EnTranslations = {
       "shotTiming": "Recharge : {cooldown} s. Impact après {flight} s. Tous les tirs partagent {recovery} s de récupération.",
       "shotRules": "Visez à l'intérieur du champ marqué. Aucun coût en mana. Les dégâts n'évoluent pas avec l'équipement ni les talents."
     },
+    "petBarButton": {
+      "cooldownAria": "{name}, {remaining}"
+    },
     "warlock": {
       "doomLabel": "Condamnation",
       "fateThreadsLabel": "Fils du destin",

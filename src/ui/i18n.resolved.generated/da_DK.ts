@@ -604,6 +604,9 @@ export const da_DK: EnTranslations = {
       "shotTiming": "Genopladning: {cooldown} sek. Påvirkning efter {flight} sek. Alle skud deler {recovery} sek. genopretningstid.",
       "shotRules": "Sigte inden for det markerede felt. Ingen manakostnad. Skaden skaleres ikke med udstyr eller talenter."
     },
+    "petBarButton": {
+      "cooldownAria": "{name}, {remaining}"
+    },
     "warlock": {
       "doomLabel": "Fordømmelse",
       "fateThreadsLabel": "Skæbnetråde",

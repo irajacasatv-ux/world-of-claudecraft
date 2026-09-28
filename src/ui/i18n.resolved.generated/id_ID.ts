@@ -604,6 +604,9 @@ export const id_ID: EnTranslations = {
       "shotTiming": "Waktu tunggu: {cooldown} detik. Dampak setelah {flight} detik. Semua tembakan berbagi pemulihan {recovery} detik.",
       "shotRules": "Bidik di dalam bidang yang ditandai. Tanpa biaya mana. Kerusakan tidak berkembang dengan perlengkapan atau bakat."
     },
+    "petBarButton": {
+      "cooldownAria": "{name}, {remaining}"
+    },
     "warlock": {
       "doomLabel": "Kecaman",
       "fateThreadsLabel": "Benang Takdir",

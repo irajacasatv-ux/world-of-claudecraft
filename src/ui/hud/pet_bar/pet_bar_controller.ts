@@ -6,14 +6,16 @@
 // listeners, the focus carry across a rebuild and the command each press sends.
 //
 // Hud builds it lazily over itself as the host (so tsc checks the Hud against
-// PetBarHost), drives render(pet) every frame from update() with the pet it
-// resolved once for the pet frame too, and calls invalidate() wherever the bar
-// must rebuild on the next frame: a language switch (relocalizeCoordinatorMemos),
-// the pet-feed mode ending (cancelPetFeed) and the bags window's feed pick.
-// pendingPetFeed stays a Hud field because the bags window reads and writes it.
+// PetBarHost) and its shared elided writer facet, drives render(pet) every frame
+// from update() with the pet it resolved once for the pet frame too, and calls
+// invalidate() wherever the bar must rebuild on the next frame: a language switch
+// (relocalizeCoordinatorMemos) and the bags window's feed pick. The food-selection
+// mode is the bar's own state: the Heal Pet press starts it, and the bags window
+// reads and ends it through Hud's bags deps; setFeedPending redraws the bar
+// whenever the mode flips.
 //
-// A DOM module: it reads #petbar and #bags, toggles a body class and arms the
-// touch-hold timer on window.
+// A DOM module: it reads #petbar, toggles a body class and arms the touch-hold
+// timer on window.
 
 import { audio } from '../../../game/audio';
 import type { Entity } from '../../../sim/types';
@@ -21,6 +23,7 @@ import type { IWorld } from '../../../world_api';
 import { captureFocusKey, restoreFirstEnabled } from '../../focus_restore';
 import { t, tPlural } from '../../i18n';
 import { iconDataUrl } from '../../icons';
+import type { PainterHostWriters } from '../../painter_host';
 import type { TouchPeekGuard } from '../../touch_peek';
 import { livingSecondaryPet } from '../pet_bar_core';
 import {
@@ -59,14 +62,11 @@ export interface PetBarHost {
     | 'setPetAutoTaunt'
     | 'setPetMode'
   >;
-  /** The food-selection mode the Heal Pet button starts, shared with the bags window. */
-  pendingPetFeed: boolean;
   /** Tells a touch long-press "peek" (inspect, no action) from a tap. */
   readonly peekGuard: Pick<TouchPeekGuard, 'consume'>;
-  /** Leaves the food-selection mode (and invalidates this bar when it was on). */
-  cancelPetFeed(): void;
+  /** Opens the bags window, where the food is chosen. */
+  openBagsForFeed(): void;
   showError(text: string): void;
-  renderBags(): void;
   hideTooltip(): void;
   attachTooltip(el: HTMLElement, html: () => string): void;
 }
@@ -80,12 +80,19 @@ export class PetBarController {
   // pet bar (the sideways consumables row and the Vale Cup indicator drop a band).
   private lastPresent = false;
   private modeMenuOpen = false;
+  // The food-selection mode the Heal Pet button starts. The bar owns it; the bags
+  // window reads and ends it through Hud's bags deps (feedPending, setFeedPending).
+  private feedActive = false;
+  // Resolved once; its per-frame display goes through Hud's elided writer.
+  private barEl: HTMLElement | null = null;
   private readonly facts = newPetBarFacts();
   private readonly ctx: PetBarContext;
   private readonly hud: PetBarHost;
+  private readonly writers: Pick<PainterHostWriters, 'setDisplay'>;
 
-  constructor(hud: PetBarHost) {
+  constructor(hud: PetBarHost, writers: Pick<PainterHostWriters, 'setDisplay'>) {
     this.hud = hud;
+    this.writers = writers;
     this.ctx = {
       primaryPetShown: false,
       ownerClass: 'warrior',
@@ -102,11 +109,23 @@ export class PetBarController {
     this.lastSig = '';
   }
 
+  get feedPending(): boolean {
+    return this.feedActive;
+  }
+
+  /** Enter or leave food selection; leaving redraws the bar. */
+  setFeedPending(active: boolean): void {
+    if (active === this.feedActive) return;
+    this.feedActive = active;
+    this.lastSig = '';
+  }
+
   // `pet` is resolved ONCE per frame by Hud.update() and passed in, shared with the
   // pet frame above it: both surfaces need the same entity, and each resolving its
   // own would walk the interest-scoped roster twice per frame.
   render(pet: Entity | null): void {
-    const bar = $('#petbar');
+    this.barEl ??= $('#petbar');
+    const bar = this.barEl;
     const sim = this.hud.sim;
     // Keep commandable Necromancy secondaries visible after Graveguard is gone.
     const primaryPetShown = !!pet && !pet.dead;
@@ -120,7 +139,7 @@ export class PetBarController {
       document.body.classList.toggle('mobile-pet-active', petPresent);
     }
     if (!pet || pet.dead) {
-      bar.style.display = 'none';
+      this.writers.setDisplay(bar, 'none');
       if (this.lastSig !== '') {
         this.clearGroups(bar);
         this.lastSig = '';
@@ -131,10 +150,10 @@ export class PetBarController {
     ctx.primaryPetShown = primaryPetShown;
     ctx.ownerClass = sim.cfg.playerClass;
     ctx.specialCommandsSupported = sim.petSpecialCommandsSupported;
-    ctx.pendingPetFeed = this.hud.pendingPetFeed;
+    ctx.pendingPetFeed = this.feedActive;
     ctx.modeMenuOpen = this.modeMenuOpen;
     const facts = petBarFactsInto(this.facts, pet, ctx);
-    bar.style.display = 'flex';
+    this.writers.setDisplay(bar, 'flex');
     if (facts.sig === this.lastSig) return;
     this.lastSig = facts.sig;
     // Focus carry-across through the shared helper (focus_restore.ts, #2528):
@@ -223,18 +242,16 @@ export class PetBarController {
   // means feedState.disabled was false (the button no-ops while
   // disabled), so the food check below is now just a defensive guard.
   private toggleFeed(): void {
-    if (this.hud.pendingPetFeed) {
-      this.hud.cancelPetFeed();
+    if (this.feedActive) {
+      this.setFeedPending(false);
       return;
     }
     if (!bagsHoldPetFood(this.hud.sim.inventory)) {
       this.hud.showError(t('hud.pet.noPetFood'));
       return;
     }
-    this.hud.pendingPetFeed = true;
-    this.lastSig = '';
-    $('#bags').style.display = 'flex';
-    this.hud.renderBags();
+    this.setFeedPending(true);
+    this.hud.openBagsForFeed();
   }
 
   private addButton(parent: HTMLElement, button: PetBarButton): void {
@@ -251,7 +268,10 @@ export class PetBarController {
     btn.setAttribute(
       'aria-label',
       button.cooldownText
-        ? `${title}, ${tPlural('hudChrome.plurals.secondsRemaining', Number(button.cooldownText))}`
+        ? t('hudChrome.petBarButton.cooldownAria', {
+            name: title,
+            remaining: tPlural('hudChrome.plurals.secondsRemaining', Number(button.cooldownText)),
+          })
         : title,
     );
     if (button.disabled) btn.setAttribute('aria-disabled', 'true');

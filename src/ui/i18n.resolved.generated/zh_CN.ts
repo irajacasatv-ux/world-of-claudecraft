@@ -604,6 +604,9 @@ export const zh_CN: EnTranslations = {
       "shotTiming": "冷却时间：{cooldown} 秒。{flight} 秒后命中。所有弹种共享 {recovery} 秒恢复时间。",
       "shotRules": "在标记区域内瞄准。不消耗法力。伤害不受装备或天赋影响。"
     },
+    "petBarButton": {
+      "cooldownAria": "{name}, {remaining}"
+    },
     "warlock": {
       "doomLabel": "谴罪",
       "fateThreadsLabel": "命运丝线",
