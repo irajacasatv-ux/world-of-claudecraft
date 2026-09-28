@@ -380,10 +380,12 @@ that rule, a `CI_GUARD_SUITES` member so it rides every PR: no file outside `CI_
 may weigh more than `LANE_THRESHOLD_MS` (exported beside the list in
 `scripts/lib/ci_shard_plan.mjs`, never restated as a literal) in
 `scripts/ci_shard_weights.generated.json`, with a positive control that the lane itself holds
-weights over the line. The table is harvested from green full-mode CI, so a file split or made
-cheaper after the harvest re-measures its own row locally with `--carry-local --supersede` (a
-required reason, and the replaced CI weight recorded on the row) until the next harvest
-replaces it; a new file carries with `--carry-local-missing`.
+weights over the line. A carried row (one the newest harvest did not measure) is judged in CI
+time, scaled by `CARRIED_LOCAL_TO_CI_RATIO` through `ciTimeWeight` in the same module, because
+it was not recorded in CI ms. The table is harvested from green full-mode CI, so a file split
+or made cheaper after the harvest re-measures its own row locally with `--carry-local
+--supersede` (a required reason, and the replaced CI weight recorded on the row) until the next
+harvest replaces it; a new file carries with `--carry-local-missing`.
 
 **Per-file memory budgets.** `npm run test:memory` (`scripts/test_memory_probe.mjs`, the pure
 judge in `scripts/lib/test_memory_budget.mjs`, the probe config `vitest.memory.config.ts`) runs

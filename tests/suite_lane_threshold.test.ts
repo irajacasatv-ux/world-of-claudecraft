@@ -5,9 +5,10 @@
 // this is the MEASURED half. A file over the line either leaves the shard pool for the
 // long-sims lane (a CI_LONG_SUITES entry), gets split or made cheaper and its row
 // re-measured (the carry tool's --supersede, with the reason), or the threshold moves as
-// a maintainer decision in scripts/lib/ci_shard_plan.mjs, never here. A carried
-// local-median row is in LOCAL ms, so it is scaled by CARRIED_LOCAL_TO_CI_RATIO into CI
-// time before it is judged; a harvested row is judged as measured.
+// a maintainer decision in scripts/lib/ci_shard_plan.mjs, never here. A carried row is
+// not in CI ms (the newest harvest did not measure it), so ciTimeWeight scales it by
+// CARRIED_LOCAL_TO_CI_RATIO into CI time before it is judged; a harvested row is judged
+// as measured.
 
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
@@ -15,6 +16,7 @@ import { MEASURED_WEIGHTS } from '../scripts/ci_shard_partition.mjs';
 import {
   CARRIED_LOCAL_TO_CI_RATIO,
   CI_LONG_SUITES,
+  ciTimeWeight,
   LANE_THRESHOLD_MS,
 } from '../scripts/lib/ci_shard_plan.mjs';
 import { carriedRows } from '../scripts/lib/ci_shard_weight_carry.mjs';
@@ -25,10 +27,8 @@ const CARRIED = carriedRows(
   ),
 );
 
-/** A row's weight in CI time: carried local medians scaled, harvested rows as measured. */
-function ciWeight(file: string, ms: number): number {
-  return CARRIED[file]?.method === 'local-median' ? ms * CARRIED_LOCAL_TO_CI_RATIO : ms;
-}
+/** A live row's weight in CI time (ciTimeWeight over the committed carried map). */
+const ciWeight = (file: string, ms: number): number => ciTimeWeight(ms, CARRIED[file]);
 
 describe('the lane threshold over the measured shard weights', () => {
   it('keeps every file outside the lane under the threshold', () => {
@@ -52,18 +52,16 @@ describe('the lane threshold over the measured shard weights', () => {
     expect(heavyLane.length).toBeGreaterThanOrEqual(3);
   });
 
-  it('judges a carried local-median row in CI time, and a harvested row as measured', () => {
-    // The scale reaches the rows it is for: the table carries local medians today, and
-    // each is judged at CARRIED_LOCAL_TO_CI_RATIO times its local figure.
-    const carried = Object.entries(CARRIED).filter(([, row]) => row.method === 'local-median');
-    expect(carried.length).toBeGreaterThan(0);
-    for (const [file] of carried) {
-      expect(ciWeight(file, MEASURED_WEIGHTS[file]), file).toBe(
-        MEASURED_WEIGHTS[file] * CARRIED_LOCAL_TO_CI_RATIO,
-      );
-    }
-    const harvested = Object.keys(MEASURED_WEIGHTS).find((file) => !(file in CARRIED)) as string;
-    expect(ciWeight(harvested, MEASURED_WEIGHTS[harvested])).toBe(MEASURED_WEIGHTS[harvested]);
+  it('judges every carried row in CI time, and a harvested row as measured', () => {
+    // Over a synthetic carried map, so the pin holds whether or not the committed table
+    // carries anything (a complete harvest empties it): each carried method is scaled,
+    // a row with no carried entry is judged as measured.
     expect(CARRIED_LOCAL_TO_CI_RATIO).toBe(4);
+    expect(ciTimeWeight(20_000, { method: 'local-median' })).toBe(80_000);
+    expect(ciTimeWeight(20_000, { method: 'prose-backfill' })).toBe(80_000);
+    expect(ciTimeWeight(20_000, { method: 'some-future-method' })).toBe(80_000);
+    expect(ciTimeWeight(20_000, undefined)).toBe(20_000);
+    // A local 23 s row is over the line in CI time though under it as recorded.
+    expect(ciTimeWeight(23_000, { method: 'local-median' })).toBeGreaterThan(LANE_THRESHOLD_MS);
   });
 });

@@ -115,16 +115,40 @@ export const LANE_THRESHOLD_MS = 90_000;
 
 /**
  * How much slower a file runs inside a full-mode CI shard than alone on a
- * developer machine. A carried `local-median` row holds LOCAL ms, so judged
- * against LANE_THRESHOLD_MS unscaled it would understate the file by this
- * factor until the next harvest replaces it; tests/suite_lane_threshold.test.ts
- * scales carried rows by it. Measured at the 2026-09-28 harvest (run
- * 36448553184): over the 1,049 local-median rows that harvest replaced, CI over
- * local had a median of 1.74 and a 95th percentile of 3.73, so 4 sits above
- * nearly all of them. Outliers remain (tests/hill.test.ts measured 7.75); the
- * next harvest judges those in CI time.
+ * developer machine. A carried row is one the newest harvest did not measure,
+ * so it is not in CI ms (a `local-median` row is local ms by definition), and
+ * judged against LANE_THRESHOLD_MS unscaled it would understate the file until
+ * the next harvest replaces it; ciTimeWeight scales every carried row by this
+ * factor for tests/suite_lane_threshold.test.ts.
+ *
+ * Measured at the 2026-09-28 harvest (run 36448553184). The files near the line
+ * are what matter: the two families split that day ran 3.13x (coverage_c,
+ * 108,657 ms in CI against 34,686 ms for its halves locally) and 2.91x (the
+ * world population sweep, 167,875 against 57,736), and over the 47 replaced
+ * local-median rows of 5 s or more locally CI over local had a 90th percentile
+ * of 3.36 and a maximum of 7.75 (tests/hill.test.ts). 4 sits above the families
+ * and about the heavy 90th to 95th percentile; a hill-like outlier passes until
+ * the next harvest, which then judges it in CI time and fails loudly.
+ *
+ * The shard packer deliberately does NOT apply this: scripts/ci_shard_partition.mjs
+ * weightForTestFile packs carried rows as recorded, so a carried file is packed
+ * lighter than it runs until the next harvest. That only moves where a file runs,
+ * never whether it runs.
  */
 export const CARRIED_LOCAL_TO_CI_RATIO = 4;
+
+/**
+ * A weight-table row in CI time: a carried row (any method; `carriedRow` is its
+ * `__provenance.carried` entry) scaled by CARRIED_LOCAL_TO_CI_RATIO, a harvested
+ * row as measured.
+ *
+ * @param {number} ms
+ * @param {object | undefined} carriedRow
+ * @returns {number}
+ */
+export function ciTimeWeight(ms, carriedRow) {
+  return carriedRow === undefined ? ms : ms * CARRIED_LOCAL_TO_CI_RATIO;
+}
 
 export const CI_LONG_SUITES = Object.freeze([
   // 2026-08-13 remeasure (run 31732244215, both lanes fully loaded; figures
