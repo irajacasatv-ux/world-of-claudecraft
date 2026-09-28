@@ -1,6 +1,36 @@
 // @vitest-environment happy-dom
 
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+// This suite asserts nothing about portraits. The real portrait chip imports the
+// portrait renderer, whose asset modules start hundreds of GLB fetches on import, about
+// 470 measured from the char window suite on 2026-09-28; they outlive happy-dom teardown
+// and fail the run with unhandled ProgressEvent rejections after green assertions. The
+// chip is inert here and the suite pins that it starts no fetch. The stand-in is defined
+// inline in vi.hoisted (the inspect window suite's shape) because a dynamic import would
+// move this file off the selective gate's import graph.
+const { fetched, inertPortraitChip } = vi.hoisted(() => {
+  const fetched: string[] = [];
+  const realFetch = globalThis.fetch;
+  globalThis.fetch = ((input: RequestInfo | URL, init?: RequestInit) => {
+    fetched.push(typeof input === 'string' ? input : input instanceof URL ? input.href : input.url);
+    return realFetch(input, init);
+  }) as typeof fetch;
+  const inertPortraitChip = {
+    crestUrl: () => '',
+    hydratePortraits: () => undefined,
+    isComposedPortraitKey: () => false,
+    modularLookFor: () => null,
+    onPortraitUpdate: () => undefined,
+    portraitChipHtml: () => '',
+  };
+  return { fetched, inertPortraitChip };
+});
+vi.mock('../src/ui/portrait_chip', () => inertPortraitChip);
+afterAll(() => {
+  expect(fetched, 'this suite starts no fetch').toEqual([]);
+});
+
 import {
   INVESTIGATION_CLUES,
   INVESTIGATION_NPC_IDS,
