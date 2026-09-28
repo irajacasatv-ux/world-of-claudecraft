@@ -74,6 +74,7 @@ interface PetBarHarness {
   attachTooltip: ReturnType<typeof vi.fn>;
   hideTooltip: ReturnType<typeof vi.fn>;
   openBagsForFeed: ReturnType<typeof vi.fn>;
+  renderBagsIfOpen: ReturnType<typeof vi.fn>;
   showError: ReturnType<typeof vi.fn>;
   /** PetBarController.render. */
   renderPetBar(pet: unknown): void;
@@ -144,6 +145,7 @@ function makeHud(
     attachTooltip: vi.fn(),
     hideTooltip: vi.fn(),
     openBagsForFeed: vi.fn(),
+    renderBagsIfOpen: vi.fn(),
     showError: vi.fn(),
   };
   // The fake host is cast at this one boundary; the controller reads it through
@@ -524,19 +526,44 @@ describe('PetBarController: the latch, the presses and the host seam', () => {
     expect(hud.controller.feedPending).toBe(false);
   });
 
-  it('keeps the feed mode across the pet leaving and returning, and repaints it pressed', () => {
+  // Fernando's 2026-09-28 ruling: the food-selection mode feeds the primary
+  // pet, so it ends the moment that pet dies, despawns or is dismissed, and the
+  // open bags repaint out of it; a bag pick then uses the item again instead of
+  // meeting the sim's "You have no living pet."
+  it.each([
+    ['despawns', null],
+    ['dies', 'dead'],
+  ] as const)('ends the feed mode when the pet %s, and repaints the bags out of it', (_, how) => {
     const hud = makeHud('forest_wolf', true, { hp: 50, maxHp: 100 }, 'hunter');
     const pet = hud.sim.entities.get(2) ?? null;
     const feed = () => document.querySelector<HTMLButtonElement>('[data-focus-key="pet_feed"]');
     hud.renderPetBar(pet);
     feed()?.click();
     expect(hud.controller.feedPending).toBe(true);
-    // The pet goes (the hide path clears the groups and the latch) and comes back.
-    hud.renderPetBar(null);
-    expect(feed()).toBeNull();
+    // A living pet across frames keeps the mode, and repaints nothing.
     hud.renderPetBar(pet);
-    expect(feed()?.getAttribute('aria-pressed')).toBe('true');
     expect(hud.controller.feedPending).toBe(true);
+    expect(hud.renderBagsIfOpen).not.toHaveBeenCalled();
+
+    hud.renderPetBar(how === 'dead' ? { ...pet, dead: true } : null);
+    expect(hud.controller.feedPending).toBe(false);
+    expect(hud.renderBagsIfOpen).toHaveBeenCalledTimes(1);
+    expect(feed()).toBeNull();
+
+    // A second empty frame does not repaint the bags again, and a returning pet
+    // shows the button unpressed.
+    hud.renderPetBar(null);
+    expect(hud.renderBagsIfOpen).toHaveBeenCalledTimes(1);
+    hud.renderPetBar(pet);
+    expect(feed()?.hasAttribute('aria-pressed')).toBe(false);
+    expect(hud.controller.feedPending).toBe(false);
+  });
+
+  it('never repaints the bags for a lost pet when no feed was pending', () => {
+    const hud = makeHud('forest_wolf', true, { hp: 50, maxHp: 100 }, 'hunter');
+    hud.renderPetBar(hud.sim.entities.get(2) ?? null);
+    hud.renderPetBar(null);
+    expect(hud.renderBagsIfOpen).not.toHaveBeenCalled();
   });
 
   it('writes the bar display through the elided facet, on the element it resolved once', () => {
@@ -576,6 +603,7 @@ describe('PetBarController: the latch, the presses and the host seam', () => {
       'sim',
       'peekGuard',
       'openBagsForFeed',
+      'renderBagsIfOpen',
       'showError',
       'hideTooltip',
       'attachTooltip',

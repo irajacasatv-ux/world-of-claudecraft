@@ -2351,9 +2351,7 @@ export class Hud {
       openFocusTrap: (root) => this.focusManager.open({ root }),
       attachTooltip: (element, html) => this.attachTooltip(element, html),
       showBanner: (text) => this.showBanner(text),
-      renderBagsIfOpen: () => {
-        if ($('#bags').style.display !== 'none') this.renderBags();
-      },
+      renderBagsIfOpen: () => this.renderBagsIfOpen(),
       random: Math.random,
       audio: {
         bagOpen: () => audio.bagOpen(),
@@ -4959,9 +4957,7 @@ export class Hud {
       this.confirmDialog(title, body, okText, cancelText, onOk),
     slotName: (slot) => itemSlotName(slot),
     isMobileLayout: () => this.isMobileLayout(),
-    afterAction: () => {
-      if ($('#bags').style.display !== 'none') this.renderBags();
-    },
+    afterAction: () => this.renderBagsIfOpen(),
   });
   // World Market window painter (market_view.ts core + market_window.ts painter).
   // It composes the shared presentation bag (icon/money/tooltip) and owns the
@@ -6187,7 +6183,7 @@ export class Hud {
     this.interfaceUnlock.relocalize();
     this.targetAurasWindow.relocalize();
     if (this.questlogWindow.isOpen) this.questlogWindow.render();
-    if ($('#bags').style.display !== 'none') this.renderBags();
+    this.renderBagsIfOpen();
     this.repaintOpenServiceWindows();
     // The Town Focus signature is text-independent (the allocation, the budget
     // and the in-town flag), so a language switch alone never moves it and the
@@ -7036,7 +7032,7 @@ export class Hud {
         useItem: (id) => {
           if (this.tradeOpen) return false;
           this.sim.useItem(id);
-          if ($('#bags').style.display !== 'none') this.renderBags();
+          this.renderBagsIfOpen();
           return true;
         },
         flash: (btn) => this.flashActionButton(btn),
@@ -9859,7 +9855,7 @@ export class Hud {
           // arm (the requester's side rides the ordinary loot event's bag
           // refresh).
           this.renderCommissionBoard();
-          if (ev.action === 'deliver' && $('#bags').style.display !== 'none') this.renderBags();
+          if (ev.action === 'deliver') this.renderBagsIfOpen();
           break;
         }
         case 'ferryBellHome': {
@@ -10009,7 +10005,7 @@ export class Hud {
           break;
         }
         case 'vendor': {
-          if ($('#bags').style.display !== 'none') this.renderBags();
+          this.renderBagsIfOpen();
           if (this.openVendorNpcId !== null) this.renderVendor();
           // A Heroic Marks purchase rides the same 'vendor' event; refresh the
           // shop so the balance and per-offer affordability update after a buy.
@@ -10378,7 +10374,7 @@ export class Hud {
           break;
         }
         case 'tradeDone':
-          if ($('#bags').style.display !== 'none') this.renderBags();
+          this.renderBagsIfOpen();
           audio.coin();
           break;
         case 'heal2': {
@@ -11811,7 +11807,7 @@ export class Hud {
     const sellJunkState = sellJunkButtonState(this.sim.inventory, ITEMS);
     const buyAndRefresh = (buy: () => void) => {
       buy();
-      if ($('#bags').style.display !== 'none') this.renderBags();
+      this.renderBagsIfOpen();
       this.renderVendor();
       // The issue #2375 repro: buying the last reagent with the crafting
       // window open must enable the row on the click, not on the next slow
@@ -12428,7 +12424,7 @@ export class Hud {
           const commission = this.craftCommissionOptIn.delete(recipeId);
           this.sim.craftItem(recipeId, commission, Math.max(1, Math.floor(count)));
           this.renderCrafting();
-          if ($('#bags').style.display !== 'none') this.renderBags();
+          this.renderBagsIfOpen();
         },
         onClose: () => this.closeCrafting(),
         onOpenOrders: () => this.openCommissionBoard(),
@@ -12893,6 +12889,10 @@ export class Hud {
   openBagsForFeed(): void {
     $('#bags').style.display = 'flex';
     this.renderBags();
+  }
+
+  renderBagsIfOpen(): void {
+    if ($('#bags').style.display !== 'none') this.renderBags();
   }
 
   toggleBags(): void {

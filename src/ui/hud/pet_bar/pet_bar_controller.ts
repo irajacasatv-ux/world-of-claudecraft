@@ -10,8 +10,9 @@
 // from update() with the pet it resolved once for the pet frame too, and calls
 // invalidate() when the bar must rebuild on the next frame for a language switch
 // (relocalizeCoordinatorMemos). The food-selection mode is the bar's own state: the
-// Heal Pet press starts it, and the bags window reads and ends it through Hud's bags
-// deps; the mode is part of the signature, so a flip redraws the bar.
+// Heal Pet press starts it, the bags window reads and ends it through Hud's bags
+// deps, and the primary pet dying or leaving ends it here; the mode is part of the
+// signature, so a flip redraws the bar.
 //
 // A DOM module: it reads #petbar, toggles a body class and arms the touch-hold
 // timer on window.
@@ -65,6 +66,8 @@ export interface PetBarHost {
   readonly peekGuard: Pick<TouchPeekGuard, 'consume'>;
   /** Opens the bags window, where the food is chosen. */
   openBagsForFeed(): void;
+  /** Repaints the bags window when it is open (the feed mode ending). */
+  renderBagsIfOpen(): void;
   showError(text: string): void;
   hideTooltip(): void;
   attachTooltip(el: HTMLElement, html: () => string): void;
@@ -127,6 +130,13 @@ export class PetBarController {
     const sim = this.hud.sim;
     // Keep commandable Necromancy secondaries visible after Graveguard is gone.
     const primaryPetShown = !!pet && !pet.dead;
+    // Food selection feeds the primary pet, so it ends the moment that pet dies,
+    // despawns or is dismissed: a bag pick then uses the item again instead of
+    // meeting the sim's "You have no living pet." The open bags repaint out of it.
+    if (this.feedActive && !primaryPetShown) {
+      this.feedActive = false;
+      this.hud.renderBagsIfOpen();
+    }
     if (!primaryPetShown) pet = livingSecondaryPet(sim.entities.values(), sim.playerId);
     // Value-diffed body-class flag (see field doc): toggled only on a real
     // transition so the per-frame path stays write-free, and on EVERY host so

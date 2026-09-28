@@ -185,7 +185,9 @@ const FANOUT_ARMS: readonly string[] = [
   // once at init by ChatGeometryController; its relocalize() rewrites them.
   'this.chatGeometry.relocalize|',
   'this.questlogWindow.render|this.questlogWindow.isOpen',
-  "this.renderBags|$('#bags').style.display !== 'none'",
+  // The bags repaint goes through Hud.renderBagsIfOpen, whose own open check
+  // is the gate.
+  'this.renderBagsIfOpen|',
   // The four service windows (copper vendor, heroic quartermaster, train,
   // unbind) repaint through the shared helper; its per-window open-plus-shown
   // guards are pinned by tests/train_window_hud.test.ts, since this half only
@@ -760,7 +762,7 @@ const NOT_A_LANGUAGE_GATE: ReadonlyArray<{
     file: 'bags_window.ts',
     memos: ['lastSortBaseline', 'ordinalCache'],
     reason:
-      'ordinalCache (surfaced by the member-compared gate widening: it is read as `this.ordinalCache?.inv !== inventory`, so the whole-field matcher never saw it) holds no text of any kind. It is `{ inv, map }`, keyed on the inventory ARRAY IDENTITY and mapping each slot object to its ordinal NUMBER, rebuilt whenever the array reference changes; a locale switch neither moves the key nor changes a value, and nothing localized is stored. lastSortBaseline gates nothing that is drawn: it decides only whether the one-shot sort settle ANIMATION plays on this paint (armed by the Sort button, compared against the press-time INVENTORY signature because online the tidied inventory arrives with the heavy self snapshot, not the press repaint). fillGrid rebuilds every cell unconditionally on every paint, and the bags fan-out arm (this.renderBags) already drives a wholesale repaint on a locale switch, so the window relocalizes by itself; the signature reads no text at all (item ids, counts, cell hints), so a locale switch cannot even move it.',
+      'ordinalCache (surfaced by the member-compared gate widening: it is read as `this.ordinalCache?.inv !== inventory`, so the whole-field matcher never saw it) holds no text of any kind. It is `{ inv, map }`, keyed on the inventory ARRAY IDENTITY and mapping each slot object to its ordinal NUMBER, rebuilt whenever the array reference changes; a locale switch neither moves the key nor changes a value, and nothing localized is stored. lastSortBaseline gates nothing that is drawn: it decides only whether the one-shot sort settle ANIMATION plays on this paint (armed by the Sort button, compared against the press-time INVENTORY signature because online the tidied inventory arrives with the heavy self snapshot, not the press repaint). fillGrid rebuilds every cell unconditionally on every paint, and the bags fan-out arm (this.renderBagsIfOpen) already drives a wholesale repaint on a locale switch, so the window relocalizes by itself; the signature reads no text at all (item ids, counts, cell hints), so a locale switch cannot even move it.',
   },
   {
     file: 'deed_tracker_painter.ts',
@@ -1182,7 +1184,9 @@ describe('language fan-out: half 1, the arms of refreshLocalizedDynamicUi', () =
     // those families would still leave the other three healthy.
     expect(observedArms).toContain('this.cardDuelWindow.relocalize|');
     expect(observedArms).toContain('this.bankWindow.render|this.bankWindow.isOpen');
-    expect(observedArms).toContain("this.renderBags|$('#bags').style.display !== 'none'");
+    expect(observedArms).toContain(
+      "this.renderCrafting|$('#crafting-window').style.display === 'flex'",
+    );
     expect(observedArms).toContain('this.mobileActionRingPainter.relocalize|');
   });
 });
