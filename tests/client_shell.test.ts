@@ -928,8 +928,14 @@ describe('client HTML shell', () => {
     expect(hudTs).not.toContain("bags.style.display !== 'block'");
     expect(hudTs).toContain("$('#bags').style.display = 'flex';");
     // The helper's own body, exactly, over comment-stripped text (a commented-out copy
-    // beside an unconditional helper must not satisfy it): the same line also sits in
-    // onInventoryChanged, so a whole-file match could not tell the helper's gate apart.
+    // beside an unconditional helper must not satisfy it), at the one place the helper
+    // is declared: the same line also sits in onInventoryChanged, so a whole-file match
+    // could not tell the helper's gate apart.
+    const helperHead = '  renderBagsIfOpen(): void {\n';
+    expect(stripComments(hudTs).split(helperHead)).toHaveLength(2);
+    expect(stripComments(hudTs).split(helperHead)[1]).toMatch(
+      /^ {4}if \(bagsWindowShown\(\$\('#bags'\)\.style\.display\)\) this\.renderBags\(\);\n {2}\}\n/,
+    );
     expect(stripComments(hudTs)).toContain(
       "  renderBagsIfOpen(): void {\n    if (bagsWindowShown($('#bags').style.display)) this.renderBags();\n  }\n",
     );
@@ -952,30 +958,25 @@ describe('client HTML shell', () => {
       expect(end, `${opener} closer`).toBeGreaterThan(start);
       return text.slice(start, end);
     };
-    for (const signature of ['closeVendor(): void', 'private onBankClosed(): void']) {
-      const body = flat(span(code, `\n  ${signature} {\n`, '\n  }\n')).trimEnd();
-      // Nothing in the method names renderBags by any spelling, and the gated repaint is
-      // the else of the ONE mobile-bags guard, closing the method: the guard's block is
-      // brace-matched and everything after it must be exactly that else, so no second
-      // guard, else-if or dead condition can narrow or strand the arm.
-      expect(body, signature).not.toMatch(/\brenderBags\b/);
-      expect(body, signature).toContain(
-        "const closeMobileBags = touchBagsShown(document.body.classList, $('#bags').style.display);",
-      );
-      const guard = 'if (closeMobileBags) {';
-      expect(body.split(guard), signature).toHaveLength(2);
-      let depth = 0;
-      let close = -1;
-      for (let i = body.indexOf(guard) + guard.length - 1; i < body.length; i++) {
-        if (body[i] === '{') depth++;
-        if (body[i] === '}' && --depth === 0) {
-          close = i;
-          break;
-        }
-      }
-      expect(close, signature).toBeGreaterThan(-1);
-      expect(body.slice(close + 1), signature).toBe(' else { this.renderBagsIfOpen(); }');
-    }
+    // The mobile-bags guard's block and its else close each method verbatim. Nothing in
+    // either method names renderBags directly (a call, .call, or a bracket read), and
+    // nothing ahead of the guard can skip it: onBankClosed is pinned whole, and
+    // closeVendor keeps exactly its one sanctioned early return and the statement that
+    // precedes the guard, with the guard appearing once.
+    const guardArm =
+      "if (closeMobileBags) { dismissBagPrompts(); const bags = $('#bags'); bags.style.display = 'none'; bags.inert = false; this.cancelPetFeed(); } else { this.renderBagsIfOpen(); }";
+    const methodBody = (signature: string) =>
+      flat(span(code, `\n  ${signature} {\n`, '\n  }\n')).trim();
+    const vendor = methodBody('closeVendor(): void');
+    expect(vendor).not.toMatch(/\brenderBags\b/);
+    expect(vendor.endsWith(`this.vendorOpenerFocus = null; ${guardArm}`), vendor).toBe(true);
+    expect(vendor.split('if (closeMobileBags)')).toHaveLength(2);
+    expect([...vendor.matchAll(/\breturn\b/g)]).toHaveLength(1);
+    expect(vendor).toContain('closeVendor(): void { if (this.openVendorNpcId === null) return; ');
+    expect(methodBody('private onBankClosed(): void')).toBe(
+      "private onBankClosed(): void { const closeMobileBags = touchBagsShown(document.body.classList, $('#bags').style.display); document.body.classList.remove('bank-open', 'weekly-vault-open'); " +
+        guardArm,
+    );
     for (const ctor of ['new MarketWindow({', 'new MailboxWindow({']) {
       // Read inside the window's own constructor block, so one window's arm can never be
       // read for the other's.
