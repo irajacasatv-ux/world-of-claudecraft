@@ -46,15 +46,21 @@ import { HARVEST_COMPONENT_ITEMS } from '../src/sim/content/professions';
 import { FOCUS_POINT_BUDGET } from '../src/sim/professions/focus';
 import type { TownFocusPendingView } from '../src/sim/professions/town_focus_pending';
 import { FOCUSABLE_SELECTOR, FocusManager } from '../src/ui/focus_manager';
-import { t } from '../src/ui/i18n';
-import { TownFocusController, type TownFocusHost } from '../src/ui/hud/town_focus/town_focus_controller';
+import {
+  TownFocusController,
+  type TownFocusHost,
+} from '../src/ui/hud/town_focus/town_focus_controller';
 import {
   buildTownFocusView,
   TOWN_FOCUS_COMPONENTS,
   type TownFocusView,
   townFocusRenderSig,
 } from '../src/ui/hud/town_focus/town_focus_view';
-import { renderTownFocusWindow, type TownFocusRespecPreview } from '../src/ui/hud/town_focus/town_focus_window';
+import {
+  renderTownFocusWindow,
+  type TownFocusRespecPreview,
+} from '../src/ui/hud/town_focus/town_focus_window';
+import { t } from '../src/ui/i18n';
 import { makeWindowFocus, type WindowFocusBridge } from '../src/ui/window_focus';
 
 const COMPONENT = TOWN_FOCUS_COMPONENTS[0];
@@ -767,7 +773,10 @@ describe('renderTownFocusWindow carries keyboard focus across its own wipe', () 
 
 const hudSrc = stripComments(readFileSync(path.resolve(process.cwd(), 'src/ui/hud.ts'), 'utf8'));
 const controllerSrc = stripComments(
-  readFileSync(path.resolve(process.cwd(), 'src/ui/hud/town_focus/town_focus_controller.ts'), 'utf8'),
+  readFileSync(
+    path.resolve(process.cwd(), 'src/ui/hud/town_focus/town_focus_controller.ts'),
+    'utf8',
+  ),
 );
 
 /** Source between two unique anchors, asserted to exist so a rename fails

@@ -8,9 +8,9 @@
 // line through the real handleEvents run in tests/hud_coordinator_delegators.test.ts.
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { ResurrectionPrompt } from '../src/ui/hud/revive/resurrection_prompt';
 import { t } from '../src/ui/i18n';
 import { PROMPT_TIMEOUT_MS } from '../src/ui/prompt_dialog';
-import { ResurrectionPrompt } from '../src/ui/hud/revive/resurrection_prompt';
 
 function rig(dead = true) {
   const respondToResurrection = vi.fn();

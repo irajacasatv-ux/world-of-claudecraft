@@ -796,7 +796,7 @@ function drawSemanticObjectFallback(
     default: {
       // Every family paints: a new one fails to compile here, never goes blank.
       const unpainted: never = semantic;
-      return unpainted;
+      void unpainted;
     }
   }
 }

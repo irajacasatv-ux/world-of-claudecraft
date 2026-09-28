@@ -137,7 +137,10 @@ describe('bindDialogKeyActivation (confirm-dialog family keyboard repair)', () =
     // announces the name and the button and never the warning. The dialog moved
     // whole out of Hud.confirmDialog into src/ui/hud/dialog/confirm_dialog_controller.ts
     // (whose own suite also asserts the attribute on the painted dialog).
-    const dialog = readFileSync(join(process.cwd(), 'src/ui/hud/dialog/confirm_dialog_controller.ts'), 'utf8');
+    const dialog = readFileSync(
+      join(process.cwd(), 'src/ui/hud/dialog/confirm_dialog_controller.ts'),
+      'utf8',
+    );
     expect(dialog).toContain(`el.setAttribute('aria-describedby', 'confirm-dialog-body')`);
     expect(dialog).toContain('<div class="cd-body" id="confirm-dialog-body">');
   });

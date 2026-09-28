@@ -18,8 +18,11 @@ import { page, userEvent } from 'vitest/browser';
 import { corpseLootAvailabilityInWorld } from '../../src/game/corpse_loot_availability';
 import type { HarvestPreference } from '../../src/sim/professions/harvest_preference';
 import type { Entity } from '../../src/sim/types';
-import { type ConfirmDialogHost, showConfirmDialog } from '../../src/ui/hud/dialog/confirm_dialog_controller';
 import { FocusManager } from '../../src/ui/focus_manager';
+import {
+  type ConfirmDialogHost,
+  showConfirmDialog,
+} from '../../src/ui/hud/dialog/confirm_dialog_controller';
 import {
   LootWindowController,
   type LootWindowControllerDeps,

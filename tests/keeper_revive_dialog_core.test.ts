@@ -5,13 +5,13 @@
 
 import { describe, expect, it } from 'vitest';
 import { RES_SICKNESS_MIN_LEVEL } from '../src/sim/resurrection';
-import { t } from '../src/ui/i18n';
-import { hudChromeStrings } from '../src/ui/i18n.catalog/hud_chrome';
 import {
   keeperReviveConfirm,
   keeperReviveDialogue,
   keeperTollSpared,
 } from '../src/ui/hud/revive/keeper_revive_dialog_core';
+import { t } from '../src/ui/i18n';
+import { hudChromeStrings } from '../src/ui/i18n.catalog/hud_chrome';
 
 describe('keeper_revive_dialog_core', () => {
   it('a levelled character hears the Toll and the free walk back, never the waiver', () => {
