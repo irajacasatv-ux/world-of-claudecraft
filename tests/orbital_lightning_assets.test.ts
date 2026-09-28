@@ -13,11 +13,14 @@ const ROOT = path.join(__dirname, '..');
 // feature/buried-hoards: pnpm-lock.yaml (a fingerprinted input) moved with the
 // patched three's patch hash, so only the embedded source fingerprint changed
 // (same components, same byte lengths).
+// Rebuilt with build.mjs at the Freeholds sync of release/v0.45.0: the lockfile
+// left the fingerprint inputs (tests/asset_fingerprint_inputs.test.ts), so only
+// the embedded source fingerprint changed again (same components, same lengths).
 const ASSETS = [
   {
     kind: 'orb',
     bytes: 20488,
-    sha: 'ea6561f3b5dd1a208e4079939af92983fa8ab51cd4c4eb543f49556c7e5ff856',
+    sha: '8ef8018eecf808cf9e8c5da684a1c3c271231f7abff0634bcb715942e62fd5d9',
     names: ['Core', 'LocalArcs', 'OuterEnergy', 'Sparks'],
     triangles: [80, 732, 1068, 108],
     min: [-0.844265, -0.540179, -0.906207],
@@ -26,7 +29,7 @@ const ASSETS = [
   {
     kind: 'impact',
     bytes: 18452,
-    sha: '6d170adf9275bc42fbd96ce917e01231875ad9bb3401c678706c3bddca4bb039',
+    sha: '30c7171c1dff5321831af792c26b5bd4a8e908aa5132192931062219057963be',
     names: ['Crown', 'GroundArcs', 'ImpactCore', 'RadialBurst', 'Sparks'],
     triangles: [168, 612, 80, 516, 108],
     min: [-1.02133, -0.1232, -1.051493],

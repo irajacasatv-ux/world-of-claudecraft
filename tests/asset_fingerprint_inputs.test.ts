@@ -7,13 +7,16 @@
 // a lockfile no GLB was built with and attested nothing. A toolchain change that
 // really moves an asset's bytes fails that asset's rebuild or byte checks anyway.
 // This walks every fingerprint module (each `source_fingerprint.mjs`, plus the two
-// texture fingerprints beside them) and fails if either file comes back.
+// texture fingerprints beside them) and fails if either file comes back, and
+// reads every source under scripts/assets for an inline list naming either one.
 
+import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { expectScansOnlyThroughSharedWalkers } from './helpers/scan_guard_self_audit';
 import { sourceFilesUnder } from './helpers/source_files_under';
+import { stripComments } from './helpers/strip_comments';
 
 const ASSETS_ROOT = fileURLToPath(new URL('../scripts/assets', import.meta.url));
 const TEXTURE_FINGERPRINTS = [
@@ -49,6 +52,21 @@ function forbiddenInputs(list: readonly string[]): string[] {
   return list.filter((input) => FORBIDDEN.includes(path.posix.normalize(input)));
 }
 
+// A family can also hash its inputs inline: the Buried Hoard reward chest and
+// orbital lightning builds list them inside their own sourceFingerprint, not as
+// an exported *_SOURCE_FILES list, so the per-list scan never saw them hash the
+// lockfile. This reads every string literal in a source, comments stripped, and
+// flags one that names either file, alone or as a path's last segment.
+function forbiddenLiterals(source: string): string[] {
+  const hits: string[] = [];
+  for (const [, , text] of stripComments(source).matchAll(/(['"`])((?:\\.|(?!\1)[^\\\n])*)\1/g)) {
+    const normalized = path.posix.normalize(text);
+    if (FORBIDDEN.some((name) => normalized === name || normalized.endsWith(`/${name}`)))
+      hits.push(text);
+  }
+  return hits;
+}
+
 describe('asset fingerprint inputs', () => {
   it('finds every fingerprint module, each with its source list', async () => {
     expect(modules.length).toBeGreaterThanOrEqual(11);
@@ -77,6 +95,32 @@ describe('asset fingerprint inputs', () => {
         'package.json',
       ]),
     ).toEqual(['./pnpm-lock.yaml', 'scripts/../package.json', 'package.json']);
+  });
+
+  it('names neither file in any source under scripts/assets, inline lists included', () => {
+    const offenders: string[] = [];
+    const sources = sourceFilesUnder(ASSETS_ROOT).map(({ file }) => file);
+    expect(sources).toContain('reward_chest/build.mjs');
+    expect(sources).toContain('orbital_lightning/build.mjs');
+    for (const file of sources) {
+      const source = readFileSync(path.join(ASSETS_ROOT, file), 'utf8');
+      for (const hit of forbiddenLiterals(source)) offenders.push(`${file}: ${hit}`);
+    }
+    expect(offenders).toEqual([]);
+  });
+
+  it('flags an inline literal however it is quoted or joined (positive control)', () => {
+    expect(
+      forbiddenLiterals(
+        [
+          "for (const file of [SOURCE, 'pnpm-lock.yaml']) {}",
+          'read(path.join(root, "package.json"));',
+          'read(`${root}/scripts/../pnpm-lock.yaml`);',
+          "// 'pnpm-lock.yaml' in a comment is not an input",
+          "const ok = ['my-package.json.bak', 'scripts/assets/build_assets.mjs'];",
+        ].join('\n'),
+      ),
+    ).toEqual(['pnpm-lock.yaml', 'package.json', '${root}/scripts/../pnpm-lock.yaml']);
   });
 
   it('scans only through the shared walker', () => {

@@ -23,7 +23,7 @@ export const MATERIALS = ['Glow', 'InnerGlow', 'Metal', 'MetalLight', 'Wood', 'W
 
 export function sourceFingerprint(root = ROOT) {
   const hash = createHash('sha256');
-  for (const file of [SOURCE, 'scripts/assets/reward_chest/build.mjs', 'pnpm-lock.yaml']) {
+  for (const file of [SOURCE, 'scripts/assets/reward_chest/build.mjs']) {
     hash
       .update(file)
       .update('\0')

@@ -19,7 +19,6 @@ export function sourceFingerprint(kind, root = ROOT) {
   for (const file of [
     `docs/design/orbital-lightning/${kind}_components.glb`,
     'scripts/assets/orbital_lightning/build.mjs',
-    'pnpm-lock.yaml',
   ]) {
     hash
       .update(file)
