@@ -932,6 +932,35 @@ describe('client HTML shell', () => {
     expect(hudTs).toContain("bags.style.display !== 'flex'");
   });
 
+  it('keeps the four close-path bags repaints gated, neither unconditional nor dropped', () => {
+    // The forbidden raw guards above cannot see an arm reverted to a bare renderBags() or
+    // deleted, so each close path's own arm is pinned in place: the vendor and bank
+    // close-else arms, and the market and mailbox syncBags(false) arms.
+    const flat = (text: string) => text.replace(/\s+/g, ' ');
+    const methodBody = (signature: string) => {
+      const start = hudTs.indexOf(`\n  ${signature} {\n`);
+      expect(start, signature).toBeGreaterThan(-1);
+      return flat(hudTs.slice(start, hudTs.indexOf('\n  }\n', start)));
+    };
+    const syncBags = (windowId: string) => {
+      const anchor = hudTs.indexOf(`closeOthers: () => this.closeOtherWindows('${windowId}')`);
+      expect(anchor, windowId).toBeGreaterThan(-1);
+      const start = hudTs.indexOf('syncBags: (open) => {', anchor);
+      return flat(hudTs.slice(start, hudTs.indexOf('\n    },', start)));
+    };
+    for (const signature of ['closeVendor(): void', 'private onBankClosed(): void']) {
+      // The gated repaint is the method's closing else arm.
+      expect(methodBody(signature), signature).toMatch(
+        /\} else \{ this\.renderBagsIfOpen\(\); \}$/,
+      );
+    }
+    for (const windowId of ['#market-window', '#mailbox-window']) {
+      expect(syncBags(windowId), windowId).toBe(
+        "syncBags: (open) => { if (open) { this.renderBags(); $('#bags').style.display = 'flex'; } else { this.renderBagsIfOpen(); }",
+      );
+    }
+  });
+
   it('lazy-builds the combo pips once, then only toggles them', () => {
     // The 5-pip row is built ONCE (guarded by children.length !== COMBO_PIP_COUNT),
     // never rebuilt per frame; a per-frame innerHTML rebuild would tank the skip rate
