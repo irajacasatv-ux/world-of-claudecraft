@@ -194,6 +194,19 @@ describe('foliage vertex pipeline', () => {
     );
   });
 
+  it("ties the migration script's output sha256 to the shipped bytes", () => {
+    // optimize_foliage_vertices.mjs treats a file whose sha256 is outputSha256
+    // as already finalized and throws on any other hash but inputSha256. The
+    // shipped file is that finalized output (the pre-migration input is no
+    // longer on disk), so a re-export that skips the table re-pin fails here.
+    for (const asset of FOLIAGE_TOWN_TREE_ASSETS) {
+      const shippedSha256 = createHash('sha256')
+        .update(readFileSync(path.join(ROOT, 'public', asset.path)))
+        .digest('hex');
+      expect(asset.outputSha256, asset.path).toBe(shippedSha256);
+    }
+  });
+
   for (const asset of EXPECTED_ASSETS) {
     it(`pins exact welded geometry and the manifest hash for ${asset.path}`, async () => {
       const assetPath = path.join(ROOT, 'public', asset.path);

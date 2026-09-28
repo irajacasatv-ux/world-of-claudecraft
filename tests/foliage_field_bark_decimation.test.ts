@@ -317,6 +317,17 @@ describe('foliage field bark decimation', () => {
     expect(FOLIAGE_BARK_BOUNDS_TOLERANCE).toBe(BOUNDS_TOLERANCE);
   });
 
+  it("ties the stage script's sha256 table to the shipped source and field bytes", () => {
+    // decimate_foliage_bark.mjs refuses a source whose sha256 is not
+    // sourceSha256 and an output whose sha256 is not outputSha256. Both are
+    // compared with a hash of the file on disk, so a re-exported tree or field
+    // copy that skips the table re-pin fails here, not at the next script run.
+    for (const asset of FOLIAGE_FIELD_BARK_ASSETS) {
+      expect(asset.sourceSha256, asset.sourcePath).toBe(fileSha256(asset.sourcePath));
+      expect(asset.outputSha256, asset.outputPath).toBe(fileSha256(asset.outputPath));
+    }
+  });
+
   it('draws a field copy for exactly the stage table outputs', () => {
     const fieldTableUrls = (Object.keys(FIELD_BARK_DECIMATED) as FieldBarkSpecies[]).flatMap(
       (species) => FIELD_BARK_DECIMATED[species].map((variant) => treeUrl(species, variant)),

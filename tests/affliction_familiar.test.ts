@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { NodeIO } from '@gltf-transform/core';
@@ -5,6 +6,7 @@ import { ALL_EXTENSIONS } from '@gltf-transform/extensions';
 import * as THREE from 'three';
 import { describe, expect, it, vi } from 'vitest';
 import { AfflictionFamiliar } from '../src/render/affliction_familiar';
+import { MEDIA_ASSETS } from '../src/render/assets/manifest.generated';
 import type { Entity } from '../src/sim/types';
 import type { IWorld } from '../src/world_api';
 import { stripComments } from './helpers/strip_comments';
@@ -28,6 +30,10 @@ describe('Affliction Maledict Eye familiar', () => {
   it('pins the approved generated eye artifact and its compact static shape', async () => {
     const bytes = readFileSync(ASSET_PATH);
     expect(bytes.length).toBe(ASSET_BYTES);
+    const sha256 = createHash('sha256').update(bytes).digest('hex');
+    expect(MEDIA_ASSETS['models/props/maledict_eye.glb']).toBe(
+      `/media/models/props/maledict_eye.${sha256.slice(0, 12)}.glb`,
+    );
     // 200 KiB, was 150: KTX2 textures trade disk bytes for ~8x smaller GPU
     // residency (the glb_texture_compression gate requires the conversion).
     expect(bytes.length).toBeLessThanOrEqual(200 * 1024);

@@ -1,9 +1,11 @@
+import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { NodeIO } from '@gltf-transform/core';
 import { ALL_EXTENSIONS } from '@gltf-transform/extensions';
 import { MeshoptDecoder } from 'meshoptimizer';
 import { describe, expect, it } from 'vitest';
+import { MEDIA_ASSETS } from '../src/render/assets/manifest.generated';
 
 const REPO_ROOT = path.join(__dirname, '..');
 const ASSET_PATH = path.join(REPO_ROOT, 'public/models/chars/forms/metamorphosis.glb');
@@ -24,6 +26,10 @@ describe('Warlock Metamorphosis asset', () => {
     const bytes = readFileSync(ASSET_PATH);
     expect(bytes.length).toBe(ASSET_BYTES);
     expect(bytes.length).toBeLessThanOrEqual(1.8 * 1024 * 1024);
+    const sha256 = createHash('sha256').update(bytes).digest('hex');
+    expect(MEDIA_ASSETS['models/chars/forms/metamorphosis.glb']).toBe(
+      `/media/models/chars/forms/metamorphosis.${sha256.slice(0, 12)}.glb`,
+    );
   });
 
   it('ships a dedicated winged rig with the exact gameplay clip set', async () => {

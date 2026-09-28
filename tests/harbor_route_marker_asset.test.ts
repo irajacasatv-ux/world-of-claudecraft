@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { type Document, type Node as GltfNode, getBounds, NodeIO } from '@gltf-transform/core';
@@ -79,8 +80,9 @@ describe('harbor route marker GLB', () => {
     const bytes = readFileSync(GLB);
     expect(bytes.length).toBe(SHIPPED_BYTES);
     expect(bytes.toString('latin1')).toContain('EXT_meshopt_compression');
-    expect(MEDIA_ASSETS['models/props/harbor_route_marker.glb']).toMatch(
-      /^\/media\/models\/props\/harbor_route_marker\.[0-9a-f]{12}\.glb$/,
+    const sha256 = createHash('sha256').update(bytes).digest('hex');
+    expect(MEDIA_ASSETS['models/props/harbor_route_marker.glb']).toBe(
+      `/media/models/props/harbor_route_marker.${sha256.slice(0, 12)}.glb`,
     );
   });
 

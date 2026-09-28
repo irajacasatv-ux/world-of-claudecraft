@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { type Document, type Node as GltfNode, NodeIO } from '@gltf-transform/core';
@@ -62,8 +63,9 @@ describe('Eastbrook ferry GLB', () => {
     const bytes = readFileSync(GLB);
     expect(bytes.length).toBe(SHIPPED_BYTES);
     expect(bytes.toString('latin1')).toContain('EXT_meshopt_compression');
-    expect(MEDIA_ASSETS['models/props/eastbrook_ferry.glb']).toMatch(
-      /^\/media\/models\/props\/eastbrook_ferry\.[0-9a-f]{12}\.glb$/,
+    const sha256 = createHash('sha256').update(bytes).digest('hex');
+    expect(MEDIA_ASSETS['models/props/eastbrook_ferry.glb']).toBe(
+      `/media/models/props/eastbrook_ferry.${sha256.slice(0, 12)}.glb`,
     );
   });
 
