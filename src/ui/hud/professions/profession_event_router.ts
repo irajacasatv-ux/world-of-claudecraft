@@ -13,8 +13,9 @@
 // preference open); each type has one home, pinned in
 // tests/profession_event_router.test.ts.
 //
-// Hud members are private, so the router takes the Hud untyped; the members it
-// reads are welded to hud.ts in tests/profession_event_router.test.ts.
+// It takes a typed host (ProfessionEventHost) and Hud passes itself, so tsc checks
+// Hud against the host; the member names are also welded in
+// tests/profession_event_router.test.ts.
 
 import { audio } from '../../../game/audio';
 import { ALL_RECIPES, ITEMS } from '../../../sim/data';

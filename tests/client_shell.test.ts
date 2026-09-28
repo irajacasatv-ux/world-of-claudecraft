@@ -1760,15 +1760,21 @@ describe('client HTML shell', () => {
     }
     // The bind banner (its plated root and its Reset / Done pair) moved WHOLE
     // to src/ui/hud/action_bar/action_bar_bind_banner.ts, so its own module is
-    // where those three pins live now; hud.ts keeps the emote editor's Done and
-    // the prompt's Decline.
+    // where those three pins live now; hud.ts keeps the emote editor's Done, and
+    // the stack prompt's Accept / Decline pair lives in src/ui/prompt_dialog.ts.
     const bindBanner = readFileSync(
       new URL('../src/ui/hud/action_bar/action_bar_bind_banner.ts', import.meta.url),
       'utf8',
     );
     expect(bindBanner).toContain("el.className = 'ui-panel-strong';");
     expect(bindBanner.match(/className = 'btn ui-btn';/g)).toHaveLength(2);
-    expect(hudTs.match(/className = 'btn ui-btn';/g)).toHaveLength(2);
+    expect(hudTs.match(/className = 'btn ui-btn';/g)).toHaveLength(1);
+    const promptDialog = readFileSync(
+      new URL('../src/ui/prompt_dialog.ts', import.meta.url),
+      'utf8',
+    );
+    expect(promptDialog).toContain("accept.className = 'btn ui-btn ui-btn--red';");
+    expect(promptDialog).toContain("decline.className = 'btn ui-btn';");
     expect(hudTs).toContain("const bar3 = $('#actionbar3');");
     expect(hudTs).toContain('const container = bars[actionBarRowForSlot(i) - 1];');
     expect(hudTs).toContain('keyCapLabel(this.keybinds.primaryLabel(slotKey))');

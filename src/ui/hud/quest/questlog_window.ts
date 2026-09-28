@@ -32,7 +32,7 @@ import { formatNumber, t } from '../../i18n';
 import { itemNameColor } from '../../item_name_color';
 import type { PainterHostPresentation } from '../../painter_host';
 import { questMapLocation } from '../../quest_map_location_core';
-import { questProgressText } from '../../quest_progress_text';
+import { questProgressText, questSuggestedPlayersHtml } from '../../quest_progress_text';
 import { QuestTrackingState, sharedQuestTracking } from '../../quest_tracking_core';
 import { svgIcon } from '../../ui_icons';
 import { buildQuestLogView, type QuestDetailModel } from './questlog_view';
@@ -250,7 +250,7 @@ export class QuestLogWindow {
   }
 
   private renderDetail(detail: HTMLElement, d: QuestDetailModel, playerName: string): void {
-    let html = `<div class="qd-sub ql-detail-title">${esc(questTitle(d.questId))}${this.questSuggestedPlayersHtml(d.suggestedPlayers)}</div>`;
+    let html = `<div class="qd-sub ql-detail-title">${esc(questTitle(d.questId))}${questSuggestedPlayersHtml(d.suggestedPlayers)}</div>`;
     html += d.objectives
       .map(
         (o) =>
@@ -336,10 +336,5 @@ export class QuestLogWindow {
 
   private questNumber(value: number): string {
     return formatNumber(value, { maximumFractionDigits: 0 });
-  }
-
-  private questSuggestedPlayersHtml(count?: number): string {
-    if (!count) return '';
-    return ` <span class="quest-suggested">${esc(t('questUi.log.suggestedPlayers', { count: this.questNumber(count) }))}</span>`;
   }
 }

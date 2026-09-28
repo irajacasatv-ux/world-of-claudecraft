@@ -6,10 +6,9 @@
 // gate, the ground-aim reticle and its re-press commit, the empower charge, the
 // mouseover redirect, the auto-attack QoL and the one item-use path.
 //
-// Hud members are private, so the controller takes the Hud untyped (the
-// hud/vehicle/hud_vehicle_bar.ts shape) and reads every member live through it;
-// the members it reads are welded to hud.ts in
-// tests/action_press_controller.test.ts. Hud keeps the public entry points
+// It takes a typed host (ActionPressHost) and reads every member live through
+// it; Hud passes itself, so tsc checks Hud against the host, and the member
+// names are also welded in tests/action_press_controller.test.ts. Hud keeps the public entry points
 // main.ts, the gamepad routing and the bar buttons call, as one-line delegators.
 //
 // A DOM module: it reads the body's mobile-touch class and the #bags window's

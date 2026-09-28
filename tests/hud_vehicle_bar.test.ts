@@ -5,11 +5,11 @@ describe('the HUD vehicle bar factory host seam', () => {
   it('stays welded to the Hud members the factory reads', () => {
     const hudSource = readFileSync(new URL('../src/ui/hud.ts', import.meta.url), 'utf8');
     for (const anchor of [
-      'public sim: IWorld,',
+      'public readonly sim: IWorld,',
       'private renderer: Renderer,',
       'private keybinds: Keybinds,',
       'private readonly writerFacet = makeWriterFacet(',
-      'optionsHooks: OptionsHooks | null = null;',
+      '  get optionsHooks(): OptionsHooks | null {',
       'readonly peekGuard = new TouchPeekGuard();',
       'readonly playerGroundAim = new GroundAimController({',
       // The empowered hold lives on the action press controller; the Hud

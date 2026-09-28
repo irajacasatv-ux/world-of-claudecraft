@@ -9,6 +9,7 @@
 import { QUESTS } from '../sim/data';
 import { formatCount } from './count_format';
 import { tEntity } from './entity_i18n';
+import { esc } from './esc';
 import { formatNumber, t } from './i18n';
 
 /** One objective's progress line: its localized label with the current and
@@ -19,6 +20,13 @@ export function questProgressText(label: string, current: number, total: number)
     current: formatCount(current),
     total: formatCount(total),
   });
+}
+
+/** The quest's suggested group size as a trailing badge, or nothing for a solo
+ *  quest; the count is a whole number in the viewer's locale. */
+export function questSuggestedPlayersHtml(count?: number): string {
+  if (!count) return '';
+  return ` <span class="quest-suggested">${esc(t('questUi.log.suggestedPlayers', { count: formatCount(count) }))}</span>`;
 }
 
 export interface QuestProgressEventInput {

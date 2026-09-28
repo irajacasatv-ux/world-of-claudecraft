@@ -13,6 +13,12 @@
 import type { OverheadEmoteId } from '../sim/types';
 import { emoteIconUrl } from './emote_icons';
 import { emoteWheelLayout, emoteWheelPick } from './emote_wheel_view';
+import { type TranslationKey, t } from './i18n';
+
+/** An emote's localized name (the wheel seats, the editor list). */
+export function emoteLabel(id: OverheadEmoteId): string {
+  return t(`hudChrome.emotes.${id}` as TranslationKey);
+}
 
 export interface EmoteWheelSeatDeps {
   /** The localized emote name (the seat's title and caption). */

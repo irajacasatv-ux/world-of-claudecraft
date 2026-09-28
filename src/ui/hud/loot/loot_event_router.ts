@@ -5,8 +5,8 @@
 // prompt close, the generic cue (which a grant owning its own cue silences),
 // and the open bags refresh.
 //
-// Hud members are private, so the router takes the Hud untyped; the members it
-// reads are welded to hud.ts in tests/loot_event_router.test.ts.
+// It takes a typed host (LootEventHost) and Hud passes itself, so tsc checks Hud
+// against the host; the member names are also welded in tests/loot_event_router.test.ts.
 
 import { audio } from '../../../game/audio';
 import type { ItemInstancePayload, SimEvent } from '../../../sim/types';

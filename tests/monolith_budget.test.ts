@@ -609,8 +609,10 @@ const MONOLITHS: MonolithRow[] = [
     // 15710 once the router and press hosts were typed (their lint suppressions left);
     // 15358 with the confirm dialog, keeper revive, tool-effect confirm, heroic purchase,
     // stack and resurrection prompts and TownFocusController; 14889 with
-    // PetBarController (src/ui/hud/pet_bar/).
-    ceiling: 14889,
+    // PetBarController (src/ui/hud/pet_bar/); 14888 after the host visibility round
+    // (two public-get, private-set accessors, paid for by moving
+    // questSuggestedPlayersHtml and emoteLabel out and inlining wocBalanceHtml).
+    ceiling: 14888,
     seam: 'pure view core + thin painter on PainterHost (src/ui/CLAUDE.md)',
   },
   {

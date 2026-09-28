@@ -220,7 +220,7 @@ import { dropdownKeyNav } from './dropdown_nav';
 import { DungeonFinderProposalPopup } from './dungeon_finder_proposal_popup';
 import { DungeonFinderWindow } from './dungeon_finder_window';
 import { emoteIconUrl } from './emote_icons';
-import { appendEmoteWheelSeats, mountEmoteWheel, pointEmoteWheel } from './emote_wheel';
+import { appendEmoteWheelSeats, emoteLabel, mountEmoteWheel, pointEmoteWheel } from './emote_wheel';
 import { EMOTE_WHEEL_LIMIT } from './emote_wheel_view';
 import type { EmpowerHold } from './empower_hold_core';
 import {
@@ -664,7 +664,7 @@ import {
 import { maskProfanity } from './profanity';
 import { showStackPrompt } from './prompt_dialog';
 import { isPvpHostilePlayer, isPvpHostileTargetId } from './pvp_hostile_core';
-import { questProgressText } from './quest_progress_text';
+import { questProgressText, questSuggestedPlayersHtml } from './quest_progress_text';
 import { RaidBossGuideWindow, raidBossGuideContextFallback } from './raid_boss_guide_window';
 import { raidCalloutKey } from './raid_callout';
 import { formatLockoutDuration, raidLockoutDisplayName } from './raid_lockout_format';
@@ -1128,7 +1128,7 @@ export class Hud {
   get hotbarActions(): HotbarAction[] {
     return this.actionBarController.actions;
   }
-  set hotbarActions(actions: HotbarAction[]) {
+  private set hotbarActions(actions: HotbarAction[]) {
     this.actionBarController.replaceActions(actions);
   }
   private get attackSlotAction(): HotbarAction {
@@ -1184,7 +1184,13 @@ export class Hud {
   // module, not another cross-window field cluster on this coordinator.
   private readonly itemDragState = new ItemDragState();
   private suppressNextActionClick = false;
-  optionsHooks: OptionsHooks | null = null;
+  private optionsHooksState: OptionsHooks | null = null;
+  get optionsHooks(): OptionsHooks | null {
+    return this.optionsHooksState;
+  }
+  private set optionsHooks(hooks: OptionsHooks | null) {
+    this.optionsHooksState = hooks;
+  }
   // The world-quest board opener: opens the map and unfolds the atlas rail on
   // the release's mapAtlasSidebarCollapsed preference (the toggle lives in
   // the rail, src/ui/map_sidebar_controller.ts).
@@ -1261,7 +1267,7 @@ export class Hud {
   // outside-click closer can defer to that opener's own toggle click. Cleared on
   // every close path (closeContextMenu + item activation).
   private ctxMenuOpener: HTMLElement | null = null;
-  errorToast = new ErrorToastController($('#error-msg'));
+  readonly errorToast = new ErrorToastController($('#error-msg'));
   // The WoW-style quest-progress flash (quest_progress_banner.ts): yellow
   // top-center lines fed by the questProgress event, aria-hidden decoration
   // (the chat log + live region carry the announced copy).
@@ -1758,7 +1764,7 @@ export class Hud {
   // mob ids that have already vocalized their aggro alert (so the first strike
   // roars and subsequent strikes use the attack vocalization). Cleared on death
   // or when the entity leaves interest (reconcileSfx).
-  mobAggroed = new Set<number>();
+  readonly mobAggroed = new Set<number>();
   // entity id -> performance.now() of its last successful idle bark (see
   // sweepMobIdleBarks). Only stamped when sfx.playAt reports the sound
   // actually played, not merely attempted (see pickIdleBarkCandidates' doc
@@ -1767,7 +1773,7 @@ export class Hud {
   private lastIdleSweepAt = 0;
   // entity ids with a sustained cast-loop SFX playing, so reconcileSfx can stop
   // loops for casters that left interest mid-channel (no castStop/death arrives).
-  castLoopIds = new Set<number>();
+  readonly castLoopIds = new Set<number>();
   private lastNythraxisCombatEventAt = 0;
   private lastResting: boolean | null = false;
   private lastZoneId = '';
@@ -1973,7 +1979,7 @@ export class Hud {
   // ended by the bags window, so it lives here rather than in either.
   pendingPetFeed = false;
   constructor(
-    public sim: IWorld,
+    public readonly sim: IWorld,
     private renderer: Renderer,
     private keybinds: Keybinds,
     private readonly features: HudFeatures = { dailyRewardsEnabled: true },
@@ -2234,7 +2240,7 @@ export class Hud {
         objectiveLabel: questObjectiveLabel,
         number: (value) => formatCount(value),
         progress: (label, current, total) => questProgressText(label, current, total),
-        suggestedPlayers: (count) => this.questSuggestedPlayersHtml(count),
+        suggestedPlayers: (count) => questSuggestedPlayersHtml(count),
         money: (copper) => moneyHtml(copper),
       },
       openFocusTrap: (root) => this.focusManager.open({ root }),
@@ -4009,10 +4015,6 @@ export class Hud {
     }
   }
 
-  private emoteLabel(id: OverheadEmoteId): string {
-    return t(`hudChrome.emotes.${id}` as TranslationKey);
-  }
-
   /** Tap-to-toggle the pinned emote wheel — used by the menu-bar and on-screen
    *  touch Emote buttons (touch has no key to hold, so the wheel stays pinned
    *  until a slice or the outside is tapped). */
@@ -4062,7 +4064,7 @@ export class Hud {
     // The seats come from the same raw slot list the pointer resolves against
     // (emote_wheel_view.ts), so the seat drawn is the seat picked.
     appendEmoteWheelSeats(el, this.emoteWheelSlots, {
-      label: (id) => this.emoteLabel(id),
+      label: emoteLabel,
       choose: (id) => this.selectEmoteWheelChoice(id),
     });
     el.querySelector<HTMLButtonElement>('.emote-wheel-edit')?.addEventListener('click', (ev) => {
@@ -4133,7 +4135,7 @@ export class Hud {
       icon.src = emoteIconUrl(def.id);
       icon.alt = '';
       const label = document.createElement('span');
-      label.textContent = this.emoteLabel(def.id);
+      label.textContent = emoteLabel(def.id);
       btn.append(icon, label);
       btn.addEventListener('click', () => {
         audio.click();
@@ -4543,7 +4545,13 @@ export class Hud {
   // castSlot to redirect friendly abilities onto it. A RESOLVER rather than an
   // id, because the target-of-target frame's unit changes under a still cursor.
   // null whenever no frame is hovered.
-  hoveredCastUnit: (() => number | null) | null = null;
+  private hoveredCastUnitFn: (() => number | null) | null = null;
+  get hoveredCastUnit(): (() => number | null) | null {
+    return this.hoveredCastUnitFn;
+  }
+  private set hoveredCastUnit(resolve: (() => number | null) | null) {
+    this.hoveredCastUnitFn = resolve;
+  }
   // The party frames are N further instances of the unit_frame family, one per
   // member, behind a keyed node pool that replaces the old per-rebuild innerHTML wipe
   // + click/contextmenu re-attach. The pool owns #party-frames; updatePartyFrames
@@ -4872,7 +4880,7 @@ export class Hud {
     ...this.presentationBag,
     root: () => $('#bags'),
     world: () => this.sim,
-    wocBalanceHtml: () => this.wocBalanceHtml(),
+    wocBalanceHtml: () => wocBalanceChipHtml(),
     claudiumLauncherHtml: () => this.claudiumLauncherHtml(),
     openClaudium: () => this.toggleClaudium(),
     openWallet: requestWalletVerify,
@@ -5816,10 +5824,6 @@ export class Hud {
 
   // The connected wallet's $WOC balance, shown left of the coins in the bag
   // (woc_balance_chip.ts builds it; the Hud only composes it into the bags deps).
-  private wocBalanceHtml(): string {
-    return wocBalanceChipHtml();
-  }
-
   private claudiumLauncherHtml(): string {
     if (!this.claudiumHooks) return '';
     this.claudiumBalance.refresh();
@@ -6083,11 +6087,6 @@ export class Hud {
       showItemLevel: () => this.optionsHooks?.settings.get('showItemLevel') ?? false,
     };
     return itemTooltipHtml(item, deps, compare, instance, materialSources);
-  }
-
-  private questSuggestedPlayersHtml(count?: number): string {
-    if (!count) return '';
-    return ` <span class="quest-suggested">${esc(t('questUi.log.suggestedPlayers', { count: formatCount(count) }))}</span>`;
   }
 
   // The {captureFocus, restoreFocus} pair for a painter window. The bridge logic

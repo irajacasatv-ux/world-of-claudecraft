@@ -29,7 +29,7 @@ describe('minimap objective tap probe', () => {
   it('stays welded to the Hud members it reads and writes', () => {
     const hudSource = readFileSync(new URL('../src/ui/hud.ts', import.meta.url), 'utf8');
     for (const anchor of [
-      'public sim: IWorld,',
+      'public readonly sim: IWorld,',
       'private readonly minimapPainter = new MinimapPainter(',
       "private mapLevel: MapLevel = 'zone';",
       'private mapZoneOverride: string | null = null;',

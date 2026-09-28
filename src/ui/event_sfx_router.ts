@@ -7,8 +7,8 @@
 // The cue choices are the pure combat_sfx.ts mappings; this module only plays
 // them and keeps the two sets the Hud prunes in reconcileSfx.
 //
-// Hud members are private, so the router takes the Hud untyped (the
-// quest_event_router.ts shape); the members it reads are welded to hud.ts in
+// It takes a typed host (EventSfxHost) and Hud passes itself, so tsc checks Hud
+// against the host; the member names are also welded to hud.ts in
 // tests/event_sfx_router.test.ts.
 
 import { audio } from '../game/audio';
