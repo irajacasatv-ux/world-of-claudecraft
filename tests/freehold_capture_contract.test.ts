@@ -495,6 +495,76 @@ describe('Freehold capture receipt refusal', () => {
     expect(wrote).toBe(false);
   });
 
+  /** A strict fake of the receipt's git reads: exactly the command shapes the
+   *  receipt issues, answered for a clean baseline at the declared release
+   *  unless `dirty` says otherwise; any other command throws, so a receipt that
+   *  started reading something else fails here rather than passing on ''. */
+  function baselineGit(
+    baseline: string,
+    calls: string[][],
+    dirty: { head?: string; diff?: string; untracked?: string } = {},
+  ): ReceiptGit {
+    return (cwd, ...args) => {
+      calls.push([cwd, ...args]);
+      const command = args.slice(0, 3).join(' ');
+      if (args.join(' ') === 'rev-parse HEAD')
+        return cwd === baseline ? (dirty.head ?? FREEHOLD_RECEIPT_BASELINE_COMMIT) : 'head';
+      if (command === `diff --name-only ${FREEHOLD_RECEIPT_BASELINE_COMMIT}`)
+        return dirty.diff ?? '';
+      if (command === 'ls-files --others --exclude-standard') return dirty.untracked ?? '';
+      if (command === 'status --porcelain=v1 --untracked-files=all') return '';
+      if (command === `ls-tree ${FREEHOLD_RECEIPT_BASELINE_COMMIT} --`)
+        return '040000 tree 1a2b3c\tsrc';
+      throw new Error(`unexpected git read: ${args.join(' ')}`);
+    };
+  }
+
+  it('declares the release commit the before captures are produced on', () => {
+    expect(FREEHOLD_RECEIPT_BASELINE_COMMIT).toBe('654071354172b3e252cfc03a1e85efde2daddaa6');
+  });
+
+  it.each([
+    [
+      'a baseline at another commit',
+      { head: 'f00dfeed' },
+      'Baseline runtime HEAD does not match the declared release',
+    ],
+    [
+      'an application diff in the baseline',
+      { diff: 'src/main.ts' },
+      'Baseline runtime has application changes',
+    ],
+    [
+      'an untracked application file in the baseline',
+      { untracked: 'src/new.ts' },
+      'Baseline runtime has application changes',
+    ],
+  ] as const)('refuses %s through the CLI and writes nothing', (_, dirty, message) => {
+    const root = mkdtempSync(join(tmpdir(), 'freehold-receipt-'));
+    const [before, after, baseline] = ['before', 'after', 'baseline'].map((d) => join(root, d));
+    const output = join(root, 'receipt');
+    for (const dir of [before, after, baseline]) mkdirSync(dir);
+    const errors: string[] = [];
+    const logs: string[] = [];
+    try {
+      stage(before, 'before');
+      stage(after, 'after');
+      writeFileSync(join(before, 'performance.json'), JSON.stringify(performance()));
+      const code = runReceiptCli([...receiptArgs(before, after, output).slice(0, -1), baseline], {
+        log: (line) => logs.push(line),
+        error: (line) => errors.push(line),
+        git: baselineGit(baseline, [], dirty),
+      });
+      expect(code).toBe(1);
+      expect(logs).toEqual([]);
+      expect(errors).toHaveLength(1);
+      expect(errors[0]).toContain(message);
+      expect(existsSync(output)).toBe(false);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   it('seals a clean set: one success line, exit 0, every record written byte for byte', () => {
     // The success arm no checkout here can reach (no baseline sits at the
     // release commit), driven through the CLI's own exit and print wrapper
@@ -512,13 +582,7 @@ describe('Freehold capture receipt refusal', () => {
           .map((file) => sha256(readFileSync(join(dir, file)))),
       );
     const calls: string[][] = [];
-    const git: ReceiptGit = (cwd, ...args) => {
-      calls.push([cwd, ...args]);
-      if (args[0] === 'rev-parse')
-        return cwd === baseline ? FREEHOLD_RECEIPT_BASELINE_COMMIT : 'head';
-      if (args[0] === 'ls-tree') return '040000 tree 1a2b3c\tsrc';
-      return '';
-    };
+    const git = baselineGit(baseline, calls);
     const logs: string[] = [];
     const errors: string[] = [];
     try {

@@ -64,6 +64,10 @@ describe('heroic quartermaster purchase confirmation', () => {
     request(stockOffer.itemId);
 
     expect(confirmations).toHaveLength(1);
+    // The gate hands the dialog no cancel action, so a dismissal (Cancel, Escape,
+    // the close button) runs nothing of its own.
+    expect(confirmations[0].onCancel).toBeUndefined();
+    confirmations[0].onCancel?.();
     expect(buy).not.toHaveBeenCalled();
   });
 

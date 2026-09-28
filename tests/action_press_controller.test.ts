@@ -374,7 +374,11 @@ describe('ActionPressController: the ground-aimed shock bomb (ported from the re
   it('enters the bag click aim under the pad-only identity, and declines every other item', () => {
     const { host, sim, press } = withCooldowns(rig());
 
-    expect(press.startItemGroundAim('minor_healing_potion')).toBe(false);
+    // The pad-only identity is the -1 sentinel, never a real bar seat.
+    expect(XHB_ONLY_AIM_SLOT).toBe(-1);
+    for (const other of ['minor_healing_potion', 'dense_sharpening_stone', 'hearth_key']) {
+      expect(press.startItemGroundAim(other), other).toBe(false);
+    }
     expect(host.playerGroundAim.pressPosition).not.toHaveBeenCalled();
     expect(press.startItemGroundAim(bomb.id)).toBe(true);
     expect(host.playerGroundAim.pressPosition).toHaveBeenCalledExactlyOnceWith(

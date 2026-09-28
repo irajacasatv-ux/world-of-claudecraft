@@ -21,6 +21,7 @@ interface ConfirmCall {
   ok: string;
   cancel: string;
   onOk: () => void;
+  onCancel?: () => void;
 }
 
 /** A plain host shaped like the Hud members the gate drives (CruciblePurchaseHost). */
@@ -29,8 +30,8 @@ function harness() {
   const buy = vi.fn();
   const hud = {
     sim: { buyCrucibleVendorItem: buy },
-    confirmDialog: (...[title, body, ok, cancel, onOk]: ConfirmDialogArgs) => {
-      confirmations.push({ title, body, ok, cancel, onOk });
+    confirmDialog: (...[title, body, ok, cancel, onOk, onCancel]: ConfirmDialogArgs) => {
+      confirmations.push({ title, body, ok, cancel, onOk, onCancel });
     },
   };
   return { confirmations, buy, request: (itemId: string) => requestCruciblePurchase(hud, itemId) };
@@ -69,6 +70,10 @@ describe('crucible quartermaster purchase confirmation', () => {
     request(offer.itemId);
 
     expect(confirmations).toHaveLength(1);
+    // The gate hands the dialog no cancel action, so a dismissal (Cancel, Escape,
+    // the close button) runs nothing of its own.
+    expect(confirmations[0].onCancel).toBeUndefined();
+    confirmations[0].onCancel?.();
     expect(buy).not.toHaveBeenCalled();
   });
 

@@ -15,6 +15,7 @@ import {
 } from '../src/ui/hud/quest/world_quest_banner_view';
 import { HOARD_GOBLIN_BANNER_MS } from '../src/ui/quest_event_view';
 import { worldQuestDisplayName } from '../src/ui/world_quest_view';
+import { stripComments } from './helpers/strip_comments';
 
 const read = (rel: string) => readFileSync(new URL(`../${rel}`, import.meta.url), 'utf8');
 
@@ -88,7 +89,7 @@ describe('world quest banner: the timing half of the collision rule', () => {
 
   it('holds for less than the ambient deferral window, so a parked zone name is never aged out', () => {
     // Both constants moved with the banner slot out of the Hud.
-    const slot = read('src/ui/banner_slot.ts');
+    const slot = stripComments(read('src/ui/banner_slot.ts'));
     const gap = Number(/const BANNER_ADVANCE_GAP_MS = (\d+);/.exec(slot)?.[1]);
     const maxDefer = Number(/const AMBIENT_MAX_DEFER_MS = (\d+);/.exec(slot)?.[1]);
     expect(gap).toBeGreaterThan(0);
@@ -104,7 +105,7 @@ describe('world quest banner: the space half of the collision rule', () => {
   const hudCss = read('src/styles/hud.css');
   const mobileCss = read('src/styles/hud.mobile.css');
   const tokens = read('src/styles/tokens.css');
-  const hudTs = read('src/ui/hud.ts');
+  const hudTs = stripComments(read('src/ui/hud.ts'));
 
   it('paints the plate class from the worldQuest variant and clears the flash lane', () => {
     // The paint moved with the banner slot (src/ui/banner_slot.ts): the plate

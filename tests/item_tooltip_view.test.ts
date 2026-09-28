@@ -104,9 +104,20 @@ describe('the Hud half of the seam (source pin)', () => {
 });
 
 describe('the faction quartermaster goods (ported from the release Hud card)', () => {
-  it('carries each good its use line on the composed card', () => {
-    const html = itemTooltipHtml(ITEMS.clockwork_shock_bomb, itemTooltipDeps(), false);
-    expect(html).toContain(esc(t('hudChrome.factionRewards.shockBombUse')));
+  it.each([
+    ['allied_hearthstone', 'hudChrome.factionRewards.alliedHearthstoneUse'],
+    ['rift_feather_glider', 'hudChrome.factionRewards.riftGliderUse'],
+    ['clockwork_target_dummy', 'hudChrome.factionRewards.targetDummyUse'],
+    ['dawn_battle_standard', 'hudChrome.factionRewards.battleStandardUse'],
+    ['clockwork_shock_bomb', 'hudChrome.factionRewards.shockBombUse'],
+    ['potion_of_invisibility', 'hudChrome.factionRewards.invisibilityUse'],
+    ['reinforced_armor_kit', 'hudChrome.factionRewards.armorKitUse'],
+    ['dense_sharpening_stone', 'hudChrome.factionRewards.sharpeningStoneUse'],
+    ['elixir_of_mana_regeneration', 'hudChrome.factionRewards.manaElixirUse'],
+  ] as const)('carries %s its use line on the composed card', (id, key) => {
+    expect(ITEMS[id], id).toBeDefined();
+    const html = itemTooltipHtml(ITEMS[id], itemTooltipDeps(), false);
+    expect(html).toContain(esc(t(key)));
   });
 
   it('reads the hearthstone attunement from the world, unattuned where the world has none', () => {
