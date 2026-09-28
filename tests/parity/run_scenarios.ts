@@ -1,5 +1,5 @@
 // Shared runner for the sharded parity gate (parity_a..g.test.ts) and the
-// sharded coverage suite (coverage_a..c.test.ts).
+// sharded coverage suite (coverage_a..d.test.ts).
 //
 // The gate used to live in a single parity.test.ts; recording every scenario
 // three times in one worker made it the slowest file in the whole suite. The

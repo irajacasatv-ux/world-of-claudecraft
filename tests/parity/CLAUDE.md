@@ -85,7 +85,7 @@ pets, affixes, ground AoE), arena/duel/fiesta, delves + lockpick, dungeons/raids
 market, bank, trade, chat/social, talents, xp/prestige, casting, consumable auras,
 and mob lifecycle. Every playable class appears in some scenario; enumerate with
 `grep -o "playerClass: '[a-z]*'\|addPlayer('[a-z]*'" tests/parity/scenarios.ts | sort -u`.
-The coverage shards (`coverage_a..c.test.ts`) assert each scenario's subsystem actually
+The coverage shards (`coverage_a..d.test.ts`) assert each scenario's subsystem actually
 FIRES (not merely named in a comment). Read those files, never a hand-written list,
 before adding a scenario.
 
@@ -98,7 +98,7 @@ in-combat and swim denials was a guard reorder the old cancel-only coverage
 (scenarios hand-assigning `castingAbility`) could not see.
 
 Layout note: the gate is SHARDED for wall-time (`parity_a..g.test.ts` +
-`coverage_a..c.test.ts`, contiguous scenario slices over the shared runner in
+`coverage_a..d.test.ts`, contiguous scenario slices over the shared runner in
 `run_scenarios.ts`); `npx vitest run tests/parity` and `UPDATE_PARITY=1` work
 unchanged, and a shard minting run touches only its own slice's goldens.
 
