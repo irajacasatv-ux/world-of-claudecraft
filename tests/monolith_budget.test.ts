@@ -619,8 +619,9 @@ const MONOLITHS: MonolithRow[] = [
     // merged tree measures 14891 (this branch 14883, the release 18093). Exact merged
     // count, zero slack.
     // LOWERED 14891 -> 14886 once the confirm dialog, the two revive flows, the
-    // tool-effect confirm and Town Focus moved into hud/ domains behind barrels.
-    ceiling: 14886,
+    // tool-effect confirm and Town Focus moved into hud/ domains behind barrels;
+    // 14866 once the Crucible purchase confirm joined the heroic one in hud/vendor.
+    ceiling: 14866,
     seam: 'pure view core + thin painter on PainterHost (src/ui/CLAUDE.md)',
   },
   {

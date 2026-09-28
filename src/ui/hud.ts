@@ -492,7 +492,7 @@ import { TownFocusController } from './hud/town_focus';
 import { FerryHudPainter } from './hud/transport';
 import { TreasureMapWindow } from './hud/treasure';
 import { createHudVehicleBar, type VehicleActionBarController } from './hud/vehicle';
-import { requestHeroicPurchase } from './hud/vendor';
+import { requestCruciblePurchase, requestHeroicPurchase } from './hud/vendor';
 import { dismissBuyQuantityPrompts } from './hud/vendor/buy_quantity_prompt_window';
 import { buildCrucibleVendorView } from './hud/vendor/crucible_vendor_view';
 import { renderCrucibleVendorWindow } from './hud/vendor/crucible_vendor_window';
@@ -11952,7 +11952,7 @@ export class Hud {
       {
         ...this.presentationBag,
         hideTooltip: () => this.hideTooltip(),
-        onBuy: (itemId) => this.requestCrucibleVendorPurchase(itemId),
+        onBuy: (itemId) => requestCruciblePurchase(this, itemId),
         onClose: () => this.closeCrucibleVendor(),
       },
     );
@@ -13419,26 +13419,6 @@ export class Hud {
   // interaction layer calls this entry point.
   requestSpiritHealerResurrect(): void {
     runKeeperRevive(this);
-  }
-
-  // Crucible Quartermaster redemptions consume a sigil with no buyback
-  // recorded, so a mis-tap is unrefundable: confirm before sending the exact
-  // pre-existing buy command (the marks-shop contract above).
-  private requestCrucibleVendorPurchase(itemId: string): void {
-    const offer = CRUCIBLE_VENDOR_STOCK.find((candidate) => candidate.itemId === itemId);
-    const item = ITEMS[itemId];
-    const sigil = offer ? ITEMS[offer.sigilId] : undefined;
-    if (!offer || !item || !sigil) return;
-    this.confirmDialog(
-      t('crucibleShop.buyConfirmTitle'),
-      t('crucibleShop.buyConfirmBody', {
-        item: itemDisplayName(item),
-        sigil: itemDisplayName(sigil),
-      }),
-      t('crucibleShop.buyConfirmAccept'),
-      t('crucibleShop.buyConfirmCancel'),
-      () => this.sim.buyCrucibleVendorItem(itemId),
-    );
   }
 
   // Minimal modal confirm dialog (reuses the .window/.panel chrome): the whole

@@ -18,9 +18,11 @@
 // direct-call list is exactly the regression this guards.
 //
 // The Marks gate moved out of the Hud into a module function
-// (src/ui/hud/vendor/heroic_purchase_confirm.ts, requestHeroicPurchase), so each
-// row names the file and owner it is read from; the function's body is lifted
-// into a one-method synthetic class for the SAME walk (readFunctionCallSites).
+// (src/ui/hud/vendor/heroic_purchase_confirm.ts, requestHeroicPurchase), and the
+// Crucible sigil gate beside it (crucible_purchase_confirm.ts,
+// requestCruciblePurchase), so each row names the file and owner it is read
+// from; the function's body is lifted into a one-method synthetic class for the
+// SAME walk (readFunctionCallSites).
 
 import { readFileSync } from 'node:fs';
 import ts from 'typescript';
@@ -31,7 +33,14 @@ import { type MethodScan, readMethodCallSites } from './helpers/method_call_site
 const HUD_PATH = new URL('../src/ui/hud.ts', import.meta.url);
 const HUD_SRC = readFileSync(HUD_PATH, 'utf8');
 const HEROIC_PATH = 'src/ui/hud/vendor/heroic_purchase_confirm.ts';
-const HEROIC_SRC = readFileSync(new URL(`../${HEROIC_PATH}`, import.meta.url), 'utf8');
+const CRUCIBLE_PATH = 'src/ui/hud/vendor/crucible_purchase_confirm.ts';
+/** Each extracted gate's source, read once by its path. */
+const MODULE_SRC: Record<string, string> = Object.fromEntries(
+  [HEROIC_PATH, CRUCIBLE_PATH].map((file) => [
+    file,
+    readFileSync(new URL(`../${file}`, import.meta.url), 'utf8'),
+  ]),
+);
 
 /** A module function by name, located by the compiler (never a text search);
  *  throws on a rename so the guard is re-pointed rather than silently empty. */
@@ -63,20 +72,20 @@ type PurchaseRow = (typeof CONFIRMED_PURCHASES)[number];
 function scan(row: PurchaseRow): MethodScan {
   return row.file === 'src/ui/hud.ts'
     ? readMethodCallSites('src/ui/hud.ts', HUD_SRC, 'Hud', row.method)
-    : readFunctionCallSites(row.file, HEROIC_SRC, row.method);
+    : readFunctionCallSites(row.file, MODULE_SRC[row.file], row.method);
 }
 
 /** Source text of the row's method or function, for the presence half of each check. */
 function methodSource(row: PurchaseRow): string {
   if (row.file !== 'src/ui/hud.ts') {
-    const { sf, fn } = moduleFunction(row.file, HEROIC_SRC, row.method);
+    const { sf, fn } = moduleFunction(row.file, MODULE_SRC[row.file], row.method);
     return fn.getText(sf);
   }
   const from = HUD_SRC.slice(HUD_SRC.indexOf(`private ${row.method}`));
   return from.slice(0, from.indexOf('\n  }\n') + 4);
 }
 
-// The two unrefundable-currency shops, each with the EXACT command its confirm
+// The three unrefundable-currency shops, each with the EXACT command its confirm
 // callback is required to own. Naming the command per shop is load-bearing, not
 // tidiness: the first version of this file asserted `buyItem` for BOTH rows, and
 // the Marks command is `buyHeroicVendorItem`, which does not contain that
@@ -87,8 +96,8 @@ function methodSource(row: PurchaseRow): string {
 // the method it names.
 //
 // `file` and `confirm` say where each gate lives and how it spells the dialog
-// call: the Warfare gate is still a Hud method, the Marks gate a module
-// function over its typed host.
+// call: the Warfare gate is still a Hud method, the Marks and Crucible gates
+// module functions over their typed hosts.
 const CONFIRMED_PURCHASES = [
   {
     method: 'requestWarfarePurchase',
@@ -102,6 +111,13 @@ const CONFIRMED_PURCHASES = [
     command: 'buyHeroicVendorItem',
     label: 'Heroic Marks',
     file: HEROIC_PATH,
+    confirm: 'host.confirmDialog',
+  },
+  {
+    method: 'requestCruciblePurchase',
+    command: 'buyCrucibleVendorItem',
+    label: 'Crucible sigils',
+    file: CRUCIBLE_PATH,
     confirm: 'host.confirmDialog',
   },
 ] as const;
