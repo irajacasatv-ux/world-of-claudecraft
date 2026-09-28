@@ -63,14 +63,14 @@ automatically instead of by hand.
   resizing any bound: the `changes` bound, plus the largest REQUIRED job
   bound, plus runner-acquisition slack (which `timeout-minutes` does not count
   but the queue's timer does) must stay comfortably under it. Today that is
-  8 + 37 (the `changes` bound plus the pr-gate shard bound, the largest
-  required one, re-derived 2026-08-14 from the worst healthy selective-mode
-  wall; the long-sims lanes sit at 36), so a required critical path of 45
-  minutes against a 90 minute ceiling. Read 45 as a ceiling, not an
+  8 + 49 (the `changes` bound plus the pr-gate shard bound, the largest
+  required one, re-derived 2026-09-28 from the worst healthy full-mode
+  wall; the long-sims lanes sit at 36), so a required critical path of 57
+  minutes against a 90 minute ceiling. Read 57 as a ceiling, not an
   expectation: queue runs always execute FULL mode (selection applies to
-  pull requests only), whose healthy shard walls are about 12 minutes, so
-  the realistic queue path is far shorter; the bound is sized for the
-  selective mode ordinary PRs share it with. These figures are welded to
+  pull requests only), and full mode is now the expensive one, with healthy
+  shard walls of about 19 to 22 minutes on the 2026-09-28 runs, so the
+  bound is sized for the queue's own mode. These figures are welded to
   the ci.yml bounds by `tests/ci_workflow.test.ts`, so resizing a bound
   fails the pin until this sentence moves with it. A candidate that blows the queue timeout is ejected,
   which blocks the merge rather than merging anything unproven, but it

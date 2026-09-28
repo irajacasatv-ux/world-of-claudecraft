@@ -1318,14 +1318,14 @@ describe('CI workflow parity', () => {
     // in shape rather than lifted from the checkout-stall replay directly, so
     // every job in this file carries a conscious timeout-minutes value.
     const bounds = [
-      // pr-gate: 37 is the 2026-08-14 re-derivation from the worst healthy
-      // SELECTIVE shard wall (16.55 minutes, run 31765273776; selective and
-      // full mode share this one bound and selective is the expensive one,
-      // x 1.60 slow-runner ratio x 1.37 margin = 36.3). The 20-then-40
-      // history, the full-mode measurement trap (a ci.yml-touching PR
-      // always widens to full, so a bounds PR cannot observe selective
-      // walls), and the derivation live on the ci.yml bound.
-      ['pr-gate', 37],
+      // pr-gate: 49 is the 2026-09-28 re-derivation from the worst healthy
+      // FULL-mode shard wall (22.12 minutes, run 36444276927 shard 7; full
+      // mode, which the merge queue always runs, now out-walks the 2026-08-14
+      // selective base of 16.55, x 1.60 slow-runner ratio x 1.37 margin =
+      // 48.5). The 20-then-40-then-37 history, the full-mode measurement trap
+      // (a ci.yml-touching PR always widens to full, so a bounds PR cannot
+      // observe selective walls), and the derivation live on the ci.yml bound.
+      ['pr-gate', 49],
       // release-gate is the one shard matrix that keeps its CI_LONG_SUITES
       // files in-shard (pr-gate hands them to the lanes), so a single shard
       // can draw four of them at once and the bound has to cover a slow

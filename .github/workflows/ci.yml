@@ -549,7 +549,20 @@ jobs:
     # packing, never from the simulation (the review round showed a
     # simulated 9.79m flat pack against a real 11.21m when one modeling
     # assumption was wrong).
-    timeout-minutes: 37
+    #
+    # 2026-09-28 re-derivation, from FULL-mode walls, because full mode now
+    # out-walks the selective base above and the merge queue always runs
+    # full. The first two full-mode runs of feature/freeholds (dispatched,
+    # test_mode=full, 5,050 unit files): run 36444276927 shard walls 15.8 to
+    # 22.12 minutes, worst healthy shard 7 at 22.12 (a 1.52 minute checkout,
+    # a 19.67 minute test step; shard 2's 27.25 held a 9.33 minute checkout
+    # stall and is excluded, as the lanes and release-gate exclude theirs);
+    # run 36448553184 walls 17.0 to 20.3 healthy (shard 8's 25.68 held a
+    # 15.5 minute stall, excluded). 22.12 x 1.60 x 1.37 = 48.5, so 49; the
+    # queue's critical path becomes 8 + 49 = 57 against its 90 minute
+    # ceiling (docs/merge-queue.md). Both runs packed on the pre-harvest
+    # table; re-derive again from full-mode walls on the harvested one.
+    timeout-minutes: 49
     runs-on: ubuntu-latest
 
     # The real-SQL merge bar (ruling R16, recorded in the woc-marketplace
@@ -853,7 +866,7 @@ jobs:
     # walls; the same stall held that run's lint, and lane B's test step took
     # 12.07); run 36448553184, lane A 13.43 and lane B 16.22. The worst
     # healthy wall is lane B at 16.22: 16.22 x 1.60 x 1.37 = 35.6, so 36,
-    # still under pr-gate's 37, so the queue's critical path does not move.
+    # under pr-gate's bound, which stays the queue's critical path.
     timeout-minutes: 36
     runs-on: ubuntu-latest
 
