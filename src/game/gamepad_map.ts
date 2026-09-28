@@ -26,7 +26,7 @@ export interface LookDelta {
 
 export type PadCastHold =
   | { kind: 'slot'; slot: number }
-  | { kind: 'xhb'; action: { type: 'ability' | 'item' | 'buddy'; id: string } };
+  | { kind: 'xhb'; action: { type: 'ability' | 'item'; id: string } };
 
 // --- W3C "Standard Gamepad" indices --------------------------------------
 // https://w3c.github.io/gamepad/#remapping, fixed across Xbox/DualShock/Switch

@@ -3290,9 +3290,9 @@ async function restoreItemHandler(ctx: Ctx): Promise<void> {
 }
 
 /** POST /admin/api/moderation/characters/:id/grant-buddy: attach a buddy
- *  companion or unlock a buddy cosmetic on a character (the channel the
+ *  companion on a character (the channel the
  *  monthly PvP ladder, top-parse and zodiac awards land through; owner plan
- *  2026-09-09). Body: { buddyKey } or { cosmeticId }, plus reason. Audit
+ *  2026-09-09). Body: { buddyKey }, plus reason. Audit
  *  first, then: ONLINE targets take the sim's grant path at once; OFFLINE
  *  targets are queued (server/buddy_grants_db.ts queueBuddyGrant) and drained at the
  *  character's next join, so an award never depends on the winner being
@@ -3304,16 +3304,13 @@ async function grantBuddyHandler(ctx: Ctx): Promise<void> {
   const body = await readBody(ctx.req);
   const bodyError = buddyGrantBodyError(body);
   if (bodyError) return fail(ctx.res, 400, bodyError);
-  const grant: BuddyGrant =
-    typeof body.buddyKey === 'string'
-      ? { buddyKey: body.buddyKey }
-      : { cosmeticId: String(body.cosmeticId) };
+  const grant: BuddyGrant = { buddyKey: String(body.buddyKey) };
   try {
     await adminDb().recordProfessionsRestore({
       characterId: id,
       adminAccountId: ctxAccountId(ctx),
       action: 'grant_buddy',
-      detail: grant.buddyKey ?? grant.cosmeticId ?? '',
+      detail: grant.buddyKey ?? '',
       reason: body.reason,
     });
     const result = rt.adminGrantBuddy(id, grant);

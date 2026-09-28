@@ -23,7 +23,6 @@
 // `src/sim`-pure: no DOM/Three/render/ui/game/net imports, no Math.random/Date.now
 // (enforced by tests/architecture.test.ts).
 
-import { recordBossDamageForBuddies, resolveBuddyChallenges } from '../buddy_challenges';
 import { rollBossBuddyDrops } from '../buddy_drops';
 import { ABILITIES, DELVES, GROUP_XP_BONUS, ITEMS, MOBS } from '../data';
 import * as deedsMod from '../deeds';
@@ -1160,9 +1159,6 @@ export function dealDamage(
   // persisted lifetime damage counters beside the session RewardCounters
   // below, plus encounter participant tracking for the roster tasks.
   if (source) deedsMod.onDamageDealtForDeeds(ctx, source, target, amount, crit, kind);
-  // Boss-pet cosmetic challenges (src/sim/buddy_challenges.ts): the attempt
-  // clock and per-player damage on the few bosses that carry one. Zero rng.
-  recordBossDamageForBuddies(ctx, source, target, amount);
   // The hub dummy lesson (tutorial/dummy_drill.ts): one credit per blow that
   // actually lands on a training dummy. Zero rng.
   if (source && amount > 0) creditDummyDrill(ctx, source, target);
@@ -1866,7 +1862,6 @@ export function handleDeath(
     // boss that carries a companion row.
     if (!template?.worldBoss) {
       rollBossBuddyDrops(ctx, e, heroicRewardRecipients, claimedInst);
-      resolveBuddyChallenges(ctx, e, heroicRewardRecipients);
     }
     ctx.awardHeroicMarks(e, heroicRewardRecipients, claimedInst);
     // Intentional Gathering PR3: the kill-credit priority snapshot for a
@@ -1886,7 +1881,6 @@ export function handleDeath(
     if (worldBossContribs) {
       ctx.rollWorldBossLoot(e, worldBossContribs);
       rollBossBuddyDrops(ctx, e, worldBossContribs, null);
-      resolveBuddyChallenges(ctx, e, worldBossContribs);
       // World-boss deeds ride the same never-pruned contributor roster.
       deedsMod.onWorldBossKilledForDeeds(ctx, e, worldBossContribs);
     }

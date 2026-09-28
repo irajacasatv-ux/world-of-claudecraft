@@ -23,18 +23,16 @@ import { audio } from '../../game/audio';
 import { ITEMS } from '../../sim/data';
 import type { ArmorType } from '../../sim/types';
 import type { IWorld } from '../../world_api';
-import { buddyCosmeticDisplayName, buddyDisplayName } from '../buddy_event_lines';
+import { buddyDisplayName } from '../buddy_event_lines';
 import { deedName } from '../deed_i18n';
 import { markDialogRoot } from '../dialog_root';
 import { itemDisplayName, itemSetBonusField, tEntity } from '../entity_i18n';
 import { esc } from '../esc';
-import { craftNameText } from '../hud/professions/craft_name_view';
 import { formatMoney, formatNumber, type TranslationKey, t } from '../i18n';
 import type { PainterHostPresentation } from '../painter_host';
 import { svgIcon } from '../ui_icons';
 import { itemIconImgHtml } from '../unknown_item_icon';
 import type {
-  BuddyCosmeticFacts,
   BuddySourceFacts,
   CollectionBossDropSource,
   CollectionDropSource,
@@ -45,8 +43,6 @@ import {
   buildCollectionsView,
   COLLECTIONS_TABS,
   type CollectionEntryView,
-  type CollectionPetGroupView,
-  type CollectionPetKind,
   type CollectionSetStat,
   type CollectionSetView,
   type CollectionsTabId,
@@ -77,16 +73,8 @@ export interface CollectionsWindowDeps extends PainterHostPresentation {
   ownedBuddyKeys(): ReadonlySet<string>;
   ownedMountKeys(): ReadonlySet<string>;
   ownedItemIds(): ReadonlySet<string>;
-  /** The rest of the buddy collection (IWorldBuddies): unlocked looks, the
-   *  worn look per buddy, the boss-roll wins pending their reveal, and the
-   *  buddy currently out (the entity mirror's buddyKey, '' for none). */
-  ownedBuddyCosmetics(): ReadonlySet<string>;
-  equippedBuddyCosmetics(): Readonly<Record<string, string>>;
+  /** Boss-roll wins pending their reveal (IWorldBuddies). */
   pendingBuddyKeys(): ReadonlySet<string>;
-  activeBuddyKey(): string;
-  /** The two buddy commands the pane sends; the world re-validates both. */
-  summonBuddy(key: string): void;
-  equipBuddyCosmetic(key: string, cosmeticId: string | null): void;
   /** key -> renderer visual key for mount rows (src/render/mount_visuals.ts). */
   buddyVisualKeys(): Readonly<Partial<Record<string, string>>>;
   mountVisualKeys(): Readonly<Partial<Record<string, string>>>;
@@ -118,48 +106,9 @@ const STAT_LABEL: Record<CollectionSetStat, TranslationKey> = {
 /** Flavour text per companion. A typed map rather than a built key: tsc names
  *  the buddy that lost its blurb, instead of a missing string appearing live. */
 const BUDDY_LORE: Readonly<Record<string, TranslationKey>> = {
-  ember_fox: 'hudChrome.collections.buddyLore.ember_fox',
-  moss_hare: 'hudChrome.collections.buddyLore.moss_hare',
-  frog: 'hudChrome.collections.buddyLore.frog',
-  crimson_claw_crab: 'hudChrome.collections.buddyLore.crimson_claw_crab',
-  golden_sentinel: 'hudChrome.collections.buddyLore.golden_sentinel',
-  nightfang: 'hudChrome.collections.buddyLore.nightfang',
-  tuskhorn_boar: 'hudChrome.collections.buddyLore.tuskhorn_boar',
-  emerald_wolf: 'hudChrome.collections.buddyLore.emerald_wolf',
-  tiger: 'hudChrome.collections.buddyLore.tiger',
-  cate_coin: 'hudChrome.collections.buddyLore.cate_coin',
-  alon: 'hudChrome.collections.buddyLore.alon',
-  trollface: 'hudChrome.collections.buddyLore.trollface',
-  ansem: 'hudChrome.collections.buddyLore.ansem',
-  triple_t: 'hudChrome.collections.buddyLore.triple_t',
-  kekius: 'hudChrome.collections.buddyLore.kekius',
-  solbot: 'hudChrome.collections.buddyLore.solbot',
-  frostfire: 'hudChrome.collections.buddyLore.frostfire',
-  rocky: 'hudChrome.collections.buddyLore.rocky',
-  proud_grunt: 'hudChrome.collections.buddyLore.proud_grunt',
-  loot_goblin: 'hudChrome.collections.buddyLore.loot_goblin',
-  penny_goldspark: 'hudChrome.collections.buddyLore.penny_goldspark',
-  stag: 'hudChrome.collections.buddyLore.stag',
-  alpaca: 'hudChrome.collections.buddyLore.alpaca',
   horse: 'hudChrome.collections.buddyLore.horse',
-  sapling: 'hudChrome.collections.buddyLore.sapling',
-  bull: 'hudChrome.collections.buddyLore.bull',
-  spider: 'hudChrome.collections.buddyLore.spider',
-  raptor: 'hudChrome.collections.buddyLore.raptor',
-  skeleton: 'hudChrome.collections.buddyLore.skeleton',
   crystal_lich: 'hudChrome.collections.buddyLore.crystal_lich',
   forgemaw: 'hudChrome.collections.buddyLore.forgemaw',
-  crystal_tide: 'hudChrome.collections.buddyLore.crystal_tide',
-  phantom: 'hudChrome.collections.buddyLore.phantom',
-  emberfall_phoenix: 'hudChrome.collections.buddyLore.emberfall_phoenix',
-};
-
-const PET_KIND_LABEL: Record<CollectionPetKind, TranslationKey> = {
-  beast: 'hudChrome.collections.petKind.beast',
-  elemental: 'hudChrome.collections.petKind.elemental',
-  humanoid: 'hudChrome.collections.petKind.humanoid',
-  undead: 'hudChrome.collections.petKind.undead',
-  celebrity: 'hudChrome.collections.petKind.celebrity',
 };
 
 /** The authored text of one set bonus tier, through the same entity key the
@@ -258,22 +207,12 @@ export class CollectionsWindow {
     this.openerFocus = null;
   }
 
-  /** Re-localize the open window after an in-game language switch: the skip
-   *  signature is text-independent, so clear it and rebuild exactly once. */
-  relocalize(): void {
-    if (!this.isOpen) return;
-    this.lastSig = '';
-    this.render();
-  }
-
   /** The whole view model, rebuilt from the live ownership reads. Cheap
    *  enough for the repaint band: the catalogs are static and every row's
    *  source derivation is memoized by collection_sources.ts. */
   private collections(): CollectionsView {
     return buildCollectionsView({
       ownedBuddyKeys: this.deps.ownedBuddyKeys(),
-      ownedBuddyCosmetics: this.deps.ownedBuddyCosmetics(),
-      equippedBuddyCosmetics: this.deps.equippedBuddyCosmetics(),
       pendingBuddyKeys: this.deps.pendingBuddyKeys(),
       ownedMountKeys: this.deps.ownedMountKeys(),
       ownedItemIds: this.deps.ownedItemIds(),
@@ -297,9 +236,6 @@ export class CollectionsWindow {
       selectedKey,
       view.buddies.filter((row) => row.owned).length,
       view.buddies.filter((row) => row.pending).length,
-      this.deps.activeBuddyKey(),
-      this.deps.ownedBuddyCosmetics().size,
-      this.deps.equippedBuddyCosmetics(),
       view.mounts.filter((row) => row.owned).length,
       view.setGroups.reduce((sum, group) => sum + group.sets.length, 0),
       [...this.exchangePrices].sort(),
@@ -326,9 +262,7 @@ export class CollectionsWindow {
         <div class="col-list" role="list">${
           this.tab === 'sets'
             ? this.setListHtml(view.setGroups, selectedKey)
-            : this.tab === 'buddies'
-              ? this.buddyListHtml(view.buddyGroups, selectedKey)
-              : this.entryListHtml(rows, selectedKey)
+            : this.entryListHtml(rows, selectedKey)
         }</div>
         <div class="col-detail">${
           this.tab === 'sets'
@@ -364,20 +298,6 @@ export class CollectionsWindow {
   private defaultSelection(view: CollectionsView, rows: CollectionEntryView[]): string {
     if (this.tab === 'sets') return view.setGroups[0]?.sets[0]?.setId ?? '';
     return rows[0]?.key ?? '';
-  }
-
-  /** The buddy tab: one heading per pet kind, rows already in rarity order
-   *  (the view core sorts them, so the painter never re-decides). */
-  private buddyListHtml(groups: readonly CollectionPetGroupView[], selectedKey: string): string {
-    return groups
-      .map(
-        (group) => `
-        <div class="col-group">
-          <h3 class="col-group-head">${esc(t(PET_KIND_LABEL[group.kind]))}</h3>
-          ${this.entryListHtml(group.entries, selectedKey)}
-        </div>`,
-      )
-      .join('');
   }
 
   private entryListHtml(rows: readonly CollectionEntryView[], selectedKey: string): string {
@@ -523,20 +443,9 @@ export class CollectionsWindow {
     return `
       <div class="col-preview" data-preview="${esc(row.visualKey ?? '')}" data-tint="${row.tint}"></div>
       <h3 class="col-detail-name q-${esc(row.quality)}">${esc(name)}</h3>
-      ${row.buddyFacts ? this.buddyActionHtml(row) : ''}
       ${lore}
       ${row.buddyFacts ? this.buddyFactsHtml(row.buddyFacts) : this.factsHtml(row.facts)}
-      ${row.buddyFacts ? this.looksHtml(row) : ''}`;
-  }
-
-  /** Summon or dismiss the selected companion: one button, only for a
-   *  collected buddy. The label follows the entity mirror (which buddy is out). */
-  private buddyActionHtml(row: CollectionEntryView): string {
-    if (!row.owned) return '';
-    const out = this.deps.activeBuddyKey() === row.key;
-    return `<button type="button" class="btn col-action" data-summon="${esc(row.key)}">${esc(
-      t(out ? 'hudChrome.collections.actions.dismiss' : 'hudChrome.collections.actions.summon'),
-    )}</button>`;
+      `;
   }
 
   private vendorLines(vendors: readonly CollectionVendorSource[], label: TranslationKey): string[] {
@@ -608,92 +517,6 @@ export class CollectionsWindow {
       );
     }
     return lines.join('');
-  }
-
-  private lookSourceLines(facts: BuddyCosmeticFacts): string[] {
-    const lines: string[] = [];
-    for (const challenge of facts.challenges) {
-      const mob = tEntity({ kind: 'mob', id: challenge.bossId, field: 'name' });
-      lines.push(
-        this.line(
-          'hudChrome.collections.source.challengeLabel',
-          challenge.kind === 'speed'
-            ? t('hudChrome.collections.source.challengeSpeed', {
-                mob,
-                seconds: num(challenge.amount),
-              })
-            : t('hudChrome.collections.source.challengeDps', { mob, dps: num(challenge.amount) }),
-        ),
-      );
-    }
-    if (facts.deedId) {
-      lines.push(
-        this.line(
-          'hudChrome.collections.source.deedLabel',
-          t('hudChrome.collections.source.deed', { deed: deedName(facts.deedId) }),
-        ),
-      );
-    }
-    if (facts.craft) {
-      lines.push(
-        this.line(
-          'hudChrome.collections.source.craftLabel',
-          t('hudChrome.collections.source.craft', {
-            item: itemDisplayName(ITEMS[facts.craft.itemId]),
-            profession: craftNameText(facts.craft.professionId),
-          }),
-        ),
-      );
-    }
-    lines.push(...this.vendorLines(facts.vendors, 'hudChrome.collections.detail.vendorLabel'));
-    if (facts.grantOnly) {
-      lines.push(
-        this.line(
-          'hudChrome.collections.source.grantLabel',
-          t('hudChrome.collections.source.grantOnly'),
-        ),
-      );
-    }
-    if (lines.length === 0) {
-      lines.push(
-        this.line(
-          'hudChrome.collections.detail.dropLabel',
-          t('hudChrome.collections.detail.noSource'),
-        ),
-      );
-    }
-    return lines;
-  }
-
-  /** The looks authored for the selected companion, each with its state, its
-   *  sources, and a Wear/Remove control once unlocked (collected buddy only). */
-  private looksHtml(row: CollectionEntryView): string {
-    const rows = row.looks
-      .map((look) => {
-        const state = look.worn
-          ? 'hudChrome.collections.looks.worn'
-          : look.owned
-            ? 'hudChrome.collections.looks.unlocked'
-            : 'hudChrome.collections.looks.locked';
-        const control =
-          look.owned && row.owned
-            ? look.worn
-              ? `<button type="button" class="btn col-action" data-unwear="${esc(row.key)}">${esc(t('hudChrome.collections.actions.remove'))}</button>`
-              : `<button type="button" class="btn col-action" data-wear="${esc(look.id)}" data-wear-key="${esc(row.key)}">${esc(t('hudChrome.collections.actions.wear'))}</button>`
-            : '';
-        return `
-        <li class="col-look${look.owned ? ' col-owned' : ' col-locked'}">
-          <span class="col-swatch" style="--col-swatch: #${look.tint.toString(16).padStart(6, '0')}" aria-hidden="true"></span>
-          <span class="col-row-name">${esc(buddyCosmeticDisplayName(look.id))}</span>
-          <span class="col-row-state">${esc(t(state as TranslationKey))}</span>
-          ${control}
-          ${this.lookSourceLines(look.facts).join('')}
-        </li>`;
-      })
-      .join('');
-    return `
-      <h4 class="col-group-head">${esc(t('hudChrome.collections.looks.title'))}</h4>
-      ${rows ? `<ul class="col-looks">${rows}</ul>` : `<p class="col-note">${esc(t('hudChrome.collections.looks.none'))}</p>`}`;
   }
 
   private setDetailHtml(sets: readonly CollectionSetView[], selectedKey: string): string {
@@ -795,31 +618,6 @@ export class CollectionsWindow {
       const item = ITEMS[row.dataset.item ?? ''];
       if (!item) continue;
       this.deps.attachTooltip(row, () => this.deps.itemTooltip(item));
-    }
-    // The buddy commands: summon/dismiss the selected companion, wear or
-    // remove a look. Server-authoritative: the next snapshot repaints the pane.
-    root.querySelector<HTMLElement>('[data-summon]')?.addEventListener('click', (ev) => {
-      const key = (ev.currentTarget as HTMLElement).dataset.summon ?? '';
-      if (!key) return;
-      audio.click();
-      this.deps.summonBuddy(key);
-    });
-    for (const button of root.querySelectorAll<HTMLElement>('[data-wear]')) {
-      button.addEventListener('click', () => {
-        const id = button.dataset.wear ?? '';
-        const key = button.dataset.wearKey ?? '';
-        if (!id || !key) return;
-        audio.click();
-        this.deps.equipBuddyCosmetic(key, id);
-      });
-    }
-    for (const button of root.querySelectorAll<HTMLElement>('[data-unwear]')) {
-      button.addEventListener('click', () => {
-        const key = button.dataset.unwear ?? '';
-        if (!key) return;
-        audio.click();
-        this.deps.equipBuddyCosmetic(key, null);
-      });
     }
     root.querySelector('[data-close]')?.addEventListener('click', () => this.close());
     const preview = root.querySelector<HTMLElement>('[data-preview]');

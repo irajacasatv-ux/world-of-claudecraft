@@ -83,11 +83,6 @@ function makeWindow(state: WorldState, opts: { peek?: boolean } = {}): Harness {
         setActiveBorder,
         deedsRarity: async () => null,
         deedsRecent: async () => null,
-        ownedBuddies: () => [],
-        ownedBuddyCosmetics: () => [],
-        equippedBuddyCosmetics: () => ({}),
-        summonBuddy: () => {},
-        equipBuddyCosmetic: () => {},
         entities: new Map(),
         playerId: 1,
         cfg: { playerClass: 'warrior' },
@@ -99,8 +94,6 @@ function makeWindow(state: WorldState, opts: { peek?: boolean } = {}): Harness {
     captureFocus: () => null,
     restoreFocus: () => {},
     onWatchChanged: () => {},
-    setDragAction: () => {},
-    clearActionDropTargets: () => {},
     itemIcon: () => '',
     moneyHtml: () => '',
     itemTooltip: () => '',
@@ -240,9 +233,8 @@ describe('Book of Deeds border picker', () => {
     // h3 the group points at), not a second aria-label string.
     expect(el.querySelector('.deeds-titles')?.getAttribute('role')).toBe('group');
     expect(el.querySelector('.deeds-borders')?.getAttribute('role')).toBe('group');
-    // Four heads: titles, borders, plus the buddy shelf's Buddies and Buddy
-    // Looks groups (tests/deeds_buddy_picker.test.ts owns those two).
-    expect(el.querySelectorAll('.deeds-picker-head').length).toBe(4);
+    // The two ordinary cosmetic groups remain in the Book.
+    expect(el.querySelectorAll('.deeds-picker-head').length).toBe(2);
     for (const cls of ['.deeds-titles', '.deeds-borders']) {
       const group = el.querySelector(cls) as HTMLElement;
       const labelledBy = group.getAttribute('aria-labelledby') ?? '';

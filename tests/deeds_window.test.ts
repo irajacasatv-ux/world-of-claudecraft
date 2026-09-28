@@ -743,17 +743,11 @@ describe('touch long-press peek', () => {
       painter.match(
         /if \(this\.deps\.consumePeek\(\)\) \{\s*this\.deps\.hideTooltip\(\);\s*return;\s*\}/g,
       )?.length,
-      // Watch, title, border, plus the buddy shelf's summon and look picks.
-    ).toBe(5);
+      // Watch, title and border.
+    ).toBe(3);
     // Association, not just count: the guard is the FIRST statement of each
     // action handler specifically, never merely present somewhere in the file.
-    for (const selector of [
-      'data-watch',
-      'data-title',
-      'data-border-pick',
-      'data-buddy-pick',
-      'data-look-pick',
-    ]) {
+    for (const selector of ['data-watch', 'data-title', 'data-border-pick']) {
       const loopStart = painter.indexOf(`el.querySelectorAll<HTMLElement>('[${selector}]')`);
       expect(loopStart).toBeGreaterThan(-1);
       const nextLoop = painter.indexOf('\n    for (const btn of ', loopStart + 1);

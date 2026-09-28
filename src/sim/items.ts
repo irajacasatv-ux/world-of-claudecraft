@@ -25,7 +25,7 @@ import {
   equipBag as equipBagCmd,
   stackSizeOf,
 } from './bags';
-import { useBuddyCosmeticToken, useBuddyToken } from './buddies';
+import { useBuddyToken } from './buddies';
 import { buildConsuming } from './consuming';
 import { isRawCookingCatch } from './content/items';
 import { ITEMS, NPCS } from './data';
@@ -97,6 +97,7 @@ import {
   isNonSpellCast,
   POTION_COOLDOWN,
 } from './types';
+import { buyBuddyOffer } from './vendor_buddy_purchase';
 import {
   bulkBuyQuantity,
   buyPurchaseTotals,
@@ -1196,11 +1197,10 @@ export function useItem(
   } else if (def.kind === 'buddy') {
     // A whistle is a grant TOKEN: using it attaches the companion to the
     // character and consumes the token (a duplicate is refused unconsumed).
-    // Summoning an owned buddy is a Hunting-window command, not an item use.
+    // Summoning an owned buddy is a Cosmetics-window command, not an item use.
     useBuddyToken(ctx, meta.entityId, itemId);
   } else if (def.kind === 'buddy_cosmetic') {
-    // Same shape for a look: unlock it for the character, consume the token.
-    useBuddyCosmeticToken(ctx, meta.entityId, itemId);
+    // Historical cosmetic tokens remain readable but are no longer usable.
   } else if (def.kind === 'recipe') {
     // A pattern teaches the recipe it names and is spent doing so.
     // useRecipePatternItem owns every gate and the consume; it sits here, below
@@ -1380,6 +1380,7 @@ export function buyItem(
     ctx.error(meta.entityId, 'Not enough honor.');
     return;
   }
+  if (buyBuddyOffer(ctx, meta.entityId, def, copperCost, honorCost)) return;
   if (!ctx.canAddItem(itemId, qty, meta.entityId)) {
     bagsFullError(ctx, meta.entityId);
     return;

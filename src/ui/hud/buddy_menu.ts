@@ -1,4 +1,4 @@
-// The right-click menu on the player's OWN buddy (one row: enable/disable the
+// The right-click menu on the player's OWN buddy (rename or toggle the
 // autoloot errand). Extracted from the Hud coordinator under the monolith
 // ratchet: the popup chrome (placement, on-screen clamp, action binding) is
 // the Hud's, handed in as a narrow host, and this module only decides what
@@ -11,6 +11,8 @@
 
 import type { IWorld } from '../../world_api';
 import { CTX_MENU_PICKER_CLASS } from '../bag_item_action_menu';
+import { t } from '../i18n';
+import type { InputDialogOpts } from '../input_controller';
 import { buddyMenuHtml } from './target_frame_menu';
 
 export interface BuddyMenuHost {
@@ -28,9 +30,11 @@ export interface BuddyMenuHost {
 export function openBuddyMenu(
   host: BuddyMenuHost,
   world: IWorld,
+  buddyId: number,
   name: string,
   x: number,
   y: number,
+  inputDialog: (opts: InputDialogOpts) => void,
 ): void {
   const el = document.querySelector('#ctx-menu') as HTMLElement;
   el.classList.remove(CTX_MENU_PICKER_CLASS);
@@ -40,6 +44,15 @@ export function openBuddyMenu(
   host.placePopupAt(el, x, y, 170, 240);
   host.keepPopupOnScreen(el);
   host.bindContextMenuActions((act) => {
-    if (act === 'autoloot') world.setBuddyAutoloot(!armed);
+    if (act === 'rename')
+      inputDialog({
+        title: t('hudChrome.buddyMenu.rename'),
+        label: t('hudChrome.buddyMenu.nameLabel'),
+        value: name,
+        selectText: true,
+        okText: t('hud.pet.renameConfirm'),
+        onOk: (value) => world.renameBuddy(buddyId, value),
+      });
+    else if (act === 'autoloot') world.setBuddyAutoloot(!armed);
   });
 }

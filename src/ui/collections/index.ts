@@ -1,7 +1,5 @@
 export {
-  type BuddyCosmeticFacts,
   type BuddySourceFacts,
-  buddyCosmeticFacts,
   buddySourceFacts,
   type CollectionBossDropSource,
   type CollectionCurrency,
@@ -22,7 +20,6 @@ export {
   COLLECTION_SET_STATS,
   COLLECTIONS_TABS,
   type CollectionEntryView,
-  type CollectionLookView,
   type CollectionSetGroupView,
   type CollectionSetPieceView,
   type CollectionSetStat,

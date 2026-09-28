@@ -5168,8 +5168,6 @@ const ALL_DELTA_KEYS = [
   'bg',
   'blk',
   'bpsl',
-  'budCos',
-  'budEq',
   'budOwn',
   'budPend',
   'buyback',
@@ -5297,8 +5295,6 @@ const TERSE_TO_IWORLD: Record<string, string> = {
   bags: 'bags',
   bank: 'bankInfo',
   blk: 'blockChance',
-  budCos: 'ownedBuddyCosmetics',
-  budEq: 'equippedBuddyCosmetics',
   budOwn: 'ownedBuddies',
   budPend: 'pendingBuddies',
   buyback: 'vendorBuyback',
@@ -6485,7 +6481,7 @@ describe('gather node cooldown wire round trip (ncd)', () => {
 });
 
 describe('delta-key contract pins (anti-drift)', () => {
-  it('ALL_DELTA_KEYS contains exactly 99 unique keys in sorted order', () => {
+  it('ALL_DELTA_KEYS contains exactly 97 unique keys in sorted order', () => {
     // +1: guildBank (Guild Bank Phase 2), +1: the battleground bg key, +1: the
     // commission order board's corder key (issue #1298), +1: the character
     // sheet's lifetime played-time key ptime, for 67, then +16: the static
@@ -6529,10 +6525,10 @@ describe('delta-key contract pins (anti-drift)', () => {
     // full-view key ggoal (its own leaf, gathering_goal_wire.ts, not folded
     // into the gprof/tfocus/tslot/hpref cluster), for 94. The account ledger
     // (src/sim/account_ledger.ts) adds the heavy self key acct, for 95. The
-    // buddy collection (server/buddy_wire.ts) adds budOwn, budCos, budEq and
-    // budPend, for 99 on the merged tree.
-    expect(ALL_DELTA_KEYS).toHaveLength(99);
-    expect(new Set(ALL_DELTA_KEYS).size).toBe(99);
+    // buddy collection (server/buddy_wire.ts) adds budOwn and budPend.
+    // The retired budCos/budEq fields are absent, leaving 97.
+    expect(ALL_DELTA_KEYS).toHaveLength(97);
+    expect(new Set(ALL_DELTA_KEYS).size).toBe(97);
     expect([...ALL_DELTA_KEYS]).toEqual([...ALL_DELTA_KEYS].sort());
   });
 
@@ -6695,8 +6691,8 @@ describe('delta-key contract pins (anti-drift)', () => {
     // sibling, likewise inside the recursive scrape) makes 93.
     // The candidate self in-combat key cbt brings the combined inventory to 94;
     // the account ledger's acct key (server/deeds_wire.ts) makes it 95.
-    // The buddy collection's budOwn, budCos, budEq and budPend make 99.
-    expect(scraped.size).toBe(99);
+    // The buddy collection's budOwn and budPend make 97.
+    expect(scraped.size).toBe(97);
     expect([...scraped].sort()).toEqual([...ALL_DELTA_KEYS].sort());
   });
 

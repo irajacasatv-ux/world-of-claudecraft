@@ -4051,27 +4051,20 @@ export class ClientWorld extends ReconWireState implements IWorld {
   toggleMounted(): void {
     this.cmd({ cmd: 'mount_toggle' });
   }
-  // --- IWorldBuddies: collection + dismiss. Summoning a specific buddy is an
-  // item use, not a buddy command, so nothing here sends one. The toggle stays
-  // authoritative (server-validated ownership) and the active identity mirror
-  // (bud) lands on the next snapshot either way. ---
+  // --- IWorldBuddies: collection, summon and dismiss. All changes stay
+  // authoritative (server-validated ownership), and the active identity mirror
+  // (bud) lands on the next snapshot. ---
   ownedBuddies(): readonly BuddyKey[] {
     return this.selfBuddies.owned;
-  }
-  ownedBuddyCosmetics(): readonly string[] {
-    return this.selfBuddies.cosmetics;
-  }
-  equippedBuddyCosmetics(): Readonly<Record<string, string>> {
-    return this.selfBuddies.equipped;
   }
   pendingBuddies(): readonly BuddyKey[] {
     return this.selfBuddies.pending;
   }
+  renameBuddy(buddyId: number, name: string): void {
+    this.cmd({ cmd: 'buddy_rename', id: buddyId, name });
+  }
   summonBuddy(key: BuddyKey): void {
     this.cmd({ cmd: 'buddy_summon', key });
-  }
-  equipBuddyCosmetic(key: BuddyKey, cosmeticId: string | null): void {
-    this.cmd({ cmd: 'buddy_cosmetic', key, id: cosmeticId });
   }
   toggleBuddy(): void {
     this.cmd({ cmd: 'buddy_toggle' });

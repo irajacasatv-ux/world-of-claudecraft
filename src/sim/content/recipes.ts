@@ -4663,32 +4663,8 @@ export const TROPHY_RECIPES: ProfessionRecipeRecord[] = [
 // every recipe, common, tool, and combo alike: see PR #1209 review, a combo
 // recipe omitted from recipeList was unreachable in normal play; the same
 // applies to the tool recipes de-stubbed here (#1135's crafted base tools).
-// Buddy cosmetic charms (content/buddy_cosmetics.ts): a crafted LOOK for an
-// achievement pet. The recipe eats the logs of three different woods, the
-// "acorns from across the map" shape of the owner plan: timber gathered in
-// three regions into one charm. Plain grades on purpose: the fine grades stay
-// confined to the tool ladder (tests/material_grades.test.ts), and ironbark
-// carries no vendor price, so no counter can feed the loop. A leatherworking
-// craft at the tannery, learned from the master there (authored after the
-// training switch, so it carries an acquisition like every recipe since).
-export const BUDDY_CHARM_RECIPES: ProfessionRecipeRecord[] = [
-  {
-    id: 'recipe_charm_stag_acorn',
-    professionId: 'leatherworking',
-    resultItemId: 'charm_stag_acorn',
-    resultCount: 1,
-    reagents: [
-      { itemId: 'ironbark_log', count: 5 },
-      { itemId: 'ashwood_log', count: 5 },
-      { itemId: 'elderwood_log', count: 5 },
-    ],
-    skillReq: 75,
-    itemLevelBudget: 20,
-    level: 20,
-    stationType: 'tannery',
-    acquisition: ['trainer'],
-  },
-];
+// Reserved recipe family; retired companion looks have no craftable source.
+export const BUDDY_CHARM_RECIPES: ProfessionRecipeRecord[] = [];
 
 export const ALL_RECIPES: ProfessionRecipeRecord[] = [
   ...COMMON_RECIPES,

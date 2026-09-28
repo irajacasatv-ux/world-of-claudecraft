@@ -36,8 +36,7 @@ export const WARFARE_SHOP_SET_ORDER: readonly string[] = [
  *  so every key in one view is unique and safe to build a focus key from. */
 export const WARFARE_SHOP_JEWELRY_KEY = 'jewelry';
 export const WARFARE_SHOP_WEAPONS_KEY = 'weapons';
-/** Cosmetic buddy whistles (kind 'buddy'), currently the Proud Grunt companion
- *  Warmarshal Draven Kole carries. Its own section rather than the jewelry
+/** Direct buddy unlocks (kind 'buddy'), currently Horse at both honor vendors. Its own section rather than the jewelry
  *  fallback: a companion is not gear, carries no slot and no stats, and must
  *  never read as a piece a set-completion count is waiting on. */
 export const WARFARE_SHOP_COMPANIONS_KEY = 'companions';
@@ -66,8 +65,7 @@ export interface WarfareShopOffer {
   /** Advisory only: the purchase resolves server-side against the server's own
    *  stock and balance, and this window decides nothing. */
   affordable: boolean;
-  /** True when the viewer already wears this piece or carries it in a bag, so
-   *  the tile can mark it and a mis-tap re-buy is at least visible first. */
+  /** Gear is worn or carried; buddies are permanently collected or pending reveal. */
   owned: boolean;
 }
 
@@ -127,6 +125,8 @@ export interface WarfareShopViewer {
   ownedItemIds: ReadonlySet<string>;
   /** Item ids the viewer currently wears. */
   equippedItemIds: ReadonlySet<string>;
+  /** Collected or pending buddies cannot be bought again. */
+  acquiredBuddyKeys: ReadonlySet<string>;
   /** Distinct-slot member count per set id (itemSetMemberCounts). A set with no
    *  row here falls back to the distinct slots this shop actually sells, so the
    *  denominator is never zero and never invented. */
@@ -137,7 +137,10 @@ export interface WarfareShopViewer {
  *  whole seam: the derivation stays drivable from a Sim-shaped and a
  *  ClientWorld-mirror-shaped stub alike, which is the exact place those two
  *  could quietly diverge. */
-export type WarfareShopWorld = Pick<IWorld, 'honor' | 'inventory' | 'equipment'>;
+export type WarfareShopWorld = Pick<
+  IWorld,
+  'honor' | 'inventory' | 'equipment' | 'ownedBuddies' | 'pendingBuddies'
+>;
 
 /**
  * Derive the shop viewer from the world seam: the honor balance, the item ids
@@ -156,12 +159,13 @@ export type WarfareShopWorld = Pick<IWorld, 'honor' | 'inventory' | 'equipment'>
  */
 export function warfareShopViewer(
   world: WarfareShopWorld,
-): Pick<WarfareShopViewer, 'honor' | 'ownedItemIds' | 'equippedItemIds'> {
+): Pick<WarfareShopViewer, 'honor' | 'ownedItemIds' | 'equippedItemIds' | 'acquiredBuddyKeys'> {
   const equippedItemIds = new Set(
     Object.values(world.equipment).filter((id): id is string => !!id),
   );
   const ownedItemIds = new Set([...equippedItemIds, ...world.inventory.map((slot) => slot.itemId)]);
-  return { honor: world.honor, ownedItemIds, equippedItemIds };
+  const acquiredBuddyKeys = new Set([...world.ownedBuddies(), ...world.pendingBuddies()]);
+  return { honor: world.honor, ownedItemIds, equippedItemIds, acquiredBuddyKeys };
 }
 
 function offerFor(itemId: string, item: ItemDef, viewer: WarfareShopViewer): WarfareShopOffer {
@@ -171,7 +175,10 @@ function offerFor(itemId: string, item: ItemDef, viewer: WarfareShopViewer): War
     item,
     honor,
     affordable: viewer.honor >= honor,
-    owned: viewer.ownedItemIds.has(itemId),
+    owned:
+      item.kind === 'buddy'
+        ? viewer.acquiredBuddyKeys.has(item.buddy)
+        : viewer.ownedItemIds.has(itemId),
   };
 }
 

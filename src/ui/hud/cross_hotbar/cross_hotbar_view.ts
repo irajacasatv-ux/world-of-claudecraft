@@ -22,7 +22,7 @@ export type CrossHotbarOverlayLayer = 'left' | 'right';
 
 /** One cell's action. Structurally the game core's CrossHotbarAction; redeclared
  *  so this registered pure core stays host-agnostic and imports no src/game. */
-export type CrossHotbarOverlayAction = { type: 'ability' | 'item' | 'buddy'; id: string } | null;
+export type CrossHotbarOverlayAction = { type: 'ability' | 'item'; id: string } | null;
 
 export type CrossHotbarCluster = 'dpad' | 'face';
 export type CrossHotbarPoint = 'top' | 'left' | 'right' | 'bottom';

@@ -11,7 +11,13 @@ import { describe, expect, it } from 'vitest';
 import { VISUALS, visualKeyFor } from '../src/render/characters/manifest';
 import { type Collider, queryOpenWorldColliders } from '../src/sim/colliders';
 import { STATIONS } from '../src/sim/content/professions';
-import { FURY_ENTITY_ID, FURY_NPC, FURY_NPC_ID, FURY_STOCK } from '../src/sim/content/pvp_honor';
+import {
+  FURY_ENTITY_ID,
+  FURY_NPC,
+  FURY_NPC_ID,
+  FURY_STOCK,
+  HONOR_VENDOR_STOCK,
+} from '../src/sim/content/pvp_honor';
 import { ZONE3_NPCS, ZONE3_ZONE } from '../src/sim/content/zone3';
 import { BUILTIN_WORLD, ITEMS, NPCS, PROPS, setActiveWorldContent } from '../src/sim/data';
 import { GRAVE_COUNT, GRAVE_RADIUS, graveOffset } from '../src/sim/prop_layout';
@@ -28,8 +34,8 @@ import { worldEntityText } from '../src/ui/world_entity_i18n';
 
 const SEED = 42;
 const KOLE = ZONE3_NPCS[WARFARE_QUARTERMASTER_NPC_ID];
-/** The one cosmetic row Kole carries beyond the mirrored WARFARE gear list. */
-const KOLE_COMPANION_ITEM_ID = 'whistle_proud_grunt';
+/** Both honor vendors carry Horse alongside their mirrored WARFARE gear. */
+const HONOR_COMPANION_ITEM_ID = 'whistle_horse';
 
 /** A vendor list with the cosmetic rows dropped, so the two placements' GEAR
  *  can be compared for drift without the companion masking a real fork. */
@@ -59,15 +65,13 @@ describe('Warmarshal Draven Kole: the definition', () => {
   it('sells the one canonical WARFARE stock rather than a second copy of it', () => {
     // One GEAR list, two placements. FURY keeps the identical stock in
     // Eastbrook, so a divergence here means someone forked the item table.
-    // Kole additionally carries the Proud Grunt companion whistle, a cosmetic
-    // that is deliberately NOT part of the mirrored gear list; every other row
-    // must still match FURY's exactly.
-    expect(KOLE.vendorItems).toEqual([...FURY_STOCK, KOLE_COMPANION_ITEM_ID]);
-    expect(NPCS[FURY_NPC_ID].vendorItems).toEqual([...FURY_STOCK]);
+    expect(KOLE.vendorItems).toEqual([...HONOR_VENDOR_STOCK]);
+    expect(NPCS[FURY_NPC_ID].vendorItems).toEqual([...HONOR_VENDOR_STOCK]);
+    expect(HONOR_VENDOR_STOCK).toEqual([...FURY_STOCK, HONOR_COMPANION_ITEM_ID]);
     expect(FURY_STOCK.length).toBeGreaterThan(0);
-    // The cosmetic is the ONLY divergence, and it is not gear.
-    expect(ITEMS[KOLE_COMPANION_ITEM_ID].kind).toBe('buddy');
-    expect(FURY_STOCK).not.toContain(KOLE_COMPANION_ITEM_ID);
+    // The companion is not gear.
+    expect(ITEMS[HONOR_COMPANION_ITEM_ID].kind).toBe('buddy');
+    expect(FURY_STOCK).not.toContain(HONOR_COMPANION_ITEM_ID);
   });
 
   it('carries the warfareVendor flag on BOTH placements, so the shop is not Highwatch-only', () => {
@@ -78,8 +82,7 @@ describe('Warmarshal Draven Kole: the definition', () => {
     // present identically; nothing else asserted either flag.
     expect(KOLE.warfareVendor, 'Warmarshal Draven Kole').toBe(true);
     expect(FURY_NPC.warfareVendor, 'FURY, the Eastbrook mirror').toBe(true);
-    // And the two really do sell the same GEAR, not a copy that can drift: the
-    // companion whistle is the one authored addition on Kole's list.
+    // Both placements keep the canonical gear list alongside the companion.
     expect(gearRows(KOLE.vendorItems)).toEqual(gearRows(FURY_NPC.vendorItems));
     expect(gearRows(KOLE.vendorItems)).toEqual([...FURY_STOCK]);
   });
@@ -157,7 +160,7 @@ describe('Warmarshal Draven Kole: the world build is untouched', () => {
     expect(kole.spawnPos.x).toBe(KOLE.pos.x);
     expect(kole.spawnPos.z).toBe(KOLE.pos.z);
     expect(kole.facing).toBe(KOLE.facing);
-    expect(kole.vendorItems).toEqual([...FURY_STOCK, KOLE_COMPANION_ITEM_ID]);
+    expect(kole.vendorItems).toEqual([...HONOR_VENDOR_STOCK]);
   });
 
   it('is idempotent, so a second spawn call cannot mint a duplicate', () => {

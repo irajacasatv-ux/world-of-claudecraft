@@ -6,36 +6,32 @@
 //
 // The sim owns every rule (src/sim/buddies.ts re-validates key, ownership and
 // fit); this module only moves values between the wire, the database and the
-// sim's own grant/summon/equip entry points.
+// sim's own grant/summon entry points.
 
 import { buddyDef } from '../src/sim/content/buddies';
-import { buddyCosmeticDef } from '../src/sim/content/buddy_cosmetics';
 import type { Sim } from '../src/sim/sim';
 import { type BuddyGrantRow, takePendingBuddyGrants } from './buddy_grants_db';
+import { screenCompanionRename } from './companion_rename';
 
-/** One admin grant request: exactly one of the two ids. */
+/** Buddy grant, including the retired cosmetic id shape in historical queue rows. */
 export interface BuddyGrant {
   buddyKey?: string;
   cosmeticId?: string;
 }
 
-/** Validate a grant body against the catalogs. Null when it names exactly one
- *  known companion or look; a reason string otherwise. */
+/** Validate an active companion grant. Retired cosmetic grants are refused. */
 export function buddyGrantBodyError(body: {
   buddyKey?: unknown;
   cosmeticId?: unknown;
 }): string | null {
   const hasBuddy = typeof body.buddyKey === 'string' && body.buddyKey.length > 0;
-  const hasLook = typeof body.cosmeticId === 'string' && body.cosmeticId.length > 0;
-  if (hasBuddy === hasLook) return 'name exactly one of buddyKey or cosmeticId';
-  if (hasBuddy && !buddyDef(body.buddyKey as string)) return 'unknown buddy key';
-  if (hasLook && !buddyCosmeticDef(body.cosmeticId as string)) return 'unknown cosmetic id';
+  if (body.cosmeticId !== undefined) return 'unknown cosmetic id';
+  if (!hasBuddy || !buddyDef(body.buddyKey as string)) return 'unknown buddy key';
   return null;
 }
 
 /** The heavy self-snapshot keys for the buddy collection (IWorldBuddies):
- *  owned companions `budOwn`, unlocked cosmetics `budCos`, the worn look per
- *  buddy `budEq`, and the boss-roll wins pending their reveal `budPend`.
+ *  owned companions `budOwn` and boss-roll wins pending their reveal `budPend`.
  *  Every writer (src/sim/buddies.ts) bumps meta.wireRev, which is what makes
  *  the heavy block due, so the gate needs no command list of its own. */
 export function emitBuddySelfKeys(
@@ -44,8 +40,6 @@ export function emitBuddySelfKeys(
   maybe: (key: string, value: unknown) => void,
 ): void {
   maybe('budOwn', sim.ownedBuddiesFor(pid));
-  maybe('budCos', sim.ownedBuddyCosmeticsFor(pid));
-  maybe('budEq', sim.equippedBuddyCosmeticsFor(pid));
   maybe('budPend', sim.pendingBuddiesFor(pid));
 }
 
@@ -59,18 +53,15 @@ export function dispatchBuddyCommand(
   msg: Record<string, unknown>,
 ): void {
   switch (command) {
-    // The bare toggle: dismiss, or re-summon the last one out.
+    // Retired shortcut token. Selection is explicit in Cosmetics.
     case 'buddy_toggle':
-      sim.toggleBuddyFor(pid);
       break;
-    // Summon/dismiss a SPECIFIC collected buddy (the Hunting window).
+    // Summon/dismiss a specific collected buddy from Cosmetics.
     case 'buddy_summon':
       if (typeof msg.key === 'string') sim.summonBuddyFor(pid, msg.key);
       break;
-    // Wear a cosmetic on a collected buddy (null = its own look).
+    // Retired append-only protocol token: old clients cannot activate archived looks.
     case 'buddy_cosmetic':
-      if (typeof msg.key === 'string' && (typeof msg.id === 'string' || msg.id === null))
-        sim.equipBuddyCosmeticFor(pid, msg.key, msg.id);
       break;
     // A preference flip, settable with no buddy out; the errand itself runs in
     // the Sim tick (src/sim/pet/buddy_autoloot.ts).
@@ -80,11 +71,36 @@ export function dispatchBuddyCommand(
   }
 }
 
+/** Shape-first name screening, under the inbound name-screen lane. Ownership and
+ *  stale entity ids are re-validated by the sim before any state changes. */
+export function dispatchBuddyRename(
+  sim: Sim,
+  pid: number,
+  msg: Record<string, unknown>,
+  offensiveName: (name: string) => boolean,
+  rejectName: () => void,
+): void {
+  if (
+    typeof msg.id !== 'number' ||
+    !Number.isSafeInteger(msg.id) ||
+    msg.id <= 0 ||
+    typeof msg.name !== 'string'
+  )
+    return;
+  const buddyId = msg.id;
+  screenCompanionRename(
+    msg.name,
+    offensiveName,
+    (name) => sim.renameBuddyFor(pid, buddyId, name),
+    rejectName,
+  );
+}
+
 /** Apply one grant to a LIVE player through the sim's own idempotent entry
- *  points. False when the character already had it. */
+ *  point. False for retired cosmetic grants or when the character already had it. */
 export function applyBuddyGrantToSim(sim: Sim, pid: number, grant: BuddyGrant): boolean {
+  if (grant.cosmeticId !== undefined) return false;
   if (typeof grant.buddyKey === 'string') return sim.grantBuddyFor(pid, grant.buddyKey);
-  if (typeof grant.cosmeticId === 'string') return sim.grantBuddyCosmeticFor(pid, grant.cosmeticId);
   return false;
 }
 

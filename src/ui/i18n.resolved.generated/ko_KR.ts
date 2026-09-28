@@ -2217,6 +2217,8 @@ export const ko_KR: EnTranslations = {
       "jewelry": "장신구",
       "weapons": "무기",
       "companions": "동료",
+      "companionPurchase": "Permanently unlocks this buddy and summons it immediately. No item is added to your bags.",
+      "companionOwnedAria": "{item}, already collected or awaiting reveal",
       "owned": "보유 중",
       "buyAria": "{honor}에 {item} 구매",
       "buyOwnedAria": "{honor}에 {item} 구매, 이미 보유 중",
@@ -2780,6 +2782,8 @@ export const ko_KR: EnTranslations = {
       "streamerBadgeTitle": "인증된 스트리머"
     },
     "buddyMenu": {
+      "rename": "Rename Buddy",
+      "nameLabel": "Buddy name",
       "autolootEnable": "자동 전리품 켜기",
       "autolootDisable": "자동 전리품 끄기",
       "autolootHint": "버디가 30야드 이내에 있는 당신 소유의 시체에서 전리품을 가져옵니다.",
@@ -5312,6 +5316,8 @@ export const ko_KR: EnTranslations = {
       "tabMounts": "탈것",
       "tabSkins": "스킨",
       "tabMech": "메카",
+      "buddyActive": "Summoned",
+      "buddyDrag": "Drag to action bar",
       "legend": "계정: 모든 캐릭터가 공유. 캐릭터: 이 캐릭터만.",
       "scopeAccount": "계정",
       "scopeCharacter": "캐릭터",

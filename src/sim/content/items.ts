@@ -426,15 +426,11 @@ export const BASE_ITEMS: Record<string, ItemDef> = {
     noDiscard: true,
     sellValue: 0,
   },
-  // Buddy whistles are GRANT TOKENS (owner plan 2026-09-09): using one
-  // attaches the companion to the character and consumes it (src/sim/
-  // buddies.ts useBuddyToken); ownership is the character's collection flag,
-  // never the item. Every whistle is SOULBOUND and listed by NO loot table:
-  // companions are won per player off bosses or earned through deeds
-  // (content/buddy_sources.ts), and a whistle only exists so a prestige
-  // vendor, a letter or an admin grant can hand one over. A duplicate token is
-  // refused unconsumed, and every whistle still sells for a flat 5g so an
-  // unwanted duplicate is bag space back rather than a permanent passenger.
+  // Active buddy whistles are soulbound grant tokens consumed on use.
+  // Retired whistles and charms retain their original definitions so existing
+  // bag/bank saves keep their identities and inventory rules. Token use checks
+  // the active buddy/cosmetic catalog first and leaves retired tokens untouched.
+  // Retired tokens have no vendor, recipe, loot or collection source.
   whistle_ember_fox: {
     id: 'whistle_ember_fox',
     name: 'Ember Fox Whistle',
@@ -603,13 +599,7 @@ export const BASE_ITEMS: Record<string, ItemDef> = {
     quality: 'uncommon',
     sellValue: 50_000, // 5g, the flat vendor price every whistle takes
   },
-  // The two prestige-currency companions, the only whistles a vendor still
-  // sells: honor at the Warfare stores (Proud Grunt, the "honour-bought pet"
-  // the ladder cosmetic hangs off) and Heroic Marks at the Quartermaster
-  // (Loot Goblin; the marks price lives with that stock in
-  // content/heroic_vendor.ts). Penny Goldspark lost her 1000g row: no
-  // companion is sold for plain gold any more (mounts fill that space), so
-  // she has no source until one is authored.
+  // Historical prestige-currency tokens, no longer stocked by vendors.
   whistle_proud_grunt: {
     id: 'whistle_proud_grunt',
     name: 'Proud Grunt Whistle',
@@ -669,7 +659,9 @@ export const BASE_ITEMS: Record<string, ItemDef> = {
     buddy: 'horse',
     soulbound: true,
     quality: 'common',
-    sellValue: 50_000, // 5g, the flat vendor price every whistle takes
+    priceHonor: 100_000, // CALIBRATE: placeholder Horse companion price.
+    sellValue: 0,
+    noVendorSell: true,
   },
   whistle_sapling: {
     id: 'whistle_sapling',
@@ -771,13 +763,7 @@ export const BASE_ITEMS: Record<string, ItemDef> = {
     quality: 'epic',
     sellValue: 50_000, // 5g, the flat vendor price every whistle takes
   },
-  // Buddy COSMETIC tokens (content/buddy_cosmetics.ts): using one unlocks the
-  // look for the character and consumes it (src/sim/buddies.ts
-  // useBuddyCosmeticToken). These two are the item-borne sources: a crafted
-  // look (content/recipes.ts recipe_charm_stag_acorn, eating the fine logs
-  // of three different woods) and a store look (Armorer Hode, plain gold).
-  // Challenge, deed and ladder looks never pass through an item. Soulbound:
-  // a look is earned or bought by the character who wears it.
+  // Historical cosmetic tokens, retained for existing inventories only.
   charm_stag_acorn: {
     id: 'charm_stag_acorn',
     name: 'Acorn Crown Charm',

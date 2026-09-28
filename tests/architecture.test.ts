@@ -221,6 +221,7 @@ const UI_PURE_CORES = [
   'src/ui/reticle_ticks_core.ts',
   'src/ui/aura_watchlist_core.ts',
   'src/ui/collection_actions_core.ts',
+  'src/ui/hud/cosmetics/buddy_cosmetics_view.ts',
   'src/ui/hud/cosmetics/cosmetics_cards_view.ts',
   'src/ui/hud/cosmetics/cosmetics_view.ts',
   'src/ui/map_entity_disclosure_core.ts',

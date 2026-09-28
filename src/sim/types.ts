@@ -4,7 +4,7 @@ import type { MaterialComposition } from './material_sources';
 // Core shared types for the simulation. The sim layer has zero DOM/rendering deps.
 
 import type { ChatSenderFlair, StreamerLinks } from './account_flair';
-import type { BuddyKey } from './content/buddies';
+import type { BuddyTokenKey } from './content/buddies';
 import type { MountKey } from './content/mounts';
 import type { CraftDef, GatheringProfessionId, ToolEffectId } from './content/professions';
 import type { RealmBuilderHonour } from './content/realm_builders';
@@ -1526,18 +1526,16 @@ export interface MountItemDef extends BaseItemDef {
 // token for a companion the player already has is refused unconsumed.
 export interface BuddyItemDef extends BaseItemDef {
   kind: 'buddy';
-  buddy: BuddyKey;
+  buddy: BuddyTokenKey;
   armorType?: never;
   weapon?: never;
 }
 
-// A buddy COSMETIC token: using it unlocks the named look for the character
-// (src/sim/buddies.ts useBuddyCosmeticToken) and consumes the token. This is
-// how a crafted look (a recipe result) and a store look (a vendor row) reach
-// the wardrobe; challenge, deed and admin unlocks skip the item entirely.
+// Historical buddy cosmetic token shape, retained for existing inventories.
+// Tokens no longer unlock looks and are not consumed on use.
 export interface BuddyCosmeticItemDef extends BaseItemDef {
   kind: 'buddy_cosmetic';
-  /** content/buddy_cosmetics.ts id. */
+  /** Historical cosmetic id, retained for old inventory records. */
   cosmetic: string;
   armorType?: never;
   weapon?: never;
@@ -7882,15 +7880,13 @@ export type SimEvent = { pid?: number } & (
   // text-free: the client renders its own localized line off `pairId`.
   | { type: 'attuned'; pid: number; pairId: string }
   // Buddy companions (src/sim/buddies.ts, content/buddy_sources.ts). All
-  // three are personal and text-free: the client renders a localized chat
+  // events are personal and text-free: the client renders a localized chat
   // line off the id. `buddyPresence` fires when a boss roll attaches a
   // PENDING companion ("you feel a presence watching you"); `buddyRevealed`
   // when a companion becomes owned (the zone-out reveal, a deed grant, a
-  // token use, an admin grant); `buddyCosmeticUnlocked` when a look unlocks
-  // (a challenge, a deed, a token, a grant).
+  // token use, an admin grant).
   | { type: 'buddyPresence'; pid: number; key: string }
   | { type: 'buddyRevealed'; pid: number; key: string }
-  | { type: 'buddyCosmeticUnlocked'; pid: number; cosmeticId: string }
   // Attunement celebration, zone broadcast (Professions 2.0): the soft
   // zone-wide copy of an attunement, one per overworld player currently in the
   // celebrant's zone INCLUDING the celebrant, `pid` being the RECIPIENT (the

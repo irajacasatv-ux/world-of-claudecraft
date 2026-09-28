@@ -7,17 +7,14 @@
 // tables plus the caller's owned-key sets, so it is safe to rebuild whenever the
 // window opens and cheap enough to rebuild on a tab switch.
 
-import { BUDDIES, BUDDY_KEYS, type BuddyKey, type BuddyKind } from '../../sim/content/buddies';
-import { buddyCosmeticsFor } from '../../sim/content/buddy_cosmetics';
+import { BUDDIES, BUDDY_KEYS, type BuddyKey } from '../../sim/content/buddies';
 import { BUDDY_MOBS, buddyTemplateId } from '../../sim/content/buddy_mobs';
 import { MOUNTS, type MountKey } from '../../sim/content/mounts';
 import { ITEM_SETS, ITEMS } from '../../sim/data';
 import { itemLevel } from '../../sim/item_level';
 import type { ArmorType, ItemDef } from '../../sim/types';
 import {
-  type BuddyCosmeticFacts,
   type BuddySourceFacts,
-  buddyCosmeticFacts,
   buddySourceFacts,
   type CollectionItemFacts,
   collectionItemFacts,
@@ -27,44 +24,11 @@ export type CollectionsTabId = 'buddies' | 'mounts' | 'sets';
 
 export const COLLECTIONS_TABS: readonly CollectionsTabId[] = ['buddies', 'mounts', 'sets'];
 
-/** What a companion IS, the buddy tab's outer grouping: the catalog's own
- *  authored kind when it carries one, else derived from the follower's mob
- *  family (content/buddy_mobs.ts). Everything that is not a walking corpse or
- *  a person derives as a beast, spiders and raptors included. */
-export type CollectionPetKind = BuddyKind;
-
-/** Pet kinds in the order the tab lists them: the creature groups first, by
- *  how ordinary they are, and the guest characters last. */
-export const COLLECTION_PET_KINDS: readonly CollectionPetKind[] = [
-  'beast',
-  'elemental',
-  'humanoid',
-  'undead',
-  'celebrity',
-];
-
-/** Rarity order INSIDE a kind: purple first, then blue, green, white. The
+/** Rarity order: purple first, then blue, green, white. The
  *  catalog has no grey (poor) whistle and must not grow one: greys were folded
  *  into white by the same 2026-09-04 call that set this order, so anything
  *  unranked sorts as common rather than inventing a fifth rung. */
 export const COLLECTION_RARITY_ORDER: readonly string[] = ['epic', 'rare', 'uncommon', 'common'];
-
-/** The grouping a mob FAMILY implies, the fallback when the catalog authors
- *  none. It can never return an editorial group: no family means celebrity,
- *  and elemental buddies are authored rather than inferred, because the two
- *  elemental rigs are a beast and a critter body to the sim. */
-export function petKindOf(family: string): CollectionPetKind {
-  if (family === 'undead') return 'undead';
-  if (family === 'humanoid') return 'humanoid';
-  return 'beast';
-}
-
-/** The group a companion sits in: authored first, family second. */
-export function buddyKindOf(key: BuddyKey): CollectionPetKind {
-  const authored = BUDDIES[key]?.kind;
-  if (authored) return authored;
-  return petKindOf(BUDDY_MOBS[buddyTemplateId(key)]?.family ?? 'beast');
-}
 
 /** Sort rank of a quality on the tab: lower sorts first. A quality the ladder
  *  does not name (a grey, were one ever authored) ranks with white. */
@@ -89,9 +53,6 @@ export interface CollectionEntryView {
   /** Null exactly when itemId is null: an entry with no item has no source,
    *  no price and no bind state to report. */
   facts: CollectionItemFacts | null;
-  /** Which of the three buddy groups this row sits in. Mount rows carry
-   *  'beast' and never use it: only the buddy tab groups. */
-  petKind: CollectionPetKind;
   /** The follower's entity dye (content/buddy_mobs.ts). Inert on a rig with
    *  baked textures, and the whole colour on a shared animal or skeleton rig,
    *  which is exactly how the world draws it. */
@@ -108,21 +69,6 @@ export interface CollectionEntryView {
   /** Buddy rows only: the companion's own sources (boss rolls, deed, token
    *  vendors). Null for a mount, whose sources ride `facts`. */
   buddyFacts: BuddySourceFacts | null;
-  /** Buddy rows only: the looks authored for this companion, catalog order. */
-  looks: CollectionLookView[];
-}
-
-/** One cosmetic (look) row under a buddy. */
-export interface CollectionLookView {
-  id: string;
-  /** Canonical English name; the painter localizes. */
-  name: string;
-  tint: number;
-  /** Unlocked for this character. */
-  owned: boolean;
-  /** Currently worn on the buddy. */
-  worn: boolean;
-  facts: BuddyCosmeticFacts;
 }
 
 /** The primary stat an epic set is itemized around. 'mixed' is a real answer
@@ -170,19 +116,9 @@ export interface CollectionSetGroupView {
   sets: CollectionSetView[];
 }
 
-/** One heading of the buddy tab: a pet kind and the rows under it, already
- *  in rarity order. */
-export interface CollectionPetGroupView {
-  kind: CollectionPetKind;
-  entries: CollectionEntryView[];
-}
-
 export interface CollectionsView {
-  /** Every buddy in one list, kind then rarity: the flat read the preview
-   *  and the selection default still want. */
+  /** Every buddy in one list, ordered by rarity then catalog order. */
   buddies: CollectionEntryView[];
-  /** The same rows split into their headings, which is what the tab paints. */
-  buddyGroups: CollectionPetGroupView[];
   mounts: CollectionEntryView[];
   setGroups: CollectionSetGroupView[];
 }
@@ -249,7 +185,6 @@ function entryFor(
   itemId: string | null,
   visualKey: string | null,
   ownedKeys: ReadonlySet<string>,
-  petKind: CollectionPetKind = 'beast',
   tint = 0xffffff,
 ): CollectionEntryView {
   const facts = itemId ? collectionItemFacts(itemId) : null;
@@ -260,18 +195,16 @@ function entryFor(
     quality: facts?.quality ?? 'common',
     visualKey,
     facts,
-    petKind,
     tint,
     owned: ownedKeys.has(key),
     pending: false,
     obtainable: facts?.obtainable ?? false,
     buddyFacts: null,
-    looks: [],
   };
 }
 
 /** A buddy row: the mount shape plus the collection-flag ownership, the
- *  pending state, the companion's own sources and its looks. */
+ *  pending state, the companion's own sources. */
 function buddyEntryFor(key: BuddyKey, input: CollectionsViewInput): CollectionEntryView {
   const base = entryFor(
     key,
@@ -282,34 +215,14 @@ function buddyEntryFor(key: BuddyKey, input: CollectionsViewInput): CollectionEn
     // share an animal rig rather than shipping one of their own).
     input.buddyVisualKeys[key] ?? null,
     input.ownedBuddyKeys,
-    buddyKindOf(key),
     BUDDY_MOBS[buddyTemplateId(key)]?.color ?? 0xffffff,
   );
   const buddyFacts = buddySourceFacts(key);
-  const worn = input.equippedBuddyCosmetics?.[key] ?? null;
-  const looks: CollectionLookView[] = buddyCosmeticsFor(key).flatMap((def) => {
-    const facts = buddyCosmeticFacts(def.id);
-    if (!facts) return [];
-    return [
-      {
-        id: def.id,
-        name: def.name,
-        tint: def.tint,
-        owned: input.ownedBuddyCosmetics?.has(def.id) ?? false,
-        worn: worn === def.id,
-        facts,
-      },
-    ];
-  });
   return {
     ...base,
-    // The worn look's dye replaces the follower's own color in the preview,
-    // exactly as spawnBuddyEntity does on the live entity.
-    tint: looks.find((look) => look.worn)?.tint ?? base.tint,
     pending: !base.owned && (input.pendingBuddyKeys?.has(key) ?? false),
     obtainable: buddyFacts.obtainable,
     buddyFacts,
-    looks,
   };
 }
 
@@ -317,10 +230,6 @@ export interface CollectionsViewInput {
   /** Buddy keys the viewer has collected (IWorld.ownedBuddies): the
    *  character's own collection flag, resolved by the sim for both worlds. */
   ownedBuddyKeys: ReadonlySet<string>;
-  /** Unlocked look ids (IWorld.ownedBuddyCosmetics). */
-  ownedBuddyCosmetics?: ReadonlySet<string>;
-  /** The worn look per buddy key (IWorld.equippedBuddyCosmetics). */
-  equippedBuddyCosmetics?: Readonly<Record<string, string>>;
   /** Boss-roll wins pending their reveal (IWorld.pendingBuddies). */
   pendingBuddyKeys?: ReadonlySet<string>;
   /** Mount keys the viewer owns (IWorld.ownedMounts), same model as above. */
@@ -336,12 +245,9 @@ export interface CollectionsViewInput {
 
 export function buildCollectionsView(input: CollectionsViewInput): CollectionsView {
   const buddies = BUDDY_KEYS.map((key) => buddyEntryFor(key, input));
-  // The tab reads kind first, then rarity, then catalog order: a collector
-  // scans for the purple in their group, and the stable third key keeps two
-  // whistles of one rarity from swapping places between renders.
+  // One flat list, with higher rarity first and stable catalog order for ties.
   buddies.sort(
     (a, b) =>
-      COLLECTION_PET_KINDS.indexOf(a.petKind) - COLLECTION_PET_KINDS.indexOf(b.petKind) ||
       rarityRank(a.quality) - rarityRank(b.quality) ||
       BUDDY_KEYS.indexOf(a.key as BuddyKey) - BUDDY_KEYS.indexOf(b.key as BuddyKey),
   );
@@ -412,10 +318,5 @@ export function buildCollectionsView(input: CollectionsViewInput): CollectionsVi
     }
   }
 
-  const buddyGroups: CollectionPetGroupView[] = COLLECTION_PET_KINDS.map((kind) => ({
-    kind,
-    entries: buddies.filter((row) => row.petKind === kind),
-  })).filter((group) => group.entries.length > 0);
-
-  return { buddies, buddyGroups, mounts, setGroups };
+  return { buddies, mounts, setGroups };
 }

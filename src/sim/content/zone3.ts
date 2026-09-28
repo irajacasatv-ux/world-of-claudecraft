@@ -17,7 +17,7 @@ import type {
 import { FERAL, HUNTER_ONLY } from './items';
 import { MOUNT_RACE_COURSE, STABLE_HORSE_TEMPLATE_ID, STABLE_PADDOCK } from './mounts';
 import { PRACTICE_ROW_CAMPFIRE } from './practice_dummies';
-import { FURY_STOCK } from './pvp_honor';
+import { HONOR_VENDOR_STOCK } from './pvp_honor';
 
 export const ZONE3_ZONE: ZoneDef = {
   id: 'thornpeak_heights',
@@ -1299,11 +1299,6 @@ export const ZONE3_NPCS: Record<string, NpcDef> = {
       'highwatch_wallshield',
       'craghorn_staff',
       'icevein_dirk',
-      // The store look for the Stag companion (content/buddy_cosmetics.ts
-      // stag_gilded): a buddy COSMETIC sold for plain gold, the cosmetic sink
-      // that is not gear. No companion itself is sold for gold (owner plan:
-      // mounts fill that space; buddies are earned).
-      'charm_stag_gilded',
     ],
     greeting: 'Forge is hot and the grindstone is turning. If it cuts, I sell it.',
   },
@@ -1357,12 +1352,7 @@ export const ZONE3_NPCS: Record<string, NpcDef> = {
     facing: 2.26, // atan2(dx, dz) toward the square at (0, 660)
     color: 0x7d2f3f, // deep war-crimson steel, off every tint the visual manifest reserves
     questIds: [],
-    // The canonical WARFARE stock plus the one companion honor buys. Draven
-    // carries it and FURY does not: the whistle is a Highwatch-row prestige
-    // purchase, not part of the mirrored gear list the two must present
-    // identically (the shop window sections it under Companions, see
-    // src/ui/hud/vendor/warfare_vendor_view.ts).
-    vendorItems: [...FURY_STOCK, 'whistle_proud_grunt'],
+    vendorItems: [...HONOR_VENDOR_STOCK],
     dynamic: true,
     warfareVendor: true,
     greeting:

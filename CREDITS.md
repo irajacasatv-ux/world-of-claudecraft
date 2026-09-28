@@ -369,6 +369,13 @@ Assets were optimized for shipping (animation clip pruning, meshopt compression,
 texture resizing) via `scripts/assets/build_assets.mjs`; raw packs are not
 committed.
 
+Buddy portraits (`public/ui/portraits/buddy_{horse,crystal_lich,forgemaw}.webp`)
+are local renders of the existing shipped buddy models, using their canonical
+visual definitions and idle poses through `scripts/render_buddy_portraits.mjs`.
+The shared backdrop comes from `scripts/lib/mob_portrait_background.mjs`.
+Underlying model ownership and licenses are unchanged; no external image source
+or generated replacement model was used.
+
 License texts: https://creativecommons.org/publicdomain/zero/1.0/ (CC0 1.0) ,
 https://creativecommons.org/licenses/by/4.0/ (CC BY 4.0) ,
 https://creativecommons.org/licenses/by-nc/4.0/ (CC BY-NC 4.0) ,

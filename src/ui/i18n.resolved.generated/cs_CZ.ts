@@ -2217,6 +2217,8 @@ export const cs_CZ: EnTranslations = {
       "jewelry": "Šperky",
       "weapons": "Zbraně",
       "companions": "Companions",
+      "companionPurchase": "Permanently unlocks this buddy and summons it immediately. No item is added to your bags.",
+      "companionOwnedAria": "{item}, already collected or awaiting reveal",
       "owned": "Vlastněno",
       "buyAria": "Koupit {item} za {honor}",
       "buyOwnedAria": "Koupit {item} za {honor}, již vlastníš",
@@ -2780,6 +2782,8 @@ export const cs_CZ: EnTranslations = {
       "streamerBadgeTitle": "Ověřený streamer"
     },
     "buddyMenu": {
+      "rename": "Rename Buddy",
+      "nameLabel": "Buddy name",
       "autolootEnable": "Enable Autoloot",
       "autolootDisable": "Disable Autoloot",
       "autolootHint": "Your buddy fetches loot from your own corpses within 30 yards.",
@@ -5312,6 +5316,8 @@ export const cs_CZ: EnTranslations = {
       "tabMounts": "Jezdecká zvířata",
       "tabSkins": "Vzhledy",
       "tabMech": "Mech",
+      "buddyActive": "Summoned",
+      "buddyDrag": "Drag to action bar",
       "legend": "Účet: sdílený všemi postavami. Postava: pouze tato postava.",
       "scopeAccount": "Účet",
       "scopeCharacter": "Postava",
@@ -17658,7 +17664,7 @@ export const cs_CZ: EnTranslations = {
         "name": "Alpaca"
       },
       "buddy_horse": {
-        "name": "Horse"
+        "name": "Tug, the Warhorse"
       },
       "buddy_sapling": {
         "name": "Sapling"

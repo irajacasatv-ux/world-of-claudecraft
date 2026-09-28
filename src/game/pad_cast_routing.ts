@@ -1,6 +1,6 @@
 import type { PadCastHold } from './gamepad_map';
 
-type PadCastAction = { type: 'ability' | 'item' | 'buddy'; id: string };
+type PadCastAction = { type: 'ability' | 'item'; id: string };
 
 export interface PadCastHud {
   pressCrossHotbarAction(action: PadCastAction): void;

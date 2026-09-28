@@ -68,7 +68,7 @@ import {
 import type { InterpolationValues, TranslationKey } from '../../i18n';
 
 // The four slot kinds (a discriminated tag the painter maps to DOM classes).
-export type ActionBarSlotKind = 'attack' | 'empty' | 'item' | 'ability' | 'buddy';
+export type ActionBarSlotKind = 'attack' | 'empty' | 'item' | 'ability';
 
 // Icon-key identities. The core emits a stable key per slot so the painter can elide
 // the (expensive) icon resolution + background-image write to slot-rebind frames
@@ -77,9 +77,6 @@ export type ActionBarSlotKind = 'attack' | 'empty' | 'item' | 'ability' | 'buddy
 export const ATTACK_ICON_KEY = '__attack';
 export const EMPTY_ICON_KEY = '';
 export const ITEM_ICON_PREFIX = 'item:';
-/** A buddy slot's icon key: the companion key after the prefix; the host
- *  paints the companion's whistle still (src/ui/hud.ts actionBarIconBg). */
-export const BUDDY_ICON_PREFIX = 'buddy:';
 export const ABILITY_ICON_PREFIX = 'ability:';
 
 // Cooldown overlay height is a percent 0..100; the sweep is clamped to 100 and the
@@ -175,9 +172,6 @@ export interface ActionBarSlotDescriptor {
   item(): ItemDef | null;
   /** The slot's keybind label. Host resolves from the keybind map. */
   keybindLabel(): string;
-  /** The slot's collected-buddy binding (a companion key), or null. Optional:
-   *  bar families that cannot hold a buddy (the stance bar) omit it. */
-  buddy?(): string | null;
   /** Whether this rendered slot owns the source slot of an active ground aim.
    *  Omitted for bar families that do not cast ground-targeted abilities. */
   ownsAimSlot?(activeAimSlot: number): boolean;
@@ -197,10 +191,6 @@ export interface ActionBarDeps {
   t(key: TranslationKey, values?: InterpolationValues): string;
   abilityName(def: AbilityDef): string;
   itemName(item: ItemDef): string;
-  /** A buddy slot's accessible name: the companion's localized mob name.
-   *  Optional: bar families whose descriptors never bind a buddy (the pad's
-   *  cross hotbar, the mobile ring) omit it; the key stands in if one lands. */
-  buddyName?(key: string): string;
   slotLabel(slotIndex: number): string;
   /** Localized integer formatter (the item stack count and cooldown digits go
    *  through this, per the "numbers go through formatNumber" invariant). */
@@ -511,38 +501,6 @@ export function createActionBarView(
           slot.ariaLabel = deps.t(SLOT_ARIA_KEY, {
             slot: slotLabel,
             ability: deps.t(ATTACK_NAME_KEY),
-          });
-          slot.ariaDescription = '';
-          slot.keybindLabel = sd.keybindLabel();
-          continue;
-        }
-
-        const buddyKey = sd.buddy?.() ?? null;
-        if (buddyKey !== null) {
-          // A summon slot: no stack, no cooldown; only death holds it.
-          slot.kind = 'buddy';
-          slot.abilityId = null;
-          slot.itemId = null;
-          slot.iconKey = `${BUDDY_ICON_PREFIX}${buddyKey}`;
-          slot.cooldownRemaining = 0;
-          slot.cooldownTotal = 0;
-          slot.cooldownPercent = 0;
-          slot.cdText = '';
-          slot.count = '';
-          slot.isCharges = false;
-          slot.rechargePercent = 0;
-          slot.usable = !player.dead;
-          slot.outOfRange = false;
-          slot.queued = false;
-          slot.procGlow = false;
-          slot.empowered = false;
-          slot.ascensionSpender = false;
-          slot.ascensionCostLabel = '';
-          slot.fateConsumeReady = false;
-          slot.fateSentenceReady = false;
-          slot.ariaLabel = deps.t(SLOT_ARIA_KEY, {
-            slot: slotLabel,
-            ability: deps.buddyName ? deps.buddyName(buddyKey) : buddyKey,
           });
           slot.ariaDescription = '';
           slot.keybindLabel = sd.keybindLabel();

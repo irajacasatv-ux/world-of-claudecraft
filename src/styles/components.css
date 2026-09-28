@@ -10245,9 +10245,8 @@
     gap: 8px;
   }
   /* The buddy shelf: the whistle still as the option's icon, the drag grip
-     for the action bar, and the look swatch (the cosmetic's dye). */
-  .deeds-buddies .deed-title-option,
-  .deeds-buddy-looks .deed-title-option {
+     for the action bar. */
+  .deeds-buddies .deed-title-option {
     display: inline-flex;
     align-items: center;
     gap: 8px;
@@ -10259,8 +10258,7 @@
     border: 1px solid #4a3d26;
     flex: 0 0 auto;
   }
-  .deed-buddy-icon-empty,
-  .deed-look-swatch-empty {
+  .deed-buddy-icon-empty {
     background: linear-gradient(160deg, #17130c, #0c0a07);
   }
   .deed-buddy-drag {
@@ -10276,14 +10274,6 @@
   }
   .deed-buddy-drag:hover {
     color: var(--color-deed-banner-text);
-  }
-  .deed-look-swatch {
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    border: 1px solid #4a3d26;
-    flex: 0 0 auto;
-    background: var(--deed-look-swatch, #17130c);
   }
   .deed-border-swatch {
     flex: none;
@@ -10565,14 +10555,16 @@
   .cos-tabs {
     flex: none;
     display: flex;
+    flex-wrap: wrap;
     gap: 2px;
-    height: 32px;
+    height: auto;
     border-bottom: 1px solid var(--color-border-default);
     margin-bottom: var(--spacing-sm);
   }
   .cos-tab {
     flex: 0 0 auto;
     min-width: 72px;
+    min-height: 32px;
     padding: 0 var(--spacing-md);
     background: transparent;
     border: 0;
@@ -10644,6 +10636,16 @@
     align-items: center;
     gap: var(--spacing-xs);
     font-size: 11px;
+  }
+  .cos-buddy-icon {
+    width: 64px;
+    height: 64px;
+    flex: 0 0 64px;
+    object-fit: contain;
+    border: 1px solid var(--color-border-default);
+    border-radius: var(--radius-sm);
+    pointer-events: none;
+    user-select: none;
   }
   .cos-scope {
     padding: 1px 6px;
@@ -14121,42 +14123,12 @@
   .col-row.col-locked {
     opacity: 0.55;
   }
-  /* The buddy pane's commands (summon/dismiss, wear/remove): the shared
+  /* The buddy pane's summon/dismiss command: the shared
      button chrome at the pane's own rhythm. */
   .col-action {
     margin: 6px 0 4px;
     padding: 4px 12px;
     min-height: 40px;
-  }
-  /* The looks list under a companion: one row per authored cosmetic, its dye
-     as a swatch, state, control, and source lines. A locked look dims like a
-     locked catalog row. */
-  .col-looks {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-  }
-  .col-look {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 6px 8px;
-    padding: 4px 0;
-    border-bottom: 1px solid var(--color-border-showcase);
-  }
-  .col-look.col-locked {
-    opacity: 0.55;
-  }
-  .col-look .col-line {
-    flex: 1 0 100%;
-  }
-  .col-swatch {
-    flex: 0 0 auto;
-    width: 14px;
-    height: 14px;
-    border-radius: 50%;
-    border: 1px solid var(--color-border-showcase);
-    background: var(--col-swatch, currentColor);
   }
   .col-row-name {
     flex: 1;

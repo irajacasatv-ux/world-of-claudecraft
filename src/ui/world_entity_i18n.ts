@@ -17,6 +17,42 @@ import { DELVES, DUNGEONS, MOBS, NPCS, QUESTS, ZONES } from '../sim/data';
 // declared-base merge in the build resolver (scripts/i18n_build.mjs). Only `.en` is
 // consumed, so this object carries only `en`.
 
+// Historical name keys remain for maintained locale overlays. They do not
+// register active mobs, rewards or Hunting entries.
+const RETIRED_BUDDY_NAMES = {
+  buddy_sapling: { name: 'Sapling' },
+  buddy_ember_fox: { name: 'Ember Fox' },
+  buddy_moss_hare: { name: 'Moss Hare' },
+  buddy_frog: { name: 'Frog' },
+  buddy_crimson_claw_crab: { name: 'Crimson Claw Crab' },
+  buddy_golden_sentinel: { name: 'Golden Sentinel' },
+  buddy_nightfang: { name: 'Nightfang' },
+  buddy_tuskhorn_boar: { name: 'Tuskhorn Boar' },
+  buddy_emerald_wolf: { name: 'Emerald Wolf' },
+  buddy_tiger: { name: 'Tiger' },
+  buddy_cate_coin: { name: 'Cate Coin' },
+  buddy_alon: { name: 'Alon' },
+  buddy_trollface: { name: 'Trollface' },
+  buddy_ansem: { name: 'Ansem' },
+  buddy_triple_t: { name: 'Triple T' },
+  buddy_kekius: { name: 'Kekius' },
+  buddy_solbot: { name: 'Solbot' },
+  buddy_frostfire: { name: 'Frostfire' },
+  buddy_rocky: { name: 'Rocky' },
+  buddy_proud_grunt: { name: 'Proud Grunt' },
+  buddy_loot_goblin: { name: 'Loot Goblin' },
+  buddy_penny_goldspark: { name: 'Penny Goldspark' },
+  buddy_stag: { name: 'Stag' },
+  buddy_alpaca: { name: 'Alpaca' },
+  buddy_bull: { name: 'Bull' },
+  buddy_spider: { name: 'Spider' },
+  buddy_raptor: { name: 'Raptor' },
+  buddy_skeleton: { name: 'Skeleton' },
+  buddy_crystal_tide: { name: 'Crystal Tide' },
+  buddy_phantom: { name: 'Phantom' },
+  buddy_emberfall_phoenix: { name: 'Emberfall Phoenix' },
+} as const;
+
 const MOB_IDS = [
   'yumi_cat',
   'forest_wolf',
@@ -808,8 +844,10 @@ function orderedValues<T>(ids: readonly string[], source: Record<string, T>): T[
 
 function makeEnglishWorldEntities(): WorldEntityTranslations {
   const mobs = {} as MobTranslations;
-  orderedValues(MOB_IDS, MOBS).forEach((mob) => {
-    mobs[mob.id as MobId] = { name: mob.name };
+  MOB_IDS.forEach((id) => {
+    const mob = MOBS[id] ?? RETIRED_BUDDY_NAMES[id as keyof typeof RETIRED_BUDDY_NAMES];
+    if (!mob) throw new Error(`Missing world entity source entry for ${id}`);
+    mobs[id] = { name: mob.name };
   });
 
   const npcs = {} as NpcTranslations;

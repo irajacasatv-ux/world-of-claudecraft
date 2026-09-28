@@ -20,7 +20,7 @@ const list = () => root().querySelector('.col-list') as HTMLElement;
 const rowKeys = () =>
   [...root().querySelectorAll<HTMLElement>('[data-key]')].map((el) => el.dataset.key ?? '');
 
-function makeWindow(): CollectionsWindow {
+function makeWindow(ownedBuddies: readonly string[] = []): CollectionsWindow {
   const deps: CollectionsWindowDeps = {
     root,
     world: () => ({ marketInfo: null, marketSellPriceCheck: () => {} }) as never,
@@ -28,13 +28,8 @@ function makeWindow(): CollectionsWindow {
     captureFocus: () => null,
     restoreFocus: () => {},
     mountPreview: () => {},
-    ownedBuddyKeys: () => new Set(),
-    ownedBuddyCosmetics: () => new Set(),
-    equippedBuddyCosmetics: () => ({}),
+    ownedBuddyKeys: () => new Set(ownedBuddies),
     pendingBuddyKeys: () => new Set(),
-    activeBuddyKey: () => '',
-    summonBuddy: () => {},
-    equipBuddyCosmetic: () => {},
     ownedMountKeys: () => new Set(),
     ownedItemIds: () => new Set(),
     buddyVisualKeys: () => ({}),
@@ -50,6 +45,41 @@ function makeWindow(): CollectionsWindow {
 describe('Hunting window list scroll', () => {
   beforeEach(() => {
     document.body.innerHTML = '<div id="collections-window"></div>';
+  });
+
+  it('shows the three buddies in one complete list with tabs and no category controls', () => {
+    const win = makeWindow();
+    win.toggle();
+    expect(rowKeys().sort()).toEqual(['crystal_lich', 'forgemaw', 'horse']);
+    expect(list().querySelector('.col-group-head')).toBeNull();
+    expect(root().querySelector('input, select')).toBeNull();
+    expect(
+      [...root().querySelectorAll<HTMLElement>('[data-tab]')].map((tab) => tab.dataset.tab),
+    ).toEqual(['buddies', 'mounts', 'sets']);
+
+    (root().querySelector('[data-key="horse"]') as HTMLElement).click();
+    (root().querySelector('[data-tab="mounts"]') as HTMLElement).click();
+    (root().querySelector('[data-tab="buddies"]') as HTMLElement).click();
+    expect(root().querySelector('.col-row.active')?.getAttribute('data-key')).toBe('horse');
+    expect(rowKeys()).toHaveLength(3);
+  });
+
+  it('leaves owned buddy selection as discovery without equipping controls', () => {
+    const win = makeWindow(['horse']);
+    win.toggle();
+    (root().querySelector('[data-key="horse"]') as HTMLElement).click();
+    expect(root().querySelector('[data-summon], [data-buddy-pick], [data-buddy-drag]')).toBeNull();
+    expect(root().querySelector('.col-detail')?.textContent).toContain('FURY');
+  });
+
+  it('shows no Looks controls for any remaining buddy', () => {
+    const win = makeWindow();
+    win.toggle();
+    for (const key of rowKeys()) {
+      (root().querySelector(`[data-key="${key}"]`) as HTMLElement).click();
+      expect(root().querySelector('.col-looks, .col-look, [data-wear], [data-unwear]')).toBeNull();
+      expect(root().querySelector('.col-detail')?.textContent).not.toContain('Looks');
+    }
   });
 
   it('keeps the catalog where the player left it when a companion is picked', () => {

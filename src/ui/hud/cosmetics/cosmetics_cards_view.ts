@@ -15,6 +15,7 @@ import { esc } from '../../esc';
 import { focusKeyAttr } from '../../focus_restore';
 import { t } from '../../i18n';
 import { mountSkinDescription, mountSkinDisplayName } from '../../mount_labels';
+import { buddyCosmeticsHtml } from './buddy_cosmetics_view';
 import {
   type CosmeticsScope,
   type CosmeticsSnapshot,
@@ -169,6 +170,8 @@ function emptyHtml(text: string): string {
 /** The whole tab panel for the snapshot's selected tab. */
 export function cosmeticsPanelHtml(s: CosmeticsSnapshot): string {
   switch (s.tab) {
+    case 'buddies':
+      return buddyCosmeticsHtml(s.buddies);
     case 'mounts': {
       const hint = s.ownsAnyMount
         ? ''
@@ -196,6 +199,7 @@ export function cosmeticsPanelHtml(s: CosmeticsSnapshot): string {
 
 /** The action a delegated click resolves to, from the button's data attributes. */
 export type CosmeticsAction =
+  | { kind: 'summon-buddy'; id: string }
   | { kind: 'preview-mount'; id: string }
   | { kind: 'preview-skin'; id: string }
   | { kind: 'wear-mount'; id: string }
@@ -213,6 +217,8 @@ export function cosmeticsActionFrom(dataset: {
 }): CosmeticsAction | null {
   const id = dataset.id ?? '';
   switch (dataset.act) {
+    case 'summon-buddy':
+      return id ? { kind: 'summon-buddy', id } : null;
     case 'preview-mount':
       return id ? { kind: 'preview-mount', id } : null;
     case 'preview-skin':

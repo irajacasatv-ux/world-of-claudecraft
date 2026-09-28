@@ -1,20 +1,8 @@
-// Cosmetic buddies: the per-character COLLECTION plus summon/dismiss and the
-// cosmetic wardrobe. A sibling sim system behind the SimContext seam
-// (module-first; sim.ts keeps thin delegates).
-//
-// Ownership model (owner plan, 2026-09-09): a buddy ATTACHES TO THE CHARACTER.
-// It is a flag in PlayerMeta.buddies.owned, persisted with the character
-// (character_state.ts `buddies`), never an item in a bag. Nothing about a
-// companion trades, mails, lists or sells; the whistle items that remain
-// (ItemDef kind 'buddy') are soulbound grant TOKENS consumed on use, the
-// channel a vendor, a letter or an admin grant uses to hand one over.
-//
-// Two ways in (src/sim/content/buddy_sources.ts): a per-player boss roll
-// that lands as a PENDING companion and reveals itself on the zone-out
-// (src/sim/buddy_drops.ts), or a Book of Deeds grant. Cosmetics are a second
-// per-character set (`cosmetics`), one of which can be worn per buddy
-// (`equipped`); the worn look is a tint the follower entity carries as its
-// color (content/buddy_cosmetics.ts).
+// Buddy ownership mirror and character-local summon/dismiss.
+// Online hosts hydrate account ownership into PlayerMeta.buddies.owned and
+// persist new grant callbacks. Offline worlds keep their own character state.
+// Raid wins stay pending on the winning character until the normal reveal.
+// Honor vendors grant directly; historical soulbound tokens remain usable.
 //
 // A buddy IS a real server-simulated owned mob entity (content/buddy_mobs.ts's
 // MobTemplate, heeled by pet/buddy_ai.ts's updateBuddyMob using the same
@@ -25,8 +13,8 @@
 //
 // `src/sim`-pure and rng-free.
 
+import { type BuddyNames, normalizeBuddyNames } from './buddy_names';
 import { BUDDY_KEYS, type BuddyKey, buddyDef, normalizeBuddyKey } from './content/buddies';
-import { buddyCosmeticDef } from './content/buddy_cosmetics';
 import { ITEMS } from './data';
 import { despawnBuddyEntity, spawnBuddyEntity } from './pet/buddy_ai';
 import type { PlayerMeta } from './sim';
@@ -44,11 +32,8 @@ export interface PendingBuddy {
 }
 
 export interface BuddyCollection {
+  names: BuddyNames;
   owned: Set<BuddyKey>;
-  /** Unlocked cosmetic ids (content/buddy_cosmetics.ts). */
-  cosmetics: Set<string>;
-  /** The worn cosmetic per buddy; absent = the buddy's own look. */
-  equipped: Map<BuddyKey, string>;
   pending: PendingBuddy[];
   /** The companion the bare toggle keybind brings back out: the last one
    *  summoned. '' until the first summon. */
@@ -58,7 +43,9 @@ export interface BuddyCollection {
 /** The persisted shape (character_state.ts). Absent while the collection is
  *  empty, so pre-buddy saves stay byte-equal. */
 export interface SavedBuddyCollection {
+  names?: Record<string, string>;
   owned?: string[];
+  /** Legacy save fields, accepted on input and discarded on restore. */
   cosmetics?: string[];
   equipped?: Record<string, string>;
   pending?: { key: string; source: string; x?: number; z?: number }[];
@@ -66,7 +53,7 @@ export interface SavedBuddyCollection {
 }
 
 export function freshBuddyCollection(): BuddyCollection {
-  return { owned: new Set(), cosmetics: new Set(), equipped: new Map(), pending: [], last: '' };
+  return { owned: new Set(), pending: [], last: '', names: {} };
 }
 
 /** Restore a saved collection through the catalog: a key or cosmetic a
@@ -74,19 +61,10 @@ export function freshBuddyCollection(): BuddyCollection {
 export function restoreBuddyCollection(saved: SavedBuddyCollection | undefined): BuddyCollection {
   const out = freshBuddyCollection();
   if (!saved) return out;
+  out.names = normalizeBuddyNames(saved.names);
   for (const key of saved.owned ?? []) {
     const norm = normalizeBuddyKey(typeof key === 'string' ? key : '');
     if (norm) out.owned.add(norm);
-  }
-  for (const id of saved.cosmetics ?? []) {
-    if (typeof id === 'string' && buddyCosmeticDef(id)) out.cosmetics.add(id);
-  }
-  for (const [key, id] of Object.entries(saved.equipped ?? {})) {
-    const norm = normalizeBuddyKey(key);
-    const def = typeof id === 'string' ? buddyCosmeticDef(id) : null;
-    // A worn look must be owned and must fit the buddy it is worn on.
-    if (norm && def && def.buddy === norm && out.cosmetics.has(def.id) && out.owned.has(norm))
-      out.equipped.set(norm, def.id);
   }
   for (const p of saved.pending ?? []) {
     const norm = normalizeBuddyKey(typeof p?.key === 'string' ? p.key : '');
@@ -107,20 +85,14 @@ export function restoreBuddyCollection(saved: SavedBuddyCollection | undefined):
 /** The save-side shape, or null while nothing is collected (zero-default
  *  omission: the caller leaves the key out). */
 export function serializeBuddyCollection(c: BuddyCollection): SavedBuddyCollection | null {
-  if (
-    c.owned.size === 0 &&
-    c.cosmetics.size === 0 &&
-    c.equipped.size === 0 &&
-    c.pending.length === 0 &&
-    c.last === ''
-  )
-    return null;
+  const names = normalizeBuddyNames(c.names);
+  const hasNames = Object.keys(names).length > 0;
+  if (c.owned.size === 0 && c.pending.length === 0 && c.last === '' && !hasNames) return null;
   return {
     ...(c.owned.size > 0 ? { owned: BUDDY_KEYS.filter((k) => c.owned.has(k)) } : {}),
-    ...(c.cosmetics.size > 0 ? { cosmetics: [...c.cosmetics].sort() } : {}),
-    ...(c.equipped.size > 0 ? { equipped: Object.fromEntries(c.equipped) } : {}),
     ...(c.pending.length > 0 ? { pending: c.pending.map((p) => ({ ...p })) } : {}),
     ...(c.last !== '' ? { last: c.last } : {}),
+    ...(hasNames ? { names } : {}),
   };
 }
 
@@ -133,6 +105,7 @@ let buddyItemIds: Map<string, string> | null = null;
  *  buddy with no whistle). Used by the admin/mail/vendor channels and the
  *  Hunting pane's vendor line, never by ownership. */
 export function buddyItemId(key: string): string | null {
+  if (!buddyDef(key)) return null;
   if (!buddyItemIds) {
     buddyItemIds = new Map();
     for (const def of Object.values(ITEMS)) {
@@ -149,19 +122,30 @@ export function buddyOwned(meta: PlayerMeta, key: string): boolean {
   return meta.buddies.owned.has(key as BuddyKey);
 }
 
+/** Apply account entitlements without changing this character's equipped buddy.
+ * The host publishes only committed ownership; pending wins stay character-local. */
+export function syncBuddyOwnership(ctx: SimContext, pid: number, keys: readonly string[]): boolean {
+  const meta = ctx.players.get(pid);
+  if (!meta) return false;
+  let changed = false;
+  for (const key of keys) {
+    const normalized = normalizeBuddyKey(key);
+    if (!normalized || meta.buddies.owned.has(normalized)) continue;
+    meta.buddies.owned.add(normalized);
+    changed = true;
+  }
+  const pending = meta.buddies.pending.filter((p) => !meta.buddies.owned.has(p.key));
+  if (pending.length !== meta.buddies.pending.length) {
+    meta.buddies.pending = pending;
+    changed = true;
+  }
+  if (changed) meta.wireRev++;
+  return changed;
+}
+
 /** The owned subset of the catalog, in catalog order. */
 export function ownedBuddies(meta: PlayerMeta): BuddyKey[] {
   return BUDDY_KEYS.filter((key) => meta.buddies.owned.has(key));
-}
-
-/** The unlocked cosmetic ids, in catalog-stable (sorted) order. */
-export function ownedBuddyCosmetics(meta: PlayerMeta): string[] {
-  return [...meta.buddies.cosmetics].sort();
-}
-
-/** The worn cosmetic per buddy as a plain record for the wire. */
-export function equippedBuddyCosmetics(meta: PlayerMeta): Record<string, string> {
-  return Object.fromEntries(meta.buddies.equipped);
 }
 
 /** The pending (won, unrevealed) companions, catalog order. */
@@ -169,20 +153,12 @@ export function pendingBuddies(meta: PlayerMeta): BuddyKey[] {
   return meta.buddies.pending.map((p) => p.key);
 }
 
-/** The color the follower entity wears: the equipped cosmetic's tint, else
- *  null for the template's own color. */
-export function buddyWornTint(meta: PlayerMeta, key: BuddyKey): number | null {
-  const id = meta.buddies.equipped.get(key);
-  const def = id ? buddyCosmeticDef(id) : null;
-  return def ? def.tint : null;
-}
-
 function spawnFor(ctx: SimContext, meta: PlayerMeta, e: { id: number }, key: BuddyKey): void {
   const owner = ctx.entities.get(e.id);
   if (!owner) return;
   owner.buddyKey = key;
   meta.buddies.last = key;
-  spawnBuddyEntity(ctx, owner, key, buddyWornTint(meta, key));
+  spawnBuddyEntity(ctx, owner, key);
 }
 
 /** Attach `key` to the character outright: owned, announced (buddyRevealed)
@@ -200,6 +176,7 @@ export function grantBuddy(ctx: SimContext, pid: number, key: string): boolean {
   ctx.emit({ type: 'buddyRevealed', pid, key: def.key });
   const e = ctx.entities.get(pid);
   if (e && !e.dead) spawnFor(ctx, meta, e, def.key);
+  ctx.onBuddyGranted?.(pid, def.key);
   return true;
 }
 
@@ -251,7 +228,7 @@ export function revealPendingBuddies(
 
 /** Summon a SPECIFIC owned buddy, or put it away when it is the one out.
  *  Instant: no channel, no gate beyond ownership (re-checked server-side even
- *  when a click proves it). Routed here from the Hunting pane command and
+ *  when a click proves it). Routed here from the Cosmetics buddy command and
  *  from the grant token's use. */
 export function summonBuddy(ctx: SimContext, pid: number, key: string): boolean {
   const meta = ctx.players.get(pid);
@@ -279,7 +256,9 @@ export function useBuddyToken(ctx: SimContext, pid: number, itemId: string): boo
   const meta = ctx.players.get(pid);
   const item = ITEMS[itemId];
   if (!meta || !item || item.kind !== 'buddy') return false;
-  if (meta.buddies.owned.has(item.buddy)) {
+  const def = buddyDef(item.buddy);
+  if (!def) return false;
+  if (meta.buddies.owned.has(def.key)) {
     ctx.error(pid, 'You already have that companion.');
     return false;
   }
@@ -301,61 +280,6 @@ export function toggleBuddy(ctx: SimContext, pid: number): boolean {
   const last = meta.buddies.last;
   if (!last || !meta.buddies.owned.has(last)) return false;
   spawnFor(ctx, meta, e, last);
-  return true;
-}
-
-/** Unlock a cosmetic for the character (challenge, deed, token, or grant).
- *  Idempotent: returns false when already owned so nothing re-announces. */
-export function grantBuddyCosmetic(ctx: SimContext, pid: number, cosmeticId: string): boolean {
-  const meta = ctx.players.get(pid);
-  const def = buddyCosmeticDef(cosmeticId);
-  if (!meta || !def) return false;
-  if (meta.buddies.cosmetics.has(def.id)) return false;
-  meta.buddies.cosmetics.add(def.id);
-  meta.wireRev++;
-  ctx.emit({ type: 'buddyCosmeticUnlocked', pid, cosmeticId: def.id });
-  return true;
-}
-
-/** Use a cosmetic token item: unlock and consume. Refused unconsumed when the
- *  look is already unlocked, same rule as the buddy token. */
-export function useBuddyCosmeticToken(ctx: SimContext, pid: number, itemId: string): boolean {
-  const meta = ctx.players.get(pid);
-  const item = ITEMS[itemId];
-  if (!meta || !item || item.kind !== 'buddy_cosmetic') return false;
-  if (meta.buddies.cosmetics.has(item.cosmetic)) {
-    ctx.error(pid, 'You already have that look.');
-    return false;
-  }
-  ctx.removeItem(itemId, 1, pid);
-  return grantBuddyCosmetic(ctx, pid, item.cosmetic);
-}
-
-/** Wear `cosmeticId` on `key` (null = the buddy's own look). Silent no-op on
- *  anything invalid: an unowned buddy, an unowned look, or a look authored
- *  for another companion. A buddy that is out is re-spawned so its body picks
- *  up the new dye (a fresh entity identity is how the wire re-sends color). */
-export function equipBuddyCosmetic(
-  ctx: SimContext,
-  pid: number,
-  key: string,
-  cosmeticId: string | null,
-): boolean {
-  const meta = ctx.players.get(pid);
-  const def = buddyDef(key);
-  if (!meta || !def || !meta.buddies.owned.has(def.key)) return false;
-  if (cosmeticId === null) {
-    if (!meta.buddies.equipped.has(def.key)) return false;
-    meta.buddies.equipped.delete(def.key);
-  } else {
-    const cos = buddyCosmeticDef(cosmeticId);
-    if (!cos || cos.buddy !== def.key || !meta.buddies.cosmetics.has(cos.id)) return false;
-    if (meta.buddies.equipped.get(def.key) === cos.id) return false;
-    meta.buddies.equipped.set(def.key, cos.id);
-  }
-  meta.wireRev++;
-  const e = ctx.entities.get(pid);
-  if (e && e.buddyKey === def.key) spawnFor(ctx, meta, e, def.key);
   return true;
 }
 

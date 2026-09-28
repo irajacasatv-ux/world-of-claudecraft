@@ -174,9 +174,11 @@ const repoRoot = fileURLToPath(new URL('..', import.meta.url));
 // buddy commands (buddy_toggle, buddy_summon, buddy_cosmetic, buddy_autoloot)
 // each have a client send and a dispatch, so +4 on both axes over the
 // release/v0.44.0 base (225 / 239).
+// The retired buddy_cosmetic token remains dispatchable but is no longer sent.
+// Buddy renaming adds one client-send / server-dispatch pair.
 const EXPECTED_SEND_COUNT = 229;
-const EXPECTED_DISPATCH_COUNT = 243;
-const EXPECTED_DISPATCH_ONLY_COUNT = 14;
+const EXPECTED_DISPATCH_COUNT = 244;
+const EXPECTED_DISPATCH_ONLY_COUNT = 15;
 
 // The chat sub-channel routing switch (server/game.ts `switch
 // (session.rememberedChat.channel)`) is NOT a msg.cmd dispatch; its labels must

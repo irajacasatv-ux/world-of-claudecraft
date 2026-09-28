@@ -1,7 +1,6 @@
-// Renders the bag-icon WebP for every buddy whistle item straight from the
-// buddy's own shipped GLB (public/models/buddies/*.glb, or the shared
-// Quaternius fox.glb tinted per species for ember_fox/moss_hare) — no
-// text-to-image generation, no internet reference art. Reuses the
+// Renders the bag-icon WebP for each active buddy whistle from its shipped
+// GLB. Retired batch rows are preserved in archived-features/buddies-and-cosmetics.
+// No text-to-image generation, no internet reference art. Reuses the
 // asset-pipeline's generic headless preview renderer (hero turntable view:
 // auto-framed bounding sphere, no weapon-specific tilt).
 //
@@ -24,50 +23,9 @@ const TMP_DIR = path.join(ROOT, 'tmp/buddy_icons');
 mkdirSync(TMP_DIR, { recursive: true });
 
 export const BUDDY_ICON_BATCH = [
-  { itemId: 'whistle_sapling', glb: 'public/models/buddies/sapling.glb' },
-  { itemId: 'whistle_ember_fox', glb: 'public/models/creatures/fox.glb', tint: [0xd9, 0x66, 0x2b] },
-  { itemId: 'whistle_moss_hare', glb: 'public/models/creatures/fox.glb', tint: [0x6f, 0x8f, 0x5a] },
-  { itemId: 'whistle_frog', glb: 'public/models/buddies/frog.glb' },
-  { itemId: 'whistle_crimson_claw_crab', glb: 'public/models/buddies/crimson_claw_crab.glb' },
-  { itemId: 'whistle_golden_sentinel', glb: 'public/models/buddies/golden_sentinel.glb' },
-  { itemId: 'whistle_nightfang', glb: 'public/models/buddies/nightfang.glb' },
-  { itemId: 'whistle_tuskhorn_boar', glb: 'public/models/buddies/tuskhorn_boar.glb' },
-  { itemId: 'whistle_emerald_wolf', glb: 'public/models/buddies/emerald_wolf.glb' },
-  { itemId: 'whistle_tiger', glb: 'public/models/buddies/tiger.glb' },
-  { itemId: 'whistle_cate_coin', glb: 'public/models/buddies/cate_coin.glb' },
-  { itemId: 'whistle_alon', glb: 'public/models/buddies/alon.glb' },
-  { itemId: 'whistle_trollface', glb: 'public/models/buddies/trollface.glb' },
-  { itemId: 'whistle_ansem', glb: 'public/models/buddies/ansem.glb' },
-  { itemId: 'whistle_triple_t', glb: 'public/models/buddies/triple_t.glb' },
-  { itemId: 'whistle_kekius', glb: 'public/models/buddies/kekius.glb' },
-  { itemId: 'whistle_solbot', glb: 'public/models/buddies/solbot.glb' },
-  { itemId: 'whistle_frostfire', glb: 'public/models/buddies/frostfire.glb' },
-  { itemId: 'whistle_rocky', glb: 'public/models/buddies/rocky.glb' },
-  // The three vendor companions (content/buddies.ts): same lane, humanoid rigs.
-  { itemId: 'whistle_proud_grunt', glb: 'public/models/buddies/proud_grunt.glb' },
-  { itemId: 'whistle_loot_goblin', glb: 'public/models/buddies/loot_goblin.glb' },
-  { itemId: 'whistle_penny_goldspark', glb: 'public/models/buddies/penny_goldspark.glb' },
-  // The beast tier and the undead, rendered from the shipped creature rigs
-  // the buddy visuals reuse, tinted to each buddy dye (content/buddy_mobs.ts).
-  { itemId: 'whistle_stag', glb: 'public/models/creatures/stag.glb', tint: [0xb9, 0x8a, 0x4e] },
-  { itemId: 'whistle_alpaca', glb: 'public/models/creatures/alpaca.glb', tint: [0xe8, 0xdc, 0xc6] },
-  { itemId: 'whistle_bull', glb: 'public/models/creatures/bull.glb', tint: [0x6b, 0x4a, 0x37] },
-  { itemId: 'whistle_spider', glb: 'public/models/creatures/spider.glb', tint: [0x4a, 0x3d, 0x63] },
-  {
-    itemId: 'whistle_raptor',
-    glb: 'public/models/creatures/velociraptor.glb',
-    tint: [0x5f, 0x8a, 0x4a],
-  },
-  { itemId: 'whistle_skeleton', glb: 'public/models/chars/enemies/skeleton_minion.glb' },
-  // The epic Nythraxis drop, from its own GLB.
+  { itemId: 'whistle_horse', glb: 'public/models/buddies/horse.glb' },
   { itemId: 'whistle_crystal_lich', glb: 'public/models/buddies/crystal_lich.glb' },
-  // The world-boss companion (content/buddy_sources.ts: Thunzharr).
-  { itemId: 'whistle_emberfall_phoenix', glb: 'public/models/buddies/emberfall_phoenix.glb' },
-  // The epic heroic-Crucible drop, from its own GLB.
   { itemId: 'whistle_forgemaw', glb: 'public/models/buddies/forgemaw.glb' },
-  // The fishing catch and the green elemental, both from their own GLBs.
-  { itemId: 'whistle_crystal_tide', glb: 'public/models/buddies/crystal_tide.glb' },
-  { itemId: 'whistle_phantom', glb: 'public/models/buddies/phantom.glb' },
 ];
 
 /** True when a GLB declares the KTX2 texture extension, which the preview

@@ -847,6 +847,8 @@ export const COMMAND_NAMES = [
   // The Social window's Who tab: ask for the realm roster (answered by the
   // `who` frame, mirrored as IWorldSocialGraph.whoInfo).
   'who',
+  // Rename a specific summoned buddy; the sim verifies its current owner.
+  'buddy_rename',
 ] as const;
 
 // The union both the send path (`online.ts`) and the dispatch switch
@@ -860,6 +862,8 @@ export type CommandName = (typeof COMMAND_NAMES)[number];
 // is called directly on the Sim by the headless RL action layer, never over the
 // wire. Each must be a member of COMMAND_NAMES (the `satisfies` enforces it).
 export const DISPATCH_ONLY_COMMANDS = [
+  // Retired buddy-look command, retained as an inert append-only protocol token.
+  'buddy_cosmetic',
   'dev_level',
   'dev_teleport',
   'dev_give',
@@ -1177,14 +1181,12 @@ export const COMMAND_FACETS = {
   // IWorldBuddies: cosmetic followers (snake_case wire strings, by design,
   // mirroring mount_toggle). The active buddy is a self-snapshot read (terse
   // `bud`, no send, untagged); the collection reads (ownedBuddies,
-  // ownedBuddyCosmetics, equippedBuddyCosmetics, pendingBuddies) ride the
-  // self snapshot too (budOwn/budCos/budEq/budPend, untagged).
+  // pendingBuddies) ride the self snapshot too (budOwn/budPend, untagged).
   buddy_toggle: 'IWorldBuddies',
-  // buddy_summon: summon/dismiss a specific collected buddy (the Hunting
+  // buddy_summon: summon/dismiss a specific collected buddy (the Cosmetics
   // window's button); the entity mirror `bud` carries the result.
   buddy_summon: 'IWorldBuddies',
-  // buddy_cosmetic: wear a look on a collected buddy; the result rides `budEq`.
-  buddy_cosmetic: 'IWorldBuddies',
+  buddy_rename: 'IWorldBuddies',
   // buddy_autoloot: enable/disable the buddy's loot errand (snake_case wire
   // string, same family as buddy_toggle). The result rides the same self
   // snapshot the toggle does (terse `budal`, no send, untagged).

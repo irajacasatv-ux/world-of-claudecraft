@@ -72,10 +72,7 @@ export const ACTION_BAR_LAYOUT_MAX_SPEC_KEYS = 8;
 // such as __proto__ from ever being assigned onto the clean specs object.
 export const ACTION_BAR_LAYOUT_SPEC_KEY_RE = /^[a-z][a-z0-9_]{0,31}$/;
 
-// 'buddy' is a collected companion key (src/world_api/buddies.ts): the slot
-// summons it, the way an item slot uses its item. Ownership is re-validated
-// by the sim at summon time, never by the layout.
-export type ActionBarSlotAction = { type: 'ability' | 'item' | 'buddy'; id: string };
+export type ActionBarSlotAction = { type: 'ability' | 'item'; id: string };
 
 export interface ActionBarFormLayout {
   // The configurable slots (index 0 is bar slot 1). Entries are an ability/item
@@ -157,7 +154,7 @@ function sanitizeSlotAction(value: unknown): ActionBarSlotAction | null {
   if (!isPlainObject(value)) return null;
   const type = value.type;
   const id = value.id;
-  if (type !== 'ability' && type !== 'item' && type !== 'buddy') return null;
+  if (type !== 'ability' && type !== 'item') return null;
   if (typeof id !== 'string') return null;
   if (id.length === 0 || id.length > ACTION_BAR_LAYOUT_MAX_ID_LEN) return null;
   return { type, id };

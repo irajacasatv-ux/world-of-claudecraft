@@ -2217,6 +2217,8 @@ export const vi_VN: EnTranslations = {
       "jewelry": "Trang Sức",
       "weapons": "Vũ Khí",
       "companions": "Companions",
+      "companionPurchase": "Permanently unlocks this buddy and summons it immediately. No item is added to your bags.",
+      "companionOwnedAria": "{item}, already collected or awaiting reveal",
       "owned": "Sở Hữu",
       "buyAria": "Mua {item} với giá {honor}",
       "buyOwnedAria": "Mua {item} với giá {honor}, đã sở hữu",
@@ -2780,6 +2782,8 @@ export const vi_VN: EnTranslations = {
       "streamerBadgeTitle": "Người phát trực tiếp đã được xác minh"
     },
     "buddyMenu": {
+      "rename": "Rename Buddy",
+      "nameLabel": "Buddy name",
       "autolootEnable": "Enable Autoloot",
       "autolootDisable": "Disable Autoloot",
       "autolootHint": "Your buddy fetches loot from your own corpses within 30 yards.",
@@ -5312,6 +5316,8 @@ export const vi_VN: EnTranslations = {
       "tabMounts": "Thú cưỡi",
       "tabSkins": "Ngoại hình",
       "tabMech": "Cỗ máy",
+      "buddyActive": "Summoned",
+      "buddyDrag": "Drag to action bar",
       "legend": "Tài khoản: dùng chung cho mọi nhân vật. Nhân vật: chỉ nhân vật này.",
       "scopeAccount": "Tài khoản",
       "scopeCharacter": "Nhân vật",
@@ -17658,7 +17664,7 @@ export const vi_VN: EnTranslations = {
         "name": "Alpaca"
       },
       "buddy_horse": {
-        "name": "Horse"
+        "name": "Tug, the Warhorse"
       },
       "buddy_sapling": {
         "name": "Sapling"

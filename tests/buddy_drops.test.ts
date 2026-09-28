@@ -30,7 +30,7 @@ import { Sim } from '../src/sim/sim';
 import type { Entity, SimEvent } from '../src/sim/types';
 import { VENDOR_TEST_WORLD } from './sim_shared';
 
-const KORZUL = 'korzul_the_gravewyrm';
+const NYTHRAXIS = 'nythraxis_scourge_of_thornpeak';
 const FORGE_BOSS = 'ignivar_herald_of_the_last_flame';
 
 function makeWorld() {
@@ -69,10 +69,10 @@ describe('boss pets: one independent roll per player', () => {
     const sim = makeWorld();
     const a = join(sim, 'Alpha');
     const b = join(sim, 'Beta');
-    grantBuddy(sim.ctx, a, 'skeleton'); // already collected: still draws, never re-attaches
+    grantBuddy(sim.ctx, a, 'crystal_lich'); // already collected: still draws, never re-attaches
     sim.tick();
-    const boss = bossAt(sim, KORZUL, 10, 10);
-    const rows = buddyBossDropsFor(KORZUL);
+    const boss = bossAt(sim, NYTHRAXIS, 10, 10);
+    const rows = buddyBossDropsFor(NYTHRAXIS);
     expect(rows.length).toBeGreaterThan(0);
     const chance = vi.spyOn(sim.ctx.rng, 'chance').mockReturnValue(true);
     rollBossBuddyDrops(sim.ctx, boss, [sim.players.get(a)!, sim.players.get(b)!], null);
@@ -80,20 +80,20 @@ describe('boss pets: one independent roll per player', () => {
     for (const call of chance.mock.calls) expect(call[0]).toBe(rows[0].chance);
     // Alpha owned it: no presence line, nothing pending. Beta won it: pending.
     expect(sim.players.get(a)!.buddies.pending).toEqual([]);
-    expect(sim.players.get(b)!.buddies.pending.map((p) => p.key)).toEqual(['skeleton']);
+    expect(sim.players.get(b)!.buddies.pending.map((p) => p.key)).toEqual(['crystal_lich']);
     const presence = events(sim, 'buddyPresence');
     expect(presence).toHaveLength(1);
-    expect(presence[0]).toMatchObject({ pid: b, key: 'skeleton' });
+    expect(presence[0]).toMatchObject({ pid: b, key: 'crystal_lich' });
   });
 
   it('uses the heroic rate under a heroic claim, and skips heroic-only rows on normal', () => {
     const sim = makeWorld();
     const pid = join(sim);
     const meta = sim.players.get(pid)!;
-    const korzul = bossAt(sim, KORZUL, 10, 10);
+    const nythraxis = bossAt(sim, NYTHRAXIS, 10, 10);
     const chance = vi.spyOn(sim.ctx.rng, 'chance').mockReturnValue(false);
-    rollBossBuddyDrops(sim.ctx, korzul, [meta], { difficulty: 'heroic' } as never);
-    const row = buddyBossDropsFor(KORZUL)[0];
+    rollBossBuddyDrops(sim.ctx, nythraxis, [meta], { difficulty: 'heroic' } as never);
+    const row = buddyBossDropsFor(NYTHRAXIS)[0];
     expect(chance).toHaveBeenLastCalledWith(row.heroicChance);
     chance.mockClear();
     const ignivar = bossAt(sim, FORGE_BOSS, 20, 20);
@@ -107,10 +107,15 @@ describe('boss pets: one independent roll per player', () => {
     const sim = makeWorld();
     const pid = join(sim);
     const meta = sim.players.get(pid)!;
-    const boss = bossAt(sim, KORZUL, 33, 44);
+    const boss = bossAt(sim, NYTHRAXIS, 33, 44);
     vi.spyOn(sim.ctx.rng, 'chance').mockReturnValue(true);
     rollBossBuddyDrops(sim.ctx, boss, [meta], { difficulty: 'normal' } as never);
-    expect(meta.buddies.pending[0]).toEqual({ key: 'skeleton', source: 'instance', x: 33, z: 44 });
+    expect(meta.buddies.pending[0]).toEqual({
+      key: 'crystal_lich',
+      source: 'instance',
+      x: 33,
+      z: 44,
+    });
   });
 
   it('is wired to the death site: killing a listed boss in the open world attaches a pending pet', () => {
@@ -118,11 +123,11 @@ describe('boss pets: one independent roll per player', () => {
     const pid = join(sim);
     const meta = sim.players.get(pid)!;
     const player = sim.entities.get(pid)!;
-    const boss = bossAt(sim, KORZUL, player.pos.x + 3, player.pos.z);
+    const boss = bossAt(sim, NYTHRAXIS, player.pos.x + 3, player.pos.z);
     boss.tappedById = pid;
     vi.spyOn(sim.ctx.rng, 'chance').mockReturnValue(true);
     sim.ctx.handleDeath(boss, player);
-    expect(meta.buddies.pending.map((p) => p.key)).toContain('skeleton');
+    expect(meta.buddies.pending.map((p) => p.key)).toContain('crystal_lich');
     expect(meta.buddies.pending[0].source).toBe('world');
   });
 });
@@ -134,21 +139,21 @@ describe('the reveal: on the zone-out, or once the player walks away', () => {
     const meta = sim.players.get(pid)!;
     const player = sim.entities.get(pid)!;
     meta.buddies.pending.push({
-      key: 'skeleton',
+      key: 'crystal_lich',
       source: 'world',
       x: player.pos.x,
       z: player.pos.z,
     });
     updateBuddyReveals(sim.ctx);
-    expect(buddyOwned(meta, 'skeleton')).toBe(false);
+    expect(buddyOwned(meta, 'crystal_lich')).toBe(false);
     player.pos.x += BUDDY_WORLD_REVEAL_DISTANCE - 1;
     updateBuddyReveals(sim.ctx);
-    expect(buddyOwned(meta, 'skeleton')).toBe(false);
+    expect(buddyOwned(meta, 'crystal_lich')).toBe(false);
     player.pos.x += 2;
     updateBuddyReveals(sim.ctx);
-    expect(buddyOwned(meta, 'skeleton')).toBe(true);
+    expect(buddyOwned(meta, 'crystal_lich')).toBe(true);
     expect(meta.buddies.pending).toEqual([]);
-    expect(player.buddyKey).toBe('skeleton');
+    expect(player.buddyKey).toBe('crystal_lich');
     expect(events(sim, 'buddyRevealed')).toHaveLength(1);
   });
 
@@ -156,19 +161,19 @@ describe('the reveal: on the zone-out, or once the player walks away', () => {
     const sim = makeWorld();
     const pid = join(sim);
     const meta = sim.players.get(pid)!;
-    meta.buddies.pending.push({ key: 'phantom', source: 'instance', x: 0, z: 0 });
+    meta.buddies.pending.push({ key: 'forgemaw', source: 'instance', x: 0, z: 0 });
     // No claimed instance holds the player in this bare world: the sweep reveals.
     updateBuddyReveals(sim.ctx);
-    expect(buddyOwned(meta, 'phantom')).toBe(true);
+    expect(buddyOwned(meta, 'forgemaw')).toBe(true);
   });
 
   it('the sweep runs from the tick at 1 Hz', () => {
     const sim = makeWorld();
     const pid = join(sim);
     const meta = sim.players.get(pid)!;
-    meta.buddies.pending.push({ key: 'phantom', source: 'instance', x: 0, z: 0 });
-    for (let i = 0; i < 25 && !buddyOwned(meta, 'phantom'); i++) sim.tick();
-    expect(buddyOwned(meta, 'phantom')).toBe(true);
+    meta.buddies.pending.push({ key: 'forgemaw', source: 'instance', x: 0, z: 0 });
+    for (let i = 0; i < 25 && !buddyOwned(meta, 'forgemaw'); i++) sim.tick();
+    expect(buddyOwned(meta, 'forgemaw')).toBe(true);
   });
 
   it('a dead player reveals nothing until they are back on their feet', () => {
@@ -176,9 +181,9 @@ describe('the reveal: on the zone-out, or once the player walks away', () => {
     const pid = join(sim);
     const meta = sim.players.get(pid)!;
     sim.entities.get(pid)!.dead = true;
-    meta.buddies.pending.push({ key: 'phantom', source: 'instance', x: 0, z: 0 });
+    meta.buddies.pending.push({ key: 'forgemaw', source: 'instance', x: 0, z: 0 });
     updateBuddyReveals(sim.ctx);
-    expect(buddyOwned(meta, 'phantom')).toBe(false);
+    expect(buddyOwned(meta, 'forgemaw')).toBe(false);
   });
 
   it('playerInsideInstance reads the claimed-instance band, never an unclaimed slot', () => {
@@ -199,23 +204,23 @@ describe('the reveal: on the zone-out, or once the player walks away', () => {
     const sim = makeWorld();
     const pid = join(sim);
     const meta = sim.players.get(pid)!;
-    meta.buddies.pending.push({ key: 'skeleton', source: 'world', x: 99999, z: 99999 });
-    meta.buddies.pending.push({ key: 'phantom', source: 'instance', x: 0, z: 0 });
+    meta.buddies.pending.push({ key: 'crystal_lich', source: 'world', x: 99999, z: 99999 });
+    meta.buddies.pending.push({ key: 'forgemaw', source: 'instance', x: 0, z: 0 });
     revealBuddiesOnJoin(sim.ctx, pid);
-    expect(buddyOwned(meta, 'skeleton')).toBe(true);
-    expect(buddyOwned(meta, 'phantom')).toBe(true);
+    expect(buddyOwned(meta, 'crystal_lich')).toBe(true);
+    expect(buddyOwned(meta, 'forgemaw')).toBe(true);
   });
 
   it('a pending companion survives the save and reveals on the next join', () => {
     const sim = makeWorld();
     const pid = join(sim);
     const meta = sim.players.get(pid)!;
-    meta.buddies.pending.push({ key: 'phantom', source: 'instance', x: 0, z: 0 });
+    meta.buddies.pending.push({ key: 'forgemaw', source: 'instance', x: 0, z: 0 });
     const state = sim.serializeCharacter(pid)!;
-    expect(state.buddies?.pending).toEqual([{ key: 'phantom', source: 'instance', x: 0, z: 0 }]);
+    expect(state.buddies?.pending).toEqual([{ key: 'forgemaw', source: 'instance', x: 0, z: 0 }]);
     const again = makeWorld();
     const pid2 = again.addPlayer('warrior', 'Owner', { state });
-    expect(buddyOwned(again.players.get(pid2)!, 'phantom')).toBe(true);
+    expect(buddyOwned(again.players.get(pid2)!, 'forgemaw')).toBe(true);
   });
 });
 

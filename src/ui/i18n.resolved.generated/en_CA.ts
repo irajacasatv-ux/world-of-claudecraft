@@ -2217,6 +2217,8 @@ export const en_CA: EnTranslations = {
       "jewelry": "Jewelry",
       "weapons": "Weapons",
       "companions": "Companions",
+      "companionPurchase": "Permanently unlocks this buddy and summons it immediately. No item is added to your bags.",
+      "companionOwnedAria": "{item}, already collected or awaiting reveal",
       "owned": "Owned",
       "buyAria": "Buy {item} for {honor}",
       "buyOwnedAria": "Buy {item} for {honor}, already owned",
@@ -2780,6 +2782,8 @@ export const en_CA: EnTranslations = {
       "streamerBadgeTitle": "Verified streamer"
     },
     "buddyMenu": {
+      "rename": "Rename Buddy",
+      "nameLabel": "Buddy name",
       "autolootEnable": "Enable Autoloot",
       "autolootDisable": "Disable Autoloot",
       "autolootHint": "Your buddy fetches loot from your own corpses within 30 yards.",
@@ -5312,6 +5316,8 @@ export const en_CA: EnTranslations = {
       "tabMounts": "Mounts",
       "tabSkins": "Skins",
       "tabMech": "Mech",
+      "buddyActive": "Summoned",
+      "buddyDrag": "Drag to action bar",
       "legend": "Account: shared by every character. Character: this character only.",
       "scopeAccount": "Account",
       "scopeCharacter": "Character",
@@ -5523,7 +5529,7 @@ export const en_CA: EnTranslations = {
       "watchFull": "Watchlist full ({cap} max)",
       "watchAria": "Watch {name} on the HUD tracker",
       "unwatchAria": "Stop watching {name}",
-      "cosmeticsSection": "Titles, Borders and Buddies",
+      "cosmeticsSection": "Titles and Borders",
       "titlesSection": "Titles",
       "titlesAria": "Choose your displayed title",
       "titlesNone": "No Title",
@@ -17658,7 +17664,7 @@ export const en_CA: EnTranslations = {
         "name": "Alpaca"
       },
       "buddy_horse": {
-        "name": "Horse"
+        "name": "Tug, the Warhorse"
       },
       "buddy_sapling": {
         "name": "Sapling"

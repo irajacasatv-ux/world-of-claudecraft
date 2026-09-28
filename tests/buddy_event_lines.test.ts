@@ -1,10 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { BUDDY_KEYS } from '../src/sim/content/buddies';
-import { BUDDY_COSMETICS } from '../src/sim/content/buddy_cosmetics';
 import {
   BUDDY_PRESENCE_COLOR,
   BUDDY_REVEAL_COLOR,
-  buddyCosmeticDisplayName,
   buddyDisplayName,
   buddyEventLine,
 } from '../src/ui/buddy_event_lines';
@@ -33,18 +31,8 @@ describe('buddy event chat lines', () => {
 
   it('the reveal line names the companion by its localized mob name', () => {
     setLanguage('en');
-    const line = buddyEventLine({ type: 'buddyRevealed', key: 'stag' });
-    expect(line.text).toBe(`${buddyDisplayName('stag')} has decided to follow you.`);
+    const line = buddyEventLine({ type: 'buddyRevealed', key: 'crystal_lich' });
+    expect(line.text).toBe(`${buddyDisplayName('crystal_lich')} has decided to follow you.`);
     expect(line.color).toBe(BUDDY_REVEAL_COLOR);
-  });
-
-  it('the look line names both the look and its companion', () => {
-    setLanguage('en');
-    const line = buddyEventLine({ type: 'buddyCosmeticUnlocked', cosmeticId: 'stag_gilded' });
-    expect(line.text).toContain(buddyCosmeticDisplayName('stag_gilded'));
-    expect(line.text).toContain(buddyDisplayName('stag'));
-    for (const id of Object.keys(BUDDY_COSMETICS)) {
-      expect(buddyCosmeticDisplayName(id)).not.toContain('hudChrome.');
-    }
   });
 });

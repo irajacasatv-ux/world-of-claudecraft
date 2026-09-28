@@ -1,7 +1,7 @@
 // The HTML5 drag payload of an action-bar binding, and the Attack row's
 // fixed-destination disposition. Extracted from the Hud coordinator under the
-// monolith ratchet: every drag SOURCE (a bar slot, the bags, the spellbook,
-// the Book of Deeds buddy shelf) writes the same payload through
+// monolith ratchet: every drag source (a bar slot, the bags, the spellbook)
+// writes the same payload through
 // writeDraggedAction, and the bar's drop handler reads it back through
 // readDraggedAction with the host's existence predicates. Pure over the
 // DataTransfer it is handed: no globals, no Hud state.
@@ -15,11 +15,10 @@ import {
 } from './hotbar';
 
 /** What the host can resolve at drop time: learned abilities, placeable item
- *  ids, and collected buddy keys. Each predicate gates its own action type. */
+ *  ids. Each predicate gates its own action type. */
 export interface HotbarActionExists {
   ability(id: string): boolean;
   item(id: string): boolean;
-  buddy(id: string): boolean;
 }
 
 export function writeDraggedAction(
@@ -44,7 +43,7 @@ export function readDraggedAction(
   } catch {
     return null;
   }
-  return parseHotbarAction(parsed, exists.ability, exists.item, exists.buddy);
+  return parseHotbarAction(parsed, exists.ability, exists.item);
 }
 
 /** Attack is accepted only by slot 0, its fixed destination. The pure

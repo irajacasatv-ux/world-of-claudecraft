@@ -4,15 +4,12 @@
 // COMPLETENESS and grouping, not about any one row's copy.
 
 import { describe, expect, it } from 'vitest';
-import { BUDDIES, BUDDY_KEYS } from '../src/sim/content/buddies';
+import { BUDDY_KEYS } from '../src/sim/content/buddies';
 import { MOUNTS } from '../src/sim/content/mounts';
 import { ITEMS } from '../src/sim/data';
 import {
-  buddyKindOf,
   buildCollectionsView,
   COLLECTION_ARMOR_TYPES,
-  COLLECTION_PET_KINDS,
-  petKindOf,
   rarityRank,
   setArmorType,
   setPrimaryStat,
@@ -29,14 +26,14 @@ const EMPTY = {
 describe('collections view model', () => {
   it('lists every catalog buddy and every catalog mount, owned or not', () => {
     const view = buildCollectionsView(EMPTY);
-    // Same set, different ORDER: the tab sorts by pet kind then rarity, so
+    // Same set, different ORDER: the tab sorts by rarity, so
     // compare membership here and pin the ordering in its own case below.
     expect([...view.buddies.map((b) => b.key)].sort()).toEqual([...BUDDY_KEYS].sort());
     expect(view.mounts.map((m) => m.key)).toEqual(Object.keys(MOUNTS));
     expect(view.buddies.every((b) => b.owned === false)).toBe(true);
   });
 
-  it('marks an entry with no source as unobtainable instead of dropping the row', () => {
+  it('preserves catalog rows and derives their availability from acquisition sources', () => {
     const view = buildCollectionsView(EMPTY);
     const rows = [...view.buddies, ...view.mounts];
     // Whatever the current content is, the flag must agree with the derivation:
@@ -48,8 +45,8 @@ describe('collections view model', () => {
     for (const row of view.buddies) {
       expect(row.obtainable, row.key).toBe(row.buddyFacts?.obtainable ?? false);
     }
-    // Penny Goldspark lost her gold row and has no source yet: still listed.
-    expect(view.buddies.find((b) => b.key === 'penny_goldspark')?.obtainable).toBe(false);
+    // Horse's honor-vendor source is reflected in Hunting.
+    expect(view.buddies.find((b) => b.key === 'horse')?.obtainable).toBe(true);
     // And the row still carries a name and a preview key either way, so an
     // unobtainable entry renders as a real, greyed-out catalog entry.
     expect(rows.every((row) => row.name.length > 0)).toBe(true);
@@ -72,48 +69,14 @@ describe('collections view model', () => {
   it('reflects ownership from the viewer collection, and pending from the boss-roll wins', () => {
     const view = buildCollectionsView({
       ...EMPTY,
-      ownedBuddyKeys: new Set(['stag']),
-      pendingBuddyKeys: new Set(['stag', 'phantom']),
+      ownedBuddyKeys: new Set(['horse']),
+      pendingBuddyKeys: new Set(['horse', 'crystal_lich']),
     });
-    const stag = view.buddies.find((b) => b.key === 'stag');
-    expect(stag?.owned).toBe(true);
-    expect(stag?.pending).toBe(false); // owned wins over a stale pending flag
-    expect(view.buddies.find((b) => b.key === 'phantom')?.pending).toBe(true);
+    const horse = view.buddies.find((b) => b.key === 'horse');
+    expect(horse?.owned).toBe(true);
+    expect(horse?.pending).toBe(false); // owned wins over a stale pending flag
+    expect(view.buddies.find((b) => b.key === 'crystal_lich')?.pending).toBe(true);
     expect(view.buddies.filter((b) => b.owned)).toHaveLength(1);
-  });
-
-  it('lists every authored look under its companion, with unlock and worn state', () => {
-    const view = buildCollectionsView({
-      ...EMPTY,
-      ownedBuddyKeys: new Set(['stag']),
-      ownedBuddyCosmetics: new Set(['stag_gilded']),
-      equippedBuddyCosmetics: { stag: 'stag_gilded' },
-    });
-    const stag = view.buddies.find((b) => b.key === 'stag')!;
-    const ids = stag.looks.map((look) => look.id);
-    expect(ids).toContain('stag_gilded');
-    expect(ids).toContain('stag_acorn');
-    const gilded = stag.looks.find((look) => look.id === 'stag_gilded')!;
-    expect(gilded.owned).toBe(true);
-    expect(gilded.worn).toBe(true);
-    // The worn look dyes the preview.
-    expect(stag.tint).toBe(gilded.tint);
-    const acorn = stag.looks.find((look) => look.id === 'stag_acorn')!;
-    expect(acorn.owned).toBe(false);
-    expect(acorn.facts.craft?.recipeId).toBe('recipe_charm_stag_acorn');
-    // A companion with no look authored carries an empty list, never undefined.
-    expect(view.buddies.find((b) => b.key === 'moss_hare')?.looks.map((l) => l.id)).toEqual([
-      'moss_hare_verdant',
-    ]);
-    expect(view.buddies.find((b) => b.key === 'proud_grunt')?.looks.map((l) => l.id)).toEqual([
-      'proud_grunt_warlord',
-    ]);
-    // The frog's one look is grant-only (the Sapphire Frog test dye).
-    expect(view.buddies.find((b) => b.key === 'frog')?.looks.map((l) => l.id)).toEqual([
-      'frog_sapphire',
-    ]);
-    const bare = view.buddies.find((b) => b.looks.length === 0);
-    expect(bare).toBeDefined();
   });
 
   it('groups epic-or-better sets by armor type then primary stat, and admits nothing below epic', () => {
@@ -139,74 +102,18 @@ describe('collections view model', () => {
     expect(seen).toEqual(ordered);
   });
 
-  it('groups buddies by pet kind, purple to white inside each kind', () => {
+  it('lists the three buddies together in stable rarity order', () => {
     const view = buildCollectionsView(EMPTY);
-    expect(view.buddyGroups.map((g) => g.kind)).toEqual(
-      COLLECTION_PET_KINDS.filter((kind) => view.buddies.some((b) => b.petKind === kind)),
+    expect(view.buddies.map((row) => row.key).sort()).toEqual([
+      'crystal_lich',
+      'forgemaw',
+      'horse',
+    ]);
+    const ranks = view.buddies.map((row) => rarityRank(row.quality));
+    expect(ranks).toEqual([...ranks].sort((a, b) => a - b));
+    expect(buildCollectionsView(EMPTY).buddies.map((row) => row.key)).toEqual(
+      view.buddies.map((row) => row.key),
     );
-    for (const group of view.buddyGroups) {
-      // Every row really belongs to its heading...
-      expect(group.entries.every((row) => row.petKind === group.kind)).toBe(true);
-      // ...and rarity never climbs back up inside one.
-      const ranks = group.entries.map((row) => rarityRank(row.quality));
-      expect(ranks).toEqual([...ranks].sort((a, b) => a - b));
-    }
-    // The groups partition the flat list: nothing lost, nothing counted twice.
-    expect(view.buddyGroups.reduce((n, g) => n + g.entries.length, 0)).toBe(view.buddies.length);
-  });
-
-  it('reads the pet kind off the follower mob family, not off a second table', () => {
-    expect(petKindOf('undead')).toBe('undead');
-    expect(petKindOf('humanoid')).toBe('humanoid');
-    // Everything else collects as a beast, spiders and raptors included.
-    expect(petKindOf('spider')).toBe('beast');
-    expect(petKindOf('reptile')).toBe('beast');
-    expect(petKindOf('beast')).toBe('beast');
-  });
-
-  it('puts the guest characters and the elementals in their authored groups', () => {
-    // Neither group is a creature type, so neither can come from a mob family:
-    // the catalog authors them and this pins the roster the owner named.
-    expect(buddyKindOf('trollface')).toBe('celebrity');
-    expect(buddyKindOf('ansem')).toBe('celebrity');
-    expect(buddyKindOf('triple_t')).toBe('celebrity');
-    expect(buddyKindOf('kekius')).toBe('celebrity');
-    expect(buddyKindOf('rocky')).toBe('elemental');
-    expect(buddyKindOf('alon')).toBe('humanoid');
-    expect(buddyKindOf('solbot')).toBe('humanoid');
-    expect(buddyKindOf('frostfire')).toBe('elemental');
-    expect(buddyKindOf('forgemaw')).toBe('elemental');
-    expect(buddyKindOf('phantom')).toBe('elemental');
-    expect(buddyKindOf('sapling')).toBe('elemental');
-    // The fishing catch takes no override: it is a beast by its own family,
-    // which is the default path this list exists to keep honest.
-    expect(buddyKindOf('crystal_tide')).toBe('beast');
-    // And nothing else drifted into them: every other companion still groups
-    // by its family, so a new buddy lands in a creature group by default.
-    const authored = BUDDY_KEYS.filter((key) => BUDDIES[key].kind !== undefined);
-    expect(authored.sort()).toEqual(
-      [
-        'alon',
-        'ansem',
-        'forgemaw',
-        'phantom',
-        'frostfire',
-        'kekius',
-        'rocky',
-        'sapling',
-        'solbot',
-        'triple_t',
-        'trollface',
-      ].sort(),
-    );
-  });
-
-  it('never infers an editorial group from a family', () => {
-    // petKindOf answers creature facts only: the two editorial groups have to be
-    // authored, so a family can never produce one by accident.
-    for (const family of ['beast', 'humanoid', 'undead', 'spider', 'reptile', 'elemental']) {
-      expect(['beast', 'humanoid', 'undead']).toContain(petKindOf(family));
-    }
   });
 
   it('ranks an unnamed quality with white, so no grey rung can appear', () => {

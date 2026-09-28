@@ -27,7 +27,6 @@ import {
   type ActionBarSlotDescriptor,
   type ActionBarWorldInput,
   ATTACK_ICON_KEY,
-  BUDDY_ICON_PREFIX,
   createActionBarView,
   EMPTY_ICON_KEY,
   ITEM_ICON_PREFIX,
@@ -61,8 +60,6 @@ interface SlotOpts {
   // an ability or item resolves".
   hasAction?: boolean;
   ownsAimSlot?: (activeAimSlot: number) => boolean;
-  /** A collected buddy key bound to the slot (the summon shortcut). */
-  buddy?: string;
 }
 
 function slot(slotIndex: number, opts: SlotOpts = {}): ActionBarSlotDescriptor {
@@ -74,7 +71,6 @@ function slot(slotIndex: number, opts: SlotOpts = {}): ActionBarSlotDescriptor {
     item: () => opts.item ?? null,
     keybindLabel: () => opts.keybind ?? `K${slotIndex}`,
     ownsAimSlot: opts.ownsAimSlot,
-    buddy: () => opts.buddy ?? null,
   };
 }
 
@@ -379,24 +375,6 @@ describe('actionBarView: the four slot kinds classify correctly', () => {
     expect(off.abilityId).toBe('fireball');
     showAttack = true;
     expect(view.tick(world()).slots[0].kind).toBe('attack');
-  });
-
-  it('a buddy slot paints the companion as a summon shortcut: no stack, only death holds it', () => {
-    const view = createActionBarView(
-      descriptor(slot(0, { attack: true }), slot(1, { buddy: 'stag' })),
-      fakeDeps(),
-    );
-    const s1 = view.tick(world()).slots[1];
-    expect(s1.kind).toBe('buddy');
-    expect(s1.iconKey).toBe(`${BUDDY_ICON_PREFIX}stag`);
-    expect(s1.abilityId).toBeNull();
-    expect(s1.itemId).toBeNull();
-    expect(s1.count).toBe('');
-    expect(s1.usable).toBe(true);
-    expect(s1.cooldownPercent).toBe(0);
-    const w = world();
-    w.player.dead = true;
-    expect(view.tick(w).slots[1].usable).toBe(false);
   });
 
   it('a freed-slot ability the active build does not currently grant stays visible, dimmed and unusable, instead of painting empty', () => {

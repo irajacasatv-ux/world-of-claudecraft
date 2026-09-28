@@ -58,116 +58,17 @@ function buddyTemplate(
 }
 
 export const BUDDY_MOBS: Record<string, MobTemplate> = {
-  // mob_fox / mob_critter (src/render/characters/manifest.ts MOB_KEYS below)
-  // carry `tint: 'entity'`, so color here is the real per-species dye, same
-  // values the old BUDDY_VISUAL_SPECS.tint used.
-  [buddyTemplateId('ember_fox')]: buddyTemplate('ember_fox', 'Ember Fox', 'beast', 0xd9662b),
-  [buddyTemplateId('moss_hare')]: buddyTemplate('moss_hare', 'Moss Hare', 'beast', 0x6f8f5a),
-  // The rest render dedicated GLBs (public/models/buddies/) with baked
-  // textures and no `tint` on their VISUALS entry, so color below is inert —
-  // kept only because MobTemplate.color is required.
-  [buddyTemplateId('frog')]: buddyTemplate('frog', 'Frog', 'beast', 0xffffff),
-  [buddyTemplateId('crimson_claw_crab')]: buddyTemplate(
-    'crimson_claw_crab',
-    'Crimson Claw Crab',
-    'beast',
-    0xffffff,
-  ),
-  [buddyTemplateId('golden_sentinel')]: buddyTemplate(
-    'golden_sentinel',
-    'Golden Sentinel',
-    'beast',
-    0xffffff,
-  ),
-  [buddyTemplateId('nightfang')]: buddyTemplate('nightfang', 'Nightfang', 'beast', 0xffffff),
-  [buddyTemplateId('tuskhorn_boar')]: buddyTemplate(
-    'tuskhorn_boar',
-    'Tuskhorn Boar',
-    'beast',
-    0xffffff,
-  ),
-  [buddyTemplateId('emerald_wolf')]: buddyTemplate(
-    'emerald_wolf',
-    'Emerald Wolf',
-    'beast',
-    0xffffff,
-  ),
-  [buddyTemplateId('tiger')]: buddyTemplate('tiger', 'Tiger', 'beast', 0xffffff),
-  [buddyTemplateId('cate_coin')]: buddyTemplate('cate_coin', 'Cate Coin', 'beast', 0xffffff),
-  [buddyTemplateId('alon')]: buddyTemplate('alon', 'Alon', 'beast', 0xffffff),
-  [buddyTemplateId('trollface')]: buddyTemplate('trollface', 'Trollface', 'beast', 0xffffff),
-  [buddyTemplateId('ansem')]: buddyTemplate('ansem', 'Ansem', 'beast', 0xffffff),
-  [buddyTemplateId('triple_t')]: buddyTemplate('triple_t', 'Triple T', 'beast', 0xffffff),
-  [buddyTemplateId('kekius')]: buddyTemplate('kekius', 'Kekius', 'beast', 0xffffff),
-  [buddyTemplateId('solbot')]: buddyTemplate('solbot', 'Solbot', 'beast', 0xffffff),
-  [buddyTemplateId('frostfire')]: buddyTemplate('frostfire', 'Frostfire', 'beast', 0xffffff),
-  [buddyTemplateId('rocky')]: buddyTemplate('rocky', 'Rocky', 'beast', 0xffffff),
-  // The three vendor-only rares. Humanoid rigs (orc grunt, goblin, gnome),
-  // family 'humanoid' so nothing in the pet/beast paths ever mistakes one for
-  // a tameable; they still never fight, exactly like every other buddy.
-  [buddyTemplateId('proud_grunt')]: buddyTemplate(
-    'proud_grunt',
-    'Proud Grunt',
-    'humanoid',
-    0xffffff,
-  ),
-  [buddyTemplateId('loot_goblin')]: buddyTemplate(
-    'loot_goblin',
-    'Loot Goblin',
-    'humanoid',
-    0xffffff,
-  ),
-  [buddyTemplateId('penny_goldspark')]: buddyTemplate(
-    'penny_goldspark',
-    'Penny Goldspark',
-    'humanoid',
-    0xffffff,
-  ),
-  // The beast tier drawn from the shipped creature rigs. Those rigs carry
-  // `tint: 'entity'` in the visual manifest, so the color below is the real
-  // per-buddy dye (the ember_fox/moss_hare model): a pet stag is not the same
-  // brown as the mob its rig came from.
-  [buddyTemplateId('stag')]: buddyTemplate('stag', 'Stag', 'beast', 0xb98a4e),
-  [buddyTemplateId('alpaca')]: buddyTemplate('alpaca', 'Alpaca', 'beast', 0xe8dcc6),
-  // The horse ships its own GLB with a baked coat (public/models/buddies/),
-  // so the color is inert here like every other dedicated-rig buddy.
-  [buddyTemplateId('horse')]: buddyTemplate('horse', 'Horse', 'beast', 0xffffff),
-  [buddyTemplateId('sapling')]: buddyTemplate('sapling', 'Sapling', 'elemental', 0xffffff),
-  [buddyTemplateId('bull')]: buddyTemplate('bull', 'Bull', 'beast', 0x6b4a37),
-  [buddyTemplateId('spider')]: buddyTemplate('spider', 'Spider', 'spider', 0x4a3d63),
-  [buddyTemplateId('raptor')]: buddyTemplate('raptor', 'Raptor', 'reptile', 0x5f8a4a),
-  [buddyTemplateId('skeleton')]: buddyTemplate('skeleton', 'Skeleton', 'undead', 0xd8d3c4),
-  // The epic raid drop. Its own GLB with baked crystal textures and no tint,
-  // so the color is inert here like every other dedicated-rig buddy.
+  [buddyTemplateId('horse')]: buddyTemplate('horse', 'Tug, the Warhorse', 'beast', 0xffffff),
   [buddyTemplateId('crystal_lich')]: buddyTemplate(
     'crystal_lich',
     'Crystal Lich',
     'undead',
     0xffffff,
   ),
-  // The Crucible drop. Its own GLB carries the molten texture, so the color
-  // is inert here like every other dedicated-rig buddy.
   [buddyTemplateId('forgemaw')]: buddyTemplate(
     'forgemaw',
     'Forgemaw The Molten',
     'elemental',
-    0xffffff,
-  ),
-  // The fishing catch and the green elemental. Both ship their own GLB with
-  // baked textures and no tint, so the color is inert here as usual.
-  [buddyTemplateId('crystal_tide')]: buddyTemplate(
-    'crystal_tide',
-    'Crystal Tide',
-    'beast',
-    0xffffff,
-  ),
-  [buddyTemplateId('phantom')]: buddyTemplate('phantom', 'Phantom', 'elemental', 0xffffff),
-  // The epic with no source yet (content/buddies.ts says why). Its own GLB
-  // carries the baked ember plumage, so the color is inert here as usual.
-  [buddyTemplateId('emberfall_phoenix')]: buddyTemplate(
-    'emberfall_phoenix',
-    'Emberfall Phoenix',
-    'beast',
     0xffffff,
   ),
 };

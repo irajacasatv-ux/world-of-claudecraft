@@ -2217,6 +2217,8 @@ export const zh_TW: EnTranslations = {
       "jewelry": "飾品",
       "weapons": "武器",
       "companions": "夥伴",
+      "companionPurchase": "Permanently unlocks this buddy and summons it immediately. No item is added to your bags.",
+      "companionOwnedAria": "{item}, already collected or awaiting reveal",
       "owned": "已擁有",
       "buyAria": "以 {honor} 購買 {item}",
       "buyOwnedAria": "以 {honor} 購買 {item}，已擁有",
@@ -2780,6 +2782,8 @@ export const zh_TW: EnTranslations = {
       "streamerBadgeTitle": "認證主播"
     },
     "buddyMenu": {
+      "rename": "Rename Buddy",
+      "nameLabel": "Buddy name",
       "autolootEnable": "開啟自動拾取",
       "autolootDisable": "關閉自動拾取",
       "autolootHint": "你的夥伴會去拾取 30 碼內屬於你自己的屍體上的戰利品。",
@@ -5312,6 +5316,8 @@ export const zh_TW: EnTranslations = {
       "tabMounts": "坐騎",
       "tabSkins": "造型",
       "tabMech": "機甲",
+      "buddyActive": "Summoned",
+      "buddyDrag": "Drag to action bar",
       "legend": "帳號：所有角色共用。角色：僅此角色。",
       "scopeAccount": "帳號",
       "scopeCharacter": "角色",

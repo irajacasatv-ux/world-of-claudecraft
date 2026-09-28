@@ -2217,6 +2217,8 @@ export const it_IT: EnTranslations = {
       "jewelry": "Gioielli",
       "weapons": "Armi",
       "companions": "Companions",
+      "companionPurchase": "Permanently unlocks this buddy and summons it immediately. No item is added to your bags.",
+      "companionOwnedAria": "{item}, already collected or awaiting reveal",
       "owned": "Posseduto",
       "buyAria": "Compra {item} per {honor}",
       "buyOwnedAria": "Compra {item} per {honor}, già posseduto",
@@ -2780,6 +2782,8 @@ export const it_IT: EnTranslations = {
       "streamerBadgeTitle": "Streamer verificato"
     },
     "buddyMenu": {
+      "rename": "Rename Buddy",
+      "nameLabel": "Buddy name",
       "autolootEnable": "Enable Autoloot",
       "autolootDisable": "Disable Autoloot",
       "autolootHint": "Your buddy fetches loot from your own corpses within 30 yards.",
@@ -5312,6 +5316,8 @@ export const it_IT: EnTranslations = {
       "tabMounts": "Cavalcature",
       "tabSkins": "Skin",
       "tabMech": "Mecha",
+      "buddyActive": "Summoned",
+      "buddyDrag": "Drag to action bar",
       "legend": "Account: condiviso da ogni personaggio. Personaggio: solo questo personaggio.",
       "scopeAccount": "Account condiviso",
       "scopeCharacter": "Personaggio",
@@ -17658,7 +17664,7 @@ export const it_IT: EnTranslations = {
         "name": "Alpaca"
       },
       "buddy_horse": {
-        "name": "Horse"
+        "name": "Tug, the Warhorse"
       },
       "buddy_sapling": {
         "name": "Sapling"

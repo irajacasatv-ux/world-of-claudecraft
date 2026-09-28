@@ -3,15 +3,17 @@
 
 # Collections
 
-The Collections window: every buddy, every mount and every epic-or-better armour
-set in the game, with where each one comes from. Opened from the micro-menu
-button beside the PvP launcher (`#mm-collections`) or the `collections` keybind.
+The Hunting/Collections window is retired from the game: no shell root, launcher,
+keybind or HUD lifecycle remains. Its standalone modules are retained for reference
+and restoration. Buddies have no action-bar integration.
+Buddy selection and Summon/Dismiss live in Cosmetics. The contracts below describe
+the retained window modules, not an active game menu.
 
 | Module | What it is |
 |---|---|
-| `collection_sources.ts` | **The derivation.** For an item id: its vendors, its drop tables, its bind state and its vendor sell value. For a buddy key (`buddySourceFacts`): the per-player boss rolls, the deed, and the grant token's vendors (`src/sim/content/buddy_sources.ts`). For a look id (`buddyCosmeticFacts`): its challenges, deed, crafting recipe, token vendors, and whether it is a seasonal grant. All read from the live content tables. Pure, memoized per id. |
-| `collections_view.ts` | The pure view model: the three tabs as rows (a buddy row carries its collection state, its pending boss-roll flag, its own sources and its looks), plus the set grouping (armour type, then primary stat). DOM-free, i18n-free, and free of any `src/render` import. |
-| `collections_window.ts` | The thin DOM painter and the window's view-state (tab, selection, render-skip signature, focus return). The buddy pane's two commands (summon/dismiss, wear/remove a look) go out through `IWorldBuddies`; the server re-validates both. |
+| `collection_sources.ts` | **The derivation.** For an item id: its vendors, its drop tables, its bind state and its vendor sell value. For a buddy key (`buddySourceFacts`): the per-player boss rolls, the deed, and the grant token's vendors (`src/sim/content/buddy_sources.ts`). All read from the live content tables. Pure, memoized per id. |
+| `collections_view.ts` | The pure view model: the three tabs as rows (a buddy row carries its collection state, its pending boss-roll flag, its own sources), plus the set grouping (armour type, then primary stat). DOM-free, i18n-free, and free of any `src/render` import. |
+| `collections_window.ts` | The thin DOM painter and the window's view-state (tab, selection, render-skip signature, focus return). The buddy pane is a discovery catalog; summon/dismiss controls live in Cosmetics. |
 | `collections_host.ts` | The construction bag Hud hands the window, plus the two things that need the render and net layers: the visual-key maps and the Exchange price lookup. |
 
 ## The rules that keep this window honest
@@ -38,7 +40,11 @@ button beside the PvP launcher (`#mm-collections`) or the `collections` keybind.
   "not available on this client" are three different answers and the pane keeps
   them apart. A blank or a stale figure is never acceptable on a price row.
 
-Buddies are a per-character collection, never an item (`src/sim/buddies.ts`; design: `docs/design/buddy-acquisition.md`): the buddy tab reads ownership, looks, and pending wins off `IWorldBuddies`, and names each row after the companion itself rather than its grant token.
+Buddies are an account collection with character-local equipment, never an item (`src/sim/buddies.ts`; design: `docs/design/buddy-acquisition.md`): the buddy tab reads ownership and pending wins off `IWorldBuddies`, and names each row after the companion itself rather than its grant token.
+
+The buddy tab shows the active catalog as one flat list, ordered by rarity and
+then catalog order. It has no pet-kind headings or filter controls. The Mounts
+and Item Sets tabs keep their own selection and scroll positions.
 
 Pinned by `tests/collections_sources.test.ts`, `tests/collections_view.test.ts`,
 `tests/collections_window.test.ts` and `tests/collections_exchange_price.test.ts`.

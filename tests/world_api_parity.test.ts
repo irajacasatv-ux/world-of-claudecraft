@@ -482,11 +482,9 @@ export const IWORLD_MEMBERS = [
   { name: 'mountRaceView', kind: 'method' }, // read-returning
   // --- cosmetic buddies (IWorldBuddies) ---
   { name: 'ownedBuddies', kind: 'method' }, // read-returning
-  { name: 'ownedBuddyCosmetics', kind: 'method' }, // read-returning
-  { name: 'equippedBuddyCosmetics', kind: 'method' }, // read-returning
   { name: 'pendingBuddies', kind: 'method' }, // read-returning
+  { name: 'renameBuddy', kind: 'method' },
   { name: 'summonBuddy', kind: 'method' },
-  { name: 'equipBuddyCosmetic', kind: 'method' },
   { name: 'toggleBuddy', kind: 'method' },
   { name: 'setBuddyAutoloot', kind: 'method' },
   // --- Dungeon Finder facet (IWorldDungeonFinder) ---
@@ -876,11 +874,11 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
     // and the account-wide Book of Deeds / Reliquary read halves. Counted
     // directly off the resolved IWORLD_MEMBERS literal.
     // The buddy merge (feature/buddy-companions-v43) adds the IWorldBuddies
-    // facet: eight methods (four read-returning), no data members: 386
-    // members, 107 data, 279 method, read off the merged member table.
-    expect(IWORLD_MEMBERS.length).toBe(386);
+    // facet: eight methods (four read-returning), no data members. Retiring
+    // the three buddy-look methods leaves 383 members, 107 data, 276 methods.
+    expect(IWORLD_MEMBERS.length).toBe(384);
     expect(DATA_MEMBERS.length).toBe(107);
-    expect(METHOD_MEMBERS.length).toBe(279);
+    expect(METHOD_MEMBERS.length).toBe(277);
   });
   it('has no duplicate member names', () => {
     const names = IWORLD_MEMBERS.map((m) => m.name);
@@ -1023,12 +1021,10 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'entities',
       'entityRosterVersion',
       'equipBag',
-      'equipBuddyCosmetic',
       'equipItem',
       'equipItemToSlot',
       'equipment',
       'equipmentInstances',
-      'equippedBuddyCosmetics',
       'extractEssence',
       'farmNowMs',
       'farmPatches',
@@ -1130,7 +1126,6 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'nodeRespawnSeconds',
       'openCommissionOrder',
       'ownedBuddies',
-      'ownedBuddyCosmetics',
       'ownedMounts',
       'partyAccept',
       'partyDecline',
@@ -1182,6 +1177,7 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'reliquaryPageCompletion',
       'reliquaryRarity',
       'reliquaryRecent',
+      'renameBuddy',
       'renamePet',
       'renown',
       'reportTelemetry',
@@ -1479,10 +1475,8 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'enterDelve',
       'enterDungeon',
       'equipBag',
-      'equipBuddyCosmetic',
       'equipItem',
       'equipItemToSlot',
-      'equippedBuddyCosmetics',
       'extractEssence',
       'farmNowMs',
       'feedPet',
@@ -1560,7 +1554,6 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'nodeRespawnSeconds',
       'openCommissionOrder',
       'ownedBuddies',
-      'ownedBuddyCosmetics',
       'ownedMounts',
       'partyAccept',
       'partyDecline',
@@ -1596,6 +1589,7 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'reliquaryPageClearCount',
       'reliquaryPageCompletion',
       'reliquaryRarity',
+      'renameBuddy',
       'renamePet',
       'reportTelemetry',
       'resolvedAbility',
@@ -2180,11 +2174,9 @@ type _ExhaustMounts = AssertNever<Exclude<keyof IWorldMounts, (typeof FACET_MOUN
 
 const FACET_BUDDIES = [
   'ownedBuddies',
-  'ownedBuddyCosmetics',
-  'equippedBuddyCosmetics',
   'pendingBuddies',
+  'renameBuddy',
   'summonBuddy',
-  'equipBuddyCosmetic',
   'toggleBuddy',
   'setBuddyAutoloot',
 ] as const satisfies readonly (keyof IWorldBuddies)[];
@@ -2434,8 +2426,8 @@ describe('W1: aggregate IWorld member set equals the disjoint union of the facet
     const union = Object.values(FACET_MEMBER_ARRAYS).flatMap((arr) => [...arr]);
     // Mirrors the IWORLD_MEMBERS.length pin above; this pin and the one above
     // must always agree.
-    expect(union.length, 'union size before dedup (catches a duplicated member)').toBe(386);
-    expect(new Set(union).size, 'union size after dedup (catches a duplicated member)').toBe(386);
+    expect(union.length, 'union size before dedup (catches a duplicated member)').toBe(384);
+    expect(new Set(union).size, 'union size after dedup (catches a duplicated member)').toBe(384);
     const sortedUnion = [...union].sort();
     const pinned = IWORLD_MEMBERS.map((m) => m.name).sort();
     expect(sortedUnion).toEqual(pinned);

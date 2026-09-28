@@ -2217,6 +2217,8 @@ export const id_ID: EnTranslations = {
       "jewelry": "Perhiasan",
       "weapons": "Senjata",
       "companions": "Companions",
+      "companionPurchase": "Permanently unlocks this buddy and summons it immediately. No item is added to your bags.",
+      "companionOwnedAria": "{item}, already collected or awaiting reveal",
       "owned": "Dimiliki",
       "buyAria": "Beli {item} seharga {honor}",
       "buyOwnedAria": "Beli {item} seharga {honor}, sudah dimiliki",
@@ -2780,6 +2782,8 @@ export const id_ID: EnTranslations = {
       "streamerBadgeTitle": "Streamer terverifikasi"
     },
     "buddyMenu": {
+      "rename": "Rename Buddy",
+      "nameLabel": "Buddy name",
       "autolootEnable": "Enable Autoloot",
       "autolootDisable": "Disable Autoloot",
       "autolootHint": "Your buddy fetches loot from your own corpses within 30 yards.",
@@ -5312,6 +5316,8 @@ export const id_ID: EnTranslations = {
       "tabMounts": "Tunggangan",
       "tabSkins": "Skin",
       "tabMech": "Mecha",
+      "buddyActive": "Summoned",
+      "buddyDrag": "Drag to action bar",
       "legend": "Akun: dibagikan oleh semua karakter. Karakter: hanya karakter ini.",
       "scopeAccount": "Akun",
       "scopeCharacter": "Karakter",
@@ -17658,7 +17664,7 @@ export const id_ID: EnTranslations = {
         "name": "Alpaca"
       },
       "buddy_horse": {
-        "name": "Horse"
+        "name": "Tug, the Warhorse"
       },
       "buddy_sapling": {
         "name": "Sapling"

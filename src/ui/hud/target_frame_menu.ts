@@ -42,8 +42,7 @@ export function targetFrameMenuKind(
   return null;
 }
 
-/** The buddy menu's rows. One action (the autoloot errand) plus Cancel: a
- *  buddy has nothing else to command. `armed` is the owner's CURRENT
+/** Rename, the autoloot errand and Cancel. `armed` is the owner's CURRENT
  *  Entity.buddyAutoloot as it came off the wire, so the row offers the flip
  *  the server would actually make, never a local guess. */
 export function buddyMenuHtml(name: string, armed: boolean): string {
@@ -53,6 +52,7 @@ export function buddyMenuHtml(name: string, armed: boolean): string {
   const hint = esc(t('hudChrome.buddyMenu.autolootHint'));
   return (
     `<div class="ctx-title">${esc(name)}</div>` +
+    `<div class="ctx-item" data-act="rename">${esc(t('hudChrome.buddyMenu.rename'))}</div>` +
     `<div class="ctx-item" data-act="autoloot" title="${hint}">${esc(label)}</div>` +
     `<div class="ctx-item" data-act="close">${esc(t('hudChrome.buddyMenu.cancel'))}</div>`
   );

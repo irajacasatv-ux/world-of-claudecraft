@@ -8,6 +8,7 @@
 // since; a character deletion cascades its rows. It cannot grow per event or
 // per session, so it registers no prune sweep by decision.
 
+import { buddyDef } from '../src/sim/content/buddies';
 import { pool } from './db';
 
 export const BUDDY_GRANTS_SCHEMA = `
@@ -34,12 +35,16 @@ export interface BuddyGrantRow {
   cosmeticId?: string;
 }
 
-/** Queue a buddy/cosmetic grant for a character that is not in world. */
+/** New offline grants go directly to durable account ownership. The legacy
+ * queue remains readable for mixed-release joins, but no new rows accumulate. */
 export async function queueBuddyGrant(characterId: number, grant: BuddyGrantRow): Promise<void> {
+  if (!grant.buddyKey || !buddyDef(grant.buddyKey) || grant.cosmeticId !== undefined) return;
   await pool.query(
-    `INSERT INTO character_buddy_grants (character_id, buddy_key, cosmetic_id)
-     VALUES ($1, $2, $3)`,
-    [characterId, grant.buddyKey ?? null, grant.cosmeticId ?? null],
+    `INSERT INTO account_buddies AS current (account_id, owned)
+     SELECT account_id, ARRAY[$2::text] FROM characters WHERE id = $1
+     ON CONFLICT (account_id) DO UPDATE SET owned = ARRAY(
+       SELECT DISTINCT key FROM unnest(current.owned || EXCLUDED.owned) AS key ORDER BY key)`,
+    [characterId, grant.buddyKey],
   );
 }
 
@@ -47,9 +52,19 @@ export async function queueBuddyGrant(characterId: number, grant: BuddyGrantRow)
  *  so a grant can never apply twice across two racing joins. */
 export async function takePendingBuddyGrants(characterId: number): Promise<BuddyGrantRow[]> {
   const res = await pool.query(
-    `DELETE FROM character_buddy_grants
-      WHERE character_id = $1
-      RETURNING buddy_key, cosmetic_id, id`,
+    `WITH consumed AS (
+       DELETE FROM character_buddy_grants WHERE character_id = $1
+       RETURNING buddy_key, cosmetic_id, id
+     ), transferred AS (
+       INSERT INTO account_buddies AS current (account_id, owned)
+       SELECT c.account_id, array_agg(DISTINCT g.buddy_key)
+         FROM consumed g JOIN characters c ON c.id = $1
+        WHERE g.buddy_key = ANY(ARRAY['horse','crystal_lich','forgemaw']::text[])
+        GROUP BY c.account_id
+       ON CONFLICT (account_id) DO UPDATE SET owned = ARRAY(
+         SELECT DISTINCT key FROM unnest(current.owned || EXCLUDED.owned) AS key ORDER BY key)
+       RETURNING account_id
+     ) SELECT buddy_key, cosmetic_id, id FROM consumed`,
     [characterId],
   );
   return (res.rows as { buddy_key: string | null; cosmetic_id: string | null; id: number }[])

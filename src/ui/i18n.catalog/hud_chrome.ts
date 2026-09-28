@@ -2805,9 +2805,12 @@ export const hudChromeStrings = {
     gossipOptionAria: 'Browse the Warfare set shop offered by {name}',
     jewelry: 'Jewelry',
     weapons: 'Weapons',
-    // Cosmetic buddy whistles (the Proud Grunt companion). Its own heading so a
+    // Direct buddy unlocks. Their own heading so a
     // companion never reads as a set piece the collection count is waiting on.
     companions: 'Companions',
+    companionPurchase:
+      'Permanently unlocks this buddy and summons it immediately. No item is added to your bags.',
+    companionOwnedAria: '{item}, already collected or awaiting reveal',
     // Marks a piece the viewer already wears or carries. The tile still sells.
     owned: 'Owned',
     // The buy tile's accessible name, as ONE key per arm rather than a base name
@@ -3697,6 +3700,8 @@ export const hudChromeStrings = {
   // this menu is only the autoloot errand: while it is on, the buddy walks to
   // your own lootable corpses within 30 yards and loots them for you.
   buddyMenu: {
+    rename: 'Rename Buddy',
+    nameLabel: 'Buddy name',
     autolootEnable: 'Enable Autoloot',
     autolootDisable: 'Disable Autoloot',
     // Hover/`title` explanation on whichever of the two rows is showing, so the
@@ -8280,7 +8285,7 @@ export const hudChromeStrings = {
     // then one heading, group label, None option and empty line per picker.
     // Border options are named by their DEED (a border reward carries a slug,
     // never player-facing display text of its own).
-    cosmeticsSection: 'Titles, Borders and Buddies',
+    cosmeticsSection: 'Titles and Borders',
     titlesSection: 'Titles',
     // UNRENDERED since the picker groups took their accessible name from the
     // visible headings (aria-labelledby); kept because the shipped locale

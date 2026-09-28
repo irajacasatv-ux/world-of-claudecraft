@@ -2,7 +2,7 @@
 // keyboard press/release cycle, the pointer hold, and the pad's press/release edges,
 // so every input family drives the ONE charge through identical rules.
 
-type CrossHotbarAction = { type: 'ability' | 'item' | 'buddy'; id: string };
+type CrossHotbarAction = { type: 'ability' | 'item'; id: string };
 type HotbarAction = CrossHotbarAction | null;
 
 export interface EmpowerHoldWorld {

@@ -4,12 +4,10 @@
 // Extracted from hud.ts (a pure key-to-url resolver needs none of the
 // coordinator's state), so the Hud passes it through as a bare function.
 
-import { buddyTokenItemId } from '../../collections/collection_sources';
 import { iconDataUrl } from '../../icons';
 import {
   ABILITY_ICON_PREFIX,
   ATTACK_ICON_KEY,
-  BUDDY_ICON_PREFIX,
   EMPTY_ICON_KEY,
   ITEM_ICON_PREFIX,
 } from './action_bar_view';
@@ -19,10 +17,6 @@ export function actionBarIconBg(iconKey: string): string {
   if (iconKey === ATTACK_ICON_KEY) return `url(${iconDataUrl('ability', 'attack')})`;
   if (iconKey.startsWith(ITEM_ICON_PREFIX)) {
     return `url(${iconDataUrl('item', iconKey.slice(ITEM_ICON_PREFIX.length))})`;
-  }
-  if (iconKey.startsWith(BUDDY_ICON_PREFIX)) {
-    const token = buddyTokenItemId(iconKey.slice(BUDDY_ICON_PREFIX.length));
-    return token ? `url(${iconDataUrl('item', token)})` : '';
   }
   return `url(${iconDataUrl('ability', iconKey.slice(ABILITY_ICON_PREFIX.length))})`;
 }

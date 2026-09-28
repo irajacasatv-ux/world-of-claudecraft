@@ -63,8 +63,6 @@ const GROUPS: Group[] = [
       { keys: ['Alt+Z'], label: 'guide.controls.hideInterface' },
       { keys: ['Shift+Z'], label: 'guide.controls.deeds' },
       { keys: ['Shift+X'], label: 'guide.controls.reliquary' },
-      // The Hunting pane (buddies, mounts and item sets): its launcher title.
-      { keys: ['Shift+C'], label: 'hudChrome.collections.launcherTitle' },
       { keys: ['Shift+Y'], label: 'hudChrome.cosmetics.title' },
       { keys: ['T'], label: 'guide.controls.crafting' },
       // Perfecting parks on crafting's shifted layer (masterwrought Phase 18,

@@ -1,4 +1,4 @@
-// WCAG-chrome + wiring guard for the Collections window DOM painter.
+// Retained Collections painter contracts and active-game retirement guards.
 //
 // The painter's DOM methods need a document, so they are not exercised in this
 // Node suite; the decisions it renders are covered by tests/collections_view
@@ -22,7 +22,6 @@ const view = strip(read('../src/ui/collections/collections_view.ts'));
 const hud = read('../src/ui/hud.ts');
 const html = read('../index.html');
 const css = read('../src/styles/components.css');
-const icons = read('../src/ui/ui_icons.ts');
 
 describe('collections_window: WCAG chrome and window contract', () => {
   it('drives every panel from the pure view core', () => {
@@ -48,15 +47,10 @@ describe('collections_window: WCAG chrome and window contract', () => {
     expect(code).toContain("data-close]')?.addEventListener('click', () => this.close())");
     expect(code).toContain('this.deps.restoreFocus(this.openerFocus)');
     expect(code).toContain('this.openerFocus = this.deps.captureFocus()');
-    // Escape closes through the painter too, not a raw hide.
-    expect(hud).toContain("case 'collections-window':");
-    expect(hud).toContain('this.collectionsWindow.close();');
   });
 
-  it('marks the dialog root once on open and relocalizes by clearing the sig', () => {
+  it('marks the retained dialog root once on open', () => {
     expect(code).toContain("markDialogRoot(root, { labelledBy: 'collections-title' })");
-    expect(code).toContain('relocalize()');
-    expect(hud).toContain('this.collectionsWindow.relocalize();');
   });
 
   it('mounts the SHARED turntable rather than standing up a second WebGL context', () => {
@@ -69,9 +63,6 @@ describe('collections_window: WCAG chrome and window contract', () => {
 
   it('keeps the render-skip signature text-independent, so a repaint band is cheap', () => {
     expect(code).toContain('if (sig === this.lastSig) return;');
-    expect(hud).toContain(
-      "if ($('#collections-window').style.display === 'block') this.collectionsWindow.render();",
-    );
   });
 
   it('keeps the view core free of any renderer import', () => {
@@ -81,18 +72,28 @@ describe('collections_window: WCAG chrome and window contract', () => {
     expect(host).toContain("from '../../render/mount_visuals'");
   });
 
-  it('ships the window root and a micro-menu launcher beside the PvP icon', () => {
-    expect(html).toContain('<div id="collections-window" class="window panel ui-window"></div>');
-    expect(html).toContain('id="mm-collections"');
-    // Beside the PvP (G) button, which is what the launcher row promises.
-    expect(html.indexOf('id="mm-collections"')).toBeGreaterThan(html.indexOf('id="mm-arena"'));
-    expect(hud).toContain("$('#mm-collections').addEventListener('click', () =>");
+  it('removes the retired window from both shells and the HUD lifecycle', () => {
+    for (const shell of [html, read('../play.html')]) {
+      expect(shell).not.toContain('id="collections-window"');
+      expect(shell).not.toContain('id="mm-collections"');
+      expect(shell).not.toContain('data-icon="hunting"');
+    }
+    expect(hud).not.toMatch(
+      /collectionsWindow|toggleCollections|collections-window|mm-collections/,
+    );
+    expect(hud).not.toContain("from './collections'");
+    expect(read('../src/main.ts')).not.toContain('toggleCollections');
+    expect(read('../src/guide/pages/controls.ts')).not.toContain(
+      'hudChrome.collections.launcherTitle',
+    );
+    expect(read('../src/game/input.ts')).not.toContain("'collections'");
+    expect(read('../src/ui/hud/menu/side_buttons.ts')).not.toContain('#mm-collections');
   });
 
-  it('groups the buddy tab by pet kind and paints its headings', () => {
-    expect(code).toContain('buddyListHtml(');
-    expect(code).toContain('PET_KIND_LABEL');
-    // The painter never re-sorts: the view core owns kind and rarity order.
+  it('paints the complete buddy list without kind headings', () => {
+    expect(code).toContain('this.entryListHtml(rows, selectedKey)');
+    expect(code).not.toContain('PET_KIND_LABEL');
+    expect(code).not.toContain('buddyListHtml(');
     expect(code).not.toContain('rarityRank(');
   });
 
@@ -112,15 +113,9 @@ describe('collections_window: WCAG chrome and window contract', () => {
     expect(code).toContain('itemSetBonusField(pieces)');
   });
 
-  it('launches as Hunting, behind the animal-face glyph', () => {
-    expect(html).toContain('data-icon="hunting"');
-    expect(icons).toContain("  | 'hunting'");
-  });
-
-  it('binds the window to a keybind of its own', () => {
-    const bind = BIND_ACTIONS.find((entry) => entry.id === 'collections');
-    expect(bind?.defaults).toEqual(['Shift+KeyC']);
-    expect(bind?.category).toBe('Interface');
+  it('removes Hunting from keybind settings and releases its default shortcut', () => {
+    expect(BIND_ACTIONS.find((entry) => entry.id === 'collections')).toBeUndefined();
+    expect(BIND_ACTIONS.flatMap((entry) => entry.defaults)).not.toContain('Shift+KeyC');
   });
 
   it('states the live-price limits instead of painting a blank or stale figure', () => {

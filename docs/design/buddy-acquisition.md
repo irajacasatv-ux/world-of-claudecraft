@@ -1,95 +1,95 @@
-# Buddy companions: acquisition and cosmetics
+# Buddy companions: acquisition
 
-Status: implemented on the buddy branch (2026-09-09), owner plan. Content rates
-are placeholders marked CALIBRATE in the tables.
+The active roster is Tug, the Warhorse, Crystal Lich and Forgemaw The Molten. Buddies are
+non-combat followers, owned across the signed-in account. Each character keeps its
+own equipped companion. Cosmetics (Shift+Y), under Buddies,
+owns selection and Summon/Dismiss. The Book of Deeds has no buddy controls.
+The Hunting menu and its Shift+C shortcut are removed. Buddies cannot be placed
+on or activated from action bars, including controller bars. Old saved buddy slots
+are cleared when loaded.
 
-## The shape
+## Obtaining the remaining buddies
 
-Buddies are rare. They are the culmination of hard work or a rare reward for a
-challenging fight. Mounts already fill the "cosmetic you can buy or farm in a
-dozen ways" space; buddies fill a different one, so a companion is never bag
-loot and never a gold vendor row.
-
-A companion **attaches to the character**: ownership is the per-character
-collection (`PlayerMeta.buddies`, persisted as `CharacterState.buddies`), never
-an item in a bag. Nothing about a companion trades, mails, lists or sells.
-
-There are exactly two ways to a companion, and both are content tables in
-`src/sim/content/buddy_sources.ts`:
-
-1. **Boss pets** (`BUDDY_BOSS_DROPS`). A boss kill rolls once per eligible
-   player, independently, at very low odds (per-player chance, a heroic rate,
-   and an optional heroic-only gate). Nobody loses a roll to a party member.
-   A win does not drop an item: the companion attaches as a *pending* buddy,
-   the player reads a per-companion "presence" line in chat, and the buddy
-   reveals itself (owned, announced, summoned) when they walk out of the
-   instance or `BUDDY_WORLD_REVEAL_DISTANCE` away from a world boss. Logging
-   out with a pending companion is safe: it reveals at the next join.
-2. **Achievement pets** (`BUDDY_DEED_REWARDS`). A Book of Deeds entry names a
-   companion; earning the deed grants it outright, retro grants included. A
-   character who earned the deed before the pet was authored receives it at
-   their next login.
-
-The two prestige-currency companions keep their vendor rows: Proud Grunt for
-honor at the Warfare stores (the "honour-bought pet" the ladder cosmetic hangs
-off) and Loot Goblin for Heroic Marks. Penny Goldspark lost her 1000g row and
-has no source until one is authored; the Hunting window says so.
-
-### Grant tokens
-
-The whistle items survive only as **grant tokens**: soulbound, consumed on use,
-attaching the companion. No loot table lists one. A duplicate token is refused
-unconsumed. They are the channel a vendor, a letter or an admin grant uses to
-hand a companion over, and the reason `/dev give whistle_<key>` still works.
-
-## Cosmetics ("looks")
-
-A look is a per-character unlock (`buddies.cosmetics`), one of which can be
-worn per buddy (`buddies.equipped`). The only kind today is a tint: the worn
-dye replaces the follower entity's color, which the existing entity-tint
-render path already honors (`tint: 'entity'` rigs take it outright; the
-baked-texture buddy rigs opt in with `tint: 'cosmetic'`, which leaves the
-authored look alone until a cosmetic dyes it). Catalog:
-`src/sim/content/buddy_cosmetics.ts`.
-
-Sources, all derived for the Hunting window:
-
-| Source | Table | Mechanism |
+| Buddy | Normal gameplay source | Chance per eligible player |
 |---|---|---|
-| Challenge | `BUDDY_COSMETIC_CHALLENGES` | Resolved at the boss's death for every credited player (`src/sim/buddy_challenges.ts`). `speed`: kill within N seconds of the attempt's first damage. `dps`: the player's own damage on the boss over the attempt meets a rate. Both re-arm on evade or respawn. |
-| Deed | `BUDDY_COSMETIC_DEED_REWARDS` | Same hook as achievement pets. |
-| Crafted | a recipe whose result is a `buddy_cosmetic` token | The Acorn Crown recipe eats the logs of three different woods, gathered in three regions (the "acorns from across the map" shape); a leatherworking craft at the tannery, learned from the master there. Using the charm unlocks the look. |
-| Store | a vendor row for a `buddy_cosmetic` token | Gilded Charm at Armorer Hode for plain gold. Honor or marks prices use the same item fields. |
-| Seasonal award | `BUDDY_COSMETIC_GRANT_ONLY` | Nothing in the game hands it out; the admin grant endpoint does (below). |
+| Tug, the Warhorse | Purchase directly from FURY (Eastbrook Vale) or Warmarshal Draven Kole (Highwatch) | 100,000 honor (placeholder price) |
+| Crystal Lich | Defeat Nythraxis, Scourge of Thornpeak | 0.5% normal, 1% heroic |
+| Forgemaw The Molten | Defeat Ignivar or Varkhul in the heroic Crucible | 1% from either boss; no normal-mode drop |
 
-## The seasonal award channel
+The rates in `src/sim/content/buddy_sources.ts` are design placeholders marked
+CALIBRATE. Rolls are independent per eligible player, using the nearby kill-credit
+roster. A successful boss roll creates a pending companion, rather than an item.
+A chat presence line signals the win; leaving the instance reveals, collects and
+summons it. Pending rewards persist across logout.
 
-Monthly PvP-ladder, top-parse-per-boss-and-spec and zodiac/gemstone awards are
-decided outside the game (the ladder, the parse service). They land through
-`POST /admin/api/moderation/characters/:id/grant-buddy` with `{ buddyKey }` or
-`{ cosmeticId }` plus a reason (permission `moderation.act`, audited as
-`grant_buddy`). An online target takes the sim's grant path at once; an
-offline target is queued in `character_buddy_grants` and drained at the next
-join (`server/buddy_wire.ts`). Zodiac pets and gemstone looks are content
-records added to the two catalogs as each month's award is authored.
+Tug, the Warhorse is sold in the honor vendors' Companions section. Paying immediately
+collects, reveals and summons Tug, the Warhorse through the same grant used by raid reveals.
+No item enters the inventory and full bags do not block the purchase. Owned or
+already-pending companions cannot be purchased again. Honor purchases are final. There are no companion deed rewards in the active tables.
 
-## Player surfaces
+## Buddy icons and names
 
-- Hunting window (Shift+C): the companion's own name, a Summon/Dismiss button
-  for a collected buddy, the source lines (per-player boss rolls with the
-  heroic rate, the deed, the token vendor), the pending state, and a Looks list
-  with unlock state, sources and Wear/Remove.
-- Chat: `buddyPresence`, `buddyRevealed`, `buddyCosmeticUnlocked` are text-free
-  events rendered by `src/ui/buddy_event_lines.ts`.
-- The bare buddy keybind dismisses, or re-summons the last companion out; the
-  last companion also walks back out at login.
-- Dev: `/dev buddies` (collect everything), `/dev buddy <key>` (stage a boss
-  win at your feet), `/dev buddylook <id>`.
+Each card in Cosmetics > Buddies shows the companion's portrait, rendered from
+the shipped game model. The target frame uses the same portrait. The hover panel
+shows a custom nickname above the original buddy type, without duplicating the
+type when the name is unchanged. Rebuild art with
+`scripts/render_buddy_portraits.mjs` (prepare, save the rendered PNGs, encode).
+Target your
+summoned buddy, then right-click its target frame and choose Rename Buddy.
+Names are saved separately for each buddy on each character, surviving swaps,
+dismissal and character reload. Account-wide unlocks do not copy nicknames.
+Names use the existing pet-name rules: 2-16 letters, spaces, hyphens or apostrophes,
+starting with a letter. Online names also use the existing name moderation.
 
-## Determinism
+## Account ownership
 
-The per-player roll draws `rng.chance()` once per (player, row) only for a boss
-with rows; ordinary kills draw nothing. The old per-kill whistle tiers and the
-fishing catch slice are gone, so every parity golden that kills a mob or lands
-a catch was re-minted with the change. The challenge tracker and the reveal
-sweep draw no rng.
+On login, existing unlocks from every character on the account are combined with
+account ownership, including queued admin grants. New reveals and purchases share
+ownership with online alts after persistence; other realms refresh within the
+existing 30-second save interval. A character's pending raid reveal and equipped
+choice remain local to that character. Changing or dismissing one character's
+buddy does not change another character's equipped companion.
+
+Honor purchases persist payment and account ownership in one transaction. A
+concurrent purchase of an already-unlocked buddy is not charged. Standalone offline
+play has no signed-in account and keeps its local character save.
+
+## Local testing and admin grants
+
+With developer commands enabled, enter `/dev buddies` in chat to collect all
+remaining buddies immediately. Open Cosmetics with Shift+Y, select Buddies and choose Summon.
+
+To grant one at a time, enter one of these commands and use the resulting whistle
+from the inventory:
+
+- `/dev give whistle_horse 1`
+- `/dev give whistle_crystal_lich 1`
+- `/dev give whistle_forgemaw 1`
+
+`/dev buddy <key>` instead stages a pending world-source reward at the player's
+feet; walk 80 yards away to reveal it. The keys are `horse`, `crystal_lich` and
+`forgemaw`. Developer commands are restricted to development environments.
+
+The authorized admin endpoint
+`POST /admin/api/moderation/characters/:id/grant-buddy` accepts a `buddyKey` and
+reason. It grants through an online character, or adds durable account ownership
+when that character is offline. Online alts receive offline grants on the next
+account refresh. It no longer accepts cosmetic grants.
+
+## Archived buddies and cosmetics
+
+`archived-features/buddies-and-cosmetics/README.md` describes the restoration
+bundle. It preserves Sapling, all previously removed buddies, their dedicated
+models, copies of shared models/icons, original full-roster definitions, and the
+removed alternate-look implementation and tests.
+
+The live game has no buddy look catalog, unlock/equip actions, challenge tracking,
+look rewards, or Looks interface. Old cosmetic wire fields are ignored and the
+retired wire command is inert. Historical whistle/charm definitions and their
+icons remain solely so existing inventory entries are readable; removed tokens
+cannot unlock content and are not consumed.
+
+Loading a character normalizes its collection to the active roster. Retired
+ownership, pending rewards, last selection and old cosmetic unlock/equipment
+fields are discarded. The code archive does not back up character saves; keep
+an original save separately if its retired unlocks must be restored later.

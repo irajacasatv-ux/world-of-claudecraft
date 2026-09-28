@@ -2217,6 +2217,8 @@ export const ru_RU: EnTranslations = {
       "jewelry": "Украшения",
       "weapons": "Оружие",
       "companions": "Спутники",
+      "companionPurchase": "Permanently unlocks this buddy and summons it immediately. No item is added to your bags.",
+      "companionOwnedAria": "{item}, already collected or awaiting reveal",
       "owned": "Получено",
       "buyAria": "Купить {item} за {honor}",
       "buyOwnedAria": "Купить {item} за {honor}, уже получено",
@@ -2780,6 +2782,8 @@ export const ru_RU: EnTranslations = {
       "streamerBadgeTitle": "Проверенный стример"
     },
     "buddyMenu": {
+      "rename": "Rename Buddy",
+      "nameLabel": "Buddy name",
       "autolootEnable": "Включить автосбор",
       "autolootDisable": "Выключить автосбор",
       "autolootHint": "Спутник соберёт добычу с ваших собственных трупов в радиусе 30 ярдов.",
@@ -5312,6 +5316,8 @@ export const ru_RU: EnTranslations = {
       "tabMounts": "Ездовые животные",
       "tabSkins": "Облики",
       "tabMech": "Мех",
+      "buddyActive": "Summoned",
+      "buddyDrag": "Drag to action bar",
       "legend": "Аккаунт: общее для всех персонажей. Персонаж: только этот персонаж.",
       "scopeAccount": "Аккаунт",
       "scopeCharacter": "Персонаж",

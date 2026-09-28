@@ -19,8 +19,6 @@
 //   every surface consumes; the Renown leaderboard displays no deed count.
 
 import { type AccountEarner, accountEarnedDays } from '../sim/account_ledger';
-import type { BuddyKey } from '../sim/content/buddies';
-import { buddyCosmeticsFor } from '../sim/content/buddy_cosmetics';
 import { countsTowardCompletion } from '../sim/deeds_completion';
 import type { DeedDef, DeedStats, DeedTrigger } from '../sim/types';
 import type { DeedsRarity } from '../world_api';
@@ -233,15 +231,6 @@ export interface DeedsViewInput {
   deedStats: Readonly<DeedStats>;
   renown: number;
   activeTitle: string | null;
-  // The buddy shelf reads (IWorldBuddies): collected keys in catalog order,
-  // the summoned key ('' for none, the entity mirror's buddyKey), the unlocked
-  // look ids and the worn look per buddy.
-  // Optional: a caller with no buddy surface (the completion suites) leaves
-  // the shelf at its None heads.
-  ownedBuddies?: readonly string[];
-  activeBuddy?: string;
-  ownedBuddyLooks?: ReadonlySet<string>;
-  equippedBuddyLooks?: Readonly<Record<string, string>>;
   // The selected nameplate border, a deed id like activeTitle (never the
   // reward slug): the picker marks this option active.
   activeBorder: string | null;
@@ -346,20 +335,6 @@ export interface DeedTitleOption {
   active: boolean;
 }
 
-/** One buddy picker option: null is the "no buddy out" head; otherwise a
- *  collected companion key. `active` marks the one currently summoned. */
-export interface DeedBuddyOption {
-  id: string | null;
-  active: boolean;
-}
-
-/** One look picker option for the summoned buddy: null is its own look;
- *  otherwise an unlocked cosmetic id (content/buddy_cosmetics.ts). */
-export interface DeedLookOption {
-  id: string | null;
-  active: boolean;
-}
-
 export interface DeedBorderOption {
   // null is the "No Border" option.
   id: string | null;
@@ -375,12 +350,6 @@ export interface DeedsViewModel {
   // input.order (catalog) order behind their None head, which the picker
   // renders verbatim: array order is a consumer contract, never re-sorted.
   borders: DeedBorderOption[];
-  // The buddy shelf beside the two worn cosmetics: collected companions behind
-  // a None head (catalog order, the picker renders verbatim), and the looks
-  // unlocked for the SUMMONED companion behind an own-look head (empty of
-  // options while no buddy is out).
-  buddies: DeedBuddyOption[];
-  buddyLooks: DeedLookOption[];
   // input.focusDeedId when that deed rendered an entry this paint, else null.
   focusDeedId: string | null;
 }
@@ -395,19 +364,6 @@ export function buildDeedsView(input: DeedsViewInput): DeedsViewModel {
   const entries: DeedEntryModel[] = [];
   const titles: DeedTitleOption[] = [{ id: null, active: input.activeTitle === null }];
   const borders: DeedBorderOption[] = [{ id: null, active: input.activeBorder === null }];
-  const activeBuddy = input.activeBuddy ?? '';
-  const buddies: DeedBuddyOption[] = [
-    { id: null, active: activeBuddy === '' },
-    ...(input.ownedBuddies ?? []).map((key) => ({ id: key, active: key === activeBuddy })),
-  ];
-  const wornLook = activeBuddy === '' ? null : (input.equippedBuddyLooks?.[activeBuddy] ?? null);
-  const buddyLooks: DeedLookOption[] = [{ id: null, active: wornLook === null }];
-  if (activeBuddy !== '') {
-    for (const look of buddyCosmeticsFor(activeBuddy as BuddyKey)) {
-      if (!input.ownedBuddyLooks?.has(look.id)) continue;
-      buddyLooks.push({ id: look.id, active: wornLook === look.id });
-    }
-  }
   let earnedCount = 0;
   let visibleTotal = 0;
   // The account-wide earned map: this character's own earns plus every deed an
@@ -479,8 +435,6 @@ export function buildDeedsView(input: DeedsViewInput): DeedsViewModel {
     entries,
     titles,
     borders,
-    buddies,
-    buddyLooks,
     focusDeedId: focus !== null && entries.some((e) => e.id === focus) ? focus : null,
   };
 }
@@ -778,12 +732,6 @@ export interface DeedsRefreshSigParts {
   accountDigest?: number;
   activeTitle: string | null;
   activeBorder: string | null;
-  // The buddy shelf: which companion is out, how many are collected, and the
-  // worn look of the one out (its unlocked-look count rides ownedLookCount).
-  activeBuddy?: string;
-  ownedBuddyCount?: number;
-  activeLook?: string | null;
-  ownedLookCount?: number;
   filter: DeedsFilter;
   search: string;
   category: DeedDisplayCategory | 'titles';
@@ -800,10 +748,6 @@ export function deedsRefreshSig(parts: DeedsRefreshSigParts): string {
     parts.accountDigest ?? 0,
     parts.activeTitle,
     parts.activeBorder,
-    parts.activeBuddy ?? '',
-    parts.ownedBuddyCount ?? 0,
-    parts.activeLook ?? null,
-    parts.ownedLookCount ?? 0,
     parts.filter,
     parts.search,
     parts.category,

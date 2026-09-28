@@ -1024,14 +1024,6 @@ const HUD_UPDATE_DRIVES: readonly DriveRow[] = [
     why: 'the merged PvP window (Thornhollow Fields and arena tabs); each tab arm builds its\n      own signature and returns on an unchanged one',
   },
   {
-    call: 'this.collectionsWindow.render',
-    band: 'medium',
-    gate: "$('#collections-window').style.display === 'block'",
-    surface: 'window',
-    guard: { kind: 'module', module: 'collections/collections_window.ts', proof: SIG_RETURN },
-    why: 'the Hunting pane (buddies, mounts, item sets): one signature over the tab, the selection, the collection counts, the pending wins, the active buddy, the looks and the exchange prices, returning on an unchanged one',
-  },
-  {
     call: 'this.dungeonFinderWindow.render',
     band: 'medium',
     gate: "$('#dungeon-finder-window').style.display === 'flex'",
@@ -1804,9 +1796,8 @@ describe('Hud.update() drives exactly the registered set, on the registered band
       // chrome 90 -> 91: the always-on pinned-recipe tracker
       // (recipe_tracker_view.ts + recipe_tracker_painter.ts), the Reliquary
       // tracker's exact slow-band row shape.
-      // window 49 -> 50 on the buddy merge: the Hunting pane
-      // (collectionsWindow.render) behind its own signature.
-    ).toEqual({ window: 50, chrome: 91, none: 17 });
+      // Hunting was retired, removing its window repaint and signature guard.
+    ).toEqual({ window: 49, chrome: 91, none: 17 });
     const windows = HUD_UPDATE_DRIVES.filter((r) => r.surface === 'window');
     expect(windows.map((r) => r.call)).toContain('this.spellbookWindow.tickOpen');
     expect(windows.map((r) => r.call)).toContain('this.refreshOpenTownFocusIfChanged');
@@ -1829,8 +1820,8 @@ describe('Hud.update() drives exactly the registered set, on the registered band
       // loot window's corpse arm moved OUT of the `none` bucket below into
       // this one: it gained a corpseSig latch when the popup started
       // refreshing instead of only closing.
-      // Up one on the buddy merge: the Hunting pane's lastSig latch.
-      module: 28,
+      // The retired Hunting pane no longer contributes a guard.
+      module: 27,
       // Phase 20's refreshCharSheetIfChanged and its siblings. Their latches are
       // HUD fields (lastCharSheetSig et al) because the cold char_window painter
       // holds no signature of its own to diff. The release's trade row left this
@@ -1875,7 +1866,6 @@ describe('Hud.update() drives exactly the registered set, on the registered band
         'bank_window.ts: if (sig === this.lastSig) return;',
         'calendar_window.ts: if (sig === this.lastSig) return;',
         'card_duel_window.ts: if (sig === this.lastSig) return;',
-        'collections/collections_window.ts: if (sig === this.lastSig) return;',
         'daily_rewards_window.ts: if (!this.charterFit.changedFrom(this.deps.world().bankPurchasedSlots)) return;',
         'deeds_window.ts: if (sig === this.lastSig) return;',
         'dungeon_finder_proposal_popup.ts: if (view.sig !== this.lastSig) {',

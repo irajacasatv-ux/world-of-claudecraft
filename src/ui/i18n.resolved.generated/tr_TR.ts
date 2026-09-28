@@ -2217,6 +2217,8 @@ export const tr_TR: EnTranslations = {
       "jewelry": "Takılar",
       "weapons": "Silahlar",
       "companions": "Companions",
+      "companionPurchase": "Permanently unlocks this buddy and summons it immediately. No item is added to your bags.",
+      "companionOwnedAria": "{item}, already collected or awaiting reveal",
       "owned": "Sahip",
       "buyAria": "{honor} karşılığında {item} satın al",
       "buyOwnedAria": "{honor} karşılığında {item} satın al, zaten sahipsin",
@@ -2780,6 +2782,8 @@ export const tr_TR: EnTranslations = {
       "streamerBadgeTitle": "Doğrulanmış yayıncı"
     },
     "buddyMenu": {
+      "rename": "Rename Buddy",
+      "nameLabel": "Buddy name",
       "autolootEnable": "Enable Autoloot",
       "autolootDisable": "Disable Autoloot",
       "autolootHint": "Your buddy fetches loot from your own corpses within 30 yards.",
@@ -5312,6 +5316,8 @@ export const tr_TR: EnTranslations = {
       "tabMounts": "Binekler",
       "tabSkins": "Görünümler",
       "tabMech": "Mek",
+      "buddyActive": "Summoned",
+      "buddyDrag": "Drag to action bar",
       "legend": "Hesap: her karakter paylaşır. Karakter: yalnızca bu karakter.",
       "scopeAccount": "Hesap",
       "scopeCharacter": "Karakter",
@@ -17658,7 +17664,7 @@ export const tr_TR: EnTranslations = {
         "name": "Alpaca"
       },
       "buddy_horse": {
-        "name": "Horse"
+        "name": "Tug, the Warhorse"
       },
       "buddy_sapling": {
         "name": "Sapling"

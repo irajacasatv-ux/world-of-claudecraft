@@ -1,14 +1,8 @@
 // The owner plan (2026-09-09) as content invariants: buddies are never bag
 // loot, never a gold vendor row, and every source the tables name resolves.
 import { describe, expect, it } from 'vitest';
-import { BUDDY_KEYS } from '../src/sim/content/buddies';
-import { BUDDY_COSMETICS } from '../src/sim/content/buddy_cosmetics';
-import {
-  BUDDY_BOSS_DROPS,
-  BUDDY_COSMETIC_CHALLENGES,
-  BUDDY_COSMETIC_GRANT_ONLY,
-  BUDDY_DEED_REWARDS,
-} from '../src/sim/content/buddy_sources';
+import { BUDDY_KEYS, buddyDef } from '../src/sim/content/buddies';
+import { BUDDY_BOSS_DROPS, BUDDY_DEED_REWARDS } from '../src/sim/content/buddy_sources';
 import { HEROIC_BOSS_LOOT } from '../src/sim/content/heroic_loot';
 import { HEROIC_VENDOR_STOCK } from '../src/sim/content/heroic_vendor';
 import { ALL_RECIPES } from '../src/sim/content/recipes';
@@ -20,7 +14,12 @@ const charms: ItemDef[] = Object.values(ITEMS).filter((item) => item.kind === 'b
 
 describe('buddy tokens: soulbound, consumed on use, never loot', () => {
   it('has a whistle for every buddy, so the sweeps below are not vacuous', () => {
-    expect(whistles.length).toBe(BUDDY_KEYS.length);
+    const active = whistles.filter((item) => item.kind === 'buddy' && buddyDef(item.buddy));
+    expect(active.map((item) => item.id).sort()).toEqual([
+      'whistle_crystal_lich',
+      'whistle_forgemaw',
+      'whistle_horse',
+    ]);
   });
 
   it('binds every whistle and every charm', () => {
@@ -63,25 +62,37 @@ describe('buddy tokens: soulbound, consumed on use, never loot', () => {
     }
   });
 
-  it('sells no companion for plain gold: the honor and marks counters are the only whistle rows', () => {
-    const goldVendors: string[] = [];
+  it('sells only Horse through the two honor vendors', () => {
+    const vendorTokens: string[] = [];
     for (const npc of Object.values(NPCS)) {
       for (const itemId of npc.vendorItems ?? []) {
         const item = ITEMS[itemId];
-        if (item?.kind !== 'buddy') continue;
-        if (item.priceHonor === undefined) goldVendors.push(`${npc.id}:${itemId}`);
+        if (item?.kind === 'buddy' || item?.kind === 'buddy_cosmetic')
+          vendorTokens.push(`${npc.id}:${itemId}`);
       }
     }
-    expect(goldVendors).toEqual([]);
-    const marks = HEROIC_VENDOR_STOCK.filter((o) => ITEMS[o.itemId]?.kind === 'buddy');
-    expect(marks.map((o) => o.itemId)).toEqual(['whistle_loot_goblin']);
-    expect(ITEMS.whistle_proud_grunt.priceHonor).toBeGreaterThan(0);
-    expect(ITEMS.whistle_penny_goldspark.buyValue).toBeUndefined();
+    expect(vendorTokens.sort()).toEqual([
+      'fury:whistle_horse',
+      'warmarshal_draven_kole:whistle_horse',
+    ]);
+    const marks = HEROIC_VENDOR_STOCK.filter((o) =>
+      ['buddy', 'buddy_cosmetic'].includes(ITEMS[o.itemId]?.kind),
+    );
+    expect(marks).toEqual([]);
   });
 });
 
 describe('every buddy source resolves', () => {
+  it('has no deed rewards', () => {
+    expect(BUDDY_DEED_REWARDS).toEqual({});
+  });
+
   it('boss rows name real bosses and real companions, and Forgemaw stays heroic-only', () => {
+    expect(BUDDY_BOSS_DROPS.map((row) => [row.key, row.bossId])).toEqual([
+      ['crystal_lich', 'nythraxis_scourge_of_thornpeak'],
+      ['forgemaw', 'ignivar_herald_of_the_last_flame'],
+      ['forgemaw', 'varkhul_forgefather_of_the_last_flame'],
+    ]);
     for (const row of BUDDY_BOSS_DROPS) {
       expect(MOBS[row.bossId], row.bossId).toBeTruthy();
       expect((BUDDY_KEYS as readonly string[]).includes(row.key), row.key).toBe(true);
@@ -91,34 +102,14 @@ describe('every buddy source resolves', () => {
     for (const row of forge) expect(row.heroicOnly).toBe(true);
   });
 
-  it('deed rewards name real companions; a look belongs to a real companion', () => {
-    for (const key of Object.values(BUDDY_DEED_REWARDS)) {
-      expect((BUDDY_KEYS as readonly string[]).includes(key), key).toBe(true);
-    }
-    for (const def of Object.values(BUDDY_COSMETICS)) {
-      expect((BUDDY_KEYS as readonly string[]).includes(def.buddy), def.id).toBe(true);
-    }
-  });
-
-  it('every charm names a real look and every crafted look has a recipe whose reagents exist', () => {
-    for (const charm of charms) {
-      const cosmetic = (charm as { cosmetic: string }).cosmetic;
-      expect(BUDDY_COSMETICS[cosmetic], charm.id).toBeTruthy();
-    }
-    const recipes = ALL_RECIPES.filter((r) => ITEMS[r.resultItemId]?.kind === 'buddy_cosmetic');
-    expect(recipes.length).toBeGreaterThan(0);
-    for (const recipe of recipes) {
-      for (const reagent of recipe.reagents) {
-        expect(ITEMS[reagent.itemId], `${recipe.id} reagent ${reagent.itemId}`).toBeTruthy();
-      }
-    }
-  });
-
-  it('a grant-only look has no in-game source at all, which is the whole point', () => {
-    for (const id of BUDDY_COSMETIC_GRANT_ONLY) {
-      expect(BUDDY_COSMETICS[id], id).toBeTruthy();
-      expect(BUDDY_COSMETIC_CHALLENGES.some((c) => c.cosmeticId === id)).toBe(false);
-      expect(charms.some((c) => (c as { cosmetic: string }).cosmetic === id)).toBe(false);
-    }
+  it('historical charms have no active look and no remaining crafting source', () => {
+    expect(charms.map((charm) => charm.id).sort()).toEqual([
+      'charm_stag_acorn',
+      'charm_stag_gilded',
+    ]);
+    const recipes = ALL_RECIPES.filter((r) =>
+      ['buddy', 'buddy_cosmetic'].includes(ITEMS[r.resultItemId]?.kind),
+    );
+    expect(recipes).toEqual([]);
   });
 });

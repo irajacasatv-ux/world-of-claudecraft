@@ -2263,7 +2263,6 @@ function buildTintedClone(
 
 function tintFor(def: VisualDef, entityColor: number): number | null {
   if (def.tint === undefined) return null;
-  if (def.tint === 'cosmetic') return entityColor === 0xffffff ? null : entityColor;
   return def.tint === 'entity' ? entityColor : def.tint;
 }
 

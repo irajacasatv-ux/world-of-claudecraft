@@ -225,7 +225,6 @@ const FANOUT_ARMS: readonly string[] = [
   'this.updateRecipeTracker|',
   'this.charWindow.renderIfOpen|',
   'this.arenaWindow.relocalize|',
-  'this.collectionsWindow.relocalize|',
   'this.dungeonFinderWindow.relocalize|',
   'this.dungeonFinderProposalPopup.relocalize|',
   'this.bgProposalPopup.relocalize|',
@@ -337,12 +336,6 @@ interface AnsweredSurface extends GatedModule {
 }
 
 const ANSWERED: readonly AnsweredSurface[] = [
-  {
-    file: 'collections/collections_window.ts',
-    memos: ['lastSig', 'paintedTab'],
-    answer: 'this.collectionsWindow.relocalize',
-    why: 'one signature over the tab, the selection, the ownership counts, the pending wins, the active buddy, the looks and the exchange prices, so every localized label and source line on the Hunting pane would sit in the old locale until a collection count moved',
-  },
   {
     file: 'hud/loot/loot_window_controller.ts',
     memos: ['corpseSig', 'harvestStatusSig'],
@@ -649,6 +642,12 @@ const NOT_A_LANGUAGE_GATE: ReadonlyArray<{
   readonly memos: readonly string[];
   readonly reason: string;
 }> = [
+  {
+    file: 'collections/collections_window.ts',
+    memos: ['lastSig', 'paintedTab'],
+    reason:
+      'Retained dormant painter: Hunting has no live HUD instance, shell root or keybind. The lastSig and paintedTab memos cannot gate any player-visible surface. tests/collections_window.test.ts pins that retirement; restoring the menu requires restoring its relocalize fanout arm.',
+  },
   {
     file: 'movable_frame.ts',
     memos: ['lastBottom', 'lastHoverCursor', 'lastHoverEdge'],
@@ -1638,8 +1637,8 @@ describe('language fan-out: half 2, every signature-gated src/ui surface is clas
       // reasoning.
       // OSSBrain integration: authored freed-slot ability cache and the health-mode
       // arm sharing the already-cleared HP gate add two explicit classifications.
-      // 37 on the merged tree: both pairs above are present.
-    ).toBe(37);
+      // 38: the retired Hunting painter is retained without a live surface.
+    ).toBe(38);
   });
 
   it('gives every relocalize() in src/ui a caller in the fan-out', () => {

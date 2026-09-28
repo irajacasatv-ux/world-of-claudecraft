@@ -884,9 +884,9 @@ describe('the professions blob growth bound (phase 16)', () => {
     expect(s2.knownRecipes ?? []).toHaveLength(RETAINABLE_KNOWN_IDS.size);
     expect(new Set(s2.knownRecipes)).toEqual(RETAINABLE_KNOWN_IDS);
     expect(MAX_KNOWN_RECIPE_IDS).toBe(512);
-    expect(new Set(ALL_RECIPES.map((recipe) => recipe.id)).size).toBe(205);
-    // + the trained buddy charm recipe (content/recipes.ts): 206.
-    expect(RETAINABLE_KNOWN_IDS.size).toBe(206);
+    expect(new Set(ALL_RECIPES.map((recipe) => recipe.id)).size).toBe(204);
+    // The retired Acorn Crown recipe no longer contributes a retained id.
+    expect(RETAINABLE_KNOWN_IDS.size).toBe(205);
     expect(RETAINABLE_KNOWN_IDS.size).toBeLessThan(MAX_KNOWN_RECIPE_IDS);
     expect(s2.knownRecipes).toContain('enchant_weapon_lastflame_zeal');
     // Derived from the refusal policy so a profession becoming slottable
@@ -1635,6 +1635,16 @@ function maximalCharacterSim(): Sim {
   const longName = 'A'.repeat(MAX_CRAFTED_BY_LENGTH);
   const instanceItemId = STORED_COLLECTION_ITEM_ID;
 
+  // Deeds no longer grant companions. Arm the complete retained collection
+  // explicitly so removing those rewards does not shrink this field to absent.
+  meta.buddies.owned = new Set(['horse', 'crystal_lich', 'forgemaw']);
+  meta.buddies.last = 'crystal_lich';
+  meta.buddies.names = {
+    horse: 'ABCDEFGHIJKLMNOP',
+    crystal_lich: 'ABCDEFGHIJKLMNOP',
+    forgemaw: 'ABCDEFGHIJKLMNOP',
+  };
+
   // Progression at the cap, every counter wide.
   sim.setPlayerLevel(MAX_LEVEL);
   meta.lifetimeXp = 999_999_999;
@@ -1947,6 +1957,19 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
     const s3 = third.serializeCharacter(pid3) as CharacterState;
     expect(s3).toEqual(s2);
     expect(Object.keys(s3).sort()).toEqual(Object.keys(s2).sort());
+    expect(s2.buddies).toEqual({
+      owned: ['horse', 'crystal_lich', 'forgemaw'],
+      last: 'crystal_lich',
+      names: {
+        horse: 'ABCDEFGHIJKLMNOP',
+        crystal_lich: 'ABCDEFGHIJKLMNOP',
+        forgemaw: 'ABCDEFGHIJKLMNOP',
+      },
+    });
+    // The retained collection plus three maximum-length custom names, including
+    // its top-level key. Names add 101 bytes to the pre-naming collection.
+    const buddyCollectionBytes = Buffer.byteLength(JSON.stringify(s2.buddies), 'utf8') + 11;
+    expect(buddyCollectionBytes).toBe(179);
 
     // The professions block rides inside at its own ceiling: the same band the
     // professions arm pins, so the two measurements can never describe
@@ -2183,9 +2206,8 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
       inventory: 16400,
       bank: 36080,
       vendorBuyback: 756,
-      // + 26 bytes: the trained recipe_charm_stag_acorn id joins the retained
-      // list (the buddy merge).
-      knownRecipes: 88,
+      // The retired recipe_charm_stag_acorn id removes its 26-byte entry.
+      knownRecipes: 62,
     });
     // field_kit (below) is the ONE Field Kit deedStats entry inside this same
     // settled state; the fixture-repair deltas above are Crucible-only and
@@ -2324,20 +2346,19 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
     // 21 characters as `"<id>",` in the sorted array (26 + 24 bytes). MEASURED,
     // not inferred, same as every other row this equation names.
     expect(counterfactualBytes - 156144).toBe(
-      // Plus 835 for the buddy merge, MEASURED per key on the settled fixture:
+      // Historical token item definitions stay readable, preserving 706 bytes:
       // 706 for the 34 whistle (the Horse and Sapling joined the 32) and 2
       // charm item ids joining
       // deedStats.itemsDiscovered (each `"<id>",` in the sorted array, id
-      // length + 3, summed off the catalog), and 129 for the new top-level
-      // `buddies` field this fixture arms (118 bytes of value plus the 11 of
-      // `"buddies":,`), the collection src/sim/buddies.ts serializes.
+      // length + 3, summed off the catalog). The explicitly armed retained
+      // collection contributes the independently measured 78 bytes above.
       Object.values(fixtureDelta).reduce((sum, value) => sum + value, 0) +
         183 +
         1548 +
         50 +
         49 +
         706 +
-        129,
+        buddyCollectionBytes,
     );
     const forgeBaseline = {
       questsDone: 4606,
@@ -2359,11 +2380,11 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
       // questsDone moved from 50 to 100 against the SAME forgeBaseline reference
       // point: the +50 hub practice quest delta above, on top of the prior +50
       // this row already carried.
-      // The buddy merge on the same reference point: knownRecipes +26 (the
-      // trained recipe_charm_stag_acorn id) and deedStats +706 (the 34 whistle
+      // The retired charm recipe removes the buddy merge's knownRecipes +26.
+      // Historical item definitions preserve deedStats +706 (the 34 whistle
       // and 2 charm ids in itemsDiscovered, the Horse and Sapling whistles
       // joining on the release/v0.44.0 merge), both measured above.
-    ).toEqual({ questsDone: 100, knownRecipes: 56, deeds: 32, deedStats: 727, reliquary: 80 });
+    ).toEqual({ questsDone: 100, knownRecipes: 30, deeds: 32, deedStats: 727, reliquary: 80 });
     // Removing field_kit AND the Bramblehide release content reproduces the
     // pre-field-kit, pre-Bramblehide baseline WITH the hammer content still
     // applied: 3884 alone measured 209,261 here (hammer content absent); the
@@ -2376,10 +2397,9 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
     expect(
       Buffer.byteLength(JSON.stringify(preReleaseCounterfactual), 'utf8'),
       'field_kit and the Bramblehide release content removed, must reproduce the recorded pre-field-kit Crucible+hammer baseline',
-      // RE-MEASURED on the release/v0.44.0 merge of the buddy branch: the
-      // release's 209,773 plus the 861 buddy bytes (706 itemsDiscovered ids,
-      // 129 for the `buddies` field, 26 for the trained charm recipe id).
-    ).toBe(210634);
+      // RE-MEASURED after retirement: the release's 209,773 plus 706 bytes of
+      // historical item ids and 179 bytes of explicitly armed buddy collection, including names.
+    ).toBe(210658);
     // Removing ONLY field_kit (the Bramblehide release content and the two
     // dev-mount reins items still present, current staged tree) reproduces
     // 209,524 plus the 1,548-byte Bramblehide delta plus the 49-byte
@@ -2390,8 +2410,8 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
     expect(
       counterfactualBytes,
       'field_kit removed, must reproduce the current staged Crucible+hammer+Bramblehide+dev-mount baseline',
-      // RE-MEASURED on the release/v0.44.0 merge (+861, the buddy terms).
-    ).toBe(212231);
+      // Retirement subtracts 77 bytes from 212,231; maximum buddy names add 101.
+    ).toBe(212255);
     const priorContent = withoutCrucibleContent(s2);
     const contentDelta = Object.fromEntries(
       (['knownRecipes', 'deedStats', 'reliquary'] as const).map((key) => [
@@ -2447,8 +2467,12 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
     // deedStats.itemsDiscovered for 34 whistle and 2 charm ids, 129 for the
     // top-level `buddies` field, 26 in knownRecipes for the charm recipe).
     // Floor at measurement minus 380, edge at measurement plus one.
-    expect(bytes, reMint).toBeGreaterThan(211863);
-    expect(bytes, reMint).toBeLessThan(212244);
+    // RE-MEASURED after roster and cosmetic retirement: 212,166 bytes, -77 from the
+    // explicit retained collection (78 replacing 129) and -26 from the
+    // retired Acorn Crown recipe. Same 381-byte band width and unchanged
+    // structural/warning ceilings; all field deltas above remain pinned.
+    expect(bytes, reMint).toBeGreaterThan(211887);
+    expect(bytes, reMint).toBeLessThan(212268);
 
     // The Crucible database review approved 229,376 bytes (224 KiB), the first
     // 32-KiB step above the corrected 209,261-byte pre-field-kit fixture it was

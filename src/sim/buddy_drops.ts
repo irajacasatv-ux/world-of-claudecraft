@@ -18,15 +18,8 @@
 //
 // `src/sim`-pure.
 
+import { attachPendingBuddy, grantBuddy, revealPendingBuddies } from './buddies';
 import {
-  attachPendingBuddy,
-  buddyWornTint,
-  grantBuddy,
-  grantBuddyCosmetic,
-  revealPendingBuddies,
-} from './buddies';
-import {
-  BUDDY_COSMETIC_DEED_REWARDS,
   BUDDY_DEED_REWARDS,
   BUDDY_WORLD_REVEAL_DISTANCE,
   buddyBossDropsFor,
@@ -91,7 +84,7 @@ export function updateBuddyReveals(ctx: SimContext): void {
   }
 }
 
-/** Login, three jobs. (1) A deed earned before its companion or look was
+/** Login, three jobs. (1) A deed earned before its companion was
  *  authored pays out now (the deed evaluator's retro pass skips deeds already
  *  earned, so the reward table is reconciled here instead). (2) A companion
  *  left pending by a logout mid-instance reveals at once when the player
@@ -105,14 +98,11 @@ export function revealBuddiesOnJoin(ctx: SimContext, pid: number): void {
   for (const [deedId, key] of Object.entries(BUDDY_DEED_REWARDS)) {
     if (meta.deedsEarned.has(deedId)) grantBuddy(ctx, pid, key);
   }
-  for (const [deedId, id] of Object.entries(BUDDY_COSMETIC_DEED_REWARDS)) {
-    if (meta.deedsEarned.has(deedId)) grantBuddyCosmetic(ctx, pid, id);
-  }
   const inside = playerInsideInstance(ctx, e);
   revealPendingBuddies(ctx, pid, (p) => p.source === 'world' || !inside);
   const last = meta.buddies.last;
   if (!e.buddyKey && !e.dead && last && meta.buddies.owned.has(last)) {
     e.buddyKey = last;
-    spawnBuddyEntity(ctx, e, last, buddyWornTint(meta, last));
+    spawnBuddyEntity(ctx, e, last);
   }
 }

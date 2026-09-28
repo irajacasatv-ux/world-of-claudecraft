@@ -3782,12 +3782,11 @@ describe('Guide professions pages and routes', () => {
       c.recipes.map((r) => ({ cap: c.maxSkill, gain: r.gain })),
     );
     // 33 Crucible crafts and the one-time Forgebreaker quest recipe.
-    expect(rows.length, 'published recipe rows').toBe(205);
+    expect(rows.length, 'published recipe rows').toBe(204);
     expect(
       rows.filter((r) => r.gain.zeroAt > r.cap).length,
       'rows carrying at least one unreachable boundary',
-      // + the buddy charm recipe (skill 75 at the tannery, gain boundary past its cap).
-    ).toBe(98);
+    ).toBe(97);
 
     const never = t('guide.profPages.gainNever');
     const cell = (reduced: string, minimal: string, zero: string): string =>

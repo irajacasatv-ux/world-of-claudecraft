@@ -11378,44 +11378,6 @@ export const GUIDE_PROF_CRAFTS: GuideProfCraft[] = [
         }
       },
       {
-        "id": "recipe_charm_stag_acorn",
-        "name": "Acorn Crown Charm",
-        "skillReq": 75,
-        "tier": 3,
-        "station": "tannery",
-        "acquisition": "trainer",
-        "feeCopper": 40000,
-        "materials": [
-          {
-            "itemId": "ironbark_log",
-            "name": "Ironbark Log",
-            "count": 5
-          },
-          {
-            "itemId": "ashwood_log",
-            "name": "Ashwood Log",
-            "count": 5
-          },
-          {
-            "itemId": "elderwood_log",
-            "name": "Highpine Log",
-            "count": 5
-          }
-        ],
-        "output": {
-          "name": "Acorn Crown Charm",
-          "count": 1,
-          "quality": "rare"
-        },
-        "combo": null,
-        "oncePerDay": false,
-        "gain": {
-          "reducedAt": 100,
-          "minimalAt": 125,
-          "zeroAt": 150
-        }
-      },
-      {
         "id": "recipe_duskhide_wraps",
         "name": "Duskhide Wraps",
         "skillReq": 50,

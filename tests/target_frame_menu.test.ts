@@ -34,14 +34,18 @@ describe('targetFrameMenuKind', () => {
   it('opens the pet menu for your own pet and the buddy menu for your own buddy', () => {
     const pet = unit({ ownerId: ME, templateId: 'pet_wolf', hostile: false });
     expect(targetFrameMenuKind(pet, ME, false)).toBe('pet');
-    const buddy = unit({ ownerId: ME, templateId: buddyTemplateId('ember_fox'), hostile: false });
+    const buddy = unit({ ownerId: ME, templateId: buddyTemplateId('horse'), hostile: false });
     expect(targetFrameMenuKind(buddy, ME, false)).toBe('buddy');
   });
 
   it('offers nothing for someone else’s pet or buddy', () => {
     const theirPet = unit({ ownerId: 9, templateId: 'pet_wolf', hostile: false });
     expect(targetFrameMenuKind(theirPet, ME, true)).toBeNull();
-    const theirBuddy = unit({ ownerId: 9, templateId: buddyTemplateId('frog'), hostile: false });
+    const theirBuddy = unit({
+      ownerId: 9,
+      templateId: buddyTemplateId('forgemaw'),
+      hostile: false,
+    });
     expect(targetFrameMenuKind(theirBuddy, ME, true)).toBeNull();
   });
 
@@ -63,10 +67,11 @@ describe('buddyMenuHtml', () => {
     expect(evil).toContain('&lt;img');
   });
 
-  it('carries exactly the two rows the opener binds', () => {
+  it('carries exactly the three rows the opener binds', () => {
     const html = buddyMenuHtml('Fox', false);
+    expect(html).toContain('data-act="rename"');
     expect(html).toContain('data-act="autoloot"');
     expect(html).toContain('data-act="close"');
-    expect(html.match(/data-act=/g)).toHaveLength(2);
+    expect(html.match(/data-act=/g)).toHaveLength(3);
   });
 });

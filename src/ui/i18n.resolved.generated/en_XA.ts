@@ -2217,6 +2217,8 @@ export const en_XA: EnTranslations = {
       "jewelry": "[Ĵéŵéļŕý]",
       "weapons": "[Ŵéáþóñš]",
       "companions": "[Çóɱþáñíóñš]",
+      "companionPurchase": "[Þéŕɱáñéñţļý úñļóçķš ţĥíš ƀúððý áñð šúɱɱóñš íţ íɱɱéðíáţéļý. Ñó íţéɱ íš áððéð ţó ýóúŕ ƀáĝš.]",
+      "companionOwnedAria": "[{item}, áļŕéáðý çóļļéçţéð óŕ áŵáíţíñĝ ŕéʋéáļ]",
       "owned": "[Óŵñéð]",
       "buyAria": "[Ɓúý {item} ƒóŕ {honor}]",
       "buyOwnedAria": "[Ɓúý {item} ƒóŕ {honor}, áļŕéáðý óŵñéð]",
@@ -2780,6 +2782,8 @@ export const en_XA: EnTranslations = {
       "streamerBadgeTitle": "[Ʋéŕíƒíéð šţŕéáɱéŕ]"
     },
     "buddyMenu": {
+      "rename": "[Ŕéñáɱé Ɓúððý]",
+      "nameLabel": "[Ɓúððý ñáɱé]",
       "autolootEnable": "[Éñáƀļé Áúţóļóóţ]",
       "autolootDisable": "[Ðíšáƀļé Áúţóļóóţ]",
       "autolootHint": "[Ýóúŕ ƀúððý ƒéţçĥéš ļóóţ ƒŕóɱ ýóúŕ óŵñ çóŕþšéš ŵíţĥíñ 30 ýáŕðš.]",
@@ -5312,6 +5316,8 @@ export const en_XA: EnTranslations = {
       "tabMounts": "[Ɱóúñţš]",
       "tabSkins": "[Šķíñš]",
       "tabMech": "[Ɱéçĥ]",
+      "buddyActive": "[Šúɱɱóñéð]",
+      "buddyDrag": "[Ðŕáĝ ţó áçţíóñ ƀáŕ]",
       "legend": "[Áççóúñţ: šĥáŕéð ƀý éʋéŕý çĥáŕáçţéŕ. Çĥáŕáçţéŕ: ţĥíš çĥáŕáçţéŕ óñļý.]",
       "scopeAccount": "[Áççóúñţ]",
       "scopeCharacter": "[Çĥáŕáçţéŕ]",
@@ -5523,7 +5529,7 @@ export const en_XA: EnTranslations = {
       "watchFull": "[Ŵáţçĥļíšţ ƒúļļ ({cap} ɱáẋ)]",
       "watchAria": "[Ŵáţçĥ {name} óñ ţĥé ĤÚÐ ţŕáçķéŕ]",
       "unwatchAria": "[Šţóþ ŵáţçĥíñĝ {name}]",
-      "cosmeticsSection": "[Ţíţļéš, Ɓóŕðéŕš áñð Ɓúððíéš]",
+      "cosmeticsSection": "[Ţíţļéš áñð Ɓóŕðéŕš]",
       "titlesSection": "[Ţíţļéš]",
       "titlesAria": "[Çĥóóšé ýóúŕ ðíšþļáýéð ţíţļé]",
       "titlesNone": "[Ñó Ţíţļé]",
@@ -17658,7 +17664,7 @@ export const en_XA: EnTranslations = {
         "name": "[Áļþáçá]"
       },
       "buddy_horse": {
-        "name": "[Ĥóŕšé]"
+        "name": "[Ţúĝ, ţĥé Ŵáŕĥóŕšé]"
       },
       "buddy_sapling": {
         "name": "[Šáþļíñĝ]"

@@ -115,6 +115,7 @@ export interface WsAuthDeps {
   ) => { fbp?: string | null; fbc?: string | null };
   metaEventSourceUrl: (req: http.IncomingMessage) => string | undefined;
   loadAccountCosmetics: (accountId: number) => Promise<AccountCosmetics>;
+  loadAccountBuddies?: (accountId: number) => Promise<readonly string[]>;
   /** The account ledger load (server/account_ledger_db.ts): which characters
    *  on the account earned each deed and found each relic. */
   loadAccountLedger: (accountId: number) => Promise<AccountLedger>;
@@ -359,11 +360,12 @@ export function createWsAuth(deps: WsAuthDeps): WsAuthHandlers {
       }
       // The account ledger rides beside the cosmetics: both are account-wide
       // state the join hands the sim, so one round trip covers the pair.
-      const [accountCosmetics, accountLedger] = await Promise.all([
+      const [accountCosmetics, accountLedger, accountBuddyOwned] = await Promise.all([
         loadAccountCosmetics(accountId),
         // A cosmetic table must never gate login: a failed read joins with a
         // fresh ledger (the sim's own default) and the next join retries.
         loadAccountLedger(accountId).catch(() => freshAccountLedger()),
+        deps.loadAccountBuddies ? deps.loadAccountBuddies(accountId) : Promise.resolve([]),
       ]);
       const joinMeta = {
         ...meta,
@@ -371,6 +373,7 @@ export function createWsAuth(deps: WsAuthDeps): WsAuthHandlers {
         sourceUrl: metaEventSourceUrl(req),
         accountCosmetics,
         accountLedger,
+        accountBuddyOwned,
         isAdmin,
         adminPermissions,
         clientSeed,

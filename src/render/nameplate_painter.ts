@@ -8,6 +8,7 @@ import { isOwnAura } from '../sim/aura_classify';
 import { corpseIndicatorFor } from '../sim/corpse_loot_state';
 import { ABILITIES, MOBS, QUESTS } from '../sim/data';
 import { specialRoleColor } from '../sim/discord_roles';
+import { isBuddyMob } from '../sim/pet/buddy_ai';
 import { isQuestGatedEntityHidden } from '../sim/quest_gated_entity';
 import { ambientNpcQuestMarkerKind } from '../sim/quests/ambient_quest_marker';
 import { type QuestMarkerKind, strongerQuestMarker } from '../sim/quests/quest_marker_kind';
@@ -19,6 +20,7 @@ import { deedBorderSlug } from '../ui/deed_border_view';
 import { deedTitleText } from '../ui/deed_i18n';
 import { devTierBadgeDataUrl, devTierByIndex, devTierNameOutlineColor } from '../ui/dev_tier';
 import { discordRoleTagLabel } from '../ui/discord_role_tag';
+import { entityDisplayName } from '../ui/entity_display_core';
 import { tEntity } from '../ui/entity_i18n';
 import { holderTierBadgeDataUrl, holderTierByIndex } from '../ui/holder_tier';
 import { formatNumber, getI18nRevision, t } from '../ui/i18n';
@@ -703,8 +705,9 @@ export class NameplatePainter {
     const elite = !!template?.elite;
     const boss = !!template?.boss;
     state.friendlyPet = isFriendlyPet(entity, this.world.entities, this.isHostilePlayer);
-    const mobName =
-      entity.ownerId !== null
+    const mobName = isBuddyMob(entity)
+      ? entityDisplayName(entity)
+      : entity.ownerId !== null
         ? (localizeSimAuraName(entity.name) ?? entity.name)
         : mobDisplayName(entity.templateId);
     state.name = entity.dead ? t('worldContent.corpseName', { name: mobName }) : mobName;

@@ -2217,6 +2217,8 @@ export const ja_JP: EnTranslations = {
       "jewelry": "アクセサリー",
       "weapons": "武器",
       "companions": "コンパニオン",
+      "companionPurchase": "Permanently unlocks this buddy and summons it immediately. No item is added to your bags.",
+      "companionOwnedAria": "{item}, already collected or awaiting reveal",
       "owned": "所有済み",
       "buyAria": "{item}を{honor}で購入",
       "buyOwnedAria": "{item}を{honor}で購入、所有済み",
@@ -2780,6 +2782,8 @@ export const ja_JP: EnTranslations = {
       "streamerBadgeTitle": "認証済み配信者"
     },
     "buddyMenu": {
+      "rename": "Rename Buddy",
+      "nameLabel": "Buddy name",
       "autolootEnable": "自動収集を有効化",
       "autolootDisable": "自動収集を無効化",
       "autolootHint": "バディが30ヤード以内にあるあなた自身の死体から戦利品を回収します。",
@@ -5312,6 +5316,8 @@ export const ja_JP: EnTranslations = {
       "tabMounts": "マウント",
       "tabSkins": "スキン",
       "tabMech": "メカ",
+      "buddyActive": "Summoned",
+      "buddyDrag": "Drag to action bar",
       "legend": "アカウント：全キャラクターで共有。キャラクター：このキャラクターのみ。",
       "scopeAccount": "アカウント",
       "scopeCharacter": "キャラクター",
