@@ -136,7 +136,9 @@ export const CI_LONG_SUITES = Object.freeze([
   // seeds nightly. chronomancy_balance_targets (8.3 s) leaves for the shard
   // pool. Projected from those weights by two-worker LPT, each half's file
   // time grows by about two minutes: re-derive the lane bound in ci.yml
-  // from the first full-mode lane walls after this lands.
+  // from the first full-mode lane walls after this lands. Done 2026-09-28:
+  // the worst healthy lane wall was 16.22 minutes, so both halves went from
+  // 28 to 36 (the measured record is on the ci.yml bound).
   // The five-class-overhauls balance harnesses (review 3050): the owned-class
   // matrices grew to 8 specs and the raid loop to ~510s, pushing shards 1 and
   // 4 past the then-20-minute pr-gate shard budget; they are exactly what this

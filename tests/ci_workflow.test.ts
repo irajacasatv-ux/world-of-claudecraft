@@ -1336,14 +1336,16 @@ describe('CI workflow parity', () => {
       // excluded) at the same 1.60 ratio and 1.37 margin; evidence on the
       // ci.yml bound.
       ['release-gate', 36],
-      // The lanes: 28 is the 2026-08-14 re-derivation from post-rebalance
-      // healthy walls (worst lane 12.5 minutes, same formula as pr-gate).
+      // The lanes: 36 is the 2026-09-28 re-derivation from the first
+      // full-mode walls after the lane diet grew both halves (worst healthy
+      // lane 16.22 minutes, same formula as pr-gate; the 2026-08-14 figure
+      // was 28 from 12.5).
       // The 60-to-20-to-30 history, including the falsified under-10
       // projection that bans sizing these from estimates, lives on the
       // ci.yml bound. Both halves share one bound so the a/b assignment can
       // rebalance without re-sizing.
-      ['pr-long-sims-a', 28],
-      ['pr-long-sims-b', 28],
+      ['pr-long-sims-a', 36],
+      ['pr-long-sims-b', 36],
       ['browser-gate', 10],
       // 8 is a measured decision like the rest (healthy worst 4.42 min, all
       // observed stalls over 8), so it is pinned exactly here beside the

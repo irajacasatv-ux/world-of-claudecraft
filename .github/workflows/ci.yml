@@ -843,7 +843,18 @@ jobs:
     # so the a/b assignment can still rebalance freely without re-sizing. The
     # queue-side ceiling this has to fit under is recorded in
     # docs/merge-queue.md.
-    timeout-minutes: 28
+    #
+    # 2026-09-28 re-derivation, owed by the lane diet that added the three
+    # warlock anchors and the five-minute windows to the lane (projected at
+    # about two more minutes per half; scripts/lib/ci_shard_plan.mjs). The
+    # first full-mode walls after it, both on feature/freeholds: run
+    # 36444276927, lane A 12.95 minutes and lane B 23.40, of which 10.88 was a
+    # stalled checkout fetch (excluded, as release-gate excludes its stall
+    # walls; the same stall held that run's lint, and lane B's test step took
+    # 12.07); run 36448553184, lane A 13.43 and lane B 16.22. The worst
+    # healthy wall is lane B at 16.22: 16.22 x 1.60 x 1.37 = 35.6, so 36,
+    # still under pr-gate's 37, so the queue's critical path does not move.
+    timeout-minutes: 36
     runs-on: ubuntu-latest
 
     steps:
@@ -953,7 +964,7 @@ jobs:
     if: ((github.event_name == 'pull_request' && (github.base_ref != 'main' || !startsWith(github.head_ref, 'release/'))) || (github.event_name == 'push' && !startsWith(github.ref, 'refs/heads/release/')) || github.event_name == 'workflow_dispatch' || github.event_name == 'merge_group') && needs.changes.outputs.code != 'false'
     # Sized with pr-long-sims-a (evidence there, in the lane-diet PR, and in
     # the dated re-derivations the sibling comment carries).
-    timeout-minutes: 28
+    timeout-minutes: 36
     runs-on: ubuntu-latest
 
     steps:
