@@ -124,15 +124,16 @@ describe('open-world population never exceeds what the content authored', () => 
       clearCopies();
 
       // A caravan tracks no escortee until a player enters its area, so it is allowed none.
-      expect(sim.escortRuns.get(caravan.id)?.npcId ?? null).toBeNull();
+      expect(sim.escortRuns.has(caravan.id), 'the boot world holds no caravan state').toBe(false);
       const caravanRow = oneOver(caravan.npcMobId, 0);
       expect(overBudget('a caravan not materialized')).toEqual(caravanRow);
       clearCopies();
 
       // An escort whose state exists but tracks no escortee is allowed none: a caravan
-      // whose world quest is inactive holds that state from the first tick on (escort.ts
-      // creates every def's state each tick), and an escort whose run ended holds it until
-      // its escortee respawns. Each shape makes a live escortee one over.
+      // never activated holds that state from the first tick on (escort.ts ensures every
+      // def's state each tick), and an escort whose run ended (a caravan deactivated mid-run
+      // included) holds it until its escortee respawns. Each shape makes a live escortee
+      // one over.
       sim.escortRuns.set(caravan.id, {
         escortId: caravan.id,
         npcId: null,
@@ -165,11 +166,14 @@ describe('open-world population never exceeds what the content authored', () => 
       expect(overBudget('a wave with no run active')).toEqual(idleWaveRow);
       clearCopies();
 
-      // A dead copy never counts: a corpse is no leak.
-      addCopies(base.templateId, 1);
+      // A dead copy never counts: a corpse is no leak. The copies make the template one
+      // over by construction, so the check passing proves they were not counted.
+      oneOver(base.templateId, campAuthored(base.templateId));
+      expect(extras.length).toBeGreaterThan(0);
       for (const id of extras) {
         const copy = sim.entities.get(id);
-        if (copy) copy.dead = true;
+        if (!copy) throw new Error(`copy ${id} is missing`);
+        copy.dead = true;
       }
       expect(overBudget('a dead copy')).toEqual([]);
       clearCopies();
