@@ -91,6 +91,9 @@ export function combineDruidSeedRuns(
 ): DruidBalanceResult[] {
   const [first] = runs;
   if (!first) return [];
+  if (runs.some((run) => run.length !== first.length)) {
+    throw new Error('combineDruidSeedRuns: seed runs differ in length');
+  }
   return first.map((cell, i) => {
     for (const run of runs) {
       const other = run[i];

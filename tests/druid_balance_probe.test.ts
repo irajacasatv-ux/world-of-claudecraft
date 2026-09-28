@@ -133,7 +133,9 @@ const BAND = 0.08;
 const FULL_SWEEP = process.env.WOC_FULL_BALANCE_SWEEP === '1';
 const band = bandAt(FULL_SWEEP);
 const MATRIX_SEEDS: readonly number[] = FULL_SWEEP ? DRUID_PROBE_SEEDS : [DRUID_PROBE_SEEDS[0]];
-// Each seed case appends its run here; the band case combines them (in seed order).
+// Each seed case appends its seed and its run here; the band case combines the runs
+// (in seed order).
+const ranSeeds: number[] = [];
 const seedRuns: DruidBalanceResult[][] = [];
 const within = (measured: number) =>
   [measured * (1 - BAND), measured * (1 + BAND)] as [number, number];
@@ -171,6 +173,16 @@ describe('Druid v0.29 balance and live-mob harness', () => {
     expect(() => combineDruidSeedRuns([[cell(1)], [cell(1, 'wildApex')]])).toThrow(
       'seed runs disagree at cell 0',
     );
+    const otherProfile = { ...cell(1), profile: 'wildfang' } as DruidBalanceResult;
+    expect(() => combineDruidSeedRuns([[cell(1)], [otherProfile]])).toThrow(
+      'seed runs disagree at cell 0',
+    );
+    // A run missing a cell, or carrying one more than the first, is refused, never
+    // silently trimmed.
+    expect(() => combineDruidSeedRuns([[cell(1)], []])).toThrow('seed runs differ in length');
+    expect(() => combineDruidSeedRuns([[cell(1)], [cell(1), cell(2)]])).toThrow(
+      'seed runs differ in length',
+    );
   });
 
   // One case per seed, so no single case carries the whole sweep: the nightly's eight
@@ -178,10 +190,15 @@ describe('Druid v0.29 balance and live-mob harness', () => {
   // 36444280897, 2026-09-28). Each seed's 12 profile x capstone combos over a 123 s
   // window take about 90 to 125 s solo (the eight measured 994 s together on
   // 2026-09-27); in the long-sims lane (workers=2) two heavy suites share the runner,
-  // roughly doubling wall time (run 31288946173 killed one at 150 s mid-matrix).
-  it.each(MATRIX_SEEDS.map((seed, index) => [index + 1, seed]))(
-    'runs the matrix at seed %i',
-    (_, seed) => {
+  // roughly doubling wall time (run 31288946173 killed one at 150 s mid-matrix). The
+  // nightly bound is per seed, 900 s, about 2.9x the more than 300 s a seed averaged in
+  // that nightly, so the sweep's total allowance is 8 x 900 = 7,200 s, inside the
+  // nightly job's 300-minute limit. A probe runs synchronously, so a bound fails an
+  // over-long case when it finishes rather than cutting it short.
+  it.each(MATRIX_SEEDS.map((seed, index) => [seed, index + 1]))(
+    'runs the matrix at seed %i (run %i)',
+    (seed) => {
+      ranSeeds.push(seed);
       seedRuns.push(runDruidBalanceSeed(seed));
     },
     FULL_SWEEP ? 900_000 : 420_000,
@@ -189,6 +206,7 @@ describe('Druid v0.29 balance and live-mob harness', () => {
 
   it('lands every profile and capstone, and the best builds inside their bands', () => {
     expect(seedRuns, 'every seed case ran').toHaveLength(MATRIX_SEEDS.length);
+    expect(ranSeeds, 'each case ran its own seed, in order').toEqual([...MATRIX_SEEDS]);
     const results = combineDruidSeedRuns(seedRuns);
     expect(results).toHaveLength(12);
     expect(new Set(results.map((result) => result.profile))).toEqual(
