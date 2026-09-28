@@ -14,29 +14,10 @@
 // the shared half lives in tests/helpers/world_population.ts, and
 // tests/world_population_shards.test.ts pins the partition.
 import { describe, expect, it } from 'vitest';
-import {
-  HEALING_DUMMY_CASTER_ID,
-  HEALING_DUMMY_RANGER_ID,
-  HEALING_DUMMY_SCOUT_ID,
-  HEALING_DUMMY_SOLDIER_ID,
-  HEALING_DUMMY_TANK_ID,
-} from '../src/sim/content/healing_training';
-import { HUB_HEALING_DUMMY_ID, HUB_TRAINING_DUMMY_ID } from '../src/sim/content/practice_dummies';
 import { CAMPS, DUNGEON_X_THRESHOLD, ESCORTS, MOBS } from '../src/sim/data';
 import { Sim } from '../src/sim/sim';
 import type { EscortRunState } from '../src/sim/types';
-import { assertPopulationSane } from './helpers/world_population';
-
-// The Eastbrook hub practice yard's standing targets, each authored once.
-const HUB_PRACTICE_IDS = [
-  HUB_TRAINING_DUMMY_ID,
-  HUB_HEALING_DUMMY_ID,
-  HEALING_DUMMY_TANK_ID,
-  HEALING_DUMMY_SOLDIER_ID,
-  HEALING_DUMMY_SCOUT_ID,
-  HEALING_DUMMY_CASTER_ID,
-  HEALING_DUMMY_RANGER_ID,
-];
+import { assertPopulationSane, HUB_PRACTICE_IDS } from './helpers/world_population';
 
 describe('open-world population never exceeds what the content authored', () => {
   // One boot world, shared by the boot check and the budget controls that follow it.
@@ -58,7 +39,8 @@ describe('open-world population never exceeds what the content authored', () => 
     // and an active run's exact wave must not, or the sweep's passes prove nothing.
     // The Fisher Bram escort's wave template (breach_wretch) belongs to no other
     // escort, though Farshore's camps also place it, so each case adds one past the
-    // summed budget; the expected rows are counted here, independently of the helper.
+    // summed budget. Live counts and camp sums are counted here, independently of the
+    // helper; the escortee, caravan and hub allowances are stated literals.
     const sim = bootWorld();
     const openWorldLive = (templateId: string) =>
       [...sim.entities.values()].filter(
@@ -109,6 +91,10 @@ describe('open-world population never exceeds what the content authored', () => 
       }
       return [];
     };
+    // Every escortee starts in the open world, where the check counts it.
+    for (const def of Object.values(ESCORTS)) {
+      expect(def.start.x, def.id).toBeLessThanOrEqual(DUNGEON_X_THRESHOLD);
+    }
     const bram = ESCORTS.esc_fs_bram;
     const wave = bram.ambushes[0];
     expect(wave.mobId).toBe('breach_wretch');
@@ -131,6 +117,15 @@ describe('open-world population never exceeds what the content authored', () => 
       const caravanRow = oneOver(caravan.npcMobId, 0);
       expect(overBudget('a caravan not materialized')).toEqual(caravanRow);
       clearCopies();
+
+      // An escort whose state exists but tracks no escortee (a run ended, its escortee
+      // not yet respawned: the state every ticked world holds) is allowed none, so its
+      // one live escortee is one over.
+      sim.escortRuns.set(bram.id, { ...idle, npcId: null, respawnAt: 30 });
+      expect(overBudget('an escort tracking no escortee')).toEqual([
+        `${bram.npcMobId}: 1 live vs 0 allowed`,
+      ]);
+      sim.escortRuns.set(bram.id, idle);
 
       for (const hubId of HUB_PRACTICE_IDS) {
         const hubRow = oneOver(hubId, 1);

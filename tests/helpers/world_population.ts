@@ -62,8 +62,10 @@ function activeWaveAllowance(sim: Sim): Map<string, number> {
 }
 
 /** Each escort tracks at most one escortee entity (its run state's npcId), idle or
- *  walking; that one is authored, never a leak. An escort tracking none (a caravan not
- *  yet materialized, a walker between its death and its respawn) is allowed none. */
+ *  walking; that one is authored, never a leak. An escort tracking none is allowed
+ *  none: a caravan not yet materialized, or any escort whose run ended (in success,
+ *  failure or timeout) until its escortee respawns. A walker that has just died stays
+ *  tracked, as a corpse the check does not count, until the next escort pass drops it. */
 function escorteeAllowance(sim: Sim): Map<string, number> {
   const out = new Map<string, number>();
   for (const def of Object.values(ESCORTS)) {
@@ -73,32 +75,34 @@ function escorteeAllowance(sim: Sim): Map<string, number> {
   return out;
 }
 
-/** The Eastbrook hub practice yards stand authored practice targets permanently,
- *  spawned by sim.ts rather than CAMPS; authored the same as an idle escortee,
- *  never a leak. */
+/** The Eastbrook hub practice yard's standing targets, spawned by sim.ts rather than
+ *  CAMPS, each authored once. */
+export const HUB_PRACTICE_IDS: readonly string[] = Object.freeze([
+  HUB_TRAINING_DUMMY_ID,
+  HUB_HEALING_DUMMY_ID,
+  HEALING_DUMMY_TANK_ID,
+  HEALING_DUMMY_SOLDIER_ID,
+  HEALING_DUMMY_SCOUT_ID,
+  HEALING_DUMMY_CASTER_ID,
+  HEALING_DUMMY_RANGER_ID,
+]);
+
+/** The hub practice targets stand permanently; each one is authored, never a leak. */
 function hubPracticeAllowance(): Map<string, number> {
-  return new Map([
-    [HUB_TRAINING_DUMMY_ID, 1],
-    [HUB_HEALING_DUMMY_ID, 1],
-    [HEALING_DUMMY_TANK_ID, 1],
-    [HEALING_DUMMY_SOLDIER_ID, 1],
-    [HEALING_DUMMY_SCOUT_ID, 1],
-    [HEALING_DUMMY_CASTER_ID, 1],
-    [HEALING_DUMMY_RANGER_ID, 1],
-  ]);
+  return new Map(HUB_PRACTICE_IDS.map((id) => [id, 1]));
 }
 
 export function assertPopulationSane(sim: Sim, label: string): void {
   const authored = authoredCounts();
   const wave = activeWaveAllowance(sim);
-  const idle = escorteeAllowance(sim);
+  const escortee = escorteeAllowance(sim);
   const hubPractice = hubPracticeAllowance();
   const over: string[] = [];
   for (const [templateId, live] of liveCounts(sim)) {
     const budget =
       (authored.get(templateId) ?? 0) +
       (wave.get(templateId) ?? 0) +
-      (idle.get(templateId) ?? 0) +
+      (escortee.get(templateId) ?? 0) +
       (hubPractice.get(templateId) ?? 0);
     if (live > budget) over.push(`${templateId}: ${live} live vs ${budget} allowed`);
   }

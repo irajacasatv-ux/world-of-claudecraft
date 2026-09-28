@@ -108,7 +108,7 @@ describe('the world population escort sweep shards', () => {
       ).toBe(shardFile(index));
     }
     // The rule's own file registers no shard and reaches the helpers only for the
-    // budget check, through one named import.
+    // budget check and the hub list, through one named import.
     const base = stripComments(read('world_population_invariant.test.ts'));
     expect(base, 'the rule file must not run or deal escorts').not.toMatch(
       /escortShard|runEscortRounds|escort_shards/,
@@ -119,8 +119,10 @@ describe('the world population escort sweep shards', () => {
     ).not.toMatch(/import \* as \w+ from '\.\/helpers\/(world_population|escort_shards)'/);
     expect(
       base,
-      'the rule file imports assertPopulationSane by name from the population helper',
-    ).toContain("import { assertPopulationSane } from './helpers/world_population';");
+      'the rule file imports the budget check and the hub list by name from the population helper',
+    ).toContain(
+      "import { assertPopulationSane, HUB_PRACTICE_IDS } from './helpers/world_population';",
+    );
     expect(
       base.match(HELPER_IMPORT),
       'the rule file imports one helper, in any import form',
@@ -167,6 +169,7 @@ describe('the world population escort sweep shards', () => {
     expect('// @vitest-environment happy-dom').toMatch(RUNNER_PRAGMA);
     expect('// @jest-environment node').toMatch(RUNNER_PRAGMA);
     expect(helperImports('await import("./helpers/x");')).toBe(1);
+    expect(helperImports('await import(`./helpers/x`);')).toBe(1);
     expect("export * from './escort_shards';").toMatch(HELPER_DEALS);
     expect("export * as deal from './escort_shards';").toMatch(HELPER_DEALS);
     expect('const shard = escortShard(0);').toMatch(HELPER_DEALS);
