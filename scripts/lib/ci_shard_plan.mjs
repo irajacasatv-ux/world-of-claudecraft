@@ -138,7 +138,8 @@ export const CI_LONG_SUITES = Object.freeze([
   // time grows by about two minutes: re-derive the lane bound in ci.yml
   // from the first full-mode lane walls after this lands. Done 2026-09-28:
   // the worst healthy lane wall was 16.22 minutes, so both halves went from
-  // 28 to 36 (the measured record is on the ci.yml bound).
+  // 28 to 36 (the measured record is on the ci.yml bound), and the halves
+  // were rebalanced from the same harvest (see CI_LONG_SUITE_HALF_A).
   // The five-class-overhauls balance harnesses (review 3050): the owned-class
   // matrices grew to 8 specs and the raid loop to ~510s, pushing shards 1 and
   // 4 past the then-20-minute pr-gate shard budget; they are exactly what this
@@ -186,12 +187,19 @@ const CI_LONG_SUITE_HALF_A = Object.freeze([
   'tests/owned_class_balance_dps_metrics.test.ts',
   'tests/owned_class_balance_dps_probes.test.ts',
   'tests/owned_class_balance_druid_bands.test.ts',
+  // 2026-09-28: moved from b by the first CI harvest of the lane files (run
+  // 36448553184, in-lane ms). Before, a summed 1,274 s and b 1,632 s, and
+  // two-worker LPT put b's busier worker at about 884 s; with this file here
+  // the halves sum to 1,449 s and 1,457 s and the busier worker of either half
+  // sits near 738 s.
+  'tests/owned_class_balance_healer_contract.test.ts',
   'tests/owned_class_balance_healer_probes.test.ts',
   'tests/owned_class_balance_role_bands.test.ts',
   'tests/owned_class_raid_armor_avoidance.test.ts',
   // 2026-09-27: the heaviest newcomer and the lightest anchor come here, the
   // other two anchors land in b (two-worker LPT over the harvested weights,
-  // anchors halved for the diet: a about 532 s, b about 561 s of file time).
+  // anchors halved for the diet: a about 532 s, b about 561 s of file time,
+  // projected before the harvest above measured them in-lane).
   'tests/warlock_anchor_affliction.test.ts',
   'tests/warlock_five_minute_windows.test.ts',
 ]);
