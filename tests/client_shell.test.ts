@@ -914,7 +914,7 @@ describe('client HTML shell', () => {
     expect(hudTs).not.toContain("pip.classList.toggle('on'");
   });
 
-  it('reconciles every #bags display show-site to flex and every read-guard to !== none', () => {
+  it('reconciles every #bags display show-site to flex and every read-guard to bagsWindowShown', () => {
     // #bags is a flex-column layout (components.css flex-direction: column). Every show-site
     // must set display = 'flex' (a 'block' drops the column), and every render read-guard goes
     // through bagsWindowShown (an === 'block' guard never fired when bags was opened via the
@@ -928,6 +928,7 @@ describe('client HTML shell', () => {
     expect(hudTs).toContain("$('#bags').style.display = 'flex';");
     expect(hudTs).toContain("if (bagsWindowShown($('#bags').style.display)) this.renderBags();");
     expect(hudTs).not.toContain("#bags').style.display !== 'none'");
+    expect(hudTs).not.toContain("bags.style.display !== 'none'");
     expect(hudTs).toContain("bags.style.display !== 'flex'");
   });
 

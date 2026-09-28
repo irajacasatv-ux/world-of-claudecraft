@@ -81,10 +81,11 @@ describe('the three walks read through the one lookup', () => {
   it.each(['src/sim/deeds.ts', 'src/sim/reliquary.ts', 'src/sim/rift/hoard_reward_save.ts'])(
     '%s reads each def with creditDef and steps with creditedParentId',
     (file) => {
-      const source = stripComments(readFileSync(file, 'utf8'));
+      const source = stripComments(readFileSync(new URL(`../${file}`, import.meta.url), 'utf8'));
       expect(source).toContain('creditDef(ITEMS, id)');
       expect(source).toContain('creditedParentId(def)');
-      expect(source).not.toMatch(/=\s*ITEMS\[id\]/);
+      // The walk's annotated def read, whatever its id variable is called.
+      expect(source).not.toMatch(/ItemDef \| undefined = ITEMS\[/);
     },
   );
 });
