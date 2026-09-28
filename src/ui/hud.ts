@@ -1607,7 +1607,6 @@ export class Hud {
     return {
       log: (text, color) => this.log(text, color),
       logNodes: (nodes, color) => this.logNodes(nodes, color),
-      showBanner: (text, motion, iconUrl) => this.showBanner(text, motion, iconUrl),
       showCelebrationBanner: (text, bannerClass, variant, motion, iconUrl, subtext) =>
         this.showCelebrationBanner(text, bannerClass, variant, motion, iconUrl, subtext),
       announce: (text) => this.combatAnnouncer.push(text, performance.now()),

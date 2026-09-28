@@ -16,12 +16,11 @@ import {
 import { buildCraftCelebrationPlan, type CraftTierUp } from './craft_celebration_view';
 import type { CelebrationHost } from './skill_level_toast_painter';
 
-/** The celebration host plus the AMBIENT banner form the masterwork plate
- *  rides (showBanner's first three arguments), not the queued celebration
- *  form the other celebration painters use. */
-export interface CraftCelebrationHost extends CelebrationHost {
-  showBanner(text: string, motion: boolean, decorativeIconUrl?: string): void;
-}
+/** The celebration host the craft plate draws through. The plate rides the
+ *  queued `deed` celebration class like every other celebration: on the
+ *  ambient form it waited in the latest-wins seat behind a live level-up, and
+ *  any later ambient line (a zone name, a countdown digit) replaced it unseen. */
+export type CraftCelebrationHost = CelebrationHost;
 
 export function paintCraftCelebrations(
   host: CraftCelebrationHost,
@@ -39,7 +38,7 @@ export function paintCraftCelebrations(
     const text = craftBannerText(plan.banner);
     // plan.motion trims the banner fade only; the announcer push below is
     // the polite #combat-live ARIA region (accessibility, never gated).
-    host.showBanner(text, plan.motion, craftBannerIcon(plan.banner));
+    host.showCelebrationBanner(text, 'deed', 'default', plan.motion, craftBannerIcon(plan.banner));
     // The banner div carries no live semantics (the deed unlock precedent),
     // so the polite #combat-live region carries the copy.
     host.announce(text);

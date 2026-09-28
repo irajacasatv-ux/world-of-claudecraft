@@ -1,6 +1,6 @@
 // Paint pins for the crafted earned moment (craft_celebration_painter.ts,
 // extracted from Hud.handleCraftCelebrations), through a recorded host: one
-// toast line per masterwork and tier-up in plan order, the single AMBIENT
+// toast line per masterwork and tier-up in plan order, the single queued deed-class
 // banner (masterwork outranks tier-up, the seal only on a masterwork), the
 // polite announce of exactly the banner copy, one chime, and reduced motion
 // trimming the banner fade only. The DOM half (the real banner slot) is
@@ -21,13 +21,11 @@ import { MASTERWORK_SEAL_IMAGE_URL } from '../src/ui/hud/professions/profession_
 function recordedHost(reducedMotion = false) {
   const calls = {
     log: [] as [string, string][],
-    banners: [] as unknown[][],
     celebrations: [] as unknown[][],
     announced: [] as string[],
   };
   const host: CraftCelebrationHost = {
     log: (text, color) => calls.log.push([text, color]),
-    showBanner: (...args) => calls.banners.push(args),
     showCelebrationBanner: (...args) => calls.celebrations.push(args),
     announce: (text) => calls.announced.push(text),
     reducedMotion: () => reducedMotion,
@@ -38,7 +36,7 @@ function recordedHost(reducedMotion = false) {
 describe('paintCraftCelebrations', () => {
   afterEach(() => vi.restoreAllMocks());
 
-  it('logs every tier-up, plates the LAST on the ambient banner with no seal, chimes once', () => {
+  it('logs every tier-up, plates the LAST on the queued deed banner with no seal, chimes once', () => {
     const chime = vi.spyOn(audio, 'achievement').mockImplementation(() => {});
     const { host, calls } = recordedHost();
     const ups = [
@@ -52,9 +50,9 @@ describe('paintCraftCelebrations', () => {
     ]);
     const text = craftBannerText({ kind: 'tierUp', craftId: 'tailoring', toTier: 3 });
     expect(calls.log[1]?.[0]).toBe(text);
-    expect(calls.banners).toEqual([[text, true, undefined]]);
-    // The masterwork plate rides the AMBIENT form, never the queued one.
-    expect(calls.celebrations).toEqual([]);
+    // The plate rides the queued deed class (never the ambient seat a later
+    // ambient line could replace).
+    expect(calls.celebrations).toEqual([[text, 'deed', 'default', true, undefined]]);
     expect(calls.announced).toEqual([text]);
     expect(chime).toHaveBeenCalledTimes(1);
   });
@@ -66,7 +64,9 @@ describe('paintCraftCelebrations', () => {
     const text = craftBannerText({ kind: 'masterwork', itemId: 'iron_sword' });
     expect(calls.log).toHaveLength(2);
     expect(calls.log[0]?.[0]).toBe(text);
-    expect(calls.banners).toEqual([[text, true, MASTERWORK_SEAL_IMAGE_URL]]);
+    expect(calls.celebrations).toEqual([
+      [text, 'deed', 'default', true, MASTERWORK_SEAL_IMAGE_URL],
+    ]);
     expect(calls.announced).toEqual([text]);
   });
 
@@ -74,7 +74,7 @@ describe('paintCraftCelebrations', () => {
     const chime = vi.spyOn(audio, 'achievement').mockImplementation(() => {});
     const { host, calls } = recordedHost(true);
     paintCraftCelebrations(host, 'iron_sword', []);
-    expect(calls.banners[0]?.[1]).toBe(false);
+    expect(calls.celebrations[0]?.[3]).toBe(false);
     expect(calls.announced).toHaveLength(1);
     expect(chime).toHaveBeenCalledTimes(1);
   });
@@ -83,7 +83,7 @@ describe('paintCraftCelebrations', () => {
     const chime = vi.spyOn(audio, 'achievement').mockImplementation(() => {});
     const { host, calls } = recordedHost();
     paintCraftCelebrations(host, null, []);
-    expect(calls).toEqual({ log: [], banners: [], celebrations: [], announced: [] });
+    expect(calls).toEqual({ log: [], celebrations: [], announced: [] });
     expect(chime).not.toHaveBeenCalled();
   });
 });

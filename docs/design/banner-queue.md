@@ -52,6 +52,9 @@ the Hud drives with its own timers). Two behavior classes:
 - The attunement banner rides the `deed` celebration class (its epic
   zone-broadcast log line was always the durable record; classed ambient
   it could vanish in the latest-wins seat behind a live level-up).
+- The masterwork and tier-up craft plate rides the same `deed` class for the
+  same reason (it predated the queue and was the last celebration left on the
+  ambient form; migrated 2026-09-27, pinned in `tests/craft_celebration_view.test.ts`).
 - Accessibility is unchanged: the banner div carries no live semantics;
   the polite `#combat-live` region push and the chat-log line stay the
   announced and durable records, emitted before the banner is scheduled.

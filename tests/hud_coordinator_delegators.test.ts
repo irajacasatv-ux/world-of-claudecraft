@@ -146,11 +146,10 @@ describe('Hud.showBanner and showCelebrationBanner: the argument order into the 
   });
 
   it('the celebration rig paints the same banners, on the same clock, as the real Hud', () => {
-    // tests/helpers/celebration_rig.ts transcribes showCelebrationBanner and the
-    // host's showBanner (whose three arguments lean on BannerSlot.show's own
-    // defaults, where the Hud's showBanner spells its own), so the two are held
-    // together by what their slots PAINT: the real #banner against the rig's
-    // element, at every checkpoint of the duration and advance chain.
+    // tests/helpers/celebration_rig.ts transcribes showCelebrationBanner, so the
+    // two are held together by what their slots PAINT: the real #banner against
+    // the rig's element, at every checkpoint of the duration and advance chain
+    // (an ambient first, through Hud.showBanner and the rig's own slot).
     const hud = bareHud();
     const rig = celebrationRig();
     const real = document.getElementById('banner') as HTMLElement;
@@ -168,8 +167,8 @@ describe('Hud.showBanner and showCelebrationBanner: the argument order into the 
       'crest.webp',
       'Mining 50',
     ];
-    hud.celebrationHost().showBanner('Zone', false, 'art.webp');
-    rig.host.showBanner('Zone', false, 'art.webp');
+    hud.showBanner('Zone', false, 'art.webp');
+    rig.slot.show('Zone', false, 'art.webp');
     hud.showCelebrationBanner(...celebration);
     rig.showCelebrationBanner(...celebration);
     const seen: string[] = [];
@@ -190,7 +189,6 @@ describe('Hud.celebrationHost: the seam the celebration painters draw through', 
     const hud = bareHud();
     const log = vi.fn();
     const logNodes = vi.fn();
-    const showBanner = vi.fn();
     const showCelebrationBanner = vi.fn();
     const combatAnnouncer = { push: vi.fn() };
     const deedsWindow = { noteUnlocks: vi.fn(), openWithDeed: vi.fn() };
@@ -198,7 +196,6 @@ describe('Hud.celebrationHost: the seam the celebration painters draw through', 
     Object.assign(hud, {
       log,
       logNodes,
-      showBanner,
       showCelebrationBanner,
       combatAnnouncer,
       deedsWindow,
@@ -214,8 +211,6 @@ describe('Hud.celebrationHost: the seam the celebration painters draw through', 
     const nodes = [document.createTextNode('n')];
     host.logNodes(nodes, 'var(--gold)');
     expect(logNodes).toHaveBeenCalledWith(nodes, 'var(--gold)');
-    host.showBanner('Zone', false, 'art.webp');
-    expect(showBanner).toHaveBeenCalledWith('Zone', false, 'art.webp');
     host.showCelebrationBanner('Gatherer', 'deed', 'skill', false, 'crest.webp', 'Mining 50');
     expect(showCelebrationBanner).toHaveBeenCalledWith(
       'Gatherer',

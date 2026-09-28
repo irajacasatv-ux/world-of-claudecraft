@@ -604,8 +604,9 @@ const MONOLITHS: MonolithRow[] = [
     // emote wheel, doom meter input, touch drop, form sync, crafting probe,
     // reliquary tracker frame, window reflow), then to 16595 in its review round,
     // then 16595 -> 15912 with the loot and profession event routers, the profession
-    // surface latch and the event sfx router.
-    ceiling: 15912,
+    // surface latch and the event sfx router; 15911 once the craft plate left the
+    // ambient banner form.
+    ceiling: 15911,
     seam: 'pure view core + thin painter on PainterHost (src/ui/CLAUDE.md)',
   },
   {

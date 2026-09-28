@@ -39,12 +39,10 @@ function world(craftSkills: Record<string, number>, gathering: Record<string, nu
 function recordedHost() {
   const calls = {
     log: [] as string[],
-    banners: [] as unknown[][],
     celebrations: [] as unknown[][],
   };
   const host: CraftCelebrationHost = {
     log: (text) => calls.log.push(text),
-    showBanner: (...args) => calls.banners.push(args),
     showCelebrationBanner: (...args) => calls.celebrations.push(args),
     announce: () => {},
     reducedMotion: () => false,
@@ -72,12 +70,12 @@ describe('CelebrationDrainObserver', () => {
     observer.observe(world({ cooking: T - 1 }), null, false, build);
     // Disarmed: the floor climb logs its skill line, but no tier plate yet.
     observer.observe(world({ cooking: T }), null, false, build);
-    expect(calls.banners).toEqual([]);
+    expect(calls.celebrations).toEqual([]);
     observer.armCraftTierUps();
     expect(observer.craftTierUpDrains).toBe(CRAFT_TIER_UP_DRAIN_WINDOW);
     observer.observe(world({ cooking: T }), null, false, build);
     const plate = craftBannerText({ kind: 'tierUp', craftId: 'cooking', toTier: 1 });
-    expect(calls.banners).toEqual([[plate, true, undefined]]);
+    expect(calls.celebrations).toEqual([[plate, 'deed', 'default', true, undefined]]);
     // The crossing disarms the window.
     expect(observer.craftTierUpDrains).toBe(0);
   });
@@ -88,7 +86,9 @@ describe('CelebrationDrainObserver', () => {
     const observer = new CelebrationDrainObserver();
     observer.observe(world({}), 'iron_sword', false, build);
     const plate = craftBannerText({ kind: 'masterwork', itemId: 'iron_sword' });
-    expect(calls.banners).toEqual([[plate, true, MASTERWORK_SEAL_IMAGE_URL]]);
+    expect(calls.celebrations).toEqual([
+      [plate, 'deed', 'default', true, MASTERWORK_SEAL_IMAGE_URL],
+    ]);
     expect(build).toHaveBeenCalledTimes(1);
   });
 
@@ -145,7 +145,6 @@ describe('the Hud side of the drain (source pins)', () => {
     for (const wire of [
       'log: (text, color) => this.log(text, color),',
       'logNodes: (nodes, color) => this.logNodes(nodes, color),',
-      'showBanner: (text, motion, iconUrl) => this.showBanner(text, motion, iconUrl),',
       'this.showCelebrationBanner(text, bannerClass, variant, motion, iconUrl, subtext),',
       'announce: (text) => this.combatAnnouncer.push(text, performance.now()),',
       "reducedMotion: () => window.matchMedia('(prefers-reduced-motion: reduce)').matches,",

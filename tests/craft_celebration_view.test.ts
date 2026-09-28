@@ -11,6 +11,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { audio } from '../src/game/audio';
 import { TIER_SKILL_STEP } from '../src/sim/professions/wheel';
 import { paintCraftCelebrations } from '../src/ui/hud/professions/craft_celebration_painter';
+import { craftBannerText } from '../src/ui/hud/professions/craft_celebration_text_view';
 import {
   buildCraftCelebrationPlan,
   CRAFT_TIER_UP_DRAIN_WINDOW,
@@ -191,13 +192,30 @@ describe('craft celebration HUD behavior', () => {
     expect(hud.log.mock.calls[0][0]).toBe(copy?.textContent);
     expect(achievement).toHaveBeenCalledTimes(1);
 
+    // An ordinary ambient line arriving while the plate plays waits its turn (the
+    // plate is a queued celebration) and replays after the plate and its fade gap.
     hud.slot.show('Ordinary banner');
+    vi.advanceTimersByTime(2600 + 250 + 1);
 
     expect(hud.bannerEl.querySelector('img')).toBeNull();
     expect(hud.bannerEl.children).toHaveLength(1);
     expect(hud.bannerEl.querySelector('.banner-copy')?.textContent).toBe('Ordinary banner');
     expect(hud.bannerEl.classList.contains('banner-with-art')).toBe(false);
     expect(hud.bannerEl.classList.contains('banner-no-motion')).toBe(false);
+  });
+
+  it('keeps the masterwork plate queued behind a live level-up, never replaced by a later ambient', () => {
+    vi.spyOn(audio, 'achievement').mockImplementation(() => {});
+    const hud = celebrationHud();
+    hud.showCelebrationBanner('Level 20', 'levelup');
+    paintCraftCelebrations(hud.host, 'iron_sword', []);
+    // A later ambient line (a zone name, a countdown digit) lands while the ding plays.
+    hud.slot.show('Zone line');
+    // The ding's full run plus the fade gap: the queue advances to what was waiting.
+    vi.advanceTimersByTime(2600 + 250 + 1);
+    expect(hud.bannerEl.querySelector('.banner-copy')?.textContent).toBe(
+      craftBannerText({ kind: 'masterwork', itemId: 'iron_sword' }),
+    );
   });
 
   it('clears a previous variant class so the shared slot never inherits it', () => {

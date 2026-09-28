@@ -10,7 +10,7 @@
 //
 // A TRANSCRIPTION, so it is held to the real wiring elsewhere:
 // tests/hud_coordinator_delegators.test.ts drives Hud.celebrationHost,
-// showBanner and showCelebrationBanner on a bare Hud.prototype, requires the
+// and showCelebrationBanner on a bare Hud.prototype, requires the
 // host member set to match this one, and compares what this rig's slot paints
 // with what the real #banner slot paints, checkpoint by checkpoint.
 import { type Mock, vi } from 'vitest';
@@ -78,9 +78,6 @@ export function celebrationRig(overrides: Partial<CelebrationRigHost> = {}): Cel
   const host: CelebrationRigHost = {
     log: (text, color) => log(text, color),
     logNodes: vi.fn(),
-    showBanner: (text, motion, decorativeIconUrl) => {
-      slot.show(text, motion, decorativeIconUrl);
-    },
     showCelebrationBanner,
     announce: (text) => combatAnnouncer.push(text, performance.now()),
     reducedMotion: () => window.matchMedia('(prefers-reduced-motion: reduce)').matches,
