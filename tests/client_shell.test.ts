@@ -927,7 +927,11 @@ describe('client HTML shell', () => {
     expect(hudTs).not.toContain("bags.style.display = 'block'");
     expect(hudTs).not.toContain("bags.style.display !== 'block'");
     expect(hudTs).toContain("$('#bags').style.display = 'flex';");
-    expect(hudTs).toContain("if (bagsWindowShown($('#bags').style.display)) this.renderBags();");
+    // The helper's own body, exactly: the same line also sits in onInventoryChanged, so a
+    // whole-file match could not tell the helper's gate apart.
+    expect(hudTs).toContain(
+      "  renderBagsIfOpen(): void {\n    if (bagsWindowShown($('#bags').style.display)) this.renderBags();\n  }\n",
+    );
     expect(hudTs).not.toContain("#bags').style.display !== 'none'");
     expect(hudTs).not.toContain("bags.style.display !== 'none'");
     expect(hudTs).toContain("bags.style.display !== 'flex'");
@@ -948,10 +952,16 @@ describe('client HTML shell', () => {
       return text.slice(start, end);
     };
     for (const signature of ['closeVendor(): void', 'private onBankClosed(): void']) {
-      const body = flat(span(code, `\n  ${signature} {\n`, '\n  }\n'));
-      // The gated repaint is the method's closing else arm, and nothing else in it repaints.
+      const body = flat(span(code, `\n  ${signature} {\n`, '\n  }\n')).trimEnd();
+      // The gated repaint is the method's closing else arm, nothing else in it names
+      // renderBags by any spelling, and the arm stays reachable: its guard is the
+      // mobile-bags read alone.
       expect(body, signature).toMatch(/\} else \{ this\.renderBagsIfOpen\(\); \}$/);
-      expect(body, signature).not.toContain('this.renderBags()');
+      expect(body, signature).not.toMatch(/\brenderBags\b/);
+      expect(body, signature).toContain(
+        "const closeMobileBags = touchBagsShown(document.body.classList, $('#bags').style.display);",
+      );
+      expect(body, signature).toContain('if (closeMobileBags) {');
     }
     for (const ctor of ['new MarketWindow({', 'new MailboxWindow({']) {
       // Read inside the window's own constructor block, so one window's arm can never be

@@ -16,10 +16,11 @@ import { WORLD_SEED } from '../src/sim/world_seed';
 
 const digest = (value: unknown) => createHash('sha256').update(JSON.stringify(value)).digest('hex');
 // Positions are rounded to a micro-yard and facings to a micro-radian before they
-// are hashed: the same Node release (26.10.0) measured warlord_drogmar's spawn
-// height one ulp apart on arm64 and x64 (3.7256669298810356 against
-// 3.725666929881035), so a raw digest pinned on one host fails on the other. A
-// spawn that moves by a micro-yard or more always changes the digest.
+// are hashed: the same Node release on both hosts (26.10.0 in the probe) measured
+// warlord_drogmar's spawn height one ulp apart on arm64 and x64
+// (3.7256669298810356 against 3.725666929881035), so a raw digest pinned on one
+// host fails on the other. A change of a micro-yard or more in any one coordinate,
+// or a micro-radian in facing, always changes the digest.
 const quantize = (v: number) => Math.round(v * 1e6) / 1e6;
 const spawnRow = (e: Entity) => ({
   id: e.id,
