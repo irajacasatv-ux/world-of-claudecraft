@@ -21,11 +21,20 @@ import type { RiftInstance } from '../src/sim/rift/types';
 import { makeVaultSeed } from '../src/sim/rift/vault_seed';
 import { Sim } from '../src/sim/sim';
 import { DT, type Entity, type SimEvent } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 type Rarity = 'common' | 'rare' | 'epic' | 'legendary';
 
 function encounter(rarity: Rarity = 'rare', seed = 5150) {
-  const sim = new Sim({ seed, playerClass: 'warrior', autoEquip: false, devCommands: true });
+  // The hoard is a private rift instance and the overworld buys these cases
+  // nothing, so the Sim runs on the empty world.
+  const sim = new Sim({
+    seed,
+    playerClass: 'warrior',
+    autoEquip: false,
+    devCommands: true,
+    world: EMPTY_TEST_WORLD,
+  });
   sim.chat('/dev level 20', sim.player.id);
   sim.enterRift(makeVaultSeed(3, 183), 23, sim.player.id, undefined, {
     ...sim.player,

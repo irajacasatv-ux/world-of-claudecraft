@@ -11,13 +11,22 @@ import type { RiftInstance } from '../src/sim/rift/types';
 import { vaultSeedOpen } from '../src/sim/rift/vault_seed';
 import { Sim } from '../src/sim/sim';
 import type { Entity } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 function hoard(rarity: 'common' | 'rare' | 'epic' | 'legendary'): {
   sim: Sim;
   inst: RiftInstance;
   boss: Entity;
 } {
-  const sim = new Sim({ seed: 4242, playerClass: 'warrior', autoEquip: true, devCommands: true });
+  // The hoard is a private rift instance and the overworld buys these cases
+  // nothing, so the Sim runs on the empty world.
+  const sim = new Sim({
+    seed: 4242,
+    playerClass: 'warrior',
+    autoEquip: true,
+    devCommands: true,
+    world: EMPTY_TEST_WORLD,
+  });
   sim.chat('/dev level 20', sim.player.id);
   sim.chat('/dev god', sim.player.id);
   // The themed bosses hold the open valleys; the caves hold the cave bosses.
@@ -54,7 +63,13 @@ describe('the hoard reward chest', () => {
       (seed) => generateRiftFloor(seed, RIFT_RANK_BASE_LEVEL.B, 0).platform !== null,
     );
     if (!destination) throw new Error('no raised rare cave in the search');
-    const sim = new Sim({ seed: 4242, playerClass: 'warrior', autoEquip: true, devCommands: true });
+    const sim = new Sim({
+      seed: 4242,
+      playerClass: 'warrior',
+      autoEquip: true,
+      devCommands: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.chat('/dev level 20', sim.player.id);
     sim.chat('/dev god', sim.player.id);
     enterDevHoard(sim.ctx, sim.player.id, destination);

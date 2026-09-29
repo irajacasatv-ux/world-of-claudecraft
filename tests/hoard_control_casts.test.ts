@@ -22,9 +22,18 @@ import type { RiftInstance } from '../src/sim/rift/types';
 import { makeVaultSeed } from '../src/sim/rift/vault_seed';
 import { Sim } from '../src/sim/sim';
 import { type Aura, DT, type Entity } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 function makeHoard(): { sim: Sim; inst: RiftInstance; boss: Entity; trash: Entity } {
-  const sim = new Sim({ seed: 9321, playerClass: 'warrior', autoEquip: false, devCommands: true });
+  // The hoard is a private rift instance and the overworld buys these cases
+  // nothing, so every Sim runs on the empty world, all on one seed.
+  const sim = new Sim({
+    seed: 9321,
+    playerClass: 'warrior',
+    autoEquip: false,
+    devCommands: true,
+    world: EMPTY_TEST_WORLD,
+  });
   sim.chat('/dev level 20', sim.player.id);
   const portal = {
     ...sim.player,
@@ -183,7 +192,12 @@ describe('hoard control casts', () => {
   });
 
   it('leaves mobs outside a Buried Hoard exactly as they were: instant', () => {
-    const sim = new Sim({ seed: 5, playerClass: 'warrior', devCommands: true });
+    const sim = new Sim({
+      seed: 9321,
+      playerClass: 'warrior',
+      devCommands: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.chat('/dev level 20', sim.player.id);
     sim.enterRift(424242, 20, sim.player.id);
     const inst = sim.riftInstances.find((candidate) => candidate.partyKey !== null);

@@ -13,6 +13,7 @@ import type { RiftInstance } from '../src/sim/rift/types';
 import { makeVaultSeed } from '../src/sim/rift/vault_seed';
 import { Sim } from '../src/sim/sim';
 import type { Entity } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const SEED = makeVaultSeed(3, 183);
 
@@ -23,7 +24,15 @@ function soloHoard(): {
   inst: RiftInstance;
   boss: Entity;
 } {
-  const sim = new Sim({ seed: 9322, playerClass: 'warrior', autoEquip: false, devCommands: true });
+  // The hoard is a private rift instance and the overworld buys these cases
+  // nothing, so every Sim runs on the empty world, all on one seed.
+  const sim = new Sim({
+    seed: 9322,
+    playerClass: 'warrior',
+    autoEquip: false,
+    devCommands: true,
+    world: EMPTY_TEST_WORLD,
+  });
   const owner = sim.player.id;
   sim.chat('/dev level 20', owner);
   const portal = {
@@ -67,7 +76,12 @@ function livingTrash(sim: Sim, inst: RiftInstance): Entity[] {
 
 describe('hoard vault rescale', () => {
   it('reconnects owner and guest by character identity without counting phantom entrants', () => {
-    const sim = new Sim({ seed: 9323, playerClass: 'warrior', noPlayer: true });
+    const sim = new Sim({
+      seed: 9322,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.cfg.vaultRewardNeedsSave = true;
     const owner = sim.addPlayer('warrior', 'Owner', { characterId: 101 });
     const guest = sim.addPlayer('warrior', 'Guest', { characterId: 202 });
@@ -221,10 +235,11 @@ describe('hoard vault rescale', () => {
 
   it('an ordinary rift is never touched', () => {
     const sim = new Sim({
-      seed: 9323,
+      seed: 9322,
       playerClass: 'warrior',
       autoEquip: false,
       devCommands: true,
+      world: EMPTY_TEST_WORLD,
     });
     sim.chat('/dev level 20', sim.player.id);
     sim.enterRift(12345, 22, sim.player.id);

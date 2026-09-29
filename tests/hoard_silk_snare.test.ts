@@ -14,9 +14,18 @@ import {
 import type { HoardBossCue, HoardBossState, RiftInstance } from '../src/sim/rift/types';
 import { Sim } from '../src/sim/sim';
 import { DT, type Entity } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 function vysskaRoom(): { sim: Sim; inst: RiftInstance; boss: Entity; state: HoardBossState } {
-  const sim = new Sim({ seed: 9102, playerClass: 'warrior', autoEquip: false, devCommands: true });
+  // The hoard is a private rift instance and the overworld buys these cases
+  // nothing, so the Sim runs on the empty world.
+  const sim = new Sim({
+    seed: 9102,
+    playerClass: 'warrior',
+    autoEquip: false,
+    devCommands: true,
+    world: EMPTY_TEST_WORLD,
+  });
   sim.chat('/dev level 20', sim.player.id);
   sim.chat('/dev hoard spider', sim.player.id);
   const inst = sim.riftInstances.find((candidate) => candidate.partyKey !== null);
