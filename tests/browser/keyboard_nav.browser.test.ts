@@ -72,6 +72,20 @@ describe('keyboard-nav: a REAL window painter through the captureFocus bridge', 
     const ev = pressTab();
     expect(ev.defaultPrevented).toBe(true);
     expect(root.contains(document.activeElement)).toBe(true);
+    const forward = document.activeElement;
+    // Shift+Tab is trapped the same way in a real document, and moves the other way: it
+    // lands somewhere other than Tab did, and a Tab from there comes back.
+    inside?.focus();
+    const back = pressTab(true);
+    expect(back.defaultPrevented).toBe(true);
+    expect(root.contains(document.activeElement)).toBe(true);
+    expect(document.activeElement).not.toBe(forward);
+    pressTab();
+    expect(document.activeElement).toBe(inside);
+    // With focus outside the window (the game world), Tab passes through untouched, so the
+    // game's Tab-target key keeps working while the window is open.
+    opener.focus();
+    expect(pressTab().defaultPrevented).toBe(false);
     // close() -> restoreFocus(opener): the real end of the Esc -> closeAll route. The manager
     // defers the restore a tick.
     win.close();
