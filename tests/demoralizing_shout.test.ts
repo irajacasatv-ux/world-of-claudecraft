@@ -8,7 +8,9 @@ import { MOBS } from '../src/sim/data';
 import { createMob } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
 import type { Entity } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
+// Every Sim case spawns the dummy or players it hits, so all run on the empty world.
 function spawnDummy(sim: Sim, target: Entity): Entity {
   const mob = createMob((sim as any).nextId++, MOBS.gravecaller_summoner, 14, {
     x: target.pos.x,
@@ -56,7 +58,12 @@ describe('warrior Direhowl', () => {
   });
 
   it('reduces nearby enemies damage dealt by 20% on cast', () => {
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', autoEquip: true });
+    const sim = new Sim({
+      seed: 42,
+      playerClass: 'warrior',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const p = sim.player;
     sim.setPlayerLevel(12, p.id);
     expect(sim.setSpec('prot', p.id)).toBe(true);
@@ -81,7 +88,12 @@ describe('warrior Direhowl', () => {
     // never folded it, so the shout was a no-op versus players (it only bit mobs,
     // whose AP is folded live in effectiveAttackPower). The aura must lower the
     // target player's baked attackPower.
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+    const sim = new Sim({
+      seed: 42,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const casterId = sim.addPlayer('warrior', 'Caster');
     const victimId = sim.addPlayer('warrior', 'Victim');
     sim.setPlayerLevel(20, victimId);
@@ -107,7 +119,12 @@ describe('warrior Direhowl', () => {
     // The baked-stat path must un-fold debuff_ap on expiry too: updateAuras only
     // re-runs recalcPlayerStats when a stats-affecting aura drops, so debuff_ap
     // has to mark stats dirty or the AP cut would persist forever after fade.
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+    const sim = new Sim({
+      seed: 42,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const casterId = sim.addPlayer('warrior', 'Caster');
     const victimId = sim.addPlayer('warrior', 'Victim');
     sim.setPlayerLevel(20, victimId);
@@ -133,7 +150,12 @@ describe('warrior Direhowl', () => {
   });
 
   it('floors a debuffed enemy player attack power at zero', () => {
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+    const sim = new Sim({
+      seed: 42,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const casterId = sim.addPlayer('warrior', 'Caster');
     const victimId = sim.addPlayer('warrior', 'Victim');
     sim.setPlayerLevel(20, victimId);
@@ -154,7 +176,12 @@ describe('warrior Direhowl', () => {
   });
 
   it('does not touch a far-away enemy', () => {
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', autoEquip: true });
+    const sim = new Sim({
+      seed: 42,
+      playerClass: 'warrior',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const p = sim.player;
     sim.setPlayerLevel(12, p.id);
     expect(sim.setSpec('prot', p.id)).toBe(true);
