@@ -59,17 +59,22 @@ describe('dungeon door clearance: no camp mob spawns on an overworld door', () =
   // shipped one: earlier this passed only because seed 20061 happened to land every
   // door-adjacent mob at exactly the ring edge (other seeds put mobs 14-18 yd from a
   // door). Loop several seeds and assert exact clearance (no tolerance slack).
-  // Each PR builds seed 2024, the one of the five whose spiral walks a mob back
-  // into a ring when the re-projection is dropped; the nightly sweep flag builds
-  // all five (each is a full overworld of its own).
-  for (const seed of NIGHTLY_SWEEP ? [7, 99, 2024, 20061, 31337] : [2024]) {
+  // Each PR builds the shipped seed and seed 2024, the one of the five whose
+  // spiral walks a mob back into a ring when the re-projection is dropped (its
+  // case also checks it still lands a mob on a ring, so a camp edit cannot
+  // quietly leave it proving nothing); the nightly sweep flag builds all five
+  // (each is a full overworld of its own).
+  const REPRESENTATIVE_SEED = 2024;
+  for (const seed of NIGHTLY_SWEEP ? [7, 99, 2024, 20061, 31337] : [20061, REPRESENTATIVE_SEED]) {
     it(`seed ${seed}: no camp mob spawns within the clear radius of any dungeon door`, () => {
       const sim = new Sim({ seed, playerClass: 'warrior', autoEquip: true });
       const mobs = [...(sim as any).entities.values()].filter((e: Entity) => e.kind === 'mob');
       expect(mobs.length).toBeGreaterThan(0);
+      let onRing = 0;
       for (const mob of mobs) {
         for (const door of DUNGEON_DOORS) {
           const d = Math.hypot(mob.pos.x - door.x, mob.pos.z - door.z);
+          if (Math.abs(d - DOOR_CLEAR_RADIUS) <= 1e-6) onRing++;
           // Re-projected mobs land exactly on the ring, so allow float epsilon only
           // (1e-6, sub-micron): this is not tolerance slack, it is IEEE rounding on
           // the exact-ring point (e.g. 19.999999999999996).
@@ -80,6 +85,7 @@ describe('dungeon door clearance: no camp mob spawns on an overworld door', () =
           ).toBeGreaterThanOrEqual(DOOR_CLEAR_RADIUS - 1e-6);
         }
       }
+      if (seed === REPRESENTATIVE_SEED) expect(onRing).toBeGreaterThan(0);
     });
   }
 
