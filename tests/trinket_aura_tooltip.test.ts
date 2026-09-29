@@ -47,6 +47,7 @@ import {
   trinketAuraEffectDescriptor,
 } from '../src/ui/trinket_aura_effect';
 import { trinketEquipLockoutText, trinketTooltipLines } from '../src/ui/trinket_tooltip_view';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 afterEach(() => setLanguage('en'));
 
@@ -361,8 +362,15 @@ describe('trinket item tooltip: on-equip lockout note', () => {
 
 // ---- combat proofs ------------------------------------------------------------
 
-function wearing(itemId: string, seed = 11): Sim {
-  const sim = new Sim({ seed, playerClass: 'warrior', autoEquip: true });
+// Each proof strikes a wolf it spawns beside the wearer, so the Sims run on the
+// empty world, all on one seed.
+function wearing(itemId: string): Sim {
+  const sim = new Sim({
+    seed: 11,
+    playerClass: 'warrior',
+    autoEquip: true,
+    world: EMPTY_TEST_WORLD,
+  });
   sim.setPlayerLevel(20);
   sim.addItem(itemId, 1);
   sim.equipItem(itemId);
