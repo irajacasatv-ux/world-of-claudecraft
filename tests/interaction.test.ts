@@ -20,6 +20,7 @@ import { CORPSE_INTERACT_GRACE_SECONDS } from '../src/sim/loot/loot_roll';
 import { Sim } from '../src/sim/sim';
 import { type Entity, INTERACT_RANGE, OBJECT_RESPAWN } from '../src/sim/types';
 import { terrainHeight } from '../src/sim/world';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 type AnySim = Sim & Record<string, any>;
 type AnyEntity = Entity & Record<string, any>;
@@ -99,8 +100,16 @@ function fillBags(sim: AnySim, pid: number): void {
   }
 }
 
+// The empty world: every loot and pickup case places the corpses and objects it
+// reads, and only the quest-NPC case below needs the town's NPCs, so it keeps
+// the full world on the same seed (a second seed was a second collider build).
 function twoPlayers(): { sim: AnySim; a: number; b: number } {
-  const sim = new Sim({ seed: 7, playerClass: 'warrior', noPlayer: true }) as AnySim;
+  const sim = new Sim({
+    seed: 7,
+    playerClass: 'warrior',
+    noPlayer: true,
+    world: EMPTY_TEST_WORLD,
+  }) as AnySim;
   const a = sim.addPlayer('warrior', 'Aaa');
   const b = sim.addPlayer('mage', 'Bbb');
   freezeWorld(sim);
@@ -443,7 +452,7 @@ describe('interaction.interact dispatch', () => {
     // layout and keeps the same 2yd offset south. The premises hold there: he
     // is the nearest NPC (2yd, apothecary_lin 10yd off), and the lootable
     // board sits outside interact's scan range (6yd, its own radius is 4).
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', autoEquip: true }) as AnySim;
+    const sim = new Sim({ seed: 7, playerClass: 'warrior', autoEquip: true }) as AnySim;
     const p = sim.player;
     const marshal = EASTBROOK_NPC_PLACEMENTS_BY_ID.marshal_redbrook.position;
     place(sim, p, marshal.x, marshal.z + 2);
