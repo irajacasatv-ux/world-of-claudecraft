@@ -15,6 +15,7 @@ import {
 import { ABILITIES } from '../src/sim/content/classes';
 import { Sim } from '../src/sim/sim';
 import { berserkerCritDamage, rageGenAuraMult } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // Warrior combat stances (owner design 2026-07-08): a warrior always lives in
 // exactly one stance valid for their spec. Battle = Arms/Prot/no-spec offensive
@@ -23,7 +24,9 @@ import { berserkerCritDamage, rageGenAuraMult } from '../src/sim/types';
 // mutually exclusive (exclusiveGroup 'warrior_stance') and auto-applied and
 // reconciled each player-tick.
 
-const makeSim = (seed = 42): Sim => new Sim({ seed, playerClass: 'warrior', autoEquip: true });
+// A stance is the warrior's own aura state, so the live cases run on the empty world.
+const makeSim = (seed = 42): Sim =>
+  new Sim({ seed, playerClass: 'warrior', autoEquip: true, world: EMPTY_TEST_WORLD });
 const stanceAuras = (sim: Sim) => sim.player.auras.filter((a) => isWarriorStanceKind(a.kind));
 
 describe('warrior stance pure core', () => {
