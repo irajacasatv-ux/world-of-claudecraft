@@ -15,12 +15,15 @@ import { createMob } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
 import type { Entity, SimEvent } from '../src/sim/types';
 import { placePlayerInOpenField } from './helpers/open_field';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const FORM_COST = 30;
 const GCD_SETTLE_TICKS = 32;
 
+// Every case stands in the open field with a dummy it places itself, so the
+// druid stands on the empty world.
 function makeDruid(level = 20): Sim {
-  const sim = new Sim({ seed: 17, playerClass: 'druid', autoEquip: true });
+  const sim = new Sim({ seed: 17, playerClass: 'druid', autoEquip: true, world: EMPTY_TEST_WORLD });
   sim.setPlayerLevel(level);
   placePlayerInOpenField(sim);
   sim.tick();
@@ -110,6 +113,9 @@ describe('druid auto-unshift on a healing or damaging cast', () => {
     expect(p.resourceType).toBe('mana');
     expect(p.gcdRemaining).toBe(0);
     const hpBefore = mob.hp;
+    // The bolt must land: pin its resist roll off (`next` at 0.9 lands any
+    // spell whose hit chance is over 90 percent) rather than ride the stream.
+    sim.rng.next = () => 0.9;
 
     sim.castAbility('moonfire');
 
