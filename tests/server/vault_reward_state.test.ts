@@ -6,6 +6,7 @@ import { HOARD_BASE_ITEM_IDS, hoardLootVariantId } from '../../src/sim/content/h
 import { TREASURE_MAP_ITEM_IDS } from '../../src/sim/content/treasure_maps';
 import { grantHoardReward } from '../../src/sim/rift/hoard_reward_grant';
 import { Sim } from '../../src/sim/sim';
+import { EMPTY_TEST_WORLD } from '../sim_shared';
 
 describe('direct vault reward character snapshot', () => {
   function saved(): CharacterState {
@@ -142,7 +143,13 @@ describe('direct vault reward character snapshot', () => {
     ['mount reins', 'reins_lanternback_troll'],
     ['next map', TREASURE_MAP_ITEM_IDS.epic],
   ])('matches the live collection ledger for %s', (_label, itemId) => {
-    const sim = new Sim({ seed: 43, playerClass: 'warrior', noPlayer: true });
+    // The collection ledger is per-character state, so the empty world serves it.
+    const sim = new Sim({
+      seed: 43,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const pid = sim.addPlayer('warrior', 'VaultTester', {
       characterId: 7,
       tutorialGreetingSent: true,
