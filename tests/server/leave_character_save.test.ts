@@ -15,6 +15,20 @@ import {
   saveLeavingCharacter,
 } from '../../server/leave_character_save';
 
+// The backoff's real sleeps (3.75 s per exhausted ladder) prove nothing the
+// literal ladder pin below does not, so the retrying cases run the ladder on the
+// faked clock: every attempt, log line and reconcile still happens in order.
+async function onFakeClock<T>(run: () => Promise<T>): Promise<T> {
+  vi.useFakeTimers();
+  try {
+    const done = run();
+    await vi.runAllTimersAsync();
+    return await done;
+  } finally {
+    vi.useRealTimers();
+  }
+}
+
 describe('the leaving character save', () => {
   it('pins the retry ladder to literals, and its cap', () => {
     // TO A LITERAL. Every other assertion here compares a measured count against
@@ -47,7 +61,7 @@ describe('the leaving character save', () => {
     });
     const reconcile = vi.fn();
     const errors = vi.spyOn(console, 'error').mockImplementation(() => undefined);
-    await saveLeavingCharacter('Ashwen', save, reconcile);
+    await onFakeClock(() => saveLeavingCharacter('Ashwen', save, reconcile));
     errors.mockRestore();
     expect(save).toHaveBeenCalledTimes(3);
     // It SUCCEEDED, so nothing is undone: reconciliation is the last attempt's
@@ -64,7 +78,7 @@ describe('the leaving character save', () => {
     const errors = vi
       .spyOn(console, 'error')
       .mockImplementation((message: unknown) => void lines.push(String(message)));
-    await saveLeavingCharacter('Ashwen', save, reconcile);
+    await onFakeClock(() => saveLeavingCharacter('Ashwen', save, reconcile));
     errors.mockRestore();
     expect(save).toHaveBeenCalledTimes(LEAVE_SAVE_MAX_ATTEMPTS);
     // ONCE, on the last attempt: this session will never save again, so the live
@@ -94,7 +108,9 @@ describe('the leaving character save', () => {
     const errors = vi
       .spyOn(console, 'error')
       .mockImplementation((message: unknown) => void lines.push(String(message)));
-    await expect(saveLeavingCharacter('Ashwen', save, reconcile)).resolves.toBeUndefined();
+    await expect(
+      onFakeClock(() => saveLeavingCharacter('Ashwen', save, reconcile)),
+    ).resolves.toBeUndefined();
     errors.mockRestore();
     expect(reconcile).toHaveBeenCalledTimes(1);
     // The fault is REPORTED, not swallowed silently: it names the character and
