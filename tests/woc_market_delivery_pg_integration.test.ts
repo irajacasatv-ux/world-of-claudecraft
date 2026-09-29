@@ -1580,6 +1580,17 @@ describeDb('woc market delivery finalization against real Postgres', () => {
   });
 
   describe('the escrow listing transaction (custody entry)', () => {
+    // Nightly-only depth (docs/qa-gate.md, "Nightly-only sweep depth"): the two
+    // escrow cost measurements below repeat their saves for the logged timing
+    // samples on the nightly run only. Every PR still takes each container
+    // shape through both arms the passes exist for (the first pass creates the
+    // opening, the second changes an existing anchor, so a revision that stops
+    // advancing or a refused large save reds here), and one maximum-prefix pass,
+    // which is itself the statement-timeout proof.
+    const NIGHTLY_SWEEP = process.env.WOC_NIGHTLY_SWEEP === '1';
+    const MATERIAL_SOURCE_PASSES = NIGHTLY_SWEEP ? 4 : 2;
+    const MAX_PREFIX_PASSES = NIGHTLY_SWEEP ? 3 : 1;
+
     const SAVE_STATE = { questLog: [], questsDone: [], inventory: [] } as unknown as CharacterState;
 
     async function seedLease(realm: string, characterId: number, nonce: string): Promise<void> {
@@ -1959,7 +1970,7 @@ describeDb('woc market delivery finalization against real Postgres', () => {
           characterId,
         ]);
         const samples: number[] = [];
-        for (let pass = 0; pass < 4; pass++) {
+        for (let pass = 0; pass < MATERIAL_SOURCE_PASSES; pass++) {
           const next = structuredClone(sourceState);
           const bankSlot = next.bank?.inventory[0];
           const vaultSlot = next.vault?.special?.[0];
@@ -2001,9 +2012,10 @@ describeDb('woc market delivery finalization against real Postgres', () => {
           'SELECT container, current_revision::text FROM material_source_containers WHERE owner_character_id = $1 ORDER BY container',
           [characterId],
         );
+        // One revision per pass: each pass changes both containers.
         expect(anchors.rows).toEqual([
-          { container: 'personal', current_revision: '4' },
-          { container: 'vault', current_revision: '4' },
+          { container: 'personal', current_revision: String(MATERIAL_SOURCE_PASSES) },
+          { container: 'vault', current_revision: String(MATERIAL_SOURCE_PASSES) },
         ]);
         process.stdout.write(
           `[escrow-material-source-cost] ${JSON.stringify({ shape, serializedBytes: Buffer.byteLength(JSON.stringify(sourceState)), milliseconds: samples })}\n`,
@@ -2075,7 +2087,7 @@ describeDb('woc market delivery finalization against real Postgres', () => {
       expect(maxEncodedBytes - calibrated.encodedBytes).toBeLessThan(maxRows);
 
       const samples: number[] = [];
-      for (let sample = 0; sample < 3; sample++) {
+      for (let sample = 0; sample < MAX_PREFIX_PASSES; sample++) {
         const suffix = String(sample + 1).padStart(4, '0');
         const batch = buildBatch(`woc.pg16.max.${suffix}`, payloadBytes);
         expect(batch.rows).toHaveLength(maxRows);
