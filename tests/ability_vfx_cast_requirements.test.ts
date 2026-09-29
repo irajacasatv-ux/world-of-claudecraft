@@ -43,6 +43,15 @@ import { castGateRig } from './helpers/cast_vfx_headless';
 
 const IDS = abilityVfxSpecIds();
 
+// The walk's degrade tiers. Every PR walks every id at tier 0, the full plan, both
+// as a world caster and as the local player: a wrong mask on any id, new or old,
+// shows there (the Warrior control below proves the walk sees one). The degraded
+// tier 1 walk rides the nightly depth flag (WOC_NIGHTLY_SWEEP, docs/qa-gate.md
+// "Nightly-only sweep depth"); the summary's per-tier counts scale by the tiers
+// walked, so the nightly asserts exactly what every PR used to.
+const NIGHTLY_SWEEP = process.env.WOC_NIGHTLY_SWEEP === '1';
+const TIERS: readonly (0 | 1)[] = NIGHTLY_SWEEP ? [0, 1] : [0];
+
 describe('the requirement masks', () => {
   it('walks the whole spec union', () => {
     expect(IDS.length).toBeGreaterThan(300);
@@ -330,7 +339,7 @@ describe('the requirement walk over the real painter', () => {
   };
   afterAll(() => vi.unstubAllGlobals());
 
-  for (const tier of [0, 1] as const) {
+  for (const tier of TIERS) {
     it(`spawns and draws only from each id's own families, tier ${tier}`, () => {
       for (const id of IDS) walkId(rigFor(castVfxRequirement(id)), id, tier, walked);
       for (const id of WARRIOR_STATE_AURA_IDS)
@@ -359,7 +368,7 @@ describe('the requirement walk over the real painter', () => {
   });
 
   it('walks every id through a claimed entry point, and both requirement classes', () => {
-    expect(walked.runs).toBeGreaterThan(IDS.length * 2 * 30);
+    expect(walked.runs).toBeGreaterThan(IDS.length * TIERS.length * 30);
     expect(walked.claimed).toBeGreaterThan(IDS.length * 20);
     expect(walked.drewEngine).toBeGreaterThan(IDS.length * 20);
     expect(walked.reachedKit).toBeGreaterThan(500);
@@ -369,12 +378,12 @@ describe('the requirement walk over the real painter', () => {
       `${CAST_VFX_ENGINE | CAST_VFX_KIT}:false`,
       `${CAST_VFX_ENGINE | CAST_VFX_KIT}:true`,
     ]);
-    // The victim-worn arms reach draws, and the fear-break arm ran on both
-    // tiers (the shout's spec authors no debuff block, so what it draws today
-    // is the hard-CC band).
+    // The victim-worn arms reach draws, and the fear-break arm ran on every
+    // walked tier (the shout's spec authors no debuff block, so what it draws
+    // today is the hard-CC band).
     expect(walked.drewBy.get('aura worn slow') ?? 0).toBeGreaterThan(10);
     expect(walked.drewBy.get('aura worn root') ?? 0).toBeGreaterThan(5);
-    expect(walked.drewBy.get('aura fear break') ?? 0).toBe(2);
+    expect(walked.drewBy.get('aura fear break') ?? 0).toBe(TIERS.length);
     // The kit's solid pieces, checked before the gate on preparations that
     // are never ready headless unless stubbed, really drew in the walk.
     const kitRig = rigs.get(`${CAST_VFX_ENGINE | CAST_VFX_KIT}:false`)!;

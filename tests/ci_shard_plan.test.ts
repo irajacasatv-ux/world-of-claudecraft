@@ -544,6 +544,7 @@ describe('the long-sims lane (Phase 4)', () => {
     // thin its PR depth, and none may be a lane file (the lane has its own
     // flag and accounting). Same audit as the diet pin.
     const listed = [
+      'tests/ability_vfx_cast_requirements.test.ts',
       'tests/audit_conservation_property.test.ts',
       'tests/chronomancy_balance_targets.test.ts',
       'tests/emerald_deck_escape.test.ts',
