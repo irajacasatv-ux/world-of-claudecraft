@@ -162,6 +162,10 @@ describe('Dawnreaver complete-hit damage tuning', () => {
     const buffed = replay();
     expect(replay()).toEqual(buffed);
     const neutral = replay(true);
+    // Under production culling the recorded stream is the rotation's own
+    // combat draws (21 today; the far overworld's idle rolls no longer ride
+    // ctx.rng), so this floor sits one draw under the live count: a legitimate
+    // cut in the rotation's draws re-derives it.
     expect(buffed.draws.length).toBeGreaterThan(20);
     expect(buffed.draws).toEqual(neutral.draws);
     expect(buffed.damage.map(({ amount: _amount, ...event }) => event)).toEqual(

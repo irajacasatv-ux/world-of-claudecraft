@@ -74,8 +74,8 @@ import {
 
 // One seed for every case: a seed a test file has not built yet costs its
 // full-world Sim about half a second (the collider grids are built per seed),
-// a seed it has already built about 20 ms. A case that needs a seed-specific
-// draw (a golden trace) passes its own seed.
+// a seed it has already built about 20 ms. No case reads a seed-specific
+// draw; the Cinder Orbs replay compares two runs of the same seed.
 function claimedEncounter(seed = 42): { sim: Sim; boss: Entity } {
   const sim = new Sim({ seed, playerClass: 'warrior', devCommands: true });
   expect(enterDungeon(sim.ctx, IGNIVAR_SECOND_WING_ID, sim.player.id, true)).toBe(true);

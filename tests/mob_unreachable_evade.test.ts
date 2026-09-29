@@ -43,7 +43,10 @@ const isPlainMeleeTrash = (e: Entity): boolean =>
 // yet costs a full-world Sim about half a second, a built one about 20 ms) and
 // production's idle culling (the server and the offline client both set it),
 // so the stall windows below stop paying for the far overworld's idle AI. The
-// rift floor is the `seed` argument to enterRift, independent of the world's.
+// rift floor's LAYOUT is the `seed` argument to enterRift; its spawn scale
+// jitter is drawn from the world's shared rng, so changing WORLD_SEED can move
+// the plain-melee pin below (seed 15 today, as it was with world seed equal to
+// rift seed).
 const WORLD_SEED = 42;
 function worldSim(extra: { devCommands?: boolean } = {}): Sim {
   return new Sim({
@@ -67,8 +70,9 @@ function enterRiftAt(seed: number) {
 
 // The first rectangular seed whose floor-0 room actually spawns a plain melee
 // trash mob. Found by entering each candidate (spawn scales jitter per spawn),
-// then memoized so every case pins the same seed. It stopped being the first
-// rectangular seed at the 2026-09-28 release/v0.44.0 merge into
+// then memoized so every case pins the same seed. The history below was
+// measured with the world seed equal to the rift seed. Seed 7 stopped being
+// the first rectangular seed at the 2026-09-28 release/v0.44.0 merge into
 // feature/buried-hoards, which grew rift_marrow_troll (1.2 to 1.45) and
 // rift_stone_ogre (1.3 to 1.6): seed 7's brute room now holds only big bodies.
 let pinSeed: number | null = null;

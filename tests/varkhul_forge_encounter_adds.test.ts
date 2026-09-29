@@ -985,6 +985,9 @@ describe('Varkhul forge pillars and add intermission', () => {
     const first = run();
     const second = run();
     expect(first).toEqual(second);
+    // Under the harness's production culling the far overworld's idle rolls
+    // leave ctx.rng, so these are the fight's own draws (42 today: Quake
+    // damage and the adds' combat rolls).
     expect(first.draws.length).toBeGreaterThan(0);
     expect(first.quakeEvents.length).toBeGreaterThan(0);
     expect(first.artificerIds.length).toBeGreaterThan(0);
