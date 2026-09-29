@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { UmbralAnchorMarker } from '../src/render/umbral_anchor_marker';
 import { Sim } from '../src/sim/sim';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 function sceneGraphResources(marker: UmbralAnchorMarker): {
   nodes: object[];
@@ -46,12 +47,26 @@ function sceneGraphResources(marker: UmbralAnchorMarker): {
   };
 }
 
+// Every case only needs a level 20 Affliction warlock whose cast puts the anchor
+// aura on the player: no case ticks the world or reads the seed, so one seed on
+// the empty world serves them all (an overworld Sim on a fresh seed cost more
+// than a second each).
+function anchorCaster(): Sim {
+  const sim = new Sim({
+    seed: 809,
+    playerClass: 'warlock',
+    autoEquip: true,
+    world: EMPTY_TEST_WORLD,
+  });
+  sim.setPlayerLevel(20);
+  expect(sim.setSpec('affliction')).toBe(true);
+  sim.player.resource = sim.player.maxResource;
+  return sim;
+}
+
 describe('Umbral Anchor marker', () => {
   it('uses one fixed scene graph while following replicated aura state', () => {
-    const sim = new Sim({ seed: 809, playerClass: 'warlock', autoEquip: true });
-    sim.setPlayerLevel(20);
-    expect(sim.setSpec('affliction')).toBe(true);
-    sim.player.resource = sim.player.maxResource;
+    const sim = anchorCaster();
     const marker = new UmbralAnchorMarker();
     const resources = sceneGraphResources(marker);
 
@@ -70,10 +85,7 @@ describe('Umbral Anchor marker', () => {
   });
 
   it('plays a bounded recall implosion without growing its scene graph', () => {
-    const sim = new Sim({ seed: 810, playerClass: 'warlock', autoEquip: true });
-    sim.setPlayerLevel(20);
-    expect(sim.setSpec('affliction')).toBe(true);
-    sim.player.resource = sim.player.maxResource;
+    const sim = anchorCaster();
     const marker = new UmbralAnchorMarker();
 
     sim.castAbility('umbral_anchor');
@@ -95,10 +107,7 @@ describe('Umbral Anchor marker', () => {
   });
 
   it('freezes painter motion and shader time when reduced motion is enabled', () => {
-    const sim = new Sim({ seed: 811, playerClass: 'warlock', autoEquip: true });
-    sim.setPlayerLevel(20);
-    expect(sim.setSpec('affliction')).toBe(true);
-    sim.player.resource = sim.player.maxResource;
+    const sim = anchorCaster();
     const marker = new UmbralAnchorMarker();
 
     sim.castAbility('umbral_anchor');
@@ -125,10 +134,7 @@ describe('Umbral Anchor marker', () => {
   });
 
   it('drapes the persistent ground layers over sloped terrain once placed', () => {
-    const sim = new Sim({ seed: 812, playerClass: 'warlock', autoEquip: true });
-    sim.setPlayerLevel(20);
-    expect(sim.setSpec('affliction')).toBe(true);
-    sim.player.resource = sim.player.maxResource;
+    const sim = anchorCaster();
     const origin = { ...sim.player.pos };
     const marker = new UmbralAnchorMarker((x) => origin.y + (x - origin.x) * 0.22);
 
@@ -153,10 +159,7 @@ describe('Umbral Anchor marker', () => {
   });
 
   it('keeps the actionable rune while shedding cosmetic layers on low detail', () => {
-    const sim = new Sim({ seed: 813, playerClass: 'warlock', autoEquip: true });
-    sim.setPlayerLevel(20);
-    expect(sim.setSpec('affliction')).toBe(true);
-    sim.player.resource = sim.player.maxResource;
+    const sim = anchorCaster();
     const marker = new UmbralAnchorMarker();
 
     sim.castAbility('umbral_anchor');
