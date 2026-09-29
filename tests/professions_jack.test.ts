@@ -40,9 +40,10 @@ import type { Rng } from '../src/sim/rng';
 import type { PlayerMeta } from '../src/sim/sim';
 import { Sim } from '../src/sim/sim';
 import { runCraft } from './helpers/enchant_family_cast';
+import { rngWithFirstDraws } from './helpers/forced_rng';
 
-function makeSim(seed = 42) {
-  return new Sim({ seed, playerClass: 'warrior', autoEquip: false });
+function makeSim() {
+  return new Sim({ seed: 42, playerClass: 'warrior', autoEquip: false });
 }
 
 function metaOf(sim: Sim, pid: number): PlayerMeta {
@@ -372,18 +373,15 @@ describe('the material-saving bonus and the output-variance roll apply at craft 
 // exactly at JACK_CEILING_TIER, so the masterwork effect gate still passes
 // for a Jack) so a 'worse' or 'better' roll's effect on the SAME underlying
 // masterwork mechanism is directly observable.
-// Both hunted seeds have been re-hunted twice for the same reason (a content
-// commit adds world-gen draws, the post-construction rng position moves, and
-// the old seeds stop landing in the required roll bands): worse 45 -> 51 and
-// better 39 -> 96 at the zones 1-3 quest-dedupe pass, then worse 51 -> 62 and
-// better 96 -> 2 at the v0.35.0 release content commits (the enchant offhand,
-// the hunter offhand, and the deeds catalog). The semantic profile is
-// preserved on both arms (the worse arm's proc roll still sits under the
-// capped 0.15 chance it would have procced on, the better arm's still between
-// the 0.03 base and the 0.08 boosted chance). Spares on record: 94, 271, 330,
-// and 338 for the worse arm; 61, 707, 850, and 854 for the better arm. The
-// seed-1 'normal' case still lands unchanged and is left alone.
-describe('the variance roll actually changes the masterwork outcome (#1296, hunted seeds)', () => {
+// Each arm forces its two draws (the variance roll, then the proc roll) with a
+// fresh Rng installed right before the craft (tests/helpers/forced_rng.ts),
+// on the file's one world seed. The hunted world seeds these arms used to ride
+// moved with every content commit that added world-gen draws, and each built
+// its own collider grids. The semantic profile is the one they were hunted
+// for: the worse arm's proc roll sits under the capped 0.15 chance it would
+// have procced on, the better arm's between the 0.03 base and the 0.08
+// boosted chance, and the observer below still reads the real draws.
+describe('the variance roll actually changes the masterwork outcome (#1296, forced rolls)', () => {
   function vestmentsScenario(sim: Sim, pid: number, meta: PlayerMeta, maxChance: boolean) {
     attuneJackOfAllTrades(ctxOf(sim), pid);
     if (maxChance) {
@@ -397,11 +395,15 @@ describe('the variance roll actually changes the masterwork outcome (#1296, hunt
     sim.addItem('spool_of_thread', 5, pid);
   }
 
-  it('a worse roll forces the masterwork bump off even though the proc roll alone would have hit (seed 51)', () => {
-    const sim = makeSim(51);
+  it('a worse roll forces the masterwork bump off even though the proc roll alone would have hit (forced rolls)', () => {
+    const sim = makeSim();
     const pid = sim.playerId;
     const meta = metaOf(sim, pid);
     vestmentsScenario(sim, pid, meta, true);
+    sim.rng = rngWithFirstDraws(
+      (variance) => variance < JACK_VARIANCE_WORSE_CHANCE,
+      (proc) => proc < 0.15,
+    );
     const draws: number[] = [];
     const rng: Rng = ctxOf(sim).rng;
     rng.setObserver((v) => draws.push(v));
@@ -417,11 +419,17 @@ describe('the variance roll actually changes the masterwork outcome (#1296, hunt
     expect(sim.lastCraftResult?.masterwork).toBeUndefined();
   });
 
-  it('a better roll improves the odds enough to turn an otherwise-miss into a masterwork hit (seed 96)', () => {
-    const sim = makeSim(96);
+  it('a better roll improves the odds enough to turn an otherwise-miss into a masterwork hit (forced rolls)', () => {
+    const sim = makeSim();
     const pid = sim.playerId;
     const meta = metaOf(sim, pid);
     vestmentsScenario(sim, pid, meta, false);
+    sim.rng = rngWithFirstDraws(
+      (variance) =>
+        variance >= JACK_VARIANCE_WORSE_CHANCE &&
+        variance < JACK_VARIANCE_WORSE_CHANCE + JACK_VARIANCE_BETTER_CHANCE,
+      (proc) => proc >= 0.03 && proc < 0.08,
+    );
     const draws: number[] = [];
     const rng: Rng = ctxOf(sim).rng;
     rng.setObserver((v) => draws.push(v));
@@ -432,7 +440,7 @@ describe('the variance roll actually changes the masterwork outcome (#1296, hunt
     expect(varianceRoll).toBeGreaterThanOrEqual(JACK_VARIANCE_WORSE_CHANCE);
     expect(varianceRoll).toBeLessThan(JACK_VARIANCE_WORSE_CHANCE + JACK_VARIANCE_BETTER_CHANCE);
     // Base chance here is MASTERWORK_BASE_CHANCE alone (0.03: no signed
-    // reagent, no specialization, no tiers above); the hunted procRoll sits
+    // reagent, no specialization, no tiers above); the forced procRoll sits
     // above that base but under the boosted chance (0.08).
     expect(procRoll).toBeGreaterThanOrEqual(0.03);
     expect(procRoll).toBeLessThan(0.08);
@@ -440,11 +448,14 @@ describe('the variance roll actually changes the masterwork outcome (#1296, hunt
     expect(sim.lastCraftResult?.masterwork).toBe(true);
   });
 
-  it('a normal roll changes nothing: draws twice, still masterwork-eligible on the ordinary chance (seed 1)', () => {
-    const sim = makeSim(1);
+  it('a normal roll changes nothing: draws twice, still masterwork-eligible on the ordinary chance (forced roll)', () => {
+    const sim = makeSim();
     const pid = sim.playerId;
     const meta = metaOf(sim, pid);
     vestmentsScenario(sim, pid, meta, true);
+    sim.rng = rngWithFirstDraws(
+      (variance) => variance >= JACK_VARIANCE_WORSE_CHANCE + JACK_VARIANCE_BETTER_CHANCE,
+    );
     runCraft(sim, 'recipe_eastbrook_ritual_vestments', false, pid);
     expect(sim.lastCraftResult?.variance).toBe('normal');
   });
