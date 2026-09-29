@@ -2428,6 +2428,9 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
         // 139 honor item ids (deedStats.itemsDiscovered +4,648 and the reliquary
         // rows +8,848, the release's own attribution).
         13496 +
+        // The feral staff adds one discovery (23 bytes) and one existing-page
+        // Reliquary entry (53 bytes), isolated below.
+        76 +
         // Plus 154 at the fourth release/v0.44.0 base merge (the ferry deed and
         // its four visit marks, attributed above).
         154 +
@@ -2444,7 +2447,12 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
         // (+1,761), Blaine's itemization; MEASURED on the 2026-09-28 merged tree.
         4711 +
         // Five earned PvP flag deed IDs plus fixed dates, isolated below.
-        138,
+        138 +
+        // Plus 19 for the World PvP trophy skull: `"pvp_trophy_skull",` in the
+        // maximal character's deedStats.itemsDiscovered (16 characters of id
+        // plus 3 bytes of quoting and comma; the deedStats row below moves by
+        // the same 19). MEASURED on CI (77,342 to 77,361).
+        19,
     );
     const forgeBaseline = {
       questsDone: 4606,
@@ -2490,8 +2498,10 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
       deeds: 881,
       // deedStats +4,648 and reliquary +8,848 at the second release/v0.44.0 base
       // merge: Warfare Season 2's 139 item ids (the 13,496 attributed above).
-      deedStats: 9427,
-      reliquary: 11501,
+      // The feral staff adds 23 discovery bytes and 53 Reliquary bytes; the World
+      // PvP trophy skull id adds 19 more discovery bytes (attributed above).
+      deedStats: 9469,
+      reliquary: 11554,
     });
     // Removing field_kit AND the Bramblehide release content reproduces the
     // pre-field-kit, pre-Bramblehide baseline WITH the hammer content still
@@ -2528,7 +2538,8 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
       // ferry deed and its visit marks, which this counterfactual keeps).
       // 226,238 -> 231,729 at the 2026-09-28 Buried Hoards merge (+5,491: the
       // +247 knownRecipes, +533 and +4,711 attributed above, all kept here).
-    ).toBe(231867);
+      // +19 for the World PvP trophy skull id, which this counterfactual keeps.
+    ).toBe(231962);
     // Removing ONLY field_kit (the Bramblehide release content and the two
     // dev-mount reins items still present, current staged tree) reproduces
     // 209,524 plus the 1,548-byte Bramblehide delta plus the 71-byte
@@ -2556,7 +2567,8 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
       // 214,207 -> 227,703 at the second release/v0.44.0 base merge (+13,496).
       // 227,703 -> 227,857 at the fourth release/v0.44.0 base merge (+154).
       // 227,857 -> 233,348 at the 2026-09-28 Buried Hoards merge (+5,491, kept).
-    ).toBe(233486);
+      // +19 for the World PvP trophy skull id, which this baseline keeps.
+    ).toBe(233581);
     const priorContent = withoutCrucibleContent(s2);
     const contentDelta = Object.fromEntries(
       (['knownRecipes', 'deedStats', 'reliquary'] as const).map((key) => [
@@ -2661,11 +2673,26 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
       delete withoutPvpTitles.deeds![id];
     }
     expect(bytes - Buffer.byteLength(JSON.stringify(withoutPvpTitles), 'utf8')).toBe(138);
-    expect(Buffer.byteLength(JSON.stringify(withoutPvpTitles), 'utf8')).toBe(233360);
-    // Re-measured 233,498; unchanged 381-byte tracking band and save warning limit.
-    expect(bytes).toBe(233498);
-    expect(bytes, reMint).toBeGreaterThan(233118);
-    expect(bytes, reMint).toBeLessThan(233499);
+    // 233,436 + 19 for the World PvP trophy skull id in itemsDiscovered.
+    expect(Buffer.byteLength(JSON.stringify(withoutPvpTitles), 'utf8')).toBe(233455);
+    const withoutFeralStaff = JSON.parse(JSON.stringify(s2)) as CharacterState;
+    expect(withoutFeralStaff.deedStats?.itemsDiscovered).toContain('vanguard_feral_staff');
+    withoutFeralStaff.deedStats!.itemsDiscovered =
+      withoutFeralStaff.deedStats!.itemsDiscovered!.filter((id) => id !== 'vanguard_feral_staff');
+    expect(withoutFeralStaff.reliquary?.firstFind?.vanguard_feral_staff).toEqual({
+      clears: 999,
+      count: 999999,
+    });
+    delete withoutFeralStaff.reliquary!.firstFind!.vanguard_feral_staff;
+    expect(fieldBytes(s2, 'deedStats') - fieldBytes(withoutFeralStaff, 'deedStats')).toBe(23);
+    expect(fieldBytes(s2, 'reliquary') - fieldBytes(withoutFeralStaff, 'reliquary')).toBe(53);
+    expect(bytes - Buffer.byteLength(JSON.stringify(withoutFeralStaff), 'utf8')).toBe(76);
+    // Re-measured 233,574; unchanged 381-byte tracking band and save warning limit.
+    // Re-based to 233,593 with the World PvP trophy skull (+19 in itemsDiscovered,
+    // attributed in the ledger above): floor at measurement minus 380, edge plus one.
+    expect(bytes).toBe(233593);
+    expect(bytes, reMint).toBeGreaterThan(233213);
+    expect(bytes, reMint).toBeLessThan(233594);
 
     // The Crucible database review approved 229,376 bytes (224 KiB), the first
     // 32-KiB step above the corrected 209,261-byte pre-field-kit fixture it was

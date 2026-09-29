@@ -300,7 +300,9 @@ describe('bank-item instance mark stylesheet contract', () => {
       .replace(/\/\*[\s\S]*?\*\//g, '')
       .replace(/\/\/[^\n]*/g, '');
     expect(painter).toContain('cornerMarkHtml(cornerMark)');
-    expect(painter).toContain('bagInstanceGlyphKind(slot.instance)');
+    // The item id rides along so a trophy skull's victim signer is never read
+    // as a maker's mark (world_pvp_spoils.ts).
+    expect(painter).toContain('bagInstanceGlyphKind(slot.instance, slot.itemId)');
     // The KNOWN key family must be used on its own: the lookbehind skips the
     // UNKNOWN_ sibling, whose name contains this one as a substring (a bare
     // contain could never fail while the import line exists).

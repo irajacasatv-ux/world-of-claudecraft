@@ -18459,6 +18459,9 @@ export const nl_NL: EnTranslations = {
       "vanguard_warstaff": {
         "name": "Voortocht Krijgsstaf"
       },
+      "vanguard_feral_staff": {
+        "name": "Vanguard's Feral Staff"
+      },
       "conjured_water4": {
         "name": "Getoverd bronwater"
       },

@@ -18459,6 +18459,9 @@ export const fr_FR: EnTranslations = {
       "vanguard_warstaff": {
         "name": "Bâton de guerre de l'Avant-garde"
       },
+      "vanguard_feral_staff": {
+        "name": "Vanguard's Feral Staff"
+      },
       "conjured_water4": {
         "name": "Eau de source invoquée"
       },

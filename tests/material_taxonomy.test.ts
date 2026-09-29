@@ -773,7 +773,7 @@ describe('phase 11l trophy promotion: the promoted set, exactly', () => {
     }
   });
 
-  it('the LIVE poor set is exactly the 16 survivors (a new poor id cannot land unseen)', () => {
+  it('the LIVE poor set is exactly the 17 survivors (a new poor id cannot land unseen)', () => {
     // The frozen-21 loop above only visits ids it already knows, so a poor
     // item authored AFTER the phase 11l boundary would never enter it: this
     // exact-set pin over the whole catalog closes that direction. The
@@ -785,7 +785,10 @@ describe('phase 11l trophy promotion: the promoted set, exactly', () => {
         .filter((d) => d.quality === 'poor')
         .map((d) => d.id)
         .sort(),
-    ).toEqual(SURVIVING_POOR_JUNK);
+      // Plus the one poor id authored after the phase: the World PvP trophy
+      // skull (src/sim/pvp/world_pvp_spoils.ts), a vendor-worthless keepsake
+      // no recipe consumes, so it stays poor and outside the material set.
+    ).toEqual([...SURVIVING_POOR_JUNK, 'pvp_trophy_skull'].sort());
   });
 
   // The two already-common rare-elite leather trophies the phase's second

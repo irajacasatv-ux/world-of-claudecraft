@@ -624,6 +624,9 @@ describe('chip reachability census: the All-only set, pinned', () => {
     'pattern_warspice_skewers',
     'pattern_wyrmfall_pendant',
     'plans_dense_sharpening_stone',
+    // The World PvP trophy skull: poor junk no recipe consumes, All-only like
+    // the other ruled junk (src/sim/pvp/world_pvp_spoils.ts).
+    'pvp_trophy_skull',
     'recipe_elixir_of_mana_regeneration',
     'recipe_potion_of_invisibility',
     // Retired premium reins remain inert saved items, with no use or material role.

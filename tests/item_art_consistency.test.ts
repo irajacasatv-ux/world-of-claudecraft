@@ -853,8 +853,8 @@ describe('item-art consistency accepted-art provenance', () => {
     // The Emissary's Cache chest: 1,322. The Clue Scroll items (clue_scroll,
     // treasure_casket): 1,323. The faction ladder rework's 17 new rows
     // (13 periphery pieces + 4 formulas): 1,340. the Viridian Valestrider's reins (release/v0.44.0 base merge): 1,341. the trinket slot's 18 trinkets (PR 4173): 1,359. Warfare Season 2 (release/v0.44.0, second base merge 2026-09-26)'s 139 honor items: 1,498.
-    // The World PvP trophy skull (pvp_trophy_skull, world_pvp_spoils.ts): 1,618.
-    expect(Object.keys(ITEMS)).toHaveLength(1618);
+    // The World PvP trophy skull (pvp_trophy_skull, world_pvp_spoils.ts): 1,619 (on top of the feral Season 2 staff).
+    expect(Object.keys(ITEMS)).toHaveLength(1619);
     expect(Object.values(verdict.auditScope.groups).reduce((sum, count) => sum + count, 0)).toBe(
       1255,
     );
@@ -1018,10 +1018,10 @@ describe('item-art consistency accepted-art provenance', () => {
     // Scroll icons (clue-scroll-icons-2026-09-17, two SVG compositions) join:
     // 1,305. The faction ladder icons (faction-ladder-icons-2026-09-23, 17 SVG
     // compositions) join: 1,322. the Viridian Valestrider's reins (release/v0.44.0 base merge): 1,323. the trinket slot's 18 trinkets (PR 4173): 1,341. Warfare Season 2 (release/v0.44.0, second base merge 2026-09-26)'s four painted weapons: 1,345.
-    // + the World PvP trophy skull (pvp_trophy_skull): 1465 owners, 1618 items.
-    expect(new Set(currentOwnerIds).size).toBe(1465);
-    expect(shippingIds).toHaveLength(1465);
-    expect(Object.keys(ITEMS)).toHaveLength(1618);
+    // + the World PvP trophy skull (pvp_trophy_skull): 1466 owners, 1619 items (on top of the feral Season 2 staff).
+    expect(new Set(currentOwnerIds).size).toBe(1466);
+    expect(shippingIds).toHaveLength(1466);
+    expect(Object.keys(ITEMS)).toHaveLength(1619);
 
     const datedVerdict = readJson<FinalAuditVerdict>(CURRENT_VERDICT_PATH);
     const oldPassIds = sorted(datedVerdict.visualVerdict.passIds);
@@ -1185,6 +1185,7 @@ describe('item-art consistency accepted-art provenance', () => {
         'vanguard_oath_blade',
         'vanguard_fang_dagger',
         'vanguard_warstaff',
+        'vanguard_feral_staff',
       ]),
     ).toEqual(sorted(currentOwnerIds));
 
@@ -1354,7 +1355,8 @@ describe('item-art consistency accepted-art provenance', () => {
     // its batch (faction-ladder-icons-2026-09-23) = 36. The trinket slot's icon batch
     // (trinket-slot-icons-2026-09-23) = 37. Warfare Season 2's weapon
     // batch (warfare-season2-weapons-2026-09-25) = 38.
-    expect(mapping.generatedBatches).toHaveLength(41);
+    // One additional dedicated batch for the Season 2 feral staff.
+    expect(mapping.generatedBatches).toHaveLength(42);
     const batch = mapping.generatedBatches.find(({ batchId }) => batchId === BATCH_ID);
     expect(batch).toBeDefined();
     expect(batch).toMatchObject({
@@ -1424,13 +1426,14 @@ describe('item-art consistency accepted-art provenance', () => {
     // Season 2's weapon batch adds 4: 815. The Buried Hoards branch's three
     // batches (18 faction reward paintings, 5 treasure-map family, 96 hoard boss
     // loot) add 119 at the 2026-09-28 release merge: 934.
-    expect(priorGeneratedIds).toHaveLength(934);
+    // The Season 2 feral staff adds one current owner.
+    expect(priorGeneratedIds).toHaveLength(935);
     const allCurrentOwnerIds = [
       ...mapping.entries.map(({ itemId }) => itemId),
       ...mapping.generatedBatches.flatMap(({ itemIds }) => itemIds),
     ];
-    expect(allCurrentOwnerIds).toHaveLength(1465);
-    expect(new Set(allCurrentOwnerIds).size).toBe(1465);
+    expect(allCurrentOwnerIds).toHaveLength(1466);
+    expect(new Set(allCurrentOwnerIds).size).toBe(1466);
     expect({
       entries: mapping.entries.length,
       priorGenerated: priorGeneratedIds.length,
@@ -1445,7 +1448,7 @@ describe('item-art consistency accepted-art provenance', () => {
       // + the 18 trinkets (trinket-slot-icons-2026-09-23) = 811.
       // + the 4 Warfare Season 2 weapons = 815.
       // + the Buried Hoards branch's 119 paintings (three batches) = 934.
-      priorGenerated: 934,
+      priorGenerated: 935,
       historicalAudit: 274,
       masterwroughtCompletion: 165,
       crucibleProfessions: 46,
@@ -1541,6 +1544,7 @@ describe('item-art consistency accepted-art provenance', () => {
         'vanguard_oath_blade',
         'vanguard_fang_dagger',
         'vanguard_warstaff',
+        'vanguard_feral_staff',
       ]),
       'the dated catalog plus the release batches, the world-quest, faction-vendor, faction-ladder and clue-scroll batches, the Field Kit, the OSSBrain reins icons and the Emissary Cache and the trinket icons is the full current catalog',
     ).toEqual(sorted(allCurrentOwnerIds));
@@ -1675,9 +1679,10 @@ describe('item-art consistency accepted-art provenance', () => {
     // merge = 1302. Plus the weekly emissary's cache chest = 1303. Plus the two
     // Clue Scroll owners = 1305. Plus the 17 faction ladder owners
     // (faction-ladder-icons-2026-09-23) = 1322. Plus the Viridian Valestrider's reins (release/v0.44.0 base merge) = 1323. Plus the 18 trinkets = 1341. Plus the 4 Warfare Season 2 weapons = 1345. Plus the Buried Hoard paintings (release/v0.44.0 merge into feature/buried-hoards (2026-09-28)) = 1464. Plus the World PvP trophy skull (pvp_trophy_skull) = 1465.
-    if (ownerIds.length !== 1465)
-      violations.push(`mapping owner count: ${ownerIds.length} != 1465`);
-    if (fileIds.length !== 1465) violations.push(`shipping WebP count: ${fileIds.length} != 1465`);
+    // The Season 2 feral staff adds one item and one unique shipping image.
+    if (ownerIds.length !== 1466)
+      violations.push(`mapping owner count: ${ownerIds.length} != 1466`);
+    if (fileIds.length !== 1466) violations.push(`shipping WebP count: ${fileIds.length} != 1466`);
     for (const id of ids) {
       const ownerCount = ownerCountById.get(id) ?? 0;
       if (ownerCount !== 1) violations.push(`${id}: current owner count ${ownerCount} != 1`);

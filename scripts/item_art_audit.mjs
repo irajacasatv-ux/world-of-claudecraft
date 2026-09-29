@@ -145,9 +145,10 @@ const build = await buildItemArtAudit({
     // feature/buried-hoards: the release's faction ladder, trinket slot and
     // Warfare Season 2 compose with the hoard paintings: 1464 / 1482, with the
     // release's 135 pending rows (trinkets and Season 2), on 36 sheet pages.
-    // + the World PvP trophy skull (pvp_trophy_skull): 1465 / 1483.
-    catalogCount: 1465,
-    liveItemCount: 1483,
+    // The feral Season 2 staff adds one painted owner and one live definition,
+    // and the World PvP trophy skull (pvp_trophy_skull) one more of each.
+    catalogCount: 1466,
+    liveItemCount: 1484,
     pendingArtCount: 135,
     generatedHeroicDefinitions: 78,
     heroicDefinitionsWithOwnWebp: 59,

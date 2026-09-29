@@ -259,7 +259,9 @@ describe('guild bank painter mark contract (source pins)', () => {
       .replace(/\/\*[\s\S]*?\*\//g, '')
       .replace(/\/\/[^\n]*/g, '');
     expect(painter).toContain('cornerMarkHtml(cornerMark)');
-    expect(painter).toContain('bagInstanceGlyphKind(slot.instance)');
+    // The item id rides along so a trophy skull's victim signer is never read
+    // as a maker's mark (world_pvp_spoils.ts).
+    expect(painter).toContain('bagInstanceGlyphKind(slot.instance, slot.itemId)');
     expect(painter).toMatch(/(?<!UNKNOWN_)INSTANCE_GLYPH_ARIA_KEYS\[glyphKind\]/);
     // The guild pane never uses the UNKNOWN_ key family (see the aria case
     // above); a switch to it must be a deliberate edit, not drift.
