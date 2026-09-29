@@ -6,9 +6,18 @@ import { describe, expect, it } from 'vitest';
 import { CASCADE_SCENARIO } from '../src/sim/dev/cascade_playtest';
 import { Sim } from '../src/sim/sim';
 import { dist2d, type SimEvent } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
+// The scenario spawns its own dummy and raid around the mage, so the Sims run
+// on the empty world rather than the full overworld.
 function devMage(devCommands: boolean) {
-  const sim = new Sim({ seed: 41, playerClass: 'mage', autoEquip: true, devCommands });
+  const sim = new Sim({
+    seed: 41,
+    playerClass: 'mage',
+    autoEquip: true,
+    devCommands,
+    world: EMPTY_TEST_WORLD,
+  });
   sim.setPlayerLevel(20);
   expect(sim.setSpec('arcane')).toBe(true);
   sim.tick();
