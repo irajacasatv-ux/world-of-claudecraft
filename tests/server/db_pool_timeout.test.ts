@@ -1,5 +1,5 @@
 import net from 'node:net';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 
 // The hanging-database guard. Point the pool at a TCP endpoint that ACCEPTS the
 // connection but never completes the Postgres startup handshake (it never sends a
@@ -48,21 +48,32 @@ afterAll(async () => {
 
 describe('db pool connect timeout', () => {
   it('rejects a query with a timeout when the database accepts but never answers', async () => {
-    const start = Date.now();
-    let error: Error | undefined;
+    // The driver's timers run on the faked clock; the socket, the held handshake
+    // and the real pg driver stay real. Waiting out the real 5000 ms proved no
+    // more than the faked clock does: still pending just short of the timeout
+    // (not an instant failure), rejected with a timeout just past it (not a hang).
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
     try {
-      await db.pool.query('SELECT 1');
-    } catch (e) {
-      error = e as Error;
+      let error: Error | undefined;
+      let settled = false;
+      const query = db.pool.query('SELECT 1').then(
+        () => {
+          settled = true;
+        },
+        (e: unknown) => {
+          error = e as Error;
+          settled = true;
+        },
+      );
+      await vi.advanceTimersByTimeAsync(4500);
+      expect(settled).toBe(false);
+      await vi.advanceTimersByTimeAsync(4500);
+      expect(settled).toBe(true);
+      await query;
+      expect(error).toBeInstanceOf(Error);
+      expect(error?.message).toMatch(/timeout/i);
+    } finally {
+      vi.useRealTimers();
     }
-    const elapsed = Date.now() - start;
-
-    expect(error).toBeInstanceOf(Error);
-    expect(error?.message).toMatch(/timeout/i);
-    // Proves the 5000ms connect timeout fired: not an instant failure (which would
-    // mean the pool never waited for the handshake) and not an indefinite hang (no
-    // timeout at all). The window brackets the one 5000ms timer with slack for CI.
-    expect(elapsed).toBeGreaterThanOrEqual(4500);
-    expect(elapsed).toBeLessThanOrEqual(9000);
-  }, 20000);
+  });
 });
