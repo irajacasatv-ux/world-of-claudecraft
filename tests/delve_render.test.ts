@@ -21,6 +21,7 @@ import {
 import { DUNGEON_WALK_HALF_X } from '../src/sim/dungeon_layout';
 import { FREEHOLD_GATE_TEMPLATE_ID } from '../src/sim/freehold/gate_rules';
 import { Sim } from '../src/sim/sim';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const FOUR_MODULE_RUN: DelveModuleId[] = [
   'reliquary_sunken_ossuary',
@@ -248,11 +249,13 @@ describe('buildDelveInteractable', () => {
     // this gate runs for every 'object'-kind view, so without its own arm the
     // arch was hidden on every frame of every lit host. Drive the entity the
     // real bootstrap spawns, not a hand-built fixture.
+    // The gate's site is a world service, which the empty world keeps.
     const sim = new Sim({
       seed: 1,
       playerClass: 'warrior',
       noPlayer: true,
       freeholdsEnabled: true,
+      world: EMPTY_TEST_WORLD,
     });
     const gate = [...sim.entities.values()].find((e) => e.templateId === FREEHOLD_GATE_TEMPLATE_ID);
     expect(gate?.kind).toBe('object');
