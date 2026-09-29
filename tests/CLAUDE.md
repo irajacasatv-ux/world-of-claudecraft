@@ -282,10 +282,11 @@ The recurring causes, each measured on this suite:
 
 **Admission: a new test file earns its place.** Its leading comment says, on its own lines,
 `Guards:` and what it uniquely guards (the behavior no existing suite pins, naming the nearest
-suite that does not), and `Cost:` and what it costs as one measured time (its local test time at
-one worker, from `npx vitest run <file> --maxWorkers=1`, for example `Cost: 0.4 s`, on one
-`Cost:` line; a second time on the line in any unit, a grouped number, a fraction of a millisecond
-or a third decimal place of a second is refused, not read). Before adding
+suite that does not), and a `Cost:` field holding its measured local test time at one worker (from
+`npx vitest run <file> --maxWorkers=1`) and nothing else: `Cost: 0.4 s` or `Cost: 450 ms`, the
+field closing its paragraph (a blank comment line, a `Guards:` line or the end of the comment
+follows it). A qualified or wrapped time, a second cost marker, a grouped number, a fraction of a
+millisecond or a third decimal place of a second is refused, not read. Before adding
 one, look for the suite that should own the case, and pick the cheapest form that keeps the guard
 (the remedies above). The lane-threshold suite checks the statement on every `.test.ts` the
 weight table has not measured yet (no row, or a carried one). A file with no row counts its

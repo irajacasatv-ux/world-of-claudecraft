@@ -107,23 +107,27 @@ describe('the lane threshold over the measured shard weights', () => {
 
 // The admission rule (tests/CLAUDE.md, "Test cost"): a test file the harvest has not measured
 // (no row in the weight table, or a carried row standing in for one) says in its leading
-// comment, on its own lines, `Guards:` and what it uniquely guards, and `Cost:` and its measured
-// local cost (a number with ms or s). Until a harvest measures the file, that cost counts into
-// the total-time ratchet below, in CI time. The files checked are the table's own population
-// (scripts/lib/ci_shard_walk.mjs: every .test.ts outside the browser suite). Every other file
-// vitest's default run collects (a .test.mjs, a .spec.ts, a test outside tests/) sits outside the
-// table: the ones that predate the rule are pinned by name below, and any new one must carry the
-// statement too. The Playwright browser suite runs under its own config and is reviewed by hand.
+// comment, on its own lines, `Guards:` and what it uniquely guards, and a `Cost:` field holding
+// its measured local cost (the field's form is below). Until a harvest measures the file, that
+// cost counts into the total-time ratchet below, in CI time. The files checked are the table's
+// own population (scripts/lib/ci_shard_walk.mjs: every .test.ts outside the browser suite).
+// Every other file vitest's default run collects (a .test.mjs, a .spec.ts, a test outside
+// tests/) sits outside the table: the ones that predate the rule are pinned by name below, and
+// any new one must carry the statement too. The Playwright browser suite runs under its own
+// config and is reviewed by hand.
 const GUARDS_LINE = /^(?:\/\/+|\/?\*+)\s*Guards:\s*(\S.*)$/;
-// The time is the first number on the line, stands alone and is the line's only time: `1200 ms`
-// and `about 1.2 s` read, while `1,200 ms`, `25 000 ms`, `1.200 ms`, `2 min 30 s` and `1 s warm,
-// 2 min cold` are refused rather than read low (a fraction reads only in seconds and to two
-// places, so a dot used to group thousands cannot shrink a cost). The second-time check reads any
-// figure followed by an h, m or s in any case and fails closed (`2 shards` is refused too), and a
-// file with two `Cost:` lines states no cost.
-const COST_LINE = /^(?:\/\/+|\/?\*+)\s*Cost:[^\d\n]*?(?:(\d+\.\d{1,2})\s*s|(\d+)\s*(ms|s))\b/;
-const SECOND_TIME = /\d\s*[hms]/i;
-const COST_MARKER = /^(?:\/\/+|\/?\*+)\s*Cost:/;
+// The cost is a field, not prose: its `Cost:` line holds one time and nothing else (`Cost: 0.4 s`,
+// `Cost: 450 ms`, an optional closing period), and the next comment line ends its paragraph (a
+// blank comment line, a `Guards:` line, or the end of the comment), so the field cannot be
+// qualified on the line after it. A fraction reads only in seconds and to two places, so a dot
+// used to group thousands cannot shrink a cost. Anything else (`1,200 ms`, `about 1.2 s at one
+// worker`, `1 s warm, 2 min cold`, a wrapped second time, a second cost marker in any case) is
+// refused rather than read, which fails the file: the safe direction. Prose elsewhere in the
+// header is not the declaration, and the first harvest replaces the field with a measured row.
+const COST_FIELD =
+  /^(?:\/\/+|\/?\*+)\s*Cost:\s*(?:(\d+\.\d{1,2})\s*s|(\d+)\s*(ms|s))\.?\s*(?:\*\/)?$/;
+const COST_MARKER = /^(?:\/\/+|\/?\*+)\s*cost\s*:/i;
+const PARAGRAPH_END = /^(?:\/\/+|\/?\*+\/?)\s*(?:Guards:|$)/;
 const GUARDS_MIN_CHARS = 12;
 
 /** The leading comment block: every comment line before the first line of code. */
@@ -141,17 +145,19 @@ function leadingComment(source: string): string[] {
 function admissionStatement(source: string): { guards?: string; costMs?: number } {
   const statement: { guards?: string; costMs?: number } = {};
   const comment = leadingComment(source);
-  const oneCostLine = comment.filter((line) => COST_MARKER.test(line)).length === 1;
   for (const line of comment) {
     const guards = line.match(GUARDS_LINE)?.[1].trim();
     if (guards && guards.length >= GUARDS_MIN_CHARS && !guards.includes('Cost:'))
       statement.guards ??= guards;
-    const cost = line.match(COST_LINE);
-    if (oneCostLine && cost && !SECOND_TIME.test(line.slice(cost[0].length)))
-      statement.costMs = cost[1]
-        ? Number(cost[1]) * 1000
-        : Number(cost[2]) * (cost[3] === 's' ? 1000 : 1);
   }
+  const markers = comment.flatMap((line, i) => (COST_MARKER.test(line) ? [i] : []));
+  if (markers.length !== 1) return statement;
+  const cost = comment[markers[0]].match(COST_FIELD);
+  const next = comment[markers[0] + 1];
+  if (cost && (next === undefined || PARAGRAPH_END.test(next)))
+    statement.costMs = cost[1]
+      ? Number(cost[1]) * 1000
+      : Number(cost[2]) * (cost[3] === 's' ? 1000 : 1);
   return statement;
 }
 
@@ -190,7 +196,7 @@ function admissionProblems(
       problems.push(`${file.key}: no "Guards:" line saying what it uniquely guards`);
     if (costMs === undefined)
       problems.push(
-        `${file.key}: no "Cost:" line opening with a measured time (a plain number, ms or s)`,
+        `${file.key}: no "Cost:" field holding one measured time alone (for example "Cost: 0.4 s")`,
       );
     // The lane rule, applied to a file the table cannot yet judge: its stated cost in CI time.
     else if (!inLane.has(file.key) && statedWeight(file.source) > LANE_THRESHOLD_MS)
@@ -395,12 +401,11 @@ describe('the new-test admission rule', () => {
   it('reads real statements from the leading comment only, and skips measured files', () => {
     const file = (key: string, source: string) => ({ key, source });
     const stated =
-      "// Guards: the pause toggle's replay path.\n// Cost: 0.2 s locally at one worker.\n" +
-      'import x from "y";\n';
+      "// Guards: the pause toggle's replay path.\n// Cost: 0.2 s\n" + 'import x from "y";\n';
     const afterDocblock =
       // The pragma is split so vitest's own docblock scan does not read it as this file's.
       `// @vitest-${'environment'} happy-dom\n\n/**\n * Guards: the drawer keyboard trap.\n` +
-      ' * Cost: 450 ms at one worker.\n */\nimport x from "y";\n';
+      ' * Cost: 450 ms.\n */\nimport x from "y";\n';
     const problems = admissionProblems(
       [
         file('tests/new_stated.test.ts', stated),
@@ -448,7 +453,7 @@ describe('the new-test admission rule', () => {
     );
     const guards = (key: string) => `${key}: no "Guards:" line saying what it uniquely guards`;
     const cost = (key: string) =>
-      `${key}: no "Cost:" line opening with a measured time (a plain number, ms or s)`;
+      `${key}: no "Cost:" field holding one measured time alone (for example "Cost: 0.4 s")`;
     expect(problems).toEqual([
       guards('tests/new_buried.test.ts'),
       cost('tests/new_buried.test.ts'),
@@ -474,13 +479,25 @@ describe('the new-test admission rule', () => {
       cost('tests/carried.test.ts'),
     ]);
     expect(admissionStatement(stated).costMs).toBe(200);
-    expect(admissionStatement('// Cost: 1200 ms\n').costMs).toBe(1200);
-    expect(admissionStatement('// Cost: about 1.2 s at one worker\n').costMs).toBe(1200);
-    expect(admissionStatement('// Cost: 1.200 ms\n').costMs).toBeUndefined();
-    expect(admissionStatement('// Cost: 1.200 s\n').costMs).toBeUndefined();
-    expect(admissionStatement('// Cost: 1.25 s, 300 cases\n').costMs).toBe(1250);
-    for (const second of ['120 sec', '2m', '120 S', '1 h'])
-      expect(admissionStatement(`// Cost: 1 s warm, ${second} cold\n`).costMs).toBeUndefined();
+    const read = (header: string) => admissionStatement(header).costMs;
+    expect(read('// Cost: 1200 ms\n')).toBe(1200);
+    expect(read('// Cost: 1.2s.\n')).toBe(1200);
+    expect(read('/** Cost: 1.25 s */\n')).toBe(1250);
+    // The paragraph ends at a blank comment line or a Guards: line.
+    expect(read('// Cost: 1 s\n//\n// Later prose.\n')).toBe(1000);
+    expect(read("// Cost: 1 s\n// Guards: the pause toggle's replay path.\n")).toBe(1000);
+    for (const refused of [
+      '// Cost: about 1.2 s at one worker\n',
+      '// Cost: 1.200 ms\n',
+      '// Cost: 1.200 s\n',
+      '// Cost: 12.5 ms\n',
+      '// Cost: 1.25 s, 300 cases\n',
+      '// Cost: 1 s warm, 2-minute cold\n',
+      '// Cost: 1 s\n// warm; two minutes cold\n',
+      ' * Cost: 1 s\n * warm; 2 min cold\n */\n',
+      '// Cost: 1 s\n//\n// cost : 120 s cold\n',
+    ])
+      expect(read(refused), refused).toBeUndefined();
     expect(admissionStatement(afterDocblock).costMs).toBe(450);
   });
 });
