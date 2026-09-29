@@ -30,6 +30,7 @@ import {
 } from '../src/sim/professions/farming';
 import { type PlayerMeta, Sim } from '../src/sim/sim';
 import { terrainHeight } from '../src/sim/world';
+import { PRODUCTION_IDLE_CULL } from './helpers/production_idle_cull';
 
 const CROP_ID = 'vale_wheat';
 const SEED_ID = 'vale_wheat_seed';
@@ -45,13 +46,19 @@ interface Harness {
   advance(ms: number): void;
 }
 
-function makeHarness(seed = 41): Harness {
+// One seed for every harness: each twin pair compares two Sims on the same
+// seed, every harvest forces its survival roll, and a fresh seed would build
+// its collider grids (about half a second) for nothing. `idleCull` opts the
+// world-ticking case into production's idle-mob cull (the tick it asserts
+// leaves the plot alone is the one live players get).
+function makeHarness(idleCull = false): Harness {
   let nowMs = START_MS;
   const sim = new Sim({
-    seed,
+    seed: 41,
     playerClass: 'warrior',
     autoEquip: false,
     lockoutNowMs: () => nowMs,
+    ...(idleCull ? PRODUCTION_IDLE_CULL : {}),
   });
   const pid = sim.playerId;
   const meta = sim.players.get(pid) as PlayerMeta;
@@ -151,8 +158,8 @@ describe('anti-chore row 2: nothing rots, and a late harvest pays what an on-tim
   let onTime: Harness;
   let late: Harness;
   beforeEach(() => {
-    onTime = makeHarness(41);
-    late = makeHarness(41);
+    onTime = makeHarness();
+    late = makeHarness();
   });
 
   it('THE DECISIVE PIN: proficiency granted is a function of skill and tier, never elapsed time', () => {
@@ -179,7 +186,7 @@ describe('anti-chore row 2: nothing rots, and a late harvest pays what an on-tim
   });
 
   it('a fully grown plot still reads ready after a month, never expired or decayed', () => {
-    const h = makeHarness(7);
+    const h = makeHarness();
     plantCrop(h.sim.ctx, h.sim.player, h.meta, BED, CROP_ID);
     clearCast(h.sim);
     h.advance(CROP.durationMs + 30 * 24 * 60 * 60_000);
@@ -240,8 +247,8 @@ describe('anti-chore row 3: absence is never punished', () => {
     // Two harnesses, identical seeds. One advances its clock in a single jump
     // (the logged-out case: nobody ticked the sim), the other in many steps
     // with ticks between (the logged-in case). Same outcome.
-    const offline = makeHarness(99);
-    const online = makeHarness(99);
+    const offline = makeHarness();
+    const online = makeHarness();
     plantCrop(offline.sim.ctx, offline.sim.player, offline.meta, BED, CROP_ID);
     clearCast(offline.sim);
     plantCrop(online.sim.ctx, online.sim.player, online.meta, BED, CROP_ID);
@@ -269,7 +276,7 @@ describe('anti-chore row 3: absence is never punished', () => {
   it('ticking the world while a crop grows never touches the plot or the counter', () => {
     // The other direction of the same promise: BEING online is not rewarded
     // either, so no player is pushed to idle in-game while a timer runs.
-    const h = makeHarness(555);
+    const h = makeHarness(true);
     plantCrop(h.sim.ctx, h.sim.player, h.meta, BED, CROP_ID);
     clearCast(h.sim);
     const before = JSON.stringify(h.meta.farmPlots.get(BED));
@@ -303,7 +310,7 @@ describe('anti-chore row 4: risk is opt-in and one band above the gate is always
 
 describe('anti-chore row 5: the timer UI exists and is honest', () => {
   it('projects every plot with its stage and its remaining time', () => {
-    const h = makeHarness(2024);
+    const h = makeHarness();
     plantCrop(h.sim.ctx, h.sim.player, h.meta, BED, CROP_ID);
     clearCast(h.sim);
     const half = CROP.durationMs / 2;
