@@ -11,6 +11,7 @@ import { resolveMovement } from '../src/sim/colliders';
 import { PLAYER_MAX_CLIMB_SLOPE } from '../src/sim/pathfind';
 import { Sim } from '../src/sim/sim';
 import { groundHeight } from '../src/sim/world';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const SEED = 20061;
 const S = BEACON_SPIRAL;
@@ -97,7 +98,14 @@ describe('the Beacon stair surface', () => {
     // steepness gate sampled the raised deck itself, so the stair's tall rims
     // poisoned whole steepness cells and walled the climb off. Drive the
     // actual per-tick player path: facing + forward intent, full Sim ticks.
-    const sim = new Sim({ seed: SEED, playerClass: 'warrior', autoEquip: true });
+    // The stair is static world geometry, which the empty world keeps; only
+    // the overworld's camps and NPCs, ticked every step of the climb, go.
+    const sim = new Sim({
+      seed: SEED,
+      playerClass: 'warrior',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const p = sim.player;
     p.pos.x = 505;
     p.pos.z = 300;
