@@ -130,40 +130,46 @@ const COST_MARKER = /^(?:\/\/+|\/?\*+)\s*cost\s*:/i;
 const PARAGRAPH_END = /^(?:\/\/+|\/?\*+\/?)\s*(?:Guards:|$)/;
 const GUARDS_MIN_CHARS = 12;
 
-/** How a line reads given whether a block comment is open at its start: `pure` when every
- *  character outside whitespace sits in a comment, `open` when a block is still open at its end.
- *  Scanned token by token, so `*\/ /*` reopens a block and `/* x *\/ code` is code. */
-function scanCommentLine(line: string, inBlock: boolean): { pure: boolean; open: boolean } {
+/** How a line reads given whether a block comment is open at its start: `code` is where code
+ *  begins on it (-1 when every character outside whitespace sits in a comment), `open` whether a
+ *  block is still open at its end. Scanned token by token, so `*\/ /*` reopens a block and
+ *  `/* x *\/ code` holds code. */
+function scanCommentLine(line: string, inBlock: boolean): { code: number; open: boolean } {
   let i = 0;
   let open = inBlock;
   while (i < line.length) {
     if (open) {
       const close = line.indexOf('*/', i);
-      if (close < 0) return { pure: true, open: true };
+      if (close < 0) return { code: -1, open: true };
       open = false;
       i = close + 2;
       continue;
     }
     const rest = line.slice(i).trimStart();
-    if (rest === '' || rest.startsWith('//')) return { pure: true, open: false };
-    if (!rest.startsWith('/*')) return { pure: false, open: false };
+    if (rest === '' || rest.startsWith('//')) return { code: -1, open: false };
+    if (!rest.startsWith('/*')) return { code: line.length - rest.length, open: false };
     open = true;
     i = line.length - rest.length + 2;
   }
-  return { pure: true, open };
+  return { code: -1, open };
 }
 
-/** The leading comment block: every comment line before the first line of code. A block
- *  comment runs from its opening to its closing whatever its lines start with, so an unstarred
- *  line inside one is a comment line too (and cannot close the cost field's paragraph). */
+/** The leading comment block: every comment line before the first line of code, split on every
+ *  JavaScript line terminator. A block comment runs from its opening to its closing whatever its
+ *  lines start with, so an unstarred line inside one is a comment line too, and the comment part
+ *  of the line where code begins counts as well: neither can close the cost field's paragraph. */
 function leadingComment(source: string): string[] {
   const lines: string[] = [];
   let inBlock = false;
-  for (const line of source.split('\n')) {
+  for (const line of source.split(/\r\n|[\n\r\u2028\u2029]/)) {
     const trimmed = line.trim();
     if (trimmed === '') continue;
     const scan = scanCommentLine(trimmed, inBlock);
-    if (!scan.pure) break;
+    if (scan.code >= 0) {
+      const comment = trimmed.slice(0, scan.code).trim();
+      if (comment !== '') lines.push(comment);
+      break;
+    }
     lines.push(trimmed);
     inBlock = scan.open;
   }
@@ -510,6 +516,7 @@ describe('the new-test admission rule', () => {
     const read = (header: string) => admissionStatement(header).costMs;
     expect(read('// Cost: 1200 ms\n')).toBe(1200);
     expect(read('// Cost: 1.2s.\n')).toBe(1200);
+    expect(read('/* Cost: 1 s\n*/ export {};\n')).toBe(1000);
     expect(read('/** Cost: 1.25 s */\n')).toBe(1250);
     // The paragraph ends at a blank comment line or a Guards: line.
     expect(read('// Cost: 1 s\n//\n// Later prose.\n')).toBe(1000);
@@ -529,6 +536,11 @@ describe('the new-test admission rule', () => {
       '/* Cost: 1 s\n   2 min cold */\n',
       '/*\n */ /*\n// Cost: 1 s\n   warm; 2 min cold\n */\n',
       '/* x */ const s = 1;\n// Cost: 1 s\n',
+      '/* Cost: 1 s\n   2 min cold */ export {};\n',
+      '/**\n * Cost: 1 s\n * warm; 2 min cold */ import x from "y";\n',
+      '// Cost: 1 s\n/* 2 min cold */ export {};\n',
+      '// intro\r/*\n// Cost: 1 s\nwarm; 2 min cold\n*/\n',
+      '// intro\u2028/*\n// Cost: 1 s\nwarm; 2 min cold\n*/\n',
     ])
       expect(read(refused), refused).toBeUndefined();
     expect(admissionStatement(afterDocblock).costMs).toBe(450);
