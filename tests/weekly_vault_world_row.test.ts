@@ -10,7 +10,7 @@ import { canEquipItem } from '../src/sim/equipment_rules';
 import { itemLevel } from '../src/sim/item_level';
 import type { PlayerMeta } from '../src/sim/sim';
 import { Sim } from '../src/sim/sim';
-import { ALL_CLASSES } from '../src/sim/types';
+import { ALL_CLASSES, type WorldContent } from '../src/sim/types';
 import {
   advanceWeeklyRewards,
   earnedWeeklyRolls,
@@ -31,6 +31,20 @@ const PREVIOUS_TIER_ITEM_LEVEL = 29;
 const WORLD_POOL_INDEX = WEEKLY_POOL_IDS.indexOf('world');
 const WEEK = 604800000;
 const THORNPEAK = 'wq_thornpeak_stormcrag';
+// The kill quest activates on area arrival and credits through a live target, so
+// its Sims keep only the target's camps; every Sim in the file shares one seed.
+const SEED = 4711;
+const THORNPEAK_QUEST = WORLD_QUESTS_BY_ID[THORNPEAK];
+const THORNPEAK_WORLD: WorldContent = {
+  ...BUILTIN_WORLD,
+  camps: BUILTIN_WORLD.camps.filter(
+    (camp) =>
+      THORNPEAK_QUEST.objective.type === 'kill' &&
+      camp.mobId === THORNPEAK_QUEST.objective.targetMobId,
+  ),
+  npcs: {},
+  groundObjects: [],
+};
 
 function metaOf(sim: Sim): PlayerMeta {
   const meta = sim.meta(sim.playerId);
@@ -47,8 +61,8 @@ function placeAt(sim: Sim, x: number, z: number): void {
 }
 
 /** A capped warrior standing inside the Thornpeak kill quest on the first cycle. */
-function questSim(seed = 4711): Sim {
-  const sim = new Sim({ seed, playerClass: 'warrior', autoEquip: true });
+function questSim(seed = SEED): Sim {
+  const sim = new Sim({ seed, playerClass: 'warrior', autoEquip: true, world: THORNPEAK_WORLD });
   const quest = WORLD_QUESTS_BY_ID[THORNPEAK];
   sim.setPlayerLevel(20);
   sim.utcDay = '2026-08-31';
@@ -149,7 +163,7 @@ describe('the keeper', () => {
       groundObjects: [],
     };
     const sim = new Sim({
-      seed: 42,
+      seed: SEED,
       playerClass: 'mage',
       noPlayer: true,
       world,
