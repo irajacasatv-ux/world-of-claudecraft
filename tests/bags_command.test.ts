@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { Sim } from '../src/sim/sim';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
+// The readout reads only the player's own bags, so the empty world serves.
 function makeWorld() {
-  return new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+  return new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true, world: EMPTY_TEST_WORLD });
 }
 
 // The self-only readout reuses the 'error' channel, like /who and the other
