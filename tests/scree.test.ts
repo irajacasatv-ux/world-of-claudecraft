@@ -22,6 +22,15 @@ const SEED = 1337;
 // a broad sample rectangle over the original vale/marsh/peaks strip
 const BOUNDS = { minX: -360, maxX: 360, minZ: -120, maxZ: 760 };
 
+// The built-in world's sweep over BOUNDS, computed once: four cases read the
+// same deterministic sweep (about 0.6 s each) and none of them mutates it. The
+// beforeEach below makes the built-in world active before any case reads it.
+let builtinSweep: ReturnType<typeof screeSpotsInBounds> | undefined;
+const builtinSpots = () => {
+  builtinSweep ??= screeSpotsInBounds(SEED, BOUNDS);
+  return builtinSweep;
+};
+
 describe('cliff scree placement', () => {
   it('compacts live matrices by variant in ascending source-slot order', () => {
     const variants = new Int8Array([-1, 1, 0, 1, -1, 0]);
@@ -51,7 +60,7 @@ describe('cliff scree placement', () => {
   });
 
   it('is deterministic per (seed, cell)', () => {
-    const spots = screeSpotsInBounds(SEED, BOUNDS);
+    const spots = builtinSpots();
     expect(spots.length).toBeGreaterThan(0);
     for (const s of spots.slice(0, 25)) {
       const again = screeSpotAt(SEED, Math.round(s.x / 6.5), Math.round(s.z / 6.5));
@@ -63,15 +72,20 @@ describe('cliff scree placement', () => {
   });
 
   it('never places on roads, underwater, or at hub centres', () => {
-    const spots = screeSpotsInBounds(SEED, BOUNDS);
+    const spots = builtinSpots();
+    expect(spots.length).toBeGreaterThan(0);
+    // Offenders are collected and asserted once: an expect() per spot and hub
+    // cost most of this case for the same verdict.
+    const offenders: string[] = [];
     for (const s of spots) {
-      expect(roadDistance(s.x, s.z)).toBeGreaterThanOrEqual(3);
-      expect(s.baseY).toBeGreaterThanOrEqual(waterLevel() + 0.5);
+      if (roadDistance(s.x, s.z) < 3) offenders.push(`${s.x},${s.z} on a road`);
+      if (s.baseY < waterLevel() + 0.5) offenders.push(`${s.x},${s.z} underwater`);
       for (const zone of BUILTIN_WORLD.zones) {
         const d = Math.hypot(s.x - zone.hub.x, s.z - zone.hub.z);
-        expect(d).toBeGreaterThanOrEqual(15);
+        if (d < 15) offenders.push(`${s.x},${s.z} at the ${zone.id} hub`);
       }
     }
+    expect(offenders).toEqual([]);
   });
 
   it('never places inside a gather node footprint (the harvest disc plus margin)', () => {
@@ -113,7 +127,7 @@ describe('cliff scree placement', () => {
   });
 
   it('keeps tier-gated visual scree out of the shared walkable heightfield', () => {
-    const spots = screeSpotsInBounds(SEED, BOUNDS);
+    const spots = builtinSpots();
     const s = spots[0];
     expect(s).toBeDefined();
     if (!s) return;
@@ -124,7 +138,7 @@ describe('cliff scree placement', () => {
   });
 
   it('keeps walk-through dressing below human-scale wall size', () => {
-    const spots = screeSpotsInBounds(SEED, BOUNDS);
+    const spots = builtinSpots();
     expect(spots.some((s) => s.scale < 0.4)).toBe(true);
     expect(Math.max(...spots.map((s) => s.scale))).toBeLessThanOrEqual(0.55);
   });
