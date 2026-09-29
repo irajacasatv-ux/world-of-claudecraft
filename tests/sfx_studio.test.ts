@@ -18,7 +18,7 @@ import { NodeIO } from '@gltf-transform/core';
 import { ALL_EXTENSIONS } from '@gltf-transform/extensions';
 import ffmpegPath from 'ffmpeg-static';
 import { MeshoptDecoder } from 'meshoptimizer';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterAll, afterEach, describe, expect, it } from 'vitest';
 // @ts-expect-error untyped zero-dependency authoring tool (scripts/*.mjs convention)
 import { buildSfxGenerationPlan } from '../scripts/sfx/generation_plan.mjs';
 // @ts-expect-error untyped zero-dependency authoring tool (scripts/*.mjs convention)
@@ -98,6 +98,17 @@ async function withIsolatedPlaybackDraft<T>(action: () => T | Promise<T>): Promi
 afterEach(() => {
   for (const root of temporaryRoots.splice(0)) {
     rmSync(root, { recursive: true, force: true });
+  }
+});
+
+// The Studio root under vitest is shared by every file one worker runs in turn (audio_io keys it
+// by worker), and the cases here leave saved drafts in it (a ui_coin draft among them), so the
+// file clears it when it ends rather than handing them to the next Studio suite in the worker.
+// Only ever the test root: outside vitest the Studio root is a developer's real workspace.
+afterAll(() => {
+  const testRoot = process.env.WOC_SFX_STUDIO_TEST_ROOT;
+  if (testRoot && STUDIO_ROOT.startsWith(testRoot)) {
+    rmSync(STUDIO_ROOT, { recursive: true, force: true });
   }
 });
 

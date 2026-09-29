@@ -42,7 +42,11 @@ const {
 // clips, so the manifest and the key and track counts are the real catalog's
 // while the conformance pass sees two blobs. The server's own /repo/ routes
 // still serve the checked-in tree.
-const { fixtureRepoRoot } = await vi.hoisted(async () => {
+// The Studio's working root is this file's own too: the global setup's root is shared by every
+// file a vitest worker runs in turn (audio_io keys it by worker, not by file), so a Studio suite
+// that ran earlier in the same worker left its saved drafts where this file's export gate reads
+// them. Both roots are set before the modules load, and restored for the next file afterwards.
+const { fixtureRepoRoot, studioTestRoot, previousStudioEnv } = await vi.hoisted(async () => {
   const fs = await import('node:fs');
   const path = await import('node:path');
   const os = await import('node:os');
@@ -64,8 +68,14 @@ const { fixtureRepoRoot } = await vi.hoisted(async () => {
     path.join(real, 'src/game/sfx_manifest.generated.ts'),
     path.join(root, 'src/game/sfx_manifest.generated.ts'),
   );
+  const previous = {
+    testRoot: process.env.WOC_SFX_STUDIO_TEST_ROOT,
+    repoRoot: process.env.WOC_SFX_STUDIO_TEST_REPO_ROOT,
+  };
+  const studio = fs.mkdtempSync(path.join(os.tmpdir(), 'woc-sfx-security-studio-'));
+  process.env.WOC_SFX_STUDIO_TEST_ROOT = studio;
   process.env.WOC_SFX_STUDIO_TEST_REPO_ROOT = root;
-  return { fixtureRepoRoot: root };
+  return { fixtureRepoRoot: root, studioTestRoot: studio, previousStudioEnv: previous };
 });
 
 function getWithHost(url: string, host: string): Promise<{ status: number; body: string }> {
@@ -241,6 +251,14 @@ describe.sequential('SFX Studio server security', () => {
       rmSync(playbackDraft, { force: true });
       if (hadPlaybackDraft) renameSync(playbackDraftBackup, playbackDraft);
       rmSync(fixtureRepoRoot, { recursive: true, force: true });
+      rmSync(studioTestRoot, { recursive: true, force: true });
+      for (const [key, value] of [
+        ['WOC_SFX_STUDIO_TEST_ROOT', previousStudioEnv.testRoot],
+        ['WOC_SFX_STUDIO_TEST_REPO_ROOT', previousStudioEnv.repoRoot],
+      ] as const) {
+        if (value === undefined) delete process.env[key];
+        else process.env[key] = value;
+      }
     }
   }, 30_000);
 
@@ -248,6 +266,8 @@ describe.sequential('SFX Studio server security', () => {
     // Without the seam the export case silently goes back to validating all
     // 717 real tracks.
     expect(audioIo.REPO_ROOT).toBe(fixtureRepoRoot);
+    // And over this file's own working root, never the one the worker shares.
+    expect(audioIo.STUDIO_ROOT.startsWith(realpathSync(studioTestRoot))).toBe(true);
     expect(realpathSync(fixtureRepoRoot)).not.toBe(realpathSync(repoRoot));
   });
 
