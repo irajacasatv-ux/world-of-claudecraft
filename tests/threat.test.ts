@@ -664,9 +664,10 @@ describe('taunt and growl', () => {
     // The paladin taunt is holy-school (a spell), so on impact it used to roll a full
     // resist. A resisted taunt silently breaks tanking, so taunts now skip the roll.
     // Force the shared spell-hit roll to reject every spell. A taunt must skip
-    // that roll entirely, which makes this stronger and faster than seed-hunting.
+    // that roll entirely, which makes this stronger and faster than seed-hunting,
+    // and lets the case share the file's seed.
     const sim = new Sim({
-      seed: 1,
+      seed: 42,
       playerClass: 'paladin',
       noPlayer: true,
       world: THREAT_TEST_WORLD,
@@ -2083,14 +2084,11 @@ describe('shaman travel and shock mechanics', () => {
   });
 
   it('Shadewolf drops before casting shaman spells from the same button press', () => {
-    // Seed hunted (re-hunted 42 -> 43 after the Eastbrook camp respacing thinned the
-    // zone-1 camp counts, which shifts every seed's stream because world-gen draws 5
-    // rng values per camp mob). The final beat needs Cinder Jolt to LAND: at seed 42
-    // the shifted stream now rolls the 1% full resist (spellHitChance caps at 0.99),
-    // so the shock deals no damage and applies no dot, and the beat asserts nothing.
-    // Seed 43 puts the cast back on an ordinary hit; 42 is the only seed in 1..60 that
-    // resists here.
-    const sim = makeSim('shaman', 43);
+    // The final beat needs Cinder Jolt to LAND, so it pins the rolls before that
+    // cast (a full resist, 1 percent since spellHitChance caps at 0.99, would deal no
+    // damage and apply no dot) rather than hunting a seed; the case shares the
+    // file's seed.
+    const sim = makeSim('shaman');
     sim.setPlayerLevel(16);
     // This test checks that *casting a spell* auto-cancels Shadewolf form.
     // Taking any damage also breaks the form, so a stray wolf swing landing
@@ -2128,6 +2126,7 @@ describe('shaman travel and shock mechanics', () => {
 
     const beforeHp = wolf.hp;
     sim.player.gcdRemaining = 0;
+    sim.rng.next = () => 0.9; // every chance over 90 percent lands: no resist
     sim.castAbility('flame_shock');
     expect(sim.player.auras.some((a) => a.id === 'ghost_wolf')).toBe(false);
     // Cinder Jolt is a projectile now: its damage lands when the bolt reaches the
