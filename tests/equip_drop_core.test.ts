@@ -23,6 +23,12 @@ import {
   resolveDraggedCopy,
 } from '../src/ui/equip_drop_core';
 import { resolveDropTargetAt } from '../src/ui/item_drop_hit_test';
+import { EMPTY_TEST_WORLD } from './sim_shared';
+
+// The authority Sims: one seed of the empty test world for the whole file. The
+// equip rule reads the player's gear, level, and spec, never a camp, an NPC, or a
+// ground object, and a seed the file has already built reuses its world.
+const SEED = 5;
 
 function equipmentOf(sim: Sim & Record<string, any>, pid: number): Record<string, string> {
   const meta = sim.players.get(pid);
@@ -127,8 +133,12 @@ describe('paperdollDropAction agrees with the sim (the authority)', () => {
 
   for (const c of cases) {
     it(`${c.itemId} -> ${c.slot} (${c.cls} ${c.level})`, () => {
-      const sim = new Sim({ seed: 5, playerClass: c.cls, noPlayer: true }) as Sim &
-        Record<string, any>;
+      const sim = new Sim({
+        seed: SEED,
+        playerClass: c.cls,
+        noPlayer: true,
+        world: EMPTY_TEST_WORLD,
+      }) as Sim & Record<string, any>;
       const pid = sim.addPlayer(c.cls, 'Dropper');
       sim.setPlayerLevel(c.level, pid);
       if (c.spec) expect(sim.setSpec(c.spec, pid)).toBe(true);
@@ -179,8 +189,12 @@ describe('paperdollDropAction unique-equipped mirror', () => {
   });
 
   it('agrees with the sim on the refused duplicate (the authority check)', () => {
-    const sim = new Sim({ seed: 6, playerClass: 'warrior', noPlayer: true }) as Sim &
-      Record<string, any>;
+    const sim = new Sim({
+      seed: SEED,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    }) as Sim & Record<string, any>;
     const pid = sim.addPlayer('warrior', 'Dropper');
     sim.setPlayerLevel(20, pid);
     expect(sim.setSpec('fury', pid)).toBe(true);
@@ -435,8 +449,12 @@ describe('paperdollDropAction promoted-copy unique mirror (Masterwrought phase 1
   });
 
   it('agrees with the sim on the promoted duplicate (the authority check)', () => {
-    const sim = new Sim({ seed: 8, playerClass: 'warrior', noPlayer: true }) as Sim &
-      Record<string, any>;
+    const sim = new Sim({
+      seed: SEED,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    }) as Sim & Record<string, any>;
     const pid = sim.addPlayer('warrior', 'Promoter');
     sim.setPlayerLevel(20, pid);
     sim.addItemInstance(RING.id, structuredClone(PROMOTED), pid);
@@ -604,8 +622,12 @@ describe('paperdollDropAction Masterwrought counted-family mirror', () => {
   });
 
   it('agrees with the sim on a refused third piece (the authority check)', () => {
-    const sim = new Sim({ seed: 11, playerClass: 'warrior', noPlayer: true }) as Sim &
-      Record<string, any>;
+    const sim = new Sim({
+      seed: SEED,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    }) as Sim & Record<string, any>;
     const pid = sim.addPlayer('warrior', 'Smith');
     sim.setPlayerLevel(20, pid);
     sim.addItem(MW_BAND, 2, pid);
@@ -632,8 +654,12 @@ describe('paperdollDropAction Masterwrought counted-family mirror', () => {
     // the bags hold two copies of ONE flagged id and only the top one rolled
     // legendary, so the equip is refused even though the player may well have
     // dragged the plain copy. Both sides must reach that same verdict.
-    const sim = new Sim({ seed: 12, playerClass: 'warrior', noPlayer: true }) as Sim &
-      Record<string, any>;
+    const sim = new Sim({
+      seed: SEED,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    }) as Sim & Record<string, any>;
     const pid = sim.addPlayer('warrior', 'Ward');
     sim.setPlayerLevel(20, pid);
     sim.addItem(MW_SIGNET, 1, pid);
@@ -671,8 +697,12 @@ describe('paperdollDropAction Masterwrought counted-family mirror', () => {
     // The named-cell twin of the case above: same bags, but the equip carries
     // the plain copy's own cell, so BOTH sides let it through, and the worn
     // payload proves the sim consumed the named unit, not the legendary top.
-    const sim = new Sim({ seed: 13, playerClass: 'warrior', noPlayer: true }) as Sim &
-      Record<string, any>;
+    const sim = new Sim({
+      seed: SEED,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    }) as Sim & Record<string, any>;
     const pid = sim.addPlayer('warrior', 'Wend');
     sim.setPlayerLevel(20, pid);
     sim.addItem(MW_SIGNET, 1, pid);
