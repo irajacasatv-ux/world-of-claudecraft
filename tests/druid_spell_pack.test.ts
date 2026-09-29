@@ -20,8 +20,8 @@ const NEW_DRUID = [
 ] as const;
 
 // Every case casts, shifts or walks a druid it adds itself and fights nothing,
-// so the rig stands on the empty world (terrain, water and colliders come with
-// the seed, not the world content).
+// so the rig stands on the empty world (terrain, water and colliders key on the
+// seed and the module's active world content, which cfg.world leaves alone).
 function makeWorld() {
   return new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true, world: EMPTY_TEST_WORLD });
 }
