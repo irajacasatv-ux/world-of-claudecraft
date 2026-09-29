@@ -17,6 +17,15 @@ function paladinSim(): Sim {
   return new Sim({ seed: 37, playerClass: 'paladin', autoEquip: true, world: EMPTY_TEST_WORLD });
 }
 
+// For a case whose assertion needs a strike to land (a Devotion grant on an
+// effective hit, the Final Edict impact cue): every roll reads 0.9, which lands
+// the hit and resist rolls and fails every crit or proc chance under 90
+// percent, so the case holds on any seed rather than on seed 37's draws (the
+// same pin the support-ability suite uses).
+function landEveryRoll(sim: Sim): void {
+  sim.rng.next = () => 0.9;
+}
+
 function hostileNear(sim: Sim): Entity {
   const player = sim.player;
   const mob = createMob(9001, MOBS.ridge_stalker, 20, {
@@ -359,6 +368,7 @@ describe('Paladin core abilities', () => {
     const damage = paladinSim();
     damage.setPlayerLevel(20);
     const enemy = hostileNear(damage);
+    landEveryRoll(damage);
     run(damage, enemy, resolve(damage, 'hammer_of_grace'));
     expect(enemy.hp).toBeLessThan(enemy.maxHp);
     expect(damage.player.paladinDevotion?.value).toBe(1);
@@ -385,6 +395,7 @@ describe('Paladin core abilities', () => {
     sim.setSpec('protection');
 
     sim.castAbility('avenging_wrath');
+    landEveryRoll(sim);
     run(sim, hostileNear(sim), resolve(sim, 'vowkeeper_strike'));
 
     expect(sim.player.paladinDevotion?.value).toBe(12);
@@ -562,6 +573,7 @@ describe('Paladin core abilities', () => {
     const enemy = hostileNear(sim);
     grantDevotion(sim.player, 20);
     activateDivineAscension(sim.player);
+    landEveryRoll(sim);
 
     run(sim, enemy, resolve(sim, 'final_edict'));
     expect(sim.drainEvents()).toContainEqual(
@@ -581,6 +593,7 @@ describe('Paladin core abilities', () => {
     sim.setPlayerLevel(20);
     sim.setSpec('retribution');
     const enemy = hostileNear(sim);
+    landEveryRoll(sim);
 
     run(sim, enemy, resolve(sim, 'final_edict'));
     expect(sim.drainEvents()).toContainEqual(
