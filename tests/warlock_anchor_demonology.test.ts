@@ -23,8 +23,9 @@ import { bandAt } from './helpers/balance_diet';
 // full sweep (WOC_FULL_BALANCE_SWEEP=1) all four seeds (docs/qa-gate.md, "The
 // balance-harness diet"; seed VALUES never change, only the count). Each band
 // is pinned per configuration via band(full, diet): the diet band keeps its full
-// band's relative width around the two-seed mean measured 2026-09-27; re-pin
-// each from its own printed actuals.
+// band's relative width around the two-seed mean measured 2026-09-27 (both
+// re-measured 2026-09-29 at the production idle cull, below); re-pin each from
+// its own printed actuals.
 const FULL_SWEEP = process.env.WOC_FULL_BALANCE_SWEEP === '1';
 const band = bandAt(FULL_SWEEP);
 const ANCHOR_SEEDS = FULL_SWEEP ? ([42, 1337, 9001, 777] as const) : ([42, 1337] as const);
@@ -63,8 +64,11 @@ describe('demonology 200 DPS anchors at 120 seconds', () => {
     // Diet: 214.52 over seeds 42 and 1337, against a four-seed mean of 218.10
     // measured the same day (2026-09-27); the diet band is the full band scaled
     // by that ratio and rounded outward (older figures above predate it).
-    expect(mean('dps')).toBeGreaterThanOrEqual(band(203, 199));
-    expect(mean('dps')).toBeLessThanOrEqual(band(225, 222));
+    // Re-measured 2026-09-29 for the production idle cull (scripts/probe_sim.ts):
+    // full actual 226.76 (4 seeds), diet actual 220.93 (2 seeds); the same
+    // relative margins give 211 / 234 (full) and 205 / 229 (diet).
+    expect(mean('dps')).toBeGreaterThanOrEqual(band(211, 205));
+    expect(mean('dps')).toBeLessThanOrEqual(band(234, 229));
     expect(mean('starvedPct')).toBeLessThan(0.1);
   }, 240_000);
 
@@ -87,8 +91,11 @@ describe('demonology 200 DPS anchors at 120 seconds', () => {
     // Diet: 268.25 over seeds 42 and 1337, against a four-seed mean of 267.00
     // measured the same day (2026-09-27); the diet band is the full band scaled
     // by that ratio and rounded outward (older figures above predate it).
-    expect(mean('dps')).toBeGreaterThanOrEqual(band(254, 255));
-    expect(mean('dps')).toBeLessThanOrEqual(band(281, 283));
+    // Re-measured 2026-09-29 for the production idle cull (scripts/probe_sim.ts):
+    // full actual 264.20 (4 seeds), diet actual 264.73 (2 seeds); the same
+    // relative margins give 251 / 278 (full) and 252 / 279 (diet).
+    expect(mean('dps')).toBeGreaterThanOrEqual(band(251, 252));
+    expect(mean('dps')).toBeLessThanOrEqual(band(278, 279));
     expect(mean('starvedPct')).toBeLessThan(0.1);
   }, 240_000);
 });

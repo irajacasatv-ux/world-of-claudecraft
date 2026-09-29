@@ -12,13 +12,18 @@ import { runWarlockBalanceProbe } from '../scripts/warlock_balance_probe';
 // the PVE viability round (the fixture kit re-anchor plus the spellDmgPct
 // floors); measured seed-42 actuals were 206/179/199. The two-minute anchors
 // live in the per-spec tests/warlock_anchor_*.test.ts files since the
-// 2026-08-13 split.
+// 2026-08-13 split; each file's seed-42 level-20 dummy tripwire is the exact
+// first 120 s of the matching window below (the rotation never reads the
+// window length), so the two are re-measured together at one configuration.
 describe('Affliction full-BiS five-minute inert-boss balance', () => {
   it('spends the mana pool by five minutes inside the sanity corridor', () => {
     const result = runWarlockBalanceProbe('affliction', 42, 300);
 
-    expect(result.dps).toBeGreaterThanOrEqual(175);
-    expect(result.dps).toBeLessThanOrEqual(235);
+    // Re-measured 2026-09-29 for the production idle cull (scripts/probe_sim.ts):
+    // seed-42 actual 204.47 DPS against the 206 the corridor was minted on; the
+    // same relative margins give 174 / 233.
+    expect(result.dps).toBeGreaterThanOrEqual(174);
+    expect(result.dps).toBeLessThanOrEqual(233);
     // Mana-end corridor widened 0.05 to 0.09 (all three specs) by the 2/4/6,
     // then to 0.12 at the 2026-08-30 legendary band (Heartwood budget growth)
     // lineage retune: the halved haste and Clearcasting rates mean fewer
@@ -37,10 +42,13 @@ describe('Affliction full-BiS five-minute inert-boss balance', () => {
     // pool survives the window. The corridor widens to 0.30 with the same
     // headroom the 0.12 line carried over its 0.096 measurement; the pool is
     // still finite (starvation still binds below).
-    expect(result.manaEndPct).toBeLessThan(0.3);
+    // Re-measured 2026-09-29 for the production idle cull (scripts/probe_sim.ts):
+    // seed-42 actual 0.212 against the 0.242 below; the same relative margins
+    // give 0.26 / 0.16.
+    expect(result.manaEndPct).toBeLessThan(0.26);
     // And a floor under the measured 0.242, so the larger surviving pool is
     // pinned from both sides rather than left open below.
-    expect(result.manaEndPct).toBeGreaterThan(0.18);
+    expect(result.manaEndPct).toBeGreaterThan(0.16);
     expect(result.starvedPct).toBeLessThan(0.45);
   }, 120_000);
 });
@@ -53,13 +61,18 @@ describe('Demonology full-BiS five-minute inert-boss balance', () => {
   // moves with it, preserving the SAME relative floor/ceiling margins as the
   // pre-v0.42.0 corridor (150/210 against a measured 179, i.e. about -16%/
   // +17%) rather than just raising the ceiling. This asserts demonology's own
-  // corridor only; it overlaps Affliction's (175-235, above), so no cross-spec
+  // corridor only; it overlaps Affliction's (174-233, above), so no cross-spec
   // ordering is claimed or tested here.
+  // Re-measured 2026-09-29 for the production idle cull (scripts/probe_sim.ts):
+  // seed-42 actual 253.67 against the 228.92 above; the same relative margins
+  // give 213 / 298. The 0.12 end pool is the finite-pool invariant copied from
+  // the affliction line, never a demonology measurement, so it stays (0.006
+  // measured, 0.018 before the cull).
   it('lands the Necromancy-buffed sustained DPS corridor', () => {
     const result = runWarlockBalanceProbe('demonology', 42, 300);
 
-    expect(result.dps).toBeGreaterThanOrEqual(192);
-    expect(result.dps).toBeLessThanOrEqual(269);
+    expect(result.dps).toBeGreaterThanOrEqual(213);
+    expect(result.dps).toBeLessThanOrEqual(298);
     expect(result.manaEndPct).toBeLessThan(0.12);
     expect(result.starvedPct).toBeLessThan(0.45);
   }, 120_000);
@@ -83,12 +96,15 @@ describe('Destruction full-BiS five-minute inert-boss balance', () => {
   // with the later stamina/Spirit item-model pass, and seed 42 measures 241.176
   // DPS and 0.237 ending mana in the full-world BiS probe. The pool still spends
   // down; the check remains a finite-economy bound rather than a cycle-phase pin.
+  // Re-measured 2026-09-29 for the production idle cull (scripts/probe_sim.ts):
+  // seed-42 actual 243.67 DPS and 0.220 ending mana against the 241.176 and
+  // 0.237 above; the same relative margins give 172 / 258 and 0.28.
   it('spends the mana pool by five minutes inside the sanity corridor', () => {
     const result = runWarlockBalanceProbe('destruction', 42, 300);
 
-    expect(result.dps).toBeGreaterThanOrEqual(170);
-    expect(result.dps).toBeLessThanOrEqual(255);
-    expect(result.manaEndPct).toBeLessThan(0.3);
+    expect(result.dps).toBeGreaterThanOrEqual(172);
+    expect(result.dps).toBeLessThanOrEqual(258);
+    expect(result.manaEndPct).toBeLessThan(0.28);
     expect(result.starvedPct).toBeLessThan(0.45);
   }, 120_000);
 });

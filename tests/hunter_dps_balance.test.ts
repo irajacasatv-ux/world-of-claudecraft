@@ -58,11 +58,17 @@ describe('Hunter v0.29 deterministic DPS alignment', () => {
       // The design floors remain unchanged. Profile and sibling-control
       // evidence: docs/design/class-balance-v042-results.md.
       expect(dps.marksmanship / dps.beast_mastery).toBeGreaterThanOrEqual(0.95);
-      expect(dps.marksmanship / dps.beast_mastery).toBeLessThanOrEqual(band(1.69, 1.75));
+      // Re-measured 2026-09-29 for the production idle cull (scripts/probe_sim.ts):
+      // full actual 1.576637 (5 seeds), diet actual 1.581893 (2 seeds); the same
+      // relative margins give 1.64 / 1.64.
+      expect(dps.marksmanship / dps.beast_mastery).toBeLessThanOrEqual(band(1.64, 1.64));
       expect(dps.survival / dps.beast_mastery).toBeGreaterThanOrEqual(0.92);
       // Full SV ratio 1.335203, with the former 1.29/1.2010 margin -> 1.43.
       // Diet SV 1.409778 already passes 1.47; retain that ceiling.
-      expect(dps.survival / dps.beast_mastery).toBeLessThanOrEqual(band(1.43, 1.47));
+      // Re-measured 2026-09-29 for the production idle cull (scripts/probe_sim.ts):
+      // full actual 1.291981 (5 seeds), diet actual 1.285936 (2 seeds); the same
+      // relative margins (1.43/1.335203, 1.47/1.409778) give 1.38 / 1.34.
+      expect(dps.survival / dps.beast_mastery).toBeLessThanOrEqual(band(1.38, 1.34));
     },
     TEST_TIMEOUT_MS,
   );
@@ -84,7 +90,10 @@ describe('Hunter v0.29 deterministic DPS alignment', () => {
       // measure 0.8225; the five-seed full sweep passes its 0.8 floor
       // unchanged, so the lead itself is intact and only the thin-lane
       // anchor moved (same relative margin at the new actual).
-      expect(dps.beast_mastery / nextBest).toBeGreaterThanOrEqual(band(0.8, 0.78));
+      // Re-measured 2026-09-29 for the production idle cull (scripts/probe_sim.ts):
+      // full actual 0.821990 (5 seeds), diet actual 0.787706 (2 seeds); the same
+      // relative margins (0.8/0.8455, 0.78/0.8225) give 0.78 / 0.75.
+      expect(dps.beast_mastery / nextBest).toBeGreaterThanOrEqual(band(0.78, 0.75));
       expect(dps.beast_mastery / nextBest).toBeLessThanOrEqual(1.15);
     },
     TEST_TIMEOUT_MS,
