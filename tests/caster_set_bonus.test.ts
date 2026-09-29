@@ -9,6 +9,7 @@ import { MOBS } from '../src/sim/data';
 import { createMob, createPlayer, recalcPlayerStats } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
 import { type Entity, type PlayerClass, SPELL_POWER_PER_INT } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const counts = (m: Record<string, number>) => new Map(Object.entries(m));
 
@@ -56,7 +57,8 @@ describe('caster lineage bonuses', () => {
 
 describe('knockback resistance is honored (the fix)', () => {
   it('a fully-resistant target is not displaced and moves when resistance is removed', () => {
-    const sim = new Sim({ seed: 7, playerClass: 'mage' });
+    // The shove comes from a boar the case builds itself: the empty world serves.
+    const sim = new Sim({ seed: 7, playerClass: 'mage', world: EMPTY_TEST_WORLD });
     const p = sim.player;
     const src = createMob((sim as any).nextId++, MOBS.wild_boar, 5, {
       x: p.pos.x - 3,
