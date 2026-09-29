@@ -557,6 +557,7 @@ describe('the long-sims lane (Phase 4)', () => {
       'tests/talent_tooltip_accuracy.test.ts',
       'tests/terrain_height_parity.test.ts',
       'tests/transport_lanes.test.ts',
+      'tests/veiled_hollow.test.ts',
       'tests/woc_market_delivery_pg_integration.test.ts',
       'tests/world_quest_tracing.test.ts',
     ];

@@ -20,6 +20,8 @@ import { Sim } from '../src/sim/sim';
 import { hollowLandness, terrainHeight, WATER_LEVEL } from '../src/sim/world';
 import { SEED, VEILED_HOLLOW_TEST_WORLD } from './veiled_hollow_shared';
 
+const NIGHTLY_SWEEP = process.env.WOC_NIGHTLY_SWEEP === '1';
+
 describe('the sealed border is a hard movement wall', () => {
   // The climb gate projects rise along the movement direction, so a smooth
   // gaussian wall alone is beatable by shallow diagonals (and airborne drift
@@ -57,17 +59,23 @@ describe('the sealed border is a hard movement wall', () => {
   }
 
   // the easiest faces found by a greedy climber: mid-band and the Starfall
-  // carve near x=126 (full sims are slow; keep the matrix tight)
+  // carve near x=126 (full sims are slow; keep the matrix tight). Every PR walks
+  // the Starfall carve at the shallower yaw and jump-spams it; the rest of the
+  // matrix rides the nightly depth flag. With the border guard removed AND the
+  // climb gate opened, each walker in the matrix crests within 7 to 16 seconds,
+  // the PR ones included, so the PR tier still reds that regression on its own.
+  const FACES = NIGHTLY_SWEEP ? [-40, 126] : [126];
+  const YAWS = NIGHTLY_SWEEP ? [1.1, 1.35] : [1.1];
   it('holds against shallow-diagonal walking at the exploit-prone faces', () => {
-    for (const x of [-40, 126]) {
-      for (const yaw of [1.1, 1.35]) {
+    for (const x of FACES) {
+      for (const yaw of YAWS) {
         expect(walker(SEED, x, yaw, false), `x=${x} yaw=${yaw}`).toBeLessThan(CREST);
       }
     }
   }, 60000);
 
   it('holds against jump spam into the face', () => {
-    for (const x of [-40, 126]) {
+    for (const x of FACES) {
       expect(walker(SEED, x, 1.2, true), `x=${x}`).toBeLessThan(CREST);
     }
   }, 60000);
