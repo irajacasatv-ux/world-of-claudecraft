@@ -172,9 +172,9 @@ describe('Nythraxis matrix DPS rotations', () => {
   it('routes plan and seed-sample sharding through the pinned core rule', () => {
     // The rule itself (every shard index, both modes) is pinned in
     // tests/nythraxis_matrix_core.test.ts; this holds the script to it, read through
-    // the tokenizing scanner with every comment masked (line, trailing and block), so
-    // a comment cannot satisfy the pin.
-    const code = maskCommentsAndStrings(source, { strings: false });
+    // the tokenizing scanner with every comment and string masked (none of the pinned
+    // lines holds a string), so neither a comment nor a string copy satisfies it.
+    const code = maskCommentsAndStrings(source);
     expect(code).toContain('const shardOptions = { tankMonteCarloRuns, shardCount, shardIndex };');
     expect(code).toContain('const selectedForShard = plansForShard(selected, shardOptions);');
     expect(code).toContain('if (!seedSampleInShard(seedIndex, shardOptions)) continue;');

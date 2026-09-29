@@ -178,11 +178,14 @@ describe('Hunter v0.29 choice-row mechanics', () => {
     expect(sim.player.auras.some((entry) => entry.id === 'hunter_predators_pace_icd')).toBe(true);
 
     // Inside the 8 s internal cooldown a second successful generator must not proc
-    // again: the first 3 s burst has expired by now, so any burst here is a new one.
+    // again. The first 3 s burst (asserted just above) has expired by the check below,
+    // so a burst there would be a fresh proc; the shot's damage proves it landed.
     ready(sim, 'measured_shot');
     sim.player.resource = sim.player.maxResource;
+    const hpBefore = target.hp;
     sim.castAbility('measured_shot');
     advance(sim, 3);
+    expect(target.hp).toBeLessThan(hpBefore);
     expect(sim.player.auras.some((entry) => entry.id === 'hunter_predators_pace_icd')).toBe(true);
     expect(sim.player.auras.some((entry) => entry.id === 'hunter_predators_pace')).toBe(false);
   });

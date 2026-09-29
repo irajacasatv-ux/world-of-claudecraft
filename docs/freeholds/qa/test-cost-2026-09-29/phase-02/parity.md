@@ -219,5 +219,6 @@ quartet (4 Sims, `coverage_c.test.ts`) and the hit-rating pair (2, `parity_g.tes
 Nothing is over budget. The quartet costs about 60 MiB over its file's end state, so no earlier
 release was needed. The peaks before the fix round were within 4 MiB of these figures.
 
-The fix-round commits above were integrated on feature/freeholds under the SHAs cited
-(the worktree branch held them as cbfb78f4c3, a450c596d0, 81d1a60831 and 3847d950ea).
+The fix-round commits above were integrated on feature/freeholds under the SHAs cited, with
+this record's own round as 00b4040652 (the worktree branch held the four as cbfb78f4c3,
+a450c596d0, 81d1a60831 and 3847d950ea).

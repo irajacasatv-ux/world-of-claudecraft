@@ -380,7 +380,9 @@ const localObjectsOnly = { ...process.env, GIT_NO_LAZY_FETCH: '1' };
 // and exactly the former asset blobs into a throwaway blobless clone and verifies
 // them there; a full-history local clone verifies from its own objects.
 const NIGHTLY_SWEEP = process.env.WOC_NIGHTLY_SWEEP === '1';
-const HISTORY_FETCH_TIMEOUT_MS = 90_000;
+// The clone and the checkout share one deadline inside the case's 120 s nightly
+// allowance, so a slow but working pair still fails red before the case's own bound.
+const HISTORY_FETCH_BUDGET_MS = 90_000;
 
 function hasLocalObject(cwd: string, spec: string): boolean {
   return (
@@ -405,6 +407,8 @@ function fetchFormerBlobs(commit: string, repoRelativePaths: string[]): string {
     encoding: 'utf8',
   }).trim();
   const dir = mkdtempSync(path.join(os.tmpdir(), 'skill-icon-history-'));
+  const deadline = Date.now() + HISTORY_FETCH_BUDGET_MS;
+  const remaining = () => Math.max(1, deadline - Date.now());
   try {
     execFileSync(
       'git',
@@ -420,12 +424,12 @@ function fetchFormerBlobs(commit: string, repoRelativePaths: string[]): string {
       ],
       // A sync spawn blocks the worker, so the case timeout cannot fire during it:
       // each git call carries its own bound and throws (red, never open) on a stall.
-      { stdio: 'pipe', timeout: HISTORY_FETCH_TIMEOUT_MS },
+      { stdio: 'pipe', timeout: remaining() },
     );
     execFileSync('git', ['checkout', '--quiet', commit, '--', ...repoRelativePaths], {
       cwd: dir,
       stdio: 'pipe',
-      timeout: HISTORY_FETCH_TIMEOUT_MS,
+      timeout: remaining(),
     });
   } catch (error) {
     rmSync(dir, { recursive: true, force: true });
