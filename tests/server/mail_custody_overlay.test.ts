@@ -41,10 +41,17 @@ import {
 import { writeMailPartitionsInTransaction } from '../../server/mail_db';
 import { REALM } from '../../server/realm';
 import { Sim } from '../../src/sim/sim';
+import { EMPTY_TEST_WORLD } from '../sim_shared';
 
 const { query } = db;
 
 const GOOD_ITEMS = [{ itemId: 'rusty_hatchet', count: 1 }];
+
+// The overlay reads the post office, its mailboxes (world services, kept by the
+// empty world) and the players, never a camp, NPC or ground object, and every
+// host and reboot shares one seed: a fresh seed builds its collider grids.
+const custodySim = (): Sim =>
+  new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true, world: EMPTY_TEST_WORLD });
 
 function row(ref: string) {
   return {
@@ -184,7 +191,7 @@ describe('the bake set', () => {
       }
       return { rows: [], rowCount: 0 };
     });
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+    const sim = custodySim();
     const pid = sim.addPlayer('warrior', 'Buyer', {
       characterId: 4242,
       tutorialGreetingSent: true,
@@ -228,7 +235,7 @@ describe('the bake set', () => {
     expect(overlayRow).toBeNull();
 
     resetCustodyParcelOverlayForTests();
-    const reboot = new Sim({ seed: 43, playerClass: 'warrior', noPlayer: true });
+    const reboot = custodySim();
     reboot.loadMail(savedBook);
     expect((await mergeCustodyParcelOverlay(reboot)).replayed).toBe(0);
     expect(reboot.hasCustodyParcel(ref)).toBe(false);
@@ -273,7 +280,7 @@ describe('the bake set', () => {
         },
       ],
     });
-    const reboot = new Sim({ seed: 44, playerClass: 'warrior', noPlayer: true });
+    const reboot = custodySim();
     expect((await mergeCustodyParcelOverlay(reboot)).replayed).toBe(1);
     expect(reboot.hasCustodyParcel('b')).toBe(true);
   });
@@ -326,7 +333,7 @@ describe('the bake set', () => {
 /** Drive one fully-drained empty merge so the watermark gate opens (the
  *  module arms it only after a complete merge). */
 async function completeEmptyMerge(): Promise<void> {
-  const sim = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+  const sim = custodySim();
   query.mockResolvedValueOnce({ rows: [], rowCount: 0 });
   query.mockResolvedValueOnce({ rows: [] });
   const counts = await mergeCustodyParcelOverlay(sim);
@@ -361,7 +368,7 @@ describe('advanceCustodyWatermarkIn', () => {
   });
 
   it('stays frozen for the whole uptime after a failed merge', async () => {
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+    const sim = custodySim();
     query.mockRejectedValueOnce(new Error('db down'));
     const counts = await mergeCustodyParcelOverlay(sim);
     expect(counts.ok).toBe(false);
@@ -384,7 +391,7 @@ describe('mergeCustodyParcelOverlay', () => {
   }
 
   it('replays a vault reward with its exact coin and items into the real post office', async () => {
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+    const sim = custodySim();
     mockStaleDelete(0);
     query.mockResolvedValueOnce({
       rows: [{ ...overlayRows(['vault:1:4242'], 'vault_reward')[0], copper: '275' }],
@@ -409,7 +416,7 @@ describe('mergeCustodyParcelOverlay', () => {
   });
 
   it('keeps an unsafe copper row for operator recovery rather than rounding its reward', async () => {
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+    const sim = custodySim();
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     try {
       mockStaleDelete(0);
@@ -430,7 +437,7 @@ describe('mergeCustodyParcelOverlay', () => {
   }
 
   it('replays a crash-lost parcel into a real book, and dedupes it on the next boot', async () => {
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+    const sim = custodySim();
     mockStaleDelete(0);
     query.mockResolvedValueOnce({ rows: overlayRows(['settlement:9']) });
     const first = await mergeCustodyParcelOverlay(sim);
@@ -469,7 +476,7 @@ describe('mergeCustodyParcelOverlay', () => {
   });
 
   it('counts the rows the watermark cutoff deleted and still replays fresh ones', async () => {
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+    const sim = custodySim();
     mockStaleDelete(2);
     query.mockResolvedValueOnce({ rows: overlayRows(['fresh:1']) });
     const result = await mergeCustodyParcelOverlay(sim);
@@ -479,7 +486,7 @@ describe('mergeCustodyParcelOverlay', () => {
   });
 
   it('keeps a malformed or refused row out of the bake set instead of destroying it', async () => {
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+    const sim = custodySim();
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     try {
       mockStaleDelete(0);
@@ -509,7 +516,7 @@ describe('mergeCustodyParcelOverlay', () => {
   });
 
   it('pages the whole table on the keyset and reports ok only when drained', async () => {
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+    const sim = custodySim();
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     try {
       // One FULL page of cheap (malformed, so no book work) rows, then a
@@ -541,7 +548,7 @@ describe('mergeCustodyParcelOverlay', () => {
   });
 
   it('stops at the page cap with ok false, leaving the watermark frozen', async () => {
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+    const sim = custodySim();
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     try {
       const fullPage = overlayRows(
@@ -566,7 +573,7 @@ describe('mergeCustodyParcelOverlay', () => {
   });
 
   it('never throws, and a failed merge is distinguishable from an empty one on the readout', async () => {
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+    const sim = custodySim();
     query.mockRejectedValueOnce(new Error('db down'));
     await expect(mergeCustodyParcelOverlay(sim)).resolves.toEqual({
       replayed: 0,
@@ -588,7 +595,7 @@ describe('mergeCustodyParcelOverlay', () => {
   });
 
   it('keeps partial progress visible when a later page fails', async () => {
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+    const sim = custodySim();
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     try {
       const fullPage = overlayRows(
@@ -612,7 +619,7 @@ describe('mergeCustodyParcelOverlay', () => {
   });
 
   it('resetCustodyParcelOverlayForTests clears the readout too', async () => {
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+    const sim = custodySim();
     mockStaleDelete(0);
     query.mockResolvedValueOnce({ rows: [] });
     await mergeCustodyParcelOverlay(sim);
@@ -742,7 +749,7 @@ describe('bake and merge wiring order', () => {
   it('serializeMail is a deep snapshot: later book mutations cannot reach written bytes', () => {
     // The bake contract assumes the serialized book is frozen at thunk entry;
     // a lazy or copy-on-write serializeMail would silently break it.
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+    const sim = custodySim();
     sim.mailSystemParcel(
       { key: '4242', name: 'Buyer' },
       CUSTODY_PARCEL_LETTERS.delivery,
