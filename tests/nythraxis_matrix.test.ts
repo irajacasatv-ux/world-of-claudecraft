@@ -40,7 +40,7 @@ describe('Nythraxis matrix DPS rotations', () => {
             MATRIX_OUTPUT_PATH: outputPath,
           },
           stdio: 'pipe',
-          timeout: 480_000,
+          timeout: 300_000,
         },
       );
 
@@ -157,13 +157,13 @@ describe('Nythraxis matrix DPS rotations', () => {
     } finally {
       rmSync(outputDirectory, { recursive: true, force: true });
     }
-    // One tsx child run of four Monte Carlo fights (~120s solo since the bear
-    // and Stonebound plans joined); the long-sims lane's slowest observed
-    // runner (run 31290316610, workers=2) killed a child at the old 120s bound
-    // mid-shard, so the child timeout and this budget carry lane-contention
-    // margin. The budget still clears two children's worth (it was sized when
-    // this case ran shard 0 and then shard 1).
-  }, 1_200_000);
+    // One tsx child run of four Monte Carlo fights: about 14 s locally and 25 to
+    // 30 s in a CI lane in the 2026-09-29 measurement (the whole file weighed 41
+    // to 59 s in CI while it still spawned two). The long-sims lane's slowest
+    // observed runner (run 31290316610, workers=2) once killed a child at a 120s
+    // bound, so the child keeps 300s (about ten times its CI time) and the case
+    // clears it with room for the report reads, under the single-test cap.
+  }, 420_000);
 
   it('moves long caster buffs to prepull instead of recurring combat priority', () => {
     expect(source).toContain("prepull: ['arcane_intellect']");

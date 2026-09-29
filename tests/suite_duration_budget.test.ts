@@ -46,16 +46,9 @@ const SINGLE_TEST_CAP = 480_000;
 // file -> the exact largest single declared timeout it is allowed to carry.
 // Every entry must exceed SINGLE_TEST_CAP (an exception at or under the cap
 // is dead weight and fails below).
-const SINGLE_TEST_EXCEPTIONS: ReadonlyMap<string, number> = new Map([
-  // The Nythraxis matrix runs its full boss ladder as one case. Splitting it
-  // is the standing follow-up; shrink this when that lands. Raised 720s to
-  // 1200s for the v0.38 tank pass, which doubled the Monte Carlo roster from
-  // two boss tanks to four: the case measured 218s solo (was ~120s), and the
-  // two child runs it spawns now carry 480s timeouts each, so the case budget
-  // must clear 960s to let a child fail on its own bound rather than here.
-  // Same ~5x lane-contention headroom the 720s row carried, not looser.
-  ['tests/nythraxis_matrix.test.ts', 1_200_000],
-]);
+// Empty since 2026-09-29: the Nythraxis matrix case, its one row, now spawns one
+// Monte Carlo child instead of two and fits under the cap (tests/nythraxis_matrix.test.ts).
+const SINGLE_TEST_EXCEPTIONS: ReadonlyMap<string, number> = new Map<string, number>([]);
 
 const DEFAULT_FILE_ALLOWANCE = 300_000;
 
@@ -86,7 +79,9 @@ const FILE_ALLOWANCE_LEDGER: ReadonlyMap<string, number> = new Map([
   // Lane-owned balance harness (diet arms: two 200s cases), invisible to the
   // parser until the 2026-09-27 trailing-comma fix.
   ['tests/hunter_dps_balance.test.ts', 400_000],
-  ['tests/nythraxis_matrix.test.ts', 1_200_000],
+  // One Monte Carlo child (300s bound) inside a 420s case since 2026-09-29; the
+  // case ran two children under 1,200s before.
+  ['tests/nythraxis_matrix.test.ts', 420_000],
   ['tests/owned_class_balance_dps_probes.test.ts', 360_000],
   // Lane-owned Groveheart harness: the eight-probe healer contract at 300s, plus
   // the one-probe heal-over-time case at 60s since 2026-09-28 (it ran within a
@@ -142,8 +137,8 @@ describe('suite duration budget (declared-timeout ratchet)', () => {
     // by quietly emptying every rule below.
     expect(withTimeouts).toBeGreaterThanOrEqual(70);
     const nythraxis = suite.get('tests/nythraxis_matrix.test.ts');
-    expect(nythraxis?.sum).toBe(1_200_000);
-    expect(Math.max(...(nythraxis?.perTest ?? [0]))).toBe(1_200_000);
+    expect(nythraxis?.sum).toBe(420_000);
+    expect(Math.max(...(nythraxis?.perTest ?? [0]))).toBe(420_000);
   });
 
   it('refuses any timeout the parser cannot size', () => {
