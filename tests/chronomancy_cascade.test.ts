@@ -28,13 +28,16 @@ import { Sim } from '../src/sim/sim';
 import type { SimContext } from '../src/sim/sim_context';
 import type { Aura, Entity } from '../src/sim/types';
 import { type AuraInput, type AurasDeps, createAurasView } from '../src/ui/auras_view';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 function ctxOf(sim: Sim): SimContext {
   return (sim as unknown as { ctx: SimContext }).ctx;
 }
 
+// Every case marks raid members it adds itself, so the rig stands on the empty
+// world.
 function chronoMage(level = 20) {
-  const sim = new Sim({ seed: 41, playerClass: 'mage', autoEquip: true });
+  const sim = new Sim({ seed: 41, playerClass: 'mage', autoEquip: true, world: EMPTY_TEST_WORLD });
   sim.setPlayerLevel(level);
   expect(sim.setSpec('arcane')).toBe(true);
   sim.tick();
