@@ -16,12 +16,15 @@ import {
 import { Sim } from '../src/sim/sim';
 import type { Entity } from '../src/sim/types';
 import { groundHeight } from '../src/sim/world';
+import { VENDOR_TEST_WORLD } from './sim_shared';
 
 const ORE = 'copper_ore';
 const FANG = 'wolf_fang';
 
+// The order board reads the Merchant (an NPC kept by the vendor world), the
+// players and the item tables, never a mob camp or a ground object.
 function makeWorld() {
-  return new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+  return new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true, world: VENDOR_TEST_WORLD });
 }
 
 function merchant(sim: Sim): Entity {
