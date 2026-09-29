@@ -272,9 +272,30 @@ function makeHarness(seed = 42) {
   };
 }
 
+// A case that drives a recovery RETRY waits out the coordinator's backoff
+// (STORAGE_RECOVERY_BACKOFF_MS with equal jitter: 1 to 2 s before the first
+// retry, 2.5 to 5 s before the second), which cost those cases 1 to 6 s of real
+// time each. They fake setTimeout only, so the backoff elapses on the fake
+// clock, in the same order, while Date.now, performance.now and setImmediate
+// (the coordinator's yield turn) stay real. afterEach restores real timers.
+function useFakeBackoff(): void {
+  vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+  // Re-arm the coordinator's rate-gate baseline and timers under this clock.
+  resetStoragePurchasesForTests();
+}
+
 // Await full quiescence of the fire-and-forget save and bounded-recovery
-// chains: condition-polled, never a fixed sleep.
+// chains: condition-polled, never a fixed sleep. Under useFakeBackoff each poll
+// yields one real turn, then advances the fake clock 50 ms (100 s of budget).
 async function waitFor(cond: () => boolean): Promise<void> {
+  if (vi.isFakeTimers()) {
+    for (let step = 0; step < 2_000; step++) {
+      if (cond()) return;
+      await new Promise<void>((resolve) => setImmediate(resolve));
+      await vi.advanceTimersByTimeAsync(50);
+    }
+    throw new Error('condition not met within 100 s of fake backoff time');
+  }
   await vi.waitFor(
     () => {
       if (!cond()) throw new Error('not yet');
@@ -295,7 +316,9 @@ beforeEach(() => {
   resetStoragePurchasesForTests();
 });
 afterEach(() => {
+  // Cancel the coordinator's timers on the clock that armed them, then restore.
   resetStoragePurchasesForTests();
+  vi.useRealTimers();
 });
 
 describe('executeStoragePurchase: the happy path and the ordering contract', () => {
@@ -730,6 +753,7 @@ describe('executeStoragePurchase: the happy path and the ordering contract', () 
   }, 20_000);
 
   it('a granted:false reply with an unknown or null reason is AMBIGUOUS, never a refusal settle', async () => {
+    useFakeBackoff();
     const h = makeHarness();
     // A malformed 2xx (an interposed proxy, service version skew) coerces to
     // granted:false reason:null; treating it as no-debit could erase a
@@ -782,6 +806,7 @@ describe('executeStoragePurchase: the happy path and the ordering contract', () 
   });
 
   it('resolves an ambiguous outcome by retrying the SAME key in the background, applying once', async () => {
+    useFakeBackoff();
     const h = makeHarness();
     h.spendResults.push(unavailable(), granted());
     const res = await executeStoragePurchase(h.host, {
@@ -1240,6 +1265,7 @@ describe('login recovery', () => {
   });
 
   it('an ambiguous recovery keeps the mutex with the background task until definitive', async () => {
+    useFakeBackoff();
     const h = makeHarness();
     await h.db.begin({
       realm: 'testrealm',
@@ -2067,6 +2093,7 @@ describe('offline hold release and sweep-kick throttling', () => {
   });
 
   it('final-session teardown forgets the yield latch so the next incident logs again', async () => {
+    useFakeBackoff();
     const h = makeHarness();
     h.spendResults.push({ result: unavailable(), neverReached: false });
     const armed = Date.now();
