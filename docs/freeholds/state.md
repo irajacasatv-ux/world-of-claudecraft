@@ -67,6 +67,19 @@ Only what the next session needs. Update at the end of every phase and QA.
 
 ## Current phase
 
+**PART 5, TEST COST AND TEST VALUE, PAUSED 2026-09-29 AT FERNANDO'S REQUEST, PUSHED.** Fernando
+ruled the three Step 0 questions as recommended (targets: the slowest PR shard job wall at least
+30 percent down, the summed shard test steps at least 25 percent, the nightly under 2.5 h;
+pr-gate stays 49; unreferenced evidence screenshots may be deleted). Phase 1 measured and
+committed the per-file series; phase 2 judged every heavy or suspect suite through nine cluster
+agents, seven fresh reviewers and six fresh reads of the fix rounds (local test bodies 26.7
+percent down, 4,985.75 s to 3,653.82 s); phase 3's import cuts landed (the locale re-export out
+of `src/ui/i18n.ts`, lazy daily world quest catalogs) with their QA still owed. Phases 4 to 6
+and the close are not started. Detail and the owed list in order:
+[the ledger](qa/persistence-2026-09-08/findings.md), PART 5, "STATUS AT THE PAUSE"; the
+measured record in `qa/test-cost-2026-09-29/`.
+
+(Superseded 2026-09-29 by the paragraph above: Part 5 is in progress.)
 **PART 4, THE RELEASE/V0.45.0 SYNC AND THE FIRST CI RUNS, DONE 2026-09-28, PUSHED.** Fernando
 ruled all four Step 0 questions as recommended (push; drop the exact GLB sha pins; re-scope the
 CI cone with a guard; end the pet feed mode) and "Push the branch as is" when told the branch

@@ -5163,3 +5163,60 @@ Asked at the session's start, with recommendations, all three answered as recomm
   doc, script or provenance record references: may they leave the repo? Hash-sealed and
   test-pinned files (for example freehold-crafted-content-2026-09-07/runtime) always stay. Git
   history keeps every deleted file recoverable." answered "Delete unreferenced (Recommended)".
+
+### STATUS AT THE PAUSE (2026-09-29, paused at Fernando's request, pushed)
+
+Phases 1 and 2 are done with their QA docs; phase 3's import cuts have landed but its QA is
+not run; phases 4 to 6 and the close are not started. The measured record is
+`docs/freeholds/qa/test-cost-2026-09-29/` (README, `phase-01-measure-qa.md`,
+`phase-02-judge-qa.md`, the per-file series under `data/`, and one record per phase 2 cluster
+under `phase-02/`).
+
+- Phase 1 (measure), `a059c8b457`: the per-file CI series of both green full-mode runs and
+  the nightly, the local per-file and per-test series, module import cost, job walls, the Sim
+  cost probes, and a file-level screenshot reference scan.
+- Phase 2 (judge), `a2bd94a83e` to `3117492ffa`: the nightly-only depth flag, nine cluster
+  agents over every heavy or suspect suite (173 shard files of 10 s or more in CI, the 17
+  lane files, four collect-time suites), seven fresh reviewers, the cluster fix rounds, and
+  six fresh reads of the fix rounds until one came back with nits only. Local full run 949.19
+  s to 777.06 s wall, test bodies 4,985.75 s to 3,653.82 s (26.7 percent), import unchanged
+  (2,143.79 s to 2,098.23 s). CI time is not re-measured yet (the harvest is phase 5).
+- Phase 3 (imports), `dda91d4db5`/`fd7b3a2fe4`/`65b0d17d2c` as landed after `3117492ffa`:
+  `src/ui/i18n.ts` no longer re-exports the 21 non-English locale slices (the five suites and
+  `scripts/i18n_resolved_hash.mjs` that read them import the barrel; the resolved hash is
+  unchanged; a TypeScript-parser pin in `tests/i18n_lazy_loader.test.ts` holds it, 3 of 3
+  mutants killed), and the daily world quest catalogs build on first use. On three sample
+  suites the locale modules loaded fell 26 to 4 and their import self time 3.43 s to 0.19 s.
+  The full measurement run after these cuts was stopped at the pause.
+
+OWED, in order, for the next session:
+1. Phase 3: the full armed measurement run; the phase 3 QA (architecture-reviewer on
+   `src/sim/world_quest_daily_generation.ts`, a coverage read of the i18n change and its pin),
+   and any further import cut the measurement justifies (levers recorded: `en_XA` eager in dev,
+   `wireEntity` inside `server/game.ts` pulled by six wire suites, the per-seed collider build in
+   `src/sim/colliders.ts` that every fresh-seed suite pays).
+2. Phase 4: the screenshot corpus under ruling (c) (477 files, 236 MB named nowhere in
+   `data/screenshot_refs.tsv`; keep `eastbrook-vale-rebuild/`, `eastbrook-grand-armoury/`,
+   README heroes, anything a test or provenance record reads), and a value audit of the
+   browser suite and the capture scripts.
+3. Phase 5: CI run on this tip, the weight harvest (it replaces every changed file's row and
+   the nine carried rows), shard and lane rebalance, the bounds by the formula, the nightly
+   sharded to get under 2.5 h (the unsharded test step was 201 min), checkout options.
+4. Phase 6: the total-CI-time ratchet and the new-test admission rule.
+5. The close: armed gate, `ci:changed`, the sweep, push, CI to green, one nightly, the final
+   PART 5 record, state.md, the progress row, memory, the report.
+- Rulings for Fernando: production idle culling in the balance harnesses (the lane record);
+  the Scouring Mercy sanity bounds; the three `paladin_devotion_balance` rotation pins; the
+  druid matrix's nightly-only cells (class owner).
+- Watch the first nightly: the skill icon history clone (`git clone --revision`).
+- Cleanup: the phase 2 agent worktrees under
+  `/Users/fernando/Documents/world-of-claudecraft/.claude/worktrees/agent-*` and their
+  `test-cost/*` branches are fully integrated and can go.
+
+CORRECTIONS TO COMMIT MESSAGES (the commits stay as written; the record is here): 35 commits
+of this part carry a body line over 90 columns where the rule asks for about 72 (rewriting them
+would invalidate the landed SHAs the cluster records cite): 4f21570cb9 5758901696 bd438a62ce
+9f7a0ba7ba 608ee86d7f 44f0d795df 53492ebffd 2bf773504f b8a151c217 d3d0e96ccf e0725870b1
+fbd78cfb14 67db6d5790 1a0b2bf703 c3cc060fe2 9bcc0431f4 38f53752ee a60deef7dc 31d393def4
+0f6594ffbc a881e6344b b037100a40 1f6774ce30 3a4ae5fba5 9c4f3cfaae 044b719747 26f7986a80
+162689d483 0f1da76468 49a853ac69 533960327a b9844277cf 627e34245d 829bdc9811 c079279b56.
