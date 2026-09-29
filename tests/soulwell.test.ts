@@ -15,6 +15,7 @@ import {
   summonSoulwell,
 } from '../src/sim/soulwell';
 import type { Entity } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 function ctx(sim: Sim): SimContext {
   return (sim as unknown as { ctx: SimContext }).ctx;
@@ -40,7 +41,16 @@ function world(): {
   owner: Entity;
   ally: Entity;
 } {
-  const sim = new Sim({ seed: 83, playerClass: 'warlock', noPlayer: true });
+  // The warlock, her party and the stranger are all placed here and the well's
+  // blockers are the case's own, so the empty world serves (terrain and props
+  // stay for the spawn search): the overworld ticked through the three-minute
+  // lifetime bought nothing.
+  const sim = new Sim({
+    seed: 83,
+    playerClass: 'warlock',
+    noPlayer: true,
+    world: EMPTY_TEST_WORLD,
+  });
   const ownerId = sim.addPlayer('warlock', 'Wellkeeper');
   const allyId = sim.addPlayer('warrior', 'Companion');
   const strangerId = sim.addPlayer('mage', 'Stranger');
