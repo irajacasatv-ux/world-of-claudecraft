@@ -21,8 +21,16 @@ function mockWaterShaderAssets(): void {
 }
 
 /** The zone sheet's shore attributes as the MAIN-THREAD bake produces them,
- *  the reference every pooled arm below has to reproduce exactly. */
-async function mainThreadShoreBake(): Promise<{ depth: number[]; slope: number[] }> {
+ *  the reference every pooled arm below has to reproduce exactly. It is a pure
+ *  function of the seed and the zone, so it is baked once for the file and each
+ *  arm compares against the same numbers. */
+let shoreBakeReference: Promise<{ depth: number[]; slope: number[] }> | undefined;
+function mainThreadShoreBake(): Promise<{ depth: number[]; slope: number[] }> {
+  shoreBakeReference ??= bakeShoreReference();
+  return shoreBakeReference;
+}
+
+async function bakeShoreReference(): Promise<{ depth: number[]; slope: number[] }> {
   vi.resetModules();
   mockWaterShaderAssets();
   const { buildWater } = await import('../src/render/water');

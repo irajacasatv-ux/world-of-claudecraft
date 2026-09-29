@@ -65,6 +65,9 @@ import {
 } from '../src/sim/world_quests';
 import { WORLD_SEED } from '../src/sim/world_seed';
 
+// Every world here is built on the shipped seed: a seed the file has not built yet
+// costs a full collider bootstrap (about half a second), and no case compares two
+// seeds, so each fresh world after the first is nearly free.
 function enterQuest(sim: Sim, quest: WorldQuestDef, level = quest.minLevel): void {
   sim.setPlayerLevel(level);
   sim.utcDay = '2026-08-31';
@@ -224,7 +227,7 @@ describe('world quest content', () => {
     expect(new Set(WORLD_QUESTS.map((quest) => quest.zoneId))).toEqual(
       new Set(ZONES.map((zone) => zone.id).filter((id) => id !== 'proving_shore')),
     );
-    const sim = new Sim({ seed: 123, playerClass: 'warrior', noPlayer: true });
+    const sim = new Sim({ seed: WORLD_SEED, playerClass: 'warrior', noPlayer: true });
     const zoneFrequency = new Map<string, number>();
     for (const quest of WORLD_QUESTS) {
       zoneFrequency.set(quest.zoneId, (zoneFrequency.get(quest.zoneId) ?? 0) + 1);
@@ -633,7 +636,7 @@ describe('world quest content', () => {
 
 describe('world quest lifecycle', () => {
   it('caches the active rotation and refreshes it only when the reset day changes', () => {
-    const sim = new Sim({ seed: 409, playerClass: 'warrior', autoEquip: true });
+    const sim = new Sim({ seed: WORLD_SEED, playerClass: 'warrior', autoEquip: true });
     sim.resetDay = '2026-08-31';
     const first = sim.ctx.currentWorldQuestRotation();
     expect(sim.ctx.currentWorldQuestRotation()).toBe(first);
@@ -649,7 +652,7 @@ describe('world quest lifecycle', () => {
 
   it('consumes the cached realm rotation directly during the player tick', () => {
     const quest = WORLD_QUESTS_BY_ID.wq_eastbrook_bandits;
-    const sim = new Sim({ seed: 409, playerClass: 'warrior', autoEquip: true });
+    const sim = new Sim({ seed: WORLD_SEED, playerClass: 'warrior', autoEquip: true });
     sim.resetDay = '2026-08-31';
     sim.setPlayerLevel(quest.minLevel);
     sim.player.pos.x = quest.area.x;
@@ -685,7 +688,7 @@ describe('world quest lifecycle', () => {
     expect(
       () =>
         new Sim({
-          seed: 1,
+          seed: WORLD_SEED,
           playerClass: 'warrior',
           noPlayer: true,
           world: worldWith([STABLE_GROUND_OBJECT_ENTITY_ID_MIN - 1]),
@@ -694,7 +697,7 @@ describe('world quest lifecycle', () => {
     expect(
       () =>
         new Sim({
-          seed: 1,
+          seed: WORLD_SEED,
           playerClass: 'warrior',
           noPlayer: true,
           world: worldWith([
@@ -705,7 +708,7 @@ describe('world quest lifecycle', () => {
     ).toThrow('Invalid or duplicate stable ground object entity id');
 
     const valid = new Sim({
-      seed: 1,
+      seed: WORLD_SEED,
       playerClass: 'warrior',
       noPlayer: true,
       world: worldWith([STABLE_GROUND_OBJECT_ENTITY_ID_MIN]),
@@ -804,7 +807,7 @@ describe('world quest lifecycle', () => {
 
   it('does not start a catalog quest outside the current rotation', () => {
     const quest = WORLD_QUESTS_BY_ID.wq_eastbrook_caravan;
-    const sim = new Sim({ seed: 410, playerClass: 'warrior', autoEquip: true });
+    const sim = new Sim({ seed: WORLD_SEED, playerClass: 'warrior', autoEquip: true });
     enterQuest(sim, quest);
     expect(activeWorldQuestsForCycle(sim.worldQuestCycle).some((row) => row.id === quest.id)).toBe(
       false,
@@ -815,7 +818,7 @@ describe('world quest lifecycle', () => {
 
   it('stays unavailable below minimum level and starts automatically on area entry', () => {
     const quest = WORLD_QUESTS_BY_ID.wq_eastbrook_bandits;
-    const sim = new Sim({ seed: 41, playerClass: 'warrior', autoEquip: true });
+    const sim = new Sim({ seed: WORLD_SEED, playerClass: 'warrior', autoEquip: true });
     enterQuest(sim, quest, 4);
     expect(sim.worldQuestLog.has(quest.id)).toBe(false);
     expect(sim.worldQuestCycle).toBe('');
@@ -835,7 +838,7 @@ describe('world quest lifecycle', () => {
 
   it('stays dormant in deterministic hosts that intentionally supply no calendar', () => {
     const quest = WORLD_QUESTS_BY_ID.wq_eastbrook_bandits;
-    const sim = new Sim({ seed: 411, playerClass: 'warrior', autoEquip: true });
+    const sim = new Sim({ seed: WORLD_SEED, playerClass: 'warrior', autoEquip: true });
     sim.setPlayerLevel(20);
     sim.player.pos.x = quest.area.x;
     sim.player.pos.z = quest.area.z;
@@ -848,7 +851,7 @@ describe('world quest lifecycle', () => {
 
   it('credits only matching kills inside the active area', () => {
     const quest = WORLD_QUESTS_BY_ID.wq_evergarden_watch;
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', autoEquip: true });
+    const sim = new Sim({ seed: WORLD_SEED, playerClass: 'warrior', autoEquip: true });
     enterQuest(sim, quest);
     const meta = sim.meta(sim.playerId);
     if (!meta) throw new Error('Missing player meta');
@@ -869,7 +872,7 @@ describe('world quest lifecycle', () => {
     const quest = WORLD_QUESTS_BY_ID.wq_willowfen_ore;
     if (quest.objective.type !== 'gather') throw new Error('Expected gather world quest fixture');
     const nodeType = quest.objective.nodeType;
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', autoEquip: true });
+    const sim = new Sim({ seed: WORLD_SEED, playerClass: 'warrior', autoEquip: true });
     sim.setPlayerLevel(quest.minLevel);
     // Day 28: with the round-2 pools (lengths 2, 4 and 7) cycle 28 repeats the
     // cycle-0 board, so the fixed-day fixtures below still land on the ore
@@ -901,7 +904,7 @@ describe('world quest lifecycle', () => {
 
   it('carries one personal freight crate at a time and banks only delivered progress', () => {
     const quest = WORLD_QUESTS_BY_ID.wq_eastbrook_bandits;
-    const sim = new Sim({ seed: 422, playerClass: 'warrior', autoEquip: true });
+    const sim = new Sim({ seed: WORLD_SEED, playerClass: 'warrior', autoEquip: true });
     enterQuest(sim, quest);
     const meta = sim.meta(sim.playerId);
     if (!meta || quest.objective.type !== 'delivery') throw new Error('Missing delivery fixture');
@@ -999,7 +1002,7 @@ describe('world quest lifecycle', () => {
 
   it('requires six separate freight pickups while sharing untouched crates with other players', () => {
     const quest = WORLD_QUESTS_BY_ID.wq_eastbrook_bandits;
-    const sim = new Sim({ seed: 422, playerClass: 'warrior', autoEquip: true });
+    const sim = new Sim({ seed: WORLD_SEED, playerClass: 'warrior', autoEquip: true });
     enterQuest(sim, quest);
     if (quest.objective.type !== 'delivery') throw new Error('Expected delivery fixture');
     const objective = quest.objective;
@@ -1056,7 +1059,7 @@ describe('world quest lifecycle', () => {
 
   it('makes freight public, foot-carried, and ephemeral across death and disconnect', () => {
     const quest = WORLD_QUESTS_BY_ID.wq_eastbrook_bandits;
-    const sim = new Sim({ seed: 424, playerClass: 'warrior', autoEquip: true });
+    const sim = new Sim({ seed: WORLD_SEED, playerClass: 'warrior', autoEquip: true });
     enterQuest(sim, quest);
     if (quest.objective.type !== 'delivery') throw new Error('Missing delivery fixture');
     const objective = quest.objective;
@@ -1111,7 +1114,7 @@ describe('world quest lifecycle', () => {
 
   it('credits distinct recovered objects and restores their detached ledger', () => {
     const quest = WORLD_QUESTS_BY_ID.wq_frostveil_howlers;
-    const sim = new Sim({ seed: 423, playerClass: 'warrior', autoEquip: true });
+    const sim = new Sim({ seed: WORLD_SEED, playerClass: 'warrior', autoEquip: true });
     sim.setPlayerLevel(20);
     sim.resetDay = '2026-08-31';
     sim.player.pos.x = quest.area.x;
@@ -1144,7 +1147,7 @@ describe('world quest lifecycle', () => {
     expect(state.worldQuests?.progress[0]?.creditedObjects).toHaveLength(2);
 
     const restored = new Sim({
-      seed: 423,
+      seed: WORLD_SEED,
       playerClass: 'warrior',
       noPlayer: true,
     });
@@ -1180,7 +1183,7 @@ describe('world quest lifecycle', () => {
 
   it('keeps personal shipwreck salvage across leaving, re-entry, and a save restore', () => {
     const quest = WORLD_QUESTS_BY_ID.wq_farshore_salvage;
-    const sim = new Sim({ seed: 425, playerClass: 'warrior', autoEquip: true });
+    const sim = new Sim({ seed: WORLD_SEED, playerClass: 'warrior', autoEquip: true });
     sim.setPlayerLevel(20);
     sim.resetDay = '2026-09-28';
     sim.player.pos.x = quest.area.x;
@@ -1211,7 +1214,7 @@ describe('world quest lifecycle', () => {
 
     const state = sim.serializeCharacter(sim.playerId);
     if (!state) throw new Error('Missing salvage save');
-    const restored = new Sim({ seed: 425, playerClass: 'warrior', noPlayer: true });
+    const restored = new Sim({ seed: WORLD_SEED, playerClass: 'warrior', noPlayer: true });
     restored.resetDay = '2026-09-28';
     const pid = restored.addPlayer('warrior', 'Wreck Salvager', { state });
     const restoredMeta = restored.meta(pid);
@@ -1285,7 +1288,7 @@ describe('world quest lifecycle', () => {
 
   it("never leaks Farshore debris credit into Galecrest Dead Men's Cargo", () => {
     const quest = WORLD_QUESTS_BY_ID.wq_farshore_salvage;
-    const sim = new Sim({ seed: 426, playerClass: 'warrior', autoEquip: true });
+    const sim = new Sim({ seed: WORLD_SEED, playerClass: 'warrior', autoEquip: true });
     sim.setPlayerLevel(20);
     sim.resetDay = '2026-09-28';
     sim.player.pos.x = quest.area.x;
@@ -1316,7 +1319,7 @@ describe('world quest lifecycle', () => {
 
   it('keeps progress while outside and does not restart when the player re-enters', () => {
     const quest = WORLD_QUESTS_BY_ID.wq_evergarden_watch;
-    const sim = new Sim({ seed: 421, playerClass: 'warrior', autoEquip: true });
+    const sim = new Sim({ seed: WORLD_SEED, playerClass: 'warrior', autoEquip: true });
     enterQuest(sim, quest);
     const meta = sim.meta(sim.playerId);
     if (!meta) throw new Error('Missing player meta');
@@ -1342,7 +1345,7 @@ describe('world quest lifecycle', () => {
 
   it('credits the real combat death path without a manual quest command', () => {
     const quest = WORLD_QUESTS_BY_ID.wq_evergarden_watch;
-    const sim = new Sim({ seed: 420, playerClass: 'warrior', autoEquip: true });
+    const sim = new Sim({ seed: WORLD_SEED, playerClass: 'warrior', autoEquip: true });
     enterQuest(sim, quest);
     const target = targetFor(sim, quest);
     target.hp = 1;
@@ -1355,7 +1358,7 @@ describe('world quest lifecycle', () => {
 
   it('automatically grants XP that remains useful at maximum level', () => {
     const quest = WORLD_QUESTS_BY_ID.wq_eastbrook_bandits;
-    const sim = new Sim({ seed: 43, playerClass: 'warrior', autoEquip: true });
+    const sim = new Sim({ seed: WORLD_SEED, playerClass: 'warrior', autoEquip: true });
     enterQuest(sim, quest, 20);
     const before = sim.lifetimeXp;
     finishQuest(sim, quest);
@@ -1370,7 +1373,7 @@ describe('world quest lifecycle', () => {
     // to pay only XP now pays copper too: the shared schedule, not the def.
     const goldQuest = WORLD_QUESTS_BY_ID.wq_mirefen_gravecallers;
     const goldSim = new Sim({
-      seed: 44,
+      seed: WORLD_SEED,
       playerClass: 'warrior',
       autoEquip: true,
     });
@@ -1384,7 +1387,7 @@ describe('world quest lifecycle', () => {
     expect(goldSim.lifetimeXp - xpBefore).toBe(worldQuestXpReward(goldQuest, 10));
 
     const xpQuest = WORLD_QUESTS_BY_ID.wq_eastbrook_bandits;
-    const xpSim = new Sim({ seed: 47, playerClass: 'warrior', autoEquip: true });
+    const xpSim = new Sim({ seed: WORLD_SEED, playerClass: 'warrior', autoEquip: true });
     enterQuest(xpSim, xpQuest, 20);
     const bothBefore = { copper: xpSim.copper, xp: xpSim.lifetimeXp };
     finishQuest(xpSim, xpQuest);
@@ -1393,7 +1396,7 @@ describe('world quest lifecycle', () => {
 
     const itemQuest = WORLD_QUESTS_BY_ID.wq_palmreach_confections;
     const itemSim = new Sim({
-      seed: 45,
+      seed: WORLD_SEED,
       playerClass: 'warrior',
       autoEquip: true,
     });
@@ -1405,7 +1408,7 @@ describe('world quest lifecycle', () => {
 
   it('restores same-cycle progress and completion without restarting or paying twice', () => {
     const quest = WORLD_QUESTS_BY_ID.wq_evergarden_watch;
-    const sim = new Sim({ seed: 46, playerClass: 'warrior', autoEquip: true });
+    const sim = new Sim({ seed: WORLD_SEED, playerClass: 'warrior', autoEquip: true });
     enterQuest(sim, quest);
     const meta = sim.meta(sim.playerId);
     if (!meta) throw new Error('Missing player meta');
@@ -1418,7 +1421,7 @@ describe('world quest lifecycle', () => {
     });
 
     const restored = new Sim({
-      seed: 46,
+      seed: WORLD_SEED,
       playerClass: 'warrior',
       noPlayer: true,
     });
@@ -1441,7 +1444,7 @@ describe('world quest lifecycle', () => {
 
   it('rolls only when the realm rotation changes and is idempotent after completion', () => {
     const quest = WORLD_QUESTS_BY_ID.wq_drakelands_brood;
-    const sim = new Sim({ seed: 461, playerClass: 'warrior', autoEquip: true });
+    const sim = new Sim({ seed: WORLD_SEED, playerClass: 'warrior', autoEquip: true });
     enterQuest(sim, quest, 20);
     finishQuest(sim, quest);
     sim.drainEvents();
@@ -1469,7 +1472,7 @@ describe('world quest lifecycle', () => {
     'resets the completed daily activity %s without duplicating its next offer',
     (questId) => {
       const quest = WORLD_QUESTS_BY_ID[questId];
-      const sim = new Sim({ seed: 4612, playerClass: 'warrior', autoEquip: true });
+      const sim = new Sim({ seed: WORLD_SEED, playerClass: 'warrior', autoEquip: true });
       enterQuest(sim, quest);
       const meta = sim.meta(sim.playerId);
       const progress = sim.worldQuestLog.get(questId);
@@ -1499,7 +1502,7 @@ describe('world quest lifecycle', () => {
   it('clears an expired rotation for a dead player and dirties the owner snapshot', () => {
     const quest = WORLD_QUESTS_BY_ID.wq_eastbrook_bandits;
     const sim = new Sim({
-      seed: 4611,
+      seed: WORLD_SEED,
       playerClass: 'warrior',
       autoEquip: true,
     });
@@ -1520,7 +1523,7 @@ describe('world quest lifecycle', () => {
 
   it('keeps completion claims across a v0.41-style rollback save', () => {
     const quest = WORLD_QUESTS_BY_ID.wq_mirefen_gravecallers;
-    const sim = new Sim({ seed: 462, playerClass: 'warrior', autoEquip: true });
+    const sim = new Sim({ seed: WORLD_SEED, playerClass: 'warrior', autoEquip: true });
     enterQuest(sim, quest, 10);
     finishQuest(sim, quest);
     const state = sim.serializeCharacter(sim.playerId);
@@ -1528,7 +1531,7 @@ describe('world quest lifecycle', () => {
     const { worldQuests: _droppedByOldBinary, ...legacyResave } = state;
 
     const restored = new Sim({
-      seed: 462,
+      seed: WORLD_SEED,
       playerClass: 'warrior',
       noPlayer: true,
     });
@@ -1547,7 +1550,7 @@ describe('world quest lifecycle', () => {
   it('normalizes legacy daily save cycles and claim tokens without paying twice', () => {
     const quest = WORLD_QUESTS_BY_ID.wq_mirefen_gravecallers;
     const sim = new Sim({
-      seed: 4621,
+      seed: WORLD_SEED,
       playerClass: 'warrior',
       autoEquip: true,
     });
@@ -1564,7 +1567,7 @@ describe('world quest lifecycle', () => {
     );
 
     const restored = new Sim({
-      seed: 4621,
+      seed: WORLD_SEED,
       playerClass: 'warrior',
       noPlayer: true,
     });
@@ -1582,7 +1585,7 @@ describe('world quest lifecycle', () => {
   it('ignores malformed milestone values and persisted quests outside their rotation', () => {
     const inactive = WORLD_QUESTS_BY_ID.wq_drakelands_brood;
     const seed = new Sim({
-      seed: 4622,
+      seed: WORLD_SEED,
       playerClass: 'warrior',
       autoEquip: true,
     });
@@ -1596,7 +1599,7 @@ describe('world quest lifecycle', () => {
     state.unlockedMilestones = [42, 'ordinary_milestone'] as unknown as string[];
 
     const restored = new Sim({
-      seed: 4622,
+      seed: WORLD_SEED,
       playerClass: 'warrior',
       noPlayer: true,
     });
@@ -1617,7 +1620,7 @@ describe('world quest lifecycle', () => {
 
   it('uses no shared RNG draws for start, credit, reward, or rollover', () => {
     const quest = WORLD_QUESTS_BY_ID.wq_eastbrook_bandits;
-    const sim = new Sim({ seed: 463, playerClass: 'warrior', autoEquip: true });
+    const sim = new Sim({ seed: WORLD_SEED, playerClass: 'warrior', autoEquip: true });
     sim.setPlayerLevel(20);
     sim.resetDay = '2026-08-31';
     sim.player.pos.x = quest.area.x;
