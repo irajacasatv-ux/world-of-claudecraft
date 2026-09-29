@@ -46,6 +46,7 @@ import {
 } from '../src/ui/icons';
 import { localizeSimAuraName } from '../src/ui/sim_i18n';
 import { bareClient } from './helpers/bare_client';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // A value no other wire field carries (durations here are round numbers), so the
 // "no budget on the identity record" assertion below cannot pass by coincidence.
@@ -55,8 +56,9 @@ const MARK_SECONDS = 4217;
 // never calls it), so build the marked entity through it rather than
 // hand-stamping the flag: the encode under test must see the entity a real
 // sanction produces, its aura included.
+// Only the player's own entity is encoded, so the Sims run on the empty world.
 function markedPlayerSim(seconds = MARK_SECONDS): Sim {
-  const sim = new Sim({ seed: 7, playerClass: 'warrior' });
+  const sim = new Sim({ seed: 7, playerClass: 'warrior', world: EMPTY_TEST_WORLD });
   sim.setCheaterMark(seconds);
   return sim;
 }
@@ -94,7 +96,7 @@ describe('the Cheater mark over the wire', () => {
   });
 
   it('leaves an unmarked player unbranded, with no key on the wire at all', () => {
-    const sim = new Sim({ seed: 7, playerClass: 'warrior' });
+    const sim = new Sim({ seed: 7, playerClass: 'warrior', world: EMPTY_TEST_WORLD });
     const e = sim.player;
 
     const wire = wireEntity(e);
