@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { WORLD_QUESTS_BY_ID } from '../src/sim/data';
+import { BUILTIN_WORLD, WORLD_QUESTS_BY_ID } from '../src/sim/data';
 import { Sim } from '../src/sim/sim';
 import type { WorldQuestDef, WorldQuestObjective } from '../src/sim/types';
 import {
@@ -12,10 +12,19 @@ import {
   worldQuestPuzzleVariantForCycle,
 } from '../src/sim/world_quest_rotation';
 import { WORLD_SEED } from '../src/sim/world_seed';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // Every world here is built on the shipped seed: a seed the file has not built yet
 // costs a full collider bootstrap, and the boards and variants come from the
-// reset day, never the seed.
+// reset day, never the seed. The candy box (and the ley cache, the wrong object
+// a case offers it) is the only overworld content the boards reach for, so every
+// Sim runs on a world holding just those two.
+const WORLD = {
+  ...EMPTY_TEST_WORLD,
+  groundObjects: BUILTIN_WORLD.groundObjects.filter(
+    (object) => object.itemId === 'confection_game_box' || object.itemId === 'leyline_cache',
+  ),
+};
 type Match3Quest = WorldQuestDef & {
   objective: Extract<WorldQuestObjective, { type: 'match3' }>;
 };
@@ -203,7 +212,12 @@ describe('weekly world quest match-three', () => {
   it('rejects remote play, preserves a detached save, and completes after physical activation', () => {
     const { quest, levels } = fixture();
     if (quest.objective.type !== 'match3') throw new Error('Expected match-three fixture');
-    const sim = new Sim({ seed: WORLD_SEED, playerClass: 'warrior', autoEquip: true });
+    const sim = new Sim({
+      seed: WORLD_SEED,
+      playerClass: 'warrior',
+      autoEquip: true,
+      world: WORLD,
+    });
     sim.setPlayerLevel(20);
     sim.resetDay = '2026-08-31';
     useAuthoredLevels(sim);
@@ -311,6 +325,7 @@ describe('weekly world quest match-three', () => {
     if (quest.objective.type !== 'match3') throw new Error('Expected match-three fixture');
     const original = new Sim({
       seed: WORLD_SEED,
+      world: WORLD,
       playerClass: 'warrior',
       autoEquip: true,
     });
@@ -335,6 +350,7 @@ describe('weekly world quest match-three', () => {
 
     const restored = new Sim({
       seed: WORLD_SEED,
+      world: WORLD,
       playerClass: 'warrior',
       noPlayer: true,
     });
@@ -380,7 +396,12 @@ describe('weekly world quest match-three', () => {
 
   it('rejects wrong objects and invalid play, and resets the authoritative level', () => {
     const { quest, levels } = fixture();
-    const sim = new Sim({ seed: WORLD_SEED, playerClass: 'warrior', autoEquip: true });
+    const sim = new Sim({
+      seed: WORLD_SEED,
+      playerClass: 'warrior',
+      autoEquip: true,
+      world: WORLD,
+    });
     sim.setPlayerLevel(20);
     sim.resetDay = '2026-08-31';
     useAuthoredLevels(sim);
@@ -446,7 +467,12 @@ describe('weekly world quest match-three', () => {
 
   it('authorizes reset only for a living player with the active match-three box open', () => {
     const { quest } = fixture();
-    const sim = new Sim({ seed: WORLD_SEED, playerClass: 'warrior', autoEquip: true });
+    const sim = new Sim({
+      seed: WORLD_SEED,
+      playerClass: 'warrior',
+      autoEquip: true,
+      world: WORLD,
+    });
     sim.setPlayerLevel(20);
     sim.resetDay = '2026-08-31';
     useAuthoredLevels(sim);
@@ -500,6 +526,7 @@ describe('weekly world quest match-three', () => {
     for (const [resetDay, variant] of weeks) {
       const original = new Sim({
         seed: WORLD_SEED,
+        world: WORLD,
         playerClass: 'warrior',
         autoEquip: true,
       });
@@ -516,6 +543,7 @@ describe('weekly world quest match-three', () => {
 
       const restored = new Sim({
         seed: WORLD_SEED,
+        world: WORLD,
         playerClass: 'warrior',
         noPlayer: true,
       });
