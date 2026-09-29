@@ -32,10 +32,17 @@ import {
   createActionBarView,
   secondaryRequirementsMet,
 } from '../src/ui/hud/action_bar/action_bar_view';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const EXECUTE = ABILITIES.execute;
 const DUSKFIRE = ABILITIES.shadowburn;
 const HAMMER = ABILITIES.hammer_of_wrath;
+
+// The live-Sim cases fight a dummy they spawn and wear gear they add, so they
+// run on the empty world.
+function makeWarriorSim(): Sim {
+  return new Sim({ seed: 72, playerClass: 'warrior', autoEquip: true, world: EMPTY_TEST_WORLD });
+}
 
 function known(def: AbilityDef): ActionBarAbility {
   return { def, cost: 0 };
@@ -266,7 +273,7 @@ describe('action bar: greys a slot while its secondary cast requirement is unmet
 
 describe('action bar and the live cast gate agree on the Execute window', () => {
   function warriorWithDummy(): { sim: Sim; p: Entity; mob: Entity } {
-    const sim = new Sim({ seed: 72, playerClass: 'warrior', autoEquip: true });
+    const sim = makeWarriorSim();
     sim.setPlayerLevel(20);
     sim.tick();
     const p = sim.player;
@@ -405,7 +412,7 @@ describe('action bar: equipment and target-aura requirements', () => {
   });
 
   it('agrees with the live sim: the worn-gear dagger read matches weapon.dagger', () => {
-    const sim = new Sim({ seed: 72, playerClass: 'warrior', autoEquip: true });
+    const sim = makeWarriorSim();
     sim.setPlayerLevel(60);
     const p = sim.player;
     for (const id of [LOW_DAGGER.id, SWORD]) {
