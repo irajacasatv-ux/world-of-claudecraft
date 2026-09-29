@@ -1,9 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { Sim } from '../src/sim/sim';
-import { SimEvent } from '../src/sim/types';
+import type { SimEvent } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
+// The character sheet reads the caller's own stats only, so the Sim runs on the
+// empty world.
 function makeWorld() {
-  return new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+  return new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true, world: EMPTY_TEST_WORLD });
 }
 
 function errorText(events: SimEvent[], pid: number): string | undefined {
@@ -24,7 +27,9 @@ describe('/stats command', () => {
 
     const events = sim.tick();
     const text = errorText(events, a)!;
-    expect(text).toMatch(/^Level \d+ Warrior — HP \d+\/\d+, Rage \d+\/\d+\. AP \d+, Crit \d+\.\d%, Armor \d+\.$/);
+    expect(text).toMatch(
+      /^Level \d+ Warrior \u2014 HP \d+\/\d+, Rage \d+\/\d+\. AP \d+, Crit \d+\.\d%, Armor \d+\.$/,
+    );
     // self-only: no other player receives the readout
     expect(events.some((e) => e.type === 'error' && e.pid !== a)).toBe(false);
   });
