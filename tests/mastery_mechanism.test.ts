@@ -13,10 +13,16 @@ import { MOBS } from '../src/sim/data';
 import { createMob, recalcPlayerStats } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
 import type { Entity } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 describe('mastery does not corrupt utility rate buffs (F1)', () => {
   it("an Elemental shaman's spell-damage mastery leaves Shadewolf's 1.4x speed intact", () => {
-    const sim = new Sim({ seed: 1, playerClass: 'shaman', autoEquip: true });
+    const sim = new Sim({
+      seed: 1,
+      playerClass: 'shaman',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.setPlayerLevel(20);
     expect(sim.setSpec('elemental')).toBe(true); // mastery = +15% spell damage
     // Shadewolf (ability id ghost_wolf) is a nature-school selfBuff whose value (1.4) is a movement-speed
@@ -95,7 +101,12 @@ describe('Gloamveil Form amplifies Shadow damage by 15%', () => {
   // Build a priest and a hostile dummy; return the damage a raw dealDamage of the given
   // school does, optionally while the priest is in Gloamveil Form (form_shadow, value 15).
   const hit = (school: string, inForm: boolean): number => {
-    const sim = new Sim({ seed: 1, playerClass: 'priest', autoEquip: true });
+    const sim = new Sim({
+      seed: 1,
+      playerClass: 'priest',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.setPlayerLevel(20);
     const p = sim.entities.get(sim.playerId) as Entity;
     if (inForm) {
@@ -147,11 +158,19 @@ describe('Gloamveil Form amplifies Shadow damage by 15%', () => {
     // Every shadow damage path funnels through dealDamage, so the DoT ticks benefit like
     // direct hits. Same seed, only the form differs.
     const dotDamage = (inForm: boolean): number => {
-      const sim = new Sim({ seed: 3, playerClass: 'priest', autoEquip: true });
+      const sim = new Sim({
+        seed: 1,
+        playerClass: 'priest',
+        autoEquip: true,
+        world: EMPTY_TEST_WORLD,
+      });
       sim.setPlayerLevel(20);
       const p = sim.entities.get(sim.playerId) as Entity;
       p.facing = 0;
       p.resource = p.maxResource;
+      // Force the cast to land: the resist roll is not what this pins, and both
+      // runs must deal their DoT for the comparison to mean anything.
+      p.hitBonus = 1;
       if (inForm) {
         p.auras.push({
           id: 'test_shadow_form',
@@ -191,7 +210,12 @@ describe('Gloamveil Form amplifies Shadow damage by 15%', () => {
   it('casting a heal ends Gloamveil Form (so the amplifier stops)', () => {
     // The form forbids healing: any heal/hot/aoeHeal drops form_shadow. This is enforced
     // in effect_dispatch; pin it so the "healing takes you out of the form" rule holds.
-    const sim = new Sim({ seed: 2, playerClass: 'priest', autoEquip: true });
+    const sim = new Sim({
+      seed: 1,
+      playerClass: 'priest',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.setPlayerLevel(20);
     const p = sim.entities.get(sim.playerId) as Entity;
     p.facing = 0;
@@ -224,7 +248,12 @@ describe('channeled spell crits take the spell crit-damage mastery', () => {
     // (Afterflame's and Ruination's exact value) injected through the talent-mods slot
     // recalcPlayerStats bakes onto critDmgSpellBonus.
     const drive = (mastery: boolean): number => {
-      const sim = new Sim({ seed: 9, playerClass: 'mage', autoEquip: true });
+      const sim = new Sim({
+        seed: 1,
+        playerClass: 'mage',
+        autoEquip: true,
+        world: EMPTY_TEST_WORLD,
+      });
       sim.setPlayerLevel(20);
       expect(sim.setSpec('arcane')).toBe(true); // Aether Darts is Chronomancy-gated
       const p = sim.entities.get(sim.playerId) as Entity;
@@ -282,7 +311,12 @@ describe('channeled spell crits take the spell crit-damage mastery', () => {
 
 describe('crit-damage masteries are scoped to their channel (F4)', () => {
   it("a Holy paladin's heal-crit mastery does not leak into damage crits", () => {
-    const sim = new Sim({ seed: 3, playerClass: 'paladin', autoEquip: true });
+    const sim = new Sim({
+      seed: 1,
+      playerClass: 'paladin',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.setPlayerLevel(20);
     expect(sim.setSpec('holy')).toBe(true);
     const p = sim.entities.get(sim.playerId) as Entity;
@@ -296,7 +330,12 @@ describe('crit-damage masteries are scoped to their channel (F4)', () => {
 
 describe('Necromancy Graveguard redirect is not double-modified (F7)', () => {
   it("a source's Defensive Stance cut is applied once, not again on the pet's share", () => {
-    const sim = new Sim({ seed: 1, playerClass: 'warlock', autoEquip: true });
+    const sim = new Sim({
+      seed: 1,
+      playerClass: 'warlock',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.setPlayerLevel(20);
     expect(sim.setSpec('demonology')).toBe(true); // mastery = 20% damage redirected to pet
     const wl = sim.entities.get(sim.playerId) as Entity;
@@ -342,7 +381,12 @@ describe('Necromancy Graveguard redirect is not double-modified (F7)', () => {
   });
 
   it("a source's Battle Combat Mastery bonus is applied once before the pet share", () => {
-    const sim = new Sim({ seed: 2, playerClass: 'warlock', autoEquip: true });
+    const sim = new Sim({
+      seed: 1,
+      playerClass: 'warlock',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.setPlayerLevel(20);
     expect(sim.setSpec('demonology')).toBe(true);
     const wl = sim.player;
