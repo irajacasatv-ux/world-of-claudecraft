@@ -932,11 +932,23 @@ const priv = (server: GameServer): any => server as any;
  *  server would land in the NEXT world's rows as a phantom durable prefix (an
  *  opening replayed onto a ladder already at 24, a deposit applied twice).
  *  Drain them before a new world is built; bounded so a stuck queue fails
- *  the run instead of hanging it. */
-const straggleWatch: GameServer[] = [];
+ *  the run instead of hanging it.
+ *
+ *  An empty queue is NOT a drained world: a coalesced holder flush arms its
+ *  follow-up save only when the previous one settles
+ *  (server/guild_book_holders.ts requestGuildBookFlush), so between two saves
+ *  of one chain the queue reads empty while the chain is still live, and the
+ *  follow-up used to commit the old world's character row into the next
+ *  world's store mid-run (seed 6163 of the P4 other-dirty sweep failed after
+ *  seed 6162 and passed alone). The session's in-flight flag stays set across
+ *  that gap, so the drain also waits on it. */
+const straggleWatch: { server: GameServer; sessions: ClientSession[] }[] = [];
+const straggling = (w: (typeof straggleWatch)[number]): boolean =>
+  w.server.characterSaveQueues.pendingKeys() > 0 ||
+  w.sessions.some((session) => session.guildBookFlushInFlight);
 async function drainStragglingSaves(): Promise<void> {
-  for (const server of straggleWatch) {
-    for (let spin = 0; server.characterSaveQueues.pendingKeys() > 0; spin++) {
+  for (const w of straggleWatch) {
+    for (let spin = 0; straggling(w); spin++) {
       if (spin > 2_000) throw new Error('a previous world never drained its save queues');
       await new Promise((r) => setTimeout(r, 0));
     }
@@ -987,6 +999,9 @@ function seedInventory(server: GameServer, pid: number, tag: string): void {
 }
 
 async function makeWorld(): Promise<World> {
+  // Drain FIRST, so nothing an earlier world still has in flight can commit
+  // into the store after the reset below.
+  await drainStragglingSaves();
   store.reset();
   // Drop every mock's recorded call history along with the store: a sweep
   // builds hundreds of worlds inside ONE test, and vi.fn() retains each
@@ -996,9 +1011,9 @@ async function makeWorld(): Promise<World> {
   // "Worker exited unexpectedly" failure). The per-test beforeEach clear
   // stays for the suites that assert against a fresh history.
   vi.clearAllMocks();
-  await drainStragglingSaves();
   const server = new GameServer();
-  straggleWatch.push(server);
+  const sessions: ClientSession[] = [];
+  straggleWatch.push({ server, sessions });
   const actors: Actor[] = [];
   for (const characterId of [1, 2]) {
     const session = server.join(
@@ -1010,6 +1025,7 @@ async function makeWorld(): Promise<World> {
       null,
     );
     if ('error' in session) throw new Error(session.error);
+    sessions.push(session);
     session.blockListLoaded = true;
     moveToBanker(server, session.pid);
     seedInventory(server, session.pid, `S${characterId}`);
