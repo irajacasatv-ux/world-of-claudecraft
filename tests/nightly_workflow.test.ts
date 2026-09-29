@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { NIGHTLY_LANES_PER_REF } from '../scripts/lib/nightly_plan.mjs';
+import { DIET_FLAG, NIGHTLY_FLAG } from './helpers/depth_flags';
 import { PLAYWRIGHT_INSTALL_BLOCK } from './helpers/playwright_install_block';
 
 const workflow = readFileSync(new URL('../.github/workflows/nightly.yml', import.meta.url), 'utf8');
@@ -135,16 +136,12 @@ describe('nightly gate workflow', () => {
     // is what keeps the full five-seed depth running anywhere at all.
     // Name-to-env-to-run adjacency (comment lines allowed) so a commented-out
     // or step-detached copy cannot satisfy it.
-    // The flag names are built from parts: only a listed reader may spell one outside
-    // a comment (tests/helpers/depth_flag_readers.ts).
-    const dietFlag = ['WOC_FULL_BALANCE', 'SWEEP'].join('_');
-    const nightlyFlag = ['WOC_NIGHTLY', 'SWEEP'].join('_');
     expect(tests).toMatch(
       new RegExp(
         String.raw`- name: Run tests \(full suite, PR tier\)\n` +
           String.raw`(?: {8}#[^\n]*\n)* {8}env:\n` +
-          ` {10}${dietFlag}: '1'\n` +
-          ` {10}${nightlyFlag}: '1'\n` +
+          ` {10}${DIET_FLAG}: '1'\n` +
+          ` {10}${NIGHTLY_FLAG}: '1'\n` +
           String.raw` {8}run: npm test -- --maxWorkers=`,
       ),
     );
@@ -153,8 +150,8 @@ describe('nightly gate workflow', () => {
     // The nightly-sweep flag is the shard pool's counterpart (docs/qa-gate.md,
     // "Nightly-only sweep depth"); its readers are pinned in
     // tests/ci_shard_plan.test.ts.
-    expect(workflow.split(dietFlag)).toHaveLength(2);
-    expect(workflow.split(nightlyFlag)).toHaveLength(2);
+    expect(workflow.split(DIET_FLAG)).toHaveLength(2);
+    expect(workflow.split(NIGHTLY_FLAG)).toHaveLength(2);
     // Unsharded by design: a --shard flag here would quietly turn the nightly
     // proof into a partial run.
     expect(tests).not.toContain('--shard');

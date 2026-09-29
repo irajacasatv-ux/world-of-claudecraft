@@ -19,6 +19,7 @@ import {
 } from '../scripts/lib/ci_shard_plan.mjs';
 import { collectSuiteVisibility } from '../scripts/lib/gate_discovery.mjs';
 import { auditDepthFlag } from './helpers/depth_flag_readers';
+import { DIET_FLAG, NIGHTLY_FLAG } from './helpers/depth_flags';
 
 const REPO_ROOT = path.resolve(__dirname, '..');
 
@@ -49,15 +50,10 @@ function realSuite(): ReturnType<typeof collectSuiteVisibility> {
   return realSuiteMemo;
 }
 
-// The two nightly depth flags, built from parts so no file but a listed reader spells
-// either outside a comment (tests/helpers/depth_flag_readers.ts).
-const DIET_FLAG = ['WOC_FULL_BALANCE', 'SWEEP'].join('_');
-const NIGHTLY_FLAG = ['WOC_NIGHTLY', 'SWEEP'].join('_');
-
-// Every tracked file that names a depth flag, read for the reader audits: git grep
-// finds them anywhere in the repository (a helper, a script, a product module, a
-// config such as vite.config.ts, a .svelte fixture), so the audit is not limited to
-// the collected suites. Markdown, workflow and data files are left to their own pins.
+// Every tracked file that names a token, read for the depth-flag reader audits: git
+// grep finds them anywhere in the repository (a helper, a script, a product module, a
+// config such as vite.config.ts, a .svelte fixture), so the audit is not limited to the
+// collected suites. Markdown, workflow and data files are left to their own pins.
 const depthFlagSourcesMemo = new Map<string, Map<string, string>>();
 function depthFlagSources(flag: string): Map<string, string> {
   const memo = depthFlagSourcesMemo.get(flag);
@@ -557,8 +553,14 @@ describe('the long-sims lane (Phase 4)', () => {
       'tests/skill_icons.test.ts',
       'tests/woc_market_delivery_pg_integration.test.ts',
     ];
-    // The corpus reaches past the suites: the diet helper names its flag in comments.
+    // The corpus reaches every tracked root, not only the suites: a helper and a
+    // script name the diet flag in comments, and the same collection finds a token of
+    // the root vite config and one of a product module (a pathspec narrowing the grep
+    // to tests/ fails here).
     expect(depthFlagSources(DIET_FLAG).has('tests/helpers/balance_diet.ts')).toBe(true);
+    expect(depthFlagSources(DIET_FLAG).has('scripts/lib/ci_shard_plan.mjs')).toBe(true);
+    expect(depthFlagSources('BalancedSequencer').has('vite.config.ts')).toBe(true);
+    expect(depthFlagSources('export const WORLD_SEED').has('src/sim/world_seed.ts')).toBe(true);
     const audit = auditDepthFlag(NIGHTLY_FLAG, depthFlagSources(NIGHTLY_FLAG), listed);
     expect(audit.violations).toEqual([]);
     expect(audit.readers).toEqual(listed);
