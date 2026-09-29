@@ -117,18 +117,23 @@ describe('the lane threshold over the measured shard weights', () => {
 // config and is reviewed by hand.
 const GUARDS_LINE = /^(?:\/\/+|\/?\*+)\s*Guards:\s*(\S.*)$/;
 // The cost is a field, not prose: its `Cost:` line holds one time and nothing else (`Cost: 0.4 s`,
-// `Cost: 450 ms`, an optional closing period) on a line that is all comment, and what directly
-// follows it closes its paragraph: a blank comment line or a `Guards:` line, or, when the field is
-// the header's last comment line, the end of the file or a code line with no comment on it. So
-// nothing adjacent can qualify the field. A fraction reads only in seconds and to two places, so a
-// dot used to group thousands cannot shrink a cost. Anything else (`1,200 ms`, `about 1.2 s at one
-// worker`, `1 s warm, 2 min cold`, a wrapped or trailing second time, a second cost marker in any
-// case) is refused rather than read, which fails the file: the safe direction. Prose elsewhere in
-// the header is not the declaration, and the first harvest replaces the field with a measured row.
+// `Cost: 450 ms`, an optional closing period) on a line that is all comment, and it is the only
+// `cost:` anywhere in the header or on the first code line. It opens its paragraph (the header's
+// start, a blank comment line or a block opener above it) or closes a `Guards:` paragraph (a Guards
+// line, and only its continuation lines, above it). What directly follows it closes its paragraph:
+// a blank comment line or a `Guards:` line, or, when the field is the header's last comment line,
+// the end of the file or a code line with no `//`, `/*` or `*/` on it (even inside a string). A
+// fraction reads only in seconds and to two places, so a dot used to group thousands cannot shrink
+// a cost. Anything else (`1,200 ms`, `about 1.2 s at one worker`, `1 s warm, 2 min cold`, a wrapped
+// or trailing second time, prose directly above) is refused rather than read, which fails the file:
+// the safe direction. The boundary is structural: the Guards text and other paragraphs are prose a
+// reviewer reads, not the declaration, and the first harvest replaces the field with a measured
+// row, which the lane rule and the ratchet then judge.
 const COST_FIELD =
   /^(?:\/\/+|\/?\*+)\s*Cost:\s*(?:(\d+\.\d{1,2})\s*s|(\d+)\s*(ms|s))\.?\s*(?:\*\/)?$/;
 const COST_MARKER = /^(?:\/\/+|\/?\*+)\s*cost\s*:/i;
 const PARAGRAPH_END = /^(?:\/\/+|\/?\*+\/?)\s*(?:Guards:|$)/;
+const PARAGRAPH_BREAK = /^(?:\/\/+|\/?\*+\/?)\s*$/;
 const GUARDS_MIN_CHARS = 12;
 
 /** How a line reads given whether a block comment is open at its start: `code` is where code
@@ -180,20 +185,24 @@ function admissionStatement(source: string): { guards?: string; costMs?: number 
     if (guards && guards.length >= GUARDS_MIN_CHARS && !guards.includes('Cost:'))
       statement.guards ??= guards;
   }
-  const markers = lines.flatMap((line, i) => (COST_MARKER.test(line) ? [i] : []));
-  // One marker, and none on the code line (a field sharing a line with code is refused).
-  if (markers.length !== 1 || (codeLine !== undefined && /cost\s*:/i.test(codeLine)))
+  // The only `cost:` anywhere in the header and on the code line, at the start of its line.
+  const mentions = lines.flatMap((line, i) => (/cost\s*:/i.test(line) ? [i] : []));
+  if (mentions.length !== 1 || (codeLine !== undefined && /cost\s*:/i.test(codeLine)))
     return statement;
-  const at = markers[0];
-  const cost = lines[at].match(COST_FIELD);
+  const at = mentions[0];
+  const cost = COST_MARKER.test(lines[at]) ? lines[at].match(COST_FIELD) : null;
+  // Above: nothing but a paragraph break (or the header's start) or a Guards paragraph.
+  let up = at - 1;
+  while (up >= 0 && !PARAGRAPH_BREAK.test(lines[up]) && !GUARDS_LINE.test(lines[up])) up--;
+  const opened = up === at - 1 || (up >= 0 && GUARDS_LINE.test(lines[up]));
   const closed =
     at + 1 < lines.length
       ? PARAGRAPH_END.test(lines[at + 1])
       : codeLine === undefined || !/\/\/|\/\*|\*\//.test(codeLine);
-  if (cost && closed)
-    statement.costMs = cost[1]
-      ? Number(cost[1]) * 1000
-      : Number(cost[2]) * (cost[3] === 's' ? 1000 : 1);
+  if (cost && opened && closed)
+    statement.costMs = Math.round(
+      cost[1] ? Number(cost[1]) * 1000 : Number(cost[2]) * (cost[3] === 's' ? 1000 : 1),
+    );
   return statement;
 }
 
@@ -519,6 +528,13 @@ describe('the new-test admission rule', () => {
     expect(read('// Cost: 1200 ms\n')).toBe(1200);
     expect(read('// Cost: 1.2s.\n')).toBe(1200);
     expect(read('/** Cost: 1.25 s */\nexport {};\n')).toBe(1250);
+    expect(read('// Cost: 2.01 s\n')).toBe(2010);
+    // A Guards paragraph, wrapped, may sit directly above the field.
+    expect(
+      read(
+        "// Intro.\n//\n// Guards: the pause toggle's replay path,\n// end to end.\n// Cost: 1 s\n",
+      ),
+    ).toBe(1000);
     expect(read('// Cost: 1 s\nexport {};\n')).toBe(1000);
     expect(read('/** Cost: 1.25 s */\n')).toBe(1250);
     // The paragraph ends at a blank comment line or a Guards: line.
@@ -551,6 +567,10 @@ describe('the new-test admission rule', () => {
       '/**\n * Cost: 1 s */ export {}; // 2 min cold\n',
       '// Cost: 1 s\nexport {}; // 2 min cold\n',
       '// Cost: 1 s\n//\nexport {}; // cost: 2 min\n',
+      '// Warm, one worker; cold at 8 workers is 2 min, so the\n// Cost: 1 s\nimport x from "y";\n',
+      '// cold cost: 2 min; warm\n//\n// Cost: 1 s\n',
+      "// Cost: 1 s\n// Guards: the pause toggle's replay path; real cost: 2 min cold\n",
+      '/*\n * Cost: 1 s\n *\n Cost: 2 min\n */\n',
     ])
       expect(read(refused), refused).toBeUndefined();
     expect(admissionStatement(afterDocblock).costMs).toBe(450);
