@@ -52,6 +52,24 @@ function makeOfficerSim(
   return sim;
 }
 
+/** The sweeps (H1 to H3, E3) run hundreds of single ops, each from the state a
+ *  fresh makeOfficerSim leaves, on ONE officer Sim per sweep: before every op
+ *  the book is reloaded through the sanctioned evict-then-load path and the
+ *  bags are emptied. The ops read and write only the bags, the book and the
+ *  purse (the H3 cases set the purse themselves), so nothing else carries
+ *  from one op to the next; a Sim per op cost about 5 ms each, some 2,500
+ *  times over. */
+function reloadBook(sim: Sim, opts: { treasury?: number; purchasedSlots?: number } = {}): void {
+  sim.evictGuildBank(GUILD_ID);
+  sim.loadGuildBank(GUILD_ID, {
+    treasury: opts.treasury ?? 100_000,
+    inventory: [],
+    purchasedSlots: opts.purchasedSlots ?? 24,
+  });
+  meta(sim).inventory.length = 0;
+  sim.drainEvents();
+}
+
 const meta = (sim: Sim) => {
   const m = sim.players.get(sim.playerId);
   if (!m) throw new Error('missing meta');
@@ -314,10 +332,10 @@ function conserved(sim: Sim): string {
 
 describe('PROBE H: hostile scalars never mint or vaporize', () => {
   it('H1: hostile slot/count on deposit conserve the item total', () => {
+    const sim = makeOfficerSim();
     for (const slot of HOSTILE_NUMBERS) {
       for (const count of [...HOSTILE_NUMBERS, undefined]) {
-        const sim = makeOfficerSim();
-        meta(sim).inventory.length = 0;
+        reloadBook(sim);
         meta(sim).inventory.push({ itemId: 'wolf_fang', count: 10 });
         book(sim).inventory.push({ itemId: 'wolf_fang', count: 10 });
         sim.guildBankDepositFor(sim.playerId, slot, count);
@@ -330,10 +348,10 @@ describe('PROBE H: hostile scalars never mint or vaporize', () => {
   });
 
   it('H2: hostile slot/count on withdraw conserve the item total', () => {
+    const sim = makeOfficerSim();
     for (const slot of HOSTILE_NUMBERS) {
       for (const count of [...HOSTILE_NUMBERS, undefined]) {
-        const sim = makeOfficerSim();
-        meta(sim).inventory.length = 0;
+        reloadBook(sim);
         meta(sim).inventory.push({ itemId: 'wolf_fang', count: 10 });
         book(sim).inventory.push({ itemId: 'wolf_fang', count: 10 });
         sim.guildBankWithdrawFor(sim.playerId, slot, count);
@@ -346,9 +364,10 @@ describe('PROBE H: hostile scalars never mint or vaporize', () => {
   });
 
   it('H3: hostile gold amounts conserve copper', () => {
+    const sim = makeOfficerSim({ treasury: 500_000 });
     for (const amount of HOSTILE_NUMBERS) {
       for (const op of ['dep', 'wd'] as const) {
-        const sim = makeOfficerSim({ treasury: 500_000 });
+        reloadBook(sim, { treasury: 500_000 });
         meta(sim).copper = 500_000;
         if (op === 'dep') sim.guildBankDepositGoldFor(sim.playerId, amount);
         else sim.guildBankWithdrawGoldFor(sim.playerId, amount);
@@ -473,12 +492,12 @@ const SHAPES: Shape[] = [
 
 describe('PROBE E3: fit-vs-grant divergence sweep', () => {
   it('E3a: deposit never overflows the book beyond its pre-existing length', () => {
+    const sim = makeOfficerSim();
     for (const src of SHAPES) {
       for (const dst of SHAPES) {
         for (const cap of [0, 24, 30]) {
           for (const count of [undefined, 1, 3, 1000]) {
-            const sim = makeOfficerSim({ purchasedSlots: cap });
-            meta(sim).inventory.length = 0;
+            reloadBook(sim, { purchasedSlots: cap });
             meta(sim).inventory.push(JSON.parse(JSON.stringify(src)));
             book(sim).inventory.push(JSON.parse(JSON.stringify(dst)));
             const lenBefore = book(sim).inventory.length;
@@ -501,12 +520,12 @@ describe('PROBE E3: fit-vs-grant divergence sweep', () => {
   });
 
   it('E3b: withdraw never overflows the bags beyond their pre-existing length', () => {
+    const sim = makeOfficerSim();
     for (const src of SHAPES) {
       for (const dst of SHAPES) {
         for (const count of [undefined, 1, 3, 1000]) {
-          const sim = makeOfficerSim();
+          reloadBook(sim);
           const bagCap = 16; // backpack only, autoEquip false
-          meta(sim).inventory.length = 0;
           meta(sim).inventory.push(JSON.parse(JSON.stringify(dst)));
           book(sim).inventory.push(JSON.parse(JSON.stringify(src)));
           const lenBefore = meta(sim).inventory.length;
@@ -528,10 +547,10 @@ describe('PROBE E3: fit-vs-grant divergence sweep', () => {
   });
 
   it('E3c: no slot ever exceeds its stack cap after a move', () => {
+    const sim = makeOfficerSim();
     for (const src of SHAPES) {
       for (const dst of SHAPES) {
-        const sim = makeOfficerSim();
-        meta(sim).inventory.length = 0;
+        reloadBook(sim);
         meta(sim).inventory.push(JSON.parse(JSON.stringify(src)));
         book(sim).inventory.push(JSON.parse(JSON.stringify(dst)));
         const capBefore = Math.max(
