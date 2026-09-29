@@ -34,8 +34,10 @@ function tierSkill(tier: number): number {
   return tier * 25; // tierForSkill = floor(skill / 25)
 }
 
-function makeSim(seed = 5150): Sim {
-  return new Sim({ seed, playerClass: 'warrior', autoEquip: true, world: EMPTY_TEST_WORLD });
+// Every Sim, the reload targets included, shares one seed: a fresh seed builds
+// its collider grids (about half a second) and no case compares two seeds.
+function makeSim(): Sim {
+  return new Sim({ seed: 5150, playerClass: 'warrior', autoEquip: true, world: EMPTY_TEST_WORLD });
 }
 
 /** Attune the local player to the Smith pair directly (bypassing the quest), so
@@ -259,7 +261,7 @@ describe('tier-crossing master mail (Professions 2.0)', () => {
     const saved = sim.serializeCharacter(sim.playerId);
     expect(saved?.tierMailSent).toMatchObject({ [PRIMARY]: 3, [SECONDARY]: 2 });
 
-    const reloaded = makeSim(5151);
+    const reloaded = makeSim();
     const pid = reloaded.addPlayer('warrior', 'Reloaded', { state: saved ?? undefined });
     const reloadedMeta = reloaded.players.get(pid)!;
     expect(reloadedMeta.tierMailSent.get(PRIMARY)).toBe(3);
@@ -372,7 +374,7 @@ describe('tier-crossing master mail (Professions 2.0)', () => {
     const saved = sim.serializeCharacter(sim.playerId);
     expect(saved?.tierMailSent).toMatchObject({ [DORMANT]: 1 }); // serialize passes it through
 
-    const reloaded = makeSim(5153);
+    const reloaded = makeSim();
     const pid = reloaded.addPlayer('warrior', 'Pruned', { state: saved ?? undefined });
     const reloadedMeta = reloaded.players.get(pid)!;
     expect(reloadedMeta.tierMailSent.has(DORMANT)).toBe(false); // healed on load
@@ -393,7 +395,7 @@ describe('tier-crossing master mail (Professions 2.0)', () => {
       [SECONDARY, 1],
     ]);
 
-    const simUnattuned = makeSim(5154);
+    const simUnattuned = makeSim();
     const unattuned = simUnattuned.players.get(simUnattuned.playerId)!;
     unattuned.tierMailSent.set(PRIMARY, 2);
     pruneTierMailToActiveMajors(unattuned);
@@ -418,7 +420,7 @@ describe('tier-crossing master mail (Professions 2.0)', () => {
     // acknowledgements with the skills it zeroes.
     saved.masteryResetApplied = false;
 
-    const reloaded = makeSim(5155);
+    const reloaded = makeSim();
     const pid = reloaded.addPlayer('warrior', 'Reset', { state: saved });
     const reloadedMeta = reloaded.players.get(pid)!;
     expect(reloadedMeta.craftSkills[PRIMARY]).toBe(0); // the reset fired
@@ -449,7 +451,7 @@ describe('tier-crossing master mail (Professions 2.0)', () => {
     expect(saved.tierMailSent).toMatchObject({ [PRIMARY]: 3 });
     delete saved.masteryResetApplied;
 
-    const reloaded = makeSim(5156);
+    const reloaded = makeSim();
     const pid = reloaded.addPlayer('warrior', 'PreFlag', { state: saved });
     const reloadedMeta = reloaded.players.get(pid)!;
     expect(reloadedMeta.craftSkills[PRIMARY]).toBe(0); // the reset fired
@@ -531,7 +533,7 @@ describe('tier-crossing master mail (Professions 2.0)', () => {
     const saved = sim.serializeCharacter(sim.playerId);
     expect(saved?.tierMailSent).toEqual({ [PRIMARY]: 2, [SECONDARY]: 1, goldsmithing: 2 });
 
-    const reloaded = makeSim(5152);
+    const reloaded = makeSim();
     const pid = reloaded.addPlayer('warrior', 'Reloaded', { state: saved ?? undefined });
     const reloadedMeta = reloaded.players.get(pid)!;
     expect(reloadedMeta.tierMailSent.has('goldsmithing')).toBe(false); // self-healed
