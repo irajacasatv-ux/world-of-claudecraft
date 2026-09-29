@@ -18,6 +18,7 @@ import { waterBodies } from '../src/sim/world';
 import { stripComments } from './helpers/strip_comments';
 
 const SEED = 7;
+const NIGHTLY_SWEEP = process.env.WOC_NIGHTLY_SWEEP === '1';
 /** Assumed frame-rate floor: the rate a loaded client sinks to before the render
  *  budget sheds (the floor character_cull_core.ts sizes its lag margin on). The
  *  probe reads once per frame, so a slower frame rate shortens the lead. */
@@ -153,11 +154,16 @@ describe('water approach probe', () => {
     const cycle = Math.ceil(WATER_APPROACH_DISC_POINTS / WATER_APPROACH_READS_PER_CALL) * step;
     const r = Math.min(...waterBodies().map((lake) => lake.radius));
     const phases = 8;
+    // Every PR walks the lake centre across the cell on a 1 yd lattice (worst lead
+    // 2.15 s today); the nightly depth flag walks the half-yard lattice (2.04 s).
+    // Both clear the 1.5 s deadline by a third, and the PR lattice alone reds a
+    // mount fast enough to eat that margin.
+    const cellStep = NIGHTLY_SWEEP ? 0.5 : 1;
     let lead = Number.POSITIVE_INFINITY;
     for (let k = 0; k < phases; k++) {
       const start = WATER_APPROACH_RADIUS + WATER_APPROACH_PITCH * 3 + (k * cycle) / phases;
-      for (let cx = 0; cx < WATER_APPROACH_PITCH; cx += 0.5) {
-        for (let cz = 0; cz < WATER_APPROACH_PITCH; cz += 0.5) {
+      for (let cx = 0; cx < WATER_APPROACH_PITCH; cx += cellStep) {
+        for (let cz = 0; cz < WATER_APPROACH_PITCH; cz += cellStep) {
           for (let deg = 0; deg < 360; deg += 2) {
             const probe = createWaterApproachProbe(pond(cx, cz, r));
             const dx = Math.cos((deg * Math.PI) / 180);
