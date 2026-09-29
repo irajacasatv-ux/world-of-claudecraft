@@ -6,6 +6,7 @@ import {
   wyrmfallDailySaveFragment,
 } from '../src/sim/professions/daily_gate_load';
 import { type CharacterState, Sim } from '../src/sim/sim';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // Direct pins for the extracted load-hardening leaf (the clamps formerly
 // inlined in Sim.addPlayer; the Sim-level round-trip behavior stays pinned by
@@ -208,7 +209,13 @@ describe('the addPlayer consumer', () => {
     // The exposure this extension closes: the raw `new Set(s.delveDaily
     // .firstClearXp)` / `new Set(s.heroicDaily.marked)` inlined in addPlayer
     // THREW on a tampered non-iterable row, the unloadable-character class.
-    const seedSim = new Sim({ seed: 42, playerClass: 'warrior', autoEquip: false });
+    // The load path reads only the saved rows, so both Sims start from the empty world.
+    const seedSim = new Sim({
+      seed: 42,
+      playerClass: 'warrior',
+      autoEquip: false,
+      world: EMPTY_TEST_WORLD,
+    });
     const saved = seedSim.serializeCharacter(seedSim.playerId) as CharacterState;
     (saved as unknown as Record<string, unknown>).delveDaily = {
       date: '2026-08-14',
@@ -219,7 +226,12 @@ describe('the addPlayer consumer', () => {
       date: 'reset:20721',
       marked: 9,
     };
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+    const sim = new Sim({
+      seed: 42,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const pid = sim.addPlayer('warrior', 'Tampered', { state: saved });
     const meta = sim.players.get(pid);
     if (!meta) throw new Error('the tampered character failed to load');
