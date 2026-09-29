@@ -1,5 +1,8 @@
-import { describe, expect, it } from 'vitest';
+import { createHash } from 'node:crypto';
+import { describe, expect, it, vi } from 'vitest';
+import * as daily from '../src/sim/world_quest_daily_generation';
 import {
+  generateBonusLeyChallenge,
   generateDailyLeyChallenge,
   generateDailyLeyPuzzle,
   generateDailyMatch3Level,
@@ -128,5 +131,83 @@ describe('daily procedural world quest levels', () => {
     expect(Object.isFrozen(ley.tiles[0])).toBe(true);
     expect(Object.isFrozen(ley.source)).toBe(true);
     expect(Object.isFrozen(ley.target)).toBe(true);
+    for (const level of [1, 2]) {
+      const bonus = generateBonusLeyChallenge(0, level);
+      expect(generateBonusLeyChallenge(32, level)).toBe(bonus);
+      expect(generateBonusLeyChallenge(1, level)).not.toBe(bonus);
+      expect(Object.isFrozen(bonus)).toBe(true);
+      expect(Object.isFrozen(bonus.solution)).toBe(true);
+      expect(Object.isFrozen(bonus.puzzle.tiles[0])).toBe(true);
+    }
+    expect(generateBonusLeyChallenge(0, 1)).not.toBe(generateBonusLeyChallenge(0, 2));
+  });
+});
+
+type DailyModule = typeof daily;
+const CYCLE_DAYS = Array.from({ length: WORLD_QUEST_DAILY_GENERATION_CYCLE }, (_, day) => day);
+const MODULE = '../src/sim/world_quest_daily_generation';
+
+// Every board of every catalog in one canonical order, whatever order they were built in.
+function catalogDigest(m: DailyModule): string {
+  const boards = {
+    ley: CYCLE_DAYS.map((day) => m.generateDailyLeyChallenge(day)),
+    bonus: [1, 2].map((level) => CYCLE_DAYS.map((day) => m.generateBonusLeyChallenge(day, level))),
+    match3: CYCLE_DAYS.map((day) => m.generateDailyMatch3Level(day)),
+  };
+  return createHash('sha256').update(JSON.stringify(boards)).digest('hex');
+}
+
+// Captured on the module that built all three catalogs at load (755ef96f3e, the parent of the
+// change that made them lazy): whenever and in whatever order a board is first read, it must
+// be exactly the board the module-load build made.
+const MODULE_LOAD_CATALOG_DIGEST =
+  '463fa65cd8db2b79e4ba6f6b37dce89e702593f2aee716d139f270a760db28db';
+
+describe('the daily catalogs build on first use, and build what the module-load build did', () => {
+  it('reads the module-load boards in catalog order', () => {
+    expect(catalogDigest(daily)).toBe(MODULE_LOAD_CATALOG_DIGEST);
+  });
+
+  it('reads the same boards from a fresh module first read in reverse order', async () => {
+    vi.resetModules();
+    const fresh: DailyModule = await import(MODULE);
+    const reversed = [...CYCLE_DAYS].reverse();
+    for (const day of reversed) fresh.generateDailyMatch3Level(day);
+    for (const level of [2, 1])
+      for (const day of reversed) fresh.generateBonusLeyChallenge(day, level);
+    for (const day of reversed) fresh.generateDailyLeyChallenge(day);
+    expect(catalogDigest(fresh)).toBe(MODULE_LOAD_CATALOG_DIGEST);
+  });
+
+  it('seeds no Rng at load, and a first read builds only its own catalog or day', async () => {
+    vi.resetModules();
+    const seeds: number[] = [];
+    vi.doMock('../src/sim/rng', async (importOriginal) => {
+      const actual = await importOriginal<typeof import('../src/sim/rng')>();
+      class CountingRng extends actual.Rng {
+        constructor(seed: number) {
+          super(seed);
+          seeds.push(seed);
+        }
+      }
+      return { ...actual, Rng: CountingRng };
+    });
+    try {
+      const fresh: DailyModule = await import(MODULE);
+      expect(seeds).toEqual([]);
+      fresh.generateDailyMatch3Level(5);
+      fresh.generateDailyMatch3Level(37);
+      expect(seeds).toEqual([0xca7d0000 + 5]);
+      fresh.generateBonusLeyChallenge(3, 2);
+      fresh.generateBonusLeyChallenge(9, 2);
+      expect(seeds.slice(1)).toEqual(CYCLE_DAYS.map((day) => 0x1e7be000 + 6 * 0x10000 + day));
+      fresh.generateDailyLeyChallenge(0);
+      fresh.generateDailyLeyPuzzle(31);
+      expect(seeds.slice(33)).toEqual(CYCLE_DAYS.map((day) => 0x1e7be000 + day));
+      expect(seeds).toHaveLength(65);
+    } finally {
+      vi.doUnmock('../src/sim/rng');
+      vi.resetModules();
+    }
   });
 });

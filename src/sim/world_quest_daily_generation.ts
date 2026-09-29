@@ -154,7 +154,7 @@ export function generateBonusLeyChallenge(
   readonly solution: readonly number[];
 } {
   const index = Math.max(1, Math.min(WORLD_QUEST_LEY_BONUS_LEVELS, Math.floor(level))) - 1;
-  return leyBonusCatalogs()[index][variant(day)];
+  return leyBonusCatalog(index)[variant(day)];
 }
 
 export function generateBonusLeyPuzzle(day: number, level: number): WorldQuestBeamPuzzleDef {
@@ -227,8 +227,8 @@ function buildDailyMatch3Level(day: number): WorldQuestMatch3LevelDef {
   throw new Error('Daily match-three generator failed its solvability contract');
 }
 
-// Immutable derived content, built and certified once per host. Repeated UI,
-// snapshot and command reads are O(1), without any mutable module-global memo.
+// Immutable derived content, built and certified once per process on first use (the memos
+// below). Repeated UI, snapshot and command reads are O(1) and return the same frozen objects.
 function buildLeyCatalog(size: number, seedBase: number) {
   // Construction-only uniqueness state: lookup never mutates the frozen catalog.
   const routes = new Set<string>();
@@ -256,23 +256,40 @@ function buildLeyCatalog(size: number, seedBase: number) {
 }
 // The catalogs are built on first use, not at module load: each builder draws only from its
 // own fixed-seed Rng, so when it runs cannot change what it builds, and every importer that
-// never reads a daily board (most of the sim's) stops paying for all three at load.
+// never reads a daily board (most of the sim's) stops paying for them at load. Each memo is
+// write-once and never invalidated; it holds fixed-seed content, never sim, world or save
+// state. The daily ley catalog is built whole (its route dedupe spans the days in order);
+// each bonus size and each match-three day is built alone, so a first read pays only for
+// its own board. A builder that throws leaves its memo empty and throws again on every read
+// (the paired tests certify every variant, so that needs a rules change first).
+// tests/world_quest_daily_generation.test.ts pins the boards to the module-load build and
+// that the module evaluates no call at load.
 let leyCatalogMemo: ReturnType<typeof buildLeyCatalog> | undefined;
-const leyCatalog = () => (leyCatalogMemo ??= buildLeyCatalog(4, 0x1e7be000));
+function leyCatalog(): ReturnType<typeof buildLeyCatalog> {
+  if (leyCatalogMemo === undefined) leyCatalogMemo = buildLeyCatalog(4, 0x1e7be000);
+  return leyCatalogMemo;
+}
 // Bonus catalogs: their own seed lanes, so neither depends on the daily draws.
-let leyBonusCatalogsMemo: readonly ReturnType<typeof buildLeyCatalog>[] | undefined;
-const leyBonusCatalogs = () =>
-  (leyBonusCatalogsMemo ??= Object.freeze(
-    WORLD_QUEST_LEY_BONUS_SIZES.map((size) => buildLeyCatalog(size, 0x1e7be000 + size * 0x10000)),
-  ));
-let match3CatalogMemo: readonly WorldQuestMatch3LevelDef[] | undefined;
-const match3Catalog = () =>
-  (match3CatalogMemo ??= Object.freeze(
-    Array.from({ length: WORLD_QUEST_DAILY_GENERATION_CYCLE }, (_, day) =>
-      buildDailyMatch3Level(day),
-    ),
-  ));
+const leyBonusCatalogMemo: (ReturnType<typeof buildLeyCatalog> | undefined)[] = [];
+function leyBonusCatalog(index: number): ReturnType<typeof buildLeyCatalog> {
+  let catalog = leyBonusCatalogMemo[index];
+  if (catalog === undefined) {
+    const size = WORLD_QUEST_LEY_BONUS_SIZES[index];
+    catalog = buildLeyCatalog(size, 0x1e7be000 + size * 0x10000);
+    leyBonusCatalogMemo[index] = catalog;
+  }
+  return catalog;
+}
+const match3LevelMemo: (WorldQuestMatch3LevelDef | undefined)[] = [];
+function match3Level(slot: number): WorldQuestMatch3LevelDef {
+  let level = match3LevelMemo[slot];
+  if (level === undefined) {
+    level = buildDailyMatch3Level(slot);
+    match3LevelMemo[slot] = level;
+  }
+  return level;
+}
 
 export function generateDailyMatch3Level(day: number): WorldQuestMatch3LevelDef {
-  return match3Catalog()[variant(day)];
+  return match3Level(variant(day));
 }
