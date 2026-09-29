@@ -76,12 +76,23 @@
 import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { methodBody } from './helpers/method_body';
 import { readMethodCallSites } from './helpers/method_call_sites';
 import { expectScansOnlyThroughSharedWalkers } from './helpers/scan_guard_self_audit';
 import { stripComments } from './helpers/strip_comments';
 import { tsFilesUnder } from './helpers/ts_files_under';
+
+// The one case that imports modules (the content-channel registry, by identity)
+// reaches src/ui/i18n through the deed and reliquary channels, and that module
+// re-exports every resolved locale slice: on a PR shard's cold transform cache
+// the import alone cost this file 10 to 13 seconds. The registry's membership
+// does not read i18n at all, so the channels get the three exports they call.
+vi.mock('../src/ui/i18n', () => ({
+  getLanguage: () => 'en',
+  isPseudoActive: () => false,
+  t: (key: string) => key,
+}));
 
 const uiRoot = fileURLToPath(new URL('../src/ui/', import.meta.url));
 const hudSource = readFileSync(new URL('../src/ui/hud.ts', import.meta.url), 'utf8');
