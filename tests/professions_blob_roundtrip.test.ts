@@ -21,7 +21,10 @@ import { GATHER_NODES } from '../src/sim/content/gather_nodes';
 import { PRE_TRAINING_RECIPE_IDS } from '../src/sim/professions/training';
 import { type CharacterState, type PlayerMeta, Sim } from '../src/sim/sim';
 
-const makeSim = (seed = 21) => new Sim({ seed, playerClass: 'warrior', autoEquip: false });
+// Every reload builds a FRESH Sim on the file's one seed: a save/load
+// round trip needs a fresh world, not a different one, and each distinct
+// seed paid a fresh full-world collider-grid build (about half a second).
+const makeSim = () => new Sim({ seed: 21, playerClass: 'warrior', autoEquip: false });
 
 // Every professions-owned key on CharacterState, pinned as a literal list so a
 // rename fails the presence pin instead of silently leaving the sweep.
@@ -225,7 +228,7 @@ describe('the professions blob round-trip sweep', () => {
     // values sit inside their normalizers' accepted ranges, so the documented
     // normalizers are pass-throughs here; the clamp arm below is where they
     // move a value).
-    const second = makeSim(22);
+    const second = makeSim();
     const pid2 = second.addPlayer('warrior', 'Sweep', { state: s1 });
     const s2 = second.serializeCharacter(pid2) as CharacterState;
     for (const field of PROFESSIONS_BLOB_FIELDS) {
@@ -247,7 +250,7 @@ describe('the professions blob round-trip sweep', () => {
     // production behavior at a later clock (the remaining legitimately
     // shrinks, monotonically, flooring at field omission) is what
     // tests/professions_node_persist.test.ts owns.
-    const third = makeSim(23);
+    const third = makeSim();
     const pid3 = third.addPlayer('warrior', 'Sweep2', { state: s2 });
     const s3 = third.serializeCharacter(pid3) as CharacterState;
     expect(s3).toEqual(s2);
@@ -285,7 +288,7 @@ describe('the professions blob round-trip sweep', () => {
       expect(s1[missing]).toBeDefined(); // the deletion below deletes something real
       delete s1[missing];
 
-      const reloaded = makeSim(25);
+      const reloaded = makeSim();
       const pid = reloaded.addPlayer('warrior', 'ParentShape', { state: s1 });
       const s2 = reloaded.serializeCharacter(pid) as CharacterState;
       expect(s2[missing], `${missing} resurrected from an absent field`).toBeUndefined();
@@ -303,7 +306,7 @@ describe('the professions blob round-trip sweep', () => {
         ).toBe(JSON.stringify(s1[field]));
       }
       // And the settle is a fixed point: a second load changes nothing.
-      const again = makeSim(26);
+      const again = makeSim();
       const pid2 = again.addPlayer('warrior', 'ParentShape2', { state: s2 });
       const s3 = again.serializeCharacter(pid2) as CharacterState;
       expect(s3).toEqual(s2);
@@ -322,7 +325,7 @@ describe('the professions blob round-trip sweep', () => {
     s1.professions = { ...s1.gatheringProficiency };
     s1.craftSkills = { ...s1.craftSkills, weaponcrafting: 999 };
 
-    const reloaded = makeSim(24);
+    const reloaded = makeSim();
     const pid = reloaded.addPlayer('warrior', 'Clamped', { state: s1 });
     const meta = reloaded.players.get(pid) as PlayerMeta;
     expect(meta.gatheringProficiency.mining).toBe(100); // gathering cap
