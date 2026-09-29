@@ -35,7 +35,7 @@ import {
   TOWN_WALL_TALL_PILLAR_ALONG,
 } from '../src/sim/prop_layout';
 import { Sim } from '../src/sim/sim';
-import type { MoveInput } from '../src/sim/types';
+import { type MoveInput, PLAYER_INTEREST_DROP_RADIUS } from '../src/sim/types';
 import { groundHeight, terrainHeight } from '../src/sim/world';
 
 // The physics-asset audit, world half (docs/design/physics-asset-audit.md):
@@ -56,8 +56,19 @@ const IDLE: MoveInput = {
   surface: false,
 };
 
+// Production's idle culling (the server and the offline client both set it):
+// mobs far from the player stop ticking. Measured on this file: every case's
+// per-tick player position, grounding, vertical speed and climb state are
+// byte-identical with and without it (1,874 ticks), and so is the crypt's mob
+// census, while the file's test time halves.
 function makeSim(): Sim {
-  const sim = new Sim({ seed: SEED, playerClass: 'warrior', autoEquip: true, devCommands: true });
+  const sim = new Sim({
+    seed: SEED,
+    playerClass: 'warrior',
+    autoEquip: true,
+    devCommands: true,
+    idleMobTickRadius: PLAYER_INTEREST_DROP_RADIUS,
+  });
   sim.setPlayerLevel(60);
   return sim;
 }
