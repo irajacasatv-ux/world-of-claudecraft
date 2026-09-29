@@ -4,11 +4,19 @@ import { MOBS } from '../src/sim/data';
 import { createMob } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
 import type { Entity } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 type TestSim = Sim & { nextId: number; addEntity(e: Entity): void; ctx: never };
 
+// The breath lands on dummies each case spawns beside the mage, so the
+// overworld's camps and NPCs are pure overhead: the empty world serves.
 function fireMage(): { sim: TestSim; p: Entity } {
-  const sim = new Sim({ seed: 141, playerClass: 'mage', autoEquip: true }) as TestSim;
+  const sim = new Sim({
+    seed: 141,
+    playerClass: 'mage',
+    autoEquip: true,
+    world: EMPTY_TEST_WORLD,
+  }) as TestSim;
   sim.setPlayerLevel(20);
   expect(sim.setSpec('fire')).toBe(true);
   sim.tick();
