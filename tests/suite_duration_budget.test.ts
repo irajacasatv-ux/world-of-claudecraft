@@ -82,10 +82,6 @@ const FILE_ALLOWANCE_LEDGER: ReadonlyMap<string, number> = new Map([
   // case ran two children under 1,200s before.
   ['tests/nythraxis_matrix.test.ts', 420_000],
   ['tests/owned_class_balance_dps_probes.test.ts', 360_000],
-  // Lane-owned Groveheart harness: the eight-probe healer contract at 300s, plus
-  // the one-probe heal-over-time case at 60s since 2026-09-28 (it ran within a
-  // second of the 20s default on the release nightly and past it on a busier one).
-  ['tests/owned_class_balance_groveheart.test.ts', 360_000],
   // Lane-owned raid harness, likewise unseen until the trailing-comma fix.
   ['tests/owned_class_raid_armor_avoidance.test.ts', 360_000],
   // The shared PostgreSQL escrow fixture carries a 120s setup hook and a 30s
@@ -96,15 +92,6 @@ const FILE_ALLOWANCE_LEDGER: ReadonlyMap<string, number> = new Map([
   // one 120s measurement case, whose template interpolation holds an object
   // literal, was invisible to the parser until then, not new.
   ['tests/woc_market_delivery_pg_integration.test.ts', 450_000],
-  // The 2026-08-23 warlock viability round doubled each anchor file's scope
-  // (the heroic Nythraxis contract plus the historical level-20 tripwire,
-  // four probe runs each); same suite family as the druid/owned probes above.
-  ['tests/warlock_anchor_affliction.test.ts', 480_000],
-  ['tests/warlock_anchor_demonology.test.ts', 480_000],
-  ['tests/warlock_anchor_destruction.test.ts', 480_000],
-  // Three 300s probe windows since the round added destruction's (it had
-  // no five-minute coverage at all before).
-  ['tests/warlock_five_minute_windows.test.ts', 360_000],
 ]);
 
 // The corpus is every .ts and .mjs under tests/, NOT just *.test.ts: vitest
