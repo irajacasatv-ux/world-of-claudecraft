@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest';
 import { Sim } from '../src/sim/sim';
 import type { Entity } from '../src/sim/types';
 import { dist2d } from '../src/sim/types';
-import { WORLD_WITHOUT_HUB_YARD } from './helpers/hub_yard';
+import { RL_TEST_WORLD } from './sim_shared';
 
 type TestSim = Sim & {
   dealDamage(
@@ -25,12 +25,14 @@ function testSim(sim: Sim): TestSim {
   return sim as unknown as TestSim;
 }
 
+// Each case parks one wild mob on the player and rewrites its level, so a world of
+// one wolf camp (no NPCs, so no hub yard dummy either) serves every case.
 function makeSim() {
   return new Sim({
     seed: 42,
     playerClass: 'warrior',
     autoEquip: true,
-    world: WORLD_WITHOUT_HUB_YARD,
+    world: RL_TEST_WORLD,
   });
 }
 
