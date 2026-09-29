@@ -6,6 +6,7 @@ import { Sim } from '../src/sim/sim';
 import type { PlayerClass } from '../src/sim/types';
 import { groundHeight } from '../src/sim/world';
 import { OPEN_FIELD, placePlayerInOpenField } from './helpers/open_field';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // Ground-targeted casting primitive (docs/design/arpg-spell-mechanics.md), exercised
 // through Flamestrike (mage, targetMode 'position', range 30). The deterministic sim
@@ -19,8 +20,10 @@ function place(sim: Sim, id: number, x: number, z: number): void {
   e.prevPos = { ...e.pos };
 }
 
+// The empty world: every case places the caster and the wolves it hits, so the
+// overworld's camps and NPCs only added construction and ticks.
 function makeMage(): { sim: Sim; pid: number } {
-  const sim = new Sim({ seed: 7, playerClass: 'mage', noPlayer: true });
+  const sim = new Sim({ seed: 7, playerClass: 'mage', noPlayer: true, world: EMPTY_TEST_WORLD });
   const pid = sim.addPlayer('mage', 'Mag');
   placePlayerInOpenField(sim, pid);
   sim.setPlayerLevel(20, pid); // plenty of level for Flamestrike
@@ -136,7 +139,7 @@ describe('ground-targeted casting (Flamestrike)', () => {
 // lingering ground zones.
 describe('ground-targeted casting (thematic per-class spells)', () => {
   function castGroundSpell(cls: PlayerClass, spell: string, aim: { x: number; z: number }): Sim {
-    const sim = new Sim({ seed: 7, playerClass: cls, noPlayer: true });
+    const sim = new Sim({ seed: 7, playerClass: cls, noPlayer: true, world: EMPTY_TEST_WORLD });
     const pid = sim.addPlayer(cls, 'Caster');
     sim.setPlayerLevel(20, pid);
     if (cls === 'shaman' && !sim.setSpec('elemental', pid)) throw new Error('no elemental spec');
@@ -200,7 +203,12 @@ describe('ground-targeted casting (thematic per-class spells)', () => {
   it('Rain of Fire creates an instant lingering zone that damages the aimed area', () => {
     // Flat dungeon-floor band (x > 600) for deterministic clear line-of-sight.
     const FLAT_X = 700;
-    const sim = new Sim({ seed: 7, playerClass: 'warlock', noPlayer: true });
+    const sim = new Sim({
+      seed: 7,
+      playerClass: 'warlock',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const pid = sim.addPlayer('warlock', 'Lock');
     sim.setPlayerLevel(20, pid);
     const me = sim.entities.get(pid);
