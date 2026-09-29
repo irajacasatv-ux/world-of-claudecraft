@@ -252,8 +252,10 @@ The recurring causes, each measured on this suite:
   a case that genuinely needs the coordinator in a small `Hud.prototype` rig file of its own.
 - Nothing framework-specific in the global `setupFiles` (`tests/vitest_setup_scope.test.ts`):
   every file pays for it before its first case.
-- A determinism check reuses its first run (the parity gate records a scenario twice, not three
-  times).
+- A determinism check reuses its first run, and so does every check that only reads a run: the
+  parity gate records each scenario twice (the determinism pair, the one PR check for state
+  leaking between Sims) and its coverage cases read the gate's first recording instead of
+  making a third (`tests/parity/CLAUDE.md`).
 - In a bare local run the long-sims lane files are opt-in (`WOC_LANE_SUITES=1`, or name the
   file); both gates opt in on every vitest leg.
 

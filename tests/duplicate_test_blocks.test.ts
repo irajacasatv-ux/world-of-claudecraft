@@ -120,6 +120,10 @@ describe('no test file registers the same block twice (#2506)', () => {
     // NEW empty file still fails, and each one is proved below to really
     // delegate rather than just being empty.
     const DELEGATED_TO_A_SHARED_RUNNER = [
+      'parity/coverage_a.test.ts',
+      'parity/coverage_b.test.ts',
+      'parity/coverage_c.test.ts',
+      'parity/coverage_d.test.ts',
       'parity/parity_a.test.ts',
       'parity/parity_b.test.ts',
       'parity/parity_c.test.ts',

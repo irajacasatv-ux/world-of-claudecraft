@@ -85,9 +85,14 @@ pets, affixes, ground AoE), arena/duel/fiesta, delves + lockpick, dungeons/raids
 market, bank, trade, chat/social, talents, xp/prestige, casting, consumable auras,
 and mob lifecycle. Every playable class appears in some scenario; enumerate with
 `grep -o "playerClass: '[a-z]*'\|addPlayer('[a-z]*'" tests/parity/scenarios.ts | sort -u`.
-The coverage shards (`coverage_a..d.test.ts`) assert each scenario's subsystem actually
+The coverage cases (`coverage_cases_a..d.ts`) assert each scenario's subsystem actually
 FIRES (not merely named in a comment). Read those files, never a hand-written list,
-before adding a scenario.
+before adding a scenario. A coverage case names the scenario it reads before the first
+colon of its title (`'arena_1v1: a match resolves (arenaEnd)'`); a case that reads
+several scenarios is listed in `MULTI_SCENARIO_CASES` in `run_scenarios.ts`. The runner
+runs each case right after its scenario's gate case, on the gate's FIRST recording
+(`recording_cache.ts`), so coverage costs no recording of its own; a case that reads a
+scenario it did not declare throws rather than quietly recording it again.
 
 The exemplar for closing a documented gap with a driving scenario:
 `professions_fishing_session` runs the fishing lifecycle through the REAL entry
@@ -97,10 +102,32 @@ post-completion cast). It exists because the phase-10 reel-arm hoist above the
 in-combat and swim denials was a guard reorder the old cancel-only coverage
 (scenarios hand-assigning `castingAbility`) could not see.
 
-Layout note: the gate is SHARDED for wall-time (`parity_a..g.test.ts` +
-`coverage_a..d.test.ts`, contiguous scenario slices over the shared runner in
-`run_scenarios.ts`); `npx vitest run tests/parity` and `UPDATE_PARITY=1` work
-unchanged, and a shard minting run touches only its own slice's goldens.
+Layout note: the gate is SHARDED for wall-time: eleven one-line shard files
+(`parity_a..g.test.ts` + `coverage_a..d.test.ts`; the coverage files kept their names
+and their CI shard-weight rows, but are ordinary gate shards), each a contiguous
+scenario slice over the shared runner in `run_scenarios.ts`, which runs every
+scenario's gate case followed by its coverage cases. `npx vitest run tests/parity` and
+`UPDATE_PARITY=1` work unchanged (coverage still runs when minting), and a shard minting
+run touches only its own slice's goldens. `-t` filters still select by the full test
+names, which did not change; a coverage case selected without its gate case records its
+scenario itself.
+
+## The determinism pair (why the gate records every scenario twice)
+
+The golden comparison catches any drift from the committed trace, but it is blind to one
+class the pair exists for: state that leaks from one Sim into the next Sim in the same
+process (a module-level counter, cache, or shared content array one Sim writes and a later
+Sim reads). Within a shard file the golden comparison catches such a leak only when a LATER
+scenario in the same file reads what an earlier one wrote; a leak confined to one
+scenario's own subsystem leaves that scenario's first recording (the one compared with the
+golden) untouched, and only its second recording sees it. Measured 2026-09-28 (the parity
+record under `docs/freeholds/qa/test-cost-2026-09-29/`): a leak every Sim reads dies under
+the golden comparison alone, but a one-scenario leak (the fishing catch table mutated in
+place after its roll) survives the golden comparison and a pair on a named subset of
+scenarios, and dies only under the full pair. No subset keeps that class caught, because
+the class lives wherever the next leak is written, so the full pair stays on every PR. It
+costs about a third of the gate (the second recording skips the per-seed collider
+bootstrap the first one pays).
 
 ## Known boundaries (what is NOT pinned, read before extracting these)
 
