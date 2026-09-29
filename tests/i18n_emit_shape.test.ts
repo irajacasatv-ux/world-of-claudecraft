@@ -185,6 +185,14 @@ describe('i18n emit determinism + orphan-sweep (I18N_OUT_DIR override)', () => {
     return out;
   }
 
+  // TWO builds per leg. The first emits into a fresh directory. Before the second,
+  // the test plants a stale slice from a (hypothetically) removed locale and
+  // diverges one LIVE slice. The regen must then show every writer arm at once,
+  // each on its own files: the orphan is swept, the diverged slice is rewritten
+  // back (the rewrite arm), every other slice keeps its mtime (the byte-identical
+  // skip arm, which content alone cannot tell from a same-bytes rewrite), and the
+  // directory is byte-identical to the first build (determinism). The former
+  // separate no-op and diverge regens exercised the same per-file arms.
   function checkEmit(scriptRel: string, prefix: string, expectedFiles: string[]) {
     const scratch = mkdtempSync(path.join(os.tmpdir(), prefix));
     try {
@@ -198,46 +206,13 @@ describe('i18n emit determinism + orphan-sweep (I18N_OUT_DIR override)', () => {
         'no leftover .tmp',
       ).toBe(false);
 
-      // Plant a stale slice from a (hypothetically) removed locale, then regenerate:
-      // the sweep must delete it and the rest must be byte-identical (determinism).
       const orphan = path.join(scratch, 'orphan_zz.ts');
       writeFileSync(orphan, '// stale slice from a removed locale\n');
-      runBuild(scriptRel, scratch);
-
-      expect(existsSync(orphan), 'orphan *.ts is swept on regen').toBe(false);
-      expect(snapshotTs(scratch), 'regeneration is byte-identical (deterministic)').toEqual(first);
-      expect(
-        readdirSync(scratch).some((f) => f.endsWith('.tmp')),
-        'no leftover .tmp',
-      ).toBe(false);
-
-      // A no-op regen over an already-fresh directory must skip every slice: no
-      // tmp write, no rename, mtime untouched. This is the arm the skip actually
-      // adds; pin it directly via mtime rather than only via byte content, since
-      // byte-identical content alone cannot distinguish "skipped" from "rewrote
-      // the exact same bytes". Excludes translation_keys.generated.ts: the game
-      // build writes that file unconditionally outside writeModuleDir, so it is
-      // not part of the skip contract this test is pinning.
-      const moduleFiles = Object.keys(first).filter((f) => f !== 'translation_keys.generated.ts');
-      const beforeMtimes = Object.fromEntries(
-        moduleFiles.map((f) => [f, statSync(path.join(scratch, f)).mtimeMs]),
-      );
-      runBuild(scriptRel, scratch);
-      const afterMtimes = Object.fromEntries(
-        moduleFiles.map((f) => [f, statSync(path.join(scratch, f)).mtimeMs]),
-      );
-      expect(afterMtimes, 'a no-op regen leaves every slice mtime untouched').toEqual(beforeMtimes);
-
-      // Plant divergent bytes into a LIVE slice (not an orphan) and regenerate: the
-      // skip arm must not fire for it, and regen must restore the original content.
-      // This exercises the arm the PR made load-bearing (content differs, so still
-      // rewrite): an inverted or mis-scoped skip condition would leave this file
-      // stale and every other assertion in this test would stay green.
       // Named explicitly rather than picked as Object.keys(first)[0]: readdirSync order is
       // filesystem order, not sorted, and on the game leg that set includes
-      // translation_keys.generated.ts (written unconditionally OUTSIDE writeModuleDir, see
-      // above). If that file happened to land first, this assertion would pass without ever
-      // exercising the skip condition it exists to pin. 'pending.ts' is present on both legs.
+      // translation_keys.generated.ts (written unconditionally OUTSIDE writeModuleDir). If
+      // that file were the one diverged, its restore would prove nothing about the skip
+      // condition. 'pending.ts' is present on both legs.
       const divergedFile = 'pending.ts';
       expect(
         Object.hasOwn(first, divergedFile),
@@ -245,12 +220,26 @@ describe('i18n emit determinism + orphan-sweep (I18N_OUT_DIR override)', () => {
       ).toBe(true);
       const divergedPath = path.join(scratch, divergedFile);
       writeFileSync(divergedPath, '// diverged: this must be overwritten by the next regen\n');
+      // The skip contract covers the writeModuleDir slices that still hold their
+      // bytes: not the diverged one, and not translation_keys.generated.ts, which
+      // the game build writes unconditionally outside writeModuleDir.
+      const skippedFiles = Object.keys(first).filter(
+        (f) => f !== 'translation_keys.generated.ts' && f !== divergedFile,
+      );
+      const mtimes = () =>
+        Object.fromEntries(skippedFiles.map((f) => [f, statSync(path.join(scratch, f)).mtimeMs]));
+      const beforeMtimes = mtimes();
       runBuild(scriptRel, scratch);
+
+      expect(existsSync(orphan), 'orphan *.ts is swept on regen').toBe(false);
       expect(
         readFileSync(divergedPath, 'utf8'),
         'a diverged live slice is rewritten back to the fresh content',
       ).toBe(first[divergedFile]);
-      expect(snapshotTs(scratch), 'the rest of the directory is unaffected').toEqual(first);
+      expect(mtimes(), 'a regen leaves every unchanged slice mtime untouched').toEqual(
+        beforeMtimes,
+      );
+      expect(snapshotTs(scratch), 'regeneration is byte-identical (deterministic)').toEqual(first);
       expect(
         readdirSync(scratch).some((f) => f.endsWith('.tmp')),
         'no leftover .tmp',
