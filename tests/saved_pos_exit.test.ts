@@ -15,6 +15,7 @@ import {
 } from '../src/sim/data';
 import { resolveSavedPosExit, savedZoneId } from '../src/sim/saved_pos_exit';
 import { type CharacterState, Sim } from '../src/sim/sim';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // Derived from the band constants so the next instance-plane move keeps these
 // honest: dungeon 0 (Hollow Crypt) sits 700 yd past the plane base, the delve
@@ -132,8 +133,11 @@ describe('savedZoneId', () => {
 
 describe('savedZoneId agrees with where Sim.addPlayer lands the character', () => {
   const SEED = 2307;
+  // Where addPlayer lands a save reads the door table and the active world's
+  // terrain, neither of which the Sim's own spawn content changes, so the Sims
+  // run on the empty world.
   const baseState = (): CharacterState => {
-    const source = new Sim({ seed: SEED, playerClass: 'warrior' });
+    const source = new Sim({ seed: SEED, playerClass: 'warrior', world: EMPTY_TEST_WORLD });
     const state = source.serializeCharacter(source.playerId);
     if (!state) throw new Error('failed to create the saved-state fixture');
     return state;
@@ -149,7 +153,12 @@ describe('savedZoneId agrees with where Sim.addPlayer lands the character', () =
       LEGACY_SUNKEN_BASTION,
     ];
     for (const pos of cases) {
-      const sim = new Sim({ seed: SEED, playerClass: 'warrior', noPlayer: true });
+      const sim = new Sim({
+        seed: SEED,
+        playerClass: 'warrior',
+        noPlayer: true,
+        world: EMPTY_TEST_WORLD,
+      });
       const pid = sim.addPlayer('warrior', 'Saved', {
         state: { ...structuredClone(base), pos: { ...pos } },
       });
