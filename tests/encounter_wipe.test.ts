@@ -3,13 +3,23 @@
 // is an encounter failure, not a survivable damage check: ordinary immunity
 // (Cold Coffin stasis) and cheat-death wards must not outlive it, while
 // explicit dev/GM invulnerability must.
+//
+// Every case builds its rig on one seed and the wolf-only world: the helper
+// reads no seed and no world content, it only needs hostile ownerless mobs to
+// stand in for the boss and the source override.
 import { describe, expect, it } from 'vitest';
 import { resolveEncounterWipe } from '../src/sim/encounters/encounter_wipe';
 import { Sim } from '../src/sim/sim';
 import type { Entity } from '../src/sim/types';
+import { WOLF_TEST_WORLD } from './sim_shared';
 
-function wipeRig(seed = 42): { sim: Sim; boss: Entity } {
-  const sim = new Sim({ seed, playerClass: 'warrior', devCommands: true });
+function wipeRig(): { sim: Sim; boss: Entity } {
+  const sim = new Sim({
+    seed: 42,
+    playerClass: 'warrior',
+    devCommands: true,
+    world: WOLF_TEST_WORLD,
+  });
   const boss = [...sim.entities.values()].find(
     (entity) => entity.kind === 'mob' && entity.ownerId === null && entity.hostile && !entity.dead,
   );
@@ -19,7 +29,7 @@ function wipeRig(seed = 42): { sim: Sim; boss: Entity } {
 
 describe('resolveEncounterWipe', () => {
   it('kills an unprotected player outright', () => {
-    const { sim, boss } = wipeRig(42);
+    const { sim, boss } = wipeRig();
     sim.player.hp = sim.player.maxHp;
 
     resolveEncounterWipe(sim.ctx, boss, [sim.player], 'Terminal Wipe');
@@ -29,7 +39,7 @@ describe('resolveEncounterWipe', () => {
   });
 
   it('kills a full-health player through Cold Coffin stasis immunity', () => {
-    const { sim, boss } = wipeRig(43);
+    const { sim, boss } = wipeRig();
     sim.player.hp = sim.player.maxHp;
     sim.player.auras.push({
       id: 'ice_block',
@@ -49,7 +59,7 @@ describe('resolveEncounterWipe', () => {
   });
 
   it('kills through a cheat-death guardian ward instead of letting it save the raid', () => {
-    const { sim, boss } = wipeRig(44);
+    const { sim, boss } = wipeRig();
     sim.player.hp = sim.player.maxHp;
     sim.player.auras.push({
       id: 'sacred_bulwark',
@@ -70,7 +80,7 @@ describe('resolveEncounterWipe', () => {
   });
 
   it('preserves GM invulnerability', () => {
-    const { sim, boss } = wipeRig(45);
+    const { sim, boss } = wipeRig();
     sim.player.gm = true;
     sim.player.hp = sim.player.maxHp;
 
@@ -81,7 +91,7 @@ describe('resolveEncounterWipe', () => {
   });
 
   it('emits the nova spellfx from the boss before the damage lands', () => {
-    const { sim, boss } = wipeRig(47);
+    const { sim, boss } = wipeRig();
     sim.player.hp = sim.player.maxHp;
 
     resolveEncounterWipe(sim.ctx, boss, [sim.player], 'Terminal Wipe');
@@ -109,7 +119,7 @@ describe('resolveEncounterWipe', () => {
   });
 
   it('attributes the nova, the damage, and the kill to an explicit source override', () => {
-    const { sim, boss } = wipeRig(48);
+    const { sim, boss } = wipeRig();
     const override = [...sim.entities.values()].find(
       (entity) =>
         entity.kind === 'mob' &&
@@ -142,7 +152,7 @@ describe('resolveEncounterWipe', () => {
     // never double-fires. Callers that want dead entries excluded filter
     // eagerly at resolution start (Varkhul's wipeEncounter does). A future
     // per-iteration dead-skip must consciously rewrite this test.
-    const { sim, boss } = wipeRig(49);
+    const { sim, boss } = wipeRig();
     sim.player.hp = sim.player.maxHp;
 
     resolveEncounterWipe(sim.ctx, boss, [sim.player, sim.player], 'Terminal Wipe');
@@ -160,7 +170,7 @@ describe('resolveEncounterWipe', () => {
   });
 
   it('preserves /dev god and profiler invulnerability while dev commands are on', () => {
-    const { sim, boss } = wipeRig(46);
+    const { sim, boss } = wipeRig();
     const godPid = sim.addPlayer('warrior', 'WipeGod');
     const god = sim.entities.get(sim.players.get(godPid)?.entityId ?? -1);
     if (!god) throw new Error('WipeGod did not spawn');
