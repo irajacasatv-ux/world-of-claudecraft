@@ -75,6 +75,7 @@ import { RIFT_LEVEL_CAP, RIFT_MAX_MOB_LEVEL } from '../src/sim/rift/rift_gen';
 import type { Rng } from '../src/sim/rng';
 import { type PlayerMeta, Sim } from '../src/sim/sim';
 import { ALL_CLASSES, DEED_STAT_KEYS, type DeedCategory, MILESTONES } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const ALL = DEED_ORDER.map((id) => DEEDS[id]);
 
@@ -2092,7 +2093,13 @@ describe('trigger references resolve against the real content tables', () => {
       ['evergarden', 'chr_evergarden_first_cast'],
     ] as const;
     for (const [zoneId, deedId] of CASES) {
-      const sim = new Sim({ seed: 11, playerClass: 'warrior', autoEquip: false });
+      // The marks and the deed pass read only the player: the empty world serves.
+      const sim = new Sim({
+        seed: 11,
+        playerClass: 'warrior',
+        autoEquip: false,
+        world: EMPTY_TEST_WORLD,
+      });
       const meta = sim.meta(sim.playerId) as PlayerMeta;
       // markVisited only dirties the evaluation key; the deed evaluator runs
       // in the tick phase, so each probe ticks before reading the grant.
@@ -2127,7 +2134,12 @@ describe('trigger references resolve against the real content tables', () => {
       ['evergarden', 'chr_evergarden_gatherer'],
     ] as const;
     for (const [zoneId, deedId] of CASES) {
-      const sim = new Sim({ seed: 11, playerClass: 'warrior', autoEquip: false });
+      const sim = new Sim({
+        seed: 11,
+        playerClass: 'warrior',
+        autoEquip: false,
+        world: EMPTY_TEST_WORLD,
+      });
       const meta = sim.meta(sim.playerId) as PlayerMeta;
       sim.ctx.markVisited(meta, `gather:${zoneId}:ore`);
       sim.ctx.markVisited(meta, `gather:${zoneId}:wood`);
