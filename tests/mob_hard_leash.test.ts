@@ -7,18 +7,21 @@
 // can never be dragged to town in the first place.
 
 import { describe, expect, it } from 'vitest';
-import { MOBS, setActiveWorldContent } from '../src/sim/data';
+import { BUILTIN_WORLD, MOBS, setActiveWorldContent } from '../src/sim/data';
 import { createMob } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
-import { EMPTY_TEST_WORLD } from './sim_shared';
+import type { WorldContent } from '../src/sim/types';
 
 const SEED = 42;
 const HOME = { x: -95, z: -78 };
 
-// One world object for every case: the collider grids are cached per active
-// world content object, so a fresh object per case rebuilt them each time.
 function makeWorld(): Sim {
-  const world = EMPTY_TEST_WORLD;
+  const world: WorldContent = {
+    ...BUILTIN_WORLD,
+    camps: [],
+    npcs: {},
+    groundObjects: [],
+  };
   setActiveWorldContent(world);
   const sim = new Sim({ seed: SEED, playerClass: 'warrior', noPlayer: true, world });
   const pid = sim.addPlayer('warrior', 'Kiter');
