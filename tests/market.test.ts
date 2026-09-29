@@ -934,8 +934,16 @@ describe('the World Market: the Merchant', () => {
       (l) => l.sellerKey === marketSellerKey(seller),
       'seller listing',
     );
-    listing.expiresAt = sim.time - 1; // force it past due
-    for (let i = 0; i < 20; i++) sim.tick(); // updateMarket runs once a second
+    // The listing's own due stamp, reached by jumping the clock rather than
+    // rewriting the stamp: a second of sweeps (updateMarket runs once a
+    // second) that ends half a second short of due leaves it on the board,
+    // and the next two seconds carry a sweep past due that returns it.
+    const due = listing.expiresAt;
+    expect(Number.isFinite(due) && due > sim.time).toBe(true);
+    sim.time = due - 1.5;
+    for (let i = 0; i < 20; i++) sim.tick();
+    expect(sim.marketListings.some((l) => l.id === listing.id)).toBe(true);
+    for (let i = 0; i < 40; i++) sim.tick();
 
     expect(sim.marketListings.some((l) => l.id === listing.id)).toBe(false);
     const info = marketInfo(sim, seller);
