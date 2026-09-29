@@ -176,6 +176,15 @@ describe('Hunter v0.29 choice-row mechanics', () => {
       expect.objectContaining({ id: 'hunter_predators_pace', kind: 'buff_speed', value: 1.2 }),
     );
     expect(sim.player.auras.some((entry) => entry.id === 'hunter_predators_pace_icd')).toBe(true);
+
+    // Inside the 8 s internal cooldown a second successful generator must not proc
+    // again: the first 3 s burst has expired by now, so any burst here is a new one.
+    ready(sim, 'measured_shot');
+    sim.player.resource = sim.player.maxResource;
+    sim.castAbility('measured_shot');
+    advance(sim, 3);
+    expect(sim.player.auras.some((entry) => entry.id === 'hunter_predators_pace_icd')).toBe(true);
+    expect(sim.player.auras.some((entry) => entry.id === 'hunter_predators_pace')).toBe(false);
   });
 
   it('Receding Shell can end Shellskin early and refund unused cooldown', () => {
