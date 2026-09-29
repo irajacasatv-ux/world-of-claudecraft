@@ -182,7 +182,7 @@ describe('mob combat profiles', () => {
 
 describe('mob Entity.autoAttack tracks genuine melee engagement', () => {
   it('is true only while genuinely within melee range, clearing when out of range', () => {
-    const sim = new Sim({ seed: 7791, playerClass: 'warrior' });
+    const sim = new Sim({ seed: 7788, playerClass: 'warrior' });
     const player = sim.entities.get(sim.playerId);
     if (!player) throw new Error('expected default player');
     player.pos = { x: 0, y: 0, z: 0 };
@@ -204,7 +204,7 @@ describe('mob Entity.autoAttack tracks genuine melee engagement', () => {
   });
 
   it('clears autoAttack when a leashed mob evades home, even mid-melee', () => {
-    const sim = new Sim({ seed: 7792, playerClass: 'warrior' });
+    const sim = new Sim({ seed: 7788, playerClass: 'warrior' });
     const player = sim.entities.get(sim.playerId);
     if (!player) throw new Error('expected default player');
     player.pos = { x: 0, y: 0, z: 0 };
@@ -227,7 +227,7 @@ describe('mob Entity.autoAttack tracks genuine melee engagement', () => {
   });
 
   it('clears autoAttack when a mob loses its target', () => {
-    const sim = new Sim({ seed: 7793, playerClass: 'warrior' });
+    const sim = new Sim({ seed: 7788, playerClass: 'warrior' });
     const mob = createMob(9012, MOBS.forest_wolf, 5, { x: 0, y: 0, z: 0 });
     mob.aggroTargetId = null;
     mob.autoAttack = true;
@@ -238,7 +238,7 @@ describe('mob Entity.autoAttack tracks genuine melee engagement', () => {
   });
 
   it('pet autoAttack is false when out of melee range', () => {
-    const sim = new Sim({ seed: 7794, playerClass: 'warrior' });
+    const sim = new Sim({ seed: 7788, playerClass: 'warrior' });
     const player = sim.entities.get(sim.playerId);
     if (!player) throw new Error('expected default player');
     player.pos = { x: 0, y: 0, z: 0 };
@@ -270,7 +270,7 @@ describe('mob Entity.autoAttack tracks genuine melee engagement', () => {
   });
 
   it('pet autoAttack is true when in melee range and swinging', () => {
-    const sim = new Sim({ seed: 7795, playerClass: 'warrior' });
+    const sim = new Sim({ seed: 7788, playerClass: 'warrior' });
     const player = sim.entities.get(sim.playerId);
     if (!player) throw new Error('expected default player');
     player.pos = { x: 0, y: 0, z: 0 };
@@ -300,7 +300,7 @@ describe('mob Entity.autoAttack tracks genuine melee engagement', () => {
   });
 
   it('pet autoAttack is false when heeling', () => {
-    const sim = new Sim({ seed: 7796, playerClass: 'hunter' });
+    const sim = new Sim({ seed: 7788, playerClass: 'hunter' });
     const player = sim.entities.get(sim.playerId);
     if (!player) throw new Error('expected default player');
     player.pos = { x: 0, y: 0, z: 0 };
@@ -320,7 +320,7 @@ describe('mob Entity.autoAttack tracks genuine melee engagement', () => {
   });
 
   it('caster mob autoAttack is false when casting from in-range', () => {
-    const sim = new Sim({ seed: 7797, playerClass: 'warrior' });
+    const sim = new Sim({ seed: 7788, playerClass: 'warrior' });
     const player = sim.entities.get(sim.playerId);
     if (!player) throw new Error('expected default player');
     player.pos = { x: 0, y: 0, z: 0 };

@@ -107,7 +107,9 @@ function expectFullyMarked(slot: InvSlot | undefined, where: string): void {
   expect(marker, `${where}: craftedRecipeId`).toBe(GEAR_RECIPE);
 }
 
-function makeSim(seed: number): Sim {
+// One seed for every case: a seed the file has not built yet costs its world
+// build again, a built one is nearly free, and no row reads a seeded draw.
+function makeSim(seed = 4101): Sim {
   // VENDOR_TEST_WORLD keeps BUILTIN_WORLD.npcs untouched (bankers, trader_wilkes,
   // the_merchant, all at fixed content-authored positions) while trimming camps
   // to a single forest_wolf slice and zeroing groundObjects: exactly the ambient
@@ -152,7 +154,7 @@ describe('provenance survives every container boundary', () => {
     // bags are declared payload-free with a guard that refuses the equip the
     // moment one ever does carry a payload, rather than silently dropping it
     // on the next unequip's plain grant.
-    const sim = makeSim(4106);
+    const sim = makeSim();
     const pid = sim.playerId;
     const meta = metaFor(sim, pid);
     const bagId = 'linen_pouch';
@@ -176,7 +178,7 @@ describe('provenance survives every container boundary', () => {
   });
 
   it('bank: deposit -> withdraw', () => {
-    const sim = makeSim(4101);
+    const sim = makeSim();
     const pid = sim.playerId;
     const meta = metaFor(sim, pid);
     standAtBanker(sim, pid);
@@ -217,7 +219,7 @@ describe('provenance survives every container boundary', () => {
   });
 
   it('equipment: equip -> unequip', () => {
-    const sim = makeSim(4102);
+    const sim = makeSim();
     const pid = sim.playerId;
     const meta = metaFor(sim, pid);
     inv(sim, pid).push(fullSlot());
@@ -234,7 +236,7 @@ describe('provenance survives every container boundary', () => {
   });
 
   it('vendor: sell -> buy back', () => {
-    const sim = makeSim(4103);
+    const sim = makeSim();
     const pid = sim.playerId;
     const meta = metaFor(sim, pid);
     standAt(sim, pid, 'trader_wilkes');
@@ -251,7 +253,7 @@ describe('provenance survives every container boundary', () => {
   });
 
   it('persistence: logout -> login, across bags, bank, buyback, and equipped', () => {
-    const sim = makeSim(4104);
+    const sim = makeSim();
     const pid = sim.playerId;
     const meta = metaFor(sim, pid);
     inv(sim, pid).push(fullSlot());
@@ -262,7 +264,7 @@ describe('provenance survives every container boundary', () => {
 
     const state = sim.serializeCharacter(pid);
     expect(state).not.toBeNull();
-    const reloaded = makeSim(1);
+    const reloaded = makeSim();
     const pid2 = reloaded.addPlayer('warrior', SIGNER, { state: state ?? undefined });
     const meta2 = metaFor(reloaded, pid2);
 
@@ -335,7 +337,7 @@ describe('provenance survives every container boundary', () => {
   });
 
   it('market: list -> cancel -> collect', () => {
-    const sim = makeSim(4106);
+    const sim = makeSim();
     const pid = sim.playerId;
     standAt(sim, pid, 'the_merchant');
     inv(sim, pid).push(fullSlot());
@@ -359,7 +361,7 @@ describe('provenance survives every container boundary', () => {
     // copy that comes back is the copy that went in, plus an enchant. This is
     // the row that catches a mint rebuilt from parts, which is how apply-enchant
     // used to drop the craft marker and reopen the disenchant anti-farm gate.
-    const sim = makeSim(4107);
+    const sim = makeSim();
     const pid = sim.playerId;
     // The pre-enchant shape a masterwork proc mints (professions/crafting.ts):
     // instance payload for the seal, craftedRecipeId on the slot.
@@ -398,7 +400,7 @@ describe('provenance survives every container boundary', () => {
     // The consequence the marker exists for, asserted on behaviour rather than
     // on the marker: disenchanting your OWN crafted piece pays no Enchanting
     // skill, and routing it through an enchant first must not change that.
-    const sim = makeSim(4108);
+    const sim = makeSim();
     const pid = sim.playerId;
     const meta = metaFor(sim, pid);
     sim.addItem('copper_ore', 4, pid);

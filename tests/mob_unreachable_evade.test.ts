@@ -11,7 +11,12 @@ import { createMob } from '../src/sim/entity';
 import { CHASE_STALL_TIMEOUT } from '../src/sim/mob/reachability';
 import { generateRiftFloor } from '../src/sim/rift/rift_gen';
 import { Sim } from '../src/sim/sim';
-import { dist2d, type Entity, NYTHRAXIS_ADD_ID } from '../src/sim/types';
+import {
+  dist2d,
+  type Entity,
+  NYTHRAXIS_ADD_ID,
+  PLAYER_INTEREST_DROP_RADIUS,
+} from '../src/sim/types';
 
 // A plain rectangular floor-0 room (no shell polygon) keeps the wall face at a
 // known |x| = wallX so the pin geometry is exact, and a modest wallX keeps the
@@ -34,8 +39,24 @@ function activeInstance(sim: Sim) {
 const isPlainMeleeTrash = (e: Entity): boolean =>
   !MOBS[e.templateId]?.petSpell && !MOBS[e.templateId]?.channelHeal && e.scale <= 1.3;
 
+// Every Sim in this file shares one world seed (a seed the file has not built
+// yet costs a full-world Sim about half a second, a built one about 20 ms) and
+// production's idle culling (the server and the offline client both set it),
+// so the stall windows below stop paying for the far overworld's idle AI. The
+// rift floor is the `seed` argument to enterRift, independent of the world's.
+const WORLD_SEED = 42;
+function worldSim(extra: { devCommands?: boolean } = {}): Sim {
+  return new Sim({
+    seed: WORLD_SEED,
+    playerClass: 'warrior',
+    autoEquip: true,
+    idleMobTickRadius: PLAYER_INTEREST_DROP_RADIUS,
+    ...extra,
+  });
+}
+
 function enterRiftAt(seed: number) {
-  const sim = new Sim({ seed, playerClass: 'warrior', autoEquip: true, devCommands: true });
+  const sim = worldSim({ devCommands: true });
   sim.enterRift(seed, 20, sim.player.id);
   const inst = activeInstance(sim);
   const mobs = inst.mobIds
@@ -233,7 +254,7 @@ describe('a mob that cannot reach its target evades', () => {
 
 describe('ordinary combat never trips the stall detector', () => {
   it('an open-field chase that reaches melee keeps chaseStall at zero', () => {
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', autoEquip: true });
+    const sim = worldSim();
     sim.player.gm = true;
     let wolf: Entity | null = null;
     let bestD = Infinity;
@@ -258,7 +279,7 @@ describe('ordinary combat never trips the stall detector', () => {
   });
 
   it('a caster standing at spell range with a live target never accumulates', () => {
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', autoEquip: true });
+    const sim = worldSim();
     sim.player.gm = true;
     const entry = Object.entries(MOBS).find(
       ([, t]) => t.petSpell !== undefined && t.channelHeal === undefined,
