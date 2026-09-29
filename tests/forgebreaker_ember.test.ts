@@ -164,7 +164,7 @@ describe('Crucible raid quest rewards', () => {
   it.each(Object.values(IGNIVAR_LORE_QUEST_IDS))(
     '%s grants the displayed XP and gold once',
     (questId) => {
-      const sim = new Sim({ seed: 84, playerClass: 'warrior' });
+      const sim = new Sim({ seed: 83, playerClass: 'warrior' }); // the file's one seed
       sim.setPlayerLevel(20);
       const meta = expectDefined(sim.players.get(sim.playerId), 'raider');
       const quest = QUESTS[questId];
