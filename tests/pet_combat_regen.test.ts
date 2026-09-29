@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { summonPyreColossus } from '../src/sim/combat/destruction';
 import { MOBS } from '../src/sim/data';
+import { createMob } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
-import { dist2d } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // Regression for the "no passive health regen while not in combat" report
 // (imdutha / ruanhx): a warlock standing idle with a summoned Pyre Colossus could not
@@ -11,8 +12,14 @@ import { dist2d } from '../src/sim/types';
 // 5-second rule. Out-of-combat health regen must resume once the pet stops
 // actively trading blows; a pet that IS fighting still keeps its owner in combat.
 
-function makeWarlock(seed = 7) {
-  const sim = new Sim({ seed, playerClass: 'warlock' as any, autoEquip: true });
+// The warlock stands on the empty world and fights a mob it places itself.
+function makeWarlock() {
+  const sim = new Sim({
+    seed: 7,
+    playerClass: 'warlock' as any,
+    autoEquip: true,
+    world: EMPTY_TEST_WORLD,
+  });
   sim.setPlayerLevel(20);
   const p: any = sim.player;
   return { sim, p };
@@ -24,29 +31,21 @@ function summonInfernal(sim: Sim, p: any) {
   throw new Error('pet not created');
 }
 
-function firstWildMob(sim: Sim) {
-  let best: any = null,
-    bd = Infinity;
-  for (const e of sim.entities.values()) {
-    if (e.kind !== 'mob' || e.dead || (e as any).ownerId !== null || !e.hostile) continue;
-    // it must also fight back: a passive-aggro template never targets the
-    // pet, and the owner-combat link keys off the mob's target
-    if ((MOBS[e.templateId]?.aggroRadius ?? 0) <= 0) continue;
-    const d = dist2d(sim.player.pos, e.pos);
-    if (d < bd) {
-      bd = d;
-      best = e;
-    }
-  }
-  if (!best) throw new Error('no wild mob');
-  return best;
+// A wild level 2 webwood spider (the mob nearest the start on the full world). It
+// must also fight back: a passive-aggro template never targets the pet, and the
+// owner-combat link keys off the mob's target.
+function wildMob(sim: Sim) {
+  expect(MOBS.webwood_spider.aggroRadius ?? 0).toBeGreaterThan(0);
+  const mob = createMob((sim as any).nextId++, MOBS.webwood_spider, 2, { ...sim.player.pos });
+  (sim as any).addEntity(mob);
+  return mob as any;
 }
 
 describe('pet-held combat does not block owner health regen', () => {
   it('an idle pet (not trading blows) lets the owner regen health', () => {
     const { sim, p } = makeWarlock();
     const pet = summonInfernal(sim, p);
-    const mob = firstWildMob(sim);
+    const mob = wildMob(sim);
 
     // Give the pet a live, in-leash target it is NOT actually fighting: the mob
     // sits ~30yd off (inside PET_LEASH 40 so the pet keeps it as a target) and we
@@ -76,7 +75,7 @@ describe('pet-held combat does not block owner health regen', () => {
   it('a pet actively trading blows still keeps its owner in combat (no regen)', () => {
     const { sim, p } = makeWarlock();
     const pet = summonInfernal(sim, p);
-    const mob = firstWildMob(sim);
+    const mob = wildMob(sim);
 
     // Park a high-HP target in melee range of the pet so it keeps swinging:
     // the pet's combatTimer stays low, so the owner stays in combat.
