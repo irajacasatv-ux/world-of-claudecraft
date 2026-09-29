@@ -11,9 +11,11 @@ import {
   SUNDER_CAST_ID,
   TOOL_RECHARGE_CAST_ID,
 } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
+// The readout reads only the player's own cast state: the empty world serves.
 function makeWorld() {
-  return new Sim({ seed: 42, playerClass: 'mage', noPlayer: true });
+  return new Sim({ seed: 42, playerClass: 'mage', noPlayer: true, world: EMPTY_TEST_WORLD });
 }
 
 function errorText(events: SimEvent[]): string | undefined {
