@@ -973,7 +973,9 @@ describe('RL interface', () => {
   });
 
   it('actions execute without error and sim stays finite', () => {
-    const sim = makeRlSim('rogue', 123);
+    // Seed 42, the seed every other Sim in this file builds, so the RL world
+    // reuses its collider grids; any seed serves both RL cases.
+    const sim = makeRlSim('rogue', 42);
     for (let step = 0; step < 600; step++) {
       applyAction(sim, step % ACTIONS.length);
       for (let t = 0; t < 4; t++) sim.tick();
@@ -984,7 +986,7 @@ describe('RL interface', () => {
 
   it('same seed + same actions => identical trajectories', () => {
     const run = () => {
-      const sim = makeRlSim('warrior', 999);
+      const sim = makeRlSim('warrior', 42);
       const trace: number[] = [];
       for (let step = 0; step < 300; step++) {
         applyAction(sim, (step * 7) % ACTIONS.length);
