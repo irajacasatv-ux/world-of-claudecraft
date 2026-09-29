@@ -6,6 +6,7 @@ import { createMob } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
 import { petCanSeeStealthedTarget } from '../src/sim/threat';
 import type { Aura, Entity, PlayerClass } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // Bug: pets could still see and hit stealthed rogues (proximity detection like a
 // mob), and Vanish did not force enemies off the rogue. Pets now perceive stealth
@@ -14,8 +15,17 @@ import type { Aura, Entity, PlayerClass } from '../src/sim/types';
 
 type TestSim = Sim & { addEntity(entity: Entity): void; nextId: number };
 
-function rogue(seed = 11): TestSim {
-  const sim = new Sim({ seed, playerClass: 'rogue', autoEquip: true }) as TestSim;
+// Every case places its own mobs, pets and rivals, so each Sim stands on the empty
+// world, all on one seed (a fresh seed costs a collider grid build).
+const SEED = 11;
+
+function rogue(): TestSim {
+  const sim = new Sim({
+    seed: SEED,
+    playerClass: 'rogue',
+    autoEquip: true,
+    world: EMPTY_TEST_WORLD,
+  }) as TestSim;
   sim.setPlayerLevel(20);
   return sim;
 }
@@ -206,8 +216,13 @@ describe('a plain stealth opener is not a Vanish-tier threat wipe', () => {
 });
 
 describe('Greater Invisibility vanishes like Smokestep', () => {
-  function mageWithGreaterInvis(seed = 21): TestSim {
-    const sim = new Sim({ seed, playerClass: 'mage', autoEquip: true }) as TestSim;
+  function mageWithGreaterInvis(): TestSim {
+    const sim = new Sim({
+      seed: SEED,
+      playerClass: 'mage',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    }) as TestSim;
     sim.setPlayerLevel(20);
     if (!sim.applyTalents({ spec: 'frost', rows: { 8: 'mag_r8_greater_invis' } }))
       throw new Error('greater invisibility talent not granted');
