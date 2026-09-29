@@ -220,15 +220,39 @@ describe('suite duration budget (declared-timeout ratchet)', () => {
       ),
     ).toEqual([90_000]);
     expect(maskCommentsAndStrings(`\`\${ {a: 1}.a } b\``)).toBe('` { {a: 1}.a }  `');
-    // A slash after a keyword such as `return` starts a regex literal, not a division:
-    // read as division, the `/*` inside this pattern opened a fake block comment that
-    // hid the case after it.
-    expect(
-      per(`function f(s) { return /\\/*/.test(s); }\nit('z', () => { run(); }, 90_000); // */`),
-    ).toEqual([90_000]);
-    expect(per(`const t = typeof /x*/;\nit('y', () => { run(); }, 90_000); // */`)).toEqual([
-      90_000,
-    ]);
+    // A slash after a keyword starts a regex literal, not a division: read as division,
+    // the `/*` inside the pattern opened a fake block comment that hid the case after
+    // it. Each keyword of the scanner's list, spelled here independently.
+    for (const keyword of [
+      'return',
+      'typeof',
+      'case',
+      'in',
+      'void',
+      'yield',
+      'await',
+      'delete',
+      'throw',
+      'else',
+      'do',
+      'instanceof',
+      'new',
+    ]) {
+      expect(
+        per(`function f(s) { ${keyword} /\\/*/; }\nit('z', () => { run(); }, 90_000); // */`),
+        keyword,
+      ).toEqual([90_000]);
+    }
+    // ...but a keyword-named property, a variable named `of`, and a word a comment ends
+    // on are values, so the slash after them divides and the case still counts.
+    for (const division of [
+      "const r = x.in / 2; // it's",
+      "const r = opts?.do / 2; // it's",
+      "const of = 4; const r = of / 2; // it's",
+      "const r = total // of\n  / count; // it's",
+    ]) {
+      expect(per(`${division}\nit('a', () => { run(); }, 90_000);`), division).toEqual([90_000]);
+    }
     // A slash right after an interpolation's `${` or a closed string starts what that
     // position allows: a regex literal after `${`, a division after a string's close.
     expect(maskCommentsAndStrings(`f(x)\`\${/}/.test(s)}\``)).toBe('f(x)` {/ /.test(s)}`');
