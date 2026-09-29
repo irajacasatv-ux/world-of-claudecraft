@@ -17,6 +17,8 @@ import { Sim } from '../src/sim/sim';
 import type { SimContext } from '../src/sim/sim_context';
 import { ALL_CLASSES, type Aura } from '../src/sim/types';
 
+// Every Sim here is on seed 7: no case compares seeds or reads a seeded roll,
+// and each extra seed paid its own collider build (over a second each).
 describe('headless environment protocol validation', () => {
   it('accepts only integer action ids from the declared action space', () => {
     expect(validateAction(0)).toBe(0);
@@ -176,7 +178,7 @@ describe('headless environment protocol validation', () => {
   });
 
   it('observes Devotion, Ascension, and the real Divine Ascension readiness gate', () => {
-    const sim = new Sim({ seed: 17, playerClass: 'paladin', autoEquip: true });
+    const sim = new Sim({ seed: 7, playerClass: 'paladin', autoEquip: true });
     sim.setPlayerLevel(20);
     expect(sim.setSpec('retribution')).toBe(true);
     const slot = sim.known.findIndex((known) => known.def.id === 'divine_ascension');
@@ -194,7 +196,7 @@ describe('headless environment protocol validation', () => {
     expect(encodeObs(sim)[readyIndex]).toBe(0);
     expect(encodeObs(sim).slice(-3)).toEqual([0, 1, 1]);
 
-    const warrior = new Sim({ seed: 18, playerClass: 'warrior', autoEquip: true });
+    const warrior = new Sim({ seed: 7, playerClass: 'warrior', autoEquip: true });
     expect(encodeObs(warrior).slice(-3)).toEqual([0, 0, 0]);
   });
 
@@ -247,7 +249,7 @@ describe('headless environment protocol validation', () => {
     gainDoom(affliction as unknown as SimContext, affliction.player, 37);
     expect(encodeObs(affliction)[13]).toBeCloseTo(0.37);
 
-    const necromancy = new Sim({ seed: 8, playerClass: 'warlock', autoEquip: true });
+    const necromancy = new Sim({ seed: 7, playerClass: 'warlock', autoEquip: true });
     necromancy.setPlayerLevel(20);
     necromancy.setSpec('demonology');
     addSoulFragments(necromancy as unknown as SimContext, necromancy.player, 3);
@@ -308,7 +310,7 @@ describe('headless environment protocol validation', () => {
   });
 
   it('reports a Forbidden Reflection copy as ready despite the original cooldown', () => {
-    const sim = new Sim({ seed: 9, playerClass: 'warlock', autoEquip: true });
+    const sim = new Sim({ seed: 7, playerClass: 'warlock', autoEquip: true });
     sim.setPlayerLevel(20);
     sim.player.resource = sim.player.maxResource;
     const slot = sim.known.findIndex((ability) => ability.def.id === 'umbral_anchor');
