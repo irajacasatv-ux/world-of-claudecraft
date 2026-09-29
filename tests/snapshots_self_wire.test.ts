@@ -20,6 +20,10 @@ import type { PlayerClass } from '../src/sim/types';
 import { bareClient, broadcast, fakeWs, joinServer, lastSnap } from './helpers/bare_client';
 import { WIRE_TEST_WORLD } from './helpers/snapshot_wire';
 
+// Every standalone Sim here uses seed 7. These cases set the state they send by
+// hand, so the seed is incidental, and each further seed cost the file its own
+// collider-grid build (about half a second a seed).
+
 describe('buried hoard rarity identity wire', () => {
   it.each(['common', 'rare', 'epic', 'legendary'] as const)('round-trips %s', (rarity) => {
     const entrance = createGroundObject(90_003, '', 'Buried Hoard', { x: 2, y: 0, z: 3 });
@@ -145,7 +149,7 @@ describe('self stat wire round-trip', () => {
   });
 
   it('mirrors compact Ascension charges for a remote Paladin visual', () => {
-    const sim = new Sim({ seed: 27, playerClass: 'paladin', autoEquip: true });
+    const sim = new Sim({ seed: 7, playerClass: 'paladin', autoEquip: true });
     sim.player.paladinDevotion!.ascensionCharges = 4;
     sim.player.paladinDevotion!.ascensionRemaining = 20;
 
@@ -170,7 +174,7 @@ describe('self stat wire round-trip', () => {
   });
 
   it('omits idle Ascension charges from the wire and clears them on decode', () => {
-    const sim = new Sim({ seed: 27, playerClass: 'paladin', autoEquip: true });
+    const sim = new Sim({ seed: 7, playerClass: 'paladin', autoEquip: true });
     sim.player.paladinDevotion!.ascensionCharges = 4;
     sim.player.paladinDevotion!.ascensionRemaining = 20;
     const active = wireEntity(sim.player);
@@ -195,7 +199,7 @@ describe('self stat wire round-trip', () => {
   });
 
   it('preserves talent-expanded Ascension charge counts for remote Paladins', () => {
-    const sim = new Sim({ seed: 28, playerClass: 'paladin', autoEquip: true });
+    const sim = new Sim({ seed: 7, playerClass: 'paladin', autoEquip: true });
     sim.player.paladinDevotion!.ascensionCharges = 7;
     sim.player.paladinDevotion!.ascensionRemaining = 20;
     const wire = wireEntity(sim.player);
@@ -865,7 +869,7 @@ describe('ledge climb over the wire (cl progress)', () => {
   function climbingPlayer(): {
     e: ReturnType<Sim['entities']['get']> & object;
   } {
-    const sim = new Sim({ seed: 1, playerClass: 'warrior', noPlayer: true });
+    const sim = new Sim({ seed: 7, playerClass: 'warrior', noPlayer: true });
     const pid = sim.addPlayer('warrior', 'Scaler');
     const e = sim.entities.get(pid)!;
     return { e };
