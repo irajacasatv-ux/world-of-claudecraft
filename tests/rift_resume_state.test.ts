@@ -47,13 +47,21 @@ import { GameServer } from '../server/game';
 import { isRiftPos } from '../src/sim/data';
 import { riftStateEventFor } from '../src/sim/rift/runs';
 import { Sim } from '../src/sim/sim';
+import { WORLD_SEED } from '../src/sim/world_seed';
 import { broadcast, type FakeClient, fakeWs, joinServer } from './helpers/bare_client';
 
 const RIFT_SEED = 4242;
 const RIFT_BASE_LEVEL = 20;
 
+// The shipped seed, the one the file's GameServers boot: the rift query reads
+// no seed, and a second seed pays its own overworld bootstrap.
 function makeSoloSim(): { sim: Sim; pid: number } {
-  const sim = new Sim({ seed: 1, playerClass: 'warrior', noPlayer: true, autoEquip: true });
+  const sim = new Sim({
+    seed: WORLD_SEED,
+    playerClass: 'warrior',
+    noPlayer: true,
+    autoEquip: true,
+  });
   const pid = sim.addPlayer('warrior', 'Solo');
   return { sim, pid };
 }
