@@ -1,12 +1,17 @@
 import { describe, expect, it } from 'vitest';
 import { dispatchWorldQuestWire } from '../server/quest_command_wire';
 import { QuestWorldWireState } from '../src/net/quest_world_wire_state';
-import { GLIDER_QUEST_ID } from '../src/sim/content/world_quest_glider';
+import { GLIDER_NPC_DEF, GLIDER_QUEST_ID } from '../src/sim/content/world_quest_glider';
 import { Sim } from '../src/sim/sim';
 import { decodeGliderState } from '../src/sim/world_quest_glider_wire';
+import { EMPTY_TEST_WORLD } from './sim_shared';
+
+// Flightmaster Zephyr is the only overworld content the launch reaches for (a
+// custom world without him switches the instructor off).
+const WORLD = { ...EMPTY_TEST_WORLD, npcs: { [GLIDER_NPC_DEF.id]: GLIDER_NPC_DEF } };
 
 function setup() {
-  const sim = new Sim({ seed: 42, playerClass: 'warrior', devCommands: true });
+  const sim = new Sim({ seed: 42, playerClass: 'warrior', devCommands: true, world: WORLD });
   sim.resetDay = '2026-09-06';
   sim.chat('/dev glider start');
   const meta = sim.meta(sim.playerId)!;
