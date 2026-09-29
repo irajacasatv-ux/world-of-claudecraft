@@ -12,6 +12,7 @@ import { respawnMob } from '../src/sim/mob/lifecycle';
 import { Sim } from '../src/sim/sim';
 import type { SimContext } from '../src/sim/sim_context';
 import type { Entity, SimEvent } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const SEED = 42;
 
@@ -23,7 +24,7 @@ const updateMob = (sim: Sim, mob: Entity) =>
   (sim as unknown as { updateMob(m: Entity): void }).updateMob(mob);
 
 function makeSim() {
-  return new Sim({ seed: SEED, playerClass: 'warrior', autoEquip: true });
+  return new Sim({ seed: SEED, playerClass: 'warrior', autoEquip: true, world: EMPTY_TEST_WORLD });
 }
 
 // Spawn a pulsing rare locked in melee on the player, exactly as it stands the

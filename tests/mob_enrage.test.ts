@@ -3,31 +3,24 @@
 // mobSwing; this covers the swing-speed half folded into swingIntervalMult.
 import { describe, expect, it } from 'vitest';
 import { MOBS } from '../src/sim/data';
+import { createMob } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
 import type { Entity } from '../src/sim/types';
-import { dist2d } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 type TestSim = Sim & {
   swingIntervalMult(e: Entity): number;
 };
 
 function makeSim(seed = 42) {
-  return new Sim({ seed, playerClass: 'warrior', autoEquip: true });
+  return new Sim({ seed, playerClass: 'warrior', autoEquip: true, world: EMPTY_TEST_WORLD });
 }
 
+// A plain live mob beside the player; each case re-points its template.
 function anyMob(sim: Sim): Entity {
-  let best: Entity | null = null;
-  let bestD = Infinity;
-  for (const e of sim.entities.values()) {
-    if (e.kind !== 'mob' || e.dead || e.ownerId !== null) continue;
-    const d = dist2d(sim.player.pos, e.pos);
-    if (d < bestD) {
-      bestD = d;
-      best = e;
-    }
-  }
-  if (!best) throw new Error('No eligible mob found');
-  return best;
+  const mob = createMob(990900, MOBS.forest_wolf, 5, { ...sim.player.pos });
+  (sim as unknown as { addEntity(e: Entity): void }).addEntity(mob);
+  return mob;
 }
 
 function swingMult(sim: Sim, e: Entity): number {

@@ -19,6 +19,7 @@ import {
 } from '../src/sim/mob_combat';
 import { Sim } from '../src/sim/sim';
 import { LEASH_DISTANCE, MELEE_RANGE } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 import { assertAllocationStable } from './util/alloc_probe';
 
 describe('mob combat profiles', () => {
@@ -99,7 +100,7 @@ describe('mob combat profiles', () => {
   });
 
   it('exposes default-profile reach through the mob combat module', () => {
-    const sim = new Sim({ seed: 7788, playerClass: 'warrior' });
+    const sim = new Sim({ seed: 7788, playerClass: 'warrior', world: EMPTY_TEST_WORLD });
     const player = sim.entities.get(sim.playerId);
     if (!player) throw new Error('expected default player');
     player.pos = { x: 0, y: 0, z: 0 };
@@ -182,7 +183,7 @@ describe('mob combat profiles', () => {
 
 describe('mob Entity.autoAttack tracks genuine melee engagement', () => {
   it('is true only while genuinely within melee range, clearing when out of range', () => {
-    const sim = new Sim({ seed: 7788, playerClass: 'warrior' });
+    const sim = new Sim({ seed: 7788, playerClass: 'warrior', world: EMPTY_TEST_WORLD });
     const player = sim.entities.get(sim.playerId);
     if (!player) throw new Error('expected default player');
     player.pos = { x: 0, y: 0, z: 0 };
@@ -204,7 +205,7 @@ describe('mob Entity.autoAttack tracks genuine melee engagement', () => {
   });
 
   it('clears autoAttack when a leashed mob evades home, even mid-melee', () => {
-    const sim = new Sim({ seed: 7788, playerClass: 'warrior' });
+    const sim = new Sim({ seed: 7788, playerClass: 'warrior', world: EMPTY_TEST_WORLD });
     const player = sim.entities.get(sim.playerId);
     if (!player) throw new Error('expected default player');
     player.pos = { x: 0, y: 0, z: 0 };
@@ -227,7 +228,7 @@ describe('mob Entity.autoAttack tracks genuine melee engagement', () => {
   });
 
   it('clears autoAttack when a mob loses its target', () => {
-    const sim = new Sim({ seed: 7788, playerClass: 'warrior' });
+    const sim = new Sim({ seed: 7788, playerClass: 'warrior', world: EMPTY_TEST_WORLD });
     const mob = createMob(9012, MOBS.forest_wolf, 5, { x: 0, y: 0, z: 0 });
     mob.aggroTargetId = null;
     mob.autoAttack = true;
@@ -238,7 +239,7 @@ describe('mob Entity.autoAttack tracks genuine melee engagement', () => {
   });
 
   it('pet autoAttack is false when out of melee range', () => {
-    const sim = new Sim({ seed: 7788, playerClass: 'warrior' });
+    const sim = new Sim({ seed: 7788, playerClass: 'warrior', world: EMPTY_TEST_WORLD });
     const player = sim.entities.get(sim.playerId);
     if (!player) throw new Error('expected default player');
     player.pos = { x: 0, y: 0, z: 0 };
@@ -270,7 +271,7 @@ describe('mob Entity.autoAttack tracks genuine melee engagement', () => {
   });
 
   it('pet autoAttack is true when in melee range and swinging', () => {
-    const sim = new Sim({ seed: 7788, playerClass: 'warrior' });
+    const sim = new Sim({ seed: 7788, playerClass: 'warrior', world: EMPTY_TEST_WORLD });
     const player = sim.entities.get(sim.playerId);
     if (!player) throw new Error('expected default player');
     player.pos = { x: 0, y: 0, z: 0 };
@@ -300,7 +301,7 @@ describe('mob Entity.autoAttack tracks genuine melee engagement', () => {
   });
 
   it('pet autoAttack is false when heeling', () => {
-    const sim = new Sim({ seed: 7788, playerClass: 'hunter' });
+    const sim = new Sim({ seed: 7788, playerClass: 'hunter', world: EMPTY_TEST_WORLD });
     const player = sim.entities.get(sim.playerId);
     if (!player) throw new Error('expected default player');
     player.pos = { x: 0, y: 0, z: 0 };
@@ -320,7 +321,7 @@ describe('mob Entity.autoAttack tracks genuine melee engagement', () => {
   });
 
   it('caster mob autoAttack is false when casting from in-range', () => {
-    const sim = new Sim({ seed: 7788, playerClass: 'warrior' });
+    const sim = new Sim({ seed: 7788, playerClass: 'warrior', world: EMPTY_TEST_WORLD });
     const player = sim.entities.get(sim.playerId);
     if (!player) throw new Error('expected default player');
     player.pos = { x: 0, y: 0, z: 0 };

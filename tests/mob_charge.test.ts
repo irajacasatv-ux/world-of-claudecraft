@@ -16,6 +16,7 @@ import {
 import { MOB_CHARGE_STUN_ID, tryStartMobCharge, updateMobChargeDash } from '../src/sim/mob/charge';
 import { Sim } from '../src/sim/sim';
 import { type Aura, dist2d, type Entity, MELEE_RANGE } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const SEED = 61234;
 
@@ -69,7 +70,12 @@ const NO_CHARGE_TEMPLATE_IDS = [
 ] as const;
 
 function makeSim(): AnySim {
-  return new Sim({ seed: SEED, playerClass: 'warrior', noPlayer: true }) as AnySim;
+  return new Sim({
+    seed: SEED,
+    playerClass: 'warrior',
+    noPlayer: true,
+    world: EMPTY_TEST_WORLD,
+  }) as AnySim;
 }
 
 function teleport(sim: AnySim, e: AnyEntity, x: number, z: number): void {

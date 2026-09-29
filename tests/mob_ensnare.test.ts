@@ -3,9 +3,10 @@ import { isRooted } from '../src/sim/combat/cc';
 import { MOBS } from '../src/sim/data';
 import { createMob } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const SEED = 5150;
-const makeSim = () => new Sim({ seed: SEED, playerClass: 'warrior' });
+const makeSim = () => new Sim({ seed: SEED, playerClass: 'warrior', world: EMPTY_TEST_WORLD });
 
 describe('Ensnare web-root affix', () => {
   it('a landed webwood_spider swing can root the player in place', () => {

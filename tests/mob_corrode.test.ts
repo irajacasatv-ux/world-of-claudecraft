@@ -2,9 +2,11 @@ import { describe, expect, it } from 'vitest';
 import { MOBS } from '../src/sim/data';
 import { createMob } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const SEED = 42;
-const makeSim = () => new Sim({ seed: SEED, playerClass: 'warrior', autoEquip: true });
+const makeSim = () =>
+  new Sim({ seed: SEED, playerClass: 'warrior', autoEquip: true, world: EMPTY_TEST_WORLD });
 
 // Spawn a Deepfen Snapper next to the player, force its Acid Spit to always land,
 // and swing until a hit connects (a swing can miss/dodge).

@@ -9,9 +9,10 @@ import { MOBS } from '../src/sim/data';
 import { createMob } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
 import type { Entity } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 function makeSim(playerClass: 'warrior' | 'mage' = 'warrior') {
-  return new Sim({ seed: 7, playerClass, autoEquip: true });
+  return new Sim({ seed: 7, playerClass, autoEquip: true, world: EMPTY_TEST_WORLD });
 }
 
 // Spawn a Vale Bandit adjacent to the player, hostile and ready to swing.

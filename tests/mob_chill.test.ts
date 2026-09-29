@@ -3,6 +3,7 @@ import { MOBS } from '../src/sim/data';
 import { createMob } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
 import type { Entity } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 type TestSim = Sim & {
   nextId: number;
@@ -68,7 +69,12 @@ describe('mob chill-on-hit', () => {
   });
 
   it('a landed swing can apply a movement-slowing chill to the victim', () => {
-    const sim = new Sim({ seed: 7, playerClass: 'warrior', noPlayer: true });
+    const sim = new Sim({
+      seed: 7,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const pid = sim.addPlayer('warrior', 'Frostbit');
     const victim = placePlayer(sim, pid, 1, 0);
     const elemental = spawnElemental(sim);
@@ -94,7 +100,12 @@ describe('mob chill-on-hit', () => {
   });
 
   it('an ordinary mob with no chill field never applies the slow', () => {
-    const sim = new Sim({ seed: 7, playerClass: 'warrior', noPlayer: true });
+    const sim = new Sim({
+      seed: 7,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const pid = sim.addPlayer('warrior', 'Safe');
     const victim = placePlayer(sim, pid, 1, 0);
     const inner = testSim(sim);

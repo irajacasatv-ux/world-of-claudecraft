@@ -3,12 +3,21 @@
 // to every living player within radius. Killing one next to you should arm the
 // fuse, then hurt you when it pops — but spare anyone who ran clear in time.
 import { describe, expect, it } from 'vitest';
+import { BUILTIN_WORLD, MOBS } from '../src/sim/data';
 import { Sim } from '../src/sim/sim';
-import { MOBS } from '../src/sim/data';
+import type { Entity, WorldContent } from '../src/sim/types';
 import { terrainHeight } from '../src/sim/world';
-import type { Entity } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
-const makeSim = () => new Sim({ seed: 42, playerClass: 'warrior', autoEquip: true });
+// Only one Bog Bloat camp spawns: every case takes a real camp bloat, and no
+// other overworld camp or NPC is built or ticked.
+const BLOAT_WORLD: WorldContent = {
+  ...EMPTY_TEST_WORLD,
+  camps: BUILTIN_WORLD.camps.filter((camp) => camp.mobId === 'bog_bloat').slice(0, 1),
+};
+
+const makeSim = () =>
+  new Sim({ seed: 42, playerClass: 'warrior', autoEquip: true, world: BLOAT_WORLD });
 
 function bloat(sim: Sim): Entity {
   return [...sim.entities.values()].find(
@@ -26,13 +35,27 @@ function place(sim: Sim, e: Entity, x: number, z: number) {
 function kill(sim: Sim, victim: Entity) {
   victim.aiState = 'idle';
   victim.auras = [];
-  (sim as any).dealDamage(sim.player, victim, victim.hp + 10000, false, 'physical', null, 'hit', true);
+  (sim as any).dealDamage(
+    sim.player,
+    victim,
+    victim.hp + 10000,
+    false,
+    'physical',
+    null,
+    'hit',
+    true,
+  );
 }
 
 describe('death throes on a volatile mob', () => {
   it('bog_bloat carries the deathThroes trait', () => {
     expect(MOBS.bog_bloat.deathThroes).toEqual({
-      min: 14, max: 22, radius: 8, delay: 1.5, name: 'Caustic Spores', school: 'nature',
+      min: 14,
+      max: 22,
+      radius: 8,
+      delay: 1.5,
+      name: 'Caustic Spores',
+      school: 'nature',
     });
   });
 

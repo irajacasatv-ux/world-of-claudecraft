@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { Sim } from '../src/sim/sim';
-import { createMob } from '../src/sim/entity';
 import { MOBS } from '../src/sim/data';
+import { createMob } from '../src/sim/entity';
+import { Sim } from '../src/sim/sim';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // Demoralizing mobs sap a player victim's attack power on a landed hit
 // (classic Demoralizing Shout / Curse of Weakness), so the damage *they*
@@ -9,12 +10,19 @@ import { MOBS } from '../src/sim/data';
 describe('mob demoralize-on-hit', () => {
   it('the Restless Bones template carries a Withering Wail proc', () => {
     expect(MOBS.restless_bones.demoralize).toMatchObject({
-      ap: 20, duration: 8, name: 'Withering Wail',
+      ap: 20,
+      duration: 8,
+      name: 'Withering Wail',
     });
   });
 
   it('a landed swing weakens the victim attack power via a negative buff_ap aura', () => {
-    const sim = new Sim({ seed: 7, playerClass: 'warrior', noPlayer: true });
+    const sim = new Sim({
+      seed: 7,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const pid = sim.addPlayer('warrior', 'Weakened');
     const victim = sim.entities.get(pid)!;
     victim.pos = { x: 1, y: 0, z: 0 };
@@ -33,7 +41,13 @@ describe('mob demoralize-on-hit', () => {
     const rng = (sim as any).rng;
     const realNext = rng.next.bind(rng);
     let firstRoll = true;
-    rng.next = () => { if (firstRoll) { firstRoll = false; return 0.999; } return realNext(); };
+    rng.next = () => {
+      if (firstRoll) {
+        firstRoll = false;
+        return 0.999;
+      }
+      return realNext();
+    };
     try {
       (sim as any).mobSwing(bones, victim);
     } finally {
@@ -51,7 +65,12 @@ describe('mob demoralize-on-hit', () => {
   });
 
   it('re-applies (refreshes) rather than stacking on repeated hits', () => {
-    const sim = new Sim({ seed: 11, playerClass: 'warrior', noPlayer: true });
+    const sim = new Sim({
+      seed: 7,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const pid = sim.addPlayer('warrior', 'Hounded');
     const victim = sim.entities.get(pid)!;
     victim.pos = { x: 1, y: 0, z: 0 };
@@ -71,7 +90,12 @@ describe('mob demoralize-on-hit', () => {
   });
 
   it('an ordinary mob with no demoralize field never applies the debuff', () => {
-    const sim = new Sim({ seed: 7, playerClass: 'warrior', noPlayer: true });
+    const sim = new Sim({
+      seed: 7,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const pid = sim.addPlayer('warrior', 'Safe');
     const victim = sim.entities.get(pid)!;
     victim.pos = { x: 1, y: 0, z: 0 };

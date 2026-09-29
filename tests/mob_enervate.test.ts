@@ -1,14 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import { Sim } from '../src/sim/sim';
 import { MOBS } from '../src/sim/data';
 import { createMob } from '../src/sim/entity';
+import { Sim } from '../src/sim/sim';
 import type { PlayerClass } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const SEED = 42;
 // Level the victim to 20 so a L18 Boneclad Revenant's swing never one-shots it
 // (death would clear the aura before we can read it).
 const makeSim = (cls: PlayerClass = 'warrior') => {
-  const sim = new Sim({ seed: SEED, playerClass: cls, autoEquip: true });
+  const sim = new Sim({ seed: SEED, playerClass: cls, autoEquip: true, world: EMPTY_TEST_WORLD });
   sim.setPlayerLevel(20);
   return sim;
 };
@@ -128,7 +129,10 @@ describe('mob vitality drain (Soul Siphon)', () => {
     const old = enervate.chance;
     enervate.chance = 1;
     try {
-      for (let i = 0; i < 80; i++) { player.hp = player.maxHp; (sim as any).mobSwing(mob, player); }
+      for (let i = 0; i < 80; i++) {
+        player.hp = player.maxHp;
+        (sim as any).mobSwing(mob, player);
+      }
     } finally {
       enervate.chance = old;
     }

@@ -19,11 +19,12 @@ import { spawnBossAdds, updateBossMechanics } from '../src/sim/mob/boss_mechanic
 import { resetEvadingMob } from '../src/sim/mob/locomotion';
 import { Sim } from '../src/sim/sim';
 import type { PlayerClass } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const SEED = 88;
 
 const makeSim = (cls: PlayerClass = 'warrior') => {
-  const sim = new Sim({ seed: SEED, playerClass: cls, autoEquip: true });
+  const sim = new Sim({ seed: SEED, playerClass: cls, autoEquip: true, world: EMPTY_TEST_WORLD });
   sim.setPlayerLevel(12);
   return sim;
 };
