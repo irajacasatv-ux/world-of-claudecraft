@@ -3,6 +3,7 @@ import { MOBS } from '../src/sim/data';
 import { createMob } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
 import type { Aura, Entity } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // Classic combo-point scaling for the two utility finishers
 // (docs/design/rogue-v029-spec-engines.md, tooltip-clarity pass):
@@ -10,8 +11,13 @@ import type { Aura, Entity } from '../src/sim/types';
 // (points buy more ticks, never bigger ones), and Armor Breach lands
 // one Sunder stack per combo point for a flat 30 sec.
 
+// Every case strikes a wolf it places itself, so the rogue stands on the empty
+// world. Each finisher is one strike, so the rolls are pinned instead of riding the
+// seed's stream: with `next` at 0.9 every chance under 90 percent fails, so the
+// strike lands as a plain hit.
 function rig() {
-  const sim = new Sim({ seed: 31, playerClass: 'rogue', autoEquip: true });
+  const sim = new Sim({ seed: 31, playerClass: 'rogue', autoEquip: true, world: EMPTY_TEST_WORLD });
+  sim.rng.next = () => 0.9;
   sim.setPlayerLevel(20);
   const p = sim.player;
   p.resource = p.maxResource;
