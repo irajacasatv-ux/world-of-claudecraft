@@ -138,10 +138,16 @@ const TONIC_WIN_SEED = 2;
 // 0.862581, times 2^32 floored), whose skill-0 expansion pays
 // { count: 3, fine: 1 }: BOTH grades nonzero, so the five-fold arms below
 // can pin base and fine multiplication on one seed without any skill
-// fiddling. Every other harness seed used in this file (2, 3, 4, 5, 7, 8, 9,
-// 41, 99, 555, 777, 778, 1234, 2024, 4242) LOSES the golden roll at both
-// the tier-1 position (third draw) and the tier-3/4 position (fourth), so
-// no pre-existing payout arm multiplies (probed the same way).
+// fiddling. Every other harness seed used in this file (2, 3, 4, 5, 8, 41)
+// LOSES the golden roll at both the tier-1 position (third draw) and the
+// tier-3/4 position (fourth), so no pre-existing payout arm multiplies
+// (probed the same way).
+//
+// Seed economy: a full-world Sim costs about half a second the first time
+// the file builds a seed and a few ms after, so an arm with no probed seed
+// of its own (a same-seed twin, a determinism pair, a clock or save arm)
+// runs on the default harness seed 41, and a different-seed negative on 4.
+// Only a probed arm builds a seed of its own.
 const GOLDEN_WIN_SEED = 280;
 
 // The shipped crop's own numbers, read from the catalog rather than restated,
@@ -962,7 +968,7 @@ describe('plantCrop: the stated gate order, every arm draw-free', () => {
     expect(h.sim.countItem(SEED_ID, h.pid)).toBe(1);
     // PER-PLAYER: a second farmer's map is empty, so the same bed is free for
     // them. The shared-bed, private-plot model in one assertion.
-    const other = makeHarness(7);
+    const other = makeHarness(41);
     giveSeeds(other);
     plant(other);
     expect(other.meta.farmPlots.has(BED)).toBe(true);
@@ -1772,8 +1778,8 @@ describe('the tonic yield arm: seed expansion, never a draw', () => {
   it('pays a toniced harvest N hours late EXACTLY what an on-time one pays', () => {
     // The anti-chore equality re-proven with the knob armed: lateness is not
     // an input to the tonic roll either.
-    const onTime = makeHarness(1234);
-    const late = makeHarness(1234);
+    const onTime = makeHarness(41);
+    const late = makeHarness(41);
     for (const hx of [onTime, late]) {
       hx.sim.addItem(SEED_ID, 1, hx.pid);
       hx.sim.addItem(FARM_GROWTH_TONIC_ITEM_ID, 1, hx.pid);
@@ -2796,7 +2802,7 @@ describe('the seed-back roll (tier 3/4): the FIRST of the two harvest draws, ban
     // in the hosts describe plants tier 1 only): a wall-clock or Math.random
     // leak anywhere in the plant-ripen-harvest-seedback chain forks this.
     const run = () => {
-      const h = makeHarness(9);
+      const h = makeHarness(41);
       const plot = plantTier(h, T3_CROP, T3_HOE, 75);
       plot.survivalRoll = 0;
       const from = h.sim.events.length;
@@ -3013,7 +3019,7 @@ describe('the golden_harvest roll: the shared rare event at the farm bed', () =>
     // rather than gated: a losing golden roll still spends the bonus draw (the
     // count arm above pins that) and pays nothing, and the field stays off the
     // wire entirely so an ordinary harvest's frame is byte-identical.
-    const h = makeHarness(1);
+    const h = makeHarness(41);
     giveSeeds(h);
     plant(h);
     h.advance(CROP.durationMs);
@@ -3882,8 +3888,8 @@ describe('convertHusks: the farmer-NPC range gate (the go-live)', () => {
 
 describe('THE ANTI-CHORE INVARIANT: nothing rots', () => {
   it('pays a harvest N hours late EXACTLY what an on-time harvest pays', () => {
-    const onTime = makeHarness(1234);
-    const late = makeHarness(1234);
+    const onTime = makeHarness(41);
+    const late = makeHarness(41);
     for (const h of [onTime, late]) {
       giveSeeds(h);
       plant(h);
@@ -3932,8 +3938,8 @@ describe('the draw contract, clause by clause', () => {
     // planting spends two draws and would leave the two streams at different
     // positions, where every later mob roll diverges and the comparison
     // measures noise instead of farming.
-    const withPlot = makeHarness(2024);
-    const without = makeHarness(2024);
+    const withPlot = makeHarness(41);
+    const without = makeHarness(41);
     withPlot.meta.farmPlots.set(BED, {
       cropId: CROP_ID,
       plantedAtMs: withPlot.now(),
@@ -4042,7 +4048,7 @@ describe('the draw contract, clause by clause', () => {
     // constant of the crop TIER alone, never of the outcome or any knob.
     // Proven as a difference across outcomes on one stream: a survived and
     // a withered tier-1 harvest cost the same two draws.
-    const h = makeHarness(2024);
+    const h = makeHarness(41);
     giveSeeds(h, 2);
     plant(h, BED);
     plant(h, BED2);
@@ -4059,8 +4065,8 @@ describe('the draw contract, clause by clause', () => {
 
 describe('determinism across hosts', () => {
   it('gives two Sims on the same seed the identical plot and harvest', () => {
-    const a = makeHarness(777);
-    const b = makeHarness(777);
+    const a = makeHarness(41);
+    const b = makeHarness(41);
     for (const h of [a, b]) {
       giveSeeds(h, 2);
       plant(h, BED);
@@ -4075,7 +4081,7 @@ describe('determinism across hosts', () => {
     expect(b.meta.pendingGatherGrants).toEqual(a.meta.pendingGatherGrants);
     // Anti-vacuous: a DIFFERENT seed really does produce a different plot, so
     // the equality above is not comparing two constants.
-    const c = makeHarness(778);
+    const c = makeHarness(4);
     giveSeeds(c);
     plant(c);
     expect(c.meta.farmPlots.get(BED)?.yieldSeed).not.toBe(a.meta.farmPlots.get(BED)?.yieldSeed);
@@ -4086,8 +4092,8 @@ describe('determinism across hosts', () => {
     // same seed and the same knobbed command script produce the same plots,
     // the same payments out of the bags, the same harvest into them, and the
     // same event stream.
-    const a = makeHarness(4242);
-    const b = makeHarness(4242);
+    const a = makeHarness(41);
+    const b = makeHarness(41);
     for (const hx of [a, b]) {
       hx.sim.addItem(SEED_ID, 2, hx.pid);
       hx.sim.addItem(FARM_COMPOST_ITEM_ID, 1, hx.pid);
@@ -4122,7 +4128,7 @@ describe('determinism across hosts', () => {
   });
 
   it('survives a mid-growth save and load with its remaining duration intact', () => {
-    const h = makeHarness(555);
+    const h = makeHarness(41);
     giveSeeds(h);
     plant(h);
     const plot = h.meta.farmPlots.get(BED) as PlotState;
@@ -4132,7 +4138,7 @@ describe('determinism across hosts', () => {
     // The POST-TICK load path: a wall clock well past zero.
     const midMs = h.now();
     const ticked = new Sim({
-      seed: 555,
+      seed: 41,
       playerClass: 'warrior',
       noPlayer: true,
       lockoutNowMs: () => midMs,
@@ -4152,7 +4158,7 @@ describe('determinism across hosts', () => {
     // first tick. Under the resolved anchor semantics an epoch-ms save
     // re-anchors to the floor of 1 rather than reading as long since ready,
     // and the duration is preserved.
-    const fresh = new Sim({ seed: 555, playerClass: 'warrior', noPlayer: true });
+    const fresh = new Sim({ seed: 41, playerClass: 'warrior', noPlayer: true });
     fresh.addPlayer('warrior', 'Farmer', { state: saved });
     const freshMeta = [...fresh.players.values()][0] as PlayerMeta;
     const freshPlot = freshMeta.farmPlots.get(BED) as PlotState;
@@ -4420,7 +4426,7 @@ describe('farmNowMs is the sim OWN clock base', () => {
     // The offline and headless hosts run the UNINJECTED lockoutNowMs, which
     // counts sim-clock ms from zero. A render consumer on those hosts needs
     // this to move, or every bed would sit at its planting stage forever.
-    const fresh = new Sim({ seed: 9, playerClass: 'warrior', autoEquip: false });
+    const fresh = new Sim({ seed: 41, playerClass: 'warrior', autoEquip: false });
     const before = fresh.farmNowMs();
     expect(Number.isFinite(before)).toBe(true);
     const TICKS = 20; // one second at the 20 Hz tick
