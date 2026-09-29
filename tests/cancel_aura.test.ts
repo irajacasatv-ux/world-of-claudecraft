@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { Sim } from '../src/sim/sim';
 import type { Aura } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
+// Every case works the player's own auras, so the Sims run on the empty world.
 const makeSim = (cls: 'warrior' | 'mage' = 'warrior', seed = 42) =>
-  new Sim({ seed, playerClass: cls, autoEquip: true });
+  new Sim({ seed, playerClass: cls, autoEquip: true, world: EMPTY_TEST_WORLD });
 
 function buff(over: Partial<Aura> = {}): Aura {
   return {
