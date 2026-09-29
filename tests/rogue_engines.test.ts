@@ -7,13 +7,20 @@ import { createMob } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
 import type { Entity, SimEvent } from '../src/sim/types';
 import { auraEffectDescriptor } from '../src/ui/aura_effect';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // The rogue spec engines (docs/design/rogue-v029-spec-engines.md): Venom
 // Ritual stages arming Venomrend, the Redline echo window, the Gloam bank
 // arming Veilstrike, spec gating, and the respec cleanup contract.
 
+// Every case fights a mob it places itself, so the rogue stands on the empty world.
+// The rolls are pinned instead of riding the seed's stream: with `next` at 0.9
+// every chance under 90 percent fails (no miss, dodge or crit, no formula dodge
+// slot), so every strike lands as a plain hit and every damage roll sits at the
+// same point of its range.
 function rig(spec: string | null) {
-  const sim = new Sim({ seed: 23, playerClass: 'rogue', autoEquip: true });
+  const sim = new Sim({ seed: 23, playerClass: 'rogue', autoEquip: true, world: EMPTY_TEST_WORLD });
+  sim.rng.next = () => 0.9;
   sim.setPlayerLevel(20);
   expect(sim.applyTalents({ spec, rows: {} })).toBe(true);
   const p = sim.player;
@@ -335,11 +342,9 @@ describe('Skulduggery: the Gloam bank and its detonation', () => {
     ); // Lurker's Strike requires a dagger
     p.critChance = 0; // crits keep kind 'hit' (crit flag), so pin them off
     // Pin the miss off too: the detonation is ONE swing, and hitBonus 1
-    // floors player-to-mob miss at 0 (swingMissChance). Two luck arms
-    // survive the pins, because neither reads an entity field this test can
-    // zero: a mob target keeps the 5 percent formula dodge slot, and the
-    // veiled opener carries its own authored crit arm on top of critChance.
-    // The hunted idle tick below parks the draw on a plain hit.
+    // floors player-to-mob miss at 0 (swingMissChance). The formula dodge slot
+    // and the opener's own authored crit arm read no entity field this test can
+    // zero; the rig's pinned rolls keep both off.
     p.hitBonus = 1;
     const isHit = (e: SimEvent): e is SimEvent & { amount: number; ability: string | null } =>
       e.type === 'damage' &&
@@ -364,11 +369,7 @@ describe('Skulduggery: the Gloam bank and its detonation', () => {
     // could never land outside a group (owner playtest bug).
     mob.facing = Math.PI;
 
-    // Hunted idle (seed 23, after every beat above, re-hunted on the
-    // release/v0.37.0 castle base): one tick parks the shared stream where
-    // the single detonation swing resolves as a plain non-crit hit (the
-    // formula dodge slot and the authored opener crit arm both stay live,
-    // see the pin comment above).
+    // One idle tick settles the turn before the press.
     sim.tick();
 
     // The detonation: one press, in the open, face to face. The veil rises
