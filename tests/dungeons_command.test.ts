@@ -2,9 +2,11 @@ import { describe, expect, it } from 'vitest';
 import { DUNGEON_LIST, zoneAt } from '../src/sim/data';
 import { Sim } from '../src/sim/sim';
 import type { SimEvent } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
+// The readout reads the static dungeon registry and zones: the empty world serves.
 function makeWorld() {
-  return new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+  return new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true, world: EMPTY_TEST_WORLD });
 }
 
 function errorTexts(events: SimEvent[]): string[] {
