@@ -118,10 +118,13 @@ function moveFarFromBankers(sim: Sim, pid = sim.playerId): void {
 // command suite drives the bank commands without placing the player, and the proximity
 // gate refuses them unless a banker is in reach, so the shared setup moves to one.
 // The command-suite assertions never read position, so the move is invisible to them; the
-// far-refusal cases below move away explicitly.
-const makeSim = (seed = 42) => {
+// far-refusal cases below move away explicitly. Every Sim in the file, the
+// reload targets and the determinism pair included, shares seed 42: a fresh
+// seed builds its collider grids (about half a second) and no case compares
+// two seeds.
+const makeSim = () => {
   const sim = new Sim({
-    seed,
+    seed: 42,
     playerClass: 'warrior',
     autoEquip: false,
     world: BANK_TEST_WORLD,
@@ -133,8 +136,8 @@ const meta = (sim: Sim, pid = sim.playerId) => sim.meta(pid)!;
 
 // A multiplayer world (no default player) for the banker interaction
 // tests, mirroring the tests/mail.test.ts makeWorld idiom.
-const makeBankWorld = (seed = 42) =>
-  new Sim({ seed, playerClass: 'warrior', noPlayer: true, world: BANK_TEST_WORLD });
+const makeBankWorld = () =>
+  new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true, world: BANK_TEST_WORLD });
 
 // Distinct gear ids (stackSize 1) for filling containers with non-mergeable entries.
 const GEAR_IDS = Object.values(ITEMS)
@@ -1367,7 +1370,7 @@ describe('conservation seed sweeps', () => {
     // The bank operations do not consume Sim RNG and every scripted sequence has
     // its own test-side seed. Reuse one real Sim/banker and reset only the state
     // under test; constructing 50 identical continents adds no coverage.
-    const sim = makeSim(1);
+    const sim = makeSim();
     const m = meta(sim);
     const initialInventory = clone(m.inventory);
 
@@ -1454,8 +1457,9 @@ describe('conservation seed sweeps', () => {
 describe('determinism', () => {
   it('the same fixed bank-op script over 300 ticks yields identical state + events', () => {
     function run() {
+      // The file's seed: a fresh one builds its collider grids for nothing.
       const sim = new Sim({
-        seed: 123,
+        seed: 42,
         playerClass: 'warrior',
         autoEquip: false,
         world: BANK_TEST_WORLD,
@@ -1515,7 +1519,7 @@ describe('persistence and back-compat', () => {
 
     const s1 = sim.serializeCharacter(sim.playerId)!;
     const sim2 = new Sim({
-      seed: 1,
+      seed: 42,
       playerClass: 'warrior',
       noPlayer: true,
       world: BANK_TEST_WORLD,
@@ -1556,7 +1560,7 @@ describe('persistence and back-compat', () => {
 
     const load = (state: typeof s1) => {
       const next = new Sim({
-        seed: 1,
+        seed: 42,
         playerClass: 'warrior',
         noPlayer: true,
         world: BANK_TEST_WORLD,
@@ -1585,7 +1589,7 @@ describe('persistence and back-compat', () => {
     ];
     const s1 = sim.serializeCharacter(sim.playerId)!;
     const sim2 = new Sim({
-      seed: 1,
+      seed: 42,
       playerClass: 'warrior',
       noPlayer: true,
       world: BANK_TEST_WORLD,
@@ -1680,7 +1684,7 @@ describe('persistence and back-compat', () => {
     ).toBe('recipe_test_crafted');
 
     const sim2 = new Sim({
-      seed: 1,
+      seed: 42,
       playerClass: 'warrior',
       noPlayer: true,
       world: BANK_TEST_WORLD,
@@ -1706,7 +1710,7 @@ describe('persistence and back-compat', () => {
     const legacy = JSON.parse(JSON.stringify(state)) as Record<string, unknown>;
     delete legacy.bank;
     const sim2 = new Sim({
-      seed: 1,
+      seed: 42,
       playerClass: 'warrior',
       noPlayer: true,
       world: BANK_TEST_WORLD,
@@ -1740,7 +1744,7 @@ describe('persistence and back-compat', () => {
     const state = sim.serializeCharacter(sim.playerId)! as { bank?: unknown };
     state.bank = { inventory: gearSlots(30), purchasedSlots: 0, bonusSlots: 0 };
     const sim2 = new Sim({
-      seed: 1,
+      seed: 42,
       playerClass: 'warrior',
       noPlayer: true,
       world: BANK_TEST_WORLD,
@@ -1786,7 +1790,7 @@ describe('persistence and back-compat', () => {
       bonusSlots: -2, // clamped to 0
     };
     const sim2 = new Sim({
-      seed: 1,
+      seed: 42,
       playerClass: 'warrior',
       noPlayer: true,
       world: BANK_TEST_WORLD,
@@ -2290,7 +2294,12 @@ describe('server-stamped bank bonus', () => {
     meta(sim).bank.bonusSlots = 6;
     const saved = sim.serializeCharacter(sim.playerId)!;
 
-    const up = new Sim({ seed: 1, playerClass: 'warrior', noPlayer: true, world: BANK_TEST_WORLD });
+    const up = new Sim({
+      seed: 42,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: BANK_TEST_WORLD,
+    });
     const upPid = up.addPlayer('warrior', 'Linked', {
       state: saved,
       bankBonus: { bonusSlots: 16, sources: SOURCES },
@@ -2298,7 +2307,7 @@ describe('server-stamped bank bonus', () => {
     expect(meta(up, upPid).bank.bonusSlots).toBe(16);
 
     const down = new Sim({
-      seed: 1,
+      seed: 42,
       playerClass: 'warrior',
       noPlayer: true,
       world: BANK_TEST_WORLD,
@@ -2323,7 +2332,7 @@ describe('server-stamped bank bonus', () => {
     meta(sim).bank.bonusSlots = 5;
     const saved = sim.serializeCharacter(sim.playerId)!;
     const sim2 = new Sim({
-      seed: 1,
+      seed: 42,
       playerClass: 'warrior',
       noPlayer: true,
       world: BANK_TEST_WORLD,
@@ -2338,7 +2347,7 @@ describe('server-stamped bank bonus', () => {
     const saved = sim.serializeCharacter(sim.playerId)!;
     delete (saved as { bank?: unknown }).bank; // a save from before the bank existed
     const sim2 = new Sim({
-      seed: 1,
+      seed: 42,
       playerClass: 'warrior',
       noPlayer: true,
       world: BANK_TEST_WORLD,
@@ -2363,7 +2372,7 @@ describe('server-stamped bank bonus', () => {
     // Rejoin after every account fact was unlinked: the stamp drops to 0, so the
     // 30 banked stacks now sit over the 24-slot capacity. Tolerated, never trimmed.
     const sim2 = new Sim({
-      seed: 1,
+      seed: 42,
       playerClass: 'warrior',
       noPlayer: true,
       world: BANK_TEST_WORLD,
