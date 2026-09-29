@@ -9,7 +9,6 @@ import { createMob } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
 import { SpatialGrid } from '../src/sim/spatial';
 import type { Entity } from '../src/sim/types';
-import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const CELL = 32;
 const BASE = 130; // matches the server's INTEREST_QUERY_RADIUS
@@ -258,8 +257,7 @@ describe('interest_candidates', () => {
     // Freshness guarantee via the REAL sim: an entity knocked across a cell
     // boundary is re-bucketed by sim.grid.refresh (end of tick), so the shared
     // query run from the anchor's cell center at broadcast time still covers it.
-    // Every entity in play is placed by hand, so the Sim runs on the empty world.
-    const sim = new Sim({ seed: 5150, playerClass: 'warrior', world: EMPTY_TEST_WORLD });
+    const sim = new Sim({ seed: 5150, playerClass: 'warrior' });
     const displaced = sim.entities.get(sim.playerId)!; // the entity that moves
     displaced.gm = true; // an L1 warrior would otherwise be irrelevant; keeps it alive
     // Flat Eastbrook ground near origin, right beside the x=0 cell boundary.
