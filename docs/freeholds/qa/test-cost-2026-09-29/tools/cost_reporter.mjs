@@ -34,7 +34,11 @@ export default class CostReporter {
       this.modules.set(key, m);
     }
     const top = imports
-      .map(([id, v]) => [path.relative(this.root, id.split('?')[0]), Math.round(v.selfTime), Math.round(v.totalTime)])
+      .map(([id, v]) => [
+        path.relative(this.root, id.split('?')[0]),
+        Math.round(v.selfTime),
+        Math.round(v.totalTime),
+      ])
       .sort((a, b) => b[1] - a[1])
       .slice(0, 8);
     this.files.push({
@@ -54,7 +58,13 @@ export default class CostReporter {
   onTestRunEnd() {
     const out = process.env.COST_OUT || 'cost.json';
     const modules = [...this.modules.entries()]
-      .map(([k, v]) => ({ module: k, self: Math.round(v.self), total: Math.round(v.total), files: v.files, external: v.external }))
+      .map(([k, v]) => ({
+        module: k,
+        self: Math.round(v.self),
+        total: Math.round(v.total),
+        files: v.files,
+        external: v.external,
+      }))
       .sort((a, b) => b.self - a.self);
     fs.writeFileSync(out, JSON.stringify({ root: this.root, files: this.files, modules }, null, 0));
     console.log(`[cost-reporter] wrote ${this.files.length} files to ${out}`);

@@ -43,7 +43,8 @@ const add = (m, k, v) => {
   if (!m.has(k)) m.set(k, new Set());
   m.get(k).add(v);
 };
-const NAME = /[\w.@%+\-]+\.(?:png|jpe?g|webp|gif|mp4|webm|json|md|txt|html|mjs|js|ts|log|csv|tsv|svg|glb|ya?ml|jsonl|wav|mp3|ogg)\b/gi;
+const NAME =
+  /[\w.@%+\-]+\.(?:png|jpe?g|webp|gif|mp4|webm|json|md|txt|html|mjs|js|ts|log|csv|tsv|svg|glb|ya?ml|jsonl|wav|mp3|ogg)\b/gi;
 const SPAN = /screenshots\/([\w.@%+\-\/]+)/g;
 for (const t of texts) {
   let body;
@@ -61,7 +62,8 @@ for (const t of texts) {
     for (const s of cands) {
       if (s.path === t.path) continue;
       const parent = path.basename(path.dirname(s.path));
-      if (before.endsWith(`${parent}/`) || path.dirname(s.path) === selfDir) add(refsBy, s.path, t.path);
+      if (before.endsWith(`${parent}/`) || path.dirname(s.path) === selfDir)
+        add(refsBy, s.path, t.path);
       else add(baseBy, s.path, t.path);
     }
   }
