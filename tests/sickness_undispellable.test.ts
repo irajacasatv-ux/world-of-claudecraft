@@ -26,6 +26,7 @@ import { applyResurrectionSickness, applyUnstuckSickness } from '../src/sim/spir
 import type { Aura, Entity, PlayerClass } from '../src/sim/types';
 import { groundHeight } from '../src/sim/world';
 import { bareClient } from './helpers/bare_client';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 type Ev = { type?: string; text?: string };
 type AnySim = Sim & Record<string, any>;
@@ -62,7 +63,14 @@ function rig(
   talentRow: string,
   level = 12,
 ): { sim: AnySim; p: Entity; events: Ev[] } {
-  const sim = new Sim({ seed: 7, playerClass: cls, autoEquip: true }) as AnySim;
+  // The rig only sickens, dispels and cleanses itself, so it stands on the empty
+  // world, on the arena rig's seed (one collider grid build serves the file).
+  const sim = new Sim({
+    seed: 42,
+    playerClass: cls,
+    autoEquip: true,
+    world: EMPTY_TEST_WORLD,
+  }) as AnySim;
   sim.setPlayerLevel(level);
   expect(sim.applyTalents({ spec: null, rows: { 8: talentRow } })).toBe(true);
   const p = sim.player as Entity;
