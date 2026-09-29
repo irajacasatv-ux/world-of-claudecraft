@@ -88,15 +88,15 @@ it.each([false, true])(
       gpuAfter: { ...counters },
       gpuDelta: { 'live-program': 0, 'attach-watchdog': 0, 'gate-timeout': 0 },
     };
-    const sample = await sampleFreeholdInterior(
-      page,
-      'freehold-inn-room',
-      arrival,
-      async (_page, label) => {
+    // The sample's settle sleep runs on the faked clock: its length proves nothing
+    // here, only that the end boundary is read after the callback.
+    vi.useFakeTimers();
+    const sample = await onFakeClock(() =>
+      sampleFreeholdInterior(page, 'freehold-inn-room', arrival, async (_page, label) => {
         if (lateProgram) counters['live-program']++;
         return { label };
-      },
-    );
+      }),
+    ).finally(() => vi.useRealTimers());
     // The world carried its four programs through the gate's first draw too.
     const firstDraw = gateFirstDraw();
     for (const edge of [firstDraw.begin, firstDraw.end])
@@ -897,7 +897,9 @@ describe('switching the tour to the Cottage', () => {
 
   it('sends the whole command and waits for the sim to take the tier', async () => {
     const { page, state } = chatPage({});
-    await changeFreeholdToCottage(page);
+    // The closing settle sleep runs on the faked clock.
+    vi.useFakeTimers();
+    await onFakeClock(() => changeFreeholdToCottage(page)).finally(() => vi.useRealTimers());
     expect(state.tier).toBe('cottage');
     expect(state.enters).toBe(2);
   });

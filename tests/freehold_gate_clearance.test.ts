@@ -49,6 +49,7 @@ import { type Entity, INTERACT_RANGE } from '../src/sim/types';
 import { groundHeight, isInWaterBody, roadDistance, WATER_LEVEL } from '../src/sim/world';
 import { WORLD_SEED } from '../src/sim/world_seed';
 import { collidersWithin, pushOutReach } from './helpers/collider_gap';
+import { PRODUCTION_IDLE_CULL } from './helpers/production_idle_cull';
 
 type P = { x: number; z: number };
 const GATE = EASTBROOK_LAYOUT.services.freeholdGate.position;
@@ -372,11 +373,13 @@ describe('the Freehold Gate site', () => {
     // closest stays Cook Marlow's spawn 12.185 yd off. Pinned exactly on
     // purpose: an NPC given a route or a wander near the gate reds this and is
     // reviewed against the 11 yd clearance, which the spawn-time case cannot see.
+    // Production's idle cull skips only idle mobs; every NPC still updates.
     const sim = new Sim({
       seed: WORLD_SEED,
       playerClass: 'warrior',
       noPlayer: true,
       freeholdsEnabled: true,
+      ...PRODUCTION_IDLE_CULL,
     });
     let closest = Number.POSITIVE_INFINITY;
     for (let tick = 0; tick < 20 * 60; tick++) {
