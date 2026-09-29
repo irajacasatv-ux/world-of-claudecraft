@@ -550,6 +550,7 @@ describe('the long-sims lane (Phase 4)', () => {
       'tests/dungeon_entry_clearance.test.ts',
       'tests/emerald_deck_escape.test.ts',
       'tests/fire_short_fight_tuning.test.ts',
+      'tests/freehold_dungeon_defs.test.ts',
       'tests/lake_shores.test.ts',
       'tests/rogue_dps_balance.test.ts',
       'tests/skill_icons.test.ts',

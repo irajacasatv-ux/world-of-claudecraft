@@ -49,6 +49,17 @@ const ENGLISH = {
   },
 } as const;
 
+// The drop's clearance sweep. Every seed builds that seed's collider grids
+// (about 1.2 s each here), so each PR runs the representative: seed 1 (the
+// grid this file's Sims build anyway) and the shipped WORLD_SEED, which catch
+// any seed-independent collider on the drop. The nightly tests job alone runs
+// the whole test-seed sweep (docs/qa-gate.md, "Nightly-only sweep depth"),
+// the only arm that sees a seed-scattered collider landing on it.
+const NIGHTLY_SWEEP = process.env.WOC_NIGHTLY_SWEEP === '1';
+const DROP_SEEDS = NIGHTLY_SWEEP
+  ? [1, 7, 42, 99, 1032, 1337, WORLD_SEED, 2_147_483_647]
+  : [1, WORLD_SEED];
+
 function litSim(): Sim {
   return new Sim({ seed: 1, playerClass: 'warrior', noPlayer: true, freeholdsEnabled: true });
 }
@@ -100,20 +111,20 @@ describe('freehold dungeon defs: registry shape', () => {
     expect(DUNGEONS.freehold_cottage.name).toBe('Cottage');
   });
 
-  it('drops a leaving player on clear ground: unblocked, with zero depenetration, on every test seed', () => {
+  it('drops a leaving player on clear ground: unblocked, with zero depenetration, across the drop seeds', () => {
     // The drop is doorPos plus the shared door inset (no leaveOffset;
     // the saved-inside rejoin in sim.ts applies the same inset). The
     // literal, then the proof: isBlocked false AND resolvePosition moves the
-    // body nowhere, at the real player radius, across the test seeds, the
-    // shipped WORLD_SEED and the corpus seed 2147483647. A door at z -96
-    // failed this (its drop at z -100 sat inside the mailbox surround), which
-    // is why it moved first; the later moves are the press clearance in
-    // tests/freehold_gate_clearance.test.ts.
+    // body nowhere, at the real player radius, across DROP_SEEDS (nightly:
+    // the test seeds, the shipped WORLD_SEED and the corpus seed 2147483647).
+    // A door at z -96 failed this (its drop at z -100 sat inside the mailbox
+    // surround), which is why it moved first; the later moves are the press
+    // clearance in tests/freehold_gate_clearance.test.ts.
     for (const def of [DUNGEONS.freehold_inn_room, DUNGEONS.freehold_cottage]) {
       expect(def.leaveOffset).toBeUndefined();
       const drop = { x: def.doorPos.x, z: def.doorPos.z - DUNGEON_DOOR_RETURN_INSET };
       expect(drop).toEqual({ x: -38.65, z: -107.75 });
-      for (const seed of [1, 7, 42, 99, 1032, 1337, WORLD_SEED, 2_147_483_647]) {
+      for (const seed of DROP_SEEDS) {
         expect(isBlocked(seed, drop.x, drop.z, PLAYER_BODY_RADIUS), `${def.id} seed ${seed}`).toBe(
           false,
         );
