@@ -1,40 +1,30 @@
 import { describe, expect, it } from 'vitest';
 import { grantXp } from '../src/sim/combat/damage';
-import { ABILITIES, BUILTIN_WORLD } from '../src/sim/data';
+import { ABILITIES, MOBS } from '../src/sim/data';
+import { createMob } from '../src/sim/entity';
 import { despawnPet, restorePet, serializePet } from '../src/sim/pet/pet_commands';
 import { Sim } from '../src/sim/sim';
-import type { Entity, WorldContent } from '../src/sim/types';
-import { dist2d, xpForLevel } from '../src/sim/types';
+import type { Entity } from '../src/sim/types';
+import { xpForLevel } from '../src/sim/types';
 import { terrainHeight } from '../src/sim/world';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
-// The imp's target is whatever wild mob is nearest (teleported next to the
-// player as a dummy), so keep the real forest_wolf camps as that mob supply
-// and strip the rest of the ambient world (subsystem-world pattern, see
-// tests/dot_final_tick.test.ts).
-const WARLOCK_TEST_WORLD: WorldContent = {
-  ...BUILTIN_WORLD,
-  camps: BUILTIN_WORLD.camps.filter((c) => c.mobId === 'forest_wolf'),
-  npcs: {},
-  groundObjects: [],
-};
+// One seed on EMPTY_TEST_WORLD: the imp's target is a wild wolf this file spawns
+// itself, so the ambient camps and each extra seed's world build were pure
+// construction and tick cost.
+const SEED = 42;
 
-function makeSim(seed = 42) {
-  return new Sim({ seed, playerClass: 'warlock', autoEquip: true, world: WARLOCK_TEST_WORLD });
+function makeSim() {
+  return new Sim({ seed: SEED, playerClass: 'warlock', autoEquip: true, world: EMPTY_TEST_WORLD });
 }
 
-function nearestMob(sim: Sim): Entity {
+/** A wild (unowned, hostile) forest wolf for the imp to fight. */
+function wildMob(sim: Sim): Entity {
   const p = sim.player;
-  let best: Entity | null = null;
-  let bestD = Infinity;
-  for (const e of sim.entities.values()) {
-    if (e.kind !== 'mob' || e.dead || e.ownerId !== null) continue;
-    const d = dist2d(p.pos, e.pos);
-    if (d < bestD) {
-      bestD = d;
-      best = e;
-    }
-  }
-  return best!;
+  const mob = createMob(sim.nextId++, MOBS.forest_wolf, 5, { ...p.pos });
+  mob.hostile = true;
+  sim.addEntity(mob);
+  return mob;
 }
 
 function teleport(e: Entity, x: number, z: number, seed: number) {
@@ -67,7 +57,7 @@ describe('warlock demon pets', () => {
       [19, 0.75],
       [20, 0.85],
     ] as const) {
-      const sim = makeSim(100 + level);
+      const sim = makeSim();
       sim.setPlayerLevel(level);
       if (level >= 5) expect(sim.setSpec('destruction')).toBe(true);
       castAndFinish(sim, 'summon_imp');
@@ -76,7 +66,7 @@ describe('warlock demon pets', () => {
   });
 
   it('resizes an existing Emberkin immediately when its owner reaches a new rank', () => {
-    const sim = makeSim(222);
+    const sim = makeSim();
     castAndFinish(sim, 'summon_imp');
     const emberkin = sim.petOf(sim.playerId);
     expect(emberkin?.scale).toBe(0.55);
@@ -88,7 +78,7 @@ describe('warlock demon pets', () => {
   });
 
   it('resizes Emberkin when its owner reaches a new rank through experience', () => {
-    const sim = makeSim(224);
+    const sim = makeSim();
     sim.setPlayerLevel(7);
     expect(sim.setSpec('destruction')).toBe(true);
     castAndFinish(sim, 'summon_imp');
@@ -105,7 +95,7 @@ describe('warlock demon pets', () => {
   });
 
   it('restores Emberkin at the scale for its owner current rank', () => {
-    const sim = makeSim(223);
+    const sim = makeSim();
     castAndFinish(sim, 'summon_imp');
     const emberkin = sim.petOf(sim.playerId);
     const saved = serializePet(sim.ctx, sim.playerId);
@@ -135,7 +125,7 @@ describe('warlock demon pets', () => {
     sim.setPlayerLevel(12);
     castAndFinish(sim, 'summon_imp');
     const imp = sim.petOf(sim.playerId)!;
-    const mob = nearestMob(sim);
+    const mob = wildMob(sim);
     mob.maxHp = 5000;
     mob.hp = 5000;
     teleport(mob, sim.player.pos.x + 10, sim.player.pos.z, sim.cfg.seed);
@@ -191,10 +181,10 @@ describe('warlock demon pets', () => {
     // non-boss add off the real party/raid tank. Keep the free default scoped
     // to solo play; a grouped warlock keeps the manual /pettaunt opt-in.
     const sim = new Sim({
-      seed: 42,
+      seed: SEED,
       playerClass: 'warlock',
       noPlayer: true,
-      world: WARLOCK_TEST_WORLD,
+      world: EMPTY_TEST_WORLD,
     });
     const lockPid = sim.addPlayer('warlock', 'Lock');
     const otherPid = sim.addPlayer('warrior', 'Tank');
