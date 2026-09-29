@@ -6,6 +6,7 @@ import { createMob } from '../src/sim/entity';
 import { enterDungeon } from '../src/sim/instances/dungeons';
 import { Sim } from '../src/sim/sim';
 import type { LootEntry } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // Gravewyrm Sanctum gold-farm fix: Korzul the Gravewyrm paid a guaranteed
 // 50000c base, rolled to 3g to 7g per kill by the loot roller's 0.6x to 1.4x
@@ -39,11 +40,18 @@ function copperEntries(loot: LootEntry[] | undefined) {
 // One world seed for the whole file: a seed the file has not built yet costs a
 // full-world Sim about half a second (its collider grids), a built one about
 // 20 ms. The heroic sweep moves the shared rng by `offset` draws instead, which
-// rolls each payout from a different stream position.
+// rolls each payout from a different stream position. The roller reads a template
+// and the heroic kill happens inside the Sanctum instance, so the Sims run on the
+// empty world.
 const FILE_SEED = 1234;
 
 function simAtDraw(offset: number): Sim {
-  const sim = new Sim({ seed: FILE_SEED, playerClass: 'warrior', noPlayer: true });
+  const sim = new Sim({
+    seed: FILE_SEED,
+    playerClass: 'warrior',
+    noPlayer: true,
+    world: EMPTY_TEST_WORLD,
+  });
   for (let draw = 0; draw < offset; draw++) sim.rng.next();
   return sim;
 }

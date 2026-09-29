@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { attuneAlliedHearthstone, DAWN_STANDARD_RADIUS } from '../src/sim/content/faction_rewards';
 import { FACTION_HUB_LANDINGS } from '../src/sim/content/faction_vendors';
-import { DUNGEON_X_THRESHOLD, ITEMS, MOBS } from '../src/sim/data';
+import { BUILTIN_WORLD, DUNGEON_X_THRESHOLD, ITEMS, MOBS } from '../src/sim/data';
 import { createMob } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
+import type { WorldContent } from '../src/sim/types';
 import { PRODUCTION_IDLE_CULL } from './helpers/production_idle_cull';
 
 // One seed for the whole file: every case builds a fresh Sim, and a seed the file
@@ -12,6 +13,16 @@ import { PRODUCTION_IDLE_CULL } from './helpers/production_idle_cull';
 // production's idle culling (the server and the offline client both set it), which
 // keeps the ticking cases from paying for every idle mob in the world.
 const SEED = 101;
+// Only the duffel case reaches into the world (the Church Order quartermaster it
+// buys from), so every Sim runs on a world holding that one NPC and nothing else.
+const QUARTERMASTER_WORLD: WorldContent = {
+  ...BUILTIN_WORLD,
+  camps: [],
+  npcs: {
+    npc_church_order_quartermaster: BUILTIN_WORLD.npcs.npc_church_order_quartermaster,
+  },
+  groundObjects: [],
+};
 
 describe('Allied Faction World Quest Rewards & Toys', () => {
   describe('Allied Hearthstone (allied_hearthstone)', () => {
@@ -21,6 +32,7 @@ describe('Allied Faction World Quest Rewards & Toys', () => {
         playerClass: 'paladin',
         autoEquip: false,
         ...PRODUCTION_IDLE_CULL,
+        world: QUARTERMASTER_WORLD,
       });
       const meta = sim.meta(sim.playerId)!;
       sim.addItem('allied_hearthstone', 1);
@@ -52,6 +64,7 @@ describe('Allied Faction World Quest Rewards & Toys', () => {
         playerClass: 'mage',
         autoEquip: false,
         ...PRODUCTION_IDLE_CULL,
+        world: QUARTERMASTER_WORLD,
       });
       const meta = sim.meta(sim.playerId)!;
       sim.addItem('allied_hearthstone', 1);
@@ -116,6 +129,7 @@ describe('Allied Faction World Quest Rewards & Toys', () => {
         playerClass: 'warrior',
         autoEquip: false,
         ...PRODUCTION_IDLE_CULL,
+        world: QUARTERMASTER_WORLD,
       });
       const meta = sim.meta(sim.playerId)!;
       meta.copper = 500_000;
@@ -173,6 +187,7 @@ describe('Allied Faction World Quest Rewards & Toys', () => {
         playerClass: 'rogue',
         autoEquip: false,
         ...PRODUCTION_IDLE_CULL,
+        world: QUARTERMASTER_WORLD,
       });
       const meta = sim.meta(sim.playerId)!;
       sim.addItem('rift_feather_glider', 1);
@@ -217,6 +232,7 @@ describe('Allied Faction World Quest Rewards & Toys', () => {
         playerClass: 'hunter',
         autoEquip: false,
         ...PRODUCTION_IDLE_CULL,
+        world: QUARTERMASTER_WORLD,
       });
       const meta = sim.meta(sim.playerId)!;
       sim.addItem('clockwork_target_dummy', 1);
@@ -249,6 +265,7 @@ describe('Allied Faction World Quest Rewards & Toys', () => {
         playerClass: 'priest',
         autoEquip: false,
         ...PRODUCTION_IDLE_CULL,
+        world: QUARTERMASTER_WORLD,
       });
       const meta = sim.meta(sim.playerId)!;
       sim.addItem('dawn_battle_standard', 1);
@@ -295,6 +312,7 @@ describe('Allied Faction World Quest Rewards & Toys', () => {
         playerClass: 'mage',
         autoEquip: false,
         ...PRODUCTION_IDLE_CULL,
+        world: QUARTERMASTER_WORLD,
       });
       const initialSpi = sim.player.stats.spi;
 
@@ -314,6 +332,7 @@ describe('Allied Faction World Quest Rewards & Toys', () => {
         playerClass: 'rogue',
         autoEquip: false,
         ...PRODUCTION_IDLE_CULL,
+        world: QUARTERMASTER_WORLD,
       });
       sim.addItem('potion_of_invisibility', 1);
       sim.useItem('potion_of_invisibility');
@@ -330,6 +349,7 @@ describe('Allied Faction World Quest Rewards & Toys', () => {
         playerClass: 'warrior',
         autoEquip: false,
         ...PRODUCTION_IDLE_CULL,
+        world: QUARTERMASTER_WORLD,
       });
       const initialArmor = sim.player.stats.armor;
 
@@ -348,6 +368,7 @@ describe('Allied Faction World Quest Rewards & Toys', () => {
         playerClass: 'warrior',
         autoEquip: false,
         ...PRODUCTION_IDLE_CULL,
+        world: QUARTERMASTER_WORLD,
       });
       const meta = sim.meta(sim.playerId)!;
 
@@ -379,6 +400,7 @@ describe('Allied Faction World Quest Rewards & Toys', () => {
         playerClass: 'warrior',
         autoEquip: false,
         ...PRODUCTION_IDLE_CULL,
+        world: QUARTERMASTER_WORLD,
       });
       const meta = sim.meta(sim.playerId)!;
       sim.addItem('clockwork_shock_bomb', 2);
