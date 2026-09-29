@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { grantDawnsWrath } from '../src/sim/combat/paladin_dawns_wrath';
+import { applyDawnsWrathOverride, grantDawnsWrath } from '../src/sim/combat/paladin_dawns_wrath';
 import {
   advanceSunGodVerdict,
   applySunGodVerdict,
@@ -61,6 +61,15 @@ function setup(power: number, maximum: boolean, ascended = false, level = 20) {
   return { sim, target };
 }
 
+// Applying the Dawn's Wrath aura recomputes the paladin's stats, which drops
+// the power the rig pinned, so the grant re-pins it: a hammer case then runs
+// at the power it names.
+function grantDawnsWrathAtPower(sim: Sim, power: number): void {
+  grantDawnsWrath(sim.ctx, sim.player);
+  sim.player.attackPower = power;
+  sim.player.spellPower = power;
+}
+
 function resolve(sim: Sim, id: string): ResolvedAbility {
   const res = sim.resolvedAbility(id);
   if (!res) throw new Error(`Missing ${id}`);
@@ -80,7 +89,7 @@ describe('Dawnreaver resolved damage tooltip accuracy', () => {
           `%s matches the combat ${maximum ? 'maximum' : 'minimum'} at power ${power}, Ascension ${ascended}`,
           (id) => {
             const { sim, target } = setup(power, maximum, ascended);
-            if (id === 'hammer_of_wrath') grantDawnsWrath(sim.ctx, sim.player);
+            if (id === 'hammer_of_wrath') grantDawnsWrathAtPower(sim, power);
             const res = resolve(sim, id);
             const effect = res.effects[0];
             const range = primaryDamageTooltipRange(res, effect, abilityScalingOf(sim.player));
@@ -152,6 +161,27 @@ describe('Dawnreaver resolved damage tooltip accuracy', () => {
       );
     }
   }
+
+  // Dawn's Wrath empowers the stored hammer at cast time, baking its factor
+  // into the strike's damageMult (applyDawnsWrathOverride, the call the cast
+  // path makes), so the tooltip range must carry that factor as combat does:
+  // 20 percent harder off the Zealfire set (docs/design/warfare-season-2.md,
+  // "40 percent, up from 20").
+  it.each([false, true])("the Dawn's Wrath hammer matches combat, maximum %s", (maximum) => {
+    const { sim, target } = setup(70, maximum);
+    grantDawnsWrathAtPower(sim, 70);
+    const scaling = abilityScalingOf(sim.player);
+    const plain = resolve(sim, 'hammer_of_wrath');
+    const plainRange = required(primaryDamageTooltipRange(plain, plain.effects[0], scaling));
+    const res = applyDawnsWrathOverride(sim.ctx, sim.player, plain);
+    const range = required(primaryDamageTooltipRange(res, res.effects[0], scaling));
+    const expected = maximum ? range.max : range.min;
+    const before = target.hp;
+    sim.ctx.runEffects(sim.player, required(sim.ctx.players.get(sim.player.id)), target, res);
+    expect(before - target.hp).toBe(expected);
+    const plainEnd = maximum ? plainRange.max : plainRange.min;
+    expect(Math.abs(expected - plainEnd * 1.2)).toBeLessThanOrEqual(1);
+  });
 
   it('preserves the existing tooltip presentation when primaryDamage is absent', () => {
     const { sim } = setup(70, false);
