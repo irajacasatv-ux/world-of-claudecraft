@@ -40,16 +40,21 @@ import {
   zeroDiff,
 } from '../src/sim/types';
 import { terrainHeight } from '../src/sim/world';
+import { WORLD_SEED } from '../src/sim/world_seed';
 import { formatXp, xpBarView } from '../src/ui/xp_bar';
 import { bareClient, broadcast, fakeWs, joinServer, lastSnap } from './helpers/bare_client';
+import { RL_TEST_WORLD } from './sim_shared';
 
 type VirtualLevelUpEvent = Extract<SimEvent, { type: 'virtualLevelUp' }>;
 type DeedUnlockedEvent = Extract<SimEvent, { type: 'deedUnlocked' }>;
 type SnapshotMessage = { t: 'snap'; self: { lxp: number; prk: number } };
 type SnapshotClient = { applySnapshot(snap: SnapshotMessage): void };
 
-function makeSim(cls: 'warrior' | 'mage' | 'rogue' = 'warrior', seed = 42): Sim {
-  return new Sim({ seed, playerClass: cls, autoEquip: true });
+// The cases grant XP directly or kill one wolf, so one wolf camp (RL_TEST_WORLD)
+// is all the world they need, on the realm's seed the GameServer case boots on:
+// the full overworld and a second seed (42) bought nothing.
+function makeSim(cls: 'warrior' | 'mage' | 'rogue' = 'warrior'): Sim {
+  return new Sim({ seed: WORLD_SEED, playerClass: cls, autoEquip: true, world: RL_TEST_WORLD });
 }
 
 function required<T>(value: T | null | undefined, label: string): T {
