@@ -59,8 +59,12 @@ const SWORD = 'eastbrook_arming_sword'; // common mainhand weapon
 const ENCHANT = 'enchant_weapon_might'; // mainhand, 5 arcane_dust, str +2
 const REPLACED_ENCHANT = 'enchant_weapon_agility'; // a second mainhand enchant, also 5 dust
 
-function makeSim(seed = 42): Sim {
-  return new Sim({ seed, playerClass: 'warrior', autoEquip: false });
+// One seed for every Sim, the determinism twins included: a full-world Sim
+// pays a collider-grid build per seed the file has not built yet (about half
+// a second), a same-seed pair needs only a shared seed, and no case reads a
+// seed-probed roll.
+function makeSim(): Sim {
+  return new Sim({ seed: 42, playerClass: 'warrior', autoEquip: false });
 }
 
 function metaOf(sim: Sim, pid: number = sim.playerId): PlayerMeta {
@@ -1065,11 +1069,11 @@ describe('a mid-cast gate flip is enforced where the body stands at COMPLETION',
 // ---------------------------------------------------------------------------
 describe('determinism: sourcing never changes the rng draw stream', () => {
   it('draws the same ONE roll and reports the same outcome from either pool', () => {
-    const carried = makeSim(1234);
+    const carried = makeSim();
     grant(carried, 'spider_leg', 1, carried.playerId);
     const fromBags = recordDraws(carried, () => resolveCraft(carried.ctx, carried.playerId, JERKY));
 
-    const vaulted = makeSim(1234);
+    const vaulted = makeSim();
     seedVault(vaulted, { spider_leg: 1 }, vaulted.playerId);
     const fromVault = recordDraws(vaulted, () =>
       resolveCraft(vaulted.ctx, vaulted.playerId, JERKY),
@@ -1096,7 +1100,7 @@ describe('determinism: sourcing never changes the rng draw stream', () => {
     // up here as a diverging second run while the cross-source case above
     // stayed green.
     const run = () => {
-      const sim = makeSim(20_260_807);
+      const sim = makeSim();
       const pid = sim.playerId;
       seedVault(sim, { spider_leg: 1 }, pid);
       const { result, values } = recordDraws(sim, () => resolveCraft(sim.ctx, pid, JERKY));
