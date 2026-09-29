@@ -243,13 +243,14 @@ describe('suite duration budget (declared-timeout ratchet)', () => {
         keyword,
       ).toEqual([90_000]);
     }
-    // ...but a keyword-named property, a variable named `of`, and a word a comment ends
-    // on are values, so the slash after them divides and the case still counts.
+    // ...but a keyword-named property, a variable named `of`, and a keyword a line
+    // comment ends on are no keyword in code, so the slash after them divides and the
+    // case still counts.
     for (const division of [
       "const r = x.in / 2; // it's",
       "const r = opts?.do / 2; // it's",
       "const of = 4; const r = of / 2; // it's",
-      "const r = total // of\n  / count; // it's",
+      "const r = total // return\n  / count; // it's",
     ]) {
       expect(per(`${division}\nit('a', () => { run(); }, 90_000);`), division).toEqual([90_000]);
     }
