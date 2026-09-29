@@ -4,6 +4,7 @@ import { createMob } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
 import type { Entity } from '../src/sim/types';
 import { WORLD_WITHOUT_HUB_YARD } from './helpers/hub_yard';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 type PaladinSpec = 'holy' | 'protection' | 'retribution';
 
@@ -122,12 +123,18 @@ function secondsToTwenty(spec: PaladinSpec): number {
   return Infinity;
 }
 
+// The blocking run stubs the shared rng (`rng.next` below), so, unlike the
+// three rotation runs above, its pacing does not ride the shared stream the
+// ambient overworld forks: it fights only the dummy it places, and runs in the
+// empty test world on the rotation runs' seed, whose terrain the file has
+// already built. The rotation runs keep the full world on purpose, since their
+// exact pins are measured against that stream.
 function protectionSecondsToTwentyWhileBlocking(): { seconds: number; devotionFromBlocks: number } {
   const sim = new Sim({
-    seed: 61,
+    seed: 53,
     playerClass: 'paladin',
     autoEquip: true,
-    world: WORLD_WITHOUT_HUB_YARD,
+    world: EMPTY_TEST_WORLD,
   });
   sim.setPlayerLevel(20);
   sim.setSpec('protection');
