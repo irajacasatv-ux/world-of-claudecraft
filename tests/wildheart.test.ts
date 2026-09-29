@@ -66,6 +66,11 @@ const WILDHEART_TEST_WORLD: WorldContent = {
 };
 type DealDamage = Sim['dealDamage'];
 
+// The portal cases (the exit on Zulgar's death, the shut portal on a trash kill)
+// ride no roll, so they share the file's default seed rather than building
+// seeds 31, 5 and 17 of their own; the loot sweeps keep their roll seeds.
+const PORTAL_SEED = 91;
+
 function makeSim(seed = 91): Sim {
   return new Sim({ seed, playerClass: 'warrior', noPlayer: true, world: WILDHEART_TEST_WORLD });
 }
@@ -585,7 +590,7 @@ describe('Wildheart Basin Tier-2 loot pass', () => {
 
   it("opens the shrine-terrace exit portal on Zulgar's death, on both difficulties", () => {
     for (const difficulty of ['normal', 'heroic'] as const) {
-      const { sim } = killZulgar(31, difficulty);
+      const { sim } = killZulgar(PORTAL_SEED, difficulty);
       const inst = (
         sim.instances as { dungeonId: string; bossExitId: number | null; objectIds: number[] }[]
       ).find((i) => i.dungeonId === 'wildheart_basin');
@@ -601,7 +606,7 @@ describe('Wildheart Basin Tier-2 loot pass', () => {
       expect(inst.objectIds).toContain(inst.bossExitId);
     }
     // No portal before the boss dies: a fresh claim spawns none.
-    const sim = makeSim(5);
+    const sim = makeSim();
     const pid = sim.addPlayer('warrior', 'Walker');
     expect(enterDungeon(sim.ctx, 'wildheart_basin', pid)).toBe(true);
     const inst = (sim.instances as { dungeonId: string; bossExitId: number | null }[]).find(
@@ -613,7 +618,7 @@ describe('Wildheart Basin Tier-2 loot pass', () => {
   it('keeps the portal shut for trash kills and lets a walk into it leave the dungeon', () => {
     // A non-final-boss death inside the claim must not open the exit: without
     // the finalBossId guard a trash pull would let a group skip the run.
-    const sim = makeSim(17);
+    const sim = makeSim();
     const pid = sim.addPlayer('warrior', 'Trasher');
     expect(enterDungeon(sim.ctx, 'wildheart_basin', pid)).toBe(true);
     const inst = (
@@ -639,7 +644,7 @@ describe('Wildheart Basin Tier-2 loot pass', () => {
 
     // And once earned, the portal is USABLE: walking into it rides the same
     // door trigger as the entrance exit and drops the player back outside.
-    const cleared = killZulgar(31, 'normal');
+    const cleared = killZulgar(PORTAL_SEED, 'normal');
     const clearedInst = (
       cleared.sim.instances as { dungeonId: string; bossExitId: number | null }[]
     ).find((i) => i.dungeonId === 'wildheart_basin');
