@@ -1,16 +1,25 @@
 import { describe, expect, it } from 'vitest';
 import { CARD_MASTER_NPC_ID } from '../src/sim/content/card_master';
+import { BUILTIN_WORLD } from '../src/sim/data';
 import { Sim } from '../src/sim/sim';
-import type { SimEvent } from '../src/sim/types';
+import type { SimEvent, WorldContent } from '../src/sim/types';
 import { groundHeight } from '../src/sim/world';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // Card Duel had zero audio events before this change (only generic 'log'
 // text). Drives the real sim end-to-end and asserts the new typed events
 // (cardDuelMatchStart, cardPlayed, cardRoundResolved, cardDuelMatchEnd) fire
 // at the exact moments hud.ts's audio wiring depends on.
 
+// The duels need only the card master the queue gates on, so the Sims run on
+// the empty world with him alone rather than the whole overworld.
+const CARD_MASTER_WORLD: WorldContent = {
+  ...EMPTY_TEST_WORLD,
+  npcs: { [CARD_MASTER_NPC_ID]: BUILTIN_WORLD.npcs[CARD_MASTER_NPC_ID] },
+};
+
 function makeWorld(seed = 42) {
-  return new Sim({ seed, playerClass: 'warrior', noPlayer: true });
+  return new Sim({ seed, playerClass: 'warrior', noPlayer: true, world: CARD_MASTER_WORLD });
 }
 
 function teleportToCardMaster(sim: Sim, pid: number) {
