@@ -31,6 +31,7 @@ import {
   WATER_LEVEL,
 } from '../src/sim/world';
 import { WORLD_SEED } from '../src/sim/world_seed';
+import { PRODUCTION_IDLE_CULL } from './helpers/production_idle_cull';
 
 // Parkour movement and height-aware prop collision:
 //  - low prop tops (moveTopY) pass a mover whose feet clear them, so a jump
@@ -51,9 +52,19 @@ afterEach(() => {
   setActiveWorldContent(null);
 });
 
+// One content object per distinct prop layout. The collider grid cache is keyed
+// per content object, so a case authoring a layout gets that layout's own grid,
+// and the cases that author the SAME layout share one build (about 0.2 s each)
+// instead of paying it again. No case mutates a content object or its props.
+const worlds = new Map<string, WorldContent>();
 function world(props: Partial<WorldContent['props']>): WorldContent {
-  // Fresh object per test: the collider grid cache is keyed per content.
-  return { ...BUILTIN_WORLD, props: { ...BUILTIN_WORLD.props, ...props } };
+  const key = JSON.stringify(props);
+  let content = worlds.get(key);
+  if (!content) {
+    content = { ...BUILTIN_WORLD, props: { ...BUILTIN_WORLD.props, ...props } };
+    worlds.set(key, content);
+  }
+  return content;
 }
 
 // A flat, dry, collider-free south-north strip to author the course on:
@@ -92,8 +103,15 @@ function findSteepFooting(seed: number): { x: number; z: number } {
   throw new Error('no steep footing found');
 }
 
+// The shipped idle-mob cull: the Sim cases tick the whole overworld around one
+// player on the course, and no mob decides them (see the level below).
 function makeSim(): Sim {
-  const sim = new Sim({ seed: SEED, playerClass: 'warrior', autoEquip: true });
+  const sim = new Sim({
+    seed: SEED,
+    playerClass: 'warrior',
+    autoEquip: true,
+    ...PRODUCTION_IDLE_CULL,
+  });
   sim.setPlayerLevel(60); // mobs along the course must not decide these tests
   return sim;
 }
