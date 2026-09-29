@@ -15,6 +15,7 @@ import {
   runDisenchant,
   runSalvage,
 } from './helpers/enchant_family_cast';
+import { rngWithFirstDraws } from './helpers/forced_rng';
 import { tsFilesUnder } from './helpers/ts_files_under';
 
 // Every grant in the game flows through the one shared inventory hub
@@ -402,17 +403,14 @@ describe('the craft output arms each stand their hub line down', () => {
   });
 
   it('a MASTERWORK proc stands both down on the baked instance', () => {
-    // Seed 3 with tailoring at skill 200 is the hunted proc window
-    // tests/professions_masterwork.test.ts uses: the second successful
-    // vestments craft procs. Reused rather than re-hunted so the two files
-    // cannot disagree about which craft is the masterwork one, and the seed is
-    // re-verified against THIS scenario (which ticks the world between the two
-    // crafts) on every hop. (That suite re-hunted 20 -> 90 when the
-    // procedural-dungeons content shifted the world-gen draw sequence, then
-    // 90 -> 53 after the Eastbrook camp respacing thinned the zone-1 camp
-    // counts, then 53 -> 3 after the v0.35.0 release content commits added the
-    // enchant and hunter offhands and the deeds catalog.)
-    const sim = new Sim({ seed: 74, playerClass: 'warrior', autoEquip: false });
+    // Tailoring at skill 200 rolls the vestments proc at 0.14 (the scenario
+    // tests/professions_masterwork.test.ts forces too): the first successful
+    // craft misses and the second procs. Each proc draw is forced by a fresh
+    // Rng installed right before its craft (tests/helpers/forced_rng.ts), so
+    // the world tick between the two crafts cannot move it, on the seed this
+    // file's other Sims build instead of a hunted one.
+    const PROC_CHANCE = 0.14;
+    const sim = new Sim({ seed: 42, playerClass: 'warrior', autoEquip: false });
     const pid = sim.playerId;
     sim.acceptArchetypeQuest('tailoring');
     const meta = sim.players.get(pid);
@@ -423,8 +421,11 @@ describe('the craft output arms each stand their hub line down', () => {
     for (let i = 0; i < 9; i++) sim.addItem('homespun_cloth', 1, pid);
     for (let i = 0; i < 15; i++) sim.addItem('spool_of_thread', 1, pid);
     sim.tick();
+    sim.rng = rngWithFirstDraws((proc) => proc >= PROC_CHANCE);
     runCraft(sim, 'recipe_eastbrook_ritual_vestments', false, pid);
+    expect(sim.lastCraftResult?.masterwork).toBeUndefined();
     sim.tick();
+    sim.rng = rngWithFirstDraws((proc) => proc < PROC_CHANCE);
     runCraft(sim, 'recipe_eastbrook_ritual_vestments', false, pid);
     expect(sim.lastCraftResult?.ok, sim.lastCraftResult?.reason).toBe(true);
     // The arm identity, and the whole point of the case.
