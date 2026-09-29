@@ -9,9 +9,17 @@ import { createMob, recalcPlayerStats } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
 import type { SimContext } from '../src/sim/sim_context';
 import type { Entity } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
+// The healer, the tank and the dummy are all placed by the rig, so the ambient
+// overworld is pure cost: the empty world.
 function groveheart() {
-  const sim = new Sim({ seed: 3872, playerClass: 'druid', autoEquip: false });
+  const sim = new Sim({
+    seed: 3872,
+    playerClass: 'druid',
+    autoEquip: false,
+    world: EMPTY_TEST_WORLD,
+  });
   sim.setPlayerLevel(20);
   expect(sim.setSpec('restoration')).toBe(true);
   const healer = sim.player;
