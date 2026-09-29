@@ -253,6 +253,23 @@ const guildSaveLedgerRows = (callIndex = 0): readonly Record<string, unknown>[] 
   return ledgerRowsFromEffects(call?.[7]);
 };
 
+/** Settle a call whose retry backoff runs on the faked setTimeout: step the
+ *  clock timer by timer until the call settles (the
+ *  tests/audit_conservation_property.test.ts idiom), so every attempt still
+ *  runs in order whatever the backoff totals are, and a call that never
+ *  settles fails here by name instead of hanging to the test timeout. */
+async function settleOnFakeClock<T>(call: Promise<T>, what: string): Promise<T> {
+  let settled = false;
+  const tracked = call.finally(() => {
+    settled = true;
+  });
+  for (let step = 0; !settled; step++) {
+    if (step > 100) throw new Error(`${what} never settled on the faked clock`);
+    await vi.advanceTimersToNextTimerAsync();
+  }
+  return tracked;
+}
+
 beforeEach(() => {
   paidGuildCreateMock.mockReset();
   paidGuildCreateMock.mockImplementation(
@@ -454,12 +471,10 @@ describe('GameServer.loadGuildBanks (boot retry)', () => {
         { guildId: 7, data: { treasury: 3, inventory: [], purchasedSlots: 0 }, oversized: false },
       ]);
     const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    // The retry backoff runs on a fake clock: the first retry waits 500 ms.
+    // The retry backoff runs on a fake clock.
     vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
     try {
-      const load = server.loadGuildBanks();
-      await vi.advanceTimersByTimeAsync(500);
-      await load;
+      await settleOnFakeClock(server.loadGuildBanks(), 'the boot load');
     } finally {
       vi.useRealTimers();
     }
@@ -472,12 +487,12 @@ describe('GameServer.loadGuildBanks (boot retry)', () => {
     const server = new GameServer();
     dbMock.loadGuildBankRows.mockRejectedValue(new Error('db down'));
     const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    // The two retry waits (500 ms, then 1000 ms) run on a fake clock.
+    // The retry waits run on a fake clock.
     vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
     try {
-      const load = server.loadGuildBanks();
-      await vi.advanceTimersByTimeAsync(1_500);
-      await expect(load).resolves.toBeUndefined();
+      await expect(
+        settleOnFakeClock(server.loadGuildBanks(), 'the boot load'),
+      ).resolves.toBeUndefined();
     } finally {
       vi.useRealTimers();
     }
@@ -2502,12 +2517,10 @@ describe('the guild_create fee gate + the create/disband hooks', () => {
     // on the withMarket leave path).
     dbMock.saveCharacterAndMarketState.mockRejectedValue(new Error('db down'));
     const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    // The four backoff waits (250, 500, 1000, 2000 ms) run on a fake clock.
+    // The backoff waits between the leave save's attempts run on a fake clock.
     vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
     try {
-      const leave = priv(server).saveCharacterOnLeave(session);
-      await vi.advanceTimersByTimeAsync(3_750);
-      await leave;
+      await settleOnFakeClock(priv(server).saveCharacterOnLeave(session), 'the leave flush');
     } finally {
       vi.useRealTimers();
     }

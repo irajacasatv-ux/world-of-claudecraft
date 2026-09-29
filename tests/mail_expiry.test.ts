@@ -55,9 +55,11 @@ function tickFor(sim: Sim, seconds: number): SimEvent[] {
   return out;
 }
 
-// The gap the clock cases leave between a read (or take) and the next verb. Every
-// clock below is compared exactly, so any elapsed time shows a clock the second
-// verb re-extended or restarted; one sim-second (20 ticks) is enough.
+// The sim time the clock cases let pass at six points. Four gaps separate a read
+// (or take) from the next verb, so a clock that verb re-extended or restarted
+// shows. Two come before the first verb, separating the landed note from the
+// read (or take) that starts its read clock. Every clock below is compared
+// exactly, so any elapsed time is visible; one sim-second (20 ticks) is enough.
 const ELAPSE_SECONDS = 1;
 
 // biome-ignore lint/suspicious/noExplicitAny: reach into the book to drive and inspect raw expiry.
