@@ -1074,9 +1074,9 @@ describe('discovery scope matches vitest collection over the real tree', () => {
           walk(full);
           continue;
         }
-        if (/\.(test|spec)\.[cm]?[jt]sx?$/.test(rel) && !rel.includes('.browser.test.')) {
-          offenders.push(rel);
-        }
+        // A browser-suite file out here is an offender too: vite.config excludes it and the
+        // browser config includes only tests/browser/, so it would run under neither.
+        if (/\.(test|spec)\.[cm]?[jt]sx?$/.test(rel)) offenders.push(rel);
       }
     };
     walk(REPO_ROOT);
@@ -1131,5 +1131,25 @@ describe('discovery scope matches vitest collection over the real tree', () => {
     };
     walk(path.join(REPO_ROOT, 'tests'));
     expect(offenders).toEqual([]);
+  });
+
+  it('keeps every browser-suite file where the browser config collects it', () => {
+    // vite.config excludes **/*.browser.test.ts everywhere and vitest.browser.config includes
+    // only tests/browser/, so a browser-suite file anywhere else under tests/ runs in neither.
+    const stranded: string[] = [];
+    const walk = (dir: string) => {
+      for (const entry of readdirSync(dir, { withFileTypes: true })) {
+        const full = path.join(dir, entry.name);
+        if (entry.isDirectory()) {
+          if (entry.name !== 'node_modules') walk(full);
+          continue;
+        }
+        const rel = path.relative(REPO_ROOT, full).split(path.sep).join('/');
+        if (entry.name.endsWith('.browser.test.ts') && !rel.startsWith('tests/browser/'))
+          stranded.push(rel);
+      }
+    };
+    walk(path.join(REPO_ROOT, 'tests'));
+    expect(stranded).toEqual([]);
   });
 });
