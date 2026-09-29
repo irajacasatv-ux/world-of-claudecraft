@@ -3,7 +3,6 @@ import { MOBS } from '../src/sim/data';
 import { createMob } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
 import type { Entity } from '../src/sim/types';
-import { WORLD_WITHOUT_HUB_YARD } from './helpers/hub_yard';
 import { EMPTY_TEST_WORLD } from './sim_shared';
 
 type PaladinSpec = 'holy' | 'protection' | 'retribution';
@@ -14,42 +13,18 @@ const PRIORITY: Readonly<Record<PaladinSpec, readonly string[]>> = {
   retribution: ['hammer_of_wrath', 'final_edict', 'dawnfall', 'hammer_of_grace'],
 };
 
-// Re-pinned for the v0.32.1 catch-up (both stay inside the 35-65 contract):
-// holy 42.3 to 41.25; retribution 46.85 to 54.35. The retribution slowdown is
-// main's hammer_of_wrath execute gate thinning the rotation's Devotion grants
-// above 20% target health; flagged for the owner's review, band intact.
-// Re-pinned for the v0.36 composition: holy 41.25 to 42.45, protection 38.65
-// to 38.1, retribution 54.35 to 48.35. Re-pinned again on the v0.37.0 castle
-// base, whose world content forks the shared stream: holy 42.45 to 41.25,
-// protection 38.1 to 38.65, retribution 48.35 to 55.75. Re-pinned 2026-08 on
-// the v0.39 Eastbrook harbor move (d19aa33f76,
-// docs/design/eastbrook-revamp/site-plan.md), whose world content forks the
-// shared stream again: holy 41.25 to 42.45; protection and retribution
-// unmoved. Re-pinned for owner refinement round 3 (the coastline pulled to
-// the town, re-threaded streets, three promoted home lots), which forks the
-// shared stream once more: retribution 55.75 to 52.45; holy and protection
-// unmoved. Re-pinned for owner refinement rounds 6 and 6b (the camps traded
-// ground, the harbour quarter and churchyard landed, the delve and its POI
-// moved to the Mirror Lake shore, three town NPCs were redistributed), which
-// forks the shared stream again: protection 38.65 to 42.7; holy and
-// retribution unmoved. Re-pinned on the eastbrook-plus-tutorial integration
-// merge (the harbor town and the Proving Shore island land in one world),
-// which forks the shared stream again: holy 42.45 to 41.25, protection 42.7
-// to 41.7; retribution unmoved. Re-pinned for the Drakelands site swap
-// (docs/design/drakelands-improvements/plan.md: the keep castle removed to
-// flat land, the troll sites traded, Wyrmwatch stripped), which forks the
-// shared stream again: protection 41.7 to 40.15, retribution 52.45 to
-// 55.75; holy unmoved. The keep-side graveyard's move to the owner's
-// churchyard (the rebuild epic's Pale Keeper seat) forks it once more:
-// retribution 55.75 to 59.2; holy and protection unmoved. The
-// release/v0.43.0 merge into feature/world-quests forks it once more, through
-// the branch's hedge_knight camp move in src/sim/content/evergarden.ts
-// (c43178a68c): retribution 59.2 back to 55.75; holy and protection unmoved.
-// The wide 35-65s design band still holds.
+// The 35 to 65 s band is the design contract; the exact pins are tripwires on
+// this seed's rng stream. Since v0.32.1, main's hammer_of_wrath execute gate
+// thins the retribution rotation's Devotion grants above 20% target health
+// (flagged for the owner's review then, band intact).
+// Re-pinned 2026-09-29 onto EMPTY_TEST_WORLD (protection 40.15 to 39.6,
+// retribution 55.75 to 46.85, holy unmoved): with no camps, NPCs or ground
+// objects ticking beside the rotation, a far-world content move can no longer
+// fork the stream these pins ride, which cost about ten re-pins on the full world.
 const EXPECTED_SECONDS: Readonly<Record<PaladinSpec, number>> = {
   holy: 41.25,
-  protection: 40.15,
-  retribution: 55.75,
+  protection: 39.6,
+  retribution: 46.85,
 };
 
 function addDummy(sim: Sim): Entity {
@@ -89,7 +64,7 @@ function secondsToTwenty(spec: PaladinSpec): number {
     seed: 53,
     playerClass: 'paladin',
     autoEquip: true,
-    world: WORLD_WITHOUT_HUB_YARD,
+    world: EMPTY_TEST_WORLD,
   });
   sim.setPlayerLevel(20);
   sim.setSpec(spec);
@@ -124,11 +99,9 @@ function secondsToTwenty(spec: PaladinSpec): number {
 }
 
 // The blocking run stubs the shared rng (`rng.next` below), so, unlike the
-// three rotation runs above, its pacing does not ride the shared stream the
-// ambient overworld forks: it fights only the dummy it places, and runs in the
-// empty test world on the rotation runs' seed, whose terrain the file has
-// already built. The rotation runs keep the full world on purpose, since their
-// exact pins are measured against that stream.
+// three rotation runs above, its pacing rides no stream at all: it fights only
+// the dummy it places, in the rotation runs' empty test world and seed, whose
+// terrain the file has already built.
 function protectionSecondsToTwentyWhileBlocking(): { seconds: number; devotionFromBlocks: number } {
   const sim = new Sim({
     seed: 53,
