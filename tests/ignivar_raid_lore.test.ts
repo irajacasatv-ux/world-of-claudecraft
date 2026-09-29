@@ -29,6 +29,12 @@ import { type Entity, IGNIVAR_BOSS_ID } from '../src/sim/types';
 import { terrainHeight } from '../src/sim/world';
 import { localizeSimAuraName, localizeSimText } from '../src/ui/sim_i18n';
 import { worldEntityText } from '../src/ui/world_entity_i18n';
+import { EMPTY_TEST_WORLD } from './sim_shared';
+
+// Every Sim here shares one seed and the empty overworld: the raid instances
+// build from their dungeon records, and the record pickups place their own
+// objects, so no case reads the seed or the overworld's camps and NPCs.
+const SEED = 91;
 
 describe('Ignivar raid lore content', () => {
   it('pins the persistent quest, record, and checkpoint identifiers literally', () => {
@@ -129,7 +135,12 @@ describe('Ignivar raid lore content', () => {
   });
 
   it('seats the arena projection between the north pillars facing south', () => {
-    const sim = new Sim({ seed: 96, playerClass: 'warrior', devCommands: true });
+    const sim = new Sim({
+      seed: SEED,
+      playerClass: 'warrior',
+      devCommands: true,
+      world: EMPTY_TEST_WORLD,
+    });
     expect(enterDungeon(sim.ctx, IGNIVAR_RAID_ARENA_ID, sim.player.id, true)).toBe(true);
     const instance = sim.instances.find((entry) => entry.dungeonId === IGNIVAR_RAID_ARENA_ID);
     if (!instance) throw new Error('Ignivar arena did not claim an instance');
@@ -145,7 +156,12 @@ describe('Ignivar raid lore content', () => {
   });
 
   it('keeps records readable as optional lore without granting quest credit', () => {
-    const sim = new Sim({ seed: 91, playerClass: 'warrior', noPlayer: true });
+    const sim = new Sim({
+      seed: SEED,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const pid = sim.addPlayer('warrior', 'Archivist');
     const player = sim.entities.get(pid) as Entity;
     player.pos = { x: 20, y: terrainHeight(20, 20, sim.cfg.seed), z: 20 };
@@ -189,7 +205,12 @@ describe('Ignivar raid lore content', () => {
   });
 
   it('localizes all three optional lore nameplates without making them items', () => {
-    const sim = new Sim({ seed: 92, playerClass: 'warrior', noPlayer: true });
+    const sim = new Sim({
+      seed: SEED,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const pid = sim.addPlayer('warrior', 'Reader');
     const player = sim.entities.get(pid) as Entity;
     player.pos = { x: 30, y: terrainHeight(30, 30, sim.cfg.seed), z: 30 };
@@ -214,7 +235,12 @@ describe('Ignivar raid lore content', () => {
   });
 
   it('reveals each automaton memory only when the final construct of that type dies', () => {
-    const sim = new Sim({ seed: 93, playerClass: 'warrior', devCommands: true });
+    const sim = new Sim({
+      seed: SEED,
+      playerClass: 'warrior',
+      devCommands: true,
+      world: EMPTY_TEST_WORLD,
+    });
     expect(enterDungeon(sim.ctx, IGNIVAR_FORGE_APPROACH_ID, sim.player.id, true)).toBe(true);
     const instance = sim.instances.find((entry) => entry.dungeonId === IGNIVAR_FORGE_APPROACH_ID);
     if (!instance) throw new Error('Ignivar approach did not claim an instance');
@@ -252,7 +278,12 @@ describe('Ignivar raid lore content', () => {
   });
 
   it('completes the Herald chapter from Ignivar death with no core interaction', () => {
-    const sim = new Sim({ seed: 94, playerClass: 'warrior', devCommands: true });
+    const sim = new Sim({
+      seed: SEED,
+      playerClass: 'warrior',
+      devCommands: true,
+      world: EMPTY_TEST_WORLD,
+    });
     expect(enterDungeon(sim.ctx, IGNIVAR_RAID_ARENA_ID, sim.player.id, true)).toBe(true);
     const instance = sim.instances.find((entry) => entry.dungeonId === IGNIVAR_RAID_ARENA_ID);
     if (!instance) throw new Error('Ignivar arena did not claim an instance');
@@ -295,7 +326,12 @@ describe('Ignivar raid lore content', () => {
   });
 
   it('completes the Forgefather chapter and closes the story when Varkhul dies', () => {
-    const sim = new Sim({ seed: 95, playerClass: 'warrior', devCommands: true });
+    const sim = new Sim({
+      seed: SEED,
+      playerClass: 'warrior',
+      devCommands: true,
+      world: EMPTY_TEST_WORLD,
+    });
     expect(enterDungeon(sim.ctx, IGNIVAR_SECOND_WING_ID, sim.player.id, true)).toBe(true);
     const instance = sim.instances.find((entry) => entry.dungeonId === IGNIVAR_SECOND_WING_ID);
     if (!instance) throw new Error('Inner Crucible did not claim an instance');
