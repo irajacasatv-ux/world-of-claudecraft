@@ -11,6 +11,7 @@
 export const pending: Record<string, readonly string[]> = {
   "es": [
     "abilityUi.actionBar.moveHint",
+    "entities.items.pvp_trophy_skull.name",
     "guide.worldPvpPage.introZones",
     "guide.worldPvpPage.zonesBody",
     "hudChrome.weeklyRewards.previewClaimNotice",
@@ -18,10 +19,13 @@ export const pending: Record<string, readonly string[]> = {
     "hudChrome.worldPvp.rewardBonus",
     "hudChrome.worldPvp.rewardPaused",
     "hudChrome.worldPvp.rewardProgress",
-    "hudChrome.worldPvp.rewardTitles"
+    "hudChrome.worldPvp.rewardTitles",
+    "hudChrome.worldPvp.skullName",
+    "hudChrome.worldPvp.spoilsLine"
   ],
   "es_ES": [
     "abilityUi.actionBar.moveHint",
+    "entities.items.pvp_trophy_skull.name",
     "guide.worldPvpPage.introZones",
     "guide.worldPvpPage.zonesBody",
     "hudChrome.weeklyRewards.previewClaimNotice",
@@ -29,10 +33,13 @@ export const pending: Record<string, readonly string[]> = {
     "hudChrome.worldPvp.rewardBonus",
     "hudChrome.worldPvp.rewardPaused",
     "hudChrome.worldPvp.rewardProgress",
-    "hudChrome.worldPvp.rewardTitles"
+    "hudChrome.worldPvp.rewardTitles",
+    "hudChrome.worldPvp.skullName",
+    "hudChrome.worldPvp.spoilsLine"
   ],
   "fr_FR": [
     "abilityUi.actionBar.moveHint",
+    "entities.items.pvp_trophy_skull.name",
     "guide.worldPvpPage.introZones",
     "guide.worldPvpPage.zonesBody",
     "hudChrome.weeklyRewards.previewClaimNotice",
@@ -40,10 +47,13 @@ export const pending: Record<string, readonly string[]> = {
     "hudChrome.worldPvp.rewardBonus",
     "hudChrome.worldPvp.rewardPaused",
     "hudChrome.worldPvp.rewardProgress",
-    "hudChrome.worldPvp.rewardTitles"
+    "hudChrome.worldPvp.rewardTitles",
+    "hudChrome.worldPvp.skullName",
+    "hudChrome.worldPvp.spoilsLine"
   ],
   "fr_CA": [
     "abilityUi.actionBar.moveHint",
+    "entities.items.pvp_trophy_skull.name",
     "guide.worldPvpPage.introZones",
     "guide.worldPvpPage.zonesBody",
     "hudChrome.weeklyRewards.previewClaimNotice",
@@ -51,11 +61,14 @@ export const pending: Record<string, readonly string[]> = {
     "hudChrome.worldPvp.rewardBonus",
     "hudChrome.worldPvp.rewardPaused",
     "hudChrome.worldPvp.rewardProgress",
-    "hudChrome.worldPvp.rewardTitles"
+    "hudChrome.worldPvp.rewardTitles",
+    "hudChrome.worldPvp.skullName",
+    "hudChrome.worldPvp.spoilsLine"
   ],
   "en_CA": [],
   "it_IT": [
     "abilityUi.actionBar.moveHint",
+    "entities.items.pvp_trophy_skull.name",
     "guide.worldPvpPage.introZones",
     "guide.worldPvpPage.zonesBody",
     "hudChrome.weeklyRewards.previewClaimNotice",
@@ -63,10 +76,13 @@ export const pending: Record<string, readonly string[]> = {
     "hudChrome.worldPvp.rewardBonus",
     "hudChrome.worldPvp.rewardPaused",
     "hudChrome.worldPvp.rewardProgress",
-    "hudChrome.worldPvp.rewardTitles"
+    "hudChrome.worldPvp.rewardTitles",
+    "hudChrome.worldPvp.skullName",
+    "hudChrome.worldPvp.spoilsLine"
   ],
   "de_DE": [
     "abilityUi.actionBar.moveHint",
+    "entities.items.pvp_trophy_skull.name",
     "guide.worldPvpPage.introZones",
     "guide.worldPvpPage.zonesBody",
     "hudChrome.weeklyRewards.previewClaimNotice",
@@ -74,7 +90,9 @@ export const pending: Record<string, readonly string[]> = {
     "hudChrome.worldPvp.rewardBonus",
     "hudChrome.worldPvp.rewardPaused",
     "hudChrome.worldPvp.rewardProgress",
-    "hudChrome.worldPvp.rewardTitles"
+    "hudChrome.worldPvp.rewardTitles",
+    "hudChrome.worldPvp.skullName",
+    "hudChrome.worldPvp.spoilsLine"
   ],
   "zh_CN": [],
   "zh_TW": [],
@@ -82,6 +100,7 @@ export const pending: Record<string, readonly string[]> = {
   "ja_JP": [],
   "pt_BR": [
     "abilityUi.actionBar.moveHint",
+    "entities.items.pvp_trophy_skull.name",
     "guide.worldPvpPage.introZones",
     "guide.worldPvpPage.zonesBody",
     "hudChrome.weeklyRewards.previewClaimNotice",
@@ -89,11 +108,14 @@ export const pending: Record<string, readonly string[]> = {
     "hudChrome.worldPvp.rewardBonus",
     "hudChrome.worldPvp.rewardPaused",
     "hudChrome.worldPvp.rewardProgress",
-    "hudChrome.worldPvp.rewardTitles"
+    "hudChrome.worldPvp.rewardTitles",
+    "hudChrome.worldPvp.skullName",
+    "hudChrome.worldPvp.spoilsLine"
   ],
   "ru_RU": [],
   "cs_CZ": [
     "abilityUi.actionBar.moveHint",
+    "entities.items.pvp_trophy_skull.name",
     "guide.worldPvpPage.introZones",
     "guide.worldPvpPage.zonesBody",
     "hudChrome.weeklyRewards.previewClaimNotice",
@@ -101,10 +123,13 @@ export const pending: Record<string, readonly string[]> = {
     "hudChrome.worldPvp.rewardBonus",
     "hudChrome.worldPvp.rewardPaused",
     "hudChrome.worldPvp.rewardProgress",
-    "hudChrome.worldPvp.rewardTitles"
+    "hudChrome.worldPvp.rewardTitles",
+    "hudChrome.worldPvp.skullName",
+    "hudChrome.worldPvp.spoilsLine"
   ],
   "nl_NL": [
     "abilityUi.actionBar.moveHint",
+    "entities.items.pvp_trophy_skull.name",
     "guide.worldPvpPage.introZones",
     "guide.worldPvpPage.zonesBody",
     "hudChrome.weeklyRewards.previewClaimNotice",
@@ -112,10 +137,13 @@ export const pending: Record<string, readonly string[]> = {
     "hudChrome.worldPvp.rewardBonus",
     "hudChrome.worldPvp.rewardPaused",
     "hudChrome.worldPvp.rewardProgress",
-    "hudChrome.worldPvp.rewardTitles"
+    "hudChrome.worldPvp.rewardTitles",
+    "hudChrome.worldPvp.skullName",
+    "hudChrome.worldPvp.spoilsLine"
   ],
   "pl_PL": [
     "abilityUi.actionBar.moveHint",
+    "entities.items.pvp_trophy_skull.name",
     "guide.worldPvpPage.introZones",
     "guide.worldPvpPage.zonesBody",
     "hudChrome.weeklyRewards.previewClaimNotice",
@@ -123,10 +151,13 @@ export const pending: Record<string, readonly string[]> = {
     "hudChrome.worldPvp.rewardBonus",
     "hudChrome.worldPvp.rewardPaused",
     "hudChrome.worldPvp.rewardProgress",
-    "hudChrome.worldPvp.rewardTitles"
+    "hudChrome.worldPvp.rewardTitles",
+    "hudChrome.worldPvp.skullName",
+    "hudChrome.worldPvp.spoilsLine"
   ],
   "id_ID": [
     "abilityUi.actionBar.moveHint",
+    "entities.items.pvp_trophy_skull.name",
     "guide.worldPvpPage.introZones",
     "guide.worldPvpPage.zonesBody",
     "hudChrome.weeklyRewards.previewClaimNotice",
@@ -134,10 +165,13 @@ export const pending: Record<string, readonly string[]> = {
     "hudChrome.worldPvp.rewardBonus",
     "hudChrome.worldPvp.rewardPaused",
     "hudChrome.worldPvp.rewardProgress",
-    "hudChrome.worldPvp.rewardTitles"
+    "hudChrome.worldPvp.rewardTitles",
+    "hudChrome.worldPvp.skullName",
+    "hudChrome.worldPvp.spoilsLine"
   ],
   "tr_TR": [
     "abilityUi.actionBar.moveHint",
+    "entities.items.pvp_trophy_skull.name",
     "guide.worldPvpPage.introZones",
     "guide.worldPvpPage.zonesBody",
     "hudChrome.weeklyRewards.previewClaimNotice",
@@ -145,10 +179,13 @@ export const pending: Record<string, readonly string[]> = {
     "hudChrome.worldPvp.rewardBonus",
     "hudChrome.worldPvp.rewardPaused",
     "hudChrome.worldPvp.rewardProgress",
-    "hudChrome.worldPvp.rewardTitles"
+    "hudChrome.worldPvp.rewardTitles",
+    "hudChrome.worldPvp.skullName",
+    "hudChrome.worldPvp.spoilsLine"
   ],
   "sv_SE": [
     "abilityUi.actionBar.moveHint",
+    "entities.items.pvp_trophy_skull.name",
     "guide.worldPvpPage.introZones",
     "guide.worldPvpPage.zonesBody",
     "hudChrome.weeklyRewards.previewClaimNotice",
@@ -156,10 +193,13 @@ export const pending: Record<string, readonly string[]> = {
     "hudChrome.worldPvp.rewardBonus",
     "hudChrome.worldPvp.rewardPaused",
     "hudChrome.worldPvp.rewardProgress",
-    "hudChrome.worldPvp.rewardTitles"
+    "hudChrome.worldPvp.rewardTitles",
+    "hudChrome.worldPvp.skullName",
+    "hudChrome.worldPvp.spoilsLine"
   ],
   "vi_VN": [
     "abilityUi.actionBar.moveHint",
+    "entities.items.pvp_trophy_skull.name",
     "guide.worldPvpPage.introZones",
     "guide.worldPvpPage.zonesBody",
     "hudChrome.weeklyRewards.previewClaimNotice",
@@ -167,10 +207,13 @@ export const pending: Record<string, readonly string[]> = {
     "hudChrome.worldPvp.rewardBonus",
     "hudChrome.worldPvp.rewardPaused",
     "hudChrome.worldPvp.rewardProgress",
-    "hudChrome.worldPvp.rewardTitles"
+    "hudChrome.worldPvp.rewardTitles",
+    "hudChrome.worldPvp.skullName",
+    "hudChrome.worldPvp.spoilsLine"
   ],
   "da_DK": [
     "abilityUi.actionBar.moveHint",
+    "entities.items.pvp_trophy_skull.name",
     "guide.worldPvpPage.introZones",
     "guide.worldPvpPage.zonesBody",
     "hudChrome.weeklyRewards.previewClaimNotice",
@@ -178,6 +221,8 @@ export const pending: Record<string, readonly string[]> = {
     "hudChrome.worldPvp.rewardBonus",
     "hudChrome.worldPvp.rewardPaused",
     "hudChrome.worldPvp.rewardProgress",
-    "hudChrome.worldPvp.rewardTitles"
+    "hudChrome.worldPvp.rewardTitles",
+    "hudChrome.worldPvp.skullName",
+    "hudChrome.worldPvp.spoilsLine"
   ]
 };
