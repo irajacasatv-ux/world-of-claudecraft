@@ -44,7 +44,7 @@ const RUN_ESCORT_ROUNDS = [
   'export function runEscortRounds(def: EscortDef): void { const sim = new Sim({ seed:',
   "424242, playerClass: 'warrior', playerName: 'Escorter', respawnSeconds: 2,",
   '...PRODUCTION_IDLE_CULL, });',
-  'sim.setPlayerLevel(20); let ranAtLeastOne = false; for (let round = 0; round < 2;',
+  'sim.setPlayerLevel(20); let roundsRun = 0; for (let round = 0; round < 2;',
   'round++) { sim.player.dead = false; sim.player.hp = sim.player.maxHp;',
   'sim.targetEntity(null); if (def.worldQuestId !== undefined) { const meta =',
   "sim.meta(sim.playerId); if (!meta) throw new Error('Missing player metadata');",
@@ -55,15 +55,15 @@ const RUN_ESCORT_ROUNDS = [
   '}); } const escortee = findByTemplate(sim, def.npcMobId); if (!escortee) continue;',
   'const pos = sim.groundPos(escortee.pos.x, escortee.pos.z + 2); sim.player.pos = {',
   '...pos }; sim.player.prevPos = { ...pos }; sim.interact(); if',
-  '(!sim.escortRuns.get(def.id)?.run) continue; ranAtLeastOne = true; let ids: number[]',
+  '(!sim.escortRuns.get(def.id)?.run) continue; let ids: number[]',
   '= []; for (let i = 0; i < 60 * 20 && ids.length === 0; i++) { sim.tick(); ids =',
   '[...(sim.escortRuns.get(def.id)?.run?.ambushIds ?? [])]; } for (const id of ids) {',
   'const mob = sim.entities.get(id); if (mob) sim.dealDamage(null, mob, mob.hp, false,',
   "'physical', null, 'hit'); } const walker = findByTemplate(sim, def.npcMobId); if",
   "(walker) sim.dealDamage(null, walker, walker.hp, false, 'physical', null, 'hit');",
   'for (let i = 0; i < 50 * 20; i++) sim.tick(); assertPopulationSane(sim, `${def.id}',
-  "round ${round + 1}`); } expect(ranAtLeastOne, 'no escort actually ran, so this",
-  "proved nothing').toBe(true); }",
+  'round ${round + 1}`); roundsRun++; } expect(roundsRun, `${def.id} ran ${roundsRun} of',
+  'its 2 rounds`).toBe(2); }',
 ].join(' ');
 
 const ESCORT_SHARDS_MODULE = [

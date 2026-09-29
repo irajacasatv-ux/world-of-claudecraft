@@ -132,7 +132,7 @@ export function runEscortRounds(def: EscortDef): void {
   });
   sim.setPlayerLevel(20);
 
-  let ranAtLeastOne = false;
+  let roundsRun = 0;
   for (let round = 0; round < 2; round++) {
     // Previous live-world waves may have killed the observer. An escort
     // cannot start for a dead player, so restore the test actor each round.
@@ -151,13 +151,12 @@ export function runEscortRounds(def: EscortDef): void {
       sim.questLog.set(def.questId, { questId: def.questId, counts: [0], state: 'active' });
     }
     const escortee = findByTemplate(sim, def.npcMobId);
-    if (!escortee) continue; // not yet respawned; the next escort still runs
+    if (!escortee) continue; // not yet respawned: a skipped round, which the count below reds
     const pos = sim.groundPos(escortee.pos.x, escortee.pos.z + 2);
     sim.player.pos = { ...pos };
     sim.player.prevPos = { ...pos };
     sim.interact();
     if (!sim.escortRuns.get(def.id)?.run) continue;
-    ranAtLeastOne = true;
 
     // Walk until the first wave spawns, then kill all of it.
     let ids: number[] = [];
@@ -175,6 +174,9 @@ export function runEscortRounds(def: EscortDef): void {
     for (let i = 0; i < 50 * 20; i++) sim.tick();
 
     assertPopulationSane(sim, `${def.id} round ${round + 1}`);
+    roundsRun++;
   }
-  expect(ranAtLeastOne, 'no escort actually ran, so this proved nothing').toBe(true);
+  // Both rounds must really run and be checked: the second is the only one that sees a
+  // leak needing a prior run in the same world, so a silently skipped round proves nothing.
+  expect(roundsRun, `${def.id} ran ${roundsRun} of its 2 rounds`).toBe(2);
 }
