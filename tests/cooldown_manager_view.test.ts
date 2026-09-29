@@ -18,6 +18,7 @@ import {
   cooldownSlotReady,
   createCooldownManagerView,
 } from '../src/ui/hud/cooldown_manager/cooldown_manager_view';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const CUE = 'ui_aura_hard_bell';
 
@@ -27,8 +28,10 @@ function spell(id: string, patch: Partial<CooldownSpellConfig> = {}, cue: string
 }
 
 /** A feral druid at 20 with a full pool: Gorebite (ferocious_bite) is known and affordable. */
+// The view reads only the feral's own kit, pool and auras, so the empty world
+// serves.
 function feral(): Sim {
-  const sim = new Sim({ seed: 29, playerClass: 'druid', autoEquip: true });
+  const sim = new Sim({ seed: 29, playerClass: 'druid', autoEquip: true, world: EMPTY_TEST_WORLD });
   sim.setPlayerLevel(20);
   expect(sim.applyTalents({ spec: 'feral', rows: {} })).toBe(true);
   sim.player.auras.push(catForm(sim));
