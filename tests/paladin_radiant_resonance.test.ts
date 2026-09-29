@@ -3,7 +3,7 @@ import { ABILITIES } from '../src/sim/content/classes';
 import { grantDevotion } from '../src/sim/paladin_devotion';
 import { type ResolvedAbility, Sim } from '../src/sim/sim';
 import { DT, type Entity } from '../src/sim/types';
-import { WORLD_WITHOUT_HUB_YARD } from './helpers/hub_yard';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 function entity(sim: Sim, id: number): Entity {
   const found = sim.entities.get(id);
@@ -17,11 +17,12 @@ function holyParty(): {
   firstAlly: Entity;
   secondAlly: Entity;
 } {
+  // A party of three players and nothing else, so it stands on the empty world.
   const sim = new Sim({
     seed: 412,
     playerClass: 'paladin',
     noPlayer: true,
-    world: WORLD_WITHOUT_HUB_YARD,
+    world: EMPTY_TEST_WORLD,
   });
   const paladinId = sim.addPlayer('paladin', 'Aurelia');
   const firstAllyId = sim.addPlayer('warrior', 'Borin');
