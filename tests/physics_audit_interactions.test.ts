@@ -8,7 +8,7 @@ import {
   supportHeightAt,
 } from '../src/sim/colliders';
 import { DUNGEONS, instanceOrigin, MOBS, PROPS } from '../src/sim/data';
-import { CRYPT_LAYOUT, DAIS_HEIGHT, tombSlotRoll } from '../src/sim/dungeon_layout';
+import { CRYPT_LAYOUT, DAIS_HEIGHT, TOMB_HD, tombSlotRoll } from '../src/sim/dungeon_layout';
 import { createMob } from '../src/sim/entity';
 import { runMobSwingAffixes } from '../src/sim/mob/mob_swing';
 import { PLAYER_BODY_RADIUS } from '../src/sim/pathfind';
@@ -185,6 +185,30 @@ describe('client predictor parity in dungeons', () => {
       expect(ghost.pos.y).toBeCloseTo(p.pos.y, 10);
       expect(ghost.pos.z).toBeCloseTo(p.pos.z, 10);
     }
+
+    // The coffin leg. The dais walk above never reaches the wall-side tombs,
+    // and a coffin lid is a height-gated top: the instanced resolver lets a
+    // body over it only when handed the mover's feet height, which the open
+    // world solver never asks for. Both hosts start south of one coffin and
+    // jump it end to end.
+    const t = CRYPT_LAYOUT.tombs[7];
+    teleport(sim, o.x + t.x, o.z + t.z - 4, 0);
+    const coffinGhost = structuredClone({
+      ...p,
+      auras: [],
+      castingAbility: null,
+    }) as unknown as Entity;
+    for (let i = 0; i < 40; i++) {
+      Object.assign(meta.moveInput, input);
+      sim.tick();
+      coffinGhost.prevPos = { ...coffinGhost.pos };
+      stepPlayerMotion(clientDeps, coffinGhost, input);
+      expect(coffinGhost.pos.x).toBeCloseTo(p.pos.x, 10);
+      expect(coffinGhost.pos.y).toBeCloseTo(p.pos.y, 10);
+      expect(coffinGhost.pos.z).toBeCloseTo(p.pos.z, 10);
+    }
+    // Over the lid and down past the coffin's far end, not stopped at its face.
+    expect(p.pos.z).toBeGreaterThan(o.z + t.z + TOMB_HD);
   });
 });
 
