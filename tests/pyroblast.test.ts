@@ -6,9 +6,10 @@ import { createMob } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
 import type { Entity } from '../src/sim/types';
 import { placePlayerInOpenField } from './helpers/open_field';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 function makeSim(seed = 42) {
-  return new Sim({ seed, playerClass: 'mage', autoEquip: true });
+  return new Sim({ seed, playerClass: 'mage', autoEquip: true, world: EMPTY_TEST_WORLD });
 }
 
 // An idle hostile mob `dz` yards in front of the player, targeted and faced. Staged in

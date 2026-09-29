@@ -33,6 +33,7 @@ import { Sim } from '../src/sim/sim';
 import { ALL_CLASSES, MAX_LEVEL, XP_TABLE, type ZoneDef } from '../src/sim/types';
 import { terrainHeight, WATER_LEVEL } from '../src/sim/world';
 import { WORLD_SEED } from '../src/sim/world_seed';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const SCRIPTED_COLLECT_ITEMS = new Set(['the_codfather']);
 
@@ -418,7 +419,7 @@ describe('talent row unlock progression', () => {
     CHOICE_ROW_LEVELS.filter((rowLevel) => rowLevel <= level).length;
 
   it('unlocks rows on the choice-row level schedule', () => {
-    const sim = new Sim({ seed: WORLD_SEED, playerClass: 'warrior' });
+    const sim = new Sim({ seed: WORLD_SEED, playerClass: 'warrior', world: EMPTY_TEST_WORLD });
     for (const level of [1, 4, 5, 7, 8, 11, 14, 17, 20]) {
       sim.setPlayerLevel(level);
       expect(sim.talentPoints().total, `level ${level}`).toBe(unlockedRowsAt(level));
@@ -426,7 +427,7 @@ describe('talent row unlock progression', () => {
   });
 
   it('counts spent talents as picked rows, not old rank totals', () => {
-    const sim = new Sim({ seed: WORLD_SEED, playerClass: 'warrior' });
+    const sim = new Sim({ seed: WORLD_SEED, playerClass: 'warrior', world: EMPTY_TEST_WORLD });
     sim.setPlayerLevel(20);
     const r5 = CHOICE_ROWS.warrior.rows[0].options[0].id;
     const r11 = CHOICE_ROWS.warrior.rows[2].options[1].id;

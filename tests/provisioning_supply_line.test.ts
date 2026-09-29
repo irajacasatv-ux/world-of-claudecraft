@@ -32,6 +32,7 @@ import type { ProfessionRecipeRecord } from '../src/sim/professions/types';
 import { materialCostMultiplier } from '../src/sim/professions/wheel';
 import { Sim } from '../src/sim/sim';
 import { reagentUnitValue } from './helpers/reagent_unit_value';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 /** Every farm PRODUCE id and its fine twin, derived from the crop catalog. The
  *  seed ids are deliberately NOT here: a seed is the input side of the farming
@@ -1222,7 +1223,12 @@ describe('the touched rows stay gold-negative and stay off the gear chain', () =
 type CraftHarness = { sim: Sim; pid: number };
 
 function craftRig(recipe: ProfessionRecipeRecord): CraftHarness {
-  const sim = new Sim({ seed: 42, playerClass: 'warrior', autoEquip: false });
+  const sim = new Sim({
+    seed: 42,
+    playerClass: 'warrior',
+    autoEquip: false,
+    world: EMPTY_TEST_WORLD,
+  });
   const pid = sim.playerId;
   const meta = (sim as unknown as { players: Map<number, Record<string, unknown>> }).players.get(
     pid,

@@ -11,11 +11,17 @@ import { isResting, prestige, updateRested } from '../src/sim/progression/xp';
 import { Sim } from '../src/sim/sim';
 import { DT, MAX_LEVEL, PRESTIGE_XP_PER_RANK, xpForLevel } from '../src/sim/types';
 import { terrainHeight } from '../src/sim/world';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 type AnySim = Sim & Record<string, any>;
 
 function makeSim(): AnySim {
-  return new Sim({ seed: 42, playerClass: 'warrior', autoEquip: true }) as AnySim;
+  return new Sim({
+    seed: 42,
+    playerClass: 'warrior',
+    autoEquip: true,
+    world: EMPTY_TEST_WORLD,
+  }) as AnySim;
 }
 
 function teleport(sim: AnySim, e: any, x: number, z: number): void {

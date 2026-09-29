@@ -28,6 +28,7 @@ import {
 import { Sim } from '../../src/sim/sim';
 import type { SimContext } from '../../src/sim/sim_context';
 import { MAX_LEVEL } from '../../src/sim/types';
+import { EMPTY_TEST_WORLD } from '../sim_shared';
 
 const alloc = (over: Partial<TalentAllocation> = {}): TalentAllocation => ({
   ...emptyAllocation(),
@@ -37,8 +38,12 @@ const alloc = (over: Partial<TalentAllocation> = {}): TalentAllocation => ({
 // A max-level warrior (autoEquip so stats.armor is nonzero and % talents are visible),
 // plus its real SimContext + the player's live meta/entity.
 function setup(seed = 5) {
-  const sim = new Sim({ seed, playerClass: 'warrior', autoEquip: true }) as Sim &
-    Record<string, any>;
+  const sim = new Sim({
+    seed,
+    playerClass: 'warrior',
+    autoEquip: true,
+    world: EMPTY_TEST_WORLD,
+  }) as Sim & Record<string, any>;
   sim.setPlayerLevel(MAX_LEVEL);
   const ctx = sim.ctx as SimContext;
   // Live meta/entity, poked directly (cast to any like the parity scenarios' AnyEntity).

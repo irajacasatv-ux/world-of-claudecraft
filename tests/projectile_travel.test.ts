@@ -14,6 +14,7 @@ import {
 import { Sim } from '../src/sim/sim';
 import { DT } from '../src/sim/types';
 import { terrainHeight } from '../src/sim/world';
+import { RL_TEST_WORLD } from './sim_shared';
 
 const STEP = PROJECTILE_SPEED * DT; // yards a bolt covers per 20 Hz tick
 
@@ -250,7 +251,9 @@ function place(sim: Sim, e: any, x: number, z: number) {
 
 describe('deferred projectile damage end-to-end (mage Ice Lance)', () => {
   function castLanceAndTrack(seed: number) {
-    const sim = new Sim({ seed, playerClass: 'mage', autoEquip: true });
+    // One wolf camp: the bolt's target is the world's first live mob, the same
+    // camp wolf the full world leads with.
+    const sim = new Sim({ seed, playerClass: 'mage', autoEquip: true, world: RL_TEST_WORLD });
     sim.setPlayerLevel(20);
     // Ice Lance is Frost-spec kit: commit the spec so the ability is known.
     expect(sim.setSpec('frost')).toBe(true);

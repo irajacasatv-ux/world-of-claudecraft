@@ -48,6 +48,7 @@ import { wieldRequirementForTier } from '../src/sim/professions/wield_gate';
 import { Sim } from '../src/sim/sim';
 import { itemNames } from '../src/ui/i18n.catalog/items';
 import { placeAtHarvestSpot } from './helpers/harvest_spot';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 /**
  * The R37 ledger, and deliberately the ONLY hand-kept table in this file.
@@ -650,7 +651,12 @@ describe('the new-zone checklist: every complete zone arrives mechanically whole
     }
     expect(toolId, `${professionId} needs a tool covering tier ${node.tier}`).not.toBe('');
 
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+    const sim = new Sim({
+      seed: 42,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const pid = sim.addPlayer('warrior', 'MarkDrive');
     const meta = sim.players.get(pid);
     if (!meta) throw new Error(`missing player meta ${pid}`);
