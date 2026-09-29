@@ -40,6 +40,11 @@ import {
   VARKHUL_ASSEMBLY_FORGE_LOCAL_POS,
 } from '../src/sim/varkhul_assembly';
 
+// One seed for every Sim: the readouts are compared with a whole-roster walk
+// of the same world, never with seed-specific values, and a seed the file has
+// already built skips the overworld's collider bootstrap.
+const SEED = 11;
+
 const COLLECTORS = [
   collectActiveIgnivarMeteors,
   collectActiveVarkhulForgestormWarnings,
@@ -56,7 +61,7 @@ const COLLECTORS = [
 
 describe('raid readouts in the open field', () => {
   it('touch no entity when no instance slot holds a mob', () => {
-    const sim = new Sim({ seed: 11, playerClass: 'warrior' });
+    const sim = new Sim({ seed: SEED, playerClass: 'warrior' });
     expect(sim.entities.size).toBeGreaterThan(100);
     const values = vi.spyOn(sim.entities, 'values');
     const get = vi.spyOn(sim.entities, 'get');
@@ -89,7 +94,7 @@ describe('riftInstanceAtPos', () => {
   });
 
   it('never consults the rift slots for a position outside the rift band', () => {
-    const sim = new Sim({ seed: 11, playerClass: 'warrior' });
+    const sim = new Sim({ seed: SEED, playerClass: 'warrior' });
     let reads = 0;
     const ctx = new Proxy(sim.ctx, {
       get(target, key, receiver) {
@@ -104,7 +109,7 @@ describe('riftInstanceAtPos', () => {
 });
 
 function ignivarRoom() {
-  const sim = new Sim({ seed: 8124, playerClass: 'warrior', devCommands: true });
+  const sim = new Sim({ seed: SEED, playerClass: 'warrior', devCommands: true });
   sim.setDungeonDifficulty('normal', sim.player.id);
   expect(enterDungeon(sim.ctx, IGNIVAR_FORGE_APPROACH_ID, sim.player.id, true)).toBe(true);
   const instance = sim.instances.find(
@@ -171,7 +176,7 @@ describe('raid readouts inside the instance', () => {
   });
 
   it('answer the Varkhul assemblies a whole-roster walk answers', () => {
-    const sim = new Sim({ seed: 6112, playerClass: 'warrior', autoEquip: true, devCommands: true });
+    const sim = new Sim({ seed: SEED, playerClass: 'warrior', autoEquip: true, devCommands: true });
     sim.setPlayerLevel(20);
     sim.chat('/dev dungeon ignivar_inner_crucible normal');
     sim.chat('/dev varkhulraid normal');
@@ -205,7 +210,7 @@ describe('raid readouts inside the instance', () => {
   });
 
   it('answer the Nythraxis gravefires a whole-roster walk answers', () => {
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', devCommands: true });
+    const sim = new Sim({ seed: SEED, playerClass: 'warrior', devCommands: true });
     sim.chat('/dev raid normal', sim.player.id);
     const boss = [...sim.entities.values()].find(
       (e) => e.kind === 'mob' && e.templateId === NYTHRAXIS_BOSS_ID && !e.dead,
@@ -230,7 +235,7 @@ describe('raid readouts inside the instance', () => {
 
 describe('a raid boss outside every instance slot', () => {
   it('has no readouts: the dev-only /dev spawn path is knowingly outside the scope', () => {
-    const sim = new Sim({ seed: 11, playerClass: 'warrior', devCommands: true });
+    const sim = new Sim({ seed: SEED, playerClass: 'warrior', devCommands: true });
     const before = sim.entities.size;
     sim.chat(`/dev spawn ${IGNIVAR_BOSS_ID}`);
     const boss = [...sim.entities.values()].find((e) => e.templateId === IGNIVAR_BOSS_ID);
