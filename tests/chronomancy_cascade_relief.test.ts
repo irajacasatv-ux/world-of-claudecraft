@@ -14,6 +14,7 @@ import { ABILITIES } from '../src/sim/data';
 import { Sim } from '../src/sim/sim';
 import type { Entity } from '../src/sim/types';
 import { free } from './helpers/chronomancy_harness';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 describe('Temporal Cascade relief multiplier (pure)', () => {
   it('leaves a full-health ally on the authored roll', () => {
@@ -52,8 +53,10 @@ describe('Temporal Cascade relief multiplier (pure)', () => {
 const CASCADE_NAME = 'Temporal Cascade';
 const BIG_POOL = 1_000_000;
 
+// Every heal lands on allies the case adds beside the caster, so the ambient
+// overworld is pure cost: the empty world.
 function chronoMage(level = 20) {
-  const sim = new Sim({ seed: 41, playerClass: 'mage', autoEquip: true });
+  const sim = new Sim({ seed: 41, playerClass: 'mage', autoEquip: true, world: EMPTY_TEST_WORLD });
   sim.setPlayerLevel(level);
   expect(sim.setSpec('arcane')).toBe(true);
   sim.tick();
