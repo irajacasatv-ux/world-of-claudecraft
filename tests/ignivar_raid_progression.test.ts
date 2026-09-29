@@ -23,9 +23,18 @@ import {
 import { enterDungeon, updateDoorTriggers, updateInstances } from '../src/sim/instances/dungeons';
 import { Sim } from '../src/sim/sim';
 import { IGNIVAR_BOSS_ID } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
+
+// Every case runs inside the raid instances, so each builds the empty
+// overworld on one seed; the packs, gates and wings read no seed.
 
 function claimedRaid(difficulty: 'normal' | 'heroic' = 'normal') {
-  const sim = new Sim({ seed: 3410, playerClass: 'warrior', devCommands: true });
+  const sim = new Sim({
+    seed: 3410,
+    playerClass: 'warrior',
+    devCommands: true,
+    world: EMPTY_TEST_WORLD,
+  });
   sim.chat(`/dev dungeon ignivar_raid_arena ${difficulty}`);
   sim.chat('/dev ignivarraid');
   const boss = [...sim.entities.values()].find((entity) => entity.templateId === IGNIVAR_BOSS_ID);
@@ -115,7 +124,12 @@ describe('Ignivar raid progression', () => {
   });
 
   it('spawns five guardian packs and opens the Herald gate only after all guardians die', () => {
-    const sim = new Sim({ seed: 3412, playerClass: 'warrior', devCommands: true });
+    const sim = new Sim({
+      seed: 3410,
+      playerClass: 'warrior',
+      devCommands: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const allyPid = sim.addPlayer('paladin', 'Approach Ally');
     const raid = sim.ctx.formDungeonFinderGroup(
       [sim.player.id, allyPid].map((pid) => ({
@@ -259,7 +273,12 @@ describe('Ignivar raid progression', () => {
     // Live sims never carry devCommands (ALLOW_DEV_COMMANDS is a root
     // invariant), and the non-dev refusals stay pinned by the foreign-claim
     // and outside-player cases above.
-    const sim = new Sim({ seed: 3411, playerClass: 'warrior', devCommands: true });
+    const sim = new Sim({
+      seed: 3410,
+      playerClass: 'warrior',
+      devCommands: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.chat(`/dev dungeon ${IGNIVAR_RAID_ARENA_ID} normal`);
     const boss = [...sim.entities.values()].find((entity) => entity.templateId === IGNIVAR_BOSS_ID);
     if (!boss) throw new Error('Solo Ignivar did not spawn');
