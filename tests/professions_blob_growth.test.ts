@@ -112,9 +112,14 @@ import { EMPTY_TEST_WORLD } from './sim_shared';
 // terrain, props, and playerStart identical to the built-in world (so
 // findSafePos/groundPos still settle every fixture the same way) while
 // skipping the camp/npc/ground-object population that this file never reads.
-const makeSim = (seed = 31, nowMs?: number) =>
+//
+// One seed for every Sim, the settle passes included: the players settle
+// against the ACTIVE world's collider grid, which is built once per seed
+// (about half a second each), and a settle pass needs a fresh Sim, never a
+// different seed.
+const makeSim = (nowMs?: number) =>
   new Sim({
-    seed,
+    seed: 31,
     playerClass: 'warrior',
     autoEquip: false,
     world: EMPTY_TEST_WORLD,
@@ -549,7 +554,7 @@ function collectionPayload(
 }
 
 function ceilingSim(nowMs?: number): Sim {
-  const sim = makeSim(31, nowMs);
+  const sim = makeSim(nowMs);
   sim.setPlayerLevel(MAX_LEVEL);
   const meta = sim.players.get(sim.playerId) as PlayerMeta;
   // Every gathering skill at its own cap (fishing's is higher by design).
@@ -872,10 +877,10 @@ describe('the professions blob growth bound (phase 16)', () => {
     // the SAME epoch clock, or the anchor rule would fold the 13-digit
     // production anchors back to the offline floor and the measurement would
     // understate every farm row (11d DB review, F2).
-    const second = makeSim(32, CEILING_EPOCH_MS);
+    const second = makeSim(CEILING_EPOCH_MS);
     const pid2 = second.addPlayer('warrior', 'Ceiling', { state: s1 });
     const s2 = second.serializeCharacter(pid2) as CharacterState;
-    const third = makeSim(33, CEILING_EPOCH_MS);
+    const third = makeSim(CEILING_EPOCH_MS);
     const pid3 = third.addPlayer('warrior', 'CeilingB', { state: s2 });
     const s3 = third.serializeCharacter(pid3) as CharacterState;
     expect(s3).toEqual(s2);
@@ -1241,7 +1246,7 @@ describe('the professions blob growth bound (phase 16)', () => {
     // included.
     armNonProfessionsFields(sim);
     const s1 = sim.serializeCharacter(sim.playerId) as CharacterState;
-    const settled = makeSim(37);
+    const settled = makeSim();
     const pid = settled.addPlayer('warrior', 'Complement', { state: s1 });
     const state = settled.serializeCharacter(pid) as CharacterState;
     const nonProfessions = new Set<string>(NON_PROFESSIONS_BLOB_FIELDS);
@@ -1415,7 +1420,7 @@ describe('the professions blob growth bound (phase 16)', () => {
         instance: { enchant: 'enchant_weapon_might', signer: overSigner },
       },
     ];
-    const second = makeSim(34);
+    const second = makeSim();
     const pid2 = second.addPlayer('warrior', 'Junk', { state: s1 });
     const s2 = second.serializeCharacter(pid2) as CharacterState;
     // Both bogus ids dropped; every legal id (retired shapes included)
@@ -1476,7 +1481,7 @@ describe('the professions blob growth bound (phase 16)', () => {
         } as unknown as InvSlot['instance'],
       },
     ];
-    const second = makeSim(41);
+    const second = makeSim();
     const pid2 = second.addPlayer('warrior', 'RiftOrder', { state: s1 });
     const s2 = second.serializeCharacter(pid2) as CharacterState;
     const row = s2.inventory?.find((slot) => slot.itemId === 'riftbound_band_of_might');
@@ -1512,7 +1517,7 @@ describe('the professions blob growth bound (phase 16)', () => {
       purchasedSlots: 8,
       bonusSlots: 0,
     };
-    const second = makeSim(43);
+    const second = makeSim();
     const pid2 = second.addPlayer('warrior', 'RiftBooks', { state: s1 });
     const s2 = second.serializeCharacter(pid2) as CharacterState;
     for (const [container, row] of [
@@ -1551,7 +1556,7 @@ describe('the professions blob growth bound (phase 16)', () => {
       purchasedSlots: 8,
       bonusSlots: 0,
     };
-    const second = makeSim(47);
+    const second = makeSim();
     const pid2 = second.addPlayer('warrior', 'MarkerBound', { state: s1 });
     const s2 = second.serializeCharacter(pid2) as CharacterState;
     const row = s2.inventory?.find((slot) => slot.itemId === 'wolf_fang');
@@ -1572,7 +1577,7 @@ describe('the professions blob growth bound (phase 16)', () => {
     const sim = ceilingSim();
     const s1 = sim.serializeCharacter(sim.playerId) as CharacterState;
     s1.knownRecipes = 'recipe_tough_jerky' as unknown as string[];
-    const second = makeSim(35);
+    const second = makeSim();
     const pid2 = second.addPlayer('warrior', 'StringRecipes', { state: s1 });
     const meta2 = second.players.get(pid2) as PlayerMeta;
     expect(meta2.knownRecipes.size).toBe(0);
@@ -1592,7 +1597,7 @@ describe('the professions blob growth bound (phase 16)', () => {
     const bulkIds: string[] = [];
     for (let i = 0; i <= MAX_KNOWN_RECIPE_IDS; i++) bulkIds.push(`recipe_bulk_${i}`);
     s1.knownRecipes = bulkIds;
-    const second = makeSim(36);
+    const second = makeSim();
     const pid2 = second.addPlayer('warrior', 'BulkRecipes', { state: s1 });
     const s2 = second.serializeCharacter(pid2) as CharacterState;
     expect(s2.knownRecipes).toHaveLength(MAX_KNOWN_RECIPE_IDS);
@@ -1947,10 +1952,10 @@ describe('whole-character material source composition matrix', () => {
       const sim = maximalCharacterSim();
       applyMeasuredMaterialCase(sim, shape);
       const first = sim.serializeCharacter(sim.playerId) as CharacterState;
-      const secondSim = makeSim(52, CEILING_EPOCH_MS);
+      const secondSim = makeSim(CEILING_EPOCH_MS);
       const secondPid = secondSim.addPlayer('warrior', `Matrix-${shape}`, { state: first });
       const second = secondSim.serializeCharacter(secondPid) as CharacterState;
-      const thirdSim = makeSim(53, CEILING_EPOCH_MS);
+      const thirdSim = makeSim(CEILING_EPOCH_MS);
       const thirdPid = thirdSim.addPlayer('warrior', `Matrix-${shape}-again`, { state: second });
       const third = thirdSim.serializeCharacter(thirdPid) as CharacterState;
 
@@ -1990,10 +1995,10 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
   it('settles to a fixed point with every container at its legal ceiling, inside the band', () => {
     const sim = maximalCharacterSim();
     const s1 = sim.serializeCharacter(sim.playerId) as CharacterState;
-    const second = makeSim(52, CEILING_EPOCH_MS);
+    const second = makeSim(CEILING_EPOCH_MS);
     const pid2 = second.addPlayer('warrior', 'Maximal', { state: s1 });
     const s2 = second.serializeCharacter(pid2) as CharacterState;
-    const third = makeSim(53, CEILING_EPOCH_MS);
+    const third = makeSim(CEILING_EPOCH_MS);
     const pid3 = third.addPlayer('warrior', 'MaximalB', { state: s2 });
     const s3 = third.serializeCharacter(pid3) as CharacterState;
     expect(s3).toEqual(s2);
