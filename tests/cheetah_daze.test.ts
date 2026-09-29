@@ -6,14 +6,17 @@ import { ABILITIES } from '../src/sim/content/classes';
 import { moveSpeedMult } from '../src/sim/player_motion';
 import { Sim } from '../src/sim/sim';
 import type { Aura } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // Aspect of the Cheetah / Courser's Guise: +30% move speed, but taking damage
 // while it is active dazes the hunter to half of their CURRENT total speed for
 // 4s, refreshed (never stacked) by each hit. The classic anti-kite counterplay.
 const CHEETAH = 'aspect_of_the_cheetah';
 
+// Every hit is sourceless and every case reads only the hunter's own auras, so
+// the Sims run on the empty world rather than the full overworld.
 function hunterWithCheetah(seed = 7): Sim {
-  const sim = new Sim({ seed, playerClass: 'hunter', autoEquip: true });
+  const sim = new Sim({ seed, playerClass: 'hunter', autoEquip: true, world: EMPTY_TEST_WORLD });
   sim.setPlayerLevel(20);
   sim.castAbility(CHEETAH);
   sim.tick();
@@ -105,7 +108,12 @@ describe("Courser's Guise daze", () => {
   });
 
   it('the Pack Rally build still pays the daze (in-combat aspect becomes pack_rally)', () => {
-    const sim = new Sim({ seed: 7, playerClass: 'hunter', autoEquip: true });
+    const sim = new Sim({
+      seed: 7,
+      playerClass: 'hunter',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.setPlayerLevel(20);
     expect(sim.applyTalents({ spec: 'marksmanship', rows: { 17: 'hun_r17_pack_rally' } })).toBe(
       true,
@@ -151,7 +159,12 @@ describe("Courser's Guise daze", () => {
   });
 
   it("does not daze when Courser's Guise is inactive", () => {
-    const sim = new Sim({ seed: 7, playerClass: 'hunter', autoEquip: true });
+    const sim = new Sim({
+      seed: 7,
+      playerClass: 'hunter',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.setPlayerLevel(20);
     hit(sim);
     expect(sim.player.auras.some((a) => a.id === COURSER_DAZE_AURA_ID)).toBe(false);
@@ -166,7 +179,12 @@ describe("Courser's Guise daze", () => {
   });
 
   it('applyCourserDaze applies the daze directly', () => {
-    const sim = new Sim({ seed: 7, playerClass: 'hunter', autoEquip: true });
+    const sim = new Sim({
+      seed: 7,
+      playerClass: 'hunter',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.setPlayerLevel(20);
     applyCourserDaze(sim.ctx, sim.player);
     const daze = sim.player.auras.find((a) => a.id === COURSER_DAZE_AURA_ID);
@@ -175,7 +193,13 @@ describe("Courser's Guise daze", () => {
   });
 
   it('/dev daze applies the daze through the chat router', () => {
-    const sim = new Sim({ seed: 7, playerClass: 'hunter', autoEquip: true, devCommands: true });
+    const sim = new Sim({
+      seed: 7,
+      playerClass: 'hunter',
+      autoEquip: true,
+      devCommands: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.setPlayerLevel(20);
     sim.chat('/dev daze');
     expect(sim.player.auras.some((a) => a.id === COURSER_DAZE_AURA_ID)).toBe(true);
