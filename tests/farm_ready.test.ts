@@ -18,7 +18,7 @@ import { farmBedById } from '../src/sim/content/farm_patches';
 import type { PlotState } from '../src/sim/professions/farm_projection';
 import { harvestCrop, plantCrop } from '../src/sim/professions/farming';
 import { type CharacterState, type PlayerMeta, Sim } from '../src/sim/sim';
-import type { SimEvent } from '../src/sim/types';
+import { PLAYER_INTEREST_DROP_RADIUS, type SimEvent } from '../src/sim/types';
 import { terrainHeight } from '../src/sim/world';
 
 const CROP_ID = 'vale_wheat';
@@ -42,13 +42,19 @@ interface Harness {
   tick(n: number): FarmReadyEvent[];
 }
 
-function makeHarness(seed = 41): Harness {
+// Every harness runs production's idle-mob culling (the server and the
+// offline client both set it): the sweep under test reads only the farmer's
+// own plots, and a far mob ticking through each real tick bought nothing but
+// time. The one exception is the rng-invisibility twin, which needs the
+// world's own draws to show that "equal" is not "both zero", so it opts out.
+function makeHarness(seed = 41, opts: { cullIdleMobs?: boolean } = {}): Harness {
   let nowMs = START_MS;
   const sim = new Sim({
     seed,
     playerClass: 'warrior',
     autoEquip: false,
     lockoutNowMs: () => nowMs,
+    ...(opts.cullIdleMobs === false ? {} : { idleMobTickRadius: PLAYER_INTEREST_DROP_RADIUS }),
   });
   const pid = sim.playerId;
   const meta = sim.players.get(pid) as PlayerMeta;
@@ -415,7 +421,7 @@ describe('the ready notice across two farmers in one sim', () => {
     // the observable: two separate events, one tick, first-joined first.)
     let nowMs = START_MS;
     const sim = new Sim({
-      seed: 77,
+      seed: 41,
       playerClass: 'warrior',
       noPlayer: true,
       lockoutNowMs: () => nowMs,
@@ -470,8 +476,8 @@ describe('the ready notice is invisible to the rng stream', () => {
     // technique: a real plant draws its two pre-roll values and would move
     // the shared stream position before the counted window even opens, which
     // is the twin's rng history and not the sweep's cost.
-    const withPlot = makeHarness(909);
-    const without = makeHarness(909);
+    const withPlot = makeHarness(41, { cullIdleMobs: false });
+    const without = makeHarness(41, { cullIdleMobs: false });
     withPlot.meta.farmPlots.set(BED, {
       cropId: CROP_ID,
       plantedAtMs: withPlot.now() - CROP.durationMs,
@@ -502,8 +508,8 @@ describe('the ready notice is invisible to the rng stream', () => {
   });
 
   it('gives two identical farming sessions the identical notice stream', () => {
-    const a = makeHarness(4242);
-    const b = makeHarness(4242);
+    const a = makeHarness();
+    const b = makeHarness();
     const streams = [a, b].map((h) => {
       h.sim.addItem(SEED_ID, 2, h.pid);
       plant(h, BED);
