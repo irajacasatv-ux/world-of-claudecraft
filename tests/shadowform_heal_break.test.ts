@@ -2,9 +2,11 @@
 // amplifies Shadow damage but forbids healing (classic Shadowform rule).
 import { describe, expect, it } from 'vitest';
 import { Sim } from '../src/sim/sim';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 function makePriest(): { sim: Sim; p: any } {
-  const sim = new Sim({ seed: 7, playerClass: 'priest', autoEquip: true });
+  // Every cast targets the priest itself, so the Sim runs on the empty world.
+  const sim = new Sim({ seed: 7, playerClass: 'priest', autoEquip: true, world: EMPTY_TEST_WORLD });
   sim.setPlayerLevel(20);
   sim.setSpec('shadow'); // Shadowform is the Shadow spec signature
   const p = sim.entities.get(sim.playerId) as any;
