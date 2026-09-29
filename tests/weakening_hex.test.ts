@@ -8,9 +8,12 @@ import { MOBS } from '../src/sim/data';
 import { createMob } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
 import type { Entity } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
+// Each case spawns its own cultist beside the player, so the Sims run on the
+// empty world.
 function makeSim(playerClass: 'warrior' | 'priest' = 'priest') {
-  return new Sim({ seed: 7, playerClass, autoEquip: true });
+  return new Sim({ seed: 7, playerClass, autoEquip: true, world: EMPTY_TEST_WORLD });
 }
 
 // Spawn a Gravecaller Cultist adjacent to the player, hostile and ready to swing.
