@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { CAMPS, ITEMS, MOBS } from '../src/sim/data';
 import { createMob } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // Sloomtooth the Drowned — a rare elite murloc tyrant lurking by the Drowned
 // Chapel in Mirefen Marsh (content-integrity coverage for the new rare).
@@ -64,7 +65,8 @@ describe('Sloomtooth the Drowned (rare elite)', () => {
   });
 
   it('actually surges back to life the first time it is brought low', () => {
-    const sim = new Sim({ seed: 20061, playerClass: 'warrior' });
+    // The rare is created off-world and its mechanics run directly: the empty world serves.
+    const sim = new Sim({ seed: 20061, playerClass: 'warrior', world: EMPTY_TEST_WORLD });
     const mob = createMob(990201, MOBS.sloomtooth_the_drowned, 11, { x: 0, y: 0, z: 0 });
     mob.hp = Math.round(mob.maxHp * 0.25);
     mob.inCombat = true;
