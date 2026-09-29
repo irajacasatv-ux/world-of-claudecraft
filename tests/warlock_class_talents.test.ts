@@ -11,9 +11,17 @@ import { createMob } from '../src/sim/entity';
 import { advancePendingProjectiles } from '../src/sim/projectile_travel';
 import { Sim } from '../src/sim/sim';
 import { DT, type Entity } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 function rig(rows: Record<number, string>, spec = 'destruction') {
-  const sim = new Sim({ seed: 73, playerClass: 'warlock', autoEquip: true });
+  // EMPTY_TEST_WORLD: every case fights a mob it spawns itself, so the ambient
+  // overworld (camps, NPCs, ground objects) was pure per-tick overhead.
+  const sim = new Sim({
+    seed: 73,
+    playerClass: 'warlock',
+    autoEquip: true,
+    world: EMPTY_TEST_WORLD,
+  });
   sim.setPlayerLevel(20);
   expect(sim.applyTalents({ spec, rows })).toBe(true);
   sim.player.resource = sim.player.maxResource;
