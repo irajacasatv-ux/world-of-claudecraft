@@ -20,9 +20,14 @@ import type { PlayerMeta } from '../src/sim/sim';
 import { Sim } from '../src/sim/sim';
 import type { Aura, Entity } from '../src/sim/types';
 import { DT } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
-function makeSim(seed = 7373): Sim {
-  return new Sim({ seed, playerClass: 'warrior', autoEquip: true });
+// Every case drives the aura runners on entities it places itself, so each Sim
+// stands on the empty world, all on one seed.
+const SEED = 7373;
+
+function makeSim(): Sim {
+  return new Sim({ seed: SEED, playerClass: 'warrior', autoEquip: true, world: EMPTY_TEST_WORLD });
 }
 
 function aura(kind: Aura['kind'], value: number, extra: Partial<Aura> = {}): Aura {
@@ -349,7 +354,8 @@ describe('auras: updateRegen', () => {
 });
 
 describe('auras: updateRegen mana (Spirit in and out of combat)', () => {
-  const makeMage = (seed = 99): Sim => new Sim({ seed, playerClass: 'mage', autoEquip: true });
+  const makeMage = (): Sim =>
+    new Sim({ seed: SEED, playerClass: 'mage', autoEquip: true, world: EMPTY_TEST_WORLD });
 
   // Regenerate one 40-tick boundary tick from an empty mana bar at a given
   // five-second-rule state and return how much mana came back.
