@@ -8,7 +8,14 @@ import {
   supportHeightAt,
 } from '../src/sim/colliders';
 import { DUNGEONS, instanceOrigin, MOBS, PROPS } from '../src/sim/data';
-import { CRYPT_LAYOUT, DAIS_HEIGHT, TOMB_HD, tombSlotRoll } from '../src/sim/dungeon_layout';
+import {
+  CRYPT_LAYOUT,
+  DAIS_HEIGHT,
+  TOMB_COFFIN_DECORATED_EAVE,
+  TOMB_HD,
+  TOMB_HW,
+  tombSlotRoll,
+} from '../src/sim/dungeon_layout';
 import { createMob } from '../src/sim/entity';
 import { runMobSwingAffixes } from '../src/sim/mob/mob_swing';
 import { PLAYER_BODY_RADIUS } from '../src/sim/pathfind';
@@ -198,6 +205,8 @@ describe('client predictor parity in dungeons', () => {
       auras: [],
       castingAbility: null,
     }) as unknown as Entity;
+    const floorY = p.pos.y;
+    const overLid: number[] = [];
     for (let i = 0; i < 40; i++) {
       Object.assign(meta.moveInput, input);
       sim.tick();
@@ -206,8 +215,15 @@ describe('client predictor parity in dungeons', () => {
       expect(coffinGhost.pos.x).toBeCloseTo(p.pos.x, 10);
       expect(coffinGhost.pos.y).toBeCloseTo(p.pos.y, 10);
       expect(coffinGhost.pos.z).toBeCloseTo(p.pos.z, 10);
+      const onFootprint =
+        Math.abs(p.pos.x - (o.x + t.x)) < TOMB_HW && Math.abs(p.pos.z - (o.z + t.z)) < TOMB_HD;
+      if (onFootprint) overLid.push(p.pos.y - floorY);
     }
-    // Over the lid and down past the coffin's far end, not stopped at its face.
+    // It crossed the coffin's footprint on top of the lid (never below the
+    // lower of the two coffin eaves, so never through the body), then came
+    // down past the far end instead of stopping at the face.
+    expect(overLid.length).toBeGreaterThan(0);
+    expect(Math.min(...overLid)).toBeGreaterThanOrEqual(TOMB_COFFIN_DECORATED_EAVE);
     expect(p.pos.z).toBeGreaterThan(o.z + t.z + TOMB_HD);
   });
 });
