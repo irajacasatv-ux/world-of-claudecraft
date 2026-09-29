@@ -64,7 +64,6 @@ const FILE_ALLOWANCE_LEDGER: ReadonlyMap<string, number> = new Map([
   // records that parallelizable shape without promoting it into the measured lane:
   // 120_000 + 30_000 + 15 * 30_000 = 600_000.
   ['tests/character_save_statement_pg_integration.test.ts', 600_000],
-  ['tests/chronomancy_balance_targets.test.ts', 420_000],
   // The real-suite shard collection case walks the complete test corpus and
   // needs a 60s allowance on low-worker hosts; the other timeout pins in this
   // file keep the exact aggregate just above the default.

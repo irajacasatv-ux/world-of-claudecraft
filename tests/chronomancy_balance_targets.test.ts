@@ -34,6 +34,11 @@ import {
   runRotation,
 } from './helpers/chronomancy_harness';
 
+// The nightly sweep depth (WOC_NIGHTLY_SWEEP, docs/qa-gate.md "Nightly-only
+// sweep depth"): the min-over-seeds case below runs its whole seed set only
+// when this is set.
+const NIGHTLY_SWEEP = process.env.WOC_NIGHTLY_SWEEP === '1';
+
 describe('Chronomancy Phase 3 balance targets', () => {
   const consOff = runRotation('arcane', conservativeOffensive, 200, false);
   const consEcho = runRotation('arcane', conservativeEcho, 200, true);
@@ -167,11 +172,13 @@ describe('Chronomancy Phase 3 balance targets', () => {
   });
 
   it('Piro and Cryo sustain clearly more DPS than conservative Chronomancy (min over seeds)', {
-    // Twelve 200-second rotation sims; well past the 5s default. 120s was
-    // enough locally but timed out twice on the loaded CI shard (2026-08-05,
-    // both release-tip and PR runs), so the cap allows for shard contention;
-    // the assertions below are what gate, not the wall clock.
-    timeout: 240_000,
+    // Sized per arm. The nightly arm drives eight more 200-second rotations
+    // (seeds 1 and 3); 120s was enough locally for the whole set but timed out
+    // twice on the loaded CI shard (2026-08-05, both release-tip and PR runs),
+    // so its cap allows for shard contention. The PR arm runs no rotation of
+    // its own (seed 2 reuses the four the describe block ran at collect time),
+    // so it keeps the 20s default. The assertions gate, not the wall clock.
+    timeout: NIGHTLY_SWEEP ? 240_000 : 20_000,
   }, () => {
     // The MIN over a fixed seed set, not one sampled fight: the QA's first
     // fix re-hunted a single seed that passed, and its own coverage audit
@@ -199,10 +206,14 @@ describe('Chronomancy Phase 3 balance targets', () => {
     // PR representative costs no extra rotation, and it still fails on any
     // change that closes the gap on that fixed fight (a Chronomancy damage
     // gain, or a Piro or Cryo loss). At the move it read the tightest Piro
-    // margin of the three and the loosest Cryo one, so a Cryo-only loss is
-    // caught later on PR than on the nightly. Seeds 1 and 3, eight more
-    // 200-second rotations, are the distribution check the MIN exists for.
-    const seeds = process.env.WOC_NIGHTLY_SWEEP === '1' ? [1, 2, 3] : [2];
+    // margin of the three (17.6 percent) and the loosest Cryo one (50.3
+    // percent, against 34.5 on seed 1), so a Cryo-only loss is caught later on
+    // PR than on the nightly: on PR it trips only once seed 2's Cryo margin
+    // falls from about 50 to the 12 percent floor (a Frostbolt DPS loss of
+    // about a quarter), where the nightly's seed 1 trips at about a sixth. An
+    // accepted trade for the PR tier. Seeds 1 and 3, eight more 200-second
+    // rotations, are the distribution check the MIN exists for.
+    const seeds = NIGHTLY_SWEEP ? [1, 2, 3] : [2];
     for (const seed of seeds) {
       // Seed 2 matches the default `runRotation` seed, so it is the exact same
       // seed/spec/policy/cap/pinAllyLow the describe-level consOff/piroWeave/
