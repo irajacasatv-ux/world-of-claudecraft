@@ -3,6 +3,13 @@ import { ITEMS } from '../src/sim/data';
 import { lootQualityBonuses } from '../src/sim/loot_quality';
 import { Sim } from '../src/sim/sim';
 import type { ItemInstancePayload } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
+
+// Every grant here carries its quality tier in the payload and no case reads
+// the world or draws a roll, so all Sims share one seed of the empty world: a
+// fresh seed builds its collider grids (about half a second) for nothing.
+const rogue = (autoEquip: boolean): Sim =>
+  new Sim({ seed: 73, playerClass: 'rogue', autoEquip, world: EMPTY_TEST_WORLD });
 
 const quality = (tier: 1 | 2 | 3 | 4): ItemInstancePayload => ({
   lootQuality: { version: 1, tier, weights: [500, 200, 300, 400, 100] },
@@ -19,7 +26,7 @@ describe('quality loot auto equip', () => {
         !i.requiredClass &&
         lootQualityBonuses(i, quality(4)).armor > 0,
     )!;
-    const sim = new Sim({ seed: 76, playerClass: 'rogue', autoEquip: true });
+    const sim = rogue(true);
     sim.setPlayerLevel(20);
     sim.addItem(item.id, 1);
     expect(sim.equipment.chest).toBe(item.id);
@@ -30,7 +37,7 @@ describe('quality loot auto equip', () => {
     expect(sim.player.equippedInstances.chest?.lootQuality?.tier).toBe(4);
   });
   it('equips an enhanced weapon into an empty slot', () => {
-    const sim = new Sim({ seed: 73, playerClass: 'rogue', autoEquip: true });
+    const sim = rogue(true);
     sim.setPlayerLevel(20);
     sim.unequipItem('mainhand');
     sim.addItemInstance('duskwhisper', quality(2));
@@ -39,7 +46,7 @@ describe('quality loot auto equip', () => {
   });
 
   it('selects the newly granted exact tier among copies and keeps the better worn copy', () => {
-    const sim = new Sim({ seed: 74, playerClass: 'rogue', autoEquip: false });
+    const sim = rogue(false);
     sim.setPlayerLevel(20);
     sim.unequipItem('offhand');
     sim.addItemInstance('duskwhisper', quality(1));
@@ -81,7 +88,7 @@ describe('quality loot auto equip', () => {
     // with no aimed slot routes a one-hander to the offhand (items.ts
     // desiredEquipSlot). The descriptor must not change the hand.
     const run = (grant: (sim: Sim) => void) => {
-      const sim = new Sim({ seed: 77, playerClass: 'rogue', autoEquip: true });
+      const sim = rogue(true);
       sim.setPlayerLevel(20);
       sim.unequipItem('offhand');
       sim.unequipItem('mainhand');
@@ -102,7 +109,7 @@ describe('quality loot auto equip', () => {
   });
 
   it('keeps ordinary auto equip and non-quality crafted grant behavior', () => {
-    const sim = new Sim({ seed: 75, playerClass: 'rogue', autoEquip: true });
+    const sim = rogue(true);
     sim.setPlayerLevel(20);
     sim.unequipItem('mainhand');
     sim.addItem('duskwhisper', 1);
