@@ -11,8 +11,12 @@ import {
 } from '../src/sim/mob/social_aggro';
 import { Sim } from '../src/sim/sim';
 import type { Entity } from '../src/sim/types';
+import { RL_TEST_WORLD } from './sim_shared';
 
-const makeSim = () => new Sim({ seed: 42, playerClass: 'warrior', autoEquip: true });
+// Each case re-purposes the first few wild mobs and places them beside the player,
+// so one wolf camp (six mobs, the built-in world's first camp) serves every case.
+const makeSim = () =>
+  new Sim({ seed: 42, playerClass: 'warrior', autoEquip: true, world: RL_TEST_WORLD });
 
 type CombatHarness = {
   enterCombat(a: Entity, b: Entity): boolean;
