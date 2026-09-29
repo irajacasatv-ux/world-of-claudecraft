@@ -373,7 +373,8 @@ describe('the Freehold Gate site', () => {
     // closest stays Cook Marlow's spawn 12.185 yd off. Pinned exactly on
     // purpose: an NPC given a route or a wander near the gate reds this and is
     // reviewed against the 11 yd clearance, which the spawn-time case cannot see.
-    // Production's idle cull skips only idle mobs; every NPC still updates.
+    // With no player in this realm, production's idle cull sits out every idle mob;
+    // the NPCs, all this case measures, still update every tick.
     const sim = new Sim({
       seed: WORLD_SEED,
       playerClass: 'warrior',
