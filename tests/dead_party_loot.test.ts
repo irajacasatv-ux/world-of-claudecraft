@@ -4,6 +4,7 @@ import { createMob } from '../src/sim/entity';
 import type { PlayerMeta } from '../src/sim/sim';
 import { Sim } from '../src/sim/sim';
 import type { Entity } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // Reproduces: "if you die in a raid/group you don't get to loot at all."
 // A party member who is downed during the fight, but whose corpse is still
@@ -37,8 +38,14 @@ function mustNumber(value: number | undefined, label: string): number {
   return value;
 }
 
+// Each case places its own wolf beside the party, so the empty world serves.
 function setup() {
-  const sim = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+  const sim = new Sim({
+    seed: 42,
+    playerClass: 'warrior',
+    noPlayer: true,
+    world: EMPTY_TEST_WORLD,
+  });
   const internals = sim as unknown as SimInternals;
   // Survivor lands the killing blow; Faller dies during the fight.
   const survivor = sim.addPlayer('warrior', 'Survivor');
