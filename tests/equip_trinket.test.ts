@@ -6,6 +6,7 @@ import { LAUNCH_PAPERDOLL_SLOTS } from '../src/sim/launch_paperdoll_slots';
 import { buildGearSet, planGearSwap } from '../src/sim/loadout_gear';
 import { Sim } from '../src/sim/sim';
 import { ALL_CLASSES, ALL_EQUIP_SLOTS, isEquipSlot, type JewelryItemDef } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // Synthetic definitions exercise the slot without adding unrequested game content.
 const TRINKET: JewelryItemDef = {
@@ -29,8 +30,10 @@ afterEach(() => {
   delete ITEMS[SECOND.id];
 });
 
+// Every case equips, saves and reloads the wearer's own gear: the empty
+// world serves the wearers and their reloaded copies alike.
 function makeSim() {
-  const sim = new Sim({ seed: 7, playerClass: 'warrior' });
+  const sim = new Sim({ seed: 7, playerClass: 'warrior', world: EMPTY_TEST_WORLD });
   sim.setPlayerLevel(20);
   return sim;
 }
@@ -77,7 +80,7 @@ describe('single functional trinket slot', () => {
   });
 
   it('refuses mismatched slots and below-level equip without consuming inventory', () => {
-    const sim = new Sim({ seed: 7, playerClass: 'mage' });
+    const sim = new Sim({ seed: 7, playerClass: 'mage', world: EMPTY_TEST_WORLD });
     sim.addItem(TRINKET.id, 1);
     sim.equipItem(TRINKET.id);
     expect(sim.equipment.trinket).toBeUndefined();
@@ -98,7 +101,12 @@ describe('single functional trinket slot', () => {
     const state = sim.serializeCharacter(sim.player.id)!;
     expect(state.equipment.trinket).toBe(TRINKET.id);
     expect(state.equipmentInstance?.trinket).toEqual(bag.instance);
-    const loaded = new Sim({ seed: 7, playerClass: 'warrior', noPlayer: true });
+    const loaded = new Sim({
+      seed: 7,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const pid = loaded.addPlayer('warrior', 'Reloaded', {
       state: JSON.parse(JSON.stringify(state)),
     });
@@ -115,7 +123,12 @@ describe('single functional trinket slot', () => {
     const sim = makeSim();
     const state = sim.serializeCharacter(sim.player.id)!;
     expect(state.equipment).not.toHaveProperty('trinket');
-    const loaded = new Sim({ seed: 7, playerClass: 'warrior', noPlayer: true });
+    const loaded = new Sim({
+      seed: 7,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const pid = loaded.addPlayer('warrior', 'Legacy', { state });
     expect(loaded.meta(pid)?.equipment).toEqual(state.equipment);
     expect(loaded.entities.get(pid)?.stats).toEqual(sim.player.stats);
@@ -142,7 +155,12 @@ describe('single functional trinket slot', () => {
     let saved = state;
     let stableBytes = 0;
     for (let pass = 0; pass < 3; pass++) {
-      const loaded = new Sim({ seed: 7, playerClass: 'warrior', noPlayer: true });
+      const loaded = new Sim({
+        seed: 7,
+        playerClass: 'warrior',
+        noPlayer: true,
+        world: EMPTY_TEST_WORLD,
+      });
       const pid = loaded.addPlayer('warrior', 'Reloaded', { state: saved });
       saved = loaded.serializeCharacter(pid)!;
       expect(saved.equipmentInstance?.trinket).toEqual({ signer: 'Test Smith' });
