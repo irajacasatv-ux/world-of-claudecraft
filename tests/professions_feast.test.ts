@@ -97,9 +97,12 @@ const EATER_NAMES = [
 /** A settled world: one placer plus `nEaters` guests standing beside them.
  *  One tick after the joins (the wellfed.test.ts idiom), positions set after
  *  it so the spawn snap never moves anyone back out of reach. */
-function world(nEaters = 1, seed = 42): { sim: Sim; placer: Player; eaters: Player[] } {
+// Every world in this file rides seed 42: a moving player builds the active
+// world's collider grid for its seed (about half a second the first time),
+// and no feast arm reads a seed-probed value.
+function world(nEaters = 1): { sim: Sim; placer: Player; eaters: Player[] } {
   const sim = new Sim({
-    seed,
+    seed: 42,
     playerClass: 'warrior',
     noPlayer: true,
     world: EMPTY_TEST_WORLD,
@@ -587,7 +590,7 @@ describe('shared feast: the bite and the Well Fed mint', () => {
     // duration) reds here too. `remaining` is excluded by construction: the
     // two runs complete on different ticks of their own sims, so it is
     // re-read at mint time instead (asserted equal to the full duration).
-    const bag = world(1, 7);
+    const bag = world(1);
     const bagEater = bag.eaters[0];
     bag.sim.addItem(DISH_ID, 1, bagEater.pid);
     bag.sim.useItem(DISH_ID, bagEater.pid);
@@ -596,7 +599,7 @@ describe('shared feast: the bite and the Well Fed mint', () => {
     const bagged = wellFedAuras(bagEater.p);
     expect(bagged, 'the bagged dish minted').toHaveLength(1);
 
-    const feast = world(1, 7);
+    const feast = world(1);
     const feastEater = feast.eaters[0];
     const feastId = placeOk(feast.sim, feast.placer);
     feast.sim.consumeFeast(feastId, feastEater.pid);
@@ -1125,7 +1128,7 @@ describe('shared feast: zero-draw determinism', () => {
     sim: Sim;
   } {
     const sim = new Sim({
-      seed: 4242,
+      seed: 42,
       playerClass: 'warrior',
       noPlayer: true,
       world: WOLF_TEST_WORLD,
