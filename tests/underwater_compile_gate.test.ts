@@ -35,6 +35,14 @@ function pondLevel(x: number, z: number): number {
   return Number.NEGATIVE_INFINITY;
 }
 
+// The shader water's shore apron samples the REAL terrain height across the
+// whole map (water_core.shoreDepthAt), about 0.6 s per medium-tier build and
+// most of this file's time, and every case builds its water afresh. Those
+// heights are a pure function of (x, z, seed) over the unchanging built-in
+// world, so they are computed once per file and replayed: every water build
+// here keeps the exact geometry, fresh modules and all.
+const terrainHeights = new Map<string, number>();
+
 type Tier = 'low' | 'medium';
 
 async function load(tier: Tier) {
@@ -55,10 +63,22 @@ async function load(tier: Tier) {
     waterNormalish: vi.fn(() => new THREE.Texture()),
     waterNormalMaps: vi.fn(() => [new THREE.Texture(), new THREE.Texture()]),
   }));
-  vi.doMock('../src/sim/world', async (importOriginal) => ({
-    ...(await importOriginal<typeof import('../src/sim/world')>()),
-    waterLevelAt: (x: number, z: number) => pondLevel(x, z),
-  }));
+  vi.doMock('../src/sim/world', async (importOriginal) => {
+    const real = await importOriginal<typeof import('../src/sim/world')>();
+    return {
+      ...real,
+      waterLevelAt: (x: number, z: number) => pondLevel(x, z),
+      terrainHeight: (x: number, z: number, seed: number) => {
+        const key = `${x},${z},${seed}`;
+        let height = terrainHeights.get(key);
+        if (height === undefined) {
+          height = real.terrainHeight(x, z, seed);
+          terrainHeights.set(key, height);
+        }
+        return height;
+      },
+    };
+  });
   const { buildWater, hasWaterShaderAssets } = await import('../src/render/water');
   const { UnderwaterView: View } = await import('../src/render/underwater');
   await Promise.resolve();
