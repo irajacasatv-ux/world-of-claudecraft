@@ -25,7 +25,9 @@ import type { SimContext } from '../src/sim/sim_context';
 import { knownLetterId } from '../src/ui/entity_i18n';
 import { samplePlayerMeta } from './parity/trace';
 
-const makeSim = (seed = 42) => new Sim({ seed, playerClass: 'warrior', noPlayer: true });
+// Every Sim, the restarts included, shares one seed: a fresh seed builds its
+// collider grids (about half a second) and no case compares two seeds.
+const makeSim = () => new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
 
 function metaOf(sim: Sim, pid: number) {
   // biome-ignore lint/suspicious/noExplicitAny: test reaches into sim internals
@@ -264,7 +266,7 @@ describe('one-shot: the flag serializes literal true and never re-fires', () => 
     blob.gatheringProficiency = { ...blob.gatheringProficiency, mining: 25 };
     // biome-ignore lint/suspicious/noExplicitAny: the legacy dual-write mirror
     (blob as any).professions = { ...(blob as any).professions, mining: 25 };
-    const sim2 = makeSim(43);
+    const sim2 = makeSim();
     const pid2 = sim2.addPlayer('warrior', 'Once', { state: blob });
     const meta2 = metaOf(sim2, pid2);
     expect(meta2.craftSkills.armorcrafting).toBe(40);
@@ -274,7 +276,7 @@ describe('one-shot: the flag serializes literal true and never re-fires', () => 
     const blob2 = sim2.serializeCharacter(pid2);
     if (!blob2) throw new Error('serializeCharacter returned null');
     expect(blob2.masteryResetApplied).toBe(true);
-    const sim3 = makeSim(44);
+    const sim3 = makeSim();
     const pid3 = sim3.addPlayer('warrior', 'Once', { state: blob2 });
     expect(metaOf(sim3, pid3).craftSkills.armorcrafting).toBe(40);
     expect(metaOf(sim3, pid3).gatheringProficiency.mining).toBe(25);
@@ -294,7 +296,7 @@ describe('one-shot: the flag serializes literal true and never re-fires', () => 
     blob.craftSkills = { ...blob.craftSkills, armorcrafting: 40 };
     // biome-ignore lint/performance/noDelete: modeling the pre-reset blob shape
     delete blob.masteryResetApplied;
-    const sim2 = makeSim(43);
+    const sim2 = makeSim();
     const pid2 = sim2.addPlayer('warrior', 'Rolled', { state: blob });
     expect(metaOf(sim2, pid2).craftSkills.armorcrafting).toBe(0);
     expect(metaOf(sim2, pid2).pendingMasteryResetNotice).toBe(true);
@@ -361,7 +363,7 @@ describe('the mail-phase notice letter', () => {
     sim.tick();
     const blob = sim.serializeCharacter(pid);
     if (!blob) throw new Error('serializeCharacter returned null');
-    const sim2 = makeSim(43);
+    const sim2 = makeSim();
     const pid2 = sim2.addPlayer('warrior', 'Notice', { state: blob });
     for (let i = 0; i < 40; i++) sim2.tick();
     expect(sim2.mailUnreadFor(pid2)).toBe(0);
