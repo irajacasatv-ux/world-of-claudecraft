@@ -3,6 +3,7 @@ import { MOBS } from '../src/sim/data';
 import { createMob } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
 import type { Entity } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 type DealDamage = (
   source: Entity | null,
@@ -22,7 +23,12 @@ type DealDamage = (
 ) => void;
 
 function doctrinePriest(): { sim: Sim; priest: Entity } {
-  const sim = new Sim({ seed: 2801, playerClass: 'priest', autoEquip: true });
+  const sim = new Sim({
+    seed: 2801,
+    playerClass: 'priest',
+    autoEquip: true,
+    world: EMPTY_TEST_WORLD,
+  });
   sim.setPlayerLevel(20);
   expect(sim.setSpec('discipline')).toBe(true);
   sim.tick();

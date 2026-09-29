@@ -12,6 +12,10 @@ import { createMob } from '../src/sim/entity';
 import type { PlayerMeta } from '../src/sim/sim';
 import { Sim } from '../src/sim/sim';
 import type { Entity, SimEvent } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
+
+// Every case builds its own fixtures; none reads the overworld.
+const BARE = { seed: 7, world: EMPTY_TEST_WORLD };
 
 type AnySim = Sim & {
   nextId: number;
@@ -54,7 +58,7 @@ function spawnDummy(sim: AnySim, p: Entity): Entity {
 
 describe('starting hands', () => {
   it('a fresh paladin starts with a one-handed mace and shield equipped', () => {
-    const sim = new Sim({ seed: 7, playerClass: 'paladin' });
+    const sim = new Sim({ ...BARE, playerClass: 'paladin' });
     const mainhand = ITEMS[CLASSES.paladin.startWeapon];
     const offhand = ITEMS[CLASSES.paladin.startOffhand ?? ''];
     expect(mainhand?.kind).toBe('weapon');
@@ -72,7 +76,7 @@ describe('starting hands', () => {
   });
 
   it('a fresh warrior starts with a basic shield equipped', () => {
-    const sim = new Sim({ seed: 7, playerClass: 'warrior', autoEquip: true });
+    const sim = new Sim({ ...BARE, playerClass: 'warrior', autoEquip: true });
     expect(sim.equipment.mainhand).toBe('worn_sword');
     expect(sim.equipment.offhand).toBe('eastbrook_buckler');
     expect(sim.player.mainhandItemId).toBe('worn_sword');
@@ -80,7 +84,7 @@ describe('starting hands', () => {
   });
 
   it('a fresh rogue starts with a real offhand weapon equipped', () => {
-    const sim = new Sim({ seed: 7, playerClass: 'rogue', autoEquip: true });
+    const sim = new Sim({ ...BARE, playerClass: 'rogue', autoEquip: true });
     expect(sim.equipment.mainhand).toBe('rusty_dagger');
     expect(sim.equipment.offhand).toBe('rusty_dagger');
     expect(sim.player.mainhandItemId).toBe('rusty_dagger');
@@ -88,7 +92,7 @@ describe('starting hands', () => {
   });
 
   it('a non-dual-wield warrior replaces mainhand instead of filling offhand', () => {
-    const sim = new Sim({ seed: 7, playerClass: 'warrior', autoEquip: true });
+    const sim = new Sim({ ...BARE, playerClass: 'warrior', autoEquip: true });
     sim.setPlayerLevel(10);
     expect(sim.setSpec('prot')).toBe(true);
     requirePlayerMeta(sim, sim.player.id).autoEquip = false;
@@ -101,7 +105,7 @@ describe('starting hands', () => {
 
 describe('offhand combat rules', () => {
   it('an offhand weapon swing deals half the resolved mainhand damage with the same weapon', () => {
-    const sim = new Sim({ seed: 7, playerClass: 'warrior', autoEquip: true }) as AnySim;
+    const sim = new Sim({ ...BARE, playerClass: 'warrior', autoEquip: true }) as AnySim;
     const p = sim.player;
     const targetId = sim.addPlayer('mage', 'Target');
     const target = requireEntity(sim, targetId);
@@ -128,7 +132,7 @@ describe('offhand combat rules', () => {
   });
 
   it('the dual-wield white-hit penalty can turn a hit into a miss', () => {
-    const sim = new Sim({ seed: 7, playerClass: 'warrior', autoEquip: true }) as AnySim;
+    const sim = new Sim({ ...BARE, playerClass: 'warrior', autoEquip: true }) as AnySim;
     const p = sim.player;
     const targetId = sim.addPlayer('mage', 'Target');
     const target = requireEntity(sim, targetId);
@@ -150,7 +154,7 @@ describe('offhand combat rules', () => {
   });
 
   it('dual wielding arms both swing timers and emits both hands over auto-attack', () => {
-    const sim = new Sim({ seed: 7, playerClass: 'warrior', autoEquip: true }) as AnySim;
+    const sim = new Sim({ ...BARE, playerClass: 'warrior', autoEquip: true }) as AnySim;
     sim.setPlayerLevel(10);
     expect(sim.setSpec('fury')).toBe(true);
     sim.addItem('redbrook_blade', 1);
@@ -179,7 +183,7 @@ describe('two-hander hand exclusivity', () => {
   // autoEquip: true dresses the starting kit, but the pickup-time auto-equip on
   // addItem would race these explicit equips; turn the player toggle off.
   function freshWarrior(): Sim {
-    const sim = new Sim({ seed: 7, playerClass: 'warrior', autoEquip: true });
+    const sim = new Sim({ ...BARE, playerClass: 'warrior', autoEquip: true });
     requirePlayerMeta(sim, sim.player.id).autoEquip = false;
     return sim;
   }
@@ -222,7 +226,7 @@ describe('two-hander hand exclusivity', () => {
 // two-handers, one per weapon slot. Shields still never sit beside a 2H.
 describe("Titan's Grip combat and bench rules", () => {
   function furyWithTwoGreatswords(): Sim {
-    const sim = new Sim({ seed: 7, playerClass: 'warrior', autoEquip: true });
+    const sim = new Sim({ ...BARE, playerClass: 'warrior', autoEquip: true });
     sim.setPlayerLevel(10);
     expect(sim.setSpec('fury')).toBe(true);
     requirePlayerMeta(sim, sim.player.id).autoEquip = false;
@@ -264,7 +268,7 @@ describe("Titan's Grip combat and bench rules", () => {
   });
 
   it('switching Fury (dual one-handers) to Prot benches the offhand weapon', () => {
-    const sim = new Sim({ seed: 7, playerClass: 'warrior', autoEquip: true });
+    const sim = new Sim({ ...BARE, playerClass: 'warrior', autoEquip: true });
     sim.setPlayerLevel(10);
     expect(sim.setSpec('fury')).toBe(true);
     requirePlayerMeta(sim, sim.player.id).autoEquip = false;

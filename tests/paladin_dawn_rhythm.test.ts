@@ -10,6 +10,7 @@ import { Sim } from '../src/sim/sim';
 import type { Aura, Entity } from '../src/sim/types';
 import { tEntity } from '../src/ui/entity_i18n';
 import { ensureLocaleLoaded, setLanguage } from '../src/ui/i18n';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 type TestSim = Sim & {
   nextId: number;
@@ -17,7 +18,12 @@ type TestSim = Sim & {
 };
 
 function makeRetribution(): TestSim {
-  const sim = new Sim({ seed: 8431, playerClass: 'paladin', autoEquip: true }) as TestSim;
+  const sim = new Sim({
+    seed: 8431,
+    playerClass: 'paladin',
+    autoEquip: true,
+    world: EMPTY_TEST_WORLD,
+  }) as TestSim;
   sim.setPlayerLevel(20);
   expect(sim.setSpec('retribution')).toBe(true);
   sim.player.resource = sim.player.maxResource;

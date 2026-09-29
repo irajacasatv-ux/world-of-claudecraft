@@ -8,6 +8,7 @@ import {
 import { Sim } from '../src/sim/sim';
 import { syncHotbarActions } from '../src/ui/hud/action_bar/hotbar';
 import { en } from '../src/ui/i18n.catalog';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const alloc = (spec: string | null): TalentAllocation => ({ ...emptyAllocation(), spec });
 
@@ -101,7 +102,12 @@ describe('Priest v0.28 spec kits', () => {
   });
 
   it('rejects a forged wrong-spec signature through the authoritative cast path', () => {
-    const sim = new Sim({ seed: 2930, playerClass: 'priest', autoEquip: true });
+    const sim = new Sim({
+      seed: 2930,
+      playerClass: 'priest',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.setPlayerLevel(20);
     expect(sim.setSpec('discipline')).toBe(true);
     const resourceBefore = sim.player.resource;

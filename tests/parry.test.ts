@@ -11,6 +11,7 @@ import { createMob } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
 import type { Entity, PlayerClass, SimEvent } from '../src/sim/types';
 import { swingMissChance } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 type AnySim = Sim & {
   nextId: number;
@@ -19,7 +20,7 @@ type AnySim = Sim & {
 };
 
 function makeSim(cls: PlayerClass): AnySim {
-  return new Sim({ seed: 1, playerClass: cls, autoEquip: true }) as AnySim;
+  return new Sim({ seed: 1, playerClass: cls, autoEquip: true, world: EMPTY_TEST_WORLD }) as AnySim;
 }
 
 // A hostile wolf 2 yd in FRONT of the player (+z), idle so nothing else acts.

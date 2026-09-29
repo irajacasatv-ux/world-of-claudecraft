@@ -7,13 +7,19 @@ import { createMob } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
 import type { SimContext } from '../src/sim/sim_context';
 import type { Aura, Entity } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 function ctxOf(sim: Sim): SimContext {
   return (sim as unknown as { ctx: SimContext }).ctx;
 }
 
 function setup(): { sim: Sim; priest: Entity; ctx: SimContext } {
-  const sim = new Sim({ seed: 2920, playerClass: 'priest', autoEquip: true });
+  const sim = new Sim({
+    seed: 2920,
+    playerClass: 'priest',
+    autoEquip: true,
+    world: EMPTY_TEST_WORLD,
+  });
   sim.setPlayerLevel(20);
   expect(sim.setSpec('discipline')).toBe(true);
   sim.tick();
@@ -221,7 +227,13 @@ describe('Priest transient lifecycle', () => {
     if (!state) throw new Error('priest state missing');
 
     sim.preparePlayerLeave(priest.id);
-    const reconnected = new Sim({ seed: 2921, playerClass: 'priest', noPlayer: true });
+    // The file's one seed: a second seed would only pay another collider grid.
+    const reconnected = new Sim({
+      seed: 2920,
+      playerClass: 'priest',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const reconnectedId = reconnected.addPlayer('priest', 'Reconnected Priest', { state });
     const loaded = reconnected.entities.get(reconnectedId);
     if (!loaded) throw new Error('reconnected priest missing');

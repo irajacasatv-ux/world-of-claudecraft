@@ -6,9 +6,15 @@ import { ABILITIES, CLASSES, MOBS } from '../src/sim/data';
 import { createMob } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
 import type { Entity } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 function makePaladin() {
-  const sim = new Sim({ seed: 42, playerClass: 'paladin', autoEquip: true });
+  const sim = new Sim({
+    seed: 42,
+    playerClass: 'paladin',
+    autoEquip: true,
+    world: EMPTY_TEST_WORLD,
+  });
   sim.setPlayerLevel(16); // Retribution Aura is learned at 16
   const p = sim.player;
   p.maxHp = 100000; // survive the scripted mob swings (death wipes auras)

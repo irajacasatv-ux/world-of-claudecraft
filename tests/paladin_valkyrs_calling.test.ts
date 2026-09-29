@@ -14,6 +14,7 @@ import { activateDivineAscension, grantDevotion, MAX_DEVOTION } from '../src/sim
 import type { PlayerMeta } from '../src/sim/sim';
 import { Sim } from '../src/sim/sim';
 import { DT, type Entity, type SimEvent } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 type TestSim = Sim & {
   nextId: number;
@@ -31,7 +32,12 @@ type TestSim = Sim & {
 };
 
 function makeRet(): TestSim {
-  const sim = new Sim({ seed: 31381, playerClass: 'paladin', autoEquip: true }) as TestSim;
+  const sim = new Sim({
+    seed: 31381,
+    playerClass: 'paladin',
+    autoEquip: true,
+    world: EMPTY_TEST_WORLD,
+  }) as TestSim;
   sim.setPlayerLevel(20);
   expect(sim.setSpec('retribution')).toBe(true);
   sim.player.resource = sim.player.maxResource;

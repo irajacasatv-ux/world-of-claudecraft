@@ -3,6 +3,10 @@ import { druidEngineOnLandedStrike } from '../src/sim/combat/druid_engines';
 import { onCastCompleted } from '../src/sim/combat/talent_procs';
 import { Sim } from '../src/sim/sim';
 import type { Aura, Entity } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
+
+// The engines read only the player's own auras, so the overworld is left out.
+const BARE = { seed: 7, world: EMPTY_TEST_WORLD };
 
 function aura(entity: Entity, kind: Aura['kind']): Aura {
   return {
@@ -19,7 +23,7 @@ function aura(entity: Entity, kind: Aura['kind']): Aura {
 
 describe("Nature's Echo", () => {
   it('starts the next Moongrove phase with one stage after a payoff', () => {
-    const sim = new Sim({ seed: 7, playerClass: 'druid', autoEquip: true });
+    const sim = new Sim({ ...BARE, playerClass: 'druid', autoEquip: true });
     sim.setPlayerLevel(20);
     expect(
       sim.applyTalents({
@@ -44,7 +48,7 @@ describe("Nature's Echo", () => {
   });
 
   it('starts the next Wildfang bank with one stage after Redharvest', () => {
-    const sim = new Sim({ seed: 7, playerClass: 'druid', autoEquip: true });
+    const sim = new Sim({ ...BARE, playerClass: 'druid', autoEquip: true });
     sim.setPlayerLevel(20);
     expect(
       sim.applyTalents({
@@ -67,7 +71,7 @@ describe("Nature's Echo", () => {
   });
 
   it('keeps the trained Galeheart ability name', () => {
-    const sim = new Sim({ seed: 7, playerClass: 'druid', autoEquip: true });
+    const sim = new Sim({ ...BARE, playerClass: 'druid', autoEquip: true });
     sim.setPlayerLevel(20);
     expect(sim.resolvedAbility('hurricane')?.def.name).toBe('Galeheart');
   });

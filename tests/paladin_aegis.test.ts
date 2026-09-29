@@ -7,9 +7,15 @@ import { Sim } from '../src/sim/sim';
 import { fiestaDownEntity } from '../src/sim/social/fiesta';
 import { channelTickBonus, directHealBonus } from '../src/sim/spell_scaling';
 import type { Aura, Entity } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 function setup() {
-  const sim = new Sim({ seed: 1701, playerClass: 'paladin', autoEquip: true });
+  const sim = new Sim({
+    seed: 1701,
+    playerClass: 'paladin',
+    autoEquip: true,
+    world: EMPTY_TEST_WORLD,
+  });
   sim.setPlayerLevel(20);
   expect(sim.setSpec('holy')).toBe(true);
   const allyId = sim.addPlayer('priest', 'Dawn Ally');

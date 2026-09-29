@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { type ResolvedAbility, Sim } from '../src/sim/sim';
 import type { Entity } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 function entity(sim: Sim, id: number): Entity {
   const found = sim.entities.get(id);
@@ -14,7 +15,12 @@ function groupedPaladin(): {
   ally: Entity;
   beacon: Entity;
 } {
-  const sim = new Sim({ seed: 211, playerClass: 'paladin', noPlayer: true });
+  const sim = new Sim({
+    seed: 211,
+    playerClass: 'paladin',
+    noPlayer: true,
+    world: EMPTY_TEST_WORLD,
+  });
   const paladinId = sim.addPlayer('paladin', 'Aurelia');
   const allyId = sim.addPlayer('warrior', 'Borin');
   const beaconId = sim.addPlayer('priest', 'Celia');
