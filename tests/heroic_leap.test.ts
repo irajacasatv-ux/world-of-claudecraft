@@ -16,6 +16,10 @@ import type { Entity } from '../src/sim/types';
 import { MAX_LEVEL } from '../src/sim/types';
 import { EMPTY_TEST_WORLD } from './sim_shared';
 
+// One seed for the file: every case places what it reads on the empty world,
+// and each fresh seed builds its own collider grid (about a second here).
+const LEAP_SEED = 7;
+
 type AnySim = Sim & {
   nextId: number;
   addEntity(entity: Entity): void;
@@ -24,7 +28,7 @@ type AnySim = Sim & {
 describe('Vaulting Charge: arcs over time, slams on landing', () => {
   it('arms a flight, rises mid-air, then lands near the aim and blasts on touchdown', () => {
     const sim = new Sim({
-      seed: 7,
+      seed: LEAP_SEED,
       playerClass: 'warrior',
       autoEquip: true,
       world: EMPTY_TEST_WORLD,
@@ -67,7 +71,7 @@ describe('Vaulting Charge: arcs over time, slams on landing', () => {
 
   it('does not teleport: it is NOT at the destination on the first tick', () => {
     const sim = new Sim({
-      seed: 3,
+      seed: LEAP_SEED,
       playerClass: 'warrior',
       autoEquip: true,
       world: EMPTY_TEST_WORLD,
@@ -85,7 +89,7 @@ describe('Vaulting Charge: arcs over time, slams on landing', () => {
 
   it('cannot arm or continue through unbreakable encounter control', () => {
     const rooted = new Sim({
-      seed: 31,
+      seed: LEAP_SEED,
       playerClass: 'warrior',
       autoEquip: true,
       world: EMPTY_TEST_WORLD,
@@ -115,7 +119,7 @@ describe('Vaulting Charge: arcs over time, slams on landing', () => {
     expect(rootedPlayer.cooldowns.has('heroic_leap')).toBe(false);
 
     const stunned = new Sim({
-      seed: 32,
+      seed: LEAP_SEED,
       playerClass: 'warrior',
       autoEquip: true,
       world: EMPTY_TEST_WORLD,
@@ -151,9 +155,9 @@ describe('Vaulting Charge: arcs over time, slams on landing', () => {
 // leap otherwise resumes later and teleports the player onto the stored landing
 // point (skipping the corpse run, or undoing an arena/fiesta placement).
 describe('Vaulting Charge: lifecycle resets', () => {
-  function armLeap(seed: number): { sim: AnySim; p: Entity; landing: { x: number; z: number } } {
+  function armLeap(): { sim: AnySim; p: Entity; landing: { x: number; z: number } } {
     const sim = new Sim({
-      seed,
+      seed: LEAP_SEED,
       playerClass: 'warrior',
       autoEquip: true,
       world: EMPTY_TEST_WORLD,
@@ -170,13 +174,13 @@ describe('Vaulting Charge: lifecycle resets', () => {
   }
 
   it('death mid-flight cancels the leap', () => {
-    const { sim, p } = armLeap(11);
+    const { sim, p } = armLeap();
     handleDeath(sim.ctx, p, null);
     expect(p.leap).toBeNull();
   });
 
   it('a released ghost never resumes a stale flight (no graveyard-to-landing teleport)', () => {
-    const { sim, p, landing } = armLeap(13);
+    const { sim, p, landing } = armLeap();
     handleDeath(sim.ctx, p, null);
     sim.releaseSpirit(p.id);
     // Adversarial arm: even if some death path missed the clear, movement for a
@@ -200,13 +204,13 @@ describe('Vaulting Charge: lifecycle resets', () => {
   });
 
   it('arena fighter reset clears an in-flight leap', () => {
-    const { sim, p } = armLeap(17);
+    const { sim, p } = armLeap();
     readyArenaFighter(sim.ctx, p, { clearPrep: true });
     expect(p.leap).toBeNull();
   });
 
   it('fiesta down clears an in-flight leap', () => {
-    const { sim, p } = armLeap(19);
+    const { sim, p } = armLeap();
     fiestaDownEntity(sim.ctx, p, null);
     expect(p.leap).toBeNull();
   });
