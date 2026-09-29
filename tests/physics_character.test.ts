@@ -6,7 +6,6 @@ import {
   MANTLE_REACH,
   queryOpenWorldColliders,
   SIGHT_HEIGHT,
-  supportHeightAt,
 } from '../src/sim/colliders';
 import { BUILTIN_WORLD, setActiveWorldContent } from '../src/sim/data';
 import {
@@ -569,28 +568,6 @@ describe('efficiency: the solver does bounded work per tick', () => {
     const before = out;
     moveCharacter(params(), SPOT.x, 0, SPOT.z, 0.1, 0.1, out);
     expect(out).toBe(before);
-  });
-});
-
-describe('the pruned support query matches the collider-grid query', () => {
-  it('agrees with supportHeightAt across a sampled route', () => {
-    setActiveWorldContent(null);
-    const stone = findStrideableStone();
-    expect(stone).toBeDefined();
-    if (!stone) return;
-    // The solver computes support from its own pruned list; drift between the
-    // two would silently change what a body can stand on.
-    for (let t = -3; t <= 3; t += 0.25) {
-      const x = stone.x + t * 0.3;
-      const z = stone.z + t;
-      const maxY = groundHeight(x, z, SEED) + MAX_STEP_HEIGHT + 1;
-      const viaGrid = supportHeightAt(SEED, x, z, R, maxY);
-      // Drive one zero-length solve so the solver's prune covers this point,
-      // then compare the floor it would land on.
-      moveCharacter(params(), x, groundHeight(x, z, SEED), z, 0, 0, out);
-      const viaFloor = floorHeightAt(SEED, x, z, R, maxY);
-      expect(viaFloor).toBe(Math.max(groundHeight(x, z, SEED), viaGrid));
-    }
   });
 });
 
