@@ -60,8 +60,18 @@ describe('Bruin Form tank kit', () => {
     druid.resource = druid.maxResource;
 
     const before = druid.hp;
+    // A full-health druid shows no heal and the HoT has run out by the end of
+    // the window, so neither end state can tell a refusal from a cast: watch
+    // the aura from the press on, and the cooldown a landed cast would arm.
+    const hasHot = () => druid.auras.some((aura) => aura.id === 'frenzied_regeneration');
     sim.castAbility('frenzied_regeneration');
-    for (let tick = 0; tick < 20 * 12; tick++) sim.tick();
+    let everHot = hasHot();
+    for (let tick = 0; tick < 20 * 12; tick++) {
+      sim.tick();
+      everHot ||= hasHot();
+    }
+    expect(everHot).toBe(false);
+    expect(druid.cooldowns.has('frenzied_regeneration')).toBe(false);
     expect(druid.auras.some((aura) => aura.id === 'frenzied_regeneration')).toBe(false);
     expect(druid.hp).toBe(before);
   });
