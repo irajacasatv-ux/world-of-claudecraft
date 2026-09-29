@@ -272,6 +272,28 @@ describe('the live damage path credits the drill', () => {
     expect(qp.counts[0]).toBeGreaterThan(0);
   });
 
+  it('a resisted cast at a real effigy still moves the count', () => {
+    // The press is what the island asked for, so a resisted cast credits too
+    // (spell_resist.ts): `next` at 0.99 fails the 96 percent spell-hit roll.
+    const sim = makeSim('mage');
+    const qp = seedActiveDrill(sim);
+    const p = standInRing(sim);
+    const target = spawnEffigy(sim, 90103, p.pos.x + 3, p.pos.z);
+    sim.targetEntity(target.id);
+    sim.rng.next = () => 0.99;
+    sim.castAbility(startingAttackFor('mage').abilityId!);
+    let resisted = false;
+    for (let i = 0; i < 200 && qp.counts[0] === 0; i++) {
+      for (const ev of sim.tick()) {
+        if (ev.type === 'damage' && ev.targetId === target.id && ev.kind === 'resist') {
+          resisted = true;
+        }
+      }
+    }
+    expect(resisted, 'the premise: the cast was resisted').toBe(true);
+    expect(qp.counts[0]).toBeGreaterThan(0);
+  });
+
   it('the same swing WITHOUT an ability credits nothing', () => {
     const sim = makeSim('warrior');
     const qp = seedActiveDrill(sim);
