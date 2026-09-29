@@ -325,43 +325,64 @@ describe('climb vetoes', () => {
 // under the sight line, so a charger inside the pen targets a body beyond the
 // back rail, but a body leaves only through the mouth. The pen is concave: a
 // charge run straight at that target presses into the back rail and the side
-// rails hold it there, so only a route out of the mouth arrives. Every other
-// prop list is empty, so nothing else stands near it.
+// rails hold it there, so only a route out of the mouth arrives.
 const PEN = { x: -8, z: 0, halfW: 3, back: 3, mouth: -1 };
-const PEN_WORLD: WorldContent = {
-  ...EMPTY_TEST_WORLD,
-  props: {
-    ...emptyZoneProps(),
-    fences: [
-      { x1: PEN.x - PEN.halfW, z1: PEN.z + PEN.back, x2: PEN.x + PEN.halfW, z2: PEN.z + PEN.back },
-      { x1: PEN.x - PEN.halfW, z1: PEN.z + PEN.back, x2: PEN.x - PEN.halfW, z2: PEN.z + PEN.mouth },
-      { x1: PEN.x + PEN.halfW, z1: PEN.z + PEN.back, x2: PEN.x + PEN.halfW, z2: PEN.z + PEN.mouth },
-    ],
-  },
+type Rail = { x1: number; z1: number; x2: number; z2: number };
+const BACK_RAIL: Rail = {
+  x1: PEN.x - PEN.halfW,
+  z1: PEN.z + PEN.back,
+  x2: PEN.x + PEN.halfW,
+  z2: PEN.z + PEN.back,
 };
+const PEN_RAILS: Rail[] = [
+  BACK_RAIL,
+  { x1: PEN.x - PEN.halfW, z1: PEN.z + PEN.back, x2: PEN.x - PEN.halfW, z2: PEN.z + PEN.mouth },
+  { x1: PEN.x + PEN.halfW, z1: PEN.z + PEN.back, x2: PEN.x + PEN.halfW, z2: PEN.z + PEN.mouth },
+];
+
+// Does the straight step from a to b pass through the rail? Strict: touching
+// a rail or running along its line is not a crossing.
+function crossesRail(a: { x: number; z: number }, b: { x: number; z: number }, r: Rail): boolean {
+  const side = (px: number, pz: number, x1: number, z1: number, x2: number, z2: number) =>
+    (px - x1) * (z2 - z1) - (pz - z1) * (x2 - x1);
+  const ab1 = side(a.x, a.z, r.x1, r.z1, r.x2, r.z2);
+  const ab2 = side(b.x, b.z, r.x1, r.z1, r.x2, r.z2);
+  const r1 = side(r.x1, r.z1, a.x, a.z, b.x, b.z);
+  const r2 = side(r.x2, r.z2, a.x, a.z, b.x, b.z);
+  return ab1 * ab2 < 0 && r1 * r2 < 0;
+}
 
 describe('charge and chase', () => {
-  it('warrior charge routes out of a three-rail pen, never over or through a rail', () => {
-    // Colliders and paths read the ACTIVE world content, so the pen world is
-    // made active for this case alone.
-    setActiveWorldContent(PEN_WORLD);
+  it('warrior charge routes out of a three-rail pen, never through a rail', () => {
+    // Every prop list but the pen's rails is empty. Colliders and paths read
+    // the ACTIVE world content, so the pen world is made active for this case
+    // alone, and built here so its collider grid goes with the case.
+    const penWorld: WorldContent = {
+      ...EMPTY_TEST_WORLD,
+      props: { ...emptyZoneProps(), fences: PEN_RAILS },
+    };
+    setActiveWorldContent(penWorld);
     try {
       const sim = new Sim({
         seed: SEED,
         playerClass: 'warrior',
         autoEquip: true,
         devCommands: true,
-        world: PEN_WORLD,
+        world: penWorld,
       });
       sim.setPlayerLevel(60);
       // Inside the pen, off its centre line, so the straight run meets the
       // back rail at a slant rather than head on.
-      teleport(sim, PEN.x + 1, PEN.z + 1, 0);
+      const start = { x: PEN.x + 1, z: PEN.z + 1 };
+      teleport(sim, start.x, start.z, 0);
       const p = sim.player;
       // An inert training dummy 7 yd beyond the back rail and 9 yd from the
       // charger (inside the 8 to 25 yd window): it never moves, so an arrival
       // is the charger's doing alone.
       const spawn = { x: PEN.x + 2, z: PEN.z + PEN.back + 7 };
+      expect(crossesRail(start, spawn, BACK_RAIL), 'the straight run meets the back rail').toBe(
+        true,
+      );
       const dummy = createMob(sim.nextId++, MOBS.training_dummy, 20, {
         x: spawn.x,
         y: groundHeight(spawn.x, spawn.z, SEED),
@@ -378,13 +399,13 @@ describe('charge and chase', () => {
       expect(p.chargeTargetId, 'the charge started: the rail left the sight line clear').toBe(
         dummy.id,
       );
-      let maxRel = 0;
       let minZ = p.pos.z;
       let endDist = Number.POSITIVE_INFINITY;
       // The route ends inside the 3 sec budget (60 ticks); a few spare.
       for (let i = 0; i < 70 && p.chargeTargetId !== null; i++) {
+        const from = { x: p.pos.x, z: p.pos.z };
         hold(sim, {}, 1);
-        maxRel = Math.max(maxRel, p.pos.y - groundHeight(p.pos.x, p.pos.z, SEED));
+        for (const rail of PEN_RAILS) expect(crossesRail(from, p.pos, rail)).toBe(false);
         minZ = Math.min(minZ, p.pos.z);
         if (p.chargeTargetId === null) {
           endDist = Math.hypot(p.pos.x - dummy.pos.x, p.pos.z - dummy.pos.z);
@@ -397,7 +418,6 @@ describe('charge and chase', () => {
       expect(endDist).toBeLessThanOrEqual(CHARGE_ARRIVE_RANGE);
       // The only way out of the pen is past the side rails' open ends.
       expect(minZ).toBeLessThan(PEN.z + PEN.mouth);
-      expect(maxRel).toBeLessThan(0.5); // never up onto a rail
     } finally {
       setActiveWorldContent(null);
     }
