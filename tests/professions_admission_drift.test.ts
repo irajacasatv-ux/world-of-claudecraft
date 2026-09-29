@@ -34,6 +34,7 @@ import { createRiftGearInstance } from '../src/sim/rift/progression';
 import { type PlayerMeta, Sim } from '../src/sim/sim';
 import type { Entity, EquipSlot, InvSlot, SimEvent } from '../src/sim/types';
 import { completeRechargeCast } from './helpers/enchant_family_cast';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const SWORD = 'eastbrook_arming_sword'; // common mainhand weapon
 const TUNIC = 'recruit_tunic'; // common chest armor
@@ -45,8 +46,10 @@ const MISSING_ITEM = '__drift_no_such_item';
 const MISSING_ENCHANT = '__drift_no_such_enchant';
 const FILLER = 'simple_fishing_pole'; // one per slot, merges with nothing
 
-function makeSim(seed = 7): Sim {
-  return new Sim({ seed, playerClass: 'warrior', autoEquip: false });
+// Admission and resolution read the player's bags, gear and the item tables,
+// never a camp, NPC or ground object, so every Sim builds the empty world.
+function makeSim(): Sim {
+  return new Sim({ seed: 7, playerClass: 'warrior', autoEquip: false, world: EMPTY_TEST_WORLD });
 }
 
 function playerOf(sim: Sim): { p: Entity; meta: PlayerMeta; pid: number } {
