@@ -26,8 +26,10 @@ const LOCKPICK_TEST_WORLD: WorldContent = {
   groundObjects: [],
 };
 
-const makeSim = (seed = 42) =>
-  new Sim({ seed, playerClass: 'warrior', autoEquip: true, world: LOCKPICK_TEST_WORLD });
+// One seed for the file: the flow cases' seeds (7, 99) bought nothing, and the
+// sweep below varies its locks through the rng stream instead of the seed.
+const makeSim = () =>
+  new Sim({ seed: 42, playerClass: 'warrior', autoEquip: true, world: LOCKPICK_TEST_WORLD });
 const BOUNTIFUL_STRESS_TIMEOUT_MS = 60_000; // 80 Sim ctors of a 13-zone world, under parallel suite load
 
 function enterBountifulFinale(sim: Sim) {
@@ -63,7 +65,7 @@ function curSpec(run: { lockpick: { pages: any[]; pageIndex: number } | null }) 
 
 describe('Bountiful lockpick, flawless sim path', () => {
   it('solver clears all 3 premium pages without failure (sim API only)', () => {
-    const sim = makeSim(42);
+    const sim = makeSim();
     const { run, chestId } = enterBountifulFinale(sim);
     sim.lockpickEngage(chestId, 1);
     drain(sim);
@@ -82,7 +84,7 @@ describe('Bountiful lockpick, flawless sim path', () => {
   });
 
   it('HUD-style flow (engage + action + drainEvents each step) succeeds', () => {
-    const sim = makeSim(7);
+    const sim = makeSim();
     const { run, chestId } = enterBountifulFinale(sim);
     sim.lockpickEngage(chestId, 1);
     drain(sim);
@@ -102,15 +104,21 @@ describe('Bountiful lockpick, the old jam is gone (authoritative-state picking)'
     () => {
       // This is the headline regression: previously a frozen HUD column jammed
       // most seeds on the single premium try. Reading sim.lockpickState directly
-      // (what the rewritten board does) cannot freeze, so every seed opens.
-      // 30 seeds still catches the jam class; 80 fresh Sims of a 13-zone
-      // world no longer fit any sane budget under parallel suite load
+      // (what the rewritten board does) cannot freeze, so every lock opens.
+      // The lock is drawn from the delve run's seed, which enterDelve takes off
+      // the sim rng, so 30 rng states on the file's one seed (the stream
+      // advanced by `skip` draws first) deal 30 locks: a fresh seed per lock
+      // paid a terrain build each. The layouts are counted, so a sweep that
+      // stopped varying its lock would fail rather than pass on one layout.
       const N = 30;
       let opened = 0;
-      for (let seed = 0; seed < N; seed++) {
-        const sim = makeSim(seed);
+      const layouts = new Set<string>();
+      for (let skip = 0; skip < N; skip++) {
+        const sim = makeSim();
+        for (let i = 0; i < skip; i++) sim.rng.next();
         const { run, chestId } = enterBountifulFinale(sim);
         sim.lockpickEngage(chestId, 1);
+        layouts.add(JSON.stringify(run.lockpick?.pages));
         let guard = 0;
         while (run.lockpick && run.lockpick.state === 'IN_PROGRESS' && guard++ < 200) {
           const col = sim.lockpickState!.col; // authoritative; never stale
@@ -119,12 +127,13 @@ describe('Bountiful lockpick, the old jam is gone (authoritative-state picking)'
         if (run.objectState[chestId].looted) opened++;
       }
       expect(opened).toBe(N);
+      expect(layouts.size, 'every rng state dealt its own lock').toBe(N);
     },
     BOUNTIFUL_STRESS_TIMEOUT_MS,
   );
 
   it('first page (16 cols) seats and rolls onto page 2 without any drain', () => {
-    const sim = makeSim(99);
+    const sim = makeSim();
     const { run, chestId } = enterBountifulFinale(sim);
     sim.lockpickEngage(chestId, 1);
 
@@ -140,7 +149,7 @@ describe('Bountiful lockpick, the old jam is gone (authoritative-state picking)'
 
 describe('Bountiful lockpick, timeout and session guards', () => {
   it('a sim-enforced step timeout burns the premium (1-try) lock and never re-fires once ended, issue #2585', () => {
-    const sim = makeSim(42);
+    const sim = makeSim();
     const { run, chestId } = enterBountifulFinale(sim);
     sim.lockpickEngage(chestId, 1);
     drain(sim);
@@ -161,7 +170,7 @@ describe('Bountiful lockpick, timeout and session guards', () => {
   });
 
   it('lockpickAction with stale sessionId is rejected (no double fail)', () => {
-    const sim = makeSim(42);
+    const sim = makeSim();
     const { run, chestId } = enterBountifulFinale(sim);
     sim.lockpickEngage(chestId, 1);
     drain(sim);
