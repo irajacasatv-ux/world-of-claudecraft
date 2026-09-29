@@ -4,14 +4,17 @@ import { createMob } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
 import { groundHeight } from '../src/sim/world';
 import { WORLD_SEED } from '../src/sim/world_seed';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const SEED = WORLD_SEED;
 const PREMIUM = 'greyjaw_hide_boots'; // uncommon: opens a roll under default strategies
 const COMMON = 'worn_sword'; // common: never master-looted under a rare threshold
 const FRESH_CORPSE_TIMER = 60;
 
+// Every corpse here is hand-built beside the party, so the Sims drop the
+// ambient camps, NPCs and ground objects the full world would tick.
 function makeSim() {
-  return new Sim({ seed: SEED, playerClass: 'warrior' });
+  return new Sim({ seed: SEED, playerClass: 'warrior', world: EMPTY_TEST_WORLD });
 }
 function teleportTo(sim: Sim, x: number, z: number, pid?: number) {
   const p = sim.entities.get(pid ?? sim.playerId)!;
