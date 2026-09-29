@@ -495,7 +495,10 @@ describe('draw-order determinism over a real Sim', () => {
   // setup) so the sequence misses first and procs on the second and third,
   // on the seed the file's other Sims build; a hunted world seed moved with
   // every content commit that added world-gen draws and built its own
-  // collider grids.
+  // collider grids. The forcing hides the world's own stream from the proc
+  // outcomes, so each run also records the next draw of the natural stream
+  // left behind by construction and setup: a construction-time draw that
+  // changes count or order between two same-seed Sims shows up there.
   const SEED = 21;
   const PROC_CHANCE = 0.14;
 
@@ -511,6 +514,7 @@ describe('draw-order determinism over a real Sim', () => {
     for (let i = 0; i < 9; i++) sim.addItem('homespun_cloth', 1, pid);
     for (let i = 0; i < 15; i++) sim.addItem('spool_of_thread', 1, pid);
     sim.drainEvents();
+    const naturalNextDraw = sim.rng.next();
     sim.rng = rngWithFirstDraws(
       (first) => first >= PROC_CHANCE,
       (second) => second < PROC_CHANCE,
@@ -538,6 +542,7 @@ describe('draw-order determinism over a real Sim', () => {
     const events = sim.drainEvents();
     return {
       pid,
+      naturalNextDraw,
       results,
       drawCounts,
       masterworkEventCount: events.filter((e) => e.type === 'masterwork').length,
@@ -558,7 +563,12 @@ describe('draw-order determinism over a real Sim', () => {
   }
 
   it('two same-seed runs are byte-identical, proc occurrences and lastMasterwork included', () => {
-    expect(run()).toEqual(run());
+    const [a, b] = [run(), run()];
+    // The natural stream is a real draw, not a forced one, so the equality
+    // below compares the construction-time draw sequence too.
+    expect(a.naturalNextDraw).toBeGreaterThanOrEqual(0);
+    expect(a.naturalNextDraw).toBeLessThan(1);
+    expect(a).toEqual(b);
   });
 
   it('draws exactly once per successful craft and zero on the denial, with the forced procs pinned', () => {
