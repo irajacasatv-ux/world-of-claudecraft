@@ -28,6 +28,7 @@ import {
   UNMAPPED_FAMILY_2,
   withRetaggedTemplates,
 } from './helpers/unmapped_family';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // Direct unit tests for the extracted loot-distribution module (L1). These drive the
 // module's exported `(ctx, ...)` functions through `sim.ctx` (the real SimContext
@@ -35,7 +36,21 @@ import {
 // pin drop-rate + need-greed resolution + fair-split determinism, the everyone-passes
 // return-to-corpse branch, and the visibility/prune helpers.
 
-const makeSim = (seed = 42) => new Sim({ seed, playerClass: 'warrior', noPlayer: true });
+// Every Sim here is built on ONE seed of the empty test world (corpses are built
+// by hand and no case reads a camp, NPC, or ground object), so each case reuses
+// the world the first one built instead of paying a fresh world per seed. The
+// case's own seed then seeds the draw stream, the one every loot path reads
+// through ctx.rng (the re-seed idiom the dedup case below already uses).
+const makeSim = (seed = 42) => {
+  const sim = new Sim({
+    seed: 42,
+    playerClass: 'warrior',
+    noPlayer: true,
+    world: EMPTY_TEST_WORLD,
+  });
+  sim.rng = new Rng(seed);
+  return sim;
+};
 
 function partyOfThree(seed = 42) {
   const sim = makeSim(seed);
