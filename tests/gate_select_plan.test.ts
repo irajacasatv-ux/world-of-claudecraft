@@ -1082,6 +1082,16 @@ describe('discovery scope matches vitest collection over the real tree', () => {
           walk(full);
           continue;
         }
+        // The walk does not follow a symlinked directory and vitest's glob does, so one that
+        // reaches a collected test is an offender (a venv's lib64 link to lib reaches none).
+        if (
+          entry.isSymbolicLink() &&
+          statSync(full, { throwIfNoEntry: false })?.isDirectory() &&
+          holdsCollectedTest(full)
+        ) {
+          offenders.push(rel);
+          continue;
+        }
         // A browser-suite file out here is an offender too: vite.config excludes it and the
         // browser config includes only tests/browser/, so it would run under neither.
         if (/\.(test|spec)\.[cm]?[jt]sx?$/.test(rel)) offenders.push(rel);
@@ -1147,8 +1157,8 @@ describe('discovery scope matches vitest collection over the real tree', () => {
     // file anywhere else under tests/, or any other test-named file inside tests/browser/, runs
     // in neither. The walkers here and in discovery do not follow a symlink, which vitest's glob
     // would, so a symlink under tests/ to a directory, or a test-named one, is flagged too (a
-    // symlinked fixture file is not a test). A browser-suite file outside tests/ fails the
-    // outside-tests guard above.
+    // symlinked fixture file is not a test). Outside tests/, a browser-suite file or a symlinked
+    // directory reaching a collected test fails the outside-tests guard above.
     const testNamed = (name: string) => /\.(test|spec)\.[cm]?[jt]sx?$/.test(name);
     const stranded: string[] = [];
     const walk = (dir: string) => {
