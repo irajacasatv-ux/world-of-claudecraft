@@ -59,6 +59,8 @@ function cacheId(sim: Sim): number {
 describe('ley bonus boards', () => {
   it('certifies both bonus catalogs: larger, solvable, unsolved at start, distinct routes', () => {
     expect(WORLD_QUEST_LEY_BONUS_SIZES).toEqual([5, 6]);
+    // The lazy bonus builder reads it, so nothing may rewrite a board size after load.
+    expect(Object.isFrozen(WORLD_QUEST_LEY_BONUS_SIZES)).toBe(true);
     expect(WORLD_QUEST_LEY_BONUS_LEVELS).toBe(2);
     for (const [index, size] of WORLD_QUEST_LEY_BONUS_SIZES.entries()) {
       const routes = new Set<string>();

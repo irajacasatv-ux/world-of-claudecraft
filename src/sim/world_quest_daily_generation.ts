@@ -143,7 +143,8 @@ export function generateDailyLeyChallenge(day: number): {
 }
 
 /** Bonus boards past the daily solve: level 1 is 5x5, level 2 is 6x6. */
-export const WORLD_QUEST_LEY_BONUS_SIZES = [5, 6] as const;
+// Frozen: the lazy bonus builder reads it, so it must not be writable after load.
+export const WORLD_QUEST_LEY_BONUS_SIZES = Object.freeze([5, 6] as const);
 export const WORLD_QUEST_LEY_BONUS_LEVELS = WORLD_QUEST_LEY_BONUS_SIZES.length;
 
 export function generateBonusLeyChallenge(

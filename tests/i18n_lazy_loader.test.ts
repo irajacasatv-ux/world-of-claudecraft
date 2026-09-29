@@ -9,7 +9,7 @@
 // and a retry possible.
 
 import { readdirSync } from 'node:fs';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   en,
   ensureLocaleLoaded,
@@ -190,9 +190,11 @@ describe('prefetchLocale (stored-locale modulepreload runtime prefetch)', () => 
 // generated modules. A re-export of the barrel or a non-en slice is tree-shaken out of the app
 // chunk, so no bundle check would notice it, but vitest evaluates it in every suite that imports
 // src/ui/i18n (all 21 slices plus the barrel, about 0.6 s of import per file). Measured at
-// runtime, not read from source: every other generated module is mocked with a pass-through
-// factory that records its evaluation, so a direct re-export, a top-level dynamic import and a
-// reach through any intermediate module all count, however the path is spelled.
+// runtime, not read from source: every other generated module is mocked with a factory that
+// records its evaluation (the barrel passes through, a slice answers a stub), so a direct
+// re-export, a top-level dynamic import (chained through further dynamic imports too) and a
+// reach through any intermediate module all count, for every spelling that resolves to the
+// module's id.
 const EAGER_GENERATED = new Set(['en.ts', 'en_XA.ts', 'loaders.ts', 'pending.ts']);
 const LAZY_GENERATED = readdirSync(new URL('../src/ui/i18n.resolved.generated/', import.meta.url))
   .filter((file) => file.endsWith('.ts') && !EAGER_GENERATED.has(file))
@@ -215,11 +217,11 @@ async function lazyGeneratedEvaluatedBy(load: () => Promise<unknown>): Promise<s
     });
   try {
     await load();
-    // A top-level import() settles after the importing module: wait until the record stops
-    // growing, a few macrotasks at most.
+    // A top-level import() settles after the importing module, and one can start another:
+    // wait for every dynamic import vitest is tracking, again while the record still grows.
     for (let turn = 0, seen = -1; turn < 8 && seen !== evaluated.size; turn++) {
       seen = evaluated.size;
-      await new Promise((resolve) => setTimeout(resolve, 0));
+      await vi.dynamicImportSettled();
     }
   } finally {
     for (const specifier of LAZY_GENERATED) vi.doUnmock(specifier);
@@ -228,14 +230,28 @@ async function lazyGeneratedEvaluatedBy(load: () => Promise<unknown>): Promise<s
   return [...evaluated].sort();
 }
 
-// Keep this describe last: its module resets leave the file's static imports on the old
-// module graph, which a later case comparing instances would trip over.
+// This describe must stay last: its module resets leave the file's static imports on the old
+// module graph, which a later case comparing instances would trip over. The flag enforces it.
+let reachPinRan = false;
+beforeEach(() => {
+  if (reachPinRan) throw new Error('a case after the lazy-reach pin: keep that describe last');
+});
 describe('src/ui/i18n.ts evaluates only the eager generated modules', () => {
+  afterAll(() => {
+    reachPinRan = true;
+  });
+
   it('evaluates no locale slice and not the barrel, directly, dynamically or transitively', async () => {
     // The barrel plus every non-en slice (21 today); a floor, so an emptied list cannot pass.
     expect(LAZY_GENERATED).toContain(BARREL);
     expect(LAZY_GENERATED.length).toBeGreaterThanOrEqual(22);
     expect(await lazyGeneratedEvaluatedBy(() => import('../src/ui/i18n'))).toEqual([]);
+  });
+
+  it('records a slice reached only at the end of a chain of dynamic imports (control)', async () => {
+    expect(await lazyGeneratedEvaluatedBy(() => import('./fixtures/i18n_reach_chain'))).toEqual([
+      '../src/ui/i18n.resolved.generated/es',
+    ]);
   });
 
   it('records the barrel and every slice when the barrel itself is loaded (control)', async () => {

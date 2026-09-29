@@ -208,6 +208,9 @@ describe('the daily catalogs build on first use, and build what the module-load 
     try {
       const fresh: DailyModule = await import(MODULE);
       expect(seeds).toEqual([]);
+      // A level the clamp cannot place throws before any builder runs.
+      expect(() => fresh.generateBonusLeyChallenge(0, Number.NaN)).toThrow(RangeError);
+      expect(seeds).toEqual([]);
       fresh.generateDailyMatch3Level(5);
       fresh.generateDailyMatch3Level(37);
       expect(seeds).toEqual([0xca7d0000 + 5]);
