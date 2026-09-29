@@ -204,7 +204,7 @@ describe('live profession attunement quests', () => {
     acceptAt(sim, HOBBY_MASTER, HOBBY_QUEST, 'tailoring');
 
     const saved = sim.serializeCharacter(sim.playerId);
-    const reloaded = makeSim(9043);
+    const reloaded = makeSim();
     const pid = reloaded.addPlayer('warrior', 'Reloaded', { state: saved ?? undefined });
 
     expect(reloaded.craftingIdentityFor(pid)).toMatchObject({
@@ -280,7 +280,7 @@ describe('live profession attunement quests', () => {
   // the craft path's masterwork proc draw share the one world rng stream).
   it('same-seed runs of the gather, craft, attune, and hobby-switch flow are identical', () => {
     const run = () => {
-      const sim = makeSim(4242);
+      const sim = makeSim();
       const pid = sim.playerId;
       unlockProfessionQuests(sim);
 
