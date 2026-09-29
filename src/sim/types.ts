@@ -9155,10 +9155,13 @@ export interface SimConfig {
   perfLap?: (phase: string, entity?: Entity) => void;
   // Distance-cull throttle: when positive, idle ownerless mobs farther than this many
   // world units from every player skip their per-tick idle AI. The offline browser and
-  // live GameServer set it to PLAYER_INTEREST_DROP_RADIUS; deterministic tests leave it
-  // unset unless they are explicitly pinning the culling contract. The headless RL env
-  // keeps its own intentional 80-unit throttle (headless/env_server.ts). Positive values
-  // also move every passive idle roll to the per-mob lane; see mob/idle_rng.ts.
+  // live GameServer set it to PLAYER_INTEREST_DROP_RADIUS. The parity goldens leave it
+  // unset (culling moves the shared rng stream they pin); a full-world suite that only
+  // needs the world to tick the way players meet it opts into the shipped value
+  // (tests/helpers/production_idle_cull.ts), which costs about a seventh of an
+  // unculled tick. The headless RL env keeps its own intentional 80-unit throttle
+  // (headless/env_server.ts). Positive values also move every passive idle roll to the
+  // per-mob lane; see mob/idle_rng.ts.
   idleMobTickRadius?: number;
   // When true, the Sowfield auto-runs a bot-vs-bot showcase match after a stretch
   // of no queue activity, so a walk-up spectator always has a game to watch (and

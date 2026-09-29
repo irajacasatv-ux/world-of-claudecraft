@@ -51,10 +51,12 @@ vi.mock('../server/db', () => ({
 }));
 
 import { GameServer, INTEREST_DROP_RADIUS } from '../server/game';
+import { offlineWorldConfig } from '../src/game/offline_world_config';
 import { ENTITY_VIEW_DESTROY_RANGE } from '../src/render/renderer';
 import { MAX_AGGRO_RADIUS } from '../src/sim/mob/aggro_ranges';
 import { Sim } from '../src/sim/sim';
 import { type Entity, PLAYER_INTEREST_DROP_RADIUS } from '../src/sim/types';
+import { PRODUCTION_IDLE_CULL } from './helpers/production_idle_cull';
 
 function sharedCullEligibleIdleMob(e: Entity): boolean {
   return (
@@ -100,6 +102,19 @@ describe('idle-mob distance culling is wired into the production server (#2703)'
     const main = readFileSync(new URL('../src/main.ts', import.meta.url), 'utf8');
     expect(main).toContain("import { offlineWorldConfig } from './game/offline_world_config'");
     expect(main).toContain('offlineWorldConfig(');
+  });
+
+  it('gives the suites that opt into production culling the radius both shipped hosts boot with', () => {
+    // tests/helpers/production_idle_cull.ts is how a full-world suite ticks the world
+    // the way players meet it; the first case above chains the server's radius to
+    // PLAYER_INTEREST_DROP_RADIUS, this one the helper and the built offline config.
+    const offline = offlineWorldConfig({
+      playerClass: 'warrior',
+      name: 'Probe',
+      devCommands: false,
+    });
+    expect(PRODUCTION_IDLE_CULL.idleMobTickRadius).toBe(PLAYER_INTEREST_DROP_RADIUS);
+    expect(offline.idleMobTickRadius).toBe(PRODUCTION_IDLE_CULL.idleMobTickRadius);
   });
 
   it('the render drop radius sits well past the farthest a mob can ever detect a player, so culling never skips a scan that could pull', () => {
