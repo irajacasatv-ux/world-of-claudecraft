@@ -8,6 +8,7 @@ import { Sim } from '../src/sim/sim';
 import type { SimContext } from '../src/sim/sim_context';
 import type { Entity } from '../src/sim/types';
 import { groundHeight } from '../src/sim/world';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // The two utility poisons added alongside the rogue rework. Both are weapon
 // COATS (issue #3774: they shipped as 40-energy targeted nukes by mistake): the
@@ -42,8 +43,9 @@ function teleport(sim: Sim, e: Entity, x: number, z: number): void {
   (sim as unknown as SimInternals).rebucket(e);
 }
 
+// The rig strikes a wolf it places itself, so the rogue stands on the empty world.
 function poisonRig(): { sim: Sim; rogue: Entity; mob: Entity } {
-  const sim = new Sim({ seed: 3, playerClass: 'rogue', autoEquip: true });
+  const sim = new Sim({ seed: 3, playerClass: 'rogue', autoEquip: true, world: EMPTY_TEST_WORLD });
   sim.setPlayerLevel(20);
   const rogue = sim.player;
   teleport(sim, rogue, 0, 0);
