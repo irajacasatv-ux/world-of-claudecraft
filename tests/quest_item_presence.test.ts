@@ -17,6 +17,7 @@ import {
 } from '../src/sim/quests/quest_item_presence';
 import { type PlayerMeta, Sim } from '../src/sim/sim';
 import type { InvSlot } from '../src/sim/types';
+import { VENDOR_TEST_WORLD } from './sim_shared';
 
 const TOOL = 'gathering_sickle';
 
@@ -178,8 +179,14 @@ describe('playerHoldsQuestItem, one store at a time', () => {
 });
 
 describe('the real seams', () => {
+  // The seams read the post office, the bank, and the Merchant (an NPC kept
+  // by the vendor world), never a mob or ground object, and share one seed:
+  // a fresh seed builds its collider grids (about half a second) for nothing.
+  const seamSim = (): Sim =>
+    new Sim({ seed: 31, playerClass: 'warrior', autoEquip: false, world: VENDOR_TEST_WORLD });
+
   it('sees a REAL mailbox attachment, in-flight letters included', () => {
-    const sim = new Sim({ seed: 31, playerClass: 'warrior', autoEquip: false });
+    const sim = seamSim();
     const pid = sim.playerId;
     const meta = sim.players.get(pid) as PlayerMeta;
     expect(playerHoldsQuestItem(sim.ctx, meta, TOOL)).toBe(false);
@@ -192,7 +199,7 @@ describe('the real seams', () => {
   });
 
   it('sees a REAL banked copy', () => {
-    const sim = new Sim({ seed: 32, playerClass: 'warrior', autoEquip: false });
+    const sim = seamSim();
     const pid = sim.playerId;
     const meta = sim.players.get(pid) as PlayerMeta;
     meta.bank.inventory.push({ itemId: TOOL, count: 1 });
@@ -208,7 +215,7 @@ describe('the real seams', () => {
     // the bucketed read (MailIndex) cannot see an untracked letter, which
     // would make the negative arm below pass for invisibility instead of
     // ownership, and its failure mode is duplicate quest-item minting.
-    const sim = new Sim({ seed: 33, playerClass: 'warrior', autoEquip: false });
+    const sim = seamSim();
     const meta = sim.players.get(sim.playerId) as PlayerMeta;
     const toolLetter = {
       letterId: 'qa_presence_tools',
@@ -237,7 +244,7 @@ describe('the real seams', () => {
     // The tier-1 tools carry noMarketList, so the stand-in is a listable id:
     // the predicate is item-generic and serves every quest's fallback grants.
     const LISTABLE = 'iron_ore';
-    const sim = new Sim({ seed: 34, playerClass: 'warrior', autoEquip: false });
+    const sim = seamSim();
     const pid = sim.playerId;
     const meta = sim.players.get(pid) as PlayerMeta;
     // marketList requires standing at the Merchant.
