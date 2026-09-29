@@ -13,9 +13,16 @@ import { enterDungeon } from '../src/sim/instances/dungeons';
 import { Sim } from '../src/sim/sim';
 import { DT, type Entity } from '../src/sim/types';
 import { VARKHUL_SHARED_PYRE_AURA_ID } from '../src/sim/varkhul_shared_pyre';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
+// The fight lives in the Inner Crucible instance, so every Sim runs on the empty world.
 function encounter(heroic = false): { sim: Sim; boss: Entity } {
-  const sim = new Sim({ seed: 9417, playerClass: 'warrior', devCommands: true });
+  const sim = new Sim({
+    seed: 9417,
+    playerClass: 'warrior',
+    devCommands: true,
+    world: EMPTY_TEST_WORLD,
+  });
   expect(enterDungeon(sim.ctx, IGNIVAR_SECOND_WING_ID, sim.player.id, true)).toBe(true);
   const instance = sim.instances.find((entry) => entry.dungeonId === IGNIVAR_SECOND_WING_ID);
   if (!instance) throw new Error('Inner Crucible instance missing');
