@@ -5,6 +5,7 @@ import { activateDivineAscension, grantDevotion, MAX_DEVOTION } from '../src/sim
 import type { PlayerMeta, ResolvedAbility } from '../src/sim/sim';
 import { Sim } from '../src/sim/sim';
 import type { Entity } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 type TestSim = Sim & {
   nextId: number;
@@ -21,8 +22,17 @@ type TestSim = Sim & {
   ): void;
 };
 
+// Every case strikes a wolf it places itself, so the rig stands on the empty
+// world. The rolls are pinned rather than riding the seed's stream: with `next`
+// at 0.9 every chance under 90 percent fails, so each Hammer lands unresisted.
 function makeRet(): TestSim {
-  const sim = new Sim({ seed: 90210, playerClass: 'paladin', autoEquip: true }) as TestSim;
+  const sim = new Sim({
+    seed: 90210,
+    playerClass: 'paladin',
+    autoEquip: true,
+    world: EMPTY_TEST_WORLD,
+  }) as TestSim;
+  sim.rng.next = () => 0.9;
   sim.setPlayerLevel(20);
   expect(sim.setSpec('retribution')).toBe(true);
   sim.player.resource = sim.player.maxResource;
