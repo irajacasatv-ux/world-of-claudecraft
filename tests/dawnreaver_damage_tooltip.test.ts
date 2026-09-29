@@ -165,7 +165,7 @@ describe('Dawnreaver resolved damage tooltip accuracy', () => {
   // Dawn's Wrath empowers the stored hammer at cast time, baking its factor
   // into the strike's damageMult (applyDawnsWrathOverride, the call the cast
   // path makes), so the tooltip range must carry that factor as combat does:
-  // 20 percent harder off the Zealfire set (docs/design/warfare-season-2.md,
+  // 20 percent harder without the Zealfire set (docs/design/warfare-season-2.md,
   // "40 percent, up from 20").
   it.each([false, true])("the Dawn's Wrath hammer matches combat, maximum %s", (maximum) => {
     const { sim, target } = setup(70, maximum);
