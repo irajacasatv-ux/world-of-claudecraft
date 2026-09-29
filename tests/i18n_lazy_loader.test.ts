@@ -8,6 +8,8 @@
 // (the caller - bootstrap / picker - catches it) without crashing, leaving English in place
 // and a retry possible.
 
+import { readFileSync } from 'node:fs';
+import ts from 'typescript';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   en,
@@ -180,5 +182,53 @@ describe('prefetchLocale (stored-locale modulepreload runtime prefetch)', () => 
     // The failed load cleared inflight, so a fresh real load still succeeds.
     await ensureLocaleLoaded('it_IT');
     expect(isLocaleResident('it_IT')).toBe(true);
+  });
+});
+
+// The module-graph half of the lazy flip: src/ui/i18n.ts statically reaches only the eager
+// generated modules. A re-export of the barrel or a non-en slice is tree-shaken out of the
+// app chunk, so no bundle check would notice it, but vitest evaluates it in every suite that
+// imports src/ui/i18n (all 21 slices plus the barrel, about 0.6 s of import per file). The
+// specifiers come from TypeScript's parser, so a comment or a string never counts.
+function staticSpecifiers(source: string): string[] {
+  const file = ts.createSourceFile('i18n.ts', source, ts.ScriptTarget.Latest, false);
+  const out: string[] = [];
+  for (const statement of file.statements) {
+    if (
+      (ts.isImportDeclaration(statement) || ts.isExportDeclaration(statement)) &&
+      statement.moduleSpecifier !== undefined &&
+      ts.isStringLiteral(statement.moduleSpecifier)
+    )
+      out.push(statement.moduleSpecifier.text);
+  }
+  return out;
+}
+
+const EAGER_GENERATED = [
+  './i18n.resolved.generated/en',
+  './i18n.resolved.generated/en_XA',
+  './i18n.resolved.generated/loaders',
+  './i18n.resolved.generated/pending',
+];
+const generatedReach = (source: string): string[] =>
+  staticSpecifiers(source)
+    .filter((specifier) => specifier.startsWith('./i18n.resolved.generated'))
+    .sort();
+const I18N_SOURCE = readFileSync(new URL('../src/ui/i18n.ts', import.meta.url), 'utf8');
+
+describe('src/ui/i18n.ts reaches only the eager generated modules', () => {
+  it('imports en, en_XA, loaders and pending, never the barrel or a non-en slice', () => {
+    expect(generatedReach(I18N_SOURCE)).toEqual(EAGER_GENERATED);
+  });
+
+  it('sees a barrel re-export and a slice import, and not a commented-out one', () => {
+    const edited =
+      `${I18N_SOURCE}\nexport { es } from './i18n.resolved.generated';\n` +
+      `import { ru_RU } from './i18n.resolved.generated/ru_RU';\n` +
+      `// export { de_DE } from './i18n.resolved.generated';\n` +
+      `const decoy = "import { fr_FR } from './i18n.resolved.generated/fr_FR';";\n`;
+    expect(generatedReach(edited)).toEqual(
+      [...EAGER_GENERATED, './i18n.resolved.generated', './i18n.resolved.generated/ru_RU'].sort(),
+    );
   });
 });
