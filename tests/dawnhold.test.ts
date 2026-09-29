@@ -29,6 +29,7 @@ import {
 import { enterDungeon, leaveDungeon } from '../src/sim/instances/dungeons';
 import { authoredLiftAt, roomAt } from '../src/sim/rift/authored';
 import { Sim } from '../src/sim/sim';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // The decor keys the authored render path supports (src/render/rift_decor.ts:
 // DECOR_MODELS plus the procedural 'pentagram' and 'rug'). A key outside this
@@ -374,7 +375,14 @@ describe('Dawnhold Castle layout', () => {
   });
 
   it('a player enters through the door path, spawns no mobs, earns the visit deed, and leaves clean', () => {
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', autoEquip: true });
+    // The empty world has no overworld mobs, so any mob the entry spawned
+    // would show up as a nonzero count.
+    const sim = new Sim({
+      seed: 42,
+      playerClass: 'warrior',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const pid = sim.player.id;
     const before = [...(sim as any).entities.values()].filter(
       (e: { kind: string }) => e.kind === 'mob',
