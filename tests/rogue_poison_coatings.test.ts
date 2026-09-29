@@ -1,13 +1,14 @@
 import { assert, describe, expect, it } from 'vitest';
 import { meleeSwing } from '../src/sim/combat/auto_attack';
 import { coatTickValue, nextCoatStacks, poisonCoatFor } from '../src/sim/combat/poison_coating';
-import { ABILITIES, BUILTIN_WORLD, MOBS } from '../src/sim/data';
+import { ABILITIES, MOBS } from '../src/sim/data';
 import { createMob } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
 import type { SimContext } from '../src/sim/sim_context';
 import { duelFor } from '../src/sim/social/duel';
 import type { Entity } from '../src/sim/types';
 import { groundHeight } from '../src/sim/world';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // The rogue poisons are weapon COATS: the ability puts an imbue on you, and a
 // landed melee swing carries the coat's rider onto whatever you struck.
@@ -32,9 +33,18 @@ function teleport(sim: Sim, e: Entity, x: number, z: number): void {
   (sim as unknown as SimInternals).rebucket(e);
 }
 
+// Every rig strikes a mob or duels a rival it places itself, so each Sim stands on
+// the empty world, all on one seed (a fresh seed costs a collider grid build).
+const SEED = 3;
+
 /** A level-20 rogue toe to toe with a hostile mob of `mobLevel`. */
 function poisonRig(mobLevel = 10): { sim: Sim; rogue: Entity; mob: Entity } {
-  const sim = new Sim({ seed: 3, playerClass: 'rogue', autoEquip: true });
+  const sim = new Sim({
+    seed: SEED,
+    playerClass: 'rogue',
+    autoEquip: true,
+    world: EMPTY_TEST_WORLD,
+  });
   sim.setPlayerLevel(20);
   const rogue = sim.player;
   teleport(sim, rogue, 0, 0);
@@ -113,6 +123,9 @@ describe("Adder's Bite", () => {
 
   it('adds its flat damage to a landed swing and leaves nothing on the target', () => {
     const { sim, rogue, mob } = poisonRig();
+    // Pin the rolls (`next` at 0.9: every swing lands as a plain hit with the same
+    // damage roll), so the comparison reads the coat and not the stream's luck.
+    sim.rng.next = () => 0.9;
     const mean = (xs: number[]) => xs.reduce((a, b) => a + b, 0) / xs.length;
     const bare: number[] = [];
     for (let i = 0; i < 12; i++) {
@@ -293,10 +306,10 @@ describe('poison-coated duel aftermath', () => {
     '%s lands during the duel but cannot survive the winning swing',
     (id) => {
       const sim = new Sim({
-        seed: 42,
+        seed: SEED,
         playerClass: 'rogue',
         noPlayer: true,
-        world: { ...BUILTIN_WORLD, camps: [], npcs: {}, groundObjects: [] },
+        world: EMPTY_TEST_WORLD,
       });
       const winnerId = sim.addPlayer('rogue', 'Winner', { autoEquip: true });
       const loserId = sim.addPlayer('mage', 'Loser', { autoEquip: true });
