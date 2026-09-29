@@ -13,6 +13,7 @@ import { canEquipItemInSlot, MASTERWROUGHT_EQUIP_CAP } from '../src/sim/equipmen
 import { RIFT_BAND_MAX_UPGRADE, RIFT_GEM_RATING } from '../src/sim/rift/band_ladder';
 import { Sim } from '../src/sim/sim';
 import type { EquipSlot, ItemDef } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // /dev bis: the one-shot best-in-slot outfit for level-cap playtesting.
 
@@ -106,7 +107,12 @@ describe('dev bis gear', () => {
     // A band's ItemDef is a stat-free shell (rift/band_ladder.ts prices the
     // copy), so equipping the loadout's id alone would put an empty ring on
     // the finger. The kit mints the S+5 copy the top parse implies.
-    const sim = new Sim({ seed: 9, playerClass: 'warrior', autoEquip: true });
+    const sim = new Sim({
+      seed: 5,
+      playerClass: 'warrior',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.setPlayerLevel(20);
     expect(sim.setSpec('prot')).toBe(true);
     const loadout = parseBisGearFor('warrior', 'prot');
@@ -135,7 +141,12 @@ describe('dev bis gear', () => {
   });
 
   it('equips the caller and raises their attack power', () => {
-    const sim = new Sim({ seed: 5, playerClass: 'rogue', autoEquip: true });
+    const sim = new Sim({
+      seed: 5,
+      playerClass: 'rogue',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.setPlayerLevel(20);
     expect(sim.setSpec('assassination')).toBe(true);
     const before = sim.player.stats.agi + sim.player.stats.sta;
@@ -151,7 +162,12 @@ describe('dev bis gear', () => {
   it('keeps the reference kit on the item-table scorer, never the parse snapshot', () => {
     // The balance probes and their pinned DPS bands equip through
     // equipReferenceEpicKitForDev; a new parse capture must not move them.
-    const sim = new Sim({ seed: 5, playerClass: 'rogue', autoEquip: true });
+    const sim = new Sim({
+      seed: 5,
+      playerClass: 'rogue',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.setPlayerLevel(20);
     expect(sim.setSpec('combat')).toBe(true);
     // The spec has a parse loadout, and it differs from the scorer's picks, so
@@ -175,7 +191,12 @@ describe('dev bis gear', () => {
     // pinned DPS bands were minted under: overwrite picks only, never clear.
     // The scorer has no druid offhand pick, so a planted offhand is the one
     // observable that separates the two appliers.
-    const sim = new Sim({ seed: 5, playerClass: 'druid', autoEquip: true });
+    const sim = new Sim({
+      seed: 5,
+      playerClass: 'druid',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.setPlayerLevel(20);
     expect(sim.setSpec('feral')).toBe(true);
     expect(bestEpicGearFor('druid', 'feral').offhand).toBeUndefined();
