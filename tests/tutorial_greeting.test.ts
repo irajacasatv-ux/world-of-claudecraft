@@ -247,7 +247,9 @@ describe('tutorial greeting one-shot', () => {
     const saved = sim.serializeCharacter(sim.playerId);
     expect(saved?.tutorialGreetingSent).toBe(true);
 
-    const reloaded = makeSim(4121);
+    // The file's own seed: loading a saved character reads nothing from the
+    // seed, and a second one paid a second collider build.
+    const reloaded = makeSim();
     const pid = reloaded.addPlayer('warrior', 'Reloaded', { state: saved ?? undefined });
     const reloadedMeta = requirePlayer(reloaded, pid);
     expect(reloadedMeta.tutorialGreetingSent).toBe(true);
