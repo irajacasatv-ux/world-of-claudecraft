@@ -1065,9 +1065,20 @@ describe('discovery scope matches vitest collection over the real tree', () => {
     'docs',
   ]);
 
-  // The names vite.config excludes only at the repo root (`.claude/**`, `docs/**`, ...); the
-  // others (node_modules, dist, the linked-worktree caches) the discovery walk skips anywhere.
-  const ROOT_ONLY_SKIP = new Set(['.claude', '.codex', '.agents', '.venv', 'tmp', 'docs']);
+  // The names vite.config excludes only at the repo root (`.claude/**`, `.wt/**`, `docs/**`,
+  // ...): nested, vitest collects them, so this walk goes into them there even where discovery
+  // skips the name anywhere (a nested linked worktree). node_modules and dist vitest excludes at
+  // any depth.
+  const ROOT_ONLY_SKIP = new Set([
+    '.claude',
+    '.codex',
+    '.agents',
+    '.worktrees',
+    '.wt',
+    '.venv',
+    'tmp',
+    'docs',
+  ]);
 
   const TEST_NAMED = /\.(test|spec)\.[cm]?[jt]sx?$/;
   /** Whether a directory reaches a test-named file, following symlinked directories as vitest's
