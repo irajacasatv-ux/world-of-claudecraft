@@ -229,7 +229,9 @@ describe('nine classes', () => {
 
   it('lightning shield reflects at most 3 charges, gated by a 5s internal cooldown', () => {
     const runReflects = () => {
-      const sim = new Sim({ seed: 7, playerClass: 'shaman' });
+      // The wolf-only world on the file's seed: the cap is a property of the
+      // shield, and a full overworld only added idle mobs to tick.
+      const sim = new Sim({ seed: 42, playerClass: 'shaman', world: CLASS_WOLF_TEST_WORLD });
       sim.setPlayerLevel(12);
       const p = sim.player;
       sim.castAbility('lightning_shield');
@@ -280,7 +282,7 @@ describe('nine classes', () => {
     }
     // deterministic
     expect(runReflects()).toEqual(r);
-  }, 90_000);
+  });
 
   it('druid bear form toggles and raises armor', () => {
     const sim = new Sim({ seed: 42, playerClass: 'druid', world: CLASS_TEST_WORLD });
