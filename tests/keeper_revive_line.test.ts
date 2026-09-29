@@ -9,11 +9,12 @@ import { RES_SICKNESS_MIN_LEVEL } from '../src/sim/resurrection';
 import { Sim } from '../src/sim/sim';
 import { hasResurrectionSickness } from '../src/sim/spirit';
 import type { Entity, SimEvent } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 type AnySim = Sim & Record<string, any>;
 
 const makeSim = (): AnySim =>
-  new Sim({ seed: 42, playerClass: 'warrior', autoEquip: true }) as AnySim;
+  new Sim({ seed: 42, playerClass: 'warrior', autoEquip: true, world: EMPTY_TEST_WORLD }) as AnySim;
 
 function releaseAsGhost(sim: AnySim): Entity {
   const p = sim.player as Entity;

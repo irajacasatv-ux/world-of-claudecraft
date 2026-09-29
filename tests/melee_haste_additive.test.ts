@@ -8,11 +8,12 @@ import { describe, expect, it } from 'vitest';
 import { Sim } from '../src/sim/sim';
 import type { Entity } from '../src/sim/types';
 import { ENRAGE_HASTE_PCT } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 type AnySim = Sim & Record<string, any>;
 
 function warrior(): { sim: AnySim; p: Entity } {
-  const sim = new Sim({ seed: 271, playerClass: 'warrior' }) as AnySim;
+  const sim = new Sim({ seed: 271, playerClass: 'warrior', world: EMPTY_TEST_WORLD }) as AnySim;
   sim.setPlayerLevel(20);
   expect(sim.setSpec('fury')).toBe(true);
   return { sim, p: sim.player };

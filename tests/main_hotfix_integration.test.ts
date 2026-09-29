@@ -4,10 +4,17 @@ import { CRUCIBLE_VENDOR_ENTITY_ID, CRUCIBLE_VENDOR_NPC_ID } from '../src/sim/co
 import { plantCrop } from '../src/sim/professions/farming';
 import { Sim } from '../src/sim/sim';
 import { WORLD_SEED } from '../src/sim/world_seed';
+import { npcScopedWorld } from './helpers/npc_scoped_world';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 describe('main hotfix integration with release features', () => {
   it('leaves the mouseover queue to the spell path: a release plant lands instantly, no cast', () => {
-    const sim = new Sim({ seed: WORLD_SEED, playerClass: 'priest', autoEquip: false });
+    const sim = new Sim({
+      seed: WORLD_SEED,
+      playerClass: 'priest',
+      autoEquip: false,
+      world: EMPTY_TEST_WORLD,
+    });
     const player = sim.player;
     const meta = sim.players.get(player.id);
     const bed = farmBedById('bed_eastbrook_1');
@@ -31,7 +38,13 @@ describe('main hotfix integration with release features', () => {
   });
 
   it('keeps exactly one quartermaster after the release practice raid is staged', () => {
-    const sim = new Sim({ seed: WORLD_SEED, playerClass: 'warrior', devCommands: true });
+    const sim = new Sim({
+      seed: WORLD_SEED,
+      playerClass: 'warrior',
+      devCommands: true,
+      // The quartermaster is the one overworld NPC the staging must not duplicate.
+      world: npcScopedWorld(CRUCIBLE_VENDOR_NPC_ID),
+    });
     sim.chat('/dev ignivarraid');
 
     const vendors = [...sim.entities.values()].filter(

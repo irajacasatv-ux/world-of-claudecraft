@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { Sim } from '../src/sim/sim';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 function castBarrier(
   level: number,
@@ -7,7 +8,7 @@ function castBarrier(
   abilityId: 'blazing_barrier' | 'ice_barrier',
   spellPower?: number,
 ): { absorb: number; cost: number; maxHp: number; spellPower: number } {
-  const sim = new Sim({ seed: 707, playerClass: 'mage', autoEquip: true });
+  const sim = new Sim({ seed: 707, playerClass: 'mage', autoEquip: true, world: EMPTY_TEST_WORLD });
   sim.setPlayerLevel(level);
   expect(sim.setSpec(spec)).toBe(true);
   if (spellPower !== undefined) {
@@ -36,7 +37,7 @@ function castTemporalBarrier(
   level: number,
   spellPower: number,
 ): { absorb: number; cost: number; spellPower: number } {
-  const sim = new Sim({ seed: 708, playerClass: 'mage', autoEquip: true });
+  const sim = new Sim({ seed: 707, playerClass: 'mage', autoEquip: true, world: EMPTY_TEST_WORLD });
   sim.setPlayerLevel(level);
   expect(sim.setSpec('arcane')).toBe(true);
   sim.player.resource = sim.player.maxResource;

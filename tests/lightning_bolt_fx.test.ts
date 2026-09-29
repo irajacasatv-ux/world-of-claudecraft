@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { Sim } from '../src/sim/sim';
 import type { Entity, SimEvent } from '../src/sim/types';
 import { groundHeight } from '../src/sim/world';
+import { RL_TEST_WORLD } from './sim_shared';
 
 // Lightning Bolt draws a jagged electric bolt instead of the default glowing
 // projectile: it emits a `spellfx` with fx:'lightning' (caster -> target). The
@@ -25,9 +26,10 @@ function nearestMob(sim: Sim, templateId: string): Entity {
   return best;
 }
 
+// The bolt needs one world wolf to strike: a world with only the first wolf camp.
 describe('lightning bolt visual', () => {
   it('emits fx:lightning from caster to target and still deals damage', () => {
-    const sim = new Sim({ seed: 42, playerClass: 'shaman' });
+    const sim = new Sim({ seed: 42, playerClass: 'shaman', world: RL_TEST_WORLD });
     const p = sim.player;
     const wolf = nearestMob(sim, 'forest_wolf');
     // Stand next to the wolf and face it.

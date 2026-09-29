@@ -11,11 +11,18 @@ import { describe, expect, it, vi } from 'vitest';
 import { Sim } from '../src/sim/sim';
 import { startFiestaPractice } from '../src/sim/social/fiesta_bots';
 import type { SimConfig } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // The retired vale_cup_util factory, minus its prebuilt cup world: a plain
-// no-player Sim is all these cases need.
+// no-player Sim on the empty world is all these cases need.
 function makeWorld(overrides: Partial<SimConfig> = {}): Sim {
-  return new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true, ...overrides });
+  return new Sim({
+    seed: 42,
+    playerClass: 'warrior',
+    noPlayer: true,
+    world: EMPTY_TEST_WORLD,
+    ...overrides,
+  });
 }
 
 vi.setConfig({ testTimeout: 30000 });

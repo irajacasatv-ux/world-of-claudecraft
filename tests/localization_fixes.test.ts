@@ -76,6 +76,7 @@ import {
   talentTranslationManifest,
 } from '../src/ui/talent_i18n';
 import { tsFilesUnder } from './helpers/ts_files_under';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // Lazy locale flip: the non-en game locales are no longer statically resident. Every
 // describe below setLanguage(non-en)s and reads synchronously through t() / localizeSimText /
@@ -1742,7 +1743,12 @@ describe('S3: every sim.ts emit is recognized (drift guard)', () => {
   // then check it against the same exact-map extraction s3_registered itself
   // uses, so this fails for the true reason (no key), not a stand-in.
   it('the real trade-accept-race deny text has its own hud.errors key, not a V07_SLASH leak', () => {
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+    const sim = new Sim({
+      seed: 42,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const a = sim.addPlayer('warrior', 'Anna');
     const b = sim.addPlayer('mage', 'Bert');
     const c = sim.addPlayer('warrior', 'Cara');

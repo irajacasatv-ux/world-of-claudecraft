@@ -8,9 +8,10 @@ import { ABILITIES, MOBS } from '../src/sim/data';
 import { createMob } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
 import type { Aura, Entity } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 function mage(spec: 'fire' | 'frost' | 'arcane'): { sim: Sim; p: Entity } {
-  const sim = new Sim({ seed: 41, playerClass: 'mage', autoEquip: true });
+  const sim = new Sim({ seed: 41, playerClass: 'mage', autoEquip: true, world: EMPTY_TEST_WORLD });
   sim.setPlayerLevel(20);
   expect(sim.setSpec(spec)).toBe(true);
   sim.tick();
@@ -95,7 +96,12 @@ describe('Hot Streak builder crits shave Combustion cooldown', () => {
 describe('Mass Barrier shields only the 5 nearest', () => {
   it('caps at the caster plus the four closest allies', () => {
     // Mass Barrier is a choice-row talent, so grant it via the talent rig.
-    const sim = new Sim({ seed: 41, playerClass: 'mage', autoEquip: true });
+    const sim = new Sim({
+      seed: 41,
+      playerClass: 'mage',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.setPlayerLevel(20);
     expect(sim.applyTalents({ spec: 'frost', rows: { 17: 'mag_r17_mass_barrier' } })).toBe(true);
     const p = sim.player;

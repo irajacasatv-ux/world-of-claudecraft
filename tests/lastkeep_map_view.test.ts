@@ -20,10 +20,12 @@ import {
   lastKeepStoryForLift,
 } from '../src/ui/lastkeep_map_view';
 import type { IWorld } from '../src/world_api';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const KEEP_ORIGIN = instanceOrigin(DUNGEONS.the_last_keep.index, 0);
 
-const makeSim = () => new Sim({ seed: 42, playerClass: 'warrior', autoEquip: true });
+const makeSim = () =>
+  new Sim({ seed: 42, playerClass: 'warrior', autoEquip: true, world: EMPTY_TEST_WORLD });
 
 // Enter the keep through the real door path, then optionally stand at an
 // instance-local point (the same slot enterDungeon claimed).
