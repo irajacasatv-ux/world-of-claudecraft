@@ -14,8 +14,11 @@ import type { PlayerMeta } from '../src/sim/sim';
 import { Sim } from '../src/sim/sim';
 import type { SimContext } from '../src/sim/sim_context';
 import type { InvSlot } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
-const freshSim = (): Sim => new Sim({ seed: 7, playerClass: 'warrior', noPlayer: true });
+// Every case works one player's own bags, so the Sims run on the empty world.
+const freshSim = (): Sim =>
+  new Sim({ seed: 7, playerClass: 'warrior', noPlayer: true, world: EMPTY_TEST_WORLD });
 
 /** A player with EMPTY bags, so every slot count below is the test's own. */
 const emptyHanded = (sim: Sim): { pid: number; meta: PlayerMeta } => {
@@ -202,7 +205,7 @@ describe('the broker custody pair draws NO rng (the module-header claim)', () =>
 // leaf): the tests/CLAUDE.md paired-file rule.
 describe('Sim.extractTradableCopy (facade delegate)', () => {
   it('extracts a live instanced copy from a real player and mutates the live inventory', () => {
-    const sim = new Sim({ seed: 7, playerClass: 'warrior', noPlayer: true });
+    const sim = freshSim();
     const pid = sim.addPlayer('warrior', 'Escrow');
     const meta = sim.players.get(pid)!;
     const itemId = Object.keys(ITEMS).find((id) => {
@@ -225,7 +228,7 @@ describe('Sim.extractTradableCopy (facade delegate)', () => {
   });
 
   it('refuses an unresolved player as not_found', () => {
-    const sim = new Sim({ seed: 7, playerClass: 'warrior', noPlayer: true });
+    const sim = freshSim();
     expect(sim.extractTradableCopy(9999, { index: 0, itemId: 'anything' })).toEqual({
       ok: false,
       reason: 'not_found',
@@ -246,7 +249,7 @@ describe('Sim.extractTradableCopy (facade delegate)', () => {
 
   it('dismounts a seller who escrows the mount they are RIDING', () => {
     const { itemId, key } = mountFixture();
-    const sim = new Sim({ seed: 7, playerClass: 'warrior', noPlayer: true });
+    const sim = freshSim();
     const pid = sim.addPlayer('warrior', 'Rider');
     const meta = sim.players.get(pid)!;
     const entity = sim.entities.get(pid)!;
@@ -263,7 +266,7 @@ describe('Sim.extractTradableCopy (facade delegate)', () => {
     // copies still owns the mount and must keep riding it. Dismounting on any
     // mount extraction would punish exactly the player who did nothing wrong.
     const { itemId, key } = mountFixture();
-    const sim = new Sim({ seed: 7, playerClass: 'warrior', noPlayer: true });
+    const sim = freshSim();
     const pid = sim.addPlayer('warrior', 'Rider');
     const meta = sim.players.get(pid)!;
     const entity = sim.entities.get(pid)!;
@@ -281,7 +284,7 @@ describe('Sim.extractTradableCopy (facade delegate)', () => {
       (id) => ITEMS[id].kind === 'mount' && (ITEMS[id] as { mount?: string }).mount !== key,
     );
     if (!other) throw new Error('need a second mount item');
-    const sim = new Sim({ seed: 7, playerClass: 'warrior', noPlayer: true });
+    const sim = freshSim();
     const pid = sim.addPlayer('warrior', 'Rider');
     const meta = sim.players.get(pid)!;
     const entity = sim.entities.get(pid)!;
