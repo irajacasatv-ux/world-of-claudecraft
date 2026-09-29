@@ -23,6 +23,7 @@ import {
 } from '../src/ui/bank_view';
 import type { BankInfo } from '../src/world_api';
 import { adoptedTrophyIds } from './helpers/adopted_trophy_ids';
+import { VENDOR_TEST_WORLD } from './sim_shared';
 
 // The bank core maps the proximity-gated BankInfo snapshot (null away from a
 // banker) to a flat render model (capacity / ordered slots / empty pad / buy
@@ -31,6 +32,12 @@ import { adoptedTrophyIds } from './helpers/adopted_trophy_ids';
 // grid model, the over-capacity clamp, the buy ladder, the click matrix, and the
 // ClientWorld-vs-Sim parity (the same snapshot drives an identical model whether
 // read off a Sim or a JSON-mirrored ClientWorld).
+
+// The real-Sim replays read the banker (an NPC kept by the vendor world) and
+// the player's bags, never a mob or ground object, and share one seed: a fresh
+// seed builds its collider grids (about half a second) for nothing.
+const bankSim = (): Sim =>
+  new Sim({ seed: 11, playerClass: 'warrior', autoEquip: false, world: VENDOR_TEST_WORLD });
 
 // Only the quality is looked up; a quality-less item and an unknown id both fall
 // back to 'common'.
@@ -999,7 +1006,7 @@ describe('planDepositAllMaterials: replays cleanly against a real Sim', () => {
   });
 
   it('deposits every planned stack with zero refusal when the bank has room', () => {
-    const sim = new Sim({ seed: 11, playerClass: 'warrior', autoEquip: false });
+    const sim = bankSim();
     moveToBanker(sim);
     const m = metaOf(sim);
     m.inventory.length = 0;
@@ -1039,7 +1046,7 @@ describe('planDepositAllMaterials: replays cleanly against a real Sim', () => {
     // (compatibleMaterialStacks) and share one bank slot, with each bucket's
     // exact count and signer preserved in materialSources rather than merged
     // away or lost.
-    const sim = new Sim({ seed: 13, playerClass: 'warrior', autoEquip: false });
+    const sim = bankSim();
     moveToBanker(sim);
     const m = metaOf(sim);
     m.inventory.length = 0;
@@ -1081,7 +1088,7 @@ describe('planDepositAllMaterials: replays cleanly against a real Sim', () => {
   });
 
   it('replays a mid-run-full plan exactly: only the fitting stacks deposit, none refuse', () => {
-    const sim = new Sim({ seed: 12, playerClass: 'warrior', autoEquip: false });
+    const sim = bankSim();
     moveToBanker(sim);
     const m = metaOf(sim);
     m.inventory.length = 0;
@@ -1210,7 +1217,7 @@ describe('deposit-all narrows to the honest taxonomy (phase 19)', () => {
   });
 
   it('plans exactly the included classes and replays against a real Sim with zero errors', () => {
-    const sim = new Sim({ seed: 17, playerClass: 'warrior', autoEquip: false });
+    const sim = bankSim();
     moveToBanker(sim);
     const m = metaOf(sim);
     m.inventory.length = 0;
@@ -1247,7 +1254,7 @@ describe('deposit-all narrows to the honest taxonomy (phase 19)', () => {
   it('a kind-tool item and grey trash still deposit through the per-item path', () => {
     // The overreach guard: the sim's any-non-quest self-storage behavior is
     // deliberate and phase 19 must not narrow it; only the SWEEP narrows.
-    const sim = new Sim({ seed: 19, playerClass: 'warrior', autoEquip: false });
+    const sim = bankSim();
     moveToBanker(sim);
     const m = metaOf(sim);
     m.inventory.length = 0;
