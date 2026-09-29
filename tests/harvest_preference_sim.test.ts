@@ -23,6 +23,11 @@ import type { CharacterState } from '../src/sim/sim';
 import { Sim } from '../src/sim/sim';
 import { makeSim, teleportTo } from './sim_shared';
 
+// Every reload lands in a FRESH Sim, which is what the persistence seam needs;
+// which seed it is does not matter to a preference, and each distinct seed
+// paid a fresh full-world build, so the reloads share makeSim's own seed.
+const RELOAD_SEED = 42;
+
 function material(itemId: string): HarvestPreference {
   return { kind: 'material', itemId };
 }
@@ -46,7 +51,7 @@ describe('the harvest preference through real Sim persistence', () => {
     const state = sim.serializeCharacter(pid)!;
     expect(Object.hasOwn(state, 'harvestPreference')).toBe(false);
 
-    const sim2 = new Sim({ seed: 1, playerClass: 'warrior' });
+    const sim2 = new Sim({ seed: RELOAD_SEED, playerClass: 'warrior' });
     const reloadedPid = sim2.addPlayer('warrior', 'Legacy', { state });
     expect(sim2.harvestPreferenceFor(reloadedPid)).toEqual(HARVEST_PREFERENCE_ALL);
   });
@@ -60,7 +65,7 @@ describe('the harvest preference through real Sim persistence', () => {
     const state = sim.serializeCharacter(pid)!;
     expect(state.harvestPreference).toBe('rough_hide');
 
-    const sim2 = new Sim({ seed: 7, playerClass: 'warrior' });
+    const sim2 = new Sim({ seed: RELOAD_SEED, playerClass: 'warrior' });
     const reloadedPid = sim2.addPlayer('warrior', 'Reloaded', { state });
     expect(sim2.harvestPreferenceFor(reloadedPid)).toEqual(material('rough_hide'));
   });
@@ -71,7 +76,7 @@ describe('the harvest preference through real Sim persistence', () => {
     const baseState = sim.serializeCharacter(pid)!;
     const retiredState: CharacterState = { ...baseState, harvestPreference: 'retired_material' };
 
-    const sim2 = new Sim({ seed: 3, playerClass: 'warrior' });
+    const sim2 = new Sim({ seed: RELOAD_SEED, playerClass: 'warrior' });
     const reloadedPid = sim2.addPlayer('warrior', 'Retired', { state: retiredState });
     expect(sim2.harvestPreferenceFor(reloadedPid)).toEqual(material('retired_material'));
 
@@ -92,7 +97,7 @@ describe('the harvest preference through real Sim persistence', () => {
       harvestPreference: 42,
     } as unknown as CharacterState;
 
-    const sim2 = new Sim({ seed: 11, playerClass: 'warrior' });
+    const sim2 = new Sim({ seed: RELOAD_SEED, playerClass: 'warrior' });
     const pid2 = sim2.addPlayer('warrior', 'Malformed', { state: malformedState });
     expect(sim2.harvestPreferenceFor(pid2)).toBeNull();
 
@@ -105,7 +110,7 @@ describe('the harvest preference through real Sim persistence', () => {
     // A real JSON round trip (the shape a JSONB column actually stores) still
     // refuses: null is not the legacy-absent case.
     const jsonRoundTripped = JSON.parse(JSON.stringify(savedOnce)) as CharacterState;
-    const sim3 = new Sim({ seed: 12, playerClass: 'warrior' });
+    const sim3 = new Sim({ seed: RELOAD_SEED, playerClass: 'warrior' });
     const pid3 = sim3.addPlayer('warrior', 'MalformedAgain', { state: jsonRoundTripped });
     expect(sim3.harvestPreferenceFor(pid3)).toBeNull();
 
@@ -122,7 +127,7 @@ describe('the harvest preference through real Sim persistence', () => {
       harvestPreference: 42,
     } as unknown as CharacterState;
 
-    const sim2 = new Sim({ seed: 13, playerClass: 'warrior' });
+    const sim2 = new Sim({ seed: RELOAD_SEED, playerClass: 'warrior' });
     const pid2 = sim2.addPlayer('warrior', 'Recovers', { state: malformedState });
     expect(sim2.harvestPreferenceFor(pid2)).toBeNull();
 
