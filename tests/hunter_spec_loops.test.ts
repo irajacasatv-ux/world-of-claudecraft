@@ -7,14 +7,28 @@ import { MOBS } from '../src/sim/data';
 import { createMob } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
 import type { Entity, SimEvent } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 type TestSim = Sim & {
   addEntity(entity: Entity): void;
   nextId: number;
 };
 
-function hunter(spec: string, seed: number): TestSim {
-  const sim = new Sim({ seed, playerClass: 'hunter', autoEquip: true }) as TestSim;
+// Every case fights a dummy and a pet it places itself, so one seed on the empty
+// world serves them all. The rolls are pinned instead of riding a seed: with
+// `next` at 0.9 every chance under 90 percent fails (no miss, dodge or crit), and
+// every damage roll sits at the same point of its range, so a comparison of two
+// casts reads the multiplier alone.
+const HUNTER_SEED = 2910;
+
+function hunter(spec: string): TestSim {
+  const sim = new Sim({
+    seed: HUNTER_SEED,
+    playerClass: 'hunter',
+    autoEquip: true,
+    world: EMPTY_TEST_WORLD,
+  }) as TestSim;
+  sim.rng.next = () => 0.9;
   sim.setPlayerLevel(20);
   expect(sim.setSpec(spec)).toBe(true);
   return sim;
@@ -60,7 +74,7 @@ function ready(sim: Sim, abilityId: string): void {
 
 describe('Hunter v0.29 baseline specialization loops', () => {
   it('uses a 100 Focus pool with 5 Focus per second passive regeneration', () => {
-    const sim = hunter('marksmanship', 2910);
+    const sim = hunter('marksmanship');
     expect(sim.player.resourceType).toBe('focus');
     expect(sim.player.maxResource).toBe(100);
     sim.player.resource = 0;
@@ -69,7 +83,7 @@ describe('Hunter v0.29 baseline specialization loops', () => {
   });
 
   it('Pack Command awards state only from a living pet hit and transforms at three stages', () => {
-    const sim = hunter('beast_mastery', 2911);
+    const sim = hunter('beast_mastery');
     const target = addMob(sim, 3);
     addPet(sim);
     sim.targetEntity(target.id);
@@ -87,7 +101,7 @@ describe('Hunter v0.29 baseline specialization loops', () => {
 
   it('adds 10% pet damage per Ferocity stage and resolves Pack Command before its new stage', () => {
     function commandDamage(stacks: number): number {
-      const sim = hunter('beast_mastery', 2914);
+      const sim = hunter('beast_mastery');
       const target = addMob(sim, 3);
       target.stats.armor = 0;
       const pet = addPet(sim);
@@ -129,7 +143,7 @@ describe('Hunter v0.29 baseline specialization loops', () => {
     // mobSwing/updateRangedPetAttack emit sites for that regression class).
     // marksmanship carries no petDmgPct mastery baseline, so the multiplier starts
     // clean at 1 and isolates the frenzy/ferocity terms under test.
-    const sim = hunter('marksmanship', 2917);
+    const sim = hunter('marksmanship');
     const pet = addPet(sim);
     expect(hunterPetDamageMultiplier(sim.ctx, pet)).toBeCloseTo(1);
 
@@ -165,7 +179,7 @@ describe('Hunter v0.29 baseline specialization loops', () => {
 
   it('grants no Focus or Ferocity when Pack Command cannot land', () => {
     for (const failure of ['missing-pet', 'dead-pet', 'missing-target', 'miss'] as const) {
-      const sim = hunter('beast_mastery', 2915);
+      const sim = hunter('beast_mastery');
       const target = addMob(sim, 3);
       const pet = failure === 'missing-pet' ? null : addPet(sim);
       if (pet && failure === 'dead-pet') pet.dead = true;
@@ -185,7 +199,7 @@ describe('Hunter v0.29 baseline specialization loops', () => {
   });
 
   it('Measured Shot grants Focus only when the shot completes, while Cold Focus accelerates it', () => {
-    const sim = hunter('marksmanship', 2912);
+    const sim = hunter('marksmanship');
     const target = addMob(sim, 20);
     sim.targetEntity(target.id);
     sim.player.resource = 0;
@@ -208,7 +222,7 @@ describe('Hunter v0.29 baseline specialization loops', () => {
   });
 
   it('Fieldcraft opens a single wound, builds Momentum, and tears it with Woundrend', () => {
-    const sim = hunter('survival', 2913);
+    const sim = hunter('survival');
     const target = addMob(sim, 12);
     sim.targetEntity(target.id);
     sim.player.resource = 0;
