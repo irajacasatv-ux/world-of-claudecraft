@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { CARD_MASTER_NPC_ID } from '../src/sim/content/card_master';
+import { BUILTIN_WORLD } from '../src/sim/data';
 import { Sim } from '../src/sim/sim';
+import type { WorldContent } from '../src/sim/types';
 import { groundHeight } from '../src/sim/world';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // Sim-level coverage for cardMinigameInfoFor (sim.ts, delegating to
 // buildCardMinigameInfo in src/sim/social/card_duel.ts): the IWorldCardMinigame
@@ -10,8 +13,15 @@ import { groundHeight } from '../src/sim/world';
 // proves it never leaks the opponent's actual hand (only counts/ids), since
 // that is exactly the property the whole design depends on.
 
+// The duels need only the card master the queue gates on, so the Sims run on
+// the empty world with him alone rather than the whole overworld.
+const CARD_MASTER_WORLD: WorldContent = {
+  ...EMPTY_TEST_WORLD,
+  npcs: { [CARD_MASTER_NPC_ID]: BUILTIN_WORLD.npcs[CARD_MASTER_NPC_ID] },
+};
+
 function makeWorld() {
-  return new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+  return new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true, world: CARD_MASTER_WORLD });
 }
 
 function teleportToCardMaster(sim: Sim, pid: number) {
