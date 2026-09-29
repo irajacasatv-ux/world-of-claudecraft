@@ -43,9 +43,14 @@ import { endArenaMatch } from '../src/sim/social/arena';
 import { applyResurrectionSickness } from '../src/sim/spirit';
 import type { DungeonDifficulty, Entity, Vec3 } from '../src/sim/types';
 import { completeCraftCast, runApplyEnchant, runDisenchant } from './helpers/enchant_family_cast';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
-function makeSim(seed = 42): Sim {
-  return new Sim({ seed, playerClass: 'warrior', autoEquip: false });
+// Every site is driven through its real hook against entities the case places
+// itself (kills, dungeon slots, duels, bouts, stations), never an ambient camp,
+// NPC or ground object, so the Sims build the empty world, which keeps the
+// dungeons, the stations and the services.
+function makeSim(): Sim {
+  return new Sim({ seed: 42, playerClass: 'warrior', autoEquip: false, world: EMPTY_TEST_WORLD });
 }
 
 // Add a fresh player and return its persisted meta.
