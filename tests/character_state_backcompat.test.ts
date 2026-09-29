@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { CharacterState } from '../src/sim/sim';
 import { Sim } from '../src/sim/sim';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // JSONB character-state back-compat round-trip.
 //
@@ -12,8 +13,10 @@ import { Sim } from '../src/sim/sim';
 // ship. We serialize a live character, strip those defaulted keys to simulate
 // such an old row, and prove the reload does not throw and the defaults apply.
 
+// The round trip reads only the character's own fields, so both Sims run on
+// the empty world and share one seed (the reload's second seed bought nothing).
 function makeSim(): Sim {
-  return new Sim({ seed: 42, playerClass: 'warrior', autoEquip: true });
+  return new Sim({ seed: 42, playerClass: 'warrior', autoEquip: true, world: EMPTY_TEST_WORLD });
 }
 
 describe('character state JSONB back-compat', () => {
@@ -60,7 +63,7 @@ describe('character state JSONB back-compat', () => {
     delete stripped.bank;
 
     // Loading the stripped row must not throw, and the `??` defaults apply.
-    const sim2 = new Sim({ seed: 1, playerClass: 'warrior' });
+    const sim2 = new Sim({ seed: 42, playerClass: 'warrior', world: EMPTY_TEST_WORLD });
     let reloadedPid = -1;
     expect(() => {
       reloadedPid = sim2.addPlayer('warrior', 'Reloaded', {
