@@ -11,6 +11,7 @@ import {
 } from '../src/sim/content/talents';
 import { Sim } from '../src/sim/sim';
 import type { PlayerClass } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 type NumericRecord = Record<string, number>;
 interface BaselineSnapshot {
@@ -369,7 +370,13 @@ describe('v0.28 passive restoration hotfix', () => {
     // well above a spec-less rogue on identical (empty) gear, which only the
     // baseline apPct + flat AP can produce. Deterministic (no rng draw).
     const apFor = (spec: string | null): number => {
-      const sim = new Sim({ seed: 1, playerClass: 'rogue', autoEquip: false });
+      // Attack power is the player's own stat, so the Sim runs on the empty world.
+      const sim = new Sim({
+        seed: 1,
+        playerClass: 'rogue',
+        autoEquip: false,
+        world: EMPTY_TEST_WORLD,
+      });
       sim.setPlayerLevel(20);
       if (spec) expect(sim.setSpec(spec)).toBe(true);
       sim.tick();
