@@ -1,12 +1,22 @@
 import { describe, expect, it } from 'vitest';
 import { ABILITIES } from '../src/sim/content/classes';
 import { Sim } from '../src/sim/sim';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // The three hunter aspects are mutually exclusive: only one may be active at a
 // time. They are marked with the shared `exclusiveGroup: 'aspect'` and enforced
 // at the self-buff apply site (effect_dispatch).
-const makeHunter = (seed = 42) => {
-  const sim = new Sim({ seed, playerClass: 'hunter', autoEquip: true });
+// Every case casts self-buffs only, so each Sim stands on the empty world, all on
+// one seed (a fresh seed costs a collider grid build).
+const SEED = 42;
+
+const makeHunter = () => {
+  const sim = new Sim({
+    seed: SEED,
+    playerClass: 'hunter',
+    autoEquip: true,
+    world: EMPTY_TEST_WORLD,
+  });
   sim.setPlayerLevel(14); // hawk(4) + monkey(10) + cheetah(14) all known
   return sim;
 };
@@ -68,7 +78,7 @@ describe('hunter aspect mutual exclusion', () => {
 
   it('is deterministic for a fixed seed', () => {
     const run = () => {
-      const sim = makeHunter(7);
+      const sim = makeHunter();
       castAspect(sim, 'aspect_of_the_hawk');
       castAspect(sim, 'aspect_of_the_cheetah');
       return aspectAuras(sim);
@@ -87,7 +97,12 @@ describe('class self-buff mutual exclusion groups', () => {
   });
 
   it('keeps only one paladin aura active', () => {
-    const sim = new Sim({ seed: 42, playerClass: 'paladin', autoEquip: true });
+    const sim = new Sim({
+      seed: SEED,
+      playerClass: 'paladin',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.setPlayerLevel(16); // devotion(1) + retribution(16) known
 
     castSelfBuff(sim, 'devotion_ward');
@@ -106,7 +121,12 @@ describe('class self-buff mutual exclusion groups', () => {
   });
 
   it('keeps only one self-applied warrior stance active', () => {
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', autoEquip: true });
+    const sim = new Sim({
+      seed: SEED,
+      playerClass: 'warrior',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.setPlayerLevel(14);
     expect(sim.setSpec('arms')).toBe(true);
 
