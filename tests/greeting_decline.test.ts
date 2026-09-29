@@ -141,7 +141,8 @@ describe('every capture script declines through GREETING_DECLINE', () => {
       .map((line) => line.replace(/^\s*(\/\/|\*).*$/, '').replace(/\s\/\/.*$/, ''));
 
   it('scans the whole scripts tree through the shared walker', () => {
-    // Measured 2026-09-23: 645 .mjs files under scripts/.
+    // Measured 2026-09-29: 629 .mjs files under scripts/ (645 on 2026-09-23;
+    // 85 retired capture scripts left and other scripts arrived since).
     expect(files.length).toBeGreaterThan(600);
     expectScansOnlyThroughSharedWalkers(import.meta.url, ['source_files_under']);
   });
@@ -157,8 +158,9 @@ describe('every capture script declines through GREETING_DECLINE', () => {
     }
     expect(hits).toEqual([]);
     // Non-vacuous: the scripts really route through the shared selector
-    // (measured 2026-09-23: 48 code lines).
-    expect(declines).toBeGreaterThan(44);
+    // (measured 2026-09-29: 36 code lines, after 85 capture scripts nothing ran
+    // or named were retired; 48 on 2026-09-23).
+    expect(declines).toBeGreaterThan(32);
   });
 
   it('finds no statement that names a greeting and clicks something else', () => {
@@ -175,8 +177,9 @@ describe('every capture script declines through GREETING_DECLINE', () => {
       for (const hit of statementHits(code)) hits.push(`scripts/${file}: ${hit}`);
     }
     expect(hits).toEqual([]);
-    // Measured 2026-09-23: 21 greeting-naming statements that click.
-    expect(clicked).toBeGreaterThan(18);
+    // Measured 2026-09-29: 17 greeting-naming statements that click (21 on
+    // 2026-09-23, before the retired capture scripts left).
+    expect(clicked).toBeGreaterThan(14);
   });
 
   it.each([
