@@ -12,6 +12,7 @@ import { createMob } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
 import type { SimContext } from '../src/sim/sim_context';
 import type { Aura, Entity } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 function ctxOf(sim: Sim): SimContext {
   return (sim as unknown as { ctx: SimContext }).ctx;
@@ -27,7 +28,17 @@ function priest(
   spec: 'discipline' | 'holy' | 'shadow',
   rows: Partial<Record<5 | 8 | 11 | 14 | 17 | 20, string>>,
 ): { sim: Sim; p: Entity; ctx: SimContext } {
-  const sim = new Sim({ seed: 2910, playerClass: 'priest', autoEquip: true });
+  // Every case works on allies and wolves it adds itself, so the rig stands on
+  // the empty world. The rolls are pinned rather than riding the seed's stream:
+  // with `next` at 0.9 every chance under 90 percent fails, so each spell lands
+  // unresisted and no heal crits (Desperate Prayer's exact heal read one).
+  const sim = new Sim({
+    seed: 2910,
+    playerClass: 'priest',
+    autoEquip: true,
+    world: EMPTY_TEST_WORLD,
+  });
+  sim.rng.next = () => 0.9;
   sim.setPlayerLevel(20);
   expect(sim.applyTalents({ spec, rows })).toBe(true);
   sim.tick();
