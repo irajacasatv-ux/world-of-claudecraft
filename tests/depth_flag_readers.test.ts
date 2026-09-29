@@ -45,6 +45,7 @@ describe('depth-flag reader audit', () => {
     ['an inverted exact read', "const PR = !(process.env.WOC_DEMO_SWEEP === '1');\n"],
     ['an exact read inside a ternary', "const D = process.env.WOC_DEMO_SWEEP === '1' ? 0.5 : 1;\n"],
     ['a reassignable binding', "let DEEP = process.env.WOC_DEMO_SWEEP === '1';\n"],
+    ['a var binding', "var DEEP = process.env.WOC_DEMO_SWEEP === '1';\n"],
     ['a property assignment', "cfg.full = process.env.WOC_DEMO_SWEEP === '1';\n"],
     [
       'a read after a regex after return',
