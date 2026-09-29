@@ -1,13 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import { Sim } from '../src/sim/sim';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // Season 1 Armory weapon-skin behavior inside the deterministic sim: the same
 // code resolves the active skin on every host, so these cover the offline path
 // and the exact rules the server relies on (type match, loadout dormancy on a
 // weapon-type swap, hunter's fixed ranged visual, and loadout seeding).
 
+// A skin is the player's own equipment state, so the Sims run on the empty world.
 function newSim(cls: 'warrior' | 'hunter' | 'rogue') {
-  const sim = new Sim({ seed: 5, playerClass: cls, playerName: 'Armory' });
+  const sim = new Sim({ seed: 5, playerClass: cls, playerName: 'Armory', world: EMPTY_TEST_WORLD });
   const pid = sim.primaryId;
   const e = sim.entities.get(pid);
   if (!e) throw new Error('no player entity');
