@@ -3,12 +3,8 @@ import { thundercallDamageMultiplier } from '../src/sim/combat/shaman_thundercal
 import { MOBS } from '../src/sim/data';
 import { createMob } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
-import {
-  type Aura,
-  type Entity,
-  PLAYER_INTEREST_DROP_RADIUS,
-  type SimEvent,
-} from '../src/sim/types';
+import type { Aura, Entity, SimEvent } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const THUNDER_CHARGES_ID = 'shaman_thunder_charges';
 
@@ -18,24 +14,23 @@ function place(sim: Sim, entity: Entity, x: number, z: number): void {
   (sim as unknown as { rebucket(entity: Entity): void }).rebucket(entity);
 }
 
-// Default seed re-hunted (2801 to 2802) after the v0.34.0 catch-up merge shifted
-// the shared draw order; a missed Arc Bolt impact banks no charge.
-// Production's idle culling (the server and offline client both set it): the
-// ambient overworld stays, so the hunted seeds keep their draws, but idle mobs
-// far from the shaman stop costing a full AI update every tick. The scoped
-// EMPTY_TEST_WORLD was tried and forks the stream (an Arc Overload proc lands
-// on the first case), so it is not used here. Each fresh seed builds its own
-// collider grid (about half a second), so only the cases whose assertions ride
-// a roll (a hit, an Arc Overload, a crit) keep a seed of their own; the
-// Faultwake placement and scaling cases and the refusal arm draw nothing they
-// assert on and reuse an already-built seed.
-function setup(seed = 2802): { sim: Sim; shaman: Entity; target: Entity } {
+// Every roll these cases assert on is pinned, not hunted: rng.next reads 0.9,
+// so each Arc Bolt and Earthen Jolt lands (the resist roll hits), no crit or
+// Arc Overload proc fires (every chance under 90 percent fails), and each damage
+// roll sits at 0.9 of its range, so a charge count or a damage ratio can no
+// longer ride a seed's draws. (The idle culling this file used before did not
+// keep the hunted seeds' draws either: culled mobs stop drawing, so the stream
+// moved and the cases passed on a new one.) With nothing left on the stream,
+// one seed and the empty test world serve every case: each case fights a dummy
+// it places itself, and each extra seed paid its own collider build.
+function setup(): { sim: Sim; shaman: Entity; target: Entity } {
   const sim = new Sim({
-    seed,
+    seed: 2802,
     playerClass: 'shaman',
     noPlayer: true,
-    idleMobTickRadius: PLAYER_INTEREST_DROP_RADIUS,
+    world: EMPTY_TEST_WORLD,
   });
+  sim.rng.next = () => 0.9;
   const pid = sim.addPlayer('shaman', 'Stormbank');
   sim.setPlayerLevel(20, pid);
   expect(sim.setSpec('elemental', pid)).toBe(true);
@@ -134,7 +129,7 @@ describe('Shaman v0.29 Thundercall', () => {
   });
 
   it('grants no charge when an Arc Bolt target dies before impact and caps valid impacts at five', () => {
-    const invalid = setup(2802);
+    const invalid = setup();
     invalid.shaman.resource = invalid.shaman.maxResource;
     invalid.sim.castAbility('lightning_bolt', invalid.shaman.id);
     for (let tick = 0; tick < 20 * 4; tick++) {
@@ -147,17 +142,17 @@ describe('Shaman v0.29 Thundercall', () => {
     invalid.sim.tick();
     expect(thunderBank(invalid.shaman)).toBeUndefined();
 
-    const valid = setup(2803);
+    const valid = setup();
     for (let cast = 0; cast < 6; cast++) castArcBolt(valid.sim, valid.shaman);
     expect(thunderBank(valid.shaman)?.stacks).toBe(5);
   });
 
   it('vents Earthen Jolt for concentrated damage and consumes only after success', () => {
-    const plain = setup(2804);
+    const plain = setup();
     plain.sim.castAbility('earth_shock', plain.shaman.id);
     const plainDamage = earthenJoltDamage(resolveCast(plain.sim), plain.shaman.id, plain.target.id);
 
-    const charged = setup(2804);
+    const charged = setup();
     seedThunderBank(charged.shaman, 5);
     charged.sim.castAbility('earth_shock', charged.shaman.id);
     const chargedDamage = earthenJoltDamage(
@@ -169,8 +164,7 @@ describe('Shaman v0.29 Thundercall', () => {
     expect(chargedDamage).toBeGreaterThan(plainDamage * 1.8);
     expect(thunderBank(charged.shaman)).toBeUndefined();
 
-    // The refusal arm draws nothing it asserts on, so it reuses this case's seed.
-    const failed = setup(2804);
+    const failed = setup();
     seedThunderBank(failed.shaman, 3);
     place(failed.sim, failed.target, 700, 100);
     const manaBefore = failed.shaman.resource;
@@ -215,7 +209,7 @@ describe('Shaman v0.29 Thundercall', () => {
   });
 
   it('uses Primal Mastery to accelerate the same builder and vent loop', () => {
-    const { sim, shaman } = setup(2807);
+    const { sim, shaman } = setup();
     expect(sim.resolvedAbility('elemental_mastery', shaman.id)?.cooldown).toBe(90);
     sim.castAbility('elemental_mastery', shaman.id);
     const mastery = shaman.auras.find((aura) => aura.id === 'elemental_mastery');
@@ -230,7 +224,7 @@ describe('Shaman v0.29 Thundercall', () => {
   });
 
   it('boosts exactly the first vent during Primal Mastery and emits its payoff cue once', () => {
-    const baseline = setup(2808);
+    const baseline = setup();
     seedThunderBank(baseline.shaman, 5);
     baseline.sim.castAbility('earth_shock', baseline.shaman.id);
     const baselineDamage = earthenJoltDamage(
@@ -239,7 +233,7 @@ describe('Shaman v0.29 Thundercall', () => {
       baseline.target.id,
     );
 
-    const mastered = setup(2808);
+    const mastered = setup();
     seedThunderBank(mastered.shaman, 5);
     castInstant(mastered.sim, mastered.shaman, 'elemental_mastery');
     mastered.shaman.gcdRemaining = 0;
