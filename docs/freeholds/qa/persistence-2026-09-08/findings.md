@@ -4764,8 +4764,8 @@ still pinned the router's old raw bags check), fixed in `3d87dd0e5c`.
   order; and pr-gate's bound. Every such finding was proven with a mutant before it was fixed
   and killed after.
 
-MUTANTS: 224 run this session, each behind a control run, restored by `git checkout` with the
-file verified equal to HEAD before the next: 222 killed, 2 equivalent. The first equivalent
+MUTANTS: 226 run this session, each behind a control run, restored by `git checkout` with the
+file verified equal to HEAD before the next: 224 killed, 2 equivalent. The first equivalent
 was a finding: the release's direct cooldown read for the shock bomb and the action bar's read
 agree on every input, so the two were unified (`ac91cd18f2`) and the uniform read stays pinned
 by the bomb-on-cooldown case. The second is the selective gate's own gap: a side-effect-only
@@ -4955,7 +4955,11 @@ that outlive happy-dom's teardown.
 (73,984), and at the last code commit `8c8454cb19`: 5,072 files and 73,984 tests passed (2
 expected fails, 28 skipped), the browser suite 554 of 554, 1,040 s. The tip after it,
 `d4ba1a019c`, changes two comment lines only. Two earlier runs were stopped mid-way because
-a fix round was still landing in the tree, and none of their results is counted.
+a fix round was still landing in the tree, and none of their results is counted. After the
+portrait-inert, scanner and harvest rounds, green again on all 12 steps at `e57856af25` (the
+interim ledger commit over code tip `27d04d7952`), the planner falling back to the full
+suite: 5,073 files and 73,987 tests passed (2 expected fails, 28 skipped), 930.5 s, and the
+browser suite 554 of 554.
 
 ### CORRECTIONS TO COMMIT MESSAGES (the commits stay as written; the record is here)
 
@@ -5047,8 +5051,10 @@ a fix round was still landing in the tree, and none of their results is counted.
   nightly run 36414582084), so the nightly verdict is red on every ref until it is re-banded
   or the balance moves.
 - `tests/corpse_harvest_sim.test.ts`'s #2514 family sweep ran within 25 ms of its 20 s default
-  on the release's own CI; given its sibling's 60 s here (`7667b93502`), which the release
-  takes with this branch or on its own.
+  on the release's own CI, and `tests/owned_class_balance_groveheart.test.ts`'s heal-over-time
+  case within a second of it on the release and main nightlies; each given 60 s here
+  (`7667b93502`, `0462c0a7b8`, the latter with its ratchet row), which the release takes with
+  this branch or on its own.
 - `maskCommentsAndStrings` (`tests/helpers/declared_timeouts.ts`), the declared-timeout
   ratchet's scanner, closed a comment at `/*/` and ended an interpolation at its first `}`;
   the second hid a 120-second case in `tests/woc_market_delivery_pg_integration.test.ts` and
@@ -5076,6 +5082,12 @@ a fix round was still landing in the tree, and none of their results is counted.
   selected; the named form was floored). No suite imports a helper that way today; a fix would
   add the bare-import form to the pattern, pinned beside its existing cases in
   `tests/gate_select_plan.test.ts`. For the gate owner; the file is the release's.
+- Every `check:types` run prints a config-load error for
+  `docs/screenshots/freehold-crafted-content-2026-09-07/runtime/vite.config.mjs` (its
+  `../vite.config.ts` import does not resolve from the docs tree; svelte-check's config
+  loader finds it and still reports 0 errors). The file is a hash-sealed reproduction
+  config in that capture's runtime manifest, so it stays as recorded; it has printed the
+  line since 2026-09-07.
 - The shard packer packs carried rows as recorded rather than in CI time
   (`CARRIED_LOCAL_TO_CI_RATIO` is applied only by the lane rule); one shared helper would give
   the table one reading, at the cost of re-pinning the partition digest.
@@ -5087,7 +5099,11 @@ a fix round was still landing in the tree, and none of their results is counted.
 - The CI lint job checks nothing on pull requests and queue runs (THE CI LINT JOB CHECKS
   NOTHING, above): a fix in its own PR with the CI owner, and an issue if you want one opened.
 - pr-gate's 49 is predicted short for selective PRs; re-derive from the first selective PR
-  runs on the harvested table, and from the next full-mode walls.
+  runs on the harvested table, and from the next full-mode walls. The first such wall (run
+  36493201427) needs a ruling: shard 4's job took 24.0 minutes with a 5.5-minute checkout
+  (the others took about 1.5), which the formula turns into 53 if that checkout counts as
+  healthy; without it the worst healthy wall is shard 5's 19.8 minutes, 43, inside 49.
+  Shard 3's 29.8 minutes held a 12.4-minute stalled checkout and is excluded, as before.
 - release-gate's 36 (from a 16.43 minute wall) was not re-measured: release pushes run full
   mode with the lane files inside the shards, and full-mode shards here reached 22.12 minutes
   without them. Re-derive from the first release push after this branch lands.
@@ -5098,5 +5114,26 @@ a fix round was still landing in the tree, and none of their results is counted.
 
 ### THE FINAL RUNS
 
-Dispatched at the pushed tip once this part was committed; their results are added here by the
-next docs commit.
+- CI run 36487204792 at `162def31a9`: every job green except shard 1, the release's #2514
+  harvest sweep at 20.65 s against its 20 s default (fixed in `7667b93502`, above); shard 8,
+  which failed on the portrait chip's fetches at `0313c4272d`, passed.
+- CI run 36493201427 at `e57856af25`: FULLY GREEN in full mode, all eight shards, both lanes,
+  browser, checks and lint (the lint job's pass is no evidence; see above). Test steps took
+  10.3 to 17.8 minutes; shard 3's checkout stalled 12.4 minutes and shard 4's took 5.5 (see
+  OWED on pr-gate's bound).
+- Nightly 36480351546 at `0313c4272d` (3 h 28 min): red on 2 files of 5,073, checks and
+  browser green. The eight-seed druid arm, the item this nightly was owed for, PASSED: all
+  eight per-seed cases ran, 347 to 407 s each against their 900 s bound (3,054 s for the
+  file). The corpse-harvest suite and the SFX export suite passed. The two reds:
+  `tests/owned_class_balance_druid_bands.test.ts` at 194.32 against its 191 cap, release-owned
+  as recorded above; and `tests/owned_class_balance_groveheart.test.ts`'s one-probe
+  heal-over-time case at 20.94 s against its 20 s default. That case is byte-identical to the
+  release, runs 19.2 s on the release and main nightlies (run 36414582084) and 15.4 s in the
+  PR lane: the same edge as the harvest sweep, tipped over by this branch's heavier druid arm.
+  `0462c0a7b8` gives it 60 s like the harvest sweep, and the file's exact ratchet row records
+  the new 360 s sum (the sibling's 300 s plus 60); dropping either fails the ratchet
+  (mutated), and a fresh read of it came back with no finding. So the nightly's only
+  remaining red is the release-owned druid band.
+- `0462c0a7b8` (a declared timeout and its ratchet row) landed after the armed gate at
+  `e57856af25`; the ratchet ran on it directly, and this docs commit's own full-mode CI run,
+  which covers it, is reported to Fernando with the part's close.

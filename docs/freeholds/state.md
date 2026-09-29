@@ -78,11 +78,21 @@ machine's key, so nothing was deleted. The branch's first CI runs found and fixe
 arm64 against x64 spawn height, re-derived the lane bound (28 to 36) and pr-gate's (37 to 49),
 harvested every shard weight (splitting two files the harvest put over the 90-second rule), and
 the first nightly exposed the eight-seed druid arm overrunning one case, now one case per seed.
-Every change had fresh reads round by round until a round came back without a should-fix;
-169 mutants ran, 168 killed (the survivor was an equivalent read, unified). The armed gate is green on all 12 steps at the last code commit `8c8454cb19` (73,984 tests, browser 554); CI run 36448553184 was fully green in full mode at `13710714d1`, and the final CI and nightly at the pushed tip are recorded in the ledger. OWED: the
-production palette read, the vacuous CI lint job (found here, repo-wide), pr-gate and
-release-gate re-derivations, and the release-owned list. Detail: [the
-ledger](qa/persistence-2026-09-08/findings.md), PART 4.
+Every change had fresh reads round by round until a round came back without a should-fix.
+After the Part 4 commit, CI caught a latent happy-dom flake (the portrait chip's GLB fetches
+outliving teardown in three suites), now stubbed and pinned; fifteen read rounds on that pin
+turned up two holes in the declared-timeout ratchet's scanner, one of which had hidden a real
+120-second case (its exact row corrected from 330,000 to 450,000), and the release's #2514
+harvest sweep and a Groveheart case, each at the edge of its 20 s default on the release's
+own runs, got 60 s. 226 mutants ran: 224 killed, 2 equivalent (an equivalent read, unified; and the
+selective gate's own blind spot for a side-effect-only helper import, recorded for its
+owner). The armed gate is green on all 12 steps at `e57856af25` (73,987 tests, browser 554),
+and CI run 36493201427 was fully green in full mode there. The final nightly ran the
+eight-seed druid arm green (all eight seeds, 347 to 407 s each); its only red left is the
+release-owned druid band. OWED:
+the production palette read, the vacuous CI lint job (found here, repo-wide), pr-gate (a
+ruling on one slow-checkout wall) and release-gate re-derivations, and the release-owned list.
+Detail: [the ledger](qa/persistence-2026-09-08/findings.md), PART 4.
 
 (Superseded 2026-09-28 by the paragraph above: Part 4 is done.)
 **PART 3, UNUSED ASSETS AND TEST NECESSITY, DONE 2026-09-27, LOCAL.** Fernando ruled that every
