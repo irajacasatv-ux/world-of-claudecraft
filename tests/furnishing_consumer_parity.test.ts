@@ -38,6 +38,7 @@ import { isSunderable } from '../src/sim/professions/sundering';
 import { Sim } from '../src/sim/sim';
 import type { ItemDef, ItemInstancePayload, PlayerClass, SimEvent } from '../src/sim/types';
 import { terrainHeight } from '../src/sim/world';
+import { WORLD_SEED } from '../src/sim/world_seed';
 import { type BagMode, bagItemAction } from '../src/ui/bags_view';
 import { paperdollDropAction } from '../src/ui/equip_drop_core';
 import { ActionBarController } from '../src/ui/hud/action_bar/action_bar_controller';
@@ -87,8 +88,10 @@ afterEach(() => {
 });
 
 function world(playerClass: PlayerClass = 'warrior'): Sim {
+  // The realm's own seed: online() boots a GameServer on it, so the offline
+  // arm shares that seed's terrain build instead of paying a second one.
   const sim = new Sim({
-    seed: 73,
+    seed: WORLD_SEED,
     playerClass,
     autoEquip: false,
     freeholdsEnabled: true,
