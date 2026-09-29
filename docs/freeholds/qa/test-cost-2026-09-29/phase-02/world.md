@@ -121,8 +121,9 @@ in `tests/world_population_shards.test.ts` carries the new `runEscortRounds` tex
   re-harvested: a separate, deliberate change.
 - The post-change harvest re-measures every row above; the per-file CI figures here are the
   baseline only.
-- `PRODUCTION_IDLE_CULL` follows the constant the server and client read; the offline client's
-  value is pinned, the server boot config's is not.
+- `PRODUCTION_IDLE_CULL` follows the constant the server and client read, and both are pinned:
+  tests/idle_mob_tick_radius.test.ts holds the server's booted Sim and the built offline config
+  to it (the server case also pins the radius to the literal 100).
 - Product side (not touched): the render streaming suites pay `vi.resetModules()` plus a
   re-import of `src/sim/data` per case because `src/render/water` and `src/render/terrain`
   load the sim data graph at module scope; a lighter zone-lookup module would cut every such

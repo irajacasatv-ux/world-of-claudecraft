@@ -167,18 +167,18 @@ restored after, and a Tests line required); every outcome is a row of `data/pari
 
 ## Review fix round (branch `test-cost/parity-fix`, on `35e89ced9a`)
 
-1. `cbfb78f4c3` test(parity): deep-freeze what the coverage cases share and refuse a tick. The
+1. `bacd23b5e8` test(parity): deep-freeze what the coverage cases share and refuse a tick. The
    freeze was one level deep. Events, notes and frames are now frozen all the way down (a Map or
    Set is walked but stays writable). The final Sim's entity and player records are frozen one
    level (a field write throws; a write inside a nested object such as `pos` is not refused, the
    cheap cut). Ticking the held Sim throws. The modified-`Scenario` guard now checks identity
    against `SCENARIOS` on a filtered run's miss as well as on a hit. `record()`'s doc comment is
    back on its function.
-2. `a450c596d0` test(parity): pin that the shard files call every shard index once.
+2. `f6e878e101` test(parity): pin that the shard files call every shard index once.
    `harness.test.ts` collects each shard file's literal `runParityShard(n)`, comments stripped,
    and requires exactly `0..PARITY_SHARD_COUNT-1`; a non-literal argument fails. The parity notes
    anchor the file count to `SHARD_BOUNDS` instead of a literal.
-3. `81d1a60831` docs(parity): point the non-vacuity comments at the coverage case module
+3. `6831c844f5` docs(parity): point the non-vacuity comments at the coverage case module
    (`scenarios.ts`, `trace.ts`, `tests/professions_farming.test.ts`).
 
 Mutants (same runner, rows appended to `data/parity_mutants.tsv`, batch `fix`): 8 of 8 killed,
@@ -194,7 +194,10 @@ control passed. The coverage-case mutants:
 The shard-index pin (`harness.test.ts`):
 
 - F6: `coverage_d.test.ts` calls `runParityShard(9)`. The pin fails.
-- F7: the same, with `// runParityShard(10);` left behind as a comment. The pin still fails.
+- F7: the same, with `// runParityShard(10);` left behind as a comment. The pin still fails,
+  but that alone does not prove the comment strip (the live duplicate fails it either way);
+  the control run does, since harness.test.ts's own comment spells `runParityShard(n)`, which
+  an unstripped scan would read as a non-literal call and fail on.
 - F8: `runParityShard(5 + 5)`. It fails as a non-literal argument.
 
 After the round, `npx vitest run tests/parity tests/professions_farming.test.ts` is green (367
@@ -215,3 +218,6 @@ quartet (4 Sims, `coverage_c.test.ts`) and the hit-rating pair (2, `parity_g.tes
 
 Nothing is over budget. The quartet costs about 60 MiB over its file's end state, so no earlier
 release was needed. The peaks before the fix round were within 4 MiB of these figures.
+
+The fix-round commits above were integrated on feature/freeholds under the SHAs cited
+(the worktree branch held them as cbfb78f4c3, a450c596d0, 81d1a60831 and 3847d950ea).
