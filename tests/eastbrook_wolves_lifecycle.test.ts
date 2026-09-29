@@ -1,15 +1,25 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { eastbrookWolvesGuide } from '../src/render/eastbrook_wolves_guidance_core';
+import { BUILTIN_WORLD } from '../src/sim/data';
 import { onMobKilledForQuests } from '../src/sim/quests/quest_credit';
 import { Sim } from '../src/sim/sim';
-import type { QuestProgress } from '../src/sim/types';
+import type { QuestProgress, WorldContent } from '../src/sim/types';
 import { QuestTrackingState } from '../src/ui/quest_tracking_core';
 import { bareClient } from './helpers/bare_client';
 
 const QUEST = 'q_wolves';
 
+// The lifecycle needs only the quest's giver and a wolf to credit, so the
+// world keeps Marshal Redbrook and one wolf camp and drops the rest.
+const MARSHAL_WORLD: WorldContent = {
+  ...BUILTIN_WORLD,
+  camps: BUILTIN_WORLD.camps.filter((camp) => camp.mobId === 'forest_wolf').slice(0, 1),
+  npcs: { marshal_redbrook: BUILTIN_WORLD.npcs.marshal_redbrook },
+  groundObjects: [],
+};
+
 function atMarshal(): Sim {
-  const sim = new Sim({ seed: 42, playerClass: 'warrior' });
+  const sim = new Sim({ seed: 42, playerClass: 'warrior', world: MARSHAL_WORLD });
   const marshal = [...sim.entities.values()].find(
     (entity) => entity.kind === 'npc' && entity.templateId === 'marshal_redbrook',
   );
