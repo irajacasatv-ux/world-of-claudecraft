@@ -99,13 +99,22 @@ function producesEffect(cls: PlayerClass, specId: string, sig: string): string {
       school: 'fire',
     });
   }
+  // The effect check counts only what the CAST did. The rig already makes
+  // things happen without any cast, so each of those is excluded: the seeded
+  // DoTs tick for the caster (their damage is not the signature's), a spec
+  // lays its own standing auras (a stance, a resource bank), the melee dummy
+  // bleeds the caster, and rage falls on its own out of combat
+  // (combat/auras.ts). A refused cast (unknown, unaffordable) must then fail.
+  const seeded = new Set(mob.auras);
+  const seededNames = new Set(mob.auras.map((a) => a.name));
+  const ownAura = (a: { id: string; sourceId: number }) =>
+    a.sourceId === pid && (a.id === sig || a.id.startsWith(`${sig}_`));
   const before = {
-    pA: p.auras.length,
-    mA: mob.auras.length,
-    cd: p.cooldowns.size,
+    pA: p.auras.filter(ownAura).length,
     res: p.resource,
     allyHp: ally.hp,
   };
+  const refusals: string[] = [];
   // The mage rework swapped Pyromancy's signature from the instant Combustion buff to
   // Pyrelance (pyroblast), a 6s hard cast whose bolt then travels: long enough for the
   // unaggroed dummy to wander behind a collider and fizzle the finish on line of sight,
@@ -120,18 +129,28 @@ function producesEffect(cls: PlayerClass, specId: string, sig: string): string {
     mob.pos.x = mobHome.x;
     mob.pos.y = mobHome.y;
     mob.pos.z = mobHome.z;
-    if (i === 0) sim.castAbility(sig, pid, { x: mob.pos.x, z: mob.pos.z });
-    for (const e of sim.tick())
-      if ((e.type === 'damage' || e.type === 'heal') && (e as any).sourceId === pid) fired = true;
+    if (i === 0) {
+      sim.castAbility(sig, pid, { x: mob.pos.x, z: mob.pos.z });
+      // An instant cast pays on the press, the one moment a rage drop is the cast's.
+      if (p.resource < before.res) fired = true;
+    }
+    for (const e of sim.tick()) {
+      if (e.type === 'error' && e.pid === pid) refusals.push(e.text);
+      if (e.type === 'damage' && e.sourceId === pid && !seededNames.has(e.ability ?? '')) {
+        fired = true;
+      }
+    }
     fired =
       fired ||
-      p.auras.length > before.pA ||
-      mob.auras.length > before.mA ||
-      p.cooldowns.size > before.cd ||
-      p.resource < before.res ||
+      p.auras.filter(ownAura).length > before.pA ||
+      mob.auras.some((a) => a.sourceId === pid && !seeded.has(a)) ||
+      p.cooldowns.has(sig) ||
+      (p.resourceType !== 'rage' && p.resource < before.res) ||
       ally.hp > before.allyHp;
   }
-  return fired ? '' : 'cast produced no observable effect';
+  return fired
+    ? ''
+    : `cast produced no observable effect (errors: ${refusals.join('; ') || 'none'})`;
 }
 
 describe('Phase 1: spec signatures', () => {
