@@ -8,9 +8,18 @@ import { directHitBonus } from '../src/sim/spell_scaling';
 import type { SimEvent } from '../src/sim/types';
 import { abilityEffectText, formatAbilityNumber } from '../src/ui/ability_description';
 import { MeterData } from '../src/ui/meters';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
+// Every case fights training dummies it places itself, so the empty world and
+// one seed serve them all: the overworld only added its camps to every tick and
+// the Fire case's second seed a second collider build.
 function setup(level = 20) {
-  const sim = new Sim({ seed: 72, playerClass: 'warlock', autoEquip: true });
+  const sim = new Sim({
+    seed: 72,
+    playerClass: 'warlock',
+    autoEquip: true,
+    world: EMPTY_TEST_WORLD,
+  });
   sim.setPlayerLevel(level);
   sim.setSpec('destruction');
   sim.tick();
@@ -201,7 +210,12 @@ describe('Destruction feedback tuning', () => {
     expect(echo.crit).toBe(true);
   });
   it('lets a normal Fire critical bank Ignite while an exact critical copy cannot', () => {
-    const sim = new Sim({ seed: 93, playerClass: 'mage', autoEquip: true });
+    const sim = new Sim({
+      seed: 72,
+      playerClass: 'mage',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.setPlayerLevel(20);
     sim.setSpec('fire');
     sim.tick();
