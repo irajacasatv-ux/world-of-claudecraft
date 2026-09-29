@@ -12,11 +12,20 @@ import {
 import { createRiftGearInstance, sanitizeRiftGearInstance } from '../src/sim/rift/progression';
 import { Sim } from '../src/sim/sim';
 import { cloneItemInstancePayload } from '../src/sim/types';
+import { npcScopedWorld } from './helpers/npc_scoped_world';
 import { moveToRiftForge } from './helpers/rift_forge';
+
+// The live forge upgrade needs the rift forge NPC; nothing else in the overworld is read.
+const FORGE_WORLD = npcScopedWorld('riftwright_maelis');
 
 describe('permanent Rift quality lane', () => {
   it('retains the descriptor through live forge upgrades, socket replacement and character reload', () => {
-    const sim = new Sim({ seed: 731, playerClass: 'warrior', autoEquip: false });
+    const sim = new Sim({
+      seed: 731,
+      playerClass: 'warrior',
+      autoEquip: false,
+      world: FORGE_WORLD,
+    });
     moveToRiftForge(sim);
     sim.setPlayerLevel(20);
     const gear = createRiftGearInstance('quality-forge', 'S', 'warrior', sim.player.id);
@@ -34,7 +43,13 @@ describe('permanent Rift quality lane', () => {
     expect(itemInstanceLevel(ITEMS[gear.itemId], current.instance)).toBe(42);
     expect(activeItemInstanceStats(current.instance, ITEMS[gear.itemId])!.hitRating).toBe(24);
     const save = JSON.parse(JSON.stringify(sim.serializeCharacter(sim.playerId)));
-    const loaded = new Sim({ seed: 731, playerClass: 'warrior', autoEquip: false, noPlayer: true });
+    const loaded = new Sim({
+      seed: 731,
+      playerClass: 'warrior',
+      autoEquip: false,
+      noPlayer: true,
+      world: FORGE_WORLD,
+    });
     const pid = loaded.addPlayer('warrior', 'Reload', { state: save });
     expect(
       loaded.players.get(pid)!.inventory.find((s) => s.itemId === gear.itemId)!.instance,

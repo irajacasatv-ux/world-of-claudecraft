@@ -13,6 +13,7 @@ import {
 import { Sim } from '../src/sim/sim';
 import type { ItemInstancePayload } from '../src/sim/types';
 import { rollWorldBossLoot } from '../src/sim/world_boss';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const ITEM = 'slagbreaker_helmet';
 const quality: ItemInstancePayload = {
@@ -20,7 +21,12 @@ const quality: ItemInstancePayload = {
 };
 
 function setup(grouped = true, count = 1) {
-  const sim = new Sim({ seed: 42, noPlayer: true, playerClass: 'warrior' });
+  const sim = new Sim({
+    seed: 42,
+    noPlayer: true,
+    playerClass: 'warrior',
+    world: EMPTY_TEST_WORLD,
+  });
   const a = sim.addPlayer('warrior', 'Alpha');
   const b = sim.addPlayer('mage', 'Bravo');
   if (grouped) {

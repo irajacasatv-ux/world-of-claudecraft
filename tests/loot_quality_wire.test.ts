@@ -4,6 +4,7 @@ import { publicInstanceView } from '../src/sim/item_instance_transfer';
 import { Sim } from '../src/sim/sim';
 import type { ItemInstancePayload } from '../src/sim/types';
 import { bareClient } from './helpers/bare_client';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const enhanced = (): ItemInstancePayload => ({
   lootQuality: { version: 1, tier: 3, weights: [1, 1000, 25, 600, 84] },
@@ -47,7 +48,12 @@ describe('loot quality public identity', () => {
   });
 
   it('preserves the exact tier and allocation through server inspect and client mirroring', () => {
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+    const sim = new Sim({
+      seed: 42,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const pid = sim.addPlayer('warrior', 'Loot Tester');
     const entity = sim.entities.get(pid)!;
     entity.equippedInstances.chest = enhanced();

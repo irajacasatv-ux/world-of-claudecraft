@@ -11,8 +11,10 @@ import * as lockpick from '../src/sim/delves/lockpick_controller';
 import { solveLockActions } from '../src/sim/lockpick';
 import { Sim } from '../src/sim/sim';
 import { terrainHeight } from '../src/sim/world';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
-const makeSim = (seed = 42) => new Sim({ seed, playerClass: 'warrior', autoEquip: true });
+const makeSim = (seed = 42) =>
+  new Sim({ seed, playerClass: 'warrior', autoEquip: true, world: EMPTY_TEST_WORLD });
 
 /** Boot the Collapsed Reliquary finale, kill the boss, stand the player on the
  * reward chest. Returns the run + chestId. Pins bountiful=false unless asked. */

@@ -20,8 +20,10 @@ import { ANTE_TO_STEP_TIMEOUT_MS, solveLockActions } from '../src/sim/lockpick';
 import { Sim } from '../src/sim/sim';
 import { DT } from '../src/sim/types';
 import { terrainHeight } from '../src/sim/world';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
-const makeSim = (seed = 42) => new Sim({ seed, playerClass: 'warrior', autoEquip: true });
+const makeSim = (seed = 42) =>
+  new Sim({ seed, playerClass: 'warrior', autoEquip: true, world: EMPTY_TEST_WORLD });
 
 /** Boot a Collapsed Reliquary finale, kill the boss, stand the player on the
  * reward chest. */

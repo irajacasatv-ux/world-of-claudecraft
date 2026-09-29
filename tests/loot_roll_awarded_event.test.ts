@@ -17,11 +17,13 @@ import { assignMasterLoot, awardSharedLootItem, submitLootRoll } from '../src/si
 import type { PlayerMeta } from '../src/sim/sim';
 import { Sim } from '../src/sim/sim';
 import type { Entity, LootSlot, SimEvent } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 type Awarded = Extract<SimEvent, { type: 'lootRollAwarded' }>;
 const ITEM = 'greyjaw_hide_boots'; // uncommon: opens a roll under default strategies
 
-const makeSim = (seed = 42) => new Sim({ seed, playerClass: 'warrior', noPlayer: true });
+const makeSim = (seed = 42) =>
+  new Sim({ seed, playerClass: 'warrior', noPlayer: true, world: EMPTY_TEST_WORLD });
 
 function partyOfThree(seed = 42) {
   const sim = makeSim(seed);
