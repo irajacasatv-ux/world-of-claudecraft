@@ -16,6 +16,12 @@ import {
 import type { TalentAllocation } from '../src/sim/content/talents';
 import { Sim } from '../src/sim/sim';
 import type { Entity } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
+
+// Every Sim here runs on one seed and EMPTY_TEST_WORLD: the cases seed their own
+// auras, allies and saves, so the ambient overworld and each extra seed's world
+// build were pure cost.
+const SEED = 2840;
 
 function allocation(spec: 'elemental' | 'enhancement' | 'restoration'): TalentAllocation {
   return { spec, rows: {} };
@@ -33,7 +39,7 @@ function effectiveArmor(sim: Sim, entity: Entity): number {
 
 describe('Shaman v0.29 state lifecycle', () => {
   it('clears Flow State progress and ready state when changing specialization', () => {
-    const sim = new Sim({ seed: 2840, playerClass: 'shaman' });
+    const sim = new Sim({ seed: SEED, playerClass: 'shaman', world: EMPTY_TEST_WORLD });
     sim.setPlayerLevel(20);
     expect(sim.setSpec('elemental')).toBe(true);
     for (const id of [FLOW_STATE_PROGRESS_ID, FLOW_STATE_READY_ID]) {
@@ -59,7 +65,7 @@ describe('Shaman v0.29 state lifecycle', () => {
   });
 
   it('clears every foreign spec engine on authoritative spec changes', () => {
-    const sim = new Sim({ seed: 2841, playerClass: 'shaman' });
+    const sim = new Sim({ seed: SEED, playerClass: 'shaman', world: EMPTY_TEST_WORLD });
     sim.setPlayerLevel(20);
     expect(sim.setSpec('elemental')).toBe(true);
     addThunderCharges(sim.ctx, sim.player, 4);
@@ -86,7 +92,12 @@ describe('Shaman v0.29 state lifecycle', () => {
   });
 
   it('removes baked armor, posture riders, and Pyrebrand before recomputing a new spec', () => {
-    const sim = new Sim({ seed: 2845, playerClass: 'shaman', autoEquip: true });
+    const sim = new Sim({
+      seed: SEED,
+      playerClass: 'shaman',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.setPlayerLevel(20);
     expect(sim.setSpec('enhancement')).toBe(true);
     const baseArmor = effectiveArmor(sim, sim.player);
@@ -112,7 +123,7 @@ describe('Shaman v0.29 state lifecycle', () => {
   });
 
   it('uses the same cleanup choke point for saved loadout switches', () => {
-    const sim = new Sim({ seed: 2842, playerClass: 'shaman' });
+    const sim = new Sim({ seed: SEED, playerClass: 'shaman', world: EMPTY_TEST_WORLD });
     sim.setPlayerLevel(20);
     expect(sim.saveLoadout('Storm', [], allocation('elemental'))).toBe(0);
     addThunderCharges(sim.ctx, sim.player, 3);
@@ -130,7 +141,12 @@ describe('Shaman v0.29 state lifecycle', () => {
   });
 
   it('removes remote currents on logout and restores no transient wrong-spec state', () => {
-    const source = new Sim({ seed: 2843, playerClass: 'shaman', noPlayer: true });
+    const source = new Sim({
+      seed: SEED,
+      playerClass: 'shaman',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const healerId = source.addPlayer('shaman', 'Leaving');
     const allyId = source.addPlayer('warrior', 'Remaining');
     for (const pid of [healerId, allyId]) source.setPlayerLevel(20, pid);
@@ -144,7 +160,12 @@ describe('Shaman v0.29 state lifecycle', () => {
     source.removePlayer(healerId);
     expect(mendingCurrent(ally, healerId)).toBeNull();
 
-    const restored = new Sim({ seed: 2844, playerClass: 'shaman', noPlayer: true });
+    const restored = new Sim({
+      seed: SEED,
+      playerClass: 'shaman',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const restoredId = restored.addPlayer('shaman', 'Returning', { state: saved ?? undefined });
     expect(restored.meta(restoredId)?.talents.spec).toBe('restoration');
     expect(player(restored, restoredId).auras.some((aura) => aura.id.startsWith('shaman_'))).toBe(
