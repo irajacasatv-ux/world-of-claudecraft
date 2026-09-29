@@ -223,12 +223,24 @@ function rehearse(state: CharacterState, seed: number, playerClass = 'warrior'):
 }
 
 // ----- the committed synthetic corpus -----------------------------------------
+// One seed serves the whole corpus: its construction, its stabilization and
+// every row's rehearsal. A row's baseline and actual still share it, which is
+// the only pairing the diff needs, and every fresh seed cost a terrain build
+// (the corpus used eleven). The env-gated staging mode keeps its own per-row
+// seeds.
+const CORPUS_SEED = 7;
+
 // Built deterministically from serializeCharacter itself (fixed seed), so the
 // modern rows carry the full curve-era blob shape, then hand-derived into the
 // five documented variants.
 
 function buildModernBlob(): CharacterState {
-  const sim = new Sim({ seed: 7, playerClass: 'warrior', noPlayer: true, world: EMPTY_TEST_WORLD });
+  const sim = new Sim({
+    seed: CORPUS_SEED,
+    playerClass: 'warrior',
+    noPlayer: true,
+    world: EMPTY_TEST_WORLD,
+  });
   const pid = sim.addPlayer('warrior', 'Corpus');
   // biome-ignore lint/suspicious/noExplicitAny: corpus construction reaches meta
   const meta = (sim as any).players.get(pid);
@@ -248,12 +260,12 @@ function buildModernBlob(): CharacterState {
 // deeds are already consistent with its skills. Without this, a synthetic
 // row with nonzero skills but no deeds would show join-time deed deltas that
 // are the deed system's own doing, not the reset's.
-function stabilize(blob: CharacterState, seed: number): Blob {
-  return roundTrip({ ...clone(blob), masteryResetApplied: true }, seed);
+function stabilize(blob: CharacterState): Blob {
+  return roundTrip({ ...clone(blob), masteryResetApplied: true }, CORPUS_SEED);
 }
 
 function buildCorpus(): { id: string; state: CharacterState }[] {
-  const modernApplied = stabilize(buildModernBlob(), 50);
+  const modernApplied = stabilize(buildModernBlob());
   const modern = clone(modernApplied);
   delete modern.masteryResetApplied;
 
@@ -272,7 +284,6 @@ function buildCorpus(): { id: string; state: CharacterState }[] {
       (b.professions as Record<string, number>).mining = 99999;
       return b as unknown as CharacterState;
     })(),
-    51,
   );
   const overCap = clone(overCapBase) as Blob;
   delete overCap.masteryResetApplied;
@@ -303,7 +314,6 @@ function buildCorpus(): { id: string; state: CharacterState }[] {
       delete b.proficiencyDisplayHealApplied;
       return b as unknown as CharacterState;
     })(),
-    52,
   );
   const stranded = clone(strandedBase) as Blob;
   (stranded.gatheringProficiency as Record<string, number>).fishing = 99.5;
@@ -344,15 +354,15 @@ function buildCorpus(): { id: string; state: CharacterState }[] {
 
 describe('mastery reset rehearsal (the committed synthetic corpus)', () => {
   const corpus = buildCorpus();
-  corpus.forEach((row, i) => {
+  for (const row of corpus) {
     it(`${row.id}: only the documented deltas`, () => {
-      const result = rehearse(row.state, 100 + i);
+      const result = rehearse(row.state, CORPUS_SEED);
       expect(result.violations, result.violations.join('\n')).toHaveLength(0);
     });
-  });
+  }
 
   it('flags the reset as applied exactly for the flag-absent rows', () => {
-    const byId = new Map(corpus.map((row, i) => [row.id, rehearse(row.state, 100 + i)]));
+    const byId = new Map(corpus.map((row) => [row.id, rehearse(row.state, CORPUS_SEED)]));
     expect(byId.get('modern-12b-shape')?.applied).toBe(true);
     expect(byId.get('minimal-fresh-shape')?.applied).toBe(true);
     expect(byId.get('over-cap-already-applied')?.applied).toBe(false);
