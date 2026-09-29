@@ -14,13 +14,21 @@ import { Sim } from '../src/sim/sim';
 import type { AuraKind, Entity, PlayerClass } from '../src/sim/types';
 import { MELEE_RANGE } from '../src/sim/types';
 import { placePlayerInOpenField } from './helpers/open_field';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 type AnySim = Sim & Record<string, any>;
 type AnyEntity = Entity & Record<string, any>;
 type Ev = Record<string, any>;
 
+// Every case shoots a mob it spawns itself in the open field, so the
+// overworld's camps and NPCs are pure overhead: the empty world serves.
 function makeSim(seed = 7): { sim: AnySim; p: AnyEntity } {
-  const sim = new Sim({ seed, playerClass: 'druid', autoEquip: true }) as AnySim;
+  const sim = new Sim({
+    seed,
+    playerClass: 'druid',
+    autoEquip: true,
+    world: EMPTY_TEST_WORLD,
+  }) as AnySim;
   sim.setPlayerLevel(20);
   // Ranged fixtures place their target relative to the player, so stand on
   // empty ground: the town is furnished and would block the shot lane.
