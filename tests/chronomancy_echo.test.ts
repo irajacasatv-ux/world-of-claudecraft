@@ -24,6 +24,7 @@ import { ABILITIES, MOBS } from '../src/sim/data';
 import { createMob } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
 import type { Entity, SimEvent } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // dealDamage's full signature including the Phase 2 `aoe` flag (last arg). This
 // port's signature carries `abilityId` (the stable content id for talent-proc
@@ -52,8 +53,10 @@ function drain(sim: Sim): SimEvent[] {
   return (sim as unknown as { drainEvents(): SimEvent[] }).drainEvents();
 }
 
+// Every case marks allies and strikes a dummy it adds itself, so the rig stands
+// on the empty world.
 function chronoMage(level = 20) {
-  const sim = new Sim({ seed: 41, playerClass: 'mage', autoEquip: true });
+  const sim = new Sim({ seed: 41, playerClass: 'mage', autoEquip: true, world: EMPTY_TEST_WORLD });
   sim.setPlayerLevel(level);
   expect(sim.setSpec('arcane')).toBe(true);
   sim.tick();
