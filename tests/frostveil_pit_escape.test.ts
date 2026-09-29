@@ -105,18 +105,33 @@ function walkHeading(
   return { x: p.pos.x, z: p.pos.z };
 }
 
-// Sixteen-azimuth sweep out of the bowl. Returns the headings (in degrees,
-// atan2(dx, dz) convention) that reached the rim. Every PR walks the four
-// cardinal headings (the west one escapes today, beside the ramp case below);
-// the nightly depth flag walks all sixteen (225 to 315 escape today). A bowl
-// that traps every heading reds both depths.
-function escapeHeadings(spot: { x: number; z: number }, seconds: number): number[] {
+// The sixteen sweep headings, k * 22.5 degrees in the atan2(dx, dz) convention,
+// ordered from due west (k = 12, the flank the authored ramp climbs) fanning out
+// both ways. The order decides only how soon a first escape is found, never
+// whether one exists.
+const SWEEP_ORDER = [12, 11, 13, 10, 14, 9, 15, 8, 0, 7, 1, 6, 2, 5, 3, 4];
+
+// Sixteen-azimuth sweep out of the bowl. Returns the headings (in degrees) that
+// reached the rim. Both depths assert the one property the case names, that SOME
+// heading of the sixteen reaches the rim: a PR stops at the first heading that
+// does (due west today, one walk), and the nightly depth flag walks all sixteen
+// (225 to 315 escape today). Closing one exit leaves both depths green while
+// another heading still escapes; a bowl that traps every heading walks all
+// sixteen and reds both.
+function escapeHeadings(
+  spot: { x: number; z: number },
+  seconds: number,
+  firstOnly: boolean,
+): number[] {
   const out: number[] = [];
-  for (let k = 0; k < 16; k += NIGHTLY_SWEEP ? 1 : 4) {
+  for (const k of SWEEP_ORDER) {
     const facing = (k * Math.PI) / 8;
     const end = walkHeading(spot, facing, seconds);
     const moved = Math.hypot(end.x - spot.x, end.z - spot.z);
-    if (moved > 8 && onRim(end.x, end.z)) out.push(Math.round((facing * 180) / Math.PI));
+    if (moved > 8 && onRim(end.x, end.z)) {
+      out.push(Math.round((facing * 180) / Math.PI));
+      if (firstOnly) break;
+    }
   }
   return out;
 }
@@ -128,7 +143,7 @@ const DOWN_THE_RAMP = Math.atan2(r.ax - r.bx, r.az - r.bz);
 
 describe('the Glacier Tarn bowl is leavable on foot', () => {
   it('walks out of the reported stranding spot', { timeout: 90_000 }, () => {
-    const headings = escapeHeadings(STRANDED, 12);
+    const headings = escapeHeadings(STRANDED, 12, !NIGHTLY_SWEEP);
     expect(headings.length, 'no heading out of the pond floor reaches the rim').toBeGreaterThan(0);
   });
 
