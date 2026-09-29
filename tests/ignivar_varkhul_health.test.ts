@@ -21,6 +21,12 @@ import { enterDungeon } from '../src/sim/instances/dungeons';
 import { applyBroodBurn } from '../src/sim/mob/dragonkin_brood';
 import { Sim } from '../src/sim/sim';
 import { IGNIVAR_BOSS_ID } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
+
+// The Sims only host a burn on the player or claim a dungeon instance, neither of
+// which reads overworld content, so each stands on the empty world, all on one
+// seed.
+const SEED = 804;
 
 function spawned(templateId: string, dungeonId: string, difficulty: 'normal' | 'heroic') {
   const base = DUNGEON_MOBS[templateId];
@@ -86,8 +92,8 @@ describe('Ignivar and Varkhul raid health bands', () => {
     expect(heroic.mechanicDamageMult).toBe(1.25);
     const burn = DUNGEON_MOBS[IGNIVAR_EMBER_SENTINEL_ID].arcCleave?.burn;
     if (!burn) throw new Error('Ember Sentinel burn missing');
-    const normalSim = new Sim({ seed: 801, playerClass: 'warrior' });
-    const heroicSim = new Sim({ seed: 802, playerClass: 'warrior' });
+    const normalSim = new Sim({ seed: SEED, playerClass: 'warrior', world: EMPTY_TEST_WORLD });
+    const heroicSim = new Sim({ seed: SEED, playerClass: 'warrior', world: EMPTY_TEST_WORLD });
 
     applyBroodBurn(normalSim.ctx, normal, normalSim.player, burn);
     applyBroodBurn(heroicSim.ctx, heroic, heroicSim.player, burn);
@@ -97,7 +103,12 @@ describe('Ignivar and Varkhul raid health bands', () => {
   });
 
   it('keeps the placement multiplier on top of Molten Assembly Heroic Warden tuning', () => {
-    const sim = new Sim({ seed: 804, playerClass: 'warrior', devCommands: true });
+    const sim = new Sim({
+      seed: SEED,
+      playerClass: 'warrior',
+      devCommands: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.setDungeonDifficulty('heroic');
     expect(enterDungeon(sim.ctx, IGNIVAR_MOLTEN_ASSEMBLY_ID, sim.player.id, true)).toBe(true);
     const claim = sim.instances.find(
