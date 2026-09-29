@@ -29,8 +29,10 @@ if (!NODE) throw new Error('no veiled_hollow ore node in content');
 // BUILTIN_WORLD population (every camp/npc/ground object across 11 zones)
 // is pure overhead here: EMPTY_TEST_WORLD keeps zones/roads/props/services
 // and drops only camps/npcs/groundObjects.
-function makeSim(seed = 7): Sim {
-  return new Sim({ seed, playerClass: 'warrior', autoEquip: true, world: EMPTY_TEST_WORLD });
+// Every Sim shares one seed: a fresh seed builds its collider grids (about
+// half a second) and no case compares two seeds.
+function makeSim(): Sim {
+  return new Sim({ seed: 7, playerClass: 'warrior', autoEquip: true, world: EMPTY_TEST_WORLD });
 }
 
 function despawnMobs(sim: Sim): void {
@@ -73,7 +75,7 @@ function mountedRider(sim: Sim): { pid: number; p: Entity } {
 
 describe('starting a profession cast dismounts, like every other cast', () => {
   it('a mounted rider dismounts the moment a gather cast starts, and the harvest completes', () => {
-    const sim = makeSim(7);
+    const sim = makeSim();
     const { pid, p } = mountedRider(sim);
     expect(sim.harvestNode(NODE!.id, undefined, pid)).toBe(true);
     expect(p.mountKey).toBe('');
@@ -84,7 +86,7 @@ describe('starting a profession cast dismounts, like every other cast', () => {
   });
 
   it('a mounted angler dismounts the moment a fishing cast starts', () => {
-    const sim = makeSim(8);
+    const sim = makeSim();
     despawnMobs(sim);
     const pid = sim.playerId;
     const meta = sim.meta(pid);
@@ -105,7 +107,7 @@ describe('starting a profession cast dismounts, like every other cast', () => {
   });
 
   it('a REFUSED gather does not dismount (the deny arms run first)', () => {
-    const sim = makeSim(9);
+    const sim = makeSim();
     const { pid, p } = mountedRider(sim);
     const meta = sim.meta(pid);
     if (!meta) throw new Error('no meta');
@@ -118,7 +120,7 @@ describe('starting a profession cast dismounts, like every other cast', () => {
   });
 
   it('a gather start drops an in-flight summon channel instead of racing it', () => {
-    const sim = makeSim(10);
+    const sim = makeSim();
     despawnMobs(sim);
     const pid = sim.playerId;
     const meta = sim.meta(pid);
@@ -146,7 +148,7 @@ describe('the other direction is the busy guard, not a dismount', () => {
     // The one mount path that skips useItem (no reins exist for the training
     // steed): the Z-toggle's lesson arm sets a summon channel directly, so it
     // carries its own busy refusal.
-    const sim = makeSim(12);
+    const sim = makeSim();
     despawnMobs(sim);
     const pid = sim.playerId;
     const meta = sim.meta(pid);
@@ -175,7 +177,7 @@ describe('the other direction is the busy guard, not a dismount', () => {
     // The race start mounts the lesson steed INSTANTLY (forceTrainingMount),
     // with no channel to interrupt: the deny must land before any session
     // state is written.
-    const sim = makeSim(13);
+    const sim = makeSim();
     despawnMobs(sim);
     const pid = sim.playerId;
     const meta = sim.meta(pid);
@@ -200,7 +202,7 @@ describe('the other direction is the busy guard, not a dismount', () => {
   });
 
   it('clicking the reins during a live gather cast is refused as busy', () => {
-    const sim = makeSim(11);
+    const sim = makeSim();
     despawnMobs(sim);
     const pid = sim.playerId;
     const meta = sim.meta(pid);
