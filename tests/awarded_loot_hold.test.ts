@@ -10,6 +10,7 @@ import type { PlayerMeta } from '../src/sim/sim';
 import { Sim } from '../src/sim/sim';
 import type { Entity, LootSlot, SimEvent } from '../src/sim/types';
 import { expectDefined } from './helpers/defined';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // The awarded-loot hold (src/sim/loot/awarded_loot_hold.ts): a need/greed,
 // master-loot, or round-robin winner whose bags are full no longer has the
@@ -24,7 +25,11 @@ const SOULBOUND = 'slagbreaker_helmet'; // soulbound: the award carries the BoP 
 const STACKABLE_SOULBOUND = 'sigil_anvil_chest';
 const COMMON = 'worn_sword'; // common: round-robin under default party strategies
 
-const makeSim = (seed = 42) => new Sim({ seed, playerClass: 'warrior', noPlayer: true });
+// The empty test world: every corpse here is built by hand (deadCorpse) and no
+// case reads a camp, an NPC, or a ground object, so the 90-second decay walk
+// below ticks only the party and its corpse instead of the whole world.
+const makeSim = (seed = 42) =>
+  new Sim({ seed, playerClass: 'warrior', noPlayer: true, world: EMPTY_TEST_WORLD });
 
 function partyOfThree(seed = 42) {
   const sim = makeSim(seed);
@@ -232,7 +237,7 @@ describe('awarded loot hold: a roll winner with full bags', () => {
     freeOneSlot(sim, a);
     expect(sim.lootCorpse(mob.id, a)).toBe(true);
     expect(sim.countItem(UNCOMMON, a)).toBe(1);
-  }, 30_000);
+  });
 
   it('a held award outlives the roll window but not the five-minute hold', () => {
     const { sim, a, b, c } = partyOfThree();
@@ -299,7 +304,7 @@ describe('awarded loot hold: a roll winner with full bags', () => {
 
   it('is deterministic per seed', () => {
     const run = () => {
-      const { sim, a, b, c } = partyOfThree(7);
+      const { sim, a, b, c } = partyOfThree();
       fillBags(sim, a);
       const mob = deadCorpse(sim, a, [a, b, c]);
       winRoll(sim, mob, UNCOMMON, a, [b, c]);
