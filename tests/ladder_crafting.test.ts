@@ -16,11 +16,16 @@ import { type PlayerMeta, Sim } from '../src/sim/sim';
 import type { InvSlot } from '../src/sim/types';
 import { expectDefined } from './helpers/defined';
 import { runCraft } from './helpers/enchant_family_cast';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const SPECIMEN_IDS = new Set(Object.values(HARVEST_COMPONENT_SPECIMENS));
 
-function makeSim(seed = 42) {
-  return new Sim({ seed, playerClass: 'warrior', autoEquip: false });
+// Crafting, training, bags and consumables read the player, the recipe tables
+// and the stations (kept by the empty world), never a camp, NPC or ground
+// object, and every Sim shares one seed: a fresh seed builds its collider
+// grids (about half a second) and no case compares two seeds.
+function makeSim() {
+  return new Sim({ seed: 11, playerClass: 'warrior', autoEquip: false, world: EMPTY_TEST_WORLD });
 }
 function metaOf(sim: Sim, pid: number): PlayerMeta {
   return expectDefined(sim.players.get(pid));
@@ -37,7 +42,7 @@ function placeAt(sim: Sim, pid: number, pos: { x: number; z: number }) {
 
 describe('ladder recipe execution sweep (all 54)', () => {
   it('every ladder recipe crafts at its station: reagents consumed, output produced', () => {
-    const sim = makeSim(7);
+    const sim = makeSim();
     const pid = primaryOf(sim);
     const meta = metaOf(sim, pid);
     meta.copper = 10_000_000;
@@ -105,7 +110,7 @@ describe('ladder recipe execution sweep (all 54)', () => {
 
 describe('Sim.trainRecipe on real ladder rungs', () => {
   it('trains a rung-0 ladder recipe free of charge at its master', () => {
-    const sim = makeSim(11);
+    const sim = makeSim();
     const pid = primaryOf(sim);
     const meta = metaOf(sim, pid);
     const rung0 = expectDefined(
@@ -121,7 +126,7 @@ describe('Sim.trainRecipe on real ladder rungs', () => {
   });
 
   it('trains a rung-50 ladder recipe for exactly 10000 copper', () => {
-    const sim = makeSim(11);
+    const sim = makeSim();
     const pid = primaryOf(sim);
     const meta = metaOf(sim, pid);
     const rung50 = expectDefined(
@@ -163,7 +168,7 @@ describe('crafted elixir defs and the live use path', () => {
 
   it('each new elixir applies its stamina aura through the live use path', () => {
     for (const [id, expected] of Object.entries(EXPECTED)) {
-      const sim = makeSim(3);
+      const sim = makeSim();
       const pid = primaryOf(sim);
       sim.addItem(id, 1, pid);
       sim.useItem(id, pid);
@@ -195,7 +200,7 @@ describe('crafted potions and elixirs stack', () => {
   );
 
   function craftTwice(recipeId: string) {
-    const sim = makeSim(11);
+    const sim = makeSim();
     const pid = primaryOf(sim);
     const meta = metaOf(sim, pid);
     meta.copper = 10_000_000;
@@ -251,7 +256,7 @@ describe('crafted potions and elixirs stack', () => {
     // The order a player actually hits most: hold a potion from loot or
     // trade, then craft more. The craft path's own add must find the plain
     // slot rather than opening a second one.
-    const sim = makeSim(11);
+    const sim = makeSim();
     const pid = primaryOf(sim);
     const meta = metaOf(sim, pid);
     meta.copper = 10_000_000;
@@ -289,7 +294,7 @@ describe('silkspun_satchel bag contract', () => {
   it('equips as a bag and contributes exactly its authored 10 slots', () => {
     expect(ITEMS.silkspun_satchel.kind).toBe('bag');
     expect(ITEMS.silkspun_satchel.bagSlots).toBe(10);
-    const sim = makeSim(9);
+    const sim = makeSim();
     const pid = primaryOf(sim);
     const meta = metaOf(sim, pid);
     sim.addItem('silkspun_satchel', 1, pid);
