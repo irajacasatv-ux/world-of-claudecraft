@@ -16,6 +16,7 @@ import { DUNGEON_WALL_X } from '../src/sim/dungeon_layout';
 import { enterDungeon, instanceInfoAt } from '../src/sim/instances/dungeons';
 import { Sim } from '../src/sim/sim';
 import { dist2d, type Entity, type SimEvent } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 type AnySim = Sim & Record<string, any>;
 
@@ -23,8 +24,11 @@ const SINGLE_REZ = 'temporal_reversal';
 const MASS_REZ = 'collective_reversal';
 
 // An arcane mage of 20 owns both the single-target and the mass resurrection.
+// Every body is a party member placed by hand, so the Sims run on the empty
+// world (terrain, props and the arena walls stay; the corridor below stays
+// collider-free).
 function chronomancer(seed = 73): { sim: AnySim; mage: Entity } {
-  const sim = new Sim({ seed, playerClass: 'mage' }) as AnySim;
+  const sim = new Sim({ seed, playerClass: 'mage', world: EMPTY_TEST_WORLD }) as AnySim;
   sim.setPlayerLevel(20);
   expect(sim.setSpec('arcane')).toBe(true);
   sim.tick();
