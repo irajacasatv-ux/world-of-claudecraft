@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { Sim } from '../src/sim/sim';
+import { EMPTY_TEST_WORLD } from './sim_shared';
+
+// Every case reads the known kit of a Hunter nobody fights, so each Sim stands
+// on the empty world, all on one seed.
+function hunter(): Sim {
+  return new Sim({ seed: 2900, playerClass: 'hunter', autoEquip: false, world: EMPTY_TEST_WORLD });
+}
 
 const KITS = [
   {
@@ -64,7 +71,7 @@ const SHARED = [
 ] as const;
 
 function knownFor(spec: string, level = 20): Set<string> {
-  const sim = new Sim({ seed: 2900, playerClass: 'hunter', autoEquip: false });
+  const sim = hunter();
   sim.setPlayerLevel(level);
   expect(sim.setSpec(spec)).toBe(true);
   const meta = sim.players.get(sim.playerId);
@@ -84,7 +91,7 @@ describe('Hunter v0.29 spec action ownership', () => {
   }
 
   it('keeps Gutting Strike before spec unlock and hands it to Fieldcraft at level 5', () => {
-    const preSpec = new Sim({ seed: 2901, playerClass: 'hunter', autoEquip: false });
+    const preSpec = hunter();
     preSpec.setPlayerLevel(4);
     const preSpecMeta = preSpec.players.get(preSpec.playerId);
     if (!preSpecMeta) throw new Error('missing pre-spec Hunter metadata');
@@ -96,7 +103,7 @@ describe('Hunter v0.29 spec action ownership', () => {
   });
 
   it('shows Fieldcraft mechanics as passives and uses 15 second movement cooldowns', () => {
-    const sim = new Sim({ seed: 2903, playerClass: 'hunter', autoEquip: false });
+    const sim = hunter();
     sim.setPlayerLevel(20);
     expect(sim.setSpec('survival')).toBe(true);
 
@@ -107,7 +114,7 @@ describe('Hunter v0.29 spec action ownership', () => {
   });
 
   it('re-specializing drops the old exclusive kit and keeps shared actions', () => {
-    const sim = new Sim({ seed: 2902, playerClass: 'hunter', autoEquip: false });
+    const sim = hunter();
     sim.setPlayerLevel(20);
     expect(sim.setSpec('beast_mastery')).toBe(true);
     expect(sim.resolvedAbility('pack_command')).not.toBeNull();
