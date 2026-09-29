@@ -58,12 +58,20 @@ import {
   saveCharacterStateOnClient,
 } from '../server/db';
 import { type CharacterState, type MailSave, type MarketSave, Sim } from '../src/sim/sim';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // A REAL serialized character, not a hand-built stub: the "an ordinary save is
 // silent" claim is only worth anything if the thing measured is what the save
-// path actually persists.
+// path actually persists. The empty world serializes the same bytes as the full
+// one (the save carries the character, not the world) and never builds the
+// overworld's colliders.
 function realCharacterState(): CharacterState {
-  const sim = new Sim({ seed: 7, playerClass: 'warrior', autoEquip: true });
+  const sim = new Sim({
+    seed: 7,
+    playerClass: 'warrior',
+    autoEquip: true,
+    world: EMPTY_TEST_WORLD,
+  });
   const state = sim.serializeCharacter(sim.playerId);
   if (!state) throw new Error('serializeCharacter returned null for the primary player');
   return state;
