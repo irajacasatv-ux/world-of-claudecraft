@@ -24,10 +24,11 @@ type TestSim = Sim & {
 // already grounded.
 const OPEN_GROUND = { x: -60, z: -2 } as const;
 
-// The rig stands on the empty world (the static colliders, plaza buildings
-// included, come with the seed, not the world content), and its rolls are
-// pinned rather than riding the seed's stream: with `next` at 0.9 every chance
-// under 90 percent fails, so every strike, chain and disc lands as a plain hit.
+// The rig stands on the empty world: the static colliders, plaza buildings
+// included, key on the seed and the module's active world content, which
+// cfg.world leaves alone. Its rolls are pinned rather than riding the seed's
+// stream: with `next` at 0.9 every chance under 90 percent fails, so every
+// strike, chain and disc lands as a plain hit.
 function makeProtection(): TestSim {
   const sim = new Sim({
     seed: 7176,
@@ -46,7 +47,8 @@ function makeProtection(): TestSim {
 
 // Move the staging area out of town, for the tests that need range. Everything
 // short-ranged stays on the plaza, whose geometry those pins were written
-// against. The ambient wildlife is cleared first: out in the field it would sit
+// against. Any non-player entity is cleared first (the empty world spawns none,
+// so this only guards a future populated rig): out in the field it would sit
 // inside Consecration and the Sunward chain, and the absorb cases pin an exact
 // Devotion count that any extra impact would inflate.
 function stageInField(sim: TestSim): void {
