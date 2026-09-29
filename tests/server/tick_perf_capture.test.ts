@@ -30,6 +30,7 @@ import { enterFreehold } from '../../src/sim/freehold/instance';
 import { Sim } from '../../src/sim/sim';
 import type { Entity, MobFamily } from '../../src/sim/types';
 import { terrainHeight } from '../../src/sim/world';
+import { WORLD_SEED } from '../../src/sim/world_seed';
 import { fakeWs, joinServer } from '../helpers/bare_client';
 
 // Compile-time assertion that T is exactly `never` (same idiom as the IWorld facet
@@ -304,9 +305,11 @@ describe('tick perf capture lifecycle', () => {
     // TickProfiler.add() ignores an unregistered phase, so a lap?.('name') in
     // sim.tick() with no matching SIM_LAP_PHASES entry would drop that timing without
     // failing anything. Pin the sim's real emissions against the registry.
+    // The full world on the realm's seed, which every GameServer here boots
+    // on: the whole overworld emits every lap, and seed 42 paid a second build.
     const emitted = new Set<string>();
     const sim = new Sim({
-      seed: 42,
+      seed: WORLD_SEED,
       playerClass: 'warrior',
       noPlayer: true,
       perfLap: (phase) => emitted.add(phase),
