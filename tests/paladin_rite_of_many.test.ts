@@ -15,12 +15,20 @@ import {
 import { ABILITIES } from '../src/sim/content/classes';
 import { Sim } from '../src/sim/sim';
 import type { Entity } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 type AnySim = Sim & Record<string, any>;
 
-// A Sunmender who has already earned the rite, at the level under test.
+// A Sunmender who has already earned the rite, at the level under test. The
+// fallen are party members the case places itself, so the rig stands on the
+// empty world.
 function sunmender(level: number): { sim: AnySim; paladin: Entity } {
-  const sim = new Sim({ seed: 616, playerClass: 'paladin', autoEquip: true }) as AnySim;
+  const sim = new Sim({
+    seed: 616,
+    playerClass: 'paladin',
+    autoEquip: true,
+    world: EMPTY_TEST_WORLD,
+  }) as AnySim;
   sim.setPlayerLevel(level);
   expect(sim.setSpec('holy')).toBe(true);
   // The rite is quest-earned, not trained: hand it the completed chain.
