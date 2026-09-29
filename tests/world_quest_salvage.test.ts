@@ -6,7 +6,7 @@ import {
   FARSHORE_SHIPWRECK_PLACEMENT,
 } from '../src/sim/content/farshore_shipwreck_layout';
 import { FARSHORE_SALVAGE_ENTITY_ID_START } from '../src/sim/content/world_quests';
-import { WORLD_QUESTS_BY_ID } from '../src/sim/data';
+import { BUILTIN_WORLD, WORLD_QUESTS_BY_ID } from '../src/sim/data';
 import { PLAYER_BODY_RADIUS, PLAYER_MAX_CLIMB_SLOPE, PLAYER_SWIM_DEPTH } from '../src/sim/pathfind';
 import { interactObjectCreditKey } from '../src/sim/quests/interact_object_credit';
 import { Sim } from '../src/sim/sim';
@@ -22,6 +22,9 @@ import { worldQuestCycleForResetDay } from '../src/sim/world_quests';
 import { WORLD_SEED } from '../src/sim/world_seed';
 
 const quest = WORLD_QUESTS_BY_ID.wq_farshore_salvage;
+// The debris is ground-object content, so every ground object stays (the hull
+// must still be absent among them); camps and NPCs only slowed each Sim.
+const WORLD = { ...BUILTIN_WORLD, camps: [], npcs: {} };
 
 function salvageEntity(id: number, x = 302.7, z = 117.75): Entity {
   return {
@@ -120,7 +123,12 @@ describe('Farshore authored shipwreck salvage', () => {
 
 describe('Farshore salvage placement', () => {
   it('keeps the hull decorative with no pickup entity or quest credit', () => {
-    const sim = new Sim({ seed: WORLD_SEED, playerClass: 'warrior', devCommands: true });
+    const sim = new Sim({
+      seed: WORLD_SEED,
+      playerClass: 'warrior',
+      devCommands: true,
+      world: WORLD,
+    });
     sim.resetDay = '2026-09-04';
     sim.chat('/dev salvage');
     sim.player.pos = sim.groundPos(302.7, 117.75);
@@ -130,7 +138,7 @@ describe('Farshore salvage placement', () => {
   });
 
   it('spawns the exact transforms with walkable collection spots inside the enlarged quest area', () => {
-    const sim = new Sim({ seed: WORLD_SEED, playerClass: 'warrior', noPlayer: true });
+    const sim = new Sim({ seed: WORLD_SEED, playerClass: 'warrior', noPlayer: true, world: WORLD });
     expect(quest.area).toEqual({ x: 347.6, z: 126.45, radius: 54 });
     for (const [index, p] of FARSHORE_SALVAGE_PLACEMENTS.entries()) {
       const object = sim.entities.get(FARSHORE_SALVAGE_ENTITY_ID_START + index);
@@ -160,7 +168,12 @@ describe('Farshore salvage placement', () => {
   it.each([0, 3])(
     'completes from eight unique pieces starting at index %i, never repeat clicks',
     (start) => {
-      const sim = new Sim({ seed: WORLD_SEED, playerClass: 'warrior', devCommands: true });
+      const sim = new Sim({
+        seed: WORLD_SEED,
+        playerClass: 'warrior',
+        devCommands: true,
+        world: WORLD,
+      });
       sim.resetDay = '2026-09-04';
       sim.chat('/dev salvage');
       const progress = sim.worldQuestLog.get(quest.id)!;
@@ -185,7 +198,12 @@ describe('Farshore salvage placement', () => {
   );
 
   it('restores earned hull credit and completes after seven other recoveries', () => {
-    const sim = new Sim({ seed: WORLD_SEED, playerClass: 'warrior', devCommands: true });
+    const sim = new Sim({
+      seed: WORLD_SEED,
+      playerClass: 'warrior',
+      devCommands: true,
+      world: WORLD,
+    });
     sim.resetDay = '2026-09-04';
     sim.chat('/dev salvage');
     const state = sim.serializeCharacter(sim.playerId)!;
@@ -198,7 +216,12 @@ describe('Farshore salvage placement', () => {
         creditedObjects: ['0@302.7,117.8'],
       },
     ];
-    const restored = new Sim({ seed: WORLD_SEED, playerClass: 'warrior', noPlayer: true });
+    const restored = new Sim({
+      seed: WORLD_SEED,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: WORLD,
+    });
     restored.resetDay = '2026-09-04';
     const pid = restored.addPlayer('warrior', 'Salvager', { state });
     const progress = restored.meta(pid)!.worldQuestLog.get(quest.id)!;
