@@ -14,9 +14,18 @@ import { describe, expect, it } from 'vitest';
 import { DELVES } from '../src/sim/data';
 import { Sim } from '../src/sim/sim';
 import { terrainHeight } from '../src/sim/world';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
+// The delve run spawns its own module mobs and objects in the instance, so
+// the overworld's camps and NPCs are pure overhead: the empty world serves.
 function makeParty(delveId: 'collapsed_reliquary' | 'drowned_litany', tier: 'normal' = 'normal') {
-  const sim = new Sim({ seed: 42, playerClass: 'warrior', autoEquip: true, noPlayer: true });
+  const sim = new Sim({
+    seed: 42,
+    playerClass: 'warrior',
+    autoEquip: true,
+    noPlayer: true,
+    world: EMPTY_TEST_WORLD,
+  });
   const a = sim.addPlayer('warrior', 'DoorA');
   const b = sim.addPlayer('warrior', 'DoorB');
   sim.partyInvite(b, a);
