@@ -72,7 +72,12 @@ describe('blocker wall colliders', () => {
     // program, docs/design/eastbrook-revamp/site-plan.md): the spawn moved to
     // the harbor quay, so the wall's x span anchors to PLAYER_START like its
     // z always has, instead of the old spawn's hardcoded -10..10.
+    // The walk meets only the wall: the camps and ground objects, spawned and
+    // ticked for nothing, stay out (the NPCs stay, since the collider build's
+    // furniture veto reads them).
     const content = world({
+      camps: [],
+      groundObjects: [],
       blockers: [
         {
           x1: PLAYER_START.x - 10,
