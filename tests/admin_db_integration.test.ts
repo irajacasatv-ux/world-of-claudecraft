@@ -46,9 +46,10 @@ describeDb('admin overview active/returning-account subqueries (real Postgres)',
           id SERIAL PRIMARY KEY,
           account_id INT NOT NULL REFERENCES accounts(id) ON DELETE CASCADE
         );
+        -- account_id's foreign key is added after the bulk load below.
         CREATE TABLE play_sessions (
           id SERIAL PRIMARY KEY,
-          account_id INT NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
+          account_id INT NOT NULL,
           started_at TIMESTAMPTZ NOT NULL DEFAULT now(),
           ended_at TIMESTAMPTZ
         );
@@ -119,6 +120,15 @@ describeDb('admin overview active/returning-account subqueries (real Postgres)',
                        ELSE now() - interval '30 minutes'
                   END
              FROM generate_series(1, 500000) AS n`,
+      );
+      // The foreign key lands AFTER the load: one validating scan instead of
+      // 500k per-row trigger checks (about 3.5 s of the load). The table ends
+      // in the same shape the inline REFERENCES gave it (a validated FK, the
+      // same one the planner can read), and the indexes above were still
+      // maintained row by row through the load.
+      await client.query(
+        `ALTER TABLE play_sessions ADD FOREIGN KEY (account_id)
+           REFERENCES accounts(id) ON DELETE CASCADE`,
       );
       await client.query('ANALYZE accounts');
       await client.query('ANALYZE play_sessions');
