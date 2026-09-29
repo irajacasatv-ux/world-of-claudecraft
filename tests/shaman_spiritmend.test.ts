@@ -1,11 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { Sim } from '../src/sim/sim';
-import {
-  type Aura,
-  type Entity,
-  PLAYER_INTEREST_DROP_RADIUS,
-  type SimEvent,
-} from '../src/sim/types';
+import type { Aura, Entity, SimEvent } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const MENDING_CURRENT_ID = 'shaman_mending_current';
 
@@ -25,19 +21,22 @@ function place(sim: Sim, entity: Entity, x: number, z: number): void {
   (sim as unknown as { rebucket(entity: Entity): void }).rebucket(entity);
 }
 
-// Production's idle culling (the server and offline client both set it): the
-// ambient overworld stays, so each seed keeps its draws, but idle mobs far from
-// the party stop costing a full AI update every tick. Each fresh seed builds its
-// own collider grid (about half a second), so only the two cases whose
-// assertions could ride a heal roll (the Lifespring deposit comparison and the
-// exact unleash burst) keep a seed of their own; the rest reuse the default.
-function setup(seed = 2820): SpiritmendSetup {
+// Every roll these cases assert on is pinned, not seeded: rng.next reads 0.9,
+// so no heal crits (every chance under 90 percent fails) and each heal roll sits
+// at 0.9 of its range, so a deposit comparison or an exact burst can no longer
+// ride a seed's draws. (The idle culling this file used before did not keep
+// each seed's draws either: culled mobs stop drawing, so the stream moved and
+// the cases passed on a new one.) With nothing left on the stream, one seed and
+// the empty test world serve every case: the party is all the file needs, and
+// each extra seed paid its own collider build.
+function setup(): SpiritmendSetup {
   const sim = new Sim({
-    seed,
+    seed: 2820,
     playerClass: 'shaman',
     noPlayer: true,
-    idleMobTickRadius: PLAYER_INTEREST_DROP_RADIUS,
+    world: EMPTY_TEST_WORLD,
   });
+  sim.rng.next = () => 0.9;
   const healerId = sim.addPlayer('shaman', 'Currentkeeper');
   const allyId = sim.addPlayer('warrior', 'Riverstone');
   const secondAllyId = sim.addPlayer('mage', 'Reed');
@@ -175,11 +174,11 @@ describe('Shaman v0.29 Spiritmend', () => {
   });
 
   it('makes Lifespring increase deposits without changing Tidecall charge count', () => {
-    const baseline = setup(2823);
+    const baseline = setup();
     castAndResolve(baseline.sim, baseline.healer, 'healing_wave', baseline.allyId);
     const baselineDeposit = currentFor(baseline.ally, baseline.healerId)?.value ?? 0;
 
-    const enhanced = setup(2823);
+    const enhanced = setup();
     castAndResolve(enhanced.sim, enhanced.healer, 'lifespring_weapon', enhanced.healerId, 1);
     castAndResolve(enhanced.sim, enhanced.healer, 'healing_wave', enhanced.allyId);
     const enhancedDeposit = currentFor(enhanced.ally, enhanced.healerId)?.value ?? 0;
@@ -227,7 +226,7 @@ describe('Shaman v0.29 Spiritmend', () => {
   });
 
   it('unleashes one owned Mending Current into a burst and one-hit guard', () => {
-    const { sim, healer, healerId, ally, allyId } = setup(2826);
+    const { sim, healer, healerId, ally, allyId } = setup();
     castAndResolve(sim, healer, 'lifespring_weapon', healerId, 1);
     ally.hp = ally.maxHp - 300;
     seedCurrent(ally, healerId, 200);
