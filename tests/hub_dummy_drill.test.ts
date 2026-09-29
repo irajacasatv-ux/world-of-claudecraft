@@ -29,11 +29,20 @@ import {
 import { startingAttackFor } from '../src/sim/tutorial/starting_attack';
 import type { Entity, QuestProgress } from '../src/sim/types';
 import { groundHeight, waterLevelAt } from '../src/sim/world';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const SEED = 42;
 
 function makeSim(playerClass: 'warrior' | 'mage' = 'warrior'): Sim {
   return new Sim({ seed: SEED, playerClass, autoEquip: true });
+}
+
+/** The credit arm reads only the quest log and the blow's two entities, and the
+ *  live-damage cases fight a dummy they spawn themselves, so they run on the
+ *  empty world (the overworld ticked around them cost about ten times as much
+ *  per tick). Hale's placement cases keep the full world they are about. */
+function makeBareSim(playerClass: 'warrior' | 'mage' = 'warrior'): Sim {
+  return new Sim({ seed: SEED, playerClass, autoEquip: true, world: EMPTY_TEST_WORLD });
 }
 
 function seedActiveDrill(sim: Sim): QuestProgress {
@@ -158,7 +167,7 @@ describe('isTrainingDummy', () => {
 
 describe('creditDummyDrill', () => {
   it('credits each blow and readies the quest at the count', () => {
-    const sim = makeSim();
+    const sim = makeBareSim();
     const qp = seedActiveDrill(sim);
     const p = sim.entities.get(sim.playerId)!;
     const need = QUESTS[DUMMY_DRILL_QUEST_ID].objectives[0].count;
@@ -171,7 +180,7 @@ describe('creditDummyDrill', () => {
   });
 
   it('draws no rng when it credits', () => {
-    const sim = makeSim();
+    const sim = makeBareSim();
     seedActiveDrill(sim);
     const p = sim.entities.get(sim.playerId)!;
     let draws = 0;
@@ -184,7 +193,7 @@ describe('creditDummyDrill', () => {
   });
 
   it('never overshoots the count', () => {
-    const sim = makeSim();
+    const sim = makeBareSim();
     const qp = seedActiveDrill(sim);
     const p = sim.entities.get(sim.playerId)!;
     const need = QUESTS[DUMMY_DRILL_QUEST_ID].objectives[0].count;
@@ -193,7 +202,7 @@ describe('creditDummyDrill', () => {
   });
 
   it('ignores blows on anything that is not the hub`s own dummy', () => {
-    const sim = makeSim();
+    const sim = makeBareSim();
     const qp = seedActiveDrill(sim);
     const p = sim.entities.get(sim.playerId)!;
     creditDummyDrill(sim.ctx, p, dummy('wolf'));
@@ -205,14 +214,14 @@ describe('creditDummyDrill', () => {
   });
 
   it('ignores a pet or mob source', () => {
-    const sim = makeSim();
+    const sim = makeBareSim();
     const qp = seedActiveDrill(sim);
     creditDummyDrill(sim.ctx, dummy('wolf'), dummy());
     expect(qp.counts[0]).toBe(0);
   });
 
   it('credits nothing when the lesson is not active', () => {
-    const sim = makeSim();
+    const sim = makeBareSim();
     const p = sim.entities.get(sim.playerId)!;
     creditDummyDrill(sim.ctx, p, dummy());
     expect(sim.players.get(sim.playerId)!.questLog.has(DUMMY_DRILL_QUEST_ID)).toBe(false);
@@ -221,7 +230,7 @@ describe('creditDummyDrill', () => {
 
 describe('the live damage path credits the drill at a fresh, low character level', () => {
   it('a plain autoattack on the real hub dummy moves the count (the button is not the lesson)', () => {
-    const sim = makeSim('warrior');
+    const sim = makeBareSim('warrior');
     expect(sim.player.level).toBe(1); // the hub is a level-1 character's first lesson
     const qp = seedActiveDrill(sim);
     const target = spawnDummyBesidePlayer(sim, 90301);
@@ -242,7 +251,7 @@ describe('the live damage path credits the drill at a fresh, low character level
   });
 
   it('a low-level mage cast on the real hub dummy credits too', () => {
-    const sim = makeSim('mage');
+    const sim = makeBareSim('mage');
     expect(sim.player.level).toBe(1);
     const qp = seedActiveDrill(sim);
     const target = spawnDummyBesidePlayer(sim, 90302);
