@@ -9,12 +9,19 @@ import { ITEMS } from '../src/sim/data';
 import { resolveEquipSlot } from '../src/sim/equipment_rules';
 import { Sim } from '../src/sim/sim';
 import type { Entity } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 type AnySim = Sim & Record<string, any>;
 type AnyEntity = Entity & Record<string, any>;
 
+// Equipping reads only the added players' own gear and bags: the empty world serves.
 function makeSim(seed = 7): AnySim {
-  return new Sim({ seed, playerClass: 'warrior', noPlayer: true }) as AnySim;
+  return new Sim({
+    seed,
+    playerClass: 'warrior',
+    noPlayer: true,
+    world: EMPTY_TEST_WORLD,
+  }) as AnySim;
 }
 
 function addCapped(sim: AnySim, cls: 'warrior' | 'mage', name: string): number {
