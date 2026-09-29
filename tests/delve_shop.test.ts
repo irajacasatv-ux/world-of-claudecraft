@@ -9,11 +9,13 @@ import { DELVE_SHOPS, DELVES, ITEMS } from '../src/sim/data';
 import { Sim } from '../src/sim/sim';
 import type { PlayerClass } from '../src/sim/types';
 import { terrainHeight } from '../src/sim/world';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // autoEquip:false so a bought wearable stays in the bags where we can count it
-// (mirrors the chest-loot test in delves.test.ts).
+// (mirrors the chest-loot test in delves.test.ts). The shop is gated on the
+// delve door's position, not on an NPC, so the empty world serves.
 const makeSim = (cls: PlayerClass = 'warrior', seed = 7) =>
-  new Sim({ seed, playerClass: cls, autoEquip: false });
+  new Sim({ seed, playerClass: cls, autoEquip: false, world: EMPTY_TEST_WORLD });
 const metaOf = (sim: Sim) => (sim as any).players.get(sim.playerId);
 const countOf = (sim: Sim, id: string) =>
   sim.inventory.filter((s) => s.itemId === id).reduce((n, s) => n + s.count, 0);
