@@ -65,6 +65,16 @@ function makeSim(seed = 99): AnySim {
   }) as AnySim;
 }
 
+// A sweep over loot outcomes: one world seed (built once, then about a
+// millisecond per Sim) with the shared rng advanced `offset` draws, so every
+// iteration rolls from a different stream position without paying a fresh
+// seed's world build.
+function makeSimAtDraw(offset: number): AnySim {
+  const sim = makeSim();
+  for (let draw = 0; draw < offset; draw++) sim.rng.next();
+  return sim;
+}
+
 function teleport(sim: AnySim, e: AnyEntity, x: number, z: number): void {
   e.pos = { x, y: e.pos.y, z };
   e.prevPos = { ...e.pos };
@@ -477,7 +487,7 @@ describe('dungeons: door-trigger entry/exit', () => {
 
 describe('dungeons: heroic difficulty', () => {
   it('resets a cleared durable solo claim before starting the selected heroic difficulty', () => {
-    const sim = makeSim(456);
+    const sim = makeSim();
     const firstPid = sim.addPlayer('warrior', 'Switcher', { characterId: 77 });
 
     enterDungeon(sim.ctx, 'hollow_crypt', firstPid);
@@ -1064,7 +1074,7 @@ describe('dungeons: heroic difficulty', () => {
   });
 
   it('claims heroic Hollow Crypt as a fixed heroic instance with level-22 transformed mobs', () => {
-    const heroic = makeSim(123);
+    const heroic = makeSim();
     const heroicPid = heroic.addPlayer('warrior', 'Hero');
     heroic.setDungeonDifficulty('heroic', heroicPid);
 
@@ -1122,7 +1132,7 @@ describe('dungeons: heroic difficulty', () => {
     expect(heroicMorthen.auras.some((a: any) => a.id === 'test_stun')).toBe(false);
     expect(heroicMorthen.auras.some((a: any) => a.id === 'test_slow')).toBe(false);
 
-    const normal = makeSim(123);
+    const normal = makeSim();
     const normalPid = normal.addPlayer('warrior', 'Normal');
     enterDungeon(normal.ctx, 'hollow_crypt', normalPid);
     const normalInst = claimedDungeon(normal, 'hollow_crypt', 'normal');
@@ -1154,7 +1164,7 @@ describe('dungeons: heroic difficulty', () => {
     ] as const;
 
     for (const [dungeonId, bossId] of finalBosses) {
-      const sim = makeSim(321);
+      const sim = makeSim();
       const pid = sim.addPlayer('warrior', `Hero-${dungeonId}`);
       sim.setDungeonDifficulty('heroic', pid);
 
@@ -1178,7 +1188,7 @@ describe('dungeons: heroic difficulty', () => {
   });
 
   it('a live claim wins over a flipped selection; the new difficulty applies after the reset', () => {
-    const sim = makeSim(456);
+    const sim = makeSim();
     const pid = sim.addPlayer('warrior', 'Switcher');
 
     enterDungeon(sim.ctx, 'hollow_crypt', pid);
@@ -1251,7 +1261,7 @@ describe('dungeons: heroic difficulty', () => {
   });
 
   it('boss adds summoned in a heroic instance spawn as level-22 transforms', () => {
-    const sim = makeSim(31);
+    const sim = makeSim();
     const pid = sim.addPlayer('warrior', 'Adds');
     sim.setDungeonDifficulty('heroic', pid);
     enterDungeon(sim.ctx, 'sunken_bastion', pid);
@@ -1284,7 +1294,7 @@ describe('dungeons: heroic difficulty', () => {
     // the landed damage must double (within one point of rounding). This pins
     // the fire-site multiply that heroic spawns rely on.
     const run = (mult?: number): number => {
-      const sim = makeSim(444);
+      const sim = makeSim();
       const pid = sim.addPlayer('warrior', 'Pulse');
       enterDungeon(sim.ctx, 'hollow_crypt', pid);
       const inst = claimedDungeon(sim, 'hollow_crypt', 'normal');
@@ -1372,7 +1382,7 @@ describe('dungeons: heroic marks', () => {
   });
 
   it('grants Heroic Marks directly at kill time without requiring a corpse loot action', () => {
-    const sim = makeSim(9);
+    const sim = makeSim();
     const leader = sim.addPlayer('warrior', 'Lead');
     const member = sim.addPlayer('mage', 'Mate');
     sim.partyInvite(member, leader);
@@ -1416,7 +1426,7 @@ describe('dungeons: heroic marks', () => {
   });
 
   it('drops no marks from a normal final boss or heroic trash', () => {
-    const normal = makeSim(10);
+    const normal = makeSim();
     const nPid = normal.addPlayer('warrior', 'Norm');
     enterDungeon(normal.ctx, 'hollow_crypt', nPid);
     const nInst = claimedDungeon(normal, 'hollow_crypt', 'normal');
@@ -1437,7 +1447,7 @@ describe('dungeons: heroic marks', () => {
     // A NORMAL final-boss kill also never grants the daily lockout.
     expect(normal.players.get(nPid)!.raidLockouts.size).toBe(0);
 
-    const heroic = makeSim(11);
+    const heroic = makeSim();
     const hPid = heroic.addPlayer('warrior', 'Hero');
     heroic.setDungeonDifficulty('heroic', hPid);
     enterDungeon(heroic.ctx, 'hollow_crypt', hPid);
@@ -1487,20 +1497,20 @@ describe('dungeons: heroic boss drops', () => {
 
   it('a heroic final-boss corpse carries one equipment item', () => {
     const dropped = new Set<string>();
-    for (let seed = 1; seed <= 8; seed++) {
-      const sim = makeSim(seed);
+    for (let offset = 1; offset <= 8; offset++) {
+      const sim = makeSimAtDraw(offset);
       const boss = killFinalBoss(sim, 'hollow_crypt', 'morthen');
       const gear = (boss.loot?.items ?? []).filter(
         (entry) => ITEMS[entry.itemId]?.slot && ITEMS[entry.itemId]?.kind !== 'bag',
       );
-      expect(gear, 'seed ' + seed).toHaveLength(1);
+      expect(gear, 'offset ' + offset).toHaveLength(1);
       dropped.add(gear[0].itemId);
     }
     expect(dropped.size).toBeGreaterThan(1);
   });
 
   it('normal final bosses and heroic trash never drop the heroic epics', () => {
-    const normal = makeSim(3);
+    const normal = makeSim();
     const nPid = normal.addPlayer('warrior', 'Norm');
     enterDungeon(normal.ctx, 'hollow_crypt', nPid);
     const nBoss = mobInInstance(
@@ -1583,10 +1593,10 @@ describe('dungeons: heroic boss drops', () => {
 
   it('a heroic five-man really sheds a farm pattern, and a normal one never can', () => {
     // The drive behind the table pin above: the group is not merely authored,
-    // it resolves through the real heroic claim. Seeds are swept until a hit
-    // lands because the rate is 0.08 per clear; the sweep is bounded and the
-    // arm states what it found, so a group that stopped resolving fails here
-    // rather than staying green on a table read alone.
+    // it resolves through the real heroic claim. Rng stream positions are
+    // swept until a hit lands because the rate is 0.08 per clear; the sweep is
+    // bounded and the arm states what it found, so a group that stopped
+    // resolving fails here rather than staying green on a table read alone.
     const patternIds = new Set(
       HEROIC_BOSS_LOOT.morthen
         .filter((e) => e.rollGroup === FARM_HEROIC_PATTERN_GROUP)
@@ -1594,12 +1604,12 @@ describe('dungeons: heroic boss drops', () => {
     );
     expect(patternIds.size).toBe(2);
     let heroicHits = 0;
-    for (let seed = 1; seed <= 120; seed++) {
-      const sim = makeSim(seed);
+    for (let offset = 1; offset <= 120; offset++) {
+      const sim = makeSimAtDraw(offset);
       const boss = killFinalBoss(sim, 'hollow_crypt', 'morthen');
       const hits = ((boss.loot?.items ?? []) as any[]).filter((s) => patternIds.has(s.itemId));
       // At most ONE per kill: the group is partitioned, never compounded.
-      expect(hits.length, `seed ${seed}`).toBeLessThanOrEqual(1);
+      expect(hits.length, `offset ${offset}`).toBeLessThanOrEqual(1);
       heroicHits += hits.length;
     }
     expect(heroicHits, 'a 0.08 group over 120 heroic clears must land some hits').toBeGreaterThan(
@@ -1607,8 +1617,8 @@ describe('dungeons: heroic boss drops', () => {
     );
     // The negative arm: the same boss on NORMAL never sheds one, because the
     // whole heroic block only runs for a heroic claim.
-    for (let seed = 1; seed <= 30; seed++) {
-      const sim = makeSim(seed);
+    for (let offset = 1; offset <= 30; offset++) {
+      const sim = makeSimAtDraw(offset);
       const pid = sim.addPlayer('warrior', 'Norm');
       enterDungeon(sim.ctx, 'hollow_crypt', pid);
       const boss = mobInInstance(sim, claimedDungeon(sim, 'hollow_crypt', 'normal'), 'morthen');
@@ -1623,7 +1633,7 @@ describe('dungeons: heroic boss drops', () => {
       );
       expect(
         ((boss.loot?.items ?? []) as any[]).some((s) => patternIds.has(s.itemId)),
-        `normal seed ${seed}`,
+        `normal offset ${offset}`,
       ).toBe(false);
     }
   }, 60_000);
@@ -1681,8 +1691,8 @@ describe('dungeons: heroic boss drops', () => {
 
     const droppedExclusives = new Set<string>();
     const droppedVariants = new Set<string>();
-    for (let seed = 1; seed <= 8; seed++) {
-      const sim = makeSim(seed);
+    for (let offset = 1; offset <= 8; offset++) {
+      const sim = makeSimAtDraw(offset);
       const tank = sim.addPlayer('warrior', 'Tank');
       sim.players.get(tank)!.questsDone.add('q_nythraxis_bound_guardian');
       for (let i = 0; i < 4; i++) {
@@ -1707,7 +1717,7 @@ describe('dungeons: heroic boss drops', () => {
       const items = (boss.loot?.items ?? []) as any[];
       // Exactly one heroic-only exclusive per kill (one roll group summing to 1.0).
       const exclusives = items.filter((s) => exclusiveIds.includes(s.itemId));
-      expect(exclusives.length, `seed ${seed} exclusives`).toBe(1);
+      expect(exclusives.length, `offset ${offset} exclusives`).toBe(1);
       for (const s of exclusives) droppedExclusives.add(s.itemId);
       // The set-piece / legendary drops are upgraded to their heroic variants.
       for (const s of items)
@@ -1744,7 +1754,7 @@ describe('dungeons: heroic daily lockouts', () => {
   }
 
   it('a heroic clear locks the heroic claim for the day but not the normal run', () => {
-    const sim = makeSim(5);
+    const sim = makeSim();
     const pid = sim.addPlayer('warrior', 'Raider');
     heroicClear(sim, pid, 'hollow_crypt', 'morthen');
 
@@ -1768,7 +1778,7 @@ describe('dungeons: heroic daily lockouts', () => {
   it('rewards again after the heroic lockout reset even when the UTC day is unchanged', () => {
     let now = 1_000_000;
     const sim = new Sim({
-      seed: 5,
+      seed: 99,
       playerClass: 'warrior',
       noPlayer: true,
       lockoutNowMs: () => now,
@@ -1793,7 +1803,7 @@ describe('dungeons: heroic daily lockouts', () => {
   });
 
   it('the kill locks EVERY current party member, wherever they stand', () => {
-    const sim = makeSim(5);
+    const sim = makeSim();
     const leader = sim.addPlayer('warrior', 'Lead');
     const camper = sim.addPlayer('mage', 'Camper');
     sim.partyInvite(camper, leader);
@@ -1833,7 +1843,7 @@ describe('dungeons: heroic daily lockouts', () => {
   });
 
   it('mails a healer waiting back at camp who entered this run, and never twice', () => {
-    const sim = makeSim(5);
+    const sim = makeSim();
     const leader = sim.addPlayer('warrior', 'Lead');
     const healer = sim.addPlayer('priest', 'Heals');
     sim.partyInvite(healer, leader);
@@ -1867,7 +1877,7 @@ describe('dungeons: heroic daily lockouts', () => {
   });
 
   it("uses a released participant's corpse position for loot and Heroic Mark eligibility", () => {
-    const sim = makeSim(5);
+    const sim = makeSim();
     const leader = sim.addPlayer('warrior', 'Lead');
     const member = sim.addPlayer('mage', 'Fallen');
     sim.partyInvite(member, leader);
@@ -1896,7 +1906,7 @@ describe('dungeons: heroic daily lockouts', () => {
   });
 
   it('a member who left the party mid-run but stayed inside is still locked by the kill', () => {
-    const sim = makeSim(5);
+    const sim = makeSim();
     const leader = sim.addPlayer('warrior', 'Lead');
     const buddy = sim.addPlayer('priest', 'Buddy');
     const quitter = sim.addPlayer('mage', 'Quit');
@@ -1934,7 +1944,7 @@ describe('dungeons: heroic daily lockouts', () => {
   });
 
   it("locks a released member who leaves the party using their corpse's instance position", () => {
-    const sim = makeSim(5);
+    const sim = makeSim();
     const leader = sim.addPlayer('warrior', 'Lead');
     const buddy = sim.addPlayer('priest', 'Buddy');
     const quitter = sim.addPlayer('mage', 'Quit');
@@ -1985,7 +1995,7 @@ describe('dungeons: heroic daily lockouts', () => {
   });
 
   it('ignores a released corpse bound to an older instance claim', () => {
-    const sim = makeSim(5);
+    const sim = makeSim();
     const leader = sim.addPlayer('warrior', 'Lead');
     const buddy = sim.addPlayer('priest', 'Buddy');
     const stale = sim.addPlayer('mage', 'Stale');
@@ -2022,7 +2032,7 @@ describe('dungeons: heroic daily lockouts', () => {
   });
 
   it('an uncredited final-boss death still locks the owning party (no marks, no credit)', () => {
-    const sim = makeSim(5);
+    const sim = makeSim();
     const leader = sim.addPlayer('warrior', 'Lead');
     const member = sim.addPlayer('mage', 'Mate');
     sim.partyInvite(member, leader);
@@ -2054,7 +2064,7 @@ describe('dungeons: heroic daily lockouts', () => {
   });
 
   it('a locked party cannot ride an unlocked recruit into a fresh heroic claim', () => {
-    const sim = makeSim(5);
+    const sim = makeSim();
     const leader = sim.addPlayer('warrior', 'Lead');
     const member = sim.addPlayer('mage', 'Mate');
     sim.partyInvite(member, leader);
@@ -2102,7 +2112,7 @@ describe('dungeons: heroic daily lockouts', () => {
   });
 
   it('a tap-runner who left the party and the instance is still locked by the kill', () => {
-    const sim = makeSim(5);
+    const sim = makeSim();
     const leader = sim.addPlayer('warrior', 'Lead');
     const runner = sim.addPlayer('mage', 'Runner');
     const buddy = sim.addPlayer('priest', 'Buddy');
@@ -2150,7 +2160,7 @@ describe('dungeons: heroic daily lockouts', () => {
   });
 
   it('a locked player cannot enter a clear they took no part in, even after its boss dies', () => {
-    const sim = makeSim(5);
+    const sim = makeSim();
     // A clears heroic solo and is locked; the claim frees.
     const a = sim.addPlayer('warrior', 'LockedA');
     sim.setDungeonDifficulty('heroic', a);
@@ -2198,7 +2208,7 @@ describe('dungeons: heroic daily lockouts', () => {
   });
 
   it('a locked player still walks back into the cleared live claim (corpse-run / loot)', () => {
-    const sim = makeSim(5);
+    const sim = makeSim();
     const pid = sim.addPlayer('warrior', 'Raider');
     sim.setDungeonDifficulty('heroic', pid);
     enterDungeon(sim.ctx, 'hollow_crypt', pid);
@@ -2225,7 +2235,7 @@ describe('dungeons: heroic Nythraxis raid arena', () => {
   // selects the difficulty, tank claims the arena and everyone walks in (the
   // per-run entry record is what the heroic mail arm pays against).
   function raidSetup(difficulty: 'normal' | 'heroic') {
-    const sim = makeSim(77);
+    const sim = makeSim();
     const tank = sim.addPlayer('warrior', 'Tank');
     sim.players.get(tank)!.questsDone.add('q_nythraxis_bound_guardian');
     const raiders: number[] = [tank];
