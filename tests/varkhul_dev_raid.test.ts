@@ -5,9 +5,18 @@ import { Sim } from '../src/sim/sim';
 import type { Entity } from '../src/sim/types';
 import { varkhulForgeBeamAssignments } from '../src/sim/varkhul_forge_beams';
 import { VARKHUL_FORGE_LOCAL_POS } from '../src/sim/varkhul_forge_intermission';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
+// The practice raid is built inside the Inner Crucible instance, so the overworld's
+// camps, NPCs and ground objects buy nothing: every Sim runs on the empty world.
 function devSim(devCommands = true): Sim {
-  const sim = new Sim({ seed: 6112, playerClass: 'warrior', autoEquip: true, devCommands });
+  const sim = new Sim({
+    seed: 6112,
+    playerClass: 'warrior',
+    autoEquip: true,
+    devCommands,
+    world: EMPTY_TEST_WORLD,
+  });
   sim.setPlayerLevel(20);
   return sim;
 }
