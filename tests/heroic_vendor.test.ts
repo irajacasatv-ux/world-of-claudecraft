@@ -26,9 +26,13 @@ import { VENDOR_TEST_WORLD } from './sim_shared';
 type AnySim = Sim & Record<string, any>;
 type AnyEntity = Entity & Record<string, any>;
 
-function makeSim(seed = 5): AnySim {
+// One seed for every Sim in the file: a seed the file has already built reuses
+// its world, and no case here depends on which seed it runs.
+const SEED = 5;
+
+function makeSim(): AnySim {
   return new Sim({
-    seed,
+    seed: SEED,
     playerClass: 'warrior',
     noPlayer: true,
     world: VENDOR_TEST_WORLD,
@@ -556,7 +560,7 @@ describe('heroic mark reward persistence', () => {
   }
 
   it('persists a kill-time mark and its deed telemetry without depending on the corpse', () => {
-    const sim = makeSim(21);
+    const sim = makeSim();
     sim.utcDay = '2026-07-07';
     const pid = sim.addPlayer('warrior', 'Daily');
     const morthen = killHeroicMorthen(sim, pid);
@@ -577,7 +581,7 @@ describe('heroic mark reward persistence', () => {
     let now = 0;
     let nextReset = DAY_MS;
     const sim = new Sim({
-      seed: 22,
+      seed: SEED,
       playerClass: 'warrior',
       noPlayer: true,
       world: VENDOR_TEST_WORLD,
@@ -602,7 +606,7 @@ describe('heroic mark reward persistence', () => {
   });
 
   it('unlocks the Full Circuit deed from four distinct rewards in one reset window', () => {
-    const sim = makeSim(25);
+    const sim = makeSim();
     const pid = sim.addPlayer('warrior', 'Circuit');
     const meta = sim.players.get(pid)!;
     const circuit = [
@@ -634,12 +638,12 @@ describe('heroic mark reward persistence', () => {
   });
 
   it('continues to load and preserve a pre-hotfix heroicDaily payload', () => {
-    const sim = makeSim(23);
+    const sim = makeSim();
     const pid = sim.addPlayer('warrior', 'Saver');
     const state = sim.serializeCharacter(pid)!;
     state.heroicDaily = { date: '2026-07-07', marked: ['hollow_crypt'] };
 
-    const sim2 = makeSim(24);
+    const sim2 = makeSim();
     const pid2 = sim2.addPlayer('warrior', 'Saver', { state });
     const meta2 = sim2.players.get(pid2) as any;
     expect(meta2.heroicDaily.date).toBe('2026-07-07');
