@@ -3,6 +3,7 @@ import { ITEMS } from '../src/sim/data';
 import { requiredLevelFor } from '../src/sim/item_level_req';
 import { Sim } from '../src/sim/sim';
 import type { SimEvent } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // knight_commanders_greaves is a rare, cloth-armor legs piece (any class can
 // wear cloth) with NO class restriction, so it isolates the level gate from
@@ -11,8 +12,15 @@ import type { SimEvent } from '../src/sim/types';
 const HELM = 'knight_commanders_greaves';
 const REQUIRED_LEVEL = 13;
 
+// The gate reads only the tester's level, gear and bags: the empty world serves.
 function freshWarrior(level: number) {
-  const sim = new Sim({ seed: 7, playerClass: 'warrior', noPlayer: true, autoEquip: false });
+  const sim = new Sim({
+    seed: 7,
+    playerClass: 'warrior',
+    noPlayer: true,
+    autoEquip: false,
+    world: EMPTY_TEST_WORLD,
+  });
   const pid = sim.addPlayer('warrior', 'Tester');
   sim.setPlayerLevel(level, pid);
   sim.addItem(HELM, 1, pid);
@@ -59,7 +67,13 @@ describe('equip level requirement', () => {
 
   it('leaves an uncommon leveling green equippable at level 1', () => {
     // cryptbone_helm is uncommon: a leveling green, deliberately ungated.
-    const sim = new Sim({ seed: 7, playerClass: 'warrior', noPlayer: true, autoEquip: false });
+    const sim = new Sim({
+      seed: 7,
+      playerClass: 'warrior',
+      noPlayer: true,
+      autoEquip: false,
+      world: EMPTY_TEST_WORLD,
+    });
     const pid = sim.addPlayer('warrior', 'Tester');
     sim.addItem('cryptbone_helm', 1, pid);
     sim.equipItem('cryptbone_helm', pid);
@@ -76,7 +90,12 @@ describe('equip level requirement', () => {
   });
 
   it('auto-equip skips gear above the level silently (no equip, no error toast)', () => {
-    const sim = new Sim({ seed: 7, playerClass: 'warrior', noPlayer: true });
+    const sim = new Sim({
+      seed: 7,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const pid = sim.addPlayer('warrior', 'Tester', { autoEquip: true });
     sim.setPlayerLevel(REQUIRED_LEVEL - 1, pid); // below the piece's required level
     sim.drainEvents();
