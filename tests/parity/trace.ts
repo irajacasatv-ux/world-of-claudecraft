@@ -302,7 +302,7 @@ export const META_EXCLUDE: ReadonlySet<string> = new Set([
   // What IS still pinned: the claim itself. The freehold_claim scenario
   // stamps two players with one key; its golden pins the entry pose inside
   // the room's band and the entity stream (the tracked exit entity and its
-  // despawn at the reap), and tests/parity/coverage_d.test.ts pins the shared
+  // despawn at the reap), and tests/parity/coverage_cases_d.ts pins the shared
   // slot from rec.notes (notes are not serialized into the golden), so a
   // key-resolution regression surfaces there rather than hiding behind this
   // row.

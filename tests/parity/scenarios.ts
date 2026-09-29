@@ -6043,7 +6043,7 @@ function professionsToolEffectSlot(seed = 1): Scenario {
 // skill-1 expansion is fine-free (resolveFarmHarvest(4, 1) = { count: 3,
 // fine: 0 }, toniced count 5), so the toniced beat below adds exactly one
 // produce grant and no fine line. Exported for the coverage suite's in-arm
-// non-vacuity guard (tests/parity/coverage_d.test.ts).
+// non-vacuity guard (tests/parity/coverage_cases_d.ts).
 export const FARM_TONIC_WINNER_YIELD_SEED = 4;
 
 // The Phase 11 (bw) golden-WIN beat's yield seed, probed the same way at the
@@ -6052,7 +6052,7 @@ export const FARM_TONIC_WINNER_YIELD_SEED = 4;
 // fine: 1 }, so BOTH grades are nonzero and the five-fold golden multiplier
 // reaches base and fine on one seed (at a single-grade seed the fine half of
 // the win would prove nothing, the M8 lesson again). Exported for the
-// coverage suite's in-arm non-vacuity guard (tests/parity/coverage_d.test.ts).
+// coverage suite's in-arm non-vacuity guard (tests/parity/coverage_cases_d.ts).
 export const FARM_GOLDEN_WIN_YIELD_SEED = 7;
 
 /** How many real plant-plus-withered-harvest cycles walk the shared stream to
@@ -6298,7 +6298,7 @@ function professionsFarmingSession(seed = 1): Scenario {
       // four while minting no CROP produce, no skill gains, no golden win,
       // and no farmReady (the plot is planted, ripened, and harvested inside
       // one drive step, so the 1 Hz sweep never observes it). The wither
-      // payout's two husks per cycle ARE minted and expected: coverage_d
+      // payout's two husks per cycle ARE minted and expected: coverage_cases_d
       // pins every padding farmWithered event and the husk pouch total,
       // composed against FARM_GOLDEN_PADDING_CYCLES rather than a literal.
       // Withering NEEDS
@@ -6346,7 +6346,7 @@ function professionsFarmingSession(seed = 1): Scenario {
       // PAYING band and really grants a highland_barley_seed, which is what
       // upgrades the scenario-level grant proof from 0 === 0 to a real grant.
       // The exact band is the recorded truth of the golden and moves with any
-      // appended draw; coverage_d states which one it landed in. Its golden
+      // appended draw; coverage_cases_d states which one it landed in. Its golden
       // roll is a recorded loss, so no bonus rides this beat.
       meta.gatheringProficiency.farming = 0; // the padding wither window again
       sim.addItem('vale_wheat_seed', 1, pid);

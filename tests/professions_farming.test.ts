@@ -540,7 +540,7 @@ describe('FARMING_GAIN_SCHEDULE and the composed ceiling', () => {
     // THE TOP BAND, added at the 11e QA. The comment above has always claimed
     // tier 3 and 4 crops teach to 100, and until now nothing asserted it: the
     // only other pin on this composition, the farming_session coverage arm in
-    // tests/parity/coverage_d.test.ts, derives its expectation by CALLING
+    // tests/parity/coverage_cases_d.ts, derives its expectation by CALLING
     // farmingHarvestGainAt, so both sides moved together and it could not fail.
     // Proved by mutation at the 11e QA: changing the tail gain 0.03125 ->
     // 0.0625 left tests/parity/coverage_c.test.ts (the arm's home until the
