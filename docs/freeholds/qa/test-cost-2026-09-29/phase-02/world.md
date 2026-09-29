@@ -2,7 +2,8 @@
 
 Scope: the 27 files of the "world" cluster (every suite that builds or ticks the whole
 overworld around one player, plus the streaming and route suites beside them), heaviest CI
-first. Baseline tip `a2bd94a83e` (feature/freeholds).
+first. Baseline tip `a2bd94a83e` (feature/freeholds). Landed on feature/freeholds as
+`13acee9c92` to `1df1006d47`; the fixes after review are under "Review fix round".
 
 ## Method
 
@@ -53,24 +54,24 @@ Pins edited with them: `tests/world_population_shards.test.ts` (the rounds text)
 | cannon_endless_session | 43 | SLIM | cull; the silent early return on a failed seat is now an assertion | 27.14, 2.92 | 2/2 (`src/sim/vehicles.ts`: endless fall locks out, endless ladder row dropped) | |
 | world_population_invariant_b | 41 | SLIM | as _c | 23.72, 2.96 | family note | |
 | transport_deck | 38 | SLIM | cull | 17.51, 3.92 | 1/1 (deck carry removed) | |
-| world_quests | 38 | SLIM | one seed (about 30 fresh seeds before) | 17.56, 2.27 | 2/4 (`src/sim/world_quests.ts`: kill credit for any template, for a mob outside the area); survived: the area-entry level gate and the claim skip, each also enforced by another arm of the module (not traced to one) | |
-| wickharbor_harbor | 38 | SLIM | cull | 32.19, 4.23 | 1/2 (`src/sim/harbor_structures.ts`: harbor rails off the grid); survived: `MAX_STEP_HEIGHT` 0.9 to 0.3 (the routes climb the decks through groundHeight, `src/sim/gale_harbor.ts`, not over a collider step) | |
-| emerald_deck_escape | 37 | MOVE TO NIGHTLY | wedge sweep 1.5 yd per PR, 0.75 yd under the flag | 15.45, 6.04 | 2/2 on the sweep (`src/sim/pathfind.ts` climb limit 1.5 to 0.3, killed at PR and at nightly depth); walkway bed removed in `src/sim/world.ts` killed by 3 point cases; the rim ease undone killed by 1 point case; neither terrain mutant is caught by the sweep at either depth | |
+| world_quests | 38 | SLIM | one seed (about 30 fresh seeds before) | 17.56, 2.27 | 2/4 (`src/sim/world_quests.ts`: kill credit for any template, for a mob outside the area); survived: the area-entry level gate and the claim skip; each also survives on the base test file (`a2bd94a83e`), so no coverage was lost | |
+| wickharbor_harbor | 38 | SLIM | cull | 32.19, 4.23 | 1/2 (`src/sim/harbor_structures.ts`: harbor rails off the grid); survived: `MAX_STEP_HEIGHT` 0.9 to 0.3, which also survives on the base test file (`a2bd94a83e`), so no coverage was lost (the routes climb the decks through groundHeight, `src/sim/gale_harbor.ts`) | |
+| emerald_deck_escape | 37 | MOVE TO NIGHTLY | wedge sweep 1.5 yd per PR, 0.75 yd under the flag | 15.45, 6.04 | on the sweep: `src/sim/pathfind.ts` climb limit 1.5 to 0.3 killed at PR and nightly depth; a walled pocket added in `src/sim/harbor_structures.ts` on the beach, off the PR grid: 2.6 yd inside killed at PR depth, 1.0 yd inside (body-sized) passes at PR depth and is killed at nightly depth, so the PR sweep is a smoke check and the local-wedge class is nightly; walkway bed removed in `src/sim/world.ts` killed by 3 point cases; the rim ease undone killed by 1 point case; neither terrain mutant is caught by the sweep at either depth | |
 | terrain_streaming | 31 | KEEP | none | 14.6 (baseline run) | | each case builds real chunks under its own mocks and pool arm; no shared fixture without merging module registries |
 | hill | 31 | KEEP | none | 14.4 (baseline run) | | already a scoped world; the ticks are the contest and accrual windows it asserts |
-| world_quest_glider | 27 | SLIM | cull (scoped and restored worlds) | 14.94, 2.39 | 2/4 (`src/sim/mob/locomotion.ts`: mobs aggro a gliding player, killed on the populated world; `src/sim/world_quest_glider.ts`: practice flag never set, killed on the restored world); survived: the practice landing and practice save arms (another arm keeps the row completed and unpaid; not traced) | |
+| world_quest_glider | 27 | SLIM | cull (scoped and restored worlds) | 14.94, 2.39 | 2/4 (`src/sim/mob/locomotion.ts`: mobs aggro a gliding player, killed on the populated world; `src/sim/world_quest_glider.ts`: practice flag never set, killed on the restored world); survived: the practice landing and practice save arms; each also survives on the base test file (`a2bd94a83e`), so no coverage was lost | |
 | lake_shores | 27 | MOVE TO NIGHTLY | seed 20061 per PR, 42 and 20061 under the flag | 9.65, 5.54 | 2/2 (`src/sim/world.ts` lake shore grading off: killed on 20061 at PR depth and on 42 at nightly depth) | |
 | world_population_invariant_a | 26 | SLIM | as _c | 23.41, 4.05 | family note | |
 | world_population_invariant_d | 24 | SLIM | as _c | 11.70, 1.88 | family note | |
-| wickharbor_wharf | 24 | SLIM | cull | 12.14, 2.47 | 1/2 (wharf colliders off the grid); survived: the step-height mutant, as above | |
-| wyrmwatch_harbor | 20 | SLIM | cull | 14.83, 2.48 | 1/2 (`src/sim/wyrmwatch_harbor.ts`: rails removed); survived: the step-height mutant | |
+| wickharbor_wharf | 24 | SLIM | cull | 12.14, 2.47 | 1/2 (wharf colliders off the grid); survived: the step-height mutant, which also survives on the base | |
+| wyrmwatch_harbor | 20 | SLIM | cull | 14.83, 2.48 | 1/2 (`src/sim/wyrmwatch_harbor.ts`: rails removed); survived: the step-height mutant, which also survives on the base | |
 | freehold_gate_clearance | 17 | SLIM | cull on the playerless running realm | 10.60, 5.31 | 1/1 (`src/sim/sim.ts`: NPCs drift a millimetre a tick) | |
 | world_quest_ambush | 17 | SLIM | cull | 6.63, 2.07 | 1/1 (`src/sim/world_quest_ambush.ts`: reopens inside the cooldown) | |
 | wyrmwatch_harbor_house | 17 | SLIM | cull | 10.02, 2.26 | 1/1 (house walls removed) | |
 | freehold_interior_route | 16 | SLIM | three settle sleeps (1.2, 1.2, 0.7 s) on the file's faked clock | 8.46, 5.48 | 2/2 (`scripts/freehold_interior_route.mjs`: end boundary read before the callback, command never submitted) | |
 | eastbrook_ferry_berth | 13 | SLIM | cull | 9.91, 2.56 | 1/1 (`src/sim/transport_ship.ts`: hull rails dropped) | |
 | unstuck | 13 | KEEP | none | 4.9 (baseline run) | | scoped world, about 0.1 s a case |
-| dawnhold_grounds | 12 | SLIM | cull | 7.70, 2.21 | 1/2 (`src/sim/dawnhold_layout.ts`: lift to zero, killed by the wall-walk climb); survived on the crossing case, which something besides the lift also blocks (not traced) | |
+| dawnhold_grounds | 12 | SLIM | cull | 7.70, 2.21 | 1/2 (`src/sim/dawnhold_layout.ts`: lift to zero, killed by the wall-walk climb); survived on the crossing case, which also survives on the base test file (`a2bd94a83e`), so no coverage was lost | |
 | world_quest_match3 | 11 | SLIM | one seed (seven before) | 4.92, 1.11 | 1/1 (`src/sim/world_quests.ts`: a dead player may reset the board) | |
 | transport_ferry_online | 11 | KEEP | none | 3.5 (baseline run) | | its GameServer already boots with the production cull; the only online ferry guard |
 
@@ -96,7 +97,21 @@ on all four shard files (7 escorts):
 Two rounds stay on every PR. The cull took the family from 83.9 s to 12.1 s locally; a second
 round in the same world is the only arm that sees a leak that needs a prior run, and at under
 a second a round it is worth its cost. The shard partition is unchanged; the whole-text pin
-in `tests/world_population_shards.test.ts` carries the new `runEscortRounds` line.
+in `tests/world_population_shards.test.ts` carries the new `runEscortRounds` text.
+
+## Review fix round
+
+- The sweep asserted only that some round ran, so a second round that skipped passed
+  silently. `runEscortRounds` now counts the rounds it checked and expects 2 (all 7 escorts
+  run both). Mutants on the shard files: a helper edit that skips round 2 killed 7 of 7; the
+  escortee never respawning (`src/sim/escort.ts` respawn delay times 1000) killed 7 of 7,
+  and the same mutant passes under the pre-fix helper (`35e89ced9a`), the gap this closes.
+- The walkway sweep's comment now calls the PR spacing a smoke check (the pocket mutants in
+  the emerald row) and the lake header no longer says both seeds run on every PR.
+- The survivors marked "also survives on the base" were run against the `a2bd94a83e` test
+  files: every one survives there too.
+- Controls green: a comment edit in `src/sim/escort.ts`, `src/sim/harbor_structures.ts` and
+  `src/sim/vehicles.ts`.
 
 ## Owed and levers not taken
 
