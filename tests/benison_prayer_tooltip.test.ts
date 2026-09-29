@@ -8,14 +8,17 @@ import { type Entity, MAX_LEVEL, type SimEvent } from '../src/sim/types';
 import { abilityScalingOf } from '../src/ui/ability_damage';
 import { abilityEffectText } from '../src/ui/ability_description';
 import { formatNumber, t } from '../src/ui/i18n';
-import { WORLD_WITHOUT_HUB_YARD } from './helpers/hub_yard';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
+// The priest heals a party ally she spawns beside her, with every roll pinned,
+// so the overworld ticking around the casts buys nothing: the empty world has
+// no hub yard either.
 function makePriest(powerBonus: number, endpoint: 'min' | 'max') {
   const sim = new Sim({
     seed: 8241,
     playerClass: 'priest',
     autoEquip: true,
-    world: WORLD_WITHOUT_HUB_YARD,
+    world: EMPTY_TEST_WORLD,
   });
   sim.setPlayerLevel(MAX_LEVEL);
   expect(sim.setSpec('holy')).toBe(true);
