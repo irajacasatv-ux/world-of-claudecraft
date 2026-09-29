@@ -11,6 +11,7 @@ import {
   VARKHUL_ENGAGE_TAUNT_SECONDS,
   varkhulForgingHammerTick,
 } from '../src/sim/varkhul_engage';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const DT = 1 / 20;
 
@@ -64,8 +65,15 @@ describe('Varkhul engage staging (pure module)', () => {
 });
 
 describe('Varkhul engage staging (encounter integration)', () => {
+  // The practice room is an instance, so the Sim runs on the empty world.
   function raidSim(): { sim: Sim; boss: Entity } {
-    const sim = new Sim({ seed: 6112, playerClass: 'warrior', autoEquip: true, devCommands: true });
+    const sim = new Sim({
+      seed: 6112,
+      playerClass: 'warrior',
+      autoEquip: true,
+      devCommands: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.setPlayerLevel(20);
     sim.chat('/dev varkhulraid normal');
     const boss = [...sim.entities.values()].find((e) => e.templateId === VARKHUL_BOSS_ID);
