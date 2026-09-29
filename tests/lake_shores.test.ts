@@ -23,7 +23,11 @@ import { computeBorderEdges, terrainHeight, WATER_LEVEL } from '../src/sim/world
 //    even, swimmable basin, not a mountain range. Sealed borders are exempt:
 //    the realm wall stands even where a lake abuts it.
 
-const SEEDS = [42, 20061]; // the suite's default seed and the production seed
+// The production seed is the ground players walk, and on its own it reds a grading
+// regression (a couple hundred blocked rays without the pass, against a bound of
+// 40), so every PR walks it; the suite's default seed, the same terrain generator
+// under other noise, rides the nightly depth flag.
+const SEEDS = process.env.WOC_NIGHTLY_SWEEP === '1' ? [42, 20061] : [20061];
 const DIRS = 16;
 // Every lake stays walk-out-able in at least this many directions (the worst
 // builtin lake, the Hollow's falls basin, measures 7 at the production seed;
