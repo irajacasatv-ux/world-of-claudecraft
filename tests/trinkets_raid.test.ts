@@ -11,9 +11,12 @@ import { MOBS } from '../src/sim/data';
 import { createMob } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
 import { DT, type Entity, type PlayerClass, type SimEvent } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
-function wearing(itemId: string, cls: PlayerClass = 'warrior', seed = 11) {
-  const sim = new Sim({ seed, playerClass: cls, autoEquip: true });
+// Every case fights foes it places itself, so the wearer stands on the empty world,
+// and the determinism case replays on the file's one seed.
+function wearing(itemId: string, cls: PlayerClass = 'warrior') {
+  const sim = new Sim({ seed: 11, playerClass: cls, autoEquip: true, world: EMPTY_TEST_WORLD });
   sim.setPlayerLevel(20);
   sim.addItem(itemId, 1);
   sim.equipItem(itemId);
@@ -335,7 +338,7 @@ describe('Heart of the Crucible', () => {
 describe('raid trinket determinism', () => {
   it('the same seed plays the same fight twice, trinket effects included', () => {
     const run = () => {
-      const sim = wearing('molten_fletching', 'rogue', 33);
+      const sim = wearing('molten_fletching', 'rogue');
       const first = foe(sim, 3);
       const second = foe(sim, 6, 20000, false);
       sim.useItem('molten_fletching');
