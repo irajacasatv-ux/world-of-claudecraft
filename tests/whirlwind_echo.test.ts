@@ -13,6 +13,7 @@ import { createMob } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
 import type { Aura, Entity, SimEvent } from '../src/sim/types';
 import { localizeSimAuraName } from '../src/ui/sim_i18n';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // Bladed Echo (operator design): casting Bladed Gyre (whirlwind, the fury AoE)
 // arms an 'aoe_echo' aura with 2 charges. Each of the caster's next 2
@@ -27,14 +28,31 @@ type TestSim = Sim & {
   addEntity(entity: Entity): void;
 };
 
-function makeSim(seed = 31338, spec: 'fury' | 'arms' = 'fury'): { sim: TestSim; p: Entity } {
-  const sim = new Sim({ seed, playerClass: 'warrior', autoEquip: true }) as TestSim;
+// Every Sim fights wolves it places itself, so the overworld buys nothing: one
+// seed on the empty world serves the file (four seeds each paid a full collider
+// build). The cases that need every strike to land force it with hitCapped
+// rather than riding a hunted seed.
+function makeSim(spec: 'fury' | 'arms' = 'fury'): { sim: TestSim; p: Entity } {
+  const sim = new Sim({
+    seed: 31338,
+    playerClass: 'warrior',
+    autoEquip: true,
+    world: EMPTY_TEST_WORLD,
+  }) as TestSim;
   sim.setPlayerLevel(20);
   expect(sim.setSpec(spec)).toBe(true);
   // A warrior spawns seeded in Battle Stance; one tick lets the stance reconcile
   // swap it to Berserker (the Fury default) so rage mints carry no Battle bonus.
   sim.tick();
   return { sim, p: sim.player };
+}
+
+/** Hit-capped: a player-to-mob strike cannot miss (swingMissChance floors at 0
+ *  and the miss roll is skipped), so the echo always has a resolved amount to
+ *  replay. Checked again at each strike, since a stat recalc would reset it. */
+function hitCapped(p: Entity): Entity {
+  p.hitBonus = 1;
+  return p;
 }
 
 function spawnMob(sim: TestSim, p: Entity, dz: number): Entity {
@@ -79,6 +97,7 @@ function hitsOn(events: SimEvent[], abilityName: string, targetId: number): numb
 }
 
 function recast(sim: TestSim, p: Entity, abilityId: string): SimEvent[] {
+  if (p.hitBonus > 0) expect(p.hitBonus, 'the hit cap still holds at the strike').toBe(1);
   p.gcdRemaining = 0;
   p.cooldowns.delete(abilityId);
   p.resource = 100;
@@ -110,11 +129,10 @@ describe('Bladed Gyre arms the echo', () => {
 
 describe('single-target casts echo onto enemies near the target', () => {
   it('(b) a single strike also hits the second enemy at the echo fraction and spends one charge', () => {
-    // Seed hunted like (d): the echo replays a RESOLVED amount, so the primary
-    // Bloodletting has to connect for there to be anything to replay. The default
-    // integration seed whiffs it since the Galecrest quest camps (#2887) added
-    // world-gen draws and moved the shared stream. Spares on record: 31340, 31341.
-    const { sim, p } = makeSim(31337);
+    // The echo replays a RESOLVED amount, so the primary Bloodletting has to
+    // connect for there to be anything to replay: hit-capped, not a hunted seed.
+    const { sim, p } = makeSim();
+    hitCapped(p);
     const { primary, near, far } = arena(sim, p);
     p.resource = 100;
     sim.castAbility('whirlwind');
@@ -136,9 +154,10 @@ describe('single-target casts echo onto enemies near the target', () => {
   });
 
   it('(c) the third single-target cast after both charges no longer echoes', () => {
-    // Same hunted seed as (b): only a cast that actually dealt damage spends a
-    // charge, so the 2 -> 1 -> 0 ladder only walks if every Bloodletting connects.
-    const { sim, p } = makeSim(31337);
+    // Hit-capped as (b): only a cast that actually dealt damage spends a charge,
+    // so the 2 -> 1 -> 0 ladder only walks if every Bloodletting connects.
+    const { sim, p } = makeSim();
+    hitCapped(p);
     const { primary, near } = arena(sim, p);
     p.resource = 100;
     sim.castAbility('whirlwind');
@@ -158,9 +177,9 @@ describe('single-target casts echo onto enemies near the target', () => {
   });
 
   it('(d) Red Harvest consumes ONE charge and echoes all three strikes', () => {
-    // This seed lands all three independently rolled weapon strikes. The
-    // default integration seed deterministically whiffs one of them.
-    const { sim, p } = makeSim(31337);
+    // Hit-capped, so all three independently rolled weapon strikes land.
+    const { sim, p } = makeSim();
+    hitCapped(p);
     const { primary, near, far } = arena(sim, p);
     p.resource = 100;
     sim.castAbility('whirlwind');
@@ -199,7 +218,8 @@ describe('single-target casts echo onto enemies near the target', () => {
 
 describe('Widening Arc (sweeping strikes) replays the full strike', () => {
   it('a single-target strike under sweeping_strikes hits ONE nearby enemy for the full amount', () => {
-    const { sim, p } = makeSim(31337, 'arms');
+    const { sim, p } = makeSim('arms');
+    hitCapped(p);
     const { primary, near, far } = arena(sim, p);
     p.resource = 100;
     sim.drainEvents();
@@ -232,8 +252,9 @@ describe('Bladed Gyre costs no rage and mints none (v0.27.1 rage fix)', () => {
   // gained. Since the v0.27.1 rage fix the spin mints nothing: with Twinstrike,
   // Bloodletting, AND the spin all generating, Fury's rotation was rage-positive
   // and Red Harvest fired every ~6 seconds.
-  function rageFromSpin(n: number, seed = 4242): number {
-    const { sim, p } = makeSim(seed);
+  function rageFromSpin(n: number): number {
+    const { sim, p } = makeSim();
+    hitCapped(p); // every clustered enemy is struck
     const zs = [3, 2, 4, 5, 6, 7, 7.5, 6.5, 5.5, 4.5];
     const mobs = zs.slice(0, n).map((dz) => spawnMob(sim, p, dz));
     p.facing = 0; // facing +z, into the cluster
@@ -258,7 +279,7 @@ describe('Bladed Gyre costs no rage and mints none (v0.27.1 rage fix)', () => {
 describe('determinism', () => {
   it('(f) an identical seeded echo fight replays byte-identically', () => {
     const run = (): string => {
-      const { sim, p } = makeSim(7);
+      const { sim, p } = makeSim();
       const { primary, near, far } = arena(sim, p);
       const amounts: number[] = [];
       const record = (events: SimEvent[]) => {
