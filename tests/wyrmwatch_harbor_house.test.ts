@@ -17,7 +17,12 @@ import { BUILTIN_WORLD, NPCS } from '../src/sim/data';
 import { MAX_STEP_HEIGHT } from '../src/sim/physics/character';
 import { isResting } from '../src/sim/progression/xp';
 import { Sim } from '../src/sim/sim';
-import { type Entity, INTERACT_RANGE, STATIC_WORLD_SERVICE_ENTITY_ID_MIN } from '../src/sim/types';
+import {
+  type Entity,
+  INTERACT_RANGE,
+  STATIC_WORLD_SERVICE_ENTITY_ID_MIN,
+  type WorldContent,
+} from '../src/sim/types';
 import { groundHeight, terrainHeight, WATER_LEVEL } from '../src/sim/world';
 import { WORLD_SEED } from '../src/sim/world_seed';
 import { wyrmwatchHarborColliders } from '../src/sim/wyrmwatch_harbor';
@@ -37,6 +42,15 @@ import { PRODUCTION_IDLE_CULL } from './helpers/production_idle_cull';
 // walks in and out of it with the real movement kernel.
 
 const S = WORLD_SEED;
+// The walks read the house through the active content (its colliders, its floor and its
+// rest area stay built-in), so the walking Sim spawns only the harbormaster: no camp,
+// no other NPC and no ground object ticks around the player.
+const HARBOR_KEEPER_WORLD: WorldContent = {
+  ...BUILTIN_WORLD,
+  camps: [],
+  npcs: { harbormaster_tamsin: BUILTIN_WORLD.npcs.harbormaster_tamsin },
+  groundObjects: [],
+};
 const aw = (x: number, z: number): number => groundHeight(x, z, S) - WATER_LEVEL;
 const H = HARBOR_HOUSE;
 const I = HARBOR_HOUSE_INTERIOR;
@@ -309,7 +323,12 @@ describe("Harbormaster's House: walking it (the real movement kernel)", () => {
   }
 
   beforeAll(() => {
-    sim = new Sim({ seed: S, playerClass: 'warrior', ...PRODUCTION_IDLE_CULL });
+    sim = new Sim({
+      seed: S,
+      playerClass: 'warrior',
+      ...PRODUCTION_IDLE_CULL,
+      world: HARBOR_KEEPER_WORLD,
+    });
     sim.setPlayerLevel(10);
   });
 
