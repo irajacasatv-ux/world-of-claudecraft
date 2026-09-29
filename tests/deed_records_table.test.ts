@@ -74,6 +74,8 @@ import { noteReliquaryMark, RELIQUARY_COMPLETION_DEED_IDS } from '../src/sim/rel
 import type { CharacterState } from '../src/sim/sim';
 import { Sim } from '../src/sim/sim';
 import type { DeedDef } from '../src/sim/types';
+import { WORLD_SEED } from '../src/sim/world_seed';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const insertMock = vi.mocked(insertCharacterDeed);
 const insertDeedsMock = vi.mocked(insertCharacterDeeds);
@@ -1105,9 +1107,16 @@ describe('reliquaryUnlock illumination fan-out through GameServer.detectActivity
    *  but the blob predates BOTH the discovery ledger and the illuminatedPages
    *  set, so the join seed pass re-discovers the whole page and completes it
    *  retro. Built on a throwaway sim so the live fills that stock the bags
-   *  never reach the rig's own server. */
+   *  never reach the rig's own server. It builds the empty world on the
+   *  server's own WORLD_SEED: a fresh seed builds its collider grids for a
+   *  save that reads neither. */
   function veteranStateFor(pageId: string): CharacterState {
-    const seed = new Sim({ seed: 7, playerClass: 'warrior', noPlayer: true });
+    const seed = new Sim({
+      seed: WORLD_SEED,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const pid = seed.addPlayer('warrior', 'Seeded');
     for (const itemId of relicItemIds(pageId)) seed.addItem(itemId, 1, pid);
     const state = seed.serializeCharacter(pid) as
