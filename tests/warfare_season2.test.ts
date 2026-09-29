@@ -40,6 +40,7 @@ import {
   type ItemDef,
   type PlayerClass,
 } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const ARMOR_TYPE: Record<string, string> = {
   warrior: 'mail',
@@ -241,7 +242,8 @@ describe('the PvE promise: never the raid pick for a tank', () => {
     kit: Partial<Record<EquipSlot, string>>,
     bear: boolean,
   ) {
-    const sim = new Sim({ seed: 20061, playerClass: cls, noPlayer: true });
+    // Vitality reads only where the player stands, so the empty world serves it.
+    const sim = new Sim({ seed: 20061, playerClass: cls, noPlayer: true, world: EMPTY_TEST_WORLD });
     const pid = sim.addPlayer(cls, `T${cls}`);
     sim.setPlayerLevel(20, pid);
     sim.applyTalents({ spec, rows: {} } as TalentAllocation, pid);
@@ -327,7 +329,7 @@ describe('the PvP promise: Season 2 is the PvP upgrade over a full Season 1 kit'
   } as const;
 
   function inOpenWorld(cls: PlayerClass, spec: string, kit: Partial<Record<EquipSlot, string>>) {
-    const sim = new Sim({ seed: 20061, playerClass: cls, noPlayer: true });
+    const sim = new Sim({ seed: 20061, playerClass: cls, noPlayer: true, world: EMPTY_TEST_WORLD });
     const pid = sim.addPlayer(cls, `P${cls}`);
     sim.setPlayerLevel(20, pid);
     sim.applyTalents({ spec, rows: {} } as TalentAllocation, pid);
