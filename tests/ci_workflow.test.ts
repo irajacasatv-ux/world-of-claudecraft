@@ -101,17 +101,27 @@ const SHARD_MATRIX = Array.from({ length: SHARD_N }, (_, i) => i + 1).join(', ')
 const TYPECHECK_BUILDS_TURBO_RUN =
   'run: npx turbo run check:types build:env build:server build:bot --ui=stream';
 
-// Shared serialized check-run lines for both pr-checks and release-checks (D8).
+// Shared serialized check-run lines for both pr-checks and release-checks (D8), in
+// their run order (the malware gate first; GATE_FIRST_AFTER_INSTALL pins it).
 // One list so a step added on one arm only fails the other arm's pin.
 const CHECK_RUN_STEPS = [
+  'run: npm run security:gate',
   'run: npm run i18n:gen',
   'run: node scripts/i18n_coverage_summary.mjs',
   'run: git diff --exit-code -- src/ui/i18n.resolved.generated',
-  'run: npm run security:gate',
   TYPECHECK_BUILDS_TURBO_RUN,
   'run: npm run wiki:content && npm run build:bundle\n',
   'run: git ls-files --error-unmatch -- src/game/sfx_manifest.generated.ts',
 ] as const;
+
+// The malware gate is the step right after the dependency install in both check jobs
+// (comment lines allowed between them): it is the only whole-tree scan on a PR, so a
+// red on a later check (a stale i18n artifact, a typecheck) must never hide its
+// verdict. Anchored step lines, so a YAML comment spelling the step cannot satisfy it.
+const GATE_FIRST_AFTER_INSTALL = new RegExp(
+  String.raw`\n {6}- name: Install dependencies\n {8}run: pnpm install --frozen-lockfile\n\n` +
+    String.raw`(?: {6}#[^\n]*\n)* {6}- name: Malicious-code gate\n {8}run: npm run security:gate\n`,
+);
 
 // Exact job-level if line for both release jobs. toContain alone would allow a
 // widened expression that still embeds this fragment and could run on ordinary PRs.
@@ -991,9 +1001,7 @@ describe('CI workflow parity', () => {
     // the checks: a red on a later step (a stale i18n artifact) must not hide its
     // verdict. release-checks holds the same order below, and the nightly checks
     // job mirrors release-checks' run lines in order (tests/nightly_workflow.test.ts).
-    expect(prChecks.indexOf('run: npm run security:gate')).toBeLessThan(
-      prChecks.indexOf('run: npm run i18n:gen'),
-    );
+    expect(prChecks).toMatch(GATE_FIRST_AFTER_INSTALL);
     // ...and a structural count, the same backstop release-gate has: an added
     // or removed pr-checks step must consciously update this test rather than
     // slipping in beside the by-name pins above.
@@ -1029,9 +1037,7 @@ describe('CI workflow parity', () => {
     // eight check steps (i18n gen/summary/freshness, malware, tsc cache, the
     // combined typecheck + env/server/bot builds turbo call, client build,
     // manifest freshness). An accidental extra step would otherwise stay green.
-    expect(releaseChecks.indexOf('run: npm run security:gate')).toBeLessThan(
-      releaseChecks.indexOf('run: npm run i18n:gen'),
-    );
+    expect(releaseChecks).toMatch(GATE_FIRST_AFTER_INSTALL);
     expect(releaseChecks.match(/\n {6}- name: /g)).toHaveLength(12);
     expect(jobSource('pr-checks').match(/\n {6}- name: /g)).toHaveLength(12);
     // tsc incremental cache (#2758) must land on both check jobs, never on a

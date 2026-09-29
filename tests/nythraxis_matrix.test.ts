@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { ITEMS } from '../src/sim/data';
+import { maskCommentsAndStrings } from './helpers/declared_timeouts';
 
 const source = readFileSync('scripts/nythraxis_matrix.ts', 'utf8');
 
@@ -170,9 +171,10 @@ describe('Nythraxis matrix DPS rotations', () => {
 
   it('routes plan and seed-sample sharding through the pinned core rule', () => {
     // The rule itself (every shard index, both modes) is pinned in
-    // tests/nythraxis_matrix_core.test.ts; this holds the script to it, read with
-    // line comments stripped so a comment cannot satisfy the pin.
-    const code = source.replace(/^\s*\/\/.*$/gm, '');
+    // tests/nythraxis_matrix_core.test.ts; this holds the script to it, read through
+    // the tokenizing scanner with every comment masked (line, trailing and block), so
+    // a comment cannot satisfy the pin.
+    const code = maskCommentsAndStrings(source, { strings: false });
     expect(code).toContain('const shardOptions = { tankMonteCarloRuns, shardCount, shardIndex };');
     expect(code).toContain('const selectedForShard = plansForShard(selected, shardOptions);');
     expect(code).toContain('if (!seedSampleInShard(seedIndex, shardOptions)) continue;');
