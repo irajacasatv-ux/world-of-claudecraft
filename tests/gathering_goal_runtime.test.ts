@@ -9,11 +9,25 @@ import { recipeById } from '../src/sim/content/recipes';
 import { Sim } from '../src/sim/sim';
 import type { Entity } from '../src/sim/types';
 import { runCraft } from './helpers/enchant_family_cast';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const SWORD_RECIPE = 'recipe_eastbrook_arming_sword'; // wolf_fang 2, bone_fragments 4, smithing_flux 6
 
-function makeSim(seed = 42) {
-  return new Sim({ seed, playerClass: 'warrior', autoEquip: false });
+// Goals read the players, the recipe tables and the order board, never a camp,
+// NPC or ground object, so every Sim builds the empty world on one seed: a
+// fresh seed builds its collider grids (about half a second) for nothing.
+function makeSim() {
+  return new Sim({ seed: 42, playerClass: 'warrior', autoEquip: false, world: EMPTY_TEST_WORLD });
+}
+
+function makeBareSim() {
+  return new Sim({
+    seed: 42,
+    playerClass: 'warrior',
+    autoEquip: false,
+    noPlayer: true,
+    world: EMPTY_TEST_WORLD,
+  });
 }
 
 function entityOf(sim: Sim, pid: number): Entity {
@@ -22,8 +36,8 @@ function entityOf(sim: Sim, pid: number): Entity {
   return entity;
 }
 
-function makeTwoPlayerSim(seed = 7) {
-  const sim = new Sim({ seed, playerClass: 'warrior', autoEquip: false, noPlayer: true });
+function makeTwoPlayerSim() {
+  const sim = makeBareSim();
   const requester = sim.addPlayer('warrior', 'Ayla');
   const crafter = sim.addPlayer('warrior', 'Borin');
   const re = entityOf(sim, requester);
@@ -158,7 +172,7 @@ describe('trackGatheringCommission: wrong-player and open-order refusal', () => 
   });
 
   it('refuses an order accepted by a different player', () => {
-    const sim = new Sim({ seed: 7, playerClass: 'warrior', autoEquip: false, noPlayer: true });
+    const sim = makeBareSim();
     const requester = sim.addPlayer('warrior', 'Ayla');
     const crafter = sim.addPlayer('warrior', 'Borin');
     const bystander = sim.addPlayer('warrior', 'Carys');
