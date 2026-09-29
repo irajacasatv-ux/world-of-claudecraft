@@ -15,6 +15,7 @@ import { moveSpeedMult, type PlayerMotionDeps, stepPlayerMotion } from '../src/s
 import { Sim } from '../src/sim/sim';
 import type { Entity, MoveInput } from '../src/sim/types';
 import { groundHeight } from '../src/sim/world';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // The physics-asset audit, interaction half: forced movement (knockback,
 // charge, Vaulting Charge) against standable geometry, client-predictor parity
@@ -34,8 +35,17 @@ const IDLE: MoveInput = {
   surface: false,
 };
 
+// The empty world keeps every prop the stall, charge and roof cases stand on
+// (and the dungeon interiors); only the ambient camps and NPCs go, and every
+// case places the one mob it needs itself.
 function makeSim(): Sim {
-  const sim = new Sim({ seed: SEED, playerClass: 'warrior', autoEquip: true, devCommands: true });
+  const sim = new Sim({
+    seed: SEED,
+    playerClass: 'warrior',
+    autoEquip: true,
+    devCommands: true,
+    world: EMPTY_TEST_WORLD,
+  });
   sim.setPlayerLevel(60);
   return sim;
 }
@@ -156,7 +166,12 @@ describe('persistence on a roof', () => {
     const saved = sim.serializeCharacter(p.id);
     expect(saved).toBeTruthy();
     if (!saved) return;
-    const sim2 = new Sim({ seed: SEED, playerClass: 'warrior', noPlayer: true });
+    const sim2 = new Sim({
+      seed: SEED,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const pid = sim2.addPlayer('warrior', 'Restored', { state: saved });
     const restored = sim2.entities.get(pid);
     expect(restored).toBeTruthy();
