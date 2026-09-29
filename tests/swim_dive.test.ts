@@ -36,12 +36,19 @@ const DEEP_EDITS: HeightStamp[] = [
   { x: LAKE.x, z: LAKE.z, radius: 14, delta: WATER_LEVEL - 6, falloff: 'flat', mode: 'level' },
 ];
 
-function deepWorld(): WorldContent {
-  return { ...BUILTIN_WORLD, camps: [], npcs: {}, groundObjects: [], terrainEdits: DEEP_EDITS };
-}
+// One content object for every lake case: the collider grid and the terrain
+// edit index are cached per content object, so a fresh copy per case rebuilt
+// both for the same levelled lake. No case mutates it.
+const DEEP_WORLD: WorldContent = {
+  ...BUILTIN_WORLD,
+  camps: [],
+  npcs: {},
+  groundObjects: [],
+  terrainEdits: DEEP_EDITS,
+};
 
 function makeSim(): Sim {
-  const world = deepWorld();
+  const world = DEEP_WORLD;
   setActiveWorldContent(world);
   const sim = new Sim({ seed: SEED, playerClass: 'warrior', autoEquip: true, world });
   sim.setPlayerLevel(60);
