@@ -22,13 +22,29 @@ import {
   COLDSIGHT_2PC_MEASURED_SHOT_FOCUS_BONUS,
   setBonusFlag,
 } from '../src/sim/content/ignivar_set_bonuses';
+import { MOBS } from '../src/sim/data';
+import { createMob } from '../src/sim/entity';
 import type { PlayerMeta } from '../src/sim/sim';
 import { Sim } from '../src/sim/sim';
-import { type Aura, dist2d, type Entity, type PlayerClass } from '../src/sim/types';
+import type { Aura, Entity, PlayerClass } from '../src/sim/types';
 import { terrainHeight } from '../src/sim/world';
+import { OPEN_FIELD } from './helpers/open_field';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
-function makeSim(cls: PlayerClass, spec: string | null, level: number, seed: number): Sim {
-  const sim = new Sim({ seed, playerClass: cls, autoEquip: true });
+// One seed and the empty test world for every scenario: each case reads its
+// own player's resolved abilities (and the one real cast strikes a wolf it
+// spawns itself), so the ambient overworld is pure overhead, and the first
+// tick of every fresh seed builds that seed's collider grid (about half a
+// second each). No case here draws on the rng.
+const RESOLUTION_SEED = 301;
+
+function makeSim(cls: PlayerClass, spec: string | null, level: number): Sim {
+  const sim = new Sim({
+    seed: RESOLUTION_SEED,
+    playerClass: cls,
+    autoEquip: true,
+    world: EMPTY_TEST_WORLD,
+  });
   sim.setPlayerLevel(level);
   if (spec) expect(sim.setSpec(spec)).toBe(true);
   return sim;
@@ -79,7 +95,7 @@ function assertMatchesSimResolve(sim: Sim, requestedId: string): void {
 
 describe('Vespers: Dirge of Decay (shadow_word_pain) and Mindfracture (mind_blast)', () => {
   it('bakes the Dirge DoT total x1.1 for a shadow priest, matching Sim.resolvedAbility', () => {
-    const sim = makeSim('priest', 'shadow', 20, 301);
+    const sim = makeSim('priest', 'shadow', 20);
     const meta = metaFor(sim);
     const mods = sim.playerMods(meta);
     const known = knownEntry(sim, 'shadow_word_pain');
@@ -94,7 +110,7 @@ describe('Vespers: Dirge of Decay (shadow_word_pain) and Mindfracture (mind_blas
   });
 
   it('rewrites Mindfracture (mind_blast) spell power coefficient for shadow', () => {
-    const sim = makeSim('priest', 'shadow', 20, 302);
+    const sim = makeSim('priest', 'shadow', 20);
     const meta = metaFor(sim);
     const mods = sim.playerMods(meta);
     const known = knownEntry(sim, 'mind_blast');
@@ -107,7 +123,7 @@ describe('Vespers: Dirge of Decay (shadow_word_pain) and Mindfracture (mind_blas
   });
 
   it('negative control: a non-shadow priest leaves both abilities byte-identical to `known`', () => {
-    const sim = makeSim('priest', 'holy', 20, 303);
+    const sim = makeSim('priest', 'holy', 20);
     const meta = metaFor(sim);
     const mods = sim.playerMods(meta);
     for (const id of ['shadow_word_pain', 'mind_blast']) {
@@ -121,7 +137,7 @@ describe('Vespers: Dirge of Decay (shadow_word_pain) and Mindfracture (mind_blas
 
 describe('Coldsight: the Cold Focus window plus the 2pc set-bonus hook', () => {
   it('doubles Measured Shot focus gain and discounts Long Draw inside the window, matching Sim', () => {
-    const sim = makeSim('hunter', 'marksmanship', 20, 304);
+    const sim = makeSim('hunter', 'marksmanship', 20);
     addAura(sim.player, 'hunter_cold_focus');
     const meta = metaFor(sim);
     const mods = sim.playerMods(meta);
@@ -138,7 +154,7 @@ describe('Coldsight: the Cold Focus window plus the 2pc set-bonus hook', () => {
   });
 
   it('adds the Coldsight 2pc Measured Shot focus bonus from mods.selected', () => {
-    const sim = makeSim('hunter', 'marksmanship', 20, 305);
+    const sim = makeSim('hunter', 'marksmanship', 20);
     const meta = metaFor(sim);
     const baseMods = sim.playerMods(meta);
     const known = knownEntry(sim, 'measured_shot');
@@ -156,7 +172,7 @@ describe('Coldsight: the Cold Focus window plus the 2pc set-bonus hook', () => {
   });
 
   it('negative control: outside the window, both abilities stay byte-identical to `known`', () => {
-    const sim = makeSim('hunter', 'marksmanship', 20, 306);
+    const sim = makeSim('hunter', 'marksmanship', 20);
     const meta = metaFor(sim);
     const mods = sim.playerMods(meta);
     for (const id of ['measured_shot', 'aimed_shot']) {
@@ -210,7 +226,7 @@ function assertExactlyOnceBake(
 
 describe('GroveOverbloom: Swiftmend -> Overbloom (druid Groveheart/restoration)', () => {
   it('transforms at 5 Verdance, bakes talent mods exactly once, and carries the primary-healing factor', () => {
-    const sim = makeSim('druid', 'restoration', 20, 307);
+    const sim = makeSim('druid', 'restoration', 20);
     addAura(sim.player, 'verdance', 5);
     // druidOverbloom is not a scalable damage/heal magnitude (scaleEffect's
     // default arm), so a second bake would coincidentally match; the
@@ -222,7 +238,7 @@ describe('GroveOverbloom: Swiftmend -> Overbloom (druid Groveheart/restoration)'
   });
 
   it('negative control: below 5 stacks Swiftmend stays byte-identical to `known`', () => {
-    const sim = makeSim('druid', 'restoration', 20, 308);
+    const sim = makeSim('druid', 'restoration', 20);
     addAura(sim.player, 'verdance', 4);
     const meta = metaFor(sim);
     const mods = sim.playerMods(meta);
@@ -236,14 +252,14 @@ describe('GroveOverbloom: Swiftmend -> Overbloom (druid Groveheart/restoration)'
 
 describe('WildfangRedharvest: Gorebite -> Redharvest (druid feral, Old Blood)', () => {
   it('transforms at 3 Old Blood and bakes talent mods exactly once, matching Sim', () => {
-    const sim = makeSim('druid', 'feral', 20, 309);
+    const sim = makeSim('druid', 'feral', 20);
     addAura(sim.player, 'old_blood', 3);
     assertExactlyOnceBake(sim, 'ferocious_bite', 'redharvest');
     assertMatchesSimResolve(sim, 'ferocious_bite');
   });
 
   it('negative control: an untransformed sibling (Rendclaw) stays byte-identical while Old Blood is stacked', () => {
-    const sim = makeSim('druid', 'feral', 20, 310);
+    const sim = makeSim('druid', 'feral', 20);
     addAura(sim.player, 'old_blood', 3);
     const meta = metaFor(sim);
     const mods = sim.playerMods(meta);
@@ -255,14 +271,14 @@ describe('WildfangRedharvest: Gorebite -> Redharvest (druid feral, Old Blood)', 
 
 describe('Knifework: Eviscerate (Dirt Nap) -> Venomrend (rogue assassination, Venom Ritual)', () => {
   it('transforms at 6 Venom Ritual and bakes talent mods exactly once, matching Sim', () => {
-    const sim = makeSim('rogue', 'assassination', 20, 311);
+    const sim = makeSim('rogue', 'assassination', 20);
     addAura(sim.player, 'venom_ritual', 6);
     assertExactlyOnceBake(sim, 'eviscerate', 'venomrend');
     assertMatchesSimResolve(sim, 'eviscerate');
   });
 
   it('negative control: below 6 stacks Dirt Nap stays byte-identical to `known`', () => {
-    const sim = makeSim('rogue', 'assassination', 20, 312);
+    const sim = makeSim('rogue', 'assassination', 20);
     addAura(sim.player, 'venom_ritual', 5);
     const meta = metaFor(sim);
     const mods = sim.playerMods(meta);
@@ -274,7 +290,7 @@ describe('Knifework: Eviscerate (Dirt Nap) -> Venomrend (rogue assassination, Ve
 
 describe('resolveActionReplacement stays a pure passthrough with no matching rule', () => {
   it('returns the identical reference for an ability with no actionReplacement rule', () => {
-    const sim = makeSim('warrior', null, 5, 313);
+    const sim = makeSim('warrior', null, 5);
     const known = knownEntry(sim, 'charge');
     expect(resolveActionReplacement(known, sim.player)).toBe(known);
   });
@@ -315,13 +331,15 @@ function addAetherSurgeCharges(entity: Entity, charges: number): void {
   });
 }
 
-function nearestForestWolf(sim: Sim): Entity {
-  const p = sim.player;
-  const wolves = [...sim.entities.values()]
-    .filter((e) => e.kind === 'mob' && !e.dead && e.templateId === 'forest_wolf')
-    .sort((a, b) => dist2d(p.pos, a.pos) - dist2d(p.pos, b.pos));
-  const wolf = wolves[0];
-  if (!wolf) throw new Error('expected a forest_wolf in the default world');
+// A camp-level forest wolf on open ground (the empty test world has no camps).
+function spawnForestWolf(sim: Sim): Entity {
+  const { x, z } = OPEN_FIELD;
+  const wolf = createMob(sim.nextId++, MOBS.forest_wolf, MOBS.forest_wolf.minLevel, {
+    x,
+    y: terrainHeight(x, z, sim.cfg.seed),
+    z,
+  });
+  sim.addEntity(wolf);
   return wolf;
 }
 
@@ -339,14 +357,14 @@ function facePlayerAt(sim: Sim, target: { pos: { x: number; z: number } }): void
 
 describe('Cost tail: draining curse tax, Measured Fury discount, Aether Surge charges', () => {
   it('discounts Measured Fury (arms) by exactly 10%, rounded, only when the passive is known', () => {
-    const sim = makeSim('warrior', 'arms', 20, 401);
+    const sim = makeSim('warrior', 'arms', 20);
     expect(sim.known.some((k) => k.def.id === 'measured_fury' && k.def.passive)).toBe(true);
     const known = knownEntry(sim, 'mortal_strike');
     expect(sim.resolvedAbility('mortal_strike')?.cost).toBe(Math.round(known.cost * 0.9));
   });
 
   it('negative control: a non-arms spec never gets the Measured Fury discount', () => {
-    const sim = makeSim('warrior', 'fury', 20, 402);
+    const sim = makeSim('warrior', 'fury', 20);
     expect(sim.known.some((k) => k.def.id === 'measured_fury')).toBe(false);
     // Fury's own paid spender: Mortal Strike is Arms-only (signature ability).
     const known = knownEntry(sim, 'red_harvest');
@@ -354,7 +372,7 @@ describe('Cost tail: draining curse tax, Measured Fury discount, Aether Surge ch
   });
 
   it('negative control: removing the passive from known drops the discount even while spec stays arms', () => {
-    const sim = makeSim('warrior', 'arms', 20, 409);
+    const sim = makeSim('warrior', 'arms', 20);
     const meta = metaFor(sim);
     const idx = meta.known.findIndex((k) => k.def.id === 'measured_fury');
     expect(idx).toBeGreaterThanOrEqual(0);
@@ -366,7 +384,7 @@ describe('Cost tail: draining curse tax, Measured Fury discount, Aether Surge ch
   it('taxes cost by the HIGHEST of several active cost_tax auras, independent of aura order', () => {
     // 80 * 1.08 = 86.4: ceil gives 87 (round would give 86), so this also
     // pins ceil over round, not just which aura wins.
-    const simA = makeSim('warrior', 'fury', 20, 410);
+    const simA = makeSim('warrior', 'fury', 20);
     addCostTaxAura(simA.player, 0.03, 'test_cost_tax_a');
     addCostTaxAura(simA.player, 0.08, 'test_cost_tax_b');
     const base = knownEntry(simA, 'red_harvest').cost;
@@ -374,14 +392,14 @@ describe('Cost tail: draining curse tax, Measured Fury discount, Aether Surge ch
     expect(expected).not.toBe(Math.round(base * 1.08));
     expect(simA.resolvedAbility('red_harvest')?.cost).toBe(expected);
 
-    const simB = makeSim('warrior', 'fury', 20, 411);
+    const simB = makeSim('warrior', 'fury', 20);
     addCostTaxAura(simB.player, 0.08, 'test_cost_tax_b');
     addCostTaxAura(simB.player, 0.03, 'test_cost_tax_a');
     expect(simB.resolvedAbility('red_harvest')?.cost).toBe(expected);
   });
 
   it('applies the Measured Fury discount BEFORE the cost_tax ceiling, not after', () => {
-    const sim = makeSim('warrior', 'arms', 20, 404);
+    const sim = makeSim('warrior', 'arms', 20);
     addCostTaxAura(sim.player, 0.3);
     const known = knownEntry(sim, 'mortal_strike');
     const discountThenTax = Math.ceil(Math.round(known.cost * 0.9) * 1.3);
@@ -392,21 +410,21 @@ describe('Cost tail: draining curse tax, Measured Fury discount, Aether Surge ch
   });
 
   it('Aether Surge cost ramps geometrically per held Arcane Charge (2 charges = 4x)', () => {
-    const sim = makeSim('mage', 'arcane', 20, 405);
+    const sim = makeSim('mage', 'arcane', 20);
     addAetherSurgeCharges(sim.player, 2);
     const known = knownEntry(sim, 'arcane_surge');
     expect(sim.resolvedAbility('arcane_surge')?.cost).toBe(Math.round(known.cost * 2 ** 2));
   });
 
   it('negative control: held Arcane Charges never touch the cost of a different ability', () => {
-    const sim = makeSim('mage', 'arcane', 20, 406);
+    const sim = makeSim('mage', 'arcane', 20);
     addAetherSurgeCharges(sim.player, 4);
     const known = knownEntry(sim, 'arcane_missiles');
     expect(sim.resolvedAbility('arcane_missiles')?.cost).toBe(known.cost);
   });
 
   it('applies cost_tax BEFORE the Aether Surge ramp, not after', () => {
-    const sim = makeSim('mage', 'arcane', 20, 412);
+    const sim = makeSim('mage', 'arcane', 20);
     addCostTaxAura(sim.player, 0.11);
     addAetherSurgeCharges(sim.player, 2);
     const base = knownEntry(sim, 'arcane_surge').cost;
@@ -417,7 +435,7 @@ describe('Cost tail: draining curse tax, Measured Fury discount, Aether Surge ch
   });
 
   it('the zero-cost Charge ability stays zero under both Measured Fury discount and cost_tax', () => {
-    const sim = makeSim('warrior', 'arms', 20, 407);
+    const sim = makeSim('warrior', 'arms', 20);
     addCostTaxAura(sim.player, 0.5);
     const known = knownEntry(sim, 'charge');
     expect(known.cost).toBe(0);
@@ -425,8 +443,8 @@ describe('Cost tail: draining curse tax, Measured Fury discount, Aether Surge ch
   });
 
   it('an actual cast spends the Measured Fury discounted cost, not the raw known cost', () => {
-    const sim = makeSim('warrior', 'arms', 20, 408);
-    const wolf = nearestForestWolf(sim);
+    const sim = makeSim('warrior', 'arms', 20);
+    const wolf = spawnForestWolf(sim);
     teleportTo(sim, wolf.pos.x + 2, wolf.pos.z);
     facePlayerAt(sim, wolf);
     sim.targetEntity(wolf.id);
