@@ -3,7 +3,7 @@ import { ABILITIES, abilitiesKnownAt, CLASSES } from '../src/sim/content/classes
 import { emptyModifiers } from '../src/sim/content/talents';
 import { WARLOCK_PET_MOBS } from '../src/sim/content/warlock_pets';
 import { Sim } from '../src/sim/sim';
-import { WORLD_WITHOUT_HUB_YARD } from './helpers/hub_yard';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const RETIRED_SUMMONS = [
   'summon_succubus',
@@ -19,12 +19,13 @@ function knownAt(level: number, spec?: 'affliction' | 'demonology' | 'destructio
   }).map((ability) => ability.def.id);
 }
 
+// The summon is a self cast, so the warlock stands on the empty world.
 function summonStarterEmberkin(): Sim {
   const sim = new Sim({
     seed: 2632,
     playerClass: 'warlock',
     autoEquip: true,
-    world: WORLD_WITHOUT_HUB_YARD,
+    world: EMPTY_TEST_WORLD,
   });
   sim.setPlayerLevel(4);
   sim.castAbility('summon_imp');
