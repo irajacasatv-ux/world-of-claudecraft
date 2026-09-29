@@ -54,6 +54,7 @@ import type { Rng } from '../src/sim/rng';
 import { Sim } from '../src/sim/sim';
 import type { CoreStats } from '../src/sim/types';
 import { runCraft } from './helpers/enchant_family_cast';
+import { rngWithFirstDraws } from './helpers/forced_rng';
 
 const statSum = (stats: Partial<CoreStats> | null | undefined): number => {
   if (!stats) return 0;
@@ -489,15 +490,14 @@ describe('draw-order determinism over a real Sim', () => {
   // Scenario: tailoring as the active archetype (unlimited empowerment
   // ceiling), skill 200 (tier-8 capability, past the specialization
   // threshold), so each successful vestments craft rolls the proc at
-  // 0.03 + 0.08 + 0.03 = 0.14. Seed 3 was hunted (bounded scan from seed 1,
-  // re-recorded whenever a content commit shifts the construction-time
-  // world-gen draw sequence: after the zones 1-3 quest-dedupe pass, then
-  // 74 -> 3 after the v0.35.0 release content commits added the enchant and
-  // hunter offhands and the deeds catalog) so the three-success sequence procs
-  // on the second and third successful crafts; only the pinned literal is
-  // committed, per the suite idiom. Spares on record: 7, 15, 28, 41, and 159.
-  // tests/professions_silent_loot.test.ts follows this same literal.
-  const SEED = 74;
+  // 0.03 + 0.08 + 0.03 = 0.14. The three successful crafts' proc draws are
+  // forced (tests/helpers/forced_rng.ts, a fresh Rng installed after the
+  // setup) so the sequence misses first and procs on the second and third,
+  // on the seed the file's other Sims build; a hunted world seed moved with
+  // every content commit that added world-gen draws and built its own
+  // collider grids.
+  const SEED = 21;
+  const PROC_CHANCE = 0.14;
 
   function run() {
     const sim = new Sim({ seed: SEED, playerClass: 'warrior', autoEquip: false });
@@ -511,6 +511,11 @@ describe('draw-order determinism over a real Sim', () => {
     for (let i = 0; i < 9; i++) sim.addItem('homespun_cloth', 1, pid);
     for (let i = 0; i < 15; i++) sim.addItem('spool_of_thread', 1, pid);
     sim.drainEvents();
+    sim.rng = rngWithFirstDraws(
+      (first) => first >= PROC_CHANCE,
+      (second) => second < PROC_CHANCE,
+      (third) => third < PROC_CHANCE,
+    );
     const rng: Rng = (sim as any).ctx.rng;
     let draws = 0;
     rng.setObserver(() => {
@@ -556,7 +561,7 @@ describe('draw-order determinism over a real Sim', () => {
     expect(run()).toEqual(run());
   });
 
-  it('draws exactly once per successful craft and zero on the denial, with the hunted procs pinned', () => {
+  it('draws exactly once per successful craft and zero on the denial, with the forced procs pinned', () => {
     const a = run();
     // The single output-side draw sits on the success path only: the
     // mid-sequence denial (no bone_fragments held) advances the shared rng
@@ -564,7 +569,7 @@ describe('draw-order determinism over a real Sim', () => {
     expect(a.drawCounts).toEqual([1, 0, 1, 1]);
     expect(a.results.map((r) => r.ok)).toEqual([true, false, true, true]);
     expect(a.results[1].reason).toBe('insufficient_materials');
-    // Hunted-seed proc pattern: first success misses, second and third proc,
+    // Forced proc pattern: first success misses, second and third proc,
     // and the denial never rolls at all.
     expect(a.results.map((r) => r.masterwork)).toEqual([undefined, undefined, true, true]);
     // quality stays the OUTPUT DEF quality on every success, proc or miss.
@@ -757,20 +762,16 @@ describe('proc-chance wiring over a real Sim (hunted boundary-window seeds)', ()
 
   it('the specialization threshold binds in the craft path: skill 74 misses where 75 and 76 proc', () => {
     // Premise anchor: the content threshold this boundary rides. A content
-    // retune moves the boundary and this seed must be re-hunted.
+    // retune moves the boundary and the forced window below must move with it.
     expect(PERK_THRESHOLDS.tailoring.specializedSkillThreshold).toBe(75);
-    // Seed 26, hunted (re-recorded whenever a content commit shifts the
-    // construction-time world-gen draw sequence: after the zones 1-3
-    // quest-dedupe pass, then 66 -> 26 after the v0.35.0 release content
-    // commits added the enchant and hunter offhands and the deeds catalog):
-    // the single proc draw lands in [0.06, 0.09). At skill 74 (tier 2, not
-    // specialized) the chance is 0.03 + 0.02 = 0.05: miss. At 75 and 76
-    // (tier 3, specialized) it is 0.03 + 0.03 + 0.03 = 0.09: proc, and only if
-    // BOTH the tiersAboveRecipe term and isSpecialized are wired into
+    // The single proc draw is forced into [0.06, 0.09) (a fresh Rng installed
+    // after the setup, on the seed the file's other Sims build). At skill 74
+    // (tier 2, not specialized) the chance is 0.03 + 0.02 = 0.05: miss. At 75
+    // and 76 (tier 3, specialized) it is 0.03 + 0.03 + 0.03 = 0.09: proc, and
+    // only if BOTH the tiersAboveRecipe term and isSpecialized are wired into
     // masterworkProcChance by crafting.ts (either wiring dropped leaves the
-    // chance at or below 0.06, under the hunted draw). Spares on record: 36,
-    // 62, 83, and 87.
-    const SEED = 66;
+    // chance at or below 0.06, under the forced draw).
+    const SEED = 21;
     const at = (skill: number) =>
       craftVestments(SEED, (sim, pid) => {
         const meta = (sim as any).players.get(pid);
@@ -779,6 +780,7 @@ describe('proc-chance wiring over a real Sim (hunted boundary-window seeds)', ()
         sim.addItem('spider_leg', 1, pid);
         sim.addItem('homespun_cloth', 3, pid);
         sim.addItem('spool_of_thread', 5, pid);
+        sim.rng = rngWithFirstDraws((proc) => proc >= 0.06 && proc < 0.09);
       });
     const r74 = at(74);
     const r75 = at(75);
@@ -1036,7 +1038,7 @@ describe('R1: the masterwork proc on an APEX craft grants a head start, never a 
   // head-start arm is the only thing standing between the proc and the bump,
   // and the control arm proves the forcing genuinely forces.
   const craftForced = (recipeId: string, activeArchetype: string | null) => {
-    const sim = new Sim({ seed: 7, playerClass: 'warrior', autoEquip: false });
+    const sim = new Sim({ seed: 21, playerClass: 'warrior', autoEquip: false });
     const pid = sim.playerId;
     const meta = (sim as any).players.get(pid);
     // An Infinity archetype ceiling for the apex arm, so the ceiling gate
