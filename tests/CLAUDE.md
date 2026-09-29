@@ -288,9 +288,12 @@ one, look for the suite that should own the case, and pick the cheapest form tha
 (the remedies above). The lane-threshold suite checks the statement on every `.test.ts` the
 weight table has not measured yet (no row, or a carried one) and counts its `Cost:` into the
 total-time ratchet until a harvest measures the file; the statement then stays as the file's
-record. Cases added to a file that already has a row reach the ratchet at the next harvest. The
-browser suite and the few `.test.mjs` suites owe the same statement but sit outside the table, so
-reviewers check those by hand.
+record; a stated cost over the lane threshold in CI time fails at once. Cases added to a file
+that already has a row reach the ratchet at the next harvest. A new collected test file outside
+the table (a `.test.mjs`, a `.spec.ts`) is checked the same way and its stated cost stays in the
+ratchet for good, since no harvest measures it; the few `.test.mjs` suites older than the rule
+are pinned by name. The Playwright browser suite runs under its own config and is checked by
+review.
 
 Tombstone pins (a case that only asserts a removed thing stays removed) retire once the removal
 is old and a live assertion covers the same ground, deleted with a coverage proof; do not add new

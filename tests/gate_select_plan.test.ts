@@ -3,6 +3,7 @@ import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSyn
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { SHARD_WALK_SKIP_NAMES } from '../scripts/lib/ci_shard_walk.mjs';
 import {
   chunkFileArgs,
   collectSuiteVisibility,
@@ -12,6 +13,7 @@ import {
   listChangedPaths,
   listTestFiles,
   resolveSelectBase,
+  SKIP_DIRS,
 } from '../scripts/lib/gate_discovery.mjs';
 import {
   buildFullSuiteArgs,
@@ -1085,15 +1087,24 @@ describe('discovery scope matches vitest collection over the real tree', () => {
     expect(collected).toEqual(['tests/alive.test.ts']);
   });
 
-  it('finds no directory named browser under tests/ except the opt-in tests/browser', () => {
+  it('finds no directory under tests/ that a discovery walk skips but vitest collects', () => {
+    // Both walkers skip directories by NAME at any depth (discovery's SKIP_DIRS, the shard
+    // walk's names and dot-directories), while vitest excludes only the root-level paths
+    // (tests/browser/, tmp/, the dot-directories at the repo root). A directory of such a name
+    // nested under tests/ would run in vitest yet leave the always-run floor, the weight table
+    // and the admission check: fail on it instead. The one sanctioned case is the opt-in
+    // tests/browser.
+    const walkerSkips = new Set([...SKIP_DIRS, ...SHARD_WALK_SKIP_NAMES]);
     const offenders: string[] = [];
     const walk = (dir: string) => {
       for (const entry of readdirSync(dir, { withFileTypes: true })) {
         if (!entry.isDirectory()) continue;
         const full = path.join(dir, entry.name);
         const rel = path.relative(REPO_ROOT, full).split(path.sep).join('/');
-        if (entry.name === 'browser' && rel !== 'tests/browser') offenders.push(rel);
-        if (entry.name === 'browser') continue;
+        const skipped = walkerSkips.has(entry.name) || entry.name.startsWith('.');
+        if (skipped && rel !== 'tests/browser' && entry.name !== 'node_modules')
+          offenders.push(rel);
+        if (skipped) continue;
         walk(full);
       }
     };

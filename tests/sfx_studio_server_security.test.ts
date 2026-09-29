@@ -248,10 +248,8 @@ describe.sequential('SFX Studio server security', () => {
         });
       }
     } finally {
-      rmSync(playbackDraft, { force: true });
-      if (hadPlaybackDraft) renameSync(playbackDraftBackup, playbackDraft);
-      rmSync(fixtureRepoRoot, { recursive: true, force: true });
-      rmSync(studioTestRoot, { recursive: true, force: true });
+      // The env restore and the private roots go first, so a failing rename below cannot
+      // leave them behind for the next file.
       for (const [key, value] of [
         ['WOC_SFX_STUDIO_TEST_ROOT', previousStudioEnv.testRoot],
         ['WOC_SFX_STUDIO_TEST_REPO_ROOT', previousStudioEnv.repoRoot],
@@ -259,6 +257,10 @@ describe.sequential('SFX Studio server security', () => {
         if (value === undefined) delete process.env[key];
         else process.env[key] = value;
       }
+      rmSync(fixtureRepoRoot, { recursive: true, force: true });
+      rmSync(studioTestRoot, { recursive: true, force: true });
+      rmSync(playbackDraft, { force: true });
+      if (hadPlaybackDraft) renameSync(playbackDraftBackup, playbackDraft);
     }
   }, 30_000);
 
