@@ -18,9 +18,22 @@ import { createMob } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
 import type { SimContext } from '../src/sim/sim_context';
 import type { Aura, Entity, SimEvent } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
-function vespersPriest(seed: number): { sim: Sim; priest: Entity; ctx: SimContext } {
-  const sim = new Sim({ seed, playerClass: 'priest', autoEquip: true });
+// One seed and the empty test world for every case. Each case spawns and
+// dots its own training dummies, so the ambient overworld is pure overhead,
+// and the first tick of every fresh seed builds that seed's collider grid
+// (about half a second each); a per-case seed bought no extra coverage here
+// (the real-cast cases force hits with hitBonus = 1).
+const VESPERS_SEED = 50401;
+
+function vespersPriest(): { sim: Sim; priest: Entity; ctx: SimContext } {
+  const sim = new Sim({
+    seed: VESPERS_SEED,
+    playerClass: 'priest',
+    autoEquip: true,
+    world: EMPTY_TEST_WORLD,
+  });
   sim.setPlayerLevel(20);
   expect(sim.setSpec('shadow')).toBe(true);
   sim.tick();
@@ -102,7 +115,7 @@ function recastDirge(
 
 describe('v0.42.0 Vespers: Dirge range-wide refresh', () => {
   it('does nothing on a first application (no prior own Dirge on the primary target)', () => {
-    const { sim, priest, ctx } = vespersPriest(50401);
+    const { sim, priest, ctx } = vespersPriest();
     const meta = ctx.players.get(priest.id);
     if (!meta) throw new Error('priest meta missing');
     const primary = addDummy(sim, priest, 0, 8);
@@ -131,7 +144,7 @@ describe('v0.42.0 Vespers: Dirge range-wide refresh', () => {
   });
 
   it('refreshes every other living own-Dirge hostile within range on a genuine reapplication, with no cap', () => {
-    const { sim, priest, ctx } = vespersPriest(50402);
+    const { sim, priest, ctx } = vespersPriest();
     const meta = ctx.players.get(priest.id);
     if (!meta) throw new Error('priest meta missing');
     const primary = addDummy(sim, priest, 0, 8);
@@ -153,7 +166,7 @@ describe('v0.42.0 Vespers: Dirge range-wide refresh', () => {
   });
 
   it('never spreads to or recreates a Dirge on a clean (never-dotted) hostile', () => {
-    const { sim, priest, ctx } = vespersPriest(50403);
+    const { sim, priest, ctx } = vespersPriest();
     const meta = ctx.players.get(priest.id);
     if (!meta) throw new Error('priest meta missing');
     const primary = addDummy(sim, priest, 0, 8);
@@ -166,7 +179,7 @@ describe('v0.42.0 Vespers: Dirge range-wide refresh', () => {
   });
 
   it('never refreshes a Dirge owned by a different priest', () => {
-    const { sim, priest, ctx } = vespersPriest(50404);
+    const { sim, priest, ctx } = vespersPriest();
     const meta = ctx.players.get(priest.id);
     if (!meta) throw new Error('priest meta missing');
     const primary = addDummy(sim, priest, 0, 8);
@@ -184,7 +197,7 @@ describe('v0.42.0 Vespers: Dirge range-wide refresh', () => {
   });
 
   it('includes a hostile exactly at the 30-yard boundary and excludes one just outside it', () => {
-    const { sim, priest, ctx } = vespersPriest(50405);
+    const { sim, priest, ctx } = vespersPriest();
     const meta = ctx.players.get(priest.id);
     if (!meta) throw new Error('priest meta missing');
     const primary = addDummy(sim, priest, 0, 8);
@@ -201,7 +214,7 @@ describe('v0.42.0 Vespers: Dirge range-wide refresh', () => {
   });
 
   it('excludes a hostile with no line of sight to the priest', () => {
-    const { sim, priest, ctx } = vespersPriest(50406);
+    const { sim, priest, ctx } = vespersPriest();
     const meta = ctx.players.get(priest.id);
     if (!meta) throw new Error('priest meta missing');
     const primary = addDummy(sim, priest, 0, 8);
@@ -221,7 +234,7 @@ describe('v0.42.0 Vespers: Dirge range-wide refresh', () => {
   });
 
   it('preserves each recipient own next-tick timing and same-tick Gloomtithe guard (never grants an instant tick)', () => {
-    const { sim, priest, ctx } = vespersPriest(50407);
+    const { sim, priest, ctx } = vespersPriest();
     const meta = ctx.players.get(priest.id);
     if (!meta) throw new Error('priest meta missing');
     const primary = addDummy(sim, priest, 0, 8);
@@ -247,7 +260,7 @@ describe('v0.42.0 Vespers: Dirge range-wide refresh', () => {
   });
 
   it('carries a currently-live extension (remaining > 18) forward within the 24-second cap without resetting it', () => {
-    const { sim, priest, ctx } = vespersPriest(50408);
+    const { sim, priest, ctx } = vespersPriest();
     const meta = ctx.players.get(priest.id);
     if (!meta) throw new Error('priest meta missing');
     const primary = addDummy(sim, priest, 0, 8);
@@ -290,7 +303,7 @@ describe('v0.42.0 Vespers: Dirge range-wide refresh', () => {
   });
 
   it('does NOT restore a stored extendedBy allowance once its live time already elapsed', () => {
-    const { sim, priest, ctx } = vespersPriest(50414);
+    const { sim, priest, ctx } = vespersPriest();
     const meta = ctx.players.get(priest.id);
     if (!meta) throw new Error('priest meta missing');
     const primary = addDummy(sim, priest, 0, 8);
@@ -310,7 +323,7 @@ describe('v0.42.0 Vespers: Dirge range-wide refresh', () => {
   });
 
   it('carries currently-live time above 18s even with no extendedBy field recorded', () => {
-    const { sim, priest, ctx } = vespersPriest(50415);
+    const { sim, priest, ctx } = vespersPriest();
     const meta = ctx.players.get(priest.id);
     if (!meta) throw new Error('priest meta missing');
     const primary = addDummy(sim, priest, 0, 8);
@@ -327,7 +340,7 @@ describe('v0.42.0 Vespers: Dirge range-wide refresh', () => {
   });
 
   it('keeps an already-bound own Effigy in step with its Dirge without rebinding or granting Gloomtithe', () => {
-    const { sim, priest, ctx } = vespersPriest(50409);
+    const { sim, priest, ctx } = vespersPriest();
     const meta = ctx.players.get(priest.id);
     if (!meta) throw new Error('priest meta missing');
     const primary = addDummy(sim, priest, 0, 8);
@@ -367,7 +380,7 @@ describe('v0.42.0 Vespers: Dirge range-wide refresh', () => {
   });
 
   it('is inert for a non-Vespers-spec priest even with a prior own Dirge captured', () => {
-    const { sim, priest, ctx } = vespersPriest(50410);
+    const { sim, priest, ctx } = vespersPriest();
     expect(sim.setSpec('holy')).toBe(true);
     const meta = ctx.players.get(priest.id);
     if (!meta) throw new Error('priest meta missing');
@@ -386,7 +399,7 @@ describe('v0.42.0 Vespers: Dirge range-wide refresh', () => {
   });
 
   it('is inert when the primary target is an enemy player rather than a mob', () => {
-    const { sim, priest, ctx } = vespersPriest(50416);
+    const { sim, priest, ctx } = vespersPriest();
     const meta = ctx.players.get(priest.id);
     if (!meta) throw new Error('priest meta missing');
     const enemyPlayerId = sim.addPlayer('warrior', 'Enemy Player');
@@ -405,7 +418,7 @@ describe('v0.42.0 Vespers: Dirge range-wide refresh', () => {
   });
 
   it('never spreads to an enemy player carrying the own Dirge, even if it is otherwise in range', () => {
-    const { sim, priest, ctx } = vespersPriest(50417);
+    const { sim, priest, ctx } = vespersPriest();
     const meta = ctx.players.get(priest.id);
     if (!meta) throw new Error('priest meta missing');
     const primary = addDummy(sim, priest, 0, 8);
@@ -432,7 +445,7 @@ describe('v0.42.0 Vespers: Dirge range-wide refresh', () => {
   });
 
   it('does not fan out when the seam apply was rejected (the old aura object is retained)', () => {
-    const { sim, priest, ctx } = vespersPriest(50418);
+    const { sim, priest, ctx } = vespersPriest();
     const meta = ctx.players.get(priest.id);
     if (!meta) throw new Error('priest meta missing');
     const primary = addDummy(sim, priest, 0, 8);
@@ -450,7 +463,7 @@ describe('v0.42.0 Vespers: Dirge range-wide refresh', () => {
   });
 
   it('may have its own recipient apply rejected; only syncs that recipient Effigy on proven success', () => {
-    const { sim, priest, ctx } = vespersPriest(50419);
+    const { sim, priest, ctx } = vespersPriest();
     const meta = ctx.players.get(priest.id);
     if (!meta) throw new Error('priest meta missing');
     const primary = addDummy(sim, priest, 0, 8);
@@ -482,7 +495,7 @@ describe('v0.42.0 Vespers: Dirge range-wide refresh', () => {
   });
 
   it('accepts a caller-resolved range beyond the authored default', () => {
-    const { sim, priest, ctx } = vespersPriest(50420);
+    const { sim, priest, ctx } = vespersPriest();
     const meta = ctx.players.get(priest.id);
     if (!meta) throw new Error('priest meta missing');
     const primary = addDummy(sim, priest, 0, 8);
@@ -497,7 +510,7 @@ describe('v0.42.0 Vespers: Dirge range-wide refresh', () => {
   });
 
   it('excludes with the authored default range when no custom range is supplied', () => {
-    const { sim, priest, ctx } = vespersPriest(50421);
+    const { sim, priest, ctx } = vespersPriest();
     const meta = ctx.players.get(priest.id);
     if (!meta) throw new Error('priest meta missing');
     const primary = addDummy(sim, priest, 0, 8);
@@ -513,14 +526,14 @@ describe('v0.42.0 Vespers: Dirge range-wide refresh', () => {
 
 describe('v0.42.0 Vespers: Dirge runtime Spell Power correction', () => {
   it('exposes a 1.10 runtime SP multiplier for a Shadow priest, matching the authored VESPERS_DOT_DAMAGE_MULT', () => {
-    const { priest, ctx } = vespersPriest(50411);
+    const { priest, ctx } = vespersPriest();
     const meta = ctx.players.get(priest.id);
     if (!meta) throw new Error('priest meta missing');
     expect(vespersDirgeSpMultiplier(meta)).toBe(VESPERS_DOT_DAMAGE_MULT);
   });
 
   it('is a no-op factor of 1 for a non-Vespers priest spec', () => {
-    const { sim, priest, ctx } = vespersPriest(50412);
+    const { sim, priest, ctx } = vespersPriest();
     expect(sim.setSpec('holy')).toBe(true);
     const meta = ctx.players.get(priest.id);
     if (!meta) throw new Error('priest meta missing');
@@ -530,7 +543,7 @@ describe('v0.42.0 Vespers: Dirge runtime Spell Power correction', () => {
 
 describe('v0.42.0 Vespers: Dirge refresh, effect_dispatch.ts integration', () => {
   it('a real shadow_word_pain recast through castAbility refreshes a second hostile own Dirge about to expire', () => {
-    const { sim, priest } = vespersPriest(50413);
+    const { sim, priest } = vespersPriest();
     const primary = addDummy(sim, priest, 0, 8);
     const secondary = addDummy(sim, priest, 4, 6);
     priest.gcdRemaining = 0;
@@ -560,7 +573,7 @@ describe('v0.42.0 Vespers: Dirge refresh, effect_dispatch.ts integration', () =>
   });
 
   it('a real recast also carries the runtime Spell Power correction into the refreshed field', () => {
-    const { sim, priest } = vespersPriest(50422);
+    const { sim, priest } = vespersPriest();
     const primary = addDummy(sim, priest, 0, 8);
     const secondary = addDummy(sim, priest, 4, 6);
     priest.gcdRemaining = 0;
@@ -590,7 +603,7 @@ describe('v0.42.0 Vespers: Dirge refresh, effect_dispatch.ts integration', () =>
   });
 
   it('a real cast delta pins the Vespers SP correction, not just the exposed constant', () => {
-    const { sim, priest } = vespersPriest(50423);
+    const { sim, priest } = vespersPriest();
     const primary = addDummy(sim, priest, 0, 8);
     priest.gcdRemaining = 0;
     priest.resource = priest.maxResource;
@@ -631,7 +644,7 @@ describe('v0.42.0 Vespers: Dirge refresh, effect_dispatch.ts integration', () =>
 
 describe('v0.42.0 Vespers: Dirge fan-out event order', () => {
   it('fans out in ascending hostile-id order, not spatial-grid bucket order', () => {
-    const { sim, priest, ctx } = vespersPriest(50440);
+    const { sim, priest, ctx } = vespersPriest();
     const meta = ctx.players.get(priest.id);
     if (!meta) throw new Error('priest meta missing');
     const primary = addDummy(sim, priest, 0, 8);
@@ -696,7 +709,7 @@ describe('v0.42.0 Vespers: Dirge base duration stays in step with the carry cons
 
 describe('v0.42.0 Vespers: DIRGE_ABILITY_ID stays canonical', () => {
   it('ability_output_scaling.ts matches the imported dirge_refresh.ts id', () => {
-    const { priest, ctx } = vespersPriest(50441);
+    const { priest, ctx } = vespersPriest();
     const meta = ctx.players.get(priest.id);
     if (!meta) throw new Error('priest meta missing');
     const ability = ABILITIES[DIRGE_ABILITY_ID];
