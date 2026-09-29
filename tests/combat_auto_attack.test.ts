@@ -20,6 +20,7 @@ import { advancePendingProjectiles } from '../src/sim/projectile_travel';
 import { type PlayerMeta, Sim } from '../src/sim/sim';
 import type { Aura, Entity, PlayerClass, SimEvent } from '../src/sim/types';
 import { placePlayerInOpenField } from './helpers/open_field';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 type DamageEvent = Extract<SimEvent, { type: 'damage' }>;
 
@@ -31,8 +32,19 @@ function makeSim(
   cls: PlayerClass,
   level: number,
   seed = 7,
+  world: 'empty' | 'full' = 'empty',
 ): { sim: Sim; p: Entity; meta: PlayerMeta } {
-  const sim = new Sim({ seed, playerClass: cls, autoEquip: true });
+  // EMPTY_TEST_WORLD: every case drives the swing functions against a target it
+  // spawns itself, so the ambient overworld is pure construction and tick cost.
+  // 'full' keeps the built-in world for the few cases whose single unforced table
+  // roll must connect: the world's construction draws decide that roll, and the
+  // empty world's stream lands a miss for them (their expectations stay as written).
+  const sim = new Sim({
+    seed,
+    playerClass: cls,
+    autoEquip: true,
+    ...(world === 'empty' ? { world: EMPTY_TEST_WORLD } : {}),
+  });
   sim.setPlayerLevel(level);
   // Ranged fixtures place their target relative to the player, so stand on
   // empty ground: the town is furnished and would block the shot lane.
@@ -86,7 +98,7 @@ function landProjectiles(
 
 describe('auto_attack meleeSwing: the white-hit table', () => {
   it('a swing that passes the table connects and deals physical damage', () => {
-    const { sim, p } = makeSim('warrior', 12);
+    const { sim, p } = makeSim('warrior', 12, 7, 'full');
     const mob = spawnDummy(sim, p, 1); // far below level -> floor miss chance
     const events = capture(sim);
     const hp0 = mob.hp;
@@ -102,7 +114,7 @@ describe('auto_attack meleeSwing: the white-hit table', () => {
   });
 
   it('critChance 1 forces a crit (double damage) on a connected swing', () => {
-    const { sim, p } = makeSim('warrior', 12);
+    const { sim, p } = makeSim('warrior', 12, 7, 'full');
     p.critChance = 1; // every hit crits (rng.chance(1) still draws, returns true)
     const mob = spawnDummy(sim, p, 1);
     const events = capture(sim);
@@ -211,7 +223,7 @@ describe('auto_attack meleeSwing: the white-hit table', () => {
   });
 
   it('a guaranteed dodge returns false, emits a dodge, and opens the Overpower window', () => {
-    const { sim, p } = makeSim('warrior', 30); // high level -> floor miss chance (0.005)
+    const { sim, p } = makeSim('warrior', 30, 7, 'full'); // high level -> floor miss chance (0.005)
     const targetPid = sim.addPlayer('rogue', 'Dodgy') as number;
     sim.setPlayerLevel(1, targetPid);
     const target = sim.entities.get(targetPid);
@@ -388,7 +400,7 @@ describe('auto_attack rangedSwing: Auto Shot vs Wand', () => {
   });
 
   it('a dodgy target does not dodge Auto Shot outside melee range', () => {
-    const { sim, p } = makeSim('hunter', 30);
+    const { sim, p } = makeSim('hunter', 30, 7, 'full');
     const targetPid = sim.addPlayer('rogue', 'Dodgy');
     const target = sim.entities.get(targetPid);
     if (target?.kind !== 'player') throw new Error('test target missing');
