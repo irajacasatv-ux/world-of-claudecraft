@@ -197,8 +197,11 @@ export function laneThresholdOver(weights, carried, lane) {
  */
 // Set 2026-09-29 from the harvest of run 36610517548 (the table after the test-cost cuts and the
 // culled balance lane): the shard pool summed 7,038,584 ms and the lane 332,450 ms (2,905,969 ms
-// in the table before, the unculled lane), each ceiling that pool plus RATCHET_HEADROOM.
-export const SHARD_POOL_CEILING_MS = 7_743_000;
+// in the table before, the unculled lane), each ceiling that pool plus RATCHET_HEADROOM. The
+// shard ceiling came down the same day at the harvest of run 36635499592, after a second
+// slimming round: its pool summed 5,912,504 ms (16 percent less), and the lane's 307,115 ms
+// stayed inside its slack, so the lane ceiling held.
+export const SHARD_POOL_CEILING_MS = 6_504_000;
 export const LANE_POOL_CEILING_MS = 366_000;
 /**
  * The room a ceiling is set with above its pool. Two green full-mode runs of one tree summed

@@ -351,7 +351,7 @@ describe('the total CI time ratchet over the measured weights', () => {
   it('pins the ceilings, the headroom and the slack as literals', () => {
     // A raise, a looser slack or a wider headroom is then a visible edit to this file, as a
     // monolith ceiling is (tests/monolith_budget.test.ts), never a quiet one in the lib alone.
-    expect(SHARD_POOL_CEILING_MS).toBe(7_743_000);
+    expect(SHARD_POOL_CEILING_MS).toBe(6_504_000);
     expect(LANE_POOL_CEILING_MS).toBe(366_000);
     expect(RATCHET_HEADROOM).toBe(0.1);
     expect(RATCHET_SLACK).toBe(0.2);
