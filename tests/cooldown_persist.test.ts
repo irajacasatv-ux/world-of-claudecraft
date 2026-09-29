@@ -17,6 +17,12 @@ import { MOBS } from '../src/sim/data';
 import { createMob } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
 import type { Entity } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
+
+// Every Sim here serializes, loads or casts on a mob it places itself, so none
+// needs the overworld, and one seed serves them all: each fresh seed of the full
+// world cost about a second and a half of collider build.
+const SEED = 7;
 
 describe('cooldown_persist leaf', () => {
   it('round-trips ability cooldowns as remaining seconds (frozen across the save)', () => {
@@ -159,7 +165,8 @@ describe('cooldown_persist leaf', () => {
 });
 
 describe('Sim cooldown persistence round-trip (anti-relog-reset)', () => {
-  const makeWorld = () => new Sim({ seed: 7, playerClass: 'warrior', noPlayer: true });
+  const makeWorld = () =>
+    new Sim({ seed: SEED, playerClass: 'warrior', noPlayer: true, world: EMPTY_TEST_WORLD });
 
   it('an ability cooldown survives serializeCharacter -> addPlayer (no relog reset)', () => {
     const sim = makeWorld();
@@ -237,13 +244,18 @@ describe('Sim cooldown persistence round-trip (anti-relog-reset)', () => {
 
 // An empty world to relog into (mirrors the makeWorld helper scoped above).
 function emptyWorld(): Sim {
-  return new Sim({ seed: 7, playerClass: 'warrior', noPlayer: true });
+  return new Sim({ seed: SEED, playerClass: 'warrior', noPlayer: true, world: EMPTY_TEST_WORLD });
 }
 
 // A live Fury warrior at cap with a melee target, for driving REAL charge spends
 // (raging_gale is fury-gated, learnLevel 7; def maxCharges 2, cooldown 8).
-function makeFuryWarrior(seed: number): { sim: Sim; p: Entity } {
-  const sim = new Sim({ seed, playerClass: 'warrior', autoEquip: true });
+function makeFuryWarrior(): { sim: Sim; p: Entity } {
+  const sim = new Sim({
+    seed: SEED,
+    playerClass: 'warrior',
+    autoEquip: true,
+    world: EMPTY_TEST_WORLD,
+  });
   sim.setPlayerLevel(20);
   expect(sim.setSpec('fury')).toBe(true);
   const host = sim as Sim & { nextId: number; addEntity(entity: Entity): void };
@@ -264,7 +276,7 @@ function makeFuryWarrior(seed: number): { sim: Sim; p: Entity } {
 
 describe('Sim charge-pool persistence round-trip (anti-relog-refill)', () => {
   it('a really-spent Twinstrike charge survives serializeCharacter -> addPlayer with literal counts', () => {
-    const { sim, p } = makeFuryWarrior(11);
+    const { sim, p } = makeFuryWarrior();
     p.gcdRemaining = 0;
     sim.castAbility('raging_gale');
     expect(p.abilityCharges?.raging_gale).toEqual({
@@ -296,7 +308,7 @@ describe('Sim charge-pool persistence round-trip (anti-relog-refill)', () => {
   });
 
   it('an EMPTY pool restores blocked (mirror intact) and refills only as the recharge elapses', () => {
-    const { sim, p } = makeFuryWarrior(13);
+    const { sim, p } = makeFuryWarrior();
     p.gcdRemaining = 0;
     sim.castAbility('raging_gale');
     p.gcdRemaining = 0;
@@ -321,7 +333,7 @@ describe('Sim charge-pool persistence round-trip (anti-relog-refill)', () => {
   });
 
   it('a LEGACY {spent, cdMax} save converts on load against the current resolved caps', () => {
-    const { sim, p } = makeFuryWarrior(17);
+    const { sim, p } = makeFuryWarrior();
     const base = sim.serializeCharacter(p.id)!;
     const state = {
       ...base,
@@ -343,7 +355,12 @@ describe('Sim charge-pool persistence round-trip (anti-relog-refill)', () => {
   });
 
   it('a LEGACY save converts the Frost second Ice Block charge (cap read from known.charges)', () => {
-    const sim = new Sim({ seed: 17, playerClass: 'mage', autoEquip: true });
+    const sim = new Sim({
+      seed: SEED,
+      playerClass: 'mage',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.setPlayerLevel(20);
     expect(sim.setSpec('frost')).toBe(true);
     const state = {
@@ -353,7 +370,12 @@ describe('Sim charge-pool persistence round-trip (anti-relog-refill)', () => {
         charges: { ice_block: { spent: 1, cdMax: 240 } },
       },
     };
-    const sim2 = new Sim({ seed: 7, playerClass: 'mage', noPlayer: true });
+    const sim2 = new Sim({
+      seed: SEED,
+      playerClass: 'mage',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const e2 = sim2.entities.get(sim2.addPlayer('mage', 'Frosty', { state }))!;
     expect(e2.abilityCharges?.ice_block).toEqual({
       charges: 1,
@@ -370,7 +392,12 @@ describe('Sim charge-pool persistence round-trip (anti-relog-refill)', () => {
     // against meta.known). The cast gate reshapes it to the resolved cap of 2, and
     // the new empty slot needs its own timer, or the pool would stick at 1 of 2
     // once the old timer ran out. The new slot costs a full recharge (no refund).
-    const sim = new Sim({ seed: 17, playerClass: 'mage', autoEquip: true });
+    const sim = new Sim({
+      seed: SEED,
+      playerClass: 'mage',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.setPlayerLevel(20);
     expect(sim.setSpec('frost')).toBe(true);
     const state = {
@@ -387,7 +414,12 @@ describe('Sim charge-pool persistence round-trip (anti-relog-refill)', () => {
         },
       },
     };
-    const sim2 = new Sim({ seed: 7, playerClass: 'mage', noPlayer: true });
+    const sim2 = new Sim({
+      seed: SEED,
+      playerClass: 'mage',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const pid2 = sim2.addPlayer('mage', 'Frosty', { state });
     const e2 = sim2.entities.get(pid2)!;
     e2.gcdRemaining = 0;
