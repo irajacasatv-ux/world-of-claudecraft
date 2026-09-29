@@ -97,7 +97,7 @@ import {
 } from '../src/sim/content/vendor_row_gates';
 import { ABILITIES, CAMPS, DUNGEONS, ITEMS, MOBS, NPCS, QUESTS, ZONES } from '../src/sim/data';
 import { FINAL_BOSS_DUNGEONS, FLAWLESS_TASKS } from '../src/sim/deeds';
-import { createMob } from '../src/sim/entity';
+import { createMob, createNpc } from '../src/sim/entity';
 import { MASTERWROUGHT_EQUIP_CAP, MASTERWROUGHT_LEGENDARY_CAP } from '../src/sim/equipment_rules';
 import { itemLevel, primaryStatSum } from '../src/sim/item_level';
 import { awardSharedLootItem, submitLootRoll } from '../src/sim/loot/loot_roll';
@@ -5947,27 +5947,35 @@ describe('Guide wiki completeness corrections (Phase 20, 2026-09-03)', () => {
     // The same Sim drive tests/items.test.ts uses, at Trader Wilkes: a purchase
     // leaves the buyback list empty, a sale pays sellValue and writes the row,
     // buying it back charges that same sellValue, and a Warfare piece is refused
-    // at the counter (soulbound), so it never reaches the list.
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+    // at the counter (soulbound), so it never reaches the list. Wilkes is spawned
+    // from his own NPC def beside the player on the empty world: placing the
+    // overworld's NPCs builds the static collider grid (about 2 s), and nothing
+    // here reads where he stands.
+    const sim = new Sim({
+      seed: 42,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const pid = sim.addPlayer('warrior', 'Audit');
     const world = sim as unknown as {
-      entities: Map<number, { id: number; templateId?: string; pos: { x: number; z: number } }>;
+      entities: Map<number, { pos: { x: number; y: number; z: number } }>;
       players: Map<
         number,
         { copper: number; inventory: unknown[]; vendorBuyback: { itemId: string; count: number }[] }
       >;
-      rebucket(e: unknown): void;
     };
-    const wilkes = [...world.entities.values()].find((e) => e.templateId === 'trader_wilkes');
     const me = world.entities.get(pid);
     const meta = world.players.get(pid);
-    expect(wilkes).toBeDefined();
     expect(me).toBeDefined();
     expect(meta).toBeDefined();
-    if (!wilkes || !me || !meta) return;
-    me.pos.x = wilkes.pos.x + 2;
-    me.pos.z = wilkes.pos.z;
-    world.rebucket(me);
+    if (!me || !meta) return;
+    const wilkes = createNpc(sim.nextId++, NPCS.trader_wilkes, {
+      x: me.pos.x + 2,
+      y: me.pos.y,
+      z: me.pos.z,
+    });
+    sim.addEntity(wilkes);
     meta.inventory.length = 0;
     meta.copper = 10_000;
     sim.buyItem(wilkes.id, 'baked_bread', undefined, pid);
