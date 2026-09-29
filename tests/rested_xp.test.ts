@@ -4,18 +4,24 @@
 // 1.5-level cap, kill-XP consumption (2x, kills only — not quests), the xp-bar
 // rested overlay fraction, and CharacterState persistence round-trip.
 import { describe, expect, it } from 'vitest';
+import { PROPS } from '../src/sim/data';
 import { Sim } from '../src/sim/sim';
 import { DT, xpForLevel } from '../src/sim/types';
-import { PROPS } from '../src/sim/data';
-import { xpBarView } from '../src/ui/xp_bar';
 import { terrainHeight } from '../src/sim/world';
+import { xpBarView } from '../src/ui/xp_bar';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
+// The inn footprint is a PROPS building, which the empty world keeps, and the
+// kill awards are direct grantXp calls, so no case needs the overworld's camps
+// or NPCs; the relog Sim shares the seed (seed 1 paid a second full build).
 function makeSim(): Sim {
-  return new Sim({ seed: 42, playerClass: 'warrior', autoEquip: true });
+  return new Sim({ seed: 42, playerClass: 'warrior', autoEquip: true, world: EMPTY_TEST_WORLD });
 }
 
 function teleport(sim: Sim, e: any, x: number, z: number) {
-  e.pos.x = x; e.pos.z = z; e.pos.y = terrainHeight(x, z, sim.cfg.seed);
+  e.pos.x = x;
+  e.pos.z = z;
+  e.pos.y = terrainHeight(x, z, sim.cfg.seed);
   e.prevPos = { ...e.pos };
 }
 
@@ -113,14 +119,26 @@ describe('rested XP — consumption', () => {
 describe('rested XP — xp-bar overlay', () => {
   it('reports a rested overlay fraction ahead of the fill', () => {
     const need = xpForLevel(1);
-    const view = xpBarView({ level: 1, xp: need * 0.2, lifetimeXp: 0, restedXp: need * 0.3, showOverflow: false });
+    const view = xpBarView({
+      level: 1,
+      xp: need * 0.2,
+      lifetimeXp: 0,
+      restedXp: need * 0.3,
+      showOverflow: false,
+    });
     expect(view.fillFrac).toBeCloseTo(0.2, 5);
     expect(view.restedFrac).toBeCloseTo(0.3, 5);
   });
 
   it('clamps the overlay to the end of the bar', () => {
     const need = xpForLevel(1);
-    const view = xpBarView({ level: 1, xp: need * 0.8, lifetimeXp: 0, restedXp: need * 0.9, showOverflow: false });
+    const view = xpBarView({
+      level: 1,
+      xp: need * 0.8,
+      lifetimeXp: 0,
+      restedXp: need * 0.9,
+      showOverflow: false,
+    });
     expect(view.restedFrac).toBeCloseTo(0.2, 5); // 0.8 + 0.9 clamps to 1.0
   });
 
@@ -138,7 +156,7 @@ describe('rested XP — persistence', () => {
     const state = sim.serializeCharacter(sim.playerId)!;
     expect(state.restedXp).toBe(4242);
 
-    const sim2 = new Sim({ seed: 1, playerClass: 'warrior' });
+    const sim2 = new Sim({ seed: 42, playerClass: 'warrior', world: EMPTY_TEST_WORLD });
     const pid = sim2.addPlayer('warrior', 'Reloaded', { state });
     expect(sim2.meta(pid)!.restedXp).toBe(4242);
   });
