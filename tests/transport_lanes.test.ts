@@ -23,6 +23,15 @@ import { WORLD_SEED } from '../src/sim/world_seed';
 // about (the deck's rails meet the world's colliders in the kernel).
 
 const HULL = EASTBROOK_FERRY_HULL;
+// The yard-by-yard sweep is the nightly depth (docs/qa-gate.md, "Nightly-only
+// sweep depth"). Every PR steps the hull four yards at a time: the hull is 31
+// yards long and samples its own outline and keel a yard apart, so on a
+// straight run consecutive poses overlap by 27 yards and re-sample the same
+// sea lines, and a spit or a pier post the lane crosses still falls under the
+// outline's yard-spaced points (the PR-tier catch is pinned by mutants moving
+// a lane leg ashore; the nightly keeps the full one-yard pass).
+const NIGHTLY_SWEEP = process.env.WOC_NIGHTLY_SWEEP === '1';
+const LANE_STEP = NIGHTLY_SWEEP ? 1 : 4;
 /** Water the keel line always keeps over the bed (yards), per route: the
  *  Nightbloom run's long western shallows keep about a quarter yard (the
  *  owner-accepted keel-in-sand look), everything else the full margin. */
@@ -93,7 +102,7 @@ describe('the ferry sea lanes', () => {
       const length = transportLaneLength(lane);
       const dry: string[] = [];
       const hits = new Set<string>();
-      for (let d = 0; d <= length; d += 1) {
+      for (let d = 0; d <= length; d += LANE_STEP) {
         transportLanePoseAt(lane, d, pose);
         // the waterline hull (about four fifths of the deck's beam) is always
         // over water: sea everywhere under it, never a beach or a spit
