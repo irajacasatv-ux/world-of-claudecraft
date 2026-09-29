@@ -16,7 +16,7 @@ import { worldQuestTraceShape } from '../src/sim/world_quest_trace_variants';
 import { WORLD_SEED } from '../src/sim/world_seed';
 
 // The advanced-variant walk is a property sweep over every authored final
-// figure. Each PR walks the 'cross' figure both ways (the longest outline, and
+// figure. Each PR walks the 'cross' figure both ways (the most corners, and
 // one that differs from the base star, so a sim that drops the selected variant
 // goes off-path); the nightly tests job sets the flag and walks every figure.
 // Every figure stays covered on each PR by the placement case below (clear, dry,

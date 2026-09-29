@@ -40,12 +40,13 @@ import type { SimEvent } from '../src/sim/types';
 const LETTER_ID = 'guild_trend_weaponcrafting_armorcrafting';
 
 // Booking happens on the 1 Hz sweep within a second of the crossing; the raven
-// then flies the standard 90 second NPC delivery delay. The flight's length is
-// the offline suite's pin (tests/professions_trend_guild_letter.test.ts ticks
-// it through the real Sim); here it proves nothing about routing, so once the
-// sweep has booked the letter the case holds its landing time inside the old
-// 95 second window and lands it on the next announce pass, instead of ticking
-// the full live overworld for ninety seconds.
+// then flies the standard 90 second NPC delivery delay. The offline suite
+// (tests/professions_trend_guild_letter.test.ts) ticks that flight through the
+// real Sim, but reads its length from the letter content; the literal ceiling
+// is this case's 95 second bound. The flight's ticks prove nothing about
+// routing, so once the sweep has booked the letter the case holds its landing
+// time inside that bound and lands it on the next announce pass, instead of
+// ticking the full live overworld for ninety seconds.
 const DELIVERY_WINDOW_SECONDS = 95;
 const BOOKING_WINDOW_TICKS = 2 * 20;
 const LANDING_WINDOW_TICKS = 2 * 20;
