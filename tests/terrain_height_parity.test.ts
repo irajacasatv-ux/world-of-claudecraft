@@ -56,8 +56,9 @@ import {
 const FIXTURE_URL = new URL('./fixtures/terrain_height_parity.v1.f64le.gz', import.meta.url);
 const UPDATE = process.env.UPDATE_TERRAIN_HEIGHT_PARITY === '1';
 // The dense overworld atlas is the corpus's open-ground sweep, most of its
-// points and most of its time. Each PR compares every other atlas point (a
-// staggered 12 yd lattice) beside every authored-feature and scatter point;
+// points and most of its time. Each PR compares every other atlas ROW (a
+// 6 by 12 yd lattice; the seeds rotate along each row, so every seed keeps
+// half its atlas points) beside every authored-feature and scatter point;
 // the nightly sweep flag compares the whole 6 yd atlas, so the finest local
 // drift between features is a nightly catch. The fixture is always the full
 // corpus (a re-mint writes every point).
@@ -477,11 +478,11 @@ describe('terrain height bit identity', () => {
 
     let comparisons = 0;
     let offset = HEADER_BYTES;
-    let atlasOrdinal = 0;
     const mismatches: string[] = [];
     for (let i = 0; i < points.length; i++) {
       const point = points[i];
-      if (point.label === 'dense overworld atlas' && atlasOrdinal++ % 2 === 1 && !NIGHTLY_SWEEP) {
+      const atlasRow = Math.round((point.z - (WORLD_MIN_Z - ATLAS_MARGIN)) / ATLAS_STEP);
+      if (point.label === 'dense overworld atlas' && atlasRow % 2 === 1 && !NIGHTLY_SWEEP) {
         offset += LANE_COUNT * 8;
         continue;
       }
