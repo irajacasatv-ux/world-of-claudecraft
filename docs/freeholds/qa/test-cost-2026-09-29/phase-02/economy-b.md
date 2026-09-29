@@ -34,11 +34,11 @@ the run happened); every batch carried a must-pass control, and every control pa
 
 | File | CI ms | Verdict | Change | Local tests s before, after | Mutants killed/total (source mutated) |
 |---|---|---|---|---|---|
-| guild_bank_persistence | 25,270 / 23,844 | SLIM | Seeds 3, 99 and 9913 become the GameServer's `WORLD_SEED`. The boot-load retry pair and the exhausted leave flush wait out their backoff on a faked `setTimeout` (the file's own 70-second-bound idiom); the give-up case now also pins all three read attempts. The leave flush drops its 30 s declared timeout (under the file default). | 12.83, 6.27 | 5/5 (`server/leave_character_save.ts` reconcile dropped, reconcile never reached; `server/game.ts` one boot attempt, the loud line reworded; `server/guild_bank_state.ts` oversized row loaded) |
+| guild_bank_persistence | 25,270 / 23,844 | SLIM | Seeds 3, 99 and 9913 become the GameServer's `WORLD_SEED`. The boot-load retry pair and the exhausted leave flush wait out their backoff on a faked `setTimeout`, stepped timer by timer until the call settles (see the fix round below); the give-up case now also pins all three read attempts. The leave flush drops its 30 s declared timeout (under the file default). | 12.83, 6.27 | 5/5 (`server/leave_character_save.ts` reconcile dropped, reconcile never reached; `server/game.ts` one boot attempt, the loud line reworded; `server/guild_bank_state.ts` oversized row loaded) |
 | faction_rewards | 27,399 / 16,090 | SLIM | Eleven seeds (101 to 111) become one, and every Sim runs with production idle culling. | 12.17, 2.55 | 4/4 (`content/faction_rewards.ts` hearthstone cooldown, teleport dropped, battle standard threshold, out-of-radius reset) |
 | unique_equipped | 21,942 / 21,416 | SLIM | Twenty-one empty-world seeds (the fifteen warriors and six reload Sims) become one. | 10.47, 0.88 | 3/3 (`items.ts` equip refusal off, duplicate never benched, benched copy loses its instance) |
 | perfecting | 21,268 / 21,998 | SLIM | About thirty empty-world seeds plus ten full worlds (the four reloads and six apex crafters) become one empty-world seed; no case reads world geometry and every rng arm forces or counts its draws. | 9.93, 0.87 | 5/5 (`professions/perfecting.ts` success inverted, bind dropped; `professions/crafting.ts` commission bond dropped, head-start rank dropped; `item_instance_load.ts` upper rank bound dropped) |
-| mail_expiry | 22,534 / 11,986 | SLIM | Six `tickFor(sim, 100)` gaps (2,000 ticks each) between a read or take and its repeat become one sim-second (`ELAPSE_SECONDS`): every clock is compared exactly, so any elapsed time shows a re-extended clock. The 47-second flights stay (see mail). | 7.64, 6.00 | 3/3 (`mail/post_office.ts` a take always restarts the clock, a repeat read extends it, sub-silver coin counted as escrow) |
+| mail_expiry | 22,534 / 11,986 | SLIM | Six `tickFor(sim, 100)` gaps (2,000 ticks each) become one sim-second (`ELAPSE_SECONDS`). Four separate a read or take from the next verb (a repeat read, a repeat take, the emptying take, the small-change take); two come before the first verb and separate the landed note from the read or take that starts its read clock. Every clock is compared exactly, so any elapsed time shows a clock started at the wrong moment or re-extended. The 47-second flights stay (see mail). | 7.64, 6.00 | 3/3 (`mail/post_office.ts` a take always restarts the clock, a repeat read extends it, sub-silver coin counted as escrow) |
 | reliquary_state | 17,440 / 16,823 | SLIM | `makeSim` builds the empty test world; the four world-reading cases (the banker, two Trader Wilkes buybacks, the hunted masterwork seed and its control) build a full world on the one shared seed 21. The incidental seeds 99 (determinism twin) and 43 (reload) become the default. | 6.85, 1.83 | 4/4 (`reliquary.ts` retro fill pushes recent, a movement find stamps clears, re-obtain writes no carrier; `items.ts` buyback without the movement flag) |
 | awarded_loot_hold | 16,508 / 17,680 | SLIM | Every corpse is hand-built and no case reads the world, so the file runs on the empty test world (the 90-second decay walk was 1,800 full-world ticks). The determinism twin reruns the default seed instead of building seed 7. Drops a 30 s declared timeout (under the file default). | 13.29, 1.39 | 3/3 (`mob/locomotion.ts` corpse decays four times fast; `loot/awarded_loot_hold.ts` hold window 60 s, hold open to all) |
 | masterwrought_cap | 14,761 / 19,216 | SLIM | Twenty empty-world seeds become one. | 9.32, 0.78 | 3/3 (`equipment_rules.ts` cap off by one, sub-cap reads the def quality, worn instances ignored) |
@@ -59,6 +59,23 @@ the run happened); every batch carried a must-pass control, and every control pa
 Totals over the 20 changed files: 176.67 s of local test time before, 71.49 s after
 (105.18 s saved, 60 percent). Of that, the Postgres suites account for 57.62 s before and
 40.42 s after.
+
+## Review fix round
+
+Two review nits, applied on `test-cost/economy-b-fix` off `35e89ced9a`.
+- `guild_bank_persistence`: the three fixed-sum clock advances (500, 1,500 and 3,750 ms)
+  hard-coded today's backoff totals, so a longer backoff would have hung the case to the
+  default timeout instead of failing. A file-local `settleOnFakeClock` now steps the faked
+  clock timer by timer until the call settles, at most 100 steps, and a call that never
+  settles fails with a named message (the `audit_conservation_property` leave-flush loop
+  is the model). Mutants, 6 of 6 as expected: `server/leave_character_save.ts` reconcile
+  dropped (fails), attempts raised to 500 (fails fast with the named message instead of
+  hanging), backoff base raised to 2,500 ms (passes: the backoff size is not what these
+  cases pin); `server/game.ts` one boot attempt (fails), boot backoff raised to 5,000 ms per
+  attempt (passes); a comment control (passes).
+- `mail_expiry`: the file comment and the row above said all six gaps sit between a read
+  or take and its repeat; two come before the first verb. Both now say what each gap
+  separates. Comment and record only, so no mutant.
 
 ## Owed
 
