@@ -56,14 +56,6 @@ function makeSim(cls: PlayerClass, seed: number): Sim {
   return new Sim({ seed, playerClass: cls, autoEquip: true, world: EMPTY_TEST_WORLD });
 }
 
-// The full world, for the two cases whose outcome is an rng draw on the full
-// world's shared stream (a Gloom Bolt that must land to copy, a self-heal that
-// must crit): a scoped world moves that stream, so they keep the world their
-// seeds were chosen on.
-function makeFullWorldSim(cls: PlayerClass, seed: number): Sim {
-  return new Sim({ seed, playerClass: cls, autoEquip: true });
-}
-
 // clampCast + directSpellCoeff, reimplemented from the raw engine constants
 // (src/sim/types.ts), independent of src/sim/spell_scaling.ts: the point of
 // this literal is to compute the expected SP rider WITHOUT calling the code
@@ -126,8 +118,14 @@ function hitAmount(
   return undefined;
 }
 
-function noCrit(entity: Entity): void {
-  entity.critChance = 0;
+// Takes the crit roll out of a packet: critChance zeroes the melee and ranged
+// table, and spells and heals roll ctx.spellCrit (which reads stats, not
+// critChance), so that is pinned to 0 too. The roll is still drawn (chance(0)
+// consumes one value), so both runs of a comparison stay in rng lockstep, but
+// no SP-delta or ratio case rides the seed's crit luck any more.
+function noCrit(sim: Sim): void {
+  sim.player.critChance = 0;
+  sim.ctx.spellCrit = () => 0;
 }
 
 describe('v0.42.0 offense-only package: real combat-path packets', () => {
@@ -152,7 +150,7 @@ describe('v0.42.0 offense-only package: real combat-path packets', () => {
       if (spec) expect(sim.setSpec(spec)).toBe(true);
       const target = spawnDummy(sim, 9000);
       const pin = () => {
-        noCrit(sim.player);
+        noCrit(sim);
         sim.player.spellPower = spellPower;
       };
       pin();
@@ -182,7 +180,7 @@ describe('v0.42.0 offense-only package: real combat-path packets', () => {
       expect(sim.setSpec('elemental')).toBe(true);
       const target = spawnDummy(sim, 9002);
       const pin = () => {
-        noCrit(sim.player);
+        noCrit(sim);
         sim.player.spellPower = 400;
       };
       pin();
@@ -232,7 +230,7 @@ describe('v0.42.0 offense-only package: real combat-path packets', () => {
       expect(sim.setSpec('destruction')).toBe(true);
       const target = spawnDummy(sim, 9101);
       const pin = () => {
-        noCrit(sim.player);
+        noCrit(sim);
         sim.player.spellPower = spellPower;
       };
       pin();
@@ -321,7 +319,7 @@ describe('v0.42.0 offense-only package: real combat-path packets', () => {
     });
 
     it('damage-derived copy: a Ruinous Brand copy is a fixed 0.5 fraction of the ALREADY offense-scaled origin hit, never re-scaled', () => {
-      const sim = makeFullWorldSim('warlock', 606);
+      const sim = makeSim('warlock', PACKET_SEED);
       sim.setPlayerLevel(20);
       expect(sim.setSpec('destruction')).toBe(true);
       const brandedPrimary = spawnDummy(sim, 9104, 5);
@@ -333,7 +331,10 @@ describe('v0.42.0 offense-only package: real combat-path packets', () => {
         otherTarget.pos.z - sim.player.pos.z,
       );
       const pin = () => {
-        noCrit(sim.player);
+        noCrit(sim);
+        // The origin Gloom Bolt must land to be copied: a hit bonus of 1 lifts
+        // effectiveSpellHit to 1, so the resist roll (still drawn) always hits.
+        sim.player.hitBonus = 1;
         sim.player.spellPower = 600; // large SP share: a re-scaled copy would visibly diverge from 0.5
       };
       pin();
@@ -363,7 +364,7 @@ describe('v0.42.0 offense-only package: real combat-path packets', () => {
       expect(sim.setSpec('demonology')).toBe(true);
       const target = spawnDummy(sim, 9201);
       const pin = () => {
-        noCrit(sim.player);
+        noCrit(sim);
         sim.player.spellPower = spellPower;
       };
       pin();
@@ -460,7 +461,7 @@ describe('v0.42.0 offense-only package: real combat-path packets', () => {
         if (spec) expect(sim.setSpec(spec)).toBe(true);
         const target = spawnDummy(sim, 9301);
         const pin = () => {
-          noCrit(sim.player);
+          noCrit(sim);
           sim.player.weapon = { min: 20, max: 20, speed: 1.8 };
           sim.player.attackPower = 800; // large AP share: a missed rider would visibly diverge
         };
@@ -488,7 +489,7 @@ describe('v0.42.0 offense-only package: real combat-path packets', () => {
         sim.castAbility('cat_form');
         sim.tick();
         const pin = () => {
-          noCrit(sim.player);
+          noCrit(sim);
           sim.player.weapon = { min: 20, max: 20, speed: 1.8 };
           sim.player.attackPower = 800;
         };
@@ -515,7 +516,7 @@ describe('v0.42.0 offense-only package: real combat-path packets', () => {
         if (spec) expect(sim.setSpec(spec)).toBe(true);
         const target = spawnDummy(sim, 9401);
         const pin = () => {
-          noCrit(sim.player);
+          noCrit(sim);
           sim.player.weapon = { min: 20, max: 20, speed: 2.8 };
           sim.player.attackPower = 800;
         };
@@ -541,7 +542,7 @@ describe('v0.42.0 offense-only package: real combat-path packets', () => {
       if (spec) expect(sim.setSpec(spec)).toBe(true);
       const target = spawnDummy(sim, 9501);
       const pin = () => {
-        noCrit(sim.player);
+        noCrit(sim);
         sim.player.spellPower = spellPower;
       };
       pin();
@@ -576,7 +577,7 @@ describe('v0.42.0 offense-only package: real combat-path packets', () => {
       expect(sim.setSpec('discipline')).toBe(true);
       const target = spawnDummy(sim, 9601);
       const pin = () => {
-        noCrit(sim.player);
+        noCrit(sim);
         sim.player.spellPower = spellPower;
       };
       pin();
@@ -589,12 +590,18 @@ describe('v0.42.0 offense-only package: real combat-path packets', () => {
     }
 
     function scouringMercyHealOnSelf(spellPower: number, seed: number): number {
-      const sim = makeFullWorldSim('priest', seed);
+      const sim = makeSim('priest', seed);
       sim.setPlayerLevel(20);
       expect(sim.setSpec('discipline')).toBe(true);
       sim.targetEntity(sim.playerId); // scouring_mercy heals a friendly target
+      // Both rolls this read rides are pinned, so no seed or world matters: the
+      // heal roll at 0.9 of its range, and a crit (heals roll ctx.spellCrit, so
+      // a chance of 1 always crits). Before, both rode the full world's rng
+      // stream on seed 1402, which drew a crit on an upper-range roll (260).
+      sim.rng.next = () => 0.9;
       const pin = () => {
-        noCrit(sim.player);
+        sim.player.critChance = 0;
+        sim.ctx.spellCrit = () => 1;
         sim.player.spellPower = spellPower;
         sim.player.maxHp = 100_000; // re-pin every tick: a recalc otherwise resets it
         sim.player.hp = 1; // stay far under max so overheal never clips the read
@@ -618,15 +625,17 @@ describe('v0.42.0 offense-only package: real combat-path packets', () => {
     });
 
     it("Scouring Mercy's heal half does NOT move: unaffected by Spell Power AND by Doctrine's offense-only bonus (both would move it if it leaked into healMult)", () => {
-      // A friendly self-cast of Scouring Mercy resolves as a guaranteed crit
-      // here (an unrelated priest mechanic, not part of this package): the
-      // observable amount is a flat 2x the authored 130-155 range with NO
-      // Spell Power rider at all. That flatness is exactly the proof this
-      // case needs: if Doctrine's 1.30 (or any Spell Power scaling) leaked
-      // into this heal's mult, spellPower 0 and 1200 would read DIFFERENT
-      // amounts, and/or the amount would exceed the raw crit-doubled ceiling.
-      const atZeroSp = scouringMercyHealOnSelf(0, 1402);
-      const atHighSp = scouringMercyHealOnSelf(1200, 1402);
+      // The self-cast's crit and heal roll are pinned in scouringMercyHealOnSelf
+      // (it is not a guaranteed crit: both used to ride the full world's rng
+      // stream on seed 1402). The pinned read is 269 at either Spell Power: a
+      // 1.5x heal crit on a 0.9 roll of the 130-155 range plus the gear's
+      // Healing Power, so the 2x-authored-range bounds below hold for this roll,
+      // not for every roll (a crit spans about 236 to 273). The flatness is the
+      // proof this case needs: if Doctrine's 1.30 (or any Spell Power scaling)
+      // leaked into this heal's mult, spellPower 0 and 1200 would read
+      // DIFFERENT amounts, and/or the amount would clear the 310 ceiling.
+      const atZeroSp = scouringMercyHealOnSelf(0, PACKET_SEED);
+      const atHighSp = scouringMercyHealOnSelf(1200, PACKET_SEED);
       expect(atHighSp).toBe(atZeroSp);
       expect(atZeroSp).toBeGreaterThanOrEqual(2 * 130);
       expect(atZeroSp).toBeLessThanOrEqual(2 * 155);
