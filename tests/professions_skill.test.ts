@@ -250,7 +250,7 @@ describe('Sim integration: craftSkills read surface + persistence', () => {
 
   it('is deterministic: two identical gain sequences produce identical craft skills', () => {
     const run = () => {
-      const sim = new Sim({ seed: 99, playerClass: 'mage', autoEquip: true });
+      const sim = new Sim({ seed: 7, playerClass: 'mage', autoEquip: true }); // the file's one seed
       sim.gainCraftSkill(sim.primaryId, 'jewelcrafting', 3);
       sim.gainCraftSkill(sim.primaryId, 'jewelcrafting', 2);
       sim.gainCraftSkill(sim.primaryId, 'inscription', 7);
