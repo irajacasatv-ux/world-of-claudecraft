@@ -138,8 +138,8 @@ const TONIC_WIN_SEED = 2;
 // 0.862581, times 2^32 floored), whose skill-0 expansion pays
 // { count: 3, fine: 1 }: BOTH grades nonzero, so the five-fold arms below
 // can pin base and fine multiplication on one seed without any skill
-// fiddling. Every other harness seed used in this file (2, 3, 4, 5, 8, 41)
-// LOSES the golden roll at both the tier-1 position (third draw) and the
+// fiddling. Every other harness seed used in this file (2, 3, 4, 5, 8, 41,
+// 1234) LOSES the golden roll at both the tier-1 position (third draw) and the
 // tier-3/4 position (fourth), so no pre-existing payout arm multiplies
 // (probed the same way).
 //
@@ -147,8 +147,15 @@ const TONIC_WIN_SEED = 2;
 // the file builds a seed and a few ms after, so an arm with no probed seed
 // of its own (a same-seed twin, a determinism pair, a clock or save arm)
 // runs on the default harness seed 41, and a different-seed negative on 4.
-// Only a probed arm builds a seed of its own.
+// Only a probed arm builds a seed of its own, and so does the anti-chore
+// equality below (ANTI_CHORE_SEED).
 const GOLDEN_WIN_SEED = 280;
+// The two anti-chore arms (a harvest N hours late pays EXACTLY what an
+// on-time one pays, plain and toniced) keep the seed they were written on:
+// an equality over one stored yield seed only sees a lateness term that moves
+// THAT seed's expansion, and seed 41's expansion happens to absorb a small
+// lateness offset (a +7 yield-seed perturbation) that 1234's reports.
+const ANTI_CHORE_SEED = 1234;
 
 // The shipped crop's own numbers, read from the catalog rather than restated,
 // so a tuning pass moves the fixture with the content instead of reddening
@@ -1778,8 +1785,8 @@ describe('the tonic yield arm: seed expansion, never a draw', () => {
   it('pays a toniced harvest N hours late EXACTLY what an on-time one pays', () => {
     // The anti-chore equality re-proven with the knob armed: lateness is not
     // an input to the tonic roll either.
-    const onTime = makeHarness(41);
-    const late = makeHarness(41);
+    const onTime = makeHarness(ANTI_CHORE_SEED);
+    const late = makeHarness(ANTI_CHORE_SEED);
     for (const hx of [onTime, late]) {
       hx.sim.addItem(SEED_ID, 1, hx.pid);
       hx.sim.addItem(FARM_GROWTH_TONIC_ITEM_ID, 1, hx.pid);
@@ -3888,8 +3895,8 @@ describe('convertHusks: the farmer-NPC range gate (the go-live)', () => {
 
 describe('THE ANTI-CHORE INVARIANT: nothing rots', () => {
   it('pays a harvest N hours late EXACTLY what an on-time harvest pays', () => {
-    const onTime = makeHarness(41);
-    const late = makeHarness(41);
+    const onTime = makeHarness(ANTI_CHORE_SEED);
+    const late = makeHarness(ANTI_CHORE_SEED);
     for (const h of [onTime, late]) {
       giveSeeds(h);
       plant(h);
