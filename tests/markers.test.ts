@@ -16,14 +16,24 @@ vi.mock('../server/db', () => ({
 import { GameServer } from '../server/game';
 import { Sim } from '../src/sim/sim';
 import type { Entity } from '../src/sim/types';
+import { WORLD_SEED } from '../src/sim/world_seed';
+import { WOLF_TEST_WORLD } from './sim_shared';
 
 // Raid marker ids (0..7), the classic raid-marker order: Star, Circle, Diamond, Triangle, Moon,
 // Square, Cross, Skull.
 const STAR = 0;
 const SKULL = 7;
 
+// The marks need only a couple of live wild mobs, which the wolf camps spawn,
+// on the realm's seed the server cases' GameServer boots on (seed 42's full
+// overworld paid a build of its own).
 function makeWorld() {
-  return new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+  return new Sim({
+    seed: WORLD_SEED,
+    playerClass: 'warrior',
+    noPlayer: true,
+    world: WOLF_TEST_WORLD,
+  });
 }
 
 // Wild, live, hostile mobs are spawned from CAMPS in the Sim constructor.
