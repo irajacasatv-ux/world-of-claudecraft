@@ -117,13 +117,14 @@ describe('the lane threshold over the measured shard weights', () => {
 // config and is reviewed by hand.
 const GUARDS_LINE = /^(?:\/\/+|\/?\*+)\s*Guards:\s*(\S.*)$/;
 // The cost is a field, not prose: its `Cost:` line holds one time and nothing else (`Cost: 0.4 s`,
-// `Cost: 450 ms`, an optional closing period), and the next comment line ends its paragraph (a
-// blank comment line, a `Guards:` line, or the end of the comment), so the field cannot be
-// qualified on the line after it. A fraction reads only in seconds and to two places, so a dot
-// used to group thousands cannot shrink a cost. Anything else (`1,200 ms`, `about 1.2 s at one
-// worker`, `1 s warm, 2 min cold`, a wrapped second time, a second cost marker in any case) is
-// refused rather than read, which fails the file: the safe direction. Prose elsewhere in the
-// header is not the declaration, and the first harvest replaces the field with a measured row.
+// `Cost: 450 ms`, an optional closing period) on a line that is all comment, and what directly
+// follows it closes its paragraph: a blank comment line or a `Guards:` line, or, when the field is
+// the header's last comment line, the end of the file or a code line with no comment on it. So
+// nothing adjacent can qualify the field. A fraction reads only in seconds and to two places, so a
+// dot used to group thousands cannot shrink a cost. Anything else (`1,200 ms`, `about 1.2 s at one
+// worker`, `1 s warm, 2 min cold`, a wrapped or trailing second time, a second cost marker in any
+// case) is refused rather than read, which fails the file: the safe direction. Prose elsewhere in
+// the header is not the declaration, and the first harvest replaces the field with a measured row.
 const COST_FIELD =
   /^(?:\/\/+|\/?\*+)\s*Cost:\s*(?:(\d+\.\d{1,2})\s*s|(\d+)\s*(ms|s))\.?\s*(?:\*\/)?$/;
 const COST_MARKER = /^(?:\/\/+|\/?\*+)\s*cost\s*:/i;
@@ -154,41 +155,42 @@ function scanCommentLine(line: string, inBlock: boolean): { code: number; open: 
   return { code: -1, open };
 }
 
-/** The leading comment block: every comment line before the first line of code, split on every
- *  JavaScript line terminator. A block comment runs from its opening to its closing whatever its
- *  lines start with, so an unstarred line inside one is a comment line too, and the comment part
- *  of the line where code begins counts as well: neither can close the cost field's paragraph. */
-function leadingComment(source: string): string[] {
+/** The header: every line that is all comment before the first line holding code, split on every
+ *  JavaScript line terminator (a block comment runs from its opening to its closing whatever its
+ *  lines start with), and that first code line itself, undefined when the file is all comment. */
+function leadingComment(source: string): { lines: string[]; codeLine?: string } {
   const lines: string[] = [];
   let inBlock = false;
   for (const line of source.split(/\r\n|[\n\r\u2028\u2029]/)) {
     const trimmed = line.trim();
     if (trimmed === '') continue;
     const scan = scanCommentLine(trimmed, inBlock);
-    if (scan.code >= 0) {
-      const comment = trimmed.slice(0, scan.code).trim();
-      if (comment !== '') lines.push(comment);
-      break;
-    }
+    if (scan.code >= 0) return { lines, codeLine: trimmed };
     lines.push(trimmed);
     inBlock = scan.open;
   }
-  return lines;
+  return { lines };
 }
 
 function admissionStatement(source: string): { guards?: string; costMs?: number } {
   const statement: { guards?: string; costMs?: number } = {};
-  const comment = leadingComment(source);
-  for (const line of comment) {
+  const { lines, codeLine } = leadingComment(source);
+  for (const line of lines) {
     const guards = line.match(GUARDS_LINE)?.[1].trim();
     if (guards && guards.length >= GUARDS_MIN_CHARS && !guards.includes('Cost:'))
       statement.guards ??= guards;
   }
-  const markers = comment.flatMap((line, i) => (COST_MARKER.test(line) ? [i] : []));
-  if (markers.length !== 1) return statement;
-  const cost = comment[markers[0]].match(COST_FIELD);
-  const next = comment[markers[0] + 1];
-  if (cost && (next === undefined || PARAGRAPH_END.test(next)))
+  const markers = lines.flatMap((line, i) => (COST_MARKER.test(line) ? [i] : []));
+  // One marker, and none on the code line (a field sharing a line with code is refused).
+  if (markers.length !== 1 || (codeLine !== undefined && /cost\s*:/i.test(codeLine)))
+    return statement;
+  const at = markers[0];
+  const cost = lines[at].match(COST_FIELD);
+  const closed =
+    at + 1 < lines.length
+      ? PARAGRAPH_END.test(lines[at + 1])
+      : codeLine === undefined || !/\/\/|\/\*|\*\//.test(codeLine);
+  if (cost && closed)
     statement.costMs = cost[1]
       ? Number(cost[1]) * 1000
       : Number(cost[2]) * (cost[3] === 's' ? 1000 : 1);
@@ -516,7 +518,8 @@ describe('the new-test admission rule', () => {
     const read = (header: string) => admissionStatement(header).costMs;
     expect(read('// Cost: 1200 ms\n')).toBe(1200);
     expect(read('// Cost: 1.2s.\n')).toBe(1200);
-    expect(read('/* Cost: 1 s\n*/ export {};\n')).toBe(1000);
+    expect(read('/** Cost: 1.25 s */\nexport {};\n')).toBe(1250);
+    expect(read('// Cost: 1 s\nexport {};\n')).toBe(1000);
     expect(read('/** Cost: 1.25 s */\n')).toBe(1250);
     // The paragraph ends at a blank comment line or a Guards: line.
     expect(read('// Cost: 1 s\n//\n// Later prose.\n')).toBe(1000);
@@ -541,6 +544,13 @@ describe('the new-test admission rule', () => {
       '// Cost: 1 s\n/* 2 min cold */ export {};\n',
       '// intro\r/*\n// Cost: 1 s\nwarm; 2 min cold\n*/\n',
       '// intro\u2028/*\n// Cost: 1 s\nwarm; 2 min cold\n*/\n',
+      '/* Cost: 1 s\n*/ export {};\n',
+      '/* Cost: 1 s */ x;\n',
+      '/* Cost: 1 s */ x; // 2 min cold\n',
+      '/* Cost: 1 s */ x; /* 2 min cold */\n',
+      '/**\n * Cost: 1 s */ export {}; // 2 min cold\n',
+      '// Cost: 1 s\nexport {}; // 2 min cold\n',
+      '// Cost: 1 s\n//\nexport {}; // cost: 2 min\n',
     ])
       expect(read(refused), refused).toBeUndefined();
     expect(admissionStatement(afterDocblock).costMs).toBe(450);
