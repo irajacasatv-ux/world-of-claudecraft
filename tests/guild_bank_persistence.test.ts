@@ -95,6 +95,9 @@ import {
 import { captureMaterialStackSelection } from '../src/sim/material_stack_selection';
 import { type CharacterState, Sim } from '../src/sim/sim';
 import type { Entity } from '../src/sim/types';
+// Every Sim here shares the GameServer's seed, so the file builds one world's
+// collider grids instead of one per seed (the seed itself is incidental).
+import { WORLD_SEED } from '../src/sim/world_seed';
 import { releasedSpyOn } from './helpers/released_spy';
 
 const GUILD_ID = 913;
@@ -310,7 +313,7 @@ beforeEach(() => {
 
 describe('loadGuildBanksIntoSim (the boot load, against a REAL Sim)', () => {
   it('injects parsed rows, gives no-row guilds an empty book, and verifies has()', () => {
-    const sim = new Sim({ seed: 3, playerClass: 'warrior', autoEquip: false });
+    const sim = new Sim({ seed: WORLD_SEED, playerClass: 'warrior', autoEquip: false });
     const book = {
       treasury: 777,
       inventory: [{ itemId: 'wolf_fang', count: 2 }],
@@ -334,7 +337,7 @@ describe('loadGuildBanksIntoSim (the boot load, against a REAL Sim)', () => {
   });
 
   it('SKIPS an oversized row entirely: no book, ops stay inert, nothing to overwrite it', () => {
-    const sim = new Sim({ seed: 3, playerClass: 'warrior', autoEquip: false });
+    const sim = new Sim({ seed: WORLD_SEED, playerClass: 'warrior', autoEquip: false });
     const result = loadGuildBanksIntoSim(sim, [{ guildId: 9, data: null, oversized: true }]);
     expect(result).toEqual({ loaded: [], oversized: [9], malformed: [], missing: [] });
     // NOT loaded as empty: an empty book would be persisted over the real row.
@@ -351,7 +354,7 @@ describe('loadGuildBanksIntoSim (the boot load, against a REAL Sim)', () => {
     // because an empty book loaded in its place would be persisted over the
     // real row by the next escrow save. The DB read therefore always hands
     // parsed JSONB, and an unparsed string can never silently empty a bank.
-    const sim = new Sim({ seed: 3, playerClass: 'warrior', autoEquip: false });
+    const sim = new Sim({ seed: WORLD_SEED, playerClass: 'warrior', autoEquip: false });
     const book = { treasury: 555, inventory: [], purchasedSlots: 0 };
     const result = loadGuildBanksIntoSim(sim, [
       { guildId: 7, data: book, oversized: false }, // parsed JSONB: the pg contract
@@ -364,7 +367,7 @@ describe('loadGuildBanksIntoSim (the boot load, against a REAL Sim)', () => {
   });
 
   it('reports a guild whose id the load path refuses as missing', () => {
-    const sim = new Sim({ seed: 3, playerClass: 'warrior', autoEquip: false });
+    const sim = new Sim({ seed: WORLD_SEED, playerClass: 'warrior', autoEquip: false });
     const result = loadGuildBanksIntoSim(sim, [{ guildId: 0, data: null, oversized: false }]);
     expect(result.missing).toEqual([0]);
   });
@@ -373,7 +376,7 @@ describe('loadGuildBanksIntoSim (the boot load, against a REAL Sim)', () => {
     // sanitizeGuildBankState would salvage these into a near-empty book that
     // the next escrow save persists OVER the real row. Loads never destroy:
     // a top-level shape mismatch is skip-and-preserve like the oversized arm.
-    const sim = new Sim({ seed: 3, playerClass: 'warrior', autoEquip: false });
+    const sim = new Sim({ seed: WORLD_SEED, playerClass: 'warrior', autoEquip: false });
     const result = loadGuildBanksIntoSim(sim, [
       { guildId: 7, data: 'not an object', oversized: false },
       { guildId: 8, data: [1, 2, 3], oversized: false },
@@ -451,7 +454,15 @@ describe('GameServer.loadGuildBanks (boot retry)', () => {
         { guildId: 7, data: { treasury: 3, inventory: [], purchasedSlots: 0 }, oversized: false },
       ]);
     const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    await server.loadGuildBanks();
+    // The retry backoff runs on a fake clock: the first retry waits 500 ms.
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    try {
+      const load = server.loadGuildBanks();
+      await vi.advanceTimersByTimeAsync(500);
+      await load;
+    } finally {
+      vi.useRealTimers();
+    }
     errSpy.mockRestore();
     expect(dbMock.loadGuildBankRows).toHaveBeenCalledTimes(2);
     expect(server.sim.guildBanks.get(7)?.treasury).toBe(3);
@@ -461,7 +472,16 @@ describe('GameServer.loadGuildBanks (boot retry)', () => {
     const server = new GameServer();
     dbMock.loadGuildBankRows.mockRejectedValue(new Error('db down'));
     const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    await expect(server.loadGuildBanks()).resolves.toBeUndefined();
+    // The two retry waits (500 ms, then 1000 ms) run on a fake clock.
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    try {
+      const load = server.loadGuildBanks();
+      await vi.advanceTimersByTimeAsync(1_500);
+      await expect(load).resolves.toBeUndefined();
+    } finally {
+      vi.useRealTimers();
+    }
+    expect(dbMock.loadGuildBankRows).toHaveBeenCalledTimes(3);
     const loud = errSpy.mock.calls.some((c) => String(c[0]).includes('GUILD BANKS UNAVAILABLE'));
     errSpy.mockRestore();
     expect(loud).toBe(true);
@@ -485,7 +505,7 @@ describe('the round trip (serialize -> reload on a fresh Sim)', () => {
     expect(serialized).not.toBeNull();
 
     // Restart shape: a fresh sim boot-loads the serialized row.
-    const sim2 = new Sim({ seed: 99, playerClass: 'mage', autoEquip: false });
+    const sim2 = new Sim({ seed: WORLD_SEED, playerClass: 'mage', autoEquip: false });
     loadGuildBanksIntoSim(sim2, [{ guildId: GUILD_ID, data: serialized, oversized: false }]);
     expect(sim2.guildBanks.get(GUILD_ID)).toEqual(serialized);
     expect(sim2.serializeGuildBank(GUILD_ID)).toEqual(serialized);
@@ -1602,7 +1622,7 @@ describe('the guild_create fee gate + the create/disband hooks', () => {
     const durableState = durableStates[0];
     expect(durableState?.deedStats?.counters?.guildsFounded).toBe(1);
     if (!durableState) throw new Error('paid creator did not commit a character state');
-    const restarted = new Sim({ seed: 9913, playerClass: 'warrior', noPlayer: true });
+    const restarted = new Sim({ seed: WORLD_SEED, playerClass: 'warrior', noPlayer: true });
     const restoredPid = restarted.addPlayer('warrior', 'DurableFounder', {
       state: durableState,
     });
@@ -2482,14 +2502,22 @@ describe('the guild_create fee gate + the create/disband hooks', () => {
     // on the withMarket leave path).
     dbMock.saveCharacterAndMarketState.mockRejectedValue(new Error('db down'));
     const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    await priv(server).saveCharacterOnLeave(session);
+    // The four backoff waits (250, 500, 1000, 2000 ms) run on a fake clock.
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    try {
+      const leave = priv(server).saveCharacterOnLeave(session);
+      await vi.advanceTimersByTimeAsync(3_750);
+      await leave;
+    } finally {
+      vi.useRealTimers();
+    }
     errSpy.mockRestore();
     dbMock.saveCharacterAndMarketState.mockResolvedValue(true);
     // Live state returned to durable truth: the unflushable withdrawal is
     // gone from the live book (its character half never persisted either).
     expect(server.sim.guildBanks.get(GUILD_ID)).toEqual(durable);
     expect(session.dirtyGuildBanks.size).toBe(0);
-  }, 30_000);
+  });
 });
 
 // ---------------------------------------------------------------------------
