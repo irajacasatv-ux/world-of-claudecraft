@@ -26,6 +26,7 @@ import { expectDefined } from './helpers/defined';
 
 // The production seed: the report is seed-pinned world geometry.
 const SEED = 20061;
+const NIGHTLY_SWEEP = process.env.WOC_NIGHTLY_SWEEP === '1';
 
 // Terrain and collider geometry read the module-global active world content
 // (data.ts), never Sim's cfg.world (see the sim.ts constructor invariant
@@ -105,10 +106,13 @@ function walkHeading(
 }
 
 // Sixteen-azimuth sweep out of the bowl. Returns the headings (in degrees,
-// atan2(dx, dz) convention) that reached the rim.
+// atan2(dx, dz) convention) that reached the rim. Every PR walks the four
+// cardinal headings (the west one escapes today, beside the ramp case below);
+// the nightly depth flag walks all sixteen (225 to 315 escape today). A bowl
+// that traps every heading reds both depths.
 function escapeHeadings(spot: { x: number; z: number }, seconds: number): number[] {
   const out: number[] = [];
-  for (let k = 0; k < 16; k++) {
+  for (let k = 0; k < 16; k += NIGHTLY_SWEEP ? 1 : 4) {
     const facing = (k * Math.PI) / 8;
     const end = walkHeading(spot, facing, seconds);
     const moved = Math.hypot(end.x - spot.x, end.z - spot.z);
