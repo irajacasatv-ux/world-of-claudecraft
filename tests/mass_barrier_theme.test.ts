@@ -7,6 +7,10 @@ function joinParty(sim: Sim, leaderId: number, memberId: number): void {
   sim.partyAccept(memberId);
 }
 
+// One seed for the file: no case reads a seeded roll, and each fresh seed built
+// its own collider grid on the first tick (over a second each).
+const BARRIER_SEED = 86;
+
 describe('Mass Barrier specialization theme', () => {
   for (const [spec, personalBarrierId, personalBarrierCooldown] of [
     ['arcane', 'temporal_barrier', 12],
@@ -15,7 +19,7 @@ describe('Mass Barrier specialization theme', () => {
   ] as const) {
     it(`also starts ${personalBarrierId}'s cooldown for a ${spec} caster`, () => {
       const sim = new Sim({
-        seed: 86,
+        seed: BARRIER_SEED,
         playerClass: 'mage',
         autoEquip: true,
         world: EMPTY_TEST_WORLD,
@@ -36,7 +40,7 @@ describe('Mass Barrier specialization theme', () => {
   ] as const) {
     it(`stores the ${school} visual school for a ${spec} caster`, () => {
       const sim = new Sim({
-        seed: 87,
+        seed: BARRIER_SEED,
         playerClass: 'mage',
         autoEquip: true,
         world: EMPTY_TEST_WORLD,
@@ -63,7 +67,7 @@ describe('Mass Barrier specialization theme', () => {
 
   it('shields nearby group members but never unrelated friendly players', () => {
     const sim = new Sim({
-      seed: 89,
+      seed: BARRIER_SEED,
       playerClass: 'mage',
       autoEquip: true,
       world: EMPTY_TEST_WORLD,
@@ -91,7 +95,7 @@ describe('Mass Barrier specialization theme', () => {
 
   it('always includes a higher-id caster when five allies are co-located', () => {
     const sim = new Sim({
-      seed: 88,
+      seed: BARRIER_SEED,
       playerClass: 'warrior',
       autoEquip: true,
       world: EMPTY_TEST_WORLD,
