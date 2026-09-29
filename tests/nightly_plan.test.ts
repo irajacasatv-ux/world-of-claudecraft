@@ -8,6 +8,7 @@ import {
   NIGHTLY_ISSUE_LABEL,
   NIGHTLY_ISSUE_TITLE,
   NIGHTLY_LANES_PER_REF,
+  NIGHTLY_TEST_SHARDS,
   parseTargetsEnv,
   pickActiveReleaseBranch,
   planNightlyReport,
@@ -36,13 +37,16 @@ const FAILED = [
 const success = (name: string) => ({ name, conclusion: 'success', html_url: '' });
 
 // A fully proven green run for RUN's two targets: the targets job plus
-// NIGHTLY_LANES_PER_REF lanes per ref, all successful.
+// NIGHTLY_LANES_PER_REF lanes per ref (both halves of the tests job, checks,
+// browser), all successful.
 const FULL_GREEN = [
   success('Resolve nightly refs'),
-  success('Nightly tests (main)'),
+  success('Nightly tests (main, 1/2)'),
+  success('Nightly tests (main, 2/2)'),
   success('Nightly checks (main)'),
   success('Nightly browser (main)'),
-  success('Nightly tests (release/v0.35.0)'),
+  success('Nightly tests (release/v0.35.0, 1/2)'),
+  success('Nightly tests (release/v0.35.0, 2/2)'),
   success('Nightly checks (release/v0.35.0)'),
   success('Nightly browser (release/v0.35.0)'),
 ];
@@ -63,7 +67,8 @@ describe('issue identity constants', () => {
     expect(NIGHTLY_ISSUE_TITLE).toBe('Nightly full gate is red');
     expect(NIGHTLY_DRILL_ISSUE_LABEL).toBe('nightly-gate-drill');
     expect(NIGHTLY_DRILL_ISSUE_TITLE).toBe('Nightly full gate drill is red');
-    expect(NIGHTLY_LANES_PER_REF).toBe(3);
+    expect(NIGHTLY_TEST_SHARDS).toBe(2);
+    expect(NIGHTLY_LANES_PER_REF).toBe(4);
     expect(trackingIssueIdentity(false)).toEqual({
       label: 'nightly-gate',
       title: 'Nightly full gate is red',
@@ -463,7 +468,7 @@ describe('planNightlyReport', () => {
   it('treats a no-failure run that proved nothing as red, never as recovery', () => {
     // Zero failures but only the targets job and one lane completed: closing
     // the tracking issue here would be the silent-green failure mode itself.
-    const partial = [success('Resolve nightly refs'), success('Nightly tests (main)')];
+    const partial = [success('Resolve nightly refs'), success('Nightly tests (main, 1/2)')];
     const plan = planNightlyReport({
       ...RUN,
       failed: [],
@@ -472,10 +477,26 @@ describe('planNightlyReport', () => {
     });
     expect(plan.action).toBe('update');
     if (plan.action !== 'update') throw new Error('unreachable');
-    expect(plan.body).toContain('only 2 of the 7 expected jobs succeeded (unproven)');
+    expect(plan.body).toContain('only 2 of the 9 expected jobs succeeded (unproven)');
     // And with no open issue, it files one rather than staying silent.
     const fresh = planNightlyReport({ ...RUN, failed: [], completed: partial, openIssues: [] });
     expect(fresh.action).toBe('create');
+  });
+
+  it('treats a night where one half of the suite never finished as unproven, not green', () => {
+    // The tests job runs as NIGHTLY_TEST_SHARDS halves per ref; a half that was
+    // cancelled or never scheduled leaves no failure behind, so only the count
+    // can see it.
+    const oneHalfMissing = FULL_GREEN.filter((job) => job.name !== 'Nightly tests (main, 2/2)');
+    const plan = planNightlyReport({
+      ...RUN,
+      failed: [],
+      completed: oneHalfMissing,
+      openIssues: [openIssue(42)],
+    });
+    expect(plan.action).toBe('update');
+    if (plan.action !== 'update') throw new Error('unreachable');
+    expect(plan.body).toContain('only 8 of the 9 expected jobs succeeded (unproven)');
   });
 
   it('treats unknown targets as unproven even with zero failures', () => {
@@ -507,14 +528,15 @@ describe('planNightlyReport', () => {
       title: NIGHTLY_DRILL_ISSUE_TITLE,
       labels: [NIGHTLY_DRILL_ISSUE_LABEL],
     });
-    // A proven green drill (targets job + 3 lanes for its one ref) must not
+    // A proven green drill (targets job + 4 lanes for its one ref) must not
     // close the production issue either.
     const green = planNightlyReport({
       ...drillRun,
       failed: [],
       completed: [
         success('Resolve nightly refs'),
-        success('Nightly tests (scratch/broken-test)'),
+        success('Nightly tests (scratch/broken-test, 1/2)'),
+        success('Nightly tests (scratch/broken-test, 2/2)'),
         success('Nightly checks (scratch/broken-test)'),
         success('Nightly browser (scratch/broken-test)'),
       ],
@@ -529,7 +551,8 @@ describe('planNightlyReport', () => {
       failed: [],
       completed: [
         success('Resolve nightly refs'),
-        success('Nightly tests (scratch/broken-test)'),
+        success('Nightly tests (scratch/broken-test, 1/2)'),
+        success('Nightly tests (scratch/broken-test, 2/2)'),
         success('Nightly checks (scratch/broken-test)'),
         success('Nightly browser (scratch/broken-test)'),
       ],

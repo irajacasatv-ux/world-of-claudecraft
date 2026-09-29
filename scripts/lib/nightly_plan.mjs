@@ -22,11 +22,14 @@ export const NIGHTLY_ISSUE_TITLE = 'Nightly full gate is red';
 export const NIGHTLY_DRILL_ISSUE_LABEL = 'nightly-gate-drill';
 export const NIGHTLY_DRILL_ISSUE_TITLE = 'Nightly full gate drill is red';
 
-// The per-ref lanes the workflow fans out (tests, checks, browser). The
-// proven-green guard below counts successes against this, so removing a lane
-// from the workflow without updating this constant turns the nightly
-// permanently "unproven" (loudly red), never silently green.
-export const NIGHTLY_LANES_PER_REF = 3;
+// The per-ref lanes the workflow fans out: the tests job's NIGHTLY_TEST_SHARDS
+// halves of the one full suite, then checks and browser. The proven-green guard
+// below counts successes against this, so removing a lane or a test half from the
+// workflow without updating these constants turns the nightly permanently
+// "unproven" (loudly red), never silently green, and a run where one half of the
+// suite never finished reads as unproven, not as a pass.
+export const NIGHTLY_TEST_SHARDS = 2;
+export const NIGHTLY_LANES_PER_REF = NIGHTLY_TEST_SHARDS + 2;
 
 /**
  * The issue identity a run reports under: the production pair, or the drill

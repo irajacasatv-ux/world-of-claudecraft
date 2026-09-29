@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { NIGHTLY_LANES_PER_REF } from '../scripts/lib/nightly_plan.mjs';
+import { NIGHTLY_LANES_PER_REF, NIGHTLY_TEST_SHARDS } from '../scripts/lib/nightly_plan.mjs';
 import { DIET_FLAG, NIGHTLY_FLAG } from './helpers/depth_flags';
 import { PLAYWRIGHT_INSTALL_BLOCK } from './helpers/playwright_install_block';
 
@@ -107,9 +107,10 @@ describe('nightly gate workflow', () => {
       expect(job).toMatch(stepLine('run: pnpm install --frozen-lockfile'));
       expect(job).toContain(`version: ${PNPM_VERSION}`);
     }
-    // The proven-green guard counts this many lanes per ref; the workflow and
-    // the planning lib must agree or every night reads as unproven.
-    expect(LANE_JOBS).toHaveLength(NIGHTLY_LANES_PER_REF);
+    // The proven-green guard counts this many lanes per ref (the tests job fans
+    // into NIGHTLY_TEST_SHARDS halves); the workflow and the planning lib must
+    // agree or every night reads as unproven.
+    expect(LANE_JOBS.length - 1 + NIGHTLY_TEST_SHARDS).toBe(NIGHTLY_LANES_PER_REF);
     // The entry scripts stay wired to the unit-tested planning lib: the
     // targets entry emits the JSON-escaped refs output the matrix consumes,
     // and the report entry calls the planner and the drill identity switch.
@@ -124,11 +125,13 @@ describe('nightly gate workflow', () => {
     expect(reportEntry).toContain('labelEnsureFailed(');
   });
 
-  it('runs the full unsharded suite per ref, with the bounded worker cap', () => {
+  it('runs the whole suite per ref as every half of one shard matrix, with the bounded worker cap', () => {
     const tests = jobSource('tests');
-    expect(tests).toMatch(stepLine('run: npm test -- --maxWorkers='));
+    const halves = Array.from({ length: NIGHTLY_TEST_SHARDS }, (_, i) => i + 1);
+    const SHARD_ARG = `--shard=\${{ matrix.shard }}/${NIGHTLY_TEST_SHARDS}`;
+    expect(tests).toMatch(stepLine(`run: npm test -- ${SHARD_ARG} --maxWorkers=`));
     expect(tests).toContain(
-      'run: npm test -- --maxWorkers="$(node -p \'Math.max(1, Math.floor(require("node:os").availableParallelism() / 2))\')"',
+      `run: npm test -- ${SHARD_ARG} --maxWorkers="$(node -p 'Math.max(1, Math.floor(require("node:os").availableParallelism() / 2))')"`,
     );
     // The nightly is the ONE run that restores the balance harnesses' full
     // sweep configuration (docs/qa-gate.md, "The balance-harness diet"): the
@@ -142,7 +145,8 @@ describe('nightly gate workflow', () => {
           String.raw`(?: {8}#[^\n]*\n)* {8}env:\n` +
           ` {10}${DIET_FLAG}: '1'\n` +
           ` {10}${NIGHTLY_FLAG}: '1'\n` +
-          String.raw` {8}run: npm test -- --maxWorkers=`,
+          String.raw` {8}run: npm test -- --shard=\$\{\{ matrix\.shard \}\}/` +
+          `${NIGHTLY_TEST_SHARDS} --maxWorkers=`,
       ),
     );
     // Nowhere else: both flags are nightly-depth-only by design, so a copy on
@@ -152,9 +156,13 @@ describe('nightly gate workflow', () => {
     // tests/ci_shard_plan.test.ts.
     expect(workflow.split(DIET_FLAG)).toHaveLength(2);
     expect(workflow.split(NIGHTLY_FLAG)).toHaveLength(2);
-    // Unsharded by design: a --shard flag here would quietly turn the nightly
-    // proof into a partial run.
-    expect(tests).not.toContain('--shard');
+    // Sharded, never partial: the matrix lists EVERY half (a lone --shard would
+    // quietly turn the nightly proof into a partial run), each leg's job name
+    // carries its half so the report can tell them apart, the one --shard flag
+    // is the matrix's, and the proven-green guard counts both halves per ref.
+    expect(tests).toMatch(new RegExp(String.raw`\n {8}shard: \[${halves.join(', ')}\]\n`));
+    expect(tests).toContain('name: Nightly tests (${{ matrix.ref }}, ${{ matrix.shard }}/2)');
+    expect(workflow.split('--shard')).toHaveLength(2);
     // The expected-red release-i18n locale tier stays out of the whole file
     // (issue #2820), not just out of the tests job.
     expect(workflow).not.toContain('I18N_RELEASE_TIER');

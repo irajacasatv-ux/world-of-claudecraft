@@ -2,6 +2,7 @@ export const NIGHTLY_ISSUE_LABEL: string;
 export const NIGHTLY_ISSUE_TITLE: string;
 export const NIGHTLY_DRILL_ISSUE_LABEL: string;
 export const NIGHTLY_DRILL_ISSUE_TITLE: string;
+export const NIGHTLY_TEST_SHARDS: number;
 export const NIGHTLY_LANES_PER_REF: number;
 
 export interface NightlyJobResult {

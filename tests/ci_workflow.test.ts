@@ -2180,7 +2180,7 @@ describe('CI workflow parity', () => {
 });
 
 describe('nightly per-file memory budgets', () => {
-  it('runs npm run test:memory as its own step of the nightly tests job, even after a red suite', () => {
+  it('runs npm run test:memory as its own step of the nightly tests job, once per ref, even after a red suite', () => {
     const nightly = readFileSync(
       new URL('../.github/workflows/nightly.yml', import.meta.url),
       'utf8',
@@ -2194,10 +2194,12 @@ describe('nightly per-file memory budgets', () => {
     // Name-to-if-to-run adjacency (comment lines allowed), so a commented-out or
     // step-detached copy cannot satisfy it; the budgets live in
     // scripts/test_memory_budgets.json and the probe in scripts/test_memory_probe.mjs.
+    // The job runs as two halves per ref and the probe measures every budgeted
+    // file itself, so it runs on the first half only.
     expect(testsJob).toMatch(
       new RegExp(
         String.raw`- name: Per-file memory budgets\n` +
-          String.raw`(?: {8}#[^\n]*\n)* {8}if: \$\{\{ !cancelled\(\) \}\}\n` +
+          String.raw`(?: {8}#[^\n]*\n)* {8}if: \$\{\{ !cancelled\(\) && matrix\.shard == 1 \}\}\n` +
           String.raw` {8}run: npm run test:memory\n`,
       ),
     );

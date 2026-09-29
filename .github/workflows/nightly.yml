@@ -14,7 +14,7 @@ name: Nightly gate
 # deliberately NOT triggered by pull_request or push: it must never add a
 # second of latency to PR feedback.
 #
-# What runs per ref: the full unsharded test suite (the same one the local
+# What runs per ref: the full test suite in two halves (the same suite the local
 # gate runs, at PR tier), the serialized checks (i18n artifacts + freshness,
 # malware gate, typecheck, all four builds), and the Chromium browser
 # regressions. The release-i18n 21-locale lane is deliberately absent: it is
@@ -94,18 +94,18 @@ jobs:
         # setup for a single API call.
         run: node scripts/nightly_targets.mjs
 
-  # The full test suite, unsharded, exactly like the local `npm run gate`
-  # vitest step (bounded workers, PR tier): wall clock does not matter at
-  # 04:47, and one job per ref keeps the tracking issue's failed-job list
-  # legible. `npm test` regenerates the i18n artifacts itself (pretest), which
-  # the S3 guard and guide freshness suites need.
+  # The full test suite, exactly like the local `npm run gate` vitest step
+  # (bounded workers, PR tier), in two halves per ref so the night stays under
+  # its bound; each half's job name carries its half, which keeps the tracking
+  # issue's failed-job list legible. `npm test` regenerates the i18n artifacts
+  # itself (pretest), which the S3 guard and guide freshness suites need.
   tests:
-    name: Nightly tests (${{ matrix.ref }})
+    name: Nightly tests (${{ matrix.ref }}, ${{ matrix.shard }}/2)
     needs: targets
     runs-on: ubuntu-latest
     timeout-minutes: 300
     # Same real-SQL wiring as ci.yml's pr-gate (ruling R16): the nightly full
-    # suite is the unsharded backstop, so it proves the pg suites daily on
+    # suite is the whole-suite backstop, so it proves the pg suites daily on
     # every tracked ref. Each matrix leg is its own job with its own
     # container, holding the fixed-database-name contract.
     services:
@@ -129,6 +129,12 @@ jobs:
       fail-fast: false
       matrix:
         ref: ${{ fromJSON(needs.targets.outputs.refs) }}
+        # The whole suite in two halves per ref (vitest sharding over the measured
+        # weights), each its own job: the unsharded run took 201 minutes of test
+        # step in one job. The report's proven-green guard counts BOTH halves
+        # (NIGHTLY_TEST_SHARDS in scripts/lib/nightly_plan.mjs), so a night where
+        # one half never finished reads as unproven, never as a full pass.
+        shard: [1, 2]
     steps:
       - name: Check out repository
         uses: actions/checkout@v6
@@ -161,14 +167,15 @@ jobs:
         env:
           WOC_FULL_BALANCE_SWEEP: '1'
           WOC_NIGHTLY_SWEEP: '1'
-        run: npm test -- --maxWorkers="$(node -p 'Math.max(1, Math.floor(require("node:os").availableParallelism() / 2))')"
+        run: npm test -- --shard=${{ matrix.shard }}/2 --maxWorkers="$(node -p 'Math.max(1, Math.floor(require("node:os").availableParallelism() / 2))')"
 
       - name: Per-file memory budgets
         # scripts/test_memory_probe.mjs over scripts/test_memory_budgets.json: each
         # budgeted file alone, a forced full GC after every case, red when a file's
         # peak retained heap passes its budget. Its own step, run even when the
-        # suite above is red, so a retention regression is named on its own.
-        if: ${{ !cancelled() }}
+        # suite above is red, so a retention regression is named on its own; on
+        # the first half only, since it measures every budgeted file itself.
+        if: ${{ !cancelled() && matrix.shard == 1 }}
         run: npm run test:memory
 
   # The serialized checks, mirroring the release-checks job in ci.yml (same

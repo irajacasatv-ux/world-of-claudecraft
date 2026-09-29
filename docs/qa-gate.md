@@ -392,7 +392,7 @@ harvest replaces it; a new file carries with `--carry-local-missing`.
 judge in `scripts/lib/test_memory_budget.mjs`, the probe config `vitest.memory.config.ts`) runs
 each file budgeted in `scripts/test_memory_budgets.json` alone, forces a full GC after every
 case, and fails a file whose peak RETAINED heap passes its budget or that leaves no record. The
-nightly tests job runs it as its own step (pinned in `tests/ci_workflow.test.ts`). Budgets are the
+nightly tests job runs it as its own step on its first half (pinned in `tests/ci_workflow.test.ts`). Budgets are the
 measured peak plus about 20 percent; lowering one is free, raising one needs its reason in the
 commit. Every vitest worker's heap is capped (`test.execArgv` in vite.config.ts) and the
 gates budget `GATE_BYTES_PER_WORKER` of memory per worker, so a retaining file
@@ -588,7 +588,8 @@ and `scripts/lib/test_visibility.mjs`, all pinned by `tests/gate_select_plan.tes
 ### Nightly full gate (scheduled backstop)
 
 `.github/workflows/nightly.yml` re-proves the tips of `main` and the highest
-`release/vX.Y.Z` branch (the `v` is optional) every night: the full unsharded test suite, the serialized
+`release/vX.Y.Z` branch (the `v` is optional) every night: the full test suite (two halves per ref, each
+its own job, both counted by the verdict), the serialized
 checks lane (mirroring ci.yml's release-checks run steps), and the Chromium browser
 lane, per ref. It exists because a red release tip once sat unwatched for days while
 every open PR inherited its failures; push runs show rot, but only to someone looking.
