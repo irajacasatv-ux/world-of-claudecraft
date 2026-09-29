@@ -8,6 +8,7 @@ import {
 import { Sim } from '../src/sim/sim';
 import type { SimContext } from '../src/sim/sim_context';
 import type { Entity } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // Independent literals, not imported from doctrine_rescue.ts: the authored
 // rescue-cleave budget (docs/design/class-balance-v042.md).
@@ -15,8 +16,20 @@ const EXPECTED_RESCUE_MAX_RECIPIENTS = 2;
 const EXPECTED_RESCUE_RADIUS = 10;
 const EXPECTED_RESCUE_FRACTION = 0.5;
 
-function doctrinePriest(seed: number): { sim: Sim; priest: Entity; ctx: SimContext } {
-  const sim = new Sim({ seed, playerClass: 'priest', autoEquip: true });
+// One seed and the empty test world for every case. Each case adds and
+// parties its own allies, so the ambient overworld is pure overhead, and the
+// first tick of every fresh seed builds that seed's collider grid (about half
+// a second each); the rescue copies are noncrit by construction, so a per-case
+// seed bought no extra coverage.
+const DOCTRINE_SEED = 50501;
+
+function doctrinePriest(): { sim: Sim; priest: Entity; ctx: SimContext } {
+  const sim = new Sim({
+    seed: DOCTRINE_SEED,
+    playerClass: 'priest',
+    autoEquip: true,
+    world: EMPTY_TEST_WORLD,
+  });
   sim.setPlayerLevel(20);
   expect(sim.setSpec('discipline')).toBe(true);
   sim.tick();
@@ -49,7 +62,7 @@ function castOn(sim: Sim, caster: Entity, target: Entity, abilityId: string): vo
 
 describe('v0.42.0 Doctrine: Scouring Mercy rescue cleave, recipient selection', () => {
   it('selects up to two OTHER injured party allies within 10 yards of the primary, nearest-to-death first', () => {
-    const { sim, priest, ctx } = doctrinePriest(50501);
+    const { sim, priest, ctx } = doctrinePriest();
     const primary = addPartyAlly(sim, priest, 'Primary', 4, 0);
     const worst = addPartyAlly(sim, priest, 'Worst', 5, 0);
     const mid = addPartyAlly(sim, priest, 'Mid', 3, 0);
@@ -69,7 +82,7 @@ describe('v0.42.0 Doctrine: Scouring Mercy rescue cleave, recipient selection', 
   });
 
   it('breaks a missing-health-fraction tie by stable entity id', () => {
-    const { sim, priest, ctx } = doctrinePriest(50502);
+    const { sim, priest, ctx } = doctrinePriest();
     const primary = addPartyAlly(sim, priest, 'Primary', 0, 0);
     const higherId = addPartyAlly(sim, priest, 'HigherId', 2, 0);
     const lowerId = addPartyAlly(sim, priest, 'LowerId', -2, 0);
@@ -82,7 +95,7 @@ describe('v0.42.0 Doctrine: Scouring Mercy rescue cleave, recipient selection', 
   });
 
   it('excludes a full-health ally', () => {
-    const { sim, priest, ctx } = doctrinePriest(50503);
+    const { sim, priest, ctx } = doctrinePriest();
     const primary = addPartyAlly(sim, priest, 'Primary', 0, 0);
     const full = addPartyAlly(sim, priest, 'Full', 2, 0);
     full.hp = full.maxHp;
@@ -91,7 +104,7 @@ describe('v0.42.0 Doctrine: Scouring Mercy rescue cleave, recipient selection', 
   });
 
   it('includes an ally exactly at the 10-yard boundary and excludes one just outside it', () => {
-    const { sim, priest, ctx } = doctrinePriest(50504);
+    const { sim, priest, ctx } = doctrinePriest();
     const primary = addPartyAlly(sim, priest, 'Primary', 0, 0);
     const atBoundary = addPartyAlly(sim, priest, 'AtBoundary', EXPECTED_RESCUE_RADIUS, 0);
     const justOutside = addPartyAlly(sim, priest, 'JustOutside', EXPECTED_RESCUE_RADIUS + 0.5, 0);
@@ -105,7 +118,7 @@ describe('v0.42.0 Doctrine: Scouring Mercy rescue cleave, recipient selection', 
   });
 
   it('excludes a living player who is not in the priest current group', () => {
-    const { sim, priest, ctx } = doctrinePriest(50505);
+    const { sim, priest, ctx } = doctrinePriest();
     const primary = addPartyAlly(sim, priest, 'Primary', 0, 0);
     const strangerId = sim.addPlayer('warrior', 'Stranger');
     sim.setPlayerLevel(20, strangerId);
@@ -120,7 +133,7 @@ describe('v0.42.0 Doctrine: Scouring Mercy rescue cleave, recipient selection', 
   });
 
   it('excludes a dead ally', () => {
-    const { sim, priest, ctx } = doctrinePriest(50506);
+    const { sim, priest, ctx } = doctrinePriest();
     const primary = addPartyAlly(sim, priest, 'Primary', 0, 0);
     const dead = addPartyAlly(sim, priest, 'Dead', 2, 0);
     dead.hp = 1;
@@ -130,7 +143,7 @@ describe('v0.42.0 Doctrine: Scouring Mercy rescue cleave, recipient selection', 
   });
 
   it('excludes a candidate the priest itself cannot see, even though it is within radius of the primary', () => {
-    const { sim, priest, ctx } = doctrinePriest(50514);
+    const { sim, priest, ctx } = doctrinePriest();
     const primary = addPartyAlly(sim, priest, 'Primary', 4, 0);
     const blocked = addPartyAlly(sim, priest, 'Blocked', 3, 0);
     const visible = addPartyAlly(sim, priest, 'Visible', 5, 0);
@@ -149,7 +162,7 @@ describe('v0.42.0 Doctrine: Scouring Mercy rescue cleave, recipient selection', 
 
 describe('v0.42.0 Doctrine: Scouring Mercy rescue cleave, copy application', () => {
   it('heals each recipient for exactly 50% of the effective primary heal, noncrit', () => {
-    const { sim, priest, ctx } = doctrinePriest(50507);
+    const { sim, priest, ctx } = doctrinePriest();
     const a = addPartyAlly(sim, priest, 'A', 2, 0);
     const b = addPartyAlly(sim, priest, 'B', -2, 0);
     a.hp = Math.floor(a.maxHp * 0.5);
@@ -173,7 +186,7 @@ describe('v0.42.0 Doctrine: Scouring Mercy rescue cleave, copy application', () 
   });
 
   it('produces no copies when effectiveHeal is zero or negative', () => {
-    const { sim, priest, ctx } = doctrinePriest(50508);
+    const { sim, priest, ctx } = doctrinePriest();
     const a = addPartyAlly(sim, priest, 'A', 2, 0);
     a.hp = Math.floor(a.maxHp * 0.5);
     const before = a.hp;
@@ -184,7 +197,7 @@ describe('v0.42.0 Doctrine: Scouring Mercy rescue cleave, copy application', () 
   });
 
   it('applies the target-side incoming-heal multiplier to a copy exactly once', () => {
-    const { sim, priest, ctx } = doctrinePriest(50509);
+    const { sim, priest, ctx } = doctrinePriest();
     const a = addPartyAlly(sim, priest, 'A', 2, 0);
     a.hp = Math.floor(a.maxHp * 0.5);
     a.auras.push({
@@ -210,7 +223,7 @@ describe('v0.42.0 Doctrine: Scouring Mercy rescue cleave, copy application', () 
   it.each([0.5, 1])(
     'does not force a tiny reduced rescue copy above zero (reduction %s)',
     (reduction) => {
-      const { sim, priest, ctx } = doctrinePriest(50520);
+      const { sim, priest, ctx } = doctrinePriest();
       const ally = addPartyAlly(sim, priest, 'Reduced', 2, 0);
       ally.hp = Math.floor(ally.maxHp * 0.5);
       ally.auras.push({
@@ -230,7 +243,7 @@ describe('v0.42.0 Doctrine: Scouring Mercy rescue cleave, copy application', () 
   );
 
   it('does not apply a source-side healing bonus on the priest to a copy', () => {
-    const { sim, priest, ctx } = doctrinePriest(50515);
+    const { sim, priest, ctx } = doctrinePriest();
     const a = addPartyAlly(sim, priest, 'A', 2, 0);
     a.hp = Math.floor(a.maxHp * 0.5);
     priest.auras.push({
@@ -251,7 +264,7 @@ describe('v0.42.0 Doctrine: Scouring Mercy rescue cleave, copy application', () 
   });
 
   it('still drains a healing absorb on the recipient', () => {
-    const { sim, priest, ctx } = doctrinePriest(50516);
+    const { sim, priest, ctx } = doctrinePriest();
     const a = addPartyAlly(sim, priest, 'A', 2, 0);
     a.hp = Math.floor(a.maxHp * 0.5);
     a.auras.push({
@@ -274,7 +287,7 @@ describe('v0.42.0 Doctrine: Scouring Mercy rescue cleave, copy application', () 
   });
 
   it('creates no new Doctrine link on the recipient', () => {
-    const { sim, priest, ctx } = doctrinePriest(50517);
+    const { sim, priest, ctx } = doctrinePriest();
     const a = addPartyAlly(sim, priest, 'A', 2, 0);
     a.hp = Math.floor(a.maxHp * 0.5);
 
@@ -286,7 +299,7 @@ describe('v0.42.0 Doctrine: Scouring Mercy rescue cleave, copy application', () 
 
 describe('v0.42.0 Doctrine: Scouring Mercy rescue cleave, end-to-end helper', () => {
   it('heals the primary plus up to two nearby injured allies, capping at three total recipients', () => {
-    const { sim, priest, ctx } = doctrinePriest(50510);
+    const { sim, priest, ctx } = doctrinePriest();
     const meta = ctx.players.get(priest.id);
     if (!meta) throw new Error('priest meta missing');
     const primary = addPartyAlly(sim, priest, 'Primary', 4, 0);
@@ -308,7 +321,7 @@ describe('v0.42.0 Doctrine: Scouring Mercy rescue cleave, end-to-end helper', ()
   });
 
   it('is inert for a non-Discipline priest', () => {
-    const { sim, priest, ctx } = doctrinePriest(50511);
+    const { sim, priest, ctx } = doctrinePriest();
     expect(sim.setSpec('holy')).toBe(true);
     const meta = ctx.players.get(priest.id);
     if (!meta) throw new Error('priest meta missing');
@@ -323,7 +336,7 @@ describe('v0.42.0 Doctrine: Scouring Mercy rescue cleave, end-to-end helper', ()
   });
 
   it('produces no rescue copies for a fully overhealed primary', () => {
-    const { sim, priest, ctx } = doctrinePriest(50512);
+    const { sim, priest, ctx } = doctrinePriest();
     const meta = ctx.players.get(priest.id);
     if (!meta) throw new Error('priest meta missing');
     const primary = addPartyAlly(sim, priest, 'Primary', 4, 0);
@@ -337,7 +350,7 @@ describe('v0.42.0 Doctrine: Scouring Mercy rescue cleave, end-to-end helper', ()
   });
 
   it('is inert when the primary is not a living friendly group member', () => {
-    const { sim, priest, ctx } = doctrinePriest(50518);
+    const { sim, priest, ctx } = doctrinePriest();
     const meta = ctx.players.get(priest.id);
     if (!meta) throw new Error('priest meta missing');
     const strangerId = sim.addPlayer('warrior', 'Stranger Primary');
@@ -357,7 +370,7 @@ describe('v0.42.0 Doctrine: Scouring Mercy rescue cleave, end-to-end helper', ()
   });
 
   it('is inert when the primary is outside Psalm reach of the priest', () => {
-    const { sim, priest, ctx } = doctrinePriest(50519);
+    const { sim, priest, ctx } = doctrinePriest();
     const meta = ctx.players.get(priest.id);
     if (!meta) throw new Error('priest meta missing');
     const farPrimary = addPartyAlly(sim, priest, 'Far Primary', DOCTRINE_RANGE + 5, 0);
@@ -373,7 +386,7 @@ describe('v0.42.0 Doctrine: Scouring Mercy rescue cleave, end-to-end helper', ()
 
 describe('v0.42.0 Doctrine: Scouring Mercy rescue cleave, effect_dispatch.ts integration', () => {
   it('a real friendly Scouring Mercy cast also heals a nearby injured party ally', () => {
-    const { sim, priest } = doctrinePriest(50513);
+    const { sim, priest } = doctrinePriest();
     const primary = addPartyAlly(sim, priest, 'Primary', 4, 0);
     const nearby = addPartyAlly(sim, priest, 'Nearby', 5, 0);
     primary.hp = Math.floor(primary.maxHp * 0.5);
