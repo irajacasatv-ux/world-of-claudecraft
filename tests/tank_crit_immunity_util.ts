@@ -3,20 +3,12 @@
 // on its own. Split from the original single-file tests/tank_crit_immunity.test.ts
 // along class-pair boundaries for CI shard balance (a pure move).
 
-import { expect, vi } from 'vitest';
+import { expect } from 'vitest';
 import { MOBS } from '../src/sim/data';
 import { createMob } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
 import type { Entity, PlayerClass } from '../src/sim/types';
 import { EMPTY_TEST_WORLD } from './sim_shared';
-
-// Vitest default (5 s) was far too tight for the old 240 s simulated window: after
-// the upstream merge each case runs ~17 s even on an unloaded machine, and
-// 25-33 s under full-suite parallel load (the old 30 s cap flaked exactly
-// there: whichever cases drew the worst scheduling timed out). 120 s keeps a
-// ~4x margin over the worst observed case; the assertions themselves are
-// deterministic and unaffected by load.
-vi.setConfig({ testTimeout: 120000 });
 
 // Tank crit immunity: creatures cannot critically strike a committed tank.
 // Committed means Protection-spec warrior, Protection-spec paladin, or a
