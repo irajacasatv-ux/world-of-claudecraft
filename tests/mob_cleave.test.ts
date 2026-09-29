@@ -3,6 +3,10 @@ import { MOBS } from '../src/sim/data';
 import { createMob } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
 import type { Entity, SimEvent } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
+
+// Every case swings a mob it places itself at the origin, so each builds the
+// empty world on one seed rather than a full overworld on a seed of its own.
 
 // Spawn a fresh Knight-Commander Olen (the seeded cleaver) at the origin and
 // register it with the sim. Returns the live entity.
@@ -39,7 +43,12 @@ describe('mob cleave', () => {
   });
 
   it('a landed swing splashes onto a second player near the primary target', () => {
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+    const sim = new Sim({
+      seed: 42,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const main = sim.addPlayer('warrior', 'Tank');
     const near = sim.addPlayer('warrior', 'Cleaved');
     const olen = spawnOlen(sim);
@@ -68,7 +77,12 @@ describe('mob cleave', () => {
   });
 
   it('does not splash onto a player outside the cleave radius', () => {
-    const sim = new Sim({ seed: 7, playerClass: 'warrior', noPlayer: true });
+    const sim = new Sim({
+      seed: 42,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const main = sim.addPlayer('warrior', 'Tank');
     const far = sim.addPlayer('warrior', 'Safe');
     const olen = spawnOlen(sim);
@@ -90,7 +104,12 @@ describe('mob cleave', () => {
   });
 
   it('a non-cleaving mob does not splash', () => {
-    const sim = new Sim({ seed: 1, playerClass: 'warrior', noPlayer: true });
+    const sim = new Sim({
+      seed: 42,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const main = sim.addPlayer('warrior', 'Tank');
     const near = sim.addPlayer('warrior', 'Bystander');
     // A plain wolf has no cleave field.
