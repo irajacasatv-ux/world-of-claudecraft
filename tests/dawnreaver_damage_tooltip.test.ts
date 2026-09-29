@@ -20,6 +20,7 @@ import {
   dawnreaverTooltipValues,
   primaryDamageTooltipRange,
 } from '../src/ui/dawnreaver_damage_tooltip_core';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 function required<T>(value: T | null | undefined): T {
   if (value === undefined || value === null) throw new Error('Missing required test value');
@@ -27,7 +28,14 @@ function required<T>(value: T | null | undefined): T {
 }
 
 function setup(power: number, maximum: boolean, ascended = false, level = 20) {
-  const sim = new Sim({ seed: 99181, playerClass: 'paladin', autoEquip: false });
+  // The rig strikes a wolf it places itself, with every roll pinned below, so it
+  // stands on the empty world.
+  const sim = new Sim({
+    seed: 99181,
+    playerClass: 'paladin',
+    autoEquip: false,
+    world: EMPTY_TEST_WORLD,
+  });
   sim.setPlayerLevel(level);
   sim.setSpec('retribution');
   if (ascended) {
