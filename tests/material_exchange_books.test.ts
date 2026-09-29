@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { Sim } from '../src/sim/sim';
 import type { InvSlot } from '../src/sim/types';
-import { npcScopedWorld } from './helpers/npc_scoped_world';
+import { worldWithOnlyNpcs } from './helpers/npc_world';
 
 // The Merchant is the only overworld content these cases read (market verbs
 // gate on standing beside him).
-const MERCHANT_WORLD = npcScopedWorld('the_merchant');
+const MERCHANT_WORLD = worldWithOnlyNpcs('the_merchant');
 
 const gathered = { gatherer: { kind: 'character' as const, id: 11, name: 'Ana' } };
 const stock = (): InvSlot => ({

@@ -4,7 +4,8 @@
 // and nothing else; every other NPC and camp is construction and tick cost the
 // case never reads (tests/CLAUDE.md "Test cost"). Terrain, props and services
 // are the built-in ones, unchanged. A case that needs no NPC at all takes
-// EMPTY_TEST_WORLD from tests/sim_shared.ts instead.
+// EMPTY_TEST_WORLD from tests/sim_shared.ts instead. Build it once at module
+// scope and pass it as `world:` to every Sim that needs it.
 import { BUILTIN_WORLD } from '../../src/sim/data';
 import type { WorldContent } from '../../src/sim/types';
 

@@ -12,11 +12,11 @@ import {
 import { createRiftGearInstance, sanitizeRiftGearInstance } from '../src/sim/rift/progression';
 import { Sim } from '../src/sim/sim';
 import { cloneItemInstancePayload } from '../src/sim/types';
-import { npcScopedWorld } from './helpers/npc_scoped_world';
+import { worldWithOnlyNpcs } from './helpers/npc_world';
 import { moveToRiftForge } from './helpers/rift_forge';
 
 // The live forge upgrade needs the rift forge NPC; nothing else in the overworld is read.
-const FORGE_WORLD = npcScopedWorld('riftwright_maelis');
+const FORGE_WORLD = worldWithOnlyNpcs('riftwright_maelis');
 
 describe('permanent Rift quality lane', () => {
   it('retains the descriptor through live forge upgrades, socket replacement and character reload', () => {

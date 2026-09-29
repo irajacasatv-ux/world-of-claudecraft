@@ -22,10 +22,10 @@ import { hasRecipeMaterials, resolveCraftForRecipe } from '../src/sim/profession
 import { Sim } from '../src/sim/sim';
 import type { SimContext } from '../src/sim/sim_context';
 import type { Entity, InvSlot, SimEvent } from '../src/sim/types';
-import { npcScopedWorld } from './helpers/npc_scoped_world';
+import { worldWithOnlyNpcs } from './helpers/npc_world';
 
 // Only Trader Wilkes, whom the vendor-sell cases stand beside, is read from the overworld.
-const VENDOR_WORLD = npcScopedWorld('trader_wilkes');
+const VENDOR_WORLD = worldWithOnlyNpcs('trader_wilkes');
 
 function makeSim(seed = 11) {
   return new Sim({ seed, playerClass: 'warrior', autoEquip: false, world: VENDOR_WORLD });

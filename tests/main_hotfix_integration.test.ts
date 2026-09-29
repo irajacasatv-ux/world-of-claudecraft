@@ -4,7 +4,7 @@ import { CRUCIBLE_VENDOR_ENTITY_ID, CRUCIBLE_VENDOR_NPC_ID } from '../src/sim/co
 import { plantCrop } from '../src/sim/professions/farming';
 import { Sim } from '../src/sim/sim';
 import { WORLD_SEED } from '../src/sim/world_seed';
-import { npcScopedWorld } from './helpers/npc_scoped_world';
+import { worldWithOnlyNpcs } from './helpers/npc_world';
 import { EMPTY_TEST_WORLD } from './sim_shared';
 
 describe('main hotfix integration with release features', () => {
@@ -43,7 +43,7 @@ describe('main hotfix integration with release features', () => {
       playerClass: 'warrior',
       devCommands: true,
       // The quartermaster is the one overworld NPC the staging must not duplicate.
-      world: npcScopedWorld(CRUCIBLE_VENDOR_NPC_ID),
+      world: worldWithOnlyNpcs(CRUCIBLE_VENDOR_NPC_ID),
     });
     sim.chat('/dev ignivarraid');
 

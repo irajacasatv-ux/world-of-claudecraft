@@ -20,11 +20,11 @@ import { isListingId, MARKET_PLAYER_LISTING_ID_BASE } from '../src/sim/market_li
 import { Sim } from '../src/sim/sim';
 import type { Entity } from '../src/sim/types';
 import { groundHeight } from '../src/sim/world';
-import { npcScopedWorld } from './helpers/npc_scoped_world';
+import { worldWithOnlyNpcs } from './helpers/npc_world';
 
 // The Merchant is the only overworld content these cases read (market verbs
 // gate on standing beside him).
-const MERCHANT_WORLD = npcScopedWorld('the_merchant');
+const MERCHANT_WORLD = worldWithOnlyNpcs('the_merchant');
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const SHOT_SCRIPT = 'scripts/market_listing_count_shot.mjs';

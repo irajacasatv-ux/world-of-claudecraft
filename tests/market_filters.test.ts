@@ -20,11 +20,11 @@ import {
 } from '../src/ui/market_filters';
 
 import { FURNISHING } from './fixtures/furnishing_item';
-import { npcScopedWorld } from './helpers/npc_scoped_world';
+import { worldWithOnlyNpcs } from './helpers/npc_world';
 
 // The Merchant is the only overworld content these cases read (market verbs
 // gate on standing beside him).
-const MERCHANT_WORLD = npcScopedWorld('the_merchant');
+const MERCHANT_WORLD = worldWithOnlyNpcs('the_merchant');
 
 beforeEach(() => {
   ITEMS[FURNISHING.id] = structuredClone(FURNISHING);
