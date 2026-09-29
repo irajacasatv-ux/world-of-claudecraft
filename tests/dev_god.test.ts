@@ -3,9 +3,18 @@ import { MOBS } from '../src/sim/data';
 import { createMob } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
 import type { Entity } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
+// Every case spawns the mob it hits or zones the player into an instance, so
+// the empty world serves.
 function godSim(devCommands = true): { sim: Sim; pid: number } {
-  const sim = new Sim({ seed: 3, playerClass: 'warrior', autoEquip: true, devCommands });
+  const sim = new Sim({
+    seed: 3,
+    playerClass: 'warrior',
+    autoEquip: true,
+    devCommands,
+    world: EMPTY_TEST_WORLD,
+  });
   sim.setPlayerLevel(20);
   return { sim, pid: sim.playerId };
 }
