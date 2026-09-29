@@ -41,9 +41,13 @@ import {
   SUNDER_CAST_ID,
   TOOL_RECHARGE_CAST_ID,
 } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
-function makeSim(seed = 42): Sim {
-  return new Sim({ seed, playerClass: 'warrior', autoEquip: false });
+// The craft cast reads the player, the recipe tables and the stations (kept by
+// the empty world), never a camp, NPC or ground object, and every Sim shares
+// one seed: a fresh seed builds its collider grids and no case compares two.
+function makeSim(): Sim {
+  return new Sim({ seed: 42, playerClass: 'warrior', autoEquip: false, world: EMPTY_TEST_WORLD });
 }
 
 function grantItem(sim: Sim, itemId: string, count: number, pid: number) {
@@ -330,7 +334,7 @@ describe('craft cast cancel', () => {
 
 describe('craft cast masterwork draw order', () => {
   it('draws rng only on successful complete, never on start or cancel', () => {
-    const sim = makeSim(99);
+    const sim = makeSim();
     const { p, meta, pid } = playerOf(sim);
     const recipe = COMMON_RECIPES[0];
     grantReagents(sim, recipe, pid, 2);
@@ -689,7 +693,7 @@ describe('craft cast death teardown', () => {
 describe('craft cast determinism', () => {
   it('two sims on the same seed emit identical craftResults and draw identically', () => {
     const runScript = () => {
-      const sim = makeSim(1234);
+      const sim = makeSim();
       const { p, meta, pid } = playerOf(sim);
       const recipe = COMMON_RECIPES[0];
       meta.copper = 10_000;
