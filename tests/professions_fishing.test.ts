@@ -1168,27 +1168,39 @@ describe('the DECISION F casts-to-200 model (Phase 11i)', () => {
     let legal = 0;
     let strict = 0;
     let best: { gains: number[]; distance: number } | null = null;
-    for (const g0 of grid)
-      for (const g1 of grid) {
-        if (g1 > g0) continue;
-        for (const g2 of grid) {
-          if (g2 > g1) continue;
-          for (const g3 of grid) {
-            if (g3 > g2) continue;
-            const r = evaluate([g0, g1, g2, g3]);
-            if (r.hours < SPAN_MIN_HOURS || r.hours > SPAN_MAX_HOURS) continue;
-            let ramp = true;
-            for (let i = 1; i < 4; i++) if (r.sec[i] < r.sec[i - 1]) ramp = false;
-            if (!ramp) continue;
-            if (Math.max(...r.shares) > BAND_SHARE_CAP) continue;
+    // evaluate() is four independent segmentSeconds terms, so the search reads
+    // each (segment, grid value) term from this table, built once by the same
+    // function, and combines them exactly as evaluate() does (the same sum in
+    // the same order, the same shares), instead of allocating four arrays for
+    // each of the 4.4M candidate schedules. The grid ascends, so g1 <= g0 is
+    // b <= a on the indices.
+    const secAt = SEGMENTS.map((_seg, i) => grid.map((g) => segmentSeconds(i, g)));
+    for (let a = 0; a < grid.length; a++)
+      for (let b = 0; b <= a; b++) {
+        for (let c = 0; c <= b; c++) {
+          for (let d = 0; d <= c; d++) {
+            const s0 = secAt[0][a];
+            const s1 = secAt[1][b];
+            const s2 = secAt[2][c];
+            const s3 = secAt[3][d];
+            const total = s0 + s1 + s2 + s3;
+            const hours = total / 3600;
+            if (hours < SPAN_MIN_HOURS || hours > SPAN_MAX_HOURS) continue;
+            if (s1 < s0 || s2 < s1 || s3 < s2) continue;
+            if (Math.max(s0 / total, s1 / total, s2 / total, s3 / total) > BAND_SHARE_CAP) continue;
             legal++;
-            if (!(g1 < g0 && g2 < g1 && g3 < g2)) continue;
+            if (!(b < a && c < b && d < c)) continue;
             strict++;
-            const distance = Math.abs(r.hours - midpoint);
-            if (!best || distance < best.distance) best = { gains: [g0, g1, g2, g3], distance };
+            const distance = Math.abs(hours - midpoint);
+            if (!best || distance < best.distance) {
+              best = { gains: [grid[a], grid[b], grid[c], grid[d]], distance };
+            }
           }
         }
       }
+    // The table really is the model: the winner re-evaluated through
+    // evaluate() itself lands on the same distance, bit for bit.
+    expect(best && Math.abs(evaluate(best.gains).hours - midpoint)).toBe(best?.distance);
     // The search space really is narrow, and it really does discriminate:
     // sixteen schedules clear every constraint and only three of those are
     // strictly decreasing. Pinned so a loosened constraint (which would let
@@ -2232,10 +2244,12 @@ describe('fishing over the live server (pin 8)', () => {
     // exists by design (the player-visible half is the "No fish are biting."
     // log line), but the event still rides the same personal routing, and
     // this is the one arm of the four that had no online pin.
-    // Explicit budget (vite.config.ts's "deliberately long walkers keep their own explicit
-    // budgets"): the loop is seeded and deterministic, so it always runs its full 100
-    // sessions * 200 ticks, measured at about 5.2s, which occasionally brushes the shared
-    // 20s default under full-suite parallel load.
+    // The empty hook is one table row among several, so the loop recasts until
+    // a reel lands on it. The hidden bite wait (3 s and up, about a hundred
+    // live ticks) is not what this arm is about, so each session pulls its
+    // bite deadline to the next tick: the live loop still fires the bite and
+    // routes it, and the reel still draws the table, without the fifty-odd
+    // idle waits the seeded search used to spend (about 5 s).
     const { server, fcA, fcB, sa, angler } = setupAngler();
     let empty = false;
     for (let session = 0; session < 100 && !empty; session++) {
@@ -2243,6 +2257,7 @@ describe('fishing over the live server (pin 8)', () => {
         server.sim.useItem('simple_fishing_pole', sa.pid);
         expect(angler.castingAbility).toBe(FISHING_CAST_ID);
       }
+      angler.fishBiteAtTick = server.sim.tickCount + 1;
       fcA.sent.length = 0;
       fcB.sent.length = 0;
       let bit = false;
@@ -2258,7 +2273,7 @@ describe('fishing over the live server (pin 8)', () => {
       server.sim.tick();
     }
     expect(empty).toBe(true);
-  }, 60_000);
+  });
 
   it('a pre-bite re-press over the live server reels in early: personal fishingEarlyReel, no busy error, recast allowed', () => {
     const { server, fcA, fcB, sa, angler } = setupAngler();
