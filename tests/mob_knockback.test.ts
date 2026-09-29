@@ -21,9 +21,10 @@ import {
 import { Sim } from '../src/sim/sim';
 import { FISHING_CAST_ID, type WorldContent } from '../src/sim/types';
 import { groundHeight, terrainHeight, WATER_LEVEL } from '../src/sim/world';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const SEED = 5150;
-const makeSim = () => new Sim({ seed: SEED, playerClass: 'warrior' });
+const makeSim = () => new Sim({ seed: SEED, playerClass: 'warrior', world: EMPTY_TEST_WORLD });
 const dist2d = (a: { x: number; z: number }, b: { x: number; z: number }) =>
   Math.hypot(a.x - b.x, a.z - b.z);
 
@@ -248,7 +249,7 @@ describe('a knockback shove never leaves the target frozen against a collider', 
       ...world({}),
       placements: [{ x: wx, z: wz, collideRadius: 2 }],
     } as WorldContent);
-    const sim = new Sim({ seed: SEED, playerClass: 'warrior' });
+    const sim = new Sim({ seed: SEED, playerClass: 'warrior', world: EMPTY_TEST_WORLD });
     const p = sim.entities.get(sim.playerId)!;
     p.gm = true;
     const g = groundHeight(wx, wz - 6, SEED);
@@ -278,7 +279,7 @@ describe('a knockback shove never leaves the target frozen against a collider', 
       ...world({}),
       blockers: [{ x1: wx - 6, z1: wz, x2: wx + 6, z2: wz }],
     } as WorldContent);
-    const sim = new Sim({ seed: SEED, playerClass: 'warrior' });
+    const sim = new Sim({ seed: SEED, playerClass: 'warrior', world: EMPTY_TEST_WORLD });
     const p = sim.entities.get(sim.playerId)!;
     p.gm = true;
     const g = groundHeight(wx, wz - 6, SEED);

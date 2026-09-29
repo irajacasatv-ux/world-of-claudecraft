@@ -17,11 +17,12 @@ import { Sim } from '../src/sim/sim';
 import type { SimContext } from '../src/sim/sim_context';
 import { MELEE_RANGE, type WorldContent } from '../src/sim/types';
 import { terrainHeight } from '../src/sim/world';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 type AnyEntity = ReturnType<typeof createMob> & Record<string, any>;
 
 function makeSim() {
-  return new Sim({ seed: 42, playerClass: 'warrior', autoEquip: true });
+  return new Sim({ seed: 42, playerClass: 'warrior', autoEquip: true, world: EMPTY_TEST_WORLD });
 }
 const ctxOf = (sim: Sim): SimContext => (sim as unknown as { ctx: SimContext }).ctx;
 

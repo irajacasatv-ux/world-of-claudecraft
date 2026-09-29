@@ -9,9 +9,12 @@ import { describe, expect, it } from 'vitest';
 import { Sim } from '../src/sim/sim';
 import type { Entity } from '../src/sim/types';
 import { DT, dist2d, RUN_SPEED } from '../src/sim/types';
+import { RL_TEST_WORLD } from './sim_shared';
 
+// The cases borrow the first wild mobs (the built-in world's first camp, a wolf
+// pack) and recast them, so the world keeps only that camp.
 function makeSim() {
-  return new Sim({ seed: 42, playerClass: 'warrior', autoEquip: true });
+  return new Sim({ seed: 42, playerClass: 'warrior', autoEquip: true, world: RL_TEST_WORLD });
 }
 
 function wildMobs(sim: Sim): Entity[] {

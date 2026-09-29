@@ -10,6 +10,7 @@ import { MOBS } from '../src/sim/data';
 import { createMob } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
 import { type Entity, LEASH_DISTANCE } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const SEED = 41099;
 const MEND = MOBS.gravecaller_mender.mendAlly!;
@@ -76,7 +77,12 @@ function walkHome(sim: Sim, mender: Entity, onTick?: () => void) {
 
 describe('evading mob support kit', () => {
   it('casts nothing for the whole walk home, with inCombat still set', () => {
-    const sim = new Sim({ seed: SEED, playerClass: 'warrior', autoEquip: true });
+    const sim = new Sim({
+      seed: SEED,
+      playerClass: 'warrior',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const { mender, ally } = leashedMender(sim);
     const wounded = ally.hp;
     mender.mendTimer = 0.001; // due the instant the walk starts
@@ -91,7 +97,12 @@ describe('evading mob support kit', () => {
   });
 
   it('mends again once it has reset and been re-engaged', () => {
-    const sim = new Sim({ seed: SEED, playerClass: 'warrior', autoEquip: true });
+    const sim = new Sim({
+      seed: SEED,
+      playerClass: 'warrior',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const { mender, ally, home } = leashedMender(sim);
     walkHome(sim, mender);
     expect(mender.mendTimer).toBe(MEND.every);

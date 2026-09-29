@@ -30,6 +30,7 @@ import {
   mobArmorReduction,
   swingMissChance,
 } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // swingMissChance only reads kind / level / hostile / ownerId, so a minimal stub is
 // enough to exercise the directional guard without standing up a whole world.
@@ -265,7 +266,7 @@ describe('enemy mob-cast spells never resist more than MOB_VS_PLAYER_MAX_RESIST 
 // between the two runs; only the post-mitigation dealt amount can differ.
 describe('farm-loop regression: mob-vs-player damage floor keeps AFK farming non-risk-free (issue #1050)', () => {
   function totalMobDamage(seed: number, armor: number, swings: number): number {
-    const sim = new Sim({ seed, playerClass: 'mage', noPlayer: true });
+    const sim = new Sim({ seed, playerClass: 'mage', noPlayer: true, world: EMPTY_TEST_WORLD });
     const pid = sim.addPlayer('mage', 'Farmer');
     const player = sim.entities.get(pid);
     if (!player) throw new Error('player entity not found after addPlayer');

@@ -21,11 +21,12 @@ import { RIFT_MECHANIC_WINDUP_SEC } from '../src/sim/mob/rift_escape_window';
 import { Sim } from '../src/sim/sim';
 import { addThreat } from '../src/sim/threat';
 import { DT, type Entity } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const SPACING = RIFT_MECHANIC_SPACING_SEC;
 
 function makeSim() {
-  return new Sim({ seed: 42, playerClass: 'warrior', autoEquip: true });
+  return new Sim({ seed: 42, playerClass: 'warrior', autoEquip: true, world: EMPTY_TEST_WORLD });
 }
 
 const fearAura = (e: Entity) => e.auras.find((a) => a.id === 'fear_incap');
