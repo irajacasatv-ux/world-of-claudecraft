@@ -15,7 +15,7 @@ import { restoreToolEffectSlotAction } from '../src/sim/professions/tool_effect_
 import { resolveSlotToolEffect, startingDurabilityFor } from '../src/sim/professions/tools';
 import { type PlayerMeta, Sim } from '../src/sim/sim';
 
-const makeSim = (seed = 11) => new Sim({ seed, playerClass: 'warrior', autoEquip: false });
+const makeSim = () => new Sim({ seed: 11, playerClass: 'warrior', autoEquip: false });
 const metaOf = (sim: Sim): PlayerMeta => sim.meta(sim.playerId) as PlayerMeta;
 
 function toolEffectEvents(sim: Sim): Array<Record<string, unknown>> {
@@ -294,8 +294,10 @@ describe('restoreToolEffectSlotAction (GM restore, R35)', () => {
     // per-draw observer counts every draw the restore makes (must be zero),
     // and the streams must stay in lockstep across subsequent ticks: any
     // draw inside the restore path desynchronizes every later value.
-    const a = makeSim(77);
-    const b = makeSim(77);
+    // (The file's seed: any one seed shows the lockstep, and a fresh seed pays
+    // its own overworld bootstrap.)
+    const a = makeSim();
+    const b = makeSim();
     for (const sim of [a, b]) {
       sim.addItem('copper_mining_pick', 1);
       sim.tick();
