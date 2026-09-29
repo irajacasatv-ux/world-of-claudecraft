@@ -6,11 +6,14 @@ import { describe, expect, it } from 'vitest';
 import { abilitiesKnownAt } from '../src/sim/content/classes';
 import { computeTalentModifiers } from '../src/sim/content/talents';
 import { Sim } from '../src/sim/sim';
-import type { Entity } from '../src/sim/types';
+import type { Entity, WorldContent } from '../src/sim/types';
 import { terrainHeight } from '../src/sim/world';
+import { EMPTY_TEST_WORLD, WOLF_TEST_WORLD } from './sim_shared';
 
-function feralDruid(seed = 42): { sim: Sim; druid: Entity } {
-  const sim = new Sim({ seed, playerClass: 'druid' });
+// One seed serves the file. The heal cases need no world content; the caster
+// form refusal stands beside a camp wolf, so it keeps the wolf camps.
+function feralDruid(world: WorldContent = EMPTY_TEST_WORLD): { sim: Sim; druid: Entity } {
+  const sim = new Sim({ seed: 42, playerClass: 'druid', world });
   sim.setPlayerLevel(20);
   expect(sim.setSpec('feral')).toBe(true);
   return { sim, druid: sim.player };
@@ -50,7 +53,7 @@ describe('Bruin Form tank kit', () => {
   });
 
   it('is refused in caster form, where a druid keeps its real heals', () => {
-    const { sim, druid } = feralDruid(7);
+    const { sim, druid } = feralDruid(WOLF_TEST_WORLD);
     const wolf = wolves(sim)[0];
     wolf.maxHp = wolf.hp = 5000;
     teleport(sim, druid, wolf.pos.x + 3, wolf.pos.z);
@@ -64,7 +67,7 @@ describe('Bruin Form tank kit', () => {
   });
 
   it('heals its authored total over the full window in Bruin Form', () => {
-    const { sim, druid } = feralDruid(11);
+    const { sim, druid } = feralDruid();
     shiftToBear(sim, druid);
     // Out of combat and unwounded by anything else, so the only healing in the
     // window is the HoT itself.
