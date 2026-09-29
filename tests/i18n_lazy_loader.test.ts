@@ -219,6 +219,9 @@ async function lazyGeneratedEvaluatedBy(load: () => Promise<unknown>): Promise<s
     await load();
     // A top-level import() settles after the importing module, and one can start another:
     // wait for every dynamic import vitest is tracking, again while the record still grows.
+    // vitest does not track an import a mock factory starts after an await, but each factory
+    // records on its first line, so such a reach still fails the pin (its message may then
+    // list fewer slices); a fetch that never settles ends in a timeout, never a pass.
     for (let turn = 0, seen = -1; turn < 8 && seen !== evaluated.size; turn++) {
       seen = evaluated.size;
       await vi.dynamicImportSettled();
