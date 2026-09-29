@@ -886,6 +886,10 @@ describe('ledge climb over the wire (cl progress)', () => {
       duration: 0.5,
     };
     expect(wireEntity(e).cl).toBe(50);
+    // A fractional point (0.2468 of the pull), so the rounding itself is
+    // observable: every other sample here lands on a whole percent or a cap.
+    e.climb.elapsed = 0.1234;
+    expect(wireEntity(e).cl).toBe(25);
     // Just armed: still non-zero, so any client reads it as climbing.
     e.climb.elapsed = 0;
     expect(wireEntity(e).cl).toBe(1);
