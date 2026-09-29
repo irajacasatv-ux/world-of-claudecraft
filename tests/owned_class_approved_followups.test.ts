@@ -13,7 +13,11 @@ import { createMob } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
 import type { Entity, PlayerClass, SimEvent } from '../src/sim/types';
 import { abilityEffectText } from '../src/ui/ability_description';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
+// Every Sim here runs on EMPTY_TEST_WORLD and one seed: each case spawns its own
+// targets, pet and party members, so the ambient overworld is pure construction and
+// tick cost, and each extra seed paid its own collider build (about half a second).
 type TestSim = Sim & {
   addEntity(entity: Entity): void;
   nextId: number;
@@ -104,7 +108,12 @@ describe('approved Packlord follow-up', () => {
   });
 
   it('summons three beasts whose damage snapshots Pack Ferocity and is attributed to the Hunter', () => {
-    const sim = new Sim({ seed: 2918, playerClass: 'hunter', autoEquip: true }) as TestSim;
+    const sim = new Sim({
+      seed: 2918,
+      playerClass: 'hunter',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    }) as TestSim;
     sim.setPlayerLevel(20);
     expect(sim.setSpec('beast_mastery')).toBe(true);
     place(sim, sim.player, 700, 0);
@@ -156,7 +165,12 @@ describe('approved Packlord follow-up', () => {
   });
 
   it('resets Stampede after five failed eligible proc rolls, but never while its beasts are active', () => {
-    const sim = new Sim({ seed: 2919, playerClass: 'hunter', autoEquip: true }) as TestSim;
+    const sim = new Sim({
+      seed: 2918,
+      playerClass: 'hunter',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    }) as TestSim;
     sim.setPlayerLevel(20);
     expect(sim.setSpec('beast_mastery')).toBe(true);
     const target = addTarget(sim, sim.nextId++, sim.player.pos.x, sim.player.pos.z + 3);
@@ -187,7 +201,12 @@ describe('approved Packlord follow-up', () => {
   });
 
   it('clears Stampede beasts and reset state when the Hunter leaves Packlord', () => {
-    const sim = new Sim({ seed: 2923, playerClass: 'hunter', autoEquip: true }) as TestSim;
+    const sim = new Sim({
+      seed: 2918,
+      playerClass: 'hunter',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    }) as TestSim;
     sim.setPlayerLevel(20);
     expect(sim.setSpec('beast_mastery')).toBe(true);
     const target = addTarget(sim, sim.nextId++, sim.player.pos.x, sim.player.pos.z + 3);
@@ -254,7 +273,7 @@ describe('approved Thundercall Chain Lightning follow-up', () => {
       abilityEffectText(chain, { spellPower: 100, healPower: 100, rangedPower: 0, attackPower: 0 }),
     ).not.toBe('62 to 72');
 
-    const sim = new Sim({ seed: 2920, playerClass: 'shaman' });
+    const sim = new Sim({ seed: 2918, playerClass: 'shaman', world: EMPTY_TEST_WORLD });
     sim.setPlayerLevel(20);
     expect(sim.setSpec('elemental')).toBe(true);
     sim.player.resource = sim.player.maxResource;
@@ -265,7 +284,12 @@ describe('approved Thundercall Chain Lightning follow-up', () => {
   });
 
   it('hits at most three enemies and grants one Thunder for the whole cast', () => {
-    const sim = new Sim({ seed: 2921, playerClass: 'shaman', autoEquip: true }) as TestSim;
+    const sim = new Sim({
+      seed: 2918,
+      playerClass: 'shaman',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    }) as TestSim;
     sim.setPlayerLevel(20);
     expect(sim.setSpec('elemental')).toBe(true);
     place(sim, sim.player, 700, 0);
@@ -325,7 +349,7 @@ describe('approved Spiritmend group revive follow-up', () => {
   });
 
   it('refuses a second mass revive while the cooldown runs, even fully out of combat', () => {
-    const sim = new Sim({ seed: 4471, playerClass: 'shaman' });
+    const sim = new Sim({ seed: 2918, playerClass: 'shaman', world: EMPTY_TEST_WORLD });
     sim.setPlayerLevel(20);
     expect(sim.setSpec('restoration')).toBe(true);
     const fallenId = sim.addPlayer('warrior', 'Fallen Twice');
@@ -366,7 +390,7 @@ describe('approved Spiritmend group revive follow-up', () => {
   });
 
   it('offers every dead group member a resurrection and leaves strangers alone', () => {
-    const sim = new Sim({ seed: 2922, playerClass: 'shaman' });
+    const sim = new Sim({ seed: 2918, playerClass: 'shaman', world: EMPTY_TEST_WORLD });
     sim.setPlayerLevel(20);
     expect(sim.setSpec('restoration')).toBe(true);
     const fallenId = sim.addPlayer('warrior', 'Fallen Ally');
