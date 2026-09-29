@@ -206,7 +206,7 @@ function admissionStatement(source: string): { guards?: string; costMs?: number 
   const saysNothing = (line: string) =>
     PARAGRAPH_BREAK.test(line) ||
     !/[A-Za-z0-9]/.test(line) ||
-    (/Guards:/.test(line) && guardsStatement(line) === undefined);
+    (/guards\s*:/i.test(line) && guardsStatement(line) === undefined);
   const onlyBreaksBelow = lines.slice(at + 1).every(saysNothing);
   const closed =
     (at + 1 === lines.length ||
@@ -597,6 +597,7 @@ describe('the new-test admission rule', () => {
       "// Guards: the pause toggle's replay path.\n//\n// Cost: 1 s\n// Guards: .\nimport x from 'y'; // 2 min cold\n",
       '// Cost: 1 s\n//\n// Guards:\nimport x from "y"; // 2 min cold\n',
       '// Cost: 1 s\n//\n// -\nimport x from "y"; // 2 min cold\n',
+      '// Cost: 1 s\n//\n// guards : x\nimport x from "y"; // 2 min cold\n',
       '/**\n * Guards: .\n * Cost: 1 s\n */\n',
     ])
       expect(read(refused), refused).toBeUndefined();

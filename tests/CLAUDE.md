@@ -282,23 +282,23 @@ The recurring causes, each measured on this suite:
 
 **Admission: a new test file earns its place.** Its leading comment says, on its own lines,
 `Guards:` and what it uniquely guards (the behavior no existing suite pins, naming the nearest suite
-that does not), and a `Cost:` field holding its measured local test time at one worker (from `npx
-vitest run <file> --maxWorkers=1`) and nothing else, for example `Cost: 0.4 s`, in its own comment
-paragraph or closing the `Guards:` one, with nothing beside it that could qualify it: no second
-`cost:`, no prose directly above or below (a Guards statement excepted), no comment on a code line
-right after it. A field that breaks this is refused, not read, so the file fails (the exact rule and
-its refused cases live in `tests/suite_lane_threshold.test.ts`). Before adding one, look for the
-suite that should own the case, and pick the cheapest form that keeps the guard (the remedies
-above). The lane-threshold suite checks the statement on every `.test.ts` the weight table has not
-measured yet (no row, or a carried one). A file with no row counts its `Cost:` into the total-time
-ratchet in CI time (scaled by `CARRIED_LOCAL_TO_CI_RATIO`, never below the measured-median fallback)
-until a harvest measures it, and outside the lane a stated cost over the lane threshold in CI time
-fails at once; a carried row counts its carried value instead. The statement then stays as the
-file's record. Cases added to a file that already has a row reach the ratchet at the next harvest. A
-new collected test file outside the table (a `.test.mjs`, a `.spec.ts`) is checked the same way and
-its stated cost stays in the ratchet for good, since no harvest measures it; the few `.test.mjs`
-suites older than the rule are pinned by name. The Playwright browser suite runs under its own
-config and is checked by review.
+that does not), and a `Cost:` field holding its measured local test time at one worker (from
+`npx vitest run <file> --maxWorkers=1`) and nothing else, for example `Cost: 0.4 s`, in its
+own comment paragraph or closing the `Guards:` one, with nothing beside it that could qualify it: no
+second `cost:`, no prose directly above or below (a Guards statement excepted), no comment on a code
+line right after it. A field that breaks this is refused, not read, so the file fails (the exact
+rule and its refused cases live in `tests/suite_lane_threshold.test.ts`). Before adding one, look
+for the suite that should own the case, and pick the cheapest form that keeps the guard (the
+remedies above). The lane-threshold suite checks the statement on every `.test.ts` the weight table
+has not measured yet (no row, or a carried one). A file with no row counts its `Cost:` into the
+total-time ratchet in CI time (scaled by `CARRIED_LOCAL_TO_CI_RATIO`, never below the
+measured-median fallback) until a harvest measures it, and outside the lane a stated cost over the
+lane threshold in CI time fails at once; a carried row counts its carried value instead. The
+statement then stays as the file's record. Cases added to a file that already has a row reach the
+ratchet at the next harvest. A new collected test file outside the table (a `.test.mjs`, a
+`.spec.ts`) is checked the same way and its stated cost stays in the ratchet for good, since no
+harvest measures it; the few `.test.mjs` suites older than the rule are pinned by name. The
+Playwright browser suite runs under its own config and is checked by review.
 
 Tombstone pins (a case that only asserts a removed thing stays removed) retire once the removal
 is old and a live assertion covers the same ground, deleted with a coverage proof; do not add new
