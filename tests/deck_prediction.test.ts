@@ -15,7 +15,6 @@ import { type TransportPose, transportShipPoseAt } from '../src/sim/transport_sc
 import { DT, emptyMoveInput, type MoveInput } from '../src/sim/types';
 import { WATER_LEVEL } from '../src/sim/world';
 import { WORLD_SEED } from '../src/sim/world_seed';
-import { PRODUCTION_IDLE_CULL } from './helpers/production_idle_cull';
 
 // The online prediction's deck-aware step (src/render/deck_prediction.ts)
 // against the live Sim: the client replays a passenger's input in the
@@ -36,9 +35,7 @@ function mi(over: Partial<MoveInput>): MoveInput {
 
 describe('the deck-aware prediction step', () => {
   it('matches the live Sim on a sailing deck, walking, turning and jumping', () => {
-    // The ferry runs only on the built-in world; the shipped idle-mob cull
-    // spares ticking the overworld's idle mobs far from the deck.
-    const sim = new Sim({ seed: WORLD_SEED, playerClass: 'warrior', ...PRODUCTION_IDLE_CULL });
+    const sim = new Sim({ seed: WORLD_SEED, playerClass: 'warrior' });
     sim.setPlayerLevel(20);
     // the western strait's elbow: the ship turns under the passenger
     sim.transportClockOffset = ROUTE.timings.docked + 16 - sim.time;
