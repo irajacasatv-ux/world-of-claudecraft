@@ -55,8 +55,15 @@ const MEAL_TICKS = 20 * 20;
 // objects: nothing can wander over and interrupt an 18-second meal or a death
 // arm, which would make these cases flaky for reasons unrelated to the rules
 // under test.
-function world(seed = 42): { sim: Sim; pid: number; p: Entity } {
-  const sim = new Sim({ seed, playerClass: 'warrior', autoEquip: false, world: EMPTY_TEST_WORLD });
+// One seed for every Sim, the second-Sim controls included: seed 43 bought them
+// nothing but a terrain build of their own.
+function world(): { sim: Sim; pid: number; p: Entity } {
+  const sim = new Sim({
+    seed: 42,
+    playerClass: 'warrior',
+    autoEquip: false,
+    world: EMPTY_TEST_WORLD,
+  });
   const pid = sim.playerId;
   sim.tick();
   return { sim, pid, p: sim.entities.get(pid) as Entity };
@@ -661,7 +668,7 @@ describe('flask auras are undispellable (the phase 10 QA STK-2 ruling, 2026-08-1
       'no fade event fires for the refused cancel',
     ).toBe(false);
 
-    const control = world(43);
+    const control = world();
     use(control.sim, control.pid, SERPENT);
     control.sim.cancelAura(STA_FAMILY, control.pid);
     expect(
@@ -680,7 +687,7 @@ describe('flask auras are undispellable (the phase 10 QA STK-2 ruling, 2026-08-1
     expect(isDispellableAura(elixirAura[0], true), 'an elixir is still stealable').toBe(true);
     expect(isCancelableAura(elixirAura[0]), 'an elixir still cancels').toBe(true);
 
-    const second = world(43);
+    const second = world();
     use(second.sim, second.pid, SUNPETAL_SCROLL);
     const scrollAura = aurasById(second.p, STA_FAMILY);
     expect(scrollAura).toHaveLength(1);
@@ -740,7 +747,7 @@ describe('the R5 full kit: a flask and a Well Fed plate ride together, both magn
     );
     expect(flaskFirst.p.stats.sta - baseSta, 'the literal beside it').toBe(19);
 
-    const foodFirst = world(43);
+    const foodFirst = world();
     const baseSta2 = foodFirst.p.stats.sta;
     use(foodFirst.sim, foodFirst.pid, STEW);
     for (let i = 0; i < MEAL_TICKS; i++) foodFirst.sim.tick();
