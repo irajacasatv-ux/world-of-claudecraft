@@ -14,7 +14,15 @@ import {
   round6,
   sampleEntity,
   samplePlayerMeta,
+  type Trace,
 } from './trace';
+
+// The sampler cases build their Sims on the seeds of the two scenarios the
+// draw-order cases record (solo_warrior 1001, solo_mage 1002), so the file pays
+// the full-world collider bootstrap once per seed instead of once per case
+// family. No assertion here depends on the seed.
+const WARRIOR_SEED = 1001;
+const MAGE_SEED = 1002;
 
 describe('round6 / non-finite handling', () => {
   it('quantizes floats to 1e-6 and passes ints through', () => {
@@ -95,7 +103,7 @@ describe('canonical', () => {
 
 describe('samplePlayerMeta', () => {
   function freshMeta() {
-    const sim = new Sim({ seed: 5, playerClass: 'warrior', autoEquip: true });
+    const sim = new Sim({ seed: WARRIOR_SEED, playerClass: 'warrior', autoEquip: true });
     return sim.players.get(sim.playerId)!;
   }
 
@@ -115,7 +123,7 @@ describe('samplePlayerMeta', () => {
   it('excludes every session / presentation / derived field', () => {
     // A host-stamped meta too, so the freeholdOwnerKey exclusion is exercised
     // where the key is actually present (offline it is absent anyway).
-    const stampedSim = new Sim({ seed: 5, playerClass: 'warrior', autoEquip: true });
+    const stampedSim = new Sim({ seed: WARRIOR_SEED, playerClass: 'warrior', autoEquip: true });
     const stampedPid = stampedSim.addPlayer('mage', 'Stamped', { freeholdOwnerKey: 'account:1' });
     const stampedMeta = stampedSim.players.get(stampedPid)!;
     expect(stampedMeta.freeholdOwnerKey).toBe('account:1');
@@ -173,7 +181,7 @@ describe('samplePlayerMeta', () => {
 
 describe('sampleEntity', () => {
   it('captures gameplay fields and excludes presentation', () => {
-    const sim = new Sim({ seed: 7, playerClass: 'mage', autoEquip: true });
+    const sim = new Sim({ seed: MAGE_SEED, playerClass: 'mage', autoEquip: true });
     const sample = sampleEntity(sim.player) as Record<string, unknown>;
     expect(Object.keys(sample)).toContain('hp');
     expect(Object.keys(sample)).toContain('pos');
@@ -183,7 +191,7 @@ describe('sampleEntity', () => {
   });
 
   it('is a value snapshot, not a live reference', () => {
-    const sim = new Sim({ seed: 7, playerClass: 'mage', autoEquip: true });
+    const sim = new Sim({ seed: MAGE_SEED, playerClass: 'mage', autoEquip: true });
     const snapshot = sampleEntity(sim.player);
     const frozen = digest(snapshot);
     sim.player.hp -= 50;
@@ -275,7 +283,7 @@ describe('exclude lists are pinned and real (anti-loosening guard)', () => {
   });
 
   it('every always-present excluded name is a real field (catches silent renames)', () => {
-    const sim = new Sim({ seed: 9, playerClass: 'warrior', autoEquip: true });
+    const sim = new Sim({ seed: WARRIOR_SEED, playerClass: 'warrior', autoEquip: true });
     const entity = sim.player as unknown as Record<string, unknown>;
     const meta = sim.players.get(sim.playerId)! as unknown as Record<string, unknown>;
     // Optional fields that are legitimately absent on a fresh entity/meta.
@@ -338,17 +346,23 @@ describe('rng draw-order observer (src/sim/rng.ts)', () => {
 });
 
 describe('draw-order digest in the trace', () => {
+  // The determinism case's first recording is reused as the warrior side of the
+  // discrimination case (recorded fresh if that case runs alone), so the file
+  // records solo_warrior twice rather than three times.
+  const warriorScenario = SCENARIOS.find((s) => s.name === 'solo_warrior')!;
+  let warriorTrace: Trace | undefined;
+
   it('is deterministic for the same scenario', () => {
-    const scenario = SCENARIOS[0];
-    const a = recordTrace(scenario);
-    const b = recordTrace(scenario);
+    const a = recordTrace(warriorScenario);
+    warriorTrace = a;
+    const b = recordTrace(warriorScenario);
     expect(a.draws).toBe(b.draws);
     expect(a.drawDigest).toBe(b.drawDigest);
     expect(a.draws).toBeGreaterThan(0);
   });
 
   it('differs across scenarios with different draw sequences', () => {
-    const warrior = recordTrace(SCENARIOS.find((s) => s.name === 'solo_warrior')!);
+    const warrior = warriorTrace ?? recordTrace(warriorScenario);
     const mage = recordTrace(SCENARIOS.find((s) => s.name === 'solo_mage')!);
     expect(warrior.drawDigest).not.toBe(mage.drawDigest);
   });
