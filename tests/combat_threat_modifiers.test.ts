@@ -3,9 +3,12 @@ import { describe, expect, it } from 'vitest';
 import { Sim } from '../src/sim/sim';
 import type { Entity, PlayerClass } from '../src/sim/types';
 import { expectDefined } from './helpers/defined';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
+// threatMod reads only the source's auras and its own PlayerMeta, so the empty
+// world serves.
 function makeSim(cls: PlayerClass, seed = 42): Sim {
-  return new Sim({ seed, playerClass: cls, autoEquip: true });
+  return new Sim({ seed, playerClass: cls, autoEquip: true, world: EMPTY_TEST_WORLD });
 }
 
 // A minimal stand-alone Entity `threatMod`/`threatModifier` can read without touching
