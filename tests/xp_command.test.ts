@@ -1,9 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { Sim } from '../src/sim/sim';
-import { MAX_LEVEL, SimEvent, xpForLevel } from '../src/sim/types';
+import { MAX_LEVEL, type SimEvent, xpForLevel } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
+// The readout reads the caller's own level and XP only, so the Sim runs on the
+// empty world.
 function makeWorld() {
-  return new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+  return new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true, world: EMPTY_TEST_WORLD });
 }
 
 function chatEvents(events: SimEvent[]): Extract<SimEvent, { type: 'chat' }>[] {
