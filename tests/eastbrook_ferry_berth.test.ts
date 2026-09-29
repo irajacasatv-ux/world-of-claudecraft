@@ -23,6 +23,7 @@ import { shipToWorld, worldToShip } from '../src/sim/transport_ship';
 import type { Entity } from '../src/sim/types';
 import { groundHeight, terrainHeight, WATER_LEVEL } from '../src/sim/world';
 import { WORLD_SEED } from '../src/sim/world_seed';
+import { PRODUCTION_IDLE_CULL } from './helpers/production_idle_cull';
 
 // The ferries' berths: moored across the ferry pier's T-head at Eastbrook
 // (Phase 1), across the ferry wharf's berth head at Wickharbor (Phase 2), and
@@ -201,7 +202,12 @@ describe('walking aboard (the real movement kernel)', () => {
   }
 
   beforeAll(() => {
-    sim = new Sim({ seed: WORLD_SEED, playerClass: 'warrior', autoEquip: true });
+    sim = new Sim({
+      seed: WORLD_SEED,
+      playerClass: 'warrior',
+      autoEquip: true,
+      ...PRODUCTION_IDLE_CULL,
+    });
     sim.setPlayerLevel(60);
   });
 
@@ -369,7 +375,7 @@ describe('Wickharbor berth (Phase 2)', () => {
   });
 
   it('boards from the wharf, over the gangplank, onto the deck', () => {
-    const sim = new Sim({ seed: WORLD_SEED, playerClass: 'warrior' });
+    const sim = new Sim({ seed: WORLD_SEED, playerClass: 'warrior', ...PRODUCTION_IDLE_CULL });
     const p = sim.player;
     const meta = sim.players.get(p.id);
     if (!meta) throw new Error('meta');
@@ -465,7 +471,7 @@ describe('the far berths: the Moonrest and Wyrmwatch ferry piers', () => {
     });
 
     it(`${name}: boards from the shore, down the pier and over the gangplank`, () => {
-      const sim = new Sim({ seed: WORLD_SEED, playerClass: 'warrior' });
+      const sim = new Sim({ seed: WORLD_SEED, playerClass: 'warrior', ...PRODUCTION_IDLE_CULL });
       const p = sim.player;
       const meta = sim.players.get(p.id);
       if (!meta) throw new Error('meta');

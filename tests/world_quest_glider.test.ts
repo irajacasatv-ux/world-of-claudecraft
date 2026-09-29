@@ -21,12 +21,14 @@ import { WATER_LEVEL } from '../src/sim/world';
 import { advanceGliderMovement, startGliderFlight } from '../src/sim/world_quest_glider';
 import { gliderCourseForCycle } from '../src/sim/world_quest_glider_generation';
 import { WORLD_SEED } from '../src/sim/world_seed';
+import { PRODUCTION_IDLE_CULL } from './helpers/production_idle_cull';
 
 function setupSim(fullWorld = false) {
   const sim = new Sim({
     seed: WORLD_SEED,
     playerClass: 'warrior',
     devCommands: true,
+    ...PRODUCTION_IDLE_CULL,
     world: fullWorld
       ? BUILTIN_WORLD
       : {
@@ -145,7 +147,12 @@ describe('World Quest Glider Integration', () => {
     sim.player.pos = sim.groundPos(GLIDER_NPC_DEF.pos.x + 1, GLIDER_NPC_DEF.pos.z);
     sim.talkToNpc(GLIDER_NPC_ID);
     const saved = sim.serializeCharacter(sim.playerId)!;
-    const restored = new Sim({ seed: WORLD_SEED, playerClass: 'warrior', noPlayer: true });
+    const restored = new Sim({
+      seed: WORLD_SEED,
+      playerClass: 'warrior',
+      noPlayer: true,
+      ...PRODUCTION_IDLE_CULL,
+    });
     restored.resetDay = sim.resetDay;
     restored.addPlayer('warrior', 'Returning Pilot', { state: saved });
     restored.tick();

@@ -28,6 +28,7 @@ import {
   harborHouseWalls,
 } from '../src/sim/wyrmwatch_harbor_house';
 import { worldEntityText } from '../src/ui/world_entity_i18n';
+import { PRODUCTION_IDLE_CULL } from './helpers/production_idle_cull';
 
 // The Harbormaster's House at the Wyrmwatch cliff harbor (src/sim/content/wyrmwatch_harbor_house.ts,
 // src/sim/wyrmwatch_harbor_house.ts): the enlarged walk-in house on stilts that replaced the
@@ -308,7 +309,7 @@ describe("Harbormaster's House: walking it (the real movement kernel)", () => {
   }
 
   beforeAll(() => {
-    sim = new Sim({ seed: S, playerClass: 'warrior' });
+    sim = new Sim({ seed: S, playerClass: 'warrior', ...PRODUCTION_IDLE_CULL });
     sim.setPlayerLevel(10);
   });
 

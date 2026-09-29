@@ -33,6 +33,7 @@ import {
   wyrmwatchHarborColliders,
   wyrmwatchRailColliders,
 } from '../src/sim/wyrmwatch_harbor';
+import { PRODUCTION_IDLE_CULL } from './helpers/production_idle_cull';
 
 // The Wyrmwatch cliff harbor at the Drakelands ferry berth (src/sim/content/wyrmwatch_harbor.ts):
 // quays at the waterline, a switchback stair up the cliff, a top landing with the harbor gate,
@@ -394,7 +395,7 @@ describe('Wyrmwatch cliff harbor: walking it (the real movement kernel)', () => 
   }
 
   beforeAll(() => {
-    sim = new Sim({ seed: S, playerClass: 'warrior' });
+    sim = new Sim({ seed: S, playerClass: 'warrior', ...PRODUCTION_IDLE_CULL });
     sim.setPlayerLevel(60);
   });
 

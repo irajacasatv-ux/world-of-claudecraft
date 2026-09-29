@@ -3,12 +3,13 @@ import { NORTH_WATCH_CANNON } from '../src/sim/content/vehicle_stations';
 import { CANNON_ENDLESS } from '../src/sim/minigames/cannon_endless';
 import { Sim } from '../src/sim/sim';
 import { type SimEvent, TICK_RATE } from '../src/sim/types';
+import { PRODUCTION_IDLE_CULL } from './helpers/production_idle_cull';
 
 type CannonResultEvent = Extract<SimEvent, { type: 'cannonResult' }>;
 type ScoreEvent = Extract<SimEvent, { type: 'worldQuestScore' }>;
 
 function armed(): Sim {
-  const sim = new Sim({ seed: 5, playerClass: 'mage', devCommands: true });
+  const sim = new Sim({ seed: 5, playerClass: 'mage', devCommands: true, ...PRODUCTION_IDLE_CULL });
   sim.chat('/dev cannon');
   sim.chat(`/dev tp ${NORTH_WATCH_CANNON.x} ${NORTH_WATCH_CANNON.z + 2}`);
   sim.tick();
@@ -32,11 +33,9 @@ describe('endless cannon play at the manned station', () => {
   it('credits the quest once at the victory, keeps the cannon manned, and a later fall costs nothing', () => {
     const sim = armed();
     const meta = sim.meta(sim.playerId)!;
-    if (!sim.enterVehicle(NORTH_WATCH_CANNON.id)) {
-      // The developer arm could not seat the tester on this seed/world; the
-      // kernel suite covers the endless machine itself.
-      return;
-    }
+    // The developer arm seats the tester; a silent early return here would pass
+    // with nothing played.
+    expect(sim.enterVehicle(NORTH_WATCH_CANNON.id)).toBe(true);
     const results: CannonResultEvent[] = [];
     const scores: ScoreEvent[] = [];
     const copperBefore = sim.copper;

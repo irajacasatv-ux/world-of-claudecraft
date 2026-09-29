@@ -13,9 +13,12 @@ import { terrainHeight } from '../src/sim/world';
 import { worldQuestCycleOfferingQuest } from '../src/sim/world_quest_rotation';
 import { worldQuestCopperReward } from '../src/sim/world_quests';
 import { WORLD_SEED } from '../src/sim/world_seed';
+import { PRODUCTION_IDLE_CULL } from './helpers/production_idle_cull';
 
 function rig(station = NORTH_WATCH_CANNON) {
-  const sim = new Sim({ seed: WORLD_SEED, playerClass: 'mage' });
+  // The defense runs minutes of full-world ticks around one player: cull the far
+  // idle mobs as production does.
+  const sim = new Sim({ seed: WORLD_SEED, playerClass: 'mage', ...PRODUCTION_IDLE_CULL });
   const player = sim.player;
   const meta = sim.meta(player.id)!;
   // The station quest carries the zone floor (WorldQuestDef.minLevel); the rig

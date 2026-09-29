@@ -24,6 +24,7 @@ import {
 import { DT, type Entity, type MoveInput } from '../src/sim/types';
 import { WATER_LEVEL } from '../src/sim/world';
 import { WORLD_SEED } from '../src/sim/world_seed';
+import { PRODUCTION_IDLE_CULL } from './helpers/production_idle_cull';
 
 // Phase 3 of the Eastbrook ferry: the deck under way is a kinematic platform
 // (src/sim/transport_deck.ts) the movement kernel stands a passenger on, and
@@ -113,7 +114,7 @@ function hardestTurn(): number {
 }
 
 function sailingSim(voyageSecond: number): Sim {
-  const sim = new Sim({ seed: WORLD_SEED, playerClass: 'warrior' });
+  const sim = new Sim({ seed: WORLD_SEED, playerClass: 'warrior', ...PRODUCTION_IDLE_CULL });
   sim.setPlayerLevel(20);
   setClock(sim, DEPART_EAST + voyageSecond);
   return sim;

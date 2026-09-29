@@ -55,6 +55,7 @@ import { collectCalmAnchorPads } from '../src/sim/terrain_calm_anchors';
 import { wickharborHarborColliders } from '../src/sim/wickharbor_harbor';
 import { groundHeight, terrainHeight, WATER_LEVEL } from '../src/sim/world';
 import { WORLD_SEED } from '../src/sim/world_seed';
+import { PRODUCTION_IDLE_CULL } from './helpers/production_idle_cull';
 
 // Wickharbor's wooden harbor (src/sim/content/wickharbor_harbor.ts): the shore boardwalk,
 // the great quay filling the water off it down to the ferry wharf, the two piers out from
@@ -620,7 +621,7 @@ describe('Wickharbor harbor: walking it (the real movement kernel)', () => {
     deckPoint(byId(id), a, c);
 
   beforeAll(() => {
-    sim = new Sim({ seed: S, playerClass: 'warrior' });
+    sim = new Sim({ seed: S, playerClass: 'warrior', ...PRODUCTION_IDLE_CULL });
     sim.setPlayerLevel(60);
   });
 

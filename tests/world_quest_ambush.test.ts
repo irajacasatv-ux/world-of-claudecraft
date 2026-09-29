@@ -12,11 +12,17 @@ import {
 } from '../src/sim/world_quest_ambush';
 import { worldQuestSalvageLayout } from '../src/sim/world_quest_salvage';
 import { WORLD_SEED } from '../src/sim/world_seed';
+import { PRODUCTION_IDLE_CULL } from './helpers/production_idle_cull';
 
 const QUEST_ID = 'wq_farshore_salvage';
 
 function armed(): Sim {
-  const sim = new Sim({ seed: 21, playerClass: 'warrior', devCommands: true });
+  const sim = new Sim({
+    seed: 21,
+    playerClass: 'warrior',
+    devCommands: true,
+    ...PRODUCTION_IDLE_CULL,
+  });
   sim.resetDay = '2026-09-06';
   sim.chat('/dev salvage');
   sim.tick();

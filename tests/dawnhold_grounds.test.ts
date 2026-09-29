@@ -17,11 +17,17 @@ import {
 } from '../src/sim/dawnhold_layout';
 import { Sim } from '../src/sim/sim';
 import { groundHeight } from '../src/sim/world';
+import { PRODUCTION_IDLE_CULL } from './helpers/production_idle_cull';
 
 const SEED = 42;
 
 function makeWalker(spot: { x: number; z: number }) {
-  const sim = new Sim({ seed: SEED, playerClass: 'warrior', autoEquip: true });
+  const sim = new Sim({
+    seed: SEED,
+    playerClass: 'warrior',
+    autoEquip: true,
+    ...PRODUCTION_IDLE_CULL,
+  });
   sim.setPlayerLevel(20);
   const p = sim.player;
   const meta = (

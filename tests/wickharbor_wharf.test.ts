@@ -33,6 +33,7 @@ import { shipHullColliders } from '../src/sim/transport_ship';
 import { wickharborWharfColliders } from '../src/sim/wickharbor_wharf';
 import { groundHeight, terrainHeight, WATER_LEVEL } from '../src/sim/world';
 import { WORLD_SEED } from '../src/sim/world_seed';
+import { PRODUCTION_IDLE_CULL } from './helpers/production_idle_cull';
 
 // The Wickharbor ferry wharf (src/sim/content/wickharbor_wharf.ts): one level plank deck (the
 // pier, the berth head and the arm) at the ferry pier height, and a flight up from the town's
@@ -496,7 +497,7 @@ describe('Wickharbor ferry wharf: walking it (the real movement kernel)', () => 
   }
 
   beforeAll(() => {
-    sim = new Sim({ seed: S, playerClass: 'warrior' });
+    sim = new Sim({ seed: S, playerClass: 'warrior', ...PRODUCTION_IDLE_CULL });
     sim.setPlayerLevel(60);
   });
 

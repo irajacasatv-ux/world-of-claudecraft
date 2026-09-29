@@ -30,6 +30,7 @@ import { shipToWorld } from '../src/sim/transport_ship';
 import { DT, type Entity } from '../src/sim/types';
 import { groundHeight, WATER_LEVEL } from '../src/sim/world';
 import { WORLD_SEED } from '../src/sim/world_seed';
+import { PRODUCTION_IDLE_CULL } from './helpers/production_idle_cull';
 
 // The scheduled, free, round-trip ferries (Phases 2 and 3), driven here on
 // route A, Eastbrook to the Nightbloom (route B, Wickharbor to the
@@ -254,7 +255,7 @@ describe('sailing (the real Sim)', () => {
   let sim: Sim;
 
   beforeEach(() => {
-    sim = new Sim({ seed: WORLD_SEED, playerClass: 'hunter' });
+    sim = new Sim({ seed: WORLD_SEED, playerClass: 'hunter', ...PRODUCTION_IDLE_CULL });
     sim.setPlayerLevel(20);
   });
 
@@ -460,7 +461,12 @@ describe('sailing (the real Sim)', () => {
     if (!state) throw new Error('no save');
     expect(state.pos).toEqual({ x: FAR.landing.x, z: FAR.landing.z });
     // a fresh world, at a moment the ship is NOT docked at Wickharbor
-    const next = new Sim({ seed: WORLD_SEED, playerClass: 'hunter', noPlayer: true });
+    const next = new Sim({
+      seed: WORLD_SEED,
+      playerClass: 'hunter',
+      noPlayer: true,
+      ...PRODUCTION_IDLE_CULL,
+    });
     setClock(next, DEPART_EAST + 2);
     const pid = next.addPlayer('hunter', 'Returner', { state });
     const back = next.entities.get(pid);
@@ -785,7 +791,7 @@ describe('the second route, Wickharbor to the Drakelands (the real Sim)', () => 
   let sim: Sim;
 
   beforeEach(() => {
-    sim = new Sim({ seed: WORLD_SEED, playerClass: 'hunter' });
+    sim = new Sim({ seed: WORLD_SEED, playerClass: 'hunter', ...PRODUCTION_IDLE_CULL });
     sim.setPlayerLevel(20);
   });
 
