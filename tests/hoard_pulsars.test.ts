@@ -25,11 +25,21 @@ import type { RiftInstance } from '../src/sim/rift/types';
 import { makeVaultSeed } from '../src/sim/rift/vault_seed';
 import { Sim } from '../src/sim/sim';
 import { DT, type Entity, RUN_SPEED, type SimEvent } from '../src/sim/types';
+import { PRODUCTION_IDLE_CULL } from './helpers/production_idle_cull';
 
 type Rarity = 'common' | 'rare' | 'epic' | 'legendary';
 
 function encounter(rarity: Rarity = 'rare') {
-  const sim = new Sim({ seed: 5150, playerClass: 'warrior', autoEquip: false, devCommands: true });
+  // The shipped idle-mob cull: the vault floor sits in its own instance band, so
+  // the overworld's idle camps are far from every player. The boss, the orbs and
+  // everything on the floor still tick their full AI.
+  const sim = new Sim({
+    seed: 5150,
+    playerClass: 'warrior',
+    autoEquip: false,
+    devCommands: true,
+    ...PRODUCTION_IDLE_CULL,
+  });
   sim.chat('/dev level 20', sim.player.id);
   sim.enterRift(makeVaultSeed(3, 183), 23, sim.player.id, undefined, {
     ...sim.player,
