@@ -6,6 +6,16 @@ import { createMob } from '../src/sim/entity';
 import { activateDivineAscension, grantDevotion } from '../src/sim/paladin_devotion';
 import { type ResolvedAbility, Sim } from '../src/sim/sim';
 import type { Entity } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
+
+// Every case fights a mob it places itself, so the ambient overworld (camps,
+// NPCs, ground objects) is pure overhead: EMPTY_TEST_WORLD. One seed for the
+// whole file: each case builds its own Sim, and a seed the file has already
+// built reuses its terrain and collider work, where a fresh seed per case paid
+// that cost again for no extra coverage.
+function paladinSim(): Sim {
+  return new Sim({ seed: 37, playerClass: 'paladin', autoEquip: true, world: EMPTY_TEST_WORLD });
+}
 
 function hostileNear(sim: Sim): Entity {
   const player = sim.player;
@@ -52,7 +62,7 @@ describe('Paladin core abilities', () => {
     expect(ABILITIES.divine_protection.ranks).toBeUndefined();
 
     for (const spec of [null, 'holy', 'protection', 'retribution'] as const) {
-      const sim = new Sim({ seed: 37, playerClass: 'paladin', autoEquip: true });
+      const sim = paladinSim();
       sim.setPlayerLevel(20);
       if (spec) expect(sim.setSpec(spec)).toBe(true);
       const ward = resolve(sim, 'divine_protection');
@@ -84,7 +94,7 @@ describe('Paladin core abilities', () => {
     });
     expect(ABILITIES.dawns_embrace.castTime).toBe(2.5);
 
-    const sim = new Sim({ seed: 38, playerClass: 'paladin', autoEquip: true });
+    const sim = paladinSim();
     sim.setPlayerLevel(20);
     sim.setSpec('holy');
     const enemy = hostileNear(sim);
@@ -113,7 +123,7 @@ describe('Paladin core abilities', () => {
   });
 
   it('exposes the compact replacement kit while retaining old actions only as hidden data', () => {
-    const sim = new Sim({ seed: 7, playerClass: 'paladin', autoEquip: true });
+    const sim = paladinSim();
     sim.setPlayerLevel(20);
     expect(sim.setSpec('retribution')).toBe(true);
 
@@ -124,7 +134,7 @@ describe('Paladin core abilities', () => {
   });
 
   it('generates Devotion, empowers Dawnfall, blocks generation, and spends one charge', () => {
-    const sim = new Sim({ seed: 11, playerClass: 'paladin', autoEquip: true });
+    const sim = paladinSim();
     sim.setPlayerLevel(20);
     sim.setSpec('retribution');
     hostileNear(sim);
@@ -182,7 +192,7 @@ describe('Paladin core abilities', () => {
   });
 
   it('keeps Mercy Lance casted and guarantees its critical hit when Ascension spends a charge', () => {
-    const sim = new Sim({ seed: 37, playerClass: 'paladin', autoEquip: true });
+    const sim = paladinSim();
     sim.setPlayerLevel(20);
     sim.setSpec('holy');
     const enemy = hostileNear(sim);
@@ -229,7 +239,7 @@ describe('Paladin core abilities', () => {
   });
 
   it('refuses Divine Ascension before 20 Devotion and activates it when ready', () => {
-    const sim = new Sim({ seed: 13, playerClass: 'paladin', autoEquip: true });
+    const sim = paladinSim();
     sim.setPlayerLevel(20);
     sim.setSpec('holy');
 
@@ -266,7 +276,7 @@ describe('Paladin core abilities', () => {
   });
 
   it('ends Divine Ascension when its visible buff is canceled', () => {
-    const sim = new Sim({ seed: 41, playerClass: 'paladin', autoEquip: true });
+    const sim = paladinSim();
     sim.setPlayerLevel(20);
     grantDevotion(sim.player, 20);
     sim.castAbility('divine_ascension');
@@ -281,7 +291,7 @@ describe('Paladin core abilities', () => {
   });
 
   it('lets Bastion Rite add block without giving Paladins warrior parry', () => {
-    const sim = new Sim({ seed: 17, playerClass: 'paladin', autoEquip: true });
+    const sim = paladinSim();
     sim.setPlayerLevel(20);
     sim.setSpec('protection');
     const mob = hostileNear(sim);
@@ -300,7 +310,7 @@ describe('Paladin core abilities', () => {
   });
 
   it('generates Protection Devotion from actual blocks with an internal cooldown', () => {
-    const sim = new Sim({ seed: 29, playerClass: 'paladin', autoEquip: true });
+    const sim = paladinSim();
     sim.setPlayerLevel(20);
     sim.setSpec('protection');
     sim.addItem('eastbrook_buckler', 1);
@@ -326,7 +336,7 @@ describe('Paladin core abilities', () => {
   });
 
   it('generates Devotion without a spec only for effective direct healing', () => {
-    const sim = new Sim({ seed: 31, playerClass: 'paladin', autoEquip: true });
+    const sim = paladinSim();
     sim.setPlayerLevel(20);
 
     sim.player.hp = 1;
@@ -340,13 +350,13 @@ describe('Paladin core abilities', () => {
   });
 
   it('generates one Devotion from other effective direct abilities without a spec', () => {
-    const healing = new Sim({ seed: 34, playerClass: 'paladin', autoEquip: true });
+    const healing = paladinSim();
     healing.setPlayerLevel(20);
     healing.player.hp = 1;
     run(healing, healing.player, resolve(healing, 'lay_on_hands'));
     expect(healing.player.paladinDevotion?.value).toBe(1);
 
-    const damage = new Sim({ seed: 35, playerClass: 'paladin', autoEquip: true });
+    const damage = paladinSim();
     damage.setPlayerLevel(20);
     const enemy = hostileNear(damage);
     run(damage, enemy, resolve(damage, 'hammer_of_grace'));
@@ -355,7 +365,7 @@ describe('Paladin core abilities', () => {
   });
 
   it('doubles Holy healing generation while Zealwing is active', () => {
-    const sim = new Sim({ seed: 32, playerClass: 'paladin', autoEquip: true });
+    const sim = paladinSim();
     sim.setPlayerLevel(20);
     sim.setSpec('holy');
 
@@ -370,7 +380,7 @@ describe('Paladin core abilities', () => {
   });
 
   it('doubles Protection damage generation while Zealwing is active', () => {
-    const sim = new Sim({ seed: 33, playerClass: 'paladin', autoEquip: true });
+    const sim = paladinSim();
     sim.setPlayerLevel(20);
     sim.setSpec('protection');
 
@@ -381,7 +391,7 @@ describe('Paladin core abilities', () => {
   });
 
   it('improves rescue tools during Ascension without marking them as charge spenders', () => {
-    const holy = new Sim({ seed: 19, playerClass: 'paladin', autoEquip: true });
+    const holy = paladinSim();
     holy.setPlayerLevel(20);
     holy.setSpec('holy');
     grantDevotion(holy.player, 20);
@@ -389,7 +399,7 @@ describe('Paladin core abilities', () => {
     const lifeCovenant = resolve(holy, 'life_covenant');
     expect(lifeCovenant.effects).toContainEqual({ type: 'absorb', amount: 120, duration: 6 });
 
-    const protection = new Sim({ seed: 23, playerClass: 'paladin', autoEquip: true });
+    const protection = paladinSim();
     protection.setPlayerLevel(20);
     protection.setSpec('protection');
     grantDevotion(protection.player, 20);
@@ -407,7 +417,7 @@ describe('Paladin core abilities', () => {
   });
 
   it('transforms every marked core ability during Ascension', () => {
-    const holy = new Sim({ seed: 41, playerClass: 'paladin', autoEquip: true });
+    const holy = paladinSim();
     holy.setPlayerLevel(20);
     holy.setSpec('holy');
     grantDevotion(holy.player, 20);
@@ -436,7 +446,7 @@ describe('Paladin core abilities', () => {
         friendlyTargetOnly: true,
       },
     ]);
-    const protection = new Sim({ seed: 43, playerClass: 'paladin', autoEquip: true });
+    const protection = paladinSim();
     protection.setPlayerLevel(20);
     protection.setSpec('protection');
     grantDevotion(protection.player, 20);
@@ -503,7 +513,7 @@ describe('Paladin core abilities', () => {
       },
     ]);
 
-    const retribution = new Sim({ seed: 47, playerClass: 'paladin', autoEquip: true });
+    const retribution = paladinSim();
     retribution.setPlayerLevel(20);
     retribution.setSpec('retribution');
     grantDevotion(retribution.player, 20);
@@ -528,7 +538,7 @@ describe('Paladin core abilities', () => {
   });
 
   it('labels defensive Ascension impacts independently from damage and healing', () => {
-    const sim = new Sim({ seed: 43, playerClass: 'paladin', autoEquip: true });
+    const sim = paladinSim();
     sim.setPlayerLevel(20);
     sim.setSpec('retribution');
     grantDevotion(sim.player, 20);
@@ -546,7 +556,7 @@ describe('Paladin core abilities', () => {
   });
 
   it('anchors Final Edict empowered nova on the Paladin', () => {
-    const sim = new Sim({ seed: 59, playerClass: 'paladin', autoEquip: true });
+    const sim = paladinSim();
     sim.setPlayerLevel(20);
     sim.setSpec('retribution');
     const enemy = hostileNear(sim);
@@ -567,7 +577,7 @@ describe('Paladin core abilities', () => {
   });
 
   it('emits the focused Final Edict weapon impact on a successful strike', () => {
-    const sim = new Sim({ seed: 61, playerClass: 'paladin', autoEquip: true });
+    const sim = paladinSim();
     sim.setPlayerLevel(20);
     sim.setSpec('retribution');
     const enemy = hostileNear(sim);
