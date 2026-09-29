@@ -20,11 +20,12 @@ import { EMPTY_TEST_WORLD } from './sim_shared';
 
 type TestSim = Sim & { ctx: SimContext; addEntity(e: Entity): void; nextId: number };
 
-// One seed on the shared EMPTY_TEST_WORLD object for every case. The static
-// collider grid is built on a seed's first tick and cached per world object
-// and seed, so the per-call world literal and the per-case seeds this
-// replaced rebuilt it (about half a second) for every Sim, control runs
-// included. Hit and crit rolls are pinned below and every comparison is a
+// One seed on the empty test world for every case. The static collider grid is
+// built on a seed's first tick and cached per seed (it keys on the module's
+// active world content, never on cfg.world, so every scoped world shares one
+// grid per seed); the per-case seeds this replaced paid that build (about half
+// a second) for every Sim, control runs included, and the saving is the one
+// seed. Hit and crit rolls are pinned below and every comparison is a
 // same-seed pair, so the seed itself carries no coverage.
 function marksmanHunter(): TestSim {
   const sim = new Sim({
