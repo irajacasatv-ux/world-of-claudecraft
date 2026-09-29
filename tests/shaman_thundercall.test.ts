@@ -3,7 +3,12 @@ import { thundercallDamageMultiplier } from '../src/sim/combat/shaman_thundercal
 import { MOBS } from '../src/sim/data';
 import { createMob } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
-import type { Aura, Entity, SimEvent } from '../src/sim/types';
+import {
+  type Aura,
+  type Entity,
+  PLAYER_INTEREST_DROP_RADIUS,
+  type SimEvent,
+} from '../src/sim/types';
 
 const THUNDER_CHARGES_ID = 'shaman_thunder_charges';
 
@@ -15,8 +20,22 @@ function place(sim: Sim, entity: Entity, x: number, z: number): void {
 
 // Default seed re-hunted (2801 to 2802) after the v0.34.0 catch-up merge shifted
 // the shared draw order; a missed Arc Bolt impact banks no charge.
+// Production's idle culling (the server and offline client both set it): the
+// ambient overworld stays, so the hunted seeds keep their draws, but idle mobs
+// far from the shaman stop costing a full AI update every tick. The scoped
+// EMPTY_TEST_WORLD was tried and forks the stream (an Arc Overload proc lands
+// on the first case), so it is not used here. Each fresh seed builds its own
+// collider grid (about half a second), so only the cases whose assertions ride
+// a roll (a hit, an Arc Overload, a crit) keep a seed of their own; the
+// Faultwake placement and scaling cases and the refusal arm draw nothing they
+// assert on and reuse an already-built seed.
 function setup(seed = 2802): { sim: Sim; shaman: Entity; target: Entity } {
-  const sim = new Sim({ seed, playerClass: 'shaman', noPlayer: true });
+  const sim = new Sim({
+    seed,
+    playerClass: 'shaman',
+    noPlayer: true,
+    idleMobTickRadius: PLAYER_INTEREST_DROP_RADIUS,
+  });
   const pid = sim.addPlayer('shaman', 'Stormbank');
   sim.setPlayerLevel(20, pid);
   expect(sim.setSpec('elemental', pid)).toBe(true);
@@ -150,7 +169,8 @@ describe('Shaman v0.29 Thundercall', () => {
     expect(chargedDamage).toBeGreaterThan(plainDamage * 1.8);
     expect(thunderBank(charged.shaman)).toBeUndefined();
 
-    const failed = setup(2805);
+    // The refusal arm draws nothing it asserts on, so it reuses this case's seed.
+    const failed = setup(2804);
     seedThunderBank(failed.shaman, 3);
     place(failed.sim, failed.target, 700, 100);
     const manaBefore = failed.shaman.resource;
@@ -161,7 +181,7 @@ describe('Shaman v0.29 Thundercall', () => {
 
   it('vents Faultwake at the selected target with deterministic area state', () => {
     const run = () => {
-      const { sim, shaman, target } = setup(2806);
+      const { sim, shaman, target } = setup();
       seedThunderBank(shaman, 5);
       sim.castAbility('earthquake', shaman.id);
       const zone = sim.ctx.groundAoEs.find((effect) => effect.sourceId === shaman.id);
@@ -180,7 +200,7 @@ describe('Shaman v0.29 Thundercall', () => {
 
   it('applies Thunder charges to Faultwake base damage and Spell Power together', () => {
     const groundEffect = (charges: number) => {
-      const { sim, shaman } = setup(2817 + charges);
+      const { sim, shaman } = setup();
       seedThunderBank(shaman, charges);
       sim.castAbility('earthquake', shaman.id);
       return sim.ctx.groundAoEs.find((effect) => effect.sourceId === shaman.id);
