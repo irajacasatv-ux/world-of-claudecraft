@@ -125,6 +125,8 @@ describe('mastery/talent damage percent scales the whole hit, not just the base 
     const baseline = emptyModifiers();
 
     const tickValue = (mods: TalentModifiers, spellPower: number): number => {
+      // Every rig in this file uses seed 11 on the empty world: one collider grid
+      // build serves the file.
       const sim = new Sim({
         seed: 11,
         playerClass: 'warlock',
@@ -160,7 +162,7 @@ describe('mastery/talent damage percent scales the whole hit, not just the base 
 
     const tickValue = (mods: TalentModifiers, spellPower: number): number => {
       const sim = new Sim({
-        seed: 21,
+        seed: 11,
         playerClass: 'priest',
         autoEquip: true,
         world: EMPTY_TEST_WORLD,
@@ -193,7 +195,7 @@ describe('mastery/talent damage percent scales the whole hit, not just the base 
     const shieldValue = (mods: TalentModifiers, spellPower: number): number => {
       const modsWithSpec: TalentModifiers = { ...mods, spec: 'frost' }; // ice_barrier is frost-spec-gated
       const sim = new Sim({
-        seed: 31,
+        seed: 11,
         playerClass: 'mage',
         autoEquip: true,
         world: EMPTY_TEST_WORLD,
@@ -279,7 +281,7 @@ describe('mastery/talent damage percent scales the whole hit, not just the base 
     // so the spec grant survives.
     const castHits = (boost: boolean): number[] => {
       const sim = new Sim({
-        seed: 41,
+        seed: 11,
         playerClass: 'paladin',
         autoEquip: true,
         world: EMPTY_TEST_WORLD,
@@ -296,6 +298,10 @@ describe('mastery/talent damage percent scales the whole hit, not just the base 
       meta.known = abilitiesKnownAt(meta.cls, 20, mods) as typeof meta.known;
       sim.player.spellPower = 400;
       sim.player.resource = sim.player.maxResource;
+      // The disc and both bounces must land: pin the rolls (`next` at 0.9 fails
+      // every chance under 90 percent, so no resist and no crit) rather than
+      // ride the seed's stream.
+      sim.rng.next = () => 0.9;
 
       const spawn = (id: number, dz: number): Entity => {
         const m = createMob(id, MOBS.forest_wolf, 20, {
@@ -404,7 +410,7 @@ describe('mastery/talent damage percent scales the whole hit, not just the base 
 
     const castInitialHeals = (boost: boolean): number[] => {
       const sim = new Sim({
-        seed: 51,
+        seed: 11,
         playerClass: 'mage',
         autoEquip: true,
         world: EMPTY_TEST_WORLD,
