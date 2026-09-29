@@ -3,6 +3,20 @@ import { defaultBuild } from '../src/sim/content/talents';
 import { grantDevotion } from '../src/sim/paladin_devotion';
 import { Sim } from '../src/sim/sim';
 import { abilityEffectText } from '../src/ui/ability_description';
+import { EMPTY_TEST_WORLD } from './sim_shared';
+
+// The rigs read tooltips and cast self-buffs only, so each stands on the empty
+// world, all on one seed.
+function paladin(): Sim {
+  const sim = new Sim({
+    seed: 901,
+    playerClass: 'paladin',
+    autoEquip: true,
+    world: EMPTY_TEST_WORLD,
+  });
+  sim.setPlayerLevel(20);
+  return sim;
+}
 
 function tooltipValue(sim: Sim, abilityId: string): string {
   const ability = sim.resolvedAbility(abilityId);
@@ -17,12 +31,10 @@ function tooltipValue(sim: Sim, abilityId: string): string {
 
 describe('Paladin maximum-health percentage tooltips', () => {
   it('renders Ward of Faith as 25% base and 35% with Enduring Protection', () => {
-    const base = new Sim({ seed: 901, playerClass: 'paladin', autoEquip: true });
-    base.setPlayerLevel(20);
+    const base = paladin();
     expect(tooltipValue(base, 'divine_protection')).toBe('25');
 
-    const enduring = new Sim({ seed: 902, playerClass: 'paladin', autoEquip: true });
-    enduring.setPlayerLevel(20);
+    const enduring = paladin();
     const build = defaultBuild('paladin', 20);
     build.rows[8] = 'pal_r8_enduring_protection';
     expect(enduring.applyTalents(build)).toBe(true);
@@ -40,8 +52,7 @@ describe('Paladin maximum-health percentage tooltips', () => {
   });
 
   it('renders Last Rite and both Holy Shield states as percentages, never zero', () => {
-    const sim = new Sim({ seed: 903, playerClass: 'paladin', autoEquip: true });
-    sim.setPlayerLevel(20);
+    const sim = paladin();
     expect(sim.setSpec('protection')).toBe(true);
 
     expect(tooltipValue(sim, 'lay_on_hands')).toBe('100');
