@@ -22,6 +22,7 @@ import {
 import { Sim } from '../src/sim/sim';
 import type { MoveInput } from '../src/sim/types';
 import { groundHeight } from '../src/sim/world';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // Dungeon interiors run the same traversal physics as the open world: the
 // boss dais is REAL elevation (walked up like a kerb, stood on by mobs and
@@ -42,8 +43,15 @@ const IDLE: MoveInput = {
   surface: false,
 };
 
+// The walks stay inside dungeon interiors, whose layout colliders do not come
+// from the overworld's camps or NPCs: the empty world serves.
 function simWithPlayerAt(x: number, z: number, facing: number): Sim {
-  const sim = new Sim({ seed: SEED, playerClass: 'warrior', autoEquip: true });
+  const sim = new Sim({
+    seed: SEED,
+    playerClass: 'warrior',
+    autoEquip: true,
+    world: EMPTY_TEST_WORLD,
+  });
   sim.setPlayerLevel(60);
   const p = sim.player;
   p.pos.x = x;
