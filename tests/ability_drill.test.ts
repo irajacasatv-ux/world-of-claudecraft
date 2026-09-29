@@ -20,9 +20,13 @@ import {
 } from '../src/sim/tutorial/ability_drill';
 import { startingAttackFor } from '../src/sim/tutorial/starting_attack';
 import type { Entity, PlayerClass, QuestProgress } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
-function makeSim(playerClass: PlayerClass = 'mage', seed = 991): Sim {
-  return new Sim({ seed, playerClass, autoEquip: true });
+// Every case either drives the drill directly or strikes an effigy it spawns
+// itself, so the rig stands on the empty world (the drill ring is a position, not
+// world content).
+function makeSim(playerClass: PlayerClass = 'mage'): Sim {
+  return new Sim({ seed: 991, playerClass, autoEquip: true, world: EMPTY_TEST_WORLD });
 }
 
 function seedActiveDrill(sim: Sim): QuestProgress {
@@ -258,6 +262,9 @@ describe('the live damage path credits the drill', () => {
     const p = standInRing(sim);
     const target = spawnEffigy(sim, 90101, p.pos.x + 3, p.pos.z);
     sim.targetEntity(target.id);
+    // One cast, so pin its resist roll off (`next` at 0.9 lands any spell whose
+    // hit chance is over 90 percent) rather than ride the seed's stream.
+    sim.rng.next = () => 0.9;
     const taught = startingAttackFor('mage').abilityId!;
     // Cast, then tick until the cast completes and the bolt lands.
     sim.castAbility(taught);
