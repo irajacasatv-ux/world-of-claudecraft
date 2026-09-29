@@ -3,9 +3,16 @@ import { MOBS } from '../src/sim/data';
 import { createMob } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
 import type { Entity } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
+
+// Every case places its own target or reads an ability, so the Sims run on the
+// empty world, all on one seed (the baseline case's seed 8 paid a second build).
+function warlockSim(): Sim {
+  return new Sim({ seed: 7, playerClass: 'warlock', autoEquip: true, world: EMPTY_TEST_WORLD });
+}
 
 function setup(): { sim: Sim; player: Entity; mob: Entity } {
-  const sim = new Sim({ seed: 7, playerClass: 'warlock', autoEquip: true });
+  const sim = warlockSim();
   sim.setPlayerLevel(8);
   expect(sim.applyTalents({ spec: null, rows: { 8: 'wlk_r8_voidfeast' } })).toBe(true);
   const player = sim.player;
@@ -27,7 +34,7 @@ function setup(): { sim: Sim; player: Entity; mob: Entity } {
 
 describe('Improved Abyssal Gag level 8 control choice', () => {
   it('unlocks the Warlock interrupt two levels early', () => {
-    const untalented = new Sim({ seed: 7, playerClass: 'warlock', autoEquip: true });
+    const untalented = warlockSim();
     untalented.setPlayerLevel(8);
     expect(untalented.resolvedAbility('spell_lock')).toBeNull();
 
@@ -56,7 +63,7 @@ describe('Improved Abyssal Gag level 8 control choice', () => {
   });
 
   it('leaves the level 10 baseline interrupt as a school lockout without the talent silence', () => {
-    const sim = new Sim({ seed: 8, playerClass: 'warlock', autoEquip: true });
+    const sim = warlockSim();
     sim.setPlayerLevel(10);
     const ability = sim.resolvedAbility('spell_lock');
 
