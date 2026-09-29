@@ -13,14 +13,25 @@ import { MOBS } from '../src/sim/data';
 import { createMob } from '../src/sim/entity';
 import { type ResolvedAbility, Sim } from '../src/sim/sim';
 import { DT, type Entity } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 type TestSim = Sim & {
   nextId: number;
   addEntity(entity: Entity): void;
 };
 
+// Every rig but the exact RNG trace fights a wolf it places itself and pins any
+// roll it reads, so it stands on the empty world. It shares the trace's seed 13:
+// the collider grid keys on the seed, so the file builds one.
+const RIG_SEED = 13;
+
 function makeRetribution(): TestSim {
-  const sim = new Sim({ seed: 9931, playerClass: 'paladin', autoEquip: true }) as TestSim;
+  const sim = new Sim({
+    seed: RIG_SEED,
+    playerClass: 'paladin',
+    autoEquip: true,
+    world: EMPTY_TEST_WORLD,
+  }) as TestSim;
   sim.setPlayerLevel(20);
   expect(sim.setSpec('retribution')).toBe(true);
   sim.player.resource = sim.player.maxResource;
@@ -182,7 +193,12 @@ describe("Retribution Paladin Dawn's Wrath", () => {
     for (let elapsed = 0; elapsed <= 8; elapsed += DT) sim.tick();
     expect(proc(sim.player)).toBeUndefined();
 
-    const protection = new Sim({ seed: 9932, playerClass: 'paladin', autoEquip: true }) as TestSim;
+    const protection = new Sim({
+      seed: RIG_SEED,
+      playerClass: 'paladin',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    }) as TestSim;
     protection.setPlayerLevel(20);
     expect(protection.setSpec('protection')).toBe(true);
     const target = targetAt(protection, 2);
