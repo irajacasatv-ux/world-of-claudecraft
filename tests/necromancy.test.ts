@@ -22,7 +22,9 @@ const NECROMANCY_IDS = new Set([
 // EMPTY_TEST_WORLD: every case fights targets it spawns itself, so the ambient
 // overworld (camps, NPCs, ground objects) was pure per-tick overhead, about
 // six sevenths of this file's test time. `fullWorld` keeps the one case whose
-// seed-43 harvest procs ride the full world's shared rng stream.
+// seed-43 harvest procs ride the full world's shared rng stream. Every other
+// Sim uses seed 42: a seed's first tick builds its static collider grid (300 to
+// 600 ms even on the empty world), and the extra seeds bought no coverage.
 function makeNecromancer(seed = 42, fullWorld = false): Sim {
   const sim = new Sim({
     seed,
@@ -1393,7 +1395,7 @@ describe('Necromancy Warlock', () => {
   });
 
   it('makes Soul Lance pierce the two nearest enemies during Lich Form', () => {
-    const sim = makeNecromancer(43);
+    const sim = makeNecromancer();
     const primary = addTarget(sim);
     const nearest = addNearbyTarget(sim, primary, 0.5);
     const secondNearest = addNearbyTarget(sim, primary, 1);
@@ -2106,7 +2108,7 @@ describe('Necromancy Warlock', () => {
     };
 
     const restored = new Sim({
-      seed: 43,
+      seed: 42,
       playerClass: 'warlock',
       noPlayer: true,
       autoEquip: true,
@@ -2128,7 +2130,7 @@ describe('Necromancy Warlock', () => {
     expect(state.pet?.templateId).toBe('graveguard');
 
     const restored = new Sim({
-      seed: 44,
+      seed: 42,
       playerClass: 'warlock',
       noPlayer: true,
       autoEquip: true,
