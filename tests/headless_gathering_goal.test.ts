@@ -24,6 +24,7 @@ import {
   parseGatheringGoalRequest,
 } from '../headless/gathering_goal_protocol';
 import { Sim } from '../src/sim/sim';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const VALID_INSPECT = { cmd: 'gathering_goal', verb: 'inspect' } as const;
 const VALID_TRACK_RECIPE = {
@@ -248,7 +249,8 @@ function expectOk(reply: GatheringGoalReply): Extract<GatheringGoalReply, { ok: 
 }
 
 function makeSim(seed = 501): Sim {
-  return new Sim({ seed, playerClass: 'warrior', autoEquip: true });
+  // The goal commands read and write the player's own state, so the Sim runs on the empty world.
+  return new Sim({ seed, playerClass: 'warrior', autoEquip: true, world: EMPTY_TEST_WORLD });
 }
 
 describe('executeGatheringGoalCommand: gating before an admitted command', () => {
