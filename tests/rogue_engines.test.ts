@@ -369,9 +369,6 @@ describe('Skulduggery: the Gloam bank and its detonation', () => {
     // could never land outside a group (owner playtest bug).
     mob.facing = Math.PI;
 
-    // One idle tick settles the turn before the press.
-    sim.tick();
-
     // The detonation: one press, in the open, face to face. The veil rises
     // BEFORE the strike resolves, so this very hit is the empowered (+50%,
     // non-set Gloam Edge) one.
