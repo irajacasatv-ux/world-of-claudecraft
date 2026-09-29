@@ -63,15 +63,20 @@ describe('dungeon door clearance: no camp mob spawns on an overworld door', () =
   // Projecting FIRST is what keeps a ring mob on safe ground: findSafePos then
   // resolves the ring-edge point itself, where resolving the raw point deep in the
   // ring and pushing the result out lands the mob on ground nothing checked. So a
-  // mob on a ring must also pass the spawner's safe-ground test, at the deepest
-  // water floor any camp mob may stand on (a swimmer's, half a yard under the line).
+  // mob on a ring must also pass the spawner's safe-ground test at its own floor: a
+  // swimmer (a canSwim or mudfin template) may stand half a yard under the waterline,
+  // anything else must stand 0.4 yd above it.
   // Each PR builds the shipped seed and seed 4, which drops a ring mob inside a ring
   // without the re-projection and into deep water without the first projection (its
   // case also checks it still lands a mob on a ring, so a camp edit cannot quietly
   // leave it proving nothing); the nightly sweep flag builds it and five more (each
   // is a full overworld of its own).
   const REPRESENTATIVE_SEED = 4;
-  const DEEPEST_CAMP_FLOOR = waterLevel() - 0.5;
+  const campFloor = (templateId: string | undefined) => {
+    const template = templateId ? MOBS[templateId] : undefined;
+    const swimmer = template?.canSwim === true || template?.family === 'mudfin';
+    return swimmer ? waterLevel() - 0.5 : waterLevel() + 0.4;
+  };
   for (const seed of NIGHTLY_SWEEP
     ? [REPRESENTATIVE_SEED, 7, 99, 2024, 20061, 31337]
     : [20061, REPRESENTATIVE_SEED]) {
@@ -85,7 +90,7 @@ describe('dungeon door clearance: no camp mob spawns on an overworld door', () =
           const d = Math.hypot(mob.pos.x - door.x, mob.pos.z - door.z);
           if (Math.abs(d - DOOR_CLEAR_RADIUS) <= 1e-6) {
             onRing++;
-            const safe = sim.findSafePos(mob.pos.x, mob.pos.z, DEEPEST_CAMP_FLOOR);
+            const safe = sim.findSafePos(mob.pos.x, mob.pos.z, campFloor(mob.templateId));
             expect(
               safe,
               `${mob.name} on the ring of door (${door.x},${door.z}) stands on unsafe ground`,
