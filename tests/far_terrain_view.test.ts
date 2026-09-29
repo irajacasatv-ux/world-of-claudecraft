@@ -209,10 +209,15 @@ describe('buildFarTerrain lifecycle', () => {
       if (changed >= expected.length) break;
     }
     if (!firstSeen) throw new Error('rebuildRegion never swapped a tile geometry');
-    // settle: nothing past the reach joins once the queue has drained
-    for (let i = 0; i < 20; i++) {
+    // settle: drain until ten flushes in a row swap nothing (a tile takes
+    // about two), so a tile past the reach has every chance to join
+    let geos = view.group.children.map((c) => (c as { geometry?: object }).geometry);
+    for (let quiet = 0, guard = 0; quiet < 10 && guard < 200; guard++) {
       stub.flush();
       await microtasks();
+      const now = view.group.children.map((c) => (c as { geometry?: object }).geometry);
+      quiet = now.every((g, i) => g === geos[i]) ? quiet + 1 : 0;
+      geos = now;
     }
     expect(resampled()).toEqual(expected);
     view.dispose();
