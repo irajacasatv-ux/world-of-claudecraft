@@ -1298,12 +1298,10 @@ describe('Eastbrook runtime collision, spawn, and services', () => {
     expect(CAMPS).toEqual(BUILTIN_WORLD.camps);
     expect(ZONE1_CAMPS).toHaveLength(14);
 
-    for (let tick = 0; tick < 2_500; tick++) {
-      setActiveWorldContent(legacyWorld);
-      legacy.tick();
-      setActiveWorldContent(BUILTIN_WORLD);
-      rebuilt.tick();
-    }
+    setActiveWorldContent(legacyWorld);
+    for (let tick = 0; tick < 2_500; tick++) legacy.tick();
+    setActiveWorldContent(BUILTIN_WORLD);
+    for (let tick = 0; tick < 2_500; tick++) rebuilt.tick();
     expect(rebuilt.tickCount).toBe(2_500);
     expect(legacy.tickCount).toBe(2_500);
     expect(stableProjection(rebuilt)).toEqual(stableProjection(legacy));
