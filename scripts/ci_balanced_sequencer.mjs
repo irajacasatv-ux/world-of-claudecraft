@@ -7,8 +7,8 @@
  * changes, and only WHERE a file runs can ever change, never WHETHER:
  * completeness is structural (every item lands in exactly one pack) and
  * re-asserted at runtime below, failing loud rather than dropping a file.
- * When --shard is absent (unsharded local runs, the lanes, nightly), vitest
- * never calls shard().
+ * When --shard is absent (unsharded local runs, the lanes), vitest never
+ * calls shard(); the nightly shards its full suite two ways per ref with it.
  */
 
 import { createHash } from 'node:crypto';

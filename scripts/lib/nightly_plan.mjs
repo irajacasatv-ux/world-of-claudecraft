@@ -153,6 +153,27 @@ export function buildTargets({ inputRef, releaseBranch, defaultBranch = 'main', 
 }
 
 /**
+ * What each gated ref's lanes check out: its resolved commit SHA, so the two halves of the
+ * tests job (and the checks and browser lanes) all run ONE commit even if the branch moves
+ * between their checkouts. A different commit could pack the shard halves differently, so a
+ * file could run in neither half on a night that still reads as proven. A ref whose SHA could
+ * not be resolved checks out by name (the behavior before the pin), never goes ungated.
+ *
+ * @param {readonly string[]} targets
+ * @param {Readonly<Record<string, string | null | undefined>>} shaByRef
+ * @returns {Record<string, string>}
+ */
+export function checkoutRefs(targets, shaByRef) {
+  /** @type {Record<string, string>} */
+  const out = {};
+  for (const ref of targets) {
+    const sha = shaByRef[ref];
+    out[ref] = typeof sha === 'string' && /^[0-9a-f]{40}$/.test(sha) ? sha : ref;
+  }
+  return out;
+}
+
+/**
  * Drop a later target whose resolved SHA matches an earlier target already
  * kept. A target whose SHA is unknown (missing or falsy in `shaByRef`) is
  * always kept: fail OPEN toward widening the gated set, never toward

@@ -10,6 +10,7 @@
 import { appendFileSync } from 'node:fs';
 import {
   buildTargets,
+  checkoutRefs,
   pickActiveReleaseBranch,
   refNamesFromMatchingRefs,
   shaFromGitRefResponse,
@@ -96,13 +97,16 @@ async function resolveTargetShas({ defaultBranch, releaseBranch }) {
 
 const inputRef = process.env.NIGHTLY_REF ?? '';
 let targets;
+/** @type {Record<string, string | null>} */
+let shaByRef = {};
 if (inputRef.trim() !== '') {
   targets = buildTargets({ inputRef, defaultBranch });
+  for (const ref of targets) shaByRef[ref] = await resolveRefSha(ref);
   console.log(`[nightly_targets] dispatch ref override: gating ${targets.join(', ')}`);
 } else {
   try {
     const releaseBranch = pickActiveReleaseBranch(await listReleaseBranches());
-    const shaByRef = await resolveTargetShas({ defaultBranch, releaseBranch });
+    shaByRef = await resolveTargetShas({ defaultBranch, releaseBranch });
     targets = buildTargets({ inputRef: null, releaseBranch, defaultBranch, shaByRef });
     console.log(
       `[nightly_targets] gating ${targets.join(', ')}${releaseBranch ? '' : ' (no release/vX.Y.Z branch found)'}`,
@@ -116,7 +120,11 @@ if (inputRef.trim() !== '') {
   }
 }
 
-const outputLine = `refs=${JSON.stringify(targets)}\n`;
+// Every lane checks out the SHA its ref resolved to here, so both halves of the tests job
+// run one commit (lib/nightly_plan.mjs checkoutRefs).
+const shas = checkoutRefs(targets, shaByRef);
+console.log(`[nightly_targets] checkouts ${JSON.stringify(shas)}`);
+const outputLine = `refs=${JSON.stringify(targets)}\nshas=${JSON.stringify(shas)}\n`;
 if (process.env.GITHUB_OUTPUT) {
   appendFileSync(process.env.GITHUB_OUTPUT, outputLine);
 } else {

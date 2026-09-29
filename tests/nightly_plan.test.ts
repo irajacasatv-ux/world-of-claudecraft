@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   buildTargets,
+  checkoutRefs,
   dedupeTargetsBySha,
   labelEnsureFailed,
   NIGHTLY_DRILL_ISSUE_LABEL,
@@ -574,5 +575,20 @@ describe('planNightlyReport', () => {
     });
     if (plan.action !== 'create') throw new Error('expected create');
     expect(plan.body).toContain('unknown (ref resolution failed)');
+  });
+});
+
+describe('checkoutRefs', () => {
+  it('checks each ref out at its resolved SHA, and by name when it resolved to nothing', () => {
+    const main = 'a'.repeat(40);
+    expect(
+      checkoutRefs(['main', 'release/v0.45.0', 'scratch/x'], {
+        main,
+        'release/v0.45.0': null,
+        'scratch/x': 'not-a-sha',
+      }),
+    ).toEqual({ main, 'release/v0.45.0': 'release/v0.45.0', 'scratch/x': 'scratch/x' });
+    // Every target gets an entry (the workflow indexes the map by matrix.ref).
+    expect(Object.keys(checkoutRefs(['main'], {}))).toEqual(['main']);
   });
 });

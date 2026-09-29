@@ -35,6 +35,11 @@ export function dedupeTargetsBySha(
 
 export function shaFromGitRefResponse(body: unknown): string | null;
 
+export function checkoutRefs(
+  targets: readonly string[],
+  shaByRef: Readonly<Record<string, string | null | undefined>>,
+): Record<string, string>;
+
 export function summarizeRunJobs(
   jobs: ReadonlyArray<{
     name?: string;

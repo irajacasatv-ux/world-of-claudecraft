@@ -73,6 +73,9 @@ jobs:
     timeout-minutes: 5
     outputs:
       refs: ${{ steps.resolve.outputs.refs }}
+      # Each gated ref's resolved commit SHA (scripts/lib/nightly_plan.mjs checkoutRefs): every
+      # lane checks it out, so the two test halves run one commit even if the branch moves.
+      shas: ${{ steps.resolve.outputs.shas }}
     steps:
       - name: Check out resolver script
         uses: actions/checkout@v6
@@ -139,7 +142,7 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v6
         with:
-          ref: ${{ matrix.ref }}
+          ref: ${{ fromJSON(needs.targets.outputs.shas)[matrix.ref] }}
           persist-credentials: false
 
       - name: Set up pnpm
@@ -195,7 +198,7 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v6
         with:
-          ref: ${{ matrix.ref }}
+          ref: ${{ fromJSON(needs.targets.outputs.shas)[matrix.ref] }}
           persist-credentials: false
 
       - name: Set up pnpm
@@ -253,7 +256,7 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v6
         with:
-          ref: ${{ matrix.ref }}
+          ref: ${{ fromJSON(needs.targets.outputs.shas)[matrix.ref] }}
           persist-credentials: false
 
       - name: Set up pnpm

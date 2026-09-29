@@ -91,6 +91,7 @@ describe('nightly gate workflow', () => {
     const targets = jobSource('targets');
     expect(targets).toMatch(stepLine('run: node scripts/nightly_targets.mjs'));
     expect(targets).toContain('refs: ${{ steps.resolve.outputs.refs }}');
+    expect(targets).toContain('shas: ${{ steps.resolve.outputs.shas }}');
     expect(targets).toContain('NIGHTLY_REF: ${{ inputs.ref }}');
     // The real default branch rides in from the event, so a renamed default
     // branch cannot strand the nightly on a hardcoded 'main'.
@@ -103,7 +104,10 @@ describe('nightly gate workflow', () => {
       expect(job).toMatch(/^\s{4}needs: targets$/m);
       expect(job).toContain('ref: ${{ fromJSON(needs.targets.outputs.refs) }}');
       expect(job).toContain('fail-fast: false');
-      expect(job).toContain('ref: ${{ matrix.ref }}');
+      // Every lane checks out the SHA its ref resolved to in the targets job, never the moving
+      // branch name, so the two test halves partition one commit.
+      expect(job).toContain('ref: ${{ fromJSON(needs.targets.outputs.shas)[matrix.ref] }}');
+      expect(job).not.toContain('ref: ${{ matrix.ref }}');
       expect(job).toMatch(stepLine('run: pnpm install --frozen-lockfile'));
       expect(job).toContain(`version: ${PNPM_VERSION}`);
     }
@@ -116,6 +120,8 @@ describe('nightly gate workflow', () => {
     // and the report entry calls the planner and the drill identity switch.
     expect(targetsEntry).toContain("from './lib/nightly_plan.mjs'");
     expect(targetsEntry).toContain('refs=${JSON.stringify(targets)}');
+    expect(targetsEntry).toContain('shas=${JSON.stringify(shas)}');
+    expect(targetsEntry).toContain('checkoutRefs(targets, shaByRef)');
     expect(targetsEntry).toContain('refNamesFromMatchingRefs(');
     expect(reportEntry).toContain("from './lib/nightly_plan.mjs'");
     expect(reportEntry).toMatch(/planNightlyReport\(\{/);
