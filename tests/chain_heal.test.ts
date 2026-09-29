@@ -2,6 +2,11 @@ import { describe, expect, it } from 'vitest';
 import { Sim } from '../src/sim/sim';
 import type { SimEvent } from '../src/sim/types';
 import { groundHeight } from '../src/sim/world';
+import { EMPTY_TEST_WORLD } from './sim_shared';
+
+// Every rig heals players it adds itself, so each Sim stands on the empty world,
+// all on one seed (a fresh seed costs a collider grid build).
+const SEED = 2;
 
 // Chain Heal (shaman): implementation adopted from Blaine1705's #1434. Heals the friendly target, then arcs to the most injured
 // allies within jump range of the previous hop (players and player pets only),
@@ -39,10 +44,12 @@ function castAndCollect(sim: Sim, casterPid: number, targetId: number | null) {
 }
 
 function chainSetup() {
-  // Seed hunted (post-merge camp order) so the per-hop applyHeal crit rolls
-  // agree across hop 0 and hop 1: the exact-half falloff assertion below needs
-  // both hops on the same crit outcome. Spares on record: 3, 4.
-  const sim = new Sim({ seed: 2, playerClass: 'shaman', noPlayer: true });
+  const sim = new Sim({
+    seed: SEED,
+    playerClass: 'shaman',
+    noPlayer: true,
+    world: EMPTY_TEST_WORLD,
+  });
   const caster = sim.addPlayer('shaman', 'Chainer');
   const near = sim.addPlayer('warrior', 'Nearhurt');
   const mid = sim.addPlayer('priest', 'Midhurt');
@@ -75,6 +82,10 @@ function chainSetup() {
 describe('chain heal', () => {
   it('arcs caster -> target -> most injured allies, one beam per hop, no repeats', () => {
     const { sim, caster, near, mid, far } = chainSetup();
+    // The exact-half falloff below needs hop 0 and hop 1 on the same crit
+    // outcome: pin the rolls (`next` at 0.9 fails every heal crit) rather than
+    // ride the seed's stream.
+    sim.rng.next = () => 0.9;
     const { beams, heals } = castAndCollect(sim, caster, near);
 
     // Three hops: the cast target, then the injured ally in jump range, then the
@@ -113,7 +124,7 @@ describe('chain heal', () => {
   });
 
   it('with no ally in range it heals only the target (a single beam)', () => {
-    const sim = new Sim({ seed: 7, playerClass: 'shaman' });
+    const sim = new Sim({ seed: SEED, playerClass: 'shaman', world: EMPTY_TEST_WORLD });
     sim.setPlayerLevel(18);
     sim.setSpec('restoration');
     teleport(sim, sim.playerId, 0, -40);
