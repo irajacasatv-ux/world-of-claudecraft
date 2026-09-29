@@ -2,6 +2,11 @@ import { describe, expect, it } from 'vitest';
 import { ABILITIES } from '../src/sim/content/classes';
 import { Sim } from '../src/sim/sim';
 import type { Entity } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
+
+// Every rig heals allies it adds itself, so each Sim stands on the empty world,
+// all on one seed (a fresh seed costs a collider grid build).
+const SEED = 2802;
 
 type DealDamage = (
   source: Entity | null,
@@ -14,7 +19,12 @@ type DealDamage = (
 ) => void;
 
 function benisonPriest(): { sim: Sim; priest: Entity } {
-  const sim = new Sim({ seed: 2802, playerClass: 'priest', autoEquip: true });
+  const sim = new Sim({
+    seed: SEED,
+    playerClass: 'priest',
+    autoEquip: true,
+    world: EMPTY_TEST_WORLD,
+  });
   sim.setPlayerLevel(20);
   expect(sim.setSpec('holy')).toBe(true);
   sim.tick();
@@ -174,7 +184,12 @@ describe('Benison baseline loop', () => {
   });
 
   it('bases Living Covenant on the resolved critical heal, not the raw roll', () => {
-    const sim = new Sim({ seed: 2812, playerClass: 'priest', autoEquip: true });
+    const sim = new Sim({
+      seed: SEED,
+      playerClass: 'priest',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.setPlayerLevel(20);
     expect(sim.applyTalents({ spec: 'holy', rows: { 14: 'pri_r14_pain_and_suffering' } })).toBe(
       true,
