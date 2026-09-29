@@ -89,6 +89,8 @@ describe('Bruin Form tank kit', () => {
     const hot = druid.auras.find((aura) => aura.id === 'frenzied_regeneration');
     expect(hot?.kind).toBe('hot');
     expect(hot?.remaining).toBe(10);
+    // The key the caster-form refusal reads as unarmed is the one a landed cast arms.
+    expect(druid.cooldowns.has('frenzied_regeneration')).toBe(true);
 
     let healed = 0;
     for (let tick = 0; tick < 20 * 12; tick++) {
