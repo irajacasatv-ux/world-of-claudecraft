@@ -5,6 +5,7 @@ import { openCommissionOrder } from '../src/sim/professions/commission_order';
 import { resolveCraftForRecipe } from '../src/sim/professions/crafting';
 import { Sim } from '../src/sim/sim';
 import { expectDefined } from './helpers/defined';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const HAMMER = 'varkhul_forgebreaker';
 const RECIPE = 'recipe_varkhul_forgebreaker';
@@ -23,7 +24,12 @@ describe('the self-crafted Forgebreaker never offers a commission', () => {
   });
 
   it('rejects the undeliverable order without reserving inventory or spending gold', () => {
-    const sim = new Sim({ seed: 4, playerClass: 'warrior', autoEquip: false });
+    const sim = new Sim({
+      seed: 4,
+      playerClass: 'warrior',
+      autoEquip: false,
+      world: EMPTY_TEST_WORLD,
+    });
     const before = sim.serializeCharacter(sim.playerId);
     expect(openCommissionOrder(sim.ctx, RECIPE, 'open', undefined, sim.playerId)).toEqual({
       ok: false,
@@ -34,7 +40,12 @@ describe('the self-crafted Forgebreaker never offers a commission', () => {
   });
 
   it('ignores a requested commission flag when minting the owner-only hammer', () => {
-    const sim = new Sim({ seed: 4, playerClass: 'warrior', autoEquip: false });
+    const sim = new Sim({
+      seed: 4,
+      playerClass: 'warrior',
+      autoEquip: false,
+      world: EMPTY_TEST_WORLD,
+    });
     const meta = expectDefined(sim.players.get(sim.playerId));
     meta.craftSkills.weaponcrafting = 125;
     meta.copper = 100000;

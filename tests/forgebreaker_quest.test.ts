@@ -22,6 +22,7 @@ import { Sim } from '../src/sim/sim';
 import type { PlayerClass } from '../src/sim/types';
 import { expectDefined } from './helpers/defined';
 import { completeCraftCast, runCraft } from './helpers/enchant_family_cast';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const RECOVERY = 'q_forgefathers_requiem';
 const FORGING = 'q_requiem_at_the_forge';
@@ -30,8 +31,10 @@ const EMBER = 'forgefathers_ember';
 const HAMMER = 'varkhul_forgebreaker';
 const MAELIN = 'archivist_maelin_ember_projection';
 
+// Every quest verb runs against a hand-placed projection of Maelin and the forge
+// is a built-in service, so the smith's Sims run on the empty world.
 function smith(cls: PlayerClass = 'warrior') {
-  const sim = new Sim({ seed: 83, playerClass: cls, autoEquip: false });
+  const sim = new Sim({ seed: 83, playerClass: cls, autoEquip: false, world: EMPTY_TEST_WORLD });
   sim.setPlayerLevel(20);
   const pid = sim.playerId;
   const meta = expectDefined(sim.players.get(pid), 'smith');
@@ -337,7 +340,12 @@ describe('Forgebreaker one-time quest route', () => {
   it('round-trips learned and spent recipe states without reopening the mint', () => {
     const { sim, pid } = learnHammer();
     const saved = expectDefined(sim.serializeCharacter(pid), 'learned character save');
-    const restored = new Sim({ seed: 83, noPlayer: true, playerClass: 'warrior' });
+    const restored = new Sim({
+      seed: 83,
+      noPlayer: true,
+      playerClass: 'warrior',
+      world: EMPTY_TEST_WORLD,
+    });
     const restoredPid = restored.addPlayer('warrior', 'Smith', { state: saved });
     const restoredMeta = expectDefined(restored.players.get(restoredPid), 'restored smith');
     expect(restoredMeta.knownRecipes.has(RECIPE)).toBe(true);

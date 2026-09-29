@@ -6,11 +6,14 @@ import {
 } from '../src/game/interactions';
 import { FORGE_NPC_DEF, FORGE_STATIONS } from '../src/sim/content/world_quest_forging';
 import { Sim } from '../src/sim/sim';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 it.each([0, 2])(
   'button %i activates distant workshop supplies without walking or opening dialogue',
   (button) => {
-    const sim = new Sim({ seed: 42, playerClass: 'warrior' });
+    // The Sim only supplies a player entity (the pick world is a stub), so it
+    // runs on the empty world.
+    const sim = new Sim({ seed: 42, playerClass: 'warrior', world: EMPTY_TEST_WORLD });
     const player = sim.player;
     player.pos = { x: FORGE_NPC_DEF.pos.x, y: 0, z: FORGE_NPC_DEF.pos.z + 4 };
     const pickUpObject = vi.fn(() => true);

@@ -14,15 +14,26 @@
 
 import { describe, expect, it } from 'vitest';
 import { recipeById } from '../src/sim/content/recipes';
+import { BUILTIN_WORLD } from '../src/sim/data';
 import { GATHERING_GOAL_REFRESH_TICKS } from '../src/sim/professions/gathering_goal_projection';
 import { Sim } from '../src/sim/sim';
+import type { WorldContent } from '../src/sim/types';
 
 const SWORD_RECIPE = 'recipe_eastbrook_arming_sword'; // wolf_fang 2, bone_fragments 4, smithing_flux 6
 const TRAINER_RECIPE = 'recipe_stormreel_fishing_rod'; // acquisition: trainer, no combo requirement
 const DAILY_RECIPE = 'recipe_quickening_catalyst'; // acquisition: trainer, oncePerDay
 
+// The bank and vault cases reach only a banker, so the Sims run on a world holding
+// the bankers and nothing else of the overworld.
+const BANKER_WORLD: WorldContent = {
+  ...BUILTIN_WORLD,
+  camps: [],
+  npcs: Object.fromEntries(Object.entries(BUILTIN_WORLD.npcs).filter(([, npc]) => npc.banker)),
+  groundObjects: [],
+};
+
 function makeSim(seed = 42) {
-  return new Sim({ seed, playerClass: 'warrior', autoEquip: false });
+  return new Sim({ seed, playerClass: 'warrior', autoEquip: false, world: BANKER_WORLD });
 }
 
 function grantOneCraftOf(sim: Sim, recipeId: string, pid: number) {

@@ -9,8 +9,12 @@ import { Sim } from '../src/sim/sim';
 import { FISHING_CAST_ID } from '../src/sim/types';
 import { groundHeight, waterLevelAt } from '../src/sim/world';
 import { codeWithoutLineComments } from './helpers/code_without_line_comments';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const SEED = 1;
+// Each Sim only supplies the angler and its roster, so it runs on the empty
+// world.
+const world = EMPTY_TEST_WORLD;
 
 function fishingShoreSpot(): { x: number; z: number; facing: number } {
   for (let r = LAKE.radius * 0.7; r <= LAKE.radius * 1.8; r += 1) {
@@ -38,7 +42,7 @@ function fishingShoreSpot(): { x: number; z: number; facing: number } {
 
 describe('FishingBobberVisual water feedback', () => {
   it('emits one bite, periodic bite, and cast-end splash without duplicating sink feedback', () => {
-    const sim = new Sim({ seed: SEED, playerClass: 'mage' });
+    const sim = new Sim({ seed: SEED, playerClass: 'mage', world });
     const player = sim.player;
     const spot = fishingShoreSpot();
     player.pos.x = spot.x;
@@ -77,7 +81,7 @@ describe('FishingBobberVisual water feedback', () => {
 
 describe('FishingBobberVisual idle frames', () => {
   it('touches no entity when nobody was noted fishing and no bobber is afloat', () => {
-    const sim = new Sim({ seed: SEED, playerClass: 'mage' });
+    const sim = new Sim({ seed: SEED, playerClass: 'mage', world });
     // Every property read on the roster counts (the map iterator the old walk
     // used, values, get, size, all of them), so any walk at all trips it.
     let touches = 0;
@@ -94,7 +98,7 @@ describe('FishingBobberVisual idle frames', () => {
   });
 
   it('sinks the bobber of an angler the renderer stopped noting (the view left the draw range)', () => {
-    const sim = new Sim({ seed: SEED, playerClass: 'mage' });
+    const sim = new Sim({ seed: SEED, playerClass: 'mage', world });
     const player = sim.player;
     const spot = fishingShoreSpot();
     player.pos.x = spot.x;

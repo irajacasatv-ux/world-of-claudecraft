@@ -21,6 +21,7 @@ import type { SimContext } from '../src/sim/sim_context';
 import type { GatherNodeType, GatherRareEventFlavor, SimEvent } from '../src/sim/types';
 import { terrainHeight } from '../src/sim/world';
 import { placeAtHarvestSpot } from './helpers/harvest_spot';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const FLAVOR_BY_TYPE: Record<GatherNodeType, GatherRareEventFlavor> = {
   ore: 'pristine_vein',
@@ -360,13 +361,21 @@ describe('announceGatherRareEvent: soft zone fanout + dormant deed mark', () => 
   });
 });
 
+// Gather nodes are content (GATHER_NODES), not world ground objects, so every Sim
+// below runs on the empty world.
+//
 // End-to-end through the real Sim command path: hunt the deterministic rng
 // stream (fixed world seed, repeated harvests with the per-player cooldown
 // cleared) until draw #2 hits, then pin the whole observable surface of the
 // hit: both events, the x5 signed yield, and the deed mark.
 describe('rare events through Sim.harvestNode (all three flavors)', () => {
   function huntHit(nodeId: string) {
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+    const sim = new Sim({
+      seed: 42,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const pid = sim.addPlayer('warrior', 'Finder');
     const node = mustNode(nodeId);
     const p = sim.entities.get(pid);
@@ -502,7 +511,12 @@ describe('rare events through Sim.harvestNode (all three flavors)', () => {
 // count, while uncommon stays a plain fungible stack.
 describe('rarity-floor signing through Sim.harvestNode', () => {
   function huntRarity(want: (rarity: string, rareEvent: unknown) => boolean) {
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+    const sim = new Sim({
+      seed: 42,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const pid = sim.addPlayer('warrior', 'Prospector');
     const nodeId = 'ore_eastbrook_1';
     const node = mustNode(nodeId);
@@ -573,7 +587,12 @@ describe('isSignableMaterialRarity threshold', () => {
 // gatherResult.qty must report the GRANTED count, not the resolved one.
 describe('grant truncation at the command boundary (full bags)', () => {
   function simAtOreNode() {
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+    const sim = new Sim({
+      seed: 42,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const pid = sim.addPlayer('warrior', 'Packrat');
     const nodeId = 'ore_eastbrook_1';
     const node = mustNode(nodeId);
