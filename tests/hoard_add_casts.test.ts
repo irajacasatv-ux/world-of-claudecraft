@@ -15,9 +15,21 @@ import type { RiftInstance } from '../src/sim/rift/types';
 import { makeVaultSeed } from '../src/sim/rift/vault_seed';
 import { Sim } from '../src/sim/sim';
 import { DT, type Entity } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
+
+// The hoard is a private rift instance and each caster is placed by hand, so the
+// Sims run on the empty world, all on one seed (the outside-a-hoard case's seed
+// 4413 paid a second full build).
+const SEED = 4412;
 
 function makeRoom(templateId: string, distance = 8): { sim: Sim; inst: RiftInstance; mob: Entity } {
-  const sim = new Sim({ seed: 4412, playerClass: 'warrior', autoEquip: false, devCommands: true });
+  const sim = new Sim({
+    seed: SEED,
+    playerClass: 'warrior',
+    autoEquip: false,
+    devCommands: true,
+    world: EMPTY_TEST_WORLD,
+  });
   sim.chat('/dev level 20', sim.player.id);
   sim.chat('/dev god', sim.player.id);
   const portal = {
@@ -159,10 +171,11 @@ describe('hoard add casts', () => {
 
   it('is silent outside a hoard and forgets the room when it empties', () => {
     const sim = new Sim({
-      seed: 4413,
+      seed: SEED,
       playerClass: 'warrior',
       autoEquip: false,
       devCommands: true,
+      world: EMPTY_TEST_WORLD,
     });
     const mob = createMob(sim.ctx.nextId++, MOBS.rift_ember_fiend, 20, {
       ...sim.player.pos,
