@@ -802,8 +802,10 @@ describe("maker's ember: the weekly bankable keystone", () => {
 });
 
 describe('sundered essence: the extraction', () => {
+  // The extraction reads only the extractor's own bags, kit and station, so
+  // the scoped world serves it as it serves the dungeon Sims above.
   function makeSunderSim(seed = 42): Sim {
-    return new Sim({ seed, playerClass: 'warrior', autoEquip: false });
+    return new Sim({ seed, playerClass: 'warrior', autoEquip: false, world: DUNGEON_TEST_WORLD });
   }
 
   function playerOf(sim: Sim): { p: Entity; meta: PlayerMeta; pid: number } {
