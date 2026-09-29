@@ -6,12 +6,30 @@ import {
   CAT_FORM_SWING_SPEED,
   ROGUE_BASE_SWING_SPEED,
 } from '../src/sim/combat/form_swing';
-import { CLASSES, ITEMS } from '../src/sim/data';
+import { CLASSES, ITEMS, MOBS } from '../src/sim/data';
+import { createMob } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
-import { type AuraKind, armorReduction } from '../src/sim/types';
+import { type AuraKind, armorReduction, type Entity } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
+// Every swing case strikes a mob it places itself (spawnDummy), so the rig
+// stands on the empty world.
 function makeWorld() {
-  return new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+  return new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true, world: EMPTY_TEST_WORLD });
+}
+
+// A plain mob beside the player; each case then pins its level, armor and
+// hostility and holds it in place, as it did with the first ambient mob.
+function spawnDummy(sim: Sim, pid: number): Entity {
+  const p = sim.entities.get(pid)!;
+  const host = sim as unknown as { nextId: number; addEntity(entity: Entity): void };
+  const mob = createMob(host.nextId++, MOBS.forest_wolf, 1, {
+    x: p.pos.x - 1,
+    y: p.pos.y,
+    z: p.pos.z,
+  });
+  host.addEntity(mob);
+  return mob;
 }
 
 // Mirror tests/form_command.ts: forms are a 3600s toggle aura on the player.
@@ -100,7 +118,7 @@ describe('Cat Form swing speed', () => {
         ...(weaponRoll.speed > 0 ? { speed: weaponRoll.speed } : {}),
       };
     }
-    const dummy = [...sim.entities.values()].find((e) => e.kind === 'mob' && !e.dead)!;
+    const dummy = spawnDummy(sim, pid);
     dummy.level = 1;
     dummy.stats.armor = 0;
     dummy.hostile = true;
@@ -220,7 +238,7 @@ describe('Cat Form swing speed', () => {
     });
     p.critChance = 0;
     p.weapon = { ...p.weapon, min: 0, max: 0 };
-    const dummy = [...sim.entities.values()].find((e) => e.kind === 'mob' && !e.dead)!;
+    const dummy = spawnDummy(sim, pid);
     dummy.level = 1;
     dummy.stats.armor = 0;
     dummy.hostile = true;
@@ -276,7 +294,7 @@ describe('Cat Form swing speed', () => {
     const p = sim.entities.get(a)!;
     giveForm(sim, a, 'form_cat', 'Cat Form');
     p.weapon = { ...p.weapon, min: 1, max: 1 };
-    const dummy = [...sim.entities.values()].find((e) => e.kind === 'mob' && !e.dead)!;
+    const dummy = spawnDummy(sim, a);
     dummy.level = 1;
     dummy.hostile = true;
     p.pos.x = dummy.pos.x + 1;
@@ -317,7 +335,7 @@ describe('Cat Form swing speed', () => {
     giveForm(sim, a, 'form_cat', 'Cat Form');
     p.critChance = 0;
     p.weapon = { ...p.weapon, min: 60, max: 60, speed: 3.0 };
-    const dummy = [...sim.entities.values()].find((e) => e.kind === 'mob' && !e.dead)!;
+    const dummy = spawnDummy(sim, a);
     dummy.level = 1;
     dummy.stats.armor = 0;
     dummy.hostile = true;
@@ -329,6 +347,9 @@ describe('Cat Form swing speed', () => {
     p.targetId = dummy.id;
     p.facing = Math.atan2(dummy.pos.x - p.pos.x, dummy.pos.z - p.pos.z);
     p.resource = p.maxResource;
+    // One press, so pin its hit roll (`next` at 0.9 clears miss, dodge and
+    // parry) rather than ride the seed's stream.
+    sim.rng.next = () => 0.9;
     sim.castAbility('claw', a);
     for (let i = 0; i < 40; i++) {
       const evs = sim.tick();
