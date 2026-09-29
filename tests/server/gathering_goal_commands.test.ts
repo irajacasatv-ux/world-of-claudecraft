@@ -17,6 +17,7 @@ import {
 import { appendGatheringGoalSelfWire } from '../../server/gathering_goal_wire';
 import { decodeGatheringGoalWire } from '../../src/net/gathering_goal_wire';
 import { Sim } from '../../src/sim/sim';
+import { EMPTY_TEST_WORLD } from '../sim_shared';
 
 describe('validTrackGatheringRecipeCommand', () => {
   it('accepts a printable bounded recipe id with a safe integer count in [1, 50]', () => {
@@ -307,8 +308,15 @@ describe('dispatchGatheringGoalCommand', () => {
 describe('two-player wire roundtrip: command helper -> Sim -> appendGatheringGoalSelfWire -> decode', () => {
   const RECIPE_ID = 'recipe_eastbrook_arming_sword';
 
+  // A goal is per-player state on the Sim, so the empty world serves the roundtrip.
   function makeTwoPlayerSim() {
-    const sim = new Sim({ seed: 11, playerClass: 'warrior', autoEquip: false, noPlayer: true });
+    const sim = new Sim({
+      seed: 11,
+      playerClass: 'warrior',
+      autoEquip: false,
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const pidA = sim.addPlayer('warrior', 'Ayla');
     const pidB = sim.addPlayer('warrior', 'Borin');
     return { sim, pidA, pidB };
