@@ -12,8 +12,9 @@ import { computeBorderEdges, terrainHeight, WATER_LEVEL } from '../src/sim/world
 //    height profile around the waterline inside every declared lake footprint,
 //    so a player who swims or wades to shore can WALK out. The proof is end to
 //    end: the real movement kernel is driven out of every declared lake in 16
-//    directions, at BOTH the test seed and the production seed. Without the
-//    grading pass a couple hundred of those rays dead-end on steep shores;
+//    directions: at the production seed on every PR, and at the test seed as
+//    well under the nightly depth flag (SEEDS below). Without the grading pass
+//    a couple hundred of those rays dead-end on steep shores;
 //    with it only the deliberate set-piece cliffs remain (the Hollow's falls
 //    lip and sealed moat walls), every lake keeps at least 7 of 16 directions
 //    freely walkable, and no lake is ever a trap.

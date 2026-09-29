@@ -135,12 +135,15 @@ function isWedge(x: number, z: number): boolean {
 }
 
 // The whole rect at three-quarter-yard spacing is the nightly depth (about 1,200
-// spots, most of this file's time); every PR scans the same rect at a yard and a
-// half, every other point of the nightly grid (the reported spot among them), a
-// quarter of the spots. The sweep guards the movement kernel against a wedge
-// anywhere in the rect; the terrain shaping under the walkway is pinned by the
-// point cases around it (the planes, the sand tie-in, the covered cells, the
-// reported spot, every railing step-off), which run at full depth on every PR.
+// spots, most of this file's time), and it is what catches a LOCAL wedge. Every PR
+// scans the same rect at a yard and a half, every other point of the nightly grid
+// (the reported spot among them), a quarter of the spots: a smoke check that reds a
+// kernel-wide regression (a lowered climb limit) or a trapped region at least a
+// yard and a half across, but misses a body-sized pocket that falls between its
+// points (both measured with a walled pocket on the beach; the nightly sweep reds
+// the small one). The terrain shaping under the walkway is pinned on every PR by
+// the point cases around it: the planes, the sand tie-in, the covered cells, the
+// reported spot and every railing step-off.
 const WEDGE_SCAN_STEP = process.env.WOC_NIGHTLY_SWEEP === '1' ? 0.75 : 1.5;
 
 function scanWedges(step: number): { x: number; z: number }[] {
