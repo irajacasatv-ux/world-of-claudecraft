@@ -1,13 +1,14 @@
 // The Forgefather's Isle LIVE-KERNEL route gate: a real Sim walks the
-// fortress with actual movement input, so every gate the engine applies
-// (tread step-up commits, the steep-ground control strip, the terrain wall
-// gate, blocker clearance) is exercised for real instead of modeled. This
-// is the suite that catches what the geometric walkability model cannot:
-// the tier-three trench froze a platform-stander with zero displacement in
-// all eight directions while every static scan read the court as walkable,
-// and the bailey towers' square colliders pinched that flight shut. Slow
-// by nature (one shared world, ~90 sim-seconds of walking): keep new legs
-// on the shared Sim and keep each leg's tick budget tight.
+// fortress with actual movement input instead of a modeled walkability scan.
+// What it pins, by mutation: each landing stays reachable along the
+// FORGEFATHER_STAIR_RAMPS walk surfaces under the live climb-slope limit, and
+// no placed blocker (the bailey towers' square colliders once pinched that
+// flight shut) closes a flight or pens the tier-three trench spot. What it
+// does NOT pin: the walker rides the ramp lifts, not the staircase props'
+// treads, so the grounded step height, the carried-body clearance, a
+// staircase prop's own placement, and run speed can all move without a red
+// here. Slow by nature (one shared world, ~90 sim-seconds of walking): keep
+// new legs on the shared Sim and keep each leg's tick budget tight.
 import { beforeAll, describe, expect, it } from 'vitest';
 import { Sim } from '../src/sim/sim';
 import { type MoveInput, PLAYER_INTEREST_DROP_RADIUS } from '../src/sim/types';
