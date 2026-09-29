@@ -11,6 +11,7 @@ import {
 } from '../src/ui/hud/cooldown_manager/cooldown_manager_catalog';
 import { defaultCooldownSpellConfig } from '../src/ui/hud/cooldown_manager/cooldown_manager_config';
 import { createCooldownManagerView } from '../src/ui/hud/cooldown_manager/cooldown_manager_view';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const CLASS_IDS = Object.keys(CLASSES) as PlayerClass[];
 
@@ -64,8 +65,9 @@ describe('cooldown manager spell catalog', () => {
     let checked = 0;
     for (const cls of CLASS_IDS) {
       const catalog = new Set(cooldownClassCatalog(cls));
-      // One Sim per class; re-applying a build recomputes the known list.
-      const sim = new Sim({ seed: 7, playerClass: cls, autoEquip: true });
+      // One Sim per class; re-applying a build recomputes the known list. Both
+      // sweeps read known kits only, so every Sim stands on the empty world.
+      const sim = new Sim({ seed: 7, playerClass: cls, autoEquip: true, world: EMPTY_TEST_WORLD });
       sim.setPlayerLevel(MAX_LEVEL);
       for (const build of builds(cls)) {
         expect(sim.applyTalents(build), `${cls} ${build.spec}`).toBe(true);
@@ -82,7 +84,12 @@ describe('cooldown manager spell catalog', () => {
   it('gives every known spell of every spec a live button (resolves, has an icon, no throw)', () => {
     for (const cls of CLASS_IDS) {
       for (const spec of talentsFor(cls)?.specs ?? []) {
-        const sim = new Sim({ seed: 7, playerClass: cls, autoEquip: true });
+        const sim = new Sim({
+          seed: 7,
+          playerClass: cls,
+          autoEquip: true,
+          world: EMPTY_TEST_WORLD,
+        });
         sim.setPlayerLevel(MAX_LEVEL);
         expect(sim.applyTalents({ spec: spec.id, rows: {} })).toBe(true);
         sim.player.resource = sim.player.maxResource;
