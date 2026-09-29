@@ -22,8 +22,14 @@ type DotCase = {
   effect: Extract<AbilityEffect, { type: 'dot' }>;
 };
 
+// One case per distinct (ability, duration, interval). The harness builds the aura
+// itself, so two ranks of one ability that share a duration and interval hand the
+// sim the same aura id, name, school and schedule and differ only in the per-tick
+// value, which never moves the tick count; a rank whose duration or interval differs
+// is a new key and keeps its own case.
 function dotCases(): DotCase[] {
   const cases: DotCase[] = [];
+  const seen = new Set<string>();
   for (const ability of Object.values(ABILITIES)) {
     const ranks = [
       { rankLabel: 'rank 1', effects: ability.effects },
@@ -34,7 +40,11 @@ function dotCases(): DotCase[] {
     ];
     for (const rank of ranks) {
       for (const effect of rank.effects) {
-        if (effect.type === 'dot') cases.push({ ability, rankLabel: rank.rankLabel, effect });
+        if (effect.type !== 'dot') continue;
+        const key = `${ability.id}|${effect.duration}|${effect.interval}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        cases.push({ ability, rankLabel: rank.rankLabel, effect });
       }
     }
   }
