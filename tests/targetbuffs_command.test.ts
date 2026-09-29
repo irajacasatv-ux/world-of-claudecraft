@@ -1,9 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { Sim } from '../src/sim/sim';
-import { Aura, SimEvent } from '../src/sim/types';
+import type { Aura, SimEvent } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
+// Every target here is a hand-added player carrying hand-set auras, so the Sim
+// runs on the empty world.
 function makeWorld() {
-  return new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+  return new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true, world: EMPTY_TEST_WORLD });
 }
 
 function errorText(events: SimEvent[]): string | undefined {
