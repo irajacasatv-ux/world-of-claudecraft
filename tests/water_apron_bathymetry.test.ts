@@ -1,5 +1,6 @@
 import * as THREE from 'three';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
+import type { WaterView } from '../src/render/water';
 
 // The world is only WORLD_SIZE yards across, so every zone water plane ENDS a
 // few dozen yards offshore, in plain view. Beyond that edge the horizon apron
@@ -34,20 +35,35 @@ function mockWaterShaderAssets(): void {
 
 const SEED = 20061;
 
+// One apron build serves every case: each case used to reset the module
+// registry and rebuild the same deterministic water (well over a second a
+// build), and every case only reads the built geometry.
+let view: WaterView;
+let core: typeof import('../src/render/water_core');
+let data: typeof import('../src/sim/data');
+
+beforeAll(async () => {
+  vi.resetModules();
+  mockWaterShaderAssets();
+  const { buildWater } = await import('../src/render/water');
+  core = await import('../src/render/water_core');
+  data = await import('../src/sim/data');
+  await Promise.resolve();
+  view = buildWater(SEED);
+});
+
+afterAll(() => {
+  view.dispose();
+});
+
 afterEach(() => {
   vi.restoreAllMocks();
 });
 
 describe('horizon apron carries real bathymetry', () => {
-  it('agrees with the seabed at the world edge instead of asserting a constant', async () => {
-    vi.resetModules();
-    mockWaterShaderAssets();
-    const { buildWater } = await import('../src/render/water');
-    const { shoreDepthAt, WATER_SEABED_CLAMP_YARDS } = await import('../src/render/water_core');
-    const { WORLD_MAX_X, WORLD_MAX_Z, WORLD_MIN_Z } = await import('../src/sim/data');
-    await Promise.resolve();
-
-    const view = buildWater(SEED);
+  it('agrees with the seabed at the world edge instead of asserting a constant', () => {
+    const { shoreDepthAt, WATER_SEABED_CLAMP_YARDS } = core;
+    const { WORLD_MAX_X, WORLD_MAX_Z, WORLD_MIN_Z } = data;
     const apron = view.meshes[0];
     const pos = apron.geometry.attributes.position as THREE.BufferAttribute;
     const depth = apron.geometry.attributes.aShoreDepth as THREE.BufferAttribute;
@@ -74,28 +90,24 @@ describe('horizon apron carries real bathymetry', () => {
 
     // And it must still settle to open sea far out, or the horizon reads as an
     // endless shallow (or worse, as the neighbouring landmass out there).
+    // Counted and asserted once: an expect() per far vertex bought nothing.
     let far = 0;
+    let unclamped = 0;
     for (let i = 0; i < pos.count; i++) {
       const x = pos.getX(i);
       const z = pos.getZ(i);
       const outside = Math.max(0, Math.abs(x) - half, z - WORLD_MAX_Z, WORLD_MIN_Z - z);
       if (outside < 600) continue;
       far++;
-      expect(depth.getX(i)).toBe(WATER_SEABED_CLAMP_YARDS);
+      if (depth.getX(i) !== WATER_SEABED_CLAMP_YARDS) unclamped++;
     }
     expect(far).toBeGreaterThan(100);
-    view.dispose();
+    expect(unclamped, 'far apron vertices off the open-sea clamp').toBe(0);
   });
 
-  it('never paints surf on open water', async () => {
-    vi.resetModules();
-    mockWaterShaderAssets();
-    const { buildWater } = await import('../src/render/water');
-    const { WATER_FOAM_WIDTH_YARDS } = await import('../src/render/water_core');
-    const { WORLD_MAX_X, WORLD_MAX_Z, WORLD_MIN_Z } = await import('../src/sim/data');
-    await Promise.resolve();
-
-    const view = buildWater(SEED);
+  it('never paints surf on open water', () => {
+    const { WATER_FOAM_WIDTH_YARDS } = core;
+    const { WORLD_MAX_X, WORLD_MAX_Z, WORLD_MIN_Z } = data;
     const apron = view.meshes[0];
     const pos = apron.geometry.attributes.position as THREE.BufferAttribute;
     const depth = apron.geometry.attributes.aShoreDepth as THREE.BufferAttribute;
@@ -110,6 +122,7 @@ describe('horizon apron carries real bathymetry', () => {
     // The shader reads surf as depth/slope, so a slope of zero or a constant
     // slope against real shelf depths would flood the open sea with foam.
     let checked = 0;
+    let flat = 0;
     let foamOnOpenWater = 0;
     for (let i = 0; i < depth.count; i++) {
       const x = pos.getX(i);
@@ -119,12 +132,13 @@ describe('horizon apron carries real bathymetry', () => {
       const d = depth.getX(i);
       if (d <= 0.5) continue; // genuine coastline running off the map edge
       checked++;
-      expect(slope.getX(i)).toBeGreaterThan(0);
+      // Counted and asserted once below, not an expect() per vertex.
+      if (!(slope.getX(i) > 0)) flat++;
       if (d / slope.getX(i) < WATER_FOAM_WIDTH_YARDS) foamOnOpenWater++;
     }
     expect(checked).toBeGreaterThan(1000);
+    expect(flat, 'open-water apron vertices without a positive slope').toBe(0);
     expect(foamOnOpenWater).toBe(0);
-    view.dispose();
   });
 });
 
@@ -136,14 +150,8 @@ describe('horizon apron carries real bathymetry', () => {
 // added draw calls), and a partition that loses or repeats a quad puts a hole
 // or a double-blended patch in the open sea.
 describe('horizon apron draws as frustum-cullable blocks', () => {
-  it('splits into blocks with their own tight bounds, over one shared buffer', async () => {
-    vi.resetModules();
-    mockWaterShaderAssets();
-    const { buildWater } = await import('../src/render/water');
-    const { buildWaterSurfaceIndex } = await import('../src/render/water_core');
-    await Promise.resolve();
-
-    const view = buildWater(SEED);
+  it('splits into blocks with their own tight bounds, over one shared buffer', () => {
+    const { buildWaterSurfaceIndex } = core;
     // Before any zone streams in, every visible mesh is an apron block (the
     // from-below twins are built hidden).
     const blocks = view.meshes.filter((m) => m.visible);
@@ -193,6 +201,5 @@ describe('horizon apron draws as frustum-cullable blocks', () => {
     const depth = blocks[0].geometry.attributes.aShoreDepth as THREE.BufferAttribute;
     const whole = buildWaterSurfaceIndex(depth.array as Float32Array, columns, columns);
     expect(drawn).toBe(whole === null ? (columns - 1) * (columns - 1) * 6 : whole.length);
-    view.dispose();
   });
 });
