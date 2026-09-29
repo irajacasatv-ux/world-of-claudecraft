@@ -90,9 +90,20 @@ describe('cosmetic skin-select event', () => {
   it('does not reroll when the token is used again', () => {
     const sim = new Sim({ seed: SKIN_SEED, playerClass: 'mage', playerName: 'Roller' });
     sim.addItem(EVENT_SKIN_TOKEN_ID, 1);
+    // The first open rolls the rank; the re-open reads it back and rolls
+    // nothing. A same-rank reroll (the 70 percent uncommon bucket makes one
+    // likely) would pass the rank equality below on its own.
+    let draws = 0;
+    sim.rng.setObserver(() => {
+      draws++;
+    });
     sim.useItem(EVENT_SKIN_TOKEN_ID);
+    expect(draws).toBe(1);
     const first = expectDefined(drainSkinEvent(sim)).rank;
+    draws = 0;
     sim.useItem(EVENT_SKIN_TOKEN_ID); // re-open
+    sim.rng.setObserver(null);
+    expect(draws).toBe(0);
     const second = expectDefined(drainSkinEvent(sim)).rank;
     expect(second).toBe(first);
   });
