@@ -8,6 +8,19 @@ export function laneThresholdOver(
   carried: Readonly<Record<string, object>>,
   lane: readonly string[],
 ): string[];
+export const SHARD_POOL_CEILING_MS: number;
+export const LANE_POOL_CEILING_MS: number;
+export const RATCHET_HEADROOM: number;
+export const RATCHET_SLACK: number;
+export function poolWeights(
+  weights: Readonly<Record<string, number>>,
+  carried: Readonly<Record<string, object>>,
+  lane: readonly string[],
+): { shard: number; lane: number };
+export function ratchetProblems(
+  pools: { shard: number; lane: number },
+  ceilings: { shard: number; lane: number },
+): string[];
 export const CI_LONG_SUITES: readonly string[];
 export const CI_LONG_SUITE_HALVES: { readonly a: readonly string[]; readonly b: readonly string[] };
 export const FLOOR_SANITY_MIN: number;

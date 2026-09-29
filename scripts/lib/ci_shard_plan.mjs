@@ -177,6 +177,75 @@ export function laneThresholdOver(weights, carried, lane) {
     .map(([file, ms]) => `${file} ${ms} ms`);
 }
 
+/**
+ * The total-CI-time ratchet, in the tests/monolith_budget.test.ts mold, over the same weight
+ * table the lane rule reads: the summed CI-time weight (ciTimeWeight, so a carried row counts
+ * in CI time) of the shard pool (every row outside CI_LONG_SUITES) and of the lane may not pass
+ * these ceilings. tests/suite_lane_threshold.test.ts judges the committed table on every PR (it
+ * is on the always-run floor), so whatever grows a pool fails where it lands: a harvest, a
+ * carried row for a new file, a superseded row. The remedies are the lane rule's: make the
+ * file cheaper, cut something it duplicates, or show it is worth its cost (the admission rule
+ * in tests/CLAUDE.md, "Test cost"). When a harvest or a cut shrinks a pool, LOWER its ceiling
+ * in the same change to the pool plus RATCHET_HEADROOM: a ceiling more than RATCHET_SLACK
+ * above its pool fails as stale, so the ratchet only tightens. Raising a ceiling is a
+ * maintainer decision, with its reason in the PR body.
+ */
+// Set 2026-09-29 from the harvest of run 36610517548 (the table after the test-cost cuts and the
+// culled balance lane): the shard pool summed 7,038,584 ms and the lane 332,450 ms (2,905,969 ms
+// in the table before, the unculled lane), each ceiling that pool plus RATCHET_HEADROOM.
+export const SHARD_POOL_CEILING_MS = 7_743_000;
+export const LANE_POOL_CEILING_MS = 366_000;
+/**
+ * The room a ceiling is set with above its pool. Two green full-mode runs of one tree summed
+ * their per-file test time 2.6 percent apart (runs 36493201427 and 36501749917: 10,541 s and
+ * 10,814 s), so a re-harvest alone must not trip it.
+ */
+export const RATCHET_HEADROOM = 0.1;
+/** A ceiling more than this fraction above its pool is stale and must come down. */
+export const RATCHET_SLACK = 0.25;
+
+/**
+ * The summed CI-time weight of the shard pool and of the lane, in whole ms.
+ *
+ * @param {Readonly<Record<string, number>>} weights
+ * @param {Readonly<Record<string, object>>} carried
+ * @param {readonly string[]} lane
+ * @returns {{ shard: number, lane: number }}
+ */
+export function poolWeights(weights, carried, lane) {
+  const inLane = new Set(lane);
+  const pools = { shard: 0, lane: 0 };
+  for (const [file, ms] of Object.entries(weights)) {
+    const weight = ciTimeWeight(ms, Object.hasOwn(carried, file) ? carried[file] : undefined);
+    if (inLane.has(file)) pools.lane += weight;
+    else pools.shard += weight;
+  }
+  return { shard: Math.round(pools.shard), lane: Math.round(pools.lane) };
+}
+
+/**
+ * The ratchet's judgment, as problem lines (empty when both pools hold): a pool over its
+ * ceiling, or a ceiling left more than RATCHET_SLACK above its pool.
+ *
+ * @param {{ shard: number, lane: number }} pools
+ * @param {{ shard: number, lane: number }} ceilings
+ * @returns {string[]}
+ */
+export function ratchetProblems(pools, ceilings) {
+  const problems = [];
+  for (const name of /** @type {const} */ (['shard', 'lane'])) {
+    const pool = pools[name];
+    const ceiling = ceilings[name];
+    if (pool > ceiling) problems.push(`${name} pool ${pool} ms is over its ceiling ${ceiling} ms`);
+    else if (ceiling > pool * (1 + RATCHET_SLACK))
+      problems.push(
+        `${name} ceiling ${ceiling} ms is stale over its pool ${pool} ms: lower it to about ` +
+          `${Math.ceil(pool * (1 + RATCHET_HEADROOM))} ms`,
+      );
+  }
+  return problems;
+}
+
 export const CI_LONG_SUITES = Object.freeze([
   // 2026-08-13 remeasure (run 31732244215, both lanes fully loaded; figures
   // are IN-LANE and stay far under 90 even at the recorded 1.6x runner

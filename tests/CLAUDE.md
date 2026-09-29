@@ -235,6 +235,12 @@ guards hold the line, each naming its own remedy:
   it: split the file along its cost clusters, make it cheaper, or lane it (a measured decision in
   `scripts/lib/ci_shard_plan.mjs`). A file whose shape changed re-measures its row with
   `node scripts/ci_shard_weights_harvest.mjs --carry-local --supersede --reason "..."`.
+- **Total time.** The same suite holds the summed CI-time weight of the shard pool and of the
+  lane under `SHARD_POOL_CEILING_MS` and `LANE_POOL_CEILING_MS` (`scripts/lib/ci_shard_plan.mjs`,
+  the monolith-budget mold): a harvest or a carried row that grows a pool past its ceiling fails,
+  and a ceiling left more than `RATCHET_SLACK` above its pool after a cut fails as stale, so it is
+  lowered in the same change. Raising a ceiling is a maintainer decision with its reason in the PR
+  body.
 - **Declared time.** `tests/suite_duration_budget.test.ts` rations declared timeouts (below).
 - **Memory.** `npm run test:memory` (nightly) runs each file budgeted in
   `scripts/test_memory_budgets.json` alone with a forced GC after every case and fails a file
@@ -270,6 +276,16 @@ The recurring causes, each measured on this suite:
   making a third (`tests/parity/CLAUDE.md`).
 - In a bare local run the long-sims lane files are opt-in (`WOC_LANE_SUITES=1`, or name the
   file); both gates opt in on every vitest leg.
+
+**Admission: a new test file earns its place.** Its leading comment says, on lines carrying
+`Guards:` and `Cost:`, what it uniquely guards (the behavior no existing suite pins, naming the
+nearest suite that does not) and what it costs (its local test time at one worker, from
+`npx vitest run <file> --maxWorkers=1`). Before adding one, look for the suite that should own the
+case, and pick the cheapest form that keeps the guard (the remedies above). The lane-threshold
+suite checks the statement on every `.test.ts` the weight table has not measured yet (no row, or
+a carried one); once a harvest measures the file, the total-time ratchet carries its weight. The
+browser suite and the few `.test.mjs` suites owe the same statement but sit outside the table, so
+reviewers check those by hand.
 
 Tombstone pins (a case that only asserts a removed thing stays removed) retire once the removal
 is old and a live assertion covers the same ground, deleted with a coverage proof; do not add new

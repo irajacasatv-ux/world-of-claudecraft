@@ -17,9 +17,16 @@ import {
   CARRIED_LOCAL_TO_CI_RATIO,
   CI_LONG_SUITES,
   ciTimeWeight,
+  LANE_POOL_CEILING_MS,
   LANE_THRESHOLD_MS,
   laneThresholdOver,
+  poolWeights,
+  RATCHET_HEADROOM,
+  RATCHET_SLACK,
+  ratchetProblems,
+  SHARD_POOL_CEILING_MS,
 } from '../scripts/lib/ci_shard_plan.mjs';
+import { walkShardTestFiles } from '../scripts/lib/ci_shard_walk.mjs';
 import { carriedRows } from '../scripts/lib/ci_shard_weight_carry.mjs';
 
 const CARRIED = carriedRows(
@@ -89,6 +96,126 @@ describe('the lane threshold over the measured shard weights', () => {
       'tests/carried.test.ts 92000 ms',
       'tests/harvested_past_line.test.ts 90001 ms',
       'tests/heavy.test.ts 95000 ms',
+    ]);
+  });
+});
+
+// The total-CI-time ratchet (scripts/lib/ci_shard_plan.mjs, beside the lane rule): the summed
+// CI-time weight of the shard pool and of the lane may not pass their ceilings, and a ceiling
+// left well above its pool after a cut is stale and must come down.
+describe('the total CI time ratchet over the measured weights', () => {
+  it('holds the shard pool and the lane under their ceilings, neither ceiling stale', () => {
+    const pools = poolWeights(MEASURED_WEIGHTS, CARRIED, CI_LONG_SUITES);
+    expect(
+      ratchetProblems(pools, { shard: SHARD_POOL_CEILING_MS, lane: LANE_POOL_CEILING_MS }),
+      'a weight row grew a pool past its ceiling (make the file cheaper, cut what it ' +
+        'duplicates, or raise the ceiling as a maintainer decision), or a pool shrank and its ' +
+        'ceiling must come down',
+    ).toEqual([]);
+    // Non-vacuous: both pools are real sums (a shrunken table would pass under any ceiling).
+    expect(pools.shard).toBeGreaterThan(SHARD_POOL_CEILING_MS / (1 + RATCHET_SLACK));
+    expect(pools.lane).toBeGreaterThan(0);
+  });
+
+  it('sums pools through the CI-time weight and judges both directions', () => {
+    const pools = poolWeights(
+      {
+        'tests/a.test.ts': 10_000,
+        'tests/carried.test.ts': 1_000,
+        'tests/lane.test.ts': 50_000,
+      },
+      { 'tests/carried.test.ts': { method: 'local-median' } },
+      ['tests/lane.test.ts'],
+    );
+    expect(pools).toEqual({ shard: 14_000, lane: 50_000 });
+    expect(ratchetProblems(pools, { shard: 14_000, lane: 50_000 })).toEqual([]);
+    expect(ratchetProblems(pools, { shard: 13_999, lane: 50_000 })).toEqual([
+      'shard pool 14000 ms is over its ceiling 13999 ms',
+    ]);
+    // Stale: more than RATCHET_SLACK above the pool; exactly at the slack still holds.
+    expect(ratchetProblems(pools, { shard: 14_000, lane: 50_000 * (1 + RATCHET_SLACK) })).toEqual(
+      [],
+    );
+    expect(
+      ratchetProblems(pools, { shard: 14_000, lane: 50_000 * (1 + RATCHET_SLACK) + 1 }),
+    ).toEqual([
+      `lane ceiling ${50_000 * (1 + RATCHET_SLACK) + 1} ms is stale over its pool 50000 ms: ` +
+        `lower it to about ${Math.ceil(50_000 * (1 + RATCHET_HEADROOM))} ms`,
+    ]);
+  });
+});
+
+// The admission rule (tests/CLAUDE.md, "Test cost"): a test file the harvest has not measured
+// (no row in the weight table, or a carried row standing in for one) says in its leading
+// comment what it uniquely guards and what it costs, on lines carrying `Guards:` and `Cost:`.
+// Once a harvest measures it, the ratchet above carries its weight. The files checked are the
+// table's own population (scripts/lib/ci_shard_walk.mjs: every .test.ts outside the browser
+// suite); the browser suite and the few .test.mjs suites owe the statement too but sit outside
+// the table, so nothing here can tell a new one from an old one.
+const ADMISSION_MARKERS = ['Guards:', 'Cost:'] as const;
+
+function leadingComment(source: string): string {
+  const lines: string[] = [];
+  for (const line of source.split('\n')) {
+    const trimmed = line.trim();
+    if (trimmed === '' && lines.length === 0) continue;
+    if (/^(\/\/|\/\*|\*)/.test(trimmed)) lines.push(trimmed);
+    else break;
+  }
+  return lines.join('\n');
+}
+
+function admissionProblems(
+  files: readonly { key: string; source: string }[],
+  weights: Readonly<Record<string, number>>,
+  carried: Readonly<Record<string, object>>,
+): string[] {
+  const problems: string[] = [];
+  for (const { key, source } of files) {
+    const measured = Object.hasOwn(weights, key) && !Object.hasOwn(carried, key);
+    if (measured) continue;
+    const header = leadingComment(source);
+    const missing = ADMISSION_MARKERS.filter((marker) => !header.includes(marker));
+    if (missing.length > 0) problems.push(`${key}: its leading comment lacks ${missing.join(' ')}`);
+  }
+  return problems;
+}
+
+describe('the new-test admission rule', () => {
+  it('asks every test file the harvest has not measured for its Guards: and Cost: lines', () => {
+    const files = walkShardTestFiles(new URL('..', import.meta.url).pathname).map((key) => ({
+      key,
+      source: readFileSync(new URL(`../${key}`, import.meta.url), 'utf8'),
+    }));
+    // Non-vacuous: the walk sees the whole suite.
+    expect(files.length).toBeGreaterThan(4_000);
+    expect(
+      admissionProblems(files, MEASURED_WEIGHTS, CARRIED),
+      'a new test file states what it uniquely guards and its measured cost (tests/CLAUDE.md, ' +
+        '"Test cost")',
+    ).toEqual([]);
+  });
+
+  it('reads the markers from the leading comment only, and skips measured files', () => {
+    const stated = '// Guards: the thing.\n// Cost: 0.2 s locally.\nimport x from "y";\n';
+    const buried = 'import x from "y";\n// Guards: the thing.\n// Cost: 0.2 s.\n';
+    const half = '/**\n * Guards: the thing.\n */\nimport x from "y";\n';
+    expect(
+      admissionProblems(
+        [
+          { key: 'tests/new_stated.test.ts', source: stated },
+          { key: 'tests/new_buried.test.ts', source: buried },
+          { key: 'tests/new_half.test.ts', source: half },
+          { key: 'tests/measured.test.ts', source: buried },
+          { key: 'tests/carried.test.ts', source: buried },
+        ],
+        { 'tests/measured.test.ts': 1_000, 'tests/carried.test.ts': 1_000 },
+        { 'tests/carried.test.ts': { method: 'local-median' } },
+      ),
+    ).toEqual([
+      'tests/new_buried.test.ts: its leading comment lacks Guards: Cost:',
+      'tests/new_half.test.ts: its leading comment lacks Cost:',
+      'tests/carried.test.ts: its leading comment lacks Guards: Cost:',
     ]);
   });
 });
