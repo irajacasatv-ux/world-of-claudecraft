@@ -12,9 +12,17 @@ import {
 } from '../src/sim/combat/shaman_thundercall';
 import { Sim } from '../src/sim/sim';
 import type { Entity } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 function setup(spec: 'elemental' | 'enhancement' = 'elemental'): { sim: Sim; shaman: Entity } {
-  const sim = new Sim({ seed: 2811, playerClass: 'shaman', noPlayer: true });
+  // The engine only touches the shaman the rig adds, so the Sim runs on the
+  // empty world.
+  const sim = new Sim({
+    seed: 2811,
+    playerClass: 'shaman',
+    noPlayer: true,
+    world: EMPTY_TEST_WORLD,
+  });
   const pid = sim.addPlayer('shaman', 'Engine');
   sim.setPlayerLevel(20, pid);
   expect(sim.setSpec(spec, pid)).toBe(true);
