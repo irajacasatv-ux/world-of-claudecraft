@@ -22,6 +22,7 @@ import { computeCharacterModifiers } from '../src/sim/set_bonus_mods';
 import { Sim } from '../src/sim/sim';
 import { type Entity, MIN_GCD, type PlayerClass, type SimEvent } from '../src/sim/types';
 import { expectDefined } from './helpers/defined';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const SET_SLOTS = ['helmet', 'shoulder', 'chest', 'legs', 'gloves'] as const;
 
@@ -48,8 +49,10 @@ function equipSet(sim: Sim, setId: string, pieces: number): void {
   }
 }
 
+// EMPTY_TEST_WORLD: every case wears its own set and fights the idle mob or ally
+// it spawns, so the ambient overworld is pure construction and tick cost.
 function live(cls: PlayerClass, spec: string, setId: string, pieces: number, seed = 911): Sim {
-  const sim = new Sim({ seed, playerClass: cls, autoEquip: true });
+  const sim = new Sim({ seed, playerClass: cls, autoEquip: true, world: EMPTY_TEST_WORLD });
   sim.setPlayerLevel(20);
   expect(sim.setSpec(spec)).toBe(true);
   equipSet(sim, setId, pieces);
