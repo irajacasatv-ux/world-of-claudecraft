@@ -66,8 +66,10 @@ const EMPTY: GuildBankState = { treasury: 0, inventory: [], purchasedSlots: 0 };
 // controls on an item whose units really are inseparable from their payload.
 const NON_MATERIAL_SIM = 'roasted_boar';
 
+// Seed 42, the seed the banker-world cases below also build: the books read
+// no seed, and a second seed pays its own collider bootstrap.
 function freshSim(): Sim {
-  return new Sim({ seed: 7, playerClass: 'warrior', autoEquip: true });
+  return new Sim({ seed: 42, playerClass: 'warrior', autoEquip: true });
 }
 
 // The sim redeclares the server's GuildRank (src/sim never imports server/);
