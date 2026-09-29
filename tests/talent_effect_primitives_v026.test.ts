@@ -6,6 +6,10 @@ import { type ResolvedAbility, Sim } from '../src/sim/sim';
 import type { Aura, Entity } from '../src/sim/types';
 import { EMPTY_TEST_WORLD } from './sim_shared';
 
+// Every case builds its rig on the empty world and reads no seed-specific draw,
+// so one seed serves the file (a fresh seed costs a collider grid build).
+const SEED = 1;
+
 function addHostile(sim: Sim, distance = 2): Entity {
   const player = sim.player;
   const mob = createMob(9000 + sim.entities.size, MOBS.forest_wolf, 20, {
@@ -73,7 +77,7 @@ function step(sim: Sim, ticks: number): void {
 describe('Talents V2 dispel and steal primitives', () => {
   it('removes only a friendly magic debuff and recalculates stats after removal', () => {
     const sim = new Sim({
-      seed: 1,
+      seed: SEED,
       playerClass: 'paladin',
       noPlayer: true,
       world: EMPTY_TEST_WORLD,
@@ -98,7 +102,12 @@ describe('Talents V2 dispel and steal primitives', () => {
   });
 
   it('steals an enemy magic benefit but leaves enemy physical and harmful auras alone', () => {
-    const sim = new Sim({ seed: 2, playerClass: 'mage', autoEquip: true, world: EMPTY_TEST_WORLD });
+    const sim = new Sim({
+      seed: SEED,
+      playerClass: 'mage',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const enemy = addHostile(sim);
     enemy.auras.push(aura(enemy, 'magic_blessing', 'buff_spellpower', 40, 'holy'));
     enemy.auras.push(aura(enemy, 'physical_guard', 'buff_armor', 50, 'physical'));
@@ -135,7 +144,7 @@ describe('Talents V2 dispel and steal primitives', () => {
       return minted;
     };
     const sim = new Sim({
-      seed: 24,
+      seed: SEED,
       playerClass: 'mage',
       autoEquip: true,
       world: EMPTY_TEST_WORLD,
@@ -155,7 +164,7 @@ describe('Talents V2 dispel and steal primitives', () => {
     // With ONLY the flask worn, the steal has nothing to take: no flask marker
     // ever lands on the thief.
     const sim2 = new Sim({
-      seed: 25,
+      seed: SEED,
       playerClass: 'mage',
       autoEquip: true,
       world: EMPTY_TEST_WORLD,
@@ -169,7 +178,12 @@ describe('Talents V2 dispel and steal primitives', () => {
   });
 
   it('does not steal permanent stance-style magic auras', () => {
-    const sim = new Sim({ seed: 21, playerClass: 'mage', autoEquip: true });
+    const sim = new Sim({
+      seed: SEED,
+      playerClass: 'mage',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const enemy = addHostile(sim);
     const permanent = aura(enemy, 'devotion_ward', 'buff_dr', 0.05, 'holy');
     permanent.remaining = Number.POSITIVE_INFINITY;
@@ -188,7 +202,7 @@ describe('Talents V2 dispel and steal primitives', () => {
     ['buff_sta_pct', 20],
   ] as const)('reverses non-player %s stat folds when Spellplunder removes them', (kind, value) => {
     const sim = new Sim({
-      seed: 22,
+      seed: SEED,
       playerClass: 'mage',
       autoEquip: true,
       world: EMPTY_TEST_WORLD,
@@ -208,7 +222,7 @@ describe('Talents V2 dispel and steal primitives', () => {
 
   it('starts Greater Invisibility damage reduction when Spellplunder ends the vanish', () => {
     const sim = new Sim({
-      seed: 23,
+      seed: SEED,
       playerClass: 'mage',
       autoEquip: true,
       world: EMPTY_TEST_WORLD,
@@ -234,7 +248,7 @@ describe('Talents V2 dispel and steal primitives', () => {
 
   it('lets Voidfeast devour the correctly directed magic aura and heal its caster', () => {
     const sim = new Sim({
-      seed: 3,
+      seed: SEED,
       playerClass: 'warlock',
       autoEquip: true,
       world: EMPTY_TEST_WORLD,
@@ -254,7 +268,7 @@ describe('Talents V2 dispel and steal primitives', () => {
 describe('Talents V2 movement and control primitives', () => {
   it('routes Typhoon through shared knockback resistance and applies its daze', () => {
     const sim = new Sim({
-      seed: 4,
+      seed: SEED,
       playerClass: 'druid',
       autoEquip: true,
       world: EMPTY_TEST_WORLD,
@@ -285,7 +299,7 @@ describe('Talents V2 movement and control primitives', () => {
     // Balance pass (G6): Rime Snare is an armed trap at the hunter's feet
     // now; the freeze lands on first contact after the arm delay.
     const sim = new Sim({
-      seed: 5,
+      seed: SEED,
       playerClass: 'hunter',
       autoEquip: true,
       world: EMPTY_TEST_WORLD,
@@ -318,7 +332,7 @@ describe('Talents V2 movement and control primitives', () => {
     expect(enemy.auras.some((entry) => entry.kind === 'root')).toBe(false);
 
     const mage = new Sim({
-      seed: 5,
+      seed: SEED,
       playerClass: 'mage',
       autoEquip: true,
       world: EMPTY_TEST_WORLD,
@@ -331,7 +345,7 @@ describe('Talents V2 movement and control primitives', () => {
 
   it('supports Silence, Preparation, and swept root-breaking Blink', () => {
     const priest = new Sim({
-      seed: 6,
+      seed: SEED,
       playerClass: 'priest',
       autoEquip: true,
       world: EMPTY_TEST_WORLD,
@@ -343,7 +357,7 @@ describe('Talents V2 movement and control primitives', () => {
     ).toBe(true);
 
     const rogue = new Sim({
-      seed: 7,
+      seed: SEED,
       playerClass: 'rogue',
       autoEquip: true,
       world: EMPTY_TEST_WORLD,
@@ -369,7 +383,7 @@ describe('Talents V2 movement and control primitives', () => {
     });
 
     const mage = new Sim({
-      seed: 8,
+      seed: SEED,
       playerClass: 'mage',
       autoEquip: true,
       world: EMPTY_TEST_WORLD,
@@ -393,7 +407,7 @@ describe('Talents V2 movement and control primitives', () => {
 
   it('preserves unbreakable encounter control across player removal primitives', () => {
     const warrior = new Sim({
-      seed: 81,
+      seed: SEED,
       playerClass: 'warrior',
       autoEquip: true,
       world: EMPTY_TEST_WORLD,
@@ -405,7 +419,7 @@ describe('Talents V2 movement and control primitives', () => {
     expect(warrior.player.auras.some((entry) => entry.id === 'scripted_stun')).toBe(true);
 
     const mage = new Sim({
-      seed: 82,
+      seed: SEED,
       playerClass: 'mage',
       autoEquip: true,
       world: EMPTY_TEST_WORLD,
@@ -429,7 +443,7 @@ describe('Talents V2 movement and control primitives', () => {
     expect(protectedRootMoveSteps).toBe(0);
 
     const castingMage = new Sim({
-      seed: 85,
+      seed: SEED,
       playerClass: 'mage',
       autoEquip: true,
       world: EMPTY_TEST_WORLD,
@@ -449,7 +463,7 @@ describe('Talents V2 movement and control primitives', () => {
     expect(castingMage.player.cooldowns.has('blink')).toBe(false);
 
     const rogue = new Sim({
-      seed: 84,
+      seed: SEED,
       playerClass: 'rogue',
       autoEquip: true,
       world: EMPTY_TEST_WORLD,
@@ -461,7 +475,7 @@ describe('Talents V2 movement and control primitives', () => {
     expect(rogue.player.pos).toEqual(rogueStart);
 
     const paladin = new Sim({
-      seed: 83,
+      seed: SEED,
       playerClass: 'paladin',
       noPlayer: true,
       world: EMPTY_TEST_WORLD,
@@ -480,7 +494,12 @@ describe('Talents V2 stasis and resource-sap primitives', () => {
   it('Ice Block stops actions and auto attacks, and recasts to cancel the stasis', () => {
     // Cold Coffin is mage base kit now (learnLevel 12, stasis + cleanseSelf; the
     // old row-granted absorb shield died with the mage rework).
-    const sim = new Sim({ seed: 9, playerClass: 'mage', autoEquip: true, world: EMPTY_TEST_WORLD });
+    const sim = new Sim({
+      seed: SEED,
+      playerClass: 'mage',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.setPlayerLevel(20);
     const enemy = addHostile(sim);
     sim.targetEntity(enemy.id);
@@ -510,7 +529,7 @@ describe('Talents V2 stasis and resource-sap primitives', () => {
     const sapGain = (control: boolean): number => {
       const run = (withSap: boolean): number => {
         const sim = new Sim({
-          seed: 10,
+          seed: SEED,
           playerClass: 'druid',
           autoEquip: true,
           world: EMPTY_TEST_WORLD,
