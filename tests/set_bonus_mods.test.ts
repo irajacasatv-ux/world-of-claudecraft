@@ -13,6 +13,7 @@ import {
 } from '../src/sim/set_bonus_mods';
 import { Sim } from '../src/sim/sim';
 import { expectDefined } from './helpers/defined';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const TWO_PIECES = { helmet: 'slagbreaker_helmet', shoulder: 'slagbreaker_shoulder' };
 
@@ -73,8 +74,14 @@ describe('set_bonus_mods: the resolver', () => {
 });
 
 describe('set_bonus_mods: live recompute wiring', () => {
+  // Equip and level recomputes read only the wearer, so the Sim runs on the empty world.
   function warriorAt25() {
-    const sim = new Sim({ seed: 11, playerClass: 'warrior', noPlayer: true });
+    const sim = new Sim({
+      seed: 11,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const pid = sim.addPlayer('warrior', 'Setwearer');
     const meta = expectDefined(sim.ctx.players.get(pid));
     const entity = expectDefined(sim.entities.get(pid));
