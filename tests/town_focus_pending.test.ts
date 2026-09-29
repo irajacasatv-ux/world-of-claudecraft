@@ -34,14 +34,25 @@ import type { CharacterState, PlayerMeta } from '../src/sim/sim';
 import { Sim } from '../src/sim/sim';
 import type { Entity } from '../src/sim/types';
 import { UNMAPPED_FAMILY } from './helpers/unmapped_family';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 type SimInternals = { entities: Map<number, Entity>; players: Map<number, PlayerMeta> };
 
 const ZONE1 = ZONES[0];
 const TIME_PER_POINT_S = RESPEC_TIER_CONFIG.time.durationMsPerPoint / 1000;
 
-function inTown(seed = 21) {
-  const sim = new Sim({ seed, playerClass: 'warrior', noPlayer: true });
+// One seed of the empty test world for every Sim in the file: town focus reads
+// only the zone hub's position (ZONES data), never a camp, an NPC, or a ground
+// object, and a seed the file has already built reuses its world.
+const SEED = 21;
+
+function inTown() {
+  const sim = new Sim({
+    seed: SEED,
+    playerClass: 'warrior',
+    noPlayer: true,
+    world: EMPTY_TEST_WORLD,
+  });
   const internals = sim as unknown as SimInternals;
   const pid = sim.addPlayer('warrior', 'Alpha');
   sim.tick();
@@ -234,7 +245,12 @@ describe('a queued town-focus re-spec through real Sim persistence', () => {
     });
 
     // A fresh process: sim time restarts from 0.
-    const reloaded = new Sim({ seed: 3, playerClass: 'warrior', noPlayer: true });
+    const reloaded = new Sim({
+      seed: SEED,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const pid2 = reloaded.addPlayer('warrior', 'Alpha', { state });
     expect(reloaded.townFocusFor(pid2)).toEqual({});
     expect(reloaded.townFocusPendingFor(pid2)).toEqual({
@@ -259,7 +275,12 @@ describe('a queued town-focus re-spec through real Sim persistence', () => {
     const { sim, pid } = inTown();
     sim.setTownFocus({ hide: 2 }, 'time', pid);
     const state = JSON.parse(JSON.stringify(sim.serializeCharacter(pid))) as CharacterState;
-    const reloaded = new Sim({ seed: 4, playerClass: 'warrior', noPlayer: true });
+    const reloaded = new Sim({
+      seed: SEED,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const pid2 = reloaded.addPlayer('warrior', 'Alpha', { state });
     expect(reloaded.townFocusPendingFor(pid2)).toEqual({
       allocation: { hide: 2 },
@@ -271,7 +292,12 @@ describe('a queued town-focus re-spec through real Sim persistence', () => {
     const { sim, pid } = inTown();
     const state = requireCharacterState(sim.serializeCharacter(pid));
     expect(Object.hasOwn(state, 'pendingTownFocus')).toBe(false);
-    const reloaded = new Sim({ seed: 5, playerClass: 'warrior', noPlayer: true });
+    const reloaded = new Sim({
+      seed: SEED,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const pid2 = reloaded.addPlayer('warrior', 'Alpha', { state });
     expect(reloaded.townFocusPendingFor(pid2)).toBeNull();
   });
@@ -282,7 +308,12 @@ describe('a queued town-focus re-spec through real Sim persistence', () => {
       ...requireCharacterState(sim.serializeCharacter(pid)),
       pendingTownFocus: { allocation: { silk: 1 }, remainingSeconds: 'soon' },
     } as unknown as CharacterState;
-    const reloaded = new Sim({ seed: 6, playerClass: 'warrior', noPlayer: true });
+    const reloaded = new Sim({
+      seed: SEED,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const pid2 = reloaded.addPlayer('warrior', 'Alpha', { state: junk });
     expect(reloaded.townFocusPendingFor(pid2)).toBeNull();
     expect(
@@ -298,7 +329,12 @@ describe('a queued town-focus re-spec through real Sim persistence', () => {
     const state = requireCharacterState(sim.serializeCharacter(pid));
     expect(state.pendingTownFocus).toMatchObject({ coin: 10, materials: 2 });
 
-    const reloaded = new Sim({ seed: 7, playerClass: 'warrior', noPlayer: true });
+    const reloaded = new Sim({
+      seed: SEED,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const pid2 = reloaded.addPlayer('warrior', 'Alpha', { state });
     // Spend the purse before it resolves: the reload must cancel, not charge
     // into the negative.
@@ -409,7 +445,7 @@ describe('re-saving a queued allocation', () => {
 
 describe('IWorld townFocusPending', () => {
   it('the Sim primary-player getter mirrors the per-pid reader', () => {
-    const sim = new Sim({ seed: 9, playerClass: 'warrior' });
+    const sim = new Sim({ seed: SEED, playerClass: 'warrior', world: EMPTY_TEST_WORLD });
     const pid = sim.playerId;
     const e = requireEntity(sim as unknown as SimInternals, pid);
     e.pos = sim.groundPos(ZONE1.hub.x, ZONE1.hub.z);
