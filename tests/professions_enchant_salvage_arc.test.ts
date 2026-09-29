@@ -32,6 +32,7 @@ import { type PlayerMeta, Sim } from '../src/sim/sim';
 import * as tradeMod from '../src/sim/social/trade';
 import type { Entity, InvSlot, SimEvent, WorldContent } from '../src/sim/types';
 import { terrainHeight } from '../src/sim/world';
+import { WORLD_SEED } from '../src/sim/world_seed';
 import { bareClient } from './helpers/bare_client';
 import {
   completeEnchantFamilyCast,
@@ -53,6 +54,13 @@ const PROFESSIONS_ENCHANT_SALVAGE_TEST_WORLD: WorldContent = {
   camps: [],
   groundObjects: [],
 };
+
+// One seed for every offline Sim, and the realm's own: every case here pins
+// a provenance, listing or skill outcome, never a seed-probed roll, and the
+// collider grids a full-world Sim builds are cached per seed, so each extra
+// seed cost a fresh build (about half a second) while the live GameServer
+// cases below already build WORLD_SEED's.
+const ARC_SEED = WORLD_SEED;
 
 /** Complete a running enchant-family cast on the server sim and route events. */
 function flushEnchantFamilyCast(server: GameServer, pid: number): void {
@@ -199,7 +207,7 @@ function moveToMerchant(sim: Sim, pid: number): void {
 describe('offline Sim end-to-end (IWorld surface)', () => {
   it('crafted Eastbrook Chainmail Vest stacks yield materials but never teach Enchanting', () => {
     const sim = new Sim({
-      seed: 20260726,
+      seed: ARC_SEED,
       playerClass: 'warrior',
       world: PROFESSIONS_ENCHANT_SALVAGE_TEST_WORLD,
       autoEquip: false,
@@ -235,7 +243,7 @@ describe('offline Sim end-to-end (IWorld surface)', () => {
 
   it('crafted Eastbrook Chainmail Vest replacement keeps provenance before disenchant', () => {
     const sim = new Sim({
-      seed: 20260728,
+      seed: ARC_SEED,
       playerClass: 'warrior',
       world: PROFESSIONS_ENCHANT_SALVAGE_TEST_WORLD,
       autoEquip: false,
@@ -269,7 +277,7 @@ describe('offline Sim end-to-end (IWorld surface)', () => {
 
   it('crafted Eastbrook Chainmail Vest unequip keeps provenance before disenchant', () => {
     const sim = new Sim({
-      seed: 20260729,
+      seed: ARC_SEED,
       playerClass: 'warrior',
       world: PROFESSIONS_ENCHANT_SALVAGE_TEST_WORLD,
       autoEquip: false,
@@ -294,7 +302,7 @@ describe('offline Sim end-to-end (IWorld surface)', () => {
 
   it('crafted Eastbrook Chainmail Vest buyback keeps provenance before disenchant', () => {
     const sim = new Sim({
-      seed: 20260730,
+      seed: ARC_SEED,
       playerClass: 'warrior',
       world: PROFESSIONS_ENCHANT_SALVAGE_TEST_WORLD,
       autoEquip: false,
@@ -336,7 +344,7 @@ describe('offline Sim end-to-end (IWorld surface)', () => {
   // letting the recipient disenchant it for full Enchanting skill.
   it('crafted Eastbrook Chainmail Vest keeps provenance across a player trade before disenchant', () => {
     const sim = new Sim({
-      seed: 20260731,
+      seed: ARC_SEED,
       playerClass: 'warrior',
       world: PROFESSIONS_ENCHANT_SALVAGE_TEST_WORLD,
       autoEquip: false,
@@ -376,7 +384,7 @@ describe('offline Sim end-to-end (IWorld surface)', () => {
   // with the same skill-farming consequence.
   it('crafted Eastbrook Chainmail Vest keeps provenance across a World Market sale before disenchant', () => {
     const sim = new Sim({
-      seed: 20260732,
+      seed: ARC_SEED,
       playerClass: 'warrior',
       world: PROFESSIONS_ENCHANT_SALVAGE_TEST_WORLD,
       autoEquip: false,
@@ -417,7 +425,7 @@ describe('offline Sim end-to-end (IWorld surface)', () => {
   // listing (which would silently launder them the same way BUG #9 did).
   it('a sell request spanning two provenance buckets splits into two listings, prices summing to the ask', () => {
     const sim = new Sim({
-      seed: 20260734,
+      seed: ARC_SEED,
       playerClass: 'warrior',
       world: PROFESSIONS_ENCHANT_SALVAGE_TEST_WORLD,
       autoEquip: false,
@@ -454,7 +462,7 @@ describe('offline Sim end-to-end (IWorld surface)', () => {
   // so both gates must account for the split BEFORE anything leaves the bag.
   it('refuses a dual-provenance sell that would push the seller over MARKET_MAX_LISTINGS', () => {
     const sim = new Sim({
-      seed: 20260735,
+      seed: ARC_SEED,
       playerClass: 'warrior',
       world: PROFESSIONS_ENCHANT_SALVAGE_TEST_WORLD,
       autoEquip: false,
@@ -493,7 +501,7 @@ describe('offline Sim end-to-end (IWorld surface)', () => {
 
   it('refuses a dual-provenance sell whose ask cannot give every bucket at least 1 copper', () => {
     const sim = new Sim({
-      seed: 20260736,
+      seed: ARC_SEED,
       playerClass: 'warrior',
       world: PROFESSIONS_ENCHANT_SALVAGE_TEST_WORLD,
       autoEquip: false,
@@ -522,7 +530,7 @@ describe('offline Sim end-to-end (IWorld surface)', () => {
 
   it('a non-crafted eligible item still gains Enchanting skill when disenchanted', () => {
     const sim = new Sim({
-      seed: 20260727,
+      seed: ARC_SEED,
       playerClass: 'warrior',
       world: PROFESSIONS_ENCHANT_SALVAGE_TEST_WORLD,
       autoEquip: false,
@@ -540,7 +548,7 @@ describe('offline Sim end-to-end (IWorld surface)', () => {
 
   it('disenchants a rare (typed secondary), applies a Runed enchant, salvages, with lastX mirrors', () => {
     const sim = new Sim({
-      seed: 20260721,
+      seed: ARC_SEED,
       playerClass: 'warrior',
       world: PROFESSIONS_ENCHANT_SALVAGE_TEST_WORLD,
       autoEquip: false,
@@ -603,7 +611,7 @@ describe('offline Sim end-to-end (IWorld surface)', () => {
 describe('online end-to-end (live GameServer, wire commands + self-deltas)', () => {
   it('disenchants the selected duplicate slot and preserves a masterwork copy with the same item id', () => {
     const sim = new Sim({
-      seed: 314,
+      seed: ARC_SEED,
       playerClass: 'warrior',
       world: PROFESSIONS_ENCHANT_SALVAGE_TEST_WORLD,
       autoEquip: false,
@@ -839,7 +847,7 @@ describe('apply-enchant keeps the crafted-provenance marker (the anti-farm gate)
     // `instance` at all, and the mint rebuilt the copy from the consumed
     // PAYLOAD only, so the marker had nowhere to survive.
     const sim = new Sim({
-      seed: 20260901,
+      seed: ARC_SEED,
       playerClass: 'warrior',
       world: PROFESSIONS_ENCHANT_SALVAGE_TEST_WORLD,
       autoEquip: false,
@@ -861,7 +869,7 @@ describe('apply-enchant keeps the crafted-provenance marker (the anti-farm gate)
     // The behaviour the marker exists for. Without it, craft -> enchant ->
     // disenchant is a self-serve skill loop on the player's own gear.
     const sim = new Sim({
-      seed: 20260902,
+      seed: ARC_SEED,
       playerClass: 'warrior',
       world: PROFESSIONS_ENCHANT_SALVAGE_TEST_WORLD,
       autoEquip: false,
@@ -888,7 +896,7 @@ describe('apply-enchant keeps the crafted-provenance marker (the anti-farm gate)
     // The negative arm. If this ever went to 0 the fix would be over-broad,
     // silently killing the legitimate disenchant faucet.
     const sim = new Sim({
-      seed: 20260903,
+      seed: ARC_SEED,
       playerClass: 'warrior',
       world: PROFESSIONS_ENCHANT_SALVAGE_TEST_WORLD,
       autoEquip: false,
@@ -912,7 +920,7 @@ describe('apply-enchant keeps the crafted-provenance marker (the anti-farm gate)
 
   it('a masterwork crafted copy keeps seal, signer, AND marker through the mint', () => {
     const sim = new Sim({
-      seed: 20260904,
+      seed: ARC_SEED,
       playerClass: 'warrior',
       world: PROFESSIONS_ENCHANT_SALVAGE_TEST_WORLD,
       autoEquip: false,
@@ -938,7 +946,7 @@ describe('apply-enchant keeps the crafted-provenance marker (the anti-farm gate)
 
   it('the REPLACE arm keeps the marker too', () => {
     const sim = new Sim({
-      seed: 20260905,
+      seed: ARC_SEED,
       playerClass: 'warrior',
       world: PROFESSIONS_ENCHANT_SALVAGE_TEST_WORLD,
       autoEquip: false,
