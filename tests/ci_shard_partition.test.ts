@@ -164,9 +164,13 @@ describe('ci_shard_partition (D11 path-matrix)', () => {
 
   it('prefers a measured duration over every heuristic and falls back cleanly', () => {
     // The whale must carry its real measured ms (not the static guess), and
-    // an unknown file must keep the heuristic path (never zero, never NaN).
+    // an unknown file must keep the heuristic path (never zero, never NaN). The
+    // whale is the druid probe, a lane file; since the lane's balance probes boot
+    // production's idle cull (2026-09-29 harvest: 15.7 s) the bound sits far above
+    // the measured-median fallback (tens of ms) rather than at the old 120 s.
     const whale = MEASURED_WEIGHTS['tests/druid_balance_probe.test.ts'];
-    expect(whale).toBeGreaterThan(120_000);
+    expect(whale).toBeGreaterThan(10_000);
+    expect(whale).toBeGreaterThan(MEASURED_FALLBACK_MS * 100);
     expect(weightForTestFile('tests/druid_balance_probe.test.ts', '', 100)).toBe(whale);
     const unknown = weightForTestFile(
       'tests/not_yet_written.test.ts',
@@ -183,9 +187,10 @@ describe('ci_shard_partition (D11 path-matrix)', () => {
     // here, not silently unbalance the packs.
     expect(Object.keys(MEASURED_WEIGHTS).length).toBeGreaterThanOrEqual(2_400);
     // Realism: the table must carry real variance (a degenerate all-equal
-    // regeneration would balance trivially while measuring nothing).
-    const heavy = Object.values(MEASURED_WEIGHTS).filter((ms) => ms > 60_000).length;
-    expect(heavy).toBeGreaterThanOrEqual(5);
+    // regeneration would balance trivially while measuring nothing). 29 rows over
+    // 20 s at the 2026-09-29 harvest (none over 60 s once the lane was culled).
+    const heavy = Object.values(MEASURED_WEIGHTS).filter((ms) => ms > 20_000).length;
+    expect(heavy).toBeGreaterThanOrEqual(20);
     const raw = JSON.parse(
       readFileSync(join(root, 'scripts/ci_shard_weights.generated.json'), 'utf8'),
     ) as { __provenance?: { run?: string; files?: number } };
@@ -236,7 +241,9 @@ describe('ci_shard_partition (D11 path-matrix)', () => {
     // The whale is DERIVED as the table argmax (rename-proof), with an
     // absolute bound no heuristic or fallback can reach.
     const [whaleFile, whaleMs] = Object.entries(MEASURED_WEIGHTS).sort((a, b) => b[1] - a[1])[0];
-    expect(whaleMs).toBeGreaterThan(120_000);
+    // 47.4 s at the 2026-09-29 harvest (the argmax was a 400 s lane file before the cull).
+    expect(whaleMs).toBeGreaterThan(30_000);
+    expect(whaleMs).toBeGreaterThan(MEASURED_FALLBACK_MS * 100);
     expect(weightForTestFile(whaleFile, '', 100)).toBe(whaleMs);
     // A mid-table member with rich imports still returns its measured value,
     // proving measured beats the heuristic path outright (the old additive

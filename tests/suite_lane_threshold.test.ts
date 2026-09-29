@@ -38,13 +38,14 @@ describe('the lane threshold over the measured shard weights', () => {
     ).toEqual([]);
   });
 
-  it('sees heavy files at all (the lane holds weights over the threshold)', () => {
-    // Positive control: if the table lost its heavy rows (a shrunken harvest), the
-    // check above would pass vacuously.
-    const heavyLane = CI_LONG_SUITES.filter(
-      (file) => (MEASURED_WEIGHTS[file] ?? 0) > LANE_THRESHOLD_MS,
-    );
-    expect(heavyLane.length).toBeGreaterThanOrEqual(3);
+  it('sees heavy files at all (the table keeps its heavy rows and every lane row)', () => {
+    // Positive control: if the table lost its heavy rows (a shrunken harvest), the check
+    // above would pass vacuously. Since the lane's balance probes boot production's idle
+    // cull (2026-09-29) no row is over the threshold itself, so the control counts rows over
+    // a quarter of it (23 at the 2026-09-29 harvest) and requires a row for every lane file.
+    const heavy = Object.values(MEASURED_WEIGHTS).filter((ms) => ms > LANE_THRESHOLD_MS / 4);
+    expect(heavy.length).toBeGreaterThanOrEqual(20);
+    expect(CI_LONG_SUITES.filter((file) => MEASURED_WEIGHTS[file] === undefined)).toEqual([]);
   });
 
   it('judges every carried row in CI time, and a harvested row as measured', () => {
