@@ -253,6 +253,17 @@ The recurring causes, each measured on this suite:
   a case that genuinely needs the coordinator in a small `Hud.prototype` rig file of its own.
 - Nothing framework-specific in the global `setupFiles` (`tests/vitest_setup_scope.test.ts`):
   every file pays for it before its first case.
+- A full overworld the suite does not need. A `Sim` builds its collider grids once per SEED the
+  file has not used yet (about half a second), and a full-world tick costs several times a scoped
+  one: a case that fights a mob or ally it places itself runs on `EMPTY_TEST_WORLD` (or a scoped
+  kin in `tests/sim_shared.ts`), one seed per file serves every case whose seed buys nothing, and
+  a suite that needs the whole world ticking around one player opts into the shipped idle-mob
+  cull (`tests/helpers/production_idle_cull.ts`). Check first: several systems switch themselves
+  off on a custom world, and the cull and a new seed both reshape the shared rng stream, so a case
+  riding a hit, a crit or a proc forces it (stub the roll) rather than hunting a new seed.
+- A costly property sweep keeps a cheap PR-tier representative and runs whole only on the nightly
+  (`WOC_NIGHTLY_SWEEP`, docs/qa-gate.md "Nightly-only sweep depth"); the representative must kill
+  a mutant of the class the sweep exists for.
 - A determinism check reuses its first run, and so does every check that only reads a run: the
   parity gate records each scenario twice (the determinism pair, the one PR check for state
   leaking between Sims) and its coverage cases read the gate's first recording instead of

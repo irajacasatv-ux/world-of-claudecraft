@@ -9158,8 +9158,8 @@ export interface SimConfig {
   // live GameServer set it to PLAYER_INTEREST_DROP_RADIUS. The parity goldens leave it
   // unset (culling moves the shared rng stream they pin); a full-world suite that only
   // needs the world to tick the way players meet it opts into the shipped value
-  // (tests/helpers/production_idle_cull.ts), which costs about a seventh of an
-  // unculled tick. The headless RL env keeps its own intentional 80-unit throttle
+  // (tests/helpers/production_idle_cull.ts), a fraction of an unculled tick's cost.
+  // The headless RL env keeps its own intentional 80-unit throttle
   // (headless/env_server.ts). Positive values also move every passive idle roll to the
   // per-mob lane; see mob/idle_rng.ts.
   idleMobTickRadius?: number;
