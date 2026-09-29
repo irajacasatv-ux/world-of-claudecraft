@@ -223,8 +223,8 @@ async function lazyGeneratedEvaluatedBy(load: () => Promise<unknown>): Promise<s
     // records on its first line, so such a reach still fails the pin (its message may then
     // list fewer slices); a fetch that never settles ends in a timeout, never a pass. An import
     // a module defers to a timer is caught only if it starts before these turns end (a
-    // zero-delay timer is; a longer timer or a later event is not): the pin measures what
-    // loading reaches, and a deferred prefetch should expect it to count.
+    // zero-delay timer is; a longer timer or a later event may not be): the pin measures
+    // what loading reaches, and a deferred prefetch should expect it to count.
     for (let turn = 0, seen = -1; turn < 8 && seen !== evaluated.size; turn++) {
       seen = evaluated.size;
       await vi.dynamicImportSettled();

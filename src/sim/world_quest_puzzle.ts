@@ -3,7 +3,8 @@
 
 import type { WorldQuestBeamPuzzleDef, WorldQuestBeamSide } from './types';
 
-const SIDES: readonly WorldQuestBeamSide[] = ['north', 'east', 'south', 'west'];
+// Frozen: the lazy daily catalogs reach it, and nothing may rewrite it after load.
+const SIDES: readonly WorldQuestBeamSide[] = Object.freeze(['north', 'east', 'south', 'west']);
 
 function normalizedRotation(value: unknown): number {
   return Number.isInteger(value) ? (((value as number) % 4) + 4) % 4 : 0;

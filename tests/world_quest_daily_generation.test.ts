@@ -125,6 +125,8 @@ describe('daily procedural world quest levels', () => {
     expect(Object.isFrozen(edited.refill)).toBe(true);
     expect(Object.isFrozen(edited)).toBe(true);
     const ley = generateDailyLeyPuzzle(0);
+    expect(Object.isFrozen(generateDailyLeyChallenge(0))).toBe(true);
+    expect(Object.isFrozen(generateDailyLeyChallenge(0).solution)).toBe(true);
     expect(generateDailyLeyPuzzle(32)).toBe(ley);
     expect(Object.isFrozen(ley)).toBe(true);
     expect(Object.isFrozen(ley.tiles)).toBe(true);
