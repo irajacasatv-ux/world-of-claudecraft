@@ -1,7 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { GROUND_OBJECTS, ITEMS, NPCS, QUESTS, questRewardItemId } from '../src/sim/data';
+import {
+  BUILTIN_WORLD,
+  GROUND_OBJECTS,
+  ITEMS,
+  NPCS,
+  QUESTS,
+  questRewardItemId,
+} from '../src/sim/data';
 import { Sim } from '../src/sim/sim';
-import type { Entity, SimEvent } from '../src/sim/types';
+import type { Entity, SimEvent, WorldContent } from '../src/sim/types';
 
 const QUEST_ID = 'q_aldrics_fallen_star';
 const METEOR_ITEM_ID = 'unknown_alien_weaponry';
@@ -9,6 +16,18 @@ const REWARD_ITEM_ID = 'alien_armor_plate';
 const RETURNED_CHROMA_ITEM_ID = 'amber_crimson_armor_plate';
 
 type SkinEvent = Extract<SimEvent, { type: 'skinEvent' }>;
+
+// The cases reach only Brother Aldric, the Merchant, and the meteor on the
+// ground, so the world keeps just those three and no camps.
+const ALDRIC_WORLD: WorldContent = {
+  ...BUILTIN_WORLD,
+  camps: [],
+  npcs: {
+    brother_aldric_fen: BUILTIN_WORLD.npcs.brother_aldric_fen,
+    the_merchant: BUILTIN_WORLD.npcs.the_merchant,
+  },
+  groundObjects: BUILTIN_WORLD.groundObjects.filter((obj) => obj.itemId === METEOR_ITEM_ID),
+};
 
 function drainSkinEvent(sim: Sim): SkinEvent | undefined {
   return sim.tick().find((e): e is SkinEvent => e.type === 'skinEvent');
@@ -66,6 +85,7 @@ describe('Brother Aldric fallen star quest', () => {
       playerClass: 'warrior',
       playerName: 'Reuben',
       autoEquip: false,
+      world: ALDRIC_WORLD,
     });
     sim.player.level = 8;
 
@@ -119,6 +139,7 @@ describe('Brother Aldric fallen star quest', () => {
       playerClass: 'warrior',
       playerName: 'Reuben',
       autoEquip: false,
+      world: ALDRIC_WORLD,
     });
     const aldric = [...sim.entities.values()].find(
       (e) => e.kind === 'npc' && e.templateId === 'brother_aldric_fen',
@@ -146,7 +167,12 @@ describe('Brother Aldric fallen star quest', () => {
   });
 
   it('keeps the cosmetic item out of vendor sell, destroy, and market flows while allowing trade', () => {
-    const sim = new Sim({ seed: 20061, playerClass: 'warrior', playerName: 'Seller' });
+    const sim = new Sim({
+      seed: 20061,
+      playerClass: 'warrior',
+      playerName: 'Seller',
+      world: ALDRIC_WORLD,
+    });
     sim.addItem(REWARD_ITEM_ID, 1);
 
     standAtMerchant(sim);
