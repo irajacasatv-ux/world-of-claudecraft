@@ -10,7 +10,7 @@ import { Sim } from '../src/sim/sim';
 import type { Entity, PlayerClass } from '../src/sim/types';
 import { EMPTY_TEST_WORLD } from './sim_shared';
 
-// Vitest default (5 s) is far too tight for the 240 s simulated window: after
+// Vitest default (5 s) was far too tight for the old 240 s simulated window: after
 // the upstream merge each case runs ~17 s even on an unloaded machine, and
 // 25-33 s under full-suite parallel load (the old 30 s cap flaked exactly
 // there: whichever cases drew the worst scheduling timed out). 120 s keeps a
@@ -25,7 +25,15 @@ vi.setConfig({ testTimeout: 120000 });
 // immune tank so every downstream rng draw keeps its stream position.
 
 export const SEED = 90210;
-export const WINDOW_SECONDS = 240;
+// About 100 landed swings: the wolf swings four times as often as its template
+// over a quarter of the old 240 s window, the same swings in a quarter of the ticks.
+export const WINDOW_SECONDS = 60;
+const SWING_SPEEDUP = 4;
+// The mob's crit roll (the 5 percent `chance` in Sim.mobSwing) is forced to succeed,
+// so every landed swing crits unless the defender is a committed tank. Both arms
+// are then decisive on any stream: at the natural rate a 100-swing fight rolls one
+// or two crits, and a non-immune arm would ride the seed's luck.
+const MOB_CRIT_CHANCE = 0.05;
 
 export type Setup = {
   cls: PlayerClass;
@@ -47,6 +55,11 @@ export function critsTaken(setup: Setup): { hits: number; crits: number } {
     noPlayer: true,
     world: EMPTY_TEST_WORLD,
   });
+  const chance = sim.rng.chance.bind(sim.rng);
+  sim.rng.chance = (p: number) => {
+    const drawn = chance(p); // still drawn, so the stream keeps its position
+    return p === MOB_CRIT_CHANCE || drawn;
+  };
   const pid = sim.addPlayer(setup.cls, 'Defender');
   sim.setPlayerLevel(20, pid);
   if (setup.spec) sim.applyTalents({ spec: setup.spec, rows: {} }, pid);
@@ -73,6 +86,7 @@ export function critsTaken(setup: Setup): { hits: number; crits: number } {
   mob.hostile = true;
   mob.maxHp = 1e9;
   mob.hp = mob.maxHp;
+  mob.weapon = { ...mob.weapon, speed: mob.weapon.speed / SWING_SPEEDUP };
   (sim as unknown as { addEntity(e: Entity): void }).addEntity(mob);
   mob.inCombat = true;
   mob.aiState = 'attack';
