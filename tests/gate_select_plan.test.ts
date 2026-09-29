@@ -1,5 +1,13 @@
 import { spawnSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
@@ -1138,14 +1146,18 @@ describe('discovery scope matches vitest collection over the real tree', () => {
     // vitest.browser.config includes only tests/browser/**/*.browser.test.ts. So a browser-suite
     // file anywhere else under tests/, or any other test-named file inside tests/browser/, runs
     // in neither. The walkers here and in discovery do not follow a symlink, which vitest's glob
-    // would, so a symlink under tests/ is flagged too.
+    // would, so a symlink under tests/ to a directory, or a test-named one, is flagged too (a
+    // symlinked fixture file is not a test). A browser-suite file outside tests/ fails the
+    // outside-tests guard above.
+    const testNamed = (name: string) => /\.(test|spec)\.[cm]?[jt]sx?$/.test(name);
     const stranded: string[] = [];
     const walk = (dir: string) => {
       for (const entry of readdirSync(dir, { withFileTypes: true })) {
         const full = path.join(dir, entry.name);
         const rel = path.relative(REPO_ROOT, full).split(path.sep).join('/');
         if (entry.isSymbolicLink()) {
-          stranded.push(rel);
+          if (testNamed(entry.name) || statSync(full, { throwIfNoEntry: false })?.isDirectory())
+            stranded.push(rel);
           continue;
         }
         if (entry.isDirectory()) {
@@ -1155,8 +1167,7 @@ describe('discovery scope matches vitest collection over the real tree', () => {
         const browserSuffix = entry.name.endsWith('.browser.test.ts');
         const inBrowserDir = rel.startsWith('tests/browser/');
         if (browserSuffix && !inBrowserDir) stranded.push(rel);
-        if (!browserSuffix && inBrowserDir && /\.(test|spec)\.[cm]?[jt]sx?$/.test(entry.name))
-          stranded.push(rel);
+        if (!browserSuffix && inBrowserDir && testNamed(entry.name)) stranded.push(rel);
       }
     };
     walk(path.join(REPO_ROOT, 'tests'));
