@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { Sim } from '../src/sim/sim';
-import type { Aura, Entity, SimEvent } from '../src/sim/types';
+import {
+  type Aura,
+  type Entity,
+  PLAYER_INTEREST_DROP_RADIUS,
+  type SimEvent,
+} from '../src/sim/types';
 
 const MENDING_CURRENT_ID = 'shaman_mending_current';
 
@@ -20,8 +25,19 @@ function place(sim: Sim, entity: Entity, x: number, z: number): void {
   (sim as unknown as { rebucket(entity: Entity): void }).rebucket(entity);
 }
 
+// Production's idle culling (the server and offline client both set it): the
+// ambient overworld stays, so each seed keeps its draws, but idle mobs far from
+// the party stop costing a full AI update every tick. Each fresh seed builds its
+// own collider grid (about half a second), so only the two cases whose
+// assertions could ride a heal roll (the Lifespring deposit comparison and the
+// exact unleash burst) keep a seed of their own; the rest reuse the default.
 function setup(seed = 2820): SpiritmendSetup {
-  const sim = new Sim({ seed, playerClass: 'shaman', noPlayer: true });
+  const sim = new Sim({
+    seed,
+    playerClass: 'shaman',
+    noPlayer: true,
+    idleMobTickRadius: PLAYER_INTEREST_DROP_RADIUS,
+  });
   const healerId = sim.addPlayer('shaman', 'Currentkeeper');
   const allyId = sim.addPlayer('warrior', 'Riverstone');
   const secondAllyId = sim.addPlayer('mage', 'Reed');
@@ -116,7 +132,7 @@ describe('Shaman v0.29 Spiritmend', () => {
   });
 
   it('ticks healing out of the same stored pool without an expiry burst', () => {
-    const { sim, healerId, ally } = setup(2821);
+    const { sim, healerId, ally } = setup();
     ally.hp = Math.round(ally.maxHp * 0.2);
     seedCurrent(ally, healerId, 300);
 
@@ -136,7 +152,7 @@ describe('Shaman v0.29 Spiritmend', () => {
   });
 
   it('gives Tidecall two recharging instant uses and preserves them on an invalid cast', () => {
-    const { sim, healer, allyId } = setup(2822);
+    const { sim, healer, allyId } = setup();
     expect(sim.resolvedAbility('tidecall', healer.id)).toMatchObject({
       castTime: 0,
       charges: 2,
@@ -173,7 +189,7 @@ describe('Shaman v0.29 Spiritmend', () => {
   });
 
   it("consumes every reached owned pool once while preserving another Shaman's pool", () => {
-    const { sim, healer, healerId, ally, allyId, secondAlly } = setup(2824);
+    const { sim, healer, healerId, ally, allyId, secondAlly } = setup();
     const otherId = sim.addPlayer('shaman', 'Othercurrent');
     sim.setPlayerLevel(20, otherId);
     sim.setSpec('restoration', otherId);
@@ -204,7 +220,7 @@ describe('Shaman v0.29 Spiritmend', () => {
   });
 
   it('keeps canonical Cascading Mend useful on an unprepared ally', () => {
-    const { sim, healer, healerId, allyId } = setup(2825);
+    const { sim, healer, healerId, allyId } = setup();
     const events = castAndResolve(sim, healer, 'chain_heal', allyId);
 
     expect(healingFor(events, healerId, allyId)).toBeGreaterThan(0);
@@ -232,7 +248,7 @@ describe('Shaman v0.29 Spiritmend', () => {
   });
 
   it('bases the one-hit guard on effective healing and refuses an empty unleash', () => {
-    const { sim, healer, healerId, ally, allyId } = setup(2827);
+    const { sim, healer, healerId, ally, allyId } = setup();
     castAndResolve(sim, healer, 'lifespring_weapon', healerId, 1);
     ally.hp = ally.maxHp - 40;
     seedCurrent(ally, healerId, 200);
