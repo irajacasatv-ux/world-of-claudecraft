@@ -547,6 +547,7 @@ describe('the long-sims lane (Phase 4)', () => {
       'tests/ability_vfx_cast_requirements.test.ts',
       'tests/audit_conservation_property.test.ts',
       'tests/chronomancy_balance_targets.test.ts',
+      'tests/dungeon_entry_clearance.test.ts',
       'tests/emerald_deck_escape.test.ts',
       'tests/fire_short_fight_tuning.test.ts',
       'tests/lake_shores.test.ts',

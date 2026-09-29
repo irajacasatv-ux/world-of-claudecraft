@@ -24,6 +24,8 @@ import { MAX_AGGRO_RADIUS } from '../src/sim/mob/locomotion';
 import { Sim } from '../src/sim/sim';
 import type { Entity } from '../src/sim/types';
 
+const NIGHTLY_SWEEP = process.env.WOC_NIGHTLY_SWEEP === '1';
+
 describe('dungeon entry clearance: zoning in never aggros a pack', () => {
   for (const dungeon of Object.values(DUNGEONS)) {
     const spawns = dungeon.spawns ?? [];
@@ -57,7 +59,10 @@ describe('dungeon door clearance: no camp mob spawns on an overworld door', () =
   // shipped one: earlier this passed only because seed 20061 happened to land every
   // door-adjacent mob at exactly the ring edge (other seeds put mobs 14-18 yd from a
   // door). Loop several seeds and assert exact clearance (no tolerance slack).
-  for (const seed of [7, 99, 2024, 20061, 31337]) {
+  // Each PR builds seed 2024, the one of the five whose spiral walks a mob back
+  // into a ring when the re-projection is dropped; the nightly sweep flag builds
+  // all five (each is a full overworld of its own).
+  for (const seed of NIGHTLY_SWEEP ? [7, 99, 2024, 20061, 31337] : [2024]) {
     it(`seed ${seed}: no camp mob spawns within the clear radius of any dungeon door`, () => {
       const sim = new Sim({ seed, playerClass: 'warrior', autoEquip: true });
       const mobs = [...(sim as any).entities.values()].filter((e: Entity) => e.kind === 'mob');
