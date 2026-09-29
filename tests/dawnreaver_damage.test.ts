@@ -6,7 +6,8 @@ import * as tuning from '../src/sim/dawnreaver_damage';
 import { createMob } from '../src/sim/entity';
 import { activateDivineAscension, grantDevotion } from '../src/sim/paladin_devotion';
 import { Sim } from '../src/sim/sim';
-import { type Entity, PLAYER_INTEREST_DROP_RADIUS, type SimEvent } from '../src/sim/types';
+import type { Entity, SimEvent } from '../src/sim/types';
+import { PRODUCTION_IDLE_CULL } from './helpers/production_idle_cull';
 
 type Damage = Extract<SimEvent, { type: 'damage' }>;
 type Options = {
@@ -28,7 +29,7 @@ function rig(options: Options = {}) {
     seed: 2701,
     playerClass: 'paladin',
     autoEquip: true,
-    idleMobTickRadius: PLAYER_INTEREST_DROP_RADIUS,
+    ...PRODUCTION_IDLE_CULL,
   });
   sim.setPlayerLevel(20);
   expect(

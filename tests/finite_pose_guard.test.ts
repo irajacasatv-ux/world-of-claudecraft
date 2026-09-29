@@ -20,7 +20,8 @@ import {
 import { sanitizeMoveInput } from '../src/sim/move_input';
 import { type PlayerMotionDeps, stepPlayerMotion } from '../src/sim/player_motion';
 import { Sim } from '../src/sim/sim';
-import { type Entity, PLAYER_INTEREST_DROP_RADIUS } from '../src/sim/types';
+import type { Entity } from '../src/sim/types';
+import { PRODUCTION_IDLE_CULL } from './helpers/production_idle_cull';
 
 // Production's idle culling (the server and the offline client both set it).
 // Measured on this file: every case's per-tick player pose, velocity, health and
@@ -30,7 +31,7 @@ function rig(seed = 7) {
     seed,
     playerClass: 'warrior',
     noPlayer: true,
-    idleMobTickRadius: PLAYER_INTEREST_DROP_RADIUS,
+    ...PRODUCTION_IDLE_CULL,
   });
   const pid = sim.addPlayer('mage', 'Guarded') as number;
   sim.setPlayerLevel(20, pid);

@@ -21,13 +21,7 @@ import { IGNIVAR_LIFT_ROOM_ID, isIgnivarRaidRoom } from '../src/sim/ignivar_raid
 import { enterDungeon } from '../src/sim/instances/dungeons';
 import { PLAYER_BODY_RADIUS, PLAYER_MAX_CLIMB_SLOPE } from '../src/sim/pathfind';
 import { Sim } from '../src/sim/sim';
-import {
-  dist2d,
-  type Entity,
-  type LootEntry,
-  PLAYER_INTEREST_DROP_RADIUS,
-  type SimEvent,
-} from '../src/sim/types';
+import { dist2d, type Entity, type LootEntry, type SimEvent } from '../src/sim/types';
 import {
   DECORATION_MAX_SLOPE,
   generateDecorationsInBounds,
@@ -40,6 +34,7 @@ import {
 
 import { decorations, formRaid, makeLootSim, makeSim, SEED, teleportTo } from './fixes_shared';
 import { expectDefined } from './helpers/defined';
+import { PRODUCTION_IDLE_CULL } from './helpers/production_idle_cull';
 import { wallFootFixture } from './helpers/wall_foot';
 
 interface SimPrivateHarness {
@@ -62,7 +57,7 @@ function asHarness(sim: Sim): SimPrivateHarness {
 // Production's idle culling (the server and the offline client both set it) for
 // the cases that tick the full world for hundreds of frames: an idle mob far from
 // every player skips its per-tick AI, and none of these cases reads one.
-const CULLED = { idleMobTickRadius: PLAYER_INTEREST_DROP_RADIUS } as const;
+const CULLED = PRODUCTION_IDLE_CULL;
 
 function makeCulledSim(): Sim {
   return new Sim({ seed: SEED, playerClass: 'warrior', ...CULLED });

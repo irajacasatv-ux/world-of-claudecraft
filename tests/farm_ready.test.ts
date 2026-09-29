@@ -18,8 +18,9 @@ import { farmBedById } from '../src/sim/content/farm_patches';
 import type { PlotState } from '../src/sim/professions/farm_projection';
 import { harvestCrop, plantCrop } from '../src/sim/professions/farming';
 import { type CharacterState, type PlayerMeta, Sim } from '../src/sim/sim';
-import { PLAYER_INTEREST_DROP_RADIUS, type SimEvent } from '../src/sim/types';
+import type { SimEvent } from '../src/sim/types';
 import { terrainHeight } from '../src/sim/world';
+import { PRODUCTION_IDLE_CULL } from './helpers/production_idle_cull';
 
 const CROP_ID = 'vale_wheat';
 const SEED_ID = 'vale_wheat_seed';
@@ -54,7 +55,7 @@ function makeHarness(seed = 41, opts: { cullIdleMobs?: boolean } = {}): Harness 
     playerClass: 'warrior',
     autoEquip: false,
     lockoutNowMs: () => nowMs,
-    ...(opts.cullIdleMobs === false ? {} : { idleMobTickRadius: PLAYER_INTEREST_DROP_RADIUS }),
+    ...(opts.cullIdleMobs === false ? {} : PRODUCTION_IDLE_CULL),
   });
   const pid = sim.playerId;
   const meta = sim.players.get(pid) as PlayerMeta;

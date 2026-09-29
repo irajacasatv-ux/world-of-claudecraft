@@ -40,13 +40,9 @@ import { createMob } from '../src/sim/entity';
 import { computeCharacterModifiers } from '../src/sim/set_bonus_mods';
 import { type ResolvedAbility, Sim } from '../src/sim/sim';
 import type { SimContext } from '../src/sim/sim_context';
-import {
-  type Aura,
-  type Entity,
-  PLAYER_INTEREST_DROP_RADIUS,
-  type SimEvent,
-} from '../src/sim/types';
+import type { Aura, Entity, SimEvent } from '../src/sim/types';
 import { expectDefined } from './helpers/defined';
+import { PRODUCTION_IDLE_CULL } from './helpers/production_idle_cull';
 
 const SET_SLOTS = ['helmet', 'shoulder', 'chest', 'gloves', 'legs'] as const;
 
@@ -128,7 +124,7 @@ function hunterSim(spec: string, seed: number): TestSim {
     seed,
     playerClass: 'hunter',
     autoEquip: true,
-    idleMobTickRadius: PLAYER_INTEREST_DROP_RADIUS,
+    ...PRODUCTION_IDLE_CULL,
   }) as TestSim;
   sim.setPlayerLevel(25);
   expect(sim.setSpec(spec)).toBe(true);

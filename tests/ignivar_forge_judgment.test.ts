@@ -71,10 +71,10 @@ import {
   DT,
   type Entity,
   IGNIVAR_BOSS_ID,
-  PLAYER_INTEREST_DROP_RADIUS,
   type PlayerClass,
   type SimEvent,
 } from '../src/sim/types';
+import { PRODUCTION_IDLE_CULL } from './helpers/production_idle_cull';
 
 // One seed for every case: a seed a test file has not built yet costs its
 // full-world Sim about half a second (the collider grids are built per seed),
@@ -88,7 +88,7 @@ function claimedEncounter(seed = 42, difficulty: 'normal' | 'heroic' = 'normal')
     seed,
     playerClass: 'warrior',
     devCommands: true,
-    idleMobTickRadius: PLAYER_INTEREST_DROP_RADIUS,
+    ...PRODUCTION_IDLE_CULL,
   });
   if (difficulty === 'heroic') sim.setDungeonDifficulty('heroic', sim.player.id);
   expect(enterDungeon(sim.ctx, 'ignivar_raid_arena', sim.player.id, true)).toBe(true);

@@ -10,8 +10,9 @@ import { MOBS } from '../src/sim/data';
 import { createMob } from '../src/sim/entity';
 import { immobileEvadeSnapsHome } from '../src/sim/mob/immobile_evade';
 import { type PlayerMeta, Sim } from '../src/sim/sim';
-import { type Entity, PLAYER_INTEREST_DROP_RADIUS } from '../src/sim/types';
+import type { Entity } from '../src/sim/types';
 import { placePlayerInOpenField } from './helpers/open_field';
+import { PRODUCTION_IDLE_CULL } from './helpers/production_idle_cull';
 
 const QUEST = 'q_broodmother';
 
@@ -23,7 +24,7 @@ function questerSim(): { sim: Sim; p: Entity; meta: PlayerMeta } {
     seed: 7,
     playerClass: 'warrior',
     autoEquip: true,
-    idleMobTickRadius: PLAYER_INTEREST_DROP_RADIUS,
+    ...PRODUCTION_IDLE_CULL,
   });
   sim.setPlayerLevel(12);
   placePlayerInOpenField(sim);

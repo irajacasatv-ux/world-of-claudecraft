@@ -40,8 +40,9 @@ import { createMob } from '../src/sim/entity';
 import { computeCharacterModifiers } from '../src/sim/set_bonus_mods';
 import { Sim } from '../src/sim/sim';
 import { resolveTalentHitMult } from '../src/sim/talent_hit_mult';
-import { type Entity, PLAYER_INTEREST_DROP_RADIUS, type SimEvent } from '../src/sim/types';
+import type { Entity, SimEvent } from '../src/sim/types';
 import { expectDefined } from './helpers/defined';
+import { PRODUCTION_IDLE_CULL } from './helpers/production_idle_cull';
 
 const SET_SLOTS = ['helmet', 'shoulder', 'chest', 'gloves', 'legs'] as const;
 
@@ -69,7 +70,7 @@ function liveWarlock(seed: number, spec: 'affliction' | 'demonology' | 'destruct
     seed,
     playerClass: 'warlock',
     autoEquip: true,
-    idleMobTickRadius: PLAYER_INTEREST_DROP_RADIUS,
+    ...PRODUCTION_IDLE_CULL,
   });
   sim.setPlayerLevel(20);
   expect(sim.setSpec(spec)).toBe(true);

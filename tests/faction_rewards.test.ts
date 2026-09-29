@@ -4,15 +4,14 @@ import { FACTION_HUB_LANDINGS } from '../src/sim/content/faction_vendors';
 import { DUNGEON_X_THRESHOLD, ITEMS, MOBS } from '../src/sim/data';
 import { createMob } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
-import { PLAYER_INTEREST_DROP_RADIUS } from '../src/sim/types';
+import { PRODUCTION_IDLE_CULL } from './helpers/production_idle_cull';
 
 // One seed for the whole file: every case builds a fresh Sim, and a seed the file
 // has already built costs about 22 ms instead of the 0.55 s a new seed's collider
-// grids cost. No case here depends on which seed it runs. CULL is production's idle
-// culling (the server and the offline client both set it), which keeps the ticking
-// cases from paying for every idle mob in the world.
+// grids cost. No case here depends on which seed it runs. PRODUCTION_IDLE_CULL is
+// production's idle culling (the server and the offline client both set it), which
+// keeps the ticking cases from paying for every idle mob in the world.
 const SEED = 101;
-const CULL = PLAYER_INTEREST_DROP_RADIUS;
 
 describe('Allied Faction World Quest Rewards & Toys', () => {
   describe('Allied Hearthstone (allied_hearthstone)', () => {
@@ -21,7 +20,7 @@ describe('Allied Faction World Quest Rewards & Toys', () => {
         seed: SEED,
         playerClass: 'paladin',
         autoEquip: false,
-        idleMobTickRadius: CULL,
+        ...PRODUCTION_IDLE_CULL,
       });
       const meta = sim.meta(sim.playerId)!;
       sim.addItem('allied_hearthstone', 1);
@@ -52,7 +51,7 @@ describe('Allied Faction World Quest Rewards & Toys', () => {
         seed: SEED,
         playerClass: 'mage',
         autoEquip: false,
-        idleMobTickRadius: CULL,
+        ...PRODUCTION_IDLE_CULL,
       });
       const meta = sim.meta(sim.playerId)!;
       sim.addItem('allied_hearthstone', 1);
@@ -116,7 +115,7 @@ describe('Allied Faction World Quest Rewards & Toys', () => {
         seed: SEED,
         playerClass: 'warrior',
         autoEquip: false,
-        idleMobTickRadius: CULL,
+        ...PRODUCTION_IDLE_CULL,
       });
       const meta = sim.meta(sim.playerId)!;
       meta.copper = 500_000;
@@ -173,7 +172,7 @@ describe('Allied Faction World Quest Rewards & Toys', () => {
         seed: SEED,
         playerClass: 'rogue',
         autoEquip: false,
-        idleMobTickRadius: CULL,
+        ...PRODUCTION_IDLE_CULL,
       });
       const meta = sim.meta(sim.playerId)!;
       sim.addItem('rift_feather_glider', 1);
@@ -217,7 +216,7 @@ describe('Allied Faction World Quest Rewards & Toys', () => {
         seed: SEED,
         playerClass: 'hunter',
         autoEquip: false,
-        idleMobTickRadius: CULL,
+        ...PRODUCTION_IDLE_CULL,
       });
       const meta = sim.meta(sim.playerId)!;
       sim.addItem('clockwork_target_dummy', 1);
@@ -249,7 +248,7 @@ describe('Allied Faction World Quest Rewards & Toys', () => {
         seed: SEED,
         playerClass: 'priest',
         autoEquip: false,
-        idleMobTickRadius: CULL,
+        ...PRODUCTION_IDLE_CULL,
       });
       const meta = sim.meta(sim.playerId)!;
       sim.addItem('dawn_battle_standard', 1);
@@ -295,7 +294,7 @@ describe('Allied Faction World Quest Rewards & Toys', () => {
         seed: SEED,
         playerClass: 'mage',
         autoEquip: false,
-        idleMobTickRadius: CULL,
+        ...PRODUCTION_IDLE_CULL,
       });
       const initialSpi = sim.player.stats.spi;
 
@@ -314,7 +313,7 @@ describe('Allied Faction World Quest Rewards & Toys', () => {
         seed: SEED,
         playerClass: 'rogue',
         autoEquip: false,
-        idleMobTickRadius: CULL,
+        ...PRODUCTION_IDLE_CULL,
       });
       sim.addItem('potion_of_invisibility', 1);
       sim.useItem('potion_of_invisibility');
@@ -330,7 +329,7 @@ describe('Allied Faction World Quest Rewards & Toys', () => {
         seed: SEED,
         playerClass: 'warrior',
         autoEquip: false,
-        idleMobTickRadius: CULL,
+        ...PRODUCTION_IDLE_CULL,
       });
       const initialArmor = sim.player.stats.armor;
 
@@ -348,7 +347,7 @@ describe('Allied Faction World Quest Rewards & Toys', () => {
         seed: SEED,
         playerClass: 'warrior',
         autoEquip: false,
-        idleMobTickRadius: CULL,
+        ...PRODUCTION_IDLE_CULL,
       });
       const meta = sim.meta(sim.playerId)!;
 
@@ -379,7 +378,7 @@ describe('Allied Faction World Quest Rewards & Toys', () => {
         seed: SEED,
         playerClass: 'warrior',
         autoEquip: false,
-        idleMobTickRadius: CULL,
+        ...PRODUCTION_IDLE_CULL,
       });
       const meta = sim.meta(sim.playerId)!;
       sim.addItem('clockwork_shock_bomb', 2);

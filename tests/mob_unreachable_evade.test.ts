@@ -11,12 +11,8 @@ import { createMob } from '../src/sim/entity';
 import { CHASE_STALL_TIMEOUT } from '../src/sim/mob/reachability';
 import { generateRiftFloor } from '../src/sim/rift/rift_gen';
 import { Sim } from '../src/sim/sim';
-import {
-  dist2d,
-  type Entity,
-  NYTHRAXIS_ADD_ID,
-  PLAYER_INTEREST_DROP_RADIUS,
-} from '../src/sim/types';
+import { dist2d, type Entity, NYTHRAXIS_ADD_ID } from '../src/sim/types';
+import { PRODUCTION_IDLE_CULL } from './helpers/production_idle_cull';
 
 // A plain rectangular floor-0 room (no shell polygon) keeps the wall face at a
 // known |x| = wallX so the pin geometry is exact, and a modest wallX keeps the
@@ -53,7 +49,7 @@ function worldSim(extra: { devCommands?: boolean } = {}): Sim {
     seed: WORLD_SEED,
     playerClass: 'warrior',
     autoEquip: true,
-    idleMobTickRadius: PLAYER_INTEREST_DROP_RADIUS,
+    ...PRODUCTION_IDLE_CULL,
     ...extra,
   });
 }

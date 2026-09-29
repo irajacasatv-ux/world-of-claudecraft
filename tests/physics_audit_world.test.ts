@@ -35,8 +35,9 @@ import {
   TOWN_WALL_TALL_PILLAR_ALONG,
 } from '../src/sim/prop_layout';
 import { Sim } from '../src/sim/sim';
-import { type MoveInput, PLAYER_INTEREST_DROP_RADIUS } from '../src/sim/types';
+import type { MoveInput } from '../src/sim/types';
 import { groundHeight, terrainHeight } from '../src/sim/world';
+import { PRODUCTION_IDLE_CULL } from './helpers/production_idle_cull';
 
 // The physics-asset audit, world half (docs/design/physics-asset-audit.md):
 // every town standable reachable and stable, every full-height prop a real
@@ -67,7 +68,7 @@ function makeSim(): Sim {
     playerClass: 'warrior',
     autoEquip: true,
     devCommands: true,
-    idleMobTickRadius: PLAYER_INTEREST_DROP_RADIUS,
+    ...PRODUCTION_IDLE_CULL,
   });
   sim.setPlayerLevel(60);
   return sim;

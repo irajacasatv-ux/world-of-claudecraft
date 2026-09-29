@@ -11,8 +11,9 @@
 // new legs on the shared Sim and keep each leg's tick budget tight.
 import { beforeAll, describe, expect, it } from 'vitest';
 import { Sim } from '../src/sim/sim';
-import { type MoveInput, PLAYER_INTEREST_DROP_RADIUS } from '../src/sim/types';
+import type { MoveInput } from '../src/sim/types';
 import { WORLD_SEED } from '../src/sim/world_seed';
+import { PRODUCTION_IDLE_CULL } from './helpers/production_idle_cull';
 
 const input = (over: Partial<MoveInput> = {}): MoveInput => ({
   forward: false,
@@ -64,7 +65,7 @@ beforeAll(() => {
     seed: WORLD_SEED,
     playerClass: 'warrior',
     autoEquip: true,
-    idleMobTickRadius: PLAYER_INTEREST_DROP_RADIUS,
+    ...PRODUCTION_IDLE_CULL,
   });
   sim.setPlayerLevel(60);
   // Park every mob near the fortress far away so aggro and knockback never

@@ -11,12 +11,8 @@ import {
 import { IGNIVAR_WATER_CONDUIT_TEMPLATES } from '../../src/sim/ignivar_arena';
 import { detachFromDungeon, enterDungeon } from '../../src/sim/instances/dungeons';
 import { Sim } from '../../src/sim/sim';
-import {
-  type Entity,
-  IGNIVAR_BOSS_ID,
-  PLAYER_INTEREST_DROP_RADIUS,
-  type PlayerClass,
-} from '../../src/sim/types';
+import { type Entity, IGNIVAR_BOSS_ID, type PlayerClass } from '../../src/sim/types';
+import { PRODUCTION_IDLE_CULL } from './production_idle_cull';
 
 // Production's idle culling (the server and the offline client both set it):
 // the raid sits in its own instance, so the overworld's idle population is out
@@ -27,7 +23,7 @@ function encounterSim(seed: number): Sim {
     seed,
     playerClass: 'warrior',
     devCommands: true,
-    idleMobTickRadius: PLAYER_INTEREST_DROP_RADIUS,
+    ...PRODUCTION_IDLE_CULL,
   });
 }
 
