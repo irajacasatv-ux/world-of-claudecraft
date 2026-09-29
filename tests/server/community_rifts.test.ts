@@ -228,9 +228,12 @@ describe('rift population boot and persistence (one-per-zone rotation)', () => {
   });
 });
 
+// The capacity cases build the file's boot seed (the shipped one): the slot
+// pool and the event cap read no seed, and a fresh seed pays its own
+// overworld bootstrap.
 describe('rift instance capacity', () => {
   it('allocates the full slot pool and maps the final slot back to its own origin', () => {
-    const sim = new Sim({ seed: 99221, playerClass: 'warrior', noPlayer: true, riftPortals: true });
+    const sim = new Sim({ seed: 20061, playerClass: 'warrior', noPlayer: true, riftPortals: true });
     // Literal pins: the pool and cap values are the tuning under test, so a
     // silent constant change must fail here, not just shift both sides.
     expect(RIFT_SLOT_COUNT).toBe(64);
@@ -241,7 +244,7 @@ describe('rift instance capacity', () => {
   });
 
   it('admits solo groups up to the per-event cap and rejects the next cleanly', () => {
-    const sim = new Sim({ seed: 77441, playerClass: 'warrior', noPlayer: true, riftPortals: true });
+    const sim = new Sim({ seed: 20061, playerClass: 'warrior', noPlayer: true, riftPortals: true });
     const pids = Array.from({ length: RIFT_EVENT_INSTANCE_CAP + 1 }, (_, index) =>
       sim.addPlayer('warrior', `Rifter${index}`),
     );
@@ -265,7 +268,7 @@ describe('rift instance capacity', () => {
   });
 
   it('caps a natural PORTAL event the same way, with free slots remaining', () => {
-    const sim = new Sim({ seed: 77441, playerClass: 'warrior', noPlayer: true, riftPortals: true });
+    const sim = new Sim({ seed: 20061, playerClass: 'warrior', noPlayer: true, riftPortals: true });
     expect(spawnNaturalRiftPortal(sim.ctx, 0)).toBe(true);
     const info = sim.naturalRiftPortals[0];
     const portal = sim.entities.get(info.id)!;
