@@ -24,6 +24,11 @@ function activatePuzzle(sim: Sim, questId: string, objectItemId: string): void {
   expect(sim.pickUpObject(object.id)).toBe(true);
 }
 
+// One seed for every Sim: the circuit variant follows the reset day, never the
+// seed, and a Sim on a seed the file already built skips the collider
+// bootstrap a fresh seed pays.
+const SEED = 991;
+
 // These literal move scripts pin the retained authored/dev levels. Procedural
 // production attempts are covered by world_quest_daily_levels.test.ts.
 function useAuthoredLevels(sim: Sim): void {
@@ -83,7 +88,7 @@ describe('world quest beam puzzle', () => {
   it('persists detached turns, rejects invalid input, reopens, and rewards the solution once', () => {
     const { quest } = puzzleFixture();
     if (quest.objective.type !== 'puzzle') throw new Error('Expected beam-puzzle fixture');
-    const sim = new Sim({ seed: 991, playerClass: 'warrior', autoEquip: true });
+    const sim = new Sim({ seed: SEED, playerClass: 'warrior', autoEquip: true });
     sim.setPlayerLevel(20);
     sim.resetDay = '2026-08-31';
     useAuthoredLevels(sim);
@@ -169,7 +174,7 @@ describe('world quest beam puzzle', () => {
     ] as const;
     for (const [resetDay, variant] of weeks) {
       const original = new Sim({
-        seed: 1_100 + variant,
+        seed: SEED,
         playerClass: 'warrior',
         autoEquip: true,
       });
@@ -189,7 +194,7 @@ describe('world quest beam puzzle', () => {
       expect(state.worldQuests?.progress[0]?.puzzleExpiresAt).toBeUndefined();
 
       const restored = new Sim({
-        seed: 1_100 + variant,
+        seed: SEED,
         playerClass: 'warrior',
         noPlayer: true,
       });
@@ -223,7 +228,7 @@ describe('world quest beam puzzle', () => {
 
   it('expires the puzzle after the 90s timer and allows reset and retry', () => {
     const { quest } = puzzleFixture();
-    const sim = new Sim({ seed: 100, playerClass: 'mage' });
+    const sim = new Sim({ seed: SEED, playerClass: 'mage' });
     sim.setPlayerLevel(60);
     sim.resetDay = '2026-08-31';
     useAuthoredLevels(sim);
