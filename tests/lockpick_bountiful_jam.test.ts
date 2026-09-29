@@ -94,7 +94,7 @@ describe('Bountiful lockpick, flawless sim path', () => {
       sim.lockpickAction(solveLockActions(curSpec(run))![run.lockpick.col]!);
       drain(sim);
     }
-    expect(run.objectState[chestId].looted).toBe(true);
+    expect(run.objectState[chestId].lootedTier).toBe('premium');
   });
 });
 
@@ -124,7 +124,9 @@ describe('Bountiful lockpick, the old jam is gone (authoritative-state picking)'
           const col = sim.lockpickState!.col; // authoritative; never stale
           sim.lockpickAction(solveLockActions(curSpec(run))![col]!);
         }
-        if (run.objectState[chestId].looted) opened++;
+        // A burnt single try still loots (the low consolation tier), so only the
+        // premium grant counts as the lock opening.
+        if (run.objectState[chestId].lootedTier === 'premium') opened++;
       }
       expect(opened).toBe(N);
       expect(layouts.size, 'every rng state dealt its own lock').toBe(N);
