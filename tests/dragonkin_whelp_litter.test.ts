@@ -102,26 +102,18 @@ describe('dragonkin whelps do not litter the brood belt', () => {
     expect(MOBS[WHELP]).toBeTruthy();
   });
 
-  it('unravels the hatchlings a walker leaves behind', { timeout: 120_000 }, () => {
+  // One walker, three laps: the first lap is the single-crossing case (the
+  // loose hatchlings unravel and leave the roster), the next two show the belt
+  // never keeps a layer. One Sim serves both claims; a separate single-lap
+  // case re-ran this first lap, walk and idle window alike.
+  it('unravels the hatchlings a walker leaves behind, lap after lap', { timeout: 180_000 }, () => {
     const { sim, player } = beltWorld();
     expect(liveCount(sim, WHELP), 'no whelps before any egg cracks').toBe(0);
-    walkTheBelt(sim, player);
-    const hatched = liveCount(sim, WHELP);
-    expect(hatched, 'walking the clutches hatches whelps').toBeGreaterThan(5);
-
-    // The walker moves on (back at the Last Keep, well clear of the belt) and
-    // the loose hatchlings are left alone past the idle window.
-    stand(sim, player, 355, 2013, DAMAGE_IDLE_DESPAWN_SECONDS + 20);
-    expect(liveCount(sim, WHELP), `left-behind hatchlings unravel (had ${hatched})`).toBe(0);
-    // Gone from the roster, not just flagged dead: an unravelled add is dropped.
-    expect([...sim.entities.values()].filter((e) => e.templateId === WHELP).length).toBe(0);
-  });
-
-  it('does not grow the belt lap after lap', { timeout: 180_000 }, () => {
-    const { sim, player } = beltWorld();
     const laps: number[] = [];
     for (let lap = 0; lap < 3; lap++) {
       walkTheBelt(sim, player);
+      const hatched = liveCount(sim, WHELP);
+      if (lap === 0) expect(hatched, 'walking the clutches hatches whelps').toBeGreaterThan(5);
       // Re-clutch every cracked egg, the camp cadence elapsing between laps.
       for (const e of [...sim.entities.values()]) {
         if (!MOBS[e.templateId]?.broodEgg) continue;
@@ -129,8 +121,15 @@ describe('dragonkin whelps do not litter the brood belt', () => {
         e.respawnTimer = 0;
         e.corpseTimer = 0;
       }
+      // The walker moves on (back at the Last Keep, well clear of the belt) and
+      // the loose hatchlings are left alone past the idle window.
       stand(sim, player, 355, 2013, DAMAGE_IDLE_DESPAWN_SECONDS + 20);
       laps.push(liveCount(sim, WHELP));
+      if (lap === 0) {
+        expect(liveCount(sim, WHELP), `left-behind hatchlings unravel (had ${hatched})`).toBe(0);
+        // Gone from the roster, not just flagged dead: an unravelled add is dropped.
+        expect([...sim.entities.values()].filter((e) => e.templateId === WHELP).length).toBe(0);
+      }
     }
     // Before the fix this read 21, 42, then 63: one permanent layer per lap, and
     // over the WHOLE belt rather than this slice, 92, 184, then 267.
