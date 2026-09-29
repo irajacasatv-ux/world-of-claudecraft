@@ -32,8 +32,10 @@ const TEN = { tank: 2, healer: 2, dps: 6 };
 // never spawns, fights, loots, or otherwise reaches for a camp, npc, or
 // ground object, so the ambient built-in world is unnecessary overhead
 // (subsystem-world pattern, docs/local-gate-perf/baselines.md Phase 9).
-const makeSim = (seed = 42) =>
-  new Sim({ seed, playerClass: 'warrior', noPlayer: true, world: EMPTY_TEST_WORLD });
+// One seed for every Sim: the finder reads no seed, and a Sim on a seed the
+// file already built skips the collider bootstrap a fresh seed pays.
+const makeSim = () =>
+  new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true, world: EMPTY_TEST_WORLD });
 
 function specIdFor(cls: PlayerClass, role: Role): string {
   const specs = TALENTS[cls]?.specs ?? [];
@@ -606,7 +608,7 @@ describe('automatic queue', () => {
     expect(errorsFor(tickAll(sim, 1), lead)).toContain('Mate cannot join the queue again yet.');
 
     // Arm 2: the same premade, with the mate silent until the offer runs out.
-    const sim2 = makeSim(7);
+    const sim2 = makeSim();
     const [lead2, mate2, ...solos2] = addPlayers(sim2, defs);
     sim2.partyInvite(mate2, lead2);
     sim2.partyAccept(mate2);
@@ -664,7 +666,7 @@ describe('automatic queue', () => {
       'gravewyrm_sanctum_normal',
     );
 
-    const sim2 = makeSim(7);
+    const sim2 = makeSim();
     const pids2 = addPlayers(sim2, [
       { cls: 'warrior', roles: ['tank'], level: 20 },
       { cls: 'priest', roles: ['healer'], level: 20 },
@@ -875,7 +877,7 @@ describe('automatic queue', () => {
 
   it('is deterministic: the same scenario yields the same assignments twice', () => {
     const run = () => {
-      const sim = makeSim(1234);
+      const sim = makeSim();
       const { pids } = queueFive(sim);
       const roles = pids.map((pid) => sim.dungeonFinderInfoFor(pid)?.proposal?.role ?? null);
       acceptAll(sim, pids);
