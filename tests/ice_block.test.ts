@@ -6,9 +6,12 @@ import { MOBS } from '../src/sim/data';
 import { createMob } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
 import type { Aura, Entity } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
+// EMPTY_TEST_WORLD: every case fights a target it spawns itself or none, so the
+// ambient overworld (camps, NPCs, ground objects) is pure construction and tick cost.
 function rigMage(spec: 'frost' | 'fire' | 'arcane' | null = null) {
-  const sim = new Sim({ seed: 17, playerClass: 'mage', autoEquip: true });
+  const sim = new Sim({ seed: 17, playerClass: 'mage', autoEquip: true, world: EMPTY_TEST_WORLD });
   sim.setPlayerLevel(20);
   if (spec) expect(sim.setSpec(spec)).toBe(true); // Ice Block is base kit, no talent needed
   sim.tick();
