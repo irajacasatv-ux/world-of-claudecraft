@@ -18,9 +18,12 @@ import {
   usePassingStone,
 } from '../src/sim/tutorial/death_lesson';
 import type { Entity, QuestProgress, SimEvent } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
+// The rite, the credit and the spirit walk read the player, the quest log and
+// the graveyards (world services), never a camp or an NPC: the empty world serves.
 function makeSim(seed = 7311): Sim {
-  return new Sim({ seed, playerClass: 'warrior', autoEquip: true });
+  return new Sim({ seed, playerClass: 'warrior', autoEquip: true, world: EMPTY_TEST_WORLD });
 }
 
 function seedActiveLesson(sim: Sim): QuestProgress {
