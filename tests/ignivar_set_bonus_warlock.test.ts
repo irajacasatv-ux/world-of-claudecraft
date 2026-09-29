@@ -40,7 +40,7 @@ import { createMob } from '../src/sim/entity';
 import { computeCharacterModifiers } from '../src/sim/set_bonus_mods';
 import { Sim } from '../src/sim/sim';
 import { resolveTalentHitMult } from '../src/sim/talent_hit_mult';
-import type { Entity, SimEvent } from '../src/sim/types';
+import { type Entity, PLAYER_INTEREST_DROP_RADIUS, type SimEvent } from '../src/sim/types';
 import { expectDefined } from './helpers/defined';
 
 const SET_SLOTS = ['helmet', 'shoulder', 'chest', 'gloves', 'legs'] as const;
@@ -62,8 +62,21 @@ function equipSet(sim: Sim, setId: string, pieces: number): void {
   }
 }
 
-function liveWarlock(seed: number, spec: 'affliction' | 'demonology' | 'destruction'): Sim {
-  const sim = new Sim({ seed, playerClass: 'warlock', autoEquip: true });
+// Production's idle culling (the server and the offline client both set it)
+// by default: the cast and cooldown waits below stop paying for the far
+// overworld's idle AI. `cull: false` keeps the unculled shared rng stream for
+// the one case whose two damage rolls were probed against it.
+function liveWarlock(
+  seed: number,
+  spec: 'affliction' | 'demonology' | 'destruction',
+  cull = true,
+): Sim {
+  const sim = new Sim({
+    seed,
+    playerClass: 'warlock',
+    autoEquip: true,
+    idleMobTickRadius: cull ? PLAYER_INTEREST_DROP_RADIUS : 0,
+  });
   sim.setPlayerLevel(20);
   expect(sim.setSpec(spec)).toBe(true);
   sim.player.resource = sim.player.maxResource;
@@ -176,7 +189,7 @@ describe('Hexthread 2pc: Needle of Fate grants 2 additional Condemnation', () =>
     expect(entryDoom(worn('hexthread', 2))).toBe(7 + HEXTHREAD_2PC_NEEDLE_DOOM_BONUS);
 
     // The live recompute: equipping resolves 9, unequipping back to 7.
-    const sim = liveWarlock(511, 'affliction');
+    const sim = liveWarlock(518, 'affliction');
     equipSet(sim, 'hexthread', 2);
     expect(resolvedNeedleDoom(sim)).toBe(7 + HEXTHREAD_2PC_NEEDLE_DOOM_BONUS);
     sim.unequipItem('helmet');
@@ -185,7 +198,7 @@ describe('Hexthread 2pc: Needle of Fate grants 2 additional Condemnation', () =>
 
   it('a landed Needle on the primary Eye generates 9 through the real cast path (control 7)', () => {
     function doomAfterNeedle(wearer: boolean): number {
-      const sim = liveWarlock(512, 'affliction');
+      const sim = liveWarlock(518, 'affliction');
       if (wearer) equipSet(sim, 'hexthread', 2);
       const target = addHostileTarget(sim);
       finishCast(sim, 'needle_of_fate', target);
@@ -197,7 +210,7 @@ describe('Hexthread 2pc: Needle of Fate grants 2 additional Condemnation', () =>
 
   it('the secondary Coven Eye x0.5-with-rounding pays +1 (a +1 bonus would pay zero)', () => {
     function doomThroughSecondaryEye(wearer: boolean): number {
-      const sim = liveWarlock(513, 'affliction');
+      const sim = liveWarlock(518, 'affliction');
       if (wearer) equipSet(sim, 'hexthread', 2);
       const host = sim as unknown as { ctx: Parameters<typeof resolveNeedleOfFate>[0] };
       const target = addHostileTarget(sim);
@@ -222,7 +235,7 @@ describe('Hexthread 2pc: Needle of Fate grants 2 additional Condemnation', () =>
 
   it('Hour of Judgment doubles the whole payload on the primary Eye (18 vs 14)', () => {
     function doomUnderJudgment(wearer: boolean): number {
-      const sim = liveWarlock(514, 'affliction');
+      const sim = liveWarlock(518, 'affliction');
       if (wearer) equipSet(sim, 'hexthread', 2);
       const host = sim as unknown as { ctx: Parameters<typeof resolveNeedleOfFate>[0] };
       const target = addHostileTarget(sim);
@@ -249,7 +262,7 @@ describe('Hexthread 2pc: Needle of Fate grants 2 additional Condemnation', () =>
 
 describe('Hexthread 4pc: Passing Sentence refunds 10 Condemnation', () => {
   function doomAfterSentence(wearer: boolean, withJudgment = false): number {
-    const sim = liveWarlock(515, 'affliction');
+    const sim = liveWarlock(518, 'affliction');
     if (wearer) equipSet(sim, 'hexthread', 4);
     const host = sim as unknown as { ctx: Parameters<typeof resolveSentence>[0] };
     const target = addHostileTarget(sim);
@@ -283,7 +296,7 @@ describe('Hexthread 4pc: Passing Sentence refunds 10 Condemnation', () => {
   });
 
   it('pays nothing on a sub-20 Sentence resolve (the early return filters first)', () => {
-    const sim = liveWarlock(516, 'affliction');
+    const sim = liveWarlock(518, 'affliction');
     equipSet(sim, 'hexthread', 4);
     const host = sim as unknown as { ctx: Parameters<typeof resolveSentence>[0] };
     const target = addHostileTarget(sim);
@@ -327,7 +340,7 @@ describe("Gravebrand 2pc: Reaping Command's cooldown drops 8 to 6", () => {
 
 describe('Gravebrand 4pc: unison strikes deal 25 percent more damage', () => {
   function reapDamage(wearer: boolean): { primary: number; riders: Entity['auras'] } {
-    const sim = liveWarlock(517, 'demonology');
+    const sim = liveWarlock(518, 'demonology');
     if (wearer) equipSet(sim, 'gravebrand', 4);
     const target = addHostileTarget(sim);
     finishCast(sim, 'raise_graveguard');
@@ -374,7 +387,7 @@ describe('Gravebrand 4pc: unison strikes deal 25 percent more damage', () => {
   });
 
   it('an owner gear swap mid-fight moves the very next command (no pet-side state)', () => {
-    const sim = liveWarlock(518, 'demonology');
+    const sim = liveWarlock(518, 'demonology', false);
     const target = addHostileTarget(sim);
     finishCast(sim, 'raise_graveguard');
     for (let fragment = 0; fragment < 4; fragment++) finishCast(sim, 'soul_harvest', target);
@@ -419,7 +432,7 @@ describe('Ruincaller 2pc: Conflagrate holds 3 charges', () => {
   });
 
   it('a wearer spends three stored uses back to back; the fourth is rejected', () => {
-    const sim = liveWarlock(519, 'destruction');
+    const sim = liveWarlock(518, 'destruction');
     equipSet(sim, 'ruincaller', 2);
     const target = addHostileTarget(sim);
     sim.targetEntity(target.id);
@@ -441,7 +454,7 @@ describe('Ruincaller 2pc: Conflagrate holds 3 charges', () => {
   });
 
   it('an unequip mid-fight clamps the pool to 2 and never grants a free charge', () => {
-    const sim = liveWarlock(520, 'destruction');
+    const sim = liveWarlock(518, 'destruction');
     equipSet(sim, 'ruincaller', 2);
     const target = addHostileTarget(sim);
     sim.targetEntity(target.id);
@@ -462,7 +475,7 @@ describe('Ruincaller 2pc: Conflagrate holds 3 charges', () => {
   });
 
   it('an unequip on an empty pool keeps one recharge timer per missing charge', () => {
-    const sim = liveWarlock(521, 'destruction');
+    const sim = liveWarlock(518, 'destruction');
     equipSet(sim, 'ruincaller', 2);
     const target = addHostileTarget(sim);
     sim.targetEntity(target.id);
@@ -490,7 +503,7 @@ describe('Ruincaller 2pc: Conflagrate holds 3 charges', () => {
 
   it('an unequip keeps no timer on a full pool and one per missing charge otherwise', () => {
     const conflagratePool = (charges: number, recharges: number[]) => {
-      const sim = liveWarlock(522, 'destruction');
+      const sim = liveWarlock(518, 'destruction');
       equipSet(sim, 'ruincaller', 2);
       // Extra timers beside the missing charges: the shape a pre-fix reset
       // could leave (a live pool, or one restored from such a save).
@@ -515,7 +528,7 @@ describe('Ruincaller 2pc: Conflagrate holds 3 charges', () => {
   });
 
   it('an unequip that empties the pool blocks a cast before the next tick', () => {
-    const sim = liveWarlock(523, 'destruction');
+    const sim = liveWarlock(518, 'destruction');
     equipSet(sim, 'ruincaller', 2);
     const target = addHostileTarget(sim);
     sim.targetEntity(target.id);

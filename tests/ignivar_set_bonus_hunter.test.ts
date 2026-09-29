@@ -40,7 +40,12 @@ import { createMob } from '../src/sim/entity';
 import { computeCharacterModifiers } from '../src/sim/set_bonus_mods';
 import { type ResolvedAbility, Sim } from '../src/sim/sim';
 import type { SimContext } from '../src/sim/sim_context';
-import type { Aura, Entity, SimEvent } from '../src/sim/types';
+import {
+  type Aura,
+  type Entity,
+  PLAYER_INTEREST_DROP_RADIUS,
+  type SimEvent,
+} from '../src/sim/types';
 import { expectDefined } from './helpers/defined';
 
 const SET_SLOTS = ['helmet', 'shoulder', 'chest', 'gloves', 'legs'] as const;
@@ -117,7 +122,14 @@ function equipSet(sim: Sim, setId: string, pieces: number): void {
 }
 
 function hunterSim(spec: string, seed: number): TestSim {
-  const sim = new Sim({ seed, playerClass: 'hunter', autoEquip: true }) as TestSim;
+  // Production's idle culling (the server and the offline client both set it):
+  // the long cooldown waits below stop paying for the far overworld's idle AI.
+  const sim = new Sim({
+    seed,
+    playerClass: 'hunter',
+    autoEquip: true,
+    idleMobTickRadius: PLAYER_INTEREST_DROP_RADIUS,
+  }) as TestSim;
   sim.setPlayerLevel(25);
   expect(sim.setSpec(spec)).toBe(true);
   return sim;
@@ -224,7 +236,7 @@ describe('Packlord 2pc: the Pack Command cooldown row', () => {
 });
 
 describe('Packlord 4pc: the Stampede reset threshold', () => {
-  function packlordSim(pieces: number, seed = 4101): { sim: TestSim; target: Entity } {
+  function packlordSim(pieces: number, seed = 4111): { sim: TestSim; target: Entity } {
     const sim = hunterSim('beast_mastery', seed);
     if (pieces > 0) equipSet(sim, 'packlord_emberhide', pieces);
     const target = addTarget(sim, 3);
@@ -277,7 +289,7 @@ describe('Packlord 4pc: the Stampede reset threshold', () => {
   });
 
   it('a passed wearer roll arms the same Stampede Ready machinery', () => {
-    const wearer = packlordSim(4, 4103);
+    const wearer = packlordSim(4);
     // Pass ONLY the wearer's reset roll: everything else (the pet strike's
     // miss and crit rolls) keeps failing, so the strike still lands.
     const spy = vi
@@ -291,7 +303,7 @@ describe('Packlord 4pc: the Stampede reset threshold', () => {
   });
 
   it('the worn cooldown row reaches the live Pack Command clock', () => {
-    const wearer = packlordSim(4, 4104);
+    const wearer = packlordSim(4);
     wearer.sim.player.auras = wearer.sim.player.auras.filter(
       (aura) => aura.kind !== 'hunter_ferocity',
     );
@@ -446,7 +458,7 @@ describe('Coldsight 4pc: Long Draw criticals extend the window', () => {
     // The pin is re-applied every tick because recalcPlayerStats rewrites
     // critChance from gear during the projectile's flight.
     function longDrawRun(critChance: number): TestSim {
-      const sim = hunterSim('marksmanship', 4121);
+      const sim = hunterSim('marksmanship', 4111);
       equipSet(sim, 'coldsight_trackers', 4);
       const target = addTarget(sim, 20);
       sim.targetEntity(target.id);
@@ -578,7 +590,7 @@ describe('Slagsnare 4pc: the Woundrend preserve and its 8 sec lockout', () => {
 
   it('live control pair: the wearer keeps 3 Hunting Momentum through a Woundrend tear', () => {
     function fieldcraftRun(pieces: number): TestSim {
-      const sim = hunterSim('survival', 4131);
+      const sim = hunterSim('survival', 4111);
       if (pieces > 0) equipSet(sim, 'slagsnare', pieces);
       const target = addTarget(sim, 2);
       sim.targetEntity(target.id);

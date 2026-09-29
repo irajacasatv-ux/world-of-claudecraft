@@ -253,7 +253,7 @@ describe("Chronoweave 4pc: Temporal Cascade's cooldown drops 17 to 12", () => {
 
 describe('Pyroclast 2pc: Scald always crits at or below 35 percent health', () => {
   function critBand(wearer: boolean, hpFraction: number): boolean {
-    const sim = liveMage(452, 'fire');
+    const sim = liveMage(451, 'fire');
     if (wearer) equipSet(sim, 'pyroclast', 2);
     const mob = addHostileMob(sim);
     mob.hp = Math.round(mob.maxHp * hpFraction);
@@ -278,7 +278,7 @@ describe('Pyroclast 2pc: Scald always crits at or below 35 percent health', () =
     // full-health dummy, so the execute band is proven here through the REAL
     // cast path with the natural crit roll pinned to a miss.
     function scaldCrit(wearer: boolean): boolean {
-      const sim = liveMage(453, 'fire');
+      const sim = liveMage(451, 'fire');
       if (wearer) equipSet(sim, 'pyroclast', 2);
       const mob = addHostileMob(sim);
       mob.hp = Math.round(mob.maxHp * 0.33);
@@ -313,7 +313,7 @@ describe('Pyroclast 4pc: builder crits outside Phoenix Trance shave 2 sec, up fr
     wearer: boolean,
     opts: { inTrance?: boolean; abilityId?: string } = {},
   ): number {
-    const sim = liveMage(454, 'fire');
+    const sim = liveMage(451, 'fire');
     if (wearer) equipSet(sim, 'pyroclast', 4);
     if (opts.inTrance) {
       sim.ctx.applyAura(sim.player, {
@@ -348,7 +348,7 @@ describe('Pyroclast 4pc: builder crits outside Phoenix Trance shave 2 sec, up fr
 describe('Frostquench 2pc: Rimelance criticals bank a second Icicle', () => {
   it('a critting Rimelance banks 2 through the real cast path (control 1)', () => {
     function icicleCount(wearer: boolean): number {
-      const sim = liveMage(455, 'frost');
+      const sim = liveMage(451, 'frost');
       if (wearer) equipSet(sim, 'frostquench', 2);
       const mob = addHostileMob(sim);
       sim.rng.chance = () => true; // every roll passes: the impact CRITS
@@ -363,7 +363,7 @@ describe('Frostquench 2pc: Rimelance criticals bank a second Icicle', () => {
   });
 
   it('the 5-Icicle cap stands: at 4 banked, a crit impact tops out at 5', () => {
-    const sim = liveMage(456, 'frost');
+    const sim = liveMage(451, 'frost');
     equipSet(sim, 'frostquench', 2);
     for (let i = 0; i < ICICLE_MAX - 1; i++) gainIcicle(sim.ctx, sim.player);
     // One crit impact: the bonus icicle (noteSpellHit seam) plus the base
@@ -374,17 +374,17 @@ describe('Frostquench 2pc: Rimelance criticals bank a second Icicle', () => {
   });
 
   it('non-crits, non-wearers, and non-frost wearers bank nothing extra', () => {
-    const wearerSim = liveMage(457, 'frost');
+    const wearerSim = liveMage(451, 'frost');
     equipSet(wearerSim, 'frostquench', 2);
     frostMageOnSpellHit(wearerSim.ctx, wearerSim.player, 'frostbolt', false);
     expect(frostIcicleCharges(wearerSim.player.auras)).toBe(0);
 
-    const controlSim = liveMage(458, 'frost');
+    const controlSim = liveMage(451, 'frost');
     frostMageOnSpellHit(controlSim.ctx, controlSim.player, 'frostbolt', true);
     expect(frostIcicleCharges(controlSim.player.auras)).toBe(0);
 
     // A fire mage wearing the frost set: the bank is committed-frost only.
-    const fireSim = liveMage(459, 'fire');
+    const fireSim = liveMage(451, 'fire');
     equipSet(fireSim, 'frostquench', 2);
     frostMageOnSpellHit(fireSim.ctx, fireSim.player, 'frostbolt', true);
     expect(frostIcicleCharges(fireSim.player.auras)).toBe(0);
@@ -393,7 +393,7 @@ describe('Frostquench 2pc: Rimelance criticals bank a second Icicle', () => {
 
 describe("Frostquench 4pc: Winterlash plants 3 Winter's Chill charges, up from 2", () => {
   function chillCharges(wearer: boolean): number | undefined {
-    const sim = liveMage(460, 'frost');
+    const sim = liveMage(451, 'frost');
     if (wearer) equipSet(sim, 'frostquench', 4);
     const mob = addHostileMob(sim);
     const meta = expectDefined(sim.ctx.players.get(sim.player.id));
@@ -408,7 +408,7 @@ describe("Frostquench 4pc: Winterlash plants 3 Winter's Chill charges, up from 2
   });
 
   it('the refresh branch restores a part-spent debuff to 3 for wearers', () => {
-    const sim = liveMage(461, 'frost');
+    const sim = liveMage(451, 'frost');
     equipSet(sim, 'frostquench', 4);
     const mob = addHostileMob(sim);
     applyWintersChill(sim.ctx, sim.player, mob);

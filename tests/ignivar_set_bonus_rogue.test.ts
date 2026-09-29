@@ -158,7 +158,7 @@ describe('Cinderfang 2pc: the Venom Ritual refund readers', () => {
   });
 
   it('stays per builder CAST, unconditional at the stage cap', () => {
-    const wearer = rogueSim('assassination', 5102);
+    const wearer = rogueSim('assassination', 5101);
     equipSet(wearer, 'cinderfang', 2);
     for (let cast = 0; cast < 6; cast++) rogueEngineOnCast(wearer.ctx, wearer.player, 'backstab');
     const ritual = expectDefined(wearer.player.auras.find((a) => a.id === 'venom_ritual'));
@@ -169,7 +169,7 @@ describe('Cinderfang 2pc: the Venom Ritual refund readers', () => {
   });
 
   it('the Wicked Slash fallback stays excluded: the anti-self-funding guard is not widened', () => {
-    const wearer = rogueSim('assassination', 5103);
+    const wearer = rogueSim('assassination', 5101);
     equipSet(wearer, 'cinderfang', 2);
     wearer.player.resource = 40;
     rogueEngineOnCast(wearer.ctx, wearer.player, 'sinister_strike');
@@ -182,7 +182,7 @@ describe('Cinderfang 2pc: the Venom Ritual refund readers', () => {
     // Cost 25 is billed at cast; the refund lands at cast completion, both
     // synchronous for an instant, so no regen ticks blur the arithmetic.
     function dartRun(pieces: number): number {
-      const sim = rogueSim('assassination', 5104);
+      const sim = rogueSim('assassination', 5101);
       if (pieces > 0) equipSet(sim, 'cinderfang', pieces);
       const target = addTarget(sim, 3);
       sim.targetEntity(target.id);
@@ -208,7 +208,7 @@ describe('Cinderfang 4pc: the Venom Dart cooldown row', () => {
   });
 
   it('the worn cooldown row reaches the live Venom Dart clock', () => {
-    const sim = rogueSim('assassination', 5111);
+    const sim = rogueSim('assassination', 5101);
     equipSet(sim, 'cinderfang', 4);
     const target = addTarget(sim, 3);
     sim.targetEntity(target.id);
@@ -232,7 +232,7 @@ describe('Smolderstrike 2pc: the Haymaker damage row through the transform re-ba
     // authored numbers: bonus round(10 x 1.36) = 14 (control round(11.6) =
     // 12) and weaponMult 1.3 x 1.36 (control 1.3 x 1.16).
     function resolvedHaymaker(pieces: number) {
-      const sim = rogueSim('combat', 5121);
+      const sim = rogueSim('combat', 5101);
       if (pieces > 0) equipSet(sim, 'smolderstrike', pieces);
       sim.player.auras.push(redlineWindow(sim.playerId));
       const resolved = expectDefined(sim.resolvedAbility('sinister_strike'));
@@ -322,7 +322,7 @@ describe('Smolderstrike 4pc: the Lights Out refund proc', () => {
     // Redline open at the runEffects tail is unconditional at 4+ spent combo,
     // so no hit-table outcome can flake this.
     function lightsOutRun(pieces: number): TestSim {
-      const sim = rogueSim('combat', 5131);
+      const sim = rogueSim('combat', 5101);
       if (pieces > 0) equipSet(sim, 'smolderstrike', pieces);
       const target = addTarget(sim, 2);
       sim.targetEntity(target.id);
@@ -385,7 +385,7 @@ describe('Ashveil 4pc: the Veiled Edge value bake and dynamic consume', () => {
     // returns 1 + value, the dynamic read the set doc verifies: 2 for
     // wearers, the base 1.5 for everyone else.
     function detonate(pieces: number): TestSim {
-      const sim = rogueSim('subtlety', 5141);
+      const sim = rogueSim('subtlety', 5101);
       if (pieces > 0) equipSet(sim, 'ashveil', pieces);
       sim.player.auras.push(gloamBank(sim.playerId));
       rogueGloamDetonation(sim.ctx, sim.player, 'ambush');
@@ -422,7 +422,7 @@ describe('Ashveil 4pc: the Veiled Edge value bake and dynamic consume', () => {
       !(e as { crit?: boolean }).crit;
 
     function veilRun(pieces: number): { edged: number; plain: number } {
-      const sim = rogueSim('subtlety', 5151);
+      const sim = rogueSim('subtlety', 5101);
       if (pieces > 0) equipSet(sim, 'ashveil', pieces);
       const target = addTarget(sim, 2);
       target.facing = Math.PI; // face to face: the armed bank waives behind

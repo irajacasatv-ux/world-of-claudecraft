@@ -191,7 +191,7 @@ describe('Stormkindled 2pc: Arc Overload triggers 30 percent of the time', () =>
 
 describe('Stormkindled 2pc retired its Unleash Weapon bend', () => {
   function unleashThunder(wearer: boolean, banked = 0): number {
-    const sim = liveShaman(733, 'elemental');
+    const sim = liveShaman(735, 'elemental');
     if (wearer) equipSet(sim, 'stormkindled', 2);
     const mob = addHostileMob(sim);
     sim.player.resource = sim.player.maxResource;
@@ -243,7 +243,7 @@ describe('Stormkindled 4pc: Magma Burst deals 20 percent more damage, delivered'
 
 describe("Stormkindled 4pc: Earthen Jolt's per-Thunder bonus rises to 30 percent", () => {
   function ventMultiplier(wearer: boolean, primal: boolean, abilityId = 'earth_shock'): number {
-    const sim = liveShaman(734, 'elemental');
+    const sim = liveShaman(735, 'elemental');
     if (wearer) equipSet(sim, 'stormkindled', 4);
     addThunderCharges(sim.ctx, sim.player, THUNDER_CHARGE_CAP);
     if (primal) armPrimalMastery(sim.ctx, sim.player);
@@ -270,7 +270,7 @@ describe("Stormkindled 4pc: Earthen Jolt's per-Thunder bonus rises to 30 percent
 
 describe('Warspirit Emberscale 2pc: Ancestral Strike advances the cadence 3 steps', () => {
   function strikeOnce(wearer: boolean): { stormcast: boolean; cadence: number } {
-    const sim = liveShaman(2821, 'enhancement');
+    const sim = liveShaman(735, 'enhancement');
     if (wearer) equipSet(sim, 'warspirit_emberscale', 2);
     applyWarspiritPosture(sim.ctx, sim.player, 'galeheart');
     const mob = addHostileMob(sim);
@@ -290,7 +290,7 @@ describe('Warspirit Emberscale 2pc: Ancestral Strike advances the cadence 3 step
     // Under Exaltation the cadence target clamps to 2, so total 3 completes
     // and carries min(target - 1, total - target) = min(1, 1) = 1, the
     // disclosed interplay.
-    const sim = liveShaman(2822, 'enhancement');
+    const sim = liveShaman(735, 'enhancement');
     equipSet(sim, 'warspirit_emberscale', 2);
     applyWarspiritPosture(sim.ctx, sim.player, 'galeheart');
     const mob = addHostileMob(sim);
@@ -320,7 +320,7 @@ describe('Warspirit Emberscale 2pc: Ancestral Strike advances the cadence 3 step
     // The talent's Stormcast-consume refund writes cadence 1 through the SAME
     // setCadence the strike advances: an amplification of the loop, never a
     // second currency. Proven at the engine seam with the talent selected.
-    const sim = new Sim({ seed: 2823, playerClass: 'shaman', autoEquip: true });
+    const sim = new Sim({ seed: 735, playerClass: 'shaman', autoEquip: true });
     sim.setPlayerLevel(20);
     expect(
       sim.applyTalents({ spec: 'enhancement', rows: { 20: SHAMAN_TALENT_IDS.deepReservoir } }),
@@ -362,7 +362,7 @@ describe('Stonehearth 2pc: Stormcast Mending Waters while Stonebound is free and
   }
 
   it('bills zero AFTER consuming the cheap charge, and the whole heal rises 25 percent', () => {
-    const sim = liveShaman(947, 'enhancement');
+    const sim = liveShaman(735, 'enhancement');
     equipSet(sim, 'stonehearth', 2);
     const mob = addHostileMob(sim);
     // Open a wide health deficit through the real pipeline, then pin the heal
@@ -413,7 +413,7 @@ describe('Stonehearth 2pc: Stormcast Mending Waters while Stonebound is free and
   });
 
   it('a wearer at ZERO mana can still press the empowered heal (the pre-gate bend)', () => {
-    const sim = liveShaman(948, 'enhancement');
+    const sim = liveShaman(735, 'enhancement');
     equipSet(sim, 'stonehearth', 2);
     const mob = addHostileMob(sim);
     sim.ctx.dealDamage(
@@ -437,7 +437,7 @@ describe('Stonehearth 2pc: Stormcast Mending Waters while Stonebound is free and
   });
 
   it('a NON-wearer while Stonebound still pays the normal half cost', () => {
-    const sim = liveShaman(949, 'enhancement');
+    const sim = liveShaman(735, 'enhancement');
     const mob = addHostileMob(sim);
     applyWarspiritPosture(sim.ctx, sim.player, 'stonebound', 14);
     armStormcastByCadence(sim, mob);
@@ -455,7 +455,7 @@ describe('Stonehearth 4pc: completing a cadence while Stonebound heals 3 percent
     pieces: number,
     posture: 'galeheart' | 'stonebound',
   ): { amounts: number[]; expected: number; hpGained: number } {
-    const sim = liveShaman(1123, 'enhancement');
+    const sim = liveShaman(735, 'enhancement');
     equipSet(sim, 'stonehearth', pieces);
     const mob = addHostileMob(sim);
     applyWarspiritPosture(sim.ctx, sim.player, posture, 14);
@@ -527,7 +527,7 @@ describe('Springmender 4pc: a fourth ally and the 150 percent chain harvest', ()
 
   it('Cascading Mend reaches a FOURTH ally for wearers (control three)', () => {
     function chainTargets(wearer: boolean): number {
-      const sim = liveShaman(358, 'restoration');
+      const sim = liveShaman(735, 'restoration');
       if (wearer) equipSet(sim, 'springmender', 4);
       const allies = [2, 4, 6, 8].map((offset) => addAlly(sim, `Chained${offset}`, offset));
       for (const ally of allies) ally.hp = Math.round(ally.maxHp * 0.4);
@@ -548,7 +548,7 @@ describe('Springmender 4pc: a fourth ally and the 150 percent chain harvest', ()
 
   it('the chain-path harvest pays 150 percent for wearers (control 125)', () => {
     function chainHarvest(wearer: boolean): number {
-      const sim = liveShaman(359, 'restoration');
+      const sim = liveShaman(735, 'restoration');
       if (wearer) equipSet(sim, 'springmender', 4);
       const ally = addAlly(sim, 'Pooled', 4);
       ally.hp = Math.max(1, ally.maxHp - 500);
@@ -560,7 +560,7 @@ describe('Springmender 4pc: a fourth ally and the 150 percent chain harvest', ()
   });
 
   it("Unleash Weapon's collapse deliberately keeps 1.25 for wearers", () => {
-    const sim = liveShaman(360, 'restoration');
+    const sim = liveShaman(735, 'restoration');
     equipSet(sim, 'springmender', 4);
     const ally = addAlly(sim, 'Rescued', 4);
     ally.hp = Math.max(1, ally.maxHp - 500);

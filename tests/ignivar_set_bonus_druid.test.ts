@@ -213,7 +213,7 @@ describe('Moonscorch 2pc: Moonseed extends Lunar Tempest twice per application',
 
   it('two presses extend a wearer application by 12; the third stays dead (control caps at 6)', () => {
     function tempestAfterThreePresses(wearer: boolean): Aura {
-      const sim = liveDruid(612, 'balance');
+      const sim = liveDruid(611, 'balance');
       if (wearer) equipSet(sim, 'moonscorch', 2);
       const target = addHostileTarget(sim, 8);
       sim.player.auras.push(formAura(sim.player, 'form_moonkin'));
@@ -247,7 +247,7 @@ describe('Moonscorch 2pc: Moonseed extends Lunar Tempest twice per application',
   });
 
   it('a fresh application resets the budget (per application, not per target)', () => {
-    const sim = liveDruid(613, 'balance');
+    const sim = liveDruid(611, 'balance');
     equipSet(sim, 'moonscorch', 2);
     const target = addHostileTarget(sim, 8);
     sim.player.auras.push(formAura(sim.player, 'form_moonkin'));
@@ -305,7 +305,7 @@ describe('Moonscorch 4pc: Moonsurge and Sunwake strike 25 percent harder, delive
     // Moonsurge and Sunwake only exist through the Moontide-3 transform, so
     // the pins resolve them the way play does: the armed payoff buttons.
     function payoffEffects(wearer: boolean) {
-      const sim = liveDruid(624, 'balance');
+      const sim = liveDruid(611, 'balance');
       if (wearer) equipSet(sim, 'moonscorch', 4);
       sim.player.auras.push(formAura(sim.player, 'form_moonkin'));
       sim.player.auras.push({
@@ -347,7 +347,7 @@ describe('Wildfang 2pc: Redharvest restores 45 energy, up from 30', () => {
     // Redharvest only exists through the Old Blood transform, so the pin
     // resolves it the way play does: the armed Gorebite button.
     function resolvedRestore(wearer: boolean): number {
-      const sim = liveDruid(625, 'feral');
+      const sim = liveDruid(611, 'feral');
       if (wearer) equipSet(sim, 'wildfang_emberhide', 2);
       sim.player.auras.push(formAura(sim.player, 'form_cat'));
       bankOldBlood(sim, 3);
@@ -381,7 +381,7 @@ describe('Wildfang 2pc: Redharvest restores 45 energy, up from 30', () => {
 
   it('flips the button energy-positive through the real cast path (net +10 vs net -5)', () => {
     function energyAfterRedharvest(wearer: boolean): number {
-      const sim = liveDruid(614, 'feral');
+      const sim = liveDruid(611, 'feral');
       if (wearer) equipSet(sim, 'wildfang_emberhide', 2);
       addHostileTarget(sim);
       sim.player.auras.push(formAura(sim.player, 'form_cat'));
@@ -408,7 +408,7 @@ describe('Wildfang 4pc: Redharvest plants a fresh Flense on the target', () => {
     combo: number;
     oldBlood: number;
   } {
-    const sim = liveDruid(615, 'feral');
+    const sim = liveDruid(611, 'feral');
     if (wearer) equipSet(sim, 'wildfang_emberhide', 4);
     const target = addHostileTarget(sim);
     sim.player.auras.push(formAura(sim.player, 'form_cat'));
@@ -472,7 +472,7 @@ describe('Cinderbark 2pc: Sweeping Claws may bank an additional Old Blood', () =
   }
 
   it('rolls exactly one flag-gated 0.3 chance per landed cast; non-wearers roll none', () => {
-    const wearer = bearWithTarget(616, true);
+    const wearer = bearWithTarget(611, true);
     const wearerSpy = vi.spyOn(ctxOf(wearer).rng, 'chance').mockReturnValue(false);
     wearer.castAbility('swipe');
     const wearerRolls = wearerSpy.mock.calls
@@ -482,7 +482,7 @@ describe('Cinderbark 2pc: Sweeping Claws may bank an additional Old Blood', () =
     expect(stacks(wearer.player, OLD_BLOOD_ID)).toBe(1);
     wearerSpy.mockRestore();
 
-    const control = bearWithTarget(616, false);
+    const control = bearWithTarget(611, false);
     const controlSpy = vi.spyOn(ctxOf(control).rng, 'chance').mockReturnValue(false);
     control.castAbility('swipe');
     const controlRolls = controlSpy.mock.calls
@@ -494,7 +494,7 @@ describe('Cinderbark 2pc: Sweeping Claws may bank an additional Old Blood', () =
   });
 
   it('a passed roll banks the additional stage; the 3-stack cap still holds', () => {
-    const sim = bearWithTarget(617, true);
+    const sim = bearWithTarget(611, true);
     const spy = vi
       .spyOn(ctxOf(sim).rng, 'chance')
       .mockImplementation((p) => p === CINDERBARK_2PC_EXTRA_OLD_BLOOD_CHANCE);
@@ -513,7 +513,7 @@ describe('Cinderbark 2pc: Sweeping Claws may bank an additional Old Blood', () =
     // Blood bank (a persistent engine aura), so leaving and re-entering Bruin
     // must neither duplicate the bank nor change the one-roll-per-landed-cast
     // cadence.
-    const sim = liveDruid(628, 'feral');
+    const sim = liveDruid(611, 'feral');
     equipSet(sim, 'cinderbark', 2);
     addHostileTarget(sim);
     sim.player.auras.push(formAura(sim.player, 'form_bear'));
@@ -544,7 +544,7 @@ describe('Cinderbark 2pc: Sweeping Claws may bank an additional Old Blood', () =
   });
 
   it('other Old Blood strikes never roll (the bend is Sweeping Claws only)', () => {
-    const sim = bearWithTarget(618, true);
+    const sim = bearWithTarget(611, true);
     const spy = vi.spyOn(ctxOf(sim).rng, 'chance').mockReturnValue(false);
     druidEngineOnLandedStrike(ctxOf(sim), sim.player, 'claw');
     druidEngineOnLandedStrike(ctxOf(sim), sim.player, 'maul');
@@ -576,7 +576,7 @@ describe('Cinderbark 4pc: Marrowbreak hits harder and the guard keeps the strike
     // Marrowbreak only exists through the Old Blood transform, so the pin
     // resolves it the way play does: the armed Bonecrush button.
     function resolvedDirect(wearer: boolean) {
-      const sim = liveDruid(626, 'feral');
+      const sim = liveDruid(611, 'feral');
       if (wearer) equipSet(sim, 'cinderbark', 4);
       sim.player.auras.push(formAura(sim.player, 'form_bear'));
       bankOldBlood(sim, 3);
@@ -597,7 +597,7 @@ describe('Cinderbark 4pc: Marrowbreak hits harder and the guard keeps the strike
   });
 
   function marrowbreakBelowHalf(wearer: boolean) {
-    const sim = liveDruid(619, 'feral');
+    const sim = liveDruid(611, 'feral');
     if (wearer) equipSet(sim, 'cinderbark', 4);
     const target = addHostileTarget(sim);
     sim.player.auras.push(formAura(sim.player, 'form_bear'));
@@ -704,7 +704,7 @@ describe('Grovespring 2pc: own blooms first, and Swiftmend heals 25 percent more
   }
 
   it("a wearer consumes their OWN bloom and leaves the other healer's HoT alone", () => {
-    const player = restorationWithHots(620, true, true);
+    const player = restorationWithHots(611, true, true);
     expect(player.auras.some((aura) => aura.id === 'regrowth')).toBe(false);
     expect(
       player.auras.some((aura) => aura.id === 'rejuvenation' && aura.sourceId === 999_999),
@@ -712,13 +712,13 @@ describe('Grovespring 2pc: own blooms first, and Swiftmend heals 25 percent more
   });
 
   it('the explicit fallback: with no own bloom the paid cast still consumes and heals', () => {
-    const player = restorationWithHots(621, true, false);
+    const player = restorationWithHots(611, true, false);
     expect(player.auras.some((aura) => aura.id === 'rejuvenation')).toBe(false);
     expect(player.hp).toBeGreaterThan(Math.round(player.maxHp * 0.3));
   });
 
   it('a non-wearer keeps the base pick (the first HoT, ownership-blind)', () => {
-    const player = restorationWithHots(622, false, true);
+    const player = restorationWithHots(611, false, true);
     expect(
       player.auras.some((aura) => aura.id === 'rejuvenation' && aura.sourceId === 999_999),
     ).toBe(false);
@@ -731,7 +731,7 @@ describe('Grovespring 4pc: Overbloom harvests 75 percent and banks 1 Verdance', 
     // Overbloom only exists through the Verdance transform, so the pin
     // resolves it the way play does: the armed Swiftmend button.
     function resolvedHarvest(wearer: boolean): number {
-      const sim = liveDruid(627, 'restoration');
+      const sim = liveDruid(611, 'restoration');
       if (wearer) equipSet(sim, 'grovespring', 4);
       for (let cast = 0; cast < 5; cast++) {
         druidEngineOnHotPlanted(ctxOf(sim), sim.player, 'rejuvenation');
@@ -746,7 +746,7 @@ describe('Grovespring 4pc: Overbloom harvests 75 percent and banks 1 Verdance', 
   });
 
   function overbloomHarvest(wearer: boolean, rows: Record<number, string> = {}) {
-    const sim = liveDruid(623, 'restoration', rows);
+    const sim = liveDruid(611, 'restoration', rows);
     if (wearer) equipSet(sim, 'grovespring', 4);
     const player = sim.player;
     player.hp = Math.round(player.maxHp * 0.3);
