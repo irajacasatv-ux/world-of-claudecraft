@@ -9,6 +9,7 @@ import { createMob, recalcPlayerStats } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
 import type { SimContext } from '../src/sim/sim_context';
 import type { Entity } from '../src/sim/types';
+import { rngWithFirstDraws } from './helpers/forced_rng';
 import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // The healer, the tank and the dummy are all placed by the rig, so the ambient
@@ -65,6 +66,13 @@ describe('Crucible healer participation through real combat healing', () => {
   it('a pure Groveheart cast wards its combat ally, survives ticking, and absorbs a real hit', () => {
     const { sim, healer, ally, enemy, ctx, meta } = groveheart();
     engage(ctx, enemy, ally);
+    // The case pins the capped ward through a real cast. Force the draws the
+    // full world's rng stream gave (a high Regrowth roll, then its crit)
+    // rather than ride the empty world's stream, which misses the crit.
+    sim.rng = rngWithFirstDraws(
+      (roll) => roll >= 0.8,
+      (crit) => crit < 0.05,
+    );
     castAbility(ctx, 'regrowth', healer.id);
     expect(healer.castingAbility).toBe('regrowth');
     for (let tick = 0; healer.castingAbility && tick < 100; tick++) {
@@ -77,7 +85,9 @@ describe('Crucible healer participation through real combat healing', () => {
     expect(heal.overheal).toBeGreaterThan(0);
     expect(enemy.threat.get(healer.id)).toBeGreaterThan(0);
     expect(healer.inCombat).toBe(false);
-    const reserve = Math.min(Math.floor((heal.overheal ?? 0) * 0.2), Math.floor(ally.maxHp * 0.05));
+    const uncapped = Math.floor((heal.overheal ?? 0) * 0.2);
+    expect(uncapped).toBeGreaterThan(Math.floor(ally.maxHp * 0.05));
+    const reserve = Math.min(uncapped, Math.floor(ally.maxHp * 0.05));
     expect(ward(ally)).toMatchObject({ value: reserve, remaining: 6 });
     updateAuras(ctx, ally);
     expect(ward(ally)).toMatchObject({ value: reserve, remaining: 5.95 });
