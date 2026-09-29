@@ -22,12 +22,16 @@ import { EMPTY_TEST_WORLD } from './sim_shared';
 
 type AnySim = Sim & Record<string, any>;
 
+// Every rig stands on the empty world and reads no seed-specific draw, so one
+// seed serves the file (a fresh seed costs a collider grid build).
+const SEED = 41;
+
 function tickFor(sim: Sim, seconds: number): void {
   for (let i = 0; i < Math.round(seconds * 20); i++) sim.tick();
 }
 
 function mageAtCap(): { sim: Sim; p: Entity } {
-  const sim = new Sim({ seed: 41, playerClass: 'mage', world: EMPTY_TEST_WORLD });
+  const sim = new Sim({ seed: SEED, playerClass: 'mage', world: EMPTY_TEST_WORLD });
   sim.setPlayerLevel(20);
   const p = sim.player;
   p.resource = p.maxResource;
@@ -92,7 +96,7 @@ describe('talent swap strips the dropped talent buffs (the Aetherwell into Rune 
   });
 
   it('drops a talent rider on a baseline ability but keeps the baseline buff (Ghostfoot Ward)', () => {
-    const sim = new Sim({ seed: 42, playerClass: 'rogue', world: EMPTY_TEST_WORLD });
+    const sim = new Sim({ seed: SEED, playerClass: 'rogue', world: EMPTY_TEST_WORLD });
     sim.setPlayerLevel(20);
     const p = sim.player;
     expect(sim.selectTalentRow(8, 'rog_r8_ghostfoot_ward')).toBe(true);
@@ -111,7 +115,12 @@ describe('talent swap strips the dropped talent buffs (the Aetherwell into Rune 
   });
 
   it('drops the talent buff from every ally it landed on, and only the swapper own copies', () => {
-    const sim = new Sim({ seed: 43, playerClass: 'mage', noPlayer: true }) as AnySim;
+    const sim = new Sim({
+      seed: SEED,
+      playerClass: 'mage',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    }) as AnySim;
     const a = sim.addPlayer('mage', 'MageA');
     const b = sim.addPlayer('mage', 'MageB');
     for (const pid of [a, b]) {
@@ -195,7 +204,7 @@ describe('talent swap closes the other routes to both talents', () => {
   });
 
   it('strips a baseline buff a dropped talent had boosted (Enduring Protection on Ward of Faith)', () => {
-    const sim = new Sim({ seed: 44, playerClass: 'paladin', world: EMPTY_TEST_WORLD });
+    const sim = new Sim({ seed: SEED, playerClass: 'paladin', world: EMPTY_TEST_WORLD });
     sim.setPlayerLevel(20);
     const p = sim.player;
     expect(sim.selectTalentRow(8, 'pal_r8_enduring_protection')).toBe(true);
@@ -214,7 +223,12 @@ describe('talent swap closes the other routes to both talents', () => {
   });
 
   it("strips a companion id minted outside aura_ids (Thieves' Chorus spell haste)", () => {
-    const sim = new Sim({ seed: 45, playerClass: 'rogue', noPlayer: true }) as AnySim;
+    const sim = new Sim({
+      seed: SEED,
+      playerClass: 'rogue',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    }) as AnySim;
     const a = sim.addPlayer('rogue', 'RogueA');
     const b = sim.addPlayer('rogue', 'RogueB');
     for (const pid of [a, b]) sim.setPlayerLevel(20, pid);
@@ -238,7 +252,12 @@ describe('talent swap closes the other routes to both talents', () => {
   });
 
   it('strips from a non-player entity, un-folds its stat, and keeps another caster copy', () => {
-    const sim = new Sim({ seed: 46, playerClass: 'mage', noPlayer: true }) as AnySim;
+    const sim = new Sim({
+      seed: SEED,
+      playerClass: 'mage',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    }) as AnySim;
     const a = sim.addPlayer('mage', 'MageA');
     const b = sim.addPlayer('mage', 'MageB');
     for (const pid of [a, b]) {
@@ -281,7 +300,7 @@ describe('talent swap closes the other routes to both talents', () => {
   });
 
   it('drops a stance the new spec cannot wear at the swap, then the reconcile seats the right one', () => {
-    const sim = new Sim({ seed: 47, playerClass: 'warrior', world: EMPTY_TEST_WORLD });
+    const sim = new Sim({ seed: SEED, playerClass: 'warrior', world: EMPTY_TEST_WORLD });
     sim.setPlayerLevel(20);
     const p = sim.player;
     expect(sim.setSpec('arms')).toBe(true);
