@@ -139,6 +139,16 @@ const CORPSE_TEST_WORLD: WorldContent = { ...BUILTIN_WORLD, roads: [] };
 // both drive EVERY Sim/GameServer in their files off this exact shape.
 const PUBLIC_TEST_WORLD: WorldContent = { ...EMPTY_TEST_WORLD, roads: [] };
 
+// For grant-domain harvests that pin NO seed-probed quantity: the same-seed
+// twin comparisons (a pick against its deduped or junk-free twin, both on one
+// seed and one world), the refusal arms (zero draws on any stream), and the
+// corpus sweeps (counts and shapes). The grant reads no world content
+// (corpse_harvest_grant.ts touches no zone, terrain or spawn), so these run on
+// the controlled empty world at a fraction of the full world's per-Sim cost.
+// Every absolute seed pin (a literal quantity, rarity or specimen at seed N)
+// stays on CORPSE_TEST_WORLD, whose constructor draws those pins include.
+const NO_SEED_PIN_WORLD: WorldContent = PUBLIC_TEST_WORLD;
+
 beforeAll(() => setActiveWorldContent(CORPSE_TEST_WORLD));
 afterAll(() => setActiveWorldContent(null));
 
@@ -184,8 +194,8 @@ function premiumMaterialUnits(meta: PlayerMeta, itemId?: string, signer?: string
  *  Builds a fresh two-player world on the pinned seed for grant-arithmetic
  *  tests. Unchanged from the pre-migration suite: every literal seed here
  *  keeps drawing exactly the same world-gen rng stream it always has. */
-function setup(seed = 11) {
-  const sim = new Sim({ seed, playerClass: 'warrior', noPlayer: true, world: CORPSE_TEST_WORLD });
+function setup(seed = 11, world: WorldContent = CORPSE_TEST_WORLD) {
+  const sim = new Sim({ seed, playerClass: 'warrior', noPlayer: true, world });
   const internals = sim as unknown as SimInternals;
   const a = sim.addPlayer('warrior', 'Alpha');
   const b = sim.addPlayer('warrior', 'Bravo');
@@ -283,9 +293,11 @@ function grantCommand(
     seed?: number;
     corpseId?: number;
     arrange?: (rig: ReturnType<typeof setup>, corpse: Entity) => void;
+    /** The Sim's construction world; see SWEEP_WORLD for the one override. */
+    world?: WorldContent;
   } = {},
 ) {
-  const rig = setup(opts.seed ?? 5);
+  const rig = setup(opts.seed ?? 5, opts.world);
   const { sim, internals, a } = rig;
   const meta = mustPlayer(internals, a);
   const template = MOBS[templateId];
@@ -1305,8 +1317,9 @@ describe('a repeated component tag harvests the family once (#2474)', () => {
     templateId: string,
     components: string[],
     seed: number,
+    world?: WorldContent,
   ): { inventory: unknown; events: unknown; draws: number; claimedBy: number | null } {
-    const { sim, internals, a } = setup(seed);
+    const { sim, internals, a } = setup(seed, world);
     const template = MOBS[templateId];
     const corpse = createMob(7774, template, template.maxLevel, { x: 0, y: 0, z: 0 });
     corpse.dead = true;
@@ -1358,8 +1371,8 @@ describe('a repeated component tag harvests the family once (#2474)', () => {
     for (const c of CASES) {
       for (const seed of [2, 5, 11]) {
         const label = `${c.templateId} ${c.tag} (${c.arm}) @${seed}`;
-        const dup = harvestWith(c.templateId, [c.tag, c.tag], seed);
-        const once = harvestWith(c.templateId, [c.tag], seed);
+        const dup = harvestWith(c.templateId, [c.tag, c.tag], seed, NO_SEED_PIN_WORLD);
+        const once = harvestWith(c.templateId, [c.tag], seed, NO_SEED_PIN_WORLD);
         expect(dup.inventory, `${label} inventory`).toEqual(once.inventory);
         expect(dup.events, `${label} events`).toEqual(once.events);
         expect(dup.draws, `${label} draws`).toEqual(once.draws);
@@ -1513,7 +1526,7 @@ describe('a repeated component tag harvests the family once (#2474)', () => {
       arrange: (rig: ReturnType<typeof setup>, corpse: Entity) => void,
     ): void {
       for (const components of [['hide', 'hide'], ['hide']]) {
-        const rig = setup(153);
+        const rig = setup(153, NO_SEED_PIN_WORLD);
         const template = MOBS[templateId];
         const corpse = createMob(7770, template, template.maxLevel, { x: 0, y: 0, z: 0 });
         corpse.dead = true;
@@ -1560,8 +1573,9 @@ describe('an invalid component tag is ignored entirely (#2504)', () => {
     templateId: string,
     components: string[],
     seed: number,
+    world?: WorldContent,
   ): { inventory: unknown; events: unknown; draws: number; claimedBy: number | null } {
-    const { sim, internals, a } = setup(seed);
+    const { sim, internals, a } = setup(seed, world);
     const template = MOBS[templateId];
     const corpse = createMob(7754, template, template.maxLevel, { x: 0, y: 0, z: 0 });
     corpse.dead = true;
@@ -1672,8 +1686,8 @@ describe('an invalid component tag is ignored entirely (#2504)', () => {
     for (const c of CASES) {
       for (const seed of [2, 5, 11]) {
         const label = `${c.templateId} ${JSON.stringify(c.padded)} (${c.arm}) @${seed}`;
-        const padded = harvestWith(c.templateId, c.padded, seed);
-        const stripped = harvestWith(c.templateId, c.stripped, seed);
+        const padded = harvestWith(c.templateId, c.padded, seed, NO_SEED_PIN_WORLD);
+        const stripped = harvestWith(c.templateId, c.stripped, seed, NO_SEED_PIN_WORLD);
         expect(padded.inventory, `${label} inventory`).toEqual(stripped.inventory);
         expect(padded.events, `${label} events`).toEqual(stripped.events);
         expect(padded.draws, `${label} draws`).toEqual(stripped.draws);
@@ -1729,8 +1743,8 @@ describe('an invalid component tag is ignored entirely (#2504)', () => {
       for (const seed of [2, 5, 11]) {
         for (const pick of [['junk'], ['junk', 'zzz'], ['junk', 'zzz', 'qqq']]) {
           const label = `${templateId} ${JSON.stringify(pick)} @${seed}`;
-          const junk = harvestWith(templateId, pick, seed);
-          const empty = harvestWith(templateId, [], seed);
+          const junk = harvestWith(templateId, pick, seed, NO_SEED_PIN_WORLD);
+          const empty = harvestWith(templateId, [], seed, NO_SEED_PIN_WORLD);
           expect(junk.inventory, `${label} inventory`).toEqual(empty.inventory);
           expect(junk.events, `${label} events`).toEqual(empty.events);
           expect(junk.draws, `${label} draws`).toEqual(empty.draws);
@@ -1820,7 +1834,7 @@ describe('an invalid component tag is ignored entirely (#2504)', () => {
     // JUNK-bearing pick itself: full bags, and an already-spent claim.
     function runArm(label: string, arrange: (rig: ReturnType<typeof setup>) => void): void {
       for (const components of [['hide', 'junk'], ['junk'], ['junk', 'zzz']]) {
-        const rig = setup(153);
+        const rig = setup(153, NO_SEED_PIN_WORLD);
         arrange(rig);
         let draws = 0;
         rig.sim.rng.setObserver(() => {
@@ -2481,7 +2495,7 @@ describe('a pick of nothing but unmapped families is refused, claim intact (#250
 
   it('leaves the corpse harvestable, so the player recovers the yield they nearly threw away', () => {
     withMixedTemplates(() => {
-      const { sim, internals, a } = setup(153);
+      const { sim, internals, a } = setup(153, NO_SEED_PIN_WORLD);
       const template = MOBS[MIXED_TEMPLATE_ID];
       const corpse = createMob(7510, template, template.maxLevel, { x: 0, y: 0, z: 0 });
       corpse.dead = true;
@@ -2707,6 +2721,12 @@ describe('a corpse whose EVERY family is unmapped is never offered a harvest (#2
     arrange?: (rig: ReturnType<typeof setup>, corpse: Entity) => void,
   ) => withUnmappedTemplate(() => harvestAt(UNMAPPED_TEMPLATE_ID, components, seed, arrange));
 
+  // The two corpus sweeps below build a fresh Sim per harvest (about 280 each)
+  // and pin counts and per-harvest shapes (claims, ledger events, draw counts,
+  // yielded item ids), never a seed-probed quantity: NO_SEED_PIN_WORLD.
+  const sweepHarvestAt = (templateId: string, components: string[] | undefined) =>
+    grantCommand(templateId, components, { seed: 5, corpseId: 7513, world: NO_SEED_PIN_WORLD });
+
   const NOT_HARVESTABLE = 'That corpse has nothing to harvest.';
   const PICK_REFUSAL = 'Nothing you selected can be harvested from that corpse.';
 
@@ -2831,7 +2851,7 @@ describe('a corpse whose EVERY family is unmapped is never offered a harvest (#2
         for (let mask = 0; mask < 1 << tags.length; mask++) {
           const selected = tags.filter((_, i) => mask & (1 << i));
           const label = `${id} ${JSON.stringify(selected)}`;
-          const r = harvestAt(id, selected);
+          const r = sweepHarvestAt(id, selected);
           const results = r.events.filter(
             (e): e is Extract<typeof e, { type: 'harvestResult' }> => e.type === 'harvestResult',
           );
@@ -2860,9 +2880,7 @@ describe('a corpse whose EVERY family is unmapped is never offered a harvest (#2
       sweep([UNMAPPED_TEMPLATE_ID, MIXED_TEMPLATE_ID, MIXED2_TEMPLATE_ID]),
     );
     expect(fixtures).toEqual({ spent: 10, refused: 6 });
-    // The sweep builds a fresh Sim per harvest (about 280 of them): roughly 15 s
-    // alone, so a loaded CI shard pushed it past the 20 s default.
-  }, 60_000);
+  });
 
   // The ten mapped families and their item ids, spelled out. Deriving them
   // from HARVEST_COMPONENT_ITEMS would compare the table with itself and pass
@@ -2898,7 +2916,7 @@ describe('a corpse whose EVERY family is unmapped is never offered a harvest (#2
               EXPECTED_FAMILY_ITEMS[family],
             );
           }
-          const r = harvestAt(id, selected);
+          const r = sweepHarvestAt(id, selected);
           if (r.claimedBy === null) continue;
           extracted += expectedSet.length;
           expect(r.draws, `${label} draws`).toBe(2 * expectedSet.length);
@@ -2923,10 +2941,7 @@ describe('a corpse whose EVERY family is unmapped is never offered a harvest (#2
       sweep([UNMAPPED_TEMPLATE_ID, MIXED_TEMPLATE_ID, MIXED2_TEMPLATE_ID]),
     );
     expect(fixtures).toEqual({ extracted: 13, unmappedOffered: 9 });
-    // The same fresh-Sim-per-harvest sweep as the case above: 6.6 s alone locally, but
-    // 19.0 and 20.0 s in release/v0.45.0 CI and 20.65 s (over the 20 s default) in a
-    // loaded feature/freeholds shard, so it carries the sibling's budget.
-  }, 60_000);
+  });
 
   it('keeps every mixed template harvestable, so the gate is not a blanket refusal', () => {
     const mixedTemplates = () =>
