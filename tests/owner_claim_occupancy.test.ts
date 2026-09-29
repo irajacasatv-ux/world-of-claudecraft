@@ -13,6 +13,7 @@ import type { InstanceSlot } from '../src/sim/sim';
 import { Sim } from '../src/sim/sim';
 import type { SimContext } from '../src/sim/sim_context';
 import type { Vec3 } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 function positionAt(index: number, slot: number): Vec3 {
   return { ...instanceOrigin(index, slot), y: DUNGEON_FLOOR_Y };
@@ -175,7 +176,12 @@ describe('owner claim occupancy index', () => {
   });
 
   it('runs the live sweep with owner and ordinary claims under the same lifecycle', () => {
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+    const sim = new Sim({
+      seed: 42,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const own = sim.instances.find(
       (claim) => claim.dungeonId === 'freehold_inn_room' && claim.slot === 0,
     )!;
@@ -210,7 +216,12 @@ describe('owner claim occupancy index', () => {
 
 describe('owner claim identity lookup', () => {
   it('resolves all owner slots without a pool scan and respects strict edges and released claims', () => {
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+    const sim = new Sim({
+      seed: 42,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const claims = sim.instances.filter((claim) => DUNGEONS[claim.dungeonId]?.claimKey === 'owner');
     for (const [index, claim] of claims.entries()) {
       claim.partyKey = `owner:${index}`;

@@ -14,6 +14,7 @@ import { enterDungeon } from '../src/sim/instances/dungeons';
 import { Sim } from '../src/sim/sim';
 import { revivePlayerAt } from '../src/sim/spirit';
 import { type Entity, IGNIVAR_BOSS_ID, type PlayerClass } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 function bossIn(sim: Sim, dungeonId: string, templateId: string): Entity {
   expect(enterDungeon(sim.ctx, dungeonId, sim.player.id, true)).toBe(true);
@@ -57,7 +58,12 @@ describe('attemptLost', () => {
 
 describe('Ignivar wipe with a same-tick entrant', () => {
   it('resets to full health instead of re-targeting the entrant', () => {
-    const sim = new Sim({ seed: 7, playerClass: 'warrior', devCommands: true });
+    const sim = new Sim({
+      seed: 7,
+      playerClass: 'warrior',
+      devCommands: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const boss = bossIn(sim, 'ignivar_raid_arena', IGNIVAR_BOSS_ID);
     updateIgnivarEncounter(sim.ctx, boss);
     expect(boss.ignivar?.attemptParticipantIds).toEqual([sim.player.id]);
@@ -74,7 +80,12 @@ describe('Ignivar wipe with a same-tick entrant', () => {
   });
 
   it('keeps fighting a raider who joined before the last participant died', () => {
-    const sim = new Sim({ seed: 7, playerClass: 'warrior', devCommands: true });
+    const sim = new Sim({
+      seed: 7,
+      playerClass: 'warrior',
+      devCommands: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const boss = bossIn(sim, 'ignivar_raid_arena', IGNIVAR_BOSS_ID);
     updateIgnivarEncounter(sim.ctx, boss);
     const joiner = addRoomPlayer(sim, boss, 'Late Joiner');
@@ -91,7 +102,12 @@ describe('Ignivar wipe with a same-tick entrant', () => {
   });
 
   it('keeps fighting a participant raised mid-attempt', () => {
-    const sim = new Sim({ seed: 7, playerClass: 'warrior', devCommands: true });
+    const sim = new Sim({
+      seed: 7,
+      playerClass: 'warrior',
+      devCommands: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const boss = bossIn(sim, 'ignivar_raid_arena', IGNIVAR_BOSS_ID);
     const ally = addRoomPlayer(sim, boss, 'Raised Healer');
     updateIgnivarEncounter(sim.ctx, boss);
@@ -109,7 +125,12 @@ describe('Ignivar wipe with a same-tick entrant', () => {
 
 describe('Varkhul wipe with a same-tick entrant', () => {
   it('resets to the anvil at full health instead of re-targeting the entrant', () => {
-    const sim = new Sim({ seed: 7, playerClass: 'warrior', devCommands: true });
+    const sim = new Sim({
+      seed: 7,
+      playerClass: 'warrior',
+      devCommands: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const boss = bossIn(sim, IGNIVAR_SECOND_WING_ID, VARKHUL_BOSS_ID);
     updateVarkhulEncounter(sim.ctx, boss);
     expect(boss.varkhul?.attemptParticipantIds).toEqual([sim.player.id]);

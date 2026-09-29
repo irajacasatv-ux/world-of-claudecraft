@@ -5,6 +5,7 @@ import {
 } from '../src/sim/combat/raid_wipe_cooldowns';
 import { ABILITIES } from '../src/sim/content/classes';
 import { Sim } from '../src/sim/sim';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 describe('raid wipe cooldown recovery', () => {
   it('resets every cooldown of two minutes or longer', () => {
@@ -17,7 +18,12 @@ describe('raid wipe cooldown recovery', () => {
   });
 
   it('clears eligible clocks and fully restores any eligible charge pool', () => {
-    const sim = new Sim({ seed: 42, playerClass: 'warlock', autoEquip: true });
+    const sim = new Sim({
+      seed: 42,
+      playerClass: 'warlock',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.setPlayerLevel(20);
     sim.setSpec('demonology');
     const meta = sim.players.get(sim.playerId);

@@ -5,9 +5,10 @@ import { createMob } from '../src/sim/entity';
 import { rollLoot } from '../src/sim/loot/loot_roll';
 import { Rng } from '../src/sim/rng';
 import { Sim } from '../src/sim/sim';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 it('Nythraxis pays exactly two distinct equipment items on both difficulties', () => {
-  const sim = new Sim({ seed: 1, playerClass: 'warrior', noPlayer: true });
+  const sim = new Sim({ seed: 1, playerClass: 'warrior', noPlayer: true, world: EMPTY_TEST_WORLD });
   const pid = sim.addPlayer('warrior', 'Raider');
   const meta = sim.ctx.players.get(pid)!;
   for (const heroic of [false, true]) {

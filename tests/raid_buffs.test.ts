@@ -9,6 +9,7 @@ import {
   SUNDER_ARMOR_PCT_PER_STACK,
 } from '../src/sim/types';
 import { groundHeight } from '../src/sim/world';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // Standardized percent raid buffs (resurrecting PR #1038 on release/v0.21.0): the six
 // iconic buffs are percent, integer-point auras that land on the caster and every
@@ -16,7 +17,7 @@ import { groundHeight } from '../src/sim/world';
 // (Sunder/Faerie Fire as non-stacking percents, Expose Armor's full-cap finisher).
 
 function makeWorld() {
-  return new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+  return new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true, world: EMPTY_TEST_WORLD });
 }
 
 function teleport(sim: Sim, id: number, x: number, z: number) {

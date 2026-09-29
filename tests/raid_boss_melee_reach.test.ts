@@ -9,11 +9,17 @@ import { createMob } from '../src/sim/entity';
 import { VARKHUL_BOSS_ID } from '../src/sim/ignivar_raid_ids';
 import { Sim } from '../src/sim/sim';
 import { IGNIVAR_BOSS_ID, MELEE_RANGE } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const RAID_BOSS_IDS = [IGNIVAR_BOSS_ID, VARKHUL_BOSS_ID] as const;
 
 function raidBossTarget(templateId: typeof IGNIVAR_BOSS_ID | typeof VARKHUL_BOSS_ID, distance = 8) {
-  const sim = new Sim({ seed: 771, playerClass: 'warrior', autoEquip: true });
+  const sim = new Sim({
+    seed: 771,
+    playerClass: 'warrior',
+    autoEquip: true,
+    world: EMPTY_TEST_WORLD,
+  });
   sim.setPlayerLevel(20);
   sim.setSpec('arms');
   const player = sim.player;

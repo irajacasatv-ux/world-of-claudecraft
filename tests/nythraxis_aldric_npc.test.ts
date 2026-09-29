@@ -20,6 +20,7 @@ import { Sim } from '../src/sim/sim';
 import type { Entity } from '../src/sim/types';
 import { groundHeight } from '../src/sim/world';
 import { bareClient } from './helpers/bare_client';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const ALDRIC_ID = 'brother_aldric_raid';
 const FINAL_QUEST = 'q_nythraxis_scourges_end';
@@ -27,8 +28,21 @@ const BOSS_ID = 'nythraxis_scourge_of_thornpeak';
 
 // --- harness (mirrors tests/nythraxis_raid_unit.test.ts) -------------------------
 
+// The encounter cases build the raid arena from DUNGEONS, not the overworld, so
+// they run on the empty world; only the world-init placement guards need the
+// shipped roster.
 function makeWorld(opts?: { devCommands?: boolean }) {
-  return new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true, ...opts });
+  return new Sim({
+    seed: 42,
+    playerClass: 'warrior',
+    noPlayer: true,
+    world: EMPTY_TEST_WORLD,
+    ...opts,
+  });
+}
+
+function makeShippedWorld() {
+  return new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
 }
 
 function teleport(sim: Sim, pid: number, x: number, z: number) {
@@ -148,13 +162,13 @@ describe('[SPEC] brother_aldric_raid is a registered NPC, not a mob template', (
 
 describe('[GUARD] dynamic NPCs are not auto-placed, ordinary NPCs are', () => {
   it('does not surface-spawn Aldric at world start', () => {
-    const sim = makeWorld();
+    const sim = makeShippedWorld();
     const placed = [...sim.entities.values()].filter((e) => e.templateId === ALDRIC_ID);
     expect(placed).toHaveLength(0);
   });
 
   it('still surface-spawns the ordinary Highwatch Aldric NPC', () => {
-    const sim = makeWorld();
+    const sim = makeShippedWorld();
     const highwatch = [...sim.entities.values()].find(
       (e) => e.templateId === 'brother_aldric_highwatch',
     );

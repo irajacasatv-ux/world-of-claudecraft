@@ -1,17 +1,18 @@
 import { describe, expect, it } from 'vitest';
 import { ClientWorld } from '../src/net/online';
 import { Sim } from '../src/sim/sim';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const HOUR = 60 * 60 * 1000;
 
 describe('Sim.raidLockouts', () => {
   it('returns nothing when no raid is locked', () => {
-    const sim = new Sim({ seed: 1, playerClass: 'warrior' });
+    const sim = new Sim({ seed: 1, playerClass: 'warrior', world: EMPTY_TEST_WORLD });
     expect(sim.raidLockouts()).toEqual([]);
   });
 
   it('projects a granted lockout as remaining ms, dropping expired ones', () => {
-    const sim = new Sim({ seed: 1, playerClass: 'warrior' });
+    const sim = new Sim({ seed: 1, playerClass: 'warrior', world: EMPTY_TEST_WORLD });
     const now = Math.floor(sim.time * 1000);
     const meta = (sim as any).primary;
     meta.raidLockouts.set('nythraxis_boss_arena', now + 5 * HOUR);
