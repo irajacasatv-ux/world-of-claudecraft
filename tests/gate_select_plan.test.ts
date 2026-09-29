@@ -1133,19 +1133,29 @@ describe('discovery scope matches vitest collection over the real tree', () => {
     expect(offenders).toEqual([]);
   });
 
-  it('keeps every browser-suite file where the browser config collects it', () => {
-    // vite.config excludes **/*.browser.test.ts everywhere and vitest.browser.config includes
-    // only tests/browser/, so a browser-suite file anywhere else under tests/ runs in neither.
+  it('keeps every test file under tests/ where one config collects it', () => {
+    // vite.config excludes **/*.browser.test.ts everywhere and all of tests/browser/, while
+    // vitest.browser.config includes only tests/browser/**/*.browser.test.ts. So a browser-suite
+    // file anywhere else under tests/, or any other test-named file inside tests/browser/, runs
+    // in neither. The walkers here and in discovery do not follow a symlink, which vitest's glob
+    // would, so a symlink under tests/ is flagged too.
     const stranded: string[] = [];
     const walk = (dir: string) => {
       for (const entry of readdirSync(dir, { withFileTypes: true })) {
         const full = path.join(dir, entry.name);
+        const rel = path.relative(REPO_ROOT, full).split(path.sep).join('/');
+        if (entry.isSymbolicLink()) {
+          stranded.push(rel);
+          continue;
+        }
         if (entry.isDirectory()) {
           if (entry.name !== 'node_modules') walk(full);
           continue;
         }
-        const rel = path.relative(REPO_ROOT, full).split(path.sep).join('/');
-        if (entry.name.endsWith('.browser.test.ts') && !rel.startsWith('tests/browser/'))
+        const browserSuffix = entry.name.endsWith('.browser.test.ts');
+        const inBrowserDir = rel.startsWith('tests/browser/');
+        if (browserSuffix && !inBrowserDir) stranded.push(rel);
+        if (!browserSuffix && inBrowserDir && /\.(test|spec)\.[cm]?[jt]sx?$/.test(entry.name))
           stranded.push(rel);
       }
     };
