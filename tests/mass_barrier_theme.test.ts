@@ -115,9 +115,11 @@ describe('Mass Barrier specialization theme', () => {
       ally.pos = { ...caster.pos };
       ally.prevPos = { ...caster.pos };
     }
-    for (const ally of lowerIdAllies.slice(0, 4)) joinParty(sim, caster.id, ally.id);
+    // Join in descending id order (the lowest id last), so the member order the party keeps
+    // disagrees with id order and the pin below can only pass on the id rule.
+    for (const ally of lowerIdAllies.slice(1).reverse()) joinParty(sim, caster.id, ally.id);
     sim.convertPartyToRaid(caster.id);
-    joinParty(sim, caster.id, lowerIdAllies[4].id);
+    joinParty(sim, caster.id, lowerIdAllies[0].id);
     expect(sim.partyOf(caster.id)?.raid).toBe(true);
     caster.resource = caster.maxResource;
 
@@ -131,9 +133,10 @@ describe('Mass Barrier specialization theme', () => {
     expect(shielded).toHaveLength(5);
     // The allies all tie on distance, and a tie goes to the lower id, the
     // sim-wide rule that keeps a pick the same on every host (stated at the
-    // chain pick in combat/trinkets.ts, and the aoeAllyAbsorb comparator in
-    // combat/effect_dispatch.ts follows it): the four lowest-id allies join
-    // the caster, and the highest-id ally is the one left out.
+    // chain pick in combat/trinkets.ts; the recipients arrive id-sorted from
+    // combat/group_targeting.ts and the aoeAllyAbsorb comparator in
+    // combat/effect_dispatch.ts breaks ties on id too): the four lowest-id
+    // allies join the caster, and the highest-id ally is the one left out.
     const ids = lowerIdAllies.map((ally) => ally.id);
     expect(ids).toEqual([...ids].sort((a, b) => a - b));
     const shieldedAlly = (ally: (typeof lowerIdAllies)[number]) =>
