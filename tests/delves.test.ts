@@ -1009,11 +1009,10 @@ describe('delve interactables and affixes', () => {
     // Import the source-of-truth set rather than a local literal, so the two
     // can never drift (a hook-less affix added to the constant would still be
     // caught by that affix's own dedicated hook test, e.g. restless_graves above).
-    // Try many run seeds; every Heroic roll must be an implemented affix.
-    // 60 runs keep full affix-pool coverage. The run seed is drawn from the
-    // shared rng at entry, so each run advances that rng `offset` draws on the
-    // file's one world seed (built once) instead of building a fresh world per
-    // seed.
+    // Sixty runs on distinct run seeds; every Heroic roll must be an
+    // implemented affix. The run seed is drawn from the shared rng at entry,
+    // so each run advances that rng `offset` draws on the file's one world
+    // seed (built once) instead of building a fresh world per seed.
     for (let offset = 1; offset <= 60; offset++) {
       const sim = makeSim('warrior');
       for (let draw = 0; draw < offset; draw++) sim.rng.next();
