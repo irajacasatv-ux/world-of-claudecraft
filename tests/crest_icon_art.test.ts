@@ -84,9 +84,13 @@ describe('painted crest routing', () => {
           .raw()
           .toBuffer({ resolveWithObject: true });
         expect([decoded.info.width, decoded.info.height], `${id} dimensions`).toEqual([256, 256]);
+        // Count the see-through pixels and assert once: an expect() per pixel cost
+        // about a second per painting for the same verdict.
+        let translucent = 0;
         for (let offset = 3; offset < decoded.data.length; offset += decoded.info.channels) {
-          expect(decoded.data[offset], `${id} must remain opaque`).toBe(255);
+          if (decoded.data[offset] !== 255) translucent += 1;
         }
+        expect(translucent, `${id} must remain opaque`).toBe(0);
       }
     }
   });
