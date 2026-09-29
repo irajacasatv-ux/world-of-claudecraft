@@ -721,9 +721,16 @@ describe('retro on join', () => {
     const b = new Sim({ seed: 42, playerClass: 'mage', world: VENDOR_TEST_WORLD });
     const pa = a.addPlayer('warrior', 'Same', { state: veteranState() });
     const pb = b.addPlayer('warrior', 'Same', { state: veteranState() });
-    expect([...a.players.get(pa)!.deedsEarned.keys()].sort()).toEqual(
-      [...b.players.get(pb)!.deedsEarned.keys()].sort(),
-    );
+    const earnedA = [...a.players.get(pa)!.deedsEarned.keys()].sort();
+    const earnedB = [...b.players.get(pb)!.deedsEarned.keys()].sort();
+    // Both joins really ran both halves of the pass, so the equality below
+    // cannot hold by both being skipped: the predicate evaluator credits the
+    // saved level 12, and the proof fallback credits the saved cooking skill.
+    for (const earned of [earnedA, earnedB]) {
+      expect(earned).toContain('prog_double_digits');
+      expect(earned).toContain('prog_first_craft');
+    }
+    expect(earnedA).toEqual(earnedB);
   });
 
   it('a done ground-pickup quest proves the sparkle and heals Something Shiny', () => {
