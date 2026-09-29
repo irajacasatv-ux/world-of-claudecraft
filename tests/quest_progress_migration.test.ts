@@ -4,6 +4,7 @@ import { QUESTS } from '../src/sim/data';
 import { migrateRestoredQuestProgress } from '../src/sim/quests/quest_progress_migration';
 import { Sim } from '../src/sim/sim';
 import type { QuestDef, QuestProgress } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // The zones 1 to 3 dedupe pass reworked nine quests under their original ids,
 // so an in-flight save's index-keyed counts point at the wrong work. Worse than
@@ -78,12 +79,23 @@ describe('quest progress migration (QuestDef.rev)', () => {
     // counts are derived state only onInventoryChangedForQuests re-credits: a
     // migrated character already holding the items must be ready at login, not
     // stuck at 0 of N until an unrelated inventory change.
-    const sim = new Sim({ seed: 7, playerClass: 'warrior', playerName: 'Col', autoEquip: false });
+    const sim = new Sim({
+      seed: 7,
+      playerClass: 'warrior',
+      playerName: 'Col',
+      autoEquip: false,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.addItem('restless_skull', 8);
     // Pre-rework shape: q_bones was a kill quest at 3 of 8, no rev stamp.
     sim.questLog.set('q_bones', { questId: 'q_bones', counts: [3], state: 'active' });
     const state = sim.serializeCharacter(sim.playerId)!;
-    const reloaded = new Sim({ seed: 7, playerClass: 'warrior', noPlayer: true });
+    const reloaded = new Sim({
+      seed: 7,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const pid = reloaded.addPlayer('warrior', 'Col', { state });
     const q = reloaded.serializeCharacter(pid)!.questLog.find((x) => x.questId === 'q_bones');
     expect(q?.counts).toEqual([8]);
@@ -91,20 +103,36 @@ describe('quest progress migration (QuestDef.rev)', () => {
   });
 
   it('a pre-rework in-flight save resets once on restore, then keeps new progress', () => {
-    const sim = new Sim({ seed: 7, playerClass: 'warrior', playerName: 'Mig', autoEquip: false });
+    const sim = new Sim({
+      seed: 7,
+      playerClass: 'warrior',
+      playerName: 'Mig',
+      autoEquip: false,
+      world: EMPTY_TEST_WORLD,
+    });
     // A pre-rework save: 9 of the old 14 Drowned Dead, no rev stamp. Under the
     // reworked count-of-1 objective this would read complete but never flip
     // ready (the credit path skips an at-cap objective).
     sim.questLog.set('q_no_rest', { questId: 'q_no_rest', counts: [9], state: 'active' });
     const state = sim.serializeCharacter(sim.playerId)!;
-    const reloaded = new Sim({ seed: 7, playerClass: 'warrior', noPlayer: true });
+    const reloaded = new Sim({
+      seed: 7,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const pid = reloaded.addPlayer('warrior', 'Mig', { state });
     const restored = reloaded.serializeCharacter(pid)!;
     const q = restored.questLog.find((x) => x.questId === 'q_no_rest');
     expect(q?.counts).toEqual([0]);
     expect(q?.rev).toBe(1);
     // Post-rework progress survives the next reload untouched (one-time reset).
-    const again = new Sim({ seed: 7, playerClass: 'warrior', noPlayer: true });
+    const again = new Sim({
+      seed: 7,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const pid2 = again.addPlayer('warrior', 'Mig', { state: restored });
     const meta = (
       again as unknown as { players: Map<number, { questLog: Map<string, QuestProgress> }> }
@@ -112,7 +140,12 @@ describe('quest progress migration (QuestDef.rev)', () => {
     const qp = meta.questLog.get('q_no_rest')!;
     qp.counts[0] = 1;
     const after = again.serializeCharacter(pid2)!;
-    const third = new Sim({ seed: 7, playerClass: 'warrior', noPlayer: true });
+    const third = new Sim({
+      seed: 7,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const pid3 = third.addPlayer('warrior', 'Mig', { state: after });
     const q3 = third.serializeCharacter(pid3)!.questLog.find((x) => x.questId === 'q_no_rest');
     expect(q3?.counts).toEqual([1]);

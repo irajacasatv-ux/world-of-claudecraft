@@ -18,9 +18,13 @@ import {
 import { Sim } from '../src/sim/sim';
 import type { Entity, QuestProgress, SimEvent } from '../src/sim/types';
 import { terrainHeight } from '../src/sim/world';
+import { worldWithOnlyNpcs } from './helpers/npc_world';
 
 type AnySim = Sim & Record<string, any>;
 type AnyEntity = Entity & Record<string, any>;
+
+// Every Sim case reaches only q_wolves's giver (also its turn-in NPC).
+const REDBROOK_WORLD = worldWithOnlyNpcs('marshal_redbrook');
 
 function teleport(sim: AnySim, e: AnyEntity, x: number, z: number): void {
   e.pos.x = x;
@@ -82,7 +86,7 @@ describe('quest_commands: computeQuestState projection', () => {
 
 describe('quest_commands: questState delegate', () => {
   it('returns unavailable for an unresolvable pid and the projection for a real player', () => {
-    const sim = new Sim({ seed: 42, playerClass: 'warrior' }) as AnySim;
+    const sim = new Sim({ seed: 42, playerClass: 'warrior', world: REDBROOK_WORLD }) as AnySim;
     const pid = sim.playerId;
     expect(questState(sim.ctx, 'q_wolves', 999999)).toBe('unavailable'); // no such player
     expect(questState(sim.ctx, 'q_wolves', pid)).toBe('available');
@@ -92,7 +96,7 @@ describe('quest_commands: questState delegate', () => {
 
 describe('quest_commands: acceptQuest', () => {
   it('accepts at the giver NPC (records the log + the accepted event)', () => {
-    const sim = new Sim({ seed: 42, playerClass: 'warrior' }) as AnySim;
+    const sim = new Sim({ seed: 42, playerClass: 'warrior', world: REDBROOK_WORLD }) as AnySim;
     const pid = sim.playerId;
     const giver = findNpc(sim, QUESTS.q_wolves.giverNpcId);
     teleport(sim, sim.player as AnyEntity, giver.pos.x, giver.pos.z);
@@ -107,7 +111,7 @@ describe('quest_commands: acceptQuest', () => {
   });
 
   it('rejects when out of range (Too far away.)', () => {
-    const sim = new Sim({ seed: 42, playerClass: 'warrior' }) as AnySim;
+    const sim = new Sim({ seed: 42, playerClass: 'warrior', world: REDBROOK_WORLD }) as AnySim;
     const pid = sim.playerId;
     // The giver exists in the world but the player is nowhere near it.
     teleport(sim, sim.player as AnyEntity, 900, 900);
@@ -118,7 +122,7 @@ describe('quest_commands: acceptQuest', () => {
   });
 
   it('rejects an unknown quest and a re-accept of a held quest (not available)', () => {
-    const sim = new Sim({ seed: 42, playerClass: 'warrior' }) as AnySim;
+    const sim = new Sim({ seed: 42, playerClass: 'warrior', world: REDBROOK_WORLD }) as AnySim;
     const pid = sim.playerId;
     const giver = findNpc(sim, QUESTS.q_wolves.giverNpcId);
     teleport(sim, sim.player as AnyEntity, giver.pos.x, giver.pos.z);
@@ -135,7 +139,7 @@ describe('quest_commands: acceptQuest', () => {
 
 describe('quest_commands: abandonQuest', () => {
   it('clears a held quest with a log, and no-ops on a quest not in the log', () => {
-    const sim = new Sim({ seed: 42, playerClass: 'warrior' }) as AnySim;
+    const sim = new Sim({ seed: 42, playerClass: 'warrior', world: REDBROOK_WORLD }) as AnySim;
     const pid = sim.playerId;
     const giver = findNpc(sim, QUESTS.q_wolves.giverNpcId);
     teleport(sim, sim.player as AnyEntity, giver.pos.x, giver.pos.z);
@@ -155,7 +159,7 @@ describe('quest_commands: abandonQuest', () => {
 
 describe('quest_commands: turnInQuest', () => {
   it('grants copper + XP, marks done, and rejects an incomplete quest', () => {
-    const sim = new Sim({ seed: 42, playerClass: 'warrior' }) as AnySim;
+    const sim = new Sim({ seed: 42, playerClass: 'warrior', world: REDBROOK_WORLD }) as AnySim;
     const pid = sim.playerId;
     const meta = sim.players.get(pid)!;
     const giver = findNpc(sim, QUESTS.q_wolves.giverNpcId);
@@ -192,7 +196,12 @@ describe('quest_commands: turnInQuest', () => {
 
 describe('quest_commands: acceptLinkedQuest', () => {
   it('gates on shared party membership, then shares (with a sharer notice)', () => {
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true }) as AnySim;
+    const sim = new Sim({
+      seed: 42,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: REDBROOK_WORLD,
+    }) as AnySim;
     const a = sim.addPlayer('warrior', 'Aleph'); // sharer
     const b = sim.addPlayer('mage', 'Bet'); // acceptor
 
@@ -224,7 +233,12 @@ describe('quest_commands: acceptLinkedQuest', () => {
   });
 
   it('re-grants a missing requiredItem through finalizeQuestAccept (fallback re-grant)', () => {
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true }) as AnySim;
+    const sim = new Sim({
+      seed: 42,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: REDBROOK_WORLD,
+    }) as AnySim;
     const a = sim.addPlayer('warrior', 'Aleph');
     const b = sim.addPlayer('mage', 'Bet');
     const quest = 'q_nythraxis_bound_guardian'; // requiredItems: ['crypt_keystone']

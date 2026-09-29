@@ -1,10 +1,17 @@
 import { describe, expect, it } from 'vitest';
 import { QUESTS } from '../src/sim/data';
 import { Sim } from '../src/sim/sim';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // Two players in one party, not near any quest giver. Returns their pids + sim.
 function partyOfTwo() {
-  const sim = new Sim({ seed: 42, playerClass: 'warrior', autoEquip: true, noPlayer: true });
+  const sim = new Sim({
+    seed: 42,
+    playerClass: 'warrior',
+    autoEquip: true,
+    noPlayer: true,
+    world: EMPTY_TEST_WORLD,
+  });
   const a = sim.addPlayer('warrior', 'Aki'); // sharer
   const b = sim.addPlayer('warrior', 'Bex'); // recipient
   sim.partyInvite(b, a);
@@ -48,7 +55,13 @@ describe('acceptLinkedQuest', () => {
   });
 
   it('rejects a non-party clicker', () => {
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', autoEquip: true, noPlayer: true });
+    const sim = new Sim({
+      seed: 42,
+      playerClass: 'warrior',
+      autoEquip: true,
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const a = sim.addPlayer('warrior', 'Aki');
     const c = sim.addPlayer('warrior', 'Cas'); // NOT in a party with Aki
     const q = simpleQuestId();

@@ -6,11 +6,14 @@ import { Sim } from '../src/sim/sim';
 import type { Entity, QuestDef } from '../src/sim/types';
 import { groundHeight } from '../src/sim/world';
 import { expectDefined } from './helpers/defined';
+import { worldWithOnlyNpcs } from './helpers/npc_world';
 
 const BOUND_GUARDIAN = 'q_nythraxis_bound_guardian';
 const KEYSTONE = 'crypt_keystone';
 const REWARD = 'kings_signet';
 const HIGHWATCH_ALDRIC = 'brother_aldric_highwatch';
+// The integration cases reach only the Bound Guardian's giver (and turn-in).
+const ALDRIC_WORLD = worldWithOnlyNpcs(HIGHWATCH_ALDRIC);
 
 function quest(extra: Partial<QuestDef>): QuestDef {
   return {
@@ -65,7 +68,7 @@ describe('questFallbackGrants (pure)', () => {
 // re-granted on accept when missing (the original progression-block scenario),
 // and not duplicated when already held.
 function makeAttunedPlayerAtGiver(): { sim: Sim; pid: number } {
-  const sim = new Sim({ seed: 7, playerClass: 'warrior', noPlayer: true });
+  const sim = new Sim({ seed: 7, playerClass: 'warrior', noPlayer: true, world: ALDRIC_WORLD });
   const pid = sim.addPlayer('warrior', 'Tester');
   const meta = sim.players.get(pid)!;
   // Satisfy accept gates: prerequisite done + minLevel.

@@ -3,6 +3,7 @@ import { allEpicGearIds } from '../src/sim/content/ptr_dev_vendor';
 import { ITEMS } from '../src/sim/data';
 import { Sim } from '../src/sim/sim';
 import type { Entity } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // The dev-only free-epic vendor: /dev vendor spawns it, it sells every epic for
 // free, and it is inert on a production realm (devCommands off). Gated tests.
@@ -24,7 +25,13 @@ describe('ptr dev vendor', () => {
   });
 
   it('/dev vendor spawns a free vendor and buying an epic costs nothing (dev realm)', () => {
-    const sim = new Sim({ seed: 5, playerClass: 'warrior', autoEquip: false, devCommands: true });
+    const sim = new Sim({
+      seed: 5,
+      playerClass: 'warrior',
+      autoEquip: false,
+      devCommands: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.setPlayerLevel(20);
     const p = sim.player;
     const copperBefore = (sim as unknown as { meta(pid?: number): { copper: number } }).meta?.(
@@ -58,7 +65,13 @@ describe('ptr dev vendor', () => {
     // untested leaf of the count path: costs stay zero at any count, the
     // grant multiplies, sanitize still refuses hostile counts, and the
     // capacity pre-check still refuses whole.
-    const sim = new Sim({ seed: 5, playerClass: 'warrior', autoEquip: false, devCommands: true });
+    const sim = new Sim({
+      seed: 5,
+      playerClass: 'warrior',
+      autoEquip: false,
+      devCommands: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.setPlayerLevel(20);
     sim.chat('/dev vendor');
     sim.tick();
@@ -90,7 +103,13 @@ describe('ptr dev vendor', () => {
     // while the unguarded flow would sail through both balance compares and
     // answer 'Your bags are full.' from canAddItem instead. The paid-path
     // magnitude arm in tests/items.test.ts cannot make this distinction.
-    const sim = new Sim({ seed: 5, playerClass: 'warrior', autoEquip: false, devCommands: true });
+    const sim = new Sim({
+      seed: 5,
+      playerClass: 'warrior',
+      autoEquip: false,
+      devCommands: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.setPlayerLevel(20);
     sim.chat('/dev vendor');
     sim.tick();
@@ -118,7 +137,13 @@ describe('ptr dev vendor', () => {
   });
 
   it('is inert on a production realm: /dev vendor does nothing without devCommands', () => {
-    const sim = new Sim({ seed: 5, playerClass: 'warrior', autoEquip: true, devCommands: false });
+    const sim = new Sim({
+      seed: 5,
+      playerClass: 'warrior',
+      autoEquip: true,
+      devCommands: false,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.setPlayerLevel(20);
     sim.chat('/dev vendor');
     sim.tick();

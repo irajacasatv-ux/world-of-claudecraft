@@ -4,12 +4,13 @@
 // the caller and returns null, so it never enters the chat log and needs no
 // server interceptor to work online.
 import { describe, expect, it } from 'vitest';
-import { Sim } from '../src/sim/sim';
 import { QUESTS } from '../src/sim/data';
-import { SimEvent } from '../src/sim/types';
+import { Sim } from '../src/sim/sim';
+import type { SimEvent } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 function makeWorld() {
-  return new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+  return new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true, world: EMPTY_TEST_WORLD });
 }
 
 function errorTo(events: SimEvent[], pid: number): string[] {

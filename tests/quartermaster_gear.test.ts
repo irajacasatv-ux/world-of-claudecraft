@@ -3,6 +3,7 @@ import { ITEMS, MOBS } from '../src/sim/data';
 import { Sim } from '../src/sim/sim';
 import { tEntity } from '../src/ui/entity_i18n';
 import { ensureLocaleLoaded, setLanguage } from '../src/ui/i18n';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // The Quartermaster's Consignment has 10 uncommon gear pieces. Eight are stocked
 // by The Merchant on the World Market; two drop from Vale threats.
@@ -40,7 +41,12 @@ describe("Quartermaster's Consignment gear pack", () => {
   });
 
   it("stocks the eight consignment pieces on the Merchant's standing market", () => {
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+    const sim = new Sim({
+      seed: 42,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const house = sim.marketListings.filter((l) => l.house);
     for (const id of VENDOR) {
       expect(

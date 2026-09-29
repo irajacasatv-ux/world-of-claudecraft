@@ -7,6 +7,7 @@ import { turnInQuestCore } from '../src/sim/quests/quest_commands';
 import { Sim } from '../src/sim/sim';
 import type { QuestDef } from '../src/sim/types';
 import { expectDefined } from './helpers/defined';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const RECIPE: ProfessionRecipeRecord & { consumeOnCraft: true } = {
   id: 'recipe_test_one_use_quest',
@@ -36,7 +37,12 @@ const QUEST: QuestDef & { recipeReward: string } = {
 };
 
 function readySmith(skill = 125) {
-  const sim = new Sim({ seed: 19, playerClass: 'warrior', autoEquip: false });
+  const sim = new Sim({
+    seed: 19,
+    playerClass: 'warrior',
+    autoEquip: false,
+    world: EMPTY_TEST_WORLD,
+  });
   const meta = expectDefined(sim.players.get(sim.playerId), 'smith');
   meta.craftSkills.weaponcrafting = skill;
   sim.addItem('spider_leg', 1);

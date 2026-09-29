@@ -11,7 +11,7 @@
 // The mob arm and its Broodmother-egg cases stay in tests/mirefen_dedupe_objectives.ts.
 
 import { describe, expect, it } from 'vitest';
-import { GROUND_OBJECTS, ITEMS, QUESTS } from '../src/sim/data';
+import { BUILTIN_WORLD, GROUND_OBJECTS, ITEMS, QUESTS } from '../src/sim/data';
 import {
   isQuestGatedEntityHidden,
   isQuestGatedGroundObjectHidden,
@@ -104,7 +104,10 @@ describe('quest-gated ground collectables (content-wide)', () => {
 });
 
 describe('quest-gated ground collectables against a live world', () => {
-  const makeSim = () => new Sim({ seed: 42, playerClass: 'warrior', playerName: 'Gate' });
+  // Every authored ground object, and none of the camps or NPCs these cases never read.
+  const GROUND_OBJECT_WORLD = { ...BUILTIN_WORLD, camps: [], npcs: {} };
+  const makeSim = () =>
+    new Sim({ seed: 42, playerClass: 'warrior', playerName: 'Gate', world: GROUND_OBJECT_WORLD });
 
   it('leaves the entity spawned in the sim: only the viewer hides it', () => {
     // The world is shared and the server is authoritative, so the crate must still be a

@@ -11,8 +11,11 @@
 import { describe, expect, it } from 'vitest';
 import { QUESTS } from '../src/sim/data';
 import { Sim } from '../src/sim/sim';
+import { worldWithOnlyNpcs } from './helpers/npc_world';
 
 const QID = 'q_wolves';
+// The Sims reach only q_wolves's turn-in NPC.
+const REDBROOK_WORLD = worldWithOnlyNpcs('marshal_redbrook');
 
 function driveToTurnIn(sim: Sim): void {
   const quest = QUESTS[QID];
@@ -31,19 +34,29 @@ function driveToTurnIn(sim: Sim): void {
 
 describe('completed quest does not repeat', () => {
   it('is "done" immediately after turn-in', () => {
-    const sim = new Sim({ seed: 1, playerClass: 'warrior', playerName: 'W' });
+    const sim = new Sim({
+      seed: 1,
+      playerClass: 'warrior',
+      playerName: 'W',
+      world: REDBROOK_WORLD,
+    });
     sim.setPlayerLevel(5);
     driveToTurnIn(sim);
     expect(sim.questState(QID)).toBe('done');
   });
 
   it('stays "done" across a serialize/deserialize round-trip', () => {
-    const sim = new Sim({ seed: 1, playerClass: 'warrior', playerName: 'W' });
+    const sim = new Sim({
+      seed: 1,
+      playerClass: 'warrior',
+      playerName: 'W',
+      world: REDBROOK_WORLD,
+    });
     sim.setPlayerLevel(5);
     driveToTurnIn(sim);
     const state = sim.serializeCharacter(sim.playerId)!;
 
-    const sim2 = new Sim({ seed: 1, noPlayer: true } as any);
+    const sim2 = new Sim({ seed: 1, noPlayer: true, world: REDBROOK_WORLD } as any);
     const pid = sim2.addPlayer('warrior', 'W', { state });
     expect(sim2.questState(QID, pid)).toBe('done');
   });
