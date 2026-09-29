@@ -11,6 +11,8 @@ describe('tank crit immunity vs mobs (paladin)', () => {
   });
 
   it('a Retribution paladin still eats mob crits', () => {
-    expect(critsTaken({ cls: 'paladin', spec: 'retribution' }).crits).toBeGreaterThan(0);
+    const { hits, crits } = critsTaken({ cls: 'paladin', spec: 'retribution' });
+    expect(hits).toBeGreaterThan(50);
+    expect(crits).toBe(hits); // the forced roll crits every landed hit
   });
 });

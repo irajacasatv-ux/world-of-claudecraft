@@ -11,6 +11,8 @@ describe('tank crit immunity vs mobs (druid)', () => {
   });
 
   it('a Feral druid OUT of form still eats mob crits: the form is the commitment', () => {
-    expect(critsTaken({ cls: 'druid', spec: 'feral' }).crits).toBeGreaterThan(0);
+    const { hits, crits } = critsTaken({ cls: 'druid', spec: 'feral' });
+    expect(hits).toBeGreaterThan(50);
+    expect(crits).toBe(hits); // the forced roll crits every landed hit
   });
 });

@@ -23,8 +23,9 @@ export const WINDOW_SECONDS = 60;
 const SWING_SPEEDUP = 4;
 // The wolf's crit roll (the 5 percent `chance` in Sim.mobSwing) is forced to succeed,
 // so every landed swing crits unless the defender is a committed tank. Both arms
-// are then decisive on any stream: at the natural rate a 100-swing fight rolls one
-// or two crits, and a non-immune arm would ride the seed's luck.
+// are then decisive on any stream: at the natural rate a 100-swing fight rolls a
+// handful of crits, and a non-immune arm would ride the seed's luck, so a non-tank
+// case asserts every landed hit crit, not just some.
 const MOB_CRIT_CHANCE = 0.05;
 
 export type Setup = {
@@ -37,7 +38,7 @@ export type Setup = {
 };
 
 // One identical fight per case: same seed, same mob, same window; only the
-// defender's build differs. Returns landed swings and crits taken.
+// defender's build differs. Returns landed hits and crits taken.
 // Hand-spawned wolf only: empty ambient world so 240 s of ticks stay cheap
 // (subsystem-world pattern; does not change hit/crit assertions).
 export function critsTaken(setup: Setup): { hits: number; crits: number } {
@@ -47,13 +48,22 @@ export function critsTaken(setup: Setup): { hits: number; crits: number } {
     noPlayer: true,
     world: EMPTY_TEST_WORLD,
   });
-  // Forced only inside the wolf's own swing (the ctx.mobSwing wrap below), so a
-  // defender's 5 percent proc or imbue roll keeps its natural outcome.
+  // Forced only on the crit roll itself: the FIRST `chance` draw inside the wolf's
+  // own swing (the ctx.mobSwing wrap below), and only at 5 percent. A landed swing
+  // draws its attack-table roll with rng.next and its damage with rng.range before
+  // the crit roll; a dodge or parry returns before it, drawing only Revenge's 30
+  // percent. So a defender's 5 percent when-struck proc drawn later in the same
+  // swing, and any roll outside the swing, keeps its natural outcome; `forced`
+  // counts the forcings so the fight can prove exactly one per landed swing.
   let wolfSwinging = false;
+  let swingDraws = 0;
+  let forced = 0;
   const chance = sim.rng.chance.bind(sim.rng);
   sim.rng.chance = (p: number) => {
     const drawn = chance(p); // still drawn, so the stream keeps its position
-    return (wolfSwinging && p === MOB_CRIT_CHANCE) || drawn;
+    if (!wolfSwinging || swingDraws++ > 0 || p !== MOB_CRIT_CHANCE) return drawn;
+    forced++;
+    return true;
   };
   const pid = sim.addPlayer(setup.cls, 'Defender');
   sim.setPlayerLevel(20, pid);
@@ -87,6 +97,7 @@ export function critsTaken(setup: Setup): { hits: number; crits: number } {
   const swing = ctx.mobSwing;
   ctx.mobSwing = (attacker, target) => {
     wolfSwinging = attacker.id === mob.id;
+    swingDraws = 0;
     try {
       swing(attacker, target);
     } finally {
@@ -100,22 +111,23 @@ export function critsTaken(setup: Setup): { hits: number; crits: number } {
 
   let hits = 0;
   let crits = 0;
+  let landed = 0; // hits plus blocks: every swing that rolled for a crit
   for (let tick = 0; tick < WINDOW_SECONDS * 20; tick++) {
     p.hp = p.maxHp;
     mob.aggroTargetId = pid;
     mob.threat.set(pid, 1e9);
     for (const event of sim.tick()) {
-      if (
-        event.type === 'damage' &&
-        event.sourceId === mob.id &&
-        event.targetId === pid &&
-        event.kind === 'hit'
-      ) {
+      if (event.type !== 'damage' || event.sourceId !== mob.id || event.targetId !== pid) continue;
+      if (event.kind === 'hit' || event.kind === 'block') landed++;
+      if (event.kind === 'hit') {
         hits++;
         if (event.crit) crits++;
       }
     }
   }
   expect(hits).toBeGreaterThan(30); // the fight actually ran
+  // Exactly one forced draw per landed swing: the force reached every crit roll
+  // and nothing else (a second 5 percent draw in a swing is left natural).
+  expect(forced).toBe(landed);
   return { hits, crits };
 }

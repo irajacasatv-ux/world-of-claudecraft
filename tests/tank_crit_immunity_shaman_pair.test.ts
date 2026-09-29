@@ -22,8 +22,12 @@ describe('tank crit immunity vs mobs (shaman)', () => {
   });
 
   it('a Galeheart Enhancement shaman still eats mob crits: the posture is the commitment', () => {
-    expect(
-      critsTaken({ cls: 'shaman', spec: 'enhancement', imbue: 'galeheart_weapon' }).crits,
-    ).toBeGreaterThan(0);
+    const { hits, crits } = critsTaken({
+      cls: 'shaman',
+      spec: 'enhancement',
+      imbue: 'galeheart_weapon',
+    });
+    expect(hits).toBeGreaterThan(50);
+    expect(crits).toBe(hits); // the forced roll crits every landed hit
   });
 });

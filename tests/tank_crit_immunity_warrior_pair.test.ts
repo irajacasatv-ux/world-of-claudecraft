@@ -11,6 +11,8 @@ describe('tank crit immunity vs mobs (warrior)', () => {
   });
 
   it('an Arms warrior still eats mob crits (the roll is alive)', () => {
-    expect(critsTaken({ cls: 'warrior', spec: 'arms' }).crits).toBeGreaterThan(0);
+    const { hits, crits } = critsTaken({ cls: 'warrior', spec: 'arms' });
+    expect(hits).toBeGreaterThan(50);
+    expect(crits).toBe(hits); // the forced roll crits every landed hit
   });
 });
