@@ -11,9 +11,11 @@ import { onBossAddsSummonedForDeeds, onDamageDealtForDeeds, updateDeeds } from '
 import { createMob } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
 import type { Entity, Vec3 } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
+// Every case spawns the boss it tracks, so the empty world serves.
 function makeSim(seed = 42): Sim {
-  return new Sim({ seed, playerClass: 'warrior', autoEquip: false });
+  return new Sim({ seed, playerClass: 'warrior', autoEquip: false, world: EMPTY_TEST_WORLD });
 }
 
 function spawnMob(sim: Sim, templateId: string, pos: Vec3, level = 10): Entity {
