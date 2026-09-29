@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { Sim } from '../src/sim/sim';
-import { SimEvent } from '../src/sim/types';
+import type { SimEvent } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
+// The readout reads only the players each case adds, so the empty world serves.
 function makeSim() {
-  return new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+  return new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true, world: EMPTY_TEST_WORLD });
 }
 
 function errorText(events: SimEvent[], pid: number): string | undefined {
@@ -33,7 +35,7 @@ describe('/attack command', () => {
     pa.targetId = tb.id;
     pa.swingTimer = 1.2;
     sim.chat('/attack', a);
-    const expected = (pa.weapon.speed).toFixed(1);
+    const expected = pa.weapon.speed.toFixed(1);
     expect(errorText(sim.tick(), a)).toBe(
       `Auto-attack is on against Bet — next swing in 1.2s (${expected}s swing).`,
     );
