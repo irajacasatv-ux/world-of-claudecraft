@@ -14,9 +14,21 @@ import type { RiftInstance } from '../src/sim/rift/types';
 import { makeVaultSeed } from '../src/sim/rift/vault_seed';
 import { Sim } from '../src/sim/sim';
 import type { Entity, SimEvent } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
+
+// The hoard and the ordinary rift are private instances, so every Sim runs on
+// the empty world, on one seed (the ordinary-rift case's seed 5 paid a second
+// full build).
+const SEED = 6120;
 
 function makeHoard(rarity: 'common' | 'rare' | 'epic' | 'legendary' = 'epic') {
-  const sim = new Sim({ seed: 6120, playerClass: 'warrior', autoEquip: false, devCommands: true });
+  const sim = new Sim({
+    seed: SEED,
+    playerClass: 'warrior',
+    autoEquip: false,
+    devCommands: true,
+    world: EMPTY_TEST_WORLD,
+  });
   sim.chat('/dev level 20', sim.player.id);
   sim.chat('/dev god', sim.player.id);
   const portal = { ...sim.player, id: -1, vaultOwnerPid: sim.player.id, vaultRarity: rarity };
@@ -142,7 +154,12 @@ describe('Buried Hoard reward chest', () => {
   });
 
   it('never appears in an ordinary rift', () => {
-    const sim = new Sim({ seed: 5, playerClass: 'warrior', devCommands: true });
+    const sim = new Sim({
+      seed: SEED,
+      playerClass: 'warrior',
+      devCommands: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.chat('/dev level 20', sim.player.id);
     sim.enterRift(424242, 20, sim.player.id);
     const inst = sim.riftInstances.find((candidate) => candidate.partyKey !== null);
