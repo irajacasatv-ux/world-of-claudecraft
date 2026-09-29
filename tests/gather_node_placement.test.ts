@@ -21,7 +21,7 @@
 
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 import { isBlocked } from '../src/sim/colliders';
 import {
   CAMPS,
@@ -242,15 +242,36 @@ function cellPassable(x: number, z: number): boolean {
   return false;
 }
 
+// The flood reaches every cell from up to eight neighbours, and each step used
+// to re-read the same per-point terrain values (a cell's passability, its ride
+// height as a step's origin AND as a destination, its swim depth, its ground
+// gradient), about 85 percent of this file's time in terrain sampling. Each is a
+// pure function of the exact point over the fixed built-in world, so the flood
+// reads them through a per-point memo: the same values, each computed once.
+function memoByPoint<T>(read: (x: number, z: number) => T): (x: number, z: number) => T {
+  const values = new Map<string, T>();
+  return (x, z) => {
+    const key = `${x},${z}`;
+    if (values.has(key)) return values.get(key) as T;
+    const value = read(x, z);
+    values.set(key, value);
+    return value;
+  };
+}
+const floodPassable = memoByPoint(cellPassable);
+const floodRideHeight = memoByPoint(rideHeight);
+const floodSwimDepth = memoByPoint(isSwimDepth);
+const floodSteepness = memoByPoint((x, z) => terrainSteepnessAt(x, z, WORLD_SEED));
+
 function stepAllowed(fromX: number, fromZ: number, toX: number, toZ: number): boolean {
-  if (!cellPassable(toX, toZ)) return false;
-  const h0 = rideHeight(fromX, fromZ);
-  const h1 = rideHeight(toX, toZ);
+  if (!floodPassable(toX, toZ)) return false;
+  const h0 = floodRideHeight(fromX, fromZ);
+  const h1 = floodRideHeight(toX, toZ);
   const run = Math.hypot(toX - fromX, toZ - fromZ);
   if (h1 <= h0 || run <= 1e-5) return true;
   if ((h1 - h0) / run > PLAYER_MAX_CLIMB_SLOPE) return false;
-  if (isSwimDepth(toX, toZ)) return true; // swimming skips the climb gate
-  return terrainSteepnessAt(toX, toZ, WORLD_SEED) <= PLAYER_MAX_CLIMB_SLOPE;
+  if (floodSwimDepth(toX, toZ)) return true; // swimming skips the climb gate
+  return floodSteepness(toX, toZ) <= PLAYER_MAX_CLIMB_SLOPE;
 }
 
 interface Box {
@@ -320,12 +341,16 @@ function hubFloodStart(zone: (typeof ZONES)[number]): { x: number; z: number } {
 }
 
 // Reachability floods are the one expensive thing here, so run each zone's once
-// and share it across the arms that need it.
+// and share it across the arms that need it. They run in a beforeAll (below,
+// beside the maze-wall flood), not at collection, so their cost shows in the
+// file's measured test time.
 const reachedByZone = new Map<string, Set<string>>();
-for (const zone of ZONES) {
-  const nodes = GATHER_NODES.filter((n) => n.zoneId === zone.id).map((n) => n.pos);
-  const start = hubFloodStart(zone);
-  reachedByZone.set(zone.id, floodFrom(start, boxAround([start, ...nodes])));
+function floodEveryZone(): void {
+  for (const zone of ZONES) {
+    const nodes = GATHER_NODES.filter((n) => n.zoneId === zone.id).map((n) => n.pos);
+    const start = hubFloodStart(zone);
+    reachedByZone.set(zone.id, floodFrom(start, boxAround([start, ...nodes])));
+  }
 }
 
 // Named points used as counter-examples below. Every one is measured, not
@@ -360,7 +385,11 @@ const ON_MAZE_WALL_POCKET = { x: -232, z: 452 };
 // against this exact box (ZONES[0].hub, boxed around the hub and the maze
 // pocket), so computing it twice bought nothing but wall time.
 const MAZE_WALL_FLOOD_BOX = boxAround([ZONES[0].hub, ON_MAZE_WALL_POCKET]);
-const MAZE_WALL_FLOOD = floodFrom(ZONES[0].hub, MAZE_WALL_FLOOD_BOX);
+let MAZE_WALL_FLOOD = new Set<string>();
+beforeAll(() => {
+  floodEveryZone();
+  MAZE_WALL_FLOOD = floodFrom(ZONES[0].hub, MAZE_WALL_FLOOD_BOX);
+}, 60_000);
 // The Eastbrook lake dock's plank surface: groundHeight rides dockSurfaceHeight
 // above the shore terrain here, so the two really differ.
 const ON_A_DOCK_PLANK = { x: PROPS.docks[0].x, z: PROPS.docks[0].z };
@@ -507,9 +536,12 @@ describe('gather node placement: every node sits on ground a player can work', (
   // this exact sweep over every shipped node, and re-running it a second time
   // over the same 54 nodes bought nothing but wall time, since the function is
   // a pure read of the (seed, node position) pair both arms already validate.
-  const seaClearanceByNode = new Map(
-    GATHER_NODES.map((node) => [node.id, seaClearanceInReach(node.pos.x, node.pos.z)] as const),
-  );
+  let seaClearanceByNode = new Map<string, number>();
+  beforeAll(() => {
+    seaClearanceByNode = new Map(
+      GATHER_NODES.map((node) => [node.id, seaClearanceInReach(node.pos.x, node.pos.z)] as const),
+    );
+  }, 60_000);
   function cachedSeaClearance(nodeId: string): number {
     const cached = seaClearanceByNode.get(nodeId);
     if (cached === undefined) throw new Error(`no cached sea clearance for ${nodeId}`);
