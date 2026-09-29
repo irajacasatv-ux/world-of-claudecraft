@@ -36,9 +36,12 @@ function fakeMeta() {
   >[0];
 }
 
-function makeSim(seed = 7) {
+// Every Sim in the file runs on seed 7: a fresh seed pays its own collider
+// bootstrap, and the loot property and its determinism pair read the roll
+// stream the ticks advance, never a particular seed.
+function makeSim() {
   return new Sim({
-    seed,
+    seed: 7,
     playerClass: 'warrior',
     autoEquip: true,
     noPlayer: true,
@@ -413,7 +416,7 @@ describe('world boss personal loot', () => {
 
   it('caps gear at one Tier-2 piece per contributor (never a glove AND a belt in one kill)', () => {
     let anyGearDropped = false;
-    const sim = makeSim(1);
+    const sim = makeSim();
     sim.utcDay = DAY;
     const pids = [
       sim.addPlayer('warrior', 'Ada'),
@@ -471,7 +474,7 @@ describe('world boss personal loot', () => {
 
   it('produces identical personal loot for the same seed (determinism)', () => {
     const run = () => {
-      const sim = makeSim(99);
+      const sim = makeSim();
       sim.utcDay = DAY;
       const p1 = sim.addPlayer('warrior', 'Ada');
       const p2 = sim.addPlayer('rogue', 'Bru');
