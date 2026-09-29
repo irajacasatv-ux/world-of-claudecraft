@@ -168,8 +168,9 @@ use the `tests/server/helpers/` fakes (see Map), not a bespoke GameServer rig.
   classification and is not one. Touching `update()` means touching this file.
 - SFX gates: the `sfx_*` suites (`sfx_conform`, `sfx_studio_server_security`,
   `tests/server/static_sfx_serving`, ...) mirror `npm run sfx:check`.
-- `malware_scan.test.ts` is the release-gate backstop (signatures from `scripts/malware_scan.mjs`,
-  zero high-severity findings allowed in the tree); run it after touching the scanner.
+- `malware_scan.test.ts` pins the scanner's rules in both directions (signatures from
+  `scripts/malware_scan.mjs`); the zero-HIGH whole-tree check is `npm run security:gate`, its own
+  step in pr-checks, release-checks and the nightly. Run both after touching the scanner.
 
 ## i18n gates live here (don't produce strings, enforce them)
 Run them after any sim/server player-text or English-catalog change. They depend on generated

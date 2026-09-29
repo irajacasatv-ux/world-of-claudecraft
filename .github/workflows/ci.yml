@@ -1133,8 +1133,8 @@ jobs:
       # expected dev-tooling false positives), so this uses --gate: it fails only on
       # a HIGH-severity signature that survives the path-aware priors (a wallet
       # drainer, a hardcoded-credential auth bypass, an exfil channel, a planted
-      # instruction-file injection). tests/malware_scan.test.ts asserts the same
-      # inside `npm test`; this just surfaces it sooner and more legibly.
+      # instruction-file injection). This step IS the whole-tree check on a PR:
+      # tests/malware_scan.test.ts pins the scanner's rules, not the tree.
       - name: Malicious-code gate
         run: npm run security:gate
 
