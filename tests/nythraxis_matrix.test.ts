@@ -23,10 +23,13 @@ describe('Nythraxis matrix DPS rotations', () => {
     try {
       // One child, at the NON-default shard (1 of 2): Monte Carlo mode shards
       // seed samples, so this shard must hold exactly the second sample (seed 2)
-      // across all four plans. Shard 0 would also be what an unsharded or
-      // index-blind filter returns first, so it proves less; one child at shard
-      // 1 pins the selection that two children (shard 0, then shard 1) pinned,
-      // at half the Monte Carlo fights.
+      // across all four plans. Shard 0 is also what an unsharded or index-blind
+      // filter returns first, so this child proves the wiring better than a
+      // shard-0 child would; shard 0's own sample (seed 1) is pinned without a
+      // fight by the sharding rule's cases in tests/nythraxis_matrix_core.test.ts,
+      // and the case below pins that the script routes through that rule. The
+      // gear, talent and cast assertions below read seed 2's fights (they read
+      // seed 1's while a shard-0 child ran first).
       execFileSync(
         process.execPath,
         [resolve('node_modules/tsx/dist/cli.mjs'), 'scripts/nythraxis_matrix.ts'],
@@ -164,6 +167,19 @@ describe('Nythraxis matrix DPS rotations', () => {
     // bound, so the child keeps 300s (about ten times its CI time) and the case
     // clears it with room for the report reads, under the single-test cap.
   }, 420_000);
+
+  it('routes plan and seed-sample sharding through the pinned core rule', () => {
+    // The rule itself (every shard index, both modes) is pinned in
+    // tests/nythraxis_matrix_core.test.ts; this holds the script to it, read with
+    // line comments stripped so a comment cannot satisfy the pin.
+    const code = source.replace(/^\s*\/\/.*$/gm, '');
+    expect(code).toContain('const shardOptions = { tankMonteCarloRuns, shardCount, shardIndex };');
+    expect(code).toContain('const selectedForShard = plansForShard(selected, shardOptions);');
+    expect(code).toContain('if (!seedSampleInShard(seedIndex, shardOptions)) continue;');
+    expect(code.match(/for \(const \[seedIndex, seed\] of runSeeds\.entries\(\)\)/g)).toHaveLength(
+      1,
+    );
+  });
 
   it('moves long caster buffs to prepull instead of recurring combat priority', () => {
     expect(source).toContain("prepull: ['arcane_intellect']");

@@ -82,3 +82,17 @@ export function nythraxisDamageBucket(targetId, templateId, bossId) {
   if (targetId === bossId) return 'boss';
   return NYTHRAXIS_ADD_IDS.has(templateId) ? 'add' : null;
 }
+
+/** The matrix's sharding rule, one owner for both modes. Monte Carlo mode
+ * (tankMonteCarloRuns above zero) shards the seed samples, so every shard keeps
+ * every plan and holds only the samples whose index lands on it; standard mode
+ * shards the plans and every shard runs every seed. */
+export function seedSampleInShard(seedIndex, { tankMonteCarloRuns, shardCount, shardIndex }) {
+  return tankMonteCarloRuns <= 0 || seedIndex % shardCount === shardIndex;
+}
+
+export function plansForShard(plans, { tankMonteCarloRuns, shardCount, shardIndex }) {
+  return tankMonteCarloRuns > 0
+    ? plans
+    : plans.filter((_, index) => index % shardCount === shardIndex);
+}

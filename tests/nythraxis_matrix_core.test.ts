@@ -5,6 +5,8 @@ import {
   combatElapsed,
   comparisonPlans,
   nythraxisDamageBucket,
+  plansForShard,
+  seedSampleInShard,
   WARLOCK_BENCHMARK_ROWS,
 } from '../scripts/lib/nythraxis_matrix_core.mjs';
 import { defaultBuild, validateAllocation } from '../src/sim/content/talents';
@@ -118,5 +120,49 @@ describe('Nythraxis matrix comparison plans', () => {
       expect(variants.flatMap((plan) => plan.baselineDps)).not.toContain('warlock-b');
       expect(variants.flatMap((plan) => plan.baselineDps)).not.toContain('warlock-c');
     }
+  });
+});
+
+describe('Nythraxis matrix sharding', () => {
+  // The rule for EVERY shard index, pinned without running a fight: the matrix
+  // suite spawns one Monte Carlo child at shard 1 of 2 (which pins the wiring and
+  // shard 1's sample), so shard 0's sample is held here.
+  const plans = [
+    'protection_warrior',
+    'protection_paladin',
+    'feral_druid_tank',
+    'stonebound_shaman',
+  ];
+  const runSeeds = [1, 2];
+  const shard = (tankMonteCarloRuns: number, shardIndex: number) => {
+    const options = { tankMonteCarloRuns, shardCount: 2, shardIndex };
+    return {
+      seeds: runSeeds.filter((_, seedIndex) => seedSampleInShard(seedIndex, options)),
+      plans: plansForShard(plans, options),
+    };
+  };
+
+  it('gives each Monte Carlo shard its own seed samples and every plan', () => {
+    expect(shard(2, 0)).toEqual({ seeds: [1], plans });
+    expect(shard(2, 1)).toEqual({ seeds: [2], plans });
+    // Three shards over five samples: every sample lands on exactly one shard.
+    const five = [1, 2, 3, 4, 5];
+    const owners = five.map((_, seedIndex) =>
+      [0, 1, 2].filter((shardIndex) =>
+        seedSampleInShard(seedIndex, { tankMonteCarloRuns: 5, shardCount: 3, shardIndex }),
+      ),
+    );
+    expect(owners).toEqual([[0], [1], [2], [0], [1]]);
+  });
+
+  it('shards the plans in standard mode and runs every seed on each shard', () => {
+    expect(shard(0, 0)).toEqual({
+      seeds: runSeeds,
+      plans: ['protection_warrior', 'feral_druid_tank'],
+    });
+    expect(shard(0, 1)).toEqual({
+      seeds: runSeeds,
+      plans: ['protection_paladin', 'stonebound_shaman'],
+    });
   });
 });

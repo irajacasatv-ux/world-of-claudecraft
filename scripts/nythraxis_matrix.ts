@@ -23,6 +23,8 @@ import {
   combatElapsed,
   comparisonPlans,
   nythraxisDamageBucket,
+  plansForShard,
+  seedSampleInShard,
   WARLOCK_BENCHMARK_ROWS,
 } from './lib/nythraxis_matrix_core.mjs';
 
@@ -2148,11 +2150,10 @@ if (!Number.isInteger(shardCount) || shardCount < 1)
 if (!Number.isInteger(shardIndex) || shardIndex < 0 || shardIndex >= shardCount)
   throw new Error('MATRIX_SHARD_INDEX must be between 0 and MATRIX_SHARD_COUNT - 1');
 // Standard matrix mode shards plans. Monte Carlo mode shards seed samples so
-// each shard still contains both tank distributions.
-const selectedForShard =
-  tankMonteCarloRuns > 0
-    ? selected
-    : selected.filter((_, index) => index % shardCount === shardIndex);
+// each shard still contains both tank distributions (the rule lives in
+// seedSampleInShard / plansForShard, pinned for every shard index).
+const shardOptions = { tankMonteCarloRuns, shardCount, shardIndex };
+const selectedForShard = plansForShard(selected, shardOptions);
 // Composed attempt count: base `plans.length`, times this side's MATRIX_SEEDS
 // sample count, with the Monte Carlo roster replacing both in MC mode.
 const attempted =
@@ -2167,7 +2168,7 @@ const runSeeds =
     ? Array.from({ length: tankMonteCarloRuns }, (_, index) => index + 1)
     : seeds;
 for (const [seedIndex, seed] of runSeeds.entries()) {
-  if (tankMonteCarloRuns > 0 && seedIndex % shardCount !== shardIndex) continue;
+  if (!seedSampleInShard(seedIndex, shardOptions)) continue;
   for (const { tank, healerSet, dpsSet } of selectedForShard) {
     // Keep the support roster identical in comparative tank simulations. Using the
     // other candidate as off-tank made its much higher threat change who was

@@ -41,3 +41,13 @@ export function nythraxisDamageBucket(
   templateId: string | undefined,
   bossId: number,
 ): 'boss' | 'add' | null;
+
+export interface MatrixShardOptions {
+  tankMonteCarloRuns: number;
+  shardCount: number;
+  shardIndex: number;
+}
+
+export function seedSampleInShard(seedIndex: number, options: MatrixShardOptions): boolean;
+
+export function plansForShard<T>(plans: readonly T[], options: MatrixShardOptions): readonly T[];
