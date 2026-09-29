@@ -14,8 +14,13 @@ import {
 } from '../src/sim/combat/priest/presentation';
 import { Sim } from '../src/sim/sim';
 import type { Aura } from '../src/sim/types';
+import { WORLD_SEED } from '../src/sim/world_seed';
 import { bareClient, broadcast, fakeWs, joinServer, lastSnap } from './helpers/bare_client';
 import { WIRE_TEST_WORLD } from './helpers/snapshot_wire';
+
+// Every direct Sim here only builds the entity it wires, so each takes the
+// ambient-free wire world on the seed the file's GameServer boots: a Sim on
+// any other seed bootstraps that seed's collider grid again.
 
 describe('client-side delta merge', () => {
   it('does not apply optimistic quest accept or completion state', () => {
@@ -253,7 +258,12 @@ describe('client-side delta merge', () => {
     // The sparsity rule omits stacks below 2, but the engine banks teach their
     // live stage (auras_view badge + aura_effect tooltip) at 0 and 1 too, and
     // the decode side cannot tell "absent because 1" from "absent because 0".
-    const sim = new Sim({ seed: 33, playerClass: 'druid', autoEquip: true });
+    const sim = new Sim({
+      seed: WORLD_SEED,
+      playerClass: 'druid',
+      autoEquip: true,
+      world: WIRE_TEST_WORLD,
+    });
     for (const stacks of [0, 1] as const) {
       sim.player.auras = [
         {
@@ -324,7 +334,7 @@ describe('client-side delta merge', () => {
     // target strip's ownFirst dot/hot prominence online while offline keeps it
     // (the stacks/charges sibling pins above follow the same pattern).
     const sim = new Sim({
-      seed: 7,
+      seed: WORLD_SEED,
       playerClass: 'warrior',
       autoEquip: true,
       world: WIRE_TEST_WORLD,
@@ -373,7 +383,12 @@ describe('client-side delta merge', () => {
   });
 
   it('round-trips next-cast empowerment scope for online action-bar glows', () => {
-    const sim = new Sim({ seed: 7, playerClass: 'priest', autoEquip: true });
+    const sim = new Sim({
+      seed: WORLD_SEED,
+      playerClass: 'priest',
+      autoEquip: true,
+      world: WIRE_TEST_WORLD,
+    });
     const e = sim.entities.get(sim.playerId)!;
     e.auras.push({
       id: 'pri_searing_light',
@@ -396,7 +411,12 @@ describe('client-side delta merge', () => {
   });
 
   it('round-trips Priest relationship and Gloomtithe presentation state online', () => {
-    const sim = new Sim({ seed: 29, playerClass: 'priest', autoEquip: true });
+    const sim = new Sim({
+      seed: WORLD_SEED,
+      playerClass: 'priest',
+      autoEquip: true,
+      world: WIRE_TEST_WORLD,
+    });
     const e = sim.player;
     e.auras.push(
       {
@@ -458,7 +478,12 @@ describe('client-side delta merge', () => {
   });
 
   it('round-trips the Lingering Dread marker and clears it in place when the wire omits it', () => {
-    const sim = new Sim({ seed: 7, playerClass: 'warrior', autoEquip: true });
+    const sim = new Sim({
+      seed: WORLD_SEED,
+      playerClass: 'warrior',
+      autoEquip: true,
+      world: WIRE_TEST_WORLD,
+    });
     const e = sim.entities.get(sim.playerId)!;
     const fearAura: Aura = {
       id: 'fear_incap',
