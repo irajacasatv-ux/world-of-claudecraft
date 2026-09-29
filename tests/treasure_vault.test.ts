@@ -29,9 +29,22 @@ import { Sim } from '../src/sim/sim';
 import { confirmVaultAttemptDurable, vaultScaledTuning } from '../src/sim/treasure_vault';
 import type { SimEvent } from '../src/sim/types';
 import { terrainHeight } from '../src/sim/world';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
-function makeSim(seed = 4242): Sim {
-  const sim = new Sim({ seed, playerClass: 'warrior', autoEquip: false, devCommands: true });
+// The vault is a private rift instance and the treasure sites are terrain
+// points, so no case reads the overworld's camps, NPCs or ground objects: every
+// Sim runs on the empty world, on one seed (the relog Sims' seed 9 paid a
+// second full collider build for nothing).
+const SEED = 4242;
+
+function makeSim(): Sim {
+  const sim = new Sim({
+    seed: SEED,
+    playerClass: 'warrior',
+    autoEquip: false,
+    devCommands: true,
+    world: EMPTY_TEST_WORLD,
+  });
   sim.chat('/dev level 20', sim.player.id);
   sim.drainEvents();
   return sim;
@@ -105,10 +118,11 @@ describe('reading a treasure map', () => {
 describe('digging on the X', () => {
   it('keeps an online vault sealed until the consumed map is durably saved', () => {
     const sim = new Sim({
-      seed: 4242,
+      seed: SEED,
       playerClass: 'warrior',
       autoEquip: false,
       devCommands: true,
+      world: EMPTY_TEST_WORLD,
     });
     sim.cfg.vaultOpenNeedsSave = true;
     sim.chat('/dev level 20', sim.player.id);
@@ -557,7 +571,12 @@ describe('the character save', () => {
       seed: map.seed,
     });
 
-    const restored = new Sim({ seed: 4242, playerClass: 'warrior', noPlayer: true });
+    const restored = new Sim({
+      seed: SEED,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const pid = restored.addPlayer('warrior', 'Digger', { state, characterId: 8001 });
     const player = restored.entities.get(pid);
     if (!player) throw new Error('restored player missing');
@@ -583,11 +602,21 @@ describe('the character save', () => {
     if (!state) throw new Error('Missing serialized character');
     expect(state.worldQuests?.treasureMap).toEqual(metaOf(sim).treasureMap);
 
-    const restored = new Sim({ seed: 9, playerClass: 'warrior', noPlayer: true });
+    const restored = new Sim({
+      seed: SEED,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const pid = restored.addPlayer('warrior', 'Digger', { state });
     expect(restored.meta(pid)?.treasureMap).toEqual(metaOf(sim).treasureMap);
 
-    const hostile = new Sim({ seed: 9, playerClass: 'warrior', noPlayer: true });
+    const hostile = new Sim({
+      seed: SEED,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const junk = {
       ...state,
       worldQuests: {
@@ -603,10 +632,11 @@ describe('the character save', () => {
 describe('the level 16 bracket', () => {
   it('a level 16 owner enters, and the hoard mobs never outlevel them', () => {
     const sim = new Sim({
-      seed: 4242,
+      seed: SEED,
       playerClass: 'warrior',
       autoEquip: false,
       devCommands: true,
+      world: EMPTY_TEST_WORLD,
     });
     sim.chat('/dev level 16', sim.player.id);
     sim.drainEvents();
