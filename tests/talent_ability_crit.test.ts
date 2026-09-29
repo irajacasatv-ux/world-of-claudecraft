@@ -5,6 +5,8 @@ import { MOBS } from '../src/sim/data';
 import { createMob } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
 import type { Entity, PlayerClass } from '../src/sim/types';
+import { rngWithFirstDraws } from './helpers/forced_rng';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // G8 (fix/talents2-balance-pass): per-ability critical strike chance. Talent
 // effects previously only carried GLOBAL crit (stats.crit); the reworked
@@ -15,8 +17,15 @@ type AnySim = Sim & Record<string, any>;
 type AnyEntity = Entity & Record<string, any>;
 type Ev = { type?: string; kind?: string; crit?: boolean };
 
-function makeSim(cls: PlayerClass, level: number, seed = 7): { sim: AnySim; p: AnyEntity } {
-  const sim = new Sim({ seed, playerClass: cls, autoEquip: true }) as AnySim;
+// Each case swings at a dummy it spawns itself, so the Sims run on the empty
+// world, all on one seed.
+function makeSim(cls: PlayerClass, level: number): { sim: AnySim; p: AnyEntity } {
+  const sim = new Sim({
+    seed: 7,
+    playerClass: cls,
+    autoEquip: true,
+    world: EMPTY_TEST_WORLD,
+  }) as AnySim;
   sim.setPlayerLevel(level);
   const p = sim.player as AnyEntity;
   p.resource = p.maxResource;
@@ -56,12 +65,15 @@ describe('G8: per-ability crit chance', () => {
   });
 
   it('meleeSwing critBonus alone forces a crit when it reaches 100%', () => {
-    // Seed hunted (post-merge camp order) so all three swings connect (no
-    // miss/parry; dodge is already off via cannotBeDodged). Spares: 2, 3.
-    const { sim, p } = makeSim('rogue', 12, 1);
+    // All three swings must connect (no miss or parry; dodge is already off via
+    // cannotBeDodged): force the draws above the avoidance bands instead of
+    // hunting a seed. Every draw also clears the crit floor, so only the bonus crits.
+    const { sim, p } = makeSim('rogue', 12);
     p.critChance = 0; // the ONLY crit source is the per-ability bonus
     const mob = spawnDummy(sim, p, 12);
     const events = capture(sim);
+    const connects = (value: number) => value >= 0.2;
+    sim.rng = rngWithFirstDraws(...Array.from({ length: 12 }, () => connects));
     for (let i = 0; i < 3; i++) {
       const connected = meleeSwing(sim.ctx, p, mob, 5, 'Craven Thrust', {
         cannotBeDodged: true,
