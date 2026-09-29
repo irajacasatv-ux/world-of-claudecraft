@@ -32,9 +32,11 @@ import { HARVEST_CAST_SECONDS } from '../src/sim/professions/harvest_admission';
 import type { PlayerMeta } from '../src/sim/sim';
 import { Sim } from '../src/sim/sim';
 import { CORPSE_HARVEST_CAST_ID, DT, type Entity } from '../src/sim/types';
+import { WORLD_SEED } from '../src/sim/world_seed';
 import { stepTownFocus } from '../src/ui/hud/town_focus/town_focus_view';
 import { grantCorpseHarvestOnMob } from './helpers/corpse_harvest_grant';
 import { UNMAPPED_FAMILY } from './helpers/unmapped_family';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // #1143: persistent, town-set focus allocation, applied on top of the #1142
 // per-corpse harvest roll. Two properties matter end-to-end:
@@ -50,8 +52,18 @@ type SimInternals = {
 
 const ZONE1 = ZONES[0];
 
+// Every Sim here stands its players in the zone1 hub and harvests corpses it
+// places itself, so the empty world serves, on the realm's seed the server
+// cases' GameServer boots on (seed 21's full world paid a build of its own).
+const SEED = WORLD_SEED;
+
 function setup() {
-  const sim = new Sim({ seed: 21, playerClass: 'warrior', noPlayer: true });
+  const sim = new Sim({
+    seed: SEED,
+    playerClass: 'warrior',
+    noPlayer: true,
+    world: EMPTY_TEST_WORLD,
+  });
   const internals = sim as unknown as SimInternals;
   const a = sim.addPlayer('warrior', 'Alpha');
   sim.tick();
@@ -109,7 +121,12 @@ function placeGrounded(sim: Sim, e: Entity, x: number, z: number): void {
 }
 
 function setupForHarvestCommand() {
-  const sim = new Sim({ seed: 21, playerClass: 'warrior', noPlayer: true });
+  const sim = new Sim({
+    seed: SEED,
+    playerClass: 'warrior',
+    noPlayer: true,
+    world: EMPTY_TEST_WORLD,
+  });
   const internals = sim as unknown as SimInternals;
   const a = sim.addPlayer('warrior', 'Alpha');
   sim.tick();
@@ -189,7 +206,12 @@ describe('an unknown allocation key never reaches the character save (#2511)', (
     const state = sim.serializeCharacter(a);
     expect(state?.townFocus).toEqual({ hide: 4 });
 
-    const reloaded = new Sim({ seed: 21, playerClass: 'warrior', noPlayer: true });
+    const reloaded = new Sim({
+      seed: SEED,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const b = reloaded.addPlayer('warrior', 'Alpha', { state: state ?? undefined });
     expect((reloaded as unknown as SimInternals).players.get(b)?.townFocus).toEqual({ hide: 4 });
   });
@@ -205,7 +227,12 @@ describe('an unknown allocation key never reaches the character save (#2511)', (
     // until Phase 11m mapped it, tests/helpers/unmapped_family.ts).
     const junked = { ...state!, townFocus: { hide: 3, eastbrook: 4, [UNMAPPED_FAMILY]: 1 } };
 
-    const reloaded = new Sim({ seed: 21, playerClass: 'warrior', noPlayer: true });
+    const reloaded = new Sim({
+      seed: SEED,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const b = reloaded.addPlayer('warrior', 'Alpha', { state: junked });
     const meta = (reloaded as unknown as SimInternals).players.get(b);
     expect(meta?.townFocus).toEqual({ hide: 3 });
@@ -229,7 +256,12 @@ describe('an unknown allocation key never reaches the character save (#2511)', (
     // that still spreads.
     const { sim, a } = setup();
     const junked = { ...sim.serializeCharacter(a)!, townFocus: { hide: 3, eastbrook: 4 } };
-    const reloaded = new Sim({ seed: 21, playerClass: 'warrior', noPlayer: true });
+    const reloaded = new Sim({
+      seed: SEED,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const b = reloaded.addPlayer('warrior', 'Alpha', { state: junked });
     const internals = reloaded as unknown as SimInternals;
     const e = internals.entities.get(b)!;
@@ -278,7 +310,12 @@ describe('an unknown allocation key never reaches the character save (#2511)', (
     // fabricated key earned soc_civic_duty with no real focus allocated.
     const { sim, a } = setup();
     const junked = { ...sim.serializeCharacter(a)!, townFocus: { eastbrook: 4 } };
-    const reloaded = new Sim({ seed: 21, playerClass: 'warrior', noPlayer: true });
+    const reloaded = new Sim({
+      seed: SEED,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const b = reloaded.addPlayer('warrior', 'Alpha', { state: junked });
     for (let i = 0; i < 5; i++) reloaded.tick();
     const earned = () =>
@@ -382,7 +419,7 @@ describe('harvestCorpse + town focus: additive bonus, baseline never lowered', (
     grantCorpseHarvestOnMob(sim2, mob2, internals2.players.get(a2)!, []);
     const baseline = sim2.countItem('rough_hide', a2);
 
-    // Both draw the same rng stream from a freshly-seeded Sim (seed 21), so the
+    // Both draw the same rng stream from a freshly-seeded Sim (the file's seed), so the
     // unfocused 'hide' component's tier roll is identical either way.
     expect(withOtherFocused).toBe(baseline);
   });
