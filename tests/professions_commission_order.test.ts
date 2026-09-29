@@ -44,6 +44,7 @@ import type { ProfessionRecipeRecord } from '../src/sim/professions/types';
 import { type PlayerMeta, Sim } from '../src/sim/sim';
 import type { Entity, InvSlot, SimEvent } from '../src/sim/types';
 import { completeCraftCast } from './helpers/enchant_family_cast';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const SWORD_RECIPE = 'recipe_eastbrook_arming_sword';
 const SWORD = 'eastbrook_arming_sword'; // weapon, commission-eligible
@@ -62,8 +63,17 @@ function grantReagents(sim: Sim, recipeId: string, pid: number, crafts = 1): voi
   }
 }
 
-function makeTwoPlayerSim(seed = 7) {
-  const sim = new Sim({ seed, playerClass: 'warrior', autoEquip: false, noPlayer: true });
+// The order board reads the players, the recipe tables and the stations (kept
+// by the empty world), never a camp, NPC or ground object, and every Sim here
+// shares one seed: a fresh seed builds its collider grids for nothing.
+function makeTwoPlayerSim() {
+  const sim = new Sim({
+    seed: 7,
+    playerClass: 'warrior',
+    autoEquip: false,
+    noPlayer: true,
+    world: EMPTY_TEST_WORLD,
+  });
   const requester = sim.addPlayer('warrior', 'Ayla');
   const crafter = sim.addPlayer('warrior', 'Borin');
   const re = entityOf(sim, requester);
@@ -584,7 +594,13 @@ describe('the Sim facade emits the personal text-free commissionOrderResult even
 describe('determinism: the order-board arc replays byte-identically', () => {
   it('two same-seed sims running the same open/accept/craft/deliver sequence agree', () => {
     const run = () => {
-      const sim = new Sim({ seed: 55, playerClass: 'warrior', autoEquip: false, noPlayer: true });
+      const sim = new Sim({
+        seed: 7,
+        playerClass: 'warrior',
+        autoEquip: false,
+        noPlayer: true,
+        world: EMPTY_TEST_WORLD,
+      });
       const requester = sim.addPlayer('warrior', 'Ayla');
       const crafter = sim.addPlayer('warrior', 'Borin');
       entityOf(sim, crafter).pos.x = entityOf(sim, requester).pos.x + 2;
