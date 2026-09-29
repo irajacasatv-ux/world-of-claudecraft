@@ -22,3 +22,12 @@ harness	H1-meta-sampler-keeps-excluded	fail	1	Tests  1 failed | 20 passed (21)	O
 harness	H2-entity-sampler-live-reference	fail	1	Tests  2 failed | 19 passed (21)	OK	tests/parity/harness.test.ts
 harness	H3-draw-digest-never-folds	fail	1	Tests  1 failed | 20 passed (21)	OK	tests/parity/harness.test.ts
 harness	H4-observer-never-counts	fail	1	Tests  1 failed | 20 passed (21)	OK	tests/parity/harness.test.ts
+fix	F0-control-comment	pass	0	Tests  46 passed (46)	OK	
+fix	F1-case-writes-an-event-field	fail	1	Tests  1 failed | 10 passed (11)	OK	tests/parity/parity_b.test.ts
+fix	F2-case-ticks-the-held-sim	fail	1	Tests  1 failed | 10 passed (11)	OK	tests/parity/parity_b.test.ts
+fix	F3-case-writes-an-entity	fail	1	Tests  1 failed | 12 passed (13)	OK	tests/parity/parity_a.test.ts
+fix	F4-case-pushes-into-a-nested-note	fail	1	Tests  1 failed | 13 passed (14)	OK	tests/parity/parity_d.test.ts
+fix	F5-modified-scenario-on-a-miss	fail	1	Tests  1 failed | 6 passed | 7 skipped (14)	OK	tests/parity/parity_d.test.ts
+fix	F6-two-files-call-one-shard	fail	1	Tests  1 failed | 21 passed (22)	OK	tests/parity/harness.test.ts
+fix	F7-duplicate-behind-a-commented-original	fail	1	Tests  1 failed | 21 passed (22)	OK	tests/parity/harness.test.ts
+fix	F8-non-literal-shard-index	fail	1	Tests  1 failed | 21 passed (22)	OK	tests/parity/harness.test.ts

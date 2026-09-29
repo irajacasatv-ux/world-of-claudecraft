@@ -6,11 +6,16 @@ is the `CI_GUARD_PREFIXES` floor in `scripts/lib/ci_shard_plan.mjs`): 390.7 s of
 full-mode run at the baseline (mean of runs 36493201427 and 36501749917,
 `../data/ci_perfile_ms.tsv`).
 
-Commits (branch `test-cost/parity`, on `feature/freeholds` at `a2bd94a83e`):
+Commits as landed on `feature/freeholds` (measured against `a2bd94a83e`):
 
-1. `8018f0caa4` test(parity): run the coverage checks on the gate's own recording
-2. `b32421f891` test(parity): build the harness samplers on the recorded scenarios' seeds
-3. `ce82a2f3a3` test(parity): guard the recordings the coverage cases share
+1. `cfd3227e73` test(parity): run the coverage checks on the gate's own recording
+2. `7c0b34bb36` test(parity): build the harness samplers on the recorded scenarios' seeds
+3. `21df2ca3c0` test(parity): guard the recordings the coverage cases share
+4. `6494bde45a` docs(freeholds): record the parity cluster's test cost cut
+5. `5b08a5f09a` fix(parity): declare the coverage timeout through a same-file const (the
+   coordinator's fix, see below)
+
+The review fix round is recorded at the end.
 
 ## What changed and why
 
@@ -77,9 +82,13 @@ commit measured 112.17 s, so the guards cost nothing measurable. At the baseline
 ratio (390.7 s against 200.85 s) the family should land near 225 s of CI test time per run, about
 166 s less; the next green full-mode harvest is the measurement that counts.
 
-Every case after the change is green in all three runs, in the extra run after the guard commit
-and in a whole-directory run (`npx vitest run tests/parity`: 187 passed, 1 skipped, the env-gated
-rename proof).
+Every parity case after the change is green in all three runs, in the extra run after the guard
+commit and in a whole-directory run (`npx vitest run tests/parity`: 187 passed, 1 skipped, the
+env-gated rename proof). The cluster did turn one suite outside it red:
+`tests/suite_duration_budget.test.ts`, because the merged runner passed each coverage case's
+timeout as `c.timeout`, which the declared-timeout ratchet cannot size. `5b08a5f09a` fixed it by
+passing the same-file `COVERAGE_TIMEOUT_MS` at the one registration (a case asking for another
+allowance now throws).
 
 ## The determinism pair stays on every PR
 
@@ -155,3 +164,54 @@ restored after, and a Tests line required); every outcome is a row of `data/pari
 - The heaviest drives tick the full world without production's idle culling (the five second
   recordings above). Culling in their `build()` would shrink them, but it changes far-mob
   behavior in the trace, so it is a re-mint and a maintainer decision, not a slim.
+
+## Review fix round (branch `test-cost/parity-fix`, on `35e89ced9a`)
+
+1. `cbfb78f4c3` test(parity): deep-freeze what the coverage cases share and refuse a tick. The
+   freeze was one level deep. Events, notes and frames are now frozen all the way down (a Map or
+   Set is walked but stays writable). The final Sim's entity and player records are frozen one
+   level (a field write throws; a write inside a nested object such as `pos` is not refused, the
+   cheap cut). Ticking the held Sim throws. The modified-`Scenario` guard now checks identity
+   against `SCENARIOS` on a filtered run's miss as well as on a hit. `record()`'s doc comment is
+   back on its function.
+2. `a450c596d0` test(parity): pin that the shard files call every shard index once.
+   `harness.test.ts` collects each shard file's literal `runParityShard(n)`, comments stripped,
+   and requires exactly `0..PARITY_SHARD_COUNT-1`; a non-literal argument fails. The parity notes
+   anchor the file count to `SHARD_BOUNDS` instead of a literal.
+3. `81d1a60831` docs(parity): point the non-vacuity comments at the coverage case module
+   (`scenarios.ts`, `trace.ts`, `tests/professions_farming.test.ts`).
+
+Mutants (same runner, rows appended to `data/parity_mutants.tsv`, batch `fix`): 8 of 8 killed,
+control passed. The coverage-case mutants:
+
+- F1: a case writes an event field. It fails with a TypeError on a read-only property.
+- F2: a case ticks the held Sim. It fails with the tick refusal.
+- F3: a case writes `player.hp`. It fails with a TypeError.
+- F4: a case pushes into a nested note array. It fails with "object is not extensible".
+- F5: `record({ ...scenario })` under `-t 'coverage: each scenario'`, the miss path. It fails with
+  the modified-scenario refusal.
+
+The shard-index pin (`harness.test.ts`):
+
+- F6: `coverage_d.test.ts` calls `runParityShard(9)`. The pin fails.
+- F7: the same, with `// runParityShard(10);` left behind as a comment. The pin still fails.
+- F8: `runParityShard(5 + 5)`. It fails as a non-literal argument.
+
+After the round, `npx vitest run tests/parity tests/professions_farming.test.ts` is green (367
+passed, 1 skipped), and so is a coverage-only filtered run (77 passed).
+
+Memory (`npm run test:memory`, peak/end retained MiB after a forced GC per case). A held
+recording keeps a full Sim alive until its last reader. The largest held sets are the rift reward
+quartet (4 Sims, `coverage_c.test.ts`) and the hit-rating pair (2, `parity_g.test.ts`):
+
+| File | Held at most | Peak/end MiB | Budget |
+|---|---|---|---|
+| `coverage_c.test.ts` | 4 | 238/176 | ceiling 1024 |
+| `parity_g.test.ts` | 2 | 197/166 | 240 (row measured 199) |
+| `coverage_d.test.ts` | 1 | 200/188 | ceiling 1024 |
+| `parity_e.test.ts` | 1 | 196/181 | ceiling 1024 |
+| the other seven shard files | 1 | 173 to 189 | ceiling 1024 |
+| `harness.test.ts` | 0 | 157/157 | ceiling 1024 |
+
+Nothing is over budget. The quartet costs about 60 MiB over its file's end state, so no earlier
+release was needed. The peaks before the fix round were within 4 MiB of these figures.
