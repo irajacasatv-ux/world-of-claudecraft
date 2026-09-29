@@ -40,11 +40,20 @@ import { isSignableMaterialRarity } from '../src/sim/professions/gathering';
 import { stationsOfType } from '../src/sim/professions/stations';
 import type { ProfessionRecipeRecord } from '../src/sim/professions/types';
 import { Sim } from '../src/sim/sim';
-import type { InvSlot } from '../src/sim/types';
+import type { InvSlot, WorldContent } from '../src/sim/types';
 import { terrainHeight } from '../src/sim/world';
+import { EMPTY_TEST_WORLD, VENDOR_TEST_WORLD } from './sim_shared';
 
-const makeSim = (cls = 'warrior', seed = 42) =>
-  new Sim({ seed, playerClass: cls as never, autoEquip: false });
+// Every case but the grant-boundary block works the bags of a player it rigs
+// itself, so the Sims run on the empty world; that block needs a vendor NPC and
+// a mob to loot, which VENDOR_TEST_WORLD keeps (all NPCs, one wolf camp). One
+// seed serves every Sim: the relog and determinism Sims' extra seeds bought
+// nothing, and each fresh full-world seed cost a collider build.
+const SEED = 42;
+const makeSim = (cls = 'warrior', world: WorldContent = EMPTY_TEST_WORLD) =>
+  new Sim({ seed: SEED, playerClass: cls as never, autoEquip: false, world });
+const relogSim = () =>
+  new Sim({ seed: SEED, playerClass: 'warrior', noPlayer: true, world: EMPTY_TEST_WORLD });
 const FRESH_CORPSE_TIMER = 60;
 
 const meta = (sim: Sim) =>
@@ -585,7 +594,7 @@ describe('bags are declared payload-free (#2837)', () => {
 
 describe('capacity gates at the grant boundaries', () => {
   it('vendor buy is refused (and not charged) when the bags are full', () => {
-    const sim = makeSim();
+    const sim = makeSim('warrior', VENDOR_TEST_WORLD);
     const m = meta(sim);
     m.copper = 100000;
     fillBags(sim);
@@ -605,7 +614,7 @@ describe('capacity gates at the grant boundaries', () => {
   });
 
   it('walk-by autoloot stays silent when the bags are full (no toast loop)', () => {
-    const sim = makeSim();
+    const sim = makeSim('warrior', VENDOR_TEST_WORLD);
     fillBags(sim);
     const wolf = [...sim.entities.values()].find((e) => e.kind === 'mob')!;
     wolf.hp = 0;
@@ -629,7 +638,7 @@ describe('capacity gates at the grant boundaries', () => {
   });
 
   it('addItem never destroys an async grant even above capacity (force path)', () => {
-    const sim = makeSim();
+    const sim = makeSim('warrior', VENDOR_TEST_WORLD);
     fillBags(sim);
     const used = sim.inventory.length;
     sim.addItem('wolf_fang', 1); // e.g. a need-greed win landing later
@@ -638,7 +647,7 @@ describe('capacity gates at the grant boundaries', () => {
   });
 
   it('corpse loot that does not fit stays on the corpse', () => {
-    const sim = makeSim();
+    const sim = makeSim('warrior', VENDOR_TEST_WORLD);
     fillBags(sim);
     // hand-build a lootable corpse next to the player
     const wolf = [...sim.entities.values()].find((e) => e.kind === 'mob')!;
@@ -670,7 +679,7 @@ describe('persistence and back-compat', () => {
     const state = sim.serializeCharacter(sim.playerId)!;
     expect(state.bags).toEqual([null, null, 'linen_pouch', null]);
 
-    const sim2 = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+    const sim2 = relogSim();
     const pid = sim2.addPlayer('warrior', 'Restored', { state });
     expect(sim2.bags).toEqual([null, null, 'linen_pouch', null]);
     expect(sim2.bagCapacity).toBe(BACKPACK_SLOTS + 6);
@@ -681,7 +690,7 @@ describe('persistence and back-compat', () => {
     const sim = makeSim();
     const state = sim.serializeCharacter(sim.playerId)!;
     delete (state as { bags?: unknown }).bags;
-    const sim2 = new Sim({ seed: 7, playerClass: 'warrior', noPlayer: true });
+    const sim2 = relogSim();
     sim2.addPlayer('warrior', 'Legacy', { state });
     expect(sim2.bags).toEqual([null, null, null, null]);
     expect(sim2.bagCapacity).toBe(BACKPACK_SLOTS);
@@ -691,7 +700,7 @@ describe('persistence and back-compat', () => {
     const sim = makeSim();
     const state = sim.serializeCharacter(sim.playerId)!;
     state.bags = ['worn_sword', 'not_an_item', 'linen_pouch', null];
-    const sim2 = new Sim({ seed: 7, playerClass: 'warrior', noPlayer: true });
+    const sim2 = relogSim();
     sim2.addPlayer('warrior', 'Tampered', { state });
     expect(sim2.bags).toEqual([null, null, 'linen_pouch', null]);
   });
@@ -701,7 +710,7 @@ describe('persistence and back-compat', () => {
     const state = sim.serializeCharacter(sim.playerId)!;
     state.bags = [null, null, null, null];
     state.inventory = Array.from({ length: 20 }, () => ({ itemId: 'worn_sword', count: 1 }));
-    const sim2 = new Sim({ seed: 7, playerClass: 'warrior', noPlayer: true });
+    const sim2 = relogSim();
     const pid = sim2.addPlayer('warrior', 'Hoarder', { state });
     const m2 = (sim2 as never as { players: Map<number, { inventory: InvSlot[] }> }).players.get(
       pid,
@@ -781,7 +790,7 @@ describe('pre-bag save migration (equivalent bags for earned space)', () => {
       itemId: i % 2 ? 'worn_sword' : 'rusty_dagger',
       count: 1,
     }));
-    const sim2 = new Sim({ seed: 7, playerClass: 'warrior', noPlayer: true });
+    const sim2 = relogSim();
     const pid = sim2.addPlayer('warrior', 'Veteran', { state });
     const m2 = (sim2 as never as { players: Map<number, { bags: (string | null)[] }> }).players.get(
       pid,
@@ -804,12 +813,12 @@ describe('pre-bag save migration (equivalent bags for earned space)', () => {
     const state = sim.serializeCharacter(sim.playerId)!;
     delete (state as { bags?: unknown }).bags;
     state.inventory = Array.from({ length: 20 }, () => ({ itemId: 'worn_sword', count: 1 }));
-    const sim2 = new Sim({ seed: 7, playerClass: 'warrior', noPlayer: true });
+    const sim2 = relogSim();
     const pid = sim2.addPlayer('warrior', 'Veteran', { state });
     const migrated = sim2.serializeCharacter(pid)!;
     expect(migrated.bags).toEqual(['linen_pouch', null, null, null]);
     // discard down to an empty backpack-sized load, then unequip the granted bag
-    const sim3 = new Sim({ seed: 7, playerClass: 'warrior', noPlayer: true });
+    const sim3 = relogSim();
     const pid3 = sim3.addPlayer('warrior', 'Veteran', { state: migrated });
     const m3 = (sim3 as never as { players: Map<number, { bags: (string | null)[] }> }).players.get(
       pid3,
@@ -824,7 +833,7 @@ describe('pre-bag save migration (equivalent bags for earned space)', () => {
     const state = sim.serializeCharacter(sim.playerId)!;
     state.bags = [null, null, null, null];
     state.inventory = Array.from({ length: 30 }, () => ({ itemId: 'worn_sword', count: 1 }));
-    const sim2 = new Sim({ seed: 7, playerClass: 'warrior', noPlayer: true });
+    const sim2 = relogSim();
     const pid = sim2.addPlayer('warrior', 'Tamper', { state });
     const m2 = (sim2 as never as { players: Map<number, { bags: (string | null)[] }> }).players.get(
       pid,
@@ -1233,7 +1242,7 @@ describe('two-pool capacity through the real gates and the real taxonomy', () =>
     expect(first).toBe(100); // 2 materials + 3 general free slots, 20 per stack
 
     const answers = [0, 1].map(() => {
-      const sim = makeSim('warrior', 4242);
+      const sim = makeSim('warrior');
       const m = meta(sim);
       m.inventory.length = 0; // a known start, so the pins below are literals
       sim.addItem('linen_pouch', 1);
@@ -1599,7 +1608,7 @@ describe('two-pool capacity through the real gates and the real taxonomy', () =>
     const state = sim.serializeCharacter(sim.playerId)!;
     state.bags = [null, null, null, null];
     state.inventory = Array.from({ length: 20 }, () => ({ itemId: GEAR, count: 1 }));
-    const sim2 = new Sim({ seed: 7, playerClass: 'warrior', noPlayer: true });
+    const sim2 = relogSim();
     const pid = sim2.addPlayer('warrior', 'Overloaded', { state });
     const m2 = (
       sim2 as never as { players: Map<number, { inventory: InvSlot[]; bags: (string | null)[] }> }
