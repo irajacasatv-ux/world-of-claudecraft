@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { wireEntity } from '../server/game';
 import { Sim } from '../src/sim/sim';
 import type { Aura, Entity } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // wireEntity's aura serialization was rewritten from a chain of conditional
 // object spreads to direct property assignment (perf: the spread form
@@ -23,13 +24,18 @@ function baseAura(overrides: Partial<Aura> = {}): Aura {
   };
 }
 
+// Every case serializes the player's own auras, so the Sims run on the empty world.
+function newSim(): Sim {
+  return new Sim({ seed: 1, playerClass: 'warrior', world: EMPTY_TEST_WORLD });
+}
+
 function wireAuras(e: Entity): Record<string, unknown>[] {
   return (wireEntity(e) as { auras?: Record<string, unknown>[] }).auras ?? [];
 }
 
 describe('wireEntity aura serialization', () => {
   it('omits every optional field when the aura carries only defaults', () => {
-    const sim = new Sim({ seed: 1, playerClass: 'warrior' });
+    const sim = newSim();
     const e = sim.player;
     e.auras = [baseAura()];
 
@@ -60,7 +66,7 @@ describe('wireEntity aura serialization', () => {
   });
 
   it('includes every optional field when the aura carries a non-default value', () => {
-    const sim = new Sim({ seed: 1, playerClass: 'warrior' });
+    const sim = newSim();
     const e = sim.player;
     e.auras = [
       baseAura({
@@ -118,7 +124,7 @@ describe('wireEntity aura serialization', () => {
   });
 
   it('omits stacks when exactly 1 but includes charges even when exactly 1', () => {
-    const sim = new Sim({ seed: 1, playerClass: 'warrior' });
+    const sim = newSim();
     const e = sim.player;
     e.auras = [baseAura({ stacks: 1, charges: 1 })];
 
@@ -132,7 +138,7 @@ describe('wireEntity aura serialization', () => {
     // which are gated on truthiness and legitimately omit 0). A defined 0 must still ride
     // the wire, or a Lightning Shield down to 0 charges would
     // silently vanish and decode back to "absent" on the client.
-    const sim = new Sim({ seed: 1, playerClass: 'warrior' });
+    const sim = newSim();
     const e = sim.player;
     e.auras = [baseAura({ value2: 0, value3: 0, tickInterval: 0, charges: 0 })];
 
@@ -149,7 +155,7 @@ describe('wireEntity aura serialization', () => {
     // w.value = a.value (not round2(a.value)) so a tiny negative survives instead of
     // collapsing to -0 -> 0, which would flip a stat-sap's isAuraDebuff classification
     // on the client. This fails if a future edit swaps in round2(a.value).
-    const sim = new Sim({ seed: 1, playerClass: 'warrior' });
+    const sim = newSim();
     const e = sim.player;
     e.auras = [baseAura({ value: -0.004 })];
 
@@ -164,7 +170,7 @@ describe('wireEntity aura serialization', () => {
     // through the real serializer: a stale client suppresses the cancel
     // affordance off this und, and the flask MARKER stays off the wire by
     // design (the phase 14 glyph note's premise).
-    const sim = new Sim({ seed: 1, playerClass: 'warrior' });
+    const sim = newSim();
     const pid = sim.playerId;
     sim.addItem('ironhusk_flask', 1, pid);
     sim.useItem('ironhusk_flask', pid);
