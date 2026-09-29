@@ -12,6 +12,7 @@ import {
 } from '../src/sim/emissary_cache';
 import { Sim } from '../src/sim/sim';
 import type { PlayerClass } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const CLASSES: PlayerClass[] = [
   'warrior',
@@ -81,7 +82,14 @@ describe('the cache pool', () => {
 
 describe('opening a cache', () => {
   it('consumes one cache and hands over a class piece plus the marks, drawing the sim rng', () => {
-    const sim = new Sim({ seed: 11, playerClass: 'mage', devCommands: true });
+    // The cache opens from the bags and draws only the sim rng, so both Sims
+    // run on the empty world.
+    const sim = new Sim({
+      seed: 11,
+      playerClass: 'mage',
+      devCommands: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.tick();
     const meta = sim.meta(sim.playerId)!;
     sim.useItem(EMISSARY_CACHE_ITEM_ID);
@@ -99,7 +107,12 @@ describe('opening a cache', () => {
     expect(gained).toHaveLength(1);
     expect(ITEMS[gained[0][0]].requiredClass ?? ['mage']).toContain('mage');
     // The same seed opens the same piece: the draw is the sim's own rng.
-    const twin = new Sim({ seed: 11, playerClass: 'mage', devCommands: true });
+    const twin = new Sim({
+      seed: 11,
+      playerClass: 'mage',
+      devCommands: true,
+      world: EMPTY_TEST_WORLD,
+    });
     twin.tick();
     twin.chat(`/dev give ${EMISSARY_CACHE_ITEM_ID} 2`);
     twin.useItem(EMISSARY_CACHE_ITEM_ID);
