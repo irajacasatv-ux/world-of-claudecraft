@@ -30,6 +30,11 @@ const SKIN_TEST_WORLD: WorldContent = {
   roads: [],
 };
 
+// One seed for the file: no case compares two seeds, the rank a roll lands on
+// is read back rather than pinned, and each fresh seed builds its own collider
+// grid (about a second here).
+const SKIN_SEED = 1;
+
 beforeAll(() => setActiveWorldContent(SKIN_TEST_WORLD));
 afterAll(() => setActiveWorldContent(null));
 
@@ -54,7 +59,7 @@ function rollRank(seed: number, cls: PlayerClass = 'mage'): { sim: Sim; rank: Sk
 
 function withPendingRank(rank: SkinRank, cls: PlayerClass): Sim {
   const sim = new Sim({
-    seed: 1,
+    seed: SKIN_SEED,
     playerClass: cls,
     playerName: 'Picker',
     world: SKIN_TEST_WORLD,
@@ -68,14 +73,14 @@ function withPendingRank(rank: SkinRank, cls: PlayerClass): Sim {
 
 describe('cosmetic skin-select event', () => {
   it('rolls a rank on use and emits a personal skinEvent (token not yet consumed)', () => {
-    const { sim, rank } = rollRank(7);
+    const { sim, rank } = rollRank(SKIN_SEED);
     expect(SKIN_RANKS).toContain(rank);
     const tokens = sim.inventory.find((s) => s.itemId === EVENT_SKIN_TOKEN_ID)?.count;
     expect(tokens).toBe(1); // consumed on lock-in, not on open
   });
 
   it('emits the skinEvent as a personal (pid-scoped) cue', () => {
-    const sim = new Sim({ seed: 7, playerClass: 'mage', playerName: 'Roller' });
+    const sim = new Sim({ seed: SKIN_SEED, playerClass: 'mage', playerName: 'Roller' });
     sim.addItem(EVENT_SKIN_TOKEN_ID, 1);
     sim.useItem(EVENT_SKIN_TOKEN_ID);
     const ev = drainSkinEvent(sim);
@@ -83,7 +88,7 @@ describe('cosmetic skin-select event', () => {
   });
 
   it('does not reroll when the token is used again', () => {
-    const sim = new Sim({ seed: 7, playerClass: 'mage', playerName: 'Roller' });
+    const sim = new Sim({ seed: SKIN_SEED, playerClass: 'mage', playerName: 'Roller' });
     sim.addItem(EVENT_SKIN_TOKEN_ID, 1);
     sim.useItem(EVENT_SKIN_TOKEN_ID);
     const first = expectDefined(drainSkinEvent(sim)).rank;
@@ -93,7 +98,7 @@ describe('cosmetic skin-select event', () => {
   });
 
   it('is deterministic: the same seed rolls the same rank', () => {
-    expect(rollRank(123).rank).toBe(rollRank(123).rank);
+    expect(rollRank(SKIN_SEED).rank).toBe(rollRank(SKIN_SEED).rank);
   });
 
   it('uses 70/25/5 rarity roll weights', () => {
@@ -107,7 +112,7 @@ describe('cosmetic skin-select event', () => {
   });
 
   it('locks in an in-rank skin: applies it, consumes the token, clears the pending rank', () => {
-    const { sim, rank } = rollRank(1);
+    const { sim, rank } = rollRank(SKIN_SEED);
     const skin = EVENT_SKIN_TIERS[0].skin; // lowest tier — allowed by every rank
     expect(rankAllowsSkin(rank, skin)).toBe(true);
 
@@ -119,7 +124,7 @@ describe('cosmetic skin-select event', () => {
   });
 
   it('uses the Aldric reward item as a mech cosmetic spinner token', () => {
-    const sim = new Sim({ seed: 1, playerClass: 'mage', playerName: 'Mech' });
+    const sim = new Sim({ seed: SKIN_SEED, playerClass: 'mage', playerName: 'Mech' });
     sim.addItem('alien_armor_plate', 1);
 
     sim.useItem('alien_armor_plate');
@@ -140,7 +145,7 @@ describe('cosmetic skin-select event', () => {
   });
 
   it('uses a returned specific mech cosmetic item as an account-wide unlock', () => {
-    const sim = new Sim({ seed: 1, playerClass: 'mage', playerName: 'Mech' });
+    const sim = new Sim({ seed: SKIN_SEED, playerClass: 'mage', playerName: 'Mech' });
     sim.addItem('amber_crimson_armor_plate', 1);
 
     sim.useItem('amber_crimson_armor_plate');
@@ -158,7 +163,7 @@ describe('cosmetic skin-select event', () => {
     // not online at the time) could never be taken off or re-applied again.
     // The unlock must behave like a purchased Season 1 Armory weapon skin:
     // account-wide and permanent.
-    const sim = new Sim({ seed: 1, playerClass: 'shaman', playerName: 'Mechwearer' });
+    const sim = new Sim({ seed: SKIN_SEED, playerClass: 'shaman', playerName: 'Mechwearer' });
     sim.addItem('amber_crimson_armor_plate', 1);
     sim.useItem('amber_crimson_armor_plate');
 
@@ -179,7 +184,7 @@ describe('cosmetic skin-select event', () => {
   });
 
   it('the mech cosmetic plate is non-vendorable, non-discardable, non-marketable', () => {
-    const sim = new Sim({ seed: 1, playerClass: 'shaman', playerName: 'Seller' });
+    const sim = new Sim({ seed: SKIN_SEED, playerClass: 'shaman', playerName: 'Seller' });
     const merchant = [...sim.entities.values()].find(
       (e) => e.kind === 'npc' && e.templateId === 'the_merchant',
     );
@@ -208,7 +213,11 @@ describe('cosmetic skin-select event', () => {
       expect(itemId, chroma.id).toBeTruthy();
       const skin = mechChromaSkinIndex(chroma.id);
 
-      const sim = new Sim({ seed: 1, playerClass: 'shaman', playerName: `Mech-${chroma.id}` });
+      const sim = new Sim({
+        seed: SKIN_SEED,
+        playerClass: 'shaman',
+        playerName: `Mech-${chroma.id}`,
+      });
       sim.accountCosmetics = {
         completedQuestIds: [],
         mechChromaIds: [chroma.id],
@@ -233,7 +242,7 @@ describe('cosmetic skin-select event', () => {
   });
 
   it('can equip a mech cosmetic as the active live appearance catalog', () => {
-    const sim = new Sim({ seed: 1, playerClass: 'shaman', playerName: 'Mechwearer' });
+    const sim = new Sim({ seed: SKIN_SEED, playerClass: 'shaman', playerName: 'Mechwearer' });
 
     expect(sim.setPlayerSkin(sim.playerId, 0, 'mech')).toBe(true);
 
@@ -256,7 +265,7 @@ describe('cosmetic skin-select event', () => {
   });
 
   it('claimEventSkin is a no-op when there is no active event', () => {
-    const sim = new Sim({ seed: 2, playerClass: 'mage', playerName: 'Idle' });
+    const sim = new Sim({ seed: SKIN_SEED, playerClass: 'mage', playerName: 'Idle' });
     sim.claimEventSkin(EVENT_SKIN_TIERS[0].skin);
     expect(sim.player.skin).toBe(0);
   });
@@ -287,11 +296,11 @@ describe('cosmetic skin-select event', () => {
   });
 
   it('persists the pending rank across serialize/deserialize', () => {
-    const { sim, rank } = rollRank(4);
+    const { sim, rank } = rollRank(SKIN_SEED);
     const state = expectDefined(sim.serializeCharacter(sim.playerId));
     expect(state.pendingSkinRank).toBe(rank);
 
-    const sim2 = new Sim({ seed: 99, playerClass: 'warrior', playerName: 'Other' });
+    const sim2 = new Sim({ seed: SKIN_SEED, playerClass: 'warrior', playerName: 'Other' });
     const pid = sim2.addPlayer('mage', 'Saver', { state });
     expect(sim2.serializeCharacter(pid)?.pendingSkinRank).toBe(rank);
   });
