@@ -3,9 +3,12 @@ import { ZONES, zoneAt } from '../src/sim/data';
 import { Sim } from '../src/sim/sim';
 import type { SimEvent } from '../src/sim/types';
 import { groundHeight } from '../src/sim/world';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
+// The zone table and zoneAt read the active world content, which the empty world
+// leaves built-in; no mob, NPC or camp is involved, so the Sim runs on it.
 function makeWorld() {
-  return new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+  return new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true, world: EMPTY_TEST_WORLD });
 }
 
 function entityFor(sim: Sim, pid: number) {
