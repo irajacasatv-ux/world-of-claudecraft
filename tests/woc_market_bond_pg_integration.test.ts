@@ -1163,6 +1163,11 @@ describeDb('woc market bond and lock lifecycle against real Postgres', () => {
   });
 
   describe('the NO KEY narrowing (write-path rider): FK-child inserts freed, exclusion kept', () => {
+    // The probe bound the blocking arms below wait out. It is the test's own
+    // choice, not a shipped bound: lock_timeout fires only on a real lock
+    // wait, so any positive bound proves the statement blocked, and this one
+    // keeps the genuinely-waited floor meaningful without paying seconds.
+    const PROBE_LOCK_TIMEOUT_MS = 300;
     it('a guard-held listing row admits a bid-row insert; plain FOR UPDATE provably blocked it', async () => {
       const realm = `nokey-${++seq}`;
       const seller = await seedAccount();
@@ -1206,7 +1211,7 @@ describeDb('woc market bond and lock lifecycle against real Postgres', () => {
           listingId,
         ]);
         await child.query('BEGIN');
-        await child.query('SET LOCAL lock_timeout = 1200');
+        await child.query(`SET LOCAL lock_timeout = ${PROBE_LOCK_TIMEOUT_MS}`);
         await expect(
           child.query(bidInsert, [
             listingId,
@@ -1252,7 +1257,7 @@ describeDb('woc market bond and lock lifecycle against real Postgres', () => {
         await holder.query('BEGIN');
         await holder.query('SELECT 1 FROM accounts WHERE id = $1 FOR UPDATE', [seller]);
         await child.query('BEGIN');
-        await child.query('SET LOCAL lock_timeout = 1200');
+        await child.query(`SET LOCAL lock_timeout = ${PROBE_LOCK_TIMEOUT_MS}`);
         await expect(
           child.query(abandonInsert, [realm, listingId, seller, BASE_MS + 1000]),
         ).rejects.toMatchObject({ code: '55P03' });
@@ -1313,12 +1318,12 @@ describeDb('woc market bond and lock lifecycle against real Postgres', () => {
         await a.query('BEGIN');
         await a.query('SELECT 1 FROM accounts WHERE id = $1 FOR NO KEY UPDATE', [account]);
         await b.query('BEGIN');
-        await b.query('SET LOCAL lock_timeout = 1200');
+        await b.query(`SET LOCAL lock_timeout = ${PROBE_LOCK_TIMEOUT_MS}`);
         const startedAt = Date.now();
         await expect(
           b.query('SELECT 1 FROM accounts WHERE id = $1 FOR NO KEY UPDATE', [account]),
         ).rejects.toMatchObject({ code: '55P03' });
-        expect(Date.now() - startedAt).toBeGreaterThanOrEqual(1_000);
+        expect(Date.now() - startedAt).toBeGreaterThanOrEqual(PROBE_LOCK_TIMEOUT_MS - 50);
         await b.query('ROLLBACK');
         await a.query('COMMIT');
         await b.query('BEGIN');
