@@ -16,9 +16,13 @@ import { MOBS } from '../src/sim/data';
 import { createMob } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
 import { DT, type Entity, type PlayerClass, type SimEvent } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
+// EMPTY_TEST_WORLD: every case fights a foe it spawns itself beside the wearer,
+// so the ambient overworld (camps, NPCs, ground objects) was pure construction
+// and tick overhead; no case reads, targets, or counts ambient content.
 function wearing(itemId: string, cls: PlayerClass = 'warrior', seed = 11) {
-  const sim = new Sim({ seed, playerClass: cls, autoEquip: true });
+  const sim = new Sim({ seed, playerClass: cls, autoEquip: true, world: EMPTY_TEST_WORLD });
   sim.setPlayerLevel(20);
   sim.addItem(itemId, 1);
   sim.equipItem(itemId);
@@ -100,7 +104,12 @@ describe('using a worn trinket', () => {
 
 describe('the on-equip lockout', () => {
   it('a freshly equipped trinket waits 30 sec before it can be used', () => {
-    const sim = new Sim({ seed: 11, playerClass: 'warrior', autoEquip: true });
+    const sim = new Sim({
+      seed: 11,
+      playerClass: 'warrior',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.setPlayerLevel(20);
     sim.addItem('wayfarers_lodestone', 1);
     sim.equipItem('wayfarers_lodestone');
@@ -306,9 +315,13 @@ describe('the caster trinkets', () => {
 
 describe('the rest', () => {
   it("Gambler's Die: always one fortune, announced; snake eyes refunds half the wait", () => {
+    // One wearer rolls again and again (its cooldown cleared between rolls), so
+    // every roll is a fresh draw of one stream; a fresh Sim per roll only paid
+    // a whole construction for each sample.
+    const sim = wearing('gamblers_die');
     const seen = new Set<string>();
-    for (let seed = 1; seed < 40 && seen.size < 4; seed++) {
-      const sim = wearing('gamblers_die', 'warrior', seed);
+    for (let i = 0; i < 40 && seen.size < 4; i++) {
+      sim.player.cooldowns.delete(trinketCooldownKey('gamblers_die'));
       sim.useItem('gamblers_die');
       const roll = sim.drainEvents().find((ev) => ev.type === 'trinketGamble') as
         | { fortune: string }
@@ -322,7 +335,7 @@ describe('the rest', () => {
       );
     }
     expect(seen.size).toBe(4);
-  }, 60_000);
+  });
 
   it('Sundered Prism: a step forward and a moment of guard', () => {
     const sim = wearing('sundered_prism');
@@ -362,7 +375,14 @@ describe('the rest', () => {
 describe('determinism', () => {
   it('a character without a trinket plays byte for byte as before', () => {
     const run = (withTrinket: boolean) => {
-      const sim = new Sim({ seed: 21, playerClass: 'warrior', autoEquip: true });
+      // Seed 11, the file's shared seed: the case compares two runs of one seed, so a
+      // seed of its own would only buy another collider-grid build.
+      const sim = new Sim({
+        seed: 11,
+        playerClass: 'warrior',
+        autoEquip: true,
+        world: EMPTY_TEST_WORLD,
+      });
       sim.setPlayerLevel(20);
       if (withTrinket) {
         sim.addItem('wayfarers_lodestone', 1);
