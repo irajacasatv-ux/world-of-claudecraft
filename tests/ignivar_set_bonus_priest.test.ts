@@ -25,6 +25,12 @@ import { Sim } from '../src/sim/sim';
 import type { SimContext } from '../src/sim/sim_context';
 import type { Aura, Entity } from '../src/sim/types';
 import { expectDefined } from './helpers/defined';
+import { EMPTY_TEST_WORLD } from './sim_shared';
+
+// Every live rig works on allies and mobs it adds itself and pins any roll it
+// reads, so each Sim stands on the empty world, all on one seed (a fresh seed
+// costs a collider grid build).
+const SEED = 733;
 
 const SET_SLOTS = ['helmet', 'shoulder', 'chest', 'gloves', 'legs'] as const;
 
@@ -147,7 +153,12 @@ describe('Emberscreed 2pc: the Doctrine link conversion, both twin branches', ()
   });
 
   it('snapshot-at-placement: a link placed before the gear change keeps its rate', () => {
-    const sim = new Sim({ seed: 733, playerClass: 'priest', autoEquip: true });
+    const sim = new Sim({
+      seed: SEED,
+      playerClass: 'priest',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.setPlayerLevel(20);
     expect(sim.setSpec('discipline')).toBe(true);
     const ally = addAlly(sim, 'Warded');
@@ -177,7 +188,12 @@ describe('Emberscreed 2pc: the Doctrine link conversion, both twin branches', ()
   it('the 0.15 no-link fallback stays untouched for wearers', () => {
     // The fallback conversion never reads the link aura, so the wearer bend
     // must not reach it (the set doc discloses it as deliberately untouched).
-    const sim = new Sim({ seed: 733, playerClass: 'priest', autoEquip: true });
+    const sim = new Sim({
+      seed: SEED,
+      playerClass: 'priest',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.setPlayerLevel(20);
     expect(sim.setSpec('discipline')).toBe(true);
     equipSet(sim, 'emberscreed', 2);
@@ -272,7 +288,12 @@ describe('Emberscreed 4pc: consumed Psalm arms an instant Scouring Hymn, once pe
       armed: boolean;
       consumed: boolean;
     } {
-      const sim = new Sim({ seed: 947, playerClass: 'priest', autoEquip: true });
+      const sim = new Sim({
+        seed: SEED,
+        playerClass: 'priest',
+        autoEquip: true,
+        world: EMPTY_TEST_WORLD,
+      });
       sim.setPlayerLevel(20);
       expect(sim.setSpec('discipline')).toBe(true);
       if (wearer) equipSet(sim, 'emberscreed', 4);
@@ -351,7 +372,12 @@ describe('Vesperash 4pc: calling the fiend resets Mindfracture and doubles its m
     // kit), so max mana differs between them: assert each run against its OWN
     // max-mana rate rather than comparing absolutes across runs.
     function manaPerHit(wearer: boolean): { gained: number; expected: number } {
-      const sim = new Sim({ seed: 1123, playerClass: 'priest', autoEquip: true });
+      const sim = new Sim({
+        seed: SEED,
+        playerClass: 'priest',
+        autoEquip: true,
+        world: EMPTY_TEST_WORLD,
+      });
       sim.setPlayerLevel(20);
       expect(sim.setSpec('shadow')).toBe(true);
       if (wearer) equipSet(sim, 'vesperash', 4);
