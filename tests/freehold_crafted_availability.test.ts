@@ -53,8 +53,9 @@ describe('crafted furnishing availability on dark hosts', () => {
     const before = structuredClone(original);
     let saved = original;
     for (const freeholdsEnabled of [false, true]) {
+      // One seed per file: a fresh one builds its collider grids for nothing.
       const restored = new Sim({
-        seed: 43,
+        seed: 42,
         playerClass: 'warrior',
         noPlayer: true,
         autoEquip: false,
@@ -171,7 +172,7 @@ describe('crafted furnishing availability on dark hosts', () => {
     '%s cannot be bought with Marks while dark',
     (itemId) => {
       const sim = new Sim({
-        seed: 5,
+        seed: 42,
         playerClass: 'warrior',
         noPlayer: true,
         world: VENDOR_TEST_WORLD,
