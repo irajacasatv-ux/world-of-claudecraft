@@ -14,9 +14,19 @@ import { serializePet } from '../src/sim/pet/pet_commands';
 import { Sim } from '../src/sim/sim';
 import { channelTickBonus } from '../src/sim/spell_scaling';
 import type { Entity, SimEvent } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 function destructionAt(level = 20) {
-  const sim = new Sim({ seed: 72, playerClass: 'warlock', autoEquip: true });
+  // EMPTY_TEST_WORLD: every case fights dummies it spawns itself, so the ambient
+  // overworld (camps, NPCs, ground objects) was pure per-tick overhead, about
+  // nine tenths of this file's test time (the same trim as
+  // tests/helpers/chronomancy_harness.ts).
+  const sim = new Sim({
+    seed: 72,
+    playerClass: 'warlock',
+    autoEquip: true,
+    world: EMPTY_TEST_WORLD,
+  });
   sim.setPlayerLevel(level);
   expect(sim.setSpec('destruction')).toBe(true);
   sim.tick();
