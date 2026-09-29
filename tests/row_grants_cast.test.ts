@@ -4,6 +4,7 @@ import { MOBS } from '../src/sim/data';
 import { createMob } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
 import type { Entity, PlayerClass, SimEvent } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const CLASSES: PlayerClass[] = [
   'warrior',
@@ -20,7 +21,9 @@ const CLASSES: PlayerClass[] = [
 // Every row option that grants a spell: apply it on a live sim, cast the granted
 // spell at a real hostile target, and require the cast to actually happen (the
 // cooldown/GCD engages or an effect lands). This is the "does every granted spell
-// work on every class" guarantee, sim-level and exhaustive.
+// work on every class" guarantee, sim-level and exhaustive. The target is a wolf
+// placed by hand, so each of the file's many Sims runs on the empty world
+// (terrain and the props that block line of sight are still there).
 describe('every row-granted spell casts on its class', () => {
   for (const cls of CLASSES) {
     const grants = CHOICE_ROWS[cls].rows.flatMap((row) =>
@@ -30,7 +33,12 @@ describe('every row-granted spell casts on its class', () => {
     );
     it(`${cls}: ${grants.length} granted spells all cast`, () => {
       for (const g of grants) {
-        const sim = new Sim({ seed: 9, playerClass: cls, autoEquip: true });
+        const sim = new Sim({
+          seed: 9,
+          playerClass: cls,
+          autoEquip: true,
+          world: EMPTY_TEST_WORLD,
+        });
         sim.setPlayerLevel(20);
         const p = sim.player;
         expect(sim.applyTalents({ spec: null, rows: { [g.level]: g.id } }), `${g.id} apply`).toBe(
