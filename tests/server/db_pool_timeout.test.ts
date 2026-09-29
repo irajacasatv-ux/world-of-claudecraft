@@ -46,12 +46,23 @@ afterAll(async () => {
   }
 });
 
+// Real event-loop turns (setImmediate is not faked). When the faked connect timer
+// fires, the driver destroys the real socket and the rejection arrives only after
+// that handle's close callback runs, a loop turn or two later. Each check first
+// lets these turns run, so a timer that already fired has surely settled the
+// query and a still-pending query is pending for real, not merely in transit.
+const REAL_TURNS = 20;
+async function runRealTurns(): Promise<void> {
+  for (let i = 0; i < REAL_TURNS; i++) await new Promise<void>((r) => setImmediate(r));
+}
+
 describe('db pool connect timeout', () => {
   it('rejects a query with a timeout when the database accepts but never answers', async () => {
     // The driver's timers run on the faked clock; the socket, the held handshake
     // and the real pg driver stay real. Waiting out the real 5000 ms proved no
-    // more than the faked clock does: still pending just short of the timeout
-    // (not an instant failure), rejected with a timeout just past it (not a hang).
+    // more than the faked clock does: still pending 1 ms short of the documented
+    // 5000 ms timeout (not an early failure), rejected with a timeout at it (not
+    // a hang, not a longer wait).
     vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
     try {
       let error: Error | undefined;
@@ -65,9 +76,11 @@ describe('db pool connect timeout', () => {
           settled = true;
         },
       );
-      await vi.advanceTimersByTimeAsync(4500);
+      await vi.advanceTimersByTimeAsync(4999);
+      await runRealTurns();
       expect(settled).toBe(false);
-      await vi.advanceTimersByTimeAsync(4500);
+      await vi.advanceTimersByTimeAsync(1);
+      await runRealTurns();
       expect(settled).toBe(true);
       await query;
       expect(error).toBeInstanceOf(Error);
