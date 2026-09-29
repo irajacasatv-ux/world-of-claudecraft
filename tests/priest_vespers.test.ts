@@ -19,6 +19,7 @@ import { createMob } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
 import type { SimContext } from '../src/sim/sim_context';
 import type { Entity } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 type DealDamage = (
   source: Entity | null,
@@ -40,7 +41,14 @@ type DealDamage = (
 type GuardianEntity = Entity & { guardianState?: { key: string } };
 
 function vespersPriest(): { sim: Sim; priest: Entity } {
-  const sim = new Sim({ seed: 2803, playerClass: 'priest', autoEquip: true });
+  // The empty test world: every case dots and strikes training dummies it
+  // spawns itself, so the ambient overworld only added tick cost.
+  const sim = new Sim({
+    seed: 2803,
+    playerClass: 'priest',
+    autoEquip: true,
+    world: EMPTY_TEST_WORLD,
+  });
   sim.setPlayerLevel(20);
   expect(sim.setSpec('shadow')).toBe(true);
   sim.tick();
