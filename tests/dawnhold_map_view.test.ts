@@ -22,10 +22,14 @@ import {
   lastKeepMapActive,
 } from '../src/ui/lastkeep_map_view';
 import type { IWorld } from '../src/world_api';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const CASTLE_ORIGIN = instanceOrigin(DUNGEONS.dawnhold_castle.index, 0);
 
-const makeSim = () => new Sim({ seed: 42, playerClass: 'warrior', autoEquip: true });
+// The castle instance, its exit portal and keepsake come from the dungeon, not
+// the overworld camps or NPCs, so every case runs on the empty world.
+const makeSim = () =>
+  new Sim({ seed: 42, playerClass: 'warrior', autoEquip: true, world: EMPTY_TEST_WORLD });
 
 // Enter the castle through the real door path, then optionally stand at an
 // instance-local point (the same slot enterDungeon claimed).
