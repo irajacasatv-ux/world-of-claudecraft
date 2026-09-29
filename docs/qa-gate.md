@@ -416,6 +416,18 @@ and a band moves, re-pin BOTH configurations from their own printed actuals; nev
 carry one configuration's band under the other, and never shorten a window that guards
 long-fight behavior (mana sustain, time-to-OOM).
 
+**Nightly-only sweep depth.** The shard pool's counterpart of the diet, for a sharded suite
+whose whole property sweep costs more than it buys on every PR. The suite keeps a cheap
+PR-tier representative (the cases that catch the regression class the sweep exists for,
+named in its comment) and runs the whole sweep only when it reads
+`WOC_NIGHTLY_SWEEP === '1'`, which the nightly tests job alone sets, beside the diet flag.
+The scoping matches the diet's: PR, merge-queue, `release/**` and local gate runs all take
+the representative, and the nightly is the one surface that runs the sweep.
+`tests/ci_workflow.test.ts` pins the flag out of ci.yml, `tests/nightly_workflow.test.ts`
+onto the nightly tests step, and `tests/ci_shard_plan.test.ts` lists exactly which suites
+read it (never a lane file). A sweep moves here only with its PR representative proven by
+a mutant that the representative still kills.
+
 The CI floor is a superset of the local one: every blind/partial test (recomputed in the
 PR's own tree via the shared `collectSuiteVisibility`), PLUS the invariant guard suites by
 name (`tests/architecture.test.ts`, the localization guards, `tests/world_api_parity.test.ts`,

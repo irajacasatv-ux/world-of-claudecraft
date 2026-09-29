@@ -508,6 +508,30 @@ describe('the long-sims lane (Phase 4)', () => {
     for (const f of readers) expect(CI_LONG_SUITES).toContain(f);
   });
 
+  it('pins exactly which suites read the WOC_NIGHTLY_SWEEP depth flag', () => {
+    // The shard pool's counterpart of the diet flag above (docs/qa-gate.md,
+    // "Nightly-only sweep depth"): a sharded suite whose whole property sweep
+    // is too costly for every PR keeps a cheap PR-tier representative and runs
+    // the sweep only under this flag, which the nightly tests job alone sets.
+    // Each reader is a conscious edit of this list, so a suite cannot quietly
+    // thin its PR depth, and none may be a lane file (the lane has its own
+    // flag and accounting). Same needle shape and split as the diet pin.
+    const needle = ['process.env.', "WOC_NIGHTLY_SWEEP === '1'"].join('');
+    const { testFiles } = collectSuiteVisibility({
+      root: REPO_ROOT,
+      readdirSync,
+      readFileSync,
+      join: path.join,
+      relative: path.relative,
+      sep: path.sep,
+    });
+    const readers = testFiles
+      .filter((f) => readFileSync(path.join(REPO_ROOT, f), 'utf8').includes(needle))
+      .sort();
+    expect(readers).toEqual([]);
+    for (const f of readers) expect(CI_LONG_SUITES).not.toContain(f);
+  });
+
   it('full mode excludes exactly the collected lane files from the shard leg', () => {
     const plan = buildShardPlan({ ...LANE_BASE, mode: 'full' });
     expect(plan.mode).toBe('full');

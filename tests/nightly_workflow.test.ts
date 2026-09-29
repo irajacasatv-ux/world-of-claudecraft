@@ -140,12 +140,17 @@ describe('nightly gate workflow', () => {
         String.raw`- name: Run tests \(full suite, PR tier\)\n` +
           String.raw`(?: {8}#[^\n]*\n)* {8}env:\n` +
           String.raw` {10}WOC_FULL_BALANCE_SWEEP: '1'\n` +
+          String.raw` {10}WOC_NIGHTLY_SWEEP: '1'\n` +
           String.raw` {8}run: npm test -- --maxWorkers=`,
       ),
     );
-    // Nowhere else: the flag is nightly-depth-only by design, so a copy on
+    // Nowhere else: both flags are nightly-depth-only by design, so a copy on
     // the checks or browser lanes (or a second one in tests) is a mistake.
+    // WOC_NIGHTLY_SWEEP is the shard pool's counterpart (docs/qa-gate.md,
+    // "Nightly-only sweep depth"); its readers are pinned in
+    // tests/ci_shard_plan.test.ts.
     expect(workflow.match(/WOC_FULL_BALANCE_SWEEP/g)).toHaveLength(1);
+    expect(workflow.match(/WOC_NIGHTLY_SWEEP/g)).toHaveLength(1);
     // Unsharded by design: a --shard flag here would quietly turn the nightly
     // proof into a partial run.
     expect(tests).not.toContain('--shard');

@@ -1623,6 +1623,9 @@ describe('CI workflow parity', () => {
     // critical path. tests/nightly_workflow.test.ts pins the one sanctioned
     // copy on the nightly tests job.
     expect(workflow).not.toContain('WOC_FULL_BALANCE_SWEEP');
+    // Its shard-pool counterpart likewise (docs/qa-gate.md, "Nightly-only
+    // sweep depth"): on ci.yml it would put every nightly sweep back on the PR.
+    expect(workflow).not.toContain('WOC_NIGHTLY_SWEEP');
     for (const job of [releaseGate, releaseChecks, jobSource('release-i18n')]) {
       expect(job).not.toContain('ci_shard_test.mjs');
       expect(job).not.toContain('TEST_MODE');

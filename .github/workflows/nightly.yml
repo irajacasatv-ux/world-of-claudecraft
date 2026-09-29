@@ -155,9 +155,12 @@ jobs:
         # "The balance-harness diet"): the PR-tier long-sims lanes run the diet
         # configuration (fewer seeds, band scenarios only, shorter windows), and
         # this flag restores the full five-seed, all-scenario, 120-second
-        # depth nightly. Set nowhere else by design.
+        # depth nightly. Set nowhere else by design. The second flag does the
+        # same for the sharded suites that keep a cheap PR-tier representative
+        # of a costly property sweep ("Nightly-only sweep depth" in the same doc).
         env:
           WOC_FULL_BALANCE_SWEEP: '1'
+          WOC_NIGHTLY_SWEEP: '1'
         run: npm test -- --maxWorkers="$(node -p 'Math.max(1, Math.floor(require("node:os").availableParallelism() / 2))')"
 
       - name: Per-file memory budgets
