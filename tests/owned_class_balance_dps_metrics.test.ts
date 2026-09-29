@@ -32,21 +32,33 @@ describe('owned-class level 20 balance harness (DPS metrics)', () => {
       // (metadata-only variants of the same rotation loop) ride the nightly
       // full matrix through runOwnedClassDpsMatrix, which also keeps the
       // exported matrix entry point itself covered nightly.
+      // Of the single-target sustained window the diet keeps only the two specs
+      // with a single-target assertion below (Packlord's Stampede, Wildfang's
+      // Redharvest). Every per-result metric of the other six holds on their
+      // three-target run (a superset of the single-target priority: the only
+      // target-count branches, Coldsight's Volley and Thundercall's Earthquake
+      // and Chain Lightning, are extra three-target buttons), and each of their
+      // single-target rotations still runs on every PR in a sibling suite
+      // (_dps_probes: Coldsight, Fieldcraft, Thundercall, Vespers; _role_bands:
+      // Thundercall, Warspirit, Vespers; _druid_bands: Moongrove). Each probe is
+      // its own fresh Sim, so the runs kept read exactly what they read before.
       const metricScenarios = FULL_SWEEP
         ? OWNED_CLASS_BALANCE_SCENARIOS
         : [OWNED_CLASS_BALANCE_SCENARIOS[1], OWNED_CLASS_BALANCE_SCENARIOS[3]];
+      const singleTargetDietSpecs = new Set(['packlord', 'wildfang']);
       const results = FULL_SWEEP
         ? runOwnedClassDpsMatrix(29_900, 'test-head')
         : OWNED_DPS_SPECS.flatMap((spec) =>
-            metricScenarios.map((scenario) =>
-              runOwnedClassDpsProbe(spec, scenario, 29_900, 'test-head'),
-            ),
+            metricScenarios
+              .filter((scenario) => scenario.targets === 3 || singleTargetDietSpecs.has(spec))
+              .map((scenario) => runOwnedClassDpsProbe(spec, scenario, 29_900, 'test-head')),
           );
-      // Literal 8, not OWNED_DPS_SPECS.length: the diet arm builds results
-      // FROM that constant, so a derived expectation would move with any
-      // accidental spec-list shrink instead of catching it (the raid harness
-      // pins its cardinality the same way).
-      expect(results).toHaveLength(8 * metricScenarios.length);
+      // Literal per configuration, not derived from OWNED_DPS_SPECS.length: the
+      // diet arm builds results FROM that constant, so a derived expectation
+      // would move with any accidental spec-list shrink instead of catching it
+      // (the raid harness pins its cardinality the same way). Full: 8 specs x 4
+      // scenarios; diet: 8 three-target runs plus 2 single-target ones.
+      expect(results).toHaveLength(FULL_SWEEP ? 32 : 10);
       expect(new Set(results.map((result) => result.spec))).toEqual(new Set(OWNED_DPS_SPECS));
       for (const result of results) {
         expect(result.head).toBe('test-head');
