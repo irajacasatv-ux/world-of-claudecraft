@@ -9,9 +9,11 @@ import { createMob, recalcPlayerStats } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
 import type { Entity, PlayerClass } from '../src/sim/types';
 import { terrainHeight } from '../src/sim/world';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 function makeSim(cls: PlayerClass, spec: string | null = null, seed = 7): Sim {
-  const sim = new Sim({ seed, playerClass: cls, autoEquip: true });
+  // Every ally and target is placed by hand, so the Sims run on the empty world.
+  const sim = new Sim({ seed, playerClass: cls, autoEquip: true, world: EMPTY_TEST_WORLD });
   sim.setPlayerLevel(20);
   if (spec) sim.setSpec(spec);
   const p = sim.entities.get(sim.playerId) as Entity;
