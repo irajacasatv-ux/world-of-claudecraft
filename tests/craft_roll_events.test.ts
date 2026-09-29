@@ -43,8 +43,17 @@ function forceRoll(sim: Sim, value: number): () => number {
   return () => draws;
 }
 
-function perfecter(seed = 5): { sim: Sim; pid: number; meta: PlayerMeta } {
-  const sim = new Sim({ seed, playerClass: 'warrior', autoEquip: false, world: EMPTY_TEST_WORLD });
+// Every roll in this file is forced (forceRoll), so no seed is load-bearing,
+// and crafting reads recipes, bags, skills and station positions, never a
+// camp, NPC or ground object: every case builds its fresh Sim on one seed of
+// the empty controlled world (stations kept), where each distinct seed or a
+// full world paid a fresh build.
+function rollSim(): Sim {
+  return new Sim({ seed: 5, playerClass: 'warrior', autoEquip: false, world: EMPTY_TEST_WORLD });
+}
+
+function perfecter(): { sim: Sim; pid: number; meta: PlayerMeta } {
+  const sim = rollSim();
   const pid = sim.playerId;
   const meta = sim.players.get(pid) as PlayerMeta;
   meta.craftSkills.jewelcrafting = PERFECTING_SKILL_REQ;
@@ -62,7 +71,7 @@ function bagRefOf(meta: PlayerMeta, itemId: string): { bag: number; itemId: stri
 
 describe('Perfecting attempts emit one craftRoll audit record per resolved roll', () => {
   it('a failed attempt records the roll, the chance, success false, and an unmoved rank', () => {
-    const { sim, pid, meta } = perfecter(11);
+    const { sim, pid, meta } = perfecter();
     const draws = forceRoll(sim, 0.95);
     sim.perfectItemAs(pid, bagRefOf(meta, APEX_NECK));
     expect(draws(), 'the audit adds no draw').toBe(1);
@@ -83,7 +92,7 @@ describe('Perfecting attempts emit one craftRoll audit record per resolved roll'
   });
 
   it('a successful attempt records success true and the rank walked to', () => {
-    const { sim, pid, meta } = perfecter(12);
+    const { sim, pid, meta } = perfecter();
     const draws = forceRoll(sim, 0.1);
     sim.perfectItemAs(pid, bagRefOf(meta, APEX_NECK));
     expect(draws()).toBe(1);
@@ -103,7 +112,7 @@ describe('Perfecting attempts emit one craftRoll audit record per resolved roll'
   });
 
   it('the record tracks the whole walk: the final rank reads PERFECTING_RANKS (Perfected)', () => {
-    const { sim, pid, meta } = perfecter(13);
+    const { sim, pid, meta } = perfecter();
     forceRoll(sim, 0.1);
     const ranks: Array<[number, number]> = [];
     for (let i = 0; i < PERFECTING_RANKS; i++) {
@@ -125,7 +134,7 @@ describe('Perfecting attempts emit one craftRoll audit record per resolved roll'
   it('the roll and chance are the exact values the success branch compared', () => {
     // The boundary: a roll equal to the chance is the fail arm (strict
     // less-than), and the record says so with the same two numbers.
-    const { sim, pid, meta } = perfecter(14);
+    const { sim, pid, meta } = perfecter();
     forceRoll(sim, PERFECTING_SUCCESS_CHANCE);
     sim.perfectItemAs(pid, bagRefOf(meta, APEX_NECK));
     const [ev] = craftRollsOf(sim);
@@ -136,7 +145,7 @@ describe('Perfecting attempts emit one craftRoll audit record per resolved roll'
   });
 
   it('a denied attempt emits no record (nothing was rolled)', () => {
-    const { sim, pid, meta } = perfecter(15);
+    const { sim, pid, meta } = perfecter();
     meta.craftSkills.jewelcrafting = PERFECTING_SKILL_REQ - 1;
     const draws = forceRoll(sim, 0.1);
     sim.perfectItemAs(pid, bagRefOf(meta, APEX_NECK));
@@ -148,8 +157,8 @@ describe('Perfecting attempts emit one craftRoll audit record per resolved roll'
 describe('masterwork proc draws emit one craftRoll audit record per eligible craft', () => {
   /** An apex crafter at the recipe's station with the bill in hand (the
    *  perfecting.test.ts apexCrafter shape). */
-  const apexCrafter = (seed: number, activeArchetype: string | null) => {
-    const sim = new Sim({ seed, playerClass: 'warrior', autoEquip: false });
+  const apexCrafter = (activeArchetype: string | null) => {
+    const sim = rollSim();
     const pid = sim.playerId;
     const meta = sim.players.get(pid) as PlayerMeta;
     meta.archetype.activeArchetype = activeArchetype;
@@ -169,7 +178,7 @@ describe('masterwork proc draws emit one craftRoll audit record per eligible cra
   };
 
   it('a forced proc records success true against the effective chance, one draw', () => {
-    const { sim, pid, meta, recipe } = apexCrafter(7, 'jewelcrafting');
+    const { sim, pid, meta, recipe } = apexCrafter('jewelcrafting');
     const draws = forceRoll(sim, 0);
     runCraft(sim, recipe.id, false, pid);
     expect(draws(), 'exactly the one proc draw').toBe(1);
@@ -193,7 +202,7 @@ describe('masterwork proc draws emit one craftRoll audit record per eligible cra
 
   it('a forced miss records success false with the same chance', () => {
     expect(MASTERWORK_CHANCE_CAP).toBeLessThan(0.999);
-    const { sim, pid, recipe } = apexCrafter(8, 'jewelcrafting');
+    const { sim, pid, recipe } = apexCrafter('jewelcrafting');
     const draws = forceRoll(sim, 0.999);
     runCraft(sim, recipe.id, false, pid);
     expect(draws()).toBe(1);
@@ -206,7 +215,7 @@ describe('masterwork proc draws emit one craftRoll audit record per eligible cra
   it('a non-apex craft that bakes a bonus record (the quality-bump proc) records its roll too', () => {
     // The bonusStats arm of the emit guard, distinct from the apex arm above:
     // dropping it would silently stop recording every ordinary masterwork.
-    const sim = new Sim({ seed: 53, playerClass: 'warrior', autoEquip: false });
+    const sim = rollSim();
     const pid = sim.playerId;
     const meta = sim.players.get(pid) as PlayerMeta;
     for (let i = 0; i < 3; i++) sim.addItem('linen_scrap', 1, pid);
@@ -233,7 +242,7 @@ describe('masterwork proc draws emit one craftRoll audit record per eligible cra
   });
 
   it('a craft whose output can never proc (a statless consumable) records nothing', () => {
-    const sim = new Sim({ seed: 54, playerClass: 'warrior', autoEquip: false });
+    const sim = rollSim();
     const pid = sim.playerId;
     const meta = sim.players.get(pid) as PlayerMeta;
     sim.addItem('linen_scrap', 1, pid);
@@ -250,7 +259,7 @@ describe('masterwork proc draws emit one craftRoll audit record per eligible cra
   it('an effect-gated craft (under the rare ceiling) records chance 0 and success false', () => {
     // No archetype reads the rare ceiling, so the head start never grants;
     // the audit says why in numbers: the effective chance was 0.
-    const { sim, pid, meta, recipe } = apexCrafter(9, null);
+    const { sim, pid, meta, recipe } = apexCrafter(null);
     const draws = forceRoll(sim, 0);
     runCraft(sim, recipe.id, false, pid);
     expect(draws()).toBe(1);
