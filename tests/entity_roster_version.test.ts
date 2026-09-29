@@ -14,6 +14,7 @@ import type { Entity } from '../src/sim/types';
 import { bareClient } from './helpers/bare_client';
 import { expectScansOnlyThroughSharedWalkers } from './helpers/scan_guard_self_audit';
 import { tsFilesUnder } from './helpers/ts_files_under';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const wire = (id: number, x: number, k = 'mob', tid = 'ridge_stalker') => ({
   id,
@@ -48,9 +49,10 @@ function selfWire(id: number) {
   };
 }
 
+// The roster ops are driven with mobs each case adds itself: the empty world serves.
 describe('Sim.entityRosterVersion', () => {
   it('bumps on an add and on a drop, and on nothing else', () => {
-    const sim = new Sim({ seed: 3, playerClass: 'warrior' });
+    const sim = new Sim({ seed: 3, playerClass: 'warrior', world: EMPTY_TEST_WORLD });
     const before = sim.entityRosterVersion;
     const mob = createMob(990001, MOBS.ridge_stalker, 3, { x: 5, y: 0, z: 5 });
     addEntityToRoster(sim.ctx, mob);
@@ -68,7 +70,7 @@ describe('Sim.entityRosterVersion', () => {
   });
 
   it('is exposed on the SimContext view and stays in step with the Sim field', () => {
-    const sim = new Sim({ seed: 3, playerClass: 'warrior' });
+    const sim = new Sim({ seed: 3, playerClass: 'warrior', world: EMPTY_TEST_WORLD });
     expect(sim.ctx.entityRosterVersion).toBe(sim.entityRosterVersion);
     addEntityToRoster(sim.ctx, createMob(990002, MOBS.ridge_stalker, 3, { x: 5, y: 0, z: 5 }));
     expect(sim.ctx.entityRosterVersion).toBe(sim.entityRosterVersion);
