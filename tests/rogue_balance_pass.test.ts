@@ -5,11 +5,16 @@ import { createMob } from '../src/sim/entity';
 import { moveSpeedMult } from '../src/sim/player_motion';
 import { Sim } from '../src/sim/sim';
 import type { Entity } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // Rogue balance pass (maintainer sheet): Shadeslip keeps Duskveil, Redhanded
 // is the scoped Craven Thrust crit mastery, False Face REMOVES the Duskveil
 // slow outright (100% move speed while stealthed), Scrapper's Edge lost its
 // damage penalty.
+
+// Every case strikes a wolf it places itself or casts on itself, so each Sim stands
+// on the empty world, all on one seed (a fresh seed costs a collider grid build).
+const SEED = 7;
 
 function stealthed(p: Entity): boolean {
   return p.auras.some((aura) => aura.kind === 'stealth');
@@ -17,7 +22,12 @@ function stealthed(p: Entity): boolean {
 
 describe('rogue balance pass', () => {
   it('Shadeslip does not break Duskveil', () => {
-    const sim = new Sim({ seed: 7, playerClass: 'rogue', autoEquip: true });
+    const sim = new Sim({
+      seed: SEED,
+      playerClass: 'rogue',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.setPlayerLevel(20);
     expect(sim.applyTalents({ spec: null, rows: { 5: 'rog_r5_shadeslip' } })).toBe(true);
     const p = sim.player;
@@ -41,7 +51,12 @@ describe('rogue balance pass', () => {
   });
 
   it('Redhanded resolves as +30% Craven Thrust crit and False Face removes the Duskveil slow', () => {
-    const sim = new Sim({ seed: 7, playerClass: 'rogue', autoEquip: true });
+    const sim = new Sim({
+      seed: SEED,
+      playerClass: 'rogue',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.setPlayerLevel(20);
     sim.setSpec('assassination');
     const anySim = sim as unknown as {
@@ -75,7 +90,12 @@ describe('rogue balance pass', () => {
     expect(stealthed(p)).toBe(true);
     expect(moveSpeedMult(p)).toBeCloseTo(1);
 
-    const bare = new Sim({ seed: 7, playerClass: 'rogue', autoEquip: true });
+    const bare = new Sim({
+      seed: SEED,
+      playerClass: 'rogue',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     bare.setPlayerLevel(20);
     bare.castAbility('stealth');
     bare.tick();
@@ -83,7 +103,12 @@ describe('rogue balance pass', () => {
   });
 
   it('Redhanded scales the poison coats and Thuggery rolls extra attacks', () => {
-    const sim = new Sim({ seed: 7, playerClass: 'rogue', autoEquip: true });
+    const sim = new Sim({
+      seed: SEED,
+      playerClass: 'rogue',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.setPlayerLevel(20);
     sim.setSpec('assassination');
     // Potent Poisons: the resolved weapon-coat riders carry the +10%.
@@ -103,7 +128,15 @@ describe('rogue balance pass', () => {
     // Thuggery: with the extra-attack roll forced to succeed, one auto cycle
     // lands two mainhand swings; without the mastery no roll is drawn at all.
     const swings = (spec: string | null, forceChance: boolean): number => {
-      const rig = new Sim({ seed: 11, playerClass: 'rogue', autoEquip: true });
+      const rig = new Sim({
+        seed: SEED,
+        playerClass: 'rogue',
+        autoEquip: true,
+        world: EMPTY_TEST_WORLD,
+      });
+      // Pin the hit table (`next` at 0.9: every swing lands as a plain hit), so the
+      // swing count reads the mastery and not the stream's miss and dodge luck.
+      rig.rng.next = () => 0.9;
       rig.setPlayerLevel(20);
       if (spec) rig.setSpec(spec);
       const p = rig.player;
