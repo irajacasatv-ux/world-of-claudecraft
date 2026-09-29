@@ -20,6 +20,7 @@ import { Sim } from '../src/sim/sim';
 import { stunDrCategory } from '../src/sim/stun_dr';
 import { CAT_FORM_MOVE_MULT, dist2d, type Entity, MELEE_RANGE } from '../src/sim/types';
 import { localizeSimAuraName } from '../src/ui/sim_i18n';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // Wildfang kit pass 2 (engage, control, opener): the baseline shift sprint and
 // its Longstride talent, the Bruin Rush to Cat Form Pin rider, full-speed
@@ -30,8 +31,10 @@ import { localizeSimAuraName } from '../src/ui/sim_i18n';
 const LONGSTRIDE_ROW = 5;
 const LONGSTRIDE_ID = 'dru_r5_ferocity';
 
+// EMPTY_TEST_WORLD: every case engages a mob it spawns itself, so the ambient
+// overworld is pure construction and tick cost.
 function rig(rows: Record<number, string> = {}, spec: string | null = 'feral', seed = 29) {
-  const sim = new Sim({ seed, playerClass: 'druid', autoEquip: true });
+  const sim = new Sim({ seed, playerClass: 'druid', autoEquip: true, world: EMPTY_TEST_WORLD });
   sim.setPlayerLevel(20);
   expect(sim.applyTalents({ spec, rows })).toBe(true);
   const player = sim.player;
@@ -366,7 +369,12 @@ describe('Stalk moves at full speed', () => {
     // untouched by stealth: 1.0 x CAT_FORM_MOVE_MULT.
     expect(moveSpeedMult(player)).toBeCloseTo(CAT_FORM_MOVE_MULT);
 
-    const rogue = new Sim({ seed: 29, playerClass: 'rogue', autoEquip: true });
+    const rogue = new Sim({
+      seed: 29,
+      playerClass: 'rogue',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     rogue.setPlayerLevel(20);
     rogue.player.gcdRemaining = 0;
     rogue.castAbility('stealth');
