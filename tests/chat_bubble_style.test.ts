@@ -5,6 +5,7 @@ import { Sim } from '../src/sim/sim';
 import type { SimEvent } from '../src/sim/types';
 import { groundHeight } from '../src/sim/world';
 import { chatBubbleStyle } from '../src/ui/chat_bubble_style';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const repoRoot = join(__dirname, '..');
 
@@ -60,7 +61,13 @@ describe('party chat carries a client-usable bubble anchor without a sim change'
     // entity id (its emit sets fromPid = the player entity). The HUD gate anchors
     // the party bubble on `entityId ?? fromPid`, so party bubbles with no sim or
     // wire change. This pins that the anchor field is actually populated.
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+    // Two players it places itself chat in a party: the empty world serves.
+    const sim = new Sim({
+      seed: 42,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const a = sim.addPlayer('warrior', 'Aleph');
     const b = sim.addPlayer('mage', 'Bet');
     teleport(sim, a, 0, -40);
