@@ -7,6 +7,7 @@ import { recalcPlayerStats } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
 import type { Entity } from '../src/sim/types';
 import { MAX_LEVEL, TITANS_GRIP_DMG_PENALTY } from '../src/sim/types';
+import { RL_TEST_WORLD } from './sim_shared';
 
 type AnySim = Sim & Record<string, any>;
 
@@ -15,7 +16,9 @@ const TWOHAND_B = 'bonewrought_greatsword';
 const ONEHAND = 'gravewyrm_cleaver';
 
 function furyWarrior(): AnySim {
-  const sim = new Sim({ seed: 2711, playerClass: 'warrior' }) as AnySim;
+  // The damage cases hit any live mob, so the Sim keeps the one wolf camp of the
+  // scoped RL world instead of the whole overworld.
+  const sim = new Sim({ seed: 2711, playerClass: 'warrior', world: RL_TEST_WORLD }) as AnySim;
   sim.setPlayerLevel(MAX_LEVEL);
   expect(sim.setSpec('fury')).toBe(true);
   return sim;
