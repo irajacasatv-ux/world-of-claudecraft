@@ -34,9 +34,11 @@ import { EMPTY_TEST_WORLD } from './sim_shared';
 // i18n key existence) or a deterministic value the test itself set (signer
 // names, wire-echoed ids, explicit addItem counts). The empty world drops the
 // ambient camp/npc/ground-object spawn work every one of the 55 Sim
-// constructions below used to pay for.
-const makeSim = (seed = 11) =>
-  new Sim({ seed, playerClass: 'warrior', autoEquip: false, world: EMPTY_TEST_WORLD });
+// constructions below used to pay for. Every Sim, the reload targets
+// included, shares one seed: a fresh seed builds its collider grids (about
+// half a second) and no case here compares two seeds.
+const makeSim = () =>
+  new Sim({ seed: 11, playerClass: 'warrior', autoEquip: false, world: EMPTY_TEST_WORLD });
 const metaOf = (sim: Sim): PlayerMeta => sim.meta(sim.playerId) as PlayerMeta;
 
 /** Self-signed charm copies for both live effects (the acquisition craft's
@@ -611,7 +613,7 @@ describe('persistence: absent stays absent, present round-trips', () => {
     const state = sim.serializeCharacter(sim.playerId) as CharacterState;
     expect(state.toolEffectSlots?.mining?.effectId).toBe('artisans_eye');
 
-    const reloaded = makeSim(12);
+    const reloaded = makeSim();
     const pid = reloaded.addPlayer('warrior', 'Reload', { state });
     const meta = reloaded.meta(pid) as PlayerMeta;
     expect(meta.toolEffectSlots?.mining).toEqual({
@@ -641,7 +643,7 @@ describe('persistence: absent stays absent, present round-trips', () => {
   it('a save from before the field existed loads with the field still absent', () => {
     const sim = makeSim();
     const state = sim.serializeCharacter(sim.playerId) as CharacterState;
-    const reloaded = makeSim(13);
+    const reloaded = makeSim();
     const pid = reloaded.addPlayer('warrior', 'Old', { state });
     expect((reloaded.meta(pid) as PlayerMeta).toolEffectSlots).toBeUndefined();
   });
@@ -661,7 +663,7 @@ describe('persistence: absent stays absent, present round-trips', () => {
         confirmMode: 'always',
       },
     } as unknown as CharacterState['toolEffectSlots'];
-    const reloaded = makeSim(14);
+    const reloaded = makeSim();
     const pid = reloaded.addPlayer('warrior', 'Retired', { state });
     // Nothing usable survived, so the field is absent again rather than {}.
     expect((reloaded.meta(pid) as PlayerMeta).toolEffectSlots).toBeUndefined();
@@ -699,7 +701,7 @@ describe('persistence: absent stays absent, present round-trips', () => {
         confirmMode: 'always',
       },
     } as CharacterState['toolEffectSlots'];
-    const reloaded = makeSim(16);
+    const reloaded = makeSim();
     const pid = reloaded.addPlayer('warrior', 'Policy', { state });
     const meta = reloaded.meta(pid) as PlayerMeta;
     // The live row survives byte-faithful; both refused rows are gone.
@@ -724,7 +726,7 @@ describe('persistence: absent stays absent, present round-trips', () => {
         confirmMode: 'always',
       },
     });
-    const again = makeSim(17);
+    const again = makeSim();
     const pid2 = again.addPlayer('warrior', 'Policy2', { state: resaved });
     expect(again.serializeCharacter(pid2)?.toolEffectSlots).toEqual(resaved.toolEffectSlots);
   });
@@ -740,7 +742,7 @@ describe('persistence: absent stays absent, present round-trips', () => {
         confirmMode: 'always',
       },
     } as CharacterState['toolEffectSlots'];
-    const reloaded = makeSim(18);
+    const reloaded = makeSim();
     const pid = reloaded.addPlayer('warrior', 'AllRefused', { state });
     expect((reloaded.meta(pid) as PlayerMeta).toolEffectSlots).toBeUndefined();
     const resaved = reloaded.serializeCharacter(pid) as CharacterState;
@@ -764,7 +766,7 @@ describe('persistence: absent stays absent, present round-trips', () => {
         confirmMode: 'always',
       },
     } as CharacterState['toolEffectSlots'];
-    const reloaded = makeSim(15);
+    const reloaded = makeSim();
     const pid = reloaded.addPlayer('warrior', 'Corrupt', { state });
     const meta = reloaded.meta(pid) as PlayerMeta;
     expect(meta.toolEffectSlots?.mining?.durability).toBe(0);
