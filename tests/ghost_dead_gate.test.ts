@@ -15,12 +15,18 @@
 
 import { describe, expect, it } from 'vitest';
 import { RIFT_ESSENCE_ITEM_ID, RIFT_GEM_IDS } from '../src/sim/content/rift/items';
-import { DUNGEON_X_THRESHOLD, QUESTS, SPIRIT_HEALER_NPC_ID } from '../src/sim/data';
+import { BUILTIN_WORLD, DUNGEON_X_THRESHOLD, QUESTS, SPIRIT_HEALER_NPC_ID } from '../src/sim/data';
 import { placeMobileStationForPlayer } from '../src/sim/professions/mobile_station';
 import { createRiftGearInstance } from '../src/sim/rift/progression';
 import { Sim } from '../src/sim/sim';
 import { SPIRIT_HEALER_RANGE } from '../src/sim/spirit';
-import { dist2d, type Entity, INTERACT_RANGE, type SimEvent } from '../src/sim/types';
+import {
+  dist2d,
+  type Entity,
+  INTERACT_RANGE,
+  type SimEvent,
+  type WorldContent,
+} from '../src/sim/types';
 import { terrainHeight } from '../src/sim/world';
 import {
   runApplyEnchant,
@@ -29,14 +35,24 @@ import {
   runSalvage,
 } from './helpers/enchant_family_cast';
 import { moveToRiftForge } from './helpers/rift_forge';
+import { VENDOR_TEST_WORLD } from './sim_shared';
 
 type AnyEntity = Entity & Record<string, any>;
 type AnySim = Sim & Record<string, any>;
 
 const DEAD_ERROR = "You can't do that while dead.";
 
+// The vendor world keeps every NPC, zone and graveyard the dead-gate cases
+// walk to (the spirit healer, the trainers and vendors, the quest givers) and
+// sheds all but one mob camp: no case fights an ambient mob, and each overworld
+// Sim cost several times the scoped one to build. The ground objects stay for
+// the pickUpObject cases.
+const DEAD_GATE_WORLD: WorldContent = {
+  ...VENDOR_TEST_WORLD,
+  groundObjects: BUILTIN_WORLD.groundObjects,
+};
 const makeSim = (seed = 42): AnySim =>
-  new Sim({ seed, playerClass: 'warrior', autoEquip: true }) as AnySim;
+  new Sim({ seed, playerClass: 'warrior', autoEquip: true, world: DEAD_GATE_WORLD }) as AnySim;
 
 function deadErrors(events: SimEvent[]): number {
   return events.filter((ev) => ev.type === 'error' && ev.text === DEAD_ERROR).length;
@@ -505,7 +521,12 @@ describe('auto-release-on-logout: save/load of a dead-unreleased character', () 
     sim.releaseSpirit();
     const releasedPos = { x: p.pos.x, z: p.pos.z };
 
-    const sim2 = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true }) as AnySim;
+    const sim2 = new Sim({
+      seed: 42,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: DEAD_GATE_WORLD,
+    }) as AnySim;
     const pid2 = sim2.addPlayer('warrior', 'Reloger', { state });
     const e2 = sim2.entities.get(pid2) as AnyEntity;
     expect(e2.dead).toBe(true);
@@ -537,7 +558,12 @@ describe('auto-release-on-logout: save/load of a dead-unreleased character', () 
     const state = sim.serializeCharacter(sim.playerId)!;
     expect(state.dead).toBe(true);
 
-    const sim2 = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true }) as AnySim;
+    const sim2 = new Sim({
+      seed: 42,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: DEAD_GATE_WORLD,
+    }) as AnySim;
     const pid2 = sim2.addPlayer('warrior', 'Reloger', { state });
     const e2 = sim2.entities.get(pid2) as AnyEntity;
     expect(e2.dead).toBe(true);
@@ -593,7 +619,12 @@ describe('auto-release-on-logout: save/load of a dead-unreleased character', () 
     const state = sim.serializeCharacter(sim.playerId)!;
     expect(state.dead).toBe(false);
 
-    const sim2 = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true }) as AnySim;
+    const sim2 = new Sim({
+      seed: 42,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: DEAD_GATE_WORLD,
+    }) as AnySim;
     const pid2 = sim2.addPlayer('warrior', 'Reloger', { state });
     const e2 = sim2.entities.get(pid2) as AnyEntity;
     expect(e2.dead).toBe(false);
@@ -614,7 +645,12 @@ describe('auto-release-on-logout: save/load of a dead-unreleased character', () 
     const state = sim.serializeCharacter(sim.playerId)!;
     expect(state.ghost).toBe(true);
 
-    const sim2 = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true }) as AnySim;
+    const sim2 = new Sim({
+      seed: 42,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: DEAD_GATE_WORLD,
+    }) as AnySim;
     const pid2 = sim2.addPlayer('warrior', 'Reloger', { state });
     const e2 = sim2.entities.get(pid2) as AnyEntity;
     expect(e2.dead).toBe(true);
@@ -634,7 +670,12 @@ describe('auto-release-on-logout: save/load of a dead-unreleased character', () 
     const state = sim.serializeCharacter(sim.playerId)! as any;
     delete state.dead; // simulate a pre-fix save
 
-    const sim2 = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true }) as AnySim;
+    const sim2 = new Sim({
+      seed: 42,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: DEAD_GATE_WORLD,
+    }) as AnySim;
     const pid2 = sim2.addPlayer('warrior', 'Reloger', { state });
     const e2 = sim2.entities.get(pid2) as AnyEntity;
     expect(e2.dead).toBe(false);
