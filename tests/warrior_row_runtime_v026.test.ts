@@ -17,9 +17,13 @@ function harness(sim: Sim): TestSim {
   return sim as TestSim;
 }
 
-function warriorAtCap(seed = 2620): TestSim {
+// Every rig in this file stands on the empty world on seed 2620 and reads no
+// seed-specific draw: one collider grid build serves the file.
+const SEED = 2620;
+
+function warriorAtCap(): TestSim {
   const sim = harness(
-    new Sim({ seed, playerClass: 'warrior', autoEquip: false, world: EMPTY_TEST_WORLD }),
+    new Sim({ seed: SEED, playerClass: 'warrior', autoEquip: false, world: EMPTY_TEST_WORLD }),
   );
   sim.setPlayerLevel(20);
   return sim;
@@ -95,7 +99,7 @@ describe('v0.26 winning Warrior authored row and mastery runtime', () => {
 
   it('Anger Management scales auto rage by 10 percent without drawing RNG', () => {
     const rageFromHit = (selected: boolean) => {
-      const sim = warriorAtCap(2621);
+      const sim = warriorAtCap();
       if (selected) expect(sim.selectTalentRow(14, 'war_row_anger_management')).toBe(true);
       const target = spawnTarget(sim, sim.player);
       sim.player.resource = 0;
@@ -115,7 +119,7 @@ describe('v0.26 winning Warrior authored row and mastery runtime', () => {
   });
 
   it('Anger Management scales gainResource, Charge, and rageOnHit by 5 percent without extra RNG', () => {
-    const sim = warriorAtCap(2622);
+    const sim = warriorAtCap();
     expect(sim.selectTalentRow(14, 'war_row_anger_management')).toBe(true);
     const player = sim.player;
     const meta = metaOf(sim);
@@ -162,7 +166,7 @@ describe('v0.26 winning Warrior authored row and mastery runtime', () => {
   });
 
   it('Pursuit grants 30 percent movement speed for six seconds on a credited kill', () => {
-    const sim = warriorAtCap(2623);
+    const sim = warriorAtCap();
     expect(sim.selectTalentRow(5, 'war_row_pursuit')).toBe(true);
     killTarget(sim, spawnTarget(sim, sim.player));
 
@@ -178,7 +182,7 @@ describe('v0.26 winning Warrior authored row and mastery runtime', () => {
   });
 
   it('Second Wind restores 1.5 percent max health per second below 35 percent, including in combat', () => {
-    const sim = warriorAtCap(2624);
+    const sim = warriorAtCap();
     expect(sim.selectTalentRow(8, 'war_row_second_wind')).toBe(true);
     const player = sim.player;
     player.inCombat = true;
@@ -195,7 +199,7 @@ describe('v0.26 winning Warrior authored row and mastery runtime', () => {
   });
 
   it('Battle Rhythm empowers exactly every third ability for generated rage only', () => {
-    const sim = warriorAtCap(2625);
+    const sim = warriorAtCap();
     expect(sim.selectTalentRow(14, 'war_row_battle_rhythm')).toBe(true);
     const player = sim.player;
     const meta = metaOf(sim);
@@ -243,7 +247,7 @@ describe('v0.26 winning Warrior authored row and mastery runtime', () => {
   });
 
   it('Bloodbath stacks five percent crit and damage per kill for eight seconds, capped at 25 percent', () => {
-    const sim = warriorAtCap(2626);
+    const sim = warriorAtCap();
     expect(sim.selectTalentRow(17, 'war_row_bloodbath')).toBe(true);
     const player = sim.player;
     const baseCrit = player.critChance;
@@ -280,7 +284,7 @@ describe('v0.26 winning Warrior authored row and mastery runtime', () => {
 
   it('Sanguine Aura buffs only the caster and melee party members with one composite aura', () => {
     const sim = harness(
-      new Sim({ seed: 2627, playerClass: 'warrior', noPlayer: true, world: EMPTY_TEST_WORLD }),
+      new Sim({ seed: SEED, playerClass: 'warrior', noPlayer: true, world: EMPTY_TEST_WORLD }),
     );
     const warrior = sim.addPlayer('warrior', 'Warrior');
     const paladin = sim.addPlayer('paladin', 'Paladin');
@@ -321,7 +325,7 @@ describe('v0.26 winning Warrior authored row and mastery runtime', () => {
 
   it('Sanguine Aura from a second Warrior refreshes one shared party buff', () => {
     const sim = harness(
-      new Sim({ seed: 2628, playerClass: 'warrior', noPlayer: true, world: EMPTY_TEST_WORLD }),
+      new Sim({ seed: SEED, playerClass: 'warrior', noPlayer: true, world: EMPTY_TEST_WORLD }),
     );
     const first = sim.addPlayer('warrior', 'First');
     const second = sim.addPlayer('warrior', 'Second');
@@ -347,7 +351,7 @@ describe('v0.26 winning Warrior authored row and mastery runtime', () => {
   });
 
   it('Bladestorm follows the moving Warrior and uses the smaller 6 yard radius', () => {
-    const sim = warriorAtCap(2629);
+    const sim = warriorAtCap();
     expect(sim.selectTalentRow(20, 'war_row_bladestorm')).toBe(true);
     const player = sim.player;
     player.resource = player.maxResource;
