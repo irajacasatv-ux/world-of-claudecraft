@@ -34,9 +34,14 @@ function equipMournweave(sim: Sim): Entity {
 
 // A full-pipeline caster in the 4-set, plus a beefy hostile target in range and
 // faced, so a hostile cast passes every castAbility guard.
-function makeCastingSim(cls: PlayerClass, seed: number): { sim: AnySim; p: AnyEntity; meta: any } {
+// Every rig in this file stands on the empty world on one seed: the proc cases
+// loop until the six percent roll lands, which any stream reaches, and a fresh
+// seed costs a collider grid build on the first line-of-sight check.
+const SEED = 11;
+
+function makeCastingSim(cls: PlayerClass): { sim: AnySim; p: AnyEntity; meta: any } {
   const sim = new Sim({
-    seed,
+    seed: SEED,
     playerClass: cls,
     autoEquip: false,
     world: EMPTY_TEST_WORLD,
@@ -81,7 +86,7 @@ function castOnce(sim: AnySim, p: AnyEntity, meta: any, abilityId: string): void
 describe('Clearcasting set proc', () => {
   it('resolves from the 4-piece Mournweave caster set', () => {
     const sim = new Sim({
-      seed: 11,
+      seed: SEED,
       playerClass: 'mage',
       autoEquip: false,
       world: EMPTY_TEST_WORLD,
@@ -101,7 +106,7 @@ describe('Clearcasting set proc', () => {
 
   it('draws no rng and grants no aura when the player has no set procs', () => {
     const sim = new Sim({
-      seed: 12,
+      seed: SEED,
       playerClass: 'mage',
       autoEquip: false,
       world: EMPTY_TEST_WORLD,
@@ -122,7 +127,7 @@ describe('Clearcasting set proc', () => {
 
   it('eventually grants Clearcasting and blocks another proc during the ICD', () => {
     const sim = new Sim({
-      seed: 13,
+      seed: SEED,
       playerClass: 'mage',
       autoEquip: false,
       world: EMPTY_TEST_WORLD,
@@ -160,14 +165,14 @@ describe('Clearcasting set proc', () => {
 // a call site in casting_lifecycle.ts fails here, not just in the unit tests above.
 describe('Clearcasting procs from real casts', () => {
   it('procs from a completed hostile cast-time spell (the projectile branch)', () => {
-    const { sim, p, meta } = makeCastingSim('mage', 21);
+    const { sim, p, meta } = makeCastingSim('mage');
     spawnTarget(sim, p);
     for (let i = 0; i < 300 && !hasClearcasting(p); i++) castOnce(sim, p, meta, 'fireball');
     expect(hasClearcasting(p)).toBe(true);
   });
 
   it('procs from starting a channel', () => {
-    const { sim, p, meta } = makeCastingSim('mage', 22);
+    const { sim, p, meta } = makeCastingSim('mage');
     // Aether Darts is Chronomancy-exclusive on the mage line. The release test
     // predates that split, so commit the matching spec before exercising the
     // channel-start proc path.
@@ -178,7 +183,7 @@ describe('Clearcasting procs from real casts', () => {
   });
 
   it('procs from a friendly-target spell (a heal)', () => {
-    const { sim, p, meta } = makeCastingSim('priest', 23);
+    const { sim, p, meta } = makeCastingSim('priest');
     p.hp = 1; // keep the self-heal meaningful so the cast never no-ops
     for (let i = 0; i < 300 && !hasClearcasting(p); i++) {
       p.hp = 1;
@@ -191,7 +196,7 @@ describe('Clearcasting procs from real casts', () => {
     // Mournweave is cloth, so a druid can wear the full set; a form toggle is a
     // physical-school ability and its off-flip is a toggle-off: neither is a
     // spell, so 300 alternating flips (which would proc ~30 times ungated) stay dry.
-    const { sim, p, meta } = makeCastingSim('druid', 24);
+    const { sim, p, meta } = makeCastingSim('druid');
     for (let i = 0; i < 300 && !hasClearcasting(p); i++) castOnce(sim, p, meta, 'bear_form');
     expect(hasClearcasting(p)).toBe(false);
   });
