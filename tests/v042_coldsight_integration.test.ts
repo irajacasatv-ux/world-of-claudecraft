@@ -11,20 +11,27 @@ import {
   coldsightReadArmed,
   FEVERED_DRAW_PULSE_COUNT,
 } from '../src/sim/combat/hunter_coldsight_read';
-import { BUILTIN_WORLD, MOBS } from '../src/sim/data';
+import { MOBS } from '../src/sim/data';
 import { createMob } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
 import type { SimContext } from '../src/sim/sim_context';
 import type { Entity, SimEvent } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 type TestSim = Sim & { ctx: SimContext; addEntity(e: Entity): void; nextId: number };
 
-function marksmanHunter(seed: number): TestSim {
+// One seed on the shared EMPTY_TEST_WORLD object for every case. The static
+// collider grid is built on a seed's first tick and cached per world object
+// and seed, so the per-call world literal and the per-case seeds this
+// replaced rebuilt it (about half a second) for every Sim, control runs
+// included. Hit and crit rolls are pinned below and every comparison is a
+// same-seed pair, so the seed itself carries no coverage.
+function marksmanHunter(): TestSim {
   const sim = new Sim({
-    seed,
+    seed: 301,
     playerClass: 'hunter',
     autoEquip: true,
-    world: { ...BUILTIN_WORLD, camps: [], npcs: {}, groundObjects: [] },
+    world: EMPTY_TEST_WORLD,
   }) as TestSim;
   sim.setPlayerLevel(20);
   expect(sim.setSpec('marksmanship')).toBe(true);
@@ -85,7 +92,7 @@ function landedHit(events: SimEvent[], abilityName: string): number {
 
 describe('Fevered Draw real channel: grant only on a full, valid run', () => {
   it('six real ticks through Sim.tick grant exactly one charge', () => {
-    const sim = marksmanHunter(301);
+    const sim = marksmanHunter();
     const target = addDummy(sim);
     sim.targetEntity(target.id);
     sim.player.resource = sim.player.maxResource;
@@ -97,7 +104,7 @@ describe('Fevered Draw real channel: grant only on a full, valid run', () => {
   });
 
   it('a fully absorbed channel still grants Read after all six shots fire', () => {
-    const sim = marksmanHunter(312);
+    const sim = marksmanHunter();
     const target = addDummy(sim);
     target.auras.push({
       id: 'test_absorb',
@@ -118,7 +125,7 @@ describe('Fevered Draw real channel: grant only on a full, valid run', () => {
   });
 
   it('an interrupted channel (silence/stun-shaped cancel) grants nothing', () => {
-    const sim = marksmanHunter(302);
+    const sim = marksmanHunter();
     const target = addDummy(sim);
     sim.targetEntity(target.id);
     sim.player.resource = sim.player.maxResource;
@@ -137,7 +144,7 @@ describe('Fevered Draw real channel: grant only on a full, valid run', () => {
   });
 
   it('the target dying mid-channel cancels the cast and grants nothing', () => {
-    const sim = marksmanHunter(303);
+    const sim = marksmanHunter();
     const target = addDummy(sim);
     sim.targetEntity(target.id);
     sim.player.resource = sim.player.maxResource;
@@ -155,7 +162,7 @@ describe('Fevered Draw real channel: grant only on a full, valid run', () => {
   });
 
   it('a pushback-shortened channel (fewer than six real pulses) grants nothing', () => {
-    const sim = marksmanHunter(304);
+    const sim = marksmanHunter();
     const target = addDummy(sim);
     sim.targetEntity(target.id);
     sim.player.resource = sim.player.maxResource;
@@ -170,7 +177,7 @@ describe('Fevered Draw real channel: grant only on a full, valid run', () => {
 
 describe('Reserve at accept: rejected never spends, an accepted-then-interrupted cast does', () => {
   it('insufficient Focus never reaches accept: the opportunity stays armed', () => {
-    const sim = marksmanHunter(305);
+    const sim = marksmanHunter();
     const target = addDummy(sim);
     sim.targetEntity(target.id);
     armColdsightRead(sim, target);
@@ -182,7 +189,7 @@ describe('Reserve at accept: rejected never spends, an accepted-then-interrupted
   });
 
   it('out of range never reaches accept: the opportunity stays armed', () => {
-    const sim = marksmanHunter(306);
+    const sim = marksmanHunter();
     const target = addDummy(sim, 200);
     sim.targetEntity(target.id);
     armColdsightRead(sim, target);
@@ -194,7 +201,7 @@ describe('Reserve at accept: rejected never spends, an accepted-then-interrupted
   });
 
   it('an accepted Long Draw interrupted mid-cast has already spent it: no refund, no leak to a later cast', () => {
-    const sim = marksmanHunter(307);
+    const sim = marksmanHunter();
     const target = addDummy(sim);
     sim.targetEntity(target.id);
     armColdsightRead(sim, target);
@@ -216,7 +223,7 @@ describe('Reserve at accept: rejected never spends, an accepted-then-interrupted
     const later = advance(sim, 4);
     const dealt = landedHit(later, 'Long Draw');
     const unarmedBaseline = (() => {
-      const control = marksmanHunter(307);
+      const control = marksmanHunter();
       const controlTarget = addDummy(control);
       control.targetEntity(controlTarget.id);
       control.player.resource = control.player.maxResource;
@@ -233,7 +240,7 @@ describe('Reserve at accept: rejected never spends, an accepted-then-interrupted
   });
 
   it('an ineligible spender never consumes the armed opportunity', () => {
-    const sim = marksmanHunter(308);
+    const sim = marksmanHunter();
     const target = addDummy(sim);
     sim.targetEntity(target.id);
     armColdsightRead(sim, target);
@@ -246,10 +253,8 @@ describe('Reserve at accept: rejected never spends, an accepted-then-interrupted
 
 describe('Complete-hit damage: the promised multiplier, including AP, at identical rng draw', () => {
   it('Long Draw lands +50% and Fell Shot lands +75% versus an unarmed baseline', () => {
-    const seed = 309001;
-
     function runAimedShot(armed: boolean): number {
-      const sim = marksmanHunter(seed);
+      const sim = marksmanHunter();
       const target = addDummy(sim);
       if (armed) armColdsightRead(sim, target);
       sim.targetEntity(target.id);
@@ -258,7 +263,7 @@ describe('Complete-hit damage: the promised multiplier, including AP, at identic
       return landedHit(advance(sim, 4), 'Long Draw');
     }
     function runArcaneShot(armed: boolean): number {
-      const sim = marksmanHunter(seed + 1);
+      const sim = marksmanHunter();
       const target = addDummy(sim);
       if (armed) armColdsightRead(sim, target);
       sim.targetEntity(target.id);
@@ -282,7 +287,7 @@ describe('Complete-hit damage: the promised multiplier, including AP, at identic
 
   it('keeps one empowered Long Draw after pushback extends the cast beyond ten seconds', () => {
     function run(armed: boolean): number {
-      const sim = marksmanHunter(310);
+      const sim = marksmanHunter();
       const target = addDummy(sim);
       if (armed) armColdsightRead(sim, target);
       sim.targetEntity(target.id);
@@ -308,7 +313,7 @@ describe('Complete-hit damage: the promised multiplier, including AP, at identic
 
 describe('Respec clears every marker (same-class negative control)', () => {
   it('leaving marksmanship drops the armed opportunity, so another spec never sees it', () => {
-    const sim = marksmanHunter(311);
+    const sim = marksmanHunter();
     const target = addDummy(sim);
     sim.targetEntity(target.id);
     armColdsightRead(sim, target);
@@ -319,7 +324,7 @@ describe('Respec clears every marker (same-class negative control)', () => {
     sim.castAbility('arcane_shot');
     const dealt = landedHit(advance(sim, 1), 'Fell Shot');
 
-    const control = marksmanHunter(311);
+    const control = marksmanHunter();
     expect(control.applyTalents({ spec: 'survival', rows: {} })).toBe(true);
     const controlTarget = addDummy(control);
     control.targetEntity(controlTarget.id);
@@ -336,7 +341,7 @@ describe('Respec clears every marker (same-class negative control)', () => {
 // marker leakage (unit-level coverage: tests/v042_coldsight_read.test.ts).
 describe('Aura event feed carries no internal Coldsight marker leakage (v0.42.0 review fix)', () => {
   it('one Rapid Fire channel plus one accepted Long Draw emits exactly two aura events', () => {
-    const sim = marksmanHunter(320);
+    const sim = marksmanHunter();
     const target = addDummy(sim);
     sim.targetEntity(target.id);
     sim.player.resource = sim.player.maxResource;
@@ -360,7 +365,7 @@ describe('Aura event feed carries no internal Coldsight marker leakage (v0.42.0 
   });
 
   it('one Rapid Fire channel plus one accepted Fell Shot emits exactly two aura events', () => {
-    const sim = marksmanHunter(321);
+    const sim = marksmanHunter();
     const target = addDummy(sim);
     sim.targetEntity(target.id);
     sim.player.resource = sim.player.maxResource;
