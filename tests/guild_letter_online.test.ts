@@ -40,9 +40,15 @@ import type { SimEvent } from '../src/sim/types';
 const LETTER_ID = 'guild_trend_weaponcrafting_armorcrafting';
 
 // Booking happens on the 1 Hz sweep within a second of the crossing; the raven
-// then flies the standard 90 second NPC delivery delay (the professions_trend
-// suite mirrors the same literal). 95 sim-seconds covers both with margin.
-const DELIVERY_WINDOW_TICKS = 95 * 20;
+// then flies the standard 90 second NPC delivery delay. The flight's length is
+// the offline suite's pin (tests/professions_trend_guild_letter.test.ts ticks
+// it through the real Sim); here it proves nothing about routing, so once the
+// sweep has booked the letter the case holds its landing time inside the old
+// 95 second window and lands it on the next announce pass, instead of ticking
+// the full live overworld for ninety seconds.
+const DELIVERY_WINDOW_SECONDS = 95;
+const BOOKING_WINDOW_TICKS = 2 * 20;
+const LANDING_WINDOW_TICKS = 2 * 20;
 const ONLINE_SUITE_TIMEOUT_MS = 40_000;
 
 function fakeWs(): { sent: { t: string; list?: SimEvent[]; [k: string]: unknown }[]; ws: unknown } {
@@ -89,7 +95,19 @@ describe('guild letter over the live GameServer wire (session routing)', () => {
       // per session (the masterworkZone suite idiom).
       const route = (evs: SimEvent[]) =>
         (server as unknown as { routeEvents(e: SimEvent[]): void }).routeEvents(evs);
-      for (let i = 0; i < DELIVERY_WINDOW_TICKS; i++) route(server.sim.tick());
+      const windowStart = server.sim.time;
+      for (let i = 0; i < BOOKING_WINDOW_TICKS; i++) route(server.sim.tick());
+      const postOffice = (
+        server.sim as unknown as {
+          postOffice: { mail: { letterId?: string; deliverAt: number; announced?: boolean }[] };
+        }
+      ).postOffice;
+      const booked = postOffice.mail.filter((m) => m.letterId === LETTER_ID);
+      expect(booked).toHaveLength(1);
+      expect(booked[0].announced).toBeFalsy();
+      expect(booked[0].deliverAt).toBeLessThanOrEqual(windowStart + DELIVERY_WINDOW_SECONDS);
+      booked[0].deliverAt = server.sim.time;
+      for (let i = 0; i < LANDING_WINDOW_TICKS; i++) route(server.sim.tick());
 
       const guildEvsOf = (sent: { t: string; list?: SimEvent[] }[]) =>
         sent
