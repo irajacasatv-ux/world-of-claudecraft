@@ -1,24 +1,23 @@
 import { describe, expect, it } from 'vitest';
 import { RIFT_ESSENCE_ITEM_ID, RIFT_GEM_IDS } from '../src/sim/content/rift/items';
-import { BUILTIN_WORLD, ITEMS } from '../src/sim/data';
+import { ITEMS } from '../src/sim/data';
 import type { MarketCollection } from '../src/sim/market';
 import { MARKET_PLAYER_LISTING_ID_BASE } from '../src/sim/market_listing_ids';
 import type { MarketQuery } from '../src/sim/market_query';
 import { emptySaleLog, type MarketSaleLog } from '../src/sim/market_sale_log';
 import { Sim } from '../src/sim/sim';
-import type { Entity, WorldContent } from '../src/sim/types';
+import type { Entity } from '../src/sim/types';
 import { groundHeight } from '../src/sim/world';
+import { VENDOR_TEST_WORLD } from './sim_shared';
 
 type MarketInfo = NonNullable<ReturnType<Sim['marketInfoFor']>>;
 type MarketListing = Sim['marketListings'][number];
 
-// The market reads the Merchant (an NPC), the players and the vendor catalog,
-// never a mob camp or a ground object, so the world keeps its NPCs and drops
-// the ambient camps and objects every Sim here used to spawn.
-const MARKET_TEST_WORLD: WorldContent = { ...BUILTIN_WORLD, camps: [], groundObjects: [] };
-
+// The market reads the Merchant (an NPC kept by the vendor world), the players
+// and the vendor catalog, never a mob camp or a ground object, so every Sim
+// here skips the ambient camps and objects the full world spawned.
 function makeWorld() {
-  return new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true, world: MARKET_TEST_WORLD });
+  return new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true, world: VENDOR_TEST_WORLD });
 }
 
 // A full browse query with sensible defaults; tests vary only what they care about.
