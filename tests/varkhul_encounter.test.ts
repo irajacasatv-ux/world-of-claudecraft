@@ -71,13 +71,15 @@ import {
   VARKHUL_SHARED_PYRE_CAST_SECONDS,
   VARKHUL_SHARED_PYRE_NAME,
 } from '../src/sim/varkhul_shared_pyre';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // One seed for every case: a seed a test file has not built yet costs its
 // full-world Sim about half a second (the collider grids are built per seed),
 // a seed it has already built about 20 ms. No case reads a seed-specific
-// draw; the Cinder Orbs replay compares two runs of the same seed.
+// draw; the Cinder Orbs replay compares two runs of the same seed. The fight
+// lives in the Inner Crucible instance, so every Sim runs on the empty world.
 function claimedEncounter(seed = 42): { sim: Sim; boss: Entity } {
-  const sim = new Sim({ seed, playerClass: 'warrior', devCommands: true });
+  const sim = new Sim({ seed, playerClass: 'warrior', devCommands: true, world: EMPTY_TEST_WORLD });
   expect(enterDungeon(sim.ctx, IGNIVAR_SECOND_WING_ID, sim.player.id, true)).toBe(true);
   const instance = sim.instances.find((entry) => entry.dungeonId === IGNIVAR_SECOND_WING_ID);
   if (!instance) throw new Error('Inner Crucible did not claim an instance');
