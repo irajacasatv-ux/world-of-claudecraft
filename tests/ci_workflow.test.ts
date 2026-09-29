@@ -484,11 +484,12 @@ describe('CI workflow parity', () => {
         const match = line.match(/^docs\/screenshots\/([A-Za-z0-9._-]+)\//);
         if (match) indexDirs.add(match[1]);
       }
-      // 127 tracked screenshot subtrees after the 2026-09-27 prune removed 411
-      // that nothing referenced (538 before it).
+      // 68 tracked screenshot subtrees after the 2026-09-29 prune removed 465
+      // files that no test, doc, script or provenance record named (135 before
+      // it; 538 before the 2026-09-27 prune).
       // Keep this floor near that measured count so truncated discovery cannot
       // silently satisfy the exact reference/cone coupling below.
-      expect(indexDirs.size).toBeGreaterThanOrEqual(127);
+      expect(indexDirs.size).toBeGreaterThanOrEqual(68);
     }
     // The guard's own file is excluded from the corpus: its SPARSE_CONE
     // literal above names every cone subtree, so counting it would satisfy
