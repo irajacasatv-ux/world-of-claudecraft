@@ -206,6 +206,8 @@ describe('aura track catalog: what it derives', () => {
       ['druid', null, 'barkskin', ['barkskin']],
     ];
     for (const [playerClass, spec, abilityId, expectedIds] of casts) {
+      // Every rig in this file uses seed 7 on the empty world and reads no
+      // seed-specific draw: one collider grid build serves the file.
       const sim = new Sim({ seed: 7, playerClass, autoEquip: true, world: EMPTY_TEST_WORLD });
       sim.setPlayerLevel(60);
       if (spec) expect(sim.setSpec(spec), `${playerClass} could not pick ${spec}`).toBe(true);
@@ -249,7 +251,7 @@ describe('aura track catalog: what it derives', () => {
       ['mage', 'arcane', 'temporal_echo', 'temporal_echo'],
     ];
     for (const [playerClass, spec, abilityId, auraId] of casts) {
-      const sim = new Sim({ seed: 11, playerClass, autoEquip: true, world: EMPTY_TEST_WORLD });
+      const sim = new Sim({ seed: 7, playerClass, autoEquip: true, world: EMPTY_TEST_WORLD });
       sim.setPlayerLevel(20);
       if (spec) expect(sim.setSpec(spec), `${playerClass} could not pick ${spec}`).toBe(true);
       const player = sim.player;
@@ -314,7 +316,7 @@ describe('aura track catalog: what it derives', () => {
     // Both arms are asserted here; the hostile one is the whole point.
     const FLAT_X = 700;
     const rig = () => {
-      const sim = new Sim({ seed: 147, playerClass: 'mage', world: EMPTY_TEST_WORLD });
+      const sim = new Sim({ seed: 7, playerClass: 'mage', world: EMPTY_TEST_WORLD });
       sim.setPlayerLevel(14);
       expect(sim.setSpec('arcane'), 'mage could not pick arcane').toBe(true);
       sim.tick();
@@ -452,7 +454,7 @@ describe('aura track catalog: what it derives', () => {
     expect(friendly).toBeDefined();
     if (!friendly) return;
     const sim = new Sim({
-      seed: 23,
+      seed: 7,
       playerClass: 'mage',
       autoEquip: true,
       world: EMPTY_TEST_WORLD,
@@ -523,7 +525,7 @@ describe('aura track catalog: what it derives', () => {
     expect(power).toBeDefined();
     if (!power) return;
     const sim = new Sim({
-      seed: 31,
+      seed: 7,
       playerClass: 'mage',
       autoEquip: true,
       world: EMPTY_TEST_WORLD,
