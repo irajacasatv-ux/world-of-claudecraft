@@ -8,8 +8,11 @@ import type { SimEvent } from '../src/sim/types';
 
 const TREND_PAIR = 'weaponcrafting+armorcrafting';
 
-function makeSim(seed = 3120): Sim {
-  return new Sim({ seed, playerClass: 'warrior', autoEquip: true });
+// Every Sim, the reload targets and the determinism twin included, shares
+// one seed: a fresh seed builds its collider grids (about half a second) and
+// no case compares two seeds.
+function makeSim(): Sim {
+  return new Sim({ seed: 3120, playerClass: 'warrior', autoEquip: true });
 }
 
 /** A mock ctx exposing only what the nudge helpers read: a mutable tickCount and
@@ -137,7 +140,7 @@ describe('first-tier tutorial one-shot (Professions 2.0)', () => {
     const saved = sim.serializeCharacter(sim.playerId);
     expect(saved?.profTierTutorialSent).toBe(true);
 
-    const reloaded = makeSim(3121);
+    const reloaded = makeSim();
     const pid = reloaded.addPlayer('warrior', 'Reloaded', { state: saved ?? undefined });
     const reloadedMeta = reloaded.players.get(pid)!;
     expect(reloadedMeta.profTierTutorialSent).toBe(true);
@@ -205,7 +208,7 @@ describe('first-tier tutorial also fires for gathering (fishing/mining/etc.)', (
     const preFixSave = sim.serializeCharacter(sim.playerId);
     expect(preFixSave && 'profTierTutorialSent' in preFixSave).toBe(false);
 
-    const reloaded = makeSim(3122);
+    const reloaded = makeSim();
     const pid = reloaded.addPlayer('warrior', 'PreFix', { state: preFixSave ?? undefined });
     const reloadedMeta = reloaded.players.get(pid)!;
     expect(reloadedMeta.profTierTutorialSent).toBeFalsy();
@@ -224,7 +227,7 @@ describe('first-tier tutorial also fires for gathering (fishing/mining/etc.)', (
 describe('nudge sweep determinism (Professions 2.0)', () => {
   it('two same-seed sims run the sweep identically', () => {
     const run = () => {
-      const sim = makeSim(9001);
+      const sim = makeSim();
       const meta = sim.players.get(sim.playerId)!;
       meta.craftSkills.weaponcrafting = 30; // tier 1: fires BOTH the tutorial and a nudge
       const events: SimEvent[] = [];
