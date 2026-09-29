@@ -19,9 +19,18 @@ import {
 import type { RiftInstance } from '../src/sim/rift/types';
 import { Sim } from '../src/sim/sim';
 import { DT, type Entity, type SimEvent } from '../src/sim/types';
+import { PRODUCTION_IDLE_CULL } from './helpers/production_idle_cull';
 
 function hoard(args = 'mushroom rare goblin'): { sim: Sim; inst: RiftInstance; goblin?: Entity } {
-  const sim = new Sim({ seed: 4242, playerClass: 'warrior', autoEquip: true, devCommands: true });
+  // The shipped idle-mob cull: the hoard sits in its own instance band, so the
+  // overworld's idle camps are far from every player and decide nothing here.
+  const sim = new Sim({
+    seed: 4242,
+    playerClass: 'warrior',
+    autoEquip: true,
+    devCommands: true,
+    ...PRODUCTION_IDLE_CULL,
+  });
   sim.chat('/dev level 20', sim.player.id);
   sim.chat('/dev god', sim.player.id);
   sim.chat(`/dev hoard ${args}`, sim.player.id);
