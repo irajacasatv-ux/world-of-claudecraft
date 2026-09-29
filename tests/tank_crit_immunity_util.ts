@@ -29,7 +29,7 @@ export const SEED = 90210;
 // over a quarter of the old 240 s window, the same swings in a quarter of the ticks.
 export const WINDOW_SECONDS = 60;
 const SWING_SPEEDUP = 4;
-// The mob's crit roll (the 5 percent `chance` in Sim.mobSwing) is forced to succeed,
+// The wolf's crit roll (the 5 percent `chance` in Sim.mobSwing) is forced to succeed,
 // so every landed swing crits unless the defender is a committed tank. Both arms
 // are then decisive on any stream: at the natural rate a 100-swing fight rolls one
 // or two crits, and a non-immune arm would ride the seed's luck.
@@ -55,10 +55,13 @@ export function critsTaken(setup: Setup): { hits: number; crits: number } {
     noPlayer: true,
     world: EMPTY_TEST_WORLD,
   });
+  // Forced only inside the wolf's own swing (the ctx.mobSwing wrap below), so a
+  // defender's 5 percent proc or imbue roll keeps its natural outcome.
+  let wolfSwinging = false;
   const chance = sim.rng.chance.bind(sim.rng);
   sim.rng.chance = (p: number) => {
     const drawn = chance(p); // still drawn, so the stream keeps its position
-    return p === MOB_CRIT_CHANCE || drawn;
+    return (wolfSwinging && p === MOB_CRIT_CHANCE) || drawn;
   };
   const pid = sim.addPlayer(setup.cls, 'Defender');
   sim.setPlayerLevel(20, pid);
@@ -88,6 +91,16 @@ export function critsTaken(setup: Setup): { hits: number; crits: number } {
   mob.hp = mob.maxHp;
   mob.weapon = { ...mob.weapon, speed: mob.weapon.speed / SWING_SPEEDUP };
   (sim as unknown as { addEntity(e: Entity): void }).addEntity(mob);
+  const ctx = sim.ctx as { mobSwing(attacker: Entity, target: Entity): void };
+  const swing = ctx.mobSwing;
+  ctx.mobSwing = (attacker, target) => {
+    wolfSwinging = attacker.id === mob.id;
+    try {
+      swing(attacker, target);
+    } finally {
+      wolfSwinging = false;
+    }
+  };
   mob.inCombat = true;
   mob.aiState = 'attack';
   mob.aggroTargetId = pid;
