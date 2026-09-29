@@ -1,9 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { Sim } from '../src/sim/sim';
-import { Entity, SimEvent } from '../src/sim/types';
+import type { Entity, SimEvent } from '../src/sim/types';
+import { RL_TEST_WORLD } from './sim_shared';
 
+// The mob case needs one live wild mob and nothing else, so the Sim runs on the
+// one-wolf-camp world.
 function makeWorld() {
-  return new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+  return new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true, world: RL_TEST_WORLD });
 }
 
 function liveMob(sim: Sim): Entity {
@@ -15,7 +18,9 @@ function liveMob(sim: Sim): Entity {
 }
 
 function errors(events: SimEvent[]): string[] {
-  return events.filter((e): e is Extract<SimEvent, { type: 'error' }> => e.type === 'error').map((e) => e.text);
+  return events
+    .filter((e): e is Extract<SimEvent, { type: 'error' }> => e.type === 'error')
+    .map((e) => e.text);
 }
 
 describe('/target readout command', () => {
