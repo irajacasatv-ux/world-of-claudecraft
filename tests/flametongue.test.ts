@@ -3,9 +3,16 @@ import { ABILITIES, abilitiesKnownAt, CLASSES } from '../src/sim/content/classes
 import { computeTalentModifiers } from '../src/sim/content/talents';
 import { Sim } from '../src/sim/sim';
 import type { Aura } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
+// A self-cast imbue reads only the caster, so each Sim runs on the empty world.
 function shaman(level: number) {
-  const sim = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+  const sim = new Sim({
+    seed: 42,
+    playerClass: 'warrior',
+    noPlayer: true,
+    world: EMPTY_TEST_WORLD,
+  });
   const pid = sim.addPlayer('shaman', 'Thrall');
   sim.setPlayerLevel(level, pid);
   if (level >= 5 && !sim.setSpec('elemental', pid)) throw new Error('no elemental spec');

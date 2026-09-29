@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { Sim } from '../src/sim/sim';
 import { angleTo, FACING_HOLD_DIST, steadyAngleTo } from '../src/sim/types';
+import { RL_TEST_WORLD } from './sim_shared';
 
 // Repro for the "immobile characters strobe their orientation" report: any
 // per-tick `facing = angleTo(a, b)` write amplifies millimetric position noise
@@ -30,7 +31,9 @@ describe('steadyAngleTo', () => {
 
 describe('mob facing vs a target standing on top of it', () => {
   it('does not strobe when the target dithers millimetrically on the mob', () => {
-    const sim = new Sim({ seed: 999, playerClass: 'warrior' });
+    // Any hostile mob serves, so the Sim runs on the one-wolf-camp world
+    // instead of ticking the whole overworld for 120 ticks.
+    const sim = new Sim({ seed: 999, playerClass: 'warrior', world: RL_TEST_WORLD });
     const p = sim.player;
     let mob: ReturnType<typeof sim.entities.get> | undefined;
     for (const e of sim.entities.values()) {

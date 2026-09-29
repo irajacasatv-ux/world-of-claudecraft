@@ -9,11 +9,19 @@ import { MOBS } from '../src/sim/data';
 import { createMob } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
 import type { Entity } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 type TestSim = Sim & { nextId: number; addEntity(e: Entity): void; ctx: never };
 
+// Every target is a training dummy placed beside the mage, so the Sims run on the
+// empty world.
 function frostMage(): { sim: TestSim; p: Entity } {
-  const sim = new Sim({ seed: 87, playerClass: 'mage', autoEquip: true }) as TestSim;
+  const sim = new Sim({
+    seed: 87,
+    playerClass: 'mage',
+    autoEquip: true,
+    world: EMPTY_TEST_WORLD,
+  }) as TestSim;
   sim.setPlayerLevel(20);
   expect(sim.setSpec('frost')).toBe(true);
   sim.tick();

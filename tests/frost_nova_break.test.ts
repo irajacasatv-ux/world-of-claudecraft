@@ -5,9 +5,11 @@ import { Sim } from '../src/sim/sim';
 import type { Aura, Entity } from '../src/sim/types';
 import { tEntity } from '../src/ui/entity_i18n';
 import { ensureLocaleLoaded, setLanguage } from '../src/ui/i18n';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
+// The rig places its own wolf beside the mage, so the Sims run on the empty world.
 function icebindRig(targetMaxHp: number, level = 7): { sim: Sim; target: Entity } {
-  const sim = new Sim({ seed: 811, playerClass: 'mage', autoEquip: true });
+  const sim = new Sim({ seed: 811, playerClass: 'mage', autoEquip: true, world: EMPTY_TEST_WORLD });
   sim.setPlayerLevel(level);
   expect(sim.setSpec('frost')).toBe(true);
   sim.player.resource = sim.player.maxResource;

@@ -5,6 +5,7 @@ import { PLAYER_BODY_RADIUS } from '../src/sim/pathfind';
 import { floorHeightAt } from '../src/sim/physics/character';
 import { Sim } from '../src/sim/sim';
 import { groundHeight } from '../src/sim/world';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // A feared player is moved by `moveToward`, the MOB movement path, and returns
 // early from the player step, so `stepPlayerMotion` (and with it the whole
@@ -20,6 +21,10 @@ import { groundHeight } from '../src/sim/world';
 // through it.
 
 const seed = 42;
+// The ramparts are static colliders (built from the active world whatever the
+// Sim's own content), and the case fears a lone player, so the Sims run on the
+// empty world.
+const world = EMPTY_TEST_WORLD;
 
 /** A spot inside the battleground where a standable top sits well above ground. */
 function rampartSpot(): { x: number; z: number; ground: number; support: number } {
@@ -41,7 +46,7 @@ function fearedOnRampart(): {
   pid: number;
   spot: ReturnType<typeof rampartSpot>;
 } {
-  const sim = new Sim({ seed, playerClass: 'warrior', noPlayer: true });
+  const sim = new Sim({ seed, playerClass: 'warrior', noPlayer: true, world });
   const pid = sim.addPlayer('priest', 'Feared');
   const spot = rampartSpot();
   const e = sim.entities.get(pid)!;
@@ -114,7 +119,7 @@ describe('a fear must not drop a player through the surface they stand on', () =
     // The other half: the fix must not weld a feared body to a height it has
     // walked off. Standing on open terrain, the floor IS the terrain, so the
     // same expression has to track it down a slope.
-    const sim = new Sim({ seed, playerClass: 'warrior', noPlayer: true });
+    const sim = new Sim({ seed, playerClass: 'warrior', noPlayer: true, world });
     const pid = sim.addPlayer('priest', 'Runner');
     const e = sim.entities.get(pid)!;
     e.pos = { x: 0, y: groundHeight(0, -40, seed), z: -40 };

@@ -13,6 +13,7 @@ import type { SimContext } from '../src/sim/sim_context';
 import { type Aura, dist2d, type Entity } from '../src/sim/types';
 import { groundHeight } from '../src/sim/world';
 import { WORLD_SEED } from '../src/sim/world_seed';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // Fear runs a player on one FIXED heading. If that heading points at a wall, they
 // used to grind into it (and, players reported, sometimes end up inside). The
@@ -31,6 +32,10 @@ const R = PLAYER_BODY_RADIUS;
 const START = { x: -100.0, z: -77.0 };
 const INTO_WALL = 0; // +z, into the building 1yd ahead
 const AWAY = Math.PI; // -z, open ground to the south
+// The building is a static collider (built from the active world whatever the
+// Sim's own content), and every feared body is placed by hand, so the Sims run
+// on the empty world.
+const world = EMPTY_TEST_WORLD;
 
 function fearAura(angle: number): Aura {
   return {
@@ -46,7 +51,7 @@ function fearAura(angle: number): Aura {
 }
 
 function fearedAt(x: number, z: number, angle: number): { sim: Sim; aura: Aura } {
-  const sim = new Sim({ seed: WORLD_SEED, playerClass: 'warrior', autoEquip: true });
+  const sim = new Sim({ seed: WORLD_SEED, playerClass: 'warrior', autoEquip: true, world });
   sim.setPlayerLevel(20);
   const p = sim.player;
   p.pos = { x, y: groundHeight(x, z, WORLD_SEED), z };
@@ -111,7 +116,12 @@ describe('fear steering (integration through the tick)', () => {
   });
 
   it('does NOT steer a feared MOB (player-only guard keeps mob movement and parity)', () => {
-    const sim = new Sim({ seed: WORLD_SEED, playerClass: 'warrior', autoEquip: true }) as Sim & {
+    const sim = new Sim({
+      seed: WORLD_SEED,
+      playerClass: 'warrior',
+      autoEquip: true,
+      world,
+    }) as Sim & {
       addEntity(e: Entity): void;
       nextId: number;
     };
@@ -151,6 +161,7 @@ describe('fear steering (integration through the tick)', () => {
       playerClass: 'warrior',
       autoEquip: true,
       devCommands: true,
+      world,
     });
     sim.setPlayerLevel(20);
     sim.player.facing = 1.2;

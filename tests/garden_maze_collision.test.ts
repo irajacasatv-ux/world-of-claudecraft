@@ -26,13 +26,21 @@ import {
   MAZE_X0,
   MAZE_Z1,
 } from '../src/sim/world';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const SEED = 20061;
 const MAZE_Z0 = MAZE_Z1 - MAZE_ROWS * MAZE_CELL;
 const MAZE_W = MAZE_COLS * MAZE_CELL;
 
+// The hedges are static colliders, built from the active built-in world whatever the
+// Sim's content, so the walker runs on the empty world (no mobs ticking around it).
 function walker(spot: { x: number; z: number }) {
-  const sim = new Sim({ seed: SEED, playerClass: 'warrior', autoEquip: true });
+  const sim = new Sim({
+    seed: SEED,
+    playerClass: 'warrior',
+    autoEquip: true,
+    world: EMPTY_TEST_WORLD,
+  });
   sim.setPlayerLevel(20);
   const p = sim.player;
   const meta = (

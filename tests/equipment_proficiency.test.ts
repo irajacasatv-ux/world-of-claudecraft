@@ -4,6 +4,7 @@ import { CLASSES, ITEMS } from '../src/sim/data';
 import { canEquipItem } from '../src/sim/equipment_rules';
 import { Sim } from '../src/sim/sim';
 import type { PlayerClass } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const ALL_CLASSES = Object.keys(CLASSES) as PlayerClass[];
 const CASTER_WEAPON_CLASSES: PlayerClass[] = [
@@ -15,8 +16,16 @@ const CASTER_WEAPON_CLASSES: PlayerClass[] = [
   'druid',
 ];
 
+// Equip rules read only the item and the class, so each fresh Sim runs on the
+// empty world instead of spawning the whole overworld per equip.
 function equip(cls: Parameters<Sim['addPlayer']>[0], itemId: string) {
-  const sim = new Sim({ seed: 42, playerClass: cls, noPlayer: true, autoEquip: false });
+  const sim = new Sim({
+    seed: 42,
+    playerClass: cls,
+    noPlayer: true,
+    autoEquip: false,
+    world: EMPTY_TEST_WORLD,
+  });
   const pid = sim.addPlayer(cls, `${cls}-${itemId}`);
   // Max level so the per-quality level gate (item_level_req.ts) never fires:
   // these cases test CLASS/armor proficiency in isolation, not the level gate.

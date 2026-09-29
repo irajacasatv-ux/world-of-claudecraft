@@ -11,6 +11,7 @@ import { ensureLocaleLoaded, formatDuration, setLanguage, t } from '../src/ui/i1
 import type { RaidLockout } from '../src/ui/raid_lockout';
 import { localizeServerText } from '../src/ui/server_i18n';
 import { localizeSimText } from '../src/ui/sim_i18n';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // A deps bag whose formatter returns a recognizable sentinel, so an arm that
 // silently formatted the countdown some other way fails instead of matching.
@@ -136,7 +137,13 @@ describe('localizeErrorText: the form gate off a real cast', () => {
   afterEach(() => setLanguage('en'));
 
   function formRefusal(abilityId: string, spec?: string): string {
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+    // The form gate reads only the caster, so the Sim runs on the empty world.
+    const sim = new Sim({
+      seed: 42,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const pid = sim.addPlayer('druid', 'Fern');
     sim.tick();
     sim.setPlayerLevel(20, pid);
