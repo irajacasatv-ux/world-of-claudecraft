@@ -17,6 +17,7 @@ import { IGNIVAR_JUDGMENT_ACTIVE_SECONDS } from '../src/sim/ignivar_forge_judgme
 import { enterDungeon } from '../src/sim/instances/dungeons';
 import { Sim } from '../src/sim/sim';
 import { DT, dist2d, type Entity, IGNIVAR_BOSS_ID, type PlayerClass } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 type RaidRole = 'tank' | 'healer' | 'dps';
 
@@ -27,7 +28,13 @@ interface TestRaider {
 
 describe('Ignivar ten-player Normal mechanics smoke', () => {
   it('coordinates the full Ignivar phase flow in a 2-2-6 roster', () => {
-    const sim = new Sim({ seed: 2786, playerClass: 'warrior', devCommands: true });
+    // The raid fights inside its own instance, so the Sim runs on the empty world.
+    const sim = new Sim({
+      seed: 2786,
+      playerClass: 'warrior',
+      devCommands: true,
+      world: EMPTY_TEST_WORLD,
+    });
     expect(enterDungeon(sim.ctx, 'ignivar_raid_arena', sim.player.id, true)).toBe(true);
     const boss = [...sim.entities.values()].find((entity) => entity.templateId === IGNIVAR_BOSS_ID);
     if (!boss) throw new Error('Ignivar did not spawn');

@@ -18,12 +18,19 @@ import {
 } from '../src/sim/mob/ignivar_trash_automata';
 import { Sim } from '../src/sim/sim';
 import { DT, type DungeonDifficulty, type Entity } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 function claimedRoom(
   dungeonId: string,
   difficulty: DungeonDifficulty = 'normal',
 ): { sim: Sim; mobs: Entity[] } {
-  const sim = new Sim({ seed: 8124, playerClass: 'warrior', devCommands: true });
+  // The automata spawn inside their room's own instance, so the Sim runs on the empty world.
+  const sim = new Sim({
+    seed: 8124,
+    playerClass: 'warrior',
+    devCommands: true,
+    world: EMPTY_TEST_WORLD,
+  });
   sim.setDungeonDifficulty(difficulty, sim.player.id);
   expect(enterDungeon(sim.ctx, dungeonId, sim.player.id, true)).toBe(true);
   const instance = sim.instances.find(

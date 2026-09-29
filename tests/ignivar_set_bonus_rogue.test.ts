@@ -36,6 +36,7 @@ import { Sim } from '../src/sim/sim';
 import type { SimContext } from '../src/sim/sim_context';
 import type { Aura, Entity, SimEvent } from '../src/sim/types';
 import { expectDefined } from './helpers/defined';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const SET_SLOTS = ['helmet', 'shoulder', 'chest', 'gloves', 'legs'] as const;
 
@@ -63,7 +64,13 @@ function equipSet(sim: Sim, setId: string, pieces: number): void {
 }
 
 function rogueSim(spec: string, seed: number): TestSim {
-  const sim = new Sim({ seed, playerClass: 'rogue', autoEquip: true }) as TestSim;
+  // Every case fights a target it places by hand, so the Sim runs on the empty world.
+  const sim = new Sim({
+    seed,
+    playerClass: 'rogue',
+    autoEquip: true,
+    world: EMPTY_TEST_WORLD,
+  }) as TestSim;
   sim.setPlayerLevel(25);
   expect(sim.setSpec(spec)).toBe(true);
   return sim;

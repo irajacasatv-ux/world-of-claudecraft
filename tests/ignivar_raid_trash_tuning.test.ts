@@ -16,6 +16,7 @@ import { enterDungeon } from '../src/sim/instances/dungeons';
 import { dungeonMinibossStompDamageMaxHp } from '../src/sim/mob/dungeon_miniboss_stomp';
 import { ignivarCinderLanceDamageMaxHp } from '../src/sim/mob/ignivar_trash_automata';
 import { Sim } from '../src/sim/sim';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const PREBOSS_ROOMS = [IGNIVAR_FORGE_APPROACH_ID, IGNIVAR_MOLTEN_ASSEMBLY_ID] as const;
 
@@ -112,7 +113,13 @@ describe('Ignivar raid trash tuning', () => {
   )(
     'stamps the configured mechanic multipliers on $difficulty spawns in $roomId',
     ({ roomId, difficulty }) => {
-      const sim = new Sim({ seed: 731, playerClass: 'warrior', devCommands: true });
+      // The trash spawns inside each room's own instance, so the Sims run on the empty world.
+      const sim = new Sim({
+        seed: 731,
+        playerClass: 'warrior',
+        devCommands: true,
+        world: EMPTY_TEST_WORLD,
+      });
       sim.setDungeonDifficulty(difficulty, sim.player.id);
       expect(enterDungeon(sim.ctx, roomId, sim.player.id, true)).toBe(true);
       const claim = sim.instances.find(

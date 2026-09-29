@@ -10,6 +10,7 @@ import {
   IGNIVAR_SECOND_WING_ID,
 } from '../src/sim/ignivar_raid_ids';
 import { Sim } from '../src/sim/sim';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const MINI = {
   healthMultiplier: 2.35,
@@ -154,7 +155,13 @@ describe('restored Ignivar pre-boss rooms', () => {
     { roomId: IGNIVAR_FORGE_APPROACH_ID, minibosses: 2, packs: 5 },
     { roomId: IGNIVAR_MOLTEN_ASSEMBLY_ID, minibosses: 2, packs: 3 },
   ])('applies the authored miniboss and pack markers when claiming $roomId', (fixture) => {
-    const sim = new Sim({ seed: 7431, playerClass: 'warrior', devCommands: true });
+    // The trash spawns inside each room's own instance, so the Sim runs on the empty world.
+    const sim = new Sim({
+      seed: 7431,
+      playerClass: 'warrior',
+      devCommands: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.chat(`/dev dungeon ${fixture.roomId} normal`);
     const claim = sim.instances.find(
       (instance) => instance.dungeonId === fixture.roomId && instance.partyKey !== null,

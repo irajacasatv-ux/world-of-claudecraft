@@ -24,6 +24,7 @@ import { type PlayerMotionDeps, stepPlayerMotion } from '../src/sim/player_motio
 import { Sim } from '../src/sim/sim';
 import { type Entity, emptyMoveInput } from '../src/sim/types';
 import { WORLD_SEED } from '../src/sim/world_seed';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 type AnySim = Sim &
   Record<string, unknown> & {
@@ -39,11 +40,13 @@ function motionDeps(sim: Sim): PlayerMotionDeps {
 /** A solo warrior aboard the lift (dev builds admit a lone rider), with the
  *  car's instance origin so walks can be expressed car-local. */
 function boardLift(): { sim: AnySim; origin: { x: number; z: number } } {
+  // The lift car is the lift room's own geometry, so the Sim runs on the empty world.
   const sim = new Sim({
     seed: WORLD_SEED,
     playerClass: 'warrior',
     autoEquip: true,
     devCommands: true,
+    world: EMPTY_TEST_WORLD,
   }) as AnySim;
   if (!enterDungeon(sim.ctx, IGNIVAR_LIFT_ROOM_ID, sim.playerId)) {
     throw new Error('the keep door refused the lift');

@@ -20,12 +20,19 @@ import { Sim } from '../src/sim/sim';
 import { groundHeight } from '../src/sim/world';
 import { abilityDisplayNameFromSource } from '../src/ui/ability_display_name';
 import { setLanguage } from '../src/ui/i18n';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 function enterIgnivar(difficulty: 'normal' | 'heroic' = 'normal'): {
   sim: Sim;
   origin: { x: number; z: number };
 } {
-  const sim = new Sim({ seed: 42, playerClass: 'warrior', devCommands: true });
+  // The moat is the arena instance's own ground, so the Sims run on the empty world.
+  const sim = new Sim({
+    seed: 42,
+    playerClass: 'warrior',
+    devCommands: true,
+    world: EMPTY_TEST_WORLD,
+  });
   sim.chat(`/dev dungeon ignivar_raid_arena ${difficulty}`);
   const instance = sim.instances.find((entry) => entry.dungeonId === 'ignivar_raid_arena');
   if (!instance) throw new Error('Ignivar instance did not spawn');
@@ -222,7 +229,12 @@ describe('Ignivar perimeter lava moat', () => {
   });
 
   it('uses the normal dev bypass path as well as the command helper', () => {
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', devCommands: true });
+    const sim = new Sim({
+      seed: 42,
+      playerClass: 'warrior',
+      devCommands: true,
+      world: EMPTY_TEST_WORLD,
+    });
     expect(enterDungeon(sim.ctx, 'ignivar_raid_arena', sim.player.id, true)).toBe(true);
   });
 });

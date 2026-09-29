@@ -34,17 +34,20 @@ import {
   INSTANCE_EMPTY_TIMEOUT,
   type Vec3,
 } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 function makeSim(seed = 42, weeklyRaidResetMs?: (nowMs: number) => number): Sim {
+  // Lockouts are claims on raid instances, so the Sims run on the empty world.
   return new Sim({
     seed,
     playerClass: 'warrior',
     autoEquip: false,
     devCommands: true,
     weeklyRaidResetMs,
+    world: EMPTY_TEST_WORLD,
   });
 }
 

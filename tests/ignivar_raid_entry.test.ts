@@ -28,6 +28,7 @@ import type { SimContext } from '../src/sim/sim_context';
 import type { Entity } from '../src/sim/types';
 import { terrainHeight } from '../src/sim/world';
 import { localizeSimText } from '../src/ui/sim_i18n';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // The keep tower door on Forgefather's Isle: the raid's one overworld entrance.
 const DOOR_POS = { x: 503.05, z: 2243.7 };
@@ -143,7 +144,14 @@ describe('ignivar raid entry: pure helpers', () => {
 
 describe('ignivar raid entry: checkpoint redirect', () => {
   it('walks a returning member through the keep door into the deepest claimed room', () => {
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', devCommands: true });
+    // The keep door and the raid claims come from the dungeon table, not the world's population, so
+    // every Sim runs on the empty world.
+    const sim = new Sim({
+      seed: 42,
+      playerClass: 'warrior',
+      devCommands: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const ally = sim.addPlayer('paladin', 'Checkpoint Ally');
     formTestRaid(sim, [sim.player.id, ally]);
     claimChainAndStepOutside(sim, sim.player.id, [
@@ -167,7 +175,12 @@ describe('ignivar raid entry: checkpoint redirect', () => {
   });
 
   it('redirects all the way to the deepest room of the chain', () => {
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', devCommands: true });
+    const sim = new Sim({
+      seed: 42,
+      playerClass: 'warrior',
+      devCommands: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const ally = sim.addPlayer('paladin', 'Crucible Ally');
     formTestRaid(sim, [sim.player.id, ally]);
     claimChainAndStepOutside(sim, sim.player.id, [
@@ -185,7 +198,12 @@ describe('ignivar raid entry: checkpoint redirect', () => {
   });
 
   it('an explicit backward portal never applies the outside checkpoint redirect', () => {
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', devCommands: true });
+    const sim = new Sim({
+      seed: 42,
+      playerClass: 'warrior',
+      devCommands: true,
+      world: EMPTY_TEST_WORLD,
+    });
     claimChainAndStepOutside(sim, sim.player.id, [
       IGNIVAR_LIFT_ROOM_ID,
       IGNIVAR_FORGE_APPROACH_ID,
@@ -201,7 +219,12 @@ describe('ignivar raid entry: checkpoint redirect', () => {
   });
 
   it('redirects the keep door to a claimed floor 3 checkpoint', () => {
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', devCommands: true });
+    const sim = new Sim({
+      seed: 42,
+      playerClass: 'warrior',
+      devCommands: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const ally = sim.addPlayer('paladin', 'Assembly Ally');
     formTestRaid(sim, [sim.player.id, ally]);
     claimChainAndStepOutside(sim, sim.player.id, [
@@ -218,7 +241,12 @@ describe('ignivar raid entry: checkpoint redirect', () => {
   });
 
   it('boards the lift again when the group is no deeper than the Halls', () => {
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', devCommands: true });
+    const sim = new Sim({
+      seed: 42,
+      playerClass: 'warrior',
+      devCommands: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const ally = sim.addPlayer('paladin', 'Lift-again Ally');
     formTestRaid(sim, [sim.player.id, ally]);
     claimChainAndStepOutside(sim, sim.player.id, [IGNIVAR_LIFT_ROOM_ID, IGNIVAR_FORGE_APPROACH_ID]);
@@ -231,7 +259,12 @@ describe('ignivar raid entry: checkpoint redirect', () => {
   });
 
   it('redirects a returning ghost from the keep door to the claimed boss floor', () => {
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', devCommands: true });
+    const sim = new Sim({
+      seed: 42,
+      playerClass: 'warrior',
+      devCommands: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const ally = sim.addPlayer('paladin', 'Boss-floor Ghost');
     formTestRaid(sim, [sim.player.id, ally]);
     claimChainAndStepOutside(sim, sim.player.id, [
@@ -253,7 +286,12 @@ describe('ignivar raid entry: checkpoint redirect', () => {
   });
 
   it('keeps unclaimed deeper rooms sealed: the own-claim exemption never invents entry', () => {
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', devCommands: true });
+    const sim = new Sim({
+      seed: 42,
+      playerClass: 'warrior',
+      devCommands: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const ally = sim.addPlayer('paladin', 'Sealed Ally');
     formTestRaid(sim, [sim.player.id, ally]);
     expect(enterDungeon(sim.ctx, IGNIVAR_LIFT_ROOM_ID, sim.player.id, true)).toBe(true);
@@ -273,7 +311,7 @@ describe('ignivar raid entry: checkpoint redirect', () => {
   });
 
   it('the interior-only Halls refuse a first entry from outside', () => {
-    const sim = new Sim({ seed: 42, playerClass: 'warrior' });
+    const sim = new Sim({ seed: 42, playerClass: 'warrior', world: EMPTY_TEST_WORLD });
     const ally = sim.addPlayer('paladin', 'Refused Ally');
     formTestRaid(sim, [sim.player.id, ally]);
     sim.drainEvents();
@@ -282,7 +320,7 @@ describe('ignivar raid entry: checkpoint redirect', () => {
   });
 
   it('a group with no claim at all boards the lift at the keep door', () => {
-    const sim = new Sim({ seed: 42, playerClass: 'warrior' });
+    const sim = new Sim({ seed: 42, playerClass: 'warrior', world: EMPTY_TEST_WORLD });
     const ally = sim.addPlayer('paladin', 'Fresh Ally');
     formTestRaid(sim, [sim.player.id, ally]);
     placeAt(sim, sim.player.id, DOOR_POS.x, DOOR_POS.z - 1);
@@ -300,7 +338,12 @@ describe('ignivar raid entry: checkpoint redirect', () => {
 
 describe('ignivar raid entry: combat lockout', () => {
   it('bars an outside member while a raid room fights, and admits them once it settles', () => {
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', devCommands: true });
+    const sim = new Sim({
+      seed: 42,
+      playerClass: 'warrior',
+      devCommands: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const ally = sim.addPlayer('paladin', 'Locked Ally');
     formTestRaid(sim, [sim.player.id, ally]);
     expect(enterDungeon(sim.ctx, IGNIVAR_LIFT_ROOM_ID, sim.player.id, true)).toBe(true);
@@ -319,7 +362,12 @@ describe('ignivar raid entry: combat lockout', () => {
   });
 
   it("ignores another raid's fights: the lockout is scoped to your own group", () => {
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', devCommands: true });
+    const sim = new Sim({
+      seed: 42,
+      playerClass: 'warrior',
+      devCommands: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const allyA = sim.addPlayer('paladin', 'Raid A Member');
     formTestRaid(sim, [sim.player.id, allyA]);
     expect(enterDungeon(sim.ctx, IGNIVAR_LIFT_ROOM_ID, sim.player.id, true)).toBe(true);
@@ -336,7 +384,12 @@ describe('ignivar raid entry: combat lockout', () => {
   });
 
   it('bars a ghost during combat and corpse-runs them back in once it settles', () => {
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', devCommands: true });
+    const sim = new Sim({
+      seed: 42,
+      playerClass: 'warrior',
+      devCommands: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const ally = sim.addPlayer('paladin', 'Ghost Ally');
     formTestRaid(sim, [sim.player.id, ally]);
     expect(enterDungeon(sim.ctx, IGNIVAR_LIFT_ROOM_ID, sim.player.id, true)).toBe(true);
@@ -367,7 +420,12 @@ describe('ignivar raid entry: combat lockout', () => {
   });
 
   it('never blocks movement between rooms for a member already inside the raid', () => {
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', devCommands: true });
+    const sim = new Sim({
+      seed: 42,
+      playerClass: 'warrior',
+      devCommands: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const ally = sim.addPlayer('paladin', 'Inside Ally');
     formTestRaid(sim, [sim.player.id, ally]);
     expect(enterDungeon(sim.ctx, IGNIVAR_LIFT_ROOM_ID, sim.player.id, true)).toBe(true);
@@ -394,7 +452,12 @@ describe('ignivar raid entry: combat lockout', () => {
   });
 
   it('throttles the walk-in denial to one notice per window', () => {
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', devCommands: true });
+    const sim = new Sim({
+      seed: 42,
+      playerClass: 'warrior',
+      devCommands: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const ally = sim.addPlayer('paladin', 'Patient Ally');
     formTestRaid(sim, [sim.player.id, ally]);
     expect(enterDungeon(sim.ctx, IGNIVAR_LIFT_ROOM_ID, sim.player.id, true)).toBe(true);

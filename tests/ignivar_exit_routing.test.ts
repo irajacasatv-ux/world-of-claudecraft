@@ -31,6 +31,7 @@ import type { InstanceSlot } from '../src/sim/sim';
 import { Sim } from '../src/sim/sim';
 import { DT, type Entity, IGNIVAR_BOSS_ID } from '../src/sim/types';
 import { localizeSimText } from '../src/ui/sim_i18n';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const KEEP_DOOR_POS = { x: 503.05, z: 2243.7 };
 const APPROACH_LEAVE_Z = KEEP_DOOR_POS.z - 6.5;
@@ -38,7 +39,9 @@ const EASTBROOK_POS = { x: -24, z: -114 };
 const SEAL_DENIAL = 'The forge doors hold fast while the battle rages.';
 
 function makeSim(): Sim {
-  return new Sim({ seed: 42, playerClass: 'warrior', devCommands: true });
+  // Raid rooms, their doors and their exits come from the dungeon table, not the world's
+  // population, so the Sim runs on the empty world.
+  return new Sim({ seed: 42, playerClass: 'warrior', devCommands: true, world: EMPTY_TEST_WORLD });
 }
 
 function claimChain(sim: Sim, rooms: readonly string[]): void {

@@ -20,9 +20,18 @@ import { enterDungeon, leaveDungeon } from '../src/sim/instances/dungeons';
 import { MAX_AGGRO_RADIUS } from '../src/sim/mob/aggro_ranges';
 import { Sim } from '../src/sim/sim';
 import { DT, dist2d, IGNIVAR_BOSS_ID } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 function devSim(devCommands = true): Sim {
-  const sim = new Sim({ seed: 2786, playerClass: 'warrior', autoEquip: true, devCommands });
+  // The raid runs inside its dungeon instances and the bots are added by hand, so the Sim runs on
+  // the empty world.
+  const sim = new Sim({
+    seed: 2786,
+    playerClass: 'warrior',
+    autoEquip: true,
+    devCommands,
+    world: EMPTY_TEST_WORLD,
+  });
   sim.setPlayerLevel(20);
   return sim;
 }
