@@ -8,6 +8,7 @@ import { createMob } from '../src/sim/entity';
 import { type ResolvedAbility, Sim } from '../src/sim/sim';
 import type { Aura, Entity, PlayerClass } from '../src/sim/types';
 import { placePlayerInOpenField } from './helpers/open_field';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 type TestSim = Sim & {
   nextId: number;
@@ -18,8 +19,12 @@ function harness(sim: Sim): TestSim {
   return sim as TestSim;
 }
 
+// Every row runs in the open field against a target the case spawns, so the Sims
+// run on the empty world.
 function simWithRows(cls: PlayerClass, rows: Record<number, string>): TestSim {
-  const sim = harness(new Sim({ seed: 1756, playerClass: cls, autoEquip: false }));
+  const sim = harness(
+    new Sim({ seed: 1756, playerClass: cls, autoEquip: false, world: EMPTY_TEST_WORLD }),
+  );
   sim.setPlayerLevel(20);
   placePlayerInOpenField(sim);
   expect(sim.applyTalents({ spec: null, rows })).toBe(true);
