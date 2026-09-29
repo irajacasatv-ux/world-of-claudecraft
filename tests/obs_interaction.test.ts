@@ -4,7 +4,14 @@ import { EASTBROOK_LAYOUT } from '../src/sim/eastbrook_layout';
 import { createGroundObject } from '../src/sim/entity';
 import { ACTIONS, applyAction, encodeObs } from '../src/sim/obs';
 import { Sim } from '../src/sim/sim';
-import { angleTo, dist2d, type Entity, INTERACT_RANGE, normAngle } from '../src/sim/types';
+import {
+  angleTo,
+  dist2d,
+  type Entity,
+  INTERACT_RANGE,
+  normAngle,
+  type WorldContent,
+} from '../src/sim/types';
 
 const SEED = 20_061;
 const ABILITY_SLOTS = ACTIONS.length - 13;
@@ -12,6 +19,16 @@ const INTERACTABLE_START = 16 + ABILITY_SLOTS * 2 + 9 + 5 * 6;
 const EMPTY_INTERACTABLE = [0, 1.5, 0, 0, 0];
 const FRIENDLY_QUEST_ID = 'q_nythraxis_scourges_end';
 const FRESH_CORPSE_TIMER = 60;
+
+// Every fixture this file reads: the wolves it turns into corpses and quest mobs,
+// the supply crates, and Chronicler Saul beside the board (which itself spawns
+// from the active world's services). The rest of the overworld is parked anyway.
+const OBS_WORLD: WorldContent = {
+  ...BUILTIN_WORLD,
+  camps: BUILTIN_WORLD.camps.filter((camp) => camp.mobId === 'forest_wolf').slice(0, 1),
+  npcs: { chronicler_saul: BUILTIN_WORLD.npcs.chronicler_saul },
+  groundObjects: BUILTIN_WORLD.groundObjects.filter((object) => object.itemId === 'supply_crate'),
+};
 
 function entityByTemplate(sim: Sim, templateId: string): Entity {
   const entity = [...sim.entities.values()].find(
@@ -113,7 +130,7 @@ afterEach(() => {
 
 describe('RL interactable observation parity', () => {
   it('advertises and loots the selected corpse through applyAction', () => {
-    const sim = new Sim({ seed: SEED, playerClass: 'warrior' });
+    const sim = new Sim({ seed: SEED, playerClass: 'warrior', world: OBS_WORLD });
     const [corpse] = mobFixtures(sim, 'forest_wolf', 1);
     makeLootableCorpse(sim, corpse, { x: 35, z: 2 });
     parkOtherInteractables(sim, corpse);
@@ -128,7 +145,7 @@ describe('RL interactable observation parity', () => {
   });
 
   it('skips a harvest-only corpse and advertises the object the interact action uses', () => {
-    const sim = new Sim({ seed: SEED, playerClass: 'warrior' });
+    const sim = new Sim({ seed: SEED, playerClass: 'warrior', world: OBS_WORLD });
     const [corpse] = mobFixtures(sim, 'forest_wolf', 1);
     makeLootableCorpse(sim, corpse, { x: 33, z: 0 });
     corpse.loot = null;
@@ -156,7 +173,7 @@ describe('RL interactable observation parity', () => {
   });
 
   it('advertises and talks to a friendly quest mob through applyAction', () => {
-    const sim = new Sim({ seed: SEED, playerClass: 'warrior' });
+    const sim = new Sim({ seed: SEED, playerClass: 'warrior', world: OBS_WORLD });
     const [questMob] = mobFixtures(sim, 'forest_wolf', 1);
     makeFriendlyQuestMob(sim, questMob, { x: 29, z: 3 });
     readyFriendlyQuest(sim);
@@ -173,7 +190,7 @@ describe('RL interactable observation parity', () => {
   });
 
   it('preserves corpse, object, then quest priority across observation and action', () => {
-    const sim = new Sim({ seed: SEED, playerClass: 'warrior' });
+    const sim = new Sim({ seed: SEED, playerClass: 'warrior', world: OBS_WORLD });
     const [corpse, questMob] = mobFixtures(sim, 'forest_wolf', 2);
     makeLootableCorpse(sim, corpse, { x: 36, z: 0 });
     makeFriendlyQuestMob(sim, questMob, { x: 32, z: 1 });
@@ -206,7 +223,7 @@ describe('RL interactable observation parity', () => {
   });
 
   it('uses spatial traversal order for equal-distance object ties across cells', () => {
-    const sim = new Sim({ seed: SEED, playerClass: 'warrior' });
+    const sim = new Sim({ seed: SEED, playerClass: 'warrior', world: OBS_WORLD });
     const right = entityByTemplate(sim, 'ground_supply_crate');
     right.templateId = 'ground_wolf_fang';
     right.objectItemId = 'wolf_fang';
@@ -233,7 +250,7 @@ describe('RL interactable observation parity', () => {
   });
 
   it('keeps board action, event, and observation bound after an active-world swap', () => {
-    const sim = new Sim({ seed: SEED, playerClass: 'warrior' });
+    const sim = new Sim({ seed: SEED, playerClass: 'warrior', world: OBS_WORLD });
     const board = entityByTemplate(sim, 'noticeboard_eastbrook');
     parkOtherInteractables(sim, board);
 
@@ -270,7 +287,7 @@ describe('RL interactable observation parity', () => {
     // chronicler_saul, the NPC the plan seats at the noticeboard. The standAt
     // literal is the circle intersection of r=4.5 around the board (5, -89)
     // and r=4.8 around Saul (10.2, -87.5); only those two sit in scan range.
-    const sim = new Sim({ seed: SEED, playerClass: 'warrior' });
+    const sim = new Sim({ seed: SEED, playerClass: 'warrior', world: OBS_WORLD });
     const board = entityByTemplate(sim, 'noticeboard_eastbrook');
     const saul = entityByTemplate(sim, 'chronicler_saul');
     // Park everything else, the file-wide fixture idiom: the tutorial island
@@ -298,7 +315,7 @@ describe('RL interactable observation parity', () => {
     [4, true],
     [4 + 0.001, false],
   ] as const)('uses the board authored radius at distance %s', (distance, advertised) => {
-    const sim = new Sim({ seed: SEED, playerClass: 'warrior' });
+    const sim = new Sim({ seed: SEED, playerClass: 'warrior', world: OBS_WORLD });
     const board = entityByTemplate(sim, 'noticeboard_eastbrook');
     parkOtherInteractables(sim, board);
     standAt(sim, { x: board.pos.x + distance, z: board.pos.z });
@@ -308,7 +325,7 @@ describe('RL interactable observation parity', () => {
   });
 
   it('keeps a generic lootable object actionable inside its five-yard range', () => {
-    const sim = new Sim({ seed: SEED, playerClass: 'warrior' });
+    const sim = new Sim({ seed: SEED, playerClass: 'warrior', world: OBS_WORLD });
     const object = [...sim.entities.values()].find(
       (candidate) => candidate.kind === 'object' && candidate.templateId === 'ground_supply_crate',
     );

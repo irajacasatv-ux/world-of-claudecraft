@@ -15,11 +15,17 @@ import { Sim } from '../src/sim/sim';
 import type { NpcDef } from '../src/sim/types';
 import { waterLevel } from '../src/sim/world';
 import { WORLD_SEED } from '../src/sim/world_seed';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const RESERVED_IDS = [FURY_ENTITY_ID, WARFARE_QUARTERMASTER_ENTITY_ID, CRUCIBLE_VENDOR_ENTITY_ID];
 
 function setup() {
-  const sim = new Sim({ seed: WORLD_SEED, playerClass: 'warrior', noPlayer: true });
+  const sim = new Sim({
+    seed: WORLD_SEED,
+    playerClass: 'warrior',
+    noPlayer: true,
+    world: EMPTY_TEST_WORLD,
+  });
   for (const id of RESERVED_IDS) sim.ctx.dropEntity(id);
   const definitions: Record<string, NpcDef> = {};
   // Reverse table order deliberately: the reserved roster has its own order.

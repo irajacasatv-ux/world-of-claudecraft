@@ -22,6 +22,7 @@ import {
 } from '../src/sim/types';
 import { ensureLocaleLoaded, setLanguage, t } from '../src/ui/i18n';
 import { presentNoticeboardEvent } from '../src/ui/noticeboard_event';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const SEED = 20_061;
 const EMPTY_NOTICEBOARD_EVENT = {
@@ -62,6 +63,12 @@ function standAt(sim: Sim, pid: number, point: { x: number; z: number }): Entity
   player.prevPos = { ...player.pos };
   sim.rebucket(player);
   return player;
+}
+
+// The board spawns from the ACTIVE world's services, not cfg.world, so a case that
+// reads only the board runs on the empty world: no NPC or camp to place.
+function boardOnlySim(): Sim {
+  return new Sim({ seed: SEED, playerClass: 'warrior', noPlayer: true, world: EMPTY_TEST_WORLD });
 }
 
 function customWorld(): WorldContent {
@@ -134,7 +141,7 @@ describe('active-world noticeboard service', () => {
   });
 
   it('emits personal localized-feedback events through direct, target, and proximity interaction', () => {
-    const sim = new Sim({ seed: SEED, playerClass: 'warrior', noPlayer: true });
+    const sim = boardOnlySim();
     const first = sim.addPlayer('warrior', 'First');
     const board = noticeboard(sim);
     const player = standAt(sim, first, EASTBROOK_LAYOUT.services.noticeboard.frontStandingPoint);
@@ -211,7 +218,7 @@ describe('active-world noticeboard service', () => {
 
   it('localizes the object label and the empty-board feedback from structured keys', () => {
     setLanguage('en');
-    const sim = new Sim({ seed: SEED, playerClass: 'warrior', noPlayer: true });
+    const sim = boardOnlySim();
     const board = noticeboard(sim);
     expect(objectDisplayName(board)).toBe('Notice Board');
     expect(t('hudChrome.noticeboard.empty')).toBe('Nothing seems posted.');
@@ -284,7 +291,7 @@ describe('active-world noticeboard service', () => {
   });
 
   it('keeps the normal range and dead-player gates without consuming the board', () => {
-    const sim = new Sim({ seed: SEED, playerClass: 'warrior', noPlayer: true });
+    const sim = boardOnlySim();
     const pid = sim.addPlayer('warrior', 'Reader');
     const board = noticeboard(sim);
     const player = standAt(sim, pid, {
@@ -524,7 +531,7 @@ describe('active-world noticeboard service', () => {
         [EASTBROOK_NOTICEBOARD_INTERACTION_RADIUS, true],
         [EASTBROOK_NOTICEBOARD_INTERACTION_RADIUS + epsilon, false],
       ] as const) {
-        const sim = new Sim({ seed: SEED, playerClass: 'warrior', noPlayer: true });
+        const sim = boardOnlySim();
         const pid = sim.addPlayer('warrior', `${path} ${distance}`);
         const board = noticeboard(sim);
         const player = standAt(sim, pid, { x: board.pos.x + distance, z: board.pos.z });

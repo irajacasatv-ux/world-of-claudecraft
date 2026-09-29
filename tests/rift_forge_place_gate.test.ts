@@ -18,6 +18,7 @@ import { isRiftForgeNpc, RIFT_FORGE_RANGE } from '../src/sim/rift/forge_gate';
 import { createRiftGearInstance } from '../src/sim/rift/progression';
 import { Sim } from '../src/sim/sim';
 import { INTERACT_RANGE, type SimEvent } from '../src/sim/types';
+import { worldWithOnlyNpcs } from './helpers/npc_world';
 import {
   moveFarFromRiftForge,
   moveToRiftForge,
@@ -25,8 +26,16 @@ import {
   riftForgeEntity,
 } from './helpers/rift_forge';
 
+// The forge cases need only the Riftwright standing in the world.
+const RIFT_FORGE_WORLD = worldWithOnlyNpcs(RIFT_FORGE_NPC_ID);
+
 function forgeWorld() {
-  const sim = new Sim({ seed: 731, playerClass: 'warrior', autoEquip: false });
+  const sim = new Sim({
+    seed: 731,
+    playerClass: 'warrior',
+    autoEquip: false,
+    world: RIFT_FORGE_WORLD,
+  });
   sim.setPlayerLevel(20);
   const gear = createRiftGearInstance('rift-place-gate', 'S', 'warrior', sim.player.id);
   sim.addItemInstance(gear.itemId, gear.instance);

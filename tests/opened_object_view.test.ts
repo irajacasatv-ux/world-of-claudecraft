@@ -6,19 +6,29 @@
 
 import { describe, expect, it } from 'vitest';
 import { PROVING_SHORE_OBJECTS } from '../src/sim/content/proving_shore';
+import { BUILTIN_WORLD } from '../src/sim/data';
 import {
   isObjectOpenedByViewer,
   OPENED_OBJECT_HIDE_ITEM_IDS,
 } from '../src/sim/quests/opened_object_view';
 import { Sim } from '../src/sim/sim';
-import type { Entity, QuestProgress } from '../src/sim/types';
+import type { Entity, QuestProgress, WorldContent } from '../src/sim/types';
 import { nearestCrate } from '../src/ui/coach_prompt_view';
 
 const CRATE_ITEM = 'ps_castaway_crate';
 const WRECK_QUEST = 'q_ps_the_wreck_line';
 
+// Only the castaway crate line is spawned: the hide reads the crates and the
+// quest ledger, never another NPC, camp or ground object.
+const CRATE_WORLD: WorldContent = {
+  ...BUILTIN_WORLD,
+  camps: [],
+  npcs: {},
+  groundObjects: BUILTIN_WORLD.groundObjects.filter((object) => object.itemId === CRATE_ITEM),
+};
+
 function makeSim(): Sim {
-  return new Sim({ seed: 4120, playerClass: 'warrior', autoEquip: true });
+  return new Sim({ seed: 4120, playerClass: 'warrior', autoEquip: true, world: CRATE_WORLD });
 }
 
 function crates(sim: Sim): Entity[] {

@@ -16,10 +16,16 @@ vi.mock('../src/sim/content/noticeboard_listings', () => ({
 
 import { EASTBROOK_LAYOUT } from '../src/sim/eastbrook_layout';
 import { Sim } from '../src/sim/sim';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 describe('noticeboard listings event', () => {
   it('carries the board id on the listings arm too', () => {
-    const sim = new Sim({ seed: 20_061, playerClass: 'warrior', noPlayer: true });
+    const sim = new Sim({
+      seed: 20_061,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const pid = sim.addPlayer('warrior', 'Reader');
     const board = [...sim.entities.values()].find(
       (entity) => entity.kind === 'object' && entity.templateId === 'noticeboard_eastbrook',
