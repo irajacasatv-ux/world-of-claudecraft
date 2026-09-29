@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { Sim } from '../src/sim/sim';
 import type { Entity, PlayerClass, SimEvent } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // Weapon imbues (shaman Stonebound/Galeheart, rogue instant/deadly
 // poison, paladin seal) are a single weapon-enchant slot: classic allows exactly
@@ -9,7 +10,13 @@ import type { Entity, PlayerClass, SimEvent } from '../src/sim/types';
 // imbue replaces any other, so the per-swing bonus can never stack.
 
 function makePlayer(cls: PlayerClass, level: number): { sim: Sim; p: Entity } {
-  const sim = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+  // The imbue slot is the player's own aura list, so the Sim runs on the empty world.
+  const sim = new Sim({
+    seed: 42,
+    playerClass: 'warrior',
+    noPlayer: true,
+    world: EMPTY_TEST_WORLD,
+  });
   const pid = sim.addPlayer(cls, 'Imbuer');
   sim.setPlayerLevel(level, pid);
   if (cls === 'shaman' && !sim.setSpec('enhancement', pid)) throw new Error('no enhancement spec');

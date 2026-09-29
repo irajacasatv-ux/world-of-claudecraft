@@ -5,6 +5,7 @@ import { isInertInstanceCorpse } from '../src/sim/mob/locomotion';
 import { Sim } from '../src/sim/sim';
 import { DT, type Entity } from '../src/sim/types';
 import { WORLD_SEED } from '../src/sim/world_seed';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // A cleared rift floor's corpse field used to pay updateMob every tick for the
 // rest of the run (instance corpses never decay or respawn, and the idle cull
@@ -69,12 +70,14 @@ describe('isInertInstanceCorpse', () => {
 });
 
 describe('Sim inert-corpse idle skip', () => {
+  // Every corpse is placed by hand, so the Sims run on the empty world.
   function buildSim(): Sim {
     return new Sim({
       seed: WORLD_SEED,
       playerClass: 'warrior',
       noPlayer: true,
       idleMobTickRadius: 120,
+      world: EMPTY_TEST_WORLD,
     });
   }
 
@@ -116,6 +119,7 @@ describe('Sim inert-corpse idle skip', () => {
       seed: WORLD_SEED,
       playerClass: 'warrior',
       idleMobTickRadius: 120,
+      world: EMPTY_TEST_WORLD,
     });
     const player = sim.player;
     player.pos.x = RIFT_POS.x + 4;
@@ -131,7 +135,12 @@ describe('Sim inert-corpse idle skip', () => {
   });
 
   it('never skips any corpse when the idle cull is disabled', () => {
-    const sim = new Sim({ seed: WORLD_SEED, playerClass: 'warrior', noPlayer: true });
+    const sim = new Sim({
+      seed: WORLD_SEED,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const corpse = riftCorpse();
     corpse.id = sim.nextId++;
     sim.addEntity(corpse);
