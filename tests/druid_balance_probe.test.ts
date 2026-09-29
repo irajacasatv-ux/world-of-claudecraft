@@ -150,26 +150,34 @@ const BAND = 0.08;
 // around their own measurement (2026-09-27: moongrove_1t 155.82 at one seed and
 // 149.27 at eight, wildfang 198.89 and 191.86; 2026-09-29 at the production idle
 // cull: 150.80 and 148.32, 198.22 and 194.57); re-pin each from its own actuals.
-// The diet also runs only the two band-carrying profiles (moongrove_1t and
-// wildfang, every capstone each). moongrove_3t and groveheart carry no band, only
-// "the best capstone reads above zero", a pin that never saw a zero confined to
-// one or two capstone rows. What it did catch, a profile reading zero under all
-// three rows, stays PR-visible only through the PBE talent rows the sibling suites
-// run, at their own seeds and windows: Moongrove three-target under
-// dru_r20_improved_hurricane (owned_class_balance_dps_metrics, damage on every
-// target) and Groveheart under dru_r20_berserk (owned_class_balance_healer_probes
-// and _groveheart). A zero under this matrix's other capstone rows alone
-// (moongrove_3t under berserk or tranquility, groveheart under improved_hurricane
-// or tranquility) is nightly-only, in this file's full sweep. The capstone engines
-// themselves are unit-pinned in tests/druid_engines.test.ts. Each cell is its own
-// fresh Sim, so the kept cells, and the bands on them, read exactly what they read
-// in the whole matrix.
+// The seed cases run only the two band-carrying profiles (moongrove_1t and
+// wildfang, every capstone each), at one seed on the diet and all eight nightly.
+// moongrove_3t and groveheart carry no band. Until 2026-09-29 the nightly ran them
+// at all eight seeds for one pin, "the best capstone's seed average reads above
+// zero": more seeds only weakened it (the average drops a zero seed), and it never
+// saw a zero confined to one or two capstone rows. Owner ruling (Fernando,
+// 2026-09-29, "One seed, every row"): the nightly runs them at ONE seed,
+// NIGHTLY_ROW_SEED, and asserts EVERY capstone row above zero, 6 probes instead of
+// 48, so a dead row under any single capstone now reds. At PR time an all-rows zero
+// stays visible only through the PBE talent rows the sibling suites run, at their
+// own seeds and windows: Moongrove three-target under dru_r20_improved_hurricane
+// (owned_class_balance_dps_metrics, damage on every target) and Groveheart under
+// dru_r20_berserk (owned_class_balance_healer_probes and _groveheart); a zero under
+// the other capstone rows alone is nightly-only, in the one-seed case below. The
+// capstone engines themselves are unit-pinned in tests/druid_engines.test.ts. Each
+// cell is its own fresh Sim, so the kept cells, and the bands on them, read exactly
+// what they read in the whole matrix.
 const FULL_SWEEP = process.env.WOC_FULL_BALANCE_SWEEP === '1';
 const band = bandAt(FULL_SWEEP);
 const MATRIX_SEEDS: readonly number[] = FULL_SWEEP ? DRUID_PROBE_SEEDS : [DRUID_PROBE_SEEDS[0]];
-const MATRIX_PROFILES: readonly DruidProbeProfile[] = FULL_SWEEP
-  ? ['moongrove_1t', 'moongrove_3t', 'wildfang', 'groveheart']
-  : ['moongrove_1t', 'wildfang'];
+const MATRIX_PROFILES: readonly DruidProbeProfile[] = ['moongrove_1t', 'wildfang'];
+// The nightly-only profiles and their one seed. NIGHTLY_ROW_SEED is the first
+// fixed seed (4242), the one the diet already runs: a ranged Moongrove row reads 0
+// at a seed whose anchor terrain breaks line of sight (the harness's zero-drop
+// note), so an every-row pin needs a seed whose anchor is known clear, and 4242's
+// is re-proven on every PR by the banded moongrove_1t cells at the same anchor.
+const NIGHTLY_ROW_PROFILES: readonly DruidProbeProfile[] = ['moongrove_3t', 'groveheart'];
+const NIGHTLY_ROW_SEED = DRUID_PROBE_SEEDS[0];
 // Each seed case appends its seed and its run here; the band case combines the runs
 // (in seed order).
 const ranSeeds: number[] = [];
@@ -209,8 +217,12 @@ describe('Druid v0.29 balance and live-mob harness', () => {
       'groveheart',
     ]);
     expect(MATRIX_SEEDS).toEqual(FULL_SWEEP ? [...DRUID_PROBE_SEEDS] : [DRUID_PROBE_SEEDS[0]]);
-    expect(MATRIX_PROFILES).toEqual(
-      FULL_SWEEP ? [...DRUID_PROBE_PROFILES] : ['moongrove_1t', 'wildfang'],
+    expect(MATRIX_PROFILES).toEqual(['moongrove_1t', 'wildfang']);
+    expect(NIGHTLY_ROW_PROFILES).toEqual(['moongrove_3t', 'groveheart']);
+    expect(NIGHTLY_ROW_SEED).toBe(4242);
+    // Every profile rides exactly one of the two arms.
+    expect([...MATRIX_PROFILES, ...NIGHTLY_ROW_PROFILES].sort()).toEqual(
+      [...DRUID_PROBE_PROFILES].sort(),
     );
   });
 
@@ -249,39 +261,37 @@ describe('Druid v0.29 balance and live-mob harness', () => {
   // roughly doubling wall time (run 31288946173 failed one against a 150 s bound). The
   // unculled nightly bound was per seed, 900 s, under 3x the more than 300 s a seed
   // averaged in that nightly. A probe runs synchronously, so a bound fails an over-long
-  // case when it finishes rather than cutting it short: 8 x 660 = 5,280 s is the most a
-  // passing sweep may take, not a cap on its wall time, which the nightly job's 300-minute
-  // limit (shared with the rest of that job) bounds. The diet's seed runs six of the
-  // twelve combos.
+  // case when it finishes rather than cutting it short: 8 x 270 = 2,160 s is the most a
+  // passing sweep's seed cases may take, not a cap on their wall time, which the nightly
+  // job's 300-minute limit (shared with the rest of that job) bounds.
   // Re-sized 2026-09-29 for the production idle cull (scripts/probe_sim.ts), about ten
-  // times the local case time rounded up to 30 s: a full seed case measured 34 to 64 s
-  // locally, one worker (the largest gives 660 s), the diet's seed case 25 s (270 s).
+  // times the local case time rounded up to 30 s: the diet's seed case measured 25 s
+  // locally, one worker (270 s). Since the one-seed ruling the same day every seed case
+  // runs the same six banded combos at both depths (the nightly-only profiles moved to
+  // their own one-seed case below), so both depths share that bound: a full seed case
+  // measured 16 to 23 s.
   it.each(MATRIX_SEEDS.map((seed, index) => [seed, index + 1]))(
     'runs the matrix at seed %i (run %i)',
     (seed) => {
       ranSeeds.push(seed);
       seedRuns.push(runDruidBalanceSeed(seed, DRUID_PROBE_SECONDS, MATRIX_PROFILES));
     },
-    FULL_SWEEP ? 660_000 : 270_000,
+    270_000,
   );
 
-  it('lands every profile and capstone, and the best builds inside their bands', () => {
+  it('lands every banded profile and capstone, and the best builds inside their bands', () => {
     expect(seedRuns, 'every seed case ran').toHaveLength(MATRIX_SEEDS.length);
     expect(ranSeeds, 'each case received its own seed, in order').toEqual([...MATRIX_SEEDS]);
     // ...and ran it: every seed gives its own run. The probe's output depends on its
     // seed (see the one-seed and eight-seed figures above), so two seeds giving
-    // identical runs of twelve results would mean a seed never reached the probe.
+    // identical runs of six results would mean a seed never reached the probe.
     expect(new Set(seedRuns.map((run) => JSON.stringify(run))).size).toBe(MATRIX_SEEDS.length);
     const results = combineDruidSeedRuns(seedRuns);
-    // Literal per configuration, not derived from MATRIX_PROFILES: a profile the
-    // matrix silently dropped must read as a short count here.
-    expect(results).toHaveLength(FULL_SWEEP ? 12 : 6);
+    // Literal, not derived from MATRIX_PROFILES: a profile the matrix silently
+    // dropped must read as a short count here. The same six cells at both depths.
+    expect(results).toHaveLength(6);
     expect(new Set(results.map((result) => result.profile))).toEqual(
-      new Set(
-        FULL_SWEEP
-          ? ['moongrove_1t', 'moongrove_3t', 'wildfang', 'groveheart']
-          : ['moongrove_1t', 'wildfang'],
-      ),
+      new Set(['moongrove_1t', 'wildfang']),
     );
     expect(new Set(results.map((result) => result.capstone))).toEqual(
       new Set(['naturesFury', 'wildApex', 'quickening']),
@@ -308,11 +318,35 @@ describe('Druid v0.29 balance and live-mob harness', () => {
     expect(moongrove?.value).toBeLessThanOrEqual(band(176.8, 179));
     expect(wildfang?.value).toBeGreaterThanOrEqual(band(161.3, 164.5));
     expect(wildfang?.value).toBeLessThanOrEqual(band(200.7, 204.3));
-    if (FULL_SWEEP) {
-      expect(best.find((result) => result.profile === 'moongrove_3t')?.value).toBeGreaterThan(0);
-      expect(best.find((result) => result.profile === 'groveheart')?.value).toBeGreaterThan(0);
-    }
   });
+
+  // Nightly-only, the owner's one-seed ruling above: moongrove_3t and groveheart at
+  // NIGHTLY_ROW_SEED, EVERY capstone row above zero (the old pin read only the best
+  // row's seed average). runIf keeps it off the diet behind the file's one flag read;
+  // the PR arm never runs, so it keeps the 20 s default; the nightly arm is about ten
+  // times its 16.5 s local case time, rounded up to 30 s. Measured 2026-09-29 at the
+  // production idle cull, Nature's Fury / Wild Apex / Quickening: moongrove_3t
+  // 156.39 / 161.56 / 152.11 dps, groveheart 63.26 / 63.26 / 63.26 hps.
+  it.runIf(FULL_SWEEP)(
+    'lands every moongrove_3t and groveheart capstone row above zero at one seed',
+    () => {
+      const rows = runDruidBalanceSeed(NIGHTLY_ROW_SEED, DRUID_PROBE_SECONDS, NIGHTLY_ROW_PROFILES);
+      // Literal cell list, capstone-major as the harness builds it: a row the
+      // harness silently dropped reads as a mismatch here, never as a pass.
+      expect(rows.map((row) => `${row.profile}/${row.capstone}/${row.metric}`)).toEqual([
+        'moongrove_3t/naturesFury/dps',
+        'groveheart/naturesFury/hps',
+        'moongrove_3t/wildApex/dps',
+        'groveheart/wildApex/hps',
+        'moongrove_3t/quickening/dps',
+        'groveheart/quickening/hps',
+      ]);
+      for (const row of rows) {
+        expect(row.value, `${row.profile} under ${row.capstone}`).toBeGreaterThan(0);
+      }
+    },
+    FULL_SWEEP ? 180_000 : 20_000,
+  );
 
   it('the live-mob and Bruin fixtures wear the pinned reference loadout', () => {
     // Identity first: every band below is conditioned on this gear, and the
