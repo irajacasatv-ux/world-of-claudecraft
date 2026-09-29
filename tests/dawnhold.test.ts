@@ -375,8 +375,8 @@ describe('Dawnhold Castle layout', () => {
   });
 
   it('a player enters through the door path, spawns no mobs, earns the visit deed, and leaves clean', () => {
-    // The empty world has no overworld mobs, so any mob the entry spawned
-    // would show up as a nonzero count.
+    // The entry claims a zero-combat interior and reads no overworld spawn,
+    // so the case runs on the empty world; the mob count must not move.
     const sim = new Sim({
       seed: 42,
       playerClass: 'warrior',
