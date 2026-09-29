@@ -10,9 +10,12 @@ import {
   STANCE_MASTERY_GUARDED_HP_PCT,
 } from '../src/sim/types';
 import { terrainHeight } from '../src/sim/world';
+import { RL_TEST_WORLD } from './sim_shared';
 
+// Every case strikes, or is struck by, the nearest mob, and one wolf camp
+// supplies it: the rest of the overworld bought nothing.
 function warriorAtCap(seed = 2601): Sim {
-  const sim = new Sim({ seed, playerClass: 'warrior' });
+  const sim = new Sim({ seed, playerClass: 'warrior', world: RL_TEST_WORLD });
   sim.setPlayerLevel(MAX_LEVEL);
   return sim;
 }
