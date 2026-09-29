@@ -1,9 +1,10 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { runEffects } from '../src/sim/combat/effect_dispatch';
 import { ABILITIES, MOBS } from '../src/sim/data';
 import { createMob } from '../src/sim/entity';
 import { type PlayerMeta, type ResolvedAbility, Sim } from '../src/sim/sim';
 import type { Aura, Entity } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // G5 (fix/talents2-balance-pass): fears no longer insta-break on any damage.
 // The generic fear family (Morrowlash, Terror Canticle) carries breakChanceScale:
@@ -62,9 +63,17 @@ function dealHit(sim: Sim, target: Entity, amount: number): void {
   });
 }
 
+// Every case fights a wolf or player it places itself, so one seed on the empty
+// world serves the file (the extra seeds and the overworld only added collider
+// builds and ticks).
 describe('G5: damage-scaled fear break', () => {
   it('a hit at or above scale * maxHp always breaks a chance-scaled fear', () => {
-    const sim = new Sim({ seed: 7, playerClass: 'warlock', autoEquip: true });
+    const sim = new Sim({
+      seed: 7,
+      playerClass: 'warlock',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const mob = addTarget(sim, 3);
     mob.auras.push({
       id: 'test_fear',
@@ -83,7 +92,12 @@ describe('G5: damage-scaled fear break', () => {
   });
 
   it('a tiny hit usually leaves a chance-scaled fear standing (seeded draw)', () => {
-    const sim = new Sim({ seed: 7, playerClass: 'warlock', autoEquip: true });
+    const sim = new Sim({
+      seed: 7,
+      playerClass: 'warlock',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const mob = addTarget(sim, 3);
     mob.auras.push({
       id: 'test_fear',
@@ -102,21 +116,19 @@ describe('G5: damage-scaled fear break', () => {
   });
 
   it('Harrow absorbs 8% max-health damage before breaking', () => {
-    // Seed hunted (post-merge camp order) so the level-14-vs-20 Harrow cast
-    // is not resisted: the fear must actually land for the aura assertions.
-    // Re-hunted (1 -> 3) after the Eastbrook camp respacing thinned the zone-1
-    // camp counts, then (3 -> 1) after the Galecrest quest camps (#2887)
-    // added four world-gen draws, then (1 -> 4) when the release
-    // private-scatter sync moved those late camps onto their own stream and
-    // the branch hunt went stale; 4 is the release side's own recorded hunt
-    // and holds on the merged stream (the Reliquary branch itself adds no
-    // world-gen draws; the Masterwrought branch's one appended draw is a
-    // KILL-time roll, so it cannot touch world-gen either, and seed 4 holds
-    // on the composed tree). Release spares on record: 6, 8.
-    const sim = new Sim({ seed: 4, playerClass: 'warlock', autoEquip: true });
+    // The level-14-vs-20 Harrow cast is forced to land (hitBonus 1) rather
+    // than riding a hunted seed: the fear must actually land for the aura
+    // assertions, and the hunt went stale with every world-gen change.
+    const sim = new Sim({
+      seed: 7,
+      playerClass: 'warlock',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.setPlayerLevel(14);
     const mob = addTarget(sim, 3);
     sim.player.resource = sim.player.maxResource;
+    sim.player.hitBonus = 1;
     sim.castAbility('fear');
     // 1.5s cast, then the fear rides a projectile (spellfx projectile) and
     // applies on arrival: give both legs room.
@@ -141,7 +153,12 @@ describe('G5: damage-scaled fear break', () => {
   });
 
   it('Dread Chorus gives every feared target the same 8% damage budget', () => {
-    const sim = new Sim({ seed: 7, playerClass: 'warlock', autoEquip: true });
+    const sim = new Sim({
+      seed: 7,
+      playerClass: 'warlock',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.setPlayerLevel(20);
     expect(sim.applyTalents({ spec: null, rows: { 8: 'wlk_r8_howl_of_terror' } })).toBe(true);
     const first = addTarget(sim, 3);
@@ -181,7 +198,12 @@ describe('G5: damage-scaled fear break', () => {
   });
 
   it('Terror Canticle (aoeFear) applies chance-scaled fears', () => {
-    const sim = new Sim({ seed: 7, playerClass: 'priest', autoEquip: true });
+    const sim = new Sim({
+      seed: 7,
+      playerClass: 'priest',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.setPlayerLevel(20);
     expect(sim.applyTalents({ spec: null, rows: { 11: 'pri_r8_psychic_scream' } })).toBe(true);
     const mob = addTarget(sim, 3);
@@ -195,7 +217,12 @@ describe('G5: damage-scaled fear break', () => {
   });
 
   it('Morrowlash keeps the generic chance-scaled fear behavior', () => {
-    const sim = new Sim({ seed: 7, playerClass: 'warlock', autoEquip: true });
+    const sim = new Sim({
+      seed: 7,
+      playerClass: 'warlock',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.setPlayerLevel(20);
     const mob = addTarget(sim, 3);
     const meta = (sim as unknown as { players: Map<number, PlayerMeta> }).players.get(
@@ -223,12 +250,22 @@ describe('G5: damage-scaled fear break', () => {
   });
 
   it('Eye Jab stays a classic incapacitate: any damage breaks it', () => {
-    const sim = new Sim({ seed: 7, playerClass: 'rogue', autoEquip: true });
+    const sim = new Sim({
+      seed: 7,
+      playerClass: 'rogue',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.setPlayerLevel(10);
     const mob = addTarget(sim, 2);
     sim.player.resource = sim.player.maxResource;
+    // Force the strike to land (a high roll clears miss, dodge and parry): the
+    // attack table is not what this pins, and a level 10 rogue on a level 20
+    // target otherwise rides a hunted seed.
+    const roll = vi.spyOn(sim.rng, 'next').mockReturnValue(0.99);
     sim.castAbility('gouge');
     for (let i = 0; i < 6; i++) sim.tick();
+    roll.mockRestore();
     const aura = fearAura(mob);
     expect(aura, 'Eye Jab incapacitate aura').toBeDefined();
     expect(aura?.breakChanceScale).toBeUndefined();
@@ -247,7 +284,12 @@ describe('PvP fear diminishing returns scale the authored duration', () => {
   // Two hostile players is the arm under test; the resolver early-returns the raw
   // duration for anything else, which the PvE case below pins.
   function pvpRig() {
-    const sim = new Sim({ seed: 5, playerClass: 'warrior', noPlayer: true });
+    const sim = new Sim({
+      seed: 7,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const inner = sim as unknown as {
       addPlayer: (c: string, n: string) => number;
       entities: Map<number, Entity>;
@@ -297,7 +339,12 @@ describe('PvP fear diminishing returns scale the authored duration', () => {
   });
 
   it('leaves PvE untouched: a mob target takes the raw authored duration', () => {
-    const sim = new Sim({ seed: 5, playerClass: 'warrior', autoEquip: true });
+    const sim = new Sim({
+      seed: 7,
+      playerClass: 'warrior',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const mob = addTarget(sim, 2);
     const inner = sim as unknown as {
       diminishedCrowdControlDuration: (a: Entity, b: Entity, c: string, d: number) => number | null;
