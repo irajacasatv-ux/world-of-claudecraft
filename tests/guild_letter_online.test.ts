@@ -133,20 +133,13 @@ describe('guild letter over the live GameServer wire (session routing)', () => {
       // (server/game.ts maybe('mailU', sim.mailUnreadFor(pid))).
       const unreadFor = (pid: number) =>
         (server.sim as unknown as { mailUnreadFor(pid: number): number }).mailUnreadFor(pid);
-      // The live GameServer keeps valeCupShowcase on, so an idle bot
-      // exhibition stages itself mid-window and its bots land in `players`.
-      // The bystander sweep names the humans; bots carry no mail at all
-      // (issue #3560), which the trailing loop pins on the server path.
-      // Optional: the eastbrook revamp (#3460) retires the Vale Cup, so on a
-      // post-retirement sim there is no vcup subsystem and no bots to exclude.
-      const botPids = new Set(
-        (server.sim as unknown as { vcup?: { botPids: number[] } }).vcup?.botPids ?? [],
-      );
-      const otherPids = [...players.keys()].filter((pid) => pid !== sc.pid && !botPids.has(pid));
+      // Every player on the live server is one of the three joined humans:
+      // the Vale Cup bot exhibition that once staged mail-less bots into
+      // `players` retired with the Vale Cup (the eastbrook revamp, #3460).
+      const otherPids = [...players.keys()].filter((pid) => pid !== sc.pid);
       expect(otherPids.length).toBe(2);
       expect(unreadFor(sc.pid)).toBe(2);
       for (const pid of otherPids) expect(unreadFor(pid)).toBe(1);
-      for (const pid of botPids) expect(unreadFor(pid)).toBe(0);
 
       // One-shot at the booking level over the server path: a second
       // qualifying pair never re-books (asserted against the PostOffice store
