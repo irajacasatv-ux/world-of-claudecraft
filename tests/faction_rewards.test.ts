@@ -4,11 +4,25 @@ import { FACTION_HUB_LANDINGS } from '../src/sim/content/faction_vendors';
 import { DUNGEON_X_THRESHOLD, ITEMS, MOBS } from '../src/sim/data';
 import { createMob } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
+import { PLAYER_INTEREST_DROP_RADIUS } from '../src/sim/types';
+
+// One seed for the whole file: every case builds a fresh Sim, and a seed the file
+// has already built costs about 22 ms instead of the 0.55 s a new seed's collider
+// grids cost. No case here depends on which seed it runs. CULL is production's idle
+// culling (the server and the offline client both set it), which keeps the ticking
+// cases from paying for every idle mob in the world.
+const SEED = 101;
+const CULL = PLAYER_INTEREST_DROP_RADIUS;
 
 describe('Allied Faction World Quest Rewards & Toys', () => {
   describe('Allied Hearthstone (allied_hearthstone)', () => {
     it('cannot be used while in combat or dead', () => {
-      const sim = new Sim({ seed: 101, playerClass: 'paladin', autoEquip: false });
+      const sim = new Sim({
+        seed: SEED,
+        playerClass: 'paladin',
+        autoEquip: false,
+        idleMobTickRadius: CULL,
+      });
       const meta = sim.meta(sim.playerId)!;
       sim.addItem('allied_hearthstone', 1);
       meta.alliedHearthstoneAttunement = 'church_order';
@@ -34,7 +48,12 @@ describe('Allied Faction World Quest Rewards & Toys', () => {
     });
 
     it('attunes to faction hubs and teleports player out of combat on a 15m cooldown', () => {
-      const sim = new Sim({ seed: 102, playerClass: 'mage', autoEquip: false });
+      const sim = new Sim({
+        seed: SEED,
+        playerClass: 'mage',
+        autoEquip: false,
+        idleMobTickRadius: CULL,
+      });
       const meta = sim.meta(sim.playerId)!;
       sim.addItem('allied_hearthstone', 1);
 
@@ -93,7 +112,12 @@ describe('Allied Faction World Quest Rewards & Toys', () => {
 
   describe('Allied Vanguard Duffel (allied_vanguard_duffel)', () => {
     it('is a 16-slot unique bag that prevents duplicate purchasing and duplicate equipping', () => {
-      const sim = new Sim({ seed: 103, playerClass: 'warrior', autoEquip: false });
+      const sim = new Sim({
+        seed: SEED,
+        playerClass: 'warrior',
+        autoEquip: false,
+        idleMobTickRadius: CULL,
+      });
       const meta = sim.meta(sim.playerId)!;
       meta.copper = 500_000;
       meta.factions.church_order = 15_000; // Vanguard standing (>= 13k)
@@ -145,7 +169,12 @@ describe('Allied Faction World Quest Rewards & Toys', () => {
 
   describe('Rift Feather Glider (rift_feather_glider)', () => {
     it('grants slow fall aura, clamps downward motion, and cancels on landing or combat', () => {
-      const sim = new Sim({ seed: 104, playerClass: 'rogue', autoEquip: false });
+      const sim = new Sim({
+        seed: SEED,
+        playerClass: 'rogue',
+        autoEquip: false,
+        idleMobTickRadius: CULL,
+      });
       const meta = sim.meta(sim.playerId)!;
       sim.addItem('rift_feather_glider', 1);
 
@@ -184,7 +213,12 @@ describe('Allied Faction World Quest Rewards & Toys', () => {
 
   describe('Clockwork Target Dummy (clockwork_target_dummy)', () => {
     it('spawns a 2-min training dummy in the open world, but is rejected in instances/dungeons', () => {
-      const sim = new Sim({ seed: 105, playerClass: 'hunter', autoEquip: false });
+      const sim = new Sim({
+        seed: SEED,
+        playerClass: 'hunter',
+        autoEquip: false,
+        idleMobTickRadius: CULL,
+      });
       const meta = sim.meta(sim.playerId)!;
       sim.addItem('clockwork_target_dummy', 1);
 
@@ -211,7 +245,12 @@ describe('Allied Faction World Quest Rewards & Toys', () => {
 
   describe('Dawn Battle Standard (dawn_battle_standard)', () => {
     it('plants standard for 5 min, buffs out-of-combat regen, and grants Blessing of the Dawn after 10s', () => {
-      const sim = new Sim({ seed: 106, playerClass: 'priest', autoEquip: false });
+      const sim = new Sim({
+        seed: SEED,
+        playerClass: 'priest',
+        autoEquip: false,
+        idleMobTickRadius: CULL,
+      });
       const meta = sim.meta(sim.playerId)!;
       sim.addItem('dawn_battle_standard', 1);
 
@@ -252,7 +291,12 @@ describe('Allied Faction World Quest Rewards & Toys', () => {
 
   describe('Faction Recipes & Consumable Utilities', () => {
     it('crafts and quaffs Elixir of Mana Regeneration (+6 Spirit for 1h)', () => {
-      const sim = new Sim({ seed: 107, playerClass: 'mage', autoEquip: false });
+      const sim = new Sim({
+        seed: SEED,
+        playerClass: 'mage',
+        autoEquip: false,
+        idleMobTickRadius: CULL,
+      });
       const initialSpi = sim.player.stats.spi;
 
       sim.addItem('elixir_of_mana_regeneration', 1);
@@ -266,7 +310,12 @@ describe('Allied Faction World Quest Rewards & Toys', () => {
     });
 
     it('quaffs Potion of Invisibility for 6s stealth', () => {
-      const sim = new Sim({ seed: 108, playerClass: 'rogue', autoEquip: false });
+      const sim = new Sim({
+        seed: SEED,
+        playerClass: 'rogue',
+        autoEquip: false,
+        idleMobTickRadius: CULL,
+      });
       sim.addItem('potion_of_invisibility', 1);
       sim.useItem('potion_of_invisibility');
 
@@ -277,7 +326,12 @@ describe('Allied Faction World Quest Rewards & Toys', () => {
     });
 
     it('applies Reinforced Armor Kit (+12 Armor for 1h)', () => {
-      const sim = new Sim({ seed: 109, playerClass: 'warrior', autoEquip: false });
+      const sim = new Sim({
+        seed: SEED,
+        playerClass: 'warrior',
+        autoEquip: false,
+        idleMobTickRadius: CULL,
+      });
       const initialArmor = sim.player.stats.armor;
 
       sim.addItem('reinforced_armor_kit', 1);
@@ -290,7 +344,12 @@ describe('Allied Faction World Quest Rewards & Toys', () => {
     });
 
     it('applies Dense Sharpening Stone to main hand weapon (+6 AP for 30m)', () => {
-      const sim = new Sim({ seed: 110, playerClass: 'warrior', autoEquip: false });
+      const sim = new Sim({
+        seed: SEED,
+        playerClass: 'warrior',
+        autoEquip: false,
+        idleMobTickRadius: CULL,
+      });
       const meta = sim.meta(sim.playerId)!;
 
       // Unequip weapon to test requirement
@@ -316,7 +375,12 @@ describe('Allied Faction World Quest Rewards & Toys', () => {
     });
 
     it('detonates Clockwork Shock Bomb dealing nature damage AoE on a 1m cooldown', () => {
-      const sim = new Sim({ seed: 111, playerClass: 'warrior', autoEquip: false });
+      const sim = new Sim({
+        seed: SEED,
+        playerClass: 'warrior',
+        autoEquip: false,
+        idleMobTickRadius: CULL,
+      });
       const meta = sim.meta(sim.playerId)!;
       sim.addItem('clockwork_shock_bomb', 2);
 
