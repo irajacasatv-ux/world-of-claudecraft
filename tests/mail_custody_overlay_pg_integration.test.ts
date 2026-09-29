@@ -14,6 +14,7 @@ import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { materialSourceConnection } from '../server/material_source_connection';
 import { handleVaultMailTake, VaultMailTakeGuard } from '../server/vault_mail_take_guard';
 import { type CharacterState, type MailSave, type MarketSave, Sim } from '../src/sim/sim';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const ADMIN_URL = process.env.TEST_DATABASE_URL;
 const VERIFY_DB = 'wocc_mail_custody_verify';
@@ -27,6 +28,14 @@ function verifyUrl(admin: string): string {
 if (ADMIN_URL) process.env.DATABASE_URL = verifyUrl(ADMIN_URL);
 
 const describeDb = ADMIN_URL ? describe : describe.skip;
+
+// Every host Sim (the live one and each restart) is built on one seed of the
+// empty test world: the post office, its mailboxes (BUILTIN_WORLD.services), and
+// the vault are all the overlay reads, and a seed the file has already built
+// reuses its world instead of paying a fresh one per restart.
+function hostSim(): Sim {
+  return new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true, world: EMPTY_TEST_WORLD });
+}
 
 describeDb('mail custody overlay (REAL Postgres)', () => {
   let admin: PgPool;
@@ -145,7 +154,7 @@ describeDb('mail custody overlay (REAL Postgres)', () => {
     const realm = (await import('../server/realm')).REALM;
     const recipientKey = String(characterId);
     const letter = { ...ROW, custodyRef: `vault:pg:${characterId}` };
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+    const sim = hostSim();
     expect(
       sim.mailSystemParcel(
         { key: recipientKey, name: `MailCustody${nextSeq}` },
@@ -212,7 +221,7 @@ describeDb('mail custody overlay (REAL Postgres)', () => {
       [[vaultRef, staleRef]],
     );
     expect(survivors.rows).toEqual([{ custody_ref: vaultRef }]);
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+    const sim = hostSim();
     await overlay.mergeCustodyParcelOverlay(sim);
     expect(sim.serializeMail().mail.some((mail) => mail.custodyRef === vaultRef)).toBe(true);
     await db.saveMailPartitions(
@@ -226,7 +235,7 @@ describeDb('mail custody overlay (REAL Postgres)', () => {
 
     // Book + persist the row (the parcel path; the book itself is the live
     // sim's and is deliberately NOT written here).
-    const sim1 = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+    const sim1 = hostSim();
     expect(
       sim1.mailSystemParcel(ROW.recipient, overlay.CUSTODY_PARCEL_LETTERS.delivery, ROW.items, REF),
     ).toBe(true);
@@ -242,7 +251,7 @@ describeDb('mail custody overlay (REAL Postgres)', () => {
     // CRASH: the process dies before any full-book write. A new process
     // loads a book WITHOUT the parcel and merges the overlay.
     overlay.resetCustodyParcelOverlayForTests();
-    const sim2 = new Sim({ seed: 43, playerClass: 'warrior', noPlayer: true });
+    const sim2 = hostSim();
     const merged = await overlay.mergeCustodyParcelOverlay(sim2);
     expect(merged).toEqual({ replayed: 1, present: 0, refused: 0, stale: 0, ok: true });
     expect(sim2.hasCustodyParcel(REF)).toBe(true);
@@ -261,7 +270,7 @@ describeDb('mail custody overlay (REAL Postgres)', () => {
 
     // Next boot: the parcel now arrives from the blob itself, no overlay
     // rows left to replay, and the book-once state is intact.
-    const sim3 = new Sim({ seed: 44, playerClass: 'warrior', noPlayer: true });
+    const sim3 = hostSim();
     sim3.loadMail(await db.loadMailState());
     expect(sim3.hasCustodyParcel(REF)).toBe(true);
     const remerge = await overlay.mergeCustodyParcelOverlay(sim3);
@@ -278,7 +287,7 @@ describeDb('mail custody overlay (REAL Postgres)', () => {
     const recipient = { key: '5555', name: 'MailProbe' };
     const parcel = { ...ROW, custodyRef: ref, recipient };
     overlay.resetCustodyParcelOverlayForTests();
-    const sim = new Sim({ seed: 46, playerClass: 'warrior', noPlayer: true });
+    const sim = hostSim();
     const pid = sim.addPlayer('warrior', recipient.name, {
       characterId: 5555,
       tutorialGreetingSent: true,
@@ -310,7 +319,7 @@ describeDb('mail custody overlay (REAL Postgres)', () => {
     await db.saveMailPartitions(sim.takeDirtyMailPartitions());
 
     overlay.resetCustodyParcelOverlayForTests();
-    const reboot = new Sim({ seed: 47, playerClass: 'warrior', noPlayer: true });
+    const reboot = hostSim();
     reboot.loadMail(await db.loadMailState());
     expect((await overlay.mergeCustodyParcelOverlay(reboot)).replayed).toBe(0);
     expect(reboot.hasCustodyParcel(ref)).toBe(false);
@@ -328,7 +337,7 @@ describeDb('mail custody overlay (REAL Postgres)', () => {
       recipient: { key: '7777', name: 'B' },
     };
     overlay.resetCustodyParcelOverlayForTests();
-    const sim = new Sim({ seed: 48, playerClass: 'warrior', noPlayer: true });
+    const sim = hostSim();
     for (const parcel of [a, b]) {
       expect(
         sim.mailSystemParcel(
@@ -351,7 +360,7 @@ describeDb('mail custody overlay (REAL Postgres)', () => {
     expect(rows.rows.map((row) => row.custody_ref)).toEqual([b.custodyRef]);
 
     overlay.resetCustodyParcelOverlayForTests();
-    const reboot = new Sim({ seed: 49, playerClass: 'warrior', noPlayer: true });
+    const reboot = hostSim();
     reboot.loadMail(await db.loadMailState());
     expect(reboot.hasCustodyParcel(a.custodyRef)).toBe(true);
     expect((await overlay.mergeCustodyParcelOverlay(reboot)).replayed).toBe(1);
@@ -403,7 +412,7 @@ describeDb('mail custody overlay (REAL Postgres)', () => {
       sim.rebucket(player);
     }
 
-    const live = new Sim({ seed: 51, playerClass: 'warrior', noPlayer: true });
+    const live = hostSim();
     const oldPid = live.addPlayer('warrior', recipient.name, {
       characterId,
       tutorialGreetingSent: true,
@@ -463,7 +472,7 @@ describeDb('mail custody overlay (REAL Postgres)', () => {
     const row = await pool.query('SELECT state FROM characters WHERE id = $1', [characterId]);
     const durableBefore = row.rows[0].state as CharacterState;
     expect(durableBefore.copper).toBe(initial.copper);
-    const rejoined = new Sim({ seed: 52, playerClass: 'warrior', noPlayer: true });
+    const rejoined = hostSim();
     rejoined.loadMail(await db.loadMailState());
     await overlay.mergeCustodyParcelOverlay(rejoined);
     const newPid = rejoined.addPlayer('warrior', recipient.name, {
@@ -532,7 +541,7 @@ describeDb('mail custody overlay (REAL Postgres)', () => {
         ])
       ).rowCount,
     ).toBe(0);
-    const reboot = new Sim({ seed: 53, playerClass: 'warrior', noPlayer: true });
+    const reboot = hostSim();
     reboot.loadMail(await db.loadMailState());
     await overlay.mergeCustodyParcelOverlay(reboot);
     expect(reboot.postOffice.mail.find((mail) => mail.custodyRef === custodyRef)?.items).toEqual(
