@@ -10,13 +10,21 @@ import { MOBS } from '../src/sim/data';
 import { createMob } from '../src/sim/entity';
 import { immobileEvadeSnapsHome } from '../src/sim/mob/immobile_evade';
 import { type PlayerMeta, Sim } from '../src/sim/sim';
-import type { Entity } from '../src/sim/types';
+import { type Entity, PLAYER_INTEREST_DROP_RADIUS } from '../src/sim/types';
 import { placePlayerInOpenField } from './helpers/open_field';
 
 const QUEST = 'q_broodmother';
 
 function questerSim(): { sim: Sim; p: Entity; meta: PlayerMeta } {
-  const sim = new Sim({ seed: 7, playerClass: 'warrior', autoEquip: true });
+  // Production's idle culling (the server and the offline client both set it):
+  // the evade window below ticks the whole world, and the far population's idle
+  // AI is no part of the egg's reset.
+  const sim = new Sim({
+    seed: 7,
+    playerClass: 'warrior',
+    autoEquip: true,
+    idleMobTickRadius: PLAYER_INTEREST_DROP_RADIUS,
+  });
   sim.setPlayerLevel(12);
   placePlayerInOpenField(sim);
   const p = sim.player;

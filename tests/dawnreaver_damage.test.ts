@@ -6,7 +6,7 @@ import * as tuning from '../src/sim/dawnreaver_damage';
 import { createMob } from '../src/sim/entity';
 import { activateDivineAscension, grantDevotion } from '../src/sim/paladin_devotion';
 import { Sim } from '../src/sim/sim';
-import type { Entity, SimEvent } from '../src/sim/types';
+import { type Entity, PLAYER_INTEREST_DROP_RADIUS, type SimEvent } from '../src/sim/types';
 
 type Damage = Extract<SimEvent, { type: 'damage' }>;
 type Options = {
@@ -21,7 +21,15 @@ type Options = {
 };
 
 function rig(options: Options = {}) {
-  const sim = new Sim({ seed: 2701, playerClass: 'paladin', autoEquip: true });
+  // Production's idle culling (the server and the offline client both set it):
+  // the cast windows below tick the whole world, and the far population's idle
+  // AI is no part of the paladin's damage.
+  const sim = new Sim({
+    seed: 2701,
+    playerClass: 'paladin',
+    autoEquip: true,
+    idleMobTickRadius: PLAYER_INTEREST_DROP_RADIUS,
+  });
   sim.setPlayerLevel(20);
   expect(
     sim.applyTalents({
