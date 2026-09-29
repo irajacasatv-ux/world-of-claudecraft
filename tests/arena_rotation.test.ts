@@ -11,9 +11,11 @@ import { Sim } from '../src/sim/sim';
 import { ARENA_MIN_LEVEL } from '../src/sim/social/arena';
 import type { PlayerClass } from '../src/sim/types';
 import { groundHeight } from '../src/sim/world';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
+// Slot rotation reads only the arena band and the queue, so the empty world serves.
 function makeWorld() {
-  return new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+  return new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true, world: EMPTY_TEST_WORLD });
 }
 
 // Every fighter here clears the ranked (1v1/2v2) minimum-level gate; Fiesta
