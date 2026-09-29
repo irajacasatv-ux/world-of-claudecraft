@@ -3,6 +3,7 @@ import { MOBS } from '../src/sim/data';
 import { createMob } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
 import { LEASH_DISTANCE } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // Hit-and-run pursuit combat for EVERY melee mob (mob-pursuit-combat-v023).
 // An ordinary mob no longer stops at max reach to trade blows like a statue:
@@ -17,7 +18,7 @@ const SEED = 7788;
 let nextId = 9200;
 
 function makeSim() {
-  const sim: any = new Sim({ seed: SEED, playerClass: 'warrior' });
+  const sim: any = new Sim({ seed: SEED, playerClass: 'warrior', world: EMPTY_TEST_WORLD });
   const p = sim.entities.get(sim.playerId)!;
   p.pos = { x: 0, y: 0, z: 0 };
   p.prevPos = { x: 0, y: 0, z: 0 };

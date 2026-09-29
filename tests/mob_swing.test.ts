@@ -12,11 +12,12 @@ import { createMob, recalcPlayerStats } from '../src/sim/entity';
 import { devourBeneficialAura, runMobSwingAffixes } from '../src/sim/mob/mob_swing';
 import { Sim } from '../src/sim/sim';
 import type { PlayerClass } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const SEED = 77;
 
 const makeSim = (cls: PlayerClass = 'warrior') => {
-  const sim = new Sim({ seed: SEED, playerClass: cls, autoEquip: true });
+  const sim = new Sim({ seed: SEED, playerClass: cls, autoEquip: true, world: EMPTY_TEST_WORLD });
   sim.setPlayerLevel(16);
   return sim;
 };

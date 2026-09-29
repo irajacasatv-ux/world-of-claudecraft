@@ -1,14 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import { Sim } from '../src/sim/sim';
 import { MOBS } from '../src/sim/data';
 import { createMob } from '../src/sim/entity';
+import { Sim } from '../src/sim/sim';
 import type { PlayerClass } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const SEED = 42;
 // A mage so the victim is a mana user; level it up so Sister Nhalia's L12 elite
 // swing never one-shots it (death would clear the aura before we can read it).
 const makeSim = (cls: PlayerClass = 'mage') => {
-  const sim = new Sim({ seed: SEED, playerClass: cls, autoEquip: true });
+  const sim = new Sim({ seed: SEED, playerClass: cls, autoEquip: true, world: EMPTY_TEST_WORLD });
   sim.setPlayerLevel(20);
   return sim;
 };
@@ -124,7 +125,10 @@ describe('mob Spirit Siphon (Sister Nhalia)', () => {
     const old = siphon.chance;
     siphon.chance = 1;
     try {
-      for (let i = 0; i < 80; i++) { player.hp = player.maxHp; (sim as any).mobSwing(mob, player); }
+      for (let i = 0; i < 80; i++) {
+        player.hp = player.maxHp;
+        (sim as any).mobSwing(mob, player);
+      }
     } finally {
       siphon.chance = old;
     }
@@ -140,7 +144,10 @@ describe('mob Spirit Siphon (Sister Nhalia)', () => {
     const old = siphon.chance;
     siphon.chance = 1;
     try {
-      for (let i = 0; i < 80; i++) { player.hp = player.maxHp; (sim as any).mobSwing(mob, player); }
+      for (let i = 0; i < 80; i++) {
+        player.hp = player.maxHp;
+        (sim as any).mobSwing(mob, player);
+      }
     } finally {
       siphon.chance = old;
     }

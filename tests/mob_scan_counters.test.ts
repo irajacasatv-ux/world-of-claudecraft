@@ -20,6 +20,7 @@ import { STEALTH_DETECTION_MAX_MULT, stealthDetectionMultiplier } from '../src/s
 import { type Entity, NYTHRAXIS_BOSS_ID } from '../src/sim/types';
 import { terrainHeight } from '../src/sim/world';
 import { canonical, sampleEntity, samplePlayerMeta } from './parity/trace';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 type AnyEntity = ReturnType<typeof createMob> & Record<string, any>;
 const ctxOf = (sim: Sim): SimContext => (sim as unknown as { ctx: SimContext }).ctx;
@@ -32,8 +33,11 @@ const seedOf = (sim: Sim): number => (sim as unknown as { cfg: { seed: number } 
 // are exact integer literals rather than "at least".
 const FAR = { x: 500, z: 500 };
 
+// The counting cases place every mob and player they count, so they run on the
+// empty world; the spot check below reads the full world, which is what makes the
+// FAR totals exact there too.
 function noPlayerSim(): Sim {
-  return new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+  return new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true, world: EMPTY_TEST_WORLD });
 }
 
 // Add a fresh warrior and teleport it to (FAR.x + dx, FAR.z + dz). Optionally mark it
@@ -109,7 +113,7 @@ function fakeCtx(
 
 describe('mob scan counters: (FAR) spot is clear of world spawns', () => {
   it('has no world entity within 60 units, so the aggro-scan totals are exact', () => {
-    const sim = noPlayerSim();
+    const sim = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
     let near = 0;
     for (const e of (sim as unknown as { entities: Map<number, Entity> }).entities.values()) {
       const dx = e.pos.x - FAR.x;

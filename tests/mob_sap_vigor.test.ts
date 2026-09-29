@@ -1,11 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { Sim } from '../src/sim/sim';
 import { MOBS } from '../src/sim/data';
 import { createMob } from '../src/sim/entity';
+import { Sim } from '../src/sim/sim';
 import type { PlayerClass } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const SEED = 42;
-const makeSim = (cls: PlayerClass) => new Sim({ seed: SEED, playerClass: cls, autoEquip: true });
+const makeSim = (cls: PlayerClass) =>
+  new Sim({ seed: SEED, playerClass: cls, autoEquip: true, world: EMPTY_TEST_WORLD });
 
 // Spawn Mirejaw the Ravenous next to the player (at the player's level for an
 // even hit table) and swing until a hit connects — a swing can miss/dodge.
@@ -74,7 +76,11 @@ describe('mob sap vigor (Sapping Bite)', () => {
     sap.chance = 1;
     player.resource = player.maxResource;
     try {
-      for (let i = 0; i < 50; i++) { player.maxHp = KEEP_ALIVE; player.hp = KEEP_ALIVE; (sim as any).mobSwing(mob, player); }
+      for (let i = 0; i < 50; i++) {
+        player.maxHp = KEEP_ALIVE;
+        player.hp = KEEP_ALIVE;
+        (sim as any).mobSwing(mob, player);
+      }
     } finally {
       sap.chance = old;
     }
@@ -90,7 +96,11 @@ describe('mob sap vigor (Sapping Bite)', () => {
     const old = sap.chance;
     sap.chance = 1;
     try {
-      for (let i = 0; i < 50; i++) { player.maxHp = KEEP_ALIVE; player.hp = KEEP_ALIVE; (sim as any).mobSwing(mob, player); }
+      for (let i = 0; i < 50; i++) {
+        player.maxHp = KEEP_ALIVE;
+        player.hp = KEEP_ALIVE;
+        (sim as any).mobSwing(mob, player);
+      }
     } finally {
       sap.chance = old;
     }

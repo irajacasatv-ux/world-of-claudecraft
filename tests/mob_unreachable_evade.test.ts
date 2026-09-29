@@ -13,6 +13,7 @@ import { generateRiftFloor } from '../src/sim/rift/rift_gen';
 import { Sim } from '../src/sim/sim';
 import { dist2d, type Entity, NYTHRAXIS_ADD_ID } from '../src/sim/types';
 import { PRODUCTION_IDLE_CULL } from './helpers/production_idle_cull';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // A plain rectangular floor-0 room (no shell polygon) keeps the wall face at a
 // known |x| = wallX so the pin geometry is exact, and a modest wallX keeps the
@@ -36,13 +37,14 @@ const isPlainMeleeTrash = (e: Entity): boolean =>
   !MOBS[e.templateId]?.petSpell && !MOBS[e.templateId]?.channelHeal && e.scale <= 1.3;
 
 // Every Sim in this file shares one world seed (a seed the file has not built
-// yet costs a full-world Sim about half a second, a built one about 20 ms) and
-// production's idle culling (the server and the offline client both set it),
-// so the stall windows below stop paying for the far overworld's idle AI. The
-// rift floor's LAYOUT is the `seed` argument to enterRift; its spawn scale
-// jitter is drawn from the world's shared rng, so changing WORLD_SEED can move
-// the plain-melee pin below (seed 15 today, as it was with world seed equal to
-// rift seed).
+// yet costs a Sim about half a second, a built one far less) and production's
+// idle culling (the server and the offline client both set it), and runs on the
+// empty world: every case fights inside a rift instance, so the overworld's
+// camps and NPCs would only cost construction and ticks. The rift floor's
+// LAYOUT is the `seed` argument to enterRift; its spawn scale jitter is drawn
+// from the world's shared rng, so changing WORLD_SEED or the world content can
+// move the plain-melee pin below (seed 15 today, as it was on the full world
+// and with world seed equal to rift seed).
 const WORLD_SEED = 42;
 function worldSim(extra: { devCommands?: boolean } = {}): Sim {
   return new Sim({
@@ -51,6 +53,7 @@ function worldSim(extra: { devCommands?: boolean } = {}): Sim {
     autoEquip: true,
     ...PRODUCTION_IDLE_CULL,
     ...extra,
+    world: EMPTY_TEST_WORLD,
   });
 }
 

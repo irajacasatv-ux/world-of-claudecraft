@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { Sim } from '../src/sim/sim';
-import { createMob } from '../src/sim/entity';
 import { MOBS } from '../src/sim/data';
+import { createMob } from '../src/sim/entity';
+import { Sim } from '../src/sim/sim';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // Staggering mobs knock a player victim off-balance on a landed hit, cutting
 // their dodge chance for the duration so the attacker (and its pack) land more
@@ -10,12 +11,20 @@ import { MOBS } from '../src/sim/data';
 describe('mob stagger-on-hit', () => {
   it('the Deeprock Tunneler template carries a Jarring Swing proc', () => {
     expect(MOBS.deeprock_kobold.staggerHit).toMatchObject({
-      chance: 0.3, dodgeReduction: 0.05, duration: 8, name: 'Off-Balance',
+      chance: 0.3,
+      dodgeReduction: 0.05,
+      duration: 8,
+      name: 'Off-Balance',
     });
   });
 
   it('a landed swing cuts the victim dodge via a negative buff_dodge aura', () => {
-    const sim = new Sim({ seed: 7, playerClass: 'warrior', noPlayer: true });
+    const sim = new Sim({
+      seed: 7,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const pid = sim.addPlayer('warrior', 'Staggered');
     sim.setPlayerLevel(15);
     const victim = sim.entities.get(pid)!;
@@ -48,7 +57,12 @@ describe('mob stagger-on-hit', () => {
   });
 
   it('re-applies (refreshes) rather than stacking on repeated hits', () => {
-    const sim = new Sim({ seed: 11, playerClass: 'warrior', noPlayer: true });
+    const sim = new Sim({
+      seed: 11,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const pid = sim.addPlayer('warrior', 'Hounded');
     sim.setPlayerLevel(15);
     const victim = sim.entities.get(pid)!;
@@ -72,21 +86,37 @@ describe('mob stagger-on-hit', () => {
   });
 
   it('the dodge floor keeps dodgeChance from going negative', () => {
-    const sim = new Sim({ seed: 7, playerClass: 'warrior', noPlayer: true });
+    const sim = new Sim({
+      seed: 7,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const pid = sim.addPlayer('warrior', 'Floored');
     sim.setPlayerLevel(15);
     const victim = sim.entities.get(pid)!;
 
     // A reduction larger than the victim's whole dodge clamps to exactly 0.
     (sim as any).applyAura(victim, {
-      id: 'stagger_test', name: 'Off-Balance', kind: 'buff_dodge',
-      remaining: 8, duration: 8, value: -1, sourceId: victim.id, school: 'physical',
+      id: 'stagger_test',
+      name: 'Off-Balance',
+      kind: 'buff_dodge',
+      remaining: 8,
+      duration: 8,
+      value: -1,
+      sourceId: victim.id,
+      school: 'physical',
     });
     expect(victim.dodgeChance).toBe(0);
   });
 
   it('an ordinary mob with no staggerHit field never applies the debuff', () => {
-    const sim = new Sim({ seed: 7, playerClass: 'warrior', noPlayer: true });
+    const sim = new Sim({
+      seed: 7,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const pid = sim.addPlayer('warrior', 'Safe');
     sim.setPlayerLevel(15);
     const victim = sim.entities.get(pid)!;
