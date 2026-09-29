@@ -10,6 +10,7 @@ import {
 import { Sim } from '../src/sim/sim';
 import type { Entity, MoveInput } from '../src/sim/types';
 import { inHollowOpenSea, terrainHeight, WATER_LEVEL, waterLevelAt } from '../src/sim/world';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // The programmatic border waters (the Hollow's moats, the column straits, the
 // row meres) are carved and rendered as water where two maps meet, and the
@@ -89,7 +90,12 @@ describe('border waters between maps are real, escapable water', () => {
     expect(bed, 'strait bed is carved deep').toBeLessThan(WATER_LEVEL - PLAYER_SWIM_DEPTH);
     expect(waterLevelAt(STRAIT.x, STRAIT.z, SEED), 'waterline is live').toBe(WATER_LEVEL);
 
-    const sim = new Sim({ seed: SEED, playerClass: 'warrior', autoEquip: true });
+    const sim = new Sim({
+      seed: SEED,
+      playerClass: 'warrior',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const actor = makeActor(sim, STRAIT.x, STRAIT.z, 0);
     drive(actor, kernelDeps(SEED), mi(), 10); // settle
     expect(isSwimming(actor, SEED), 'treads the moat surface').toBe(true);
@@ -108,7 +114,12 @@ describe('border waters between maps are real, escapable water', () => {
 
   it('crosses Palmreach -> Hollow -> Palmreach without wedging (the reported trap)', () => {
     setActiveWorldContent(BUILTIN_WORLD);
-    const sim = new Sim({ seed: SEED, playerClass: 'warrior', autoEquip: true });
+    const sim = new Sim({
+      seed: SEED,
+      playerClass: 'warrior',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const deps = kernelDeps(SEED);
 
     // eastbound: from the palm shore across the moat into the Hollow
@@ -132,7 +143,12 @@ describe('border waters between maps are real, escapable water', () => {
     // away from its isthmus road (passX -330). Individual banks may be
     // authored cliffs (a swimmer follows the mere to the next beach), but
     // most crossings must round-trip, so nobody is ever trapped on one side.
-    const sim = new Sim({ seed: SEED, playerClass: 'warrior', autoEquip: true });
+    const sim = new Sim({
+      seed: SEED,
+      playerClass: 'warrior',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const deps = kernelDeps(SEED);
     const spots = [-520, -500, -480, -460, -440, -420, -280, -260, -240, -230, -210, -200];
     let attempted = 0;
@@ -193,7 +209,12 @@ describe('border waters between maps are real, escapable water', () => {
     // continues below the waterline with no live waterline: a mover walking
     // its bed toward the band must be able to re-enter the swimmable water
     // (the surface must never read as a wall from outside)
-    const sim = new Sim({ seed: SEED, playerClass: 'warrior', autoEquip: true });
+    const sim = new Sim({
+      seed: SEED,
+      playerClass: 'warrior',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const deps = kernelDeps(SEED);
     // find a submerged-but-waterline-free spot just outside the band
     let start: { x: number; z: number } | null = null;
