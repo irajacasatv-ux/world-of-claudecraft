@@ -4,6 +4,12 @@ import { createMob } from '../src/sim/entity';
 import { type ResolvedAbility, Sim } from '../src/sim/sim';
 import { fiestaDownEntity } from '../src/sim/social/fiesta';
 import type { Aura, Entity } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
+
+// Every rig fights the stalkers or duels the player it places itself, so each Sim
+// stands on the empty world, all on one seed (a fresh seed costs a collider grid
+// build).
+const SEED = 2701;
 
 function addHostile(sim: Sim, id: number, offsetX: number): Entity {
   const mob = createMob(id, MOBS.ridge_stalker, 20, {
@@ -17,7 +23,12 @@ function addHostile(sim: Sim, id: number, offsetX: number): Entity {
 }
 
 function setup(): { sim: Sim; marked: Entity; nearby: Entity } {
-  const sim = new Sim({ seed: 2701, playerClass: 'paladin', autoEquip: true });
+  const sim = new Sim({
+    seed: SEED,
+    playerClass: 'paladin',
+    autoEquip: true,
+    world: EMPTY_TEST_WORLD,
+  });
   sim.setPlayerLevel(20);
   expect(sim.setSpec('retribution')).toBe(true);
   sim.rng.next = () => 0.5;
@@ -94,9 +105,16 @@ describe('Verdict of the Sun God', () => {
   });
 
   it("replaces only the casting Paladin's previous mark and preserves another Paladin's mark", () => {
-    const sim = new Sim({ seed: 2702, playerClass: 'paladin', autoEquip: true });
+    const sim = new Sim({
+      seed: SEED,
+      playerClass: 'paladin',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.setPlayerLevel(20);
     expect(sim.setSpec('retribution')).toBe(true);
+    // Each mark must land: pin the rolls as setup() does.
+    sim.rng.next = () => 0.5;
     const secondId = sim.addPlayer('paladin', 'Second Sun Judge', { autoEquip: true });
     sim.setPlayerLevel(20, secondId);
     expect(sim.setSpec('retribution', secondId)).toBe(true);
@@ -214,7 +232,12 @@ describe('Verdict of the Sun God', () => {
   });
 
   it('does not mark a target beyond the verdict range', () => {
-    const sim = new Sim({ seed: 2701, playerClass: 'paladin', autoEquip: true });
+    const sim = new Sim({
+      seed: SEED,
+      playerClass: 'paladin',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.setPlayerLevel(20);
     expect(sim.setSpec('retribution')).toBe(true);
     const farTarget = addHostile(sim, 9703, 31);
@@ -256,7 +279,12 @@ describe('Verdict of the Sun God', () => {
   });
 
   it('cannot detonate from the stale mark removed when a terminal duel hit lands', () => {
-    const sim = new Sim({ seed: 2701, playerClass: 'paladin', noPlayer: true });
+    const sim = new Sim({
+      seed: SEED,
+      playerClass: 'paladin',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const casterId = sim.addPlayer('paladin', 'Sun Judge', { autoEquip: true });
     const opponentId = sim.addPlayer('warrior', 'Condemned', { autoEquip: true });
     sim.setPlayerLevel(20, casterId);
