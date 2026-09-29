@@ -52,8 +52,19 @@ const ESSENCE = 'sundered_essence';
 const SETTING = 'prismglass_setting';
 const CAP_ERROR = 'You can only equip two Masterwrought items.';
 
-function world(seed = 5): { sim: Sim; pid: number; meta: PlayerMeta; e: Entity } {
-  const sim = new Sim({ seed, playerClass: 'warrior', autoEquip: false, world: EMPTY_TEST_WORLD });
+// One empty-world seed for every Sim in the file (the reload and crafting arms
+// included): a seed the file has already built reuses its world, and no case
+// here depends on which seed or world it runs (every rng-sensitive arm forces
+// or counts its own draws, and none reads world geometry).
+const SEED = 5;
+
+function world(): { sim: Sim; pid: number; meta: PlayerMeta; e: Entity } {
+  const sim = new Sim({
+    seed: SEED,
+    playerClass: 'warrior',
+    autoEquip: false,
+    world: EMPTY_TEST_WORLD,
+  });
   const pid = sim.playerId;
   return {
     sim,
@@ -66,8 +77,8 @@ function world(seed = 5): { sim: Sim; pid: number; meta: PlayerMeta; e: Entity }
 /** A skill-125 jewelcrafter holding several of every attempt material, so no
  *  arm below can deny for want of skill or materials instead of the gate
  *  under test. */
-function perfecter(seed = 5, materials = 8): ReturnType<typeof world> {
-  const w = world(seed);
+function perfecter(materials = 8): ReturnType<typeof world> {
+  const w = world();
   w.meta.craftSkills.jewelcrafting = PERFECTING_SKILL_REQ;
   for (const c of PERFECTING_ATTEMPT_COST) w.sim.addItem(c.itemId, materials, w.pid);
   return w;
@@ -164,7 +175,7 @@ describe('the attempt cost table and rank constants (locked tuning)', () => {
 
 describe('the deny ladder: order, zero draws, zero consumption', () => {
   it('a dead player is refused by the shared dead gate, consuming nothing', () => {
-    const { sim, pid, meta, e } = perfecter(11);
+    const { sim, pid, meta, e } = perfecter();
     sim.addItem(APEX_NECK, 1, pid);
     e.dead = true;
     const before = materialCounts(sim, pid);
@@ -179,7 +190,7 @@ describe('the deny ladder: order, zero draws, zero consumption', () => {
     // The phase 13 QA mutation lane: deleting the guard on this arm alone
     // survived every suite (the case above drives the server arm only), and
     // the IWorld arm is the offline browser host's ONLY path.
-    const { sim, pid, meta, e } = perfecter(11);
+    const { sim, pid, meta, e } = perfecter();
     sim.addItem(APEX_NECK, 1, pid);
     e.dead = true;
     const before = materialCounts(sim, pid);
@@ -196,7 +207,7 @@ describe('the deny ladder: order, zero draws, zero consumption', () => {
     // reaching the export directly (a headless harness, a future server
     // path) bypassed it entirely. The shared head now runs
     // refusedWhileDead itself, so the refusal is real code on EVERY entry.
-    const { sim, pid, meta, e } = perfecter(11);
+    const { sim, pid, meta, e } = perfecter();
     sim.addItem(APEX_NECK, 1, pid);
     e.dead = true;
     const ref = bagRefOf(meta, APEX_NECK);
@@ -210,7 +221,7 @@ describe('the deny ladder: order, zero draws, zero consumption', () => {
   });
 
   it('an invalid ref denies with the noItem line, on every malformed shape', () => {
-    const { sim, pid } = perfecter(12);
+    const { sim, pid } = perfecter();
     sim.drainEvents();
     // A STALE cell too: the index of a material stack named as the apex piece
     // (the shape a shift between click and command produces) resolves to
@@ -237,7 +248,7 @@ describe('the deny ladder: order, zero draws, zero consumption', () => {
     // unbind): boundTo values are entity ids, which are not session-stable,
     // so the attempt checks POSSESSION only and never compares the value. A
     // bound copy in the player's own bags is theirs by construction.
-    const { sim, pid, meta } = perfecter(13);
+    const { sim, pid, meta } = perfecter();
     sim.addItemInstance(APEX_NECK, { boundTo: 424242, perfecting: 1 }, pid, 1);
     const ref = bagRefOf(meta, APEX_NECK);
     sim.drainEvents();
@@ -261,7 +272,7 @@ describe('the deny ladder: order, zero draws, zero consumption', () => {
   });
 
   it('not-apex answers BEFORE already-Perfected (a stamped non-apex copy)', () => {
-    const { sim, pid, meta } = perfecter(14);
+    const { sim, pid, meta } = perfecter();
     sim.addItemInstance(NON_APEX, { perfected: true }, pid, 1);
     sim.drainEvents();
     const draws = drawsDuring(sim, () => sim.perfectItemAs(pid, bagRefOf(meta, NON_APEX)));
@@ -274,7 +285,7 @@ describe('the deny ladder: order, zero draws, zero consumption', () => {
     // the promotion replaced that arm and moved the ONE skill gate above the
     // split, so an unskilled owner of a Perfected copy hears the skill line,
     // never a promotion arm.
-    const { sim, pid, meta } = perfecter(15);
+    const { sim, pid, meta } = perfecter();
     meta.craftSkills.jewelcrafting = 0; // the skill gate must answer, not the promotion ladder
     sim.addItemInstance(APEX_NECK, { perfected: true, boundTo: pid }, pid, 1);
     const before = materialCounts(sim, pid);
@@ -288,7 +299,7 @@ describe('the deny ladder: order, zero draws, zero consumption', () => {
   });
 
   it('the skill gate binds at exactly 125 and answers BEFORE the material gates', () => {
-    const { sim, pid, meta } = perfecter(16);
+    const { sim, pid, meta } = perfecter();
     meta.craftSkills.jewelcrafting = PERFECTING_SKILL_REQ - 1;
     // Materials are ALSO short, so a ladder that answered materials first
     // would say so here.
@@ -306,7 +317,7 @@ describe('the deny ladder: order, zero draws, zero consumption', () => {
   });
 
   it('a lock-only shortfall denies with the DEDICATED locked line', () => {
-    const { sim, pid, meta } = perfecter(17);
+    const { sim, pid, meta } = perfecter();
     sim.addItem(APEX_NECK, 1, pid);
     // Every material held raw, but the whole ember stack is locked (issue
     // 3042): raw meets the need, unlocked does not.
@@ -324,7 +335,7 @@ describe('the deny ladder: order, zero draws, zero consumption', () => {
   });
 
   it('a genuine shortfall denies with the missing-materials line', () => {
-    const { sim, pid, meta } = perfecter(18);
+    const { sim, pid, meta } = perfecter();
     sim.addItem(APEX_NECK, 1, pid);
     sim.removeItem(SETTING, 8, pid);
     sim.drainEvents();
@@ -334,7 +345,7 @@ describe('the deny ladder: order, zero draws, zero consumption', () => {
   });
 
   it('the positive control: a resolved attempt draws EXACTLY once', () => {
-    const { sim, pid, meta } = perfecter(19);
+    const { sim, pid, meta } = perfecter();
     sim.addItem(APEX_NECK, 1, pid);
     sim.drainEvents();
     const draws = drawsDuring(sim, () => sim.perfectItemAs(pid, bagRefOf(meta, APEX_NECK)));
@@ -348,7 +359,7 @@ describe('the deny ladder: order, zero draws, zero consumption', () => {
     // ops' recipe); it is redundant with HEAVY_SELF_CMDS for this command
     // TODAY, so this pin is what keeps a future removal of either mechanism
     // a conscious choice rather than a silent loss of the last one.
-    const { sim, pid, meta } = perfecter(26);
+    const { sim, pid, meta } = perfecter();
     sim.addItem(APEX_NECK, 1, pid);
     const ref = bagRefOf(meta, APEX_NECK);
     const revBefore = meta.wireRev;
@@ -364,7 +375,7 @@ describe('the deny ladder: order, zero draws, zero consumption', () => {
     // The bank suite's synthetic-collect idiom: no shipped quest counts an
     // attempt material, so pin the consume -> onInventoryChangedForQuests
     // wiring with a synthetic collect quest over the ember.
-    const { sim, pid, meta } = perfecter(27);
+    const { sim, pid, meta } = perfecter();
     sim.addItem(APEX_NECK, 1, pid);
     QUESTS.__perfect_resync = {
       ...QUESTS.q_widows,
@@ -392,7 +403,7 @@ describe('the deny ladder: order, zero draws, zero consumption', () => {
 
 describe('R2: the piece binds on the FIRST attempt, success and failure alike', () => {
   it('a failed first attempt binds, spends the bill, and advances nothing', () => {
-    const { sim, pid, meta } = perfecter(21);
+    const { sim, pid, meta } = perfecter();
     sim.addItem(APEX_NECK, 1, pid);
     const ref = bagRefOf(meta, APEX_NECK);
     // Freely tradable until the walk begins: no boundTo on the fresh copy.
@@ -413,7 +424,7 @@ describe('R2: the piece binds on the FIRST attempt, success and failure alike', 
   });
 
   it('a second attempt never re-emits the bind notice', () => {
-    const { sim, pid, meta } = perfecter(22);
+    const { sim, pid, meta } = perfecter();
     sim.addItem(APEX_NECK, 1, pid);
     const ref = bagRefOf(meta, APEX_NECK);
     forceRoll(sim, 0.99);
@@ -424,7 +435,7 @@ describe('R2: the piece binds on the FIRST attempt, success and failure alike', 
   });
 
   it('a successful first attempt binds and advances to rank 1', () => {
-    const { sim, pid, meta } = perfecter(23);
+    const { sim, pid, meta } = perfecter();
     sim.addItem(APEX_NECK, 1, pid);
     const ref = bagRefOf(meta, APEX_NECK);
     sim.drainEvents();
@@ -444,7 +455,7 @@ describe('R2: the piece binds on the FIRST attempt, success and failure alike', 
     // The skill boundary is pinned on both sides above; this is the success
     // boundary's twin. roll < chance succeeds, so roll == chance fails: a
     // <= regression widens the real success rate and fails here.
-    const { sim, pid, meta } = perfecter(25);
+    const { sim, pid, meta } = perfecter();
     sim.addItem(APEX_NECK, 1, pid);
     const ref = bagRefOf(meta, APEX_NECK);
     sim.drainEvents();
@@ -459,7 +470,7 @@ describe('R2: the piece binds on the FIRST attempt, success and failure alike', 
   });
 
   it('fail-forward on a mid-track copy: rank and payload survive the failure', () => {
-    const { sim, pid, meta } = perfecter(24);
+    const { sim, pid, meta } = perfecter();
     // A mid-track copy already carrying its bind (the fixture stamps the
     // player's own entity id, though ownership is presence-only either way).
     sim.addItemInstance(APEX_NECK, { perfecting: 2, boundTo: meta.entityId }, pid, 1);
@@ -477,7 +488,7 @@ describe('R2: the piece binds on the FIRST attempt, success and failure alike', 
 
 describe('the rank walk to Perfected', () => {
   it('four forced successes walk 0 to Perfected, delete the track field, and bake the R5 delta', () => {
-    const { sim, pid, meta } = perfecter(31);
+    const { sim, pid, meta } = perfecter();
     sim.addItem(APEX_NECK, 1, pid);
     const ref = bagRefOf(meta, APEX_NECK);
     sim.drainEvents();
@@ -512,7 +523,7 @@ describe('the rank walk to Perfected', () => {
   });
 
   it('a head-started copy (rank 1) needs only the remaining successes', () => {
-    const { sim, pid, meta } = perfecter(32);
+    const { sim, pid, meta } = perfecter();
     sim.addItemInstance(APEX_NECK, { perfecting: PERFECTING_HEADSTART_RANK }, pid, 1);
     const ref = bagRefOf(meta, APEX_NECK);
     forceRoll(sim, 0);
@@ -525,7 +536,7 @@ describe('the rank walk to Perfected', () => {
   });
 
   it('the worn attempt path recalculates the wearer stats at the Perfected stamp', () => {
-    const { sim, pid, meta, e } = perfecter(33);
+    const { sim, pid, meta, e } = perfecter();
     sim.setPlayerLevel(20);
     sim.addItem(APEX_NECK, 1, pid);
     sim.equipItem(APEX_NECK, pid);
@@ -661,7 +672,7 @@ describe('R5: the Perfected bonus is exactly the source-28 budget delta', () => 
 
 describe('perfectingInfoFrom: the shared both-hosts view', () => {
   it('reports rank, craft, skill, bind, and LOCK-AWARE material counts', () => {
-    const { sim, pid, meta } = perfecter(41);
+    const { sim, pid, meta } = perfecter();
     sim.addItemInstance(APEX_NECK, { perfecting: 2, boundTo: meta.entityId }, pid, 1);
     const ref = bagRefOf(meta, APEX_NECK);
     const emberSlot = meta.inventory.find((s) => s.itemId === EMBER);
@@ -706,7 +717,7 @@ describe('perfectingInfoFrom: the shared both-hosts view', () => {
     // Every other view assertion in this file reads perfected over an
     // unfinished copy, so a literal `false` at the builder would have
     // survived the suite; this is the failing-direction twin.
-    const { sim, pid, meta } = perfecter(43);
+    const { sim, pid, meta } = perfecter();
     sim.addItemInstance(APEX_NECK, { perfected: true, boundTo: meta.entityId }, pid, 1);
     const view = perfectingInfoFrom({
       ref: bagRefOf(meta, APEX_NECK),
@@ -721,7 +732,7 @@ describe('perfectingInfoFrom: the shared both-hosts view', () => {
   });
 
   it('a skill of PERFECTING_SKILL_REQ - 1 reads skillMet: false (the failing direction)', () => {
-    const { sim, pid, meta } = perfecter(44);
+    const { sim, pid, meta } = perfecter();
     meta.craftSkills.jewelcrafting = PERFECTING_SKILL_REQ - 1;
     sim.addItem(APEX_NECK, 1, pid);
     const view = perfectingInfoFrom({
@@ -742,7 +753,7 @@ describe('perfectingInfoFrom: the shared both-hosts view', () => {
     // legendary sub-cap, so the pending copy reads equipBlocked true; the
     // clean fixture (nothing else worn) reads false, and the promoted ring
     // itself reads false (nothing is pending on it).
-    const { sim, pid, meta } = perfecter(45);
+    const { sim, pid, meta } = perfecter();
     sim.setPlayerLevel(20);
     sim.addItemInstance(APEX_NECK, { perfected: true, boundTo: meta.entityId }, pid, 1);
     sim.equipItem(APEX_NECK, pid);
@@ -772,7 +783,7 @@ describe('perfectingInfoFrom: the shared both-hosts view', () => {
   });
 
   it('the Sim facade delegate answers through the same builder (worn arm)', () => {
-    const { sim, pid, meta } = perfecter(42);
+    const { sim, pid, meta } = perfecter();
     sim.setPlayerLevel(20);
     sim.addItem(APEX_NECK, 1, pid);
     sim.equipItem(APEX_NECK, pid);
@@ -787,7 +798,7 @@ describe('perfectingInfoFrom: the shared both-hosts view', () => {
 
 describe('persistence: round-trips, pre-phase saves, and the load bound', () => {
   it('a mid-track bagged copy round-trips through serializeCharacter/addPlayer', () => {
-    const { sim, pid, meta } = perfecter(51);
+    const { sim, pid, meta } = perfecter();
     sim.addItem(APEX_NECK, 1, pid);
     const ref = bagRefOf(meta, APEX_NECK);
     forceRoll(sim, 0);
@@ -797,7 +808,12 @@ describe('persistence: round-trips, pre-phase saves, and the load bound', () => 
     const state = sim.serializeCharacter(pid);
     expect(state).toBeTruthy();
 
-    const fresh = new Sim({ seed: 51, playerClass: 'warrior', noPlayer: true });
+    const fresh = new Sim({
+      seed: SEED,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const loadedPid = fresh.addPlayer('warrior', 'Reloaded', { state: state ?? undefined });
     const loadedMeta = fresh.players.get(loadedPid) as PlayerMeta;
     const loaded = loadedMeta.inventory.find((s) => s.itemId === APEX_NECK);
@@ -809,7 +825,7 @@ describe('persistence: round-trips, pre-phase saves, and the load bound', () => 
   });
 
   it('a Perfected WORN copy round-trips with its stats recalculated on load', () => {
-    const { sim, pid, meta } = perfecter(52);
+    const { sim, pid, meta } = perfecter();
     sim.setPlayerLevel(20);
     sim.addItem(APEX_NECK, 1, pid);
     sim.equipItem(APEX_NECK, pid);
@@ -819,7 +835,12 @@ describe('persistence: round-trips, pre-phase saves, and the load bound', () => 
     const liveInt = (sim.entities.get(pid) as Entity).stats.int;
     const state = sim.serializeCharacter(pid);
 
-    const fresh = new Sim({ seed: 52, playerClass: 'warrior', noPlayer: true });
+    const fresh = new Sim({
+      seed: SEED,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const loadedPid = fresh.addPlayer('warrior', 'Reloaded', { state: state ?? undefined });
     const loadedMeta = fresh.players.get(loadedPid) as PlayerMeta;
     expect(loadedMeta.equipmentInstance.neck?.perfected).toBe(true);
@@ -831,10 +852,15 @@ describe('persistence: round-trips, pre-phase saves, and the load bound', () => 
   });
 
   it('a pre-phase save (no perfecting fields) loads clean', () => {
-    const { sim, pid } = perfecter(53);
+    const { sim, pid } = perfecter();
     sim.addItem(APEX_NECK, 1, pid);
     const state = sim.serializeCharacter(pid);
-    const fresh = new Sim({ seed: 53, playerClass: 'warrior', noPlayer: true });
+    const fresh = new Sim({
+      seed: SEED,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const loadedPid = fresh.addPlayer('warrior', 'Reloaded', { state: state ?? undefined });
     const loadedMeta = fresh.players.get(loadedPid) as PlayerMeta;
     const loaded = loadedMeta.inventory.find((s) => s.itemId === APEX_NECK);
@@ -873,7 +899,7 @@ describe('persistence: round-trips, pre-phase saves, and the load bound', () => 
   });
 
   it('a hand-edited out-of-range rank is dropped on the real load path', () => {
-    const { sim, pid } = perfecter(54);
+    const { sim, pid } = perfecter();
     sim.addItem(APEX_NECK, 1, pid);
     const state = sim.serializeCharacter(pid);
     expect(state).toBeTruthy();
@@ -881,7 +907,12 @@ describe('persistence: round-trips, pre-phase saves, and the load bound', () => 
     const row = state.inventory.find((s) => s.itemId === APEX_NECK);
     expect(row).toBeTruthy();
     if (row) row.instance = { perfecting: 99 } as never;
-    const fresh = new Sim({ seed: 54, playerClass: 'warrior', noPlayer: true });
+    const fresh = new Sim({
+      seed: SEED,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const loadedPid = fresh.addPlayer('warrior', 'Reloaded', { state });
     const loadedMeta = fresh.players.get(loadedPid) as PlayerMeta;
     const loaded = loadedMeta.inventory.find((s) => s.itemId === APEX_NECK);
@@ -892,7 +923,7 @@ describe('persistence: round-trips, pre-phase saves, and the load bound', () => 
 
 describe('the phase 01 cap interlock: a Perfected piece still counts', () => {
   it('two worn apex pieces, one Perfected, still trip the Masterwrought cap', () => {
-    const { sim, pid, meta } = perfecter(61);
+    const { sim, pid, meta } = perfecter();
     sim.setPlayerLevel(20);
     sim.addItem(APEX_NECK, 1, pid);
     sim.addItem(APEX_RING, 1, pid);
@@ -917,8 +948,13 @@ describe('the crafting.ts head start (R1) over a real Sim', () => {
   /** An apex crafter at the recipe's station with the bill in hand; the
    *  archetype decides the ceiling term of the effect gate (a major reads
    *  Infinity, no archetype reads the rare ceiling). */
-  const apexCrafter = (seed: number, activeArchetype: string | null) => {
-    const sim = new Sim({ seed, playerClass: 'warrior', autoEquip: false });
+  const apexCrafter = (activeArchetype: string | null) => {
+    const sim = new Sim({
+      seed: SEED,
+      playerClass: 'warrior',
+      autoEquip: false,
+      world: EMPTY_TEST_WORLD,
+    });
     const pid = sim.playerId;
     const meta = sim.players.get(pid) as PlayerMeta;
     meta.archetype.activeArchetype = activeArchetype;
@@ -937,7 +973,7 @@ describe('the crafting.ts head start (R1) over a real Sim', () => {
   };
 
   it('a forced proc on an apex recipe mints masterwork:true + perfecting 1, one draw', () => {
-    const { sim, pid, meta, recipe } = apexCrafter(7, 'jewelcrafting');
+    const { sim, pid, meta, recipe } = apexCrafter('jewelcrafting');
     // Force the single output-side proc draw to hit; the counter pins the
     // one-draw contract on the apex path (the head start gates the EFFECT,
     // never the draw).
@@ -956,7 +992,7 @@ describe('the crafting.ts head start (R1) over a real Sim', () => {
   });
 
   it('a forced MISS mints the plain signed copy: no rank, no masterwork flag, still one draw', () => {
-    const { sim, pid, meta, recipe } = apexCrafter(8, 'jewelcrafting');
+    const { sim, pid, meta, recipe } = apexCrafter('jewelcrafting');
     // 0.999 sits above MASTERWORK_CHANCE_CAP, so no composition of the
     // chance terms can turn it into a hit; the premise is checked, not
     // trusted to a comment (a cap retune past it would silently flip this
@@ -979,7 +1015,7 @@ describe('the crafting.ts head start (R1) over a real Sim', () => {
     // the apex def's bumped tier is legendary (4), so the SAME gate that keeps
     // a dormant or hobby craft from bumping keeps it from a head start. The
     // draw still happens (the gate is on the effect); the copy lands plain.
-    const { sim, pid, meta, recipe } = apexCrafter(9, null);
+    const { sim, pid, meta, recipe } = apexCrafter(null);
     const draws = forceRoll(sim, 0);
     runCraft(sim, recipe.id, false, pid);
     expect(meta.lastCraftResult?.ok).toBe(true);
@@ -990,7 +1026,7 @@ describe('the crafting.ts head start (R1) over a real Sim', () => {
   });
 
   it("a commissioned head-start copy carries the Maker's Bond arm beside its rank", () => {
-    const { sim, pid, meta, recipe } = apexCrafter(10, 'jewelcrafting');
+    const { sim, pid, meta, recipe } = apexCrafter('jewelcrafting');
     forceRoll(sim, 0);
     runCraft(sim, recipe.id, true, pid);
     expect(meta.lastCraftResult?.masterwork).toBe(true);
@@ -1020,7 +1056,7 @@ describe('the crafting.ts head start (R1) over a real Sim', () => {
     // (0): the head start is STILL denied, by the same ceiling term that
     // denies the no-archetype crafter above (a Jack's breadth ceiling is the
     // rare tier, under the apex def's legendary bumped tier).
-    const { sim, pid, meta, recipe } = apexCrafter(11, null);
+    const { sim, pid, meta, recipe } = apexCrafter(null);
     meta.archetype.isJackOfAllTrades = true;
     const draws = forceRollSequence(sim, [0.5, 0]);
     runCraft(sim, recipe.id, false, pid);
@@ -1036,7 +1072,7 @@ describe('the crafting.ts head start (R1) over a real Sim', () => {
   });
 
   it("a Jack 'worse' variance also draws two and mints the plain signed copy", () => {
-    const { sim, pid, meta, recipe } = apexCrafter(12, null);
+    const { sim, pid, meta, recipe } = apexCrafter(null);
     meta.archetype.isJackOfAllTrades = true;
     const draws = forceRollSequence(sim, [0, 0]); // variance 'worse', proc hit
     runCraft(sim, recipe.id, false, pid);
@@ -1106,7 +1142,7 @@ describe('the R5 merge is ADDITIVE, the two-hand line is priced, and failure lea
     // existing record is an explicit marker enchant so the copy still reads
     // as enchanted afterwards (apex gear post-dates the marker; no apex copy
     // can be a bare-stats legacy enchant).
-    const { sim, pid, meta } = perfecter(31);
+    const { sim, pid, meta } = perfecter();
     sim.addItemInstance(
       APEX_NECK,
       {
@@ -1151,7 +1187,7 @@ describe('the R5 merge is ADDITIVE, the two-hand line is priced, and failure lea
   });
 
   it('a failed attempt leaves a mid-track copy BYTE-IDENTICAL and a worn one recalculated to the same stats', () => {
-    const { sim, pid, meta, e } = perfecter(32);
+    const { sim, pid, meta, e } = perfecter();
     sim.setPlayerLevel(20);
     sim.addItemInstance(APEX_RING, { signer: 'Crafter', boundTo: pid, perfecting: 2 }, pid, 1);
     sim.equipItem(APEX_RING, pid);
@@ -1184,7 +1220,7 @@ describe('perfectedBonusStats null arms and the mixed shortfall', () => {
   });
 
   it('a MIXED shortfall (one material lock-only, another genuinely short) reads as missing, not locked', () => {
-    const { sim, pid } = perfecter(30);
+    const { sim, pid } = perfecter();
     const meta = sim.players.get(pid) as PlayerMeta;
     sim.addItem(APEX_NECK, 1, pid);
     const ember = meta.inventory.find((s) => s.itemId === EMBER);
@@ -1209,7 +1245,7 @@ describe('the rolled-spread distinguisher (phase 18, the test-lane no-change lis
     // determined by the id, so two independently walked copies of one def
     // always carry byte-identical rolled.stats. Proven over two REAL walks
     // rather than asserted of the pure function.
-    const { sim, pid, meta } = perfecter(41, 16);
+    const { sim, pid, meta } = perfecter(16);
     sim.addItem(APEX_NECK, 1, pid);
     const refA = bagRefOf(meta, APEX_NECK);
     forceRoll(sim, 0);
