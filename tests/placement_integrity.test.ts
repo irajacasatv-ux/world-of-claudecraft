@@ -99,10 +99,15 @@ const probe = (x: number, z: number, calm: number): number =>
   terrainHeightWithForcedCalm(x, z, SEED, calm);
 
 // Mirror of the production sizing decision, so the test checks the exact
-// rings players walk.
+// rings players walk. Three arms size every pad; the sizing is pure in the row,
+// so each row is sized once for the file.
+const survivingROutByRow = new Map<CalmPadRow, number | null>();
 function survivingROut(row: CalmPadRow): number | null {
+  if (survivingROutByRow.has(row)) return survivingROutByRow.get(row) ?? null;
   const width = calmSkirtWidth(row.x, row.z, row.rIn, row.baseROut - row.rIn, row.optional, probe);
-  return width === null ? null : row.rIn + width;
+  const rOut = width === null ? null : row.rIn + width;
+  survivingROutByRow.set(row, rOut);
+  return rOut;
 }
 
 const openWorldPads = collectCalmAnchorPads().filter((row) => row.x <= DUNGEON_X_THRESHOLD);
@@ -126,6 +131,19 @@ function hAt(x: number, z: number): number {
     heightCache.set(key, h);
   }
   return h;
+}
+
+// The water surface at a lattice point, cached like the height: both walks read
+// it for every neighbour they consider, and it cost as much as the heights did.
+const waterCache = new Map<string, number>();
+function wAt(x: number, z: number): number {
+  const key = `${x},${z}`;
+  let wl = waterCache.get(key);
+  if (wl === undefined) {
+    wl = waterLevelAt(x, z, SEED);
+    waterCache.set(key, wl);
+  }
+  return wl;
 }
 
 // True when a player can travel road -> (x, z). Searched in REVERSE (pad
@@ -159,7 +177,7 @@ function reachesRoad(x0: number, z0: number): boolean {
         const key = `${nx},${nz}`;
         if (seen.has(key)) continue;
         const hNext = hAt(nx, nz);
-        const wl = waterLevelAt(nx, nz, SEED);
+        const wl = wAt(nx, nz);
         const swim = wl !== -Infinity && hNext < wl;
         const forwardClimb = hHere - hNext;
         const forwardDrop = hNext - hHere;
@@ -217,7 +235,7 @@ function escapesPad(
   row: Pick<CalmPadRow, 'x' | 'z'>,
   rOut: number,
   h: (x: number, z: number) => number,
-  waterAt: (x: number, z: number) => number = (x, z) => waterLevelAt(x, z, SEED),
+  waterAt: (x: number, z: number) => number = wAt,
 ): boolean {
   const limit = rOut + PAD_ESCAPE_MARGIN;
   const sx = Math.round(row.x / WALK_CELL) * WALK_CELL;
