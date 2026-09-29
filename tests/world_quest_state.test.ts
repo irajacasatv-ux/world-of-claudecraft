@@ -7,6 +7,7 @@ import { gliderScoreboardId } from '../src/sim/glider_scoreboards';
 import { Sim } from '../src/sim/sim';
 import { takeWorldQuestDeliveryCargo } from '../src/sim/world_quest_delivery';
 import { freshWorldQuestRotationCache, rotationBindings } from '../src/sim/world_quest_state';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 describe('world quest coordinator adapters', () => {
   it('bounds personal records and preserves daily and lifetime best times independently', () => {
@@ -52,7 +53,8 @@ describe('world quest coordinator adapters', () => {
   });
 
   it('drops only the requested player cargo and ignores missing players', () => {
-    const sim = new Sim({ seed: 42, playerClass: 'warrior' });
+    // The cargo is a bare field on each player, so no overworld content is needed.
+    const sim = new Sim({ seed: 42, playerClass: 'warrior', world: EMPTY_TEST_WORLD });
     const other = sim.addPlayer('mage', 'Other');
     takeWorldQuestDeliveryCargo(sim.ctx, sim.player);
     expect(sim.dropWorldQuestDeliveryCargo(987654)).toBe(false);
