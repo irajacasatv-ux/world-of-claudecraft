@@ -9,6 +9,13 @@ import {
 } from '../src/sim/materials_vault';
 import { Sim } from '../src/sim/sim';
 import { type InvSlot, TICK_RATE } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
+
+// The save and load cases read only the character's own containers, so their
+// Sims run on the empty world rather than the full overworld.
+function makeWorld() {
+  return new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true, world: EMPTY_TEST_WORLD });
+}
 
 describe('bind-on-pickup party trade marker cleanup', () => {
   it('retires expired sigil markers and restacks copies that are otherwise identical', () => {
@@ -230,7 +237,7 @@ describe('bind-on-pickup party trade marker cleanup', () => {
   });
 
   it('normalizes the saved character without a realm-wide tick sweep', () => {
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+    const sim = makeWorld();
     const pid = sim.addPlayer('warrior', 'Alice');
     const meta = sim.ctx.players.get(pid);
     expect(meta).toBeDefined();
@@ -256,7 +263,7 @@ describe('bind-on-pickup party trade marker cleanup', () => {
   });
 
   it('retires and restacks expired persisted copies during load and resave', () => {
-    const seed = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+    const seed = makeWorld();
     const seedPid = seed.addPlayer('warrior', 'Alice');
     const state = seed.serializeCharacter(seedPid);
     expect(state).toBeDefined();
@@ -284,7 +291,7 @@ describe('bind-on-pickup party trade marker cleanup', () => {
       ],
       upgrades: 2,
     };
-    const loaded = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+    const loaded = makeWorld();
     loaded.tick();
 
     const loadedPid = loaded.addPlayer('warrior', 'Alice', { state });
