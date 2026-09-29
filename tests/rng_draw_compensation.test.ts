@@ -11,12 +11,21 @@ import { runEffects } from '../src/sim/combat/effect_dispatch';
 import { repeatDawnEcho } from '../src/sim/combat/paladin_talents';
 import type { PlayerMeta, ResolvedAbility } from '../src/sim/sim';
 import { Sim } from '../src/sim/sim';
+import { EMPTY_TEST_WORLD } from './sim_shared';
+
+// Both cases count the draws of one heal call on the caster itself, so the
+// Sims run on the empty world: no overworld NPC or camp is ever reached.
 
 type TestSim = Sim & { players: Map<number, PlayerMeta> };
 
 describe('rng draw-order compensations (max-health heal path)', () => {
   it('lay_on_hands consumes exactly two draws: the discarded roll and the burned crit', () => {
-    const sim = new Sim({ seed: 31, playerClass: 'paladin', autoEquip: true }) as TestSim;
+    const sim = new Sim({
+      seed: 31,
+      playerClass: 'paladin',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    }) as TestSim;
     sim.setPlayerLevel(20);
     const p = sim.player;
     const meta = sim.players.get(p.id);
@@ -48,7 +57,12 @@ describe('rng draw-order compensations (max-health heal path)', () => {
     // repeatDawnEcho is the real caller (Dawn Echo copies an already-resolved
     // heal at 40%); pin it at zero draws so a future change cannot silently
     // add a roll (or a needless compensation) and shift the shared stream.
-    const sim = new Sim({ seed: 31, playerClass: 'paladin', autoEquip: true }) as TestSim;
+    const sim = new Sim({
+      seed: 31,
+      playerClass: 'paladin',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    }) as TestSim;
     sim.setPlayerLevel(20);
     const p = sim.player;
     p.hp = Math.floor(p.maxHp / 2);
