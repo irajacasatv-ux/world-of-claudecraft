@@ -14,7 +14,7 @@
 
 import { describe, expect, it } from 'vitest';
 import { BOOTCAMP_COURSE_CHECKPOINTS } from '../src/sim/content/proving_shore';
-import { DUNGEONS, GROUND_OBJECTS, QUESTS } from '../src/sim/data';
+import { BUILTIN_WORLD, DUNGEONS, GROUND_OBJECTS, QUESTS } from '../src/sim/data';
 import {
   hasInteractObjectCredit,
   interactObjectCreditKey,
@@ -24,13 +24,22 @@ import {
 import { isObjectOpenedByViewer } from '../src/sim/quests/opened_object_view';
 import { sanitizeRemovedZone1Content } from '../src/sim/removed_zone1_content';
 import { Sim } from '../src/sim/sim';
-import type { Entity, QuestProgress } from '../src/sim/types';
+import type { Entity, QuestProgress, WorldContent } from '../src/sim/types';
 
 type AnySim = Sim & Record<string, any>;
 type AnyEntity = Entity & Record<string, any>;
 
 const BELLS_QUEST = 'q_fs_the_three_bells';
 const BELL_ITEM = 'gullhaven_watchbell';
+
+// The bell line needs only its giver and its bells, so the Sims run on a world
+// holding just those (the rest of the overworld's population bought nothing).
+const BELL_WORLD: WorldContent = {
+  ...BUILTIN_WORLD,
+  camps: [],
+  npcs: { bellkeeper_tam: BUILTIN_WORLD.npcs.bellkeeper_tam },
+  groundObjects: BUILTIN_WORLD.groundObjects.filter((object) => object.itemId === BELL_ITEM),
+};
 
 function bellWorld(): {
   sim: AnySim;
@@ -39,7 +48,7 @@ function bellWorld(): {
   bells: AnyEntity[];
   qp: QuestProgress;
 } {
-  const sim = new Sim({ seed: 11, playerClass: 'warrior' }) as AnySim;
+  const sim = new Sim({ seed: 11, playerClass: 'warrior', world: BELL_WORLD }) as AnySim;
   const player = sim.player as AnyEntity;
   const meta = sim.ctx.resolve(undefined)?.meta as any;
   // The prerequisite chain, then the real accept path (so resolvedCounts is
@@ -465,7 +474,12 @@ describe('the ledger survives a save/load round-trip', () => {
       interactObjectCreditKey(0, bells[0].pos),
     ]);
 
-    const reloaded = new Sim({ seed: 11, playerClass: 'warrior', noPlayer: true }) as AnySim;
+    const reloaded = new Sim({
+      seed: 11,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: BELL_WORLD,
+    }) as AnySim;
     const rePid = reloaded.addPlayer('warrior', 'Reload', { state: saved });
     const reQp = reloaded.meta(rePid)?.questLog.get(BELLS_QUEST) as QuestProgress;
     const reBells = [...reloaded.entities.values()].filter(
@@ -488,7 +502,12 @@ describe('the load path normalizes an untrusted ledger', () => {
     const saved = JSON.parse(JSON.stringify(donor.sim.serializeCharacter(donor.sim.playerId)));
     const row = saved.questLog.find((q: any) => q.questId === BELLS_QUEST);
     row.creditedObjects = creditedObjects;
-    const sim = new Sim({ seed: 11, playerClass: 'warrior', noPlayer: true }) as AnySim;
+    const sim = new Sim({
+      seed: 11,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: BELL_WORLD,
+    }) as AnySim;
     const pid = sim.addPlayer('warrior', 'Reload', { state: saved });
     return sim.meta(pid)?.questLog.get(BELLS_QUEST);
   }

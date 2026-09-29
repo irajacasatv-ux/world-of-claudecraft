@@ -13,6 +13,7 @@ import { VARKHUL_BOSS_ID } from '../src/sim/ignivar_raid_ids';
 import { Sim } from '../src/sim/sim';
 import { type Entity, isMechWearer } from '../src/sim/types';
 import { codeWithoutLineComments } from './helpers/code_without_line_comments';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 type PrewarmEntityHost = {
   sim: { player: Entity };
@@ -32,7 +33,13 @@ function varkhulTwinEntity(player: Entity): Entity {
 }
 
 function cosmeticPlayer(): Entity {
-  const player = new Sim({ seed: 42, playerClass: 'warrior', autoEquip: true }).player;
+  // Only the player entity is read, so the Sim runs on the empty world.
+  const player = new Sim({
+    seed: 42,
+    playerClass: 'warrior',
+    autoEquip: true,
+    world: EMPTY_TEST_WORLD,
+  }).player;
   player.skinCatalog = 'mech';
   player.weaponSkinId = 'ice_fang_sword';
   player.mainhandItemId ??= 'rusty_sword';

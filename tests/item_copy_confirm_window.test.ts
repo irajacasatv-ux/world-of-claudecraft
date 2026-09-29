@@ -26,6 +26,7 @@ import { SUNDERED_ESSENCE_YIELD } from '../src/sim/professions/sundering';
 import { type PlayerMeta, Sim } from '../src/sim/sim';
 import type { Entity } from '../src/sim/types';
 import { completeEnchantFamilyCast } from './helpers/enchant_family_cast';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // The same raid-won epic the sunder suite drives (id frozen; renders as
 // Bonewrought Dreadhelm).
@@ -33,7 +34,8 @@ const RAID_EPIC = 'crownforged_dreadhelm';
 const NOT_HELD = 'You are not holding that item.';
 
 function makeSim(seed = 42): Sim {
-  return new Sim({ seed, playerClass: 'warrior', autoEquip: false });
+  // The copy works on the player's own bags, so the Sim runs on the empty world.
+  return new Sim({ seed, playerClass: 'warrior', autoEquip: false, world: EMPTY_TEST_WORLD });
 }
 
 function playerOf(sim: Sim): { p: Entity; meta: PlayerMeta; pid: number } {

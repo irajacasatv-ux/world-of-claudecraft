@@ -11,6 +11,7 @@ import { describe, expect, it } from 'vitest';
 import { cellOfIndex, layoutBagCells, moveStackToCell } from '../src/sim/inventory_order';
 import { Sim } from '../src/sim/sim';
 import type { InvSlot } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const CAP = 8;
 const stack = (itemId: string, slot?: number): InvSlot => ({
@@ -122,8 +123,13 @@ describe('moveStackToCell', () => {
 
 describe('Sim.moveInventoryItem', () => {
   const makeSim = (): { sim: Sim & Record<string, any>; pid: number } => {
-    const sim = new Sim({ seed: 9, playerClass: 'warrior', noPlayer: true }) as Sim &
-      Record<string, any>;
+    // The sort works on the player's own bags, so the Sim runs on the empty world.
+    const sim = new Sim({
+      seed: 9,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    }) as Sim & Record<string, any>;
     const pid = sim.addPlayer('warrior', 'Sorter');
     return { sim, pid };
   };

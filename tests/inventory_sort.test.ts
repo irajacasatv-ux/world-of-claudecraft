@@ -17,6 +17,7 @@ import { MATERIAL_GRADES } from '../src/sim/professions/material_grades';
 import { Sim } from '../src/sim/sim';
 import type { InvSlot, ItemDef } from '../src/sim/types';
 import { adoptedTrophyIds } from './helpers/adopted_trophy_ids';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // Synthetic defs for the ladder arms; the material-grade family arms use REAL
 // grade-table ids (elderwood_log / fine_elderwood_log / copper_ore /
@@ -690,8 +691,13 @@ describe('sortInventoryStacks against the REAL catalog', () => {
 
 describe('Sim.sortInventory (the command against the real sim)', () => {
   const makeSim = (): { sim: Sim & Record<string, any>; pid: number } => {
-    const sim = new Sim({ seed: 9, playerClass: 'warrior', noPlayer: true }) as Sim &
-      Record<string, any>;
+    // The sort works on the player's own bags, so the Sims run on the empty world.
+    const sim = new Sim({
+      seed: 9,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    }) as Sim & Record<string, any>;
     const pid = sim.addPlayer('warrior', 'Sorter');
     return { sim, pid };
   };
@@ -738,7 +744,8 @@ describe('Sim.sortInventory (the command against the real sim)', () => {
   it('resolves the local player when called with no pid (the offline IWorld arm)', () => {
     // IWorldInventory.sortInventory() takes no arguments, so the offline host
     // always runs the pid-undefined resolution.
-    const sim = new Sim({ seed: 11, playerClass: 'warrior' }) as Sim & Record<string, any>;
+    const sim = new Sim({ seed: 11, playerClass: 'warrior', world: EMPTY_TEST_WORLD }) as Sim &
+      Record<string, any>;
     const meta = sim.players.values().next().value;
     if (!meta) throw new Error('no local player');
     meta.inventory.length = 0;

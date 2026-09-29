@@ -24,6 +24,7 @@ import type { Rng } from '../src/sim/rng';
 import { type PlayerMeta, Sim } from '../src/sim/sim';
 import { CRAFT_CAST_ID, type Entity, type SimEvent } from '../src/sim/types';
 import { terrainHeight } from '../src/sim/world';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const SEED = 4242;
 // The free rung-0 tome and the rung-50 rare band the deed derives from.
@@ -48,7 +49,8 @@ function recipeById(id: string) {
 }
 
 function makeSim(): Sim {
-  return new Sim({ seed: SEED, playerClass: 'warrior', autoEquip: false });
+  // Inscription works on the player's own bags and gear, so the Sim runs on the empty world.
+  return new Sim({ seed: SEED, playerClass: 'warrior', autoEquip: false, world: EMPTY_TEST_WORLD });
 }
 
 function playerOf(sim: Sim): { p: Entity; meta: PlayerMeta; pid: number } {
