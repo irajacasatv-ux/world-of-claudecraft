@@ -37,6 +37,9 @@ const BAD_NAME_LINE = 'That name cannot be inscribed on the work.';
 const NEEDS_DEED_LINE = 'You need a Deed of Making to make that work a legend.';
 const LOCKED_LINE = 'A material needed for perfecting is locked.';
 
+// Every case forces its rolls (forceRoll) and reads none from the seed, so one
+// seed on the empty world serves the whole file: each case used to pay its own
+// seed's collider build, and the reload case a full-world Sim.
 function world(seed = 5): { sim: Sim; pid: number; meta: PlayerMeta; e: Entity } {
   const sim = new Sim({ seed, playerClass: 'warrior', autoEquip: false, world: EMPTY_TEST_WORLD });
   const pid = sim.playerId;
@@ -174,7 +177,7 @@ describe('the content the promotion consumes', () => {
 
 describe('the promotion success path (the real producer end to end)', () => {
   it('consumes ONE deed, stamps quality+name, keeps stats byte-identical, draws zero', () => {
-    const w = promoter(71);
+    const w = promoter();
     const { sim, pid, meta } = w;
     sim.addItemInstance(APEX_NECK, { signer: 'Crafter' }, pid, 1);
     const ref = bagRefOf(meta, APEX_NECK);
@@ -232,7 +235,7 @@ describe('the promotion success path (the real producer end to end)', () => {
   });
 
   it('the quality override and name persist through serializeCharacter -> addPlayer', () => {
-    const w = promoter(72);
+    const w = promoter();
     const { sim, pid, meta } = w;
     sim.addItemInstance(APEX_NECK, { signer: 'Crafter' }, pid, 1);
     const ref = bagRefOf(meta, APEX_NECK);
@@ -242,7 +245,12 @@ describe('the promotion success path (the real producer end to end)', () => {
     const state = sim.serializeCharacter(pid);
     expect(state).toBeTruthy();
 
-    const fresh = new Sim({ seed: 72, playerClass: 'warrior', noPlayer: true });
+    const fresh = new Sim({
+      seed: 5,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const loadedPid = fresh.addPlayer('warrior', 'Reloaded', { state: state ?? undefined });
     const loadedMeta = fresh.players.get(loadedPid) as PlayerMeta;
     const loaded = loadedMeta.inventory.find((s) => s.itemId === APEX_NECK);
@@ -256,7 +264,7 @@ describe('the promotion success path (the real producer end to end)', () => {
     // The facet arm is perfectItem(ref, name?) resolving the PRIMARY player
     // (the offline-host shape); the server's pid-explicit arm is
     // perfectItemAs(pid, ref, name?), which every other case here drives.
-    const w = promoter(73);
+    const w = promoter();
     const { sim, pid, meta } = w;
     sim.addItemInstance(APEX_NECK, {}, pid, 1);
     const ref = bagRefOf(meta, APEX_NECK);
@@ -267,7 +275,7 @@ describe('the promotion success path (the real producer end to end)', () => {
   });
 
   it('promotes a WORN Perfected copy in place: stats unmoved, peer mirror rebuilt', () => {
-    const w = promoter(74);
+    const w = promoter();
     const { sim, pid, meta, e } = w;
     sim.setPlayerLevel(20);
     sim.addItem(APEX_NECK, 1, pid);
@@ -302,7 +310,7 @@ describe('the promotion success path (the real producer end to end)', () => {
     // The 2026-08-27 review: without a markItemDiscovered at the stamp site
     // the quality:legendary mark (a real deed trigger, col_first_legendary)
     // only landed at the NEXT LOGIN's retro seed pass.
-    const w = promoter(75);
+    const w = promoter();
     const { sim, pid, meta } = w;
     sim.addItemInstance(APEX_NECK, {}, pid, 1);
     const ref = bagRefOf(meta, APEX_NECK);
@@ -321,7 +329,7 @@ describe('the promotion success path (the real producer end to end)', () => {
   });
 
   it('the shared view empties the bill once promoted (no act is left to promise)', () => {
-    const w = promoter(78);
+    const w = promoter();
     const { sim, pid, meta } = w;
     sim.addItemInstance(APEX_NECK, {}, pid, 1);
     const ref = bagRefOf(meta, APEX_NECK);
@@ -344,7 +352,7 @@ describe('the promotion success path (the real producer end to end)', () => {
   });
 
   it('an INSTANCED owner keeps only the personal event: no zone copies at all', () => {
-    const w = promoter(79);
+    const w = promoter();
     const { sim, pid, meta, e } = w;
     sim.addItemInstance(APEX_NECK, {}, pid, 1);
     const ref = bagRefOf(meta, APEX_NECK);
@@ -361,7 +369,7 @@ describe('the promotion success path (the real producer end to end)', () => {
   });
 
   it('fans one zone copy to every overworld player in the zone, the owner first, far zones excluded', () => {
-    const w = promoter(80);
+    const w = promoter();
     const { sim, pid, meta, e } = w;
     const near = sim.addPlayer('mage', 'Nearby');
     const far = sim.addPlayer('priest', 'Farhand');
@@ -409,7 +417,7 @@ describe('the promotion success path (the real producer end to end)', () => {
     // Perfected payload with no rolled record is a legal input; the
     // promotion must mint { quality: 'legendary' } cleanly, with no stats
     // key, and readers must tolerate the stats-free record.
-    const w = promoter(76);
+    const w = promoter();
     const { sim, pid, meta } = w;
     sim.addItemInstance(APEX_NECK, { perfected: true, boundTo: pid }, pid, 1);
     const ref = bagRefOf(meta, APEX_NECK);
@@ -429,14 +437,14 @@ describe('the promotion success path (the real producer end to end)', () => {
 describe('the promotion deny ladder: each arm red-direction, zero draws, nothing consumed', () => {
   /** A promoter one real walk in: the bagged apex copy is Perfected and the
    *  shared draw counter is armed. */
-  function walked(seed: number): ReturnType<typeof world> & {
+  function walked(): ReturnType<typeof world> & {
     ref: { bag: number; itemId: string };
     draws: () => number;
     base: number;
     rev: number;
     forged: number;
   } {
-    const w = promoter(seed);
+    const w = promoter();
     w.sim.addItemInstance(APEX_NECK, { signer: 'Crafter' }, w.pid, 1);
     const ref = bagRefOf(w.meta, APEX_NECK);
     const draws = walkToPerfected(w, ref);
@@ -468,7 +476,7 @@ describe('the promotion deny ladder: each arm red-direction, zero draws, nothing
   }
 
   it('a missing name (undefined and empty) refuses with the needs-a-name line', () => {
-    const w = walked(81);
+    const w = walked();
     w.sim.perfectItemAs(w.pid, w.ref);
     expectDenied(w, NEEDS_NAME_LINE, 2);
     w.sim.perfectItemAs(w.pid, w.ref, '');
@@ -476,7 +484,7 @@ describe('the promotion deny ladder: each arm red-direction, zero draws, nothing
   });
 
   it('a bad-shape name refuses with the inscription line', () => {
-    const w = walked(82);
+    const w = walked();
     for (const bad of ['1Blade', 'A', 'A'.repeat(MAX_LEGENDARY_NAME_LENGTH + 1), 'Bad_Name']) {
       w.sim.perfectItemAs(w.pid, w.ref, bad);
       expectDenied(w, BAD_NAME_LINE, 2);
@@ -484,7 +492,7 @@ describe('the promotion deny ladder: each arm red-direction, zero draws, nothing
   });
 
   it('a genuine deed shortfall refuses with the deed line', () => {
-    const w = walked(83);
+    const w = walked();
     // Removing the deed stack SPLICES its cell out, shifting the apex cell
     // down one: re-derive the index-plus-id ref (the item_copy_ref
     // discipline this fixture itself relies on).
@@ -498,7 +506,7 @@ describe('the promotion deny ladder: each arm red-direction, zero draws, nothing
   });
 
   it('a lock-only deed shortfall refuses with the DEDICATED locked line', () => {
-    const w = walked(84);
+    const w = walked();
     const deedSlot = w.meta.inventory.find((s) => s.itemId === DEED);
     expect(deedSlot).toBeTruthy();
     if (deedSlot) deedSlot.instance = { locked: true };
@@ -511,7 +519,7 @@ describe('the promotion deny ladder: each arm red-direction, zero draws, nothing
   });
 
   it('an already-legendary copy refuses with the already line, deed intact', () => {
-    const w = walked(85);
+    const w = walked();
     w.sim.perfectItemAs(w.pid, w.ref, NAME);
     expect(w.sim.countItem(DEED, w.pid), 'the promotion itself spent one').toBe(1);
     expect(w.meta.deedStats.counters.legendariesForged).toBe(1);
@@ -529,7 +537,7 @@ describe('the promotion deny ladder: each arm red-direction, zero draws, nothing
   });
 
   it('the skill gate guards the promotion too (one gate, both acts)', () => {
-    const w = walked(86);
+    const w = walked();
     w.meta.craftSkills.jewelcrafting = PERFECTING_SKILL_REQ - 1;
     w.sim.drainEvents();
     w.sim.perfectItemAs(w.pid, w.ref, NAME);
@@ -543,7 +551,7 @@ describe('the promotion deny ladder: each arm red-direction, zero draws, nothing
   it('a denial never bumps wireRev on ANY arm; the success pair is pinned above', () => {
     // Every arm in this describe asserts it through expectDenied; this case
     // keeps the two cheapest arms back to back so the claim reads in one place.
-    const w = walked(87);
+    const w = walked();
     w.sim.perfectItemAs(w.pid, w.ref); // needs-a-name
     w.sim.perfectItemAs(w.pid, w.ref, '1Blade'); // bad shape
     expect(w.meta.wireRev).toBe(w.rev);
@@ -578,7 +586,7 @@ describe('the equip interplay: a promoted copy counts on BOTH rules', () => {
     // second promoted copy of a worn promoted def is refused AT THE MINT
     // (burning the deed and the name on a copy that could never be worn
     // beside its twin would be the alternative). Zero draws, deed intact.
-    const w = promoter(91);
+    const w = promoter();
     const { sim, pid, meta } = w;
     sim.setPlayerLevel(20);
     // First copy: the REAL walk, promoted, worn on ring1.
@@ -612,7 +620,7 @@ describe('the equip interplay: a promoted copy counts on BOTH rules', () => {
     // The unique rule scans WORN slots, so promoting two bagged copies of
     // one def is legal while neither is worn; the equip path then refuses
     // the second copy, judging the incoming unit's own payload.
-    const w = promoter(94);
+    const w = promoter();
     const { sim, pid, meta } = w;
     sim.setPlayerLevel(20);
     sim.addItemInstance(APEX_RING, {}, pid, 1);
@@ -648,7 +656,7 @@ describe('the equip interplay: a promoted copy counts on BOTH rules', () => {
     // just an illegal worn set). The worn arm now answers the equip path's
     // sub-cap with the copy's own slot excluded: the second promotion
     // refuses with the equip path's exact literal, zero draws, deed intact.
-    const w = promoter(95);
+    const w = promoter();
     const { sim, pid, meta } = w;
     sim.setPlayerLevel(20);
     sim.addItem(APEX_RING, 1, pid);
@@ -673,7 +681,7 @@ describe('the equip interplay: a promoted copy counts on BOTH rules', () => {
   });
 
   it('a worn promoted piece plus an ORDINARY Masterwrought piece stays legal inside cap 2', () => {
-    const w = promoter(92);
+    const w = promoter();
     const { sim, pid, meta } = w;
     sim.setPlayerLevel(20);
     sim.addItemInstance(APEX_NECK, {}, pid, 1);
@@ -690,7 +698,7 @@ describe('the equip interplay: a promoted copy counts on BOTH rules', () => {
   });
 
   it('a worn promoted piece refuses a SECOND legendary-effective piece (the sub-cap)', () => {
-    const w = promoter(93);
+    const w = promoter();
     const { sim, pid, meta } = w;
     sim.setPlayerLevel(20);
     sim.addItemInstance(APEX_NECK, {}, pid, 1);
