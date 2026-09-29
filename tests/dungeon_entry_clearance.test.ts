@@ -23,6 +23,7 @@ import {
 import { MAX_AGGRO_RADIUS } from '../src/sim/mob/locomotion';
 import { Sim } from '../src/sim/sim';
 import type { Entity } from '../src/sim/types';
+import { waterLevel } from '../src/sim/world';
 
 const NIGHTLY_SWEEP = process.env.WOC_NIGHTLY_SWEEP === '1';
 
@@ -59,13 +60,21 @@ describe('dungeon door clearance: no camp mob spawns on an overworld door', () =
   // shipped one: earlier this passed only because seed 20061 happened to land every
   // door-adjacent mob at exactly the ring edge (other seeds put mobs 14-18 yd from a
   // door). Loop several seeds and assert exact clearance (no tolerance slack).
-  // Each PR builds the shipped seed and seed 2024, the one of the five whose
-  // spiral walks a mob back into a ring when the re-projection is dropped (its
-  // case also checks it still lands a mob on a ring, so a camp edit cannot
-  // quietly leave it proving nothing); the nightly sweep flag builds all five
-  // (each is a full overworld of its own).
-  const REPRESENTATIVE_SEED = 2024;
-  for (const seed of NIGHTLY_SWEEP ? [7, 99, 2024, 20061, 31337] : [20061, REPRESENTATIVE_SEED]) {
+  // Projecting FIRST is what keeps a ring mob on safe ground: findSafePos then
+  // resolves the ring-edge point itself, where resolving the raw point deep in the
+  // ring and pushing the result out lands the mob on ground nothing checked. So a
+  // mob on a ring must also pass the spawner's safe-ground test, at the deepest
+  // water floor any camp mob may stand on (a swimmer's, half a yard under the line).
+  // Each PR builds the shipped seed and seed 4, which drops a ring mob inside a ring
+  // without the re-projection and into deep water without the first projection (its
+  // case also checks it still lands a mob on a ring, so a camp edit cannot quietly
+  // leave it proving nothing); the nightly sweep flag builds it and five more (each
+  // is a full overworld of its own).
+  const REPRESENTATIVE_SEED = 4;
+  const DEEPEST_CAMP_FLOOR = waterLevel() - 0.5;
+  for (const seed of NIGHTLY_SWEEP
+    ? [REPRESENTATIVE_SEED, 7, 99, 2024, 20061, 31337]
+    : [20061, REPRESENTATIVE_SEED]) {
     it(`seed ${seed}: no camp mob spawns within the clear radius of any dungeon door`, () => {
       const sim = new Sim({ seed, playerClass: 'warrior', autoEquip: true });
       const mobs = [...(sim as any).entities.values()].filter((e: Entity) => e.kind === 'mob');
@@ -74,7 +83,14 @@ describe('dungeon door clearance: no camp mob spawns on an overworld door', () =
       for (const mob of mobs) {
         for (const door of DUNGEON_DOORS) {
           const d = Math.hypot(mob.pos.x - door.x, mob.pos.z - door.z);
-          if (Math.abs(d - DOOR_CLEAR_RADIUS) <= 1e-6) onRing++;
+          if (Math.abs(d - DOOR_CLEAR_RADIUS) <= 1e-6) {
+            onRing++;
+            const safe = sim.findSafePos(mob.pos.x, mob.pos.z, DEEPEST_CAMP_FLOOR);
+            expect(
+              safe,
+              `${mob.name} on the ring of door (${door.x},${door.z}) stands on unsafe ground`,
+            ).toEqual({ x: mob.pos.x, z: mob.pos.z });
+          }
           // Re-projected mobs land exactly on the ring, so allow float epsilon only
           // (1e-6, sub-micron): this is not tolerance slack, it is IEEE rounding on
           // the exact-ring point (e.g. 19.999999999999996).
