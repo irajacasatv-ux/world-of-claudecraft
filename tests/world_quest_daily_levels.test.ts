@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { applyQuestSelfWire, type QuestSelfMirrors } from '../src/net/quest_snapshot_wire';
-import { WORLD_QUESTS_BY_ID } from '../src/sim/data';
+import { BUILTIN_WORLD, WORLD_QUESTS_BY_ID } from '../src/sim/data';
 import { Sim } from '../src/sim/sim';
 import type { WorldQuestProgress } from '../src/sim/types';
 import {
@@ -20,9 +20,19 @@ import {
 } from '../src/ui/world_quest_ley_view';
 import { buildWorldQuestMatch3View } from '../src/ui/world_quest_match3_view';
 import { buildWorldQuestPuzzleView } from '../src/ui/world_quest_puzzle_view';
+import { EMPTY_TEST_WORLD } from './sim_shared';
+
+// The ley cache and the candy box are the only overworld content these boards
+// reach for; the rest of the world only slowed every Sim this file builds.
+const WORLD = {
+  ...EMPTY_TEST_WORLD,
+  groundObjects: BUILTIN_WORLD.groundObjects.filter(
+    (object) => object.itemId === 'leyline_cache' || object.itemId === 'confection_game_box',
+  ),
+};
 
 function enter(id: string, day = '2026-08-31') {
-  const sim = new Sim({ seed: 991, playerClass: 'warrior', autoEquip: true });
+  const sim = new Sim({ seed: 991, playerClass: 'warrior', autoEquip: true, world: WORLD });
   const quest = WORLD_QUESTS_BY_ID[id];
   sim.setPlayerLevel(30);
   sim.resetDay = day;
@@ -177,7 +187,7 @@ describe('daily world quest integration', () => {
     expect(progress.match3Moves).toBe(1);
     expect(progress.match3Board).not.toEqual(initial);
     const state = sim.serializeCharacter(sim.playerId)!;
-    const restored = new Sim({ seed: 991, playerClass: 'warrior', noPlayer: true });
+    const restored = new Sim({ seed: 991, playerClass: 'warrior', noPlayer: true, world: WORLD });
     restored.resetDay = sim.resetDay;
     const pid = restored.addPlayer('warrior', 'Candy', { state });
     expect(restored.meta(pid)!.worldQuestLog.get(quest.id)).toEqual(progress);
@@ -208,7 +218,7 @@ describe('daily world quest integration', () => {
     const initialRotations = [...progress.puzzleRotations!];
     sim.rotateWorldQuestPuzzleTile(quest.id, 0);
     const saved = sim.serializeCharacter(sim.playerId)!;
-    const restored = new Sim({ seed: 991, playerClass: 'warrior', noPlayer: true });
+    const restored = new Sim({ seed: 991, playerClass: 'warrior', noPlayer: true, world: WORLD });
     restored.resetDay = sim.resetDay;
     const pid = restored.addPlayer('warrior', 'Ley', { state: saved });
     const { puzzleExpiresAt: _deadline, ...durableProgress } = progress;
