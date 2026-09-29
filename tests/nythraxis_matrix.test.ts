@@ -21,6 +21,12 @@ describe('Nythraxis matrix DPS rotations', () => {
     const outputDirectory = mkdtempSync(join(tmpdir(), 'nythraxis-matrix-test-'));
     const outputPath = join(outputDirectory, 'result.json');
     try {
+      // One child, at the NON-default shard (1 of 2): Monte Carlo mode shards
+      // seed samples, so this shard must hold exactly the second sample (seed 2)
+      // across all four plans. Shard 0 would also be what an unsharded or
+      // index-blind filter returns first, so it proves less; one child at shard
+      // 1 pins the selection that two children (shard 0, then shard 1) pinned,
+      // at half the Monte Carlo fights.
       execFileSync(
         process.execPath,
         [resolve('node_modules/tsx/dist/cli.mjs'), 'scripts/nythraxis_matrix.ts'],
@@ -30,7 +36,7 @@ describe('Nythraxis matrix DPS rotations', () => {
             ...process.env,
             MATRIX_TANK_MC_RUNS: '2',
             MATRIX_SHARD_COUNT: '2',
-            MATRIX_SHARD_INDEX: '0',
+            MATRIX_SHARD_INDEX: '1',
             MATRIX_OUTPUT_PATH: outputPath,
           },
           stdio: 'pipe',
@@ -58,7 +64,13 @@ describe('Nythraxis matrix DPS rotations', () => {
       expect(report.sharedTankGear).toHaveLength(12);
       expect(report.sharedTankGear.filter((id) => ITEMS[id]?.masterwrought)).toHaveLength(2);
       expect(report.sharedTankGear.some((id) => ITEMS[id]?.slot === 'feet')).toBe(true);
-      expect(report.runs.map((run) => run.seed)).toEqual([1, 1, 1, 1]);
+      expect(report.runs.map((run) => run.seed)).toEqual([2, 2, 2, 2]);
+      expect(report.runs.map((run) => run.key.split('|')[0])).toEqual([
+        'protection_warrior',
+        'protection_paladin',
+        'feral_druid_tank',
+        'stonebound_shaman',
+      ]);
 
       const expectedRows = {
         protection_warrior: {
@@ -142,44 +154,15 @@ describe('Nythraxis matrix DPS rotations', () => {
       expect(report.runs[3].actors.stonebound_shaman.successfulCasts.stormstrike).toBeGreaterThan(
         0,
       );
-
-      const secondShardPath = join(outputDirectory, 'result-shard-1.json');
-      execFileSync(
-        process.execPath,
-        [resolve('node_modules/tsx/dist/cli.mjs'), 'scripts/nythraxis_matrix.ts'],
-        {
-          cwd: process.cwd(),
-          env: {
-            ...process.env,
-            MATRIX_TANK_MC_RUNS: '2',
-            MATRIX_SHARD_COUNT: '2',
-            MATRIX_SHARD_INDEX: '1',
-            MATRIX_OUTPUT_PATH: secondShardPath,
-          },
-          stdio: 'pipe',
-          timeout: 480_000,
-        },
-      );
-      const secondShard = JSON.parse(readFileSync(secondShardPath, 'utf8')) as {
-        run: number;
-        runs: Array<{ seed: number; key: string }>;
-      };
-      expect(secondShard.run).toBe(4);
-      expect(secondShard.runs.map((run) => run.seed)).toEqual([2, 2, 2, 2]);
-      expect(secondShard.runs.map((run) => run.key.split('|')[0])).toEqual([
-        'protection_warrior',
-        'protection_paladin',
-        'feral_druid_tank',
-        'stonebound_shaman',
-      ]);
     } finally {
       rmSync(outputDirectory, { recursive: true, force: true });
     }
-    // Two tsx child runs, each now four Monte Carlo fights (~120s solo since
-    // the bear and Stonebound plans joined); the long-sims lane's slowest
-    // observed runner (run 31290316610, workers=2) killed a child at the old
-    // 120s bound mid-shard, so both child timeouts and this budget carry
-    // lane-contention margin.
+    // One tsx child run of four Monte Carlo fights (~120s solo since the bear
+    // and Stonebound plans joined); the long-sims lane's slowest observed
+    // runner (run 31290316610, workers=2) killed a child at the old 120s bound
+    // mid-shard, so the child timeout and this budget carry lane-contention
+    // margin. The budget still clears two children's worth (it was sized when
+    // this case ran shard 0 and then shard 1).
   }, 1_200_000);
 
   it('moves long caster buffs to prepull instead of recurring combat priority', () => {
