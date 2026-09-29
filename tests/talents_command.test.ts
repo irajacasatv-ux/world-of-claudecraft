@@ -7,6 +7,11 @@ import {
 } from '../src/sim/content/talents';
 import { Sim } from '../src/sim/sim';
 import { MAX_LEVEL, type SimEvent } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
+
+// The readout reads the caller's own talent allocation only, so every Sim runs on
+// the empty world.
+const talentSim = () => new Sim({ seed: 7, playerClass: 'warrior', world: EMPTY_TEST_WORLD });
 
 // "/talents" emits a self-only `error` event (the same self-reply channel /who
 // uses) and returns null, so we collect the text from the next tick's events.
@@ -21,13 +26,13 @@ function readout(sim: Sim, cmd: string): string | undefined {
 
 describe('/talents readout', () => {
   it('reports not-yet-unlocked below the talent level', () => {
-    const sim = new Sim({ seed: 7, playerClass: 'warrior' }); // fresh = level 1
+    const sim = talentSim(); // fresh = level 1
     const text = readout(sim, '/talents');
     expect(text).toBe('You have not unlocked talents yet — they begin at level 5.');
   });
 
   it('shows the specialization and selected/unlocked row counts', () => {
-    const sim = new Sim({ seed: 7, playerClass: 'warrior' });
+    const sim = talentSim();
     sim.setPlayerLevel(MAX_LEVEL); // all six choice rows are available at level 20
     expect(
       sim.applyTalents({
@@ -46,7 +51,7 @@ describe('/talents readout', () => {
   });
 
   it('reports no specialization when none is chosen', () => {
-    const sim = new Sim({ seed: 7, playerClass: 'warrior' });
+    const sim = talentSim();
     sim.setPlayerLevel(MAX_LEVEL);
     expect(
       sim.applyTalents({
@@ -60,7 +65,7 @@ describe('/talents readout', () => {
   });
 
   it('omits the unspent suffix when all rows are selected and aliases resolve', () => {
-    const sim = new Sim({ seed: 7, playerClass: 'warrior' });
+    const sim = talentSim();
     sim.setPlayerLevel(MAX_LEVEL);
     const allocation: TalentAllocation = {
       spec: null,
