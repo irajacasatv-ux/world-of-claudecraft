@@ -28,6 +28,7 @@ import { stationsOfType } from '../src/sim/professions/stations';
 import { type PlayerMeta, Sim } from '../src/sim/sim';
 import type { Entity, SimEvent } from '../src/sim/types';
 import { terrainHeight } from '../src/sim/world';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const SEED = 8181;
 const APEX_RECIPE = 'recipe_stonepot_feast';
@@ -54,7 +55,14 @@ function playerOf(sim: Sim): { p: Entity; meta: PlayerMeta; pid: number } {
  *  exactly one line of its reagents in bags. Everything the resolve gates on is
  *  satisfied HERE so a failure downstream is about the phase's own code. */
 function cookAt(recipeId: string): { sim: Sim; p: Entity; meta: PlayerMeta; pid: number } {
-  const sim = new Sim({ seed: SEED, playerClass: 'warrior', autoEquip: false });
+  // The kitchen is a world service, which the empty world keeps; the camps and
+  // NPCs around it play no part in a craft.
+  const sim = new Sim({
+    seed: SEED,
+    playerClass: 'warrior',
+    autoEquip: false,
+    world: EMPTY_TEST_WORLD,
+  });
   const { p, meta, pid } = playerOf(sim);
   const kitchen = stationsOfType(STATIONS, 'kitchens')[0];
   if (!kitchen) throw new Error('no kitchens station in STATIONS');
