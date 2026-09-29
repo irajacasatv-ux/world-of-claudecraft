@@ -32,6 +32,14 @@ const HULL = EASTBROOK_FERRY_HULL;
 // a lane leg ashore; the nightly keeps the full one-yard pass).
 const NIGHTLY_SWEEP = process.env.WOC_NIGHTLY_SWEEP === '1';
 const LANE_STEP = NIGHTLY_SWEEP ? 1 : 4;
+// That overlap argument is for straight runs. At a bend consecutive poses also
+// turn, so the bow and stern, half a hull out, swing sideways over water the
+// outline's points never revisit: a waypoint of the Eastbrook arrival arc moved
+// seven yards grounds the hull for one yard of the voyage, which the four-yard
+// step steps over. So wherever a PR step turns the heading by more than the
+// bow's one-yard sideways swing (the outline's own spacing), the PR walks that
+// step yard by yard, as the nightly walks the whole lane.
+const FINE_TURN = 2 / HULL.length;
 /** Water the keel line always keeps over the bed (yards), per route: the
  *  Nightbloom run's long western shallows keep about a quarter yard (the
  *  owner-accepted keel-in-sand look), everything else the full margin. */
@@ -102,7 +110,21 @@ describe('the ferry sea lanes', () => {
       const length = transportLaneLength(lane);
       const dry: string[] = [];
       const hits = new Set<string>();
+      const ahead: TransportPose = { x: 0, z: 0, rot: 0 };
+      // How far the heading turns over the PR step that starts at `d`.
+      const stepTurn = (d: number): number => {
+        transportLanePoseAt(lane, d, pose);
+        transportLanePoseAt(lane, Math.min(d + LANE_STEP, length), ahead);
+        return Math.abs(Math.atan2(Math.sin(ahead.rot - pose.rot), Math.cos(ahead.rot - pose.rot)));
+      };
+      const distances: number[] = [];
       for (let d = 0; d <= length; d += LANE_STEP) {
+        distances.push(d);
+        if (LANE_STEP > 1 && stepTurn(d) > FINE_TURN) {
+          for (let e = d + 1; e < d + LANE_STEP && e <= length; e++) distances.push(e);
+        }
+      }
+      for (const d of distances) {
         transportLanePoseAt(lane, d, pose);
         // the waterline hull (about four fifths of the deck's beam) is always
         // over water: sea everywhere under it, never a beach or a spit
