@@ -2,23 +2,41 @@ import { describe, expect, it } from 'vitest';
 import { WORLD_QUESTS_BY_ID } from '../src/sim/data';
 import { CLASSIC_WORLD_QUEST_COMMANDS } from '../src/sim/dev_world_quest';
 import { Sim } from '../src/sim/sim';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
+// The arm reads the world quest catalog and stands the player in the quest's
+// area; no case needs an overworld camp or NPC, so every Sim runs on the empty world.
 describe('dev world quest commands', () => {
   it('rejects developer world quest commands when devCommands is false', () => {
-    const sim = new Sim({ seed: 20061, playerClass: 'warrior', devCommands: false });
+    const sim = new Sim({
+      seed: 20061,
+      playerClass: 'warrior',
+      devCommands: false,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.chat('/dev wq eastbrook_bandits');
     expect(sim.players.get(sim.playerId)?.devWorldQuestCycle).toBeNull();
     expect(sim.players.get(sim.playerId)?.worldQuestLog.has('wq_eastbrook_bandits')).toBe(false);
   });
 
   it('lists world quest commands when typing /dev wq without arguments', () => {
-    const sim = new Sim({ seed: 20061, playerClass: 'warrior', devCommands: true });
+    const sim = new Sim({
+      seed: 20061,
+      playerClass: 'warrior',
+      devCommands: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.chat('/dev wq');
     expect(sim.players.get(sim.playerId)?.devWorldQuestCycle).toBeNull();
   });
 
   it.each(CLASSIC_WORLD_QUEST_COMMANDS)('arms and teleports to /dev %s', (cmd) => {
-    const sim = new Sim({ seed: 20061, playerClass: 'mage', devCommands: true });
+    const sim = new Sim({
+      seed: 20061,
+      playerClass: 'mage',
+      devCommands: true,
+      world: EMPTY_TEST_WORLD,
+    });
     expect(sim.player.level).toBe(1);
 
     sim.chat(`/dev ${cmd}`);
@@ -53,7 +71,12 @@ describe('dev world quest commands', () => {
     { input: '/dev wq wraithwood', expectedId: 'wq_wraithwood_restless' },
     { input: '/dev wq evergarden', expectedId: 'wq_evergarden_watch' },
   ])('arms through alias $input -> $expectedId', ({ input, expectedId }) => {
-    const sim = new Sim({ seed: 20061, playerClass: 'mage', devCommands: true });
+    const sim = new Sim({
+      seed: 20061,
+      playerClass: 'mage',
+      devCommands: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.chat(input);
     sim.tick();
     const meta = sim.players.get(sim.playerId);
