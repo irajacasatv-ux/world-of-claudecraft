@@ -12,6 +12,7 @@ import { ITEMS } from '../src/sim/data';
 import { stationsOfType } from '../src/sim/professions/stations';
 import { Sim } from '../src/sim/sim';
 import type { SimContext } from '../src/sim/sim_context';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const TRAINER_RECIPES = [
   ['recipe_freehold_weapon_rack', 'weaponcrafting', 'forge'],
@@ -29,12 +30,15 @@ const PATTERN_RECIPES = [
   ['recipe_freehold_jewel_floor_lamp', 'jewelcrafting', 'forge'],
 ] as const;
 
+// Training resolves against the static station anchors, a built-in service the empty
+// world keeps, so the Sims carry no camps, NPCs or ground objects.
 function createTrainingSim() {
   const sim = new Sim({
     seed: 42,
     playerClass: 'warrior',
     autoEquip: false,
     freeholdsEnabled: true,
+    world: EMPTY_TEST_WORLD,
   });
   const ctx = (sim as unknown as { ctx: SimContext }).ctx;
   const meta = ctx.players.get(sim.playerId);

@@ -1171,11 +1171,13 @@ describe('determinism', () => {
   }
 
   it('the same seed and drive give identical positions, slots and draw counts', () => {
-    const one = drive(makeSim(1234));
-    const two = drive(makeSim(1234));
+    // The file's one seed: any seed serves the pair, and a second seed would
+    // build its own collider grids.
+    const one = drive(makeSim());
+    const two = drive(makeSim());
     expect(one).toEqual(two);
     expect(one.slots).toHaveLength(2);
     // Anti-vacuity: a different drive changes something the digest sees.
-    expect(drive(makeSim(1234), false)).not.toEqual(one);
+    expect(drive(makeSim(), false)).not.toEqual(one);
   });
 });

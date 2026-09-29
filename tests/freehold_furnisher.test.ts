@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
+import { FREEHOLD_FURNISHER_NPC_ID } from '../src/sim/content/freehold';
 import { RELIQUARY_PAGES } from '../src/sim/content/reliquary';
-import { ITEMS } from '../src/sim/data';
+import { BUILTIN_WORLD, ITEMS } from '../src/sim/data';
 import { pageCompletion } from '../src/sim/reliquary';
 import { Sim } from '../src/sim/sim';
+import type { WorldContent } from '../src/sim/types';
 import { WORLD_SEED } from '../src/sim/world_seed';
 
 const IDS = [
@@ -16,8 +18,23 @@ const IDS = [
   'freehold_open_bookshelf',
 ] as const;
 
-function readyBuyer(freeholdsEnabled = true) {
-  const sim = new Sim({ seed: WORLD_SEED, playerClass: 'warrior', freeholdsEnabled });
+// Every case buys from the one authored furnisher, so the Sims run on a world holding
+// only that NPC; the dark-host case keeps the full roster, whose id order hands the
+// lit furnisher's id to another merchant.
+const FURNISHER_WORLD: WorldContent = {
+  ...BUILTIN_WORLD,
+  camps: [],
+  npcs: { [FREEHOLD_FURNISHER_NPC_ID]: BUILTIN_WORLD.npcs[FREEHOLD_FURNISHER_NPC_ID] },
+  groundObjects: [],
+};
+
+function readyBuyer(freeholdsEnabled = true, fullRoster = false) {
+  const sim = new Sim({
+    seed: WORLD_SEED,
+    playerClass: 'warrior',
+    freeholdsEnabled,
+    ...(fullRoster ? {} : { world: FURNISHER_WORLD }),
+  });
   const meta = sim.meta(sim.primaryId)!;
   meta.inventory.splice(0);
   meta.copper = 1_000_000;
@@ -118,9 +135,9 @@ describe('the authored Freehold Furnisher acquisition path', () => {
   });
 
   it('a dark host cannot buy any furnishing using the corresponding lit entity id', () => {
-    const lit = readyBuyer();
+    const lit = readyBuyer(true, true);
     const vendor = furnisherId(lit.sim);
-    const { sim, meta } = readyBuyer(false);
+    const { sim, meta } = readyBuyer(false, true);
     // Since the release/v0.44.0 sync at aaff789813 the dark roster, which
     // spawns no furnisher, hands the lit furnisher's id to the next NPC it
     // builds (the Rift Watch quartermaster, far off), so the refusal is that
@@ -140,7 +157,12 @@ describe('the authored Freehold Furnisher acquisition path', () => {
     for (const id of IDS) sim.buyItem(vendor, id);
     expect(errors(sim)).toEqual([]);
     const saved = JSON.parse(JSON.stringify(sim.serializeCharacter(sim.primaryId)));
-    const restored = new Sim({ seed: WORLD_SEED, playerClass: 'warrior', noPlayer: true });
+    const restored = new Sim({
+      seed: WORLD_SEED,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: FURNISHER_WORLD,
+    });
     const pid = restored.addPlayer('warrior', 'Restored', { state: saved });
     const loaded = restored.meta(pid)!;
     expect(restored.cfg.freeholdsEnabled).toBe(false);
@@ -163,7 +185,12 @@ describe('the authored Freehold Furnisher acquisition path', () => {
     const saved = sim.serializeCharacter(sim.primaryId)!;
     delete saved.reliquary;
     delete saved.deedStats;
-    const restored = new Sim({ seed: WORLD_SEED, playerClass: 'warrior', noPlayer: true });
+    const restored = new Sim({
+      seed: WORLD_SEED,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: FURNISHER_WORLD,
+    });
     const pid = restored.addPlayer('warrior', 'Earlier Character', {
       state: JSON.parse(JSON.stringify(saved)),
     });
