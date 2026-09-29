@@ -9,8 +9,15 @@ import { emitAbsorbCredit } from '../src/sim/combat/absorb_credit';
 import { dealDamage } from '../src/sim/combat/damage';
 import { Sim } from '../src/sim/sim';
 import type { Aura, Entity, SimEvent } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 type AbsorbEvent = Extract<SimEvent, { type: 'absorb' }>;
+
+// The hits land on players the cases add themselves, so the empty world on one
+// seed serves every case.
+function makeSim(): Sim {
+  return new Sim({ seed: 11, playerClass: 'mage', autoEquip: true, world: EMPTY_TEST_WORLD });
+}
 
 function absorbEvents(events: readonly SimEvent[]): AbsorbEvent[] {
   return events.filter((e): e is AbsorbEvent => e.type === 'absorb');
@@ -31,7 +38,7 @@ function shield(id: string, name: string, value: number, sourceId: number): Aura
 
 describe('absorb credit (shields on the healing meter)', () => {
   it('a partly drained shield credits the shielder for exactly what it soaked', () => {
-    const sim = new Sim({ seed: 11, playerClass: 'mage', autoEquip: true });
+    const sim = makeSim();
     sim.setPlayerLevel(20);
     const allyId = sim.addPlayer('warrior', 'Shielded');
     const ally = sim.entities.get(allyId) as Entity;
@@ -59,7 +66,7 @@ describe('absorb credit (shields on the healing meter)', () => {
   });
 
   it('two shields from two casters each credit their own caster, innermost first', () => {
-    const sim = new Sim({ seed: 12, playerClass: 'mage', autoEquip: true });
+    const sim = makeSim();
     sim.setPlayerLevel(20);
     const priestId = sim.addPlayer('priest', 'Shielder Two');
     const allyId = sim.addPlayer('warrior', 'Shielded');
