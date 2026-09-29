@@ -7,14 +7,21 @@ import { grantDevotion } from '../src/sim/paladin_devotion';
 import { moveSpeedMult } from '../src/sim/player_motion';
 import { Sim } from '../src/sim/sim';
 import type { Aura, Entity } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 type TestSim = Sim & {
   nextId: number;
   addEntity(entity: Entity): void;
 };
 
+// Every case marks wolves it places itself, so the rig stands on the empty world.
 function makeProtection(seed = 8117): TestSim {
-  const sim = new Sim({ seed, playerClass: 'paladin', autoEquip: true }) as TestSim;
+  const sim = new Sim({
+    seed,
+    playerClass: 'paladin',
+    autoEquip: true,
+    world: EMPTY_TEST_WORLD,
+  }) as TestSim;
   sim.setPlayerLevel(20);
   expect(sim.setSpec('protection')).toBe(true);
   sim.player.resource = sim.player.maxResource;
