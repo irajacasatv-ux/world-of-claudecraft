@@ -3,10 +3,11 @@ import { SAVED_LOADOUT_BAR_SLOTS } from '../src/sim/content/talents';
 import { Sim } from '../src/sim/sim';
 import { MAX_LEVEL } from '../src/sim/types';
 import { ACTION_BAR_ABILITY_SLOTS } from '../src/ui/hud/action_bar/action_bar_layout_core';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 describe('loadout action bar persistence', () => {
   it('preserves the full three-row action bar in saved loadouts', () => {
-    const sim = new Sim({ seed: 7, playerClass: 'warrior' });
+    const sim = new Sim({ seed: 7, playerClass: 'warrior', world: EMPTY_TEST_WORLD });
     sim.setPlayerLevel(MAX_LEVEL);
     const fullBar = Array.from({ length: SAVED_LOADOUT_BAR_SLOTS + 1 }, (_, i) => `slot_${i}`);
 

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { sanitizeBankState } from '../src/sim/bank';
 import { Sim } from '../src/sim/sim';
 import type { InvSlot } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const mixed = (): InvSlot => ({
   itemId: 'copper_ore',
@@ -13,7 +14,8 @@ const mixed = (): InvSlot => ({
   ],
   instance: JSON.parse('{"future":{"nested":[1,2]},"__proto__":{"kept":true}}'),
 });
-const makeSim = () => new Sim({ seed: 42, playerClass: 'warrior' as const, autoEquip: false });
+const makeSim = () =>
+  new Sim({ seed: 42, playerClass: 'warrior' as const, autoEquip: false, world: EMPTY_TEST_WORLD });
 
 describe('source-tracked material load boundaries', () => {
   it('refuses a source-bearing charge stack instead of clipping its attributed units', () => {
@@ -49,7 +51,12 @@ describe('source-tracked material load boundaries', () => {
     const state = original.serializeCharacter(original.playerId)!;
     state.inventory = [mixed()];
     state.bank!.inventory = [mixed()];
-    const restored = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+    const restored = new Sim({
+      seed: 42,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const pid = restored.addPlayer('warrior', 'Ana', { state });
     const saved = restored.serializeCharacter(pid)!;
     expect(saved.inventory).toEqual(state.inventory);
@@ -61,7 +68,12 @@ describe('source-tracked material load boundaries', () => {
     const state = original.serializeCharacter(original.playerId)!;
     state.inventory = [mixed()];
     state.inventory[0].count = 26;
-    const restored = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+    const restored = new Sim({
+      seed: 42,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const beforeEntities = restored.entities.size;
     const beforePlayers = restored.players.size;
     expect(() => restored.addPlayer('warrior', 'Ana', { state })).toThrow();

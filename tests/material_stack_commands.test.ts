@@ -3,11 +3,17 @@ import { parseMaterialGroupingIntent } from '../server/material_stack_wire';
 import { bagCapacity } from '../src/sim/bags';
 import { captureMaterialStackSelection } from '../src/sim/material_stack_selection';
 import { Sim } from '../src/sim/sim';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const a = { gatherer: { kind: 'character' as const, id: 11, name: 'Ana' } };
 const b = { gatherer: { kind: 'character' as const, id: 22, name: 'Bru' } };
 function setup() {
-  const sim = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+  const sim = new Sim({
+    seed: 42,
+    playerClass: 'warrior',
+    noPlayer: true,
+    world: EMPTY_TEST_WORLD,
+  });
   const pid = sim.addPlayer('warrior', 'Ana');
   const meta = sim.players.get(pid)!;
   meta.inventory = [

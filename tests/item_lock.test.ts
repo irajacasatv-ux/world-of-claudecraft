@@ -22,9 +22,13 @@ import { hasRecipeMaterials, resolveCraftForRecipe } from '../src/sim/profession
 import { Sim } from '../src/sim/sim';
 import type { SimContext } from '../src/sim/sim_context';
 import type { Entity, InvSlot, SimEvent } from '../src/sim/types';
+import { npcScopedWorld } from './helpers/npc_scoped_world';
+
+// Only Trader Wilkes, whom the vendor-sell cases stand beside, is read from the overworld.
+const VENDOR_WORLD = npcScopedWorld('trader_wilkes');
 
 function makeSim(seed = 11) {
-  return new Sim({ seed, playerClass: 'warrior', autoEquip: false });
+  return new Sim({ seed, playerClass: 'warrior', autoEquip: false, world: VENDOR_WORLD });
 }
 
 function ctxOf(sim: Sim): SimContext {
@@ -273,7 +277,7 @@ describe('the lock, threaded through save/load', () => {
     meta.inventory.push({ itemId: COMMON_WEAPON, count: 1, instance: { locked: true } });
 
     const state = sim.serializeCharacter(pid);
-    const sim2 = new Sim({ seed: 11, playerClass: 'warrior', noPlayer: true });
+    const sim2 = new Sim({ seed: 11, playerClass: 'warrior', noPlayer: true, world: VENDOR_WORLD });
     const pid2 = sim2.addPlayer('warrior', 'Lockwright', { state: state ?? undefined });
     const loaded = inventoryOf(sim2, pid2).find((s) => s.itemId === COMMON_WEAPON);
     expect(loaded?.instance?.locked).toBe(true);
@@ -295,7 +299,7 @@ describe('the lock, threaded through save/load', () => {
     const saved = state?.inventory.find((s) => s.itemId === 'bone_fragments');
     expect(saved).toEqual({ itemId: 'bone_fragments', count: 5, instance: { locked: true } });
 
-    const sim2 = new Sim({ seed: 11, playerClass: 'warrior', noPlayer: true });
+    const sim2 = new Sim({ seed: 11, playerClass: 'warrior', noPlayer: true, world: VENDOR_WORLD });
     const pid2 = sim2.addPlayer('warrior', 'Lockwright', { state: state ?? undefined });
     const loaded = inventoryOf(sim2, pid2).find((s) => s.itemId === 'bone_fragments');
     expect(loaded).toEqual({

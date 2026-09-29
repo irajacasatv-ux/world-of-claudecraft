@@ -93,8 +93,10 @@ describe('identity-preserving Materials Vault stacks', () => {
     statsOf(saved.vault.special[0]).sta = 7;
     expect(statsOf(meta.vault.special[0]).sta).toBe(2);
 
+    // The reload Sim shares the file's seed: a second seed builds its collider
+    // grids again, and the vault restore reads no seeded state.
     const restored = new Sim({
-      seed: 74,
+      seed: 73,
       playerClass: 'warrior',
       autoEquip: false,
       noPlayer: true,

@@ -23,6 +23,7 @@ import { TRAINING_FEE_BY_TIER } from '../src/sim/professions/training';
 import { type PlayerMeta, Sim } from '../src/sim/sim';
 import { CRAFT_CAST_ID, type Entity, type SimEvent } from '../src/sim/types';
 import { terrainHeight } from '../src/sim/world';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const SEED = 4242;
 // The free rung-0 ring and the rung-50 rare band the deed derives from.
@@ -45,7 +46,7 @@ function rung50Recipe() {
 }
 
 function makeSim(): Sim {
-  return new Sim({ seed: SEED, playerClass: 'warrior', autoEquip: false });
+  return new Sim({ seed: SEED, playerClass: 'warrior', autoEquip: false, world: EMPTY_TEST_WORLD });
 }
 
 function playerOf(sim: Sim): { p: Entity; meta: PlayerMeta; pid: number } {

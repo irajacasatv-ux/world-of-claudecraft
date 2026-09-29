@@ -21,6 +21,13 @@ import { createMob, createPlayer, recalcPlayerStats } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
 import type { Entity, PlayerClass } from '../src/sim/types';
 import { CAST_PUSHBACK_SEC, CHANNEL_PUSHBACK_FRACTION } from '../src/sim/types';
+import { EMPTY_TEST_WORLD, RL_TEST_WORLD } from './sim_shared';
+
+// One seed for every Sim in the file (none of these cases rides a seeded roll).
+// The end-to-end pushback case borrows a world wolf as its attacker, so it keeps
+// the first wolf camp; the rest need no overworld content.
+const SEED = 77;
+
 import {
   equippedSetTooltipPieces,
   itemSetMemberCounts,
@@ -385,7 +392,7 @@ describe('recalcPlayerStats applies equipped set bonuses (real raid/dungeon gear
 });
 
 describe('pushbackCast honors castPushbackReduction', () => {
-  const sim = new Sim({ seed: 1, playerClass: 'mage' });
+  const sim = new Sim({ seed: SEED, playerClass: 'mage', world: EMPTY_TEST_WORLD });
   const pushback = (reduction: number, channeling: boolean): Entity => {
     const p = sim.player;
     p.channeling = channeling;
@@ -423,7 +430,7 @@ describe('caster lineage 2-piece: damage delays a cast half as much (end to end)
   // lineage 2-piece castPushbackReduction of 0.5 halves the delay (full
   // immunity moved to the new raid tier's caster sets in the retune).
   const castThenHit = (equipSet: boolean) => {
-    const sim = new Sim({ seed: 77, playerClass: 'mage' });
+    const sim = new Sim({ seed: SEED, playerClass: 'mage', world: RL_TEST_WORLD });
     sim.setPlayerLevel(20);
     if (equipSet) {
       for (const id of ['necromancers_starshroud', 'necromancers_soulsteps']) {
@@ -462,7 +469,7 @@ describe('knockback resistance (the aggregate stat, set synthetically)', () => {
   it('prevents a forced mob knockback from displacing the player', () => {
     // No shipped set grants knockbackResistance; this pins the engine mechanic
     // behind the stat.
-    const sim = new Sim({ seed: 5150, playerClass: 'mage' });
+    const sim = new Sim({ seed: SEED, playerClass: 'mage', world: EMPTY_TEST_WORLD });
     const p = sim.entities.get(sim.playerId)!;
     p.maxHp = 100000;
     p.hp = 100000;

@@ -10,11 +10,12 @@ import { describe, expect, it } from 'vitest';
 import { itemCopyPin } from '../src/sim/item_copy_ref';
 import { Sim } from '../src/sim/sim';
 import type { ItemInstancePayload, SimEvent } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const ENCHANT = { enchantId: 'ench_test' } as unknown as ItemInstancePayload;
 
 function makeSim(): Sim {
-  return new Sim({ seed: 11, playerClass: 'warrior', autoEquip: false });
+  return new Sim({ seed: 11, playerClass: 'warrior', autoEquip: false, world: EMPTY_TEST_WORLD });
 }
 
 function gearResults(events: SimEvent[]) {

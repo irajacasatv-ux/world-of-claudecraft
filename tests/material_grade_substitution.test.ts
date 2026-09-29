@@ -10,6 +10,10 @@ import { turnInQuestCore } from '../src/sim/quests/quest_commands';
 import { Sim } from '../src/sim/sim';
 import type { QuestDef } from '../src/sim/types';
 import { terrainHeight } from '../src/sim/world';
+import { npcScopedWorld } from './helpers/npc_scoped_world';
+
+// The work-order giver is the only overworld NPC these cases walk to.
+const GIVER_WORLD = npcScopedWorld('forgemistress_darva');
 
 // Downward grade substitution (D8): a fine grade satisfies a requirement for
 // its base, never the reverse. Not a courtesy. The fine grade REPLACES the
@@ -23,7 +27,7 @@ import { terrainHeight } from '../src/sim/world';
 // consumption, and quest collect credit + turn-in.
 
 function makeSim(seed = 42) {
-  return new Sim({ seed, playerClass: 'warrior', autoEquip: false });
+  return new Sim({ seed, playerClass: 'warrior', autoEquip: false, world: GIVER_WORLD });
 }
 
 function grantItem(sim: Sim, itemId: string, count: number, pid: number) {

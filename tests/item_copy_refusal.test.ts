@@ -22,13 +22,18 @@ import { describe, expect, it } from 'vitest';
 import { ITEMS } from '../src/sim/data';
 import { Sim } from '../src/sim/sim';
 import type { EquipSlot, InvSlot, PlayerClass } from '../src/sim/types';
+import { npcScopedWorld } from './helpers/npc_scoped_world';
+
+// The sell arms need a real vendor to stand at (Trader Wilkes, the first vendor
+// the full world spawns); nothing else in the overworld is read.
+const VENDOR_WORLD = npcScopedWorld('trader_wilkes');
 
 /** An out-of-range index: passes the server's Number.isInteger gate, fails the
  *  leaf's range check. This is the shape a stale client frame actually sends. */
 const BAD_INDEX = 999;
 
 function makeSim(cls: PlayerClass = 'warrior'): Sim {
-  const sim = new Sim({ seed: 5, playerClass: cls, autoEquip: false });
+  const sim = new Sim({ seed: 5, playerClass: cls, autoEquip: false, world: VENDOR_WORLD });
   // Strip the starting kit. autoEquip:false does not mean naked, and a pre-worn
   // chest piece silently invalidated two of these fixtures on the first run.
   const meta = sim.players.get(sim.playerId);

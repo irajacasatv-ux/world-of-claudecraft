@@ -4,6 +4,7 @@ import { rekeyInstanceSigner } from '../src/sim/character_rename';
 import { holdsSelfSignedInstance, requiredReagentCount } from '../src/sim/professions/crafting';
 import { Sim } from '../src/sim/sim';
 import type { InvSlot } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const self = { gatherer: { kind: 'character' as const, id: 11, name: 'Ana' } };
 const row = (signer?: string): InvSlot => ({
@@ -18,7 +19,12 @@ describe('premium benefits of mixed material sources', () => {
     expect(holdsSelfSignedInstance([row('Bru')], 'Ana', 'copper_ore')).toBe(false);
   });
   it('expires the discount exactly when the final premium unit is consumed', () => {
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', autoEquip: false });
+    const sim = new Sim({
+      seed: 42,
+      playerClass: 'warrior',
+      autoEquip: false,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.inventory.splice(0);
     const meta = sim.players.get(sim.playerId)!;
     sim.addItem('copper_ore', 4);
@@ -37,7 +43,12 @@ describe('premium benefits of mixed material sources', () => {
     expect(cost()).toEqual({ count: 4, selfSignedBonusApplied: false });
   });
   it('rewrites owned premium signatures on rename while preserving gatherer snapshots', () => {
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', autoEquip: false });
+    const sim = new Sim({
+      seed: 42,
+      playerClass: 'warrior',
+      autoEquip: false,
+      world: EMPTY_TEST_WORLD,
+    });
     const state = sim.serializeCharacter(sim.playerId)!;
     state.inventory = [row('Ana'), row('Bru')];
     state.bank!.inventory = [row('Ana')];
@@ -51,7 +62,12 @@ describe('premium benefits of mixed material sources', () => {
     expect(state.inventory[1]).toEqual(row('Bru'));
   });
   it('renames vault-only premium signatures with exact zero-total journal movements', () => {
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', autoEquip: false });
+    const sim = new Sim({
+      seed: 42,
+      playerClass: 'warrior',
+      autoEquip: false,
+      world: EMPTY_TEST_WORLD,
+    });
     const state = sim.serializeCharacter(sim.playerId)!;
     state.inventory = [];
     const mixed: InvSlot = {

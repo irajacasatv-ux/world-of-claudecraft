@@ -3,13 +3,19 @@ import { removeUnlockedFromSlots } from '../src/sim/item_lock';
 import type { MaterialComposition } from '../src/sim/material_sources';
 import { Sim } from '../src/sim/sim';
 import type { ItemInstancePayload } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const sources: MaterialComposition = [
   { source: { gatherer: { kind: 'character', id: 11, name: 'Ana' } }, count: 2 },
   { source: { signer: 'Bru' }, count: 1 },
 ];
 function world(): Sim {
-  const sim = new Sim({ seed: 42, playerClass: 'warrior', autoEquip: false });
+  const sim = new Sim({
+    seed: 42,
+    playerClass: 'warrior',
+    autoEquip: false,
+    world: EMPTY_TEST_WORLD,
+  });
   sim.inventory.splice(0);
   return sim;
 }
