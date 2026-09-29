@@ -27,14 +27,23 @@ import { Sim } from '../src/sim/sim';
 import type { Entity } from '../src/sim/types';
 import { grantCorpseHarvestOnMob } from './helpers/corpse_harvest_grant';
 import { expectDefined } from './helpers/defined';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 type SimInternals = {
   entities: Map<number, Entity>;
   players: Map<number, PlayerMeta>;
 };
 
-function setup(seed = 11) {
-  const sim = new Sim({ seed, playerClass: 'warrior', noPlayer: true });
+// Every corpse here is hand-built at the player's feet and every roll goes
+// through the roller or the harvest grant, so the Sims build the empty world on
+// one seed: a fresh seed builds its collider grids (about half a second).
+function setup() {
+  const sim = new Sim({
+    seed: 11,
+    playerClass: 'warrior',
+    noPlayer: true,
+    world: EMPTY_TEST_WORLD,
+  });
   const internals = sim as unknown as SimInternals;
   const pid = sim.addPlayer('warrior', 'Alpha');
   sim.tick();
@@ -72,7 +81,7 @@ function questDropRate(
   active: boolean,
   n = 400,
 ): number {
-  const { sim, internals, pid } = setup(77);
+  const { sim, internals, pid } = setup();
   const meta = expectDefined(internals.players.get(pid));
   if (active) activateQuest(meta, questId);
   const template = MOBS[mobId];
@@ -187,7 +196,7 @@ describe('quest items stay obtainable through their kill-loot drop path', () => 
   }
 
   it('looting the boar corpse grants boar_hide, so collect credit accrues through the drop', () => {
-    const { sim, internals, pid } = setup(3);
+    const { sim, internals, pid } = setup();
     const meta = expectDefined(internals.players.get(pid));
     activateQuest(meta, 'q_boars');
     // Roll fresh boar corpses until one carries the quest drop (chance 0.6),
