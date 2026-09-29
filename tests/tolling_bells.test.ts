@@ -7,8 +7,10 @@
 
 import { describe, expect, it } from 'vitest';
 import { DELVES, MOBS } from '../src/sim/data';
+import { litanyModuleGeometry } from '../src/sim/delve_litany_layout';
 import { initDrownedLitanyBossState } from '../src/sim/delves/drowned_litany_boss';
 import { Sim } from '../src/sim/sim';
+import { addThreat } from '../src/sim/threat';
 import { terrainHeight } from '../src/sim/world';
 import { PRODUCTION_IDLE_CULL } from './helpers/production_idle_cull';
 
@@ -183,22 +185,63 @@ describe('Tolling Bells: wall pass-through despawn', () => {
     // Lifetime never fires; only the wall bounds check can drop these bells.
     const ids = st.bells.map((b: any) => b.entityId);
     expect(ids).toHaveLength(4);
-    for (const b of st.bells) b.remaining = 999;
     st.bellVolleyTimer = 9999; // no further volleys during the flight
+    // The volley's rotation is a random draw, so one volley can send no bell
+    // out through a given wall. Restart every bell at the altar (the dais
+    // centre, where Nhalia spawns) squared on its own wall: south into the
+    // field, east, north behind the altar, west. The distances are the Apse
+    // layout's, and a bell flies 8 yd/s.
+    const apse = litanyModuleGeometry('litany_apse');
+    if (!apse) throw new Error('no Apse geometry');
+    const altar = { x: run.origin.x + apse.dais.x, z: boss.spawnPos.z };
+    const lanes = [
+      { vx: 0, vz: -1, wall: apse.dais.z - apse.zMin },
+      { vx: 1, vz: 0, wall: apse.wallX - apse.dais.x },
+      { vx: 0, vz: 1, wall: apse.zMax - apse.dais.z },
+      { vx: -1, vz: 0, wall: apse.wallX + apse.dais.x },
+    ];
+    st.bells.forEach((b: any, i: number) => {
+      b.remaining = 999;
+      b.vx = lanes[i].vx;
+      b.vz = lanes[i].vz;
+      const e = (sim as any).entities.get(b.entityId);
+      e.pos.x = altar.x;
+      e.pos.z = altar.z;
+    });
+    // Off both lanes (the altar's two axes) by more than the 2 yd contact
+    // radius, so no bell knocks the player out of the fight. The forced pull
+    // leaves Nhalia on the delve companion, and once she kills it an empty
+    // threat table sends her home, which resets the encounter and drops
+    // every bell at once: top the player's threat so the pull holds.
+    sim.player.pos.x = altar.x + 3;
+    sim.player.pos.z = altar.z - 3;
+    addThreat(boss, sim.player.id, 1_000_000);
+    sim.player.prevPos = { ...sim.player.pos };
 
-    // At 8 yd/s the farthest wall (altar z=72 to zMin -16, 88yd + margin) is
-    // crossed in ~11.4s. Every bell must be gone well before its lifetime.
-    for (let i = 0; i < 20 * 14; i++) {
+    // Each bell stays up while it is still inside the room, and is gone
+    // within a second of flight past its wall: the north bell reaches its
+    // wall first, the south one last (88 yd, about 11 s).
+    const alive = (id: number) => {
+      const e = (sim as any).entities.get(id);
+      return !!e && !e.dead;
+    };
+    for (let t = 1; t <= 20 * 14; t++) {
       sim.player.hp = sim.player.maxHp; // stay alive so the run keeps ticking
       sim.tick();
       if (run.nhaliaBoss) run.nhaliaBoss.bellVolleyTimer = 9999;
+      const flown = 8 * DT * t;
+      lanes.forEach((lane, i) => {
+        if (flown < lane.wall) expect(alive(ids[i]), `bell ${i} inside the room`).toBe(true);
+        if (flown > lane.wall + 8) expect(alive(ids[i]), `bell ${i} past its wall`).toBe(false);
+      });
     }
     for (const id of ids) {
       expect((sim as any).entities.get(id)).toBeUndefined();
     }
-    // Bell contact can knock the player far enough to reset the encounter. The
-    // reset replaces the state object, so assert against the live run state.
-    expect(run.nhaliaBoss?.bells).toHaveLength(0);
+    // The same pull throughout: an encounter reset (it replaces the state
+    // object and drops every bell) would pass the checks above for nothing.
+    expect(run.nhaliaBoss).toBe(st);
+    expect(st.bells).toHaveLength(0);
   });
 });
 
