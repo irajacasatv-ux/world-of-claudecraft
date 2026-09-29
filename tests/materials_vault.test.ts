@@ -110,9 +110,11 @@ const makeSim = (seed = 42) => {
 const meta = (sim: Sim, pid = sim.playerId) => sim.meta(pid)!;
 type Meta = ReturnType<typeof meta>;
 
-// A multiplayer world (no default player), for the cases that need a pid.
-const makeVaultWorld = (seed = 42) =>
-  new Sim({ seed, playerClass: 'warrior', noPlayer: true, world: VAULT_TEST_WORLD });
+// A multiplayer world (no default player), for the cases that need a pid. The
+// relog worlds share the file's seed: a load reads the save, not the seed, and
+// seed 1 paid a terrain build of its own.
+const makeVaultWorld = () =>
+  new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true, world: VAULT_TEST_WORLD });
 
 // Distinct gear ids (stackSize 1) for filling bags with non-mergeable entries.
 const GEAR_IDS = Object.values(ITEMS)
@@ -1090,7 +1092,7 @@ describe('persistence and back-compat', () => {
     m.copper = 4242;
 
     const s1 = sim.serializeCharacter(sim.playerId)!;
-    const sim2 = makeVaultWorld(1);
+    const sim2 = makeVaultWorld();
     const pid2 = sim2.addPlayer('warrior', 'Saver', { state: s1 });
     const s2 = sim2.serializeCharacter(pid2)!;
     // The Book of Deeds legitimately enriches a save across a load (the discovery
@@ -1130,7 +1132,7 @@ describe('persistence and back-compat', () => {
     const state = sim.serializeCharacter(sim.playerId)!;
     const legacy = JSON.parse(JSON.stringify(state)) as Record<string, unknown>;
     delete legacy.vault;
-    const sim2 = makeVaultWorld(1);
+    const sim2 = makeVaultWorld();
     let pid = -1;
     expect(() => {
       pid = sim2.addPlayer('warrior', 'Legacy', { state: legacy as never });
@@ -1152,7 +1154,7 @@ describe('vault load-path sanitization', () => {
     const seed = makeSim();
     const state = seed.serializeCharacter(seed.playerId)! as { vault?: unknown };
     state.vault = raw;
-    const sim = makeVaultWorld(1);
+    const sim = makeVaultWorld();
     const pid = sim.addPlayer('warrior', 'Tampered', { state: state as never });
     return { sim, pid, m: meta(sim, pid) };
   };
@@ -2203,8 +2205,9 @@ describe('double-send safety', () => {
 describe('determinism', () => {
   it('the same fixed vault-op script over 300 ticks yields identical state + events', () => {
     function run() {
+      // The file's seed: the pair compares itself, and seed 123 paid a build.
       const sim = new Sim({
-        seed: 123,
+        seed: 42,
         playerClass: 'warrior',
         autoEquip: false,
         world: VAULT_TEST_WORLD,
@@ -2365,7 +2368,7 @@ describe('vault wire revision', () => {
       upgrades: 1,
     };
     const state = seed.serializeCharacter(seed.playerId)!;
-    const sim = makeVaultWorld(1);
+    const sim = makeVaultWorld();
     const pid = sim.addPlayer('warrior', 'Reloaded', { state });
     expect(meta(sim, pid).vault.stock).toEqual({ copper_ore: 9 });
     expect(meta(sim, pid).vaultWireRev).toBe(1);
