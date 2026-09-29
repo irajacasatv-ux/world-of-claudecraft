@@ -120,9 +120,10 @@ const GUARDS_LINE = /^(?:\/\/+|\/?\*+)\s*Guards:\s*(\S.*)$/;
 // `Cost: 450 ms`, an optional closing period) on a line that is all comment, and it is the only
 // `cost:` anywhere in the header or on the first code line. It opens its paragraph (the header's
 // start, a blank comment line or a block opener above it) or closes a `Guards:` paragraph (a Guards
-// line, and only its continuation lines, above it). What directly follows it closes its paragraph:
-// a blank comment line or a `Guards:` line, or, when the field is the header's last comment line,
-// the end of the file or a code line with no `//`, `/*` or `*/` on it (even inside a string). A
+// statement, and only its continuation lines, above it). What directly follows it closes its
+// paragraph: a blank comment line or a Guards statement (a `Guards:` line that passes the Guards
+// check). When only blank comment lines follow it, the first code line abuts it too, so the end of
+// the file or a code line with no `//`, `/*` or `*/` on it (even inside a string) comes next. A
 // fraction reads only in seconds and to two places, so a dot used to group thousands cannot shrink
 // a cost. Anything else (`1,200 ms`, `about 1.2 s at one worker`, `1 s warm, 2 min cold`, a wrapped
 // or trailing second time, prose directly above) is refused rather than read, which fails the file:
@@ -132,9 +133,16 @@ const GUARDS_LINE = /^(?:\/\/+|\/?\*+)\s*Guards:\s*(\S.*)$/;
 const COST_FIELD =
   /^(?:\/\/+|\/?\*+)\s*Cost:\s*(?:(\d+\.\d{1,2})\s*s|(\d+)\s*(ms|s))\.?\s*(?:\*\/)?$/;
 const COST_MARKER = /^(?:\/\/+|\/?\*+)\s*cost\s*:/i;
-const PARAGRAPH_END = /^(?:\/\/+|\/?\*+\/?)\s*(?:Guards:|$)/;
 const PARAGRAPH_BREAK = /^(?:\/\/+|\/?\*+\/?)\s*$/;
 const GUARDS_MIN_CHARS = 12;
+
+/** The Guards statement a line makes, if it makes one: text of real length, no `Cost:` in it. */
+function guardsStatement(line: string): string | undefined {
+  const guards = line.match(GUARDS_LINE)?.[1].trim();
+  return guards && guards.length >= GUARDS_MIN_CHARS && !guards.includes('Cost:')
+    ? guards
+    : undefined;
+}
 
 /** How a line reads given whether a block comment is open at its start: `code` is where code
  *  begins on it (-1 when every character outside whitespace sits in a comment), `open` whether a
@@ -180,11 +188,7 @@ function leadingComment(source: string): { lines: string[]; codeLine?: string } 
 function admissionStatement(source: string): { guards?: string; costMs?: number } {
   const statement: { guards?: string; costMs?: number } = {};
   const { lines, codeLine } = leadingComment(source);
-  for (const line of lines) {
-    const guards = line.match(GUARDS_LINE)?.[1].trim();
-    if (guards && guards.length >= GUARDS_MIN_CHARS && !guards.includes('Cost:'))
-      statement.guards ??= guards;
-  }
+  for (const line of lines) statement.guards ??= guardsStatement(line);
   // The only `cost:` anywhere in the header and on the code line, at the start of its line.
   const mentions = lines.flatMap((line, i) => (/cost\s*:/i.test(line) ? [i] : []));
   if (mentions.length !== 1 || (codeLine !== undefined && /cost\s*:/i.test(codeLine)))
@@ -193,13 +197,15 @@ function admissionStatement(source: string): { guards?: string; costMs?: number 
   const cost = COST_MARKER.test(lines[at]) ? lines[at].match(COST_FIELD) : null;
   // Above: nothing but a paragraph break (or the header's start) or a Guards paragraph.
   let up = at - 1;
-  while (up >= 0 && !PARAGRAPH_BREAK.test(lines[up]) && !GUARDS_LINE.test(lines[up])) up--;
-  const opened = up === at - 1 || (up >= 0 && GUARDS_LINE.test(lines[up]));
+  while (up >= 0 && !PARAGRAPH_BREAK.test(lines[up]) && !guardsStatement(lines[up])) up--;
+  const opened = up === at - 1 || (up >= 0 && guardsStatement(lines[up]) !== undefined);
   // Below: a paragraph break or a Guards line; and when only bare breaks follow the field, the
   // first code line is adjacent to it too, so it may carry no comment.
   const onlyBreaksBelow = lines.slice(at + 1).every((line) => PARAGRAPH_BREAK.test(line));
   const closed =
-    (at + 1 === lines.length || PARAGRAPH_END.test(lines[at + 1])) &&
+    (at + 1 === lines.length ||
+      PARAGRAPH_BREAK.test(lines[at + 1]) ||
+      guardsStatement(lines[at + 1]) !== undefined) &&
     (!onlyBreaksBelow || codeLine === undefined || !/\/\/|\/\*|\*\//.test(codeLine));
   if (cost && opened && closed)
     statement.costMs = Math.round(
@@ -514,6 +520,8 @@ describe('the new-test admission rule', () => {
       guards('tests/new_no_number.test.ts'),
       cost('tests/new_no_number.test.ts'),
       guards('tests/new_terse.test.ts'),
+      // A terse Guards line is not a statement, so directly above the field it is prose.
+      cost('tests/new_terse.test.ts'),
       cost('tests/new_comma.test.ts'),
       cost('tests/new_spaced.test.ts'),
       cost('tests/new_dotted.test.ts'),
@@ -579,6 +587,9 @@ describe('the new-test admission rule', () => {
       '/*\n * Cost: 1 s\n *\n Cost: 2 min\n */\n',
       "/**\n * Guards: the pause toggle's replay path.\n * Cost: 1 s\n */\nimport x from 'y'; // 2 min cold\n",
       '// Cost: 1 s\n//\nimport x from "y"; // 2 min cold\n',
+      "// Guards: the pause toggle's replay path.\n//\n// Cost: 1 s\n// Guards:\nimport x from 'y'; // 2 min cold\n",
+      "// Guards: the pause toggle's replay path.\n//\n// Cost: 1 s\n// Guards: .\nimport x from 'y'; // 2 min cold\n",
+      '/**\n * Guards: .\n * Cost: 1 s\n */\n',
     ])
       expect(read(refused), refused).toBeUndefined();
     expect(admissionStatement(afterDocblock).costMs).toBe(450);

@@ -285,7 +285,8 @@ The recurring causes, each measured on this suite:
 suite that does not), and a `Cost:` field holding its measured local test time at one worker (from
 `npx vitest run <file> --maxWorkers=1`) and nothing else, for example `Cost: 0.4 s`, in its own
 comment paragraph or closing the `Guards:` one, with nothing beside it that could qualify it: no
-second `cost:`, no prose directly above or below, no comment on a code line right after it. A
+second `cost:`, no prose directly above or below (a Guards statement excepted), no comment on a
+code line right after it. A
 field that breaks this is refused, not read, so the file fails (the exact rule and its refused
 cases live in `tests/suite_lane_threshold.test.ts`). Before adding one, look for the suite that
 should own the case, and pick the cheapest form that keeps the guard (the remedies above). The
