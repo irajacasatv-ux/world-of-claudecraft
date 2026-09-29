@@ -10,9 +10,16 @@ import { CLASSES, MOBS } from '../src/sim/data';
 import { createMob, createPlayer } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
 import type { Aura, Entity } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
+
+// Every case controls the warrior with mobs and players it places itself, so the
+// empty world serves.
+function makeWarrior(): Sim {
+  return new Sim({ seed: 17, playerClass: 'warrior', autoEquip: true, world: EMPTY_TEST_WORLD });
+}
 
 function rigWarrior() {
-  const sim = new Sim({ seed: 17, playerClass: 'warrior', autoEquip: true });
+  const sim = makeWarrior();
   sim.setPlayerLevel(20);
   expect(sim.selectTalentRow(17, 'war_row_avatar')).toBe(true); // Avatar is a tier-5 row grant
   sim.tick();
@@ -63,7 +70,7 @@ const hasAvatarBuff = (p: Entity) => p.auras.some((a) => a.kind === 'buff_avatar
 
 describe('Avatar breaks enemy control (usableWhileControlled + source-scoped break)', () => {
   it('activates at level 17 by immediately clearing fear and preserving the damage buff', () => {
-    const sim = new Sim({ seed: 17, playerClass: 'warrior', autoEquip: true });
+    const sim = makeWarrior();
     sim.setPlayerLevel(17);
     expect(sim.selectTalentRow(17, 'war_row_avatar')).toBe(true);
     sim.tick();
