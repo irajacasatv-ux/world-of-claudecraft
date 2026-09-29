@@ -88,6 +88,10 @@ const FILE_ALLOWANCE_LEDGER: ReadonlyMap<string, number> = new Map([
   ['tests/hunter_dps_balance.test.ts', 400_000],
   ['tests/nythraxis_matrix.test.ts', 1_200_000],
   ['tests/owned_class_balance_dps_probes.test.ts', 360_000],
+  // Lane-owned Groveheart harness: the eight-probe healer contract at 300s, plus
+  // the one-probe heal-over-time case at 60s since 2026-09-28 (it ran within a
+  // second of the 20s default on the release nightly and past it on a busier one).
+  ['tests/owned_class_balance_groveheart.test.ts', 360_000],
   // Lane-owned raid harness, likewise unseen until the trailing-comma fix.
   ['tests/owned_class_raid_armor_avoidance.test.ts', 360_000],
   // The shared PostgreSQL escrow fixture carries a 120s setup hook and a 30s

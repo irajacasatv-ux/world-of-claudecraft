@@ -10,7 +10,10 @@ describe('owned-class level 20 balance harness (Groveheart)', () => {
 
     expect(groveheart.healingBySource.Wildbloom).toBeGreaterThan(0);
     expect(groveheart.hps).toBeGreaterThan(0);
-  });
+    // One three-ally probe: 15.4 s in the PR lane, 19.2 s on the release/v0.45.0 and main
+    // nightlies and 20.9 s (over the 20 s default) on a busier feature/freeholds nightly,
+    // so it carries a declared budget like its sibling below.
+  }, 60_000);
 
   it('holds the Groveheart interim healer contract on both profiles', () => {
     // Single target: inside the peer envelope at the shared seed.
