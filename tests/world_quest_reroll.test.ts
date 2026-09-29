@@ -148,8 +148,9 @@ describe('World Quest Reroll Mechanism', () => {
     expect(saved.worldQuests?.rerollCycle).toBe(cycle);
     expect(saved.worldQuests?.replacements?.[eastbrookQuest.id]).toBe(replacementId);
 
-    // Restore into a fresh PlayerMeta on the SAME cycle
-    const freshSim = new Sim({ seed: 43, playerClass: 'mage', autoEquip: true });
+    // Restore into a fresh PlayerMeta on the SAME cycle (and the same seed: the
+    // restore reads only the save, and a fresh seed pays its own bootstrap)
+    const freshSim = new Sim({ seed: 42, playerClass: 'mage', autoEquip: true });
     freshSim.setPlayerLevel(20);
     const freshMeta = freshSim.meta(freshSim.playerId);
     expect(freshMeta).toBeDefined();
@@ -168,7 +169,7 @@ describe('World Quest Reroll Mechanism', () => {
       // old rerollCycle preserved from previous day
       rerollCycle: cycle,
     };
-    const nextSim = new Sim({ seed: 44, playerClass: 'priest', autoEquip: true });
+    const nextSim = new Sim({ seed: 42, playerClass: 'priest', autoEquip: true });
     nextSim.setPlayerLevel(20);
     const nextMeta = nextSim.meta(nextSim.playerId);
     expect(nextMeta).toBeDefined();
