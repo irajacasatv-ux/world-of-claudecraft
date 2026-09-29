@@ -8,6 +8,7 @@ import {
   migrateCharacterTalentsV2,
 } from '../src/sim/talent_save_migration';
 import { ALL_CLASSES } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const fixtureUrl = new URL('./fixtures/v025_warrior_character.json', import.meta.url);
 const fixtureBytes = readFileSync(fixtureUrl);
@@ -282,7 +283,14 @@ describe('talent production save migrations', () => {
   });
 
   it('loads, saves, and reloads the migrated Warrior without duplicate learning or neutral-state loss', () => {
-    const sim = new Sim({ seed: 17, playerClass: 'warrior', noPlayer: true });
+    // The load and save arms read only the character, so both Sims run on the
+    // empty world.
+    const sim = new Sim({
+      seed: 17,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const pid = sim.addPlayer('warrior', 'Migration Fixture', { state: cloneFixture() });
     const first = savedState(sim.serializeCharacter(pid));
 
@@ -336,7 +344,12 @@ describe('talent production save migrations', () => {
     expect(new Set(known).size).toBe(known.length);
     expect(sim.events.some((event) => event.type === 'learnAbility')).toBe(false);
 
-    const sim2 = new Sim({ seed: 17, playerClass: 'warrior', noPlayer: true });
+    const sim2 = new Sim({
+      seed: 17,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const pid2 = sim2.addPlayer('warrior', 'Migration Fixture', { state: first });
     const second = savedState(sim2.serializeCharacter(pid2));
     expect(second.talents).toEqual(first.talents);
