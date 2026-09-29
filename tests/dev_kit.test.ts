@@ -20,6 +20,7 @@ import { canDualWield, isShieldItem } from '../src/sim/equipment_rules';
 import { itemFromRaid } from '../src/sim/item_level';
 import { Sim } from '../src/sim/sim';
 import { ALL_CLASSES, type PlayerClass } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // These presets exist so a tester can gear up in one click instead of being kitted
 // out through the database, and so a Gravewyrm Sanctum balance run measures the
@@ -495,9 +496,11 @@ describe('kit application order', () => {
   });
 });
 
+// The kit reads only the character's class, spec and bags, so every real-Sim
+// case runs on the empty world.
 describe('/dev kit against a real Sim', () => {
   function kitted(cls: PlayerClass, spec: string): Sim {
-    const sim = new Sim({ seed: 7, playerClass: cls, devCommands: true });
+    const sim = new Sim({ seed: 7, playerClass: cls, devCommands: true, world: EMPTY_TEST_WORLD });
     sim.setPlayerLevel(DEV_KIT_LEVEL);
     if (!sim.setSpec(spec)) throw new Error(`could not select ${cls} ${spec}`);
     sim.chat(`/dev kit ${spec}`);
@@ -558,7 +561,12 @@ describe('/dev kit against a real Sim', () => {
   it('leaves level and spec alone: this is a GEAR command', () => {
     // Deliberately decoupled from /dev level and the spec UI so a tester can vary one
     // without the other.
-    const sim = new Sim({ seed: 7, playerClass: 'mage', devCommands: true });
+    const sim = new Sim({
+      seed: 7,
+      playerClass: 'mage',
+      devCommands: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.setPlayerLevel(DEV_KIT_LEVEL);
     const meta = sim.players.get(sim.playerId);
     if (meta) meta.talents.spec = 'frost';
@@ -574,7 +582,12 @@ describe('/dev kit against a real Sim', () => {
   }
 
   it('refuses a spec that belongs to another class', () => {
-    const sim = new Sim({ seed: 7, playerClass: 'warrior', devCommands: true });
+    const sim = new Sim({
+      seed: 7,
+      playerClass: 'warrior',
+      devCommands: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.setPlayerLevel(DEV_KIT_LEVEL);
     const before = equipmentSnapshot(sim);
     sim.chat('/dev kit restoration');
@@ -584,7 +597,12 @@ describe('/dev kit against a real Sim', () => {
   it('is inert when dev commands are off', () => {
     // The whole surface is env-gated server-side; a preset must not be the one cheat
     // that leaks past it.
-    const sim = new Sim({ seed: 7, playerClass: 'warrior', devCommands: false });
+    const sim = new Sim({
+      seed: 7,
+      playerClass: 'warrior',
+      devCommands: false,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.setPlayerLevel(DEV_KIT_LEVEL);
     const before = equipmentSnapshot(sim);
     const bagsBefore = sim.players.get(sim.playerId)?.bags.filter(Boolean).length ?? 0;
