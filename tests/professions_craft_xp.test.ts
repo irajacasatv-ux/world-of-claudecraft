@@ -17,9 +17,21 @@ import { stationsOfType } from '../src/sim/professions/stations';
 import type { ProfessionRecipeRecord } from '../src/sim/professions/types';
 import type { PlayerMeta } from '../src/sim/sim';
 import { Sim } from '../src/sim/sim';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
+// Crafting reads the recipe, the bags, the skills and the station position,
+// never a camp, an NPC or a ground object, so every case runs on the empty
+// controlled world (stations kept): about a millisecond per fresh Sim where
+// the full world cost tens, across the per-recipe sweep's two hundred-odd
+// cases.
 function makeSim(seed = 42) {
-  return new Sim({ seed, playerClass: 'warrior', autoEquip: false, freeholdsEnabled: true });
+  return new Sim({
+    seed,
+    playerClass: 'warrior',
+    autoEquip: false,
+    freeholdsEnabled: true,
+    world: EMPTY_TEST_WORLD,
+  });
 }
 
 function grantItem(sim: Sim, itemId: string, count: number, pid: number) {
