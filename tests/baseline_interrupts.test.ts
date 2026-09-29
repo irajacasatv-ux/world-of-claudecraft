@@ -9,6 +9,7 @@ import { MOBS } from '../src/sim/data';
 import { createMob } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
 import type { Entity } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const INTERRUPTS: Record<string, string> = {
   warrior: 'pummel',
@@ -63,7 +64,13 @@ describe('baseline class interrupts', () => {
   );
 
   it('an interrupt cancels a hostile cast and locks that spell school', () => {
-    const sim = new Sim({ seed: 4, playerClass: 'warrior', autoEquip: true });
+    // The caster is a mob the case places itself, so the empty world serves.
+    const sim = new Sim({
+      seed: 4,
+      playerClass: 'warrior',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.setPlayerLevel(20);
     const p = sim.entities.get(sim.playerId) as Entity;
     // A hostile mob mid-cast of a non-physical (interruptible) spell.
