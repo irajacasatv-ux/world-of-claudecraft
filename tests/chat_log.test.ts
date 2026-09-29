@@ -14,14 +14,23 @@ vi.mock('../server/db', () => ({
 import { ChatLogger, type ChatLogRow } from '../server/chat_log';
 import { GameServer } from '../server/game';
 import { MAX_CHAT_MESSAGE_LEN, Sim } from '../src/sim/sim';
+import { WORLD_SEED } from '../src/sim/world_seed';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 function row(message: string, channel = 'say'): ChatLogRow {
   return { accountId: 1, characterId: 2, characterName: 'Zyx', channel, message };
 }
 
 describe('sent chat normalization', () => {
+  // The empty world on the seed the GameServer cases below boot: chat reads no
+  // seed or world content, and a second seed pays its own overworld bootstrap.
   function makeWorld() {
-    return new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+    return new Sim({
+      seed: WORLD_SEED,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
   }
 
   it('captures plain text and /say as say', () => {
