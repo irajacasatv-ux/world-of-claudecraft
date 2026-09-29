@@ -227,8 +227,8 @@ function buildDailyMatch3Level(day: number): WorldQuestMatch3LevelDef {
   throw new Error('Daily match-three generator failed its solvability contract');
 }
 
-// Immutable derived content, built and certified once per process on first use (the memos
-// below). Repeated UI, snapshot and command reads are O(1) and return the same frozen objects.
+// Immutable derived content, built and certified once per module instance on first use (the
+// memos below). Repeated UI, snapshot and command reads are O(1) and return the same frozen objects.
 function buildLeyCatalog(size: number, seedBase: number) {
   // Construction-only uniqueness state: lookup never mutates the frozen catalog.
   const routes = new Set<string>();
@@ -263,7 +263,7 @@ function buildLeyCatalog(size: number, seedBase: number) {
 // its own board. A builder that throws leaves its memo empty and throws again on every read
 // (the paired tests certify every variant, so that needs a rules change first).
 // tests/world_quest_daily_generation.test.ts pins the boards to the module-load build and
-// that the module evaluates no call at load.
+// that the module seeds no Rng at load.
 let leyCatalogMemo: ReturnType<typeof buildLeyCatalog> | undefined;
 function leyCatalog(): ReturnType<typeof buildLeyCatalog> {
   if (leyCatalogMemo === undefined) leyCatalogMemo = buildLeyCatalog(4, 0x1e7be000);
@@ -275,6 +275,9 @@ function leyBonusCatalog(index: number): ReturnType<typeof buildLeyCatalog> {
   let catalog = leyBonusCatalogMemo[index];
   if (catalog === undefined) {
     const size = WORLD_QUEST_LEY_BONUS_SIZES[index];
+    // Fail fast on a level the clamp cannot place (NaN), as the module-load table's
+    // out-of-range read did, rather than running the builder on no size at all.
+    if (size === undefined) throw new RangeError(`No bonus ley board at index ${index}`);
     catalog = buildLeyCatalog(size, 0x1e7be000 + size * 0x10000);
     leyBonusCatalogMemo[index] = catalog;
   }

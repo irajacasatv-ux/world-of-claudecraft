@@ -137,8 +137,19 @@ describe('daily procedural world quest levels', () => {
       expect(generateBonusLeyChallenge(1, level)).not.toBe(bonus);
       expect(Object.isFrozen(bonus)).toBe(true);
       expect(Object.isFrozen(bonus.solution)).toBe(true);
+      expect(Object.isFrozen(bonus.puzzle)).toBe(true);
+      expect(Object.isFrozen(bonus.puzzle.tiles)).toBe(true);
       expect(Object.isFrozen(bonus.puzzle.tiles[0])).toBe(true);
+      expect(Object.isFrozen(bonus.puzzle.source)).toBe(true);
+      expect(Object.isFrozen(bonus.puzzle.target)).toBe(true);
     }
+    // Unsafe, fractional and non-finite days all read day 0's memo slot.
+    for (const day of [Number.NaN, 1.5, 2 ** 53, Number.POSITIVE_INFINITY]) {
+      expect(generateDailyMatch3Level(day)).toBe(generateDailyMatch3Level(0));
+      expect(generateDailyLeyChallenge(day)).toBe(generateDailyLeyChallenge(0));
+    }
+    // A level the clamp cannot place fails fast, as the module-load table's read did.
+    expect(() => generateBonusLeyChallenge(0, Number.NaN)).toThrow(RangeError);
     expect(generateBonusLeyChallenge(0, 1)).not.toBe(generateBonusLeyChallenge(0, 2));
   });
 });
@@ -164,7 +175,7 @@ const MODULE_LOAD_CATALOG_DIGEST =
   '463fa65cd8db2b79e4ba6f6b37dce89e702593f2aee716d139f270a760db28db';
 
 describe('the daily catalogs build on first use, and build what the module-load build did', () => {
-  it('reads the module-load boards in catalog order', () => {
+  it('matches the module-load build (the digest reads in catalog order)', () => {
     expect(catalogDigest(daily)).toBe(MODULE_LOAD_CATALOG_DIGEST);
   });
 
@@ -176,6 +187,8 @@ describe('the daily catalogs build on first use, and build what the module-load 
     for (const level of [2, 1])
       for (const day of reversed) fresh.generateBonusLeyChallenge(day, level);
     for (const day of reversed) fresh.generateDailyLeyChallenge(day);
+    // A fresh module instance, not the static one the earlier cases built.
+    expect(fresh.generateDailyMatch3Level(0)).not.toBe(daily.generateDailyMatch3Level(0));
     expect(catalogDigest(fresh)).toBe(MODULE_LOAD_CATALOG_DIGEST);
   });
 

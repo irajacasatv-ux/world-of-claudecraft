@@ -529,11 +529,12 @@ describe('CI workflow parity', () => {
       // (browser-gate keeps the full tree), never code no unit test reaches.
       const corpus = sparseConeCorpus(tracked, read, new Set([SELF]));
       // CORPUS_FLOOR files after the 2026-09-29 retirement of 85 capture scripts that
-      // nothing ran or named (63 of them sat under a walked root): 11,038 at the
-      // release/v0.45.0 sync (2026-09-28), the day the corpus narrowed from every
-      // reference-bearing file (10,729 at the v0.44.0 close) to the test-reachable
-      // ones (the walked-root arm reaches more code than the markdown it drops). An
-      // emptied or truncated closure must not green the coupling.
+      // nothing ran or named (the corpus was 11,060 just before, and all 85 were
+      // members). It was 11,038 at the release/v0.45.0 sync (2026-09-28), the day the
+      // corpus narrowed from every reference-bearing file (10,729 at the v0.44.0
+      // close) to the test-reachable ones (the walked-root arm reaches more code than
+      // the markdown it drops). An emptied or truncated closure must not green the
+      // coupling.
       expect(corpus.length).toBeGreaterThanOrEqual(CORPUS_FLOOR);
       for (const file of corpus) {
         const source = read(file);
