@@ -84,10 +84,11 @@ import { stripComments } from './helpers/strip_comments';
 import { tsFilesUnder } from './helpers/ts_files_under';
 
 // The one case that imports modules (the content-channel registry, by identity)
-// reaches src/ui/i18n through the deed and reliquary channels, and that module
-// re-exports every resolved locale slice: on a PR shard's cold transform cache
-// the import alone cost this file 10 to 13 seconds. The registry's membership
-// does not read i18n at all, so the channels get the three exports they call.
+// reaches src/ui/i18n through the deed and reliquary channels. That module used to
+// re-export every resolved locale slice (10 to 13 seconds of import on a PR shard's
+// cold transform cache); since 2026-09-29 it loads only the eager en and en_XA
+// tables. The registry's membership does not read i18n at all, so the channels get
+// the three exports they call and even those tables stay out.
 vi.mock('../src/ui/i18n', () => ({
   getLanguage: () => 'en',
   isPseudoActive: () => false,
