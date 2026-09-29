@@ -8,7 +8,7 @@
 // bags, a second death before the sweep).
 import { describe, expect, it } from 'vitest';
 import { corpseIndicatorFor } from '../src/sim/corpse_loot_state';
-import { BUILTIN_WORLD, ITEMS, ZONES } from '../src/sim/data';
+import { BUILTIN_WORLD, ITEMS } from '../src/sim/data';
 import {
   isWorldPvpSkullCopy,
   settleAllWorldPvpSpoils,
@@ -30,7 +30,6 @@ const ARENA_FREE_WORLD: WorldContent = {
 };
 const SEED = 7;
 const CONTESTED = { x: 60, z: 700 };
-const FFA = { x: 353.8, z: 2262.4 };
 
 function world(): Sim {
   return new Sim({ seed: SEED, playerClass: 'warrior', noPlayer: true, world: ARENA_FREE_WORLD });
@@ -205,30 +204,29 @@ describe('the drop', () => {
     expect(skullsOf(sim, c)).toHaveLength(0);
   });
 
-  it('no flag, no drop: an unflagged victim or an unflagged blow on free-for-all ground drops nothing', () => {
+  it('no flag, no drop: an unflagged victim or an unflagged blow drops nothing', () => {
+    // World PvP is opt-in everywhere now (the release retired free-for-all
+    // ground), so a lethal blow between a flagged and an unflagged player is
+    // no world kill at all: neither direction stakes gold or drops a skull.
     const sim = world();
     const a = fighter(sim, 'Aleph', 1001, 0);
     const b = fighter(sim, 'Bet', 1002, 2);
-    place(sim, a, FFA, 0);
-    place(sim, b, FFA, 2);
-    expect(ZONES.some((z) => z.worldPvp === 'ffa')).toBe(true);
-    // Unflagged victim: the blow marks the attacker, but the victim stakes nothing.
+    flag(sim, a);
     sim.meta(b)!.copper = 20_000;
-    slay(sim, a, b);
-    expect(ent(sim, a).pvpFlag).toBe(true);
+    slay(sim, a, b); // flagged blow, unflagged victim
     expect(ent(sim, b).lootable).toBe(false);
-    expect(sim.worldPvpBooks.spoils.size).toBe(0);
-    // Flagged victim, unflagged blow (hitting a flagged player never marks).
-    const c = fighter(sim, 'Gimel', 1003, 0);
-    const d = fighter(sim, 'Dalet', 1004, 2);
-    place(sim, c, FFA, 4);
-    place(sim, d, FFA, 6);
+    expect(sim.meta(b)!.copper).toBe(20_000);
+    const c = fighter(sim, 'Gimel', 1003, 4);
+    const d = fighter(sim, 'Dalet', 1004, 6);
     flag(sim, d);
     sim.meta(d)!.copper = 20_000;
-    slay(sim, c, d);
+    slay(sim, c, d); // unflagged blow, flagged victim
     expect(ent(sim, c).pvpFlag).toBeFalsy();
     expect(ent(sim, d).lootable).toBe(false);
+    expect(sim.meta(d)!.copper).toBe(20_000);
+    expect(skullsOf(sim, a)).toHaveLength(0);
     expect(skullsOf(sim, c)).toHaveLength(0);
+    expect(sim.worldPvpBooks.spoils.size).toBe(0);
   });
 
   it('a grey kill and a fully decayed repeat kill drop nothing', () => {

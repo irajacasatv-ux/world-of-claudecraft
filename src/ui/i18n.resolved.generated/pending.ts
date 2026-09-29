@@ -11,32 +11,44 @@
 export const pending: Record<string, readonly string[]> = {
   "es": [
     "entities.items.pvp_trophy_skull.name",
+    "hudChrome.hill.pvpBanner",
+    "hudChrome.hill.pvpEntry",
     "hudChrome.worldPvp.skullName",
     "hudChrome.worldPvp.spoilsLine"
   ],
   "es_ES": [
     "entities.items.pvp_trophy_skull.name",
+    "hudChrome.hill.pvpBanner",
+    "hudChrome.hill.pvpEntry",
     "hudChrome.worldPvp.skullName",
     "hudChrome.worldPvp.spoilsLine"
   ],
   "fr_FR": [
     "entities.items.pvp_trophy_skull.name",
+    "hudChrome.hill.pvpBanner",
+    "hudChrome.hill.pvpEntry",
     "hudChrome.worldPvp.skullName",
     "hudChrome.worldPvp.spoilsLine"
   ],
   "fr_CA": [
     "entities.items.pvp_trophy_skull.name",
+    "hudChrome.hill.pvpBanner",
+    "hudChrome.hill.pvpEntry",
     "hudChrome.worldPvp.skullName",
     "hudChrome.worldPvp.spoilsLine"
   ],
   "en_CA": [],
   "it_IT": [
     "entities.items.pvp_trophy_skull.name",
+    "hudChrome.hill.pvpBanner",
+    "hudChrome.hill.pvpEntry",
     "hudChrome.worldPvp.skullName",
     "hudChrome.worldPvp.spoilsLine"
   ],
   "de_DE": [
     "entities.items.pvp_trophy_skull.name",
+    "hudChrome.hill.pvpBanner",
+    "hudChrome.hill.pvpEntry",
     "hudChrome.worldPvp.skullName",
     "hudChrome.worldPvp.spoilsLine"
   ],
@@ -46,47 +58,65 @@ export const pending: Record<string, readonly string[]> = {
   "ja_JP": [],
   "pt_BR": [
     "entities.items.pvp_trophy_skull.name",
+    "hudChrome.hill.pvpBanner",
+    "hudChrome.hill.pvpEntry",
     "hudChrome.worldPvp.skullName",
     "hudChrome.worldPvp.spoilsLine"
   ],
   "ru_RU": [],
   "cs_CZ": [
     "entities.items.pvp_trophy_skull.name",
+    "hudChrome.hill.pvpBanner",
+    "hudChrome.hill.pvpEntry",
     "hudChrome.worldPvp.skullName",
     "hudChrome.worldPvp.spoilsLine"
   ],
   "nl_NL": [
     "entities.items.pvp_trophy_skull.name",
+    "hudChrome.hill.pvpBanner",
+    "hudChrome.hill.pvpEntry",
     "hudChrome.worldPvp.skullName",
     "hudChrome.worldPvp.spoilsLine"
   ],
   "pl_PL": [
     "entities.items.pvp_trophy_skull.name",
+    "hudChrome.hill.pvpBanner",
+    "hudChrome.hill.pvpEntry",
     "hudChrome.worldPvp.skullName",
     "hudChrome.worldPvp.spoilsLine"
   ],
   "id_ID": [
     "entities.items.pvp_trophy_skull.name",
+    "hudChrome.hill.pvpBanner",
+    "hudChrome.hill.pvpEntry",
     "hudChrome.worldPvp.skullName",
     "hudChrome.worldPvp.spoilsLine"
   ],
   "tr_TR": [
     "entities.items.pvp_trophy_skull.name",
+    "hudChrome.hill.pvpBanner",
+    "hudChrome.hill.pvpEntry",
     "hudChrome.worldPvp.skullName",
     "hudChrome.worldPvp.spoilsLine"
   ],
   "sv_SE": [
     "entities.items.pvp_trophy_skull.name",
+    "hudChrome.hill.pvpBanner",
+    "hudChrome.hill.pvpEntry",
     "hudChrome.worldPvp.skullName",
     "hudChrome.worldPvp.spoilsLine"
   ],
   "vi_VN": [
     "entities.items.pvp_trophy_skull.name",
+    "hudChrome.hill.pvpBanner",
+    "hudChrome.hill.pvpEntry",
     "hudChrome.worldPvp.skullName",
     "hudChrome.worldPvp.spoilsLine"
   ],
   "da_DK": [
     "entities.items.pvp_trophy_skull.name",
+    "hudChrome.hill.pvpBanner",
+    "hudChrome.hill.pvpEntry",
     "hudChrome.worldPvp.skullName",
     "hudChrome.worldPvp.spoilsLine"
   ]
