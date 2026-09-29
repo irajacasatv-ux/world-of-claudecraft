@@ -6,6 +6,7 @@ import { createMob } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
 import { dist2d, type Entity } from '../src/sim/types';
 import { groundHeight } from '../src/sim/world';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 type TestSim = Sim & {
   nextId: number;
@@ -26,7 +27,14 @@ function player(sim: Sim, id: number): Entity {
 
 describe('Gladesong channel healing', () => {
   it('pulses four times on the caster and nearby visible allies only', () => {
-    const sim = new Sim({ seed: 260_1756, playerClass: 'druid', autoEquip: false }) as TestSim;
+    // The chapel wall is static collider geometry, which the empty world keeps; the
+    // healers and the wolf are placed by hand, so no camp or NPC is needed.
+    const sim = new Sim({
+      seed: 260_1756,
+      playerClass: 'druid',
+      autoEquip: false,
+      world: EMPTY_TEST_WORLD,
+    }) as TestSim;
     sim.setPlayerLevel(20);
     expect(sim.applyTalents({ spec: null, rows: { 17: 'dru_r17_frenzied_regeneration' } })).toBe(
       true,
