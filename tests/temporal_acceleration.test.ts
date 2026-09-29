@@ -7,11 +7,14 @@ import { spellHasteMult } from '../src/sim/combat/spell_combat';
 import { ABILITIES } from '../src/sim/data';
 import { Sim } from '../src/sim/sim';
 import type { Entity } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const TA = 'temporal_acceleration';
 
+// Every ally the burst reaches is added beside the mage, so the Sims run on the
+// empty world.
 function chronoMage(): { sim: Sim; p: Entity } {
-  const sim = new Sim({ seed: 41, playerClass: 'mage', autoEquip: true });
+  const sim = new Sim({ seed: 41, playerClass: 'mage', autoEquip: true, world: EMPTY_TEST_WORLD });
   sim.setPlayerLevel(20);
   expect(sim.setSpec('arcane')).toBe(true);
   sim.tick();
