@@ -9,15 +9,24 @@
 // harness), never internals.
 
 import { describe, expect, it } from 'vitest';
+import { BUILTIN_WORLD } from '../src/sim/data';
 import { Sim } from '../src/sim/sim';
-import type { Entity, ItemInstancePayload, SimEvent } from '../src/sim/types';
+import type { Entity, ItemInstancePayload, SimEvent, WorldContent } from '../src/sim/types';
 import { groundHeight } from '../src/sim/world';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const BOOTS = 'oiled_boots'; // armor, sellValue 80, stack 1
 const HIDE = 'pristine_hide'; // junk rare material, sellValue 25, stack 20
 const SCALE = 'mudfin_scale'; // junk reagent (common since phase 11l), eviction filler
 
-const makeWorld = () => new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+// Selling and buying back need one vendor in reach: the empty world plus Trader
+// Wilkes, the first vendor the full overworld spawns.
+const TRADER_WORLD: WorldContent = {
+  ...EMPTY_TEST_WORLD,
+  npcs: { trader_wilkes: BUILTIN_WORLD.npcs.trader_wilkes },
+};
+const makeWorld = () =>
+  new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true, world: TRADER_WORLD });
 
 function standAt(sim: Sim, pid: number, target: Entity): void {
   const p = sim.entities.get(pid);
