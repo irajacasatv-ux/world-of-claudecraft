@@ -18,6 +18,7 @@ import { isMaterialItemId } from '../src/sim/material_ids';
 import type { MaterialSource, MaterialSourceCount } from '../src/sim/material_sources';
 import { Sim } from '../src/sim/sim';
 import type { InvSlot } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const MATERIAL = 'copper_ore';
 const ANA: MaterialSource = { gatherer: { kind: 'character', id: 11, name: 'Ana' } };
@@ -34,8 +35,14 @@ const GEAR_IDS = Object.values(ITEMS)
   .filter((d) => d.kind === 'weapon' || d.kind === 'armor')
   .map((d) => d.id);
 
+// A trade needs only its two parties side by side, so the empty world serves it.
 function setup() {
-  const sim = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+  const sim = new Sim({
+    seed: 42,
+    playerClass: 'warrior',
+    noPlayer: true,
+    world: EMPTY_TEST_WORLD,
+  });
   const a = sim.addPlayer('warrior', 'Ana');
   const b = sim.addPlayer('warrior', 'Bru');
   // Both sides start from a KNOWN bag, so every count below is exact rather
