@@ -37,8 +37,19 @@ afterEach(() => {
   setActiveWorldContent(null);
 });
 
+// A fixture world: the built-in props plus the case's own, on the flat spot
+// below. Every call is a new content object, so each one builds its collider
+// grid and each Sim on it spawns its world; the overworld's camps, NPCs and
+// ground objects take no part in a climb on the spot, so they stay out. The
+// real-geometry case below keeps the full built-in world.
 function world(props: Partial<WorldContent['props']>): WorldContent {
-  return { ...BUILTIN_WORLD, props: { ...BUILTIN_WORLD.props, ...props } };
+  return {
+    ...BUILTIN_WORLD,
+    camps: [],
+    npcs: {},
+    groundObjects: [],
+    props: { ...BUILTIN_WORLD.props, ...props },
+  };
 }
 
 // Flat, dry, collider-free ground to build fixtures on.
