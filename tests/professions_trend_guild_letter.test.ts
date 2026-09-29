@@ -12,23 +12,10 @@ import { guildLetters, letterDelay, makeWorld, tickFor } from './professions_tre
 const GUILD_DELIVERY_TEST_TIMEOUT_MS = 40_000;
 
 describe('the Guild letter through the real Sim', () => {
+  // The fresh crossing's own case was this one's first window run alone; the
+  // window below asserts the same one pair-correct letter before playing on.
   it(
-    'a fresh character crossing the threshold gets exactly one pair-correct letter',
-    () => {
-      const sim = makeWorld();
-      const pid = sim.addPlayer('warrior', 'Tinker');
-      sim.gainCraftSkill(pid, 'engineering', 15);
-      sim.gainCraftSkill(pid, 'alchemy', 15);
-      const events = tickFor(sim, letterDelay('engineering+alchemy') + 5);
-      const letters = guildLetters(events, pid);
-      expect(letters).toHaveLength(1);
-      expect(letters[0]).toMatchObject({ letterId: 'guild_trend_engineering_alchemy' });
-    },
-    GUILD_DELIVERY_TEST_TIMEOUT_MS,
-  );
-
-  it(
-    'continued gains and long additional ticking never produce a second Guild letter',
+    'a fresh crossing gets one pair-correct letter, and continued gains never a second',
     () => {
       const sim = makeWorld();
       const pid = sim.addPlayer('warrior', 'Tinker');
@@ -36,7 +23,9 @@ describe('the Guild letter through the real Sim', () => {
       sim.gainCraftSkill(pid, 'alchemy', 15);
       const all: SimEvent[] = [];
       all.push(...tickFor(sim, letterDelay('engineering+alchemy') + 5));
-      expect(guildLetters(all, pid)).toHaveLength(1);
+      const letters = guildLetters(all, pid);
+      expect(letters).toHaveLength(1);
+      expect(letters[0]).toMatchObject({ letterId: 'guild_trend_engineering_alchemy' });
       // Cross a DIFFERENT pair far past the threshold and keep playing.
       sim.gainCraftSkill(pid, 'jewelcrafting', 100);
       sim.gainCraftSkill(pid, 'weaponcrafting', 100);
