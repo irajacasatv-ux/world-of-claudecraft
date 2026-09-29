@@ -13,7 +13,8 @@ import {
   type FarVistaGateTimers,
   farVistaGate,
 } from '../src/render/far_terrain';
-import type { FarVistaPlan } from '../src/render/far_terrain_core';
+import { type FarVistaPlan, planFarTiles } from '../src/render/far_terrain_core';
+import { WORLD_MAX_X, WORLD_MAX_Z, WORLD_MIN_X, WORLD_MIN_Z } from '../src/sim/data';
 
 // A coarse plan keeps each tile a couple of idle slots: the LAW under test
 // is lifecycle, not sampling cost.
@@ -167,23 +168,54 @@ describe('buildFarTerrain lifecycle', () => {
     // a small edit box: hits one tile's interior (plus spacing padding)
     view.rebuildRegion(10, 10, 30, 30);
     const total = view.plannedTileCount();
+    // The edit's reach: a far vertex's clearance reads the cells one spacing
+    // out and its normal one cell further still, so every tile within two
+    // spacings of the box re-samples, and only those. On the shipped grid
+    // that turns this one-tile box into the four tiles meeting near it.
+    const reach = 2 * plan.spacing;
+    const expected = planFarTiles(WORLD_MIN_X, WORLD_MAX_X, WORLD_MIN_Z, WORLD_MAX_Z)
+      .filter(
+        (t) =>
+          t.x0 <= 30 + reach &&
+          t.x0 + t.size >= 10 - reach &&
+          t.z0 <= 30 + reach &&
+          t.z0 + t.size >= 10 - reach,
+      )
+      .map((t) => `${t.x0},${t.z0}`)
+      .sort();
+    expect(expected).toHaveLength(4);
+    const resampled = () =>
+      view.group.children
+        .filter((c, i) => ((c as { geometry?: object }).geometry as object) !== before[i])
+        .map((c) => {
+          type Framed = { geometry?: { boundingBox?: { min: { x: number; z: number } } | null } };
+          const box = (c as Framed).geometry?.boundingBox;
+          return `${box?.min.x},${box?.min.z}`;
+        })
+        .sort();
+    let firstSeen = false;
     for (let guard = 0; guard < 500; guard++) {
       stub.flush();
       await microtasks();
       // the built count NEVER dips: the stale mesh stands until its
       // replacement geometry is complete
       expect(view.builtTileCount()).toBe(total);
-      const changed = view.group.children.filter(
-        (c, i) => ((c as { geometry?: object }).geometry as object) !== before[i],
-      ).length;
-      if (changed > 0) {
+      const changed = resampled().length;
+      if (changed > 0 && !firstSeen) {
+        firstSeen = true;
         // only tiles the padded edit box intersects re-sampled
         expect(changed).toBeLessThanOrEqual(4);
-        view.dispose();
-        return;
       }
+      if (changed >= expected.length) break;
     }
-    throw new Error('rebuildRegion never swapped a tile geometry');
+    if (!firstSeen) throw new Error('rebuildRegion never swapped a tile geometry');
+    // settle: nothing past the reach joins once the queue has drained
+    for (let i = 0; i < 20; i++) {
+      stub.flush();
+      await microtasks();
+    }
+    expect(resampled()).toEqual(expected);
+    view.dispose();
   });
 
   it('accelerateInitialBuild completes the whole grid with NO idle grant at all', async () => {
