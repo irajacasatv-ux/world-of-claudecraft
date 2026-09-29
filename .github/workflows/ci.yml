@@ -771,14 +771,13 @@ jobs:
       # and the npm-test legs skip their lifecycle copy). The freshness diff
       # lives in pr-checks. Worker count resolves inside the script: the
       # half-cores measured default unless a step env sets a valid
-      # WOC_TEST_WORKERS. Both alternatives were measured and regressed (4
-      # workers, run 31107474546; 3 workers, run 31771637461, three unrelated
-      # default-timeout blowouts for at most a minute of wall). A new 3-worker
-      # trial on the shard legs only (the lanes stay at 2) runs under
-      # Fernando's ruling of 2026-09-29, after the heavy suites were slimmed and
-      # the balance lane culled: kept only if two full-mode runs are green with
-      # no timeout and the summed shard test step falls at least 5 percent,
-      # otherwise reverted. The ruling lives in scripts/ci_shard_test.mjs.
+      # WOC_TEST_WORKERS. None is set: every alternative was measured and
+      # regressed (4 workers, run 31107474546; 3 workers, run 31771637461,
+      # three unrelated default-timeout blowouts for at most a minute of wall;
+      # 3 workers again on 2026-09-29, runs 36615627398, 36619850946 and
+      # 36622924538, 11 percent less summed shard test step but a subprocess
+      # timeout under the contention). The ruling lives in
+      # scripts/ci_shard_test.mjs.
       #
       # Phase 2 (docs/qa-gate.md, "Selective PR-tier CI"): the runner reads the
       # changes job's selection decision. test_mode=full spawns the old step
@@ -797,7 +796,6 @@ jobs:
           TEST_MODE: ${{ needs.changes.outputs.test_mode }}
           TEST_MODE_REASON: ${{ needs.changes.outputs.test_mode_reason }}
           CHANGED_FILES: ${{ needs.changes.outputs.changed_files }}
-          WOC_TEST_WORKERS: '3'
         run: node scripts/ci_shard_test.mjs --shard=${{ matrix.shard }}/8
 
   # The long-sims lanes (Phase 4 of the CI/CD performance packet; split into
@@ -888,12 +886,14 @@ jobs:
     # the test step, which ci-stall-rerun.yml does not rerun, and 6 of 22
     # test-job checkouts across those two runs stalled for 3.8 to 8.2 minutes.
     # Fernando ruled (2026-09-29) a stall floor instead: the worst observed stall
-    # (8.2) plus setup (0.5) plus a slow-runner test step (2.3 x 1.60), times the
-    # 1.37 margin, is 17.0, so 17. The one sanctioned flake retry
-    # (lib/ci_leg_runner.mjs) runs the step twice: a worst stall plus two
-    # slow-runner test steps is 8.2 + 0.5 + 2 x 3.7 = 16.1, inside it with
-    # little margin, so a stall and a retry together are the case to watch.
-    timeout-minutes: 17
+    # plus setup (0.5) plus a slow-runner test step (2.3 x 1.60), times the 1.37
+    # margin. From the 8.2 minute stall first seen that gave 17; later the same
+    # day a lane A checkout stalled 14.8 minutes and was killed at 17 in its test
+    # step (run 36622924538), and a shard checkout stalled 16.45 (run
+    # 36615627398). The same arithmetic on 16.45 is (16.45 + 0.5 + 3.68) x 1.37
+    # = 28.3, so 29. It also covers the one sanctioned flake retry
+    # (lib/ci_leg_runner.mjs), which runs the step twice.
+    timeout-minutes: 29
     runs-on: ubuntu-latest
 
     steps:
@@ -998,7 +998,7 @@ jobs:
     if: ((github.event_name == 'pull_request' && (github.base_ref != 'main' || !startsWith(github.head_ref, 'release/'))) || (github.event_name == 'push' && !startsWith(github.ref, 'refs/heads/release/')) || github.event_name == 'workflow_dispatch' || github.event_name == 'merge_group') && needs.changes.outputs.code != 'false'
     # Sized with pr-long-sims-a (evidence there, in the lane-diet PR, and in
     # the dated re-derivations the sibling comment carries).
-    timeout-minutes: 17
+    timeout-minutes: 29
     runs-on: ubuntu-latest
 
     steps:

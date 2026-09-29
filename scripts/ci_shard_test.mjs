@@ -76,11 +76,14 @@ const planOnly = argv.includes('--plan-only');
 // run at the new value. WOC_TEST_WORKERS is the knob that produces such a
 // run (resolveWorkerCount validates it; anything malformed or out of
 // range falls back to this default, loudly). 2026-09-29: Fernando ruled a
-// new 3-worker trial on the shard legs only (ci.yml sets the knob on the
-// pr-gate step; the lanes keep this default), now that the heavy suites are
-// slimmed and the balance lane culled: kept only if two full-mode runs are
-// green with no timeout and the summed shard test step falls at least 5
-// percent, otherwise reverted.
+// new 3-worker trial on the shard legs only, kept only if two full-mode runs
+// were green with no timeout and the summed shard test step fell at least 5
+// percent. Runs 36615627398, 36619850946 and 36622924538 summed 81.4, 90.8
+// and 85.6 minutes of shard test step against 94.0 and 99.0 at two workers
+// (about 11 percent less), but per-file time inflated 28 to 49 percent under
+// the contention and the third run timed out a 30 s subprocess
+// (tests/item_art_audit_builder.test.ts), so the trial was reverted and half
+// cores stands.
 const workerResolution = resolveWorkerCount({
   cores: os.availableParallelism(),
   envValue: process.env.WOC_TEST_WORKERS,

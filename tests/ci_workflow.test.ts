@@ -1358,17 +1358,19 @@ describe('CI workflow parity', () => {
       // excluded) at the same 1.60 ratio and 1.37 margin; evidence on the
       // ci.yml bound.
       ['release-gate', 36],
-      // The lanes: 17 is the 2026-09-29 re-derivation after the balance
+      // The lanes: 29 is the 2026-09-29 re-derivation after the balance
       // harnesses booted the idle cull (worst healthy lane 4.88 minutes; the
-      // formula's 10.7 raised to a stall floor, 8.2 minute checkout stall plus
-      // setup plus a slow-runner test step, x 1.37, by Fernando's ruling); it
-      // was 36 from 16.22 on 2026-09-28 and 28 from 12.5 on 2026-08-14.
+      // formula's 10.7 raised to a stall floor by Fernando's ruling: the worst
+      // observed checkout stall, 16.45 minutes, plus setup plus a slow-runner
+      // test step, x 1.37; a first 17 from an 8.2 minute stall killed a lane
+      // the same day); it was 36 from 16.22 on 2026-09-28 and 28 from 12.5 on
+      // 2026-08-14.
       // The 60-to-20-to-30 history, including the falsified under-10
       // projection that bans sizing these from estimates, lives on the
       // ci.yml bound. Both halves share one bound so the a/b assignment can
       // rebalance without re-sizing.
-      ['pr-long-sims-a', 17],
-      ['pr-long-sims-b', 17],
+      ['pr-long-sims-a', 29],
+      ['pr-long-sims-b', 29],
       ['browser-gate', 10],
       // 8 is a measured decision like the rest (healthy worst 4.42 min, all
       // observed stalls over 8), so it is pinned exactly here beside the
@@ -1563,22 +1565,22 @@ describe('CI workflow parity', () => {
           String.raw` {10}TEST_MODE: \$\{\{ needs\.changes\.outputs\.test_mode \}\}\n` +
           String.raw` {10}TEST_MODE_REASON: \$\{\{ needs\.changes\.outputs\.test_mode_reason \}\}\n` +
           String.raw` {10}CHANGED_FILES: \$\{\{ needs\.changes\.outputs\.changed_files \}\}\n` +
-          String.raw` {10}WOC_TEST_WORKERS: '3'\n` +
           String.raw` {8}run: node scripts/ci_shard_test\.mjs --shard=\$\{\{ matrix\.shard \}\}/${SHARD_N}\n`,
       ),
     );
     // Exactly three entry invocations: the shard matrix and the two long-sims
     // lane halves.
     expect(workflow.match(/run: node scripts\/ci_shard_test\.mjs/g)).toHaveLength(3);
-    // WOC_TEST_WORKERS is set in exactly ONE place: the pr-gate shard step, at 3,
-    // the trial Fernando ruled on 2026-09-29 (the two earlier alternatives to the
-    // half-cores default were measured and regressed: 4 workers, run
-    // 31107474546; 3 workers, run 31771637461). Any other override means someone
-    // re-trialing without a new ruling. Counted as the BARE key on the
-    // comment-stripped workflow, which catches every YAML value form (same-line,
-    // next-line, block scalar) while a doc comment naming the knob stays legal.
-    // The one sanctioned copy is pinned in place by the shard step's anchored shape above.
-    expect(workflowCode.split('WOC_TEST_WORKERS')).toHaveLength(2);
+    // WOC_TEST_WORKERS must not be set ANYWHERE in the workflow: every
+    // alternative to the half-cores default was measured and regressed (4
+    // workers, run 31107474546; 3 workers, run 31771637461, and again on
+    // 2026-09-29 under Fernando's trial ruling, runs 36615627398, 36619850946
+    // and 36622924538: less wall, but a subprocess timeout under the
+    // contention), so a reappearing override means someone re-trialing
+    // without a new ruling. Counted as the BARE key on the comment-stripped
+    // workflow, which catches every YAML value form (same-line, next-line,
+    // block scalar) while a doc comment naming the knob stays legal.
+    expect(workflowCode).not.toContain('WOC_TEST_WORKERS');
     // The knob's declaration must not silently vanish while the entry reads
     // it, for two mechanisms: biome's suspicious/noUndeclaredEnvVars warns
     // on any process.env read absent from turbo.json, and turbo's strict

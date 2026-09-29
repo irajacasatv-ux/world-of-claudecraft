@@ -65,7 +65,7 @@ automatically instead of by hand.
   but the queue's timer does) must stay comfortably under it. Today that is
   8 + 49 (the `changes` bound plus the pr-gate shard bound, the largest
   required one, re-derived 2026-09-28 from the worst healthy full-mode
-  wall; the long-sims lanes sit at 17 since 2026-09-29), so a required critical path of 57
+  wall; the long-sims lanes sit at 29 since 2026-09-29), so a required critical path of 57
   minutes against a 90 minute ceiling. Read 57 as a ceiling, not an
   expectation: queue runs always execute FULL mode (selection applies to
   pull requests only), and full mode is now the expensive one, with healthy
