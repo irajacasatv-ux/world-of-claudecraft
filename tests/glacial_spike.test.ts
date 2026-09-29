@@ -11,6 +11,7 @@ import { createMob } from '../src/sim/entity';
 import type { PlayerMeta } from '../src/sim/sim';
 import { Sim } from '../src/sim/sim';
 import type { Aura, Entity, SimEvent } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // Rimeneedle (owner design 2026-07-14, combat/frost_mage.ts + content): the
 // frost spender. Rimelance impacts and Frostglobe pulses bank Icicles (up to 5);
@@ -23,11 +24,14 @@ type TestSim = Sim & {
   addEntity(entity: Entity): void;
 };
 
+// EMPTY_TEST_WORLD: every case casts at a dummy it spawns itself, so the ambient
+// overworld is pure construction and tick cost.
 function makeSim(opts?: { spec?: string | null; seed?: number }): { sim: TestSim; p: Entity } {
   const sim = new Sim({
     seed: opts?.seed ?? 90210,
     playerClass: 'mage',
     autoEquip: true,
+    world: EMPTY_TEST_WORLD,
   }) as unknown as TestSim;
   sim.setPlayerLevel(20);
   const spec = opts?.spec === undefined ? 'frost' : opts.spec;
@@ -129,7 +133,9 @@ describe('Icicles build-up', () => {
     // respacing merged in: world-gen draws 5 rng values per camp mob, so
     // thinning the zone-1 camps shifted every seed's stream and seed 11 now
     // resists cast 3. Seed 12 lands all 10 again, so the loop below is
-    // unchanged.
+    // unchanged. The suite now runs on EMPTY_TEST_WORLD (no camps, so no
+    // world-gen camp draws); seed 12's stream there still lands every cast
+    // the loop makes, so the seed was kept, not re-hunted.
     const { sim, p } = makeSim({ seed: 12 });
     spawnTarget(sim, p);
     expect(frostIcicleCharges(p.auras)).toBe(0);
