@@ -12,6 +12,7 @@ import { createMob } from '../src/sim/entity';
 import { advancePendingProjectiles } from '../src/sim/projectile_travel';
 import { Sim } from '../src/sim/sim';
 import { type Entity, type PlayerClass, spellHitChance } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 type AnySim = Sim & Record<string, any>;
 type AnyEntity = Entity & Record<string, any>;
@@ -42,8 +43,15 @@ describe('spell_resist: pure leaf', () => {
   });
 });
 
+// Each case spawns its own target and stubs the roll, so the Sims run on the
+// empty world.
 function makeSim(cls: PlayerClass, level: number): { sim: AnySim; p: AnyEntity; meta: any } {
-  const sim = new Sim({ seed: 99, playerClass: cls, autoEquip: true }) as AnySim;
+  const sim = new Sim({
+    seed: 99,
+    playerClass: cls,
+    autoEquip: true,
+    world: EMPTY_TEST_WORLD,
+  }) as AnySim;
   sim.setPlayerLevel(level);
   const p = sim.player as AnyEntity;
   p.resource = p.maxResource;
