@@ -11,12 +11,25 @@ import {
   PROVING_SHORE_QUEST_ORDER,
   PROVING_SHORE_QUESTS,
 } from '../src/sim/content/proving_shore';
+import { BUILTIN_WORLD } from '../src/sim/data';
 import { Sim } from '../src/sim/sim';
+import type { WorldContent } from '../src/sim/types';
 
 const DEED_ID = 'prog_ready_for_an_adventure';
 
+// The rail only needs its own givers and the two ferry bells: every other NPC,
+// camp and ground object of the overworld is left out.
+const PROVING_SHORE_WORLD: WorldContent = {
+  ...BUILTIN_WORLD,
+  camps: [],
+  npcs: Object.fromEntries(
+    Object.keys(PROVING_SHORE_NPCS).map((id) => [id, BUILTIN_WORLD.npcs[id]]),
+  ),
+  groundObjects: BUILTIN_WORLD.groundObjects.filter((o) => o.itemId === 'ps_ferry_bell'),
+};
+
 function makeSim(seed = 4120): Sim {
-  return new Sim({ seed, playerClass: 'warrior', autoEquip: true });
+  return new Sim({ seed, playerClass: 'warrior', autoEquip: true, world: PROVING_SHORE_WORLD });
 }
 
 function islandBell(sim: Sim) {
