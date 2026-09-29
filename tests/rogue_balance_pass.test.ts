@@ -174,6 +174,8 @@ describe('rogue balance pass', () => {
       return hits;
     };
     expect(swings('combat', true)).toBe(2); // the mastery swings again
-    expect(swings(null, false)).toBe(1); // no mastery: single swing
+    // No mastery: a single swing even with the roll forced (a pinned natural roll
+    // at 0.9 could never proc, so only the forced arm can see a leaked roll).
+    expect(swings(null, true)).toBe(1);
   });
 });
