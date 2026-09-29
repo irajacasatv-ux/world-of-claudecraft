@@ -12,6 +12,7 @@ import { savedWorldQuestState } from '../src/sim/world_quest_state';
 import { worldQuestProgressForWire } from '../src/sim/world_quest_trace_wire';
 import { sanitizeWorldQuestProgress } from '../src/sim/world_quests';
 import { bareClient } from './helpers/bare_client';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const ID = 'wq_eastbrook_shadow';
 const GUARD = 2146900041;
@@ -174,7 +175,13 @@ describe('borrowed cloak owner wire and persistence', () => {
 
 describe('cloak character round trip', () => {
   it('never reloads the borrowed aura, stealthed flag or active channel from a save', () => {
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', autoEquip: true });
+    // A save round trip on one Sim: no overworld content is reached for.
+    const sim = new Sim({
+      seed: 42,
+      playerClass: 'warrior',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.setPlayerLevel(10);
     const meta = sim.players.get(sim.player.id)!;
     meta.worldQuestCycle = cycle();
