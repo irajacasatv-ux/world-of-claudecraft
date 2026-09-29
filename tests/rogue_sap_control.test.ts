@@ -5,6 +5,7 @@ import { incapacitateDrCategory } from '../src/sim/incapacitate_dr';
 import { Sim } from '../src/sim/sim';
 import type { CrowdControlDrCategory, Entity } from '../src/sim/types';
 import { groundHeight } from '../src/sim/world';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // Sap is the classic out-of-combat setup tool. Two defects it had:
 //   1. its incapacitate arm called enterCombat, which put both sides in combat
@@ -34,8 +35,17 @@ function teleport(sim: Sim, e: Entity, x: number, z: number): void {
   (sim as unknown as SimInternals).rebucket(e);
 }
 
+// Every rig saps a wolf or duels a player it places itself, so each Sim stands on
+// the empty world, all on one seed (a fresh seed costs a collider grid build).
+const SEED = 9;
+
 function sapRig(): { sim: Sim; rogue: Entity; mob: Entity } {
-  const sim = new Sim({ seed: 9, playerClass: 'rogue', autoEquip: true });
+  const sim = new Sim({
+    seed: SEED,
+    playerClass: 'rogue',
+    autoEquip: true,
+    world: EMPTY_TEST_WORLD,
+  });
   sim.setPlayerLevel(20);
   const rogue = sim.player;
   teleport(sim, rogue, 0, 0);
@@ -99,7 +109,12 @@ describe('Sap does not start a fight', () => {
 
 describe('Sap diminishing returns match Gripping Roots', () => {
   it('walks the full/half/quarter/immune ladder against another player', () => {
-    const sim = new Sim({ seed: 42, playerClass: 'rogue', noPlayer: true });
+    const sim = new Sim({
+      seed: SEED,
+      playerClass: 'rogue',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const a = sim.addPlayer('rogue', 'Slip');
     const b = sim.addPlayer('mage', 'Mark');
     sim.duels.set(a, { a, b, state: 'active', timer: 0 });
@@ -135,7 +150,12 @@ describe('Sap diminishing returns match Gripping Roots', () => {
   });
 
   it('keeps its own bucket, so a Sap never eats a root chain', () => {
-    const sim = new Sim({ seed: 42, playerClass: 'rogue', noPlayer: true });
+    const sim = new Sim({
+      seed: SEED,
+      playerClass: 'rogue',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const a = sim.addPlayer('rogue', 'Slip');
     const b = sim.addPlayer('mage', 'Mark');
     sim.duels.set(a, { a, b, state: 'active', timer: 0 });
