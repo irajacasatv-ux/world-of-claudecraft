@@ -29,6 +29,7 @@ import type { Entity, MobTemplate } from '../src/sim/types';
 import { castDisplayName } from '../src/ui/cast_display_name';
 import { setLanguage, type TranslationKey, t } from '../src/ui/i18n';
 import { DICT, localizeSimAuraName, simDictProvidedKeys } from '../src/ui/sim_i18n';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 /** Every MobTemplate field a rift template names today, with the player surface
  *  that name reaches. A field missing from this table (or from EXEMPT_FIELDS)
@@ -200,7 +201,13 @@ describe('the rift matcher exemptions are earned', () => {
     // Run the actual affix cascade rather than reading the source: the dread
     // stalker's lifeleech is authored 'Siphon', and if the leech arm ever grows
     // an aura or a bark the name has to join the matcher.
-    const sim = new Sim({ seed: 4242, playerClass: 'warrior', autoEquip: true });
+    // The stalker is placed by hand beside the player, so the empty world serves.
+    const sim = new Sim({
+      seed: 4242,
+      playerClass: 'warrior',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const p = sim.player as Entity;
     const tmpl = RIFT_MOBS.rift_dread_stalker;
     expect(tmpl?.lifeleech?.name, 'fixture: the dread stalker still leeches by name').toBe(
