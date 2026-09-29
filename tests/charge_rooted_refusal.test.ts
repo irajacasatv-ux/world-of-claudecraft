@@ -31,10 +31,12 @@ import { describe, expect, it } from 'vitest';
 import { ABILITIES } from '../src/sim/content/classes';
 import { Sim } from '../src/sim/sim';
 import type { Entity, SimEvent } from '../src/sim/types';
-import { teleportTo } from './sim_shared';
+import { RL_TEST_WORLD, teleportTo } from './sim_shared';
 
+// The charge needs one live forest wolf to run at, which the one-camp wolf
+// world spawns; the rest of the overworld bought nothing.
 function chargeSetup() {
-  const sim = new Sim({ seed: 42, playerClass: 'warrior', autoEquip: true });
+  const sim = new Sim({ seed: 42, playerClass: 'warrior', autoEquip: true, world: RL_TEST_WORLD });
   sim.setPlayerLevel(20);
   const p = sim.player;
   const wolf = [...sim.entities.values()].find(
