@@ -7,7 +7,8 @@ import {
   STALL_CANOPY_TOP,
   supportHeightAt,
 } from '../src/sim/colliders';
-import { DUNGEONS, instanceOrigin, MOBS, PROPS } from '../src/sim/data';
+import { CHARGE_ARRIVE_RANGE } from '../src/sim/combat/charge_route';
+import { DUNGEONS, instanceOrigin, MOBS, PROPS, setActiveWorldContent } from '../src/sim/data';
 import {
   CRYPT_LAYOUT,
   DAIS_HEIGHT,
@@ -22,7 +23,7 @@ import { PLAYER_BODY_RADIUS } from '../src/sim/pathfind';
 import { findLedgeGrab } from '../src/sim/physics/ledge';
 import { moveSpeedMult, type PlayerMotionDeps, stepPlayerMotion } from '../src/sim/player_motion';
 import { Sim } from '../src/sim/sim';
-import type { Entity, MoveInput } from '../src/sim/types';
+import { type Entity, emptyZoneProps, type MoveInput, type WorldContent } from '../src/sim/types';
 import { groundHeight } from '../src/sim/world';
 import { EMPTY_TEST_WORLD } from './sim_shared';
 
@@ -44,9 +45,9 @@ const IDLE: MoveInput = {
   surface: false,
 };
 
-// The empty world keeps every prop the stall, charge and roof cases stand on
-// (and the dungeon interiors); only the ambient camps and NPCs go, and every
-// case places the one mob it needs itself.
+// The empty world keeps every prop the stall and roof cases stand on (and the
+// dungeon interiors); only the ambient camps and NPCs go, and every case places
+// the one mob it needs itself. The charge case builds its own pen world.
 function makeSim(): Sim {
   const sim = new Sim({
     seed: SEED,
@@ -319,34 +320,87 @@ describe('climb vetoes', () => {
   });
 });
 
+// A three-rail pen alone on open ground near Eastbrook: a back rail to the
+// north, a side rail west and east, the mouth open to the south. A rail sits
+// under the sight line, so a charger inside the pen targets a body beyond the
+// back rail, but a body leaves only through the mouth. The pen is concave: a
+// charge run straight at that target presses into the back rail and the side
+// rails hold it there, so only a route out of the mouth arrives. Every other
+// prop list is empty, so nothing else stands near it.
+const PEN = { x: -8, z: 0, halfW: 3, back: 3, mouth: -1 };
+const PEN_WORLD: WorldContent = {
+  ...EMPTY_TEST_WORLD,
+  props: {
+    ...emptyZoneProps(),
+    fences: [
+      { x1: PEN.x - PEN.halfW, z1: PEN.z + PEN.back, x2: PEN.x + PEN.halfW, z2: PEN.z + PEN.back },
+      { x1: PEN.x - PEN.halfW, z1: PEN.z + PEN.back, x2: PEN.x - PEN.halfW, z2: PEN.z + PEN.mouth },
+      { x1: PEN.x + PEN.halfW, z1: PEN.z + PEN.back, x2: PEN.x + PEN.halfW, z2: PEN.z + PEN.mouth },
+    ],
+  },
+};
+
 describe('charge and chase', () => {
-  it('warrior charge routes around a stall, never onto or through it', () => {
-    const sim = makeSim();
-    teleport(sim, -10.5, -3.0, 0);
-    const p = sim.player;
-    const tmpl = MOBS.forest_wolf;
-    // Diagonal past the stall edge: line of sight clears, but the straight
-    // run to the target still crosses the stall footprint, so the path must
-    // route around it.
-    const mob = createMob(sim.nextId++, tmpl, 5, { x: -10.5, y: 0, z: 9.0 });
-    mob.pos.y = groundHeight(mob.pos.x, mob.pos.z, SEED);
-    mob.hostile = true;
-    sim.addEntity(mob);
-    hold(sim, {}, 1); // bucket the mob
-    p.facing = Math.atan2(mob.pos.x - p.pos.x, mob.pos.z - p.pos.z);
-    sim.targetEntity(mob.id);
-    p.gcdRemaining = 0;
-    p.resource = 100;
-    sim.castAbility('charge');
-    expect(p.chargeTargetId).toBe(mob.id);
-    let maxRel = 0;
-    for (let i = 0; i < 80; i++) {
-      hold(sim, {}, 1);
-      maxRel = Math.max(maxRel, p.pos.y - groundHeight(p.pos.x, p.pos.z, SEED));
+  it('warrior charge routes out of a three-rail pen, never over or through a rail', () => {
+    // Colliders and paths read the ACTIVE world content, so the pen world is
+    // made active for this case alone.
+    setActiveWorldContent(PEN_WORLD);
+    try {
+      const sim = new Sim({
+        seed: SEED,
+        playerClass: 'warrior',
+        autoEquip: true,
+        devCommands: true,
+        world: PEN_WORLD,
+      });
+      sim.setPlayerLevel(60);
+      // Inside the pen, off its centre line, so the straight run meets the
+      // back rail at a slant rather than head on.
+      teleport(sim, PEN.x + 1, PEN.z + 1, 0);
+      const p = sim.player;
+      // An inert training dummy 7 yd beyond the back rail and 9 yd from the
+      // charger (inside the 8 to 25 yd window): it never moves, so an arrival
+      // is the charger's doing alone.
+      const spawn = { x: PEN.x + 2, z: PEN.z + PEN.back + 7 };
+      const dummy = createMob(sim.nextId++, MOBS.training_dummy, 20, {
+        x: spawn.x,
+        y: groundHeight(spawn.x, spawn.z, SEED),
+        z: spawn.z,
+      });
+      dummy.hostile = true;
+      sim.addEntity(dummy);
+      hold(sim, {}, 1); // bucket the dummy
+      p.facing = Math.atan2(dummy.pos.x - p.pos.x, dummy.pos.z - p.pos.z);
+      sim.targetEntity(dummy.id);
+      p.gcdRemaining = 0;
+      p.resource = 100;
+      sim.castAbility('charge');
+      expect(p.chargeTargetId, 'the charge started: the rail left the sight line clear').toBe(
+        dummy.id,
+      );
+      let maxRel = 0;
+      let minZ = p.pos.z;
+      let endDist = Number.POSITIVE_INFINITY;
+      // The route ends inside the 3 sec budget (60 ticks); a few spare.
+      for (let i = 0; i < 70 && p.chargeTargetId !== null; i++) {
+        hold(sim, {}, 1);
+        maxRel = Math.max(maxRel, p.pos.y - groundHeight(p.pos.x, p.pos.z, SEED));
+        minZ = Math.min(minZ, p.pos.z);
+        if (p.chargeTargetId === null) {
+          endDist = Math.hypot(p.pos.x - dummy.pos.x, p.pos.z - dummy.pos.z);
+        }
+      }
+      expect(p.chargeTargetId, 'the route ended').toBeNull();
+      expect({ x: dummy.pos.x, z: dummy.pos.z }).toEqual(spawn);
+      // It ended by arriving, not by running out its budget against the back
+      // rail: inside the arrive range of the target.
+      expect(endDist).toBeLessThanOrEqual(CHARGE_ARRIVE_RANGE);
+      // The only way out of the pen is past the side rails' open ends.
+      expect(minZ).toBeLessThan(PEN.z + PEN.mouth);
+      expect(maxRel).toBeLessThan(0.5); // never up onto a rail
+    } finally {
+      setActiveWorldContent(null);
     }
-    console.log('charge end', p.pos.x.toFixed(1), p.pos.z.toFixed(1), 'maxRel', maxRel.toFixed(2));
-    expect(maxRel).toBeLessThan(0.5); // never climbed the canopy
-    expect(Math.hypot(p.pos.x - mob.pos.x, p.pos.z - mob.pos.z)).toBeLessThan(6); // reached it
   });
 
   it('a mob chases the player up onto the dais and back down', () => {
