@@ -1,19 +1,24 @@
 import { describe, expect, it } from 'vitest';
 import { RIFT_ESSENCE_ITEM_ID, RIFT_GEM_IDS } from '../src/sim/content/rift/items';
-import { ITEMS } from '../src/sim/data';
+import { BUILTIN_WORLD, ITEMS } from '../src/sim/data';
 import type { MarketCollection } from '../src/sim/market';
 import { MARKET_PLAYER_LISTING_ID_BASE } from '../src/sim/market_listing_ids';
 import type { MarketQuery } from '../src/sim/market_query';
 import { emptySaleLog, type MarketSaleLog } from '../src/sim/market_sale_log';
 import { Sim } from '../src/sim/sim';
-import type { Entity } from '../src/sim/types';
+import type { Entity, WorldContent } from '../src/sim/types';
 import { groundHeight } from '../src/sim/world';
 
 type MarketInfo = NonNullable<ReturnType<Sim['marketInfoFor']>>;
 type MarketListing = Sim['marketListings'][number];
 
+// The market reads the Merchant (an NPC), the players and the vendor catalog,
+// never a mob camp or a ground object, so the world keeps its NPCs and drops
+// the ambient camps and objects every Sim here used to spawn.
+const MARKET_TEST_WORLD: WorldContent = { ...BUILTIN_WORLD, camps: [], groundObjects: [] };
+
 function makeWorld() {
-  return new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+  return new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true, world: MARKET_TEST_WORLD });
 }
 
 // A full browse query with sensible defaults; tests vary only what they care about.
