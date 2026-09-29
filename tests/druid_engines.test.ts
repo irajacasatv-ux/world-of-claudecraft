@@ -16,9 +16,13 @@ import { createMob, recalcPlayerStats } from '../src/sim/entity';
 import { moveSpeedMult } from '../src/sim/player_motion';
 import { Sim } from '../src/sim/sim';
 import type { Aura, Entity } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
+// Every Sim here runs on one seed and EMPTY_TEST_WORLD: each case fights a mob or
+// restores a save it makes itself, so the ambient overworld and each extra seed's
+// world build were pure construction and tick cost.
 function rig(spec: 'balance' | 'feral' | 'restoration', rows: Record<number, string> = {}) {
-  const sim = new Sim({ seed: 29, playerClass: 'druid', autoEquip: true });
+  const sim = new Sim({ seed: 29, playerClass: 'druid', autoEquip: true, world: EMPTY_TEST_WORLD });
   sim.setPlayerLevel(20);
   expect(sim.applyTalents({ spec, rows })).toBe(true);
   sim.player.resource = sim.player.maxResource;
@@ -270,7 +274,12 @@ describe('Wildfang engine', () => {
     // so a level-8 feral is the first with the transforming button. The
     // transform resolves the actor-level rank: rank 1 bites for 35 plus 20 per
     // combo and refunds 15, so the cast nets minus 20 energy (35 cost, 15 back).
-    const sim = new Sim({ seed: 29, playerClass: 'druid', autoEquip: true });
+    const sim = new Sim({
+      seed: 29,
+      playerClass: 'druid',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.setPlayerLevel(8);
     expect(sim.applyTalents({ spec: 'feral', rows: {} })).toBe(true);
     const player = sim.player;
@@ -365,7 +374,12 @@ describe('Wildfang engine', () => {
 
     const state = sim.serializeCharacter(player.id);
     expect(state).not.toBeNull();
-    const restored = new Sim({ seed: 30, playerClass: 'warrior', noPlayer: true });
+    const restored = new Sim({
+      seed: 29,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const restoredId = restored.addPlayer('druid', 'Returning', { state: state ?? undefined });
     expect(restored.entities.get(restoredId)?.auras.some((aura) => aura.id === OLD_BLOOD_ID)).toBe(
       false,
@@ -386,7 +400,12 @@ describe('Wildfang engine', () => {
     expect(stacks(alive.player, MOONTIDE_ID)).toBe(1);
     const aliveState = alive.sim.serializeCharacter(alive.player.id);
     expect(aliveState).not.toBeNull();
-    const relogged = new Sim({ seed: 31, playerClass: 'warrior', noPlayer: true });
+    const relogged = new Sim({
+      seed: 29,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const reloggedId = relogged.addPlayer('druid', 'Relogged', {
       state: aliveState ?? undefined,
     });
