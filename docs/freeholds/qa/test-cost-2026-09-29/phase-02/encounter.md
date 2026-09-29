@@ -1,8 +1,8 @@
 # Part 5 test cost: the encounter cluster
 
 Twenty-six heavy files (raid and dungeon encounters, the Crucible set bonuses, loot and
-gold sweeps, mob evade, delves, the fortress route, PvP). Base `a2bd94a83e`; commits
-`6a581ed71e` to `178f800f11` plus the record commit. Local figures are the medians of
+gold sweeps, mob evade, delves, the fortress route, PvP). Base `a2bd94a83e`; landed on
+`feature/freeholds` as `1f6774ce30` to `1a0b2bf703`, with this record at `67db6d5790`. Local figures are the medians of
 three `npx vitest run <file> --maxWorkers=1` runs, before and after back to back on the
 same host (`tests` from the Duration line; `import` moved by at most 0.4 s either way and
 is not a lever here). CI seconds are the two baseline PR runs (36493201427 /
@@ -84,8 +84,8 @@ after the gear-swap change; the other 22 rows come from one sequential sweep.
   `src/sim/mob/idle_rng.ts`). It was applied only where every case stayed green with
   unchanged assertion counts. Draw observers around `sim.tick()` now see the fights' own
   draws only: `dawnreaver_damage` records 21 (it recorded about 2,700 unculled, almost all
-  far idle rolls), so its `> 20` floor sits one under the live count, and the comment says
-  so; the forge replay records 42.
+  far idle rolls); its floor is now one roll per cast of the rotation (fix round, below)
+  instead of a bound one under today's count. The forge replay records 42.
 - Two fresh coverage reviews ran over the diff; every finding was applied (comments that
   overstated a sweep or a seed claim, the rift pin's dependence on the world seed, the
   warlock seed coupling) or judged: the dropped 45 s timeout on the Judgment finale is
@@ -94,11 +94,11 @@ after the gear-swap change; the other 22 rows come from one sequential sweep.
 
 ## Owed
 
-- `forgefather_fortress_route`: cutting the step height from 0.9 to 0.05, raising the
-  carried-body clearance from 0.5 to 50, or cutting run speed from 7 to 2 all leave the
-  route green, before and after this change. Only the climb slope bites. The header's claim that the
-  suite exercises the tread step-up and the steep-ground strip is not what the thresholds
-  prove; worth a look by the route's owner.
+- `forgefather_fortress_route` (resolved in the fix round): cutting the step height
+  from 0.9 to 0.05, raising the carried-body clearance from 0.5 to 50, or cutting run speed
+  from 7 to 2 leave the route green before and after this change, because the walker rides
+  the `FORGEFATHER_STAIR_RAMPS` lifts rather than the staircase props' treads. The header
+  now states what it pins and what it does not.
 - `src/sim/types.ts` (the `idleMobTickRadius` comment) still says deterministic tests
   leave culling unset unless they pin it; the Ignivar and Varkhul harnesses now set it.
   Product text, not touched here.
@@ -114,3 +114,18 @@ after the gear-swap change; the other 22 rows come from one sequential sweep.
   cull without moving the shared rng (at the price of a parity golden re-mint).
 - `world_pvp` ticks the 300 s disarm countdown at full resolution five times; a coarser
   host clock for idle countdowns would be a product change.
+
+## Fix round (branch `test-cost/encounter-fix` off `35e89ced9a`)
+
+- `dawnreaver_damage`: the replay's draw floor is derived from what it must prove, at
+  least one roll per cast of the rotation, so the `draws` equality always compares a real
+  stream without pinning today's count of 21. Mutants: an rng observer that records
+  nothing (empty stream) is killed by the floor; an extra draw beside the multiplier is
+  killed by the equality.
+- `forgefather_fortress_route`: the header now names what mutation shows the route pins.
+  Killed: the bailey flight's ramp surface flattened (`content/ember_coast.ts`), a bailey
+  tower pushed 4 yd into the flight (`forgefather_fortress.ts`), the climb slope cut to 0.2
+  (`pathfind.ts`). Surviving, and now named in the header as not pinned: step height,
+  carried-body clearance, run speed, and a staircase prop moved (raised 3 yd, or shifted
+  10 yd) while its ramp band stays.
+- 5 of 5 mutants killed, 1 control passed.
