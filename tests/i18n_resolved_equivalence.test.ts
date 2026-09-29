@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { PERTURBATIONS } from './helpers/i18n_determinism';
 
 // Byte-equivalence safety net for the i18n scaling refactor. Every
 // behavior-preserving change must leave the resolved locale table byte-identical.
@@ -15,7 +16,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 // ONE pair of generator runs serves every case. Each run emits the whole tree
 // (every slice, the barrel, and the flat key union) into its own throwaway
 // directory through the generator's I18N_OUT_DIR override, under a different
-// TZ / LC_ALL / temp path (the pairs tests/helpers/i18n_determinism.ts uses). Both
+// TZ / LC_ALL / temp path (the pair tests/helpers/i18n_determinism.ts exports). Both
 // runs must equal the committed bytes, file set included: that is the freshness
 // check (run A against the tree) and the determinism check (run B against the same
 // bytes, so A and B agree) at once, without regenerating over the working tree.
@@ -40,18 +41,9 @@ const generatedPath = 'src/ui/i18n.resolved.generated';
 const keysPath = 'src/ui/i18n.catalog/translation_keys.generated.ts';
 const KEYS_FILE = path.basename(keysPath);
 
-// Distinct timezone, locale, and temp-dir prefix, so a hidden dependency on any
-// of them produces a diff instead of a false pass.
-const PERTURBATIONS = [
-  { name: 'A', TZ: 'UTC', LC_ALL: 'C', LANG: 'C', prefix: 'i18n-det-a-' },
-  {
-    name: 'B',
-    TZ: 'Asia/Kolkata',
-    LC_ALL: 'en_US.UTF-8',
-    LANG: 'en_US.UTF-8',
-    prefix: 'zzz-i18n-det-b-',
-  },
-] as const;
+// The shared perturbed pair (distinct TZ, LC_ALL/LANG and temp-dir prefix), named
+// A and B here in run order.
+const RUN_NAMES = ['A', 'B'] as const;
 
 interface Emit {
   name: string;
@@ -85,7 +77,7 @@ beforeAll(() => {
   committed = readTree(path.join(root, generatedPath), sliceFiles);
   committed.set(KEYS_FILE, readFileSync(path.join(root, keysPath)));
   committedFiles = [...committed.keys()].sort();
-  for (const perturb of PERTURBATIONS) {
+  for (const [index, perturb] of PERTURBATIONS.entries()) {
     const dir = mkdtempSync(path.join(tmpdir(), perturb.prefix));
     tempDirs.push(dir);
     execFileSync(process.execPath, [buildScript], {
@@ -100,7 +92,7 @@ beforeAll(() => {
       },
     });
     const files = listFilesRecursive(dir);
-    emits.push({ name: perturb.name, files, bytes: readTree(dir, files) });
+    emits.push({ name: RUN_NAMES[index] ?? String(index), files, bytes: readTree(dir, files) });
   }
 }, 30_000);
 

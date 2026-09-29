@@ -94,9 +94,10 @@ export const OUT_OF_GRAPH_PATTERNS = Object.freeze([
 /**
  * Shared helpers that themselves reach outside the graph. A per-file text scan
  * cannot see through an import, so a test whose fs access lives one hop away in
- * `tests/helpers/*` looks pure: tests/i18n_resolved_equivalence.test.ts delegates
- * its readdirSync/readFileSync to tests/helpers/i18n_determinism. Importing one
- * of these is therefore itself an out-of-graph signal.
+ * `tests/helpers/*` looks pure: tests/helpers/i18n_determinism's assertDeterministic
+ * spawns a generator and reads back every file it emitted on behalf of its callers
+ * (the i18n status registry's determinism case among them). Importing one of these
+ * is therefore itself an out-of-graph signal.
  *
  * Derived by scanning the helper directories rather than hand-listed, so a helper
  * that grows an fs call is covered without anyone remembering to update a list.
