@@ -10,6 +10,7 @@ import {
 import { ABILITIES } from '../src/sim/data';
 import { Sim } from '../src/sim/sim';
 import type { PlayerClass } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const CLASSES: PlayerClass[] = [
   'warrior',
@@ -117,7 +118,13 @@ describe('choice row engine', () => {
   });
 
   it('a live sim applies a row pick end to end and persists it', () => {
-    const sim = new Sim({ seed: 3, playerClass: 'warrior', autoEquip: true });
+    // The pick reads only the player's own build: the empty world serves.
+    const sim = new Sim({
+      seed: 3,
+      playerClass: 'warrior',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.setPlayerLevel(20);
     const r5 = CHOICE_ROWS.warrior.rows[0].options[0].id;
     sim.applyTalents({ spec: 'arms', rows: { 5: r5 } });
