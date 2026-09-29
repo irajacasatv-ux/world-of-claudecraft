@@ -18,9 +18,17 @@ import { MOBS } from '../src/sim/data';
 import { createMob } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
 import type { Entity } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 function setup(): { sim: Sim; shaman: Entity; target: Entity } {
-  const sim = new Sim({ seed: 2821, playerClass: 'shaman', noPlayer: true });
+  // The shaman and every mob it jolts are placed by hand, so the Sim runs on the
+  // empty world.
+  const sim = new Sim({
+    seed: 2821,
+    playerClass: 'shaman',
+    noPlayer: true,
+    world: EMPTY_TEST_WORLD,
+  });
   const pid = sim.addPlayer('shaman', 'Engine');
   sim.setPlayerLevel(20, pid);
   expect(sim.setSpec('enhancement', pid)).toBe(true);
