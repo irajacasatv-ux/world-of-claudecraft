@@ -10,6 +10,7 @@ import { ALL_RECIPES, COMBO_RECIPES, recipeById } from '../src/sim/content/recip
 import { isRecipeKnown, resolveCraft } from '../src/sim/professions/crafting';
 import { grandfatherKnownRecipes, PRE_TRAINING_RECIPE_IDS } from '../src/sim/professions/training';
 import { type CharacterState, Sim } from '../src/sim/sim';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // The 21 recipe ids that existed BEFORE the training switch, as LITERALS (9 common, 6
 // tool, 3 caster hub, 3 combo): this list is a historical record and must
@@ -60,8 +61,10 @@ const LEGACY_SAVE = {
   knownRecipes: [],
 } as unknown as CharacterState;
 
-function makeSim(seed = 42) {
-  return new Sim({ seed, playerClass: 'warrior', autoEquip: false });
+// The union reads the save and the recipe tables, never the world, so every
+// Sim, the reload targets included, builds the empty world on one seed.
+function makeSim() {
+  return new Sim({ seed: 42, playerClass: 'warrior', autoEquip: false, world: EMPTY_TEST_WORLD });
 }
 
 function metaOf(sim: Sim, pid: number) {
@@ -172,7 +175,7 @@ describe('legacy save load (the one-time union) and persistence', () => {
     const pid = sim.addPlayer('warrior', 'Legacy', { state: legacySave() });
     const firstState = sim.serializeCharacter(pid)!;
 
-    const reloaded = makeSim(7);
+    const reloaded = makeSim();
     const reloadedPid = reloaded.addPlayer('warrior', 'Legacy', { state: firstState });
     const reloadedMeta = metaOf(reloaded, reloadedPid);
     expect([...reloadedMeta.knownRecipes].sort()).toEqual(
@@ -212,7 +215,7 @@ describe('legacy save load (the one-time union) and persistence', () => {
     expect(full.recipesGrandfathered).toBe(true);
     delete (full as { recipesGrandfathered?: boolean }).recipesGrandfathered;
 
-    const back = makeSim(11);
+    const back = makeSim();
     const pid = back.addPlayer('warrior', 'Returned', { state: full });
     const meta = metaOf(back, pid);
     expect(meta.recipesGrandfathered).toBe(true);
