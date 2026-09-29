@@ -36,6 +36,7 @@ import {
   terrainSteepnessAt,
   WATER_LEVEL,
 } from '../src/sim/world';
+import { PRODUCTION_IDLE_CULL } from './helpers/production_idle_cull';
 
 // The character physics solver: swept collision, multi-plane sliding,
 // depenetration, step-up, and the terrain wall/contour gate. These pin the
@@ -49,8 +50,20 @@ afterEach(() => {
   setActiveWorldContent(null);
 });
 
+// One content object per distinct prop layout. The collider grid is cached per
+// content object, so the cases that author the SAME layout (the crate beside
+// SPOT, the bare world) share one grid build instead of paying it each time. No
+// case mutates a content object or its props; the two cases that add blockers
+// spread a fresh object of their own.
+const worlds = new Map<string, WorldContent>();
 function world(props: Partial<WorldContent['props']>): WorldContent {
-  return { ...BUILTIN_WORLD, props: { ...BUILTIN_WORLD.props, ...props } };
+  const key = JSON.stringify(props);
+  let content = worlds.get(key);
+  if (!content) {
+    content = { ...BUILTIN_WORLD, props: { ...BUILTIN_WORLD.props, ...props } };
+    worlds.set(key, content);
+  }
+  return content;
 }
 
 function params(over: Partial<CharacterMoveParams> = {}): CharacterMoveParams {
@@ -589,7 +602,14 @@ describe('air control cannot manufacture speed', () => {
   // converge on the run speed but never exceed it, whatever the input does.
   it('never exceeds run speed however the wish vector is steered', () => {
     setActiveWorldContent(world({}));
-    const sim = new Sim({ seed: SEED, playerClass: 'warrior', autoEquip: true });
+    // The shipped idle-mob cull: 200 airborne ticks of the whole overworld
+    // around one player, and no mob reaches the air-strafe it pins.
+    const sim = new Sim({
+      seed: SEED,
+      playerClass: 'warrior',
+      autoEquip: true,
+      ...PRODUCTION_IDLE_CULL,
+    });
     sim.setPlayerLevel(60);
     const p = sim.player;
     p.pos.x = SPOT.x;
