@@ -7,6 +7,7 @@ import {
 } from '../src/sim/item_instance_transfer';
 import { Sim } from '../src/sim/sim';
 import type { InvSlot } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const source = { gatherer: { kind: 'character' as const, id: 11, name: 'Ana' }, signer: 'Ana' };
 const mixed = (): InvSlot => ({
@@ -18,7 +19,12 @@ const mixed = (): InvSlot => ({
   ],
 });
 const setup = () => {
-  const sim = new Sim({ seed: 42, playerClass: 'warrior', autoEquip: false });
+  const sim = new Sim({
+    seed: 42,
+    playerClass: 'warrior',
+    autoEquip: false,
+    world: EMPTY_TEST_WORLD,
+  });
   sim.inventory.splice(0, sim.inventory.length, mixed());
   return sim;
 };

@@ -8,11 +8,16 @@ import { MARKET_SWEEP_MAX_UNITS } from '../src/sim/market_sweep';
 import { Sim } from '../src/sim/sim';
 import type { Entity } from '../src/sim/types';
 import { groundHeight } from '../src/sim/world';
+import { npcScopedWorld } from './helpers/npc_scoped_world';
+
+// The Merchant is the only overworld content these cases read (market verbs
+// gate on standing beside him).
+const MERCHANT_WORLD = npcScopedWorld('the_merchant');
 
 const ORE = 'copper_ore';
 
 function makeWorld() {
-  return new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+  return new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true, world: MERCHANT_WORLD });
 }
 
 function merchant(sim: Sim): Entity {

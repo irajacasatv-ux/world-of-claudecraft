@@ -20,6 +20,11 @@ import {
 } from '../src/ui/market_filters';
 
 import { FURNISHING } from './fixtures/furnishing_item';
+import { npcScopedWorld } from './helpers/npc_scoped_world';
+
+// The Merchant is the only overworld content these cases read (market verbs
+// gate on standing beside him).
+const MERCHANT_WORLD = npcScopedWorld('the_merchant');
 
 beforeEach(() => {
   ITEMS[FURNISHING.id] = structuredClone(FURNISHING);
@@ -387,7 +392,12 @@ describe('World Market filters', () => {
   // standing at the Merchant lists a held shipped pattern, the listing lands,
   // and the Patterns chip browse returns it.
   it('lists a held pattern on the market and finds it under the Patterns chip', () => {
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+    const sim = new Sim({
+      seed: 42,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: MERCHANT_WORLD,
+    });
     const seller = sim.addPlayer('warrior', 'Seller');
     const merchant = [...sim.entities.values()].find((e) => e.templateId === 'the_merchant');
     if (!merchant) throw new Error('the Merchant was not spawned');

@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { Sim } from '../src/sim/sim';
 import type { InvSlot } from '../src/sim/types';
+import { npcScopedWorld } from './helpers/npc_scoped_world';
+
+// The Merchant is the only overworld content these cases read (market verbs
+// gate on standing beside him).
+const MERCHANT_WORLD = npcScopedWorld('the_merchant');
 
 const gathered = { gatherer: { kind: 'character' as const, id: 11, name: 'Ana' } };
 const stock = (): InvSlot => ({
@@ -12,7 +17,12 @@ const stock = (): InvSlot => ({
   ],
 });
 const setup = () => {
-  const sim = new Sim({ seed: 42, playerClass: 'warrior', autoEquip: false });
+  const sim = new Sim({
+    seed: 42,
+    playerClass: 'warrior',
+    autoEquip: false,
+    world: MERCHANT_WORLD,
+  });
   const meta = sim.players.get(sim.playerId)!;
   meta.inventory.splice(0, meta.inventory.length, stock());
   meta.copper = 1000;

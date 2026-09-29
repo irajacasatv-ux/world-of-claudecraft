@@ -11,9 +11,14 @@ import { MARKET_PAGE_SIZE, type MarketQuery } from '../src/sim/market_query';
 import { Sim } from '../src/sim/sim';
 import type { Entity } from '../src/sim/types';
 import { groundHeight } from '../src/sim/world';
+import { npcScopedWorld } from './helpers/npc_scoped_world';
+
+// The Merchant is the only overworld content these cases read (market verbs
+// gate on standing beside him).
+const MERCHANT_WORLD = npcScopedWorld('the_merchant');
 
 function makeWorld() {
-  return new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+  return new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true, world: MERCHANT_WORLD });
 }
 
 function q(extra: Partial<MarketQuery> = {}): MarketQuery {
