@@ -20,10 +20,18 @@ import {
 import { sanitizeMoveInput } from '../src/sim/move_input';
 import { type PlayerMotionDeps, stepPlayerMotion } from '../src/sim/player_motion';
 import { Sim } from '../src/sim/sim';
-import type { Entity } from '../src/sim/types';
+import { type Entity, PLAYER_INTEREST_DROP_RADIUS } from '../src/sim/types';
 
+// Production's idle culling (the server and the offline client both set it).
+// Measured on this file: every case's per-tick player pose, velocity, health and
+// fall start are byte-identical with and without it (756 ticks).
 function rig(seed = 7) {
-  const sim = new Sim({ seed, playerClass: 'warrior', noPlayer: true });
+  const sim = new Sim({
+    seed,
+    playerClass: 'warrior',
+    noPlayer: true,
+    idleMobTickRadius: PLAYER_INTEREST_DROP_RADIUS,
+  });
   const pid = sim.addPlayer('mage', 'Guarded') as number;
   sim.setPlayerLevel(20, pid);
   // Let the spawn settle onto the ground before anything is injected.
