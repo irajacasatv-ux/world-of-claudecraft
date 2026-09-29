@@ -1,7 +1,7 @@
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 import { expectScansOnlyThroughSharedWalkers } from './helpers/scan_guard_self_audit';
 import { duplicatesAmong, testBlockCalls } from './helpers/test_block_calls';
 import { tsFilesUnder } from './helpers/ts_files_under';
@@ -75,9 +75,15 @@ describe('no test file registers the same block twice (#2506)', () => {
   // stray `.filter(f => f.file.endsWith('.test.ts'))`, say) would leave every
   // floor, the subdirectory pin and the fixture green while the sweep quietly
   // covered less. The floors can only vouch for the sweep if they are counting
-  // the same files it read.
-  const perFile = scanUnder(TESTS_ROOT);
-  const allBlocks = perFile.flatMap((f) => f.blocks);
+  // the same files it read. The one parse runs in a beforeAll with its own
+  // allowance: at collection its cost never reached the file's measured test
+  // time, and inside a case it would ride that case's timeout.
+  let perFile: ReturnType<typeof scanUnder> = [];
+  let allBlocks: ReturnType<typeof scanUnder>[number]['blocks'] = [];
+  beforeAll(() => {
+    perFile = scanUnder(TESTS_ROOT);
+    allBlocks = perFile.flatMap((f) => f.blocks);
+  }, 60_000);
 
   it('finds no block that repeats a sibling verbatim', () => {
     // The whole point of the guard. A repeat is always a defect: vitest runs
