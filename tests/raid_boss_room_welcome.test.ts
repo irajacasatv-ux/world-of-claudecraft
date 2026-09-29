@@ -15,6 +15,10 @@ import {
   INSTANCE_EMPTY_TIMEOUT,
   type SimEvent,
 } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
+
+// Every case welcomes entrants inside the raid room, so each builds the empty
+// overworld on one seed; the welcome reads no seed.
 
 function welcomeEvents(events: SimEvent[], text: string) {
   return events.filter(
@@ -40,6 +44,7 @@ describe('Ignivar room welcome', () => {
       noPlayer: true,
       playerClass: 'warrior',
       devCommands: true,
+      world: EMPTY_TEST_WORLD,
     });
     const leaderId = sim.addPlayer('warrior', 'Firstember');
     const laterId = sim.addPlayer('mage', 'Laterember');
@@ -85,10 +90,11 @@ describe('Ignivar room welcome', () => {
 
   it('does not replay after the same durable character relogs into the live claim', () => {
     const sim = new Sim({
-      seed: 4273,
+      seed: 4271,
       noPlayer: true,
       playerClass: 'warrior',
       devCommands: true,
+      world: EMPTY_TEST_WORLD,
     });
     const firstPid = sim.addPlayer('warrior', 'Relogember', { characterId: 4273 });
     expect(enterDungeon(sim.ctx, IGNIVAR_RAID_ARENA_ID, firstPid, true)).toBe(true);
@@ -113,10 +119,11 @@ describe('Ignivar room welcome', () => {
 
   it('welcomes the same durable character again after the old claim is freed', () => {
     const sim = new Sim({
-      seed: 4274,
+      seed: 4271,
       noPlayer: true,
       playerClass: 'warrior',
       devCommands: true,
+      world: EMPTY_TEST_WORLD,
     });
     const pid = sim.addPlayer('warrior', 'Freshclaim', { characterId: 4274 });
     // The Halls claim keeps the arena's floor-chain exit routable below.
