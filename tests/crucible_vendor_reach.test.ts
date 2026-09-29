@@ -8,11 +8,17 @@
 
 import { describe, expect, it } from 'vitest';
 import { CRUCIBLE_VENDOR_NPC_ID } from '../src/sim/content/ignivar_loot';
-import { DUNGEONS } from '../src/sim/data';
+import { BUILTIN_WORLD, DUNGEONS } from '../src/sim/data';
 import { IGNIVAR_LIFT_ROOM_ID } from '../src/sim/ignivar_raid_ids';
 import { type PlayerMotionDeps, stepPlayerMotion } from '../src/sim/player_motion';
 import { Sim } from '../src/sim/sim';
-import { dist2d, type Entity, emptyMoveInput, INTERACT_RANGE } from '../src/sim/types';
+import {
+  dist2d,
+  type Entity,
+  emptyMoveInput,
+  INTERACT_RANGE,
+  type WorldContent,
+} from '../src/sim/types';
 import { WORLD_SEED } from '../src/sim/world_seed';
 
 type AnySim = Sim & Record<string, any>;
@@ -31,8 +37,24 @@ const TIER_THREE_COURT: Point = { x: 504, y: 0, z: 2228.5 };
 const LANDING_COURT: Point = { x: 503.3, y: 15.34, z: 2237.5 };
 const MAX_TICKS_PER_LEG = 20 * 20;
 
+// The walks need the keep's real stairs and plates and the Quartermaster alone:
+// no authored NPC stands near the keep to veto a prop, so dropping the rest of
+// the roster, the camps and the ground objects leaves the fortress colliders as
+// they are and skips the overworld's spawn cost.
+const QUARTERMASTER_WORLD: WorldContent = {
+  ...BUILTIN_WORLD,
+  camps: [],
+  npcs: { [CRUCIBLE_VENDOR_NPC_ID]: BUILTIN_WORLD.npcs[CRUCIBLE_VENDOR_NPC_ID] },
+  groundObjects: [],
+};
+
 function worldSim(): AnySim {
-  return new Sim({ seed: WORLD_SEED, playerClass: 'warrior', autoEquip: true }) as AnySim;
+  return new Sim({
+    seed: WORLD_SEED,
+    playerClass: 'warrior',
+    autoEquip: true,
+    world: QUARTERMASTER_WORLD,
+  }) as AnySim;
 }
 
 function vendor(sim: AnySim): Entity {
