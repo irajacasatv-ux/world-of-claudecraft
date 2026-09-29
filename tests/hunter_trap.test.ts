@@ -5,6 +5,7 @@ import { createMob } from '../src/sim/entity';
 import type { GroundAoE } from '../src/sim/entity_roster';
 import { Sim } from '../src/sim/sim';
 import type { Entity, SimEvent } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 type TestSim = Sim & {
   ctx: { groundAoEs: GroundAoE[] };
@@ -13,7 +14,13 @@ type TestSim = Sim & {
 };
 
 function setup(rows: Record<number, string> = {}): TestSim {
-  const sim = new Sim({ seed: 7, playerClass: 'hunter', autoEquip: true }) as TestSim;
+  // Every trapped wolf is placed by hand, so the Sim runs on the empty world.
+  const sim = new Sim({
+    seed: 7,
+    playerClass: 'hunter',
+    autoEquip: true,
+    world: EMPTY_TEST_WORLD,
+  }) as TestSim;
   sim.setPlayerLevel(20);
   expect(sim.applyTalents({ spec: 'marksmanship', rows })).toBe(true);
   sim.player.resource = sim.player.maxResource;

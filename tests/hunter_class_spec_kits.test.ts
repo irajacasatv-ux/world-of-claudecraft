@@ -7,6 +7,7 @@ import {
 } from '../src/sim/content/talents';
 import { Sim } from '../src/sim/sim';
 import { loadoutKnownAbilityIds, syncHotbarActions } from '../src/ui/hud/action_bar/hotbar';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 type HunterSpec = 'beast_mastery' | 'marksmanship' | 'survival';
 
@@ -71,7 +72,13 @@ describe('Hunter v0.29 specialization ownership', () => {
   });
 
   it('rejects a forged wrong-spec signature on the authoritative Sim', () => {
-    const sim = new Sim({ seed: 2962, playerClass: 'hunter', autoEquip: true });
+    // The spec gate is the hunter's own cast, so the Sim runs on the empty world.
+    const sim = new Sim({
+      seed: 2962,
+      playerClass: 'hunter',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.setPlayerLevel(20);
     expect(sim.setSpec('marksmanship')).toBe(true);
     const resourceBefore = sim.player.resource;

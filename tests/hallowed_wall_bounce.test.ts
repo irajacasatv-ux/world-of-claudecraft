@@ -1,10 +1,17 @@
 import { describe, expect, it } from 'vitest';
 import { grantDevotion } from '../src/sim/paladin_devotion';
 import { Sim } from '../src/sim/sim';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 describe('Holy Shield active mitigation', () => {
   it('replaces the old bouncing attack with a free block and absorb window', () => {
-    const sim = new Sim({ seed: 7, playerClass: 'paladin', autoEquip: true });
+    // The shield is the paladin's own aura, so the Sim runs on the empty world.
+    const sim = new Sim({
+      seed: 7,
+      playerClass: 'paladin',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.setPlayerLevel(20);
     expect(sim.setSpec('protection')).toBe(true);
     grantDevotion(sim.player, 3);

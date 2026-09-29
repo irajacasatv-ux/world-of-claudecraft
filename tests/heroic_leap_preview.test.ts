@@ -7,8 +7,11 @@ import { MAX_LEVEL } from '../src/sim/types';
 import { groundHeight, waterLevelAt } from '../src/sim/world';
 import { WORLD_SEED } from '../src/sim/world_seed';
 import { bareClient } from './helpers/bare_client';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const EPSILON_DIGITS = 6;
+// The leap lands against the terrain and the static colliders, which a Sim builds
+// from the active world whatever its population, so the Sims run on the empty world.
 
 describe('Heroic Leap placement preview', () => {
   const groundedFrom = (x: number, z: number) => ({
@@ -43,7 +46,12 @@ describe('Heroic Leap placement preview', () => {
     const previewDistance = Math.hypot(preview.x - from.x, preview.z - from.z);
     expect(previewDistance).toBeLessThan(targetDistance);
 
-    const sim = new Sim({ seed: WORLD_SEED, playerClass: 'warrior', autoEquip: true });
+    const sim = new Sim({
+      seed: WORLD_SEED,
+      playerClass: 'warrior',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.setPlayerLevel(MAX_LEVEL);
     const player = sim.player;
     player.pos = { x: from.x, y: groundHeight(from.x, from.z, WORLD_SEED), z: from.z };
@@ -71,7 +79,12 @@ describe('Heroic Leap placement preview', () => {
   it('returns non-leap placement points unchanged in both worlds', () => {
     const point = { x: 12.5, z: -7.25 };
     const original = { ...point };
-    const sim = new Sim({ seed: WORLD_SEED, playerClass: 'warrior', autoEquip: true });
+    const sim = new Sim({
+      seed: WORLD_SEED,
+      playerClass: 'warrior',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const client = bareClient(1);
 
     expect(sim.groundAimPlacementPreview('charge', point)).toBe(point);

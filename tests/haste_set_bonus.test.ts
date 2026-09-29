@@ -21,6 +21,7 @@ import { ITEMS, MOBS } from '../src/sim/data';
 import { createMob, type PlayerEquipment, recalcPlayerStats } from '../src/sim/entity';
 import { type PlayerMeta, Sim } from '../src/sim/sim';
 import type { Entity, ItemDef, PlayerClass } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 type AnySim = Sim & Record<string, any>;
 type AnyEntity = Entity & Record<string, any>;
@@ -41,7 +42,13 @@ function equipmentOf(items: ItemDef[]): PlayerEquipment {
 }
 
 function player(cls: PlayerClass, level = 20): { sim: AnySim; p: AnyEntity; pid: number } {
-  const sim = new Sim({ seed: 7, playerClass: 'warrior', noPlayer: true }) as AnySim;
+  // Every case reads the player's own stats and auras, so the Sim runs on the empty world.
+  const sim = new Sim({
+    seed: 7,
+    playerClass: 'warrior',
+    noPlayer: true,
+    world: EMPTY_TEST_WORLD,
+  }) as AnySim;
   const pid = sim.addPlayer(cls, 'Tester');
   sim.setPlayerLevel(level, pid);
   sim.tick();

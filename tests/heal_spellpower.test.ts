@@ -3,6 +3,7 @@ import { castAbility, updateCasting } from '../src/sim/combat/casting_lifecycle'
 import { Sim } from '../src/sim/sim';
 import { hotTickBonus } from '../src/sim/spell_scaling';
 import type { Entity, PlayerClass } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // Healing scales with Spell Power the same way damage does: a direct heal takes the
 // cast-time coefficient, a HoT takes the DoT (duration/15) coefficient split across
@@ -14,7 +15,13 @@ type AnySim = Sim & Record<string, any>;
 type AnyEntity = Entity & Record<string, any>;
 
 function makeSim(cls: PlayerClass, level: number, spellPower: number) {
-  const sim = new Sim({ seed: 99, playerClass: cls, autoEquip: true }) as AnySim;
+  // The heal lands on the caster herself, so the Sim runs on the empty world.
+  const sim = new Sim({
+    seed: 99,
+    playerClass: cls,
+    autoEquip: true,
+    world: EMPTY_TEST_WORLD,
+  }) as AnySim;
   sim.setPlayerLevel(level);
   const p = sim.player as AnyEntity;
   const meta = sim.players.get(p.id);

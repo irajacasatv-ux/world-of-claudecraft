@@ -13,12 +13,19 @@ import { runHunterPackRally } from '../src/sim/combat/hunter_shared';
 import { ABILITIES } from '../src/sim/data';
 import { Sim } from '../src/sim/sim';
 import type { Entity } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 type AnySim = Sim & Record<string, any>;
 
 describe('Pack Rally never stacks with itself', () => {
   it('a second hunter casting replaces the first copy instead of stacking', () => {
-    const sim = new Sim({ seed: 2026, playerClass: 'hunter', noPlayer: true }) as AnySim;
+    // The casters and their party are added by hand, so every Sim runs on the empty world.
+    const sim = new Sim({
+      seed: 2026,
+      playerClass: 'hunter',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    }) as AnySim;
     const a = sim.addPlayer('hunter', 'HunterA');
     const b = sim.addPlayer('hunter', 'HunterB');
     sim.partyInvite(b, a);
@@ -55,7 +62,12 @@ describe('Pack Rally never stacks with itself', () => {
 
 describe('Emboldening Roar never stacks its crit buff with itself', () => {
   it('two Fury warriors casting on an overlapping ally leave exactly one 3-charge copy', () => {
-    const sim = new Sim({ seed: 2026, playerClass: 'warrior', noPlayer: true }) as AnySim;
+    const sim = new Sim({
+      seed: 2026,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    }) as AnySim;
     const a = sim.addPlayer('warrior', 'WarriorA');
     const b = sim.addPlayer('warrior', 'WarriorB');
     for (const pid of [a, b]) {
@@ -82,7 +94,12 @@ describe('Emboldening Roar never stacks its crit buff with itself', () => {
 
 describe('Mass Barrier never stacks its shield with itself', () => {
   it('two mages casting on an overlapping group leave exactly one absorb copy per target', () => {
-    const sim = new Sim({ seed: 2026, playerClass: 'mage', noPlayer: true }) as AnySim;
+    const sim = new Sim({
+      seed: 2026,
+      playerClass: 'mage',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    }) as AnySim;
     const a = sim.addPlayer('mage', 'MageA');
     const b = sim.addPlayer('mage', 'MageB');
     for (const pid of [a, b]) {

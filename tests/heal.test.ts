@@ -20,9 +20,11 @@ import { MOBS } from '../src/sim/data';
 import { createMob } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
 import type { Aura, Entity, SimEvent } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 function makeSim(seed = 5252): Sim {
-  return new Sim({ seed, playerClass: 'priest', autoEquip: true });
+  // Every heal lands on the priest or a unit the case builds, so the Sim runs on the empty world.
+  return new Sim({ seed, playerClass: 'priest', autoEquip: true, world: EMPTY_TEST_WORLD });
 }
 
 // Construct an aura with only the fields the heal helpers read.

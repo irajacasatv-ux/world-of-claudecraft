@@ -10,6 +10,7 @@ import { ITEMS } from '../src/sim/data';
 import { Sim } from '../src/sim/sim';
 import { HEALING_SP_SCALE } from '../src/sim/spell_scaling';
 import type { ItemDef, ItemSet, SimEvent } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 type HealEv = Extract<SimEvent, { type: 'heal2' }>;
 
@@ -47,7 +48,8 @@ describe('Healing Power derivation (recalcPlayerStats)', () => {
   it('gear Healing Power raises healPower only; Spell Power raises both', () => {
     injectRobes();
     try {
-      const sim = new Sim({ seed: 11, playerClass: 'priest' });
+      // The heals land on the priest herself, so the Sims run on the empty world, all on one seed.
+      const sim = new Sim({ seed: 11, playerClass: 'priest', world: EMPTY_TEST_WORLD });
       const p = sim.player;
       const baseSp = p.spellPower;
       // With no Healing Power anywhere, healPower IS spell power (the one-way
@@ -94,7 +96,7 @@ describe('Healing Power derivation (recalcPlayerStats)', () => {
 
 describe('Healing Power in the live heal path', () => {
   function healAmounts(withRobe: boolean): number[] {
-    const sim = new Sim({ seed: 21, playerClass: 'priest' });
+    const sim = new Sim({ seed: 11, playerClass: 'priest', world: EMPTY_TEST_WORLD });
     const p = sim.player;
     sim.setPlayerLevel(20);
     if (withRobe) {
