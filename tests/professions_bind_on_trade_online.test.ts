@@ -55,8 +55,10 @@ import { type ClientSession, GameServer } from '../server/game';
 import type { ClientWorld } from '../src/net/online';
 import { type PlayerMeta, Sim } from '../src/sim/sim';
 import type { InvSlot, SimEvent } from '../src/sim/types';
+import { WORLD_SEED } from '../src/sim/world_seed';
 import { bareClient } from './helpers/bare_client';
 import { completeEnchantFamilyCast } from './helpers/enchant_family_cast';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // A common one-hand weapon: disenchants to arcane_dust (sub-rare, no typed
 // secondary) and salvages to bone_fragments. Both actions draw the shared
@@ -274,8 +276,16 @@ describe('online bind-on-trade arc (two sessions, live GameServer)', () => {
 // ---------------------------------------------------------------------------
 // Arm 2: bindOnTrade JSONB persistence round-trip + the shared load clamp.
 // ---------------------------------------------------------------------------
-function freshSim(seed = 5): Sim {
-  return new Sim({ seed, playerClass: 'warrior', autoEquip: false, noPlayer: true });
+// One seed and the empty world for every round-trip Sim: serialize and load
+// read only the character, never the seed or the overworld's content.
+function freshSim(): Sim {
+  return new Sim({
+    seed: WORLD_SEED,
+    playerClass: 'warrior',
+    autoEquip: false,
+    noPlayer: true,
+    world: EMPTY_TEST_WORLD,
+  });
 }
 
 describe('bindOnTrade persistence round-trip (serialize -> JSONB -> load)', () => {
@@ -292,7 +302,7 @@ describe('bindOnTrade persistence round-trip (serialize -> JSONB -> load)', () =
     // Simulate the JSONB store/load byte boundary.
     const wire = JSON.parse(JSON.stringify(state));
 
-    const dst = freshSim(9);
+    const dst = freshSim();
     const loadedPid = dst.addPlayer('warrior', 'Dst', { state: wire });
     const inv = dst.ctx.resolve(loadedPid)?.meta.inventory ?? [];
     const armed = inv.find((s) => s.itemId === SECONDARY && s.instance?.boundTo === undefined);
@@ -325,7 +335,7 @@ describe('bindOnTrade persistence round-trip (serialize -> JSONB -> load)', () =
     if (!tampered) throw new Error('no persisted resonant_steel slot');
     tampered.count = 9999;
 
-    const dst = freshSim(9);
+    const dst = freshSim();
     const before = dst.ctx.players.size;
     expect(() => dst.addPlayer('warrior', 'Dst', { state: wire })).toThrow(
       /material source state is invalid; refusing character load/,
@@ -342,7 +352,7 @@ describe('bindOnTrade persistence round-trip (serialize -> JSONB -> load)', () =
     consistentSlot.count = 9999;
     (consistentSlot as unknown as InvSlot).materialSources = [{ source: {}, count: 9999 }];
 
-    const dst2 = freshSim(11);
+    const dst2 = freshSim();
     const loadedPid = dst2.addPlayer('warrior', 'Dst2', { state: consistent });
     const loaded = (dst2.ctx.resolve(loadedPid)?.meta.inventory ?? []).find(
       (s) => s.itemId === SECONDARY,
