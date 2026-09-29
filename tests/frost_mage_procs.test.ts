@@ -43,9 +43,11 @@ type TestSim = Sim & {
 // fixture as tests/sim_shared.ts) skips the full built-in world's camp/npc
 // spawns, which is what made Sim construction and every sim.tick() call in
 // the long proc-hunting loops below expensive (Phase 9, subsystem worlds).
-function makeSim(opts?: { spec?: string | null; seed?: number }): { sim: TestSim; p: Entity } {
+// One seed serves the file: a fresh seed costs a collider grid build, and the
+// cases that need a landed spell pin their rolls instead of hunting a seed.
+function makeSim(opts?: { spec?: string | null }): { sim: TestSim; p: Entity } {
   const sim = new Sim({
-    seed: opts?.seed ?? 1,
+    seed: 1,
     playerClass: 'mage',
     autoEquip: true,
     world: EMPTY_TEST_WORLD,
@@ -252,7 +254,7 @@ describe('frostbolt proc generation', () => {
     'same seed, same casts: identical proc sequence (determinism)',
     () => {
       const run = (): string[] => {
-        const { sim, p } = makeSim({ seed: 777 });
+        const { sim, p } = makeSim();
         spawnTarget(sim, p);
         const gained: string[] = [];
         for (let cast = 0; cast < 12; cast++) {
@@ -450,13 +452,11 @@ describe('Ice Lance frozen resolution', () => {
   });
 
   it("spends Fingers of Frost before Winter's Chill (the owner's order)", () => {
-    // Seed hunted (re-hunted off the default 1 after the Eastbrook camp respacing
-    // thinned the zone-1 camp counts, which shifts every seed's stream because
-    // world-gen draws 5 rng values per camp mob). All three lances have to LAND
-    // for the spend order to be observable: on the default seed the third lance
-    // now rolls a full resist, so it spends nothing and Winter's Chill never
-    // ticks down. Spares on record: 3, 4.
-    const { sim, p } = makeSim({ seed: 2 });
+    // All three lances have to LAND for the spend order to be observable (a
+    // resisted lance spends nothing), so the rolls are pinned rather than riding
+    // a hunted seed: with `next` at 0.9 every lance lands and none crits.
+    const { sim, p } = makeSim();
+    sim.rng.next = () => 0.9;
     const mob = spawnTarget(sim, p);
     pushAura(p, {
       id: 'fingers_of_frost',
@@ -523,7 +523,10 @@ describe('Ice Lance frozen resolution', () => {
   it('Shatter adds crit chance without adding another crit-damage multiplier', () => {
     expect(SHATTER_CRIT_BONUS).toBe(0.5);
     const forcedCrit = (rooted: boolean): number => {
-      const { sim, p } = makeSim({ seed: 1337 });
+      const { sim, p } = makeSim();
+      // The bolt must land: `next` at 0.9 passes the spell-hit roll, and the
+      // forced crit aura below still crits it.
+      sim.rng.next = () => 0.9;
       const mob = spawnTarget(sim, p);
       pushAura(p, {
         id: 'test_forced_spell_crit',
