@@ -10,6 +10,7 @@ import { type ResolvedAbility, Sim } from '../src/sim/sim';
 import { fiestaDownEntity } from '../src/sim/social/fiesta';
 import { threatModifier } from '../src/sim/threat';
 import type { Aura, Entity } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 function hostileNear(sim: Sim): Entity {
   const player = sim.player;
@@ -87,9 +88,18 @@ function aura(
 // once). No allocator can mint a negative id, so this can never collide again.
 const FOREIGN_PALADIN_SOURCE_ID = -999;
 
+// Every case fights a mob or ally it places itself, so the ambient overworld
+// (camps, NPCs, ground objects) is pure overhead: EMPTY_TEST_WORLD. One seed
+// for the whole file: each case builds its own Sim, and a seed the file has
+// already built reuses its terrain and collider work, where a fresh seed per
+// case paid that cost again for no extra coverage.
+function paladinSim(): Sim {
+  return new Sim({ seed: 102, playerClass: 'paladin', autoEquip: true, world: EMPTY_TEST_WORLD });
+}
+
 describe('Paladin support abilities', () => {
   it('applies Guardian Covenant to both a targeted ally and the Retribution paladin', () => {
-    const sim = new Sim({ seed: 159, playerClass: 'paladin', autoEquip: true });
+    const sim = paladinSim();
     sim.setPlayerLevel(20);
     sim.setSpec('retribution');
     const allyId = sim.addPlayer('priest', 'Guardian Ally');
@@ -112,7 +122,7 @@ describe('Paladin support abilities', () => {
   });
 
   it('self-casts Guardian Covenant when no friendly target is selected', () => {
-    const sim = new Sim({ seed: 160, playerClass: 'paladin', autoEquip: true });
+    const sim = paladinSim();
     sim.setPlayerLevel(12);
     sim.setSpec('retribution');
     const hostile = hostileNear(sim);
@@ -131,7 +141,7 @@ describe('Paladin support abilities', () => {
   });
 
   it('empowers both Guardian Covenant recipients during a real Ascension cast', () => {
-    const sim = new Sim({ seed: 161, playerClass: 'paladin', autoEquip: true });
+    const sim = paladinSim();
     sim.setPlayerLevel(20);
     sim.setSpec('retribution');
     const allyId = sim.addPlayer('priest', 'Ascended Guardian Ally');
@@ -257,7 +267,7 @@ describe('Paladin support abilities', () => {
     for (const spec of ['protection', 'holy', 'retribution'] as const) {
       for (const id of retired) expect(known(spec)).not.toContain(id);
     }
-    const authority = new Sim({ seed: 102, playerClass: 'paladin', autoEquip: true });
+    const authority = paladinSim();
     authority.setPlayerLevel(20);
     expect(authority.setSpec('retribution')).toBe(true);
     for (const id of retired) {
@@ -270,8 +280,8 @@ describe('Paladin support abilities', () => {
   });
 
   it("makes every spec's Last Rite heal for caster maximum health and preserve two RNG draws", () => {
-    for (const [index, spec] of ['holy', 'protection', 'retribution'].entries()) {
-      const sim = new Sim({ seed: 164 + index, playerClass: 'paladin', autoEquip: true });
+    for (const spec of ['holy', 'protection', 'retribution']) {
+      const sim = paladinSim();
       sim.setPlayerLevel(20);
       expect(sim.setSpec(spec as 'holy' | 'protection' | 'retribution')).toBe(true);
       const allyId = sim.addPlayer('warrior', `Last Rite ${spec} Ally`, { autoEquip: true });
@@ -328,7 +338,7 @@ describe('Paladin support abilities', () => {
   });
 
   it('authors the requested first-pass values and spec restrictions', () => {
-    const paladin = new Sim({ seed: 101, playerClass: 'paladin', autoEquip: true });
+    const paladin = paladinSim();
     paladin.setPlayerLevel(20);
 
     expect(resolve(paladin, 'devotion_ward').effects).toEqual([
@@ -445,7 +455,7 @@ describe('Paladin support abilities', () => {
     expect(paladinDevotionConflicts(current, 1, 'dawn_devotion')).toEqual([2, 0]);
     expect(paladinDevotionConflicts(current, 2, 'grace_devotion')).toEqual([1]);
 
-    const sim = new Sim({ seed: 102, playerClass: 'paladin', autoEquip: true });
+    const sim = paladinSim();
     sim.setPlayerLevel(20);
     run(sim, null, resolve(sim, 'radiant_devotion'));
     run(sim, null, resolve(sim, 'dawn_devotion'));
@@ -478,7 +488,7 @@ describe('Paladin support abilities', () => {
 
   it('casts Hammer of Grace instantly at 20 m, pays out on impact, and refuses 20.01 m', () => {
     const setupAtDistance = (distance: number): { sim: Sim; target: Entity } => {
-      const sim = new Sim({ seed: 157, playerClass: 'paladin', autoEquip: true });
+      const sim = paladinSim();
       sim.setPlayerLevel(20);
       sim.setSpec('retribution');
       const target = hostileNear(sim);
@@ -516,7 +526,7 @@ describe('Paladin support abilities', () => {
   });
 
   it('replaces one Paladin long Devotion party-wide without removing another Paladin copy', () => {
-    const sim = new Sim({ seed: 154, playerClass: 'paladin', autoEquip: true });
+    const sim = paladinSim();
     sim.setPlayerLevel(20);
     const secondId = sim.addPlayer('paladin', 'Second Light', { autoEquip: true });
     const allyId = sim.addPlayer('priest', 'Shared Ally');
@@ -548,7 +558,7 @@ describe('Paladin support abilities', () => {
   });
 
   it('recalculates a former party member after replacing the caster long Devotion', () => {
-    const sim = new Sim({ seed: 152, playerClass: 'paladin', autoEquip: true });
+    const sim = paladinSim();
     sim.setPlayerLevel(20);
     const allyId = sim.addPlayer('priest', 'Former Devotee');
     sim.setPlayerLevel(20, allyId);
@@ -571,7 +581,7 @@ describe('Paladin support abilities', () => {
   });
 
   it('switches Devotion and Requital through one aura family across the party', () => {
-    const sim = new Sim({ seed: 142, playerClass: 'paladin', autoEquip: true });
+    const sim = paladinSim();
     sim.setPlayerLevel(20);
     const allyId = sim.addPlayer('priest', 'Aura Ally');
     sim.setPlayerLevel(20, allyId);
@@ -611,7 +621,7 @@ describe('Paladin support abilities', () => {
   });
 
   it('removes a permanent Devotion from allies when its Paladin dies', () => {
-    const sim = new Sim({ seed: 143, playerClass: 'paladin', autoEquip: true });
+    const sim = paladinSim();
     sim.setPlayerLevel(20);
     const allyId = sim.addPlayer('priest', 'Aura Survivor');
     sim.setPlayerLevel(20, allyId);
@@ -650,7 +660,7 @@ describe('Paladin support abilities', () => {
   });
 
   it('removes a permanent Devotion from allies through the Fiesta death path', () => {
-    const sim = new Sim({ seed: 145, playerClass: 'paladin', autoEquip: true });
+    const sim = paladinSim();
     sim.setPlayerLevel(20);
     const allyId = sim.addPlayer('priest', 'Fiesta Aura Ally');
     sim.setPlayerLevel(20, allyId);
@@ -668,7 +678,7 @@ describe('Paladin support abilities', () => {
   });
 
   it("removes only the casting Paladin's permanent Devotion from the party when canceled", () => {
-    const sim = new Sim({ seed: 144, playerClass: 'paladin', autoEquip: true });
+    const sim = paladinSim();
     sim.setPlayerLevel(20);
     const allyId = sim.addPlayer('priest', 'Aura Cancel Ally');
     sim.setPlayerLevel(20, allyId);
@@ -694,7 +704,7 @@ describe('Paladin support abilities', () => {
   });
 
   it('makes Hammer of Grace restore mana and heal on one successful hit', () => {
-    const grace = new Sim({ seed: 107, playerClass: 'paladin', autoEquip: true });
+    const grace = paladinSim();
     grace.setPlayerLevel(20);
     grace.setSpec('retribution');
     const graceTarget = hostileNear(grace);
@@ -720,7 +730,7 @@ describe('Paladin support abilities', () => {
 
   it('lets Hammer of Grace generate Devotion for every specialization', () => {
     for (const spec of ['holy', 'protection', 'retribution'] as const) {
-      const sim = new Sim({ seed: 151, playerClass: 'paladin', autoEquip: true });
+      const sim = paladinSim();
       sim.setPlayerLevel(20);
       sim.setSpec(spec);
       const target = hostileNear(sim);
@@ -736,7 +746,7 @@ describe('Paladin support abilities', () => {
 
   it('lets a pure Mending Light heal generate Devotion for every specialization', () => {
     for (const spec of ['holy', 'protection', 'retribution'] as const) {
-      const sim = new Sim({ seed: 153, playerClass: 'paladin', autoEquip: true });
+      const sim = paladinSim();
       sim.setPlayerLevel(20);
       sim.setSpec(spec);
       sim.player.hp = 1;
@@ -749,7 +759,7 @@ describe('Paladin support abilities', () => {
   });
 
   it('restores mana on an absorbed Hammer of Grace but heals from effective damage only', () => {
-    const absorbed = new Sim({ seed: 114, playerClass: 'paladin', autoEquip: true });
+    const absorbed = paladinSim();
     absorbed.setPlayerLevel(20);
     absorbed.setSpec('retribution');
     const absorbedTarget = hostileNear(absorbed);
@@ -768,7 +778,7 @@ describe('Paladin support abilities', () => {
   });
 
   it('damages enemies with Solar Invocation and grants Devotion for either valid use', () => {
-    const sim = new Sim({ seed: 129, playerClass: 'paladin', autoEquip: true });
+    const sim = paladinSim();
     sim.setPlayerLevel(20);
     sim.setSpec('holy');
     const enemy = hostileNear(sim);
@@ -801,7 +811,7 @@ describe('Paladin support abilities', () => {
   });
 
   it('applies Sacred Form healing and threat modifiers', () => {
-    const sim = new Sim({ seed: 113, playerClass: 'paladin', autoEquip: true });
+    const sim = paladinSim();
     sim.setPlayerLevel(20);
     sim.setSpec('holy');
     const critBefore = sim.ctx.spellCrit(sim.player);
@@ -856,7 +866,7 @@ describe('Paladin support abilities', () => {
   });
 
   it('lets Solar Step remain stationary until the player supplies movement input', () => {
-    const sim = new Sim({ seed: 127, playerClass: 'paladin', autoEquip: true });
+    const sim = paladinSim();
     sim.setPlayerLevel(20);
     run(sim, null, resolve(sim, 'solar_step'));
     const before = { ...sim.player.pos };
@@ -874,7 +884,7 @@ describe('Paladin support abilities', () => {
   });
 
   it('heals one target with Solar Invocation and splashes around that target in Ascension', () => {
-    const sim = new Sim({ seed: 131, playerClass: 'paladin', autoEquip: true });
+    const sim = paladinSim();
     sim.setPlayerLevel(20);
     sim.setSpec('holy');
     const primaryId = sim.addPlayer('priest', 'Solar Primary');
@@ -906,7 +916,7 @@ describe('Paladin support abilities', () => {
   });
 
   it('never turns an offensive Ascension Solar Invocation into an area heal after a kill', () => {
-    const sim = new Sim({ seed: 133, playerClass: 'paladin', autoEquip: true });
+    const sim = paladinSim();
     sim.setPlayerLevel(20);
     sim.setSpec('holy');
     const target = hostileNear(sim);
@@ -928,7 +938,7 @@ describe('Paladin support abilities', () => {
   });
 
   it('stacks Devotion Aura by source in the real damage pipeline', () => {
-    const sim = new Sim({ seed: 137, playerClass: 'paladin', autoEquip: true });
+    const sim = paladinSim();
     sim.setPlayerLevel(20);
     const attacker = hostileNear(sim);
     sim.player.auras.push(aura('devotion_ward', 'buff_dr', 50, 0.05));
