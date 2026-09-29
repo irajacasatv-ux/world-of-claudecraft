@@ -121,8 +121,10 @@ describe('classic formulas', () => {
 
 describe('world generation', () => {
   it('spawns player, npcs, mobs and objects deterministically', () => {
-    const a = makeSim('warrior', 7);
-    const b = makeSim('warrior', 7);
+    // The full world on the file's default seed, which the rogue and action-bar
+    // cases below build anyway (seed 7 paid a second full build).
+    const a = makeSim('warrior');
+    const b = makeSim('warrior');
     expect(a.entities.size).toBe(b.entities.size);
     expect(a.entities.size).toBeGreaterThan(60);
     const mobsA = [...a.entities.values()].filter((e) => e.kind === 'mob');
