@@ -19,12 +19,13 @@ import {
   consumeColdsightReadReservation,
   FEVERED_DRAW_PULSE_COUNT,
 } from '../src/sim/combat/hunter_coldsight_read';
-import { BUILTIN_WORLD, MOBS } from '../src/sim/data';
+import { MOBS } from '../src/sim/data';
 import { createMob } from '../src/sim/entity';
 import type { ResolvedAbility } from '../src/sim/sim';
 import { Sim } from '../src/sim/sim';
 import type { SimContext } from '../src/sim/sim_context';
 import type { Entity, SimEvent } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 type TestSim = Sim & { ctx: SimContext; addEntity(e: Entity): void; nextId: number };
 
@@ -46,21 +47,17 @@ function auraEvents(events: SimEvent[]): Extract<SimEvent, { type: 'aura' }>[] {
   return events.filter((e): e is Extract<SimEvent, { type: 'aura' }> => e.type === 'aura');
 }
 
-function hunterSim(spec: string, seed: number): TestSim {
-  const sim = new Sim({ seed, playerClass: 'hunter', autoEquip: true }) as TestSim;
-  sim.setPlayerLevel(20);
-  expect(sim.setSpec(spec)).toBe(true);
-  return sim;
-}
-
-// Tick-driven tests below only need the player's own auras to tick; an empty
-// world keeps sim.tick() from also stepping camps/npcs.
-function hunterSimEmptyWorld(spec: string, seed: number): TestSim {
+// One seed on the empty test world for every case: each case drives the
+// exported state machine (or a single tick of the player's own auras) against
+// a target it spawns itself, and no assertion reads an rng outcome, so the
+// ambient overworld and a fresh seed per case (a full collider build each)
+// bought nothing but construction time.
+function hunterSim(spec: string): TestSim {
   const sim = new Sim({
-    seed,
+    seed: 201,
     playerClass: 'hunter',
     autoEquip: true,
-    world: { ...BUILTIN_WORLD, camps: [], npcs: {}, groundObjects: [] },
+    world: EMPTY_TEST_WORLD,
   }) as TestSim;
   sim.setPlayerLevel(20);
   expect(sim.setSpec(spec)).toBe(true);
@@ -85,7 +82,7 @@ function fullFeveredDraw(
 
 describe('Fevered Draw grant: only a full, valid channel qualifies', () => {
   it('grants a 10 sec visible opportunity after all six pulses land on a live target', () => {
-    const sim = hunterSim('marksmanship', 201);
+    const sim = hunterSim('marksmanship');
     const target = liveTarget(sim);
     expect(coldsightReadArmed(sim.player)).toBe(false);
     fullFeveredDraw(sim, target);
@@ -96,14 +93,14 @@ describe('Fevered Draw grant: only a full, valid channel qualifies', () => {
   });
 
   it('refuses a pushback-shortened channel: fewer than six real pulses grants nothing', () => {
-    const sim = hunterSim('marksmanship', 202);
+    const sim = hunterSim('marksmanship');
     const target = liveTarget(sim);
     fullFeveredDraw(sim, target, FEVERED_DRAW_PULSE_COUNT - 1);
     expect(coldsightReadArmed(sim.player)).toBe(false);
   });
 
   it('refuses when the target is dead at completion', () => {
-    const sim = hunterSim('marksmanship', 203);
+    const sim = hunterSim('marksmanship');
     const target = liveTarget(sim);
     target.dead = true;
     fullFeveredDraw(sim, target);
@@ -111,13 +108,13 @@ describe('Fevered Draw grant: only a full, valid channel qualifies', () => {
   });
 
   it('refuses when there is no target at completion', () => {
-    const sim = hunterSim('marksmanship', 204);
+    const sim = hunterSim('marksmanship');
     fullFeveredDraw(sim, null);
     expect(coldsightReadArmed(sim.player)).toBe(false);
   });
 
   it('ignores completion of any ability other than rapid_fire', () => {
-    const sim = hunterSim('marksmanship', 205);
+    const sim = hunterSim('marksmanship');
     const target = liveTarget(sim);
     coldsightFeveredDrawChannelStart(sim.ctx, sim.player, 'rapid_fire');
     for (let i = 0; i < FEVERED_DRAW_PULSE_COUNT; i++) {
@@ -128,21 +125,21 @@ describe('Fevered Draw grant: only a full, valid channel qualifies', () => {
   });
 
   it('never grants for a non-marksmanship hunter spec', () => {
-    const sim = hunterSim('survival', 206);
+    const sim = hunterSim('survival');
     const target = liveTarget(sim);
     fullFeveredDraw(sim, target);
     expect(coldsightReadArmed(sim.player)).toBe(false);
   });
 
   it('a channel that never actually started (no pulses tracked) grants nothing even if reported complete', () => {
-    const sim = hunterSim('marksmanship', 207);
+    const sim = hunterSim('marksmanship');
     const target = liveTarget(sim);
     coldsightFeveredDrawCompleted(sim.ctx, sim.player, 'rapid_fire', target);
     expect(coldsightReadArmed(sim.player)).toBe(false);
   });
 
   it('a repeated full completion refreshes, never stacks', () => {
-    const sim = hunterSim('marksmanship', 208);
+    const sim = hunterSim('marksmanship');
     const target = liveTarget(sim);
     fullFeveredDraw(sim, target);
     const aura = sim.player.auras.find((a) => a.kind === 'hunter_coldsight_read');
@@ -153,7 +150,7 @@ describe('Fevered Draw grant: only a full, valid channel qualifies', () => {
   });
 
   it('a fresh channel start resets progress: a prior short channel cannot combine with a later one', () => {
-    const sim = hunterSim('marksmanship', 209);
+    const sim = hunterSim('marksmanship');
     const target = liveTarget(sim);
     coldsightFeveredDrawChannelStart(sim.ctx, sim.player, 'rapid_fire');
     coldsightFeveredDrawPulse(sim.ctx, sim.player, 'rapid_fire'); // 1 pulse, then abandoned (no completion call)
@@ -168,21 +165,21 @@ describe('Fevered Draw grant: only a full, valid channel qualifies', () => {
 
 describe('coldsightReserveRead: reserve at accepted cast, reject never consumes', () => {
   it('reserves on an accepted Long Draw and consumes the armed opportunity', () => {
-    const sim = hunterSim('marksmanship', 210);
+    const sim = hunterSim('marksmanship');
     fullFeveredDraw(sim, liveTarget(sim));
     coldsightReserveRead(sim.ctx, sim.player, 'aimed_shot');
     expect(coldsightReadArmed(sim.player)).toBe(false);
   });
 
   it('a rejected/ineligible cast never consumes the armed opportunity', () => {
-    const sim = hunterSim('marksmanship', 211);
+    const sim = hunterSim('marksmanship');
     fullFeveredDraw(sim, liveTarget(sim));
     coldsightReserveRead(sim.ctx, sim.player, 'multi_shot'); // not a Coldsight Read ability
     expect(coldsightReadArmed(sim.player)).toBe(true);
   });
 
   it('reserving with nothing armed is a no-op', () => {
-    const sim = hunterSim('marksmanship', 212);
+    const sim = hunterSim('marksmanship');
     coldsightReserveRead(sim.ctx, sim.player, 'aimed_shot');
     const base = sim.resolvedAbility('aimed_shot');
     if (!base) throw new Error('expected aimed_shot to resolve');
@@ -190,7 +187,7 @@ describe('coldsightReserveRead: reserve at accepted cast, reject never consumes'
   });
 
   it('prevents a second queued action from spending the same opportunity', () => {
-    const sim = hunterSim('marksmanship', 213);
+    const sim = hunterSim('marksmanship');
     fullFeveredDraw(sim, liveTarget(sim));
     coldsightReserveRead(sim.ctx, sim.player, 'aimed_shot'); // first accepted cast reserves it
     coldsightReserveRead(sim.ctx, sim.player, 'arcane_shot'); // same-tick second cast finds nothing armed
@@ -207,7 +204,7 @@ describe('coldsightReserveRead: reserve at accepted cast, reject never consumes'
 
 describe('coldsightVoidReservationOnCancel: interrupted casts spend it, never leak forward', () => {
   it('an interrupted Long Draw loses its reservation for good', () => {
-    const sim = hunterSim('marksmanship', 214);
+    const sim = hunterSim('marksmanship');
     fullFeveredDraw(sim, liveTarget(sim));
     coldsightReserveRead(sim.ctx, sim.player, 'aimed_shot');
     coldsightVoidReservationOnCancel(sim.ctx, sim.player, 'aimed_shot');
@@ -218,7 +215,7 @@ describe('coldsightVoidReservationOnCancel: interrupted casts spend it, never le
   });
 
   it('leaves an unrelated cancelled cast alone', () => {
-    const sim = hunterSim('marksmanship', 215);
+    const sim = hunterSim('marksmanship');
     fullFeveredDraw(sim, liveTarget(sim));
     coldsightReserveRead(sim.ctx, sim.player, 'aimed_shot');
     coldsightVoidReservationOnCancel(sim.ctx, sim.player, 'raptor_strike');
@@ -236,7 +233,7 @@ describe('consumeColdsightReadReservation: a damageMult rider on the complete hi
   }
 
   it('bakes +50% as damageMult into a reserved Long Draw, leaving min/max (and any AP scaling) untouched', () => {
-    const sim = hunterSim('marksmanship', 216);
+    const sim = hunterSim('marksmanship');
     const base = sim.resolvedAbility('aimed_shot');
     if (!base) throw new Error('expected aimed_shot to resolve');
     const baseEff = directDamageOf(base);
@@ -250,7 +247,7 @@ describe('consumeColdsightReadReservation: a damageMult rider on the complete hi
   });
 
   it('bakes +75% for a reserved Fell Shot', () => {
-    const sim = hunterSim('marksmanship', 217);
+    const sim = hunterSim('marksmanship');
     const base = sim.resolvedAbility('arcane_shot');
     if (!base) throw new Error('expected arcane_shot to resolve');
     fullFeveredDraw(sim, liveTarget(sim));
@@ -260,7 +257,7 @@ describe('consumeColdsightReadReservation: a damageMult rider on the complete hi
   });
 
   it('composes with an existing damageMult rather than overwriting it', () => {
-    const sim = hunterSim('marksmanship', 218);
+    const sim = hunterSim('marksmanship');
     const base = sim.resolvedAbility('aimed_shot');
     if (!base) throw new Error('expected aimed_shot to resolve');
     const withExistingMult: ResolvedAbility = {
@@ -276,14 +273,14 @@ describe('consumeColdsightReadReservation: a damageMult rider on the complete hi
   });
 
   it('leaves the resolved ability unchanged (same reference) when nothing is reserved', () => {
-    const sim = hunterSim('marksmanship', 219);
+    const sim = hunterSim('marksmanship');
     const base = sim.resolvedAbility('aimed_shot');
     if (!base) throw new Error('expected aimed_shot to resolve');
     expect(consumeColdsightReadReservation(sim.ctx, sim.player, base)).toBe(base);
   });
 
   it('leaves an ineligible ability unchanged even with a live reservation, and does not consume it', () => {
-    const sim = hunterSim('marksmanship', 220);
+    const sim = hunterSim('marksmanship');
     fullFeveredDraw(sim, liveTarget(sim));
     coldsightReserveRead(sim.ctx, sim.player, 'aimed_shot');
     const sting = sim.resolvedAbility('serpent_sting');
@@ -295,7 +292,7 @@ describe('consumeColdsightReadReservation: a damageMult rider on the complete hi
   });
 
   it('only consumes once: a second resolve of the same ability finds nothing left', () => {
-    const sim = hunterSim('marksmanship', 221);
+    const sim = hunterSim('marksmanship');
     const base = sim.resolvedAbility('aimed_shot');
     if (!base) throw new Error('expected aimed_shot to resolve');
     fullFeveredDraw(sim, liveTarget(sim));
@@ -309,14 +306,14 @@ describe('consumeColdsightReadReservation: a damageMult rider on the complete hi
 // never put an 'aura' event on the wire (only the real 10s Read may).
 describe('Internal bookkeeping markers never emit an aura event (v0.42.0 review fix)', () => {
   it('channel start emits no aura event', () => {
-    const sim = hunterSim('marksmanship', 222);
+    const sim = hunterSim('marksmanship');
     const events = captureEmittedEvents(sim);
     coldsightFeveredDrawChannelStart(sim.ctx, sim.player, 'rapid_fire');
     expect(auraEvents(events)).toHaveLength(0);
   });
 
   it('channel completion emits only the real Coldsight Read grant', () => {
-    const sim = hunterSim('marksmanship', 223);
+    const sim = hunterSim('marksmanship');
     const target = liveTarget(sim);
     const events = captureEmittedEvents(sim);
     fullFeveredDraw(sim, target);
@@ -327,7 +324,7 @@ describe('Internal bookkeeping markers never emit an aura event (v0.42.0 review 
   });
 
   it('reserving at cast-accept emits only the real buff fade, never a marker gain', () => {
-    const sim = hunterSim('marksmanship', 224);
+    const sim = hunterSim('marksmanship');
     fullFeveredDraw(sim, liveTarget(sim));
     const events = captureEmittedEvents(sim);
     coldsightReserveRead(sim.ctx, sim.player, 'aimed_shot');
@@ -337,7 +334,7 @@ describe('Internal bookkeeping markers never emit an aura event (v0.42.0 review 
   });
 
   it('consuming the reservation on a landed hit emits no aura event', () => {
-    const sim = hunterSim('marksmanship', 225);
+    const sim = hunterSim('marksmanship');
     const base = sim.resolvedAbility('aimed_shot');
     if (!base) throw new Error('expected aimed_shot to resolve');
     fullFeveredDraw(sim, liveTarget(sim));
@@ -348,7 +345,7 @@ describe('Internal bookkeeping markers never emit an aura event (v0.42.0 review 
   });
 
   it('cancelling an accepted cast voids the reservation marker silently', () => {
-    const sim = hunterSim('marksmanship', 226);
+    const sim = hunterSim('marksmanship');
     fullFeveredDraw(sim, liveTarget(sim));
     coldsightReserveRead(sim.ctx, sim.player, 'aimed_shot');
     expect(sim.player.auras.some((a) => a.id === 'hunter_coldsight_read_reserved_aimed_shot')).toBe(
@@ -363,7 +360,7 @@ describe('Internal bookkeeping markers never emit an aura event (v0.42.0 review 
   });
 
   it('cancelling a channel voids the progress marker silently', () => {
-    const sim = hunterSim('marksmanship', 227);
+    const sim = hunterSim('marksmanship');
     coldsightFeveredDrawChannelStart(sim.ctx, sim.player, 'rapid_fire');
     expect(sim.player.auras.some((a) => a.id === 'hunter_coldsight_fevered_draw_progress')).toBe(
       true,
@@ -377,7 +374,7 @@ describe('Internal bookkeeping markers never emit an aura event (v0.42.0 review 
   });
 
   it('respec sweeps the progress marker silently', () => {
-    const sim = hunterSim('marksmanship', 228);
+    const sim = hunterSim('marksmanship');
     coldsightFeveredDrawChannelStart(sim.ctx, sim.player, 'rapid_fire');
     expect(sim.player.auras.some((a) => a.id === 'hunter_coldsight_fevered_draw_progress')).toBe(
       true,
@@ -391,7 +388,7 @@ describe('Internal bookkeeping markers never emit an aura event (v0.42.0 review 
   });
 
   it('respec sweeps a live reservation marker silently', () => {
-    const sim = hunterSim('marksmanship', 232);
+    const sim = hunterSim('marksmanship');
     fullFeveredDraw(sim, liveTarget(sim));
     coldsightReserveRead(sim.ctx, sim.player, 'aimed_shot');
     expect(sim.player.auras.some((a) => a.id === 'hunter_coldsight_read_reserved_aimed_shot')).toBe(
@@ -407,7 +404,7 @@ describe('Internal bookkeeping markers never emit an aura event (v0.42.0 review 
   });
 
   it('respec still emits one fade for a still-armed real Coldsight Read (positive control)', () => {
-    const sim = hunterSim('marksmanship', 233);
+    const sim = hunterSim('marksmanship');
     fullFeveredDraw(sim, liveTarget(sim));
     const events = captureEmittedEvents(sim);
     cleanColdsightReadState(sim.ctx, sim.player);
@@ -417,7 +414,7 @@ describe('Internal bookkeeping markers never emit an aura event (v0.42.0 review 
   });
 
   it('a marker forced to natural expiry (generic per-tick timer) emits no aura event', () => {
-    const sim = hunterSimEmptyWorld('marksmanship', 229);
+    const sim = hunterSim('marksmanship');
     coldsightFeveredDrawChannelStart(sim.ctx, sim.player, 'rapid_fire');
     const marker = sim.player.auras.find((a) => a.id === 'hunter_coldsight_fevered_draw_progress');
     if (!marker) throw new Error('expected the progress marker to be present');
@@ -436,7 +433,7 @@ describe('Internal bookkeeping markers never emit an aura event (v0.42.0 review 
 // aura's expiry must both still emit.
 describe('Natural expiry positive controls: unaffected auras still emit (no broad silence)', () => {
   it('the real Coldsight Read buff naturally expiring still emits one fade', () => {
-    const sim = hunterSimEmptyWorld('marksmanship', 230);
+    const sim = hunterSim('marksmanship');
     fullFeveredDraw(sim, liveTarget(sim));
     const real = sim.player.auras.find((a) => a.id === 'hunter_coldsight_read');
     if (!real) throw new Error('expected the real Coldsight Read buff to be armed');
@@ -449,7 +446,7 @@ describe('Natural expiry positive controls: unaffected auras still emit (no broa
   });
 
   it('an unrelated internal_cd aura naturally expiring still emits one fade', () => {
-    const sim = hunterSimEmptyWorld('marksmanship', 231);
+    const sim = hunterSim('marksmanship');
     sim.player.auras.push({
       id: 'heating_up',
       name: 'Heating Up',
