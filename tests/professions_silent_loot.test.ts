@@ -423,6 +423,7 @@ describe('the craft output arms each stand their hub line down', () => {
     sim.tick();
     sim.rng = rngWithFirstDraws((proc) => proc >= PROC_CHANCE);
     runCraft(sim, 'recipe_eastbrook_ritual_vestments', false, pid);
+    expect(sim.lastCraftResult?.ok, sim.lastCraftResult?.reason).toBe(true);
     expect(sim.lastCraftResult?.masterwork).toBeUndefined();
     sim.tick();
     sim.rng = rngWithFirstDraws((proc) => proc < PROC_CHANCE);

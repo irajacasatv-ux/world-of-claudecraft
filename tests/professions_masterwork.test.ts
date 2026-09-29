@@ -609,7 +609,8 @@ describe('proc-chance wiring over a real Sim (hunted boundary-window seeds)', ()
   // paired same-seed runs share the identical single proc draw; each seed was
   // hunted (bounded scan from seed 1, draw value verified via the rng
   // observer during the hunt) for a draw inside the decisive window where the
-  // flipped input alone decides the proc.
+  // flipped input alone decides the proc. The specialization-threshold case
+  // below forces its draw into its window instead (tests/helpers/forced_rng.ts).
 
   function craftVestments(seed: number, setup: (sim: Sim, pid: number) => void) {
     const sim = new Sim({ seed, playerClass: 'warrior', autoEquip: false });

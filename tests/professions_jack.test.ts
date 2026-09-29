@@ -366,8 +366,8 @@ describe('the material-saving bonus and the output-variance roll apply at craft 
   });
 });
 
-// Masterwork interaction (hunted seeds, the suite's own idiom: see
-// tests/professions_crafting.test.ts "masterwork proc" describe block). Both
+// Masterwork interaction (forced rolls, the idiom tests/professions_crafting.test.ts
+// "masterwork proc" describe block uses too). Both
 // scenarios reuse recipe_eastbrook_ritual_vestments (an uncommon-def
 // tailoring piece with a primary-stat profile, bumping to rare: tier 2,
 // exactly at JACK_CEILING_TIER, so the masterwork effect gate still passes

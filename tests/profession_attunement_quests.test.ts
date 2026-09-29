@@ -24,8 +24,10 @@ const OUTFITTER_MASTER = 'weaver_ottilie';
 // The hobby-switch quest is given by Smith Haldren, not an anchor master.
 const HOBBY_MASTER = 'smith_haldren';
 
-function makeSim(seed = 9042): Sim {
-  return new Sim({ seed, playerClass: 'warrior', autoEquip: true });
+// Every Sim, the reload target and the determinism twin included, shares one
+// seed: a fresh seed builds its collider grids and no case compares two seeds.
+function makeSim(): Sim {
+  return new Sim({ seed: 9042, playerClass: 'warrior', autoEquip: true });
 }
 
 function moveToNpc(sim: Sim, templateId: string, pid = sim.playerId): void {
