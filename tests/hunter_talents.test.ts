@@ -7,18 +7,28 @@ import { MOBS } from '../src/sim/data';
 import { createMob } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
 import type { Aura, Entity, SimEvent } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 type TestSim = Sim & {
   addEntity(entity: Entity): void;
   nextId: number;
 };
 
-function hunter(
-  spec: string,
-  rows: Partial<Record<5 | 8 | 11 | 14 | 17 | 20, string>>,
-  seed: number,
-): TestSim {
-  const sim = new Sim({ seed, playerClass: 'hunter', autoEquip: true }) as TestSim;
+// One seed on the empty test world for every case: each case fights a dummy
+// (and a pet) it spawns itself, so the ambient overworld only added tick time,
+// and each extra seed paid its own collider build (about half a second) the
+// first time a shot checked line of sight. Several cases need their shots to
+// land (a missed spender procs nothing), which is an rng draw: this seed lands
+// them, as the per-case seeds it replaced did.
+const HUNTER_SEED = 2920;
+
+function hunter(spec: string, rows: Partial<Record<5 | 8 | 11 | 14 | 17 | 20, string>>): TestSim {
+  const sim = new Sim({
+    seed: HUNTER_SEED,
+    playerClass: 'hunter',
+    autoEquip: true,
+    world: EMPTY_TEST_WORLD,
+  }) as TestSim;
   sim.setPlayerLevel(20);
   expect(sim.applyTalents({ spec, rows })).toBe(true);
   return sim;
@@ -91,7 +101,7 @@ function ready(sim: Sim, abilityId: string): void {
 
 describe('Hunter v0.29 choice-row mechanics', () => {
   it('Tactical Retreat gives Trailbreak two uses and clears ordinary movement locks', () => {
-    const sim = hunter('survival', { 5: 'hun_r5_tactical_retreat' }, 2920);
+    const sim = hunter('survival', { 5: 'hun_r5_tactical_retreat' });
     expect(sim.resolvedAbility('trailbreak')?.charges).toBe(2);
     sim.player.auras.push(aura('test_root', 'root'), aura('test_slow', 'slow'));
 
@@ -102,7 +112,7 @@ describe('Hunter v0.29 choice-row mechanics', () => {
   });
 
   it('Enduring Courser bursts on activation and breaks when damage lands', () => {
-    const sim = hunter('survival', { 5: 'hun_r5_enduring_courser' }, 2927);
+    const sim = hunter('survival', { 5: 'hun_r5_enduring_courser' });
 
     sim.castAbility('aspect_of_the_cheetah');
 
@@ -121,7 +131,7 @@ describe('Hunter v0.29 choice-row mechanics', () => {
   // gate the instant it landed and immediately recast Aspect of the Cheetah
   // for a fresh 3s/60% burst, chained every GCD for 100% uptime in arena/BG.
   it("right-clicking Enduring Courser's internal cooldown cannot farm 100% burst uptime", () => {
-    const sim = hunter('survival', { 5: 'hun_r5_enduring_courser' }, 2927);
+    const sim = hunter('survival', { 5: 'hun_r5_enduring_courser' });
 
     sim.castAbility('aspect_of_the_cheetah');
     expect(sim.player.auras.some((entry) => entry.id === 'hunter_enduring_courser_burst')).toBe(
@@ -147,7 +157,7 @@ describe('Hunter v0.29 choice-row mechanics', () => {
   });
 
   it("Predator's Pace follows a successful Focus generator and respects its cooldown", () => {
-    const sim = hunter('marksmanship', { 5: 'hun_r5_predators_pace' }, 2928);
+    const sim = hunter('marksmanship', { 5: 'hun_r5_predators_pace' });
     const target = addMob(sim, 20);
     sim.targetEntity(target.id);
 
@@ -161,7 +171,7 @@ describe('Hunter v0.29 choice-row mechanics', () => {
   });
 
   it('Receding Shell can end Shellskin early and refund unused cooldown', () => {
-    const sim = hunter('survival', { 8: 'hun_r8_receding_shell' }, 2921);
+    const sim = hunter('survival', { 8: 'hun_r8_receding_shell' });
     sim.castAbility('shellskin');
     const shell = sim.player.auras.find((entry) => entry.id === 'shellskin');
     if (!shell) throw new Error('missing Shellskin aura');
@@ -174,7 +184,7 @@ describe('Hunter v0.29 choice-row mechanics', () => {
   });
 
   it('Shared Recovery heals the pet and protects both partners', () => {
-    const sim = hunter('beast_mastery', { 8: 'hun_r8_shared_recovery' }, 2922);
+    const sim = hunter('beast_mastery', { 8: 'hun_r8_shared_recovery' });
     const pet = addPet(sim, 400);
     sim.player.hp = Math.round(sim.player.maxHp * 0.5);
 
@@ -188,7 +198,7 @@ describe('Hunter v0.29 choice-row mechanics', () => {
   });
 
   it('Beastguard redirects safely to a pet floor and falls back below half health', () => {
-    const sim = hunter('beast_mastery', { 8: 'hun_r8_beastguard' }, 2929);
+    const sim = hunter('beast_mastery', { 8: 'hun_r8_beastguard' });
     const pet = addPet(sim, 205);
     const ownerBefore = sim.player.hp;
 
@@ -205,7 +215,7 @@ describe('Hunter v0.29 choice-row mechanics', () => {
   });
 
   it('Double Hush and Crippling Pursuit preserve their charge and per-target contracts', () => {
-    const sim = hunter('marksmanship', { 11: 'hun_r11_double_hush' }, 2923);
+    const sim = hunter('marksmanship', { 11: 'hun_r11_double_hush' });
     expect(sim.resolvedAbility('counter_shot')?.charges).toBe(2);
     expect(sim.resolvedAbility('counter_shot')?.cooldown).toBe(24);
 
@@ -228,12 +238,12 @@ describe('Hunter v0.29 choice-row mechanics', () => {
   });
 
   it('Apex Instinct grants Focus and expires four seconds after each major window', () => {
-    for (const [spec, cooldown, spender, seed] of [
-      ['beast_mastery', 'bestial_wrath', 'arcane_shot', 2924],
-      ['marksmanship', 'cold_focus', 'aimed_shot', 2925],
-      ['survival', 'bloodtrail_assault', 'mongoose_bite', 2926],
+    for (const [spec, cooldown, spender] of [
+      ['beast_mastery', 'bestial_wrath', 'arcane_shot'],
+      ['marksmanship', 'cold_focus', 'aimed_shot'],
+      ['survival', 'bloodtrail_assault', 'mongoose_bite'],
     ] as const) {
-      const sim = hunter(spec, { 17: 'hun_r17_apex_instinct' }, seed);
+      const sim = hunter(spec, { 17: 'hun_r17_apex_instinct' });
       sim.player.resource = 0;
       sim.castAbility(cooldown);
 
@@ -249,7 +259,7 @@ describe('Hunter v0.29 choice-row mechanics', () => {
   });
 
   it('Efficient Rhythm converts 75 Focus spent into one stronger generator', () => {
-    const sim = hunter('marksmanship', { 14: 'hun_r14_efficient_rhythm' }, 2930);
+    const sim = hunter('marksmanship', { 14: 'hun_r14_efficient_rhythm' });
     const target = addMob(sim, 20);
     sim.targetEntity(target.id);
 
@@ -275,7 +285,7 @@ describe('Hunter v0.29 choice-row mechanics', () => {
   });
 
   it('Guise Mastery applies each guise rider behind one shared cooldown', () => {
-    const harrier = hunter('marksmanship', { 14: 'hun_r14_guise_mastery' }, 2931);
+    const harrier = hunter('marksmanship', { 14: 'hun_r14_guise_mastery' });
     harrier.castAbility('aspect_of_the_hawk');
     expect(harrier.resolvedAbility('measured_shot')?.effects).toContainEqual({
       type: 'gainResource',
@@ -285,17 +295,16 @@ describe('Hunter v0.29 choice-row mechanics', () => {
       true,
     );
 
-    const marten = hunter('survival', { 14: 'hun_r14_guise_mastery' }, 2932);
+    const marten = hunter('survival', { 14: 'hun_r14_guise_mastery' });
     marten.castAbility('aspect_of_the_monkey');
     expect(marten.player.auras).toContainEqual(
       expect.objectContaining({ id: 'hunter_guise_marten', kind: 'shield_wall', value: 0.25 }),
     );
 
-    const courser = hunter(
-      'survival',
-      { 5: 'hun_r5_enduring_courser', 14: 'hun_r14_guise_mastery' },
-      2933,
-    );
+    const courser = hunter('survival', {
+      5: 'hun_r5_enduring_courser',
+      14: 'hun_r14_guise_mastery',
+    });
     courser.castAbility('aspect_of_the_cheetah');
     expect(courser.player.auras).toContainEqual(
       expect.objectContaining({ id: 'hunter_guise_courser', kind: 'buff_speed', value: 1.6 }),
@@ -303,7 +312,7 @@ describe('Hunter v0.29 choice-row mechanics', () => {
   });
 
   it('Shell and Fang trades mitigation for attacks during Shellskin', () => {
-    const sim = hunter('marksmanship', { 17: 'hun_r17_shell_and_fang' }, 2934);
+    const sim = hunter('marksmanship', { 17: 'hun_r17_shell_and_fang' });
     const target = addMob(sim, 20);
     sim.targetEntity(target.id);
     expect(sim.resolvedAbility('shellskin')?.effects).toContainEqual({
@@ -322,7 +331,7 @@ describe('Hunter v0.29 choice-row mechanics', () => {
   });
 
   it('Overdraw exposes every third spender before it resolves', () => {
-    const sim = hunter('marksmanship', { 20: 'hun_r20_overdraw' }, 2925);
+    const sim = hunter('marksmanship', { 20: 'hun_r20_overdraw' });
     const target = addMob(sim, 20);
     sim.targetEntity(target.id);
 
@@ -349,9 +358,8 @@ describe('Hunter v0.29 choice-row mechanics', () => {
   });
 
   it('Fang Chorus echoes every spender and turns the third echo into a clap', () => {
-    // Seed re-hunted (2935 to 2937) after the v0.34.0 catch-up merge shifted
-    // the shared draw order; a missed spender draws no echo and no clap.
-    const sim = hunter('marksmanship', { 20: 'hun_r20_fang_chorus' }, 2937);
+    // A missed spender draws no echo and no clap (see HUNTER_SEED).
+    const sim = hunter('marksmanship', { 20: 'hun_r20_fang_chorus' });
     anchorProbeInOpenField(sim);
     addPet(sim);
     const primary = addMob(sim, 20);
@@ -386,7 +394,7 @@ describe('Hunter v0.29 choice-row mechanics', () => {
     // guard for the pet-damage-multiplier consolidation: runFangChorus previously
     // read a local copy of the multiplier that never carried the hunter_frenzy term.
     function fangChorusDamage(frenzied: boolean): number {
-      const sim = hunter('beast_mastery', { 20: 'hun_r20_fang_chorus' }, 2937);
+      const sim = hunter('beast_mastery', { 20: 'hun_r20_fang_chorus' });
       anchorProbeInOpenField(sim);
       addPet(sim);
       const primary = addMob(sim, 20);
@@ -429,7 +437,7 @@ describe('Hunter v0.29 choice-row mechanics', () => {
   });
 
   it('Pack Rally transforms Courser in combat and returns to Courser on cooldown', () => {
-    const sim = hunter('beast_mastery', { 17: 'hun_r17_pack_rally' }, 2926);
+    const sim = hunter('beast_mastery', { 17: 'hun_r17_pack_rally' });
     sim.player.inCombat = true;
     expect(sim.resolvedAbility('aspect_of_the_cheetah')?.def.id).toBe('pack_rally');
 
@@ -448,7 +456,7 @@ describe('Hunter v0.29 choice-row mechanics', () => {
     // straight onto the resolved talentMods exercises the exact same
     // applyTalentMods(found, mods) call resolvedAbility makes for every real
     // per-ability mod, without inventing new talent content.
-    const sim = hunter('beast_mastery', { 17: 'hun_r17_pack_rally' }, 2926);
+    const sim = hunter('beast_mastery', { 17: 'hun_r17_pack_rally' });
     sim.player.inCombat = true;
     const packRallyMod: ResolvedAbilityMod = {
       dmgPct: 0,
