@@ -11,6 +11,12 @@ import { MOBS } from '../src/sim/data';
 import { createMob } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
 import type { AbilityEffect, Entity, PlayerClass } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
+
+// Every Sim here runs on one seed and EMPTY_TEST_WORLD: the runtime cases pin the
+// rng or read deterministic stats off a player and pets they add themselves, so
+// the ambient overworld and each extra seed's world build were pure cost.
+const SEED = 12;
 
 function alloc(spec: string): TalentAllocation {
   return { spec, rows: {} };
@@ -215,7 +221,12 @@ describe('spec masteries', () => {
     // Packbond (petDmgPct 0.25) must deal exactly 1.25x what a no-pet-mastery spec's
     // identical pet deals.
     const setup = (spec: string) => {
-      const sim = new Sim({ seed: 11, playerClass: 'hunter', autoEquip: true });
+      const sim = new Sim({
+        seed: SEED,
+        playerClass: 'hunter',
+        autoEquip: true,
+        world: EMPTY_TEST_WORLD,
+      });
       sim.setPlayerLevel(20);
       sim.setSpec(spec);
       // World construction consumes the shared RNG, so pin subsequent combat rolls:
@@ -279,7 +290,12 @@ describe('spec masteries', () => {
     // Same setup as the petDmgPct test above, marksmanship (0 petDmgPct) isolates the
     // frenzy term specifically.
     const setup = (frenzied: boolean) => {
-      const sim = new Sim({ seed: 13, playerClass: 'hunter', autoEquip: true });
+      const sim = new Sim({
+        seed: SEED,
+        playerClass: 'hunter',
+        autoEquip: true,
+        world: EMPTY_TEST_WORLD,
+      });
       sim.setPlayerLevel(20);
       sim.setSpec('marksmanship');
       (sim as unknown as { rng: { next: () => number } }).rng.next = () => 0.5;
@@ -349,7 +365,12 @@ describe('spec masteries', () => {
   });
 
   it('replaces Veinleech with the Evil Eye Condemnation signature', () => {
-    const sim = new Sim({ seed: 12, playerClass: 'warlock', autoEquip: true });
+    const sim = new Sim({
+      seed: SEED,
+      playerClass: 'warlock',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.setPlayerLevel(20);
     sim.setSpec('affliction');
     const knownIds = sim.players.get(sim.playerId)?.known.map((ability) => ability.def.id);
@@ -361,12 +382,22 @@ describe('spec masteries', () => {
   });
 
   it('applies passive stat, pet damage, damage-share, and heal-crit masteries at runtime', () => {
-    const rogue = new Sim({ seed: 4, playerClass: 'rogue', autoEquip: true });
+    const rogue = new Sim({
+      seed: SEED,
+      playerClass: 'rogue',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     rogue.setPlayerLevel(20);
     rogue.setSpec('combat');
     expect(rogue.player.meleeHaste).toBeCloseTo(0.1);
 
-    const hunter = new Sim({ seed: 5, playerClass: 'hunter', autoEquip: true });
+    const hunter = new Sim({
+      seed: SEED,
+      playerClass: 'hunter',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     hunter.setPlayerLevel(20);
     hunter.setSpec('beast_mastery');
     const hunterPet = createMob(9001, MOBS.forest_wolf, 20, hunter.player.pos);
@@ -375,7 +406,12 @@ describe('spec masteries', () => {
       (hunter as unknown as { petDamageMult(e: Entity): number }).petDamageMult(hunterPet),
     ).toBeCloseTo(1.25);
 
-    const paladin = new Sim({ seed: 6, playerClass: 'paladin', autoEquip: true });
+    const paladin = new Sim({
+      seed: SEED,
+      playerClass: 'paladin',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     paladin.setPlayerLevel(20);
     paladin.setSpec('holy');
     paladin.player.stats.int = 2000;
@@ -395,7 +431,12 @@ describe('spec masteries', () => {
     ).applyHeal(paladin.player, paladin.player, 100, 'test');
     expect(paladin.player.hp).toBe(200);
 
-    const warlock = new Sim({ seed: 7, playerClass: 'warlock', autoEquip: true });
+    const warlock = new Sim({
+      seed: SEED,
+      playerClass: 'warlock',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     warlock.setPlayerLevel(20);
     warlock.setSpec('demonology');
     const demon = createMob(9002, MOBS.forest_wolf, 20, warlock.player.pos);
@@ -421,7 +462,12 @@ describe('spec masteries', () => {
   });
 
   it('mastery strength ramps on the live level-up path (min(1, level/20) re-bake)', () => {
-    const sim = new Sim({ seed: 11, playerClass: 'druid', autoEquip: true });
+    const sim = new Sim({
+      seed: SEED,
+      playerClass: 'druid',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.setPlayerLevel(10);
     sim.setSpec('restoration');
     const at10 = metaOf(sim, sim.player).talentMods.global.hotHealPct;
@@ -441,7 +487,12 @@ describe('spec masteries', () => {
     // Spec is chosen FIRST (baked at 20), then the level is jumped down: the mastery
     // must re-bake to the new level, not keep its old-level strength. Before the fix,
     // setPlayerLevel recalced stats but left talentMods baked at the prior level.
-    const sim = new Sim({ seed: 12, playerClass: 'druid', autoEquip: true });
+    const sim = new Sim({
+      seed: SEED,
+      playerClass: 'druid',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.setPlayerLevel(20);
     sim.setSpec('restoration');
     expect(metaOf(sim, sim.player).talentMods.global.hotHealPct).toBeCloseTo(0.25, 10);
@@ -456,17 +507,32 @@ describe('spec masteries', () => {
   it('re-bakes mastery-scaled passive stats when setPlayerLevel jumps without a respec', () => {
     // The mage-rework Fire mastery also grants +2% crit chance (stats.crit 0.02) on top of
     // its crit-damage bonus, and that passive stat must re-bake to the new level.
-    const sim = new Sim({ seed: 12, playerClass: 'mage', autoEquip: true });
+    const sim = new Sim({
+      seed: SEED,
+      playerClass: 'mage',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.setPlayerLevel(10);
     sim.setSpec('fire');
 
-    const noSpec10 = new Sim({ seed: 12, playerClass: 'mage', autoEquip: true });
+    const noSpec10 = new Sim({
+      seed: SEED,
+      playerClass: 'mage',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     noSpec10.setPlayerLevel(10);
     const at10MasteryCrit = sim.player.critChance - noSpec10.player.critChance;
     expect(at10MasteryCrit).toBeCloseTo(0.02 * (10 / 20), 10);
 
     sim.setPlayerLevel(20);
-    const noSpec20 = new Sim({ seed: 12, playerClass: 'mage', autoEquip: true });
+    const noSpec20 = new Sim({
+      seed: SEED,
+      playerClass: 'mage',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     noSpec20.setPlayerLevel(20);
     const at20MasteryCrit = sim.player.critChance - noSpec20.player.critChance;
     expect(at20MasteryCrit).toBeCloseTo(0.02, 10);
