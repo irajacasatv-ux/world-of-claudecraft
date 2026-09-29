@@ -17,9 +17,14 @@ import { transportShipPoseAt, transportVoyageSeconds } from '../../src/sim/trans
 import { type Aura, DT, RUN_SPEED } from '../../src/sim/types';
 import { WATER_LEVEL } from '../../src/sim/world';
 import { WORLD_SEED } from '../../src/sim/world_seed';
+import { PRODUCTION_IDLE_CULL } from '../helpers/production_idle_cull';
+import { EMPTY_TEST_WORLD } from '../sim_shared';
 
+// The signature cases read only the player's own auras, movement state and
+// position, so they run on the empty world, on the realm seed the ferry case
+// below builds anyway (seed 42 paid a second full collider build).
 function fixture(): { sim: Sim; session: MovementOverrideSessionState } {
-  const sim = new Sim({ seed: 42, playerClass: 'warrior' });
+  const sim = new Sim({ seed: WORLD_SEED, playerClass: 'warrior', world: EMPTY_TEST_WORLD });
   return {
     sim,
     session: {
@@ -211,7 +216,9 @@ describe('a ferry passenger (server/transport_head.ts ferryMovementFrame)', () =
   // tick; the one bump is the frame change itself, at cast-off and at mooring.
   it('bumps once at cast-off and once at mooring, never while the deck carries them', () => {
     const route = EASTBROOK_NIGHTBLOOM_FERRY;
-    const sim = new Sim({ seed: WORLD_SEED, playerClass: 'warrior' });
+    // The shipped idle-mob cull: the voyage ticks the whole overworld around one
+    // passenger, and no mob takes part in it.
+    const sim = new Sim({ seed: WORLD_SEED, playerClass: 'warrior', ...PRODUCTION_IDLE_CULL });
     const e = sim.player;
     const session: MovementOverrideSessionState = {
       pid: sim.playerId,
