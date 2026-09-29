@@ -29,14 +29,18 @@ vi.mock('../server/db', () => ({
 import { GameServer } from '../server/game';
 import { Sim } from '../src/sim/sim';
 import { dist2d, type Entity, type SimEvent, type Vec3 } from '../src/sim/types';
+import { WORLD_SEED } from '../src/sim/world_seed';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 type AnySim = Sim & Record<string, any>;
 
 const COMBAT_REZ = 'temporal_reversal';
 
-// An arcane mage of 20 owns the single-target combat resurrection.
-function chronomancer(seed = 91): { sim: AnySim; mage: Entity } {
-  const sim = new Sim({ seed, playerClass: 'mage' }) as AnySim;
+// An arcane mage of 20 owns the single-target combat resurrection. The offline
+// rigs raise a hand-placed ally on the empty world, on the seed the online
+// GameServer below boots with, so the file builds one collider grid, not four.
+function chronomancer(): { sim: AnySim; mage: Entity } {
+  const sim = new Sim({ seed: WORLD_SEED, playerClass: 'mage', world: EMPTY_TEST_WORLD }) as AnySim;
   sim.setPlayerLevel(20);
   expect(sim.setSpec('arcane')).toBe(true);
   sim.tick();
@@ -106,7 +110,7 @@ describe('combat resurrection on a released ghost', () => {
   it('accepts the mouseover override with no current target selected', () => {
     // The path the party/raid frame drives (castAbilityOn): the caster never
     // selects the ghost, the hovered member's pid rides the cast itself.
-    const { sim, mage } = chronomancer(92);
+    const { sim, mage } = chronomancer();
     const ally = addToGroup(sim, mage, 'Fallen');
     killAndRelease(sim, mage, ally);
     mage.targetId = null;
@@ -123,7 +127,7 @@ describe('combat resurrection on a released ghost', () => {
   it('still refuses a released member whose BODY is out of reach', () => {
     // Reach is the body, not the spirit: moving the corpse (not the ghost) out of
     // range must still refuse, so this fix never became a cross-map resurrection.
-    const { sim, mage } = chronomancer(93);
+    const { sim, mage } = chronomancer();
     const ally = addToGroup(sim, mage, 'Fallen');
     killAndRelease(sim, mage, ally);
     ally.corpsePos = { x: mage.pos.x + 400, y: mage.pos.y, z: mage.pos.z };
