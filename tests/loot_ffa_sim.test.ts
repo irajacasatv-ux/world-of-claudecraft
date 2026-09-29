@@ -87,6 +87,37 @@ describe('loot goes FFA one minute after a corpse becomes lootable', () => {
     sim.lootCorpse(mob.id, stranger);
     expect(copperOf(internals.players.get(stranger))).toBeGreaterThan(before);
   });
+
+  it('runs the same owner-lock timeline on two Sims of one seed', () => {
+    // Read INSIDE the lock window, where the timer is still unclamped: a pair
+    // compared after the lock lapsed reads two timers pinned at zero and cannot
+    // tell a leaked or mis-paced countdown from a sound one. Five seconds in
+    // (100 ticks at 20 Hz) the one-minute lock has 55 s left, the stranger is
+    // still turned away, and the loot is untouched. The second Sim runs after
+    // the first, so a countdown carried across Sims shows up in its timer.
+    const midWindow = () => {
+      const { sim, stranger, tapper, mob } = setup();
+      for (let i = 0; i < 100; i++) sim.tick();
+      return {
+        timer: mob.lootFfaTimer,
+        tapped: mob.tappedById === tapper,
+        lootable: mob.lootable,
+        strangerLooted: sim.lootCorpse(mob.id, stranger),
+        loot: structuredClone(mob.loot),
+      };
+    };
+    const first = midWindow();
+    const { timer, ...owner } = first;
+    expect(timer).toBeCloseTo(55, 9);
+    expect(owner).toEqual({
+      tapped: true,
+      lootable: true,
+      strangerLooted: false,
+      loot: { copper: 50, items: [{ itemId: 'minor_health_potion', count: 1 }] },
+    });
+    // Bit-identical, not merely close: same seed, same world, same timeline.
+    expect(midWindow()).toEqual(first);
+  });
 });
 
 // Regression: the FFA rights model and the loot-distribution strategies must agree.
