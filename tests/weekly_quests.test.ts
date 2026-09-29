@@ -254,12 +254,13 @@ describe('the commendation', () => {
     const state = sim.serializeCharacter(sim.playerId);
     if (!state) throw new Error('Missing serialized character');
     expect(state.weeklyQuest?.commended).toBe('automatons');
-    const restored = new Sim({ seed: 4711, playerClass: 'warrior', noPlayer: true });
+    // The restores reuse the file's seed: a load reads only the save.
+    const restored = new Sim({ seed: 7, playerClass: 'warrior', noPlayer: true });
     restored.resetDay = sim.resetDay;
     const pid = restored.addPlayer('warrior', 'Commended', { state });
     expect(restored.meta(pid)?.weeklyQuest?.commended).toBe('automatons');
     // A junk claim restores as none, so the choice is open again rather than lost.
-    const junk = new Sim({ seed: 4711, playerClass: 'warrior', noPlayer: true });
+    const junk = new Sim({ seed: 7, playerClass: 'warrior', noPlayer: true });
     junk.resetDay = sim.resetDay;
     const junkPid = junk.addPlayer('warrior', 'Junk', {
       state: {
