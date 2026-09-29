@@ -14,6 +14,7 @@ import { createMob } from '../src/sim/entity';
 import type { PlayerMeta, ResolvedAbility } from '../src/sim/sim';
 import { Sim } from '../src/sim/sim';
 import type { Aura, Entity, PlayerClass } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 type TestSim = Sim & {
   nextId: number;
@@ -25,8 +26,12 @@ function harness(sim: Sim): TestSim {
   return sim as unknown as TestSim;
 }
 
+// Every case strikes a mob it places itself, so the caster stands on the empty
+// world.
 function makeSim(cls: PlayerClass, level: number): { sim: TestSim; p: Entity; meta: PlayerMeta } {
-  const sim = harness(new Sim({ seed: 4242, playerClass: cls, autoEquip: true }));
+  const sim = harness(
+    new Sim({ seed: 4242, playerClass: cls, autoEquip: true, world: EMPTY_TEST_WORLD }),
+  );
   sim.setPlayerLevel(level);
   const p = sim.player;
   const meta = sim.players.get(p.id);
@@ -125,6 +130,9 @@ describe('effect_dispatch: a single cast fans into every listed effect', () => {
   it('garrote: the direct hit carries abilityId, the bleed ticks never do (no per-tick cue replay)', () => {
     const { sim, p, meta } = makeSim('rogue', 20);
     const mob = spawnTarget(sim, p);
+    // A physical direct hit can miss: pin the roll (`next` at 0.9 fails every
+    // chance under 90 percent) rather than ride the seed's stream.
+    sim.rng.next = () => 0.9;
     sim.events.length = 0;
     runEffects(sim.ctx, p, meta, mob, resolve(sim, 'garrote', p.id));
 
@@ -172,6 +180,7 @@ describe('effect_dispatch: a single cast fans into every listed effect', () => {
     // action bars only.)
     const toss = makeSim('rogue', 20);
     const tossTarget = spawnTarget(toss.sim, toss.p);
+    toss.sim.rng.next = () => 0.9; // Gouge's physical strike lands, as above
     toss.sim.events.length = 0;
     runEffects(toss.sim.ctx, toss.p, toss.meta, tossTarget, resolve(toss.sim, 'gouge', toss.p.id));
     expect(tossTarget.auras.some((a: Aura) => a.kind === 'incapacitate')).toBe(true);
