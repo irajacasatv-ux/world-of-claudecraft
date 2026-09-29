@@ -17,8 +17,10 @@ const RETIRED = 'q_archetype_acceptance'; // a real, now-deleted id
 const SYNTHETIC = 'q_removed_synthetic'; // never a real id; outlives any future re-add
 const KNOWN = 'q_wolves'; // a real kill quest (kill 8 forest_wolf)
 
-function makeSim(seed = 8080): Sim {
-  return new Sim({ seed, playerClass: 'warrior', autoEquip: true });
+// One seed for every Sim: a load reads only the save, and a Sim on a seed the
+// file already built skips the overworld's collider bootstrap.
+function makeSim(): Sim {
+  return new Sim({ seed: 8080, playerClass: 'warrior', autoEquip: true });
 }
 
 /** A save whose questLog carries two unknown ACTIVE entries (a retired quest id
@@ -46,7 +48,7 @@ describe('quest-log load normalization (retired/unknown quest ids)', () => {
 
   it('prunes unknown active quest ids at load, keeping known entries and done history intact', () => {
     const saved = migrantSave(makeSim());
-    const reloaded = makeSim(8081);
+    const reloaded = makeSim();
     const pid = reloaded.addPlayer('warrior', 'Migrant', { state: saved });
     const meta = reloaded.players.get(pid);
     if (!meta) throw new Error('load failed');
@@ -65,7 +67,7 @@ describe('quest-log load normalization (retired/unknown quest ids)', () => {
 
   it('the three quest-touching tick paths run without throwing after load', () => {
     const saved = migrantSave(makeSim());
-    const reloaded = makeSim(8082);
+    const reloaded = makeSim();
     const pid = reloaded.addPlayer('warrior', 'Migrant', { state: saved });
     const meta = reloaded.players.get(pid);
     if (!meta) throw new Error('load failed');
@@ -91,13 +93,13 @@ describe('quest-log load normalization (retired/unknown quest ids)', () => {
 
   it('a save/load round-trip after pruning stays stable', () => {
     const saved = migrantSave(makeSim());
-    const once = makeSim(8083);
+    const once = makeSim();
     const pid1 = once.addPlayer('warrior', 'Migrant', { state: saved });
     const resaved = once.serializeCharacter(pid1);
     // The re-serialized questLog carries only the known active entry.
     expect(resaved?.questLog.map((q) => q.questId)).toEqual([KNOWN]);
 
-    const twice = makeSim(8084);
+    const twice = makeSim();
     const pid2 = twice.addPlayer('warrior', 'Migrant2', { state: resaved ?? undefined });
     const meta2 = twice.players.get(pid2);
     expect(meta2?.questLog.has(KNOWN)).toBe(true);
