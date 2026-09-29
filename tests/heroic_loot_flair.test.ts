@@ -13,6 +13,7 @@ import { expectedStatBudget, itemLevel, primaryStatSum } from '../src/sim/item_l
 import { Sim } from '../src/sim/sim';
 import type { Entity, ItemDef } from '../src/sim/types';
 import { itemDisplayName } from '../src/ui/entity_i18n';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 type AnySim = Sim & Record<string, any>;
 type AnyEntity = Entity & Record<string, any>;
@@ -189,7 +190,13 @@ describe('heroic loot flair: weapon dps tracks item level', () => {
 
 describe('heroic loot flair: the drop swap in a heroic instance', () => {
   function killKorzul(difficulty: 'normal' | 'heroic'): any[] {
-    const sim = new Sim({ seed: 7, playerClass: 'warrior', noPlayer: true }) as AnySim;
+    // Korzul spawns in his own dungeon instance, so the Sim runs on the empty world.
+    const sim = new Sim({
+      seed: 7,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    }) as AnySim;
     const pid = sim.addPlayer('warrior', 'Solo');
     if (difficulty === 'heroic') sim.setDungeonDifficulty('heroic', pid);
     enterDungeon(sim.ctx, 'gravewyrm_sanctum', pid);

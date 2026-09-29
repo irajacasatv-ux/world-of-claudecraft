@@ -6,6 +6,7 @@ import { createMob } from '../src/sim/entity';
 import { enterDungeon } from '../src/sim/instances/dungeons';
 import { Sim } from '../src/sim/sim';
 import type { LootEntry, MobTemplate } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // Heroic finale gold (LootEntry.heroicCopper; bases in
 // src/sim/content/dungeon_difficulty.ts, ladder doc in
@@ -52,11 +53,17 @@ function copperEntries(loot: LootEntry[] | undefined) {
 // One world seed for the whole file: a seed the file has not built yet costs a
 // full-world Sim about half a second (its collider grids), a built one about
 // 20 ms. The sweeps below move the shared rng by `offset` draws instead, which
-// rolls each payout from a different stream position.
+// rolls each payout from a different stream position. Every payout is rolled off
+// a mob the case builds itself, so the Sims run on the empty world.
 const FILE_SEED = 1;
 
 function simAtDraw(offset: number): Sim {
-  const sim = new Sim({ seed: FILE_SEED, playerClass: 'warrior', noPlayer: true });
+  const sim = new Sim({
+    seed: FILE_SEED,
+    playerClass: 'warrior',
+    noPlayer: true,
+    world: EMPTY_TEST_WORLD,
+  });
   for (let draw = 0; draw < offset; draw++) sim.rng.next();
   return sim;
 }

@@ -7,6 +7,7 @@ import { itemLevel, itemSourceLevel } from '../src/sim/item_level';
 import { rollLoot } from '../src/sim/loot/loot_roll';
 import { Rng } from '../src/sim/rng';
 import { Sim } from '../src/sim/sim';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // Release baseline: every existing acquisition remains and item definitions and
 // levels stay byte-equivalent after canonical serialization. This catches an
@@ -237,7 +238,8 @@ describe('heroic five-player equipment budget', () => {
 
   let sim: Sim;
   beforeAll(() => {
-    sim = new Sim({ seed: 1234, playerClass: 'warrior' });
+    // Loot is rolled off mobs the case builds, so the Sim runs on the empty world.
+    sim = new Sim({ seed: 1234, playerClass: 'warrior', world: EMPTY_TEST_WORLD });
   });
 
   for (const [bossId, baseline] of Object.entries(BASELINE)) {

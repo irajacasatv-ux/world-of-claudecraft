@@ -8,6 +8,7 @@ import { ITEMS } from '../src/sim/data';
 import { type MailSave, Sim } from '../src/sim/sim';
 import type { SimContext } from '../src/sim/sim_context';
 import { tradeSetOffer } from '../src/sim/social/trade';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 describe('soulbound: heroic_mark is bound', () => {
   it('flags heroic_mark soulbound (and it is not soulbound for ordinary items)', () => {
@@ -17,7 +18,14 @@ describe('soulbound: heroic_mark is bound', () => {
   });
 
   it('cannot be destroyed via right-click discard, but ordinary items can', () => {
-    const sim = new Sim({ seed: 1, playerClass: 'warrior', autoEquip: true });
+    // Mail rides the built-in mailboxes, which the empty world keeps, and every other character is
+    // added by hand, so the Sims run on the empty world.
+    const sim = new Sim({
+      seed: 1,
+      playerClass: 'warrior',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const pid = sim.player.id;
     sim.addItem('heroic_mark', 3, pid);
     sim.addItem('minor_healing_potion', 3, pid);
@@ -73,7 +81,12 @@ describe('soulbound: heroic_mark is bound', () => {
   });
 
   it('reports a soulbound refusal without calling the mark a quest item', () => {
-    const sim = new Sim({ seed: 1, playerClass: 'warrior', noPlayer: true });
+    const sim = new Sim({
+      seed: 1,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const sender = sim.addPlayer('warrior', 'Alice');
     const recipient = sim.addPlayer('mage', 'Bob');
     const senderMeta = sim.meta(sender);
@@ -111,7 +124,12 @@ describe('soulbound: heroic_mark is bound', () => {
     // display name would expose it to a future holder of a freed name (the
     // minted letter is system mail with attachments, which never expires),
     // so the stable id must win whenever it exists.
-    const sim = new Sim({ seed: 1, playerClass: 'warrior', noPlayer: true });
+    const sim = new Sim({
+      seed: 1,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const sender = sim.addPlayer('warrior', 'Alice', { characterId: 641 });
     sim.addPlayer('mage', 'Bob', { characterId: 642 });
     const legacySave: MailSave = {
@@ -157,7 +175,12 @@ describe('soulbound: heroic_mark is bound', () => {
   });
 
   it('returns a persisted pre-soulbound Heroic Mark parcel to its sender on load', () => {
-    const sim = new Sim({ seed: 1, playerClass: 'warrior', noPlayer: true });
+    const sim = new Sim({
+      seed: 1,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const sender = sim.addPlayer('warrior', 'Alice');
     const recipient = sim.addPlayer('mage', 'Bob');
     const legacySave: MailSave = {
