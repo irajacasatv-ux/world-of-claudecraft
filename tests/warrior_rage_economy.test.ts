@@ -6,25 +6,28 @@
 // makes Bloodletting the one generating builder and restores the shared scale.
 import { describe, expect, it } from 'vitest';
 import { WARRIOR_ROWS } from '../src/sim/content/warrior_rows';
-import { ABILITIES } from '../src/sim/data';
+import { ABILITIES, MOBS } from '../src/sim/data';
+import { createMob } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
 import type { Entity } from '../src/sim/types';
 import { MAX_LEVEL, rageConversion, rageGenAuraMult } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 type AnySim = Sim & Record<string, any>;
 
+// The white hit lands on a wolf the case places beside the warrior, so the Sim
+// runs on the empty world.
 function furyWarrior(): AnySim {
-  const sim = new Sim({ seed: 2712, playerClass: 'warrior' }) as AnySim;
+  const sim = new Sim({ seed: 2712, playerClass: 'warrior', world: EMPTY_TEST_WORLD }) as AnySim;
   sim.setPlayerLevel(MAX_LEVEL);
   expect(sim.setSpec('fury')).toBe(true);
   return sim;
 }
 
 function dummyMob(sim: AnySim): Entity {
-  const mob = [...sim.entities.values()].find(
-    (e): e is Entity => (e as Entity).kind === 'mob' && !(e as Entity).dead,
-  );
-  if (!mob) throw new Error('no mob to hit');
+  const p = sim.player;
+  const mob = createMob(sim.nextId++, MOBS.forest_wolf, MAX_LEVEL, { ...p.pos, z: p.pos.z + 3 });
+  sim.addEntity(mob);
   mob.hp = 1_000_000;
   mob.maxHp = 1_000_000;
   return mob;
