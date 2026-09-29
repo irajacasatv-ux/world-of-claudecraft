@@ -9,9 +9,17 @@ import {
 } from '../src/sim/combat/shaman_spiritmend';
 import { Sim } from '../src/sim/sim';
 import type { Entity } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 function setup(): { sim: Sim; healer: Entity; ally: Entity; other: Entity } {
-  const sim = new Sim({ seed: 2831, playerClass: 'shaman', noPlayer: true });
+  // The engine runs between three players the rig adds itself, so the Sim runs
+  // on the empty world.
+  const sim = new Sim({
+    seed: 2831,
+    playerClass: 'shaman',
+    noPlayer: true,
+    world: EMPTY_TEST_WORLD,
+  });
   const healerId = sim.addPlayer('shaman', 'Engine');
   const allyId = sim.addPlayer('warrior', 'Ally');
   const otherId = sim.addPlayer('shaman', 'Other');
