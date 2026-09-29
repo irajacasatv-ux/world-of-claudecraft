@@ -199,18 +199,28 @@ const LAZY_GENERATED = readdirSync(new URL('../src/ui/i18n.resolved.generated/',
   .map((file) => `../src/ui/i18n.resolved.generated/${file.slice(0, -'.ts'.length)}`)
   .sort();
 
+const BARREL = '../src/ui/i18n.resolved.generated/index';
+
 async function lazyGeneratedEvaluatedBy(load: () => Promise<unknown>): Promise<string[]> {
   vi.resetModules();
   const evaluated = new Set<string>();
   for (const specifier of LAZY_GENERATED)
     vi.doMock(specifier, async (importOriginal) => {
       evaluated.add(specifier);
-      return importOriginal();
+      // The barrel passes through (so the slices it imports are reached and recorded);
+      // a slice records itself and answers a stub, since loading the 21 real tables
+      // would put back the very cost this pin guards against.
+      if (specifier === BARREL) return importOriginal();
+      return { [specifier.slice(specifier.lastIndexOf('/') + 1)]: {} };
     });
   try {
     await load();
-    // A top-level import() settles after the importing module; give it a macrotask.
-    await new Promise((resolve) => setTimeout(resolve, 0));
+    // A top-level import() settles after the importing module: wait until the record stops
+    // growing, a few macrotasks at most.
+    for (let turn = 0, seen = -1; turn < 8 && seen !== evaluated.size; turn++) {
+      seen = evaluated.size;
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    }
   } finally {
     for (const specifier of LAZY_GENERATED) vi.doUnmock(specifier);
     vi.resetModules();
@@ -218,10 +228,12 @@ async function lazyGeneratedEvaluatedBy(load: () => Promise<unknown>): Promise<s
   return [...evaluated].sort();
 }
 
+// Keep this describe last: its module resets leave the file's static imports on the old
+// module graph, which a later case comparing instances would trip over.
 describe('src/ui/i18n.ts evaluates only the eager generated modules', () => {
   it('evaluates no locale slice and not the barrel, directly, dynamically or transitively', async () => {
     // The barrel plus every non-en slice (21 today); a floor, so an emptied list cannot pass.
-    expect(LAZY_GENERATED).toContain('../src/ui/i18n.resolved.generated/index');
+    expect(LAZY_GENERATED).toContain(BARREL);
     expect(LAZY_GENERATED.length).toBeGreaterThanOrEqual(22);
     expect(await lazyGeneratedEvaluatedBy(() => import('../src/ui/i18n'))).toEqual([]);
   });

@@ -106,8 +106,8 @@ export function isFullSuiteTrigger(p) {
  * reaches only through type-erased edges, so `related` over a
  * driving source selects almost nothing. The planner therefore feeds the
  * changed artifact paths THEMSELVES to `vitest related`, which walks the real
- * import graph to every consumer (measured: a single resolved slice reaches
- * about 240 of 2296 suites). They are inert only for the widen decision,
+ * import graph to every consumer (a slice reaches src/ui/i18n.ts's importers
+ * through the loaders' dynamic imports). They are inert only for the widen decision,
  * never dropped from selection.
  *
  * Membership is TOP-LEVEL ONLY under the two resolved dirs: the generator's

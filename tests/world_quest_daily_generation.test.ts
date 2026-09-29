@@ -211,13 +211,16 @@ describe('the daily catalogs build on first use, and build what the module-load 
       fresh.generateDailyMatch3Level(5);
       fresh.generateDailyMatch3Level(37);
       expect(seeds).toEqual([0xca7d0000 + 5]);
+      fresh.generateBonusLeyChallenge(3, 1);
+      fresh.generateBonusLeyChallenge(9, 1);
+      expect(seeds.slice(1)).toEqual(CYCLE_DAYS.map((day) => 0x1e7be000 + 5 * 0x10000 + day));
       fresh.generateBonusLeyChallenge(3, 2);
       fresh.generateBonusLeyChallenge(9, 2);
-      expect(seeds.slice(1)).toEqual(CYCLE_DAYS.map((day) => 0x1e7be000 + 6 * 0x10000 + day));
+      expect(seeds.slice(33)).toEqual(CYCLE_DAYS.map((day) => 0x1e7be000 + 6 * 0x10000 + day));
       fresh.generateDailyLeyChallenge(0);
       fresh.generateDailyLeyPuzzle(31);
-      expect(seeds.slice(33)).toEqual(CYCLE_DAYS.map((day) => 0x1e7be000 + day));
-      expect(seeds).toHaveLength(65);
+      expect(seeds.slice(65)).toEqual(CYCLE_DAYS.map((day) => 0x1e7be000 + day));
+      expect(seeds).toHaveLength(97);
     } finally {
       vi.doUnmock('../src/sim/rng');
       vi.resetModules();
