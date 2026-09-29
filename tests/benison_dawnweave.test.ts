@@ -6,11 +6,19 @@ import {
 import { Sim } from '../src/sim/sim';
 import type { Entity, SimEvent } from '../src/sim/types';
 import { expectDefined } from './helpers/defined';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const SLOTS = ['helmet', 'shoulder', 'chest', 'gloves'] as const;
 
+// The rig drops every entity but the priest and her ally below, so it starts
+// from the empty world rather than building the overworld only to drop it.
 function setup(pieces = 4, fixedRolls = true) {
-  const sim = new Sim({ seed: 733, playerClass: 'priest', autoEquip: true });
+  const sim = new Sim({
+    seed: 733,
+    playerClass: 'priest',
+    autoEquip: true,
+    world: EMPTY_TEST_WORLD,
+  });
   sim.setPlayerLevel(20);
   expect(sim.setSpec('holy')).toBe(true);
   for (const slot of SLOTS.slice(0, pieces)) {
