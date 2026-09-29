@@ -16,6 +16,7 @@ import {
 } from '../src/sim/content/trinkets';
 import { ITEMS, MOBS } from '../src/sim/data';
 import { createMob } from '../src/sim/entity';
+import { Rng } from '../src/sim/rng';
 import { Sim } from '../src/sim/sim';
 import type { Entity } from '../src/sim/types';
 import { ensureLocaleLoaded, formatNumber, setLanguage } from '../src/ui/i18n';
@@ -28,6 +29,7 @@ import {
   trinketTooltipLines,
   trinketTooltipLineTexts,
 } from '../src/ui/trinket_tooltip_view';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const VIEWER: TrinketTooltipViewer = {
   attackPower: 500,
@@ -113,8 +115,16 @@ const EXPECTED: Record<string, { equip?: string; use: string }> = {
   },
 };
 
-function wearing(itemId: string, seed = 11): Sim {
-  const sim = new Sim({ seed, playerClass: 'warrior', autoEquip: true });
+// One seed of the empty test world for every Sim in the file: the trinket
+// proofs spawn their own targets and read no camp, NPC, or ground object, and a
+// seed the file has already built reuses its world.
+function wearing(itemId: string): Sim {
+  const sim = new Sim({
+    seed: 11,
+    playerClass: 'warrior',
+    autoEquip: true,
+    world: EMPTY_TEST_WORLD,
+  });
   sim.setPlayerLevel(20);
   sim.addItem(itemId, 1);
   sim.equipItem(itemId);
@@ -254,7 +264,10 @@ describe('trinket tooltip numbers match combat', () => {
   it("every Gambler's Die fortune applies what the tooltip and the notice promise", () => {
     const seen = new Set<GambleFortune>();
     for (let seed = 1; seed <= 200 && seen.size < GAMBLE_FORTUNES.length; seed++) {
-      const sim = wearing('gamblers_die', seed);
+      const sim = wearing('gamblers_die');
+      // A fresh draw stream per iteration (the fortune is one ctx.rng.int), so
+      // the loop walks the fortunes without building a world per seed.
+      sim.rng = new Rng(seed);
       const p = sim.player;
       const text = trinketTooltipLineTexts('gamblers_die', p).at(-1)?.text ?? '';
       sim.useItem('gamblers_die');
