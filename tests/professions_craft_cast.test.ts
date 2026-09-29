@@ -356,13 +356,15 @@ describe('craft cast masterwork draw order', () => {
     cancelCast(sim.ctx, p);
     expect(drawsAfterStart()).toBe(0);
 
-    // Fresh cast and complete: at least the masterwork proc draw (Jack adds more).
+    // Fresh cast and complete: exactly the one masterwork proc draw. A Jack
+    // would add the variance roll; this crafter is not one.
+    expect(meta.archetype.isJackOfAllTrades).toBe(false);
     const drawsComplete = nextSpy();
     grantReagents(sim, recipe, pid);
     expect(craftItem(sim.ctx, recipe.id, false, pid).casting).toBe(true);
     expect(drawsComplete()).toBe(0);
     completeCraftNow(sim);
-    expect(drawsComplete()).toBeGreaterThanOrEqual(1);
+    expect(drawsComplete()).toBe(1);
     expect(meta.lastCraftResult?.ok).toBe(true);
   });
 });
