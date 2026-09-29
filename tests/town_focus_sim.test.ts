@@ -161,6 +161,10 @@ describe('setTownFocus: gated on standing in the town hub', () => {
     const e = internals.entities.get(a)!;
     e.pos = { x: ZONE1.hub.x + ZONE1.hub.radius * 20, y: 0, z: ZONE1.hub.z };
     sim.setTownFocus({ fang: POINTS_PER_TIER_BONUS }, 'time', a);
+    // The time tier only queues a change, so resolve any queue before reading the
+    // committed allocation: a request that slipped past the gate would land here.
+    expect(internals.players.get(a)?.pendingTownFocus).toBeUndefined();
+    forceResolveTownFocus(internals, a);
     expect(internals.players.get(a)?.townFocus).toEqual({ hide: POINTS_PER_TIER_BONUS });
   });
 
