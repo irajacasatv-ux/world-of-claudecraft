@@ -18,7 +18,9 @@ const PRODUCTION_SEED = WORLD_SEED;
 
 function world(extra: Partial<WorldContent>): WorldContent {
   // A fresh object per test: the collider grid cache is keyed per content.
-  return { ...BUILTIN_WORLD, ...extra };
+  // The docks are props; no case reads a camp, an NPC or a ground object, so
+  // each fresh grid is built without the overworld's spawns.
+  return { ...BUILTIN_WORLD, camps: [], npcs: {}, groundObjects: [], ...extra };
 }
 
 afterEach(() => {
@@ -90,10 +92,17 @@ describe('fishing dock deck collision', () => {
   });
 
   it('allows normal movement along the full deck in both directions', () => {
-    setActiveWorldContent(world({}));
+    // The Sim spawns from the same content the colliders read.
+    const content = world({});
+    setActiveWorldContent(content);
 
     const walk = (startLocalZ: number, facing: number): number => {
-      const sim = new Sim({ seed: PRODUCTION_SEED, playerClass: 'warrior', autoEquip: true });
+      const sim = new Sim({
+        seed: PRODUCTION_SEED,
+        playerClass: 'warrior',
+        autoEquip: true,
+        world: content,
+      });
       const p = sim.player;
       p.pos.x = d.x + startLocalZ * Math.sin(d.rot);
       p.pos.z = d.z + startLocalZ * Math.cos(d.rot);
