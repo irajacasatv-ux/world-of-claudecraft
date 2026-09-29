@@ -10,6 +10,7 @@ import { describe, expect, it } from 'vitest';
 import { CLASSES } from '../src/sim/content/classes';
 import { Sim } from '../src/sim/sim';
 import type { PlayerClass } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const CLASS_IDS = Object.keys(CLASSES) as PlayerClass[];
 
@@ -42,8 +43,10 @@ const NAKED_LEVEL_20_HP: Record<PlayerClass, number> = {
   warlock: 677,
 };
 
+// A naked pool reads only the class table and the level, so every probe Sim
+// starts from the empty world (no camps, NPCs or ground objects to spawn).
 function nakedMaxHp(cls: PlayerClass): number {
-  const sim = new Sim({ seed: 1, playerClass: cls, autoEquip: false });
+  const sim = new Sim({ seed: 1, playerClass: cls, autoEquip: false, world: EMPTY_TEST_WORLD });
   sim.setPlayerLevel(20);
   sim.tick();
   return sim.player.maxHp;
