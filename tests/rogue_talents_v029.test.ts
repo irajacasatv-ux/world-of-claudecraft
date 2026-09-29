@@ -5,13 +5,24 @@ import { MOBS } from '../src/sim/data';
 import { createMob } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
 import type { Entity, PlayerClass, SimEvent } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // The rogue v0.29 row redesign (docs/design/rogue-v029-class-design.md): themed
 // tiers ending in a capstone. This suite pins the grid shape and gives every new
 // mechanic a decisive assertion that fails on regression.
 
+// Every case fights mobs it places itself, so the rogue stands on the empty world.
+// The rolls are pinned instead of riding the seed's stream: with `next` at 0.9
+// every chance under 90 percent fails, so each single strike (Dirt Nap, Gut
+// Punch, Low Blow, Flurry of Knives) lands as a plain hit.
 function rig(rows: Record<number, string>, spec: string | null = null) {
-  const sim = new Sim({ seed: 17, playerClass: 'rogue' as PlayerClass, autoEquip: true });
+  const sim = new Sim({
+    seed: 17,
+    playerClass: 'rogue' as PlayerClass,
+    autoEquip: true,
+    world: EMPTY_TEST_WORLD,
+  });
+  sim.rng.next = () => 0.9;
   sim.setPlayerLevel(20);
   expect(sim.applyTalents({ spec, rows })).toBe(true);
   const p = sim.player;
