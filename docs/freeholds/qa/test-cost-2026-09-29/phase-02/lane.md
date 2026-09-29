@@ -35,14 +35,14 @@ at 0.4 to 2.8 s in both arms everywhere (collect cost is not where this cluster 
 
 | File | CI s | Verdict | Change | Local tests s, before to after | Mutants |
 |---|---|---|---|---|---|
-| druid_balance_probe | 286 / 3,054 | SLIM (diet) + MOVE (two profiles to the nightly) | PR diet runs the two banded profiles, moongrove_1t and wildfang, every capstone each: 6 of 12 probes. moongrove_3t and groveheart asserted only "best capstone above zero"; the nightly keeps all 12. The Bruin determinism case re-runs the banded seed against the band case's run (was two runs at a seed nothing else builds). | 176.82 to 95.11 (46.2%) | 4/4 killed: `WILD_APEX_MULT` 1.25 to 1.6 (`src/sim/combat/druid_engines.ts`) reds the diet band; a per-call drift in `runDruidBruinTankProbe` reds determinism; Groveheart casting nothing and Moongrove dead at three targets (`scripts/owned_class_balance_probe.ts`) are killed at PR time by healer_probes and dps_metrics, the representatives of the two profiles moved to the nightly |
+| druid_balance_probe | 286 / 3,054 | SLIM (diet) + MOVE (two profiles to the nightly) | PR diet runs the two banded profiles, moongrove_1t and wildfang, every capstone each: 6 of 12 probes. moongrove_3t and groveheart asserted only "best capstone above zero" (blind to a zero under one or two capstone rows); the nightly keeps all 12. At PR time an all-rows zero stays visible only through the PBE rows the sibling suites run (Moongrove three-target under improved_hurricane, Groveheart under berserk); a zero under the other capstone rows alone is nightly-only. The Bruin determinism case re-runs the banded seed against the band case's run (was two runs at a seed nothing else builds). | 176.82 to 95.11 (46.2%) | 4/4 killed: `WILD_APEX_MULT` 1.25 to 1.6 (`src/sim/combat/druid_engines.ts`) reds the diet band; a per-call drift in `runDruidBruinTankProbe` reds determinism; Groveheart casting nothing and Moongrove dead at three targets (`scripts/owned_class_balance_probe.ts`) are killed at PR time by healer_probes and dps_metrics, the representatives of the two profiles moved to the nightly |
 | owned_class_balance_dps_metrics | 145 / 249 | SLIM (diet) | Diet keeps the eight three-target sustained runs plus the two single-target runs with an assertion (Packlord's Stampede, Wildfang's Redharvest): 10 of 16. The only target-count branches (Coldsight Volley, Thundercall Earthquake and Chain Lightning) are extra three-target buttons, so the three-target priority is a superset; the dropped specs' single-target rotations run on every PR in dps_probes, role_bands and druid_bands. Nightly unchanged. | 90.93 to 58.36 (35.8%) | 4/4 killed: Moongrove dead at three targets and Packlord never pressing Stampede, killed by the slimmed file; Coldsight and Thundercall dead at one target, killed by dps_probes (the representative for the dropped runs) |
 | owned_class_balance_healer_contract | 120 / 484 | MERGE (one assertion) | Drops the single-target Spiritmend average (two diet probes, five nightly); its one assertion, hps above zero, is held per run at one and three allies by healer_probes in the same lane. | 74.65 to 60.96 (18.3%) | 2/2 killed: single-ally Spiritmend casting nothing is killed by healer_probes; healers starting at 30 percent mana still reds this file |
 | owned_class_balance_healer_probes | 120 / 174 | SLIM | Every fixed profile run is paid once (one seed, 29_910): the Priest pressure case reads the three-ally Doctrine and Benison runs (both hold absorb above zero and a Vigil weave there: 2,898 absorbed, 3 casts), and the determinism case re-runs Spiritmend against its first run. Four fresh seeds became one. | 76.30 to 54.83 (28.1%) | 5/5 killed: Benison never weaving Seraphic Vigil, Doctrine never shielding, a per-call drift in `runOwnedHealerProbe`, and the two MERGE/MOVE proofs above |
 | owned_class_balance_groveheart | 88 / 151 | MERGE (one probe) | The heal-over-time case reads the contract case's three-ally run at 29_914 (Wildbloom 2,142 there) instead of its own at 29_913. | 56.41 to 48.91 (13.3%) | 1/1 killed: heal-over-time ticks attributed to the ally, not the healer (`src/sim/combat/auras.ts`) |
-| owned_class_balance_dps_probes | 63 / 84 | SLIM | The determinism case re-runs the Bloodhook case's Fieldcraft fixture against its run (was two three-target runs at a seed nothing else builds). Sim determinism under many targets stays pinned by the parity goldens. | 40.60 to 31.76 (21.8%) | 2/2 killed: a per-call drift in `runOwnedClassDpsProbe`; Fieldcraft never applying its Bloodhook wound |
+| owned_class_balance_dps_probes | 63 / 84 | SLIM, narrowing | The determinism case re-runs the Bloodhook case's Fieldcraft fixture against its run (was two three-target runs at a seed nothing else builds). A narrowing: no lane suite now runs a multi-target DPS probe twice, so harness determinism under several targets (the three-target rotation branches) is no longer pinned in the lane; the sim's own determinism under several targets stays with the parity goldens (multi-target scenarios such as Consecration and Arcane Explosion must reproduce their committed traces). | 40.60 to 31.76 (21.8%) | 2/2 killed: a per-call drift in `runOwnedClassDpsProbe`; Fieldcraft never applying its Bloodhook wound |
 | eastbrook_gameplay_integration | 108 / 152 | SLIM | The projection case switched the active world content every tick, bumping the content generation 5,000 times, so every tick rebuilt the terrain region, road and bounds caches keyed on it. Each world now runs its 2,500 ticks under its own content; the comparison, tick count and respawn check are unchanged. | 61.04 to 27.91 (54.3%) | 1/1 killed: the Eastbrook bank moved onto the Wolf Run wander lane (`src/sim/eastbrook_layout.ts`) forks the projection |
-| nythraxis_matrix | 50 / 62 | MERGE (two children to one) | One child at the non-default shard 1 of 2 (exactly seed 2 across the four plans, in plan order) carries every gear, talent and cast assertion the shard-0 child carried; shard 0 is also what an index-blind filter returns, so it proved less. | 27.49 to 14.09 (48.7%) | 2/2 killed: the shard index ignored (always 0), and Monte Carlo sharding dropped (`scripts/nythraxis_matrix.ts`) |
+| nythraxis_matrix | 50 / 62 | MERGE (two children to one) | One child at the non-default shard 1 of 2 (exactly seed 2 across the four plans, in plan order) carries the gear, talent and cast assertions; the five cast assertions moved from seed 1 (the shard-0 child) to seed 2. As first committed this left shard 0's own sample (seed 1) unpinned; the review round below restores that pin without a second fight. | 27.49 to 14.09 (48.7%) | 2/2 killed: the shard index ignored (always 0), and Monte Carlo sharding dropped (`scripts/nythraxis_matrix.ts`); plus the review round's 5 |
 | hunter_dps_balance | 175 / 627 | KEEP | Twelve 90 s probes, every one inside a ratio band; already on the two-seed diet. | unchanged (99.5 in the baseline) | none needed |
 | owned_class_raid_armor_avoidance | 155 / 701 | KEEP | Eight 120 s level-24 probes; the Vespers median and best-other ceilings need all eight, and the window is a long-fight guard. | unchanged (87.5) | none needed |
 | owned_class_balance_role_bands | 136 / 602 | KEEP | Seven probe configurations at two seeds, all inside ratio bands. | unchanged (77.0) | none needed |
@@ -131,8 +131,31 @@ that a remedy which moves an asserted number is reverted.
 ## Owed
 
 - The ruling above, and the owner's call on nightly item 1.
-- The Nythraxis case's declared allowance (1,200,000 ms, and its two rows in
-  `tests/suite_duration_budget.test.ts`) was sized for two child runs; it is a ceiling, not a
-  cost, and was left as is to keep the ledger out of this change.
+- The Nythraxis case's declared allowance was sized for two child runs; the coordinator's
+  `35e89ced9a` re-sized it for one (420 s case, 300 s child, ledger rows exact).
 - The shard weights for these files re-measure at the next harvest from a green full-mode run
   (the lane files are not weight-gated, so nothing carries a local row meanwhile).
+
+## Review round
+
+Three findings on the cuts above, all applied (branch `test-cost/lane-fix`, from `35e89ced9a`).
+
+1. Should-fix, `nythraxis_matrix`: the one-child merge left shard 0's sample (seed 1 across
+   the four plans) unpinned, and the first commit's claim that one child "pins the selection
+   that two children pinned" overstated it. The sharding rule moved into
+   `scripts/lib/nythraxis_matrix_core.mjs` (`seedSampleInShard`, `plansForShard`, the script
+   now calls both) and `tests/nythraxis_matrix_core.test.ts` pins it for every shard index in
+   both modes without a fight; a comment-stripped source pin in the matrix suite holds the
+   script to the rule. The case comment now says the cast assertions read seed 2's fights.
+2. Nit, `druid_balance_probe`: the diet comment said the sibling suites hold the dropped
+   profiles' pin "per run"; they run the PBE talent rows, so a zero under the matrix's other
+   capstone rows alone is nightly-only. The comment (and the row above) now says so.
+3. Nit, `owned_class_balance_dps_probes`: the determinism reuse is recorded as the narrowing
+   it is (row above and the file's comment).
+
+Mutants (`scripts/lib/nythraxis_matrix_core.mjs` unless named), 6 run: shard 0 dropping its
+sample and shard 0 taking the wrong sample are both killed by the core suite; the same
+shard-0 drop PASSES the one-child matrix case (the gap the finding named, now closed by the
+core suite); an inline shard-0 bypass in `scripts/nythraxis_matrix.ts` is killed by the source
+pin; swapped standard-mode plan shards are killed by the core suite; the control (a comment
+appended to the core) passed. All four changed test files ran green twice, `tsc` clean.
