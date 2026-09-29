@@ -116,9 +116,11 @@ function hasProc(cls: PlayerClass, spec: string, setId: string, pieces: number, 
   return modsFor(cls, spec, setId, pieces).procs.some((proc) => proc.id === id);
 }
 
-function makeSim(cls: PlayerClass, spec: string, seed = 11): AnySim {
+// One seed for every Sim in the file: the Lightbrand, Snaretooth and rogue
+// cases' own seeds (5, 2913, 23) each paid a terrain build of their own.
+function makeSim(cls: PlayerClass, spec: string): AnySim {
   const sim = new Sim({
-    seed,
+    seed: 11,
     playerClass: cls,
     autoEquip: true,
     world: EMPTY_TEST_WORLD,
@@ -403,7 +405,7 @@ describe('Paladin Season 2 sets', () => {
 
   it('Lightbrand 4pc: the landing arms a 15 percent Final Edict that the next Edict spends', () => {
     const land = (pieces: number) => {
-      const sim = makeSim('paladin', 'retribution', 5);
+      const sim = makeSim('paladin', 'retribution');
       equipSet(sim, 'vanguard_paladin_retribution', pieces);
       sim.player.resource = sim.player.maxResource;
       sim.player.facing = 0;
@@ -519,7 +521,7 @@ describe('Hunter Season 2 sets', () => {
 
   it('Snaretooth 4pc: a Bloodhook that arrives grants 1 Hunting Momentum', () => {
     const hook = (pieces: number) => {
-      const sim = makeSim('hunter', 'survival', 2913);
+      const sim = makeSim('hunter', 'survival');
       equipSet(sim, 'vanguard_hunter_survival', pieces);
       const mob = addMob(sim, 12);
       sim.targetEntity(mob.id);
@@ -542,7 +544,7 @@ describe('Hunter Season 2 sets', () => {
 // ---------------------------------------------------------------------------
 describe('Rogue Season 2 sets', () => {
   function rogueAt(spec: string, setId: string, pieces: number) {
-    const sim = makeSim('rogue', spec, 23);
+    const sim = makeSim('rogue', spec);
     equipSet(sim, setId, pieces);
     const mob = addMob(sim, 2);
     sim.player.facing = 0;
