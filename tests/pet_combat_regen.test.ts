@@ -31,12 +31,13 @@ function summonInfernal(sim: Sim, p: any) {
   throw new Error('pet not created');
 }
 
-// A wild level 2 webwood spider (the mob nearest the start on the full world). It
-// must also fight back: a passive-aggro template never targets the pet, and the
-// owner-combat link keys off the mob's target.
+// A wild, hostile level 2 webwood spider placed by the rig. It must also fight
+// back: a passive-aggro template never targets the pet, and the owner-combat
+// link keys off the mob's target.
 function wildMob(sim: Sim) {
   expect(MOBS.webwood_spider.aggroRadius ?? 0).toBeGreaterThan(0);
   const mob = createMob((sim as any).nextId++, MOBS.webwood_spider, 2, { ...sim.player.pos });
+  mob.hostile = true;
   (sim as any).addEntity(mob);
   return mob as any;
 }
