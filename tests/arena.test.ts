@@ -1225,11 +1225,12 @@ describe('arena: enclosing walls', () => {
 describe('arena: a drawn bout is recorded as a draw', () => {
   // addArenaResult took `won: boolean | null` and did nothing on null, so a
   // drawn bout moved the rating and then vanished from the record. The same
-  // gap the battleground had; both are now the D of W-L-D.
+  // gap the battleground had; both are now the D of W-L-D. The record is pure
+  // meta bookkeeping, so these build the file's arena world and seed.
   const meta = (sim: Sim, pid: number) => sim.ctx.players.get(pid)!;
 
   it('counts a draw in the bracket it was played in, and only there', () => {
-    const sim = new Sim({ seed: 5, playerClass: 'warrior', noPlayer: true });
+    const sim = makeWorld();
     const pid = sim.addPlayer('warrior', 'Drawer');
     const m = meta(sim, pid);
 
@@ -1246,7 +1247,7 @@ describe('arena: a drawn bout is recorded as a draw', () => {
   });
 
   it('still counts wins and losses the way it always did', () => {
-    const sim = new Sim({ seed: 5, playerClass: 'warrior', noPlayer: true });
+    const sim = makeWorld();
     const m = meta(sim, sim.addPlayer('warrior', 'Mixed'));
     addArenaResult(m, '1v1', 10, true);
     addArenaResult(m, '1v1', -10, false);
@@ -1255,7 +1256,7 @@ describe('arena: a drawn bout is recorded as a draw', () => {
   });
 
   it('reports the draw through arenaStanding, which the record renders from', () => {
-    const sim = new Sim({ seed: 5, playerClass: 'warrior', noPlayer: true });
+    const sim = makeWorld();
     const m = meta(sim, sim.addPlayer('warrior', 'Standing'));
     addArenaResult(m, '1v1', 0, null);
     expect(arenaStanding(m, '1v1').draws).toBe(1);
