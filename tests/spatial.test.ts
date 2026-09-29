@@ -5,6 +5,21 @@ import { Sim } from '../src/sim/sim';
 import { SpatialGrid } from '../src/sim/spatial';
 import { dist2d, type Entity } from '../src/sim/types';
 import { placePlayerInOpenField } from './helpers/open_field';
+import { EMPTY_TEST_WORLD } from './sim_shared';
+
+const SEED = 20061;
+
+// The two whole-world scans only read the grid, so they share one full world
+// ticked 200 times (each used to build and tick an identical one of its own).
+let wandered: Sim | null = null;
+function wanderedWorld(): Sim {
+  if (!wandered) {
+    wandered = new Sim({ seed: SEED, playerClass: 'warrior' });
+    // let mobs wander off their spawn points and the grid re-bucket them
+    for (let i = 0; i < 200; i++) wandered.tick();
+  }
+  return wandered;
+}
 
 function bruteForceInRadius(sim: Sim, x: number, z: number, radius: number): Set<number> {
   const out = new Set<number>();
@@ -31,9 +46,7 @@ function insertDistantEntities(grid: SpatialGrid, count: number, firstId = 100):
 
 describe('spatial grid', () => {
   it('radius queries match a brute-force scan across the whole world', () => {
-    const sim = new Sim({ seed: 20061, playerClass: 'warrior' });
-    // let mobs wander off their spawn points and the grid re-bucket them
-    for (let i = 0; i < 200; i++) sim.tick();
+    const sim = wanderedWorld();
 
     const probes: Array<[number, number, number]> = [];
     for (let z = -1200; z <= 1200; z += 150) {
@@ -92,8 +105,7 @@ describe('spatial grid', () => {
   });
 
   it('predicate queries match a filtered brute-force scan across the whole world', () => {
-    const sim = new Sim({ seed: 20061, playerClass: 'warrior' });
-    for (let i = 0; i < 200; i++) sim.tick();
+    const sim = wanderedWorld();
     const isNpc = (e: Entity) => e.kind === 'npc';
     const probes: Array<[number, number, number]> = [];
     for (let z = -1200; z <= 1200; z += 300) {
@@ -179,7 +191,13 @@ describe('spatial grid', () => {
   });
 
   it('keeps the roster exact on spawn and despawn without a tick', () => {
-    const sim = new Sim({ seed: 20061, playerClass: 'warrior', noPlayer: true });
+    // A hand-added player alone: the empty world, on the file's seed.
+    const sim = new Sim({
+      seed: SEED,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const pid = sim.addPlayer('mage', 'Gridtest');
     const p = sim.entities.get(pid)!;
     expect(gridInRadius(sim.grid, p.pos.x, p.pos.z, 5).has(pid)).toBe(true);
@@ -219,7 +237,8 @@ describe('spatial grid', () => {
   });
 
   it('player combat flag matches per-player scan semantics', () => {
-    const sim = new Sim({ seed: 20061, playerClass: 'warrior' });
+    // The wolf is hand-placed in the open field, so the empty world serves.
+    const sim = new Sim({ seed: SEED, playerClass: 'warrior', world: EMPTY_TEST_WORLD });
     const p = sim.entities.get(sim.primaryId)!;
     // Stage the pull in the collider-free open-field lane rather than walking a fixed
     // heading out of the spawn hoping to reach a camp: that route depends on whatever
