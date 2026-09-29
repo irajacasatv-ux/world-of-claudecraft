@@ -1,9 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { Sim } from '../src/sim/sim';
-import { SimEvent } from '../src/sim/types';
+import type { SimEvent } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
+// A self-only readout of the caller's own counters: no mob, NPC or camp is
+// involved, so the Sim runs on the empty world.
 function makeWorld() {
-  return new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+  return new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true, world: EMPTY_TEST_WORLD });
 }
 
 function errorEvents(events: SimEvent[]): Extract<SimEvent, { type: 'error' }>[] {
@@ -29,7 +32,7 @@ describe('/session command', () => {
     );
   });
 
-  it('reflects this session\'s counters with singular/plural and thousands separators', () => {
+  it("reflects this session's counters with singular/plural and thousands separators", () => {
     const sim = makeWorld();
     const a = sim.addPlayer('warrior', 'Aleph');
     sim.tick();
