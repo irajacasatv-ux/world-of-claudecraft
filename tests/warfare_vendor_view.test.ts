@@ -26,6 +26,7 @@ import {
   warfareShopViewer,
 } from '../src/ui/hud/vendor/warfare_vendor_view';
 import { bareClient } from './helpers/bare_client';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const SET_A = 'fixture_set_a';
 const SET_B = 'fixture_set_b';
@@ -360,8 +361,14 @@ describe('warfareShopViewer: the IWorld derivation, identical in both worlds', (
   const HELM = `${SET_A}_helmet`;
   const POTION = 'minor_healing_potion';
 
+  // The viewer reads three getters off the primary player, so the empty world serves it.
   function simWorld(): WarfareShopWorld {
-    const sim = new Sim({ seed: 7, playerClass: 'warrior', autoEquip: false });
+    const sim = new Sim({
+      seed: 7,
+      playerClass: 'warrior',
+      autoEquip: false,
+      world: EMPTY_TEST_WORLD,
+    });
     // All three reads are GETTERS projecting off the primary PlayerMeta (which
     // is private, and is NOT the player Entity), so the fixture writes that
     // record: writing the Entity would leave every projection at its default.
