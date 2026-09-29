@@ -4,6 +4,7 @@ import { MOBS } from '../src/sim/data';
 import { createMob, createPlayer } from '../src/sim/entity';
 import { aggroDungeonPackmates } from '../src/sim/mob/dungeon_pack_aggro';
 import { Sim } from '../src/sim/sim';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 describe('authored dungeon pack aggro', () => {
   it('pulls idle claim-local packmates without crossing room or slot namespaces', () => {
@@ -31,7 +32,13 @@ describe('authored dungeon pack aggro', () => {
   });
 
   it('pulls the complete authored pack through the real non-social taunt path', () => {
-    const sim = new Sim({ seed: 4821, playerClass: 'paladin', autoEquip: false });
+    // The pack is placed by hand beside the paladin: the empty world serves.
+    const sim = new Sim({
+      seed: 4821,
+      playerClass: 'paladin',
+      autoEquip: false,
+      world: EMPTY_TEST_WORLD,
+    });
     const pulled = createMob(910_001, MOBS.ignivar_crucible_warden, 20, {
       x: sim.player.pos.x + 25,
       y: 0,
