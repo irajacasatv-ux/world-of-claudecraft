@@ -2,6 +2,12 @@ import { describe, expect, it } from 'vitest';
 import { ClientWorld } from '../src/net/online';
 import { Sim } from '../src/sim/sim';
 import type { SimEvent } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
+
+// Equipping and unequipping touch only the player's own bags and paper doll, so
+// the Sims run on the empty world.
+const unequipSim = () =>
+  new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true, world: EMPTY_TEST_WORLD });
 
 function logText(events: SimEvent[]): string | undefined {
   const e = events.find((ev) => ev.type === 'log');
@@ -10,7 +16,7 @@ function logText(events: SimEvent[]): string | undefined {
 
 describe('Sim.unequipItem', () => {
   it('moves an equipped piece back to bags, empties the slot, and recalcs stats', () => {
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+    const sim = unequipSim();
     const pid = sim.addPlayer('warrior', 'Aleph');
     const meta = sim.players.get(pid)!;
     sim.tick();
@@ -33,7 +39,7 @@ describe('Sim.unequipItem', () => {
   });
 
   it('is a no-op for an empty slot', () => {
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+    const sim = unequipSim();
     const pid = sim.addPlayer('warrior', 'Aleph');
     sim.tick();
     expect(sim.unequipItem('legs', pid)).toBe(false);
