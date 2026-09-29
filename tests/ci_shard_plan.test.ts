@@ -18,6 +18,8 @@ import {
   resolveWorkerCount,
 } from '../scripts/lib/ci_shard_plan.mjs';
 import { collectSuiteVisibility } from '../scripts/lib/gate_discovery.mjs';
+import { auditDepthFlag } from './helpers/depth_flag_readers';
+import { sourceFilesUnder } from './helpers/source_files_under';
 
 const REPO_ROOT = path.resolve(__dirname, '..');
 
@@ -47,6 +49,30 @@ function realSuite(): ReturnType<typeof collectSuiteVisibility> {
   });
   return realSuiteMemo;
 }
+
+// Every source file under tests/ and scripts/, for the depth-flag reader audits
+// (tests/helpers/depth_flag_readers.ts): a reader could hide in a helper or a
+// script, so the audit reads the whole corpus, not only the collected suites.
+let depthFlagSourcesMemo: Map<string, string> | undefined;
+function depthFlagSources(): Map<string, string> {
+  if (depthFlagSourcesMemo) return depthFlagSourcesMemo;
+  const sources = new Map<string, string>();
+  for (const dir of ['tests', 'scripts']) {
+    for (const { file, full } of sourceFilesUnder(path.join(REPO_ROOT, dir), {
+      skipDirectories: ['node_modules'],
+    }))
+      sources.set(`${dir}/${file.split(path.sep).join('/')}`, corpusRead(full));
+  }
+  depthFlagSourcesMemo = sources;
+  return sources;
+}
+// The files that must spell a depth flag's name to pin it: the registries here and
+// the workflow pins.
+const DEPTH_FLAG_PIN_FILES = [
+  'tests/ci_shard_plan.test.ts',
+  'tests/ci_workflow.test.ts',
+  'tests/nightly_workflow.test.ts',
+];
 
 // A realistic fixture: enough always-run files to clear the sanity floor, plus
 // every guard suite and a parity pin so the guard union resolves.
@@ -489,14 +515,13 @@ describe('the long-sims lane (Phase 4)', () => {
     // it, is a conscious edit here. Every reader must also be a
     // CI_LONG_SUITES member: the diet exists to shrink the lane, and a diet
     // on a sharded suite would thin coverage nothing accounted for. The
-    // needle carries the compared VALUE too: a harness drifting to a
-    // different truthy check (=== 'true') while nightly.yml still sets '1'
-    // would silently run the diet nightly forever. Split so this registry
-    // does not match itself.
-    const needle = ['process.env.', "WOC_FULL_BALANCE_SWEEP === '1'"].join('');
-    const { testFiles } = realSuite();
-    const readers = testFiles.filter((f) => corpusSource(f).includes(needle)).sort();
-    expect(readers).toEqual([
+    // audit (tests/helpers/depth_flag_readers.ts) reads every source file under
+    // tests/ and scripts/ and admits only the exact read `=== '1'`, the compared
+    // VALUE included: a harness drifting to a different check (=== 'true', a
+    // truthy test, a bracket key) while nightly.yml still sets '1' would
+    // silently run the diet nightly forever, and a read in a helper module would
+    // escape a list of test files.
+    const listed = [
       'tests/druid_balance_probe.test.ts',
       'tests/hunter_dps_balance.test.ts',
       'tests/owned_class_balance_dps_metrics.test.ts',
@@ -508,8 +533,16 @@ describe('the long-sims lane (Phase 4)', () => {
       'tests/warlock_anchor_affliction.test.ts',
       'tests/warlock_anchor_demonology.test.ts',
       'tests/warlock_anchor_destruction.test.ts',
-    ]);
-    for (const f of readers) expect(CI_LONG_SUITES).toContain(f);
+    ];
+    const audit = auditDepthFlag(
+      'WOC_FULL_BALANCE_SWEEP',
+      depthFlagSources(),
+      listed,
+      DEPTH_FLAG_PIN_FILES,
+    );
+    expect(audit.violations).toEqual([]);
+    expect(audit.readers).toEqual(listed);
+    for (const f of listed) expect(CI_LONG_SUITES).toContain(f);
   });
 
   it('pins exactly which suites read the WOC_NIGHTLY_SWEEP depth flag', () => {
@@ -519,11 +552,8 @@ describe('the long-sims lane (Phase 4)', () => {
     // the sweep only under this flag, which the nightly tests job alone sets.
     // Each reader is a conscious edit of this list, so a suite cannot quietly
     // thin its PR depth, and none may be a lane file (the lane has its own
-    // flag and accounting). Same needle shape and split as the diet pin.
-    const needle = ['process.env.', "WOC_NIGHTLY_SWEEP === '1'"].join('');
-    const { testFiles } = realSuite();
-    const readers = testFiles.filter((f) => corpusSource(f).includes(needle)).sort();
-    expect(readers).toEqual([
+    // flag and accounting). Same audit as the diet pin.
+    const listed = [
       'tests/audit_conservation_property.test.ts',
       'tests/chronomancy_balance_targets.test.ts',
       'tests/emerald_deck_escape.test.ts',
@@ -531,8 +561,16 @@ describe('the long-sims lane (Phase 4)', () => {
       'tests/lake_shores.test.ts',
       'tests/rogue_dps_balance.test.ts',
       'tests/woc_market_delivery_pg_integration.test.ts',
-    ]);
-    for (const f of readers) expect(CI_LONG_SUITES).not.toContain(f);
+    ];
+    const audit = auditDepthFlag(
+      'WOC_NIGHTLY_SWEEP',
+      depthFlagSources(),
+      listed,
+      DEPTH_FLAG_PIN_FILES,
+    );
+    expect(audit.violations).toEqual([]);
+    expect(audit.readers).toEqual(listed);
+    for (const f of listed) expect(CI_LONG_SUITES).not.toContain(f);
   });
 
   it('full mode excludes exactly the collected lane files from the shard leg', () => {
