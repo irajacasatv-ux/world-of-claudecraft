@@ -193,7 +193,17 @@ describe('Chronomancy Phase 3 balance targets', () => {
     // is the class owner's re-tune call, flagged in the v0.34.0 merge-audit
     // record (the consReact floor above documents the same
     // flagged-adjustment precedent).
-    for (const seed of [1, 2, 3]) {
+    // The whole seed set runs nightly (WOC_NIGHTLY_SWEEP, docs/qa-gate.md
+    // "Nightly-only sweep depth"); every PR runs seed 2 alone. Seed 2 is the
+    // default seed the describe-level rotations above already measured, so the
+    // PR representative costs no extra rotation, and it still fails on any
+    // change that closes the gap on that fixed fight (a Chronomancy damage
+    // gain, or a Piro or Cryo loss). At the move it read the tightest Piro
+    // margin of the three and the loosest Cryo one, so a Cryo-only loss is
+    // caught later on PR than on the nightly. Seeds 1 and 3, eight more
+    // 200-second rotations, are the distribution check the MIN exists for.
+    const seeds = process.env.WOC_NIGHTLY_SWEEP === '1' ? [1, 2, 3] : [2];
+    for (const seed of seeds) {
       // Seed 2 matches the default `runRotation` seed, so it is the exact same
       // seed/spec/policy/cap/pinAllyLow the describe-level consOff/piroWeave/
       // piroScorch/cryo measurements above already ran. The sim is deterministic,
