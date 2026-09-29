@@ -6,6 +6,7 @@ import { devourBeneficialAura } from '../src/sim/mob/mob_swing';
 import { Sim } from '../src/sim/sim';
 import { type Aura, type Entity, rageGenAuraMult } from '../src/sim/types';
 import { createAurasView } from '../src/ui/auras_view';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const TICKS_PER_SECOND = 20;
 const CLASSIC_TICK = 2 * TICKS_PER_SECOND;
@@ -25,8 +26,16 @@ type SimInternals = {
   mobSwing(mob: Entity, target: Entity): void;
 };
 
+// Every druid Sim runs on EMPTY_TEST_WORLD: the checks read the druid's own
+// resource over short windows against a mob they spawn, so the ambient overworld
+// is pure construction and tick cost. The warrior rage comparison below keeps the
+// built-in world: its seed was hunted on that world's rng stream.
+function druidSim(): Sim {
+  return new Sim({ seed: 11, playerClass: 'druid', autoEquip: true, world: EMPTY_TEST_WORLD });
+}
+
 function druidWithLifesap(): Sim {
-  const sim = new Sim({ seed: 11, playerClass: 'druid', autoEquip: true });
+  const sim = druidSim();
   sim.setPlayerLevel(20);
   expect(sim.applyTalents({ spec: null, rows: { 17: 'dru_r17_survival_of_the_fittest' } })).toBe(
     true,
@@ -137,9 +146,7 @@ function measureLifesapPotential(form: 'bear_form' | 'cat_form'): number {
 }
 
 function measureCatEnergyPotential(withLifesap: boolean): number {
-  const sim = withLifesap
-    ? druidWithLifesap()
-    : new Sim({ seed: 11, playerClass: 'druid', autoEquip: true });
+  const sim = withLifesap ? druidWithLifesap() : druidSim();
   sim.setPlayerLevel(20);
   const p = sim.player;
   p.resource = p.maxResource;
@@ -164,9 +171,7 @@ function measureCatEnergyPotential(withLifesap: boolean): number {
 }
 
 function runClawRotation(withLifesap: boolean): number {
-  const sim = withLifesap
-    ? druidWithLifesap()
-    : new Sim({ seed: 11, playerClass: 'druid', autoEquip: true });
+  const sim = withLifesap ? druidWithLifesap() : druidSim();
   sim.setPlayerLevel(20);
   const p = sim.player;
   p.resource = p.maxResource;
@@ -321,7 +326,7 @@ describe('Lifesap adversarial balance checks', () => {
   });
 
   it('derives a normal buff-bar slot for the Lifesap aura', () => {
-    const p = new Sim({ seed: 11, playerClass: 'druid', autoEquip: true }).player;
+    const p = druidSim().player;
     const view = createAurasView('buffs', {
       iconId: (a) => (ABILITIES[a.id] ? a.id : `aura_${a.kind}`),
       auraName: (a) => ABILITIES[a.id]?.name ?? a.name,
