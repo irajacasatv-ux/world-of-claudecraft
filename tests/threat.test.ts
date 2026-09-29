@@ -994,9 +994,14 @@ describe('hunter pets', () => {
     sim.targetEntity(wolf.id);
     sim.player.facing = Math.atan2(wolf.pos.x - sim.player.pos.x, wolf.pos.z - sim.player.pos.z);
     sim.castAbility('tame_beast');
-    for (let i = 0; i < 20 * 7; i++) sim.tick(); // 6s cast
+    // The sim time the wild target left the world: the tame's own moment.
+    let tamedAt: number | null = null;
+    for (let i = 0; i < 20 * 7; i++) {
+      sim.tick(); // 6s cast
+      if (tamedAt === null && !sim.entities.has(originalWolfId)) tamedAt = sim.time;
+    }
     const pet = expectDefined(sim.petOf(sim.playerId));
-    return { sim, wolf: pet, originalWolfId, wild: wolf };
+    return { sim, wolf: pet, originalWolfId, wild: wolf, tamedAt: expectDefined(tamedAt) };
   }
 
   function activePetDuel() {
@@ -1013,7 +1018,7 @@ describe('hunter pets', () => {
   }
 
   it('tame beast creates a loyal pet copy and temporarily despawns the wild target', () => {
-    const { sim, wolf, originalWolfId, wild } = tamedSetup();
+    const { sim, wolf, originalWolfId, wild, tamedAt } = tamedSetup();
     expect(wolf.ownerId).toBe(sim.playerId);
     expect(wolf.hostile).toBe(false);
     expect(sim.petOf(sim.playerId)).toBe(wolf);
@@ -1022,8 +1027,7 @@ describe('hunter pets', () => {
     // The camp holds other wild wolves the whole time, so "some wild wolf
     // exists" proves nothing: the respawn is the tamed one's own replacement,
     // a fresh wild wolf of its level on its spawn point, a minute after the tame
-    // (which landed just under a second before the setup returned, so the
-    // checks sit well clear of that minute on either side).
+    // (read half a second either side of that minute, timed from the tame).
     const respawns = () =>
       [...sim.entities.values()].filter(
         (e) =>
@@ -1033,9 +1037,12 @@ describe('hunter pets', () => {
           e.spawnPos.x === wild.spawnPos.x &&
           e.spawnPos.z === wild.spawnPos.z,
       );
-    for (let i = 0; i < 20 * 55; i++) sim.tick();
+    const tickUntil = (time: number) => {
+      while (sim.time < time) sim.tick();
+    };
+    tickUntil(tamedAt + 59.5);
     expect(respawns()).toEqual([]);
-    for (let i = 0; i < 20 * 6; i++) sim.tick();
+    tickUntil(tamedAt + 60.5);
     const back = respawns();
     expect(back).toHaveLength(1);
     expect(back[0].id).not.toBe(originalWolfId);
