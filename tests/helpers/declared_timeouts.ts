@@ -84,7 +84,8 @@ const REGEX_AFTER_WORD = new Set([
  * already blank, so a line comment ending in a keyword cannot lend its word), skipping
  * whitespace. A word reached as a property (`x.in / 2`, `opts?.do`, `x.\n in`) or a
  * private field (`this.#in`) is a value, never a keyword, so it reads as ''; the
- * third dot of a spread (`...await /x/`) is no property access.
+ * third dot of a spread (`...await /x/`) and a number literal's dot are no property
+ * access.
  */
 function wordBefore(masked: readonly string[], end: number): string {
   let j = end - 1;
@@ -95,8 +96,14 @@ function wordBefore(masked: readonly string[], end: number): string {
   if (j >= 0 && masked[j] === '#') return '';
   let k = j;
   while (k >= 0 && /\s/.test(masked[k])) k--;
-  if (k >= 0 && masked[k] === '.' && !(k >= 1 && masked[k - 1] === '.')) return '';
-  return word;
+  if (k < 0 || masked[k] !== '.') return word;
+  // Not a property dot: the third dot of a spread, or the trailing dot of a number
+  // literal (`1.` then a keyword). `1..in` is a number literal then a property.
+  if (k >= 2 && masked[k - 1] === '.' && masked[k - 2] === '.') return word;
+  let m = k - 1;
+  while (m >= 0 && /[\w$]/.test(masked[m])) m--;
+  if (/^\d+$/.test(masked.slice(m + 1, k).join(''))) return word;
+  return '';
 }
 
 /**

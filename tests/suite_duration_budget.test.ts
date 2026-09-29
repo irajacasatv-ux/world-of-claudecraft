@@ -243,18 +243,23 @@ describe('suite duration budget (declared-timeout ratchet)', () => {
         keyword,
       ).toEqual([90_000]);
     }
-    // ...but a keyword-named property, a variable named `of`, and a keyword a line
-    // comment ends on are no keyword in code, so the slash after them divides and the
-    // case still counts.
-    // A spread's third dot is no property access: the keyword after it still starts a
-    // regex.
+    // A spread's third dot and a number literal's trailing dot are no property access:
+    // the keyword after them still starts a regex.
     expect(
       per(`const a = [...await /\\/*/.exec(s)];\nit('z', () => { run(); }, 90_000); // */`),
     ).toEqual([90_000]);
+    expect(per(`const a = 1.\n  return /\\/*/;\nit('z', () => { run(); }, 90_000); // */`)).toEqual(
+      [90_000],
+    );
+    // ...but a keyword-named property (behind `.`, `?.` or a dot before whitespace), a
+    // private field, a property of a number literal, a variable named `of`, and a
+    // keyword a line comment ends on are no keyword in code, so the slash after them
+    // divides and the case still counts.
     for (const division of [
       "const r = x.in / 2; // it's",
       "const r = x.\n  in / 2; // it's",
       "class C { #in = 4; f() { return this.#in / 2; } } // it's",
+      "const r = 1..in / 2; // it's",
       "const r = opts?.do / 2; // it's",
       "const of = 4; const r = of / 2; // it's",
       "const r = total // return\n  / count; // it's",
