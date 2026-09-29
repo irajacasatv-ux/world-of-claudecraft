@@ -17,14 +17,16 @@ const RETURNED_CHROMA_ITEM_ID = 'amber_crimson_armor_plate';
 
 type SkinEvent = Extract<SimEvent, { type: 'skinEvent' }>;
 
-// The cases reach only Brother Aldric, the Merchant, and the meteor on the
-// ground, so the world keeps just those three and no camps.
+// The cases reach only Brother Aldric, the Merchant, the vendor beside her
+// (Trader Wilkes, whose wares put a merchant in range of the sell guard), and
+// the meteor on the ground, so the world keeps just those and no camps.
 const ALDRIC_WORLD: WorldContent = {
   ...BUILTIN_WORLD,
   camps: [],
   npcs: {
     brother_aldric_fen: BUILTIN_WORLD.npcs.brother_aldric_fen,
     the_merchant: BUILTIN_WORLD.npcs.the_merchant,
+    trader_wilkes: BUILTIN_WORLD.npcs.trader_wilkes,
   },
   groundObjects: BUILTIN_WORLD.groundObjects.filter((obj) => obj.itemId === METEOR_ITEM_ID),
 };
