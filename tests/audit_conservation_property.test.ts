@@ -23,8 +23,11 @@
 // lease fence-out is modelled by rolling the acting character back to its
 // durable row exactly as a same-account takeover does.
 //
-// Every run is reproducible from a printed seed; failures are minimized to the
-// shortest still-failing op sequence by delta debugging (shrinkSteps below).
+// Every run is reproducible from a printed seed, alone or in sweep order:
+// each world starts only after every earlier world's in-flight saves and
+// holder flushes have drained, on a freshly reset store (makeWorld,
+// drainStragglingSaves). Failures are minimized to the shortest still-failing
+// op sequence by delta debugging (shrinkSteps below).
 //
 // PERMANENT characterization suite. The properties must simply hold; the
 // named P4 blocks preserve the exact witnesses for conservation holes that are
@@ -1668,14 +1671,18 @@ const seeds = (n: number, from = 1): number[] => Array.from({ length: n }, (_, i
 
 // Sweep depth. Each property sweep's full seed count is its NIGHTLY depth,
 // run only under the flag the nightly tests job alone sets; every PR runs the
-// first fifth of the same seeds. What that PR representative still catches:
-// every sweep keeps its whole op and event alphabet with both officers acting
-// and saving, so a conservation hole on any common path (a mint, a lost copy,
-// a torn escrow, an undo that misses an op) still reds on the PR; the named
+// first fifth of the same seeds. What the PR tier keeps: every sweep's whole
+// op and event alphabet with both officers acting and saving, the named
 // witnesses below (P4 lease-fence, P4-CONSUMED, P4-CLOSED, the P5 window, P6)
-// run whole on every PR; and the coverage floor at the bottom holds the
-// thinned sweeps to reaching every op and every injected event arm. The
-// nightly depth is what hunts the rarer interleavings.
+// run whole, and the coverage floor at the bottom holds the thinned sweeps to
+// reaching every op and every injected event arm. What it is PROVEN to catch,
+// by mutation: a treasury mint on the withdraw-gold op path (seven of the
+// nine sweep cases red; src/sim/guild_bank.ts). What this file catches at
+// NEITHER depth: a netted-replay rescue that accepts a still-short log
+// (server/guild_bank_state.ts mergeGuildBankRow), which
+// tests/audit_cur_conservation.test.ts and
+// tests/guild_bank_persistence.test.ts catch on every PR. No mutant is known
+// that only the nightly depth kills; it is there for the rarer interleavings.
 const NIGHTLY_SWEEP_DEPTH = process.env.WOC_NIGHTLY_SWEEP === '1';
 const sweepSeeds = (nightlyCount: number, from = 1): number[] =>
   seeds(NIGHTLY_SWEEP_DEPTH ? nightlyCount : Math.ceil(nightlyCount / 5), from);
