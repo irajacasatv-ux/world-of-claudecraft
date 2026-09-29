@@ -115,10 +115,12 @@ describe('the lane threshold over the measured shard weights', () => {
 // table: the ones that predate the rule are pinned by name below, and any new one must carry the
 // statement too. The Playwright browser suite runs under its own config and is reviewed by hand.
 const GUARDS_LINE = /^(?:\/\/+|\/?\*+)\s*Guards:\s*(\S.*)$/;
-// The time is the first number on the line and stands alone: `1200 ms` and `about 1.2 s` read,
-// while `1,200 ms`, `25 000 ms`, `1.200 ms` and `2 min 30 s` are refused rather than read low (a
-// fraction reads only in seconds, so a dot used to group thousands cannot shrink a cost).
-const COST_LINE = /^(?:\/\/+|\/?\*+)\s*Cost:[^\d\n]*?(?:(\d+\.\d+)\s*s|(\d+)\s*(ms|s))\b/;
+// The time is the first number on the line, stands alone and is the line's only time: `1200 ms`
+// and `about 1.2 s` read, while `1,200 ms`, `25 000 ms`, `1.200 ms`, `2 min 30 s` and `1 s warm,
+// 120 s cold` are refused rather than read low (a fraction reads only in seconds and to two
+// places, so a dot used to group thousands cannot shrink a cost).
+const COST_LINE = /^(?:\/\/+|\/?\*+)\s*Cost:[^\d\n]*?(?:(\d+\.\d{1,2})\s*s|(\d+)\s*(ms|s))\b/;
+const SECOND_TIME = /\d\s*(?:ms|s)\b/;
 const GUARDS_MIN_CHARS = 12;
 
 /** The leading comment block: every comment line before the first line of code. */
@@ -140,7 +142,7 @@ function admissionStatement(source: string): { guards?: string; costMs?: number 
     if (guards && guards.length >= GUARDS_MIN_CHARS && !guards.includes('Cost:'))
       statement.guards ??= guards;
     const cost = line.match(COST_LINE);
-    if (cost)
+    if (cost && !SECOND_TIME.test(line.slice(cost[0].length)))
       statement.costMs ??= cost[1]
         ? Number(cost[1]) * 1000
         : Number(cost[2]) * (cost[3] === 's' ? 1000 : 1);
@@ -418,6 +420,10 @@ describe('the new-test admission rule', () => {
           "// Guards: the pause toggle's replay path.\n// Cost: 40.000 ms\n",
         ),
         file(
+          'tests/new_two_times.test.ts',
+          "// Guards: the pause toggle's replay path.\n// Cost: 1 s warm, 120 s cold\n",
+        ),
+        file(
           'tests/new_minutes.test.ts',
           "// Guards: the pause toggle's replay path.\n// Cost: 1 min 5 s\n",
         ),
@@ -450,6 +456,7 @@ describe('the new-test admission rule', () => {
       cost('tests/new_comma.test.ts'),
       cost('tests/new_spaced.test.ts'),
       cost('tests/new_dotted.test.ts'),
+      cost('tests/new_two_times.test.ts'),
       cost('tests/new_minutes.test.ts'),
       'tests/new_heavy.test.ts: its stated cost is 120000 ms in CI time, over LANE_THRESHOLD_MS: ' +
         'split it or make it cheaper',
@@ -460,6 +467,8 @@ describe('the new-test admission rule', () => {
     expect(admissionStatement('// Cost: 1200 ms\n').costMs).toBe(1200);
     expect(admissionStatement('// Cost: about 1.2 s at one worker\n').costMs).toBe(1200);
     expect(admissionStatement('// Cost: 1.200 ms\n').costMs).toBeUndefined();
+    expect(admissionStatement('// Cost: 1.200 s\n').costMs).toBeUndefined();
+    expect(admissionStatement('// Cost: 1.25 s, 300 cases\n').costMs).toBe(1250);
     expect(admissionStatement(afterDocblock).costMs).toBe(450);
   });
 });
