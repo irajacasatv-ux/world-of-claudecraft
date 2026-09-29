@@ -36,6 +36,7 @@ import type { PlayerMeta } from '../src/sim/sim';
 import { Sim } from '../src/sim/sim';
 import type { SimContext } from '../src/sim/sim_context';
 import type { Entity } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // The two sides of the referential pin, DERIVED INDEPENDENTLY: the left from
 // the recipe table's channel field, the right from the shipped pattern table.
@@ -294,7 +295,9 @@ describe('the channel flip leaves no recipe unobtainable', () => {
     // The on-ramp half. Driven through resolveTrain, the same resolution the
     // sim and the trainer window use, at a skill high enough that any refusal
     // is provably about the CHANNEL and not the tier gate.
-    const sim = new Sim({ seed: 11, playerClass: 'warrior' });
+    // The Sim only supplies a player meta; stations are content, so it runs on
+    // the empty world.
+    const sim = new Sim({ seed: 11, playerClass: 'warrior', world: EMPTY_TEST_WORLD });
     const meta = (sim as unknown as { players: Map<number, PlayerMeta> }).players.get(
       sim.playerId,
     ) as PlayerMeta;

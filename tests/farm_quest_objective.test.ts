@@ -22,7 +22,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { FARM_CROPS, type FarmCropDef } from '../src/sim/content/farm_crops';
 import { FARM_PATCHES, farmBedById } from '../src/sim/content/farm_patches';
-import { QUESTS } from '../src/sim/data';
+import { BUILTIN_WORLD, QUESTS } from '../src/sim/data';
 import type { PlotState } from '../src/sim/professions/farm_projection';
 import {
   FARM_WITHERED_HUSK_COUNT,
@@ -32,7 +32,13 @@ import {
 } from '../src/sim/professions/farming';
 import { questObjectiveAreas } from '../src/sim/quest_targets';
 import { type PlayerMeta, Sim } from '../src/sim/sim';
-import type { QuestDef, QuestObjective, QuestProgress, SimEvent } from '../src/sim/types';
+import type {
+  QuestDef,
+  QuestObjective,
+  QuestProgress,
+  SimEvent,
+  WorldContent,
+} from '../src/sim/types';
 import { terrainHeight } from '../src/sim/world';
 
 const QUEST_ID = 'q_test_farm_objective';
@@ -102,6 +108,15 @@ interface Harness {
   advance(ms: number): void;
 }
 
+// Beds are content records and the only NPC any case walks to is the test
+// quest's giver, so every Sim runs on a world holding Foreman Odell alone.
+const GIVER_WORLD: WorldContent = {
+  ...BUILTIN_WORLD,
+  camps: [],
+  npcs: { [GIVER_ID]: BUILTIN_WORLD.npcs[GIVER_ID] },
+  groundObjects: [],
+};
+
 function makeHarness(seed = 41): Harness {
   let nowMs = START_MS;
   const sim = new Sim({
@@ -109,6 +124,7 @@ function makeHarness(seed = 41): Harness {
     playerClass: 'warrior',
     autoEquip: false,
     lockoutNowMs: () => nowMs,
+    world: GIVER_WORLD,
   });
   const pid = sim.playerId;
   const meta = sim.players.get(pid) as PlayerMeta;

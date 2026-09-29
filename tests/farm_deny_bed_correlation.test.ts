@@ -34,6 +34,7 @@ import { type PlayerMeta, Sim } from '../src/sim/sim';
 import { FISHING_CAST_ID, type SimEvent } from '../src/sim/types';
 import { terrainHeight } from '../src/sim/world';
 import { stripComments } from './helpers/strip_comments';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const BED = 'bed_eastbrook_1';
 const CROP_ID = 'vale_wheat';
@@ -78,11 +79,14 @@ function standAtBed(sim: Sim, bedId: string): void {
 /** A farmer standing at BED with the tier-1 hoe and one seed: every arm below
  *  removes exactly the one thing its own deny is about. */
 function makeHarness(): Harness {
+  // Farm beds are content records, not world spawns, and every arm drives the
+  // plant command directly, so the Sims run on the empty world.
   const sim = new Sim({
     seed: 41,
     playerClass: 'warrior',
     autoEquip: false,
     lockoutNowMs: () => START_MS,
+    world: EMPTY_TEST_WORLD,
   });
   const pid = sim.playerId;
   const meta = sim.players.get(pid) as PlayerMeta;

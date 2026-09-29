@@ -22,6 +22,7 @@ import type { PlotState } from '../src/sim/professions/farm_projection';
 import { harvestCrop, plantCrop } from '../src/sim/professions/farming';
 import { type PlayerMeta, Sim } from '../src/sim/sim';
 import { terrainHeight } from '../src/sim/world';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 vi.mock('../src/sim/content/farm_patches', async (importActual) => {
   const actual = await importActual<typeof import('../src/sim/content/farm_patches')>();
@@ -42,11 +43,14 @@ const CROP = FARM_CROPS[CROP_ID] as FarmCropDef;
 
 function makeHarness(): { sim: Sim; pid: number; meta: PlayerMeta; advance(ms: number): void } {
   let nowMs = START_MS;
+  // Farm beds are content records, not world spawns, and the case drives
+  // plant and harvest directly, so the Sim runs on the empty world.
   const sim = new Sim({
     seed: 41,
     playerClass: 'warrior',
     autoEquip: false,
     lockoutNowMs: () => nowMs,
+    world: EMPTY_TEST_WORLD,
   });
   const pid = sim.playerId;
   const meta = sim.players.get(pid) as PlayerMeta;

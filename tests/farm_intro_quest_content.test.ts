@@ -9,9 +9,9 @@
 
 import { describe, expect, it } from 'vitest';
 import { ZONE1_QUEST_ORDER } from '../src/sim/content/zone1';
-import { NPCS, QUEST_ORDER, QUESTS } from '../src/sim/data';
+import { BUILTIN_WORLD, NPCS, QUEST_ORDER, QUESTS } from '../src/sim/data';
 import { Sim } from '../src/sim/sim';
-import { INTERACT_RANGE } from '../src/sim/types';
+import { INTERACT_RANGE, type WorldContent } from '../src/sim/types';
 import { terrainHeight } from '../src/sim/world';
 
 const QUEST_ID = 'q_farm_intro';
@@ -23,8 +23,17 @@ const MAGIC_SENTENCE = 'It keeps growing while you are away, and it never spoils
 const JOURNAL_POINTER =
   'Your Harvest Journal (Shift+K, or the Farming row of your Professions window) lists every planted bed and its timer.';
 
+// The accept path reaches only Farmer Jessica, so each Sim runs on a world
+// holding her and nothing else.
+const FARMER_WORLD: WorldContent = {
+  ...BUILTIN_WORLD,
+  camps: [],
+  npcs: { [GIVER]: BUILTIN_WORLD.npcs[GIVER] },
+  groundObjects: [],
+};
+
 function freshCharacter(): { sim: Sim; pid: number } {
-  const sim = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+  const sim = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true, world: FARMER_WORLD });
   const pid = sim.addPlayer('warrior', 'Sower');
   return { sim, pid };
 }

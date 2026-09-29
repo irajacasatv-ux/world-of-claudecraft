@@ -32,11 +32,11 @@
 import { describe, expect, it } from 'vitest';
 import { FARM_CROPS } from '../src/sim/content/farm_crops';
 import { farmBedById } from '../src/sim/content/farm_patches';
-import { ALL_RECIPES, ITEMS, NPCS } from '../src/sim/data';
+import { ALL_RECIPES, BUILTIN_WORLD, ITEMS, NPCS } from '../src/sim/data';
 import { farmingTeachingCeilingFor, harvestCrop, plantCrop } from '../src/sim/professions/farming';
 import { TIER3_TOOL_WIELD_PROFICIENCY } from '../src/sim/professions/wield_gate';
 import { type PlayerMeta, Sim } from '../src/sim/sim';
-import type { Entity } from '../src/sim/types';
+import type { Entity, WorldContent } from '../src/sim/types';
 import { terrainHeight } from '../src/sim/world';
 
 const FUNDS = 100_000;
@@ -57,6 +57,18 @@ interface Rig {
   advance(ms: number): void;
 }
 
+// The walks buy only from the two upper-tier farmers and plant at a content
+// bed, so each Sim runs on a world holding Hollis and Verbena alone.
+const UPPER_FARMER_WORLD: WorldContent = {
+  ...BUILTIN_WORLD,
+  camps: [],
+  npcs: {
+    farmer_hollis: BUILTIN_WORLD.npcs.farmer_hollis,
+    farmer_verbena: BUILTIN_WORLD.npcs.farmer_verbena,
+  },
+  groundObjects: [],
+};
+
 function makeRig(seed = 4242): Rig {
   let nowMs = START_MS;
   const sim = new Sim({
@@ -64,6 +76,7 @@ function makeRig(seed = 4242): Rig {
     playerClass: 'warrior',
     autoEquip: false,
     lockoutNowMs: () => nowMs,
+    world: UPPER_FARMER_WORLD,
   });
   const pid = sim.playerId;
   const meta = sim.players.get(pid) as PlayerMeta;

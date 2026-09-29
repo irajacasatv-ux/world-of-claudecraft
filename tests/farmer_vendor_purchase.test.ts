@@ -10,14 +10,22 @@
 // probed by construction, since the walk covers every row on every counter.
 
 import { describe, expect, it } from 'vitest';
-import { ITEMS, NPCS } from '../src/sim/data';
+import { BUILTIN_WORLD, ITEMS, NPCS } from '../src/sim/data';
 import { Sim } from '../src/sim/sim';
-import type { Entity, NpcDef, SimEvent } from '../src/sim/types';
+import type { Entity, NpcDef, SimEvent, WorldContent } from '../src/sim/types';
 import { terrainHeight } from '../src/sim/world';
 
 const FARMER_IDS = ['farmer_jessica', 'farmer_teasel', 'farmer_hollis', 'farmer_verbena'] as const;
 const FUNDS = 100_000;
 const FAR = 20;
+// Every case buys from one of the four farmers, so each Sim runs on a world
+// holding those four NPCs and nothing else.
+const FARMER_WORLD: WorldContent = {
+  ...BUILTIN_WORLD,
+  camps: [],
+  npcs: Object.fromEntries(FARMER_IDS.map((id) => [id, BUILTIN_WORLD.npcs[id]])),
+  groundObjects: [],
+};
 
 function farmerEntity(sim: Sim, templateId: string): Entity {
   const entity = [...sim.entities.values()].find(
@@ -77,7 +85,12 @@ describe('the farmer counters, purchased row by row', () => {
   for (const farmerId of FARMER_IDS) {
     for (const itemId of NPCS[farmerId].vendorItems ?? []) {
       it(`${farmerId} sells ${itemId}: one more in the bags, exactly buyValue less copper`, () => {
-        const sim = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+        const sim = new Sim({
+          seed: 42,
+          playerClass: 'warrior',
+          noPlayer: true,
+          world: FARMER_WORLD,
+        });
         const pid = sim.addPlayer('warrior', 'Buyer');
         const meta = sim.players.get(pid);
         if (!meta) throw new Error('missing meta');
@@ -107,7 +120,12 @@ describe('the farmer counters, purchased row by row', () => {
     // NPC's, not the row's), so the positive arms above are proven to depend
     // on standing at the counter rather than passing by accident.
     for (const farmerId of FARMER_IDS) {
-      const sim = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+      const sim = new Sim({
+        seed: 42,
+        playerClass: 'warrior',
+        noPlayer: true,
+        world: FARMER_WORLD,
+      });
       const pid = sim.addPlayer('warrior', 'Buyer');
       const meta = sim.players.get(pid);
       if (!meta) throw new Error('missing meta');
@@ -126,7 +144,12 @@ describe('the farmer counters, purchased row by row', () => {
   it('a row that is not on the counter is refused: the farmers do not sell each other stock', () => {
     // Hollis stocks compost alone: asking him for a tier-1 seed (Jessica's
     // row) is 'not sold here', so the positive arms above are per counter.
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+    const sim = new Sim({
+      seed: 42,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: FARMER_WORLD,
+    });
     const pid = sim.addPlayer('warrior', 'Buyer');
     const meta = sim.players.get(pid);
     if (!meta) throw new Error('missing meta');
