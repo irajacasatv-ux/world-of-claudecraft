@@ -21,6 +21,7 @@ import { canEquipItem } from '../src/sim/equipment_rules';
 import { meetsLevelRequirement } from '../src/sim/item_level_req';
 import { Sim } from '../src/sim/sim';
 import { ALL_CLASSES, MAX_LEVEL, xpToReachLevel } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 describe('community test account configuration', () => {
   it('is disabled until boot explicitly enables it', () => {
@@ -88,7 +89,13 @@ describe('community test character templates', () => {
         expect(meetsLevelRequirement(MAX_LEVEL, item)).toBe(true);
       }
 
-      const reloaded = new Sim({ seed: 20061, playerClass: cls, noPlayer: true });
+      // The reload reads only the saved state, so it runs on the empty world.
+      const reloaded = new Sim({
+        seed: 20061,
+        playerClass: cls,
+        noPlayer: true,
+        world: EMPTY_TEST_WORLD,
+      });
       const pid = reloaded.addPlayer(cls, name, { state });
       const player = reloaded.entities.get(pid);
       if (!player) throw new Error(`failed to reload ${name}`);
