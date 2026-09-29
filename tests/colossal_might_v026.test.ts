@@ -8,9 +8,17 @@ import {
 import { Sim } from '../src/sim/sim';
 import { dist2d, MAX_LEVEL } from '../src/sim/types';
 import { terrainHeight } from '../src/sim/world';
+import { RL_TEST_WORLD } from './sim_shared';
 
+// The melee cases need one live mob to stand beside, which the one-wolf-camp
+// world spawns; the rest of the overworld is pure cost.
 function warrior(spec: 'arms' | 'prot' | null): Sim {
-  const sim = new Sim({ seed: 2614, playerClass: 'warrior', autoEquip: true });
+  const sim = new Sim({
+    seed: 2614,
+    playerClass: 'warrior',
+    autoEquip: true,
+    world: RL_TEST_WORLD,
+  });
   sim.setPlayerLevel(MAX_LEVEL);
   if (spec !== null) expect(sim.setSpec(spec)).toBe(true);
   expect(sim.selectTalentRow(17, 'war_row_recklessness')).toBe(true);
