@@ -25,6 +25,7 @@ import { DAMAGE_IDLE_DESPAWN_MOB_IDS, DAMAGE_IDLE_DESPAWN_SECONDS } from '../src
 import { Sim } from '../src/sim/sim';
 import type { Entity, WorldContent } from '../src/sim/types';
 import { WORLD_SEED } from '../src/sim/world_seed';
+import { PRODUCTION_IDLE_CULL } from './helpers/production_idle_cull';
 
 type AnySim = Sim & Record<string, unknown>;
 
@@ -50,11 +51,16 @@ const BROOD_BELT_TEST_WORLD: WorldContent = {
   groundObjects: [],
 };
 
+// The shipped idle-mob cull: the walker ticks the whole belt around one player.
+// Eggs crack and whelps hatch beside the walker, inside the radius, and the
+// idle-despawn decay runs in its own pass (runDespawnDecay) that the cull never
+// skips, so a whelp left behind still unravels on its timer.
 function beltWorld(): { sim: AnySim; player: Entity } {
   const sim = new Sim({
     seed: WORLD_SEED,
     playerClass: 'warrior',
     world: BROOD_BELT_TEST_WORLD,
+    ...PRODUCTION_IDLE_CULL,
   }) as AnySim;
   const player = sim.player;
   sim.setPlayerLevel(60); // the walker must survive the clutch, not fight it
