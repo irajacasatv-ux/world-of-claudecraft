@@ -18,6 +18,7 @@ import { reachDeckClear } from '../src/sim/reach_decks';
 import { rideSteepnessAt } from '../src/sim/ride_height';
 import { Sim } from '../src/sim/sim';
 import { groundHeight, reachPalmSpots, waterLevelAt } from '../src/sim/world';
+import { worldWithOnlyNpcs } from './helpers/npc_world';
 
 // The shipped world seed (src/main.ts WORLD_SEED, server/main.ts Sim cfg).
 const SEED = 20061;
@@ -38,6 +39,7 @@ const MIN_PALM_CLEARANCE = 2;
 const SPAWN_BODY_RADIUS = 0.6;
 
 const okku = PALMREACH_NPCS.hermit_okku;
+const OKRIM_WORLD = worldWithOnlyNpcs('hermit_okku');
 
 describe('Okrim stands clear of the Vinefall banyan', () => {
   it('is at least 12 yards from every authored great tree center', () => {
@@ -114,8 +116,10 @@ describe('Okrim stands clear of the Vinefall banyan', () => {
   });
 
   it('spawns exactly at the authored spot in the shipped world', () => {
-    // Arrange
-    const sim = new Sim({ seed: SEED, playerClass: 'warrior', noPlayer: true });
+    // Arrange: each surface NPC is placed on its own against the static colliders
+    // (findSafePos reads no other entity), so a world holding only Okrim places
+    // him exactly as the full shipped roster does.
+    const sim = new Sim({ seed: SEED, playerClass: 'warrior', noPlayer: true, world: OKRIM_WORLD });
 
     // Act
     const spawned = [...sim.entities.values()].find(

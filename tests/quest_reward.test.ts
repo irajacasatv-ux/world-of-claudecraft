@@ -7,6 +7,10 @@ import { describe, expect, it } from 'vitest';
 import { QUESTS, questRewardItemId } from '../src/sim/data';
 import { Sim } from '../src/sim/sim';
 import type { PlayerClass } from '../src/sim/types';
+import { worldWithOnlyNpcs } from './helpers/npc_world';
+
+// The turn-in needs only the quest's NPC standing in the world.
+const REDBROOK_WORLD = worldWithOnlyNpcs('marshal_redbrook');
 
 const ALL_CLASSES: PlayerClass[] = [
   'warrior',
@@ -38,7 +42,13 @@ describe('quest reward preview matches turn-in (#98)', () => {
   it('the resolver agrees with what turnInQuest actually grants, for every class', () => {
     for (const cls of ALL_CLASSES) {
       // autoEquip off so the granted reward stays in the bag where we can count it
-      const sim = new Sim({ seed: 1, playerClass: cls, playerName: 'Q', autoEquip: false });
+      const sim = new Sim({
+        seed: 1,
+        playerClass: cls,
+        playerName: 'Q',
+        autoEquip: false,
+        world: REDBROOK_WORLD,
+      });
       const preview = questRewardItemId(QUESTS['q_greyjaw'], cls);
 
       // drive the quest to turn-in

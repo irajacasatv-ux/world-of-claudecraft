@@ -12,8 +12,12 @@ import { GATHER_NODES, NPCS, QUEST_ORDER, QUESTS } from '../src/sim/data';
 import { nodeMaterialFor } from '../src/sim/professions/gathering';
 import { Sim } from '../src/sim/sim';
 import { terrainHeight } from '../src/sim/world';
+import { worldWithOnlyNpcs } from './helpers/npc_world';
 
 const ORE_NODE_ID = GATHER_NODES.find((n) => n.type === 'ore')!.id;
+
+// The quest needs only its giver in the world; the gather nodes are not world content.
+const ODELL_WORLD = worldWithOnlyNpcs('foreman_odell');
 
 function teleportOntoNode(sim: Sim, pid: number, nodeId: string) {
   const node = GATHER_NODES.find((n) => n.id === nodeId)!;
@@ -79,7 +83,7 @@ describe('q_prof_intro content wiring', () => {
 
 describe('q_prof_intro: mining, and only mining, satisfies the gather objective', () => {
   it('an ore-node harvest advances progress and grants only the ordinary mining material', () => {
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+    const sim = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true, world: ODELL_WORLD });
     const pid = sim.addPlayer('warrior', 'Miner');
     // #2343: every node harvest needs the matching-profession tool in bags.
     sim.addItem('copper_mining_pick', 1, pid);
@@ -104,7 +108,7 @@ describe('q_prof_intro: mining, and only mining, satisfies the gather objective'
   });
 
   it('ordinary mining does not create the retired chunk_of_ore workaround item', () => {
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+    const sim = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true, world: ODELL_WORLD });
     const pid = sim.addPlayer('warrior', 'NoQuest');
     // #2343: every node harvest needs the matching-profession tool in bags.
     sim.addItem('copper_mining_pick', 1, pid);
@@ -117,7 +121,7 @@ describe('q_prof_intro: mining, and only mining, satisfies the gather objective'
   });
 
   it('promotes after five granted ore harvests and can be turned in without collect items', () => {
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+    const sim = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true, world: ODELL_WORLD });
     const pid = sim.addPlayer('warrior', 'Miner');
     // #2343: every node harvest needs the matching-profession tool in bags. The
     // five nodes below are all tier 1, so the tier-1 pick covers the whole
