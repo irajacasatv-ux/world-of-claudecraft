@@ -8,9 +8,14 @@ import { ABILITIES, MOBS } from '../src/sim/data';
 import { createMob } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
 import type { PlayerClass } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
+
+// Every rig fights and heals the dummies it places itself, so each Sim stands on
+// the empty world, all on one seed (a fresh seed costs a collider grid build).
+const SEED = 3;
 
 function producesEffect(cls: PlayerClass, specId: string, sig: string): string {
-  const sim = new Sim({ seed: 3, playerClass: cls, autoEquip: true });
+  const sim = new Sim({ seed: SEED, playerClass: cls, autoEquip: true, world: EMPTY_TEST_WORLD });
   sim.setPlayerLevel(20);
   const ok = sim.setSpec(specId);
   if (!ok) return 'setSpec failed';
@@ -146,7 +151,12 @@ describe('Phase 1: spec signatures', () => {
   it('Ancestral Strike is Enhancement-only and Cascading Mend is Restoration-only', () => {
     const shaman = TALENTS.shaman!;
     for (const s of shaman.specs) {
-      const sim = new Sim({ seed: 1, playerClass: 'shaman', autoEquip: true });
+      const sim = new Sim({
+        seed: SEED,
+        playerClass: 'shaman',
+        autoEquip: true,
+        world: EMPTY_TEST_WORLD,
+      });
       sim.setPlayerLevel(20);
       sim.setSpec(s.id);
       const isEnh = s.signature === 'stormstrike';
@@ -157,7 +167,12 @@ describe('Phase 1: spec signatures', () => {
   });
 
   it('picking a spec announces the signature (learnAbility event + log) so it lands on the bar', () => {
-    const sim = new Sim({ seed: 1, playerClass: 'warrior', autoEquip: true });
+    const sim = new Sim({
+      seed: SEED,
+      playerClass: 'warrior',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.setPlayerLevel(20);
     sim.setSpec('fury'); // grants bloodthirst
     const evs = sim.tick();
