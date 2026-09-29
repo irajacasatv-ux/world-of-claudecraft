@@ -82,9 +82,6 @@ const FILE_ALLOWANCE_LEDGER: ReadonlyMap<string, number> = new Map([
   // One Monte Carlo child (300s bound) inside a 420s case since 2026-09-29; the
   // case ran two children under 1,200s before.
   ['tests/nythraxis_matrix.test.ts', 420_000],
-  ['tests/owned_class_balance_dps_probes.test.ts', 360_000],
-  // Lane-owned raid harness, likewise unseen until the trailing-comma fix.
-  ['tests/owned_class_raid_armor_avoidance.test.ts', 360_000],
   // The shared PostgreSQL escrow fixture carries a 120s setup hook and a 30s
   // pool-closing teardown, plus two 30s cases (the deadlock probe, the transaction
   // cost) and two 120s cases (the material-source saves, the maximum ledger prefix),
