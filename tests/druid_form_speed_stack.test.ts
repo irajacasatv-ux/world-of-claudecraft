@@ -4,6 +4,7 @@ import { ABILITIES } from '../src/sim/data';
 import { moveSpeedMult } from '../src/sim/player_motion';
 import { Sim } from '../src/sim/sim';
 import { CAT_FORM_MOVE_MULT, type Entity } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // Player report (v0.44.0): "Dash and Loping Stride SET the movement speed
 // instead of increasing it". Cat Form is a passive +15% (CAT_FORM_MOVE_MULT)
@@ -13,8 +14,9 @@ import { CAT_FORM_MOVE_MULT, type Entity } from '../src/sim/types';
 
 const DASH_MULT = (ABILITIES.dash.effects[0] as { value: number }).value;
 
+// Speed multipliers read only the druid's own auras: the empty world serves.
 function rig() {
-  const sim = new Sim({ seed: 29, playerClass: 'druid', autoEquip: true });
+  const sim = new Sim({ seed: 29, playerClass: 'druid', autoEquip: true, world: EMPTY_TEST_WORLD });
   sim.setPlayerLevel(20);
   expect(sim.applyTalents({ spec: 'feral', rows: {} })).toBe(true);
   const player = sim.player;
