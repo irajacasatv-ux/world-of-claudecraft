@@ -30,6 +30,7 @@ import {
 import { SpatialGrid } from '../src/sim/spatial';
 import { DEFAULT_STORAGE_PRICES } from '../src/sim/storage_prices';
 import type { Entity } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 type AnyEntity = Entity & Record<string, unknown>;
 
@@ -695,8 +696,19 @@ describe('paladin-sourced despawn cleanup gate', () => {
     });
   }
 
+  // Both gates act on entities the cases add themselves and draw no rng, so
+  // they share one seed on the empty world.
+  function paladinSim(): Sim {
+    return new Sim({
+      seed: 4242,
+      playerClass: 'paladin',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
+  }
+
   it('leaves a live paladin devotion intact when a non-paladin despawns', () => {
-    const sim = new Sim({ seed: 4242, playerClass: 'paladin', autoEquip: true });
+    const sim = paladinSim();
     const ctx = (sim as unknown as { ctx: Parameters<typeof dropEntityFromRoster>[0] }).ctx;
     plantDevotion(sim.player, sim.player.id);
 
@@ -708,7 +720,7 @@ describe('paladin-sourced despawn cleanup gate', () => {
   });
 
   it('still strips every sourced devotion when the paladin despawns', () => {
-    const sim = new Sim({ seed: 4243, playerClass: 'paladin', autoEquip: true });
+    const sim = paladinSim();
     const ctx = (sim as unknown as { ctx: Parameters<typeof dropEntityFromRoster>[0] }).ctx;
     const allyId = sim.addPlayer('priest', 'Vera');
     const ally = sim.entities.get(allyId);
