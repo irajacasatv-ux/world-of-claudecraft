@@ -12,13 +12,17 @@
 // so every case still runs alone.
 //
 // Because several cases read one recording, a held recording is guarded:
-//   - its event list, notes and frames are frozen, so a case that sorted or
-//     pushed into them would throw instead of changing what the next case sees;
+//   - its events, notes and frames are DEEP-frozen, and every entity and player
+//     record of its final Sim is frozen (one level: a field write throws, a
+//     write inside a nested object such as pos is not refused), so a case that
+//     sorted, pushed or assigned into what it reads throws instead of changing
+//     what the next case sees; ticking the held Sim throws too;
 //   - while a case runs (readingOnly), a read of a scenario the case did not
 //     declare throws (run_scenarios.ts derives the declaration from the title),
-//     a read passing a different Scenario object under a held name throws, and
-//     so does any recording the case makes outside this module (counted through
-//     record.ts), or an async case whose assertions would escape the test.
+//     a read passing any Scenario object other than the SCENARIOS one throws
+//     (held or not), and so does any recording the case makes outside this
+//     module (counted through record.ts), or an async case whose assertions
+//     would escape the test.
 
 import type { Recorder, Scenario } from './record';
 import { record, recordingsStartedSoFar } from './record';
@@ -36,19 +40,41 @@ export type Ev = Record<string, any>;
 // The `it` a coverage case module registers its cases through (the runner's).
 export type CoverageIt = (title: string, fn: () => void, timeout?: number) => void;
 
-const held = new Map<string, { scenario: Scenario; recording: Recording }>();
+const held = new Map<string, Recording>();
 let readable: ReadonlySet<string> | null = null;
 let recordedOnMiss = 0;
 
+// Freezes arrays and plain objects all the way down (a Map or Set is walked
+// but stays writable). `seen` guards cycles and shared subtrees.
+function deepFreeze(value: unknown, seen: WeakSet<object>): void {
+  if (value === null || typeof value !== 'object' || seen.has(value)) return;
+  seen.add(value);
+  if (value instanceof Map || value instanceof Set) {
+    for (const v of value.values()) deepFreeze(v, seen);
+    return;
+  }
+  Object.freeze(value);
+  for (const v of Object.values(value)) deepFreeze(v, seen);
+}
+
+function refuseTick(): never {
+  throw new Error('a coverage case ticked a held recording; it may only read it');
+}
+
 function freeze(recording: Recording): Recording {
-  Object.freeze(recording.rec.allEvents);
-  Object.freeze(recording.rec.notes);
-  Object.freeze(recording.trace.frames);
+  const seen = new WeakSet<object>();
+  deepFreeze(recording.rec.allEvents, seen);
+  deepFreeze(recording.rec.notes, seen);
+  deepFreeze(recording.trace.frames, seen);
+  const sim = recording.rec.sim;
+  for (const e of sim.entities.values()) Object.freeze(e);
+  for (const meta of sim.players.values()) Object.freeze(meta);
+  (sim as { tick: () => unknown }).tick = refuseTick;
   return recording;
 }
 
 export function holdRecording(scenario: Scenario, recording: Recording): void {
-  held.set(scenario.name, { scenario, recording: freeze(recording) });
+  held.set(scenario.name, freeze(recording));
 }
 
 export function releaseRecording(name: string): void {
@@ -86,15 +112,11 @@ export function recordShared(scenario: Scenario): Recording {
       `coverage case read undeclared scenario ${scenario.name}; declare it in run_scenarios.ts`,
     );
   }
-  const hit = held.get(scenario.name);
-  if (hit) {
-    if (hit.scenario !== scenario) {
-      throw new Error(
-        `coverage case passed a modified ${scenario.name}; the held one is SCENARIOS'`,
-      );
-    }
-    return hit.recording;
+  if (SCENARIOS.find((s) => s.name === scenario.name) !== scenario) {
+    throw new Error(`coverage case passed a modified ${scenario.name}; read the SCENARIOS one`);
   }
+  const hit = held.get(scenario.name);
+  if (hit) return hit;
   recordedOnMiss++;
   const fresh = record(scenario);
   holdRecording(scenario, fresh);

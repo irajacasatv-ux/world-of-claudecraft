@@ -180,8 +180,6 @@ export class Recorder {
   }
 }
 
-// Record a scenario into a Trace plus the live Recorder (the Recorder exposes
-// allEvents + the final sim for coverage assertions in tests).
 // How many recordings this process has started. recording_cache.ts reads it to
 // prove a coverage case recorded nothing behind the shared recordings' back.
 let recordingsStarted = 0;
@@ -190,6 +188,8 @@ export function recordingsStartedSoFar(): number {
   return recordingsStarted;
 }
 
+// Record a scenario into a Trace plus the live Recorder (the Recorder exposes
+// allEvents + the final sim for coverage assertions in tests).
 export function record(scenario: Scenario): { trace: Trace; rec: Recorder } {
   recordingsStarted++;
   const sim = scenario.build();
