@@ -11,6 +11,7 @@ vi.mock('../server/db', async () => (await import('./helpers/snapshot_db_mock'))
 import { GameServer, wireEntity } from '../server/game';
 import { Sim } from '../src/sim/sim';
 import type { Aura } from '../src/sim/types';
+import { WORLD_SEED } from '../src/sim/world_seed';
 import { absorbTotal } from '../src/ui/absorb_bar';
 import { auraEffectDescriptor } from '../src/ui/aura_effect';
 import { isAuraDebuff } from '../src/ui/auras_view';
@@ -33,7 +34,7 @@ describe('aura magnitude over the wire (buff/debuff tooltip parity)', () => {
     mirror: Aura;
   } {
     const sim = new Sim({
-      seed: 1,
+      seed: WORLD_SEED,
       playerClass: 'warrior',
       noPlayer: true,
       world: WIRE_TEST_WORLD,
@@ -294,7 +295,7 @@ describe('aura magnitude over the wire (buff/debuff tooltip parity)', () => {
     // builds a fresh client per call), so this drives two snapshots into
     // one client by hand.
     const sim = new Sim({
-      seed: 1,
+      seed: WORLD_SEED,
       playerClass: 'warrior',
       noPlayer: true,
       world: WIRE_TEST_WORLD,
@@ -399,7 +400,7 @@ describe('aura decode reuses records across snapshots (allocation fast path)', (
   }
 
   function makeMobWithAura(): { sim: Sim; mobId: number } {
-    const sim = new Sim({ seed: 1, playerClass: 'warrior', noPlayer: true });
+    const sim = new Sim({ seed: WORLD_SEED, playerClass: 'warrior', noPlayer: true });
     const pid = sim.addPlayer('warrior', 'Poker');
     const mob = [...sim.entities.values()].find((e) => e.kind === 'mob')!;
     void pid;
@@ -479,7 +480,7 @@ describe('aura decode fast-path guards (composition edge cases)', () => {
   }
 
   function makeMobWithTwoAuras(): { sim: Sim; mobId: number } {
-    const sim = new Sim({ seed: 1, playerClass: 'warrior', noPlayer: true });
+    const sim = new Sim({ seed: WORLD_SEED, playerClass: 'warrior', noPlayer: true });
     sim.addPlayer('warrior', 'Poker');
     const mob = [...sim.entities.values()].find((e) => e.kind === 'mob')!;
     mob.auras.push(

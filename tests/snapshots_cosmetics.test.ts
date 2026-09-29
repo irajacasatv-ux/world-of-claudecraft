@@ -12,6 +12,7 @@ import { type ClientSession, GameServer, wireEntity } from '../server/game';
 import { gameMetricsCounters } from '../server/http/game_signals';
 import { legendaryRegaliaActive } from '../src/render/legendary_regalia_core';
 import { Sim } from '../src/sim/sim';
+import { WORLD_SEED } from '../src/sim/world_seed';
 import { deedBorderSlug } from '../src/ui/deed_border_view';
 import { bareClient, broadcast, fakeWs, joinServer, lastSnap } from './helpers/bare_client';
 import { WIRE_TEST_WORLD } from './helpers/snapshot_wire';
@@ -22,7 +23,7 @@ import { WIRE_TEST_WORLD } from './helpers/snapshot_wire';
 describe('guild nameplate wire', () => {
   it('carries the guild name through wireEntity only when set', () => {
     const sim = new Sim({
-      seed: 1,
+      seed: WORLD_SEED,
       playerClass: 'warrior',
       noPlayer: true,
       world: WIRE_TEST_WORLD,
@@ -144,7 +145,7 @@ describe('guild nameplate wire', () => {
 // sim validator (src/sim/deeds.ts setActiveTitle) is the only writer.
 describe('active title wire (Book of Deeds)', () => {
   it('carries the title deed id through wireEntity only when set', () => {
-    const sim = new Sim({ seed: 1, playerClass: 'warrior', noPlayer: true });
+    const sim = new Sim({ seed: WORLD_SEED, playerClass: 'warrior', noPlayer: true });
     const pid = sim.addPlayer('warrior', 'Thaldrin');
     const e = sim.entities.get(pid)!;
     const meta = sim.players.get(pid)!;
@@ -399,7 +400,7 @@ describe('active border wire (Book of Deeds)', () => {
   const TITLE_DEED = 'prog_veteran';
 
   it('carries the border deed id through wireEntity only when set', () => {
-    const sim = new Sim({ seed: 1, playerClass: 'warrior', noPlayer: true });
+    const sim = new Sim({ seed: WORLD_SEED, playerClass: 'warrior', noPlayer: true });
     const pid = sim.addPlayer('warrior', 'Thaldrin');
     const e = sim.entities.get(pid)!;
     const meta = sim.players.get(pid)!;
@@ -416,7 +417,7 @@ describe('active border wire (Book of Deeds)', () => {
   });
 
   it('rejects a cross-kind deed in BOTH directions and never crosses the two wire fields', () => {
-    const sim = new Sim({ seed: 1, playerClass: 'warrior', noPlayer: true });
+    const sim = new Sim({ seed: WORLD_SEED, playerClass: 'warrior', noPlayer: true });
     const pid = sim.addPlayer('warrior', 'Crosskind');
     const e = sim.entities.get(pid)!;
     const meta = sim.players.get(pid)!;
@@ -696,7 +697,7 @@ describe('active border wire (Book of Deeds)', () => {
     // use prog_prestige_10 (its cross-kind sibling makes the kind rejection
     // decisive). This composes the real rank-5 id through the whole earn -> select
     // -> wire -> slug chain so the named criterion is demonstrated, not just derived.
-    const sim = new Sim({ seed: 1, playerClass: 'warrior', noPlayer: true });
+    const sim = new Sim({ seed: WORLD_SEED, playerClass: 'warrior', noPlayer: true });
     const pid = sim.addPlayer('warrior', 'Curator');
     const e = sim.entities.get(pid)!;
     const meta = sim.players.get(pid)!;
@@ -838,7 +839,7 @@ describe('cosmetic set rate guard (one bucket for title and border)', () => {
 describe('held weapon wire (mainhandItemId/offhandItemId)', () => {
   it('carries both equipped hand item ids through wireEntity', () => {
     const sim = new Sim({
-      seed: 1,
+      seed: WORLD_SEED,
       playerClass: 'warrior',
       noPlayer: true,
       world: WIRE_TEST_WORLD,
@@ -937,7 +938,7 @@ describe('weapon skin wire (weaponSkinId)', () => {
   });
 
   it('carries the active skin through wireEntity only while one is applied', () => {
-    const sim = new Sim({ seed: 1, playerClass: 'warrior', noPlayer: true });
+    const sim = new Sim({ seed: WORLD_SEED, playerClass: 'warrior', noPlayer: true });
     const pid = sim.addPlayer('warrior', 'Thaldrin');
     const e = sim.entities.get(pid)!;
     expect(wireEntity(e).wsk).toBeUndefined();
@@ -1061,7 +1062,7 @@ describe('equipped instance wire (eqi)', () => {
   };
 
   it('carries eqi through wireEntity only while an instanced piece is worn', () => {
-    const sim = new Sim({ seed: 1, playerClass: 'warrior', noPlayer: true });
+    const sim = new Sim({ seed: WORLD_SEED, playerClass: 'warrior', noPlayer: true });
     const pid = sim.addPlayer('warrior', 'Thaldrin');
     const e = sim.entities.get(pid)!;
     // The fresh auto-equipped worn set is all plain pieces: eq rides, eqi
@@ -1080,7 +1081,7 @@ describe('equipped instance wire (eqi)', () => {
   });
 
   it('strips non-cosmetic instance fields from the wire payload (data minimization)', () => {
-    const sim = new Sim({ seed: 1, playerClass: 'warrior', noPlayer: true });
+    const sim = new Sim({ seed: WORLD_SEED, playerClass: 'warrior', noPlayer: true });
     const pid = sim.addPlayer('warrior', 'Yrsa');
     const e = sim.entities.get(pid)!;
     sim.addItemInstance(
@@ -1125,7 +1126,7 @@ describe('equipped instance wire (eqi)', () => {
     // legendaryRegaliaActive TRUE on the Sim entity's own mirror, then TRUE
     // again on the ClientWorld mirror decoded from the same wireEntity
     // record, so the both-hosts claim is measured, not argued.
-    const sim = new Sim({ seed: 1, playerClass: 'warrior', noPlayer: true });
+    const sim = new Sim({ seed: WORLD_SEED, playerClass: 'warrior', noPlayer: true });
     const pid = sim.addPlayer('warrior', 'Sunwrought');
     const e = sim.entities.get(pid)!;
     sim.addItemInstance(
@@ -1145,7 +1146,7 @@ describe('equipped instance wire (eqi)', () => {
     // masterwork one and the un-aimed equip's pick order would decide the
     // arm): a plain masterwork roll glows on NEITHER host (the predicate
     // keys on rolled.quality alone).
-    const sim2 = new Sim({ seed: 1, playerClass: 'warrior', noPlayer: true });
+    const sim2 = new Sim({ seed: WORLD_SEED, playerClass: 'warrior', noPlayer: true });
     const pid2 = sim2.addPlayer('warrior', 'Plainwrought');
     const e2 = sim2.entities.get(pid2)!;
     sim2.addItemInstance('eastbrook_ritual_vestments', structuredClone(inst), pid2);

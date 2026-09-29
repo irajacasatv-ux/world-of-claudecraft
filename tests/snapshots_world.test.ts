@@ -22,6 +22,7 @@ import { petOf, serializePet, summonPet } from '../src/sim/pet/pet_commands';
 import { Sim } from '../src/sim/sim';
 import { terrainHeight } from '../src/sim/world';
 import { WORLD_BOSSES, worldBossLockoutId } from '../src/sim/world_boss';
+import { WORLD_SEED } from '../src/sim/world_seed';
 import {
   bareClient,
   broadcast,
@@ -886,7 +887,7 @@ describe('negotiated Warlock pet-special wire v1', () => {
 
   it('disarms a legacy restored special pet before the first server tick', () => {
     const source = new Sim({
-      seed: 991,
+      seed: WORLD_SEED,
       playerClass: 'warlock',
       noPlayer: true,
     });
