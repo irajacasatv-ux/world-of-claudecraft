@@ -46,7 +46,9 @@ function installIdleStub(): IdleStub {
 
 async function microtasks(): Promise<void> {
   // a few macrotask turns so chained `await idleSlot()` continuations run
-  for (let i = 0; i < 4; i++) await new Promise((r) => setTimeout(r, 0));
+  // (setImmediate turns: a zero-delay timer is clamped to a millisecond, and
+  // a full-grid drive takes hundreds of these turns)
+  for (let i = 0; i < 4; i++) await new Promise((r) => setImmediate(r));
 }
 
 async function driveToComplete(view: FarTerrainView, stub: IdleStub): Promise<void> {
