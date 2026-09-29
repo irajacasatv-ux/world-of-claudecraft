@@ -8,9 +8,10 @@ import { TOOL_RECHARGE_CAST_DURATION_SEC } from '../src/sim/content/professions'
 import { type PlayerMeta, Sim } from '../src/sim/sim';
 import { type Entity, type SimEvent, TOOL_RECHARGE_CAST_ID } from '../src/sim/types';
 import { completeRechargeCast, runRecharge } from './helpers/enchant_family_cast';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 function makeSim(seed = 11): Sim {
-  return new Sim({ seed, playerClass: 'warrior', autoEquip: false });
+  return new Sim({ seed, playerClass: 'warrior', autoEquip: false, world: EMPTY_TEST_WORLD });
 }
 
 function metaOf(sim: Sim): PlayerMeta {

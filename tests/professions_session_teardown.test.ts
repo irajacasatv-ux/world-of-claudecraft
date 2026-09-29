@@ -20,11 +20,12 @@ import { Sim } from '../src/sim/sim';
 import { moveToGraveyardForUnstuck } from '../src/sim/spirit';
 import { type Entity, FISHING_CAST_ID, GATHER_CAST_ID } from '../src/sim/types';
 import { terrainHeight } from '../src/sim/world';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const NODE = GATHER_NODES[0]; // ore_eastbrook_1, tier 1
 
 function makeSim(seed = 4242): Sim {
-  return new Sim({ seed, playerClass: 'warrior', autoEquip: true });
+  return new Sim({ seed, playerClass: 'warrior', autoEquip: true, world: EMPTY_TEST_WORLD });
 }
 
 function teleportTo(sim: Sim, pid: number, x: number, z: number): void {
@@ -405,7 +406,13 @@ describe('a denied rift entry is not a displacement', () => {
     // cancelProfessionSessionOnDisplacement call: a denied entrant was
     // never displaced, so the cancel must NOT run. Fill the per-event cap,
     // then have a live gatherer knock on the full pool.
-    const sim = new Sim({ seed: 4242, playerClass: 'warrior', autoEquip: true, riftPortals: true });
+    const sim = new Sim({
+      seed: 4242,
+      playerClass: 'warrior',
+      autoEquip: true,
+      riftPortals: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const pid = sim.playerId;
     const fillers = Array.from({ length: RIFT_EVENT_INSTANCE_CAP }, (_, index) =>
       sim.addPlayer('warrior', `Rifter${index}`),

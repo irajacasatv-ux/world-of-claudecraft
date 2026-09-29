@@ -10,9 +10,10 @@ import {
   skillInCraft,
 } from '../src/sim/professions/wheel';
 import { Sim } from '../src/sim/sim';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 function makeSim(seed = 42) {
-  return new Sim({ seed, playerClass: 'warrior', autoEquip: false });
+  return new Sim({ seed, playerClass: 'warrior', autoEquip: false, world: EMPTY_TEST_WORLD });
 }
 
 function grantItem(sim: Sim, itemId: string, count: number, pid: number) {

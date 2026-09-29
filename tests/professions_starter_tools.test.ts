@@ -23,6 +23,7 @@ import { acceptQuest } from '../src/sim/quests/quest_commands';
 import { Sim } from '../src/sim/sim';
 import type { Entity, QuestDef } from '../src/sim/types';
 import { terrainHeight } from '../src/sim/world';
+import { worldWithOnlyNpcs } from './helpers/npc_world';
 
 type AnySim = Sim & Record<string, any>;
 type AnyEntity = Entity & Record<string, any>;
@@ -48,6 +49,15 @@ const HIGHER_TIER_TOOLS = [
   'silverleaf_sickle',
   'bronze_hoe',
 ] as const;
+
+// The world keeps only the NPCs the cases walk to: the four quest givers, the
+// vendor, and the Merchant.
+const STARTER_TOOL_NPC_IDS = [
+  ...GATHER_QUEST_IDS.map((questId) => QUESTS[questId].giverNpcId),
+  'trader_wilkes',
+  'the_merchant',
+];
+const STARTER_TOOL_WORLD = worldWithOnlyNpcs(...STARTER_TOOL_NPC_IDS);
 
 /** The gathering profession whose tool clears a node type's gate. */
 function professionForNodeType(nodeType: string): GatheringProfessionId {
@@ -82,7 +92,12 @@ function findNpc(sim: AnySim, templateId: string): AnyEntity {
 
 /** A sim with the player standing on the quest's giver, ready to accept. */
 function simAtGiver(questId: string): { sim: AnySim; pid: number; meta: any } {
-  const sim = new Sim({ seed: 7, playerClass: 'warrior', autoEquip: false }) as AnySim;
+  const sim = new Sim({
+    seed: 7,
+    playerClass: 'warrior',
+    autoEquip: false,
+    world: STARTER_TOOL_WORLD,
+  }) as AnySim;
   const pid = sim.playerId;
   const player = sim.entities.get(pid) as AnyEntity;
   const giver = findNpc(sim, QUESTS[questId].giverNpcId);

@@ -18,6 +18,7 @@ import {
   WORK_ORDER_PAYOUT_FRACTION,
 } from '../src/sim/professions/cadence';
 import { Sim } from '../src/sim/sim';
+import { worldWithOnlyNpcs } from './helpers/npc_world';
 
 // questId -> the seated master who gives and takes it (content). The
 // material id, count, and reward are all read from LIVE data below, never
@@ -34,8 +35,11 @@ const WORK_ORDERS: { questId: string; master: string }[] = [
   { questId: 'q_prof_workorder_apothecary', master: 'alchemist_verane' },
 ];
 
+// The world keeps only the masters who give and take the orders.
+const MASTERS_WORLD = worldWithOnlyNpcs(...WORK_ORDERS.map(({ master }) => master));
+
 function makeSim(seed = 4411): Sim {
-  return new Sim({ seed, playerClass: 'warrior', autoEquip: true });
+  return new Sim({ seed, playerClass: 'warrior', autoEquip: true, world: MASTERS_WORLD });
 }
 
 function moveToNpc(sim: Sim, templateId: string, pid = sim.playerId): void {

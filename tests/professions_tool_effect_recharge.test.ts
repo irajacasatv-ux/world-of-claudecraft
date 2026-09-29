@@ -29,8 +29,10 @@ import { type PlayerMeta, Sim } from '../src/sim/sim';
 import type { SimEvent } from '../src/sim/types';
 import { runRecharge } from './helpers/enchant_family_cast';
 import { reagentUnitValue } from './helpers/reagent_unit_value';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
-const makeSim = (seed = 11) => new Sim({ seed, playerClass: 'warrior', autoEquip: false });
+const makeSim = (seed = 11) =>
+  new Sim({ seed, playerClass: 'warrior', autoEquip: false, world: EMPTY_TEST_WORLD });
 const metaOf = (sim: Sim): PlayerMeta => sim.meta(sim.playerId) as PlayerMeta;
 
 /** Slot a self-crafted charm onto mining with the given pick carried. */

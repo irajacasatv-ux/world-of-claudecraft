@@ -17,9 +17,13 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Sim } from '../src/sim/sim';
 import type { Entity } from '../src/sim/types';
 import { groundHeight } from '../src/sim/world';
+import { worldWithOnlyNpcs } from './helpers/npc_world';
+
+// Every case trades at the Merchant, so the world keeps only her.
+const MERCHANT_WORLD = worldWithOnlyNpcs('the_merchant');
 
 function makeWorld() {
-  return new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+  return new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true, world: MERCHANT_WORLD });
 }
 
 function merchant(sim: Sim): Entity {

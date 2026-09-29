@@ -23,6 +23,7 @@ import {
 import { Sim } from '../src/sim/sim';
 import type { SimEvent } from '../src/sim/types';
 import { runCraft } from './helpers/enchant_family_cast';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // alchemy -> apothecary (station_highwatch_apothecary, zone 3); the deny
 // arms and the happy path all train this trainer-taught combo recipe.
@@ -33,7 +34,7 @@ const ALCH_COMBO_ID = 'recipe_volatile_flux_elixir';
 const FIELD_POS = { x: 0, z: 150 };
 
 function makeSim(seed = 42) {
-  return new Sim({ seed, playerClass: 'warrior', autoEquip: false });
+  return new Sim({ seed, playerClass: 'warrior', autoEquip: false, world: EMPTY_TEST_WORLD });
 }
 
 function metaOf(sim: Sim, pid: number) {

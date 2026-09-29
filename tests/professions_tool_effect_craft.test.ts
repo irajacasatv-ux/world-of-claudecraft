@@ -31,9 +31,10 @@ import { slotToolEffectRefused } from '../src/sim/professions/tools';
 import { resolveTrain, trainingStationTypeFor } from '../src/sim/professions/training';
 import { Sim } from '../src/sim/sim';
 import type { ItemDef } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 function makeSim(seed = 42) {
-  return new Sim({ seed, playerClass: 'warrior', autoEquip: false });
+  return new Sim({ seed, playerClass: 'warrior', autoEquip: false, world: EMPTY_TEST_WORLD });
 }
 
 function metaOf(sim: Sim, pid: number) {
