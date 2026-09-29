@@ -10,9 +10,18 @@ import { describe, expect, it } from 'vitest';
 import { ITEMS } from '../src/sim/data';
 import { Sim } from '../src/sim/sim';
 import type { Aura, Entity, SimEvent } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
+// Every case drinks and reads on the player alone, so the empty world serves:
+// the overworld built and ticked around each five-second tick-down bought
+// nothing.
 function playerWorld() {
-  const sim = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+  const sim = new Sim({
+    seed: 42,
+    playerClass: 'warrior',
+    noPlayer: true,
+    world: EMPTY_TEST_WORLD,
+  });
   const pid = sim.addPlayer('warrior', 'Aleph');
   sim.tick();
   const p = sim.entities.get(pid)! as Entity;
