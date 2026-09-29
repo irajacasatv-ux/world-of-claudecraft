@@ -14,7 +14,9 @@ describe('owned-class level 20 balance harness (healer contract)', () => {
   it(
     'keeps each healer build inside its seed-averaged role and mana contract',
     () => {
-      const spiritmendSingle = averageOwnedHealerProbe('spiritmend', 1, BALANCE_SEEDS);
+      // No single-target Spiritmend run here: its one assertion (hps above zero)
+      // is held per run, one and three allies, by every spec's first case in
+      // tests/owned_class_balance_healer_probes.test.ts, which rides the same lane.
       const spiritmendGroup = averageOwnedHealerProbe('spiritmend', 3, BALANCE_SEEDS);
       const doctrineSingle = averageOwnedHealerProbe('doctrine', 1, BALANCE_SEEDS);
       const doctrineGroup = averageOwnedHealerProbe('doctrine', 3, BALANCE_SEEDS);
@@ -49,7 +51,6 @@ describe('owned-class level 20 balance harness (healer contract)', () => {
         doctrineGroup.hps + doctrineGroup.dps + doctrineGroup.absorbedDamage / 60,
       ).toBeGreaterThanOrEqual(band(120, 110));
       expect(doctrineGroup.resourceEnd).toBeGreaterThanOrEqual(150);
-      expect(spiritmendSingle.hps).toBeGreaterThan(0);
       // Same owned-class matrix growth as the DPS metric test in
       // owned_class_balance_dps_metrics, same long-sims lane contention
       // doubling; the diet runs two of the five seeds (~50s measured local).

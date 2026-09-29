@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   OWNED_CLASS_BALANCE_SCENARIOS,
+  type OwnedClassBalanceResult,
   runOwnedClassDpsProbe,
   runWarspiritOfftankProbe,
 } from '../scripts/owned_class_balance_probe';
@@ -8,18 +9,27 @@ import {
 // Part of the owned-class level 20 balance family (docs/qa-gate.md, "The
 // long-sims lanes"). This file reads no diet flag: its probes run the same
 // configuration at PR time and nightly.
+
+// The sustained single-target Fieldcraft run at the Bloodhook seed, paid once per
+// file: the Bloodhook case reads it, and the determinism case re-runs the same
+// fixture against it (a determinism check reuses its first run instead of paying
+// two runs at a seed nothing else builds).
+let fieldcraftRun: OwnedClassBalanceResult | undefined;
+const fieldcraftSustained = (): OwnedClassBalanceResult =>
+  (fieldcraftRun ??= runOwnedClassDpsProbe('fieldcraft', OWNED_CLASS_BALANCE_SCENARIOS[1], 29_902));
+
 describe('owned-class level 20 balance harness (DPS probes)', () => {
   it('is deterministic at the same fixed seed and fixture', () => {
-    const scenario = OWNED_CLASS_BALANCE_SCENARIOS[3];
-    expect(runOwnedClassDpsProbe('fieldcraft', scenario, 29_901)).toEqual(
-      runOwnedClassDpsProbe('fieldcraft', scenario, 29_901),
+    const first = fieldcraftSustained();
+    expect(runOwnedClassDpsProbe('fieldcraft', OWNED_CLASS_BALANCE_SCENARIOS[1], 29_902)).toEqual(
+      first,
     );
   }, 120_000);
 
   it('pins a Fieldcraft sustained-damage ceiling against the ranged Hunter specs and pays Bloodhook', () => {
     const scenario = OWNED_CLASS_BALANCE_SCENARIOS[1];
     const coldsight = runOwnedClassDpsProbe('coldsight', scenario, 29_902);
-    const fieldcraft = runOwnedClassDpsProbe('fieldcraft', scenario, 29_902);
+    const fieldcraft = fieldcraftSustained();
     const woundDamage = fieldcraft.damageBySource['Bloodhook Wound'] ?? 0;
 
     // Band widened for the stacked v0.29 rogue redesign (#2328): its shared

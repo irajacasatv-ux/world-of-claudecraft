@@ -1,12 +1,23 @@
 import { describe, expect, it } from 'vitest';
-import { runOwnedHealerProbe } from '../scripts/owned_class_balance_probe';
+import {
+  type OwnedHealerBalanceResult,
+  runOwnedHealerProbe,
+} from '../scripts/owned_class_balance_probe';
 
 // Part of the owned-class level 20 balance family (docs/qa-gate.md, "The
 // long-sims lanes"). This file reads no diet flag: its probes run the same
 // configuration at PR time and nightly.
+
+// The three-ally Groveheart run at the contract seed, run once per file: the
+// heal-over-time case reads its healing profile and the contract case its hps,
+// so the file pays one three-ally Groveheart probe, not one per case at two seeds.
+let groupRun: OwnedHealerBalanceResult | undefined;
+const groveheartGroup = (): OwnedHealerBalanceResult =>
+  (groupRun ??= runOwnedHealerProbe('groveheart', 3, 29_914));
+
 describe('owned-class level 20 balance harness (Groveheart)', () => {
   it('counts Groveheart heal-over-time ticks in the effective-healing profile', () => {
-    const groveheart = runOwnedHealerProbe('groveheart', 3, 29_913);
+    const groveheart = groveheartGroup();
 
     expect(groveheart.healingBySource.Wildbloom).toBeGreaterThan(0);
     expect(groveheart.hps).toBeGreaterThan(0);
@@ -33,7 +44,7 @@ describe('owned-class level 20 balance harness (Groveheart)', () => {
     const groupPeers = (['spiritmend', 'doctrine', 'benison'] as const).map(
       (spec) => runOwnedHealerProbe(spec, 3, 29_914).hps,
     );
-    const group = runOwnedHealerProbe('groveheart', 3, 29_914).hps;
+    const group = groveheartGroup().hps;
     expect(group).toBeGreaterThanOrEqual(Math.min(...groupPeers) * 0.45);
     expect(group).toBeLessThanOrEqual(Math.max(...groupPeers) * 1.15);
 

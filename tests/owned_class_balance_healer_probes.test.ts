@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
   OWNED_CLASS_PBE_TALENTS,
+  type OwnedHealerBalanceResult,
+  type OwnedHealerSpec,
   runOwnedHealerProbe,
   runWarspiritOfftankProbe,
 } from '../scripts/owned_class_balance_probe';
@@ -9,12 +11,29 @@ import { Sim } from '../src/sim/sim';
 // Part of the owned-class level 20 balance family (docs/qa-gate.md, "The
 // long-sims lanes"). This file reads no diet flag: its probes run the same
 // configuration at PR time and nightly.
+
+// Every probe here runs at one seed, and each fixed profile run is paid once per
+// file: the profile case records all eight, the Priest pressure case reads the
+// three-ally Doctrine and Benison runs, and the determinism case re-runs one
+// against its first run (a determinism check reuses its first run).
+const PROBE_SEED = 29_910;
+const profileRuns = new Map<string, OwnedHealerBalanceResult>();
+function profileRun(spec: OwnedHealerSpec, allies: 1 | 3): OwnedHealerBalanceResult {
+  const key = `${spec}:${allies}`;
+  let run = profileRuns.get(key);
+  if (!run) {
+    run = runOwnedHealerProbe(spec, allies, PROBE_SEED, 'test-head');
+    profileRuns.set(key, run);
+  }
+  return run;
+}
+
 describe('owned-class level 20 balance harness (healer probes)', () => {
   it.each(['spiritmend', 'doctrine', 'benison', 'groveheart'] as const)(
     'records the fixed one-ally and three-ally %s healing profiles',
     (spec) => {
       for (const allies of [1, 3] as const) {
-        const result = runOwnedHealerProbe(spec, allies, 29_910, 'test-head');
+        const result = profileRun(spec, allies);
         expect(result.head).toBe('test-head');
         expect(result.effectiveHealing).toBeGreaterThan(0);
         expect(result.hps).toBe(result.effectiveHealing / result.seconds);
@@ -38,8 +57,8 @@ describe('owned-class level 20 balance harness (healer probes)', () => {
   );
 
   it('runs Priest healer pressure through shields and Seraphic Vigil', () => {
-    const doctrine = runOwnedHealerProbe('doctrine', 3, 29_912);
-    const benison = runOwnedHealerProbe('benison', 3, 29_912);
+    const doctrine = profileRun('doctrine', 3);
+    const benison = profileRun('benison', 3);
 
     expect(doctrine.absorbedDamage).toBeGreaterThan(0);
     // The pressure run must still WEAVE the Vigil into the rotation; whether
@@ -51,7 +70,7 @@ describe('owned-class level 20 balance harness (healer probes)', () => {
     // The trigger contract, exercised directly: ward an ally, drop them below
     // the 35% threshold with one hit, and the consumed Vigil pays its heal as
     // an attributable Seraphic Vigil healing event.
-    const sim = new Sim({ seed: 29_912, playerClass: 'priest', autoEquip: true }) as Sim & {
+    const sim = new Sim({ seed: PROBE_SEED, playerClass: 'priest', autoEquip: true }) as Sim & {
       drainEvents(): { type: string; ability?: string; amount?: number }[];
       ctx: {
         dealDamage(
@@ -93,9 +112,8 @@ describe('owned-class level 20 balance harness (healer probes)', () => {
   }, 120_000);
 
   it('keeps role probes deterministic at the same fixed seed', () => {
-    expect(runOwnedHealerProbe('spiritmend', 3, 29_911)).toEqual(
-      runOwnedHealerProbe('spiritmend', 3, 29_911),
-    );
-    expect(runWarspiritOfftankProbe(29_921)).toEqual(runWarspiritOfftankProbe(29_921));
+    const first = profileRun('spiritmend', 3);
+    expect(runOwnedHealerProbe('spiritmend', 3, PROBE_SEED, 'test-head')).toEqual(first);
+    expect(runWarspiritOfftankProbe(PROBE_SEED)).toEqual(runWarspiritOfftankProbe(PROBE_SEED));
   }, 120_000);
 });
