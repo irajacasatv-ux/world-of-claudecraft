@@ -20,9 +20,17 @@ import {
 } from '../src/sim/paladin_devotion';
 import { type ResolvedAbility, Sim } from '../src/sim/sim';
 import type { Entity } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
+// Every case fights a wolf it places itself (or none), so the rig stands on the
+// empty world.
 function rig(rows: Record<number, string>, spec: string | null = null) {
-  const sim = new Sim({ seed: 91, playerClass: 'paladin', autoEquip: true });
+  const sim = new Sim({
+    seed: 91,
+    playerClass: 'paladin',
+    autoEquip: true,
+    world: EMPTY_TEST_WORLD,
+  });
   sim.setPlayerLevel(20);
   expect(sim.applyTalents({ spec, rows })).toBe(true);
   sim.player.resource = sim.player.maxResource;
