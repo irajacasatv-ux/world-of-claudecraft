@@ -11,9 +11,13 @@ import {
 } from '../src/sim/spell_scaling';
 import type { Entity, PlayerClass } from '../src/sim/types';
 import { MAX_LEVEL, SPELL_POWER_PER_INT } from '../src/sim/types';
+import { rngWithFirstDraws } from './helpers/forced_rng';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
+// Every case reads a leveled player or fights a dummy it spawns beside them,
+// so the Sims run on the empty world.
 function leveled(cls: PlayerClass, level = MAX_LEVEL) {
-  const sim = new Sim({ seed: 7, playerClass: 'warrior', noPlayer: true });
+  const sim = new Sim({ seed: 7, playerClass: 'warrior', noPlayer: true, world: EMPTY_TEST_WORLD });
   const pid = sim.addPlayer(cls, 'Tester');
   sim.setPlayerLevel(level, pid);
   sim.tick();
@@ -183,6 +187,10 @@ describe('Spell Power end-to-end through the sim', () => {
     // The dummy is only ever hit by our single Frostbolt (the wolf swings at the
     // mage, not the dummy), so its HP delta IS the spell's damage.
     const before = dummy.hp;
+    // The bolt rides its hit and crit rolls: force the first draws after the cast
+    // into the middle band, so it lands without a crit instead of riding a seed.
+    const midBand = (value: number) => value >= 0.3 && value <= 0.9;
+    sim.rng = rngWithFirstDraws(midBand, midBand, midBand, midBand, midBand, midBand);
     sim.castAbility('frostbolt', p.id);
     for (let i = 0; i < 80 && dummy.hp === before; i++) sim.tick();
     const dealt = before - dummy.hp;
