@@ -76,8 +76,17 @@ function addWithoutAutoEquip(sim: Sim, itemId: string, count = 1): void {
   sim.addItem(itemId, count);
 }
 
-function makeFuryWarrior(seed: number): Sim {
-  const sim = new Sim({ seed, playerClass: 'warrior', autoEquip: true, world: EMPTY_TEST_WORLD });
+// One seed for every Sim in the file: a seed the file has already built reuses
+// its world, and no case here depends on which seed it runs.
+const SEED = 9001;
+
+function makeFuryWarrior(): Sim {
+  const sim = new Sim({
+    seed: SEED,
+    playerClass: 'warrior',
+    autoEquip: true,
+    world: EMPTY_TEST_WORLD,
+  });
   sim.setPlayerLevel(20);
   expect(sim.setSpec('fury')).toBe(true);
   return sim;
@@ -166,7 +175,7 @@ describe('unique-equipped pure rules (equipment_rules)', () => {
 
 describe('unique-equipped enforcement (equipItem)', () => {
   it('refuses a second worn copy of the same legendary weapon', () => {
-    const sim = makeFuryWarrior(9001);
+    const sim = makeFuryWarrior();
     addWithoutAutoEquip(sim, 'kingsbane_last_oath', 2);
 
     sim.equipItemToSlot('kingsbane_last_oath', 'mainhand');
@@ -184,7 +193,7 @@ describe('unique-equipped enforcement (equipItem)', () => {
   });
 
   it('refuses an aimed-slot duplicate too', () => {
-    const sim = makeFuryWarrior(9002);
+    const sim = makeFuryWarrior();
     addWithoutAutoEquip(sim, 'kingsbane_last_oath', 2);
 
     sim.equipItemToSlot('kingsbane_last_oath', 'mainhand');
@@ -198,7 +207,7 @@ describe('unique-equipped enforcement (equipItem)', () => {
   });
 
   it('refuses the heroic variant of a worn legendary (same family)', () => {
-    const sim = makeFuryWarrior(9010);
+    const sim = makeFuryWarrior();
     addWithoutAutoEquip(sim, 'kingsbane_last_oath');
     addWithoutAutoEquip(sim, 'heroic_kingsbane_last_oath');
 
@@ -213,7 +222,7 @@ describe('unique-equipped enforcement (equipItem)', () => {
   });
 
   it('refuses a Titan Grip pair of the same legendary two-hander', () => {
-    const sim = makeFuryWarrior(9011);
+    const sim = makeFuryWarrior();
     addWithoutAutoEquip(sim, TWOHAND_ID, 2);
 
     sim.equipItem(TWOHAND_ID);
@@ -230,7 +239,7 @@ describe('unique-equipped enforcement (equipItem)', () => {
   });
 
   it('refuses the second copy of a legendary ring on the free finger', () => {
-    const sim = makeFuryWarrior(9012);
+    const sim = makeFuryWarrior();
     addWithoutAutoEquip(sim, RING_ID, 2);
 
     sim.equipItem(RING_ID);
@@ -251,7 +260,7 @@ describe('unique-equipped enforcement (equipItem)', () => {
   });
 
   it('allows two different legendaries worn together', () => {
-    const sim = makeFuryWarrior(9003);
+    const sim = makeFuryWarrior();
     addWithoutAutoEquip(sim, 'kingsbane_last_oath');
     addWithoutAutoEquip(sim, 'voidsong_dirk');
 
@@ -263,7 +272,7 @@ describe('unique-equipped enforcement (equipItem)', () => {
   });
 
   it('allows replacing a worn legendary with another copy in the same slot', () => {
-    const sim = makeFuryWarrior(9004);
+    const sim = makeFuryWarrior();
     addWithoutAutoEquip(sim, 'kingsbane_last_oath', 2);
 
     sim.equipItemToSlot('kingsbane_last_oath', 'mainhand');
@@ -277,7 +286,7 @@ describe('unique-equipped enforcement (equipItem)', () => {
   });
 
   it('keeps a non-legendary same-id Titan Grip pair legal', () => {
-    const sim = makeFuryWarrior(9005);
+    const sim = makeFuryWarrior();
     addWithoutAutoEquip(sim, 'eastbrook_greatsword', 2);
 
     sim.equipItem('eastbrook_greatsword');
@@ -288,7 +297,7 @@ describe('unique-equipped enforcement (equipItem)', () => {
   });
 
   it('auto-equip skips a duplicate legendary silently', () => {
-    const sim = makeFuryWarrior(9013);
+    const sim = makeFuryWarrior();
     // autoEquip stays on: the first ring auto-equips into the empty ring1, the
     // second copy must be skipped with no refusal toast (auto-equip is a
     // convenience; the explicit equip path owns the error).
@@ -306,13 +315,13 @@ describe('unique-equipped enforcement (equipItem)', () => {
 
 describe('unique-equipped load-time demotion', () => {
   it('benches a persisted duplicate legendary into the bags on load, and says so', () => {
-    const sim = makeFuryWarrior(9006);
+    const sim = makeFuryWarrior();
     const state = sim.serializeCharacter(sim.playerId)!;
     state.equipment.mainhand = 'kingsbane_last_oath';
     state.equipment.offhand = 'kingsbane_last_oath';
 
     const sim2 = new Sim({
-      seed: 9007,
+      seed: SEED,
       playerClass: 'warrior',
       noPlayer: true,
       world: EMPTY_TEST_WORLD,
@@ -330,13 +339,13 @@ describe('unique-equipped load-time demotion', () => {
   });
 
   it('benches a persisted heroic duplicate of the same family', () => {
-    const sim = makeFuryWarrior(9014);
+    const sim = makeFuryWarrior();
     const state = sim.serializeCharacter(sim.playerId)!;
     state.equipment.mainhand = 'kingsbane_last_oath';
     state.equipment.offhand = 'heroic_kingsbane_last_oath';
 
     const sim2 = new Sim({
-      seed: 9015,
+      seed: SEED,
       playerClass: 'warrior',
       noPlayer: true,
       world: EMPTY_TEST_WORLD,
@@ -350,7 +359,7 @@ describe('unique-equipped load-time demotion', () => {
   });
 
   it('keeps the worn instance payload and moves the benched one into the bag row', () => {
-    const sim = makeFuryWarrior(9016);
+    const sim = makeFuryWarrior();
     const state = sim.serializeCharacter(sim.playerId)!;
     state.equipment.mainhand = 'kingsbane_last_oath';
     state.equipment.offhand = 'kingsbane_last_oath';
@@ -360,7 +369,7 @@ describe('unique-equipped load-time demotion', () => {
     };
 
     const sim2 = new Sim({
-      seed: 9017,
+      seed: SEED,
       playerClass: 'warrior',
       noPlayer: true,
       world: EMPTY_TEST_WORLD,
@@ -382,7 +391,7 @@ describe('unique-equipped load-time demotion', () => {
     // bumps wrote rolled.quality; they never carry `perfected`) are NOT
     // retroactively captured, and a live character legally wearing two such
     // copies is not silently benched at the next login.
-    const sim = makeFuryWarrior(9018);
+    const sim = makeFuryWarrior();
     const state = sim.serializeCharacter(sim.playerId)!;
     state.equipment.ring1 = EPIC_RING_ID;
     state.equipment.ring2 = EPIC_RING_ID;
@@ -392,7 +401,7 @@ describe('unique-equipped load-time demotion', () => {
     };
 
     const sim2 = new Sim({
-      seed: 9019,
+      seed: SEED,
       playerClass: 'warrior',
       noPlayer: true,
       world: EMPTY_TEST_WORLD,
@@ -407,7 +416,7 @@ describe('unique-equipped load-time demotion', () => {
   });
 
   it('benches a PROMOTED duplicate of one epic def on load (perfected + legendary-rolled)', () => {
-    const sim = makeFuryWarrior(9020);
+    const sim = makeFuryWarrior();
     const state = sim.serializeCharacter(sim.playerId)!;
     state.equipment.ring1 = EPIC_RING_ID;
     state.equipment.ring2 = EPIC_RING_ID;
@@ -417,7 +426,7 @@ describe('unique-equipped load-time demotion', () => {
     };
 
     const sim2 = new Sim({
-      seed: 9021,
+      seed: SEED,
       playerClass: 'warrior',
       noPlayer: true,
       world: EMPTY_TEST_WORLD,
@@ -434,13 +443,13 @@ describe('unique-equipped load-time demotion', () => {
   });
 
   it('loads two different persisted legendaries untouched', () => {
-    const sim = makeFuryWarrior(9008);
+    const sim = makeFuryWarrior();
     const state = sim.serializeCharacter(sim.playerId)!;
     state.equipment.mainhand = 'kingsbane_last_oath';
     state.equipment.offhand = 'voidsong_dirk';
 
     const sim2 = new Sim({
-      seed: 9009,
+      seed: SEED,
       playerClass: 'warrior',
       noPlayer: true,
       world: EMPTY_TEST_WORLD,
