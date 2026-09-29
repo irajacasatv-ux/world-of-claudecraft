@@ -30,9 +30,13 @@ import { Sim } from '../src/sim/sim';
 import type { SimContext } from '../src/sim/sim_context';
 import { abilityScalingPower, channelTickBonus } from '../src/sim/spell_scaling';
 import { CAST_QUEUE_WINDOW_SEC, type Entity, type SimEvent } from '../src/sim/types';
-import { en } from '../src/ui/i18n.resolved.generated';
+import { en } from '../src/ui/i18n.resolved.generated/en';
 import { EMPTY_TEST_WORLD } from './sim_shared';
 
+// One seed for the whole file: a seed's first tick builds its static collider
+// grid (300 to 600 ms even on EMPTY_TEST_WORLD), and the per-case seeds this
+// file used to spread across (about twenty) bought no coverage; every pinned
+// value holds on seed 42. Cases that compare two Sims still build each fresh.
 function makeAffliction(seed = 42): Sim {
   const sim = new Sim({ seed, playerClass: 'warlock', autoEquip: true, world: EMPTY_TEST_WORLD });
   sim.setPlayerLevel(20);
@@ -430,7 +434,7 @@ describe('Affliction Warlock', () => {
 
   it('doubles Maledict Gaze attack speed during Possess the Evil Eye', () => {
     const gazeCount = (possessed: boolean): number => {
-      const sim = makeAffliction(possessed ? 920 : 919);
+      const sim = makeAffliction();
       const target = addTarget(sim, 8);
       finishCast(sim, 'evil_eye', target);
       if (possessed) finishCast(sim, 'possess_evil_eye', target);
@@ -634,7 +638,7 @@ describe('Affliction Warlock', () => {
   });
 
   it('refunds 50 Condemnation from only the first Sentence during Hour of Judgment', () => {
-    const sim = makeAffliction(44);
+    const sim = makeAffliction();
     const target = addTarget(sim, 8);
     finishCast(sim, 'evil_eye', target);
     finishCast(sim, 'hour_of_judgment', target);
@@ -650,7 +654,7 @@ describe('Affliction Warlock', () => {
 
   it('increases Sentence damage by 20% throughout Hour of Judgment', () => {
     const sentenceHit = (judgment: boolean): number => {
-      const sim = makeAffliction(1944);
+      const sim = makeAffliction();
       const target = addTarget(sim, 8);
       finishCast(sim, 'evil_eye', target);
       if (judgment) {
@@ -832,7 +836,7 @@ describe('Affliction Warlock', () => {
 
   it('increases the primary Sentence hit by exactly 25% during Possession', () => {
     const sentenceHit = (possessed: boolean): number => {
-      const sim = makeAffliction(1942);
+      const sim = makeAffliction();
       const target = addTarget(sim, 8);
       finishCast(sim, 'evil_eye', target);
       if (possessed) finishCast(sim, 'possess_evil_eye', target);
@@ -1709,7 +1713,7 @@ describe('Affliction Warlock', () => {
     expect([20, 50, 80, 100].map(sentenceBaseDamage)).toEqual([138, 400, 620, 910]);
     const losses: number[] = [];
     for (const amount of [20, 50, 80, 100]) {
-      const sim = makeAffliction(amount);
+      const sim = makeAffliction();
       const target = addTarget(sim);
       finishCast(sim, 'evil_eye', target);
       gainDoom(ctx(sim), sim.player, amount);
@@ -1757,7 +1761,7 @@ describe('Affliction Warlock', () => {
   it('applies every endgame compression step to real Sentence and demonic echo damage', () => {
     const observed = [17, 18, 19].map((level) => {
       const sim = new Sim({
-        seed: 1900 + level,
+        seed: 42,
         playerClass: 'warlock',
         autoEquip: true,
         world: EMPTY_TEST_WORLD,
@@ -1795,7 +1799,7 @@ describe('Affliction Warlock', () => {
   });
 
   it('routes Sentence through the Evil Eye at 35% of normal threat', () => {
-    const sim = makeAffliction(1943);
+    const sim = makeAffliction();
     const target = addTarget(sim, 8);
     finishCast(sim, 'evil_eye', target);
     gainDoom(ctx(sim), sim.player, 20);
@@ -1816,7 +1820,7 @@ describe('Affliction Warlock', () => {
     const sentenceLoss = (
       threadCount: number,
     ): { loss: number; events: SimEvent[]; sim: Sim; target: Entity } => {
-      const sim = makeAffliction(1931);
+      const sim = makeAffliction();
       const target = addTarget(sim);
       finishCast(sim, 'evil_eye', target);
       for (let thread = 0; thread < threadCount; thread++) {
@@ -1885,7 +1889,7 @@ describe('Affliction Warlock', () => {
   });
 
   it('applies Sentence healing, splash, boss bonus, and normal-enemy execution tiers', () => {
-    const healingSim = makeAffliction(504);
+    const healingSim = makeAffliction();
     const healingTarget = addTarget(healingSim);
     finishCast(healingSim, 'evil_eye', healingTarget);
     healingSim.player.hp = 1;
@@ -1893,7 +1897,7 @@ describe('Affliction Warlock', () => {
     finishCast(healingSim, 'sentence', healingTarget);
     expect(healingSim.player.hp).toBe(52);
 
-    const splashSim = makeAffliction(502);
+    const splashSim = makeAffliction();
     const splashTarget = addTarget(splashSim, 8);
     const nearby = addTarget(splashSim, 12);
     const distant = addTarget(splashSim, 25);
@@ -1905,7 +1909,7 @@ describe('Affliction Warlock', () => {
     expect(nearHp - nearby.hp).toBe(140);
     expect(distant.hp).toBe(farHp);
 
-    const bossSim = makeAffliction(503);
+    const bossSim = makeAffliction();
     const boss = createMob((bossSim as unknown as { nextId: number }).nextId++, MOBS.morthen, 20, {
       x: bossSim.player.pos.x,
       y: bossSim.player.pos.y,
@@ -1935,7 +1939,7 @@ describe('Affliction Warlock', () => {
     expect(boss.hp).toBeLessThan(bossHp);
     expect(bossNearbyHp - bossNearby.hp).toBe(205);
 
-    const executeSim = makeAffliction(504);
+    const executeSim = makeAffliction();
     const executeTarget = addTarget(executeSim);
     finishCast(executeSim, 'evil_eye', executeTarget);
     executeTarget.hp = Math.floor(executeTarget.maxHp * 0.19);
@@ -1957,7 +1961,7 @@ describe('Affliction Warlock', () => {
     // huge remainder of its health pool a long DPS-testing session had ground it down
     // to, instead of Sentence's normal tuned hit, corrupting the very combat meter the
     // dummy exists to let players read.
-    const fullSim = makeAffliction(505);
+    const fullSim = makeAffliction();
     const fullDummy = createMob(
       (fullSim as unknown as { nextId: number }).nextId++,
       MOBS.training_dummy,
@@ -1972,7 +1976,7 @@ describe('Affliction Warlock', () => {
     const normalDealt = fullHpBefore - fullDummy.hp;
     expect(normalDealt).toBeGreaterThan(0);
 
-    const lowSim = makeAffliction(505);
+    const lowSim = makeAffliction();
     const lowDummy = createMob(
       (lowSim as unknown as { nextId: number }).nextId++,
       MOBS.training_dummy,
@@ -2004,7 +2008,7 @@ describe('Affliction Warlock', () => {
 
   it('keeps the level 5 Sentence below its level 20 damage curve', () => {
     const sim = new Sim({
-      seed: 55,
+      seed: 42,
       playerClass: 'warlock',
       autoEquip: true,
       world: EMPTY_TEST_WORLD,
@@ -2222,7 +2226,7 @@ describe('Affliction Warlock', () => {
   });
 
   it('keeps the 100-Condemnation boss bonus out of the Coven echo', () => {
-    const sim = makeAffliction(506);
+    const sim = makeAffliction();
     const boss = createMob((sim as unknown as { nextId: number }).nextId++, MOBS.morthen, 20, {
       x: sim.player.pos.x,
       y: sim.player.pos.y,
