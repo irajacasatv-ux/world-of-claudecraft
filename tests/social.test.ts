@@ -3,9 +3,10 @@
 // neither file carries the whole bill); shared fixtures are in
 // tests/social_shared.ts. Tests here run on the entity-stripped
 // SOCIAL_TEST_WORLD via makeWorld() except the three that fight or loot a
-// live camp wolf, which keep the full built-in world via makeFullWorld().
+// live camp wolf, which run on WOLF_CAMP_WORLD via makeWolfWorld().
 import { describe, expect, it } from 'vitest';
 import {
+  BUILTIN_WORLD,
   CRYPT_SPAWNS,
   DUNGEON_X_THRESHOLD,
   DUNGEONS,
@@ -23,9 +24,30 @@ import {
   type InvSlot,
   type LootSlot,
   type SimEvent,
+  type WorldContent,
 } from '../src/sim/types';
 import type { PartyMemberInfo } from '../src/world_api';
-import { face, makeFullWorld, makeWorld, mustEntity, nearestMob, teleport } from './social_shared';
+import {
+  face,
+  makeWorld,
+  mustEntity,
+  nearestMob,
+  SOCIAL_TEST_WORLD,
+  teleport,
+} from './social_shared';
+
+// The live-wolf cases need the forest wolf camps and the q_wolves giver, and
+// nothing else of the overworld.
+const WOLF_CAMP_WORLD: WorldContent = {
+  ...BUILTIN_WORLD,
+  camps: BUILTIN_WORLD.camps.filter((camp) => camp.mobId === 'forest_wolf'),
+  npcs: { marshal_redbrook: BUILTIN_WORLD.npcs.marshal_redbrook },
+  groundObjects: [],
+};
+
+function makeWolfWorld(): Sim {
+  return new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true, world: WOLF_CAMP_WORLD });
+}
 
 const FRESH_CORPSE_TIMER = 60;
 
@@ -63,7 +85,7 @@ function fillPartyToFive(sim: Sim, leader: number): number[] {
 }
 
 describe('parties', () => {
-  // Pass makeFullWorld() for the tests that hunt a live camp wolf; the default
+  // Pass makeWolfWorld() for the tests that hunt a live camp wolf; the default
   // entity-stripped world covers everything else.
   function makeDuo(sim: Sim = makeWorld()): { sim: Sim; a: number; b: number } {
     const a = sim.addPlayer('warrior', 'Aleph');
@@ -445,7 +467,7 @@ describe('parties', () => {
   });
 
   it('party members share kill xp with the group bonus and quest credit', () => {
-    const { sim, a, b } = makeDuo(makeFullWorld()); // hunts a live camp wolf
+    const { sim, a, b } = makeDuo(makeWolfWorld()); // hunts a live camp wolf
     // both accept the wolf quest
     // Re-pinned 2026-08 for the harbor move (d19aa33f76,
     // docs/design/eastbrook-revamp/site-plan.md): marshal_redbrook (the
@@ -487,7 +509,7 @@ describe('parties', () => {
   });
 
   it("party members may loot each other's tapped kills and split copper", () => {
-    const { sim, a, b } = makeDuo(makeFullWorld()); // hunts a live camp wolf
+    const { sim, a, b } = makeDuo(makeWolfWorld()); // hunts a live camp wolf
     const wolf = nearestMob(sim, 'forest_wolf');
     wolf.hp = 1;
     teleport(sim, a, wolf.pos.x + 2, wolf.pos.z);
@@ -511,7 +533,7 @@ describe('parties', () => {
   });
 
   it('non-party members cannot loot tapped kills', () => {
-    const sim = makeFullWorld(); // hunts a live camp wolf
+    const sim = makeWolfWorld(); // hunts a live camp wolf
     const a = sim.addPlayer('warrior', 'Aleph');
     const c = sim.addPlayer('rogue', 'Gimel');
     const wolf = nearestMob(sim, 'forest_wolf');
@@ -1101,7 +1123,8 @@ describe('the Hollow Crypt', () => {
   });
 
   it('the storyline chain gates the dungeon quest', () => {
-    const sim = new Sim({ seed: 42, playerClass: 'warrior' });
+    // Quest gating reads the quest log alone, so the stripped world serves.
+    const sim = new Sim({ seed: 42, playerClass: 'warrior', world: SOCIAL_TEST_WORLD });
     expect(sim.questState('q_whispers')).toBe('unavailable'); // needs q_bones
     expect(sim.questState('q_rite')).toBe('unavailable');
     expect(sim.questState('q_hollow')).toBe('unavailable');
