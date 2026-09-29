@@ -4,6 +4,7 @@ import { createMob } from '../src/sim/entity';
 import { HEROIC_MIN_MOVE_SPEED } from '../src/sim/instances/difficulty';
 import { Sim } from '../src/sim/sim';
 import type { Aura, Entity } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // Voss (the heroic Nythraxis rogue add) is the raid's CONTROL assignment: he
 // ignores taunt by design, so player crowd control and slows are his entire
@@ -16,8 +17,9 @@ import type { Aura, Entity } from '../src/sim/types';
 const SEED = 777;
 const VOSS = 'nythraxis_heroic_rogue_add';
 
+// Voss is spawned by hand and handed his auras directly, so the empty world serves.
 function makeSim(): Sim {
-  return new Sim({ seed: SEED, playerClass: 'warrior', noPlayer: true });
+  return new Sim({ seed: SEED, playerClass: 'warrior', noPlayer: true, world: EMPTY_TEST_WORLD });
 }
 
 function spawnVoss(sim: Sim): Entity {
