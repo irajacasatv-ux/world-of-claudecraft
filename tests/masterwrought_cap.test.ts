@@ -174,9 +174,18 @@ afterAll(() => {
 
 // EMPTY_TEST_WORLD (the gate-perf trim): every case here is addItem/equip
 // driven against synthetic ids, so no arm reads a camp, npc, or ground
-// object; zones/terrain/playerStart stay identical to the built-in world.
-function makeWarrior(seed: number): Sim {
-  const sim = new Sim({ seed, playerClass: 'warrior', autoEquip: true, world: EMPTY_TEST_WORLD });
+// object; zones/terrain/playerStart stay identical to the built-in world. One
+// seed for every Sim in the file: a seed the file has already built reuses its
+// world, and no case here depends on which seed it runs.
+const SEED = 7101;
+
+function makeWarrior(): Sim {
+  const sim = new Sim({
+    seed: SEED,
+    playerClass: 'warrior',
+    autoEquip: true,
+    world: EMPTY_TEST_WORLD,
+  });
   sim.setPlayerLevel(60);
   return sim;
 }
@@ -184,8 +193,13 @@ function makeWarrior(seed: number): Sim {
 // The shipped-gear R6 cases need a class inside BOTH phase 09 gate lists:
 // shaman sits in the HEAVY melee group (ridgebreaker) and the caster
 // proficiency group (the held offhands).
-function makeShaman(seed: number): Sim {
-  const sim = new Sim({ seed, playerClass: 'shaman', autoEquip: true, world: EMPTY_TEST_WORLD });
+function makeShaman(): Sim {
+  const sim = new Sim({
+    seed: SEED,
+    playerClass: 'shaman',
+    autoEquip: true,
+    world: EMPTY_TEST_WORLD,
+  });
   sim.setPlayerLevel(60);
   return sim;
 }
@@ -543,7 +557,7 @@ describe('masterwrought counted family (pure equipment_rules)', () => {
 
 describe('masterwrought cap enforcement (equipItem)', () => {
   it('wears two flagged pieces and refuses a third', () => {
-    const sim = makeWarrior(7101);
+    const sim = makeWarrior();
     grant(sim, RING_ID);
     grant(sim, AMULET_ID);
     grant(sim, BULWARK_ID);
@@ -564,7 +578,7 @@ describe('masterwrought cap enforcement (equipItem)', () => {
   });
 
   it('refuses a second legendary flagged piece but still takes a plain one', () => {
-    const sim = makeWarrior(7102);
+    const sim = makeWarrior();
     grant(sim, EMBER_ID);
     grant(sim, ASH_ID);
     grant(sim, AMULET_ID);
@@ -588,7 +602,7 @@ describe('masterwrought cap enforcement (equipItem)', () => {
   });
 
   it('allows swapping a flagged piece into an occupied flagged slot at the cap', () => {
-    const sim = makeWarrior(7103);
+    const sim = makeWarrior();
     grant(sim, RING_ID);
     grant(sim, AMULET_ID);
     grant(sim, EMBER_ID);
@@ -606,7 +620,7 @@ describe('masterwrought cap enforcement (equipItem)', () => {
   });
 
   it('counts a flagged two-hander once and does not double count what it displaces', () => {
-    const sim = makeWarrior(7104);
+    const sim = makeWarrior();
     grant(sim, RING_ID);
     grant(sim, BULWARK_ID);
     grant(sim, GREATSWORD_ID);
@@ -633,7 +647,7 @@ describe('masterwrought cap enforcement (equipItem)', () => {
   });
 
   it('auto-equip fills up to the cap and then skips without a toast', () => {
-    const sim = makeWarrior(7108);
+    const sim = makeWarrior();
     // autoEquip stays on: the loot path equips the first two flagged pieces
     // into their empty slots, then must decline the third SILENTLY (auto-equip
     // is a convenience; the explicit equip path owns the refusal).
@@ -650,7 +664,7 @@ describe('masterwrought cap enforcement (equipItem)', () => {
   });
 
   it('lets the unique-equipped rule answer first for a def-legendary duplicate', () => {
-    const sim = makeWarrior(7109);
+    const sim = makeWarrior();
     grant(sim, EMBER_ID, 2);
 
     sim.equipItem(EMBER_ID);
@@ -669,7 +683,7 @@ describe('masterwrought cap enforcement (equipItem)', () => {
   });
 
   it('answers with the cap refusal rather than a bags-full one when both apply', () => {
-    const sim = makeWarrior(7110);
+    const sim = makeWarrior();
     grant(sim, RING_ID);
     grant(sim, AMULET_ID);
     sim.equipItem(RING_ID);
@@ -700,7 +714,7 @@ describe('masterwrought cap enforcement (equipItem)', () => {
   });
 
   it('skips an auto-equip whose carried copy rolled legendary against a legendary worn piece', () => {
-    const sim = makeWarrior(7111);
+    const sim = makeWarrior();
     const meta = sim.meta(sim.playerId)!;
     grant(sim, RING_ID);
     sim.equipItem(RING_ID);
@@ -729,7 +743,7 @@ describe('masterwrought cap enforcement (equipItem)', () => {
     // R16 through the REAL equip path, not just the pure rule: the counted
     // family compares no ids or families, so two copies of one flagged epic
     // fill both fingers with no refusal.
-    const sim = makeWarrior(7113);
+    const sim = makeWarrior();
     grant(sim, RING_ID, 2);
 
     sim.equipItemToSlot(RING_ID, 'ring1');
@@ -747,7 +761,7 @@ describe('masterwrought cap with the shipped phase 09 gear (R6)', () => {
   // def change that alters how the counted family reads a shipped piece
   // (slot, hand, occupiesHand, the flag itself) reds here, not only there.
   it('wears the flagged two-hander beside one flagged piece and refuses a third', () => {
-    const sim = makeWarrior(7116);
+    const sim = makeWarrior();
     grant(sim, 'ridgebreaker');
     grant(sim, 'wyrmfall_pendant');
     grant(sim, 'warhewn_signet');
@@ -769,7 +783,7 @@ describe('masterwrought cap with the shipped phase 09 gear (R6)', () => {
   });
 
   it('the two-hander benches a flagged HELD offhand, which then stops counting', () => {
-    const sim = makeShaman(7117);
+    const sim = makeShaman();
     grant(sim, 'gyrelens_array');
     grant(sim, 'wyrmfall_pendant');
     grant(sim, 'ridgebreaker');
@@ -806,7 +820,7 @@ describe('masterwrought cap with the shipped phase 09 gear (R6)', () => {
     // 2H equip does NOT bench it, and the counted family keeps counting it.
     // The pair therefore sits AT the cap; freeing the slot is the player's
     // move, never the rule's side effect.
-    const sim = makeWarrior(7118);
+    const sim = makeWarrior();
     grant(sim, WORN_OFFHAND_ID);
     grant(sim, 'ridgebreaker');
     grant(sim, RING_ID);
@@ -854,7 +868,7 @@ describe('masterwrought content shape', () => {
 
 describe('masterwrought sub-cap reads the copy being worn', () => {
   it('refuses a carried legendary roll of an epic piece and equips the plain copy', () => {
-    const sim = makeWarrior(7105);
+    const sim = makeWarrior();
     const meta = sim.meta(sim.playerId)!;
     meta.autoEquip = false;
     grant(sim, EMBER_ID);
@@ -897,7 +911,7 @@ describe('masterwrought sub-cap reads the copy being worn', () => {
     // tests/orange_promotion.test.ts). The BEHAVIOR here still holds: the
     // rolled copy equips BESIDE A PLAIN COPY of its own id, and once worn
     // its live payload is what the sub-cap counts.
-    const sim = makeWarrior(7112);
+    const sim = makeWarrior();
     grant(sim, RING_ID);
     sim.equipItemToSlot(RING_ID, 'ring1');
     sim.tick();
@@ -924,7 +938,7 @@ describe('masterwrought sub-cap reads the copy being worn', () => {
     // peek judged the highest-index copy, so naming a promoted copy sitting
     // UNDER a plain one equipped the promoted unit past the sub-cap (a
     // second worn legendary). The peek now judges the named cell.
-    const sim = makeWarrior(7119);
+    const sim = makeWarrior();
     const meta = sim.meta(sim.playerId)!;
     meta.autoEquip = false;
     grant(sim, EMBER_ID);
@@ -950,7 +964,7 @@ describe('masterwrought sub-cap reads the copy being worn', () => {
   it('a slotIndex naming a PLAIN copy equips even when a promoted copy sits highest', () => {
     // The mirror direction: the id-only peek judged the highest-index
     // (promoted) copy and falsely refused the plain unit the player named.
-    const sim = makeWarrior(7120);
+    const sim = makeWarrior();
     const meta = sim.meta(sim.playerId)!;
     meta.autoEquip = false;
     grant(sim, EMBER_ID);
@@ -981,14 +995,14 @@ describe('masterwrought sub-cap reads the copy being worn', () => {
 
 describe('masterwrought legacy save tolerance', () => {
   it('loads a save wearing three flagged pieces and refuses only the next equip', () => {
-    const source = makeWarrior(7106);
+    const source = makeWarrior();
     const state = source.serializeCharacter(source.playerId)!;
     state.equipment.ring1 = RING_ID;
     state.equipment.ring2 = RING_ID;
     state.equipment.neck = AMULET_ID;
 
     const sim = new Sim({
-      seed: 7107,
+      seed: SEED,
       playerClass: 'warrior',
       noPlayer: true,
       world: EMPTY_TEST_WORLD,
@@ -1019,14 +1033,14 @@ describe('masterwrought legacy save tolerance', () => {
     // the legendary arm). Distinct ids on purpose, so the duplicate-unique
     // load bench (benchDuplicateUniqueEquipped) stays out of the picture and
     // the tolerance proven is this family's own.
-    const source = makeWarrior(7114);
+    const source = makeWarrior();
     const state = source.serializeCharacter(source.playerId)!;
     state.equipment.ring1 = EMBER_ID;
     state.equipment.ring2 = ASH_ID;
     state.equipment.neck = AMULET_ID;
 
     const sim = new Sim({
-      seed: 7115,
+      seed: SEED,
       playerClass: 'warrior',
       noPlayer: true,
       world: EMPTY_TEST_WORLD,
