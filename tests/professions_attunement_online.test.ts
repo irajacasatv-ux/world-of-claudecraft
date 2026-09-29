@@ -51,8 +51,13 @@ const FORGE_MASTER = 'forgemistress_darva';
 
 // Booking happens on the 1 Hz sweep within a second of the crossing; the tier
 // letter then flies the 90 second NPC delivery delay (the guild_letter_online
-// literal). 95 sim-seconds covers both with margin.
-const DELIVERY_WINDOW_TICKS = 95 * 20;
+// literal). The flight's length proves nothing about routing, so once the
+// sweep has booked the letter the case holds its landing time inside a 95
+// second window and lands it on the next announce pass, instead of ticking the
+// full live overworld for ninety seconds.
+const DELIVERY_WINDOW_SECONDS = 95;
+const BOOKING_WINDOW_TICKS = 2 * 20;
+const LANDING_WINDOW_TICKS = 2 * 20;
 const ONLINE_SUITE_TIMEOUT_MS = 40_000;
 
 type SentMsg = { t: string; list?: SimEvent[]; self?: { cprof?: CraftingIdentityView } };
@@ -352,9 +357,21 @@ describe('tier mail over the live GameServer wire (session routing)', () => {
       meta.craftSkills.weaponcrafting = 50; // tier 2 (tierForSkill = floor(skill / 25))
 
       const route = routeOf(server);
-      for (let i = 0; i < DELIVERY_WINDOW_TICKS; i++) route(server.sim.tick());
-
       const tierLetter = MASTER_TIER_LETTERS[SMITH_PAIR][2];
+      const windowStart = server.sim.time;
+      for (let i = 0; i < BOOKING_WINDOW_TICKS; i++) route(server.sim.tick());
+      const postOffice = (
+        server.sim as unknown as {
+          postOffice: { mail: { letterId?: string; deliverAt: number; announced?: boolean }[] };
+        }
+      ).postOffice;
+      const booked = postOffice.mail.filter((m) => m.letterId === tierLetter.letterId);
+      expect(booked).toHaveLength(1);
+      expect(booked[0].announced).toBeFalsy();
+      expect(booked[0].deliverAt).toBeLessThanOrEqual(windowStart + DELIVERY_WINDOW_SECONDS);
+      booked[0].deliverAt = server.sim.time;
+      for (let i = 0; i < LANDING_WINDOW_TICKS; i++) route(server.sim.tick());
+
       const tierMailOf = (sent: SentMsg[]) =>
         eventsOf(sent, 'mailArrived').filter((ev) =>
           ((ev as { letterId?: string }).letterId ?? '').startsWith('prof_tier_'),
