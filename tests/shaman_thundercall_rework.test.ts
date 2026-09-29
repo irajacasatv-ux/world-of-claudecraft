@@ -25,6 +25,7 @@ import { MOBS } from '../src/sim/data';
 import { createMob } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
 import type { Aura, Entity, SimEvent } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const THUNDER_CHARGES_ID = 'shaman_thunder_charges';
 const ECHOING_ELEMENTS = 'sha_r20_elemental_fury';
@@ -40,7 +41,13 @@ function setup(options: { spec?: string; level?: number; talents?: Record<number
   shaman: Entity;
   target: Entity;
 } {
-  const sim = new Sim({ seed: 2802, playerClass: 'shaman', noPlayer: true });
+  // The rig fights a dummy it places itself, so it stands on the empty world.
+  const sim = new Sim({
+    seed: 2802,
+    playerClass: 'shaman',
+    noPlayer: true,
+    world: EMPTY_TEST_WORLD,
+  });
   const pid = sim.addPlayer('shaman', 'Stormcaller');
   sim.setPlayerLevel(options.level ?? 20, pid);
   expect(sim.setSpec(options.spec ?? 'elemental', pid)).toBe(true);
@@ -158,6 +165,7 @@ describe('Thundercall v0.44 partial vents', () => {
 
   it('keeps the full-bank riders (Echoing Elements, Primal Mastery) for a full vent only', () => {
     const { sim, shaman, target } = setup({ talents: { 20: ECHOING_ELEMENTS } });
+    landNoCrit(sim);
     shaman.auras.push({
       id: PRIMAL_MASTERY_VENT_ID,
       name: 'Primal Mastery',
@@ -185,9 +193,9 @@ describe('Thundercall v0.44 partial vents', () => {
 describe('Thundercall v0.44 Arc Overload', () => {
   it('repeats a landed Arc Bolt for half its damage and banks one extra Thunder', () => {
     const { sim, shaman } = setup();
-    const real = sim.rng.chance.bind(sim.rng);
-    vi.spyOn(sim.rng, 'chance').mockImplementation((p: number) =>
-      p === ARC_OVERLOAD_CHANCE ? true : real(p),
+    // Land the bolt, fail its crit, force the overload (its chance is below 0.5).
+    vi.spyOn(sim.rng, 'chance').mockImplementation(
+      (p: number) => p === ARC_OVERLOAD_CHANCE || p >= 0.5,
     );
     const events = cast(sim, shaman, 'lightning_bolt');
     const bolt = hits(events, 'Arc Bolt')[0];
@@ -346,6 +354,7 @@ describe('Thundercall v0.44 Stormbreak and Lightning Mastery', () => {
     const { sim, shaman, target } = setup();
     shaman.gcdRemaining = 0;
     shaman.resource = 100;
+    landNoCrit(sim);
     sim.castAbility('thunderstorm', shaman.id);
     const events = sim.tick();
     expect(hits(events, 'Stormbreak').some((hit) => hit.targetId === target.id)).toBe(true);
