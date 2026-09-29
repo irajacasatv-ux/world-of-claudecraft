@@ -30,12 +30,21 @@ import {
   recordMarketSoldVolumeRow,
   recordMarketSoldVolumeRowBounded,
 } from '../../server/market_sold_volume_db';
+import { BUILTIN_WORLD } from '../../src/sim/data';
 import type { MarketListing } from '../../src/sim/market';
 import { Sim } from '../../src/sim/sim';
-import type { Entity } from '../../src/sim/types';
+import type { Entity, WorldContent } from '../../src/sim/types';
 import { groundHeight } from '../../src/sim/world';
 import { stripComments } from '../helpers/strip_comments';
 import { tsFilesUnder } from '../helpers/ts_files_under';
+import { EMPTY_TEST_WORLD } from '../sim_shared';
+
+// The end-to-end sales need only the Merchant's proximity gate, so their Sims run
+// on the empty world plus that one NPC.
+const MERCHANT_WORLD: WorldContent = {
+  ...EMPTY_TEST_WORLD,
+  npcs: { the_merchant: BUILTIN_WORLD.npcs.the_merchant },
+};
 
 function listing(over: Partial<MarketListing> = {}): MarketListing {
   return {
@@ -169,7 +178,12 @@ describe('buyWithSoldVolume (the dispatch-site observer)', () => {
       recorded.push(entry);
       return Promise.resolve();
     });
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+    const sim = new Sim({
+      seed: 42,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: MERCHANT_WORLD,
+    });
     const seller = sim.addPlayer('warrior', 'Seller');
     const buyer = sim.addPlayer('mage', 'Buyer');
     standAtMerchant(sim, seller);
@@ -200,7 +214,12 @@ describe('buyWithSoldVolume (the dispatch-site observer)', () => {
       recorded.push(entry);
       return Promise.resolve();
     });
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+    const sim = new Sim({
+      seed: 42,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: MERCHANT_WORLD,
+    });
     const seller = sim.addPlayer('warrior', 'Seller');
     const buyer = sim.addPlayer('mage', 'Buyer');
     standAtMerchant(sim, seller);
