@@ -4,6 +4,7 @@ import { Sim } from '../src/sim/sim';
 import { type AuraKind, dist2d } from '../src/sim/types';
 import { groundHeight, WATER_LEVEL } from '../src/sim/world';
 import { placePlayerInOpenField } from './helpers/open_field';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const NEW_DRUID = [
   'travel_form',
@@ -18,8 +19,11 @@ const NEW_DRUID = [
   'rip',
 ] as const;
 
+// Every case casts, shifts or walks a druid it adds itself and fights nothing,
+// so the rig stands on the empty world (terrain, water and colliders come with
+// the seed, not the world content).
 function makeWorld() {
-  return new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+  return new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true, world: EMPTY_TEST_WORLD });
 }
 
 function placeOnGround(sim: Sim, pid: number, x: number, z: number) {
