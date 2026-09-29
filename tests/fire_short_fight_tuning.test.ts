@@ -527,8 +527,15 @@ describe('sustained parity, entire fight (Monte Carlo follow-up 2026-07-24)', ()
   // margin (on this tree the five-seed ratios read 1.08 at 60s and 1.00 at
   // 120s under the 1.25 ceiling, the share 16 percent, conservation 0.98 to
   // 1.00). The 0.95 floor is decided on the mean alone, and a five-seed mean
-  // swings about 0.07 at 60s (single seeds read 0.73 to 1.40), so the floor
-  // runs only on the nightly's full pool, never on a smaller one.
+  // swings about 0.07 at 60s (single seeds read 0.73 to 1.40), so the owner's
+  // floor runs only on the nightly's full pool. The PR tier keeps a LOOSE floor
+  // as the over-nerf representative: its five seeds are fixed, so the verdict is
+  // deterministic on a given tree, and the floors sit where a content fork that
+  // reshuffles the rng streams still clears them: resampling the 40-seed pool's
+  // per-seed results 200,000 times, a five-seed ratio fell under 0.80 at 60s
+  // 0.05 percent of the time and never under 0.90 at 120s. So 0.80 at 60s and
+  // 0.90 at 120s: halving Pyrelance (0.89) or cutting Ignition to 0.05 (0.88)
+  // trips the 120s floor on this tree.
   const NIGHTLY_SWEEP = process.env.WOC_NIGHTLY_SWEEP === '1';
   const SUSTAINED_SEEDS = Array.from({ length: NIGHTLY_SWEEP ? 40 : 5 }, (_, i) => i + 1);
   const SUSTAINED_CEILING = 1.25; // x talented frost, per duration
@@ -543,6 +550,8 @@ describe('sustained parity, entire fight (Monte Carlo follow-up 2026-07-24)', ()
   // 186.43) while the 120s window already sits above parity at 1.019. Fire's
   // absolute standing is tracked by the Crucible DPS study, not here.
   const SUSTAINED_FLOOR = 0.95;
+  const PR_SUSTAINED_FLOOR_60 = 0.8; // x talented frost, the five-seed PR tier only
+  const PR_SUSTAINED_FLOOR_120 = 0.9;
   const IGNITE_SHARE_CEILING = 0.3; // the 40%-over-6s contract at duration
   // 60s is the shortest "entire fight" (one full burst window amortized), the
   // leakiest cell across every knob variant tried; 120s is the raid-typical
@@ -588,6 +597,11 @@ describe('sustained parity, entire fight (Monte Carlo follow-up 2026-07-24)', ()
       expect(at60.fireMean).toBeGreaterThanOrEqual(at60.frostMean * SUSTAINED_FLOOR);
     },
   );
+
+  it.skipIf(NIGHTLY_SWEEP)('holds the loose PR-tier floor over the five-seed pool', () => {
+    expect(at120.fireMean).toBeGreaterThanOrEqual(at120.frostMean * PR_SUSTAINED_FLOOR_120);
+    expect(at60.fireMean).toBeGreaterThanOrEqual(at60.frostMean * PR_SUSTAINED_FLOOR_60);
+  });
 
   it('Ignite pays its stated contract at duration (share stays bounded)', () => {
     expect(at120.igniteShare).toBeLessThanOrEqual(IGNITE_SHARE_CEILING);
