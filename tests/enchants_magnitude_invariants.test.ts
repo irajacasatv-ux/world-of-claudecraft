@@ -11,6 +11,7 @@ import { ENCHANTS, type EnchantDef } from '../src/sim/content/enchants';
 import { APEX_TIER_REAGENT, resolveApplyEnchant } from '../src/sim/professions/enchanting';
 import { Sim } from '../src/sim/sim';
 import { xpForLevel } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 type Axis = 'str' | 'agi' | 'sta' | 'int' | 'spi' | 'armor';
 const AXES: readonly Axis[] = ['str', 'agi', 'sta', 'int', 'spi', 'armor'];
@@ -326,7 +327,14 @@ describe('enchant table magnitude invariants', () => {
 
 describe('the full stamina path in HP', () => {
   it('enchanting every stamina slot adds exactly 240 HP on a level-20 pool', () => {
-    const sim = new Sim({ seed: 7, playerClass: 'warrior', autoEquip: false });
+    // Equipping and enchanting read only the warrior's own gear and bags:
+    // the empty world serves.
+    const sim = new Sim({
+      seed: 7,
+      playerClass: 'warrior',
+      autoEquip: false,
+      world: EMPTY_TEST_WORLD,
+    });
     const pid = sim.playerId;
     while (sim.player.level < 20) sim.grantXp(xpForLevel(sim.player.level));
     expect(sim.player.level).toBe(20);
