@@ -195,10 +195,12 @@ function admissionStatement(source: string): { guards?: string; costMs?: number 
   let up = at - 1;
   while (up >= 0 && !PARAGRAPH_BREAK.test(lines[up]) && !GUARDS_LINE.test(lines[up])) up--;
   const opened = up === at - 1 || (up >= 0 && GUARDS_LINE.test(lines[up]));
+  // Below: a paragraph break or a Guards line; and when only bare breaks follow the field, the
+  // first code line is adjacent to it too, so it may carry no comment.
+  const onlyBreaksBelow = lines.slice(at + 1).every((line) => PARAGRAPH_BREAK.test(line));
   const closed =
-    at + 1 < lines.length
-      ? PARAGRAPH_END.test(lines[at + 1])
-      : codeLine === undefined || !/\/\/|\/\*|\*\//.test(codeLine);
+    (at + 1 === lines.length || PARAGRAPH_END.test(lines[at + 1])) &&
+    (!onlyBreaksBelow || codeLine === undefined || !/\/\/|\/\*|\*\//.test(codeLine));
   if (cost && opened && closed)
     statement.costMs = Math.round(
       cost[1] ? Number(cost[1]) * 1000 : Number(cost[2]) * (cost[3] === 's' ? 1000 : 1),
@@ -241,7 +243,7 @@ function admissionProblems(
       problems.push(`${file.key}: no "Guards:" line saying what it uniquely guards`);
     if (costMs === undefined)
       problems.push(
-        `${file.key}: no "Cost:" field holding one measured time alone and closing its paragraph (for example "Cost: 0.4 s")`,
+        `${file.key}: no "Cost:" field holding one measured time alone, opening its paragraph or following a Guards paragraph and closing it (for example "Cost: 0.4 s")`,
       );
     // The lane rule, applied to a file the table cannot yet judge: its stated cost in CI time.
     else if (!inLane.has(file.key) && statedWeight(file.source) > LANE_THRESHOLD_MS)
@@ -498,7 +500,7 @@ describe('the new-test admission rule', () => {
     );
     const guards = (key: string) => `${key}: no "Guards:" line saying what it uniquely guards`;
     const cost = (key: string) =>
-      `${key}: no "Cost:" field holding one measured time alone and closing its paragraph (for example "Cost: 0.4 s")`;
+      `${key}: no "Cost:" field holding one measured time alone, opening its paragraph or following a Guards paragraph and closing it (for example "Cost: 0.4 s")`;
     expect(problems).toEqual([
       guards('tests/new_buried.test.ts'),
       cost('tests/new_buried.test.ts'),
@@ -529,6 +531,10 @@ describe('the new-test admission rule', () => {
     expect(read('// Cost: 1.2s.\n')).toBe(1200);
     expect(read('/** Cost: 1.25 s */\nexport {};\n')).toBe(1250);
     expect(read('// Cost: 2.01 s\n')).toBe(2010);
+    // Past a Guards line below, the code line is no longer adjacent to the field.
+    expect(read("// Cost: 1 s\n// Guards: the pause toggle's replay path.\nx(); // note\n")).toBe(
+      1000,
+    );
     // A Guards paragraph, wrapped, may sit directly above the field.
     expect(
       read(
@@ -571,6 +577,8 @@ describe('the new-test admission rule', () => {
       '// cold cost: 2 min; warm\n//\n// Cost: 1 s\n',
       "// Cost: 1 s\n// Guards: the pause toggle's replay path; real cost: 2 min cold\n",
       '/*\n * Cost: 1 s\n *\n Cost: 2 min\n */\n',
+      "/**\n * Guards: the pause toggle's replay path.\n * Cost: 1 s\n */\nimport x from 'y'; // 2 min cold\n",
+      '// Cost: 1 s\n//\nimport x from "y"; // 2 min cold\n',
     ])
       expect(read(refused), refused).toBeUndefined();
     expect(admissionStatement(afterDocblock).costMs).toBe(450);
