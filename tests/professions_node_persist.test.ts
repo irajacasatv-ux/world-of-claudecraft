@@ -23,9 +23,11 @@ import { EMPTY_TEST_WORLD } from './sim_shared';
 // Node readiness is keyed off GATHER_NODES (static content) and the caller's
 // own explicit Rng, never off the Sim's ambient world: every Sim here only
 // needs a player and its clock, so EMPTY_TEST_WORLD (no camps, npcs, or
-// ground objects) skips the built-in world's population cost for free.
-const makeSim = (seed = 11) =>
-  new Sim({ seed, playerClass: 'warrior', autoEquip: false, world: EMPTY_TEST_WORLD });
+// ground objects) skips the built-in world's population cost for free. Every
+// Sim, the reload targets included, shares one seed: a fresh seed builds its
+// collider grids (about half a second) and no case compares two seeds.
+const makeSim = () =>
+  new Sim({ seed: 11, playerClass: 'warrior', autoEquip: false, world: EMPTY_TEST_WORLD });
 const metaOf = (sim: Sim): PlayerMeta => sim.meta(sim.playerId) as PlayerMeta;
 
 // A real shipped node: the load filter keeps live ids only, so every arm below
@@ -135,7 +137,7 @@ describe('the write ceiling, the load clamp, and the record bound stay coupled',
     // tampered save to. If a future modifier (event, debuff, tool penalty)
     // ever writes LONGER than the table, this sweep reds instead of the
     // load clamp silently shortening the timer on the next relog.
-    const meta = metaOf(makeSim(16));
+    const meta = metaOf(makeSim());
     for (const node of GATHER_NODES) {
       expect(resolveHarvest(meta, node, 0, new Rng(17)).granted, node.id).toBe(true);
       expect(meta.nodeHarvestReadyAt[node.id], node.id).toBe(
@@ -206,7 +208,7 @@ describe('the real save/load path closes the relog exploit', () => {
     // The logout gap: the loading sim has its own clock, already advanced.
     // The delta FROZE during logout, so the timer resumes with its full
     // remaining anchored at load time rather than expiring on wall time.
-    const reloaded = makeSim(12);
+    const reloaded = makeSim();
     for (let i = 0; i < 10; i++) reloaded.tick();
     const pid = reloaded.addPlayer('warrior', 'Returner', { state });
     const meta2 = reloaded.meta(pid) as PlayerMeta;
@@ -226,7 +228,7 @@ describe('the real save/load path closes the relog exploit', () => {
     metaOf(sim).nodeHarvestReadyAt[NODE.id] = sim.time + 30;
     const state = sim.serializeCharacter(sim.playerId) as CharacterState;
     expect(state.nodeHarvestCooldowns).toEqual({ [NODE.id]: 30 });
-    const reloaded = makeSim(13);
+    const reloaded = makeSim();
     const pid = reloaded.addPlayer('warrior', 'Partway', { state });
     const meta2 = reloaded.meta(pid) as PlayerMeta;
     expect(meta2.nodeHarvestReadyAt[NODE.id]).toBeCloseTo(reloaded.time + 30, 6);
@@ -263,7 +265,7 @@ describe('the real save/load path closes the relog exploit', () => {
     const sim = makeSim();
     const state = sim.serializeCharacter(sim.playerId) as CharacterState;
     delete state.nodeHarvestCooldowns;
-    const reloaded = makeSim(14);
+    const reloaded = makeSim();
     const pid = reloaded.addPlayer('warrior', 'Legacy', { state });
     const meta2 = reloaded.meta(pid) as PlayerMeta;
     expect(meta2.nodeHarvestReadyAt).toEqual({});
@@ -274,7 +276,7 @@ describe('the real save/load path closes the relog exploit', () => {
     const sim = makeSim();
     const state = sim.serializeCharacter(sim.playerId) as CharacterState;
     state.nodeHarvestCooldowns = { legacy_node: 100, [NODE.id]: 50 };
-    const reloaded = makeSim(15);
+    const reloaded = makeSim();
     const pid = reloaded.addPlayer('warrior', 'Healed', { state });
     const meta2 = reloaded.meta(pid) as PlayerMeta;
     expect(meta2.nodeHarvestReadyAt).toEqual({ [NODE.id]: reloaded.time + 50 });
