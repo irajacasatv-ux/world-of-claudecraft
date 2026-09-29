@@ -11,13 +11,17 @@
 // a `-t` filter that skips the gate case produces, records the scenario itself,
 // so every case still runs alone.
 //
-// While a coverage case runs, the runner names the scenarios it declared
-// (run_scenarios.ts derives them from the title) and a read of any OTHER
-// scenario throws: a case that quietly started reading an undeclared scenario
-// would be re-recording it, which is the cost this module exists to remove.
+// Because several cases read one recording, a held recording is guarded:
+//   - its event list, notes and frames are frozen, so a case that sorted or
+//     pushed into them would throw instead of changing what the next case sees;
+//   - while a case runs (readingOnly), a read of a scenario the case did not
+//     declare throws (run_scenarios.ts derives the declaration from the title),
+//     a read passing a different Scenario object under a held name throws, and
+//     so does any recording the case makes outside this module (counted through
+//     record.ts), or an async case whose assertions would escape the test.
 
 import type { Recorder, Scenario } from './record';
-import { record } from './record';
+import { record, recordingsStartedSoFar } from './record';
 import { SCENARIOS } from './scenarios';
 import type { Trace } from './trace';
 
@@ -32,11 +36,19 @@ export type Ev = Record<string, any>;
 // The `it` a coverage case module registers its cases through (the runner's).
 export type CoverageIt = (title: string, fn: () => void, timeout?: number) => void;
 
-const held = new Map<string, Recording>();
+const held = new Map<string, { scenario: Scenario; recording: Recording }>();
 let readable: ReadonlySet<string> | null = null;
+let recordedOnMiss = 0;
 
-export function holdRecording(name: string, recording: Recording): void {
-  held.set(name, recording);
+function freeze(recording: Recording): Recording {
+  Object.freeze(recording.rec.allEvents);
+  Object.freeze(recording.rec.notes);
+  Object.freeze(recording.trace.frames);
+  return recording;
+}
+
+export function holdRecording(scenario: Scenario, recording: Recording): void {
+  held.set(scenario.name, { scenario, recording: freeze(recording) });
 }
 
 export function releaseRecording(name: string): void {
@@ -50,10 +62,21 @@ export function heldRecordingNames(): string[] {
 // Run one coverage case with reads limited to the scenarios it declared.
 export function readingOnly(names: ReadonlySet<string>, fn: () => void): void {
   readable = names;
+  recordedOnMiss = 0;
+  const before = recordingsStartedSoFar();
   try {
-    fn();
+    const result: unknown = fn();
+    if (typeof (result as PromiseLike<unknown> | undefined)?.then === 'function') {
+      throw new Error('coverage cases must be synchronous: they read a held recording');
+    }
   } finally {
     readable = null;
+  }
+  const outside = recordingsStartedSoFar() - before - recordedOnMiss;
+  if (outside !== 0) {
+    throw new Error(
+      `coverage case made ${outside} recording(s) outside recording_cache.ts; read through run()`,
+    );
   }
 }
 
@@ -64,9 +87,17 @@ export function recordShared(scenario: Scenario): Recording {
     );
   }
   const hit = held.get(scenario.name);
-  if (hit) return hit;
+  if (hit) {
+    if (hit.scenario !== scenario) {
+      throw new Error(
+        `coverage case passed a modified ${scenario.name}; the held one is SCENARIOS'`,
+      );
+    }
+    return hit.recording;
+  }
+  recordedOnMiss++;
   const fresh = record(scenario);
-  held.set(scenario.name, fresh);
+  holdRecording(scenario, fresh);
   return fresh;
 }
 

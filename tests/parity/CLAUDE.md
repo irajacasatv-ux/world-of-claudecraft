@@ -110,7 +110,11 @@ scenario's gate case followed by its coverage cases. `npx vitest run tests/parit
 `UPDATE_PARITY=1` work unchanged (coverage still runs when minting), and a shard minting
 run touches only its own slice's goldens. `-t` filters still select by the full test
 names, which did not change; a coverage case selected without its gate case records its
-scenario itself.
+scenario itself. Which FILE runs a scenario follows `SHARD_BOUNDS`, not the file's name,
+so select one across the directory (`npx vitest run tests/parity -t <scenario>`). A held
+recording is shared by its readers, so `recording_cache.ts` freezes its event list, notes
+and frames and fails a case that is async, reads a scenario it did not declare, or
+records anything itself.
 
 ## The determinism pair (why the gate records every scenario twice)
 

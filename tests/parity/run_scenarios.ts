@@ -232,7 +232,7 @@ function gateCase(scenario: Scenario, index: number): void {
     }
     const first = record(scenario);
     // Held for this scenario's coverage cases, which read this very recording.
-    if (LAST_READER.has(scenario.name)) holdRecording(scenario.name, first);
+    if (LAST_READER.has(scenario.name)) holdRecording(scenario, first);
     const a = plain(first.trace);
     const b = plain(recordTrace(scenario));
     expect(a).toEqual(b);
