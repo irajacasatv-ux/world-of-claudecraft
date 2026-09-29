@@ -530,6 +530,7 @@ describe('the long-sims lane (Phase 4)', () => {
       .sort();
     expect(readers).toEqual([
       'tests/chronomancy_balance_targets.test.ts',
+      'tests/emerald_deck_escape.test.ts',
       'tests/rogue_dps_balance.test.ts',
     ]);
     for (const f of readers) expect(CI_LONG_SUITES).not.toContain(f);

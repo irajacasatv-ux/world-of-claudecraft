@@ -134,6 +134,14 @@ function isWedge(x: number, z: number): boolean {
   return escapeDistance(x, z, 24, 400, ESCAPE_YARDS) <= ESCAPE_YARDS;
 }
 
+// The whole rect at three-quarter-yard spacing is the nightly depth (about 1,200
+// spots, most of this file's time); every PR scans the same rect at a yard and a
+// half, a quarter of the spots, which still lands several samples on each deck and
+// along the rim, so a wedge region the size of the reported one still reds here.
+// The reported spot itself and every railing step-off are pinned below at full
+// depth on every run.
+const WEDGE_SCAN_STEP = process.env.WOC_NIGHTLY_SWEEP === '1' ? 0.75 : 1.5;
+
 function scanWedges(step: number): { x: number; z: number }[] {
   const found: { x: number; z: number }[] = [];
   for (let z = RECT.z1; z <= RECT.z2 + 1e-9; z += step) {
@@ -333,7 +341,7 @@ describe('the Palmreach jungle-pool walkway keeps no one', () => {
   it('leaves no wedge anywhere over the walkway, the rim, or the beach', {
     timeout: 180_000,
   }, () => {
-    const wedges = scanWedges(0.75);
+    const wedges = scanWedges(WEDGE_SCAN_STEP);
     expect(wedges.map((w) => `(${w.x.toFixed(2)}, ${w.z.toFixed(2)})`)).toEqual([]);
   });
 
