@@ -14,7 +14,12 @@ import { EMPTY_TEST_WORLD } from './sim_shared';
 // the empty world, all on one seed (a fresh seed costs a collider grid build).
 const SEED = 3;
 
-function producesEffect(cls: PlayerClass, specId: string, sig: string): string {
+function producesEffect(
+  cls: PlayerClass,
+  specId: string,
+  sig: string,
+  rig: { resource?: number; seconds?: number } = {},
+): string {
   const sim = new Sim({ seed: SEED, playerClass: cls, autoEquip: true, world: EMPTY_TEST_WORLD });
   sim.setPlayerLevel(20);
   const ok = sim.setSpec(specId);
@@ -27,7 +32,7 @@ function producesEffect(cls: PlayerClass, specId: string, sig: string): string {
   const p = sim.entities.get(pid) as any;
   if (!sim.resolvedAbility(sig)) return `signature ${sig} not granted by spec`;
   p.maxHp = p.hp = 1_000_000;
-  p.resource = p.maxResource;
+  p.resource = rig.resource ?? p.maxResource;
   p.comboPoints = 5;
   const signature = ABILITIES[sig];
   // Some signatures are finishers that consume a resource aura. This smoke test
@@ -124,7 +129,7 @@ function producesEffect(cls: PlayerClass, specId: string, sig: string): string {
   // expire unobserved.
   const mobHome = { x: mob.pos.x, y: mob.pos.y, z: mob.pos.z };
   let fired = false;
-  for (let i = 0; i < 20 * 8 && !fired; i++) {
+  for (let i = 0; i < 20 * (rig.seconds ?? 8) && !fired; i++) {
     mob.hp = 1_000_000;
     mob.pos.x = mobHome.x;
     mob.pos.y = mobHome.y;
@@ -163,6 +168,15 @@ describe('Phase 1: spec signatures', () => {
       }
     }
     expect(duds, `signatures that failed:\n${duds.join('\n')}`).toEqual([]);
+  });
+
+  // The check must be able to fail: an Arms warrior at zero rage cannot pay for
+  // Maiming Strike, and the rig's standing effects (the melee dummy's bleed
+  // from its first swing, rage moving on its own) must not read as the refused
+  // cast's. Two seconds cover the press and the dummy's opening swings.
+  it('an unaffordable signature press reads as a dud, naming its refusal', () => {
+    const why = producesEffect('warrior', 'arms', 'mortal_strike', { resource: 0, seconds: 2 });
+    expect(why).toMatch(/^cast produced no observable effect \(errors: (?!none\)).+\)$/);
   });
 
   // The display names are the shipped ones (src/ui/i18n.catalog/abilities.ts):
