@@ -130,9 +130,12 @@ describe('Mass Barrier specialization theme', () => {
     expect(caster.auras.some((aura) => aura.id === 'mass_barrier')).toBe(true);
     expect(shielded).toHaveLength(5);
     // The allies all tie on distance, and a tie goes to the lower id, the
-    // sim-wide rule that keeps a pick the same on every host (the chain pick
-    // in combat/trinkets.ts states it): the four lowest-id allies join the
-    // caster, and the highest-id ally is the one left out.
+    // sim-wide rule that keeps a pick the same on every host (stated at the
+    // chain pick in combat/trinkets.ts, and the aoeAllyAbsorb comparator in
+    // combat/effect_dispatch.ts follows it): the four lowest-id allies join
+    // the caster, and the highest-id ally is the one left out.
+    const ids = lowerIdAllies.map((ally) => ally.id);
+    expect(ids).toEqual([...ids].sort((a, b) => a - b));
     const shieldedAlly = (ally: (typeof lowerIdAllies)[number]) =>
       ally.auras.some((aura) => aura.id === 'mass_barrier');
     expect(lowerIdAllies.map(shieldedAlly)).toEqual([true, true, true, true, false]);
