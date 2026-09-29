@@ -3,6 +3,7 @@ import { MOBS } from '../src/sim/data';
 import { createMob } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
 import type { Aura, Entity } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // Classic Rip scaling for Bloodrift (owner ruling 2026-07-29, mirroring the
 // Bleed Out fix): a FIXED 24 sec duration whose total damage is 36 plus 24
@@ -10,8 +11,9 @@ import type { Aura, Entity } from '../src/sim/types';
 // exactly the pre-change 156 total. Rounds out the six-spec tooltip-clarity
 // rule that every finisher visibly rewards the points it consumes.
 
+// The bleed lands on a wolf the case places itself, so the empty world serves.
 function rig() {
-  const sim = new Sim({ seed: 43, playerClass: 'druid', autoEquip: true });
+  const sim = new Sim({ seed: 43, playerClass: 'druid', autoEquip: true, world: EMPTY_TEST_WORLD });
   sim.setPlayerLevel(20);
   const p = sim.player;
   p.resource = p.maxResource;
