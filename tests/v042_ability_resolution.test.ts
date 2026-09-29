@@ -35,7 +35,8 @@ import { EMPTY_TEST_WORLD } from './sim_shared';
 // own player's resolved abilities (and the one real cast strikes a wolf it
 // spawns itself), so the ambient overworld is pure overhead, and the first
 // tick of every fresh seed builds that seed's collider grid (about half a
-// second each). No case here draws on the rng.
+// second each). Only the real cast draws on the rng (Mortal Strike rolls the
+// melee table), and that case pins its rolls so it holds on any seed.
 const RESOLUTION_SEED = 301;
 
 function makeSim(cls: PlayerClass, spec: string | null, level: number): Sim {
@@ -449,6 +450,10 @@ describe('Cost tail: draining curse tax, Measured Fury discount, Aether Surge ch
     facePlayerAt(sim, wolf);
     sim.targetEntity(wolf.id);
     sim.player.resource = 100;
+    // Every roll reads 0.9: the strike lands (no miss, dodge or parry, which
+    // would change the rage spent) without a crit, and kills the level-1 wolf
+    // before it can swing back and feed rage.
+    sim.rng.next = () => 0.9;
     const known = knownEntry(sim, 'mortal_strike');
     sim.castAbility('mortal_strike');
     sim.tick();
