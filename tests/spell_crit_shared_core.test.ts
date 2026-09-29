@@ -15,6 +15,9 @@ import { type PlayerEquipment, recalcPlayerStats } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
 import type { Aura, ItemDef } from '../src/sim/types';
 import { critFractionFromRating } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
+
+// Crit is the player's own stat, so each Sim runs on the empty world.
 
 function aura(kind: string, value: number, sourceId: number): Aura {
   return {
@@ -58,7 +61,7 @@ describe('spell crit shared core', () => {
     };
     ITEMS[itemId] = item;
     try {
-      const sim = new Sim({ seed: 11, playerClass: 'mage' });
+      const sim = new Sim({ seed: 11, world: EMPTY_TEST_WORLD, playerClass: 'mage' });
       const p = sim.player;
       const before = sim.ctx.spellCrit(p);
       expect(before).toBeCloseTo(0.05 + p.stats.int * 0.0008, 10);
@@ -91,7 +94,7 @@ describe('spell crit shared core', () => {
       critRating: 20,
     };
     try {
-      const sim = new Sim({ seed: 11, playerClass: 'mage' });
+      const sim = new Sim({ seed: 11, world: EMPTY_TEST_WORLD, playerClass: 'mage' });
       const p = sim.player;
 
       // Act
@@ -110,7 +113,7 @@ describe('spell crit shared core', () => {
 
   it('talent crit (stats.crit) raises spell crit by its full value', () => {
     // Arrange
-    const sim = new Sim({ seed: 11, playerClass: 'mage' });
+    const sim = new Sim({ seed: 11, world: EMPTY_TEST_WORLD, playerClass: 'mage' });
     const p = sim.player;
     const meta = sim.players.get(sim.playerId);
     if (!meta) throw new Error('missing player meta');
@@ -130,7 +133,7 @@ describe('spell crit shared core', () => {
     // Arrange: a rogue with 1 then 2 Nighttalon pieces. The 2/4/6 lineage
     // retune moved the crit rating to the Agility lineage's 2-piece tier
     // (agi 10 + SET_CRIT_3PC_RATING; the pieces themselves carry no ratings).
-    const sim = new Sim({ seed: 11, playerClass: 'rogue' });
+    const sim = new Sim({ seed: 11, world: EMPTY_TEST_WORLD, playerClass: 'rogue' });
     sim.setPlayerLevel(20);
     const p = sim.player;
     const pieces = setMembers(SET_NIGHTTALON);
@@ -154,7 +157,7 @@ describe('spell crit shared core', () => {
 
   it('a flat buff_crit aura raises spell and melee crit by the same amount', () => {
     // Arrange
-    const sim = new Sim({ seed: 11, playerClass: 'mage' });
+    const sim = new Sim({ seed: 11, world: EMPTY_TEST_WORLD, playerClass: 'mage' });
     const p = sim.player;
     const spell0 = sim.ctx.spellCrit(p);
     const melee0 = p.critChance;
@@ -169,7 +172,7 @@ describe('spell crit shared core', () => {
 
   it('buff_spellcrit stays spell-only and is read live without a recalc', () => {
     // Arrange
-    const sim = new Sim({ seed: 11, playerClass: 'mage' });
+    const sim = new Sim({ seed: 11, world: EMPTY_TEST_WORLD, playerClass: 'mage' });
     const p = sim.player;
     const spell0 = sim.ctx.spellCrit(p);
     const melee0 = p.critChance;
@@ -187,7 +190,7 @@ describe('spell crit shared core', () => {
 
   it('berserker stance crit stays melee-only', () => {
     // Arrange
-    const sim = new Sim({ seed: 11, playerClass: 'warrior' });
+    const sim = new Sim({ seed: 11, world: EMPTY_TEST_WORLD, playerClass: 'warrior' });
     const p = sim.player;
     const spell0 = sim.ctx.spellCrit(p);
 
