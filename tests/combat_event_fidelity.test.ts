@@ -13,9 +13,12 @@ import { MOBS } from '../src/sim/data';
 import { createMob } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
 import type { Aura, SimEvent } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
+// Every case heals, auras or strikes entities it places itself, so the empty
+// world serves, and the one seed builds one collider grid for the file.
 function makeSim(seed = 5252): Sim {
-  return new Sim({ seed, playerClass: 'priest', autoEquip: true });
+  return new Sim({ seed, playerClass: 'priest', autoEquip: true, world: EMPTY_TEST_WORLD });
 }
 
 type Heal2Event = Extract<SimEvent, { type: 'heal2' }>;
@@ -247,7 +250,12 @@ describe('aura event attribution', () => {
   });
 
   it('a stack bump credits the current caster and cast, not the pre-existing aura', () => {
-    const sim = new Sim({ seed: 77, playerClass: 'warrior', autoEquip: true });
+    const sim = new Sim({
+      seed: 5252,
+      playerClass: 'warrior',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.setPlayerLevel(20);
     // Armor Shear is Protection-only since the 2026-07-08 restructure, and a
     // settle tick populates the known-ability list (the imbue harness does
