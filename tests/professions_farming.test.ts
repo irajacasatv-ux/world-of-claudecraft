@@ -138,8 +138,8 @@ const TONIC_WIN_SEED = 2;
 // 0.862581, times 2^32 floored), whose skill-0 expansion pays
 // { count: 3, fine: 1 }: BOTH grades nonzero, so the five-fold arms below
 // can pin base and fine multiplication on one seed without any skill
-// fiddling. Every other harness seed used in this file (2, 3, 4, 5, 8, 41,
-// 1234) LOSES the golden roll at both the tier-1 position (third draw) and the
+// fiddling. Every other harness seed used in this file (2, 3, 4, 5, 8, 41)
+// LOSES the golden roll at both the tier-1 position (third draw) and the
 // tier-3/4 position (fourth), so no pre-existing payout arm multiplies
 // (probed the same way).
 //
@@ -147,15 +147,14 @@ const TONIC_WIN_SEED = 2;
 // the file builds a seed and a few ms after, so an arm with no probed seed
 // of its own (a same-seed twin, a determinism pair, a clock or save arm)
 // runs on the default harness seed 41, and a different-seed negative on 4.
-// Only a probed arm builds a seed of its own, and so does the anti-chore
-// equality below (ANTI_CHORE_SEED).
+// Only a probed arm builds a seed of its own.
 const GOLDEN_WIN_SEED = 280;
-// The two anti-chore arms (a harvest N hours late pays EXACTLY what an
-// on-time one pays, plain and toniced) keep the seed they were written on:
-// an equality over one stored yield seed only sees a lateness term that moves
-// THAT seed's expansion, and seed 41's expansion happens to absorb a small
-// lateness offset (a +7 yield-seed perturbation) that 1234's reports.
-const ANTI_CHORE_SEED = 1234;
+// The stored yield seeds the anti-chore sweep hand-writes into a plot. An
+// equality over ONE stored seed only sees a lateness term that moves THAT
+// seed's expansion (a +7 yield-seed offset on a late harvest is absorbed by
+// seed 41's plant and reported by seed 1234's), so the sweep spreads the
+// stored input over the 32-bit range instead of trusting one lucky plant.
+const STORED_YIELD_SEEDS = [1, 12_345, 0x1234_5678, 0x9e37_79b9, 0xdead_beef, 0xffff_fffe];
 
 // The shipped crop's own numbers, read from the catalog rather than restated,
 // so a tuning pass moves the fixture with the content instead of reddening
@@ -1785,8 +1784,8 @@ describe('the tonic yield arm: seed expansion, never a draw', () => {
   it('pays a toniced harvest N hours late EXACTLY what an on-time one pays', () => {
     // The anti-chore equality re-proven with the knob armed: lateness is not
     // an input to the tonic roll either.
-    const onTime = makeHarness(ANTI_CHORE_SEED);
-    const late = makeHarness(ANTI_CHORE_SEED);
+    const onTime = makeHarness();
+    const late = makeHarness();
     for (const hx of [onTime, late]) {
       hx.sim.addItem(SEED_ID, 1, hx.pid);
       hx.sim.addItem(FARM_GROWTH_TONIC_ITEM_ID, 1, hx.pid);
@@ -3895,8 +3894,8 @@ describe('convertHusks: the farmer-NPC range gate (the go-live)', () => {
 
 describe('THE ANTI-CHORE INVARIANT: nothing rots', () => {
   it('pays a harvest N hours late EXACTLY what an on-time harvest pays', () => {
-    const onTime = makeHarness(ANTI_CHORE_SEED);
-    const late = makeHarness(ANTI_CHORE_SEED);
+    const onTime = makeHarness();
+    const late = makeHarness();
     for (const h of [onTime, late]) {
       giveSeeds(h);
       plant(h);
@@ -3921,6 +3920,46 @@ describe('THE ANTI-CHORE INVARIANT: nothing rots', () => {
     expect(late.meta.pendingGatherGrants).toEqual(onTime.meta.pendingGatherGrants);
     // Anti-vacuous: the on-time harvest actually produced something to match.
     expect(onTime.sim.countItem(PRODUCE_ID, onTime.pid)).toBeGreaterThan(0);
+  });
+
+  it('pays EXACTLY the stored yield seed however late, across the stored-seed range, plain and toniced', () => {
+    // The equality above rides the one yield seed its plant drew; this pins
+    // the harvest to the STORED input directly. Each plot is hand-written
+    // (no plant draws, so the twins stay in lockstep), survival forced, and
+    // harvested on time by one twin and 12 hours late by the other.
+    const onTime = makeHarness();
+    const late = makeHarness();
+    const counts = (h: Harness) => [PRODUCE_ID, FINE_ID].map((id) => h.sim.countItem(id, h.pid));
+    let paid = 0;
+    for (const yieldSeed of STORED_YIELD_SEEDS) {
+      for (const tonic of [false, true]) {
+        const before = [counts(onTime), counts(late)];
+        for (const [h, lateness] of [
+          [onTime, 0],
+          [late, 12 * 60 * 60_000],
+        ] as const) {
+          h.meta.farmPlots.set(BED, {
+            cropId: CROP_ID,
+            plantedAtMs: h.now(),
+            readyAtMs: h.now() + CROP.durationMs,
+            survivalRoll: 0,
+            yieldSeed,
+            compost: false,
+            watch: false,
+            tonic,
+            notified: false,
+          });
+          h.advance(CROP.durationMs + lateness);
+          harvest(h);
+        }
+        const gotOnTime = counts(onTime).map((n, i) => n - before[0][i]);
+        const gotLate = counts(late).map((n, i) => n - before[1][i]);
+        expect(gotLate, `stored seed ${yieldSeed}, tonic ${tonic}`).toEqual(gotOnTime);
+        paid += gotOnTime[0];
+      }
+    }
+    // Anti-vacuous: the sweep really harvested produce to compare.
+    expect(paid).toBeGreaterThan(0);
   });
 
   it('never surfaces a status past `ready`, however long the plot sits', () => {
