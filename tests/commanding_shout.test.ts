@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { ABILITIES, abilitiesKnownAt } from '../src/sim/content/classes';
 import { Sim } from '../src/sim/sim';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 describe('Valor Roar', () => {
   it('keeps the stable rallying_cry id for the winning Warrior party cooldown', () => {
@@ -24,7 +25,12 @@ describe('Valor Roar', () => {
   });
 
   it('raises maximum health by 20% for 10 seconds when cast', () => {
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', autoEquip: true });
+    const sim = new Sim({
+      seed: 42,
+      playerClass: 'warrior',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.setPlayerLevel(18);
     const p = sim.player;
     const maxHpBefore = p.maxHp;
@@ -37,7 +43,12 @@ describe('Valor Roar', () => {
   });
 
   it('refreshes one shared health and Protection reduction buff across Warriors', () => {
-    const sim = new Sim({ seed: 43, playerClass: 'warrior', noPlayer: true });
+    const sim = new Sim({
+      seed: 42,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const first = sim.addPlayer('warrior', 'First');
     const second = sim.addPlayer('warrior', 'Second');
     for (const pid of [first, second]) {
