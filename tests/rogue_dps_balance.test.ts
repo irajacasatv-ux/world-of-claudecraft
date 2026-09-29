@@ -9,9 +9,16 @@ import { ITEMS } from '../src/sim/data';
 
 const SPECS: RogueProbeSpec[] = ['assassination', 'combat', 'subtlety'];
 
-function measuredDps(): Record<RogueProbeSpec, number> {
+// The replay that proves the bands deterministic. Every PR replays Combat alone:
+// it runs after all nine band runs, so it catches nondeterminism in the probe, in
+// the shared sim, or in state one run leaks into the next, at a third of the cost
+// of replaying the whole sweep. The nightly replays all three specs, which adds
+// only nondeterminism confined to the Assassination or Subtlety rotation paths.
+const REPLAY_SPECS: RogueProbeSpec[] = process.env.WOC_NIGHTLY_SWEEP === '1' ? SPECS : ['combat'];
+
+function measuredDps(specs: readonly RogueProbeSpec[] = SPECS): Record<RogueProbeSpec, number> {
   return Object.fromEntries(
-    SPECS.map((spec) => [
+    specs.map((spec) => [
       spec,
       averageRogueDps(
         spec,
@@ -97,8 +104,10 @@ describe('Rogue fight-6498 deterministic DPS bands', () => {
 
   it('holds Combat at the 200-DPS top band and pins the merged-tree sibling ordering', () => {
     const first = measuredDps();
-    const repeat = measuredDps();
-    expect(repeat).toEqual(first);
+    const repeat = measuredDps(REPLAY_SPECS);
+    expect(Object.keys(repeat)).toEqual(REPLAY_SPECS);
+    for (const spec of REPLAY_SPECS)
+      expect(repeat[spec], `${spec} replays exactly`).toBe(first[spec]);
 
     // Prior anchor: ~212 Combat, 175 Assassination, 190 Subtlety (2026-08-30
     // hit rebalance, this branch's own Crucible-loadout baseline). Two moves

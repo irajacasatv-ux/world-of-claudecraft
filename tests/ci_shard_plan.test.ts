@@ -528,7 +528,10 @@ describe('the long-sims lane (Phase 4)', () => {
     const readers = testFiles
       .filter((f) => readFileSync(path.join(REPO_ROOT, f), 'utf8').includes(needle))
       .sort();
-    expect(readers).toEqual(['tests/chronomancy_balance_targets.test.ts']);
+    expect(readers).toEqual([
+      'tests/chronomancy_balance_targets.test.ts',
+      'tests/rogue_dps_balance.test.ts',
+    ]);
     for (const f of readers) expect(CI_LONG_SUITES).not.toContain(f);
   });
 
