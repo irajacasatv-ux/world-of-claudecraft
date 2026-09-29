@@ -23,6 +23,7 @@ import { PLAYER_BODY_RADIUS } from '../src/sim/pathfind';
 import { Sim } from '../src/sim/sim';
 import type { Entity } from '../src/sim/types';
 import { terrainHeight } from '../src/sim/world';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const R = PLAYER_BODY_RADIUS;
 
@@ -127,7 +128,13 @@ describe('delveDoorClampSolidsFromEntities', () => {
 // predictor could show a door as open when the server still has it closed.
 describe('clampDelveDoors parity: server object-state derivation vs the client entity derivation', () => {
   it('agrees with the pure clamp for a real spawned door across a range of approaches', () => {
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', autoEquip: true });
+    // The run spawns its own module and door, so the empty world serves.
+    const sim = new Sim({
+      seed: 42,
+      playerClass: 'warrior',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.setPlayerLevel(DELVES.collapsed_reliquary.minLevel);
     const doorEntryPos = DELVES.collapsed_reliquary.doorPos;
     const p = sim.player;
