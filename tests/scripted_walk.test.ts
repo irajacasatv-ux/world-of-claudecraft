@@ -4,10 +4,16 @@ import { walkEncounterActorTo } from '../src/sim/encounters/scripted_walk';
 import { createMob } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
 import { DT } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
+
+// Each case walks a hand-made actor, so both Sims run on the empty world and share
+// one seed (the second case's own seed paid a second full build).
+const walkSim = () =>
+  new Sim({ seed: 8410, playerClass: 'warrior', noPlayer: true, world: EMPTY_TEST_WORLD });
 
 describe('scripted encounter walk', () => {
   it('uses ordinary mob movement without teleporting to the destination', () => {
-    const sim = new Sim({ seed: 8410, playerClass: 'warrior', noPlayer: true });
+    const sim = walkSim();
     const actor = createMob(9_900, MOBS.forest_wolf, 5, sim.ctx.groundPos(0, 0));
     const destination = sim.ctx.groundPos(10, 0);
     const before = { ...actor.pos };
@@ -23,7 +29,7 @@ describe('scripted encounter walk', () => {
   });
 
   it('faces a rooted actor toward the destination without moving it', () => {
-    const sim = new Sim({ seed: 8411, playerClass: 'warrior', noPlayer: true });
+    const sim = walkSim();
     const actor = createMob(9_901, MOBS.forest_wolf, 5, sim.ctx.groundPos(0, 0));
     const destination = sim.ctx.groundPos(10, 0);
     actor.auras.push({
