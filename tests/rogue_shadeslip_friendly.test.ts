@@ -6,6 +6,7 @@ import { dist2d, type Entity, type SimEvent } from '../src/sim/types';
 import { groundHeight } from '../src/sim/world';
 import { abilityRequirementKeys } from '../src/ui/hud/action_bar/ability_requirement_keys';
 import { classAbilityNamesEn } from '../src/ui/i18n.catalog/abilities';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // Shadeslip repositions the CASTER and does nothing to the thing it steps to,
 // so it resolves against an ally the same way it resolves against an enemy
@@ -28,7 +29,9 @@ function errors(events: SimEvent[]): SimEvent[] {
 }
 
 function makePair(): { sim: Sim; rogue: Entity; ally: Entity; rogueId: number } {
-  const sim = new Sim({ seed: 5, playerClass: 'rogue', noPlayer: true });
+  // Both players and the mob are placed by hand, so the empty world holds
+  // everything the step reaches.
+  const sim = new Sim({ seed: 5, playerClass: 'rogue', noPlayer: true, world: EMPTY_TEST_WORLD });
   const rogueId = sim.addPlayer('rogue', 'Slip');
   const allyId = sim.addPlayer('priest', 'Mender');
   const rogue = sim.entities.get(rogueId)!;
