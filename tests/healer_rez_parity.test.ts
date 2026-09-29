@@ -13,8 +13,11 @@ import { ABILITIES, abilitiesKnownAt } from '../src/sim/content/classes';
 import { computeTalentModifiers, emptyAllocation } from '../src/sim/content/talents';
 import { Sim } from '../src/sim/sim';
 import type { Entity, PlayerClass, SimEvent } from '../src/sim/types';
-import { en, zh_CN } from '../src/ui/i18n.resolved.generated';
+// The two locale slices this suite reads, not the barrel that loads all of them.
+import { en } from '../src/ui/i18n.resolved.generated/en';
+import { zh_CN } from '../src/ui/i18n.resolved.generated/zh_CN';
 import { abilityIconRecipe, hasExplicitAbilityIcon } from '../src/ui/icons';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const SHARED_REZ_COOLDOWN = 300;
 
@@ -39,8 +42,13 @@ function killAt(entity: Entity, x: number, z: number): void {
   entity.resource = 0;
 }
 
-function healerSim(playerClass: PlayerClass, spec: string, seed: number): Sim {
-  const sim = new Sim({ seed, playerClass });
+// One seed on EMPTY_TEST_WORLD: every case adds its own fallen party member, so
+// the ambient overworld is pure cost, and each extra seed paid its own collider
+// build (about half a second).
+const HEALER_SEED = 4481;
+
+function healerSim(playerClass: PlayerClass, spec: string): Sim {
+  const sim = new Sim({ seed: HEALER_SEED, playerClass, world: EMPTY_TEST_WORLD });
   sim.setPlayerLevel(20);
   expect(sim.setSpec(spec)).toBe(true);
   sim.tick();
@@ -98,11 +106,11 @@ describe('healer resurrection cooldown parity', () => {
 
   it('refuses both new mass rezzes in combat: requiresOutOfCombat is live', () => {
     const cases = [
-      { playerClass: 'priest' as const, spec: 'holy', id: 'prayer_of_returning', seed: 4484 },
-      { playerClass: 'druid' as const, spec: 'restoration', id: 'grove_awakening', seed: 4485 },
+      { playerClass: 'priest' as const, spec: 'holy', id: 'prayer_of_returning' },
+      { playerClass: 'druid' as const, spec: 'restoration', id: 'grove_awakening' },
     ];
-    for (const { playerClass, spec, id, seed } of cases) {
-      const sim = healerSim(playerClass, spec, seed);
+    for (const { playerClass, spec, id } of cases) {
+      const sim = healerSim(playerClass, spec);
       const fallen = addFallenPartyMember(sim, 'Fallen In Combat');
 
       // A dead member is in reach and mana is full: only the combat gate may
@@ -161,7 +169,7 @@ describe('Prayer of Returning content', () => {
   });
 
   it('revives every offered dead group member and then runs the cooldown', () => {
-    const sim = healerSim('priest', 'holy', 4481);
+    const sim = healerSim('priest', 'holy');
     const fallen = addFallenPartyMember(sim, 'Fallen Friend');
 
     sim.castAbility('prayer_of_returning');
@@ -217,7 +225,7 @@ describe('Grove Awakening content', () => {
   });
 
   it('revives an offered dead group member out of combat', () => {
-    const sim = healerSim('druid', 'restoration', 4482);
+    const sim = healerSim('druid', 'restoration');
     const fallen = addFallenPartyMember(sim, 'Fallen Grove');
 
     sim.castAbility('grove_awakening');
@@ -259,7 +267,7 @@ describe('Wildwake content', () => {
   });
 
   it('revives a dead group member mid-combat with nature-school spellfx', () => {
-    const sim = healerSim('druid', 'restoration', 4483);
+    const sim = healerSim('druid', 'restoration');
     const fallen = addFallenPartyMember(sim, 'Fallen Wild');
 
     // The cast must start while the druid is IN combat: that is the whole point
