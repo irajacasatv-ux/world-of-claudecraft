@@ -14,6 +14,7 @@ import { ITEMS } from '../../src/sim/data';
 import { Sim } from '../../src/sim/sim';
 import type { InvSlot } from '../../src/sim/types';
 import type { GuildBankInfo } from '../../src/world_api';
+import { EMPTY_TEST_WORLD } from '../sim_shared';
 
 const GUILD_ID = 4242;
 
@@ -30,9 +31,15 @@ function questItemId(): string {
 }
 
 /** A sim holding ONE guild book, with no player, banker, or rank setup: the
- *  operator read is ungated by design, so none of that is needed here. */
+ *  operator read is ungated by design, so none of that is needed here, and the
+ *  book lives on the Sim, so the empty world serves every case. */
 function simWithBook(slots: InvSlot[], treasury = 100_000, purchasedSlots = 24): Sim {
-  const sim = new Sim({ seed: 11, playerClass: 'warrior', autoEquip: false });
+  const sim = new Sim({
+    seed: 11,
+    playerClass: 'warrior',
+    autoEquip: false,
+    world: EMPTY_TEST_WORLD,
+  });
   sim.loadGuildBank(GUILD_ID, { treasury, inventory: slots, purchasedSlots });
   return sim;
 }
