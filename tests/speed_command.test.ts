@@ -1,9 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { Sim } from '../src/sim/sim';
-import { Aura, SimEvent } from '../src/sim/types';
+import type { Aura, SimEvent } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
+// The readout reads the caller's own auras only, so the Sim runs on the empty
+// world.
 function makeWorld() {
-  return new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+  return new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true, world: EMPTY_TEST_WORLD });
 }
 
 function aura(kind: Aura['kind'], value: number): Aura {
@@ -66,8 +69,12 @@ describe('/speed command', () => {
     sim.tick();
     expect(speedText(sim, a)).toBe('Movement speed: 100% of normal.');
     sim.chat('/movespeed', a);
-    expect(sim.tick().some((e) => e.type === 'error' && e.text === 'Movement speed: 100% of normal.')).toBe(true);
+    expect(
+      sim.tick().some((e) => e.type === 'error' && e.text === 'Movement speed: 100% of normal.'),
+    ).toBe(true);
     sim.chat('/ms', a);
-    expect(sim.tick().some((e) => e.type === 'error' && e.text === 'Movement speed: 100% of normal.')).toBe(true);
+    expect(
+      sim.tick().some((e) => e.type === 'error' && e.text === 'Movement speed: 100% of normal.'),
+    ).toBe(true);
   });
 });
