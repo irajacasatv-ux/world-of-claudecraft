@@ -46,7 +46,7 @@ import {
 import { abilityEffectText } from '../src/ui/ability_description';
 import { auraEffectDescriptor } from '../src/ui/aura_effect';
 import { hudChromeStrings } from '../src/ui/i18n.catalog/hud_chrome';
-import { WORLD_WITHOUT_HUB_YARD } from './helpers/hub_yard';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const SC: AbilityScaling = { spellPower: 200, healPower: 200, rangedPower: 300, attackPower: 250 };
 
@@ -415,12 +415,15 @@ describe('v0.42.0 Skulduggery/Coldsight tooltip drift fixes', () => {
 // wrong coefficient choice, e.g. directHealBonus instead of channelTickBonus,
 // would otherwise pass a self-consistent-but-wrong test).
 describe('actual runtime -> formatted tooltip, real Sim casts (Groveheart druid)', () => {
-  function freshGroveheartDruid(seed: number): Sim {
+  // Every roll is pinned below and the druid heals only herself, so the seed and
+  // the overworld buy nothing: one seed on the empty world (no hub yard either)
+  // serves all four casts, where four seeds each paid a full collider build.
+  function freshGroveheartDruid(): Sim {
     const sim = new Sim({
-      seed,
+      seed: 101,
       playerClass: 'druid',
       autoEquip: true,
-      world: WORLD_WITHOUT_HUB_YARD,
+      world: EMPTY_TEST_WORLD,
     });
     sim.setPlayerLevel(MAX_LEVEL);
     expect(sim.setSpec('restoration')).toBe(true);
@@ -465,7 +468,7 @@ describe('actual runtime -> formatted tooltip, real Sim casts (Groveheart druid)
   }
 
   it('Wildbloom (rejuvenation): the pure-HoT $d matches the actually deposited tick total', () => {
-    const sim = freshGroveheartDruid(101);
+    const sim = freshGroveheartDruid();
     const p = sim.player;
     castAbility(sim.ctx, 'rejuvenation', p.id);
     waitForCast(sim);
@@ -481,7 +484,7 @@ describe('actual runtime -> formatted tooltip, real Sim casts (Groveheart druid)
   });
 
   it('Regrowth (Second Bloom): the hybrid HoT rider still takes the primary-healing factor on its flat base', () => {
-    const sim = freshGroveheartDruid(102);
+    const sim = freshGroveheartDruid();
     const p = sim.player;
     castAbility(sim.ctx, 'regrowth', p.id);
     waitForCast(sim);
@@ -504,7 +507,7 @@ describe('actual runtime -> formatted tooltip, real Sim casts (Groveheart druid)
   });
 
   it('Gladesong (tranquility) channel: each pulse matches the actual per-tick channel coefficient', () => {
-    const sim = freshGroveheartDruid(103);
+    const sim = freshGroveheartDruid();
     const p = sim.player;
     expect(
       sim.applyTalents({ spec: 'restoration', rows: { 17: 'dru_r17_frenzied_regeneration' } }),
@@ -534,7 +537,7 @@ describe('actual runtime -> formatted tooltip, real Sim casts (Groveheart druid)
   });
 
   it('Swiftmend (consumeAura heal): the $d combined total matches the actual consumed-HoT heal', () => {
-    const sim = freshGroveheartDruid(104);
+    const sim = freshGroveheartDruid();
     const p = sim.player;
     castAbility(sim.ctx, 'rejuvenation', p.id);
     waitForCast(sim);
