@@ -36,10 +36,22 @@ function copperEntries(loot: LootEntry[] | undefined) {
   return (loot ?? []).filter((entry) => entry.copper !== undefined);
 }
 
+// One world seed for the whole file: a seed the file has not built yet costs a
+// full-world Sim about half a second (its collider grids), a built one about
+// 20 ms. The heroic sweep moves the shared rng by `offset` draws instead, which
+// rolls each payout from a different stream position.
+const FILE_SEED = 1234;
+
+function simAtDraw(offset: number): Sim {
+  const sim = new Sim({ seed: FILE_SEED, playerClass: 'warrior', noPlayer: true });
+  for (let draw = 0; draw < offset; draw++) sim.rng.next();
+  return sim;
+}
+
 // Drives the authoritative roller (Sim.rollLoot) the same way combat death
 // does, so the assertion covers the real payout path, not just the record.
-function rolledKorzulCopper(seed: number, kills: number): number[] {
-  const sim = new Sim({ seed, playerClass: 'warrior', noPlayer: true });
+function rolledKorzulCopper(kills: number): number[] {
+  const sim = simAtDraw(0);
   const pid = sim.addPlayer('warrior', 'Looter');
   const meta = (sim as unknown as { players: Map<number, unknown> }).players.get(pid);
   const template = MOBS.korzul_the_gravewyrm;
@@ -55,8 +67,8 @@ function rolledKorzulCopper(seed: number, kills: number): number[] {
 // Kills the real spawned Korzul inside a real HEROIC instance through the
 // real death path (dealDamage -> handleDeath -> rollLoot with a live heroic
 // claim), mirroring the rig in tests/heroic_loot_flair.test.ts.
-function heroicKillCopper(seed: number): number {
-  const sim = new Sim({ seed, playerClass: 'warrior', noPlayer: true });
+function heroicKillCopper(offset: number): number {
+  const sim = simAtDraw(offset);
   const s = sim as unknown as Record<string, any>;
   const pid = sim.addPlayer('warrior', 'Solo');
   sim.setDungeonDifficulty('heroic', pid);
@@ -122,7 +134,7 @@ describe('Gravewyrm Sanctum end-boss gold (farm fix)', () => {
   });
 
   it('every rolled payout lands inside the 9000c to 21000c band, edges reached', () => {
-    const amounts = rolledKorzulCopper(1234, 2000);
+    const amounts = rolledKorzulCopper(2000);
     for (const copper of amounts) {
       expect(copper).toBeGreaterThanOrEqual(ROLLED_MIN_COPPER);
       expect(copper).toBeLessThanOrEqual(ROLLED_MAX_COPPER);
@@ -141,10 +153,10 @@ describe('Gravewyrm Sanctum end-boss gold (farm fix)', () => {
     // 60000c to 140000c. Both the normal band (9000c to 21000c) and the old
     // 50000c base (30000c to 70000c) are disjoint from parts of this band,
     // and no sample may fall outside it.
-    for (let seed = 1; seed <= 8; seed++) {
-      const copper = heroicKillCopper(seed);
-      expect(copper, `seed ${seed}`).toBeGreaterThanOrEqual(HEROIC_ROLLED_MIN_COPPER);
-      expect(copper, `seed ${seed}`).toBeLessThanOrEqual(HEROIC_ROLLED_MAX_COPPER);
+    for (let offset = 1; offset <= 8; offset++) {
+      const copper = heroicKillCopper(offset);
+      expect(copper, `offset ${offset}`).toBeGreaterThanOrEqual(HEROIC_ROLLED_MIN_COPPER);
+      expect(copper, `offset ${offset}`).toBeLessThanOrEqual(HEROIC_ROLLED_MAX_COPPER);
     }
   });
 });

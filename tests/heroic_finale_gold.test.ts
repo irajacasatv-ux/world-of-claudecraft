@@ -49,6 +49,18 @@ function copperEntries(loot: LootEntry[] | undefined) {
   return (loot ?? []).filter((entry) => entry.copper !== undefined);
 }
 
+// One world seed for the whole file: a seed the file has not built yet costs a
+// full-world Sim about half a second (its collider grids), a built one about
+// 20 ms. The sweeps below move the shared rng by `offset` draws instead, which
+// rolls each payout from a different stream position.
+const FILE_SEED = 1;
+
+function simAtDraw(offset: number): Sim {
+  const sim = new Sim({ seed: FILE_SEED, playerClass: 'warrior', noPlayer: true });
+  for (let draw = 0; draw < offset; draw++) sim.rng.next();
+  return sim;
+}
+
 function heroicBandFor(dungeonId: string): { min: number; max: number } {
   return RAID_FINALE_DUNGEON_IDS.has(dungeonId)
     ? { min: RAID_ROLL_MIN, max: RAID_ROLL_MAX }
@@ -61,10 +73,10 @@ function heroicBandFor(dungeonId: string): { min: number; max: number } {
 function instanceKillCopper(
   dungeonId: string,
   bossTemplateId: string,
-  seed: number,
+  offset: number,
   difficulty: 'normal' | 'heroic',
 ): number {
-  const sim = new Sim({ seed, playerClass: 'warrior', noPlayer: true });
+  const sim = simAtDraw(offset);
   const s = sim as unknown as Record<string, any>;
   const pid = sim.addPlayer('warrior', 'Solo');
   if (difficulty === 'heroic') sim.setDungeonDifficulty('heroic', pid);
@@ -90,9 +102,9 @@ function instanceKillCopper(
 function rollWithClaim(
   template: MobTemplate,
   heroic: boolean,
-  seed: number,
+  offset: number,
 ): { copper: number; probe: number } {
-  const sim = new Sim({ seed, playerClass: 'warrior', noPlayer: true });
+  const sim = simAtDraw(offset);
   const s = sim as unknown as Record<string, any>;
   const pid = sim.addPlayer('warrior', 'Looter');
   const meta = s.players.get(pid);
@@ -160,16 +172,16 @@ describe('heroic finale gold policy', () => {
     // the claim plumbing end to end for one dungeon per difficulty).
     for (const tuning of Object.values(HEROIC_DUNGEON_TUNING)) {
       const { min, max } = heroicBandFor(tuning.id);
-      for (let seed = 1; seed <= 3; seed++) {
-        const { copper } = rollWithClaim(MOBS[tuning.finalBossId], true, seed * 101);
-        expect(copper, `${tuning.id} seed ${seed}`).toBeGreaterThanOrEqual(min);
-        expect(copper, `${tuning.id} seed ${seed}`).toBeLessThanOrEqual(max);
+      for (let offset = 1; offset <= 3; offset++) {
+        const { copper } = rollWithClaim(MOBS[tuning.finalBossId], true, offset);
+        expect(copper, `${tuning.id} offset ${offset}`).toBeGreaterThanOrEqual(min);
+        expect(copper, `${tuning.id} offset ${offset}`).toBeLessThanOrEqual(max);
       }
     }
   });
 
   it('the heroic substitution keeps the rng stream position identical', () => {
-    // Same seed, same synthetic template (registered into MOBS because the
+    // Same stream position, same synthetic template (registered into MOBS because the
     // roller resolves the table by templateId, and absent from
     // HEROIC_BOSS_LOOT so the heroic-only item append cannot add draws),
     // rolled once without and once with a heroic claim: the payouts land in
@@ -182,8 +194,8 @@ describe('heroic finale gold policy', () => {
     };
     (MOBS as Record<string, MobTemplate>).synthetic_gold_probe = template;
     try {
-      const normal = rollWithClaim(template, false, 424242);
-      const heroic = rollWithClaim(template, true, 424242);
+      const normal = rollWithClaim(template, false, 0);
+      const heroic = rollWithClaim(template, true, 0);
       expect(normal.copper).toBeGreaterThanOrEqual(600);
       expect(normal.copper).toBeLessThanOrEqual(1400);
       expect(heroic.copper).toBeGreaterThanOrEqual(3000);
@@ -195,20 +207,30 @@ describe('heroic finale gold policy', () => {
   });
 
   it('heroic Zulgar pays the 10g finale band through the real heroic death path', () => {
-    for (let seed = 1; seed <= 6; seed++) {
-      const copper = instanceKillCopper('wildheart_basin', 'wildheart_high_priest', seed, 'heroic');
-      expect(copper, `seed ${seed}`).toBeGreaterThanOrEqual(HEROIC_ROLL_MIN);
-      expect(copper, `seed ${seed}`).toBeLessThanOrEqual(HEROIC_ROLL_MAX);
+    for (let offset = 1; offset <= 6; offset++) {
+      const copper = instanceKillCopper(
+        'wildheart_basin',
+        'wildheart_high_priest',
+        offset,
+        'heroic',
+      );
+      expect(copper, `offset ${offset}`).toBeGreaterThanOrEqual(HEROIC_ROLL_MIN);
+      expect(copper, `offset ${offset}`).toBeLessThanOrEqual(HEROIC_ROLL_MAX);
     }
   });
 
   it('a live NORMAL instance claim still pays the normal base', () => {
     // Pins the difficulty clause of the claim predicate: a refactor that
     // widened heroicClaim to ANY live claim would pay the heroic base here.
-    for (let seed = 1; seed <= 4; seed++) {
-      const copper = instanceKillCopper('wildheart_basin', 'wildheart_high_priest', seed, 'normal');
-      expect(copper, `seed ${seed}`).toBeGreaterThanOrEqual(NORMAL_ROLL_MIN);
-      expect(copper, `seed ${seed}`).toBeLessThanOrEqual(NORMAL_ROLL_MAX);
+    for (let offset = 1; offset <= 4; offset++) {
+      const copper = instanceKillCopper(
+        'wildheart_basin',
+        'wildheart_high_priest',
+        offset,
+        'normal',
+      );
+      expect(copper, `offset ${offset}`).toBeGreaterThanOrEqual(NORMAL_ROLL_MIN);
+      expect(copper, `offset ${offset}`).toBeLessThanOrEqual(NORMAL_ROLL_MAX);
     }
   });
 
@@ -216,7 +238,7 @@ describe('heroic finale gold policy', () => {
     // A bare mob outside any instance carries no claim at all, so the roller
     // must use the 15000c normal base: every payout inside 9000c to 21000c.
     // Under the old 55000c base every roll paid at least 33000c.
-    const sim = new Sim({ seed: 77, playerClass: 'warrior', noPlayer: true });
+    const sim = simAtDraw(0);
     const pid = sim.addPlayer('warrior', 'Looter');
     const meta = (sim as unknown as { players: Map<number, unknown> }).players.get(pid);
     const template = MOBS.wildheart_high_priest;

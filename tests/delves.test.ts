@@ -58,6 +58,19 @@ function makeSim(cls: 'warrior' | 'warlock' = 'warrior', seed = 42) {
   return new Sim({ seed, playerClass: cls, autoEquip: true, world: DELVE_TEST_WORLD });
 }
 
+// A fresh host for a relog: the file's one world seed on the same sparse
+// fixture (a seed or world the file has not built yet costs a fresh build),
+// with no default player so the saved character is the only one.
+function relogSim() {
+  return new Sim({
+    seed: 42,
+    playerClass: 'warrior',
+    autoEquip: true,
+    noPlayer: true,
+    world: DELVE_TEST_WORLD,
+  });
+}
+
 function teleport(sim: Sim, x: number, z: number) {
   const p = sim.player;
   p.pos.x = x;
@@ -220,7 +233,7 @@ describe('delve spatial band', () => {
     const state = src.serializeCharacter(src.playerId)!;
     const origin = delveOrigin(0, 0);
     state.pos = { x: origin.x, z: origin.z + 20 }; // deep inside delve slot 0
-    const dst = new Sim({ seed: 7, playerClass: 'warrior', autoEquip: true, noPlayer: true });
+    const dst = relogSim();
     const pid = dst.addPlayer('warrior', 'Relogged', { state });
     const e = (dst as any).entities.get(pid)!;
     const door = DELVES.collapsed_reliquary.doorPos; // Brother Halven board door {-136,112}
@@ -238,7 +251,7 @@ describe('delve spatial band', () => {
     const state = src.serializeCharacter(src.playerId)!;
     // an old-coordinates delve save
     state.pos = { x: 4800, z: -1230 };
-    const dst = new Sim({ seed: 7, playerClass: 'warrior', autoEquip: true, noPlayer: true });
+    const dst = relogSim();
     const pid = dst.addPlayer('warrior', 'LegacyDelver', { state });
     const e = (dst as any).entities.get(pid)!;
     const door = DELVES.collapsed_reliquary.doorPos;
@@ -247,7 +260,7 @@ describe('delve spatial band', () => {
     // an old-coordinates dungeon save (index 0 band at x 900)
     const state2 = src.serializeCharacter(src.playerId)!;
     state2.pos = { x: 912, z: -1240 };
-    const dst2 = new Sim({ seed: 7, playerClass: 'warrior', autoEquip: true, noPlayer: true });
+    const dst2 = relogSim();
     const pid2 = dst2.addPlayer('warrior', 'LegacyCrawler', { state: state2 });
     const e2 = (dst2 as any).entities.get(pid2)!;
     expect(e2.pos.x).toBeLessThan(600); // ejected to an overworld door, not stranded
@@ -996,12 +1009,14 @@ describe('delve interactables and affixes', () => {
     // Import the source-of-truth set rather than a local literal, so the two
     // can never drift (a hook-less affix added to the constant would still be
     // caught by that affix's own dedicated hook test, e.g. restless_graves above).
-    // Try many seeds; every Heroic roll must be an implemented affix.
-    // 60 seeds keep full affix-pool coverage. The fixture contains only the
-    // delve under test, so this sweep does not repeatedly spawn the unrelated
-    // overworld continent.
-    for (let seed = 1; seed <= 60; seed++) {
-      const sim = makeSim('warrior', seed);
+    // Try many run seeds; every Heroic roll must be an implemented affix.
+    // 60 runs keep full affix-pool coverage. The run seed is drawn from the
+    // shared rng at entry, so each run advances that rng `offset` draws on the
+    // file's one world seed (built once) instead of building a fresh world per
+    // seed.
+    for (let offset = 1; offset <= 60; offset++) {
+      const sim = makeSim('warrior');
+      for (let draw = 0; draw < offset; draw++) sim.rng.next();
       enterReliquary(sim, 'heroic');
       const run = sim.delveRunForPlayer(sim.playerId)!;
       for (const id of run.affixes) expect(DELVE_IMPLEMENTED_AFFIXES.has(id)).toBe(true);
