@@ -5,9 +5,12 @@
 import { describe, expect, it } from 'vitest';
 import { Sim } from '../src/sim/sim';
 import type { Entity } from '../src/sim/types';
+import { RL_TEST_WORLD } from './sim_shared';
 
+// The table is read off one wild mob whose threat each case sets by hand, so the
+// Sim runs on the one-wolf-camp world.
 function makeSim() {
-  return new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+  return new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true, world: RL_TEST_WORLD });
 }
 
 function nearestMob(sim: Sim): Entity {
