@@ -7,6 +7,7 @@ import {
   HEALING_TRAINING_ENTITY_IDS,
   HEALING_TRAINING_GROUND_SPAWNS,
 } from '../src/sim/content/healing_training';
+import { HUB_SPARRING_MASTER_ID } from '../src/sim/content/practice_dummies';
 import { BUILTIN_WORLD, MOBS } from '../src/sim/data';
 import { handleDevChat } from '../src/sim/dev_commands';
 import { healingTrainingGroundEnabled } from '../src/sim/healing_training';
@@ -17,6 +18,16 @@ import { groundHeight, waterLevelAt } from '../src/sim/world';
 import { WORLD_WITHOUT_HUB_YARD } from './helpers/hub_yard';
 
 const SEED = 42;
+// The healing ground and the hub yard beside it spawn off the sparring master's
+// def alone (healingTrainingGroundEnabled, hubPracticeEnabled), so the cases that
+// heal or strike those dummies stand on a world with just that one NPC: no camps
+// to build or tick. The placement cases read the whole town and keep BUILTIN_WORLD.
+const HEALING_GROUND_WORLD: WorldContent = {
+  ...BUILTIN_WORLD,
+  camps: [],
+  npcs: { [HUB_SPARRING_MASTER_ID]: BUILTIN_WORLD.npcs[HUB_SPARRING_MASTER_ID] },
+  groundObjects: [],
+};
 const EMPTY_WORLD: WorldContent = {
   ...BUILTIN_WORLD,
   zones: [],
@@ -111,7 +122,12 @@ describe('Healing Training Ground: templates and placement', () => {
 
 describe('Healing Training Ground: priest healing mechanics', () => {
   it('a priest can target a healing dummy and heal it with single-target heals', () => {
-    const sim = new Sim({ seed: SEED, playerClass: 'priest', devCommands: true });
+    const sim = new Sim({
+      seed: SEED,
+      playerClass: 'priest',
+      devCommands: true,
+      world: HEALING_GROUND_WORLD,
+    });
     sim.setPlayerLevel(20);
 
     const scout = [...sim.entities.values()].find(
@@ -144,7 +160,12 @@ describe('Healing Training Ground: priest healing mechanics', () => {
   });
 
   it('a priest can cast prayer_of_healing (Choirmend) to heal all nearby dummies in AoE', () => {
-    const sim = new Sim({ seed: SEED, playerClass: 'priest', devCommands: true });
+    const sim = new Sim({
+      seed: SEED,
+      playerClass: 'priest',
+      devCommands: true,
+      world: HEALING_GROUND_WORLD,
+    });
     sim.setPlayerLevel(20);
     sim.setSpec('holy');
     sim.player.pos = sim.groundPos(-82, -42);
@@ -173,7 +194,12 @@ describe('Healing Training Ground: priest healing mechanics', () => {
   });
 
   it('a priest can apply renew (Lingering Grace) to heal over time', () => {
-    const sim = new Sim({ seed: SEED, playerClass: 'priest', devCommands: true });
+    const sim = new Sim({
+      seed: SEED,
+      playerClass: 'priest',
+      devCommands: true,
+      world: HEALING_GROUND_WORLD,
+    });
     sim.setPlayerLevel(20);
     sim.player.pos = sim.groundPos(-82, -42);
     sim.player.facing = 0;
@@ -192,7 +218,7 @@ describe('Healing Training Ground: priest healing mechanics', () => {
   });
 
   it('sheds healing back toward resting HP under repeated ticks', () => {
-    const sim = new Sim({ seed: SEED, playerClass: 'priest' });
+    const sim = new Sim({ seed: SEED, playerClass: 'priest', world: HEALING_GROUND_WORLD });
     const tank = [...sim.entities.values()].find(
       (e) => e.templateId === HEALING_DUMMY_TANK_ID && !e.dead,
     );
@@ -214,7 +240,12 @@ describe('Healing Training Ground: priest healing mechanics', () => {
   });
 
   it('/dev healing teleports the player to the healing training ground at level 20', () => {
-    const sim = new Sim({ seed: SEED, playerClass: 'priest', devCommands: true });
+    const sim = new Sim({
+      seed: SEED,
+      playerClass: 'priest',
+      devCommands: true,
+      world: HEALING_GROUND_WORLD,
+    });
     expect(sim.player.level).toBe(1);
 
     handleDevChat(sim.ctx, '/dev healing', sim.player.id);
@@ -231,7 +262,7 @@ describe('Healing Training Ground: Chronomancer mechanics', () => {
     const sim = new Sim({
       seed: SEED,
       playerClass: 'mage',
-      world: BUILTIN_WORLD,
+      world: HEALING_GROUND_WORLD,
       devCommands: true,
     });
     handleDevChat(sim.ctx, '/dev healing', sim.player.id);
@@ -259,7 +290,10 @@ describe('Healing Training Ground: Chronomancer mechanics', () => {
     // Wait out GCD
     for (let i = 0; i < 30; i++) sim.tick();
 
-    // Target the combat dummy and cast Aether Surge
+    // Target the combat dummy and cast Aether Surge. Its damage feeds the echo, so
+    // pin the rolls (`next` at 0.9 passes the spell-hit roll) rather than ride the
+    // seed's stream past the full-resist chance.
+    sim.rng.next = () => 0.9;
     sim.targetEntity(combatDummy.id);
     sim.player.facing = Math.atan2(
       combatDummy.pos.z - sim.player.pos.z,
@@ -304,7 +338,7 @@ describe('Healing Training Ground: Chronomancer mechanics', () => {
     const sim = new Sim({
       seed: SEED,
       playerClass: 'mage',
-      world: BUILTIN_WORLD,
+      world: HEALING_GROUND_WORLD,
       devCommands: true,
     });
     handleDevChat(sim.ctx, '/dev healing', sim.player.id);
