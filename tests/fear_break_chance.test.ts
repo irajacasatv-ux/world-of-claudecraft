@@ -87,7 +87,11 @@ describe('G5: damage-scaled fear break', () => {
       breaksOnDamage: true,
       breakChanceScale: 0.1,
     } as Aura);
+    // The break roll draws its worst case: "always" must hold on the highest
+    // draw, not on whichever draw this seed happens to hand out.
+    const roll = vi.spyOn(sim.rng, 'next').mockReturnValue(0.9999);
     dealHit(sim, mob, Math.ceil(mob.maxHp * 0.1)); // chance clamps to 1
+    roll.mockRestore();
     expect(fearAura(mob)).toBeUndefined();
   });
 
