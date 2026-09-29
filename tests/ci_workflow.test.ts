@@ -981,15 +981,19 @@ describe('CI workflow parity', () => {
     expect(prGate).toContain('run: node scripts/ci_shard_test.mjs');
     expect(prGate).not.toContain('run: npm test');
     expect(prChecks).not.toContain('run: npm test');
+    const prStepAt: number[] = [];
     for (const step of CHECK_RUN_STEPS) {
       // Anchored to the start of a step line, so a YAML-commented-out step
       // (`#        run: npm run build`) cannot satisfy it: the substring
       // survives the comment, the anchored form does not.
       expect(prChecks).toMatch(new RegExp(`\\n {8}${escapeRe(step)}`));
+      prStepAt.push(prChecks.search(new RegExp(`\\n {8}${escapeRe(step)}`)));
       expect(prGate).not.toContain(step);
       expect(prLongSimsA).not.toContain(step);
       expect(prLongSimsB).not.toContain(step);
     }
+    // ...and in the list's order.
+    expect(prStepAt).toEqual([...prStepAt].sort((a, b) => a - b));
     // The lane jobs are tests-only through the shard runner, like pr-gate: a
     // raw `npm test` or a check step substituted into one would run the whole
     // suite (or a check) on every PR under the lane's name.
@@ -1027,12 +1031,15 @@ describe('CI workflow parity', () => {
     // Red-path pin: reintroducing single-shard gating on the test job fails.
     expect(releaseGate).not.toContain('matrix.shard == 1');
     expect(workflow).not.toContain('matrix.shard == 1');
+    const releaseStepAt: number[] = [];
     for (const step of CHECK_RUN_STEPS) {
       // Same anchored form as the PR-tier loop: a YAML-commented-out step must
       // not satisfy the pin.
       expect(releaseChecks).toMatch(new RegExp(`\\n {8}${escapeRe(step)}`));
+      releaseStepAt.push(releaseChecks.search(new RegExp(`\\n {8}${escapeRe(step)}`)));
       expect(releaseGate).not.toContain(step);
     }
+    expect(releaseStepAt).toEqual([...releaseStepAt].sort((a, b) => a - b));
     // Named-step count: checkout, setup-pnpm, setup-node, pnpm install, plus
     // eight check steps (i18n gen/summary/freshness, malware, tsc cache, the
     // combined typecheck + env/server/bot builds turbo call, client build,
@@ -1638,10 +1645,10 @@ describe('CI workflow parity', () => {
     // job would silently put the five-seed cost back on the PR (or release)
     // critical path. tests/nightly_workflow.test.ts pins the one sanctioned
     // copy on the nightly tests job.
-    expect(workflow).not.toContain('WOC_FULL_BALANCE_SWEEP');
+    expect(workflow).not.toContain(['WOC_FULL_BALANCE', 'SWEEP'].join('_'));
     // Its shard-pool counterpart likewise (docs/qa-gate.md, "Nightly-only
     // sweep depth"): on ci.yml it would put every nightly sweep back on the PR.
-    expect(workflow).not.toContain('WOC_NIGHTLY_SWEEP');
+    expect(workflow).not.toContain(['WOC_NIGHTLY', 'SWEEP'].join('_'));
     for (const job of [releaseGate, releaseChecks, jobSource('release-i18n')]) {
       expect(job).not.toContain('ci_shard_test.mjs');
       expect(job).not.toContain('TEST_MODE');

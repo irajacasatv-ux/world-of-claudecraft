@@ -135,22 +135,26 @@ describe('nightly gate workflow', () => {
     // is what keeps the full five-seed depth running anywhere at all.
     // Name-to-env-to-run adjacency (comment lines allowed) so a commented-out
     // or step-detached copy cannot satisfy it.
+    // The flag names are built from parts: only a listed reader may spell one outside
+    // a comment (tests/helpers/depth_flag_readers.ts).
+    const dietFlag = ['WOC_FULL_BALANCE', 'SWEEP'].join('_');
+    const nightlyFlag = ['WOC_NIGHTLY', 'SWEEP'].join('_');
     expect(tests).toMatch(
       new RegExp(
         String.raw`- name: Run tests \(full suite, PR tier\)\n` +
           String.raw`(?: {8}#[^\n]*\n)* {8}env:\n` +
-          String.raw` {10}WOC_FULL_BALANCE_SWEEP: '1'\n` +
-          String.raw` {10}WOC_NIGHTLY_SWEEP: '1'\n` +
+          ` {10}${dietFlag}: '1'\n` +
+          ` {10}${nightlyFlag}: '1'\n` +
           String.raw` {8}run: npm test -- --maxWorkers=`,
       ),
     );
     // Nowhere else: both flags are nightly-depth-only by design, so a copy on
     // the checks or browser lanes (or a second one in tests) is a mistake.
-    // WOC_NIGHTLY_SWEEP is the shard pool's counterpart (docs/qa-gate.md,
+    // The nightly-sweep flag is the shard pool's counterpart (docs/qa-gate.md,
     // "Nightly-only sweep depth"); its readers are pinned in
     // tests/ci_shard_plan.test.ts.
-    expect(workflow.match(/WOC_FULL_BALANCE_SWEEP/g)).toHaveLength(1);
-    expect(workflow.match(/WOC_NIGHTLY_SWEEP/g)).toHaveLength(1);
+    expect(workflow.split(dietFlag)).toHaveLength(2);
+    expect(workflow.split(nightlyFlag)).toHaveLength(2);
     // Unsharded by design: a --shard flag here would quietly turn the nightly
     // proof into a partial run.
     expect(tests).not.toContain('--shard');

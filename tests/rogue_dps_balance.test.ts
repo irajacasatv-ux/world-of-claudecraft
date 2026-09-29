@@ -14,7 +14,8 @@ const SPECS: RogueProbeSpec[] = ['assassination', 'combat', 'subtlety'];
 // the shared sim, or in state one run leaks into the next, at a third of the cost
 // of replaying the whole sweep. The nightly replays all three specs, which adds
 // only nondeterminism confined to the Assassination or Subtlety rotation paths.
-const REPLAY_SPECS: RogueProbeSpec[] = process.env.WOC_NIGHTLY_SWEEP === '1' ? SPECS : ['combat'];
+const NIGHTLY_SWEEP = process.env.WOC_NIGHTLY_SWEEP === '1';
+const REPLAY_SPECS: RogueProbeSpec[] = NIGHTLY_SWEEP ? SPECS : ['combat'];
 
 function measuredDps(specs: readonly RogueProbeSpec[] = SPECS): Record<RogueProbeSpec, number> {
   return Object.fromEntries(

@@ -28,7 +28,8 @@ import { computeBorderEdges, terrainHeight, WATER_LEVEL } from '../src/sim/world
 // regression (a couple hundred blocked rays without the pass, against a bound of
 // 40), so every PR walks it; the suite's default seed, the same terrain generator
 // under other noise, rides the nightly depth flag.
-const SEEDS = process.env.WOC_NIGHTLY_SWEEP === '1' ? [42, 20061] : [20061];
+const NIGHTLY_SWEEP = process.env.WOC_NIGHTLY_SWEEP === '1';
+const SEEDS = NIGHTLY_SWEEP ? [42, 20061] : [20061];
 const DIRS = 16;
 // Every lake stays walk-out-able in at least this many directions (the worst
 // builtin lake, the Hollow's falls basin, measures 7 at the production seed;

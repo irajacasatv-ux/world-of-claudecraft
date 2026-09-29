@@ -144,7 +144,8 @@ function isWedge(x: number, z: number): boolean {
 // the small one). The terrain shaping under the walkway is pinned on every PR by
 // the point cases around it: the planes, the sand tie-in, the covered cells, the
 // reported spot and every railing step-off.
-const WEDGE_SCAN_STEP = process.env.WOC_NIGHTLY_SWEEP === '1' ? 0.75 : 1.5;
+const NIGHTLY_SWEEP = process.env.WOC_NIGHTLY_SWEEP === '1';
+const WEDGE_SCAN_STEP = NIGHTLY_SWEEP ? 0.75 : 1.5;
 
 function scanWedges(step: number): { x: number; z: number }[] {
   const found: { x: number; z: number }[] = [];
