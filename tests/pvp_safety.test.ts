@@ -372,8 +372,10 @@ describe('PvP control abilities in active duels', () => {
   it('does not diminish PvE stuns: a stun on a mob keeps full duration on repeat', () => {
     // DR is duel/PvP only (player source AND player target). A paladin stunning a
     // hostile mob must always land the full 3s, no matter how many times in a row.
+    // (Seed 42, the file's seed: the stun retries past any miss, so a fresh
+    // seed bought nothing but its own overworld bootstrap.)
     const sim = new Sim({
-      seed: 7,
+      seed: 42,
       playerClass: 'paladin' as any,
       playerName: 'Pala',
       autoEquip: true,
