@@ -17,14 +17,15 @@
 
 import { describe, expect, it } from 'vitest';
 import { DEED_ORDER, DEEDS } from '../src/sim/content/deeds';
-import { ITEMS } from '../src/sim/data';
+import { ITEMS, NPCS } from '../src/sim/data';
 import { deedIdsForDirtyKey, METER_DIRTY_KEYS, narrowKeysForTrigger } from '../src/sim/deeds';
 import * as items from '../src/sim/items';
 import { awardBattlegroundKillHonor, grantHonor } from '../src/sim/pvp/honor';
 import type { CharacterState, PlayerMeta } from '../src/sim/sim';
 import { Sim } from '../src/sim/sim';
 import type { SimContext } from '../src/sim/sim_context';
-import type { Entity, SimEvent } from '../src/sim/types';
+import type { Entity, SimEvent, WorldContent } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // The ladder, restated independently of the catalog so a threshold, renown
 // value, or title text edited in content reds here too.
@@ -34,8 +35,12 @@ const LADDER = [
   { id: 'pvp_honor_field_marshal', amount: 150_000, renown: 50, title: 'Warcrowned' },
 ] as const;
 
+// The meter and the loader read only the character, and the spending cases need
+// FURY in reach: the empty world plus the Honor Quartermaster serves every Sim.
+const FURY_WORLD: WorldContent = { ...EMPTY_TEST_WORLD, npcs: { fury: NPCS.fury } };
+
 function world(): Sim {
-  return new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+  return new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true, world: FURY_WORLD });
 }
 
 function ctxOf(sim: Sim): SimContext {
