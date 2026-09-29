@@ -38,6 +38,7 @@ import { GameServer } from '../server/game';
 import { gameMetricsCounters } from '../server/http/game_signals';
 import { bankGrantStorageSlots } from '../src/sim/bank';
 import { Sim } from '../src/sim/sim';
+import { WORLD_SEED } from '../src/sim/world_seed';
 import { COMMAND_NAMES } from '../src/world_api';
 import { bareClient } from './helpers/bare_client';
 
@@ -472,7 +473,7 @@ describe('bank wire round-trip', () => {
     // The shared script: stock 5 wolf_fang + 1000 copper, deposit 2 then the rest,
     // withdraw 1, buy the first expansion. End state: 4 in the bank, 6 purchased
     // slots, 500 copper.
-    const offline = new Sim({ seed: 7, playerClass: 'warrior', autoEquip: true }) as any;
+    const offline = new Sim({ seed: WORLD_SEED, playerClass: 'warrior', autoEquip: true }) as any;
     const offPid = offline.playerId;
     bringBankerToPlayer(offline, offPid);
     offline.addItem('wolf_fang', 5, offPid);
@@ -836,7 +837,7 @@ describe('bank wire round-trip', () => {
     // the wire's dispatch coerced and socketed first-empty above. Inherited
     // verbatim from the equip_bag family idiom; the UI only ever passes
     // integers, so no player-reachable caller sees the difference.
-    const offline = new Sim({ seed: 7, playerClass: 'warrior', autoEquip: true }) as any;
+    const offline = new Sim({ seed: WORLD_SEED, playerClass: 'warrior', autoEquip: true }) as any;
     const offPid = offline.playerId;
     bringBankerToPlayer(offline, offPid);
     offline.players.get(offPid).copper = 3000000;
@@ -869,7 +870,7 @@ describe('bank wire round-trip', () => {
       };
     };
 
-    const offline = new Sim({ seed: 7, playerClass: 'warrior', autoEquip: true }) as any;
+    const offline = new Sim({ seed: WORLD_SEED, playerClass: 'warrior', autoEquip: true }) as any;
     const offPid = offline.playerId;
     bringBankerToPlayer(offline, offPid);
     drive(offline, offPid);
@@ -1006,7 +1007,7 @@ describe('bank wire round-trip', () => {
     // number that cannot occur by coincidence.
     const server = new GameServer();
     (server as any).sim = new Sim({
-      seed: 7,
+      seed: WORLD_SEED,
       playerClass: 'warrior',
       noPlayer: true,
       storagePrices: {
@@ -1387,7 +1388,7 @@ describe('the revision-gated bank self key', () => {
 // sim-side; the S3 guard pins the literal's matcher registration).
 describe('pool-honest bank deposit refusal', () => {
   function bankWithMaterialsRoomOnly() {
-    const sim: any = new Sim({ seed: 7, playerClass: 'warrior', autoEquip: false });
+    const sim: any = new Sim({ seed: WORLD_SEED, playerClass: 'warrior', autoEquip: false });
     const pid = sim.playerId;
     bringBankerToPlayer(sim, pid);
     const meta = sim.players.get(pid);

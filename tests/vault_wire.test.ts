@@ -46,6 +46,7 @@ import { DUNGEON_X_THRESHOLD } from '../src/sim/data';
 import { resolveCraftForRecipe } from '../src/sim/professions/crafting';
 import { type PlayerMeta, Sim } from '../src/sim/sim';
 import type { Entity, InvSlot } from '../src/sim/types';
+import { WORLD_SEED } from '../src/sim/world_seed';
 import {
   bareClient,
   broadcast,
@@ -778,7 +779,7 @@ describe('materials vault wire round-trip', () => {
     // Sim handed the identical null refuses outright. Without this arm the
     // "deviation" is only half recorded, and an offline change that started
     // accepting null would close the gap with nothing going red.
-    const offline = new Sim({ seed: 7, playerClass: 'warrior', autoEquip: true });
+    const offline = new Sim({ seed: WORLD_SEED, playerClass: 'warrior', autoEquip: true });
     const offPid = offline.playerId;
     bringBankerToPlayer(offline, offPid);
     offline.addItem('copper_ore', 5, offPid);
@@ -1562,7 +1563,7 @@ describe('materials vault wire round-trip', () => {
     // the two hosts diverge HERE). End state: 10 copper + 3 hide stocked,
     // rung 2, ceiling 80, next price 100000, 0 copper, empty bags arm.
     // biome-ignore lint/suspicious/noExplicitAny: the Sim internals this rig reaches for
-    const offline = new Sim({ seed: 7, playerClass: 'warrior', autoEquip: true }) as any;
+    const offline = new Sim({ seed: WORLD_SEED, playerClass: 'warrior', autoEquip: true }) as any;
     const offPid = offline.playerId;
     bringBankerToPlayer(offline, offPid);
     offline.addItem('copper_ore', 10, offPid);
@@ -2158,7 +2159,7 @@ describe('storage price overrides ride the vault delta (phase 09)', () => {
     const server = new GameServer();
     // biome-ignore lint/suspicious/noExplicitAny: the pre-join sim swap is a rig internal
     (server as any).sim = new Sim({
-      seed: 7,
+      seed: WORLD_SEED,
       playerClass: 'warrior',
       noPlayer: true,
       storagePrices: { vaultUpgrades: [333, 334, 335, 336, 337] },
