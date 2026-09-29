@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { Sim } from '../src/sim/sim';
+import { EMPTY_TEST_WORLD } from './sim_shared';
+
+// Both casts are self casts that read nothing around the caster, so the Sims run
+// on the empty world, on one seed.
+const SEED = 2603;
 
 describe('v0.26 canonical successful-cast hooks', () => {
   it('routes a selected castNth row through the normal instant-cast lifecycle', () => {
@@ -7,7 +12,12 @@ describe('v0.26 canonical successful-cast hooks', () => {
     // survival row with no castNth hooks), so the lifecycle vehicle is the
     // surviving analogue: Ghostfoot Gambit, a castNth n=1 hook on Ghostfoot
     // (evasion), an instant self-cast, granting a scoped next_cast_cheap aura.
-    const sim = new Sim({ seed: 2603, playerClass: 'rogue', autoEquip: false });
+    const sim = new Sim({
+      seed: SEED,
+      playerClass: 'rogue',
+      autoEquip: false,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.setPlayerLevel(20);
     expect(sim.selectTalentRow(17, 'rog_r17_ghostfoot_gambit')).toBe(true);
 
@@ -35,7 +45,12 @@ describe('v0.26 canonical successful-cast hooks', () => {
   });
 
   it('emits an authored Warrior cast cue with the stable ability id', () => {
-    const sim = new Sim({ seed: 2604, playerClass: 'warrior', autoEquip: false });
+    const sim = new Sim({
+      seed: SEED,
+      playerClass: 'warrior',
+      autoEquip: false,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.events = [];
 
     sim.castAbility('battle_shout');
