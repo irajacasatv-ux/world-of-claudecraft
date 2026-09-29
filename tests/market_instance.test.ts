@@ -39,6 +39,7 @@ import { GameServer } from '../server/game';
 import { Sim } from '../src/sim/sim';
 import type { Entity, ItemInstancePayload, SimEvent } from '../src/sim/types';
 import { groundHeight } from '../src/sim/world';
+import { VENDOR_TEST_WORLD } from './sim_shared';
 
 const BOOTS = 'oiled_boots'; // armor, stack 1
 const HIDE = 'pristine_hide'; // junk rare material, stack 20
@@ -46,7 +47,10 @@ const HIDE = 'pristine_hide'; // junk rare material, stack 20
 // material now shares one stack, so it could never reach the slot cap. The
 // non-material SWORD below is the replacement.
 
-const makeWorld = () => new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+// The market reads the Merchant (an NPC kept by the vendor world), the players
+// and the vendor catalog, never a mob camp or a ground object.
+const makeWorld = () =>
+  new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true, world: VENDOR_TEST_WORLD });
 
 function merchant(sim: Sim): Entity {
   for (const e of sim.entities.values()) if (e.templateId === 'the_merchant') return e;
