@@ -508,6 +508,10 @@ describe('terrain height bit identity', () => {
     }
 
     expect(comparisons).toBeGreaterThanOrEqual(200_000);
+    // The nightly depth compares EVERY point in both lanes (the corpus size is
+    // pinned to a literal by the case above); the floor alone would pass a
+    // nightly that still skipped the odd atlas rows, or any other block.
+    if (NIGHTLY_SWEEP) expect(comparisons).toBe(points.length * LANE_COUNT);
     expect(mismatches, mismatches.join('\n')).toHaveLength(0);
   }, 30_000);
 });
