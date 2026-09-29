@@ -6,7 +6,7 @@ import { createMob } from '../src/sim/entity';
 import { updateMobTarget } from '../src/sim/mob/targeting';
 import { RIFT_BAND_GEM_SLOTS, RIFT_BAND_MAX_UPGRADE } from '../src/sim/rift/band_ladder';
 import { sanitizeRiftGearInstance } from '../src/sim/rift/progression';
-import { Sim } from '../src/sim/sim';
+import type { Sim } from '../src/sim/sim';
 import {
   dist2d,
   type Entity,
@@ -15,6 +15,7 @@ import {
   type SimEvent,
 } from '../src/sim/types';
 import { anchorProbeInOpenField } from './probe_anchor';
+import { newProbeSim } from './probe_sim';
 
 export type OwnedDpsSpec =
   | 'packlord'
@@ -848,7 +849,7 @@ export function runOwnedClassDpsProbe(
   setupEquipment?: (sim: Sim) => void,
 ): OwnedClassBalanceResult {
   const fixture = FIXTURES[spec];
-  const sim = new Sim({ seed, playerClass: fixture.cls, autoEquip: false }) as ProbeSim;
+  const sim = newProbeSim({ seed, playerClass: fixture.cls, autoEquip: false }) as ProbeSim;
   sim.setPlayerLevel(20);
   anchorProbeInOpenField(sim);
   const talents = pbeTalents(spec, fixture.talentSpec);
@@ -1135,7 +1136,7 @@ export function runOwnedHealerProbe(
   setupEquipment?: (sim: Sim) => void,
 ): OwnedHealerBalanceResult {
   const fixture = healerFixture(spec);
-  const sim = new Sim({ seed, playerClass: fixture.cls, autoEquip: false }) as ProbeSim;
+  const sim = newProbeSim({ seed, playerClass: fixture.cls, autoEquip: false }) as ProbeSim;
   sim.setPlayerLevel(20);
   anchorProbeInOpenField(sim);
   const talents = pbeTalents(spec, fixture.talentSpec);
@@ -1302,7 +1303,7 @@ function incomingDamageForPosture(
   posture: 'galeheart_weapon' | 'rockbiter_weapon',
   seed: number,
 ): number {
-  const sim = new Sim({ seed, playerClass: 'shaman', autoEquip: false }) as ProbeSim;
+  const sim = newProbeSim({ seed, playerClass: 'shaman', autoEquip: false }) as ProbeSim;
   sim.setPlayerLevel(20);
   anchorProbeInOpenField(sim);
   if (!sim.applyTalents({ spec: 'enhancement', rows: {} } as never)) {
@@ -1351,7 +1352,7 @@ export function runWarspiritOfftankProbe(
 ): WarspiritOfftankResult {
   const galeheartIncomingDamage = incomingDamageForPosture('galeheart_weapon', seed);
   const stoneboundIncomingDamage = incomingDamageForPosture('rockbiter_weapon', seed);
-  const sim = new Sim({ seed, playerClass: 'shaman', autoEquip: false }) as ProbeSim;
+  const sim = newProbeSim({ seed, playerClass: 'shaman', autoEquip: false }) as ProbeSim;
   sim.setPlayerLevel(20);
   anchorProbeInOpenField(sim);
   if (!sim.applyTalents({ spec: 'enhancement', rows: {} } as never)) {

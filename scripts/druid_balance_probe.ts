@@ -9,13 +9,14 @@ import { MOBS } from '../src/sim/data';
 import { equipReferenceEpicKitForDev } from '../src/sim/dev/bis_gear';
 import { createMob } from '../src/sim/entity';
 import { updateMobTarget } from '../src/sim/mob/targeting';
-import { Sim } from '../src/sim/sim';
+import type { Sim } from '../src/sim/sim';
 import type { Entity } from '../src/sim/types';
 import {
   type OwnedClassBalanceScenario,
   runOwnedClassDpsProbe,
   runOwnedHealerProbe,
 } from './owned_class_balance_probe';
+import { newProbeSim } from './probe_sim';
 
 export const DRUID_PROBE_SECONDS = 123;
 export const DRUID_PROBE_SEEDS = [4242, 777, 1313, 99, 2024, 555, 31337, 8080] as const;
@@ -211,7 +212,7 @@ export function runDruidLiveMobProbe(
   arm: DruidLiveMobResult['arm'],
   seed = 42_420,
 ): DruidLiveMobResult {
-  const sim = new Sim({ seed, playerClass: 'druid', autoEquip: true });
+  const sim = newProbeSim({ seed, playerClass: 'druid', autoEquip: true });
   sim.setPlayerLevel(20);
   const spec = arm === 'moongrove' ? 'balance' : 'feral';
   const row14 = arm === 'moongrove' ? 'dru_r14_moonfury' : 'dru_r14_savage_fury';
@@ -298,7 +299,7 @@ export function runDruidLiveMobProbe(
 }
 
 function bruinFixture(seed: number): Sim {
-  const sim = new Sim({ seed, playerClass: 'druid', autoEquip: true });
+  const sim = newProbeSim({ seed, playerClass: 'druid', autoEquip: true });
   sim.setPlayerLevel(20);
   if (!sim.applyTalents({ spec: 'feral', rows: {} })) {
     throw new Error('failed to apply feral');

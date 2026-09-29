@@ -26,6 +26,7 @@
 //    non-mob phases.
 
 import { readFileSync } from 'node:fs';
+import ts from 'typescript';
 import { describe, expect, it, vi } from 'vitest';
 
 // Mock the db layer so no Postgres is needed; GameServer's constructor never
@@ -50,6 +51,7 @@ vi.mock('../server/db', () => ({
   loadAccountFlair: vi.fn(async () => ({ ai: false, streamer: false, links: {} })),
 }));
 
+import { newProbeSim, PROBE_IDLE_CULL } from '../scripts/probe_sim';
 import { GameServer, INTEREST_DROP_RADIUS } from '../server/game';
 import { offlineWorldConfig } from '../src/game/offline_world_config';
 import { ENTITY_VIEW_DESTROY_RANGE } from '../src/render/renderer';
@@ -57,6 +59,7 @@ import { MAX_AGGRO_RADIUS } from '../src/sim/mob/aggro_ranges';
 import { Sim } from '../src/sim/sim';
 import { type Entity, PLAYER_INTEREST_DROP_RADIUS } from '../src/sim/types';
 import { PRODUCTION_IDLE_CULL } from './helpers/production_idle_cull';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 function sharedCullEligibleIdleMob(e: Entity): boolean {
   return (
@@ -349,4 +352,69 @@ describe('idle-mob distance culling is wired into the production server (#2703)'
 
     expect(withMedian).toBeLessThan(withoutMedian * 0.6);
   }, 60_000);
+});
+
+// The balance probe harnesses (the long-sims lane's instrument) tick the world production
+// runs: every Sim they build goes through scripts/probe_sim.ts, so a probe added with a
+// bare constructor would measure an unculled world (six to nine times slower, and on a
+// different rng stream than the bands were measured at). Constructions come from
+// TypeScript's parser, so a comment or a string never counts.
+const BALANCE_HARNESSES = [
+  'scripts/owned_class_balance_probe.ts',
+  'scripts/druid_balance_probe.ts',
+  'scripts/hunter_dps_probe.ts',
+  'scripts/warlock_balance_probe.ts',
+] as const;
+
+function simConstructions(source: string): { bare: number; probe: number } {
+  const file = ts.createSourceFile('harness.ts', source, ts.ScriptTarget.Latest, true);
+  const counts = { bare: 0, probe: 0 };
+  const visit = (node: ts.Node): void => {
+    if (
+      ts.isNewExpression(node) &&
+      ts.isIdentifier(node.expression) &&
+      node.expression.text === 'Sim'
+    )
+      counts.bare++;
+    if (
+      ts.isCallExpression(node) &&
+      ts.isIdentifier(node.expression) &&
+      node.expression.text === 'newProbeSim'
+    )
+      counts.probe++;
+    ts.forEachChild(node, visit);
+  };
+  visit(file);
+  return counts;
+}
+
+const harnessSource = (file: string): string =>
+  readFileSync(new URL(`../${file}`, import.meta.url), 'utf8');
+
+describe('the balance probe harnesses boot the production idle cull', () => {
+  it('builds every harness Sim through newProbeSim, whose cull wins over the caller', () => {
+    expect(PROBE_IDLE_CULL).toEqual(PRODUCTION_IDLE_CULL);
+    for (const file of BALANCE_HARNESSES) {
+      const counts = simConstructions(harnessSource(file));
+      expect(counts.bare, file).toBe(0);
+      expect(counts.probe, file).toBeGreaterThan(0);
+    }
+    const sim = newProbeSim({
+      seed: 20_062,
+      playerClass: 'warrior',
+      world: EMPTY_TEST_WORLD,
+      idleMobTickRadius: 0,
+    });
+    expect(sim.cfg.idleMobTickRadius).toBe(PLAYER_INTEREST_DROP_RADIUS);
+  });
+
+  it('counts a bare construction, and not a commented or quoted one', () => {
+    const source = harnessSource(BALANCE_HARNESSES[0]);
+    const before = simConstructions(source);
+    const edited =
+      `${source}\nconst stray = new Sim({ seed: 1, playerClass: 'warrior' });\n` +
+      `// const commented = new Sim({ seed: 2, playerClass: 'warrior' });\n` +
+      `const quoted = "new Sim({ seed: 3, playerClass: 'warrior' })";\n`;
+    expect(simConstructions(edited)).toEqual({ bare: before.bare + 1, probe: before.probe });
+  });
 });

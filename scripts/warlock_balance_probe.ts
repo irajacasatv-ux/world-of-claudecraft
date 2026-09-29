@@ -4,8 +4,9 @@ import { addSoulFragments, soulFragmentCount } from '../src/sim/combat/necromanc
 import { HEROIC_DUNGEON_TUNING } from '../src/sim/content/dungeon_difficulty';
 import { MOBS } from '../src/sim/data';
 import { createMob, type PlayerEquipment, recalcPlayerStats } from '../src/sim/entity';
-import { Sim } from '../src/sim/sim';
+import type { Sim } from '../src/sim/sim';
 import type { Entity, SimEvent } from '../src/sim/types';
+import { newProbeSim } from './probe_sim';
 
 export type WarlockBalanceSpec = 'affliction' | 'destruction' | 'demonology';
 
@@ -311,7 +312,7 @@ export function runWarlockBalanceProbe(
   seconds = 300,
   scenario: WarlockProbeScenario = WARLOCK_LEVEL_20_SCENARIO,
 ): WarlockBalanceResult {
-  const sim = new Sim({ seed, playerClass: 'warlock', autoEquip: true }) as ProbeSim;
+  const sim = newProbeSim({ seed, playerClass: 'warlock', autoEquip: true }) as ProbeSim;
   sim.setPlayerLevel(20);
   if (!sim.applyTalents({ spec, rows: TALENT_ROWS[spec] })) {
     throw new Error(`Could not apply ${spec} benchmark talents`);
