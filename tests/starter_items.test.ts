@@ -2,10 +2,12 @@ import { describe, expect, it } from 'vitest';
 import { CLASSES } from '../src/sim/content/classes';
 import { Sim } from '../src/sim/sim';
 import type { PlayerClass } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // Fresh characters set out provisioned: 5 bread for every class, plus 5 water
 // for the mana classes. Saved characters load their own bags and are never
-// re-granted the rations.
+// re-granted the rations. The rations ride character creation alone, so every
+// Sim runs on the empty world.
 
 const ALL_CLASSES = Object.keys(CLASSES) as PlayerClass[];
 
@@ -17,7 +19,7 @@ describe('starter rations', () => {
   for (const cls of ALL_CLASSES) {
     const wantsWater = CLASSES[cls].resourceType === 'mana';
     it(`a fresh ${cls} starts with 5 bread${wantsWater ? ' and 5 water' : ' and no water'}`, () => {
-      const sim = new Sim({ seed: 42, playerClass: cls });
+      const sim = new Sim({ seed: 42, playerClass: cls, world: EMPTY_TEST_WORLD });
       expect(count(sim, 'baked_bread')).toBe(5);
       expect(count(sim, 'spring_water')).toBe(wantsWater ? 5 : 0);
     });
@@ -29,14 +31,19 @@ describe('starter rations', () => {
   });
 
   it('a saved character keeps its bags as-is (no re-grant on load)', () => {
-    const sim = new Sim({ seed: 42, playerClass: 'priest' });
+    const sim = new Sim({ seed: 42, playerClass: 'priest', world: EMPTY_TEST_WORLD });
     // The player ate two loaves and drank all the water before saving.
     sim.removeItem('baked_bread', 2);
     sim.removeItem('spring_water', 5);
     const state = sim.serializeCharacter(sim.primaryId);
     expect(state).not.toBeNull();
 
-    const sim2 = new Sim({ seed: 42, playerClass: 'priest', noPlayer: true });
+    const sim2 = new Sim({
+      seed: 42,
+      playerClass: 'priest',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const pid = sim2.addPlayer('priest', 'Reloaded', { state: state! });
     const meta = sim2.players.get(pid)!;
     const loaded = (id: string) =>
