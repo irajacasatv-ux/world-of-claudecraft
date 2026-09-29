@@ -848,7 +848,21 @@ describe('Fenbridge content projection and preservation', () => {
 
 describe('Fenbridge runtime safety and traversal', () => {
   it('spawns every NPC at its exact authored transform and keeps Petra a live banker chest', () => {
-    const sim = new Sim({ seed: SEED, playerClass: 'warrior', noPlayer: true });
+    // The case reads only Fenbridge's own NPCs, so the Sim spawns those alone.
+    const fenbridgeIds = new Set(FENBRIDGE_LAYOUT.services.npcs.map((placement) => placement.id));
+    const sim = new Sim({
+      seed: SEED,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: {
+        ...BUILTIN_WORLD,
+        camps: [],
+        npcs: Object.fromEntries(
+          Object.entries(BUILTIN_WORLD.npcs).filter(([id]) => fenbridgeIds.has(id)),
+        ),
+        groundObjects: [],
+      },
+    });
     for (const placement of FENBRIDGE_LAYOUT.services.npcs) {
       const entity = [...sim.entities.values()].find(
         (candidate) => candidate.kind === 'npc' && candidate.templateId === placement.id,

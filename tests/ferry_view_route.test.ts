@@ -10,6 +10,7 @@ import { Sim } from '../src/sim/sim';
 import { type TransportPose, transportShipPoseAt } from '../src/sim/transport_schedule';
 import type { Entity } from '../src/sim/types';
 import { WORLD_SEED } from '../src/sim/world_seed';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // Which route a player's ferry view shows (src/sim/ferry_view_route.ts): the
 // route they ride, else the one whose ship or berth is nearest. The offline
@@ -51,7 +52,10 @@ describe('ferryViewRouteIndex', () => {
 
 describe('both worlds show the same route', () => {
   it('the offline Sim and the online ClientWorld agree, on foot and aboard', () => {
-    const sim = new Sim({ seed: WORLD_SEED, playerClass: 'warrior' });
+    // The route pick reads the clock and the viewer (the ferry gate follows the
+    // active built-in world, not the Sim's content), so the Sim runs on the
+    // empty world.
+    const sim = new Sim({ seed: WORLD_SEED, playerClass: 'warrior', world: EMPTY_TEST_WORLD });
     const player = {
       pos: { x: 0, y: 0, z: 0 },
       ferryRiding: false,

@@ -19,14 +19,24 @@
 
 import { describe, expect, it } from 'vitest';
 import { isOnProvingShore } from '../src/sim/content/proving_shore';
+import { BUILTIN_WORLD } from '../src/sim/data';
 import { Sim } from '../src/sim/sim';
-import type { Entity } from '../src/sim/types';
+import type { Entity, WorldContent } from '../src/sim/types';
 
 // Any seed works: the bells are authored placements and neither
 // tryRingFerryBell nor displacePlayer draws rng, so 4121 is arbitrary, not
 // hunted; a re-record round should never need to move it.
+// The crossing reads only the two bells, so each Sim runs on a world holding
+// those ground objects and nothing else.
+const BELL_WORLD: WorldContent = {
+  ...BUILTIN_WORLD,
+  camps: [],
+  npcs: {},
+  groundObjects: BUILTIN_WORLD.groundObjects.filter((object) => object.itemId === 'ps_ferry_bell'),
+};
+
 function makeSim(seed = 4121): Sim {
-  return new Sim({ seed, playerClass: 'warrior', autoEquip: true });
+  return new Sim({ seed, playerClass: 'warrior', autoEquip: true, world: BELL_WORLD });
 }
 
 function bells(sim: Sim): { island: Entity; town: Entity } {

@@ -21,6 +21,7 @@ import { FERRY_HUD_NEAR_YD, FerryHudPainter, ferryHudModel } from '../src/ui/hud
 import { ensureLocaleLoaded, setLanguage } from '../src/ui/i18n';
 import type { PainterHostWriters } from '../src/ui/painter_host';
 import { bareClient } from './helpers/bare_client';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const ROUTE = EASTBROOK_NIGHTBLOOM_FERRY;
 const T = ROUTE.timings;
@@ -72,7 +73,9 @@ describe('ferryHudModel', () => {
   });
 
   it('reads the same from the offline Sim and the online ClientWorld', () => {
-    const sim = new Sim({ seed: WORLD_SEED, playerClass: 'warrior' });
+    // The timetable is a pure clock read (the ferry gate follows the active
+    // built-in world, not the Sim's content), so the Sim runs on the empty world.
+    const sim = new Sim({ seed: WORLD_SEED, playerClass: 'warrior', world: EMPTY_TEST_WORLD });
     const client = bareClient(sim.player.id);
     const apply = (s: unknown) =>
       (client as unknown as { applySnapshot(s: unknown): void }).applySnapshot(s);
