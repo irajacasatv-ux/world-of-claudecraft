@@ -247,7 +247,7 @@ describe('same display name, different characters: identity is by entity, not by
 describe('stable host character identity survives an entity rejoin', () => {
   it('the same character reconnecting under a fresh entity id keeps its death-snapshot admission', () => {
     const sim = new Sim({
-      seed: 23,
+      seed: 21,
       playerClass: 'warrior',
       noPlayer: true,
       world: CORPSE_TEST_WORLD,
