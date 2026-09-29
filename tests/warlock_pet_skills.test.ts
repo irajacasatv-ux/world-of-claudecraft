@@ -5,6 +5,7 @@ import { petRangedAttack, updatePet } from '../src/sim/pet/pet_ai';
 import { tryUseWarlockPetSkill, useWarlockPetSkill } from '../src/sim/pet/warlock_pet_skills';
 import { Sim } from '../src/sim/sim';
 import { dist2d, type Entity } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 type RigSim = Sim & { addEntity(entity: Entity): void };
 
@@ -14,7 +15,13 @@ function rig(petTemplateId = 'gloomshade'): {
   pet: Entity;
   target: Entity;
 } {
-  const sim = new Sim({ seed: 97, playerClass: 'warlock', noPlayer: true }) as unknown as RigSim;
+  // The rig places the pet and its target by hand, so it runs on the empty world.
+  const sim = new Sim({
+    seed: 97,
+    playerClass: 'warlock',
+    noPlayer: true,
+    world: EMPTY_TEST_WORLD,
+  }) as unknown as RigSim;
   const ownerId = sim.addPlayer('warlock', 'Owner');
   const owner = sim.entities.get(ownerId) as Entity;
   const petTemplate = MOBS[petTemplateId];
