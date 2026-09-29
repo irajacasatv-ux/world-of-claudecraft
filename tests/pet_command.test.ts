@@ -1,13 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { Sim } from '../src/sim/sim';
 import type { Entity, SimEvent } from '../src/sim/types';
+import { RL_TEST_WORLD } from './sim_shared';
 
 function makeWorld() {
-  return new Sim({ seed: 42, playerClass: 'hunter', noPlayer: true });
+  return new Sim({ seed: 42, playerClass: 'hunter', noPlayer: true, world: RL_TEST_WORLD });
 }
 
 function makeClassWorld(cls: Parameters<Sim['addPlayer']>[0]) {
-  return new Sim({ seed: 42, playerClass: cls, noPlayer: true });
+  return new Sim({ seed: 42, playerClass: cls, noPlayer: true, world: RL_TEST_WORLD });
 }
 
 function errorText(events: SimEvent[]): string | undefined {
@@ -70,7 +71,12 @@ describe('/pet command', () => {
     const saved = first.serializeCharacter(pid)!;
     expect(saved.pet?.templateId).toBe(templateId);
 
-    const restored = new Sim({ seed: 42, playerClass: 'hunter', noPlayer: true });
+    const restored = new Sim({
+      seed: 42,
+      playerClass: 'hunter',
+      noPlayer: true,
+      world: RL_TEST_WORLD,
+    });
     const restoredPid = restored.addPlayer('hunter', 'Tamer', { state: saved });
     expect(restored.petOf(restoredPid)?.templateId).toBe(templateId);
   });

@@ -3,9 +3,10 @@ import { zoneAt } from '../src/sim/data';
 import { Sim } from '../src/sim/sim';
 import { dist2d, type SimEvent } from '../src/sim/types';
 import { groundHeight } from '../src/sim/world';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 function makeWorld() {
-  return new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+  return new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true, world: EMPTY_TEST_WORLD });
 }
 
 function teleport(sim: Sim, pid: number, x: number, z: number) {

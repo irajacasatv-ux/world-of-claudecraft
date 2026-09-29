@@ -2,13 +2,15 @@ import { describe, expect, it } from 'vitest';
 import { petPickTarget } from '../src/sim/pet/pet_ai';
 import { Sim } from '../src/sim/sim';
 import type { Entity } from '../src/sim/types';
+import { RL_TEST_WORLD } from './sim_shared';
 
 // Anti-AFK gate on aggressive pet auto-pull (hunter/warlock). An aggressive pet
 // proactively pulls nearby hostiles only while the owner is actually playing; an
 // idle owner's pet still DEFENDS (mob attacking owner/pet, or owner attacking a
 // mob) but must not farm the area on its own. See petPickTarget + PET_OWNER_IDLE_TICKS.
 
-const makeWorld = () => new Sim({ seed: 42, playerClass: 'hunter', noPlayer: true });
+const makeWorld = () =>
+  new Sim({ seed: 42, playerClass: 'hunter', noPlayer: true, world: RL_TEST_WORLD });
 
 // Adopt a wild mob as the player's pet (mirrors a completed tame).
 function givePet(sim: Sim, ownerPid: number): Entity {

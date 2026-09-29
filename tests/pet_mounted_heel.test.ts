@@ -6,6 +6,7 @@ import { completeTame, petOf } from '../src/sim/pet/pet_commands';
 import { Sim } from '../src/sim/sim';
 import type { Entity, PetMode } from '../src/sim/types';
 import { terrainHeight } from '../src/sim/world';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // Riding across a zone used to drag the pet into every fight on the way, and no
 // stance avoided it: defensive correctly answers whatever is attacking its owner
@@ -28,7 +29,12 @@ function world(mode: PetMode = 'defensive'): {
   hunter: AnyEntity;
   pet: AnyEntity;
 } {
-  const sim = new Sim({ seed: SEED, playerClass: 'hunter', noPlayer: true }) as AnySim;
+  const sim = new Sim({
+    seed: SEED,
+    playerClass: 'hunter',
+    noPlayer: true,
+    world: EMPTY_TEST_WORLD,
+  }) as AnySim;
   const hid = sim.addPlayer('hunter', 'Rider') as number;
   sim.setPlayerLevel(20, hid);
   const hunter = sim.entities.get(hid) as AnyEntity;

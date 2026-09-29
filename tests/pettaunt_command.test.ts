@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { Sim } from '../src/sim/sim';
 import type { Entity, SimEvent } from '../src/sim/types';
+import { RL_TEST_WORLD } from './sim_shared';
 
 function makeWorld() {
-  return new Sim({ seed: 42, playerClass: 'hunter', noPlayer: true });
+  return new Sim({ seed: 42, playerClass: 'hunter', noPlayer: true, world: RL_TEST_WORLD });
 }
 
 function errorTexts(events: SimEvent[]): string[] {
