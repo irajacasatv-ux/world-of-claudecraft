@@ -55,6 +55,11 @@ function tickFor(sim: Sim, seconds: number): SimEvent[] {
   return out;
 }
 
+// The gap the clock cases leave between a read (or take) and the next verb. Every
+// clock below is compared exactly, so any elapsed time shows a clock the second
+// verb re-extended or restarted; one sim-second (20 ticks) is enough.
+const ELAPSE_SECONDS = 1;
+
 // biome-ignore lint/suspicious/noExplicitAny: reach into the book to drive and inspect raw expiry.
 const bookOf = (sim: Sim): any[] => (sim.postOffice as any).mail;
 
@@ -325,13 +330,13 @@ describe('the emptied-letter clocks: unread 30 days, read 3 days', () => {
 
   it('reading a note (mailMarkRead) moves it onto the 3-day read clock, once', () => {
     const { sim, bob, raw } = setupNote();
-    tickFor(sim, 100);
+    tickFor(sim, ELAPSE_SECONDS);
     sim.mailMarkRead(raw.id, bob);
     expect(raw.read).toBe(true);
     const readAt = sim.time;
     expect(raw.expiresAt).toBe(readAt + MAIL_READ_EXPIRY_SECONDS);
     // The flip fires once: a repeat read never extends the clock.
-    tickFor(sim, 100);
+    tickFor(sim, ELAPSE_SECONDS);
     sim.mailMarkRead(raw.id, bob);
     expect(raw.expiresAt).toBe(readAt + MAIL_READ_EXPIRY_SECONDS);
     // And the sweep collects it from there.
@@ -342,12 +347,12 @@ describe('the emptied-letter clocks: unread 30 days, read 3 days', () => {
 
   it('the take that first reads a bare note starts the read clock; a repeat take never extends it', () => {
     const { sim, bob, raw } = setupNote();
-    tickFor(sim, 100);
+    tickFor(sim, ELAPSE_SECONDS);
     sim.mailTake(raw.id, bob);
     expect(raw.read).toBe(true);
     const readAt = sim.time;
     expect(raw.expiresAt).toBe(readAt + MAIL_READ_EXPIRY_SECONDS);
-    tickFor(sim, 100);
+    tickFor(sim, ELAPSE_SECONDS);
     sim.mailTake(raw.id, bob);
     expect(raw.expiresAt).toBe(readAt + MAIL_READ_EXPIRY_SECONDS);
   });
@@ -360,7 +365,7 @@ describe('the emptied-letter clocks: unread 30 days, read 3 days', () => {
     expect(raw.read).toBe(true);
     // Attachments aboard: reading changes nothing about its clock.
     expect(raw.expiresAt).toBe(sentAt + MAIL_ATTACHMENT_EXPIRY_SECONDS);
-    tickFor(sim, 100);
+    tickFor(sim, ELAPSE_SECONDS);
     sim.mailTake(raw.id, bob);
     expect(raw.items).toEqual([]);
     expect(raw.copper).toBe(0);
@@ -419,7 +424,7 @@ describe('sub-silver coin is not escrow', () => {
     sim.mailMarkRead(raw.id, bob);
     const readAt = sim.time;
     expect(raw.expiresAt).toBe(readAt + MAIL_READ_EXPIRY_SECONDS);
-    tickFor(sim, 100);
+    tickFor(sim, ELAPSE_SECONDS);
     const before = bobMeta.copper;
     sim.mailTake(raw.id, bob);
     expect(bobMeta.copper).toBe(before + 42);
