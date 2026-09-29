@@ -59,11 +59,16 @@ import {
   VARKHUL_WORLDFIRE_DAMAGE_MAX_HP,
   VARKHUL_WORLDFIRE_FULL_DAMAGE_MAX_HP,
 } from '../src/sim/varkhul_worldfire';
-import { addEncounterPlayer, claimedEncounter, rekeyBoss } from './helpers/varkhul_forge_harness';
+import {
+  addEncounterPlayer,
+  claimedEncounter,
+  FORGE_SEED,
+  rekeyBoss,
+} from './helpers/varkhul_forge_harness';
 
 describe('Varkhul forge pillars and add intermission', () => {
   it('re-seats on the highest-threat raider, not the lowest entity id, when the tank leaves the claim', () => {
-    const { sim, boss } = claimedEncounter(9401);
+    const { sim, boss } = claimedEncounter(FORGE_SEED);
     // The druid spawns first (lowest entity id after the tank) with almost no
     // threat; the mage joined later and holds far more.
     const druid = addEncounterPlayer(sim, boss, 'Wolf Druid', 'dps');
@@ -84,7 +89,7 @@ describe('Varkhul forge pillars and add intermission', () => {
   });
 
   it('names his unseen master once when Varkhul dies', () => {
-    const { sim, boss } = claimedEncounter(699);
+    const { sim, boss } = claimedEncounter(FORGE_SEED);
     updateVarkhulEncounter(sim.ctx, boss);
     const state = boss.varkhul;
     if (!state) throw new Error('Varkhul state missing');
@@ -123,7 +128,7 @@ describe('Varkhul forge pillars and add intermission', () => {
   });
 
   it('keeps the authored boss set-piece in front of the anvil, facing away from the raid', () => {
-    const { sim, boss } = claimedEncounter(701, false, false);
+    const { sim, boss } = claimedEncounter(FORGE_SEED, false, false);
     const instance = sim.instances.find((entry) => entry.dungeonId === IGNIVAR_SECOND_WING_ID);
     if (!instance) throw new Error('instance missing');
     const origin = sim.ctx.instanceOriginOf(instance);
@@ -163,7 +168,7 @@ describe('Varkhul forge pillars and add intermission', () => {
   });
 
   it("walks to the forge before opening the Master's Assembly portals", () => {
-    const { sim, boss } = claimedEncounter(704);
+    const { sim, boss } = claimedEncounter(FORGE_SEED);
     updateVarkhulEncounter(sim.ctx, boss);
     const state = boss.varkhul;
     const instance = sim.instances.find((entry) => entry.mobIds.includes(boss.id));
@@ -208,7 +213,7 @@ describe('Varkhul forge pillars and add intermission', () => {
   });
 
   it("cancels an active Shared Pyre when Master's Assembly starts", () => {
-    const { sim, boss } = claimedEncounter(705);
+    const { sim, boss } = claimedEncounter(FORGE_SEED);
     const dps = addEncounterPlayer(sim, boss, 'Assembly Pyre Target');
     updateVarkhulEncounter(sim.ctx, boss);
     const state = boss.varkhul;
@@ -239,7 +244,7 @@ describe('Varkhul forge pillars and add intermission', () => {
   });
 
   it('swings and strikes the anvil with a bounded metal-impact cue throughout the intermission', () => {
-    const { sim, boss } = claimedEncounter(700);
+    const { sim, boss } = claimedEncounter(FORGE_SEED);
     boss.hp = Math.floor(boss.maxHp * 0.5);
     updateVarkhulEncounter(sim.ctx, boss);
     const state = boss.varkhul;
@@ -273,7 +278,7 @@ describe('Varkhul forge pillars and add intermission', () => {
   });
 
   it('starts the first hammer strike at 0.6 seconds and repeats every two seconds', () => {
-    const { sim, boss } = claimedEncounter(741);
+    const { sim, boss } = claimedEncounter(FORGE_SEED);
     const hammerEvents = () =>
       sim.events.filter(
         (event) => event.type === 'spellfxAt' && event.ability === VARKHUL_FORGE_HAMMER_ABILITY_ID,
@@ -297,7 +302,7 @@ describe('Varkhul forge pillars and add intermission', () => {
   });
 
   it('schedules Cinder Artificers independently from the ordinary add waves', () => {
-    const { sim, boss } = claimedEncounter(744, true);
+    const { sim, boss } = claimedEncounter(FORGE_SEED, true);
     boss.hp = Math.floor(boss.maxHp * 0.5);
     updateVarkhulEncounter(sim.ctx, boss);
     const state = boss.varkhul;
@@ -347,7 +352,7 @@ describe('Varkhul forge pillars and add intermission', () => {
   });
 
   it('selects the independent Artificer portal without consuming shared RNG', () => {
-    const { sim, boss } = claimedEncounter(747);
+    const { sim, boss } = claimedEncounter(FORGE_SEED);
     boss.hp = Math.floor(boss.maxHp * 0.5);
     updateVarkhulEncounter(sim.ctx, boss);
     const state = boss.varkhul;
@@ -366,7 +371,7 @@ describe('Varkhul forge pillars and add intermission', () => {
   });
 
   it('opens the first Artificer portal at 10 seconds, spawns it two seconds later, and repeats at 18 seconds', () => {
-    const { sim, boss } = claimedEncounter(742);
+    const { sim, boss } = claimedEncounter(FORGE_SEED);
     boss.hp = Math.floor(boss.maxHp * 0.5);
 
     updateVarkhulEncounter(sim.ctx, boss);
@@ -424,8 +429,8 @@ describe('Varkhul forge pillars and add intermission', () => {
   });
 
   it('only opens an Artificer portal when the full warning and repair window remains', () => {
-    const setupDuePortal = (seed: number, remaining: number) => {
-      const { sim, boss } = claimedEncounter(seed, true);
+    const setupDuePortal = (remaining: number) => {
+      const { sim, boss } = claimedEncounter(FORGE_SEED, true);
       boss.hp = Math.floor(boss.maxHp * 0.5);
       updateVarkhulEncounter(sim.ctx, boss);
       const state = boss.varkhul;
@@ -438,7 +443,6 @@ describe('Varkhul forge pillars and add intermission', () => {
     };
 
     const fair = setupDuePortal(
-      748,
       VARKHUL_CINDER_ARTIFICER_PORTAL_TELEGRAPH_SECONDS +
         VARKHUL_CINDER_REPAIR_CHANNEL_SECONDS +
         DT,
@@ -449,7 +453,6 @@ describe('Varkhul forge pillars and add intermission', () => {
     expect(fair.state.assemblyArtificerSpawnIndex).toBe(1);
 
     const tooLate = setupDuePortal(
-      749,
       VARKHUL_CINDER_ARTIFICER_PORTAL_TELEGRAPH_SECONDS + VARKHUL_CINDER_REPAIR_CHANNEL_SECONDS,
     );
     expect(tooLate.state.assemblyArtificerPortalSpawns).toEqual([]);
@@ -460,7 +463,7 @@ describe('Varkhul forge pillars and add intermission', () => {
   });
 
   it('lets control stop the Artificer, then plays start, loop and end around a real repair', () => {
-    const { sim, boss } = claimedEncounter(745, true);
+    const { sim, boss } = claimedEncounter(FORGE_SEED, true);
     sim.setPlayerLevel(20);
     boss.hp = Math.floor(boss.maxHp * 0.5);
     updateVarkhulEncounter(sim.ctx, boss);
@@ -681,7 +684,7 @@ describe('Varkhul forge pillars and add intermission', () => {
   });
 
   it('repairs two percent each second for six seconds in Normal', () => {
-    const { sim, boss } = claimedEncounter(743);
+    const { sim, boss } = claimedEncounter(FORGE_SEED);
     boss.hp = Math.floor(boss.maxHp * 0.5);
     updateVarkhulEncounter(sim.ctx, boss);
     const state = boss.varkhul;
@@ -714,7 +717,7 @@ describe('Varkhul forge pillars and add intermission', () => {
   });
 
   it('keeps earned repair ticks but stops all future healing after interruption', () => {
-    const { sim, boss } = claimedEncounter(751);
+    const { sim, boss } = claimedEncounter(FORGE_SEED);
     boss.hp = Math.floor(boss.maxHp * 0.25);
     updateVarkhulEncounter(sim.ctx, boss);
     const state = boss.varkhul;
@@ -757,10 +760,7 @@ describe('Varkhul forge pillars and add intermission', () => {
   it.each(['silence', 'range', 'boss-death'] as const)(
     'cancels an active repair on %s without a heal, nova, or ChannelEnd',
     (cancelMode) => {
-      const { sim, boss } = claimedEncounter(
-        cancelMode === 'silence' ? 748 : cancelMode === 'range' ? 749 : 750,
-        true,
-      );
+      const { sim, boss } = claimedEncounter(FORGE_SEED, true);
       boss.hp = Math.floor(boss.maxHp * 0.5);
       updateVarkhulEncounter(sim.ctx, boss);
       const state = boss.varkhul;
@@ -829,7 +829,7 @@ describe('Varkhul forge pillars and add intermission', () => {
   );
 
   it('requires a living independent Artificer to die before the intermission ends', () => {
-    const { sim, boss } = claimedEncounter(746);
+    const { sim, boss } = claimedEncounter(FORGE_SEED);
     boss.hp = Math.floor(boss.maxHp * 0.5);
     updateVarkhulEncounter(sim.ctx, boss);
     const state = boss.varkhul;
@@ -866,13 +866,10 @@ describe('Varkhul forge pillars and add intermission', () => {
     expect(spawnedAddIds.every((id) => !boss.summonedIds.includes(id))).toBe(true);
   });
 
-  it.each([
-    { heroic: false, seed: 707 },
-    { heroic: true, seed: 708 },
-  ])(
+  it.each([{ heroic: false }, { heroic: true }])(
     'runs one complete $heroic Meltdown before rearming the intermission beams',
-    ({ heroic, seed }) => {
-      const { sim, boss } = claimedEncounter(seed, heroic);
+    ({ heroic }) => {
+      const { sim, boss } = claimedEncounter(FORGE_SEED, heroic);
       const originalDealDamage = sim.ctx.dealDamage;
       const meltdownDamage: number[] = [];
       sim.ctx.dealDamage = ((...args: Parameters<typeof originalDealDamage>) => {
@@ -942,7 +939,7 @@ describe('Varkhul forge pillars and add intermission', () => {
   );
 
   it('keeps the terminal Meltdown vent atomic when a retained Quake completes that tick', () => {
-    const { sim, boss } = claimedEncounter(740, true);
+    const { sim, boss } = claimedEncounter(FORGE_SEED, true);
     boss.hp = Math.floor(boss.maxHp * 0.5);
     updateVarkhulEncounter(sim.ctx, boss);
     const state = boss.varkhul;
@@ -973,7 +970,7 @@ describe('Varkhul forge pillars and add intermission', () => {
   });
 
   it('pauses Meltdown, then resumes pending and future portals with a fresh pillar warning', () => {
-    const { sim, boss } = claimedEncounter(731, true);
+    const { sim, boss } = claimedEncounter(FORGE_SEED, true);
     const instance = sim.instances.find((entry) => entry.mobIds.includes(boss.id));
     if (!instance) throw new Error('Varkhul instance missing');
     const origin = sim.ctx.instanceOriginOf(instance);
@@ -1211,7 +1208,7 @@ describe('Varkhul forge pillars and add intermission', () => {
   });
 
   it('ends the trigger tick at Meltdown before Brand, Masterpiece, or another major can run', () => {
-    const { sim, boss } = claimedEncounter(720);
+    const { sim, boss } = claimedEncounter(FORGE_SEED);
     updateVarkhulEncounter(sim.ctx, boss);
     const state = boss.varkhul;
     if (!state) throw new Error('Varkhul state missing');
@@ -1256,7 +1253,7 @@ describe('Varkhul forge pillars and add intermission', () => {
   });
 
   it('preserves the 50% floor through a teaching Meltdown and still starts the add phase', () => {
-    const { sim, boss } = claimedEncounter(709);
+    const { sim, boss } = claimedEncounter(FORGE_SEED);
     boss.hp = Math.floor(boss.maxHp * 0.79);
     updateVarkhulEncounter(sim.ctx, boss);
     const state = boss.varkhul;
@@ -1278,7 +1275,7 @@ describe('Varkhul forge pillars and add intermission', () => {
   });
 
   it('runs the 80% lesson in order, pauses majors, then loops both 20% pillars with majors live', () => {
-    const { sim, boss } = claimedEncounter(710);
+    const { sim, boss } = claimedEncounter(FORGE_SEED);
     updateVarkhulEncounter(sim.ctx, boss);
     const state = boss.varkhul;
     if (!state) throw new Error('Varkhul state missing');
@@ -1380,14 +1377,14 @@ describe('Varkhul forge pillars and add intermission', () => {
   });
 
   it.each([
-    { heroic: false, seed: 726, bossId: 10_000_000, window: 'pressure_left', mask: 1 },
-    { heroic: false, seed: 736, bossId: 10_000_001, window: 'pressure_right', mask: 2 },
-    { heroic: true, seed: 746, bossId: 10_000_002, window: 'pressure_left', mask: 1 },
-    { heroic: true, seed: 756, bossId: 10_000_003, window: 'pressure_right', mask: 2 },
+    { heroic: false, bossId: 10_000_000, window: 'pressure_left', mask: 1 },
+    { heroic: false, bossId: 10_000_001, window: 'pressure_right', mask: 2 },
+    { heroic: true, bossId: 10_000_002, window: 'pressure_left', mask: 1 },
+    { heroic: true, bossId: 10_000_003, window: 'pressure_right', mask: 2 },
   ] as const)(
     'adds the $window six-second pillar soak at 35% on $heroic',
-    ({ heroic, seed, bossId, window, mask }) => {
-      const { sim, boss } = claimedEncounter(seed, heroic);
+    ({ heroic, bossId, window, mask }) => {
+      const { sim, boss } = claimedEncounter(FORGE_SEED, heroic);
       rekeyBoss(sim, boss, bossId);
       updateVarkhulEncounter(sim.ctx, boss);
       const state = boss.varkhul;
@@ -1428,8 +1425,7 @@ describe('Varkhul forge pillars and add intermission', () => {
 
   it('keeps the Normal 20% finale soak cycle', () => {
     const heroic = false;
-    const seed = 737;
-    const { sim, boss } = claimedEncounter(seed, heroic);
+    const { sim, boss } = claimedEncounter(FORGE_SEED, heroic);
     updateVarkhulEncounter(sim.ctx, boss);
     const state = boss.varkhul;
     if (!state) throw new Error('Varkhul state missing');
@@ -1474,7 +1470,7 @@ describe('Varkhul forge pillars and add intermission', () => {
   });
 
   it('shuts down Heroic pillars and forge heat when Worldfire begins', () => {
-    const { sim, boss } = claimedEncounter(747, true);
+    const { sim, boss } = claimedEncounter(FORGE_SEED, true);
     updateVarkhulEncounter(sim.ctx, boss);
     const state = boss.varkhul;
     if (!state) throw new Error('Varkhul state missing');
@@ -1524,10 +1520,7 @@ describe('Varkhul forge pillars and add intermission', () => {
   it.each(['cinderOrbs', 'forgestorm', 'interceptBeam'] as const)(
     'cancels an active %s sequence when Heroic Worldfire begins',
     (majorAbility) => {
-      const { sim, boss } = claimedEncounter(
-        760 + ['cinderOrbs', 'forgestorm', 'interceptBeam'].indexOf(majorAbility),
-        true,
-      );
+      const { sim, boss } = claimedEncounter(FORGE_SEED, true);
       updateVarkhulEncounter(sim.ctx, boss);
       const state = boss.varkhul;
       if (!state) throw new Error('Varkhul state missing');
@@ -1604,9 +1597,7 @@ describe('Varkhul forge pillars and add intermission', () => {
   it.each(['cinderOrbs', 'forgestorm', 'interceptBeam', 'anvil'] as const)(
     'preserves an active %s sequence when Normal crosses 20%%',
     (majorAbility) => {
-      const { sim, boss } = claimedEncounter(
-        770 + ['cinderOrbs', 'forgestorm', 'interceptBeam', 'anvil'].indexOf(majorAbility),
-      );
+      const { sim, boss } = claimedEncounter(FORGE_SEED);
       updateVarkhulEncounter(sim.ctx, boss);
       const state = boss.varkhul;
       if (!state) throw new Error('Varkhul state missing');
@@ -1643,7 +1634,7 @@ describe('Varkhul forge pillars and add intermission', () => {
   );
 
   it('keeps only frontals, Anvil meteors, and melee during Heroic Worldfire', () => {
-    const { sim, boss } = claimedEncounter(748, true);
+    const { sim, boss } = claimedEncounter(FORGE_SEED, true);
     updateVarkhulEncounter(sim.ctx, boss);
     const state = boss.varkhul;
     if (!state) throw new Error('Varkhul state missing');
@@ -1725,7 +1716,7 @@ describe('Varkhul forge pillars and add intermission', () => {
   });
 
   it('fills the Heroic room in six bands and makes the last three seconds lethal', () => {
-    const { sim, boss } = claimedEncounter(727, true);
+    const { sim, boss } = claimedEncounter(FORGE_SEED, true);
     updateVarkhulEncounter(sim.ctx, boss);
     const state = boss.varkhul;
     if (!state) throw new Error('Varkhul state missing');
@@ -1808,7 +1799,7 @@ describe('Varkhul forge pillars and add intermission', () => {
   });
 
   it('keeps full-room Heroic Worldfire burning after a dev-invulnerable raid survives the deadline', () => {
-    const { sim, boss } = claimedEncounter(755, true);
+    const { sim, boss } = claimedEncounter(FORGE_SEED, true);
     // The terminal wipe now force-kills through ordinary immunity
     // (encounter_wipe.ts), so the only sanctioned deadline survivor is a
     // dev/GM invulnerable player; the persistent Worldfire serves exactly
@@ -1869,7 +1860,7 @@ describe('Varkhul forge pillars and add intermission', () => {
   });
 
   it('ticks Heroic Worldfire naturally once per second without an early pulse', () => {
-    const { sim, boss } = claimedEncounter(738, true);
+    const { sim, boss } = claimedEncounter(FORGE_SEED, true);
     updateVarkhulEncounter(sim.ctx, boss);
     const state = boss.varkhul;
     if (!state) throw new Error('Varkhul state missing');
@@ -1908,7 +1899,7 @@ describe('Varkhul forge pillars and add intermission', () => {
   });
 
   it('keeps Worldfire Heroic-only while Normal retains the ordinary 45-second burn', () => {
-    const { sim, boss } = claimedEncounter(728, false);
+    const { sim, boss } = claimedEncounter(FORGE_SEED, false);
     updateVarkhulEncounter(sim.ctx, boss);
     const state = boss.varkhul;
     if (!state) throw new Error('Varkhul state missing');
@@ -1938,7 +1929,7 @@ describe('Varkhul forge pillars and add intermission', () => {
   });
 
   it('does not let Forge Meltdown or forge heat return during Heroic Worldfire', () => {
-    const { sim, boss } = claimedEncounter(729, true);
+    const { sim, boss } = claimedEncounter(FORGE_SEED, true);
     updateVarkhulEncounter(sim.ctx, boss);
     const state = boss.varkhul;
     if (!state) throw new Error('Varkhul state missing');

@@ -36,11 +36,16 @@ import {
   VARKHUL_WORK_FACING,
   VARKHUL_WORK_LOCAL_POS,
 } from '../src/sim/varkhul_forge_intermission';
-import { addEncounterPlayer, addTank, claimedEncounter } from './helpers/varkhul_forge_harness';
+import {
+  addEncounterPlayer,
+  addTank,
+  claimedEncounter,
+  FORGE_SEED,
+} from './helpers/varkhul_forge_harness';
 
 describe('Varkhul forge pillars and add intermission', () => {
   it('does not trigger the 80%, 50%, 35%, or 20% windows just above their thresholds', () => {
-    const teaching = claimedEncounter(721);
+    const teaching = claimedEncounter(FORGE_SEED);
     updateVarkhulEncounter(teaching.sim.ctx, teaching.boss);
     const teachingState = teaching.boss.varkhul;
     if (!teachingState) throw new Error('Teaching state missing');
@@ -51,7 +56,7 @@ describe('Varkhul forge pillars and add intermission', () => {
     updateVarkhulEncounter(teaching.sim.ctx, teaching.boss);
     expect(teachingState.forgeBeamWindow).toBe('teaching_left');
 
-    const intermission = claimedEncounter(722);
+    const intermission = claimedEncounter(FORGE_SEED);
     intermission.boss.hp = intermission.boss.maxHp * 0.5001;
     updateVarkhulEncounter(intermission.sim.ctx, intermission.boss);
     expect(intermission.boss.varkhul?.assemblyTriggered).toBe(false);
@@ -59,7 +64,7 @@ describe('Varkhul forge pillars and add intermission', () => {
     updateVarkhulEncounter(intermission.sim.ctx, intermission.boss);
     expect(intermission.boss.varkhul?.assemblyPhase).toBe('adds');
 
-    const pressure = claimedEncounter(739);
+    const pressure = claimedEncounter(FORGE_SEED);
     updateVarkhulEncounter(pressure.sim.ctx, pressure.boss);
     const pressureState = pressure.boss.varkhul;
     if (!pressureState) throw new Error('Pressure state missing');
@@ -74,7 +79,7 @@ describe('Varkhul forge pillars and add intermission', () => {
     updateVarkhulEncounter(pressure.sim.ctx, pressure.boss);
     expect(pressureState.forgeBeamPressureTriggered).toBe(true);
 
-    const final = claimedEncounter(723);
+    const final = claimedEncounter(FORGE_SEED);
     updateVarkhulEncounter(final.sim.ctx, final.boss);
     const finalState = final.boss.varkhul;
     if (!finalState) throw new Error('Final state missing');
@@ -90,7 +95,7 @@ describe('Varkhul forge pillars and add intermission', () => {
   });
 
   it('uses the full three-second warmup before a player can block or take exposure damage', () => {
-    const { sim, boss } = claimedEncounter(724);
+    const { sim, boss } = claimedEncounter(FORGE_SEED);
     const instance = sim.instances.find((entry) => entry.mobIds.includes(boss.id));
     if (!instance) throw new Error('Varkhul instance missing');
     const origin = sim.ctx.instanceOriginOf(instance);
@@ -133,7 +138,7 @@ describe('Varkhul forge pillars and add intermission', () => {
   });
 
   it('keeps Varkhul in player melee range while his tank soaks a pillar', () => {
-    const { sim, boss } = claimedEncounter(754);
+    const { sim, boss } = claimedEncounter(FORGE_SEED);
     const instance = sim.instances.find((entry) => entry.mobIds.includes(boss.id));
     if (!instance) throw new Error('Varkhul instance missing');
     const origin = sim.ctx.instanceOriginOf(instance);
@@ -158,7 +163,7 @@ describe('Varkhul forge pillars and add intermission', () => {
   });
 
   it('delays the right-pillar ignition and blocker until its full warmup completes', () => {
-    const { sim, boss } = claimedEncounter(732);
+    const { sim, boss } = claimedEncounter(FORGE_SEED);
     const instance = sim.instances.find((entry) => entry.mobIds.includes(boss.id));
     if (!instance) throw new Error('Varkhul instance missing');
     const origin = sim.ctx.instanceOriginOf(instance);
@@ -205,7 +210,7 @@ describe('Varkhul forge pillars and add intermission', () => {
   });
 
   it('warms the first pillar, warns the next for two seconds, then hands off with zero overlap', () => {
-    const { sim, boss } = claimedEncounter(733);
+    const { sim, boss } = claimedEncounter(FORGE_SEED);
     const rightBlocker = addTank(sim, boss, 'BothWarmupRightBlocker');
     const instance = sim.instances.find((entry) => entry.mobIds.includes(boss.id));
     if (!instance) throw new Error('Varkhul instance missing');
@@ -280,7 +285,7 @@ describe('Varkhul forge pillars and add intermission', () => {
   });
 
   it('waits for a Normal wave to die, then telegraphs the next wave after three seconds', () => {
-    const { sim, boss } = claimedEncounter(712);
+    const { sim, boss } = claimedEncounter(FORGE_SEED);
     boss.hp = Math.floor(boss.maxHp * 0.5);
     updateVarkhulEncounter(sim.ctx, boss);
     const state = boss.varkhul;
@@ -324,7 +329,7 @@ describe('Varkhul forge pillars and add intermission', () => {
   });
 
   it('overlaps Heroic waves after fourteen seconds or queues early when the prior wave dies', () => {
-    const timed = claimedEncounter(711, true);
+    const timed = claimedEncounter(FORGE_SEED, true);
     timed.boss.hp = Math.floor(timed.boss.maxHp * 0.5);
     updateVarkhulEncounter(timed.sim.ctx, timed.boss);
     const timedState = timed.boss.varkhul;
@@ -340,7 +345,7 @@ describe('Varkhul forge pillars and add intermission', () => {
     expect(timedState.assemblyPortalSpawns).toHaveLength(5);
     expect(timedState.assemblyNextWaveRemaining).toBe(VARKHUL_FORGE_ADD_WAVE_DELAY_HEROIC_SECONDS);
 
-    const early = claimedEncounter(713, true);
+    const early = claimedEncounter(FORGE_SEED, true);
     early.boss.hp = Math.floor(early.boss.maxHp * 0.5);
     updateVarkhulEncounter(early.sim.ctx, early.boss);
     const earlyState = early.boss.varkhul;
@@ -359,7 +364,7 @@ describe('Varkhul forge pillars and add intermission', () => {
   });
 
   it('waits for future and pending waves even when every add already spawned is dead', () => {
-    const { sim, boss } = claimedEncounter(725);
+    const { sim, boss } = claimedEncounter(FORGE_SEED);
     boss.hp = boss.maxHp * 0.5;
     updateVarkhulEncounter(sim.ctx, boss);
     const state = boss.varkhul;
@@ -400,7 +405,7 @@ describe('Varkhul forge pillars and add intermission', () => {
   ])(
     'times out the full $seconds-second intermission exactly and keeps living adds in combat',
     ({ heroic, seconds }) => {
-      const { sim, boss } = claimedEncounter(heroic ? 713 : 714, heroic);
+      const { sim, boss } = claimedEncounter(FORGE_SEED, heroic);
       const rightBlocker = addTank(sim, boss, 'TimeoutRightBlocker');
       const instance = sim.instances.find((entry) => entry.mobIds.includes(boss.id));
       if (!instance) throw new Error('Varkhul instance missing');
@@ -456,7 +461,7 @@ describe('Varkhul forge pillars and add intermission', () => {
   );
 
   it('telegraphs four portals, spawns twenty Heroic combat adds, and sends them to the top tank', () => {
-    const { sim, boss } = claimedEncounter(702, true);
+    const { sim, boss } = claimedEncounter(FORGE_SEED, true);
     const topTank = addTank(sim, boss, 'TopTank');
     const deadTank = addTank(sim, boss, 'DeadTank');
     const highThreatDps = addEncounterPlayer(sim, boss, 'HighThreatDps');
@@ -548,7 +553,7 @@ describe('Varkhul forge pillars and add intermission', () => {
   });
 
   it('ramps one-second soak damage and records the long Heroic exposure reset', () => {
-    const { sim, boss } = claimedEncounter(703, true);
+    const { sim, boss } = claimedEncounter(FORGE_SEED, true);
     sim.player.damageImmune = false;
     boss.hp = Math.floor(boss.maxHp * 0.79);
     updateVarkhulEncounter(sim.ctx, boss);
@@ -592,7 +597,7 @@ describe('Varkhul forge pillars and add intermission', () => {
   ])(
     'keeps exposure until the $resetSeconds-second reset and restarts the next soak at stack one',
     ({ heroic, resetSeconds }) => {
-      const { sim, boss } = claimedEncounter(heroic ? 715 : 716, heroic);
+      const { sim, boss } = claimedEncounter(FORGE_SEED, heroic);
       boss.hp = Math.floor(boss.maxHp * 0.79);
       updateVarkhulEncounter(sim.ctx, boss);
       const state = boss.varkhul;
@@ -642,14 +647,14 @@ describe('Varkhul forge pillars and add intermission', () => {
   );
 
   it('cools idle Normal heat, preserves Heroic heat, and announces both danger thresholds once', () => {
-    const normal = claimedEncounter(705);
+    const normal = claimedEncounter(FORGE_SEED);
     updateVarkhulEncounter(normal.sim.ctx, normal.boss);
     if (!normal.boss.varkhul) throw new Error('Normal Varkhul state missing');
     normal.boss.varkhul.assemblyForgeOverheat = 0.4;
     updateVarkhulEncounter(normal.sim.ctx, normal.boss);
     expect(normal.boss.varkhul.assemblyForgeOverheat).toBeCloseTo(0.3985, 8);
 
-    const heroic = claimedEncounter(706, true);
+    const heroic = claimedEncounter(FORGE_SEED, true);
     updateVarkhulEncounter(heroic.sim.ctx, heroic.boss);
     if (!heroic.boss.varkhul) throw new Error('Heroic Varkhul state missing');
     heroic.boss.varkhul.assemblyForgeOverheat = 0.4;
@@ -672,7 +677,7 @@ describe('Varkhul forge pillars and add intermission', () => {
   });
 
   it('lets a portal Sentinel cross the room, retarget by threat, and obey a taunt', () => {
-    const { sim, boss } = claimedEncounter(717);
+    const { sim, boss } = claimedEncounter(FORGE_SEED);
     boss.hp = Math.floor(boss.maxHp * 0.5);
     updateVarkhulEncounter(sim.ctx, boss);
     const state = boss.varkhul;
@@ -728,7 +733,7 @@ describe('Varkhul forge pillars and add intermission', () => {
   });
 
   it('makes each portal Warden pursue, melee, cast Quake, and recast on cadence', () => {
-    const { sim, boss } = claimedEncounter(704, true);
+    const { sim, boss } = claimedEncounter(FORGE_SEED, true);
     sim.player.autoAttack = false;
     sim.player.damageImmune = false;
     sim.player.maxHp = 100_000;
@@ -858,7 +863,7 @@ describe('Varkhul forge pillars and add intermission', () => {
   });
 
   it('lets Pummel interrupt Quake, applies fire lockout, and preserves its 12-second cadence', () => {
-    const { sim, boss } = claimedEncounter(718);
+    const { sim, boss } = claimedEncounter(FORGE_SEED);
     sim.setPlayerLevel(20);
     boss.hp = Math.floor(boss.maxHp * 0.5);
     updateVarkhulEncounter(sim.ctx, boss);
@@ -916,7 +921,7 @@ describe('Varkhul forge pillars and add intermission', () => {
 
   it('replays Warden and Artificer portals, casts, heals, IDs, and rng draws for the same seed', () => {
     const run = () => {
-      const { sim, boss } = claimedEncounter(719, true);
+      const { sim, boss } = claimedEncounter(FORGE_SEED, true);
       boss.hp = Math.floor(boss.maxHp * 0.5);
       updateVarkhulEncounter(sim.ctx, boss);
       const state = boss.varkhul;

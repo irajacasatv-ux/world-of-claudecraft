@@ -72,6 +72,10 @@ import {
   VARKHUL_SHARED_PYRE_NAME,
 } from '../src/sim/varkhul_shared_pyre';
 
+// One seed for every case: a seed a test file has not built yet costs its
+// full-world Sim about half a second (the collider grids are built per seed),
+// a seed it has already built about 20 ms. A case that needs a seed-specific
+// draw (a golden trace) passes its own seed.
 function claimedEncounter(seed = 42): { sim: Sim; boss: Entity } {
   const sim = new Sim({ seed, playerClass: 'warrior', devCommands: true });
   expect(enterDungeon(sim.ctx, IGNIVAR_SECOND_WING_ID, sim.player.id, true)).toBe(true);
@@ -198,7 +202,7 @@ describe('Varkhul encounter geometry and selection', () => {
   });
 
   it('replays a full Cinder Orbs sequence identically for the same seed', () => {
-    expect(deterministicCinderOrbRun(434)).toEqual(deterministicCinderOrbRun(434));
+    expect(deterministicCinderOrbRun(42)).toEqual(deterministicCinderOrbRun(42));
   });
 
   it('rotates a deterministic five-impact Forgestorm pattern per wave', () => {
@@ -215,7 +219,7 @@ describe('Varkhul encounter geometry and selection', () => {
 
 describe('Varkhul encounter behavior', () => {
   it('spawns exactly once from the Inner Crucible roster and initializes through the mob tick', () => {
-    const { sim, boss } = claimedEncounter(40);
+    const { sim, boss } = claimedEncounter();
 
     expect(boss.varkhul).toBeUndefined();
     sim.tick();
@@ -333,7 +337,7 @@ describe('Varkhul encounter behavior', () => {
   });
 
   it('marks three non-tanks, keeps fire at their spread positions, and emits radial orbs', () => {
-    const { sim, boss } = claimedEncounter(43);
+    const { sim, boss } = claimedEncounter();
     const players = [
       sim.player,
       addEncounterPlayer(sim, boss, 'Cinder One'),
@@ -459,7 +463,7 @@ describe('Varkhul encounter behavior', () => {
   });
 
   it('keeps the ground fire permanently and continues ticking after twelve seconds', () => {
-    const { sim, boss } = claimedEncounter(431);
+    const { sim, boss } = claimedEncounter();
     sim.player.devGod = true;
     updateVarkhulEncounter(sim.ctx, boss);
     const state = isolateMechanics(boss);
@@ -485,7 +489,7 @@ describe('Varkhul encounter behavior', () => {
   });
 
   it('damages the exact cinder fire edge but spares dead and outside players', () => {
-    const { sim, boss } = claimedEncounter(433);
+    const { sim, boss } = claimedEncounter();
     const onEdge = addEncounterPlayer(sim, boss, 'Cinder Edge');
     const outside = addEncounterPlayer(sim, boss, 'Cinder Outside');
     const deadInside = addEncounterPlayer(sim, boss, 'Cinder Fallen');
@@ -514,7 +518,7 @@ describe('Varkhul encounter behavior', () => {
   });
 
   it('moves each orb across the room and damages each player at most once', () => {
-    const { sim, boss } = claimedEncounter(435);
+    const { sim, boss } = claimedEncounter();
     const target = addEncounterPlayer(sim, boss, 'Orb Dodger');
     sim.player.pos = { ...boss.pos, x: boss.pos.x - 20 };
     target.maxHp = 1_000;
@@ -541,7 +545,7 @@ describe('Varkhul encounter behavior', () => {
   });
 
   it('routes Heroic cinder fire and orb damage through the live encounter path', () => {
-    const { sim, boss } = claimedEncounter(437);
+    const { sim, boss } = claimedEncounter();
     const instance = sim.instances.find((entry) => entry.dungeonId === IGNIVAR_SECOND_WING_ID);
     if (!instance) throw new Error('Inner Crucible instance disappeared');
     instance.difficulty = 'heroic';
@@ -575,7 +579,7 @@ describe('Varkhul encounter behavior', () => {
   });
 
   it('waits instead of channeling Cinder Orbs when the tank is alone', () => {
-    const { sim, boss } = claimedEncounter(436);
+    const { sim, boss } = claimedEncounter();
     updateVarkhulEncounter(sim.ctx, boss);
     const state = isolateMechanics(boss);
     state.cinderOrbsTimer = DT;
@@ -589,7 +593,7 @@ describe('Varkhul encounter behavior', () => {
   });
 
   it('does not release fire or projectiles for a marked player who dies during the spread', () => {
-    const { sim, boss } = claimedEncounter(434);
+    const { sim, boss } = claimedEncounter();
     const players = [
       sim.player,
       addEncounterPlayer(sim, boss, 'Cinder Living One'),
@@ -626,7 +630,7 @@ describe('Varkhul encounter behavior', () => {
   });
 
   it('does not project cinder hazards from a dead Varkhul', () => {
-    const { sim, boss } = claimedEncounter(432);
+    const { sim, boss } = claimedEncounter();
     updateVarkhulEncounter(sim.ctx, boss);
     const state = isolateMechanics(boss);
     state.cinderFires.push({
@@ -652,7 +656,7 @@ describe('Varkhul encounter behavior', () => {
   });
 
   it('publishes five GroundAoE warnings before each Forgestorm impact', () => {
-    const { sim, boss } = claimedEncounter(44);
+    const { sim, boss } = claimedEncounter();
     sim.player.maxHp = 1_000;
     sim.player.hp = 1_000;
     updateVarkhulEncounter(sim.ctx, boss);
@@ -725,7 +729,7 @@ describe('Varkhul encounter behavior', () => {
   });
 
   it('applies the Heroic Forgestorm damage through the live encounter path', () => {
-    const { sim, boss } = claimedEncounter(4401);
+    const { sim, boss } = claimedEncounter();
     const instance = sim.instances.find((entry) => entry.dungeonId === IGNIVAR_SECOND_WING_ID);
     if (!instance) throw new Error('Inner Crucible instance disappeared');
     instance.difficulty = 'heroic';
@@ -744,7 +748,7 @@ describe('Varkhul encounter behavior', () => {
   });
 
   it('cues the PowerUp windup one-shot at the start of every Forgestorm wave', () => {
-    const { sim, boss } = claimedEncounter(44);
+    const { sim, boss } = claimedEncounter();
     updateVarkhulEncounter(sim.ctx, boss);
     const state = isolateMechanics(boss);
     const stormWindups = () =>
@@ -777,7 +781,7 @@ describe('Varkhul encounter behavior', () => {
   });
 
   it('casts Shared Pyre on a non-tank while preserving Forgestorm as a separate major', () => {
-    const { sim, boss } = claimedEncounter(441);
+    const { sim, boss } = claimedEncounter();
     const raiders = [
       addEncounterPlayer(sim, boss, 'Pyre One'),
       addEncounterPlayer(sim, boss, 'Pyre Two'),
@@ -827,7 +831,7 @@ describe('Varkhul encounter behavior', () => {
   ])(
     'damages the whole raid for each missing $difficulty Shared Pyre soaker',
     ({ difficulty, splitDamage }) => {
-      const { sim, boss } = claimedEncounter(difficulty === 'normal' ? 447 : 448);
+      const { sim, boss } = claimedEncounter();
       const instance = sim.instances.find((entry) => entry.dungeonId === IGNIVAR_SECOND_WING_ID);
       if (!instance) throw new Error('Inner Crucible instance disappeared');
       instance.difficulty = difficulty;
@@ -880,7 +884,7 @@ describe('Varkhul encounter behavior', () => {
   );
 
   it('cancels Shared Pyre without raid damage when its marked player dies', () => {
-    const { sim, boss } = claimedEncounter(442);
+    const { sim, boss } = claimedEncounter();
     const raiders = [
       addEncounterPlayer(sim, boss, 'Fallen Pyre'),
       addEncounterPlayer(sim, boss, 'Living Pyre One'),
@@ -924,7 +928,7 @@ describe('Varkhul encounter behavior', () => {
   });
 
   it('cancels Shared Pyre immediately when its marked player leaves the world', () => {
-    const { sim, boss } = claimedEncounter(446);
+    const { sim, boss } = claimedEncounter();
     const raiders = [
       addEncounterPlayer(sim, boss, 'Departing Pyre'),
       addEncounterPlayer(sim, boss, 'Remaining Pyre'),
@@ -956,7 +960,7 @@ describe('Varkhul encounter behavior', () => {
   });
 
   it('clears raid mechanics through a real death and corpse resurrection', () => {
-    const { sim, boss } = claimedEncounter(443);
+    const { sim, boss } = claimedEncounter();
     addEncounterPlayer(sim, boss, 'Living Witness');
     updateVarkhulEncounter(sim.ctx, boss);
     const state = isolateMechanics(boss);
@@ -1044,7 +1048,7 @@ describe('Varkhul encounter behavior', () => {
   });
 
   it('resets a real all-dead wipe and starts the next pull without stale hazards', () => {
-    const { sim, boss } = claimedEncounter(444);
+    const { sim, boss } = claimedEncounter();
     const raider = addEncounterPlayer(sim, boss, 'Wipe Witness');
     updateVarkhulEncounter(sim.ctx, boss);
     const firstState = isolateMechanics(boss);
@@ -1080,7 +1084,7 @@ describe('Varkhul encounter behavior', () => {
     ['normal', [900, 800, 600]],
     ['heroic', [860, 720, 470]],
   ] as const)('scales the three Anvil raid hits on %s', (difficulty, expectedHp) => {
-    const { sim, boss } = claimedEncounter(difficulty === 'normal' ? 451 : 452);
+    const { sim, boss } = claimedEncounter();
     const raider = addEncounterPlayer(sim, boss, `${difficulty} Anvil Raider`);
     const instance = sim.instances.find((entry) => entry.dungeonId === IGNIVAR_SECOND_WING_ID);
     if (!instance) throw new Error('Inner Crucible instance disappeared');
@@ -1151,7 +1155,7 @@ describe('Varkhul encounter behavior', () => {
   ] as const)(
     'locks the 120-degree frontal facing and deals %s damage only inside it',
     (difficulty, damage) => {
-      const { sim, boss } = claimedEncounter(difficulty === 'normal' ? 453 : 454);
+      const { sim, boss } = claimedEncounter();
       const bait = addEncounterPlayer(sim, boss, `${difficulty} Frontal Bait`);
       const instance = sim.instances.find((entry) => entry.dungeonId === IGNIVAR_SECOND_WING_ID);
       if (!instance) throw new Error('Inner Crucible instance disappeared');
@@ -1182,7 +1186,7 @@ describe('Varkhul encounter behavior', () => {
   );
 
   it('stands his ground through the Slam recovery after the frontal, then runs', () => {
-    const { sim, boss } = claimedEncounter(456);
+    const { sim, boss } = claimedEncounter();
     updateVarkhulEncounter(sim.ctx, boss, true);
     const state = isolateMechanics(boss);
     // park the target far, so any chase movement is unmistakable
@@ -1213,7 +1217,7 @@ describe('Varkhul encounter behavior', () => {
   });
 
   it('schedules three dodgeable Heroic meteors after a hammer impact', () => {
-    const { sim, boss } = claimedEncounter(455);
+    const { sim, boss } = claimedEncounter();
     const instance = sim.instances.find((entry) => entry.dungeonId === IGNIVAR_SECOND_WING_ID);
     if (!instance) throw new Error('Inner Crucible instance disappeared');
     instance.difficulty = 'heroic';
@@ -1248,7 +1252,7 @@ describe('Varkhul encounter behavior', () => {
   });
 
   it('keeps all nine Heroic meteor impacts when enraged hammer warnings overlap', () => {
-    const { sim, boss } = claimedEncounter(458);
+    const { sim, boss } = claimedEncounter();
     const instance = sim.instances.find((entry) => entry.dungeonId === IGNIVAR_SECOND_WING_ID);
     if (!instance) throw new Error('Inner Crucible instance disappeared');
     instance.difficulty = 'heroic';
@@ -1273,7 +1277,7 @@ describe('Varkhul encounter behavior', () => {
   });
 
   it('does not schedule hammer meteors in Normal', () => {
-    const { sim, boss } = claimedEncounter(459);
+    const { sim, boss } = claimedEncounter();
     updateVarkhulEncounter(sim.ctx, boss);
     const state = isolateMechanics(boss);
     state.anvilTimer = DT;
@@ -1285,7 +1289,7 @@ describe('Varkhul encounter behavior', () => {
     expect(sim.activeVarkhulAnvilMeteors).toEqual([]);
   });
   it('makes the Assembly threshold mandatory and immune to exact-copy and dev damage', () => {
-    const { sim, boss } = claimedEncounter(462);
+    const { sim, boss } = claimedEncounter();
     updateVarkhulEncounter(sim.ctx, boss);
     isolateMechanics(boss);
     const floor = Math.ceil(boss.maxHp * 0.5);
@@ -1336,7 +1340,7 @@ describe('Varkhul encounter behavior', () => {
     expect(boss.hp).toBe(hpDuringAssembly);
   });
   it('accelerates non-tank mechanics at 20% and wipes when Masterpiece expires', () => {
-    const { sim, boss } = claimedEncounter(47);
+    const { sim, boss } = claimedEncounter();
     updateVarkhulEncounter(sim.ctx, boss);
     const state = isolateMechanics(boss);
     state.assemblyTriggered = true;
@@ -1367,7 +1371,7 @@ describe('Varkhul encounter behavior', () => {
   });
 
   it('cleans in-claim auras, warnings, casts, and enrage on reset', () => {
-    const { sim, boss } = claimedEncounter(48);
+    const { sim, boss } = claimedEncounter();
     updateVarkhulEncounter(sim.ctx, boss);
     const state = isolateMechanics(boss);
     sim.player.auras.push({
@@ -1395,7 +1399,7 @@ describe('Varkhul encounter behavior', () => {
   });
 
   it('recovers participating players long cooldowns when the pull wipes', () => {
-    const { sim, boss } = claimedEncounter(481);
+    const { sim, boss } = claimedEncounter();
     sim.setPlayerLevel(20);
     const meta = sim.meta(sim.player.id);
     const longAbility = meta?.known.find((ability) => ability.cooldown >= 120);
@@ -1413,7 +1417,7 @@ describe('Varkhul encounter behavior', () => {
   });
 
   it('does not reset a pre-pull visitor cooldown when another player later wipes', () => {
-    const { sim, boss } = claimedEncounter(482);
+    const { sim, boss } = claimedEncounter();
     sim.setPlayerLevel(20);
     const visitorMeta = sim.meta(sim.player.id);
     const longAbility = visitorMeta?.known.find((ability) => ability.cooldown >= 120);
@@ -1445,7 +1449,7 @@ describe('Varkhul encounter behavior', () => {
   });
 
   it('keeps long cooldowns when the encounter is reset without a wipe', () => {
-    const { sim, boss } = claimedEncounter(483);
+    const { sim, boss } = claimedEncounter();
     sim.setPlayerLevel(20);
     const meta = sim.meta(sim.player.id);
     const longAbility = meta?.known.find((ability) => ability.cooldown >= 120);
@@ -1459,7 +1463,7 @@ describe('Varkhul encounter behavior', () => {
   });
 
   it('despawns portal-wave adds and clears boss-sourced auras from displaced players on reset', () => {
-    const { sim, boss } = claimedEncounter(49);
+    const { sim, boss } = claimedEncounter();
     const displaced = addEncounterPlayer(sim, boss, 'Displaced Raider');
     updateVarkhulEncounter(sim.ctx, boss);
     isolateMechanics(boss);
@@ -1492,7 +1496,7 @@ describe('Varkhul encounter behavior', () => {
   });
 
   it('clears both Varkhul encounter auras when a player leaves the Inner Crucible', () => {
-    const { sim, boss } = claimedEncounter(50);
+    const { sim, boss } = claimedEncounter();
     sim.player.auras.push(
       {
         id: VARKHUL_MAKERS_BRAND_AURA_ID,
@@ -1571,7 +1575,7 @@ describe('Varkhul encounter behavior', () => {
     ).toBe(false);
   });
   it('can clear one retired boss source without touching another source', () => {
-    const { sim, boss } = claimedEncounter(51);
+    const { sim, boss } = claimedEncounter();
     const otherSourceId = boss.id + 10_000;
     for (const sourceId of [boss.id, otherSourceId]) {
       sim.player.auras.push({
@@ -1597,7 +1601,7 @@ describe('Varkhul encounter behavior', () => {
 
 describe('Varkhul empty-raid reset and terminal wipe', () => {
   it('performs exactly one home reset for an all-dead raid and stops consuming rng', () => {
-    const { sim, boss } = claimedEncounter(52);
+    const { sim, boss } = claimedEncounter();
     updateVarkhulEncounter(sim.ctx, boss);
     expect(boss.varkhul).toBeDefined();
     // Drag him off the work spot the way a fight does before everyone drops.
@@ -1627,7 +1631,7 @@ describe('Varkhul empty-raid reset and terminal wipe', () => {
   });
 
   it('holds the one-reset state through full ticks of an all-dead raid', () => {
-    const { sim, boss } = claimedEncounter(53);
+    const { sim, boss } = claimedEncounter();
     updateVarkhulEncounter(sim.ctx, boss);
     expect(boss.varkhul).toBeDefined();
     sim.player.dead = true;
@@ -1644,7 +1648,7 @@ describe('Varkhul empty-raid reset and terminal wipe', () => {
   });
 
   it('never consumes rng for a spawned boss whose room is empty and unpulled', () => {
-    const { sim, boss } = claimedEncounter(54);
+    const { sim, boss } = claimedEncounter();
     // claimedEncounter force-flags a pull; restore the fresh-spawn pose and
     // walk the only player out before the encounter state ever initializes.
     boss.inCombat = false;
@@ -1667,7 +1671,7 @@ describe('Varkhul empty-raid reset and terminal wipe', () => {
   });
 
   it('heals a damaged stateless boss with one reset before the empty-room gate latches', () => {
-    const { sim, boss } = claimedEncounter(57);
+    const { sim, boss } = claimedEncounter();
     // Stateless (boss.varkhul never initialized), out of combat, empty room,
     // but NOT pristine: the gate must let one reset through to heal him.
     boss.inCombat = false;
@@ -1705,7 +1709,7 @@ describe('Varkhul empty-raid reset and terminal wipe', () => {
   });
 
   it('filters a player already dead at Masterpiece resolution start out of the wipe', () => {
-    const { sim, boss } = claimedEncounter(59);
+    const { sim, boss } = claimedEncounter();
     const fallen = addEncounterPlayer(sim, boss, 'Fallen Raider');
     updateVarkhulEncounter(sim.ctx, boss);
     const state = isolateMechanics(boss);
@@ -1738,7 +1742,7 @@ describe('Varkhul empty-raid reset and terminal wipe', () => {
   });
 
   it('kills a full-health Cold Coffin stasis player when Masterpiece Unbound expires', () => {
-    const { sim, boss } = claimedEncounter(55);
+    const { sim, boss } = claimedEncounter();
     updateVarkhulEncounter(sim.ctx, boss);
     const state = isolateMechanics(boss);
     state.assemblyTriggered = true;
@@ -1766,7 +1770,7 @@ describe('Varkhul empty-raid reset and terminal wipe', () => {
   });
 
   it('preserves dev and GM invulnerability through the Masterpiece Unbound wipe', () => {
-    const { sim, boss } = claimedEncounter(56);
+    const { sim, boss } = claimedEncounter();
     const god = addEncounterPlayer(sim, boss, 'Wipe God');
     god.devGod = true;
     sim.player.gm = true;

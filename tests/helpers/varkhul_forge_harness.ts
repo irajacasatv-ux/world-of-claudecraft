@@ -7,14 +7,29 @@ import { VARKHUL_BOSS_ID } from '../../src/sim/encounters/varkhul';
 import { IGNIVAR_SECOND_WING_ID } from '../../src/sim/ignivar_raid_ids';
 import { enterDungeon } from '../../src/sim/instances/dungeons';
 import { Sim } from '../../src/sim/sim';
-import type { Entity } from '../../src/sim/types';
+import { type Entity, PLAYER_INTEREST_DROP_RADIUS } from '../../src/sim/types';
+
+// One seed for every case: a seed a test file has not built yet costs its
+// full-world Sim about half a second (the collider grids are built per seed),
+// a seed it has already built about 20 ms. No case asserts a seed-specific draw;
+// the replay cases compare two runs of the same seed.
+export const FORGE_SEED = 721;
 
 export function claimedEncounter(
   seed: number,
   heroic = false,
   engage = true,
 ): { sim: Sim; boss: Entity } {
-  const sim = new Sim({ seed, playerClass: 'warrior', devCommands: true });
+  // Production's idle culling (the server and the offline client both set it):
+  // the raid sits in its own instance, so the overworld's idle population is
+  // out of every player's radius and skips its per-tick AI instead of costing
+  // each full-world tick.
+  const sim = new Sim({
+    seed,
+    playerClass: 'warrior',
+    devCommands: true,
+    idleMobTickRadius: PLAYER_INTEREST_DROP_RADIUS,
+  });
   expect(enterDungeon(sim.ctx, IGNIVAR_SECOND_WING_ID, sim.player.id, true)).toBe(true);
   const instance = sim.instances.find((entry) => entry.dungeonId === IGNIVAR_SECOND_WING_ID);
   if (!instance) throw new Error('Inner Crucible did not claim an instance');
