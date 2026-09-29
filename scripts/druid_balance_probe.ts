@@ -109,16 +109,29 @@ export function combineDruidSeedRuns(
   });
 }
 
-/** One seed's matrix: twelve profile x capstone cells, each that seed's raw figure. */
+export const DRUID_PROBE_PROFILES: readonly DruidProbeProfile[] = [
+  'moongrove_1t',
+  'moongrove_3t',
+  'wildfang',
+  'groveheart',
+];
+
+/** One seed's matrix: twelve profile x capstone cells, each that seed's raw figure.
+ *  `profiles` narrows the matrix to those profiles' cells (each cell is its own fresh
+ *  Sim, so the cells kept read exactly what they read in the whole matrix); the cell
+ *  order stays capstone-major. */
 export function runDruidBalanceSeed(
   seed: number,
   seconds = DRUID_PROBE_SECONDS,
+  profiles: readonly DruidProbeProfile[] = DRUID_PROBE_PROFILES,
 ): DruidBalanceResult[] {
   const seeds = [seed];
   const results: DruidBalanceResult[] = [];
+  const wanted = new Set(profiles);
   for (const [capstone, talentId] of Object.entries(DRUID_CAPSTONES) as [DruidCapstone, string][]) {
     const row = { 20: talentId };
     for (const targets of [1, 3] as const) {
+      if (!wanted.has(`moongrove_${targets}t`)) continue;
       const scenario: OwnedClassBalanceScenario = { targets, seconds: 123, window: 'raid' };
       const values = seeds.map(
         (seed) => runOwnedClassDpsProbe('moongrove', scenario, seed, 'druid-v029', row).dps,
@@ -135,40 +148,46 @@ export function runDruidBalanceSeed(
       seconds: 123,
       window: 'raid',
     };
-    results.push({
-      profile: 'wildfang',
-      capstone,
-      metric: 'dps',
-      value: average(
-        seeds.map(
-          (seed) =>
-            runOwnedClassDpsProbe('wildfang', wildfangScenario, seed, 'druid-v029', row).dps,
+    if (wanted.has('wildfang')) {
+      results.push({
+        profile: 'wildfang',
+        capstone,
+        metric: 'dps',
+        value: average(
+          seeds.map(
+            (seed) =>
+              runOwnedClassDpsProbe('wildfang', wildfangScenario, seed, 'druid-v029', row).dps,
+          ),
         ),
-      ),
-    });
-    results.push({
-      profile: 'groveheart',
-      capstone,
-      metric: 'hps',
-      value: average(
-        seeds.map(
-          (seed) => runOwnedHealerProbe('groveheart', 3, seed, 'druid-v029', row, seconds).hps,
+      });
+    }
+    if (wanted.has('groveheart')) {
+      results.push({
+        profile: 'groveheart',
+        capstone,
+        metric: 'hps',
+        value: average(
+          seeds.map(
+            (seed) => runOwnedHealerProbe('groveheart', 3, seed, 'druid-v029', row, seconds).hps,
+          ),
         ),
-      ),
-    });
+      });
+    }
   }
   return results;
 }
 
+/** Each profile's best capstone, in DRUID_PROBE_PROFILES order; a profile with no
+ *  cell in `results` (a narrowed matrix) has no entry. */
 export function bestDruidBuilds(results: readonly DruidBalanceResult[]): DruidBalanceResult[] {
-  return (['moongrove_1t', 'moongrove_3t', 'wildfang', 'groveheart'] as const).map(
-    (profile) =>
-      results
-        .filter((result) => result.profile === profile)
-        .sort(
-          (left, right) => right.value - left.value || left.capstone.localeCompare(right.capstone),
-        )[0],
-  );
+  return DRUID_PROBE_PROFILES.flatMap((profile) => {
+    const best = results
+      .filter((result) => result.profile === profile)
+      .sort(
+        (left, right) => right.value - left.value || left.capstone.localeCompare(right.capstone),
+      )[0];
+    return best ? [best] : [];
+  });
 }
 
 function addLiveMob(sim: Sim, player: Entity): Entity {

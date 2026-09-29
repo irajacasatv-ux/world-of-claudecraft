@@ -3,9 +3,12 @@ import {
   bestDruidBuilds,
   combineDruidSeedRuns,
   DRUID_CAPSTONES,
+  DRUID_PROBE_PROFILES,
   DRUID_PROBE_SECONDS,
   DRUID_PROBE_SEEDS,
   type DruidBalanceResult,
+  type DruidBruinTankResult,
+  type DruidProbeProfile,
   runDruidBalanceSeed,
   runDruidBruinTankProbe,
   runDruidLiveMobProbe,
@@ -130,15 +133,32 @@ const BAND = 0.08;
 // band(full, diet): the eight-seed bands keep the one-seed bands' relative width
 // around their own measurement (2026-09-27: moongrove_1t 155.82 at one seed and
 // 149.27 at eight, wildfang 198.89 and 191.86); re-pin each from its own actuals.
+// The diet also runs only the two band-carrying profiles (moongrove_1t and
+// wildfang, every capstone each). moongrove_3t and groveheart carry no band, only
+// "the best capstone reads above zero", which the diet's other suites hold per run
+// on every PR (owned_class_balance_dps_metrics: Moongrove's three-target damage on
+// every target; owned_class_balance_healer_probes and _groveheart: Groveheart
+// healing), and the capstone engines themselves are unit-pinned in
+// tests/druid_engines.test.ts. Each cell is its own fresh Sim, so the kept cells,
+// and the bands on them, read exactly what they read in the whole matrix.
 const FULL_SWEEP = process.env.WOC_FULL_BALANCE_SWEEP === '1';
 const band = bandAt(FULL_SWEEP);
 const MATRIX_SEEDS: readonly number[] = FULL_SWEEP ? DRUID_PROBE_SEEDS : [DRUID_PROBE_SEEDS[0]];
+const MATRIX_PROFILES: readonly DruidProbeProfile[] = FULL_SWEEP
+  ? ['moongrove_1t', 'moongrove_3t', 'wildfang', 'groveheart']
+  : ['moongrove_1t', 'wildfang'];
 // Each seed case appends its seed and its run here; the band case combines the runs
 // (in seed order).
 const ranSeeds: number[] = [];
 const seedRuns: DruidBalanceResult[][] = [];
 const within = (measured: number) =>
   [measured * (1 - BAND), measured * (1 + BAND)] as [number, number];
+// The Bruin tank probe at its banded seed, run once per file: the band case reads
+// it, and the determinism case re-runs the same seed against it (a determinism
+// check reuses its first run instead of paying two at a seed nothing else builds).
+let bruinFirstRun: DruidBruinTankResult | undefined;
+const bruinTankRun = (): DruidBruinTankResult =>
+  (bruinFirstRun ??= runDruidBruinTankProbe(42_920, 'test-head'));
 
 function fixtureEquipment(
   seed: number,
@@ -159,7 +179,16 @@ describe('Druid v0.29 balance and live-mob harness', () => {
     expect(DRUID_PROBE_SECONDS).toBe(123);
     expect(DRUID_PROBE_SEEDS).toEqual([4242, 777, 1313, 99, 2024, 555, 31337, 8080]);
     expect(Object.keys(DRUID_CAPSTONES)).toEqual(['naturesFury', 'wildApex', 'quickening']);
+    expect(DRUID_PROBE_PROFILES).toEqual([
+      'moongrove_1t',
+      'moongrove_3t',
+      'wildfang',
+      'groveheart',
+    ]);
     expect(MATRIX_SEEDS).toEqual(FULL_SWEEP ? [...DRUID_PROBE_SEEDS] : [DRUID_PROBE_SEEDS[0]]);
+    expect(MATRIX_PROFILES).toEqual(
+      FULL_SWEEP ? [...DRUID_PROBE_PROFILES] : ['moongrove_1t', 'wildfang'],
+    );
   });
 
   it('combines per-seed runs by the zero-drop average, cell by cell', () => {
@@ -199,12 +228,12 @@ describe('Druid v0.29 balance and live-mob harness', () => {
   // that nightly. A probe runs synchronously, so a bound fails an over-long case when it
   // finishes rather than cutting it short: 8 x 900 = 7,200 s is the most a passing sweep
   // may take, not a cap on its wall time, which the nightly job's 300-minute limit (shared
-  // with the rest of that job) bounds.
+  // with the rest of that job) bounds. The diet's seed runs six of the twelve combos.
   it.each(MATRIX_SEEDS.map((seed, index) => [seed, index + 1]))(
     'runs the matrix at seed %i (run %i)',
     (seed) => {
       ranSeeds.push(seed);
-      seedRuns.push(runDruidBalanceSeed(seed));
+      seedRuns.push(runDruidBalanceSeed(seed, DRUID_PROBE_SECONDS, MATRIX_PROFILES));
     },
     FULL_SWEEP ? 900_000 : 420_000,
   );
@@ -217,9 +246,15 @@ describe('Druid v0.29 balance and live-mob harness', () => {
     // identical runs of twelve results would mean a seed never reached the probe.
     expect(new Set(seedRuns.map((run) => JSON.stringify(run))).size).toBe(MATRIX_SEEDS.length);
     const results = combineDruidSeedRuns(seedRuns);
-    expect(results).toHaveLength(12);
+    // Literal per configuration, not derived from MATRIX_PROFILES: a profile the
+    // matrix silently dropped must read as a short count here.
+    expect(results).toHaveLength(FULL_SWEEP ? 12 : 6);
     expect(new Set(results.map((result) => result.profile))).toEqual(
-      new Set(['moongrove_1t', 'moongrove_3t', 'wildfang', 'groveheart']),
+      new Set(
+        FULL_SWEEP
+          ? ['moongrove_1t', 'moongrove_3t', 'wildfang', 'groveheart']
+          : ['moongrove_1t', 'wildfang'],
+      ),
     );
     expect(new Set(results.map((result) => result.capstone))).toEqual(
       new Set(['naturesFury', 'wildApex', 'quickening']),
@@ -238,8 +273,10 @@ describe('Druid v0.29 balance and live-mob harness', () => {
     expect(moongrove?.value).toBeLessThanOrEqual(band(178, 185));
     expect(wildfang?.value).toBeGreaterThanOrEqual(band(159, 165));
     expect(wildfang?.value).toBeLessThanOrEqual(band(198, 205));
-    expect(best.find((result) => result.profile === 'moongrove_3t')?.value).toBeGreaterThan(0);
-    expect(best.find((result) => result.profile === 'groveheart')?.value).toBeGreaterThan(0);
+    if (FULL_SWEEP) {
+      expect(best.find((result) => result.profile === 'moongrove_3t')?.value).toBeGreaterThan(0);
+      expect(best.find((result) => result.profile === 'groveheart')?.value).toBeGreaterThan(0);
+    }
   });
 
   it('the live-mob and Bruin fixtures wear the pinned reference loadout', () => {
@@ -285,7 +322,7 @@ describe('Druid v0.29 balance and live-mob harness', () => {
   );
 
   it('records Bruin mitigation, threat, taunt uptime, and exit behavior', () => {
-    const result = runDruidBruinTankProbe(42_920, 'test-head');
+    const result = bruinTankRun();
     expect(result.head).toBe('test-head');
     expect(result.bruinIncomingDamage).toBeLessThan(result.wolfIncomingDamage);
     // The two incoming figures and the mitigation they imply are banded on
@@ -322,6 +359,7 @@ describe('Druid v0.29 balance and live-mob harness', () => {
   }, 60_000);
 
   it('keeps the Bruin tank probe deterministic at the same fixed seed', () => {
-    expect(runDruidBruinTankProbe(42_921)).toEqual(runDruidBruinTankProbe(42_921));
+    const first = bruinTankRun();
+    expect(runDruidBruinTankProbe(42_920, 'test-head')).toEqual(first);
   }, 60_000);
 });
