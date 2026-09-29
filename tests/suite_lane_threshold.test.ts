@@ -10,9 +10,11 @@
 // a superseded row), not CI ms, so ciTimeWeight scales it by CARRIED_LOCAL_TO_CI_RATIO
 // into CI time before it is judged; a harvested row is judged as measured.
 
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
+import { join, relative, sep } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { MEASURED_WEIGHTS } from '../scripts/ci_shard_partition.mjs';
+import { MEASURED_FALLBACK_MS, MEASURED_WEIGHTS } from '../scripts/ci_shard_partition.mjs';
 import {
   CARRIED_LOCAL_TO_CI_RATIO,
   CI_LONG_SUITES,
@@ -28,6 +30,7 @@ import {
 } from '../scripts/lib/ci_shard_plan.mjs';
 import { walkShardTestFiles } from '../scripts/lib/ci_shard_walk.mjs';
 import { carriedRows } from '../scripts/lib/ci_shard_weight_carry.mjs';
+import { listTestFiles } from '../scripts/lib/gate_discovery.mjs';
 
 const CARRIED = carriedRows(
   JSON.parse(
@@ -40,7 +43,8 @@ describe('the lane threshold over the measured shard weights', () => {
     const over = laneThresholdOver(MEASURED_WEIGHTS, CARRIED, CI_LONG_SUITES);
     expect(
       over,
-      'a suite outside CI_LONG_SUITES weighs more than LANE_THRESHOLD_MS: lane it, split it, or ' +
+      'a suite outside CI_LONG_SUITES weighs more than LANE_THRESHOLD_MS: split it, make it ' +
+        'cheaper, or lane it (which needs a maintainer raise of LANE_POOL_CEILING_MS); ' +
         're-measure it after a split (ci_shard_weights_harvest --carry-local --supersede)',
     ).toEqual([]);
   });
@@ -49,9 +53,10 @@ describe('the lane threshold over the measured shard weights', () => {
     // Positive control: if the table lost its heavy rows (a shrunken harvest), the check
     // above would pass vacuously. Since the lane's balance probes boot production's idle
     // cull (2026-09-29) no row is over the threshold itself, so the control counts rows over
-    // a quarter of it (23 at the 2026-09-29 harvest) and requires a row for every lane file.
+    // a quarter of it (23 at the 2026-09-29 harvest; the floor leaves room to slim the heavy
+    // tail further) and requires a row for every lane file.
     const heavy = Object.values(MEASURED_WEIGHTS).filter((ms) => ms > LANE_THRESHOLD_MS / 4);
-    expect(heavy.length).toBeGreaterThanOrEqual(20);
+    expect(heavy.length).toBeGreaterThanOrEqual(10);
     expect(CI_LONG_SUITES.filter((file) => MEASURED_WEIGHTS[file] === undefined)).toEqual([]);
   });
 
@@ -100,15 +105,133 @@ describe('the lane threshold over the measured shard weights', () => {
   });
 });
 
+// The admission rule (tests/CLAUDE.md, "Test cost"): a test file the harvest has not measured
+// (no row in the weight table, or a carried row standing in for one) says in its leading
+// comment, on its own lines, `Guards:` and what it uniquely guards, and `Cost:` and its measured
+// local cost (a number with ms or s). Until a harvest measures the file, that cost counts into
+// the total-time ratchet below, in CI time. The files checked are the table's own population
+// (scripts/lib/ci_shard_walk.mjs: every .test.ts outside the browser suite). Every other file
+// vitest's default run collects (a .test.mjs, a .spec.ts, a test outside tests/) sits outside the
+// table: the ones that predate the rule are pinned by name below, and any new one must carry the
+// statement too. The Playwright browser suite runs under its own config and is reviewed by hand.
+const GUARDS_LINE = /^(?:\/\/+|\/?\*+)\s*Guards:\s*(\S.*)$/;
+const COST_LINE = /^(?:\/\/+|\/?\*+)\s*Cost:\s*.*?(\d+(?:\.\d+)?)\s*(ms|s)\b/;
+const GUARDS_MIN_CHARS = 12;
+
+/** The leading comment block: every comment line before the first line of code. */
+function leadingComment(source: string): string[] {
+  const lines: string[] = [];
+  for (const line of source.split('\n')) {
+    const trimmed = line.trim();
+    if (trimmed === '') continue;
+    if (/^(\/\/|\/\*|\*)/.test(trimmed)) lines.push(trimmed);
+    else break;
+  }
+  return lines;
+}
+
+function admissionStatement(source: string): { guards?: string; costMs?: number } {
+  const statement: { guards?: string; costMs?: number } = {};
+  for (const line of leadingComment(source)) {
+    const guards = line.match(GUARDS_LINE)?.[1].trim();
+    if (guards && guards.length >= GUARDS_MIN_CHARS && !guards.includes('Cost:'))
+      statement.guards ??= guards;
+    const cost = line.match(COST_LINE);
+    if (cost) statement.costMs ??= Number(cost[1]) * (cost[2] === 's' ? 1000 : 1);
+  }
+  return statement;
+}
+
+interface WalkedFile {
+  key: string;
+  source: string;
+}
+
+const unmeasured = (
+  { key }: WalkedFile,
+  weights: Readonly<Record<string, number>>,
+  carried: Readonly<Record<string, object>>,
+): boolean => !Object.hasOwn(weights, key) || Object.hasOwn(carried, key);
+
+function admissionProblems(
+  files: readonly WalkedFile[],
+  weights: Readonly<Record<string, number>>,
+  carried: Readonly<Record<string, object>>,
+): string[] {
+  const problems: string[] = [];
+  for (const file of files) {
+    if (!unmeasured(file, weights, carried)) continue;
+    const { guards, costMs } = admissionStatement(file.source);
+    if (guards === undefined)
+      problems.push(`${file.key}: no "Guards:" line saying what it uniquely guards`);
+    if (costMs === undefined)
+      problems.push(`${file.key}: no "Cost:" line with a measured time (ms or s)`);
+  }
+  return problems;
+}
+
+/**
+ * The CI-time weight of the walked files that have NO row (a carried row is already in the
+ * table): each at its stated local cost scaled like a carried row, or the measured fallback
+ * when it states none (the admission check fails that file anyway).
+ */
+function unmeasuredPools(
+  files: readonly WalkedFile[],
+  weights: Readonly<Record<string, number>>,
+  lane: readonly string[],
+): { shard: number; lane: number } {
+  const inLane = new Set(lane);
+  const pools = { shard: 0, lane: 0 };
+  for (const file of files) {
+    if (Object.hasOwn(weights, file.key)) continue;
+    const { costMs } = admissionStatement(file.source);
+    const weight =
+      costMs === undefined ? MEASURED_FALLBACK_MS : ciTimeWeight(costMs, { method: 'admission' });
+    if (inLane.has(file.key)) pools.lane += weight;
+    else pools.shard += weight;
+  }
+  return { shard: Math.round(pools.shard), lane: Math.round(pools.lane) };
+}
+
+// The collected test files the weight table does not describe, all written before the rule.
+const LEGACY_OUTSIDE_TABLE = [
+  'tests/browser_path_resolve.test.mjs',
+  'tests/cpu_profile_window.test.mjs',
+  'tests/geared_arrival_bench.test.mjs',
+  'tests/geared_arrival_fixture.test.mjs',
+  'tests/geared_arrival_roster.test.mjs',
+  'tests/gpu_hitch_capture.test.mjs',
+  'tests/gpu_hitch_metrics.test.mjs',
+  'tests/gpu_hitch_probe.test.mjs',
+  'tests/mob_portrait_background.test.mjs',
+  'tests/nythraxis_hitch_bench.test.mjs',
+  'tests/perf_baseline_store.test.mjs',
+  'tests/perf_hitch_crowd_reset.test.mjs',
+  'tests/perf_hitch_soak.test.mjs',
+  'tests/perf_hitch_store.test.mjs',
+  'tests/prod_cpu_monitor.test.mjs',
+  'tests/profile_mode.test.mjs',
+  'tests/profiler_metrics.test.mjs',
+] as const;
+
+const REPO_ROOT = fileURLToPath(new URL('..', import.meta.url));
+
+const WALKED: readonly WalkedFile[] = walkShardTestFiles(REPO_ROOT).map((key) => ({
+  key,
+  source: readFileSync(new URL(`../${key}`, import.meta.url), 'utf8'),
+}));
+
 // The total-CI-time ratchet (scripts/lib/ci_shard_plan.mjs, beside the lane rule): the summed
-// CI-time weight of the shard pool and of the lane may not pass their ceilings, and a ceiling
-// left well above its pool after a cut is stale and must come down.
+// CI-time weight of the shard pool and of the lane, a new file counted at its stated cost, may
+// not pass their ceilings, and a ceiling left well above its pool after a cut is stale.
 describe('the total CI time ratchet over the measured weights', () => {
   it('holds the shard pool and the lane under their ceilings, neither ceiling stale', () => {
-    const pools = poolWeights(MEASURED_WEIGHTS, CARRIED, CI_LONG_SUITES);
+    const measured = poolWeights(MEASURED_WEIGHTS, CARRIED, CI_LONG_SUITES);
+    const added = unmeasuredPools(WALKED, MEASURED_WEIGHTS, CI_LONG_SUITES);
+    const pools = { shard: measured.shard + added.shard, lane: measured.lane + added.lane };
     expect(
       ratchetProblems(pools, { shard: SHARD_POOL_CEILING_MS, lane: LANE_POOL_CEILING_MS }),
-      'a weight row grew a pool past its ceiling (make the file cheaper, cut what it ' +
+      'a new file or a weight row grew a pool past its ceiling (make it cheaper, cut what it ' +
         'duplicates, or raise the ceiling as a maintainer decision), or a pool shrank and its ' +
         'ceiling must come down',
     ).toEqual([]);
@@ -117,7 +240,16 @@ describe('the total CI time ratchet over the measured weights', () => {
     expect(pools.lane).toBeGreaterThan(0);
   });
 
-  it('sums pools through the CI-time weight and judges both directions', () => {
+  it('pins the ceilings, the headroom and the slack as literals', () => {
+    // A raise, a looser slack or a wider headroom is then a visible edit to this file, as a
+    // monolith ceiling is (tests/monolith_budget.test.ts), never a quiet one in the lib alone.
+    expect(SHARD_POOL_CEILING_MS).toBe(7_743_000);
+    expect(LANE_POOL_CEILING_MS).toBe(366_000);
+    expect(RATCHET_HEADROOM).toBe(0.1);
+    expect(RATCHET_SLACK).toBe(0.2);
+  });
+
+  it('sums pools through the CI-time weight and judges both directions for both pools', () => {
     const pools = poolWeights(
       {
         'tests/a.test.ts': 10_000,
@@ -129,93 +261,120 @@ describe('the total CI time ratchet over the measured weights', () => {
     );
     expect(pools).toEqual({ shard: 14_000, lane: 50_000 });
     expect(ratchetProblems(pools, { shard: 14_000, lane: 50_000 })).toEqual([]);
-    expect(ratchetProblems(pools, { shard: 13_999, lane: 50_000 })).toEqual([
+    expect(ratchetProblems(pools, { shard: 13_999, lane: 49_999 })).toEqual([
       'shard pool 14000 ms is over its ceiling 13999 ms',
+      'lane pool 50000 ms is over its ceiling 49999 ms',
     ]);
     // Stale: more than RATCHET_SLACK above the pool; exactly at the slack still holds.
-    expect(ratchetProblems(pools, { shard: 14_000, lane: 50_000 * (1 + RATCHET_SLACK) })).toEqual(
-      [],
-    );
     expect(
-      ratchetProblems(pools, { shard: 14_000, lane: 50_000 * (1 + RATCHET_SLACK) + 1 }),
-    ).toEqual([
-      `lane ceiling ${50_000 * (1 + RATCHET_SLACK) + 1} ms is stale over its pool 50000 ms: ` +
-        `lower it to about ${Math.ceil(50_000 * (1 + RATCHET_HEADROOM))} ms`,
+      ratchetProblems(pools, { shard: 14_000 * 1.2, lane: 50_000 * (1 + RATCHET_SLACK) }),
+    ).toEqual([]);
+    expect(ratchetProblems(pools, { shard: 16_801, lane: 60_001 })).toEqual([
+      `shard ceiling 16801 ms is stale over its pool 14000 ms: lower it to about ${Math.ceil(
+        14_000 * (1 + RATCHET_HEADROOM),
+      )} ms`,
+      `lane ceiling 60001 ms is stale over its pool 50000 ms: lower it to about ${Math.ceil(
+        50_000 * (1 + RATCHET_HEADROOM),
+      )} ms`,
     ]);
+  });
+
+  it('counts a new file at its stated cost in CI time, and a measured or carried one not again', () => {
+    const files = [
+      { key: 'tests/new.test.ts', source: '// Guards: a new behavior here.\n// Cost: 0.5 s\n' },
+      {
+        key: 'tests/new_lane.test.ts',
+        source: '// Guards: a new lane behavior.\n// Cost: 300 ms\n',
+      },
+      { key: 'tests/new_unstated.test.ts', source: 'import x from "y";\n' },
+      { key: 'tests/measured.test.ts', source: '// Cost: 9 s\n' },
+      { key: 'tests/carried.test.ts', source: '// Cost: 9 s\n' },
+    ];
+    expect(
+      unmeasuredPools(files, { 'tests/measured.test.ts': 1, 'tests/carried.test.ts': 1 }, [
+        'tests/new_lane.test.ts',
+      ]),
+    ).toEqual({ shard: 2_000 + MEASURED_FALLBACK_MS, lane: 1_200 });
   });
 });
 
-// The admission rule (tests/CLAUDE.md, "Test cost"): a test file the harvest has not measured
-// (no row in the weight table, or a carried row standing in for one) says in its leading
-// comment what it uniquely guards and what it costs, on lines carrying `Guards:` and `Cost:`.
-// Once a harvest measures it, the ratchet above carries its weight. The files checked are the
-// table's own population (scripts/lib/ci_shard_walk.mjs: every .test.ts outside the browser
-// suite); the browser suite and the few .test.mjs suites owe the statement too but sit outside
-// the table, so nothing here can tell a new one from an old one.
-const ADMISSION_MARKERS = ['Guards:', 'Cost:'] as const;
-
-function leadingComment(source: string): string {
-  const lines: string[] = [];
-  for (const line of source.split('\n')) {
-    const trimmed = line.trim();
-    if (trimmed === '' && lines.length === 0) continue;
-    if (/^(\/\/|\/\*|\*)/.test(trimmed)) lines.push(trimmed);
-    else break;
-  }
-  return lines.join('\n');
-}
-
-function admissionProblems(
-  files: readonly { key: string; source: string }[],
-  weights: Readonly<Record<string, number>>,
-  carried: Readonly<Record<string, object>>,
-): string[] {
-  const problems: string[] = [];
-  for (const { key, source } of files) {
-    const measured = Object.hasOwn(weights, key) && !Object.hasOwn(carried, key);
-    if (measured) continue;
-    const header = leadingComment(source);
-    const missing = ADMISSION_MARKERS.filter((marker) => !header.includes(marker));
-    if (missing.length > 0) problems.push(`${key}: its leading comment lacks ${missing.join(' ')}`);
-  }
-  return problems;
-}
-
 describe('the new-test admission rule', () => {
   it('asks every test file the harvest has not measured for its Guards: and Cost: lines', () => {
-    const files = walkShardTestFiles(new URL('..', import.meta.url).pathname).map((key) => ({
-      key,
-      source: readFileSync(new URL(`../${key}`, import.meta.url), 'utf8'),
-    }));
-    // Non-vacuous: the walk sees the whole suite.
-    expect(files.length).toBeGreaterThan(4_000);
+    // The walk sees the whole suite; right after a full harvest no file is unmeasured, so the
+    // synthetic case below carries the parser.
+    expect(WALKED.length).toBeGreaterThan(4_000);
     expect(
-      admissionProblems(files, MEASURED_WEIGHTS, CARRIED),
+      admissionProblems(WALKED, MEASURED_WEIGHTS, CARRIED),
       'a new test file states what it uniquely guards and its measured cost (tests/CLAUDE.md, ' +
         '"Test cost")',
     ).toEqual([]);
   });
 
-  it('reads the markers from the leading comment only, and skips measured files', () => {
-    const stated = '// Guards: the thing.\n// Cost: 0.2 s locally.\nimport x from "y";\n';
-    const buried = 'import x from "y";\n// Guards: the thing.\n// Cost: 0.2 s.\n';
-    const half = '/**\n * Guards: the thing.\n */\nimport x from "y";\n';
+  it('asks the same of a new collected test file outside the table (a .test.mjs, a .spec.ts)', () => {
+    const table = new Set(WALKED.map(({ key }) => key));
+    const outside = listTestFiles({
+      root: REPO_ROOT,
+      dir: REPO_ROOT,
+      readdirSync,
+      join,
+      relative,
+      sep,
+    }).filter((file) => !table.has(file));
+    // Non-vacuous: the collected walk sees the legacy files, so it sees a new one beside them.
+    expect(outside).toEqual(expect.arrayContaining([...LEGACY_OUTSIDE_TABLE]));
+    const legacy = new Set<string>(LEGACY_OUTSIDE_TABLE);
+    const newcomers = outside
+      .filter((key) => !legacy.has(key))
+      .map((key) => ({ key, source: readFileSync(join(REPO_ROOT, key), 'utf8') }));
     expect(
-      admissionProblems(
-        [
-          { key: 'tests/new_stated.test.ts', source: stated },
-          { key: 'tests/new_buried.test.ts', source: buried },
-          { key: 'tests/new_half.test.ts', source: half },
-          { key: 'tests/measured.test.ts', source: buried },
-          { key: 'tests/carried.test.ts', source: buried },
-        ],
-        { 'tests/measured.test.ts': 1_000, 'tests/carried.test.ts': 1_000 },
-        { 'tests/carried.test.ts': { method: 'local-median' } },
-      ),
-    ).toEqual([
-      'tests/new_buried.test.ts: its leading comment lacks Guards: Cost:',
-      'tests/new_half.test.ts: its leading comment lacks Cost:',
-      'tests/carried.test.ts: its leading comment lacks Guards: Cost:',
+      admissionProblems(newcomers, {}, {}),
+      'a new test file outside the weight table states what it guards and costs too',
+    ).toEqual([]);
+  });
+
+  it('reads real statements from the leading comment only, and skips measured files', () => {
+    const file = (key: string, source: string) => ({ key, source });
+    const stated =
+      "// Guards: the pause toggle's replay path.\n// Cost: 0.2 s locally at one worker.\n" +
+      'import x from "y";\n';
+    const afterDocblock =
+      // The pragma is split so vitest's own docblock scan does not read it as this file's.
+      `// @vitest-${'environment'} happy-dom\n\n/**\n * Guards: the drawer keyboard trap.\n` +
+      ' * Cost: 450 ms at one worker.\n */\nimport x from "y";\n';
+    const problems = admissionProblems(
+      [
+        file('tests/new_stated.test.ts', stated),
+        file('tests/new_after_docblock.test.ts', afterDocblock),
+        file('tests/new_buried.test.ts', `import x from "y";\n${stated}`),
+        file('tests/new_guards_only.test.ts', "// Guards: the pause toggle's replay path.\n"),
+        file('tests/new_empty.test.ts', '// Guards:\n// Cost:\n'),
+        file('tests/new_one_line.test.ts', '// Guards: Cost:\n'),
+        file('tests/new_prose.test.ts', '// This file has no Guards: or Cost: statement.\n'),
+        file('tests/new_no_number.test.ts', '// SafeGuards: the pause path.\n// Cost: cheap\n'),
+        file('tests/measured.test.ts', 'import x from "y";\n'),
+        file('tests/carried.test.ts', 'import x from "y";\n'),
+      ],
+      { 'tests/measured.test.ts': 1_000, 'tests/carried.test.ts': 1_000 },
+      { 'tests/carried.test.ts': { method: 'local-median' } },
+    );
+    const guards = (key: string) => `${key}: no "Guards:" line saying what it uniquely guards`;
+    const cost = (key: string) => `${key}: no "Cost:" line with a measured time (ms or s)`;
+    expect(problems).toEqual([
+      guards('tests/new_buried.test.ts'),
+      cost('tests/new_buried.test.ts'),
+      cost('tests/new_guards_only.test.ts'),
+      guards('tests/new_empty.test.ts'),
+      cost('tests/new_empty.test.ts'),
+      guards('tests/new_one_line.test.ts'),
+      cost('tests/new_one_line.test.ts'),
+      guards('tests/new_prose.test.ts'),
+      cost('tests/new_prose.test.ts'),
+      guards('tests/new_no_number.test.ts'),
+      cost('tests/new_no_number.test.ts'),
+      guards('tests/carried.test.ts'),
+      cost('tests/carried.test.ts'),
     ]);
+    expect(admissionStatement(stated).costMs).toBe(200);
+    expect(admissionStatement(afterDocblock).costMs).toBe(450);
   });
 });

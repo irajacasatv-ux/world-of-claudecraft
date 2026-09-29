@@ -889,7 +889,10 @@ jobs:
     # test-job checkouts across those two runs stalled for 3.8 to 8.2 minutes.
     # Fernando ruled (2026-09-29) a stall floor instead: the worst observed stall
     # (8.2) plus setup (0.5) plus a slow-runner test step (2.3 x 1.60), times the
-    # 1.37 margin, is 17.0, so 17.
+    # 1.37 margin, is 17.0, so 17. The one sanctioned flake retry
+    # (lib/ci_leg_runner.mjs) runs the step twice: a worst stall plus two
+    # slow-runner test steps is 8.2 + 0.5 + 2 x 3.7 = 16.1, inside it with
+    # little margin, so a stall and a retry together are the case to watch.
     timeout-minutes: 17
     runs-on: ubuntu-latest
 

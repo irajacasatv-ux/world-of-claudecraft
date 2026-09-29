@@ -391,12 +391,15 @@ harvest replaces it; a new file carries with `--carry-local-missing`.
 **Total-time ratchet and test admission.** The same suite holds the summed CI-time weight of the
 shard pool and of the lane under `SHARD_POOL_CEILING_MS` and `LANE_POOL_CEILING_MS`
 (`poolWeights` and `ratchetProblems` beside the lane rule in `scripts/lib/ci_shard_plan.mjs`, the
-`tests/monolith_budget.test.ts` mold): a harvest or a carried row that grows a pool past its
-ceiling fails where it lands, and a ceiling more than `RATCHET_SLACK` above its pool fails as
-stale, so a cut lowers it in the same change and the ratchet only tightens; raising one is a
-maintainer decision. It also checks the admission rule: every `.test.ts` the table has not
-measured yet (no row, or a carried one) says in its leading comment what it uniquely guards and
-what it costs, on `Guards:` and `Cost:` lines (`tests/CLAUDE.md`, "Test cost").
+`tests/monolith_budget.test.ts` mold): a new file, a harvest or a carried row that grows a pool
+past its ceiling fails where it lands, and a ceiling more than `RATCHET_SLACK` above its pool
+fails as stale, so a cut of more than about 8 percent lowers it in the same change; raising one
+(including laning a file, which moves its weight into the lane pool) is a maintainer decision,
+and a change of the CI worker count re-bases both. It also checks the admission rule: every
+`.test.ts` the table has not measured yet (no row, or a carried one) says in its leading comment
+what it uniquely guards and its measured local cost, on `Guards:` and `Cost:` lines, and that
+cost counts into the ratchet until a harvest measures the file (`tests/CLAUDE.md`, "Test
+cost").
 
 **Per-file memory budgets.** `npm run test:memory` (`scripts/test_memory_probe.mjs`, the pure
 judge in `scripts/lib/test_memory_budget.mjs`, the probe config `vitest.memory.config.ts`) runs

@@ -182,13 +182,18 @@ export function laneThresholdOver(weights, carried, lane) {
  * table the lane rule reads: the summed CI-time weight (ciTimeWeight, so a carried row counts
  * in CI time) of the shard pool (every row outside CI_LONG_SUITES) and of the lane may not pass
  * these ceilings. tests/suite_lane_threshold.test.ts judges the committed table on every PR (it
- * is on the always-run floor), so whatever grows a pool fails where it lands: a harvest, a
- * carried row for a new file, a superseded row. The remedies are the lane rule's: make the
- * file cheaper, cut something it duplicates, or show it is worth its cost (the admission rule
- * in tests/CLAUDE.md, "Test cost"). When a harvest or a cut shrinks a pool, LOWER its ceiling
- * in the same change to the pool plus RATCHET_HEADROOM: a ceiling more than RATCHET_SLACK
- * above its pool fails as stale, so the ratchet only tightens. Raising a ceiling is a
- * maintainer decision, with its reason in the PR body.
+ * is on the always-run floor), and adds each walked test file with no row at its stated local
+ * cost (the admission rule's `Cost:` line) in CI time, so whatever grows a pool fails where it
+ * lands: a new file, a harvest, a carried row, a superseded row. The remedies are the lane
+ * rule's: make the file cheaper, cut something it duplicates, or show it is worth its cost
+ * (tests/CLAUDE.md, "Test cost"). A ceiling more than RATCHET_SLACK above its pool fails as
+ * stale, so a cut of more than about 8 percent (1.10 against 1.20) forces the ceiling down in
+ * the same change, to the pool plus RATCHET_HEADROOM; a smaller cut leaves room a later change
+ * may regrow into. Moving a file from the shard pool to the lane moves its weight between the
+ * two ceilings, so laning one needs a maintainer raise of LANE_POOL_CEILING_MS, as any raise
+ * does (its reason in the PR body). The ceilings are measured at the CI worker count they were
+ * harvested at (scripts/ci_shard_test.mjs): a change of worker count re-bases them from the
+ * first green full-mode harvest at the new count, in the same change.
  */
 // Set 2026-09-29 from the harvest of run 36610517548 (the table after the test-cost cuts and the
 // culled balance lane): the shard pool summed 7,038,584 ms and the lane 332,450 ms (2,905,969 ms
@@ -202,7 +207,7 @@ export const LANE_POOL_CEILING_MS = 366_000;
  */
 export const RATCHET_HEADROOM = 0.1;
 /** A ceiling more than this fraction above its pool is stale and must come down. */
-export const RATCHET_SLACK = 0.25;
+export const RATCHET_SLACK = 0.2;
 
 /**
  * The summed CI-time weight of the shard pool and of the lane, in whole ms.
