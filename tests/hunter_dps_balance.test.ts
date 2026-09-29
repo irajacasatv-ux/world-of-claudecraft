@@ -18,7 +18,11 @@ const SECONDS = 90;
 // the runner with a harness marathon at workers=2). Diet: two-fifths the
 // seeds (~43s per test measured local), budgeted with the same proportional
 // slow-runner margin.
-const TEST_TIMEOUT_MS = FULL_SWEEP ? 480_000 : 200_000;
+// Re-sized 2026-09-29 at the production idle cull (scripts/probe_sim.ts) to
+// about ten times the slower test's local time: the full sweep measures 35.5 s
+// (360 s); the diet measures 21.5 s, whose 240 s would pass its 200 s, so the
+// diet arm stays at 200 s.
+const TEST_TIMEOUT_MS = FULL_SWEEP ? 360_000 : 200_000;
 
 function matrix(targets: number): Record<string, number> {
   return Object.fromEntries(

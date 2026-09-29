@@ -16,7 +16,9 @@ import { bandAt } from './helpers/balance_diet';
 // is pinned per configuration via band(full, diet): the diet band keeps its full
 // band's relative width around the two-seed mean measured 2026-09-27 (both
 // re-measured 2026-09-29 at the production idle cull, below); re-pin each from
-// its own printed actuals.
+// its own printed actuals. Each case's timeout is about ten times its local
+// time at the full sweep, since the one literal serves both depths (measured
+// 2026-09-29 at the idle cull: 17.6 s heroic, 10.9 s level-20 dummy).
 const FULL_SWEEP = process.env.WOC_FULL_BALANCE_SWEEP === '1';
 const band = bandAt(FULL_SWEEP);
 const ANCHOR_SEEDS = FULL_SWEEP ? ([42, 1337, 9001, 777] as const) : ([42, 1337] as const);
@@ -55,7 +57,7 @@ describe('destruction Ruinbolt feedback anchors at 120 seconds', () => {
     expect(mean('dps')).toBeGreaterThanOrEqual(band(219, 215));
     expect(mean('dps')).toBeLessThanOrEqual(band(243, 240));
     expect(mean('starvedPct')).toBeLessThan(0.1);
-  }, 240_000);
+  }, 180_000);
 
   it('holds the level-20 dummy drift tripwire', () => {
     const rows = ANCHOR_SEEDS.map((seed) => runWarlockBalanceProbe('destruction', seed, 120));
@@ -85,5 +87,5 @@ describe('destruction Ruinbolt feedback anchors at 120 seconds', () => {
     expect(mean('dps')).toBeGreaterThanOrEqual(band(235, 235));
     expect(mean('dps')).toBeLessThanOrEqual(band(261, 262));
     expect(mean('starvedPct')).toBeLessThan(0.1);
-  }, 240_000);
+  }, 120_000);
 });

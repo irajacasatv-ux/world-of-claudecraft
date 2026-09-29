@@ -15,6 +15,8 @@ import { runWarlockBalanceProbe } from '../scripts/warlock_balance_probe';
 // 2026-08-13 split; each file's seed-42 level-20 dummy tripwire is the exact
 // first 120 s of the matching window below (the rotation never reads the
 // window length), so the two are re-measured together at one configuration.
+// Each window's timeout is about ten times its local time, measured 2026-09-29
+// at the production idle cull (10.4 s, 6.3 s and 6.9 s).
 describe('Affliction full-BiS five-minute inert-boss balance', () => {
   it('spends the mana pool by five minutes inside the sanity corridor', () => {
     const result = runWarlockBalanceProbe('affliction', 42, 300);
@@ -75,7 +77,7 @@ describe('Demonology full-BiS five-minute inert-boss balance', () => {
     expect(result.dps).toBeLessThanOrEqual(298);
     expect(result.manaEndPct).toBeLessThan(0.12);
     expect(result.starvedPct).toBeLessThan(0.45);
-  }, 120_000);
+  }, 90_000);
 });
 
 describe('Destruction full-BiS five-minute inert-boss balance', () => {
@@ -106,5 +108,5 @@ describe('Destruction full-BiS five-minute inert-boss balance', () => {
     expect(result.dps).toBeLessThanOrEqual(258);
     expect(result.manaEndPct).toBeLessThan(0.28);
     expect(result.starvedPct).toBeLessThan(0.45);
-  }, 120_000);
+  }, 90_000);
 });
