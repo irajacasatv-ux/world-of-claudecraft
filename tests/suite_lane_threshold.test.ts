@@ -117,10 +117,13 @@ describe('the lane threshold over the measured shard weights', () => {
 const GUARDS_LINE = /^(?:\/\/+|\/?\*+)\s*Guards:\s*(\S.*)$/;
 // The time is the first number on the line, stands alone and is the line's only time: `1200 ms`
 // and `about 1.2 s` read, while `1,200 ms`, `25 000 ms`, `1.200 ms`, `2 min 30 s` and `1 s warm,
-// 120 s cold` are refused rather than read low (a fraction reads only in seconds and to two
-// places, so a dot used to group thousands cannot shrink a cost).
+// 2 min cold` are refused rather than read low (a fraction reads only in seconds and to two
+// places, so a dot used to group thousands cannot shrink a cost). The second-time check reads any
+// figure followed by an h, m or s in any case and fails closed (`2 shards` is refused too), and a
+// file with two `Cost:` lines states no cost.
 const COST_LINE = /^(?:\/\/+|\/?\*+)\s*Cost:[^\d\n]*?(?:(\d+\.\d{1,2})\s*s|(\d+)\s*(ms|s))\b/;
-const SECOND_TIME = /\d\s*(?:ms|s)\b/;
+const SECOND_TIME = /\d\s*[hms]/i;
+const COST_MARKER = /^(?:\/\/+|\/?\*+)\s*Cost:/;
 const GUARDS_MIN_CHARS = 12;
 
 /** The leading comment block: every comment line before the first line of code. */
@@ -137,13 +140,15 @@ function leadingComment(source: string): string[] {
 
 function admissionStatement(source: string): { guards?: string; costMs?: number } {
   const statement: { guards?: string; costMs?: number } = {};
-  for (const line of leadingComment(source)) {
+  const comment = leadingComment(source);
+  const oneCostLine = comment.filter((line) => COST_MARKER.test(line)).length === 1;
+  for (const line of comment) {
     const guards = line.match(GUARDS_LINE)?.[1].trim();
     if (guards && guards.length >= GUARDS_MIN_CHARS && !guards.includes('Cost:'))
       statement.guards ??= guards;
     const cost = line.match(COST_LINE);
-    if (cost && !SECOND_TIME.test(line.slice(cost[0].length)))
-      statement.costMs ??= cost[1]
+    if (oneCostLine && cost && !SECOND_TIME.test(line.slice(cost[0].length)))
+      statement.costMs = cost[1]
         ? Number(cost[1]) * 1000
         : Number(cost[2]) * (cost[3] === 's' ? 1000 : 1);
   }
@@ -421,7 +426,11 @@ describe('the new-test admission rule', () => {
         ),
         file(
           'tests/new_two_times.test.ts',
-          "// Guards: the pause toggle's replay path.\n// Cost: 1 s warm, 120 s cold\n",
+          "// Guards: the pause toggle's replay path.\n// Cost: 1 s warm, 2 min cold\n",
+        ),
+        file(
+          'tests/new_two_lines.test.ts',
+          "// Guards: the pause toggle's replay path.\n// Cost: 1 s warm.\n// Cost: 120 s cold.\n",
         ),
         file(
           'tests/new_minutes.test.ts',
@@ -457,6 +466,7 @@ describe('the new-test admission rule', () => {
       cost('tests/new_spaced.test.ts'),
       cost('tests/new_dotted.test.ts'),
       cost('tests/new_two_times.test.ts'),
+      cost('tests/new_two_lines.test.ts'),
       cost('tests/new_minutes.test.ts'),
       'tests/new_heavy.test.ts: its stated cost is 120000 ms in CI time, over LANE_THRESHOLD_MS: ' +
         'split it or make it cheaper',
@@ -469,6 +479,8 @@ describe('the new-test admission rule', () => {
     expect(admissionStatement('// Cost: 1.200 ms\n').costMs).toBeUndefined();
     expect(admissionStatement('// Cost: 1.200 s\n').costMs).toBeUndefined();
     expect(admissionStatement('// Cost: 1.25 s, 300 cases\n').costMs).toBe(1250);
+    for (const second of ['120 sec', '2m', '120 S', '1 h'])
+      expect(admissionStatement(`// Cost: 1 s warm, ${second} cold\n`).costMs).toBeUndefined();
     expect(admissionStatement(afterDocblock).costMs).toBe(450);
   });
 });
