@@ -12,6 +12,13 @@ import { Sim } from '../src/sim/sim';
 import { type AuraKind, armorReduction, type Entity } from '../src/sim/types';
 import { EMPTY_TEST_WORLD } from './sim_shared';
 
+// The feral form damage knob as tuned for the 1.0s cadence standardization
+// (1.22 against the wildfang band probe and the eight-seed druid matrix, the
+// tuning note on CAT_FORM_DAMAGE_MULT in form_swing.ts; design home
+// docs/design/druid-v029-class-design.md). A literal, never the export, so the
+// closed forms below cannot follow a retune of the constant they guard.
+const TUNED_CAT_FORM_DAMAGE_MULT = 1.22;
+
 // Every swing case strikes a mob it places itself (spawnDummy), so the rig
 // stands on the empty world.
 function makeWorld() {
@@ -50,6 +57,7 @@ function giveForm(sim: Sim, pid: number, kind: AuraKind, name: string) {
 describe('Cat Form swing speed', () => {
   it('pins the classic fast paw cadence at 1.0s', () => {
     expect(CAT_FORM_SWING_SPEED).toBe(1.0);
+    expect(CAT_FORM_DAMAGE_MULT).toBe(TUNED_CAT_FORM_DAMAGE_MULT);
     // The rogue baseline constant is untouched by the cat cadence change: it
     // still mirrors the rogue's starting dagger.
     const rogueWeapon = ITEMS[CLASSES.rogue.startWeapon].weapon!;
@@ -174,12 +182,16 @@ describe('Cat Form swing speed', () => {
 
     // Cat Form's per-swing AP uses the fixed cat cadence (1.0) and the feral
     // form damage multiplier; the bear druid's uses the staff, no multiplier.
-    expect(cat.amount).toBe(expectAt(cat.ap, CAT_FORM_SWING_SPEED, cat.dr, CAT_FORM_DAMAGE_MULT));
+    expect(cat.amount).toBe(
+      expectAt(cat.ap, CAT_FORM_SWING_SPEED, cat.dr, TUNED_CAT_FORM_DAMAGE_MULT),
+    );
     expect(staff.amount).toBe(expectAt(staff.ap, staffSpeed, staff.dr));
     // The bug would have been Cat Form normalizing by the slow staff instead: prove
     // the fixed cadence value is genuinely smaller, so a faster swing hits softer.
     expect(staffSpeed).toBeGreaterThan(CAT_FORM_SWING_SPEED);
-    expect(cat.amount).toBeLessThan(expectAt(cat.ap, staffSpeed, cat.dr, CAT_FORM_DAMAGE_MULT));
+    expect(cat.amount).toBeLessThan(
+      expectAt(cat.ap, staffSpeed, cat.dr, TUNED_CAT_FORM_DAMAGE_MULT),
+    );
   });
 
   it('Cat Form auto weapon rolls are normalized to authored DPS: two speeds, one result', () => {
@@ -207,7 +219,7 @@ describe('Cat Form swing speed', () => {
         Math.round(
           (perSwing * (CAT_FORM_SWING_SPEED / Math.max(0.1, speed)) +
             (ap / 14) * CAT_FORM_SWING_SPEED) *
-            CAT_FORM_DAMAGE_MULT *
+            TUNED_CAT_FORM_DAMAGE_MULT *
             (1 - dr),
         ),
       );
@@ -366,7 +378,8 @@ describe('Cat Form swing speed', () => {
           Math.max(
             1,
             Math.round(
-              ((60 + (ap / 14) * CAT_FORM_SWING_SPEED) * CAT_FORM_DAMAGE_MULT + 25) * (1 - dr),
+              ((60 + (ap / 14) * CAT_FORM_SWING_SPEED) * TUNED_CAT_FORM_DAMAGE_MULT + 25) *
+                (1 - dr),
             ),
           ),
         );
