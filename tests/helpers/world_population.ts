@@ -23,6 +23,7 @@ import { CAMPS, DUNGEON_X_THRESHOLD, ESCORTS, MOBS } from '../../src/sim/data';
 import { Sim } from '../../src/sim/sim';
 import type { Entity, EscortDef } from '../../src/sim/types';
 import { worldQuestCycleOfferingQuest } from '../../src/sim/world_quest_rotation';
+import { PRODUCTION_IDLE_CULL } from './production_idle_cull';
 
 /** Authored standing population per template, from the camp tables. */
 function authoredCounts(): Map<string, number> {
@@ -119,11 +120,15 @@ export function findByTemplate(sim: Sim, templateId: string): Entity | undefined
 export function runEscortRounds(def: EscortDef): void {
   // Keep repeated runs in one Sim to expose accumulating survivors. Each
   // route has its own test budget now that every regional caravan runs.
+  // Production's idle cull leaves the count honest: a culled mob is idle, alive
+  // and still counted, and every corpse (the respawn path a wave leak rides), every
+  // committed wave mob and every mob near the player still updates.
   const sim = new Sim({
     seed: 424242,
     playerClass: 'warrior',
     playerName: 'Escorter',
     respawnSeconds: 2, // resolve "did it come back?" in seconds of sim time
+    ...PRODUCTION_IDLE_CULL,
   });
   sim.setPlayerLevel(20);
 

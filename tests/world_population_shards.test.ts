@@ -42,7 +42,8 @@ const shardFile = (index: number) =>
 // matching constant below in the same change.
 const RUN_ESCORT_ROUNDS = [
   'export function runEscortRounds(def: EscortDef): void { const sim = new Sim({ seed:',
-  "424242, playerClass: 'warrior', playerName: 'Escorter', respawnSeconds: 2, });",
+  "424242, playerClass: 'warrior', playerName: 'Escorter', respawnSeconds: 2,",
+  '...PRODUCTION_IDLE_CULL, });',
   'sim.setPlayerLevel(20); let ranAtLeastOne = false; for (let round = 0; round < 2;',
   'round++) { sim.player.dead = false; sim.player.hp = sim.player.maxHp;',
   'sim.targetEntity(null); if (def.worldQuestId !== undefined) { const meta =',
