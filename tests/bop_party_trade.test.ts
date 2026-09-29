@@ -9,11 +9,14 @@ import { grantAwardedLootItem } from '../src/sim/loot/loot_roll';
 import { type PlayerMeta, Sim } from '../src/sim/sim';
 import { type ItemInstancePayload, TICK_RATE } from '../src/sim/types';
 import { expectDefined } from './helpers/defined';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const HELM = 'slagbreaker_helmet'; // soulbound epic warrior tier piece
 
+// Every case trades between players it places itself at the origin, so the
+// Sims run on the empty world (the overworld's NPCs and camps bought nothing).
 function tradeSim() {
-  const sim = new Sim({ seed: 7, playerClass: 'warrior', noPlayer: true });
+  const sim = new Sim({ seed: 7, playerClass: 'warrior', noPlayer: true, world: EMPTY_TEST_WORLD });
   const alice = sim.addPlayer('warrior', 'Alice');
   const bob = sim.addPlayer('warrior', 'Bob');
   const cara = sim.addPlayer('warrior', 'Cara');
@@ -235,7 +238,12 @@ describe('BoP party trade window: award and refusal details', () => {
 
 describe('BoP party trade window: stable ids beat names across a rename', () => {
   function idTradeSim() {
-    const sim = new Sim({ seed: 7, playerClass: 'warrior', noPlayer: true });
+    const sim = new Sim({
+      seed: 7,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const alice = sim.addPlayer('warrior', 'Alice', { characterId: 11 });
     const bob = sim.addPlayer('warrior', 'Bob', { characterId: 22 });
     const mallory = sim.addPlayer('warrior', 'Mallory', { characterId: 99 });
