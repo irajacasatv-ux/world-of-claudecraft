@@ -337,11 +337,9 @@ describe('CI workflow parity', () => {
       '            /docs/screenshots/admin-guild-bank-panel/',
       '            /docs/screenshots/aura-tracks/',
       '            /docs/screenshots/bank-storage-charters/',
-      '            /docs/screenshots/bank-vault-tab/',
       '            /docs/screenshots/buried-hoard-entrance/',
       '            /docs/screenshots/buried-hoard-valley/',
       '            /docs/screenshots/charselect-zone/',
-      '            /docs/screenshots/dash-speed-stack/',
       '            /docs/screenshots/eastbrook-grand-armoury/',
       '            /docs/screenshots/eastbrook-vale-rebuild/',
       '            /docs/screenshots/fenbridge-rebuild/',
@@ -356,13 +354,10 @@ describe('CI workflow parity', () => {
       '            /docs/screenshots/intentional-gathering-pr1/',
       '            /docs/screenshots/intentional-gathering-pr2/',
       '            /docs/screenshots/item-art-consistency-2026-08-09/',
-      '            /docs/screenshots/market-house-redesign/',
-      '            /docs/screenshots/nythraxis-dread-curse-swap/',
       '            /docs/screenshots/r35-admin-professions-inspector/',
       '            /docs/screenshots/release-v036-skill-normalization-2026-08-10/',
       '            /docs/screenshots/target-dots/',
       '            /docs/screenshots/touch-ui-rework/',
-      '            /docs/screenshots/vault-fine-mark/',
       '            /docs/screenshots/wildheart/',
       '            /docs/screenshots/woc-market/',
       '          sparse-checkout-cone-mode: false',
@@ -484,19 +479,19 @@ describe('CI workflow parity', () => {
         const match = line.match(/^docs\/screenshots\/([A-Za-z0-9._-]+)\//);
         if (match) indexDirs.add(match[1]);
       }
-      // 68 tracked screenshot subtrees after the 2026-09-29 prune removed 465
+      // 67 tracked screenshot subtrees after the 2026-09-29 prune removed 466
       // files that no test, doc, script or provenance record named (135 before
       // it; 538 before the 2026-09-27 prune).
       // Keep this floor near that measured count so truncated discovery cannot
       // silently satisfy the exact reference/cone coupling below.
-      expect(indexDirs.size).toBeGreaterThanOrEqual(68);
+      expect(indexDirs.size).toBeGreaterThanOrEqual(67);
     }
     // The guard's own file is excluded from the corpus: its SPARSE_CONE
     // literal above names every cone subtree, so counting it would satisfy
     // the coupling even over an otherwise empty corpus (the
     // release_i18n_tier_coverage SELF idiom).
     const SELF = 'tests/ci_workflow.test.ts';
-    const CORPUS_FLOOR = 11_038;
+    const CORPUS_FLOOR = 10_975;
     const referenced = new Set<string>();
     {
       const ls = spawnSync('git', ['ls-files', '-z'], {
@@ -533,11 +528,12 @@ describe('CI workflow parity', () => {
       // name, and every JSON; never markdown prose, never the browser suite
       // (browser-gate keeps the full tree), never code no unit test reaches.
       const corpus = sparseConeCorpus(tracked, read, new Set([SELF]));
-      // CORPUS_FLOOR files at the release/v0.45.0 sync (2026-09-28), the day the
-      // corpus narrowed from every reference-bearing file (10,729 at the v0.44.0
-      // close) to the test-reachable ones (11,038: the walked-root arm reaches
-      // more code than the markdown it drops). An emptied or truncated closure must
-      // not green the coupling.
+      // CORPUS_FLOOR files after the 2026-09-29 retirement of 85 capture scripts that
+      // nothing ran or named (63 of them sat under a walked root): 11,038 at the
+      // release/v0.45.0 sync (2026-09-28), the day the corpus narrowed from every
+      // reference-bearing file (10,729 at the v0.44.0 close) to the test-reachable
+      // ones (the walked-root arm reaches more code than the markdown it drops). An
+      // emptied or truncated closure must not green the coupling.
       expect(corpus.length).toBeGreaterThanOrEqual(CORPUS_FLOOR);
       for (const file of corpus) {
         const source = read(file);
