@@ -9,13 +9,17 @@ import type { ProfessionRecipeRecord } from '../src/sim/professions/types';
 import { Sim } from '../src/sim/sim';
 import { CRAFT_CAST_ID } from '../src/sim/types';
 import { completeCraftCast, runCraft } from './helpers/enchant_family_cast';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
+// The furnishing crafts read the player, the recipe tables and the stations
+// (kept by the empty world), never a camp, NPC or ground object.
 function setup(recipe: ProfessionRecipeRecord, skill = 50) {
   const sim = new Sim({
     seed: 42,
     playerClass: 'warrior',
     autoEquip: false,
     freeholdsEnabled: true,
+    world: EMPTY_TEST_WORLD,
   });
   const meta = sim.players.get(sim.playerId);
   if (!meta || !recipe.stationType) throw new Error('Missing furnishing craft fixture');
