@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { Sim } from '../src/sim/sim';
 import type { Aura, SimEvent } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
+// The readout reads only the player's own auras: the empty world serves.
 function makeWorld() {
-  return new Sim({ seed: 42, playerClass: 'mage', noPlayer: true });
+  return new Sim({ seed: 42, playerClass: 'mage', noPlayer: true, world: EMPTY_TEST_WORLD });
 }
 
 function errors(events: SimEvent[]): Extract<SimEvent, { type: 'error' }>[] {
