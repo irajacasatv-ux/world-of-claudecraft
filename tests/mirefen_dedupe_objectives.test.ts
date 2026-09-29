@@ -18,6 +18,7 @@ import type { PlayerMeta } from '../src/sim/sim';
 import { Sim } from '../src/sim/sim';
 import type { SimContext } from '../src/sim/sim_context';
 import { dist2d, type Entity, type QuestProgress } from '../src/sim/types';
+import { PRODUCTION_IDLE_CULL } from './helpers/production_idle_cull';
 
 // Mirefen duplicate-objective rework: each duplicate quest keeps its id (no DB
 // breakage) but gets a distinct objective so two quests are no longer literal
@@ -473,8 +474,17 @@ describe('firebottle lifecycle: giver re-grant and removal on finish (q_deepfen_
 // floor still detects anyone within a few yards. That left a non-quester attacked and
 // held in combat by an egg they could never legally damage back.
 describe('Broodmother egg aggro gate over a live tick loop (issue: eggs attack non-questers)', () => {
+  // The shipped idle-mob cull: the loop ticks the whole overworld around one
+  // player, and the egg and widow under test stand beside that player, inside
+  // the radius, so their idle scans still run every tick.
   const makeSim = () =>
-    new Sim({ seed: 4242, playerClass: 'warrior', playerName: 'Fenn', autoEquip: false });
+    new Sim({
+      seed: 4242,
+      playerClass: 'warrior',
+      playerName: 'Fenn',
+      autoEquip: false,
+      ...PRODUCTION_IDLE_CULL,
+    });
   const findLiveEgg = (sim: Sim): Entity => {
     const egg = [...sim.entities.values()].find(
       (e) => e.kind === 'mob' && e.templateId === 'spider_egg' && !e.dead,
