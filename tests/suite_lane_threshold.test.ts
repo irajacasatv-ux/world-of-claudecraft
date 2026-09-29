@@ -496,6 +496,7 @@ describe('the new-test admission rule', () => {
       '// Cost: 1 s\n// warm; two minutes cold\n',
       ' * Cost: 1 s\n * warm; 2 min cold\n */\n',
       '// Cost: 1 s\n//\n// cost : 120 s cold\n',
+      '// Cost: 1 s\n// Note: 2 min cold\n',
     ])
       expect(read(refused), refused).toBeUndefined();
     expect(admissionStatement(afterDocblock).costMs).toBe(450);
