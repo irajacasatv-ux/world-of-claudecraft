@@ -15,9 +15,19 @@ import { Sim } from '../src/sim/sim';
 import { DT } from '../src/sim/types';
 import { setLanguage } from '../src/ui/i18n';
 import { localizeSimAuraName } from '../src/ui/sim_i18n';
+import { PRODUCTION_IDLE_CULL } from './helpers/production_idle_cull';
 
 function encounter(startOrbital = true) {
-  const sim = new Sim({ seed: 9321, playerClass: 'warrior', autoEquip: false, devCommands: true });
+  // The shipped idle-mob cull: the vault floor sits in its own instance band, so
+  // the overworld's idle camps are far from every player. Vharok, his orbs and
+  // everything on the floor still tick their full AI.
+  const sim = new Sim({
+    seed: 9321,
+    playerClass: 'warrior',
+    autoEquip: false,
+    devCommands: true,
+    ...PRODUCTION_IDLE_CULL,
+  });
   sim.chat('/dev level 20', sim.player.id);
   sim.enterRift(makeVaultSeed(3, 183), 23, sim.player.id, undefined, {
     ...sim.player,
