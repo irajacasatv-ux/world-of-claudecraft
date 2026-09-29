@@ -9,12 +9,20 @@ import { ITEMS } from '../src/sim/data';
 import { MATERIAL_ITEM_IDS } from '../src/sim/material_taxonomy';
 import { Sim } from '../src/sim/sim';
 import type { InvSlot } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const ONLY_MATERIALS = 'Only materials fit in the space left in your bags.';
 const FULL = 'Your bags are full.';
 const SATCHEL = 'burlap_reagent_pouch'; // 8-slot materialsOnly satchel
 
-const makeSim = () => new Sim({ seed: 42, playerClass: 'warrior' as never, autoEquip: false });
+// The refusal reads only the player's own bags, so the empty world serves.
+const makeSim = () =>
+  new Sim({
+    seed: 42,
+    playerClass: 'warrior' as never,
+    autoEquip: false,
+    world: EMPTY_TEST_WORLD,
+  });
 const meta = (sim: Sim) =>
   (sim as never as { players: Map<number, never> }).players.get(sim.playerId)! as {
     inventory: InvSlot[];
