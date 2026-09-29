@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import type { ClientWorld } from '../src/net/online';
 import type { TalentModifiers } from '../src/sim/content/talents';
-import { BUILTIN_WORLD } from '../src/sim/data';
 import type { PlayerMeta } from '../src/sim/sim';
 import { Sim } from '../src/sim/sim';
 import type { PlayerClass } from '../src/sim/types';
 import { abilityScalingOf } from '../src/ui/ability_damage';
 import { abilityEffectText } from '../src/ui/ability_description';
 import { bareClient } from './helpers/bare_client';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 function snapshot(client: ClientWorld, extra: Record<string, unknown> = {}): void {
   (client as unknown as { applySnapshot(value: unknown): void }).applySnapshot({
@@ -58,7 +58,7 @@ describe('online balance resolution uses current snapshot state', () => {
       seed: 842,
       playerClass: 'paladin',
       autoEquip: false,
-      world: { ...BUILTIN_WORLD, camps: [], npcs: {}, groundObjects: [] },
+      world: EMPTY_TEST_WORLD,
     });
     sim.setPlayerLevel(20);
     expect(sim.setSpec('holy')).toBe(true);
@@ -124,8 +124,10 @@ describe('online balance resolution uses current snapshot state', () => {
 // fed the EXACT SAME mirrored inputs (known list, talent mods, entity/auras),
 // so any mismatch would be the display split itself, not a setup difference.
 describe('resolvedAbility cost tail parity: Sim (offline) vs ClientWorld (online), same state', () => {
-  function makeLeveledSim(cls: PlayerClass, spec: string | null, seed: number): Sim {
-    const sim = new Sim({ seed, playerClass: cls, autoEquip: true });
+  // Every case asks one seed and an empty world: resolvedAbility reads only the
+  // character (known list, talents, auras), never the seed or world content.
+  function makeLeveledSim(cls: PlayerClass, spec: string | null): Sim {
+    const sim = new Sim({ seed: 842, playerClass: cls, autoEquip: true, world: EMPTY_TEST_WORLD });
     sim.setPlayerLevel(20);
     if (spec) expect(sim.setSpec(spec)).toBe(true);
     return sim;
@@ -183,7 +185,7 @@ describe('resolvedAbility cost tail parity: Sim (offline) vs ClientWorld (online
   }
 
   it('a draining curse cost_tax aura taxes cost the same offline and online', () => {
-    const sim = makeLeveledSim('warrior', 'fury', 601);
+    const sim = makeLeveledSim('warrior', 'fury');
     addCostTaxAura(sim, 0.33);
     const client = mirrorClient(sim, 'warrior');
     // Fury's own paid spender: Mortal Strike is Arms-only (signature ability).
@@ -193,7 +195,7 @@ describe('resolvedAbility cost tail parity: Sim (offline) vs ClientWorld (online
   });
 
   it('the Measured Fury (arms) discount applies the same offline and online', () => {
-    const sim = makeLeveledSim('warrior', 'arms', 602);
+    const sim = makeLeveledSim('warrior', 'arms');
     const client = mirrorClient(sim, 'warrior');
     const discounted = Math.round(knownCost(sim, 'mortal_strike') * 0.9);
     expect(sim.resolvedAbility('mortal_strike')?.cost).toBe(discounted);
@@ -201,7 +203,7 @@ describe('resolvedAbility cost tail parity: Sim (offline) vs ClientWorld (online
   });
 
   it('control: without the arms passive, offline and online agree on the base cost', () => {
-    const sim = makeLeveledSim('warrior', 'fury', 603);
+    const sim = makeLeveledSim('warrior', 'fury');
     const client = mirrorClient(sim, 'warrior');
     const base = knownCost(sim, 'red_harvest');
     expect(sim.resolvedAbility('red_harvest')?.cost).toBe(base);
@@ -209,7 +211,7 @@ describe('resolvedAbility cost tail parity: Sim (offline) vs ClientWorld (online
   });
 
   it('Aether Surge charges ramp cost the same offline and online', () => {
-    const sim = makeLeveledSim('mage', 'arcane', 604);
+    const sim = makeLeveledSim('mage', 'arcane');
     addAetherSurgeCharges(sim, 2);
     const client = mirrorClient(sim, 'mage');
     // (1 + 1.0)^2 charges = 4x the base cost.
@@ -219,7 +221,7 @@ describe('resolvedAbility cost tail parity: Sim (offline) vs ClientWorld (online
   });
 
   it('control: a zero-cost ability (Charge) shows zero both offline and online under discount and tax', () => {
-    const sim = makeLeveledSim('warrior', 'arms', 605);
+    const sim = makeLeveledSim('warrior', 'arms');
     addCostTaxAura(sim, 0.5);
     const client = mirrorClient(sim, 'warrior');
     expect(knownCost(sim, 'charge')).toBe(0);
@@ -228,7 +230,7 @@ describe('resolvedAbility cost tail parity: Sim (offline) vs ClientWorld (online
   });
 
   it('the discount-then-tax order (never tax-then-discount) holds the same online', () => {
-    const sim = makeLeveledSim('warrior', 'arms', 606);
+    const sim = makeLeveledSim('warrior', 'arms');
     addCostTaxAura(sim, 0.3);
     const client = mirrorClient(sim, 'warrior');
     const base = knownCost(sim, 'mortal_strike');
@@ -241,7 +243,7 @@ describe('resolvedAbility cost tail parity: Sim (offline) vs ClientWorld (online
   });
 
   it('the tax-then-surge order (never surge-then-tax) holds the same online', () => {
-    const sim = makeLeveledSim('mage', 'arcane', 607);
+    const sim = makeLeveledSim('mage', 'arcane');
     addCostTaxAura(sim, 0.11);
     addAetherSurgeCharges(sim, 2);
     const client = mirrorClient(sim, 'mage');
