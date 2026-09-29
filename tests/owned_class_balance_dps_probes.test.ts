@@ -13,7 +13,13 @@ import {
 // The sustained single-target Fieldcraft run at the Bloodhook seed, paid once per
 // file: the Bloodhook case reads it, and the determinism case re-runs the same
 // fixture against it (a determinism check reuses its first run instead of paying
-// two runs at a seed nothing else builds).
+// two runs at a seed nothing else builds). This NARROWS the check: it used to run
+// the three-target scenario, and no lane suite now runs a multi-target DPS probe
+// twice, so harness determinism under several targets (the three-target rotation
+// branches: Coldsight's Volley, Thundercall's Earthquake and Chain Lightning) is
+// no longer pinned here; the sim's own determinism under several targets stays with
+// the parity goldens (multi-target scenarios such as Consecration and Arcane
+// Explosion must reproduce their committed traces).
 let fieldcraftRun: OwnedClassBalanceResult | undefined;
 const fieldcraftSustained = (): OwnedClassBalanceResult =>
   (fieldcraftRun ??= runOwnedClassDpsProbe('fieldcraft', OWNED_CLASS_BALANCE_SCENARIOS[1], 29_902));

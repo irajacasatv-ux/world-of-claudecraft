@@ -135,12 +135,18 @@ const BAND = 0.08;
 // 149.27 at eight, wildfang 198.89 and 191.86); re-pin each from its own actuals.
 // The diet also runs only the two band-carrying profiles (moongrove_1t and
 // wildfang, every capstone each). moongrove_3t and groveheart carry no band, only
-// "the best capstone reads above zero", which the diet's other suites hold per run
-// on every PR (owned_class_balance_dps_metrics: Moongrove's three-target damage on
-// every target; owned_class_balance_healer_probes and _groveheart: Groveheart
-// healing), and the capstone engines themselves are unit-pinned in
-// tests/druid_engines.test.ts. Each cell is its own fresh Sim, so the kept cells,
-// and the bands on them, read exactly what they read in the whole matrix.
+// "the best capstone reads above zero", a pin that never saw a zero confined to
+// one or two capstone rows. What it did catch, a profile reading zero under all
+// three rows, stays PR-visible only through the PBE talent rows the sibling suites
+// run, at their own seeds and windows: Moongrove three-target under
+// dru_r20_improved_hurricane (owned_class_balance_dps_metrics, damage on every
+// target) and Groveheart under dru_r20_berserk (owned_class_balance_healer_probes
+// and _groveheart). A zero under this matrix's other capstone rows alone
+// (moongrove_3t under berserk or tranquility, groveheart under improved_hurricane
+// or tranquility) is nightly-only, in this file's full sweep. The capstone engines
+// themselves are unit-pinned in tests/druid_engines.test.ts. Each cell is its own
+// fresh Sim, so the kept cells, and the bands on them, read exactly what they read
+// in the whole matrix.
 const FULL_SWEEP = process.env.WOC_FULL_BALANCE_SWEEP === '1';
 const band = bandAt(FULL_SWEEP);
 const MATRIX_SEEDS: readonly number[] = FULL_SWEEP ? DRUID_PROBE_SEEDS : [DRUID_PROBE_SEEDS[0]];
