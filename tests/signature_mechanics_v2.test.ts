@@ -4,6 +4,7 @@ import { createMob } from '../src/sim/entity';
 import { summonPet } from '../src/sim/pet/pet_commands';
 import { Sim } from '../src/sim/sim';
 import { DT, type Entity } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 function addDummy(sim: Sim, x = sim.player.pos.x, z = sim.player.pos.z + 4): Entity {
   const mob = createMob((sim as any).nextId++, MOBS.ridge_stalker, 20, {
@@ -21,7 +22,12 @@ function addDummy(sim: Sim, x = sim.player.pos.x, z = sim.player.pos.z + 4): Ent
 
 describe('signature mechanics v2', () => {
   it('Howling Rage arms Unleash Beast and extends its frenzy', () => {
-    const sim = new Sim({ seed: 11, playerClass: 'hunter', autoEquip: true });
+    const sim = new Sim({
+      seed: 11,
+      playerClass: 'hunter',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.setPlayerLevel(20);
     expect(sim.setSpec('beast_mastery')).toBe(true);
     const hunter = sim.player;
@@ -47,7 +53,12 @@ describe('signature mechanics v2', () => {
   });
 
   it('Cold Focus strengthens Measured Shot and discounts Long Draw', () => {
-    const sim = new Sim({ seed: 12, playerClass: 'hunter', autoEquip: true });
+    const sim = new Sim({
+      seed: 11,
+      playerClass: 'hunter',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.setPlayerLevel(20);
     expect(sim.setSpec('marksmanship')).toBe(true);
 
@@ -70,7 +81,12 @@ describe('signature mechanics v2', () => {
   });
 
   it('hemorrhage applies bleed vulnerability and makes later bleed ticks hit harder', () => {
-    const sim = new Sim({ seed: 13, playerClass: 'rogue', autoEquip: true });
+    const sim = new Sim({
+      seed: 11,
+      playerClass: 'rogue',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.setPlayerLevel(20);
     expect(sim.setSpec('subtlety')).toBe(true);
     const rogue = sim.player;
