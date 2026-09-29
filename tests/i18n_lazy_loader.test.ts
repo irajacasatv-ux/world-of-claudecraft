@@ -221,9 +221,10 @@ async function lazyGeneratedEvaluatedBy(load: () => Promise<unknown>): Promise<s
     // wait for every dynamic import vitest is tracking, again while the record still grows.
     // vitest does not track an import a mock factory starts after an await, but each factory
     // records on its first line, so such a reach still fails the pin (its message may then
-    // list fewer slices); a fetch that never settles ends in a timeout, never a pass. What the
-    // pin guards is what LOADING evaluates: an import a module starts later, from a timer or
-    // an event callback, is not load-time cost and is outside it.
+    // list fewer slices); a fetch that never settles ends in a timeout, never a pass. An import
+    // a module defers to a timer is caught only if it starts before these turns end (a
+    // zero-delay timer is; a longer timer or a later event is not): the pin measures what
+    // loading reaches, and a deferred prefetch should expect it to count.
     for (let turn = 0, seen = -1; turn < 8 && seen !== evaluated.size; turn++) {
       seen = evaluated.size;
       await vi.dynamicImportSettled();
