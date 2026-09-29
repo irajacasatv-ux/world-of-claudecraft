@@ -36,7 +36,12 @@ import { EMPTY_TEST_WORLD } from './sim_shared';
 type AnySim = Sim & Record<string, any>;
 type AnyEntity = Entity & Record<string, any>;
 
-function hunterWorld(seed = 11): { sim: AnySim; hid: number; hunter: AnyEntity } {
+// Every rig stands on the empty world and reads no seed-specific draw, so one
+// seed serves the file (a fresh seed costs a collider grid build the first time
+// a pull or projectile reads the ground).
+const SEED = 11;
+
+function hunterWorld(seed = SEED): { sim: AnySim; hid: number; hunter: AnyEntity } {
   const sim = new Sim({
     seed,
     playerClass: 'hunter',
@@ -76,7 +81,7 @@ function spawnBroodmotherEgg(sim: AnySim, near: AnyEntity): AnyEntity {
 describe('pet_commands module (P1b)', () => {
   it('commands Duskmurk signature skill and exposes its independent autocast toggle', () => {
     const sim = new Sim({
-      seed: 13,
+      seed: SEED,
       playerClass: 'warlock',
       noPlayer: true,
       world: EMPTY_TEST_WORLD,
@@ -102,7 +107,7 @@ describe('pet_commands module (P1b)', () => {
 
   it('routes a summoned Emberkin through the real damage-special command and never taunts', () => {
     const sim = new Sim({
-      seed: 130,
+      seed: SEED,
       playerClass: 'warlock',
       noPlayer: true,
       world: EMPTY_TEST_WORLD,
@@ -135,7 +140,7 @@ describe('pet_commands module (P1b)', () => {
   });
 
   it('does not seed pet attack threat against a quest-gated mob for a non-quester', () => {
-    const { sim, hid, hunter } = hunterWorld(1311);
+    const { sim, hid, hunter } = hunterWorld();
     summonPet(sim.ctx, hunter, 'forest_wolf');
     const pet = petOf(sim.ctx, hid) as AnyEntity;
     const egg = spawnBroodmotherEgg(sim, pet);
@@ -167,7 +172,7 @@ describe('pet_commands module (P1b)', () => {
   // player pointing their pet at what looks like an idle boss right after a wipe
   // still writes a durable threat-table entry onto it.
   it('refuses petAttack against an evading mob, and works once it stops evading', () => {
-    const { sim, hid, hunter } = hunterWorld(1312);
+    const { sim, hid, hunter } = hunterWorld();
     summonPet(sim.ctx, hunter, 'forest_wolf');
     const pet = petOf(sim.ctx, hid) as AnyEntity;
     const target = spawnWolf(sim, pet);
@@ -187,7 +192,7 @@ describe('pet_commands module (P1b)', () => {
   });
 
   it('refuses petTaunt against an evading mob, and works once it stops evading', () => {
-    const { sim, hid, hunter } = hunterWorld(1313);
+    const { sim, hid, hunter } = hunterWorld();
     summonPet(sim.ctx, hunter, 'forest_wolf');
     const pet = petOf(sim.ctx, hid) as AnyEntity;
     const target = spawnWolf(sim, pet);
@@ -208,7 +213,7 @@ describe('pet_commands module (P1b)', () => {
   });
 
   it('refuses petWaterJet against an evading mob, and works once it stops evading', () => {
-    const { sim, hid, hunter } = hunterWorld(1314);
+    const { sim, hid, hunter } = hunterWorld();
     summonPet(sim.ctx, hunter, 'forest_wolf');
     const pet = petOf(sim.ctx, hid) as AnyEntity;
     pet.templateId = 'water_elemental'; // the only family with a Water Jet
@@ -227,7 +232,7 @@ describe('pet_commands module (P1b)', () => {
   });
 
   it('refuses petSpecial against an evading mob, and works once it stops evading', () => {
-    const { sim, hid, hunter } = hunterWorld(1315);
+    const { sim, hid, hunter } = hunterWorld();
     summonPet(sim.ctx, hunter, 'forest_wolf');
     const pet = petOf(sim.ctx, hid) as AnyEntity;
     pet.templateId = 'emberkin'; // ranged-active signature skill (petRanged.active)
@@ -259,7 +264,7 @@ describe('pet_commands module (P1b)', () => {
 
   it('preserves an explicit autocast preference and defaults legacy pet state safely', () => {
     const sim = new Sim({
-      seed: 131,
+      seed: SEED,
       playerClass: 'warlock',
       noPlayer: true,
       world: EMPTY_TEST_WORLD,
@@ -295,7 +300,7 @@ describe('pet_commands module (P1b)', () => {
 
   it('rejects manual signature commands without a live hostile owner target', () => {
     const sim = new Sim({
-      seed: 132,
+      seed: SEED,
       playerClass: 'warlock',
       noPlayer: true,
       world: EMPTY_TEST_WORLD,
@@ -329,7 +334,7 @@ describe('pet_commands module (P1b)', () => {
 
   it('does not let a stunned pet use its signature skill through a manual command', () => {
     const sim = new Sim({
-      seed: 14,
+      seed: SEED,
       playerClass: 'warlock',
       noPlayer: true,
       world: EMPTY_TEST_WORLD,
@@ -452,7 +457,7 @@ describe('pet_commands module (P1b)', () => {
 
   it('an unbreakable owner movement lock cannot spend mana or arm Demon Heal', () => {
     const sim = new Sim({
-      seed: 12,
+      seed: SEED,
       playerClass: 'warlock',
       noPlayer: true,
       world: EMPTY_TEST_WORLD,
@@ -574,7 +579,7 @@ describe('pet_commands module (P1b)', () => {
   });
 
   it("setPetMode('passive') clears aggroTargetId/inCombat/autoAttack", () => {
-    const { sim, hid, hunter } = hunterWorld(12);
+    const { sim, hid, hunter } = hunterWorld();
     const wolf = spawnWolf(sim, hunter);
     completeTame(sim.ctx, hunter, wolf);
     const pet = petOf(sim.ctx, hid) as AnyEntity;
@@ -592,7 +597,7 @@ describe('pet_commands module (P1b)', () => {
 
   it('warlock demon swap: fresh demon answers on swap + resummon + Demon Heal tick', () => {
     const sim = new Sim({
-      seed: 13,
+      seed: SEED,
       playerClass: 'warlock',
       noPlayer: true,
       world: EMPTY_TEST_WORLD,
@@ -638,7 +643,7 @@ describe('pet_commands module (P1b)', () => {
 
   it('petTaunt is a permanent no-op for a ranged warlock pet, near or far (never gets stuck pending)', () => {
     const sim = new Sim({
-      seed: 21,
+      seed: SEED,
       playerClass: 'warlock',
       noPlayer: true,
       world: EMPTY_TEST_WORLD,
@@ -735,7 +740,7 @@ describe('pet_commands module (P1b)', () => {
 
   it('manual Gloomshade chain does not move or aggro quest-gated eggs', () => {
     const sim = new Sim({
-      seed: 24,
+      seed: SEED,
       playerClass: 'warlock',
       noPlayer: true,
       world: EMPTY_TEST_WORLD,
@@ -770,7 +775,7 @@ describe('pet_commands module (P1b)', () => {
 
   it('manual ranged pet special does not fire or aggro quest-gated eggs', () => {
     const sim = new Sim({
-      seed: 25,
+      seed: SEED,
       playerClass: 'warlock',
       noPlayer: true,
       world: EMPTY_TEST_WORLD,
@@ -804,7 +809,7 @@ describe('pet_commands module (P1b)', () => {
 
   it('manual Water Jet does not channel, aura, or aggro quest-gated eggs', () => {
     const sim = new Sim({
-      seed: 26,
+      seed: SEED,
       playerClass: 'mage',
       noPlayer: true,
       world: EMPTY_TEST_WORLD,
@@ -839,7 +844,7 @@ describe('pet_commands module (P1b)', () => {
 
   it('setPetAutoTaunt cannot arm auto-taunt on a ranged warlock pet', () => {
     const sim = new Sim({
-      seed: 22,
+      seed: SEED,
       playerClass: 'warlock',
       noPlayer: true,
       world: EMPTY_TEST_WORLD,
@@ -856,7 +861,7 @@ describe('pet_commands module (P1b)', () => {
 
   it('petTaunt/setPetAutoTaunt/petTauntReadout stay no-op for the mage Water Elemental (regression)', () => {
     const sim = new Sim({
-      seed: 23,
+      seed: SEED,
       playerClass: 'mage',
       noPlayer: true,
       world: EMPTY_TEST_WORLD,
@@ -894,6 +899,6 @@ describe('pet_commands module (P1b)', () => {
     };
     // Same seed + identical drive => byte-identical moved-slice state (the lifecycle
     // path itself draws no world rng, so this also pins that the move kept it pure).
-    expect(drive(21)).toBe(drive(21));
+    expect(drive(SEED)).toBe(drive(SEED));
   });
 });
