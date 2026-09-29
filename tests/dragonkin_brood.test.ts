@@ -14,10 +14,15 @@ import { respawnMob } from '../src/sim/mob/lifecycle';
 import { Sim } from '../src/sim/sim';
 import type { SimContext } from '../src/sim/sim_context';
 import { dist2d, type PlayerClass } from '../src/sim/types';
-import { despawnMobs } from './sim_shared';
+import { PRODUCTION_IDLE_CULL } from './helpers/production_idle_cull';
+import { despawnMobs, EMPTY_TEST_WORLD } from './sim_shared';
 
 const SEED = 24601;
-const makeSim = () => new Sim({ seed: SEED, playerClass: 'warrior' });
+// The shipped idle-mob cull: every case fights a brood it spawns beside the
+// player, so the overworld's far idle camps decide nothing (the fiat-kill cases
+// silence every mob anyway, the shipped clutches included).
+const makeSim = () => new Sim({ seed: SEED, playerClass: 'warrior', world: EMPTY_TEST_WORLD });
+const makeFullSim = () => new Sim({ seed: SEED, playerClass: 'warrior', ...PRODUCTION_IDLE_CULL });
 const ctxOf = (sim: Sim): SimContext => (sim as unknown as { ctx: SimContext }).ctx;
 
 let nextTestId = 990001;
@@ -121,7 +126,7 @@ describe('egg crack, hatch, and ripple', () => {
   });
 
   it('an egg FIAT-flagged dead stays inert; only a real death cracks it', () => {
-    const sim = makeSim();
+    const sim = makeFullSim();
     const egg = spawn(sim, 'dragonkin_egg', 30, 0);
     // despawnMobs (tests/sim_shared.ts) is the silencing idiom the gather,
     // profession, and core sim suites all use: it writes dead/hp 0 straight
