@@ -131,6 +131,16 @@ afterEach(() => vi.restoreAllMocks());
 
 describe('Dawnreaver complete-hit damage tuning', () => {
   it('replays a seeded Ascension rotation exactly without changing the neutral RNG draw stream', () => {
+    const rotation = [
+      'sun_gods_verdict',
+      'final_edict',
+      'dawnfall',
+      'hammer_of_wrath',
+      'final_edict',
+      'dawnfall',
+      'final_edict',
+      'hammer_of_wrath',
+    ];
     function replay(neutral = false) {
       const spy = neutral
         ? vi.spyOn(tuning, 'dawnreaverDamageMultiplier').mockReturnValue(1)
@@ -140,18 +150,7 @@ describe('Dawnreaver complete-hit damage tuning', () => {
         const draws: number[] = [];
         sim.rng.setObserver((value) => draws.push(value));
         const damage: Damage[] = [];
-        for (const id of [
-          'sun_gods_verdict',
-          'final_edict',
-          'dawnfall',
-          'hammer_of_wrath',
-          'final_edict',
-          'dawnfall',
-          'final_edict',
-          'hammer_of_wrath',
-        ]) {
-          damage.push(...cast(sim, id));
-        }
+        for (const id of rotation) damage.push(...cast(sim, id));
         // High-HP targets keep kill-triggered RNG and execute thresholds out of the comparison.
         expect(targets.every((target) => !target.dead && target.hp > 90_000)).toBe(true);
         return { draws, damage };
@@ -162,11 +161,12 @@ describe('Dawnreaver complete-hit damage tuning', () => {
     const buffed = replay();
     expect(replay()).toEqual(buffed);
     const neutral = replay(true);
-    // Under production culling the recorded stream is the rotation's own
-    // combat draws (21 today; the far overworld's idle rolls no longer ride
-    // ctx.rng), so this floor sits one draw under the live count: a legitimate
-    // cut in the rotation's draws re-derives it.
-    expect(buffed.draws.length).toBeGreaterThan(20);
+    // The floor only has to prove the stream equality below compares a real
+    // stream: every cast in the rotation rolls at least once. Under production
+    // culling the recorded draws are the rotation's own (the far overworld's
+    // idle rolls no longer ride ctx.rng), so a per-cast floor holds without
+    // pinning today's exact count.
+    expect(buffed.draws.length).toBeGreaterThanOrEqual(rotation.length);
     expect(buffed.draws).toEqual(neutral.draws);
     expect(buffed.damage.map(({ amount: _amount, ...event }) => event)).toEqual(
       neutral.damage.map(({ amount: _amount, ...event }) => event),
