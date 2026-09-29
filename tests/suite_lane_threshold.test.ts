@@ -201,7 +201,13 @@ function admissionStatement(source: string): { guards?: string; costMs?: number 
   const opened = up === at - 1 || (up >= 0 && guardsStatement(lines[up]) !== undefined);
   // Below: a paragraph break or a Guards line; and when only bare breaks follow the field, the
   // first code line is adjacent to it too, so it may carry no comment.
-  const onlyBreaksBelow = lines.slice(at + 1).every((line) => PARAGRAPH_BREAK.test(line));
+  // A line that says nothing (a bare break, no letter or digit, a Guards line making no
+  // statement) does not separate the field from the code line.
+  const saysNothing = (line: string) =>
+    PARAGRAPH_BREAK.test(line) ||
+    !/[A-Za-z0-9]/.test(line) ||
+    (/Guards:/.test(line) && guardsStatement(line) === undefined);
+  const onlyBreaksBelow = lines.slice(at + 1).every(saysNothing);
   const closed =
     (at + 1 === lines.length ||
       PARAGRAPH_BREAK.test(lines[at + 1]) ||
@@ -249,7 +255,7 @@ function admissionProblems(
       problems.push(`${file.key}: no "Guards:" line saying what it uniquely guards`);
     if (costMs === undefined)
       problems.push(
-        `${file.key}: no "Cost:" field holding one measured time alone, opening its paragraph or following a Guards paragraph and closing it (for example "Cost: 0.4 s")`,
+        `${file.key}: no "Cost:" field holding one measured time alone with nothing beside it that could qualify it (for example "Cost: 0.4 s"; the rule sits above COST_FIELD in tests/suite_lane_threshold.test.ts)`,
       );
     // The lane rule, applied to a file the table cannot yet judge: its stated cost in CI time.
     else if (!inLane.has(file.key) && statedWeight(file.source) > LANE_THRESHOLD_MS)
@@ -506,7 +512,7 @@ describe('the new-test admission rule', () => {
     );
     const guards = (key: string) => `${key}: no "Guards:" line saying what it uniquely guards`;
     const cost = (key: string) =>
-      `${key}: no "Cost:" field holding one measured time alone, opening its paragraph or following a Guards paragraph and closing it (for example "Cost: 0.4 s")`;
+      `${key}: no "Cost:" field holding one measured time alone with nothing beside it that could qualify it (for example "Cost: 0.4 s"; the rule sits above COST_FIELD in tests/suite_lane_threshold.test.ts)`;
     expect(problems).toEqual([
       guards('tests/new_buried.test.ts'),
       cost('tests/new_buried.test.ts'),
@@ -520,7 +526,7 @@ describe('the new-test admission rule', () => {
       guards('tests/new_no_number.test.ts'),
       cost('tests/new_no_number.test.ts'),
       guards('tests/new_terse.test.ts'),
-      // A terse Guards line is not a statement, so directly above the field it is prose.
+      // A terse Guards line is not a statement, so opening the field's paragraph it is prose.
       cost('tests/new_terse.test.ts'),
       cost('tests/new_comma.test.ts'),
       cost('tests/new_spaced.test.ts'),
@@ -589,6 +595,8 @@ describe('the new-test admission rule', () => {
       '// Cost: 1 s\n//\nimport x from "y"; // 2 min cold\n',
       "// Guards: the pause toggle's replay path.\n//\n// Cost: 1 s\n// Guards:\nimport x from 'y'; // 2 min cold\n",
       "// Guards: the pause toggle's replay path.\n//\n// Cost: 1 s\n// Guards: .\nimport x from 'y'; // 2 min cold\n",
+      '// Cost: 1 s\n//\n// Guards:\nimport x from "y"; // 2 min cold\n',
+      '// Cost: 1 s\n//\n// -\nimport x from "y"; // 2 min cold\n',
       '/**\n * Guards: .\n * Cost: 1 s\n */\n',
     ])
       expect(read(refused), refused).toBeUndefined();
