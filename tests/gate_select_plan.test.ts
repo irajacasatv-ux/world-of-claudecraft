@@ -4,6 +4,7 @@ import {
   mkdtempSync,
   readdirSync,
   readFileSync,
+  realpathSync,
   rmSync,
   statSync,
   writeFileSync,
@@ -1068,33 +1069,52 @@ describe('discovery scope matches vitest collection over the real tree', () => {
   // others (node_modules, dist, the linked-worktree caches) the discovery walk skips anywhere.
   const ROOT_ONLY_SKIP = new Set(['.claude', '.codex', '.agents', '.venv', 'tmp', 'docs']);
 
+  const TEST_NAMED = /\.(test|spec)\.[cm]?[jt]sx?$/;
+  /** Whether a directory reaches a test-named file, following symlinked directories as vitest's
+   *  glob does (each real directory once, so a link cycle ends) and skipping what vitest
+   *  excludes at any depth. */
+  const reachesTestFile = (dir: string, seen = new Set<string>()): boolean => {
+    const real = realpathSync(dir);
+    if (seen.has(real)) return false;
+    seen.add(real);
+    return readdirSync(dir, { withFileTypes: true }).some((entry) => {
+      const full = path.join(dir, entry.name);
+      const isDir =
+        entry.isDirectory() ||
+        (entry.isSymbolicLink() && statSync(full, { throwIfNoEntry: false })?.isDirectory());
+      if (isDir)
+        return (
+          entry.name !== 'node_modules' && entry.name !== 'dist' && reachesTestFile(full, seen)
+        );
+      return TEST_NAMED.test(entry.name);
+    });
+  };
+
   it('finds no collected test file outside tests/', () => {
     const offenders: string[] = [];
     const walk = (dir: string) => {
       for (const entry of readdirSync(dir, { withFileTypes: true })) {
         const full = path.join(dir, entry.name);
         const rel = path.relative(REPO_ROOT, full).split(path.sep).join('/');
-        if (entry.isDirectory()) {
+        const linkedDir =
+          entry.isSymbolicLink() && statSync(full, { throwIfNoEntry: false })?.isDirectory();
+        if (entry.isDirectory() || linkedDir) {
           // vite.config excludes these names at the repo root only; nested, vitest collects them.
           if (SCOPE_SKIP.has(entry.name) && (!ROOT_ONLY_SKIP.has(entry.name) || rel === entry.name))
             continue;
           if (rel === 'tests') continue;
+          // The walk does not follow a symlinked directory and vitest's glob does, so one that
+          // reaches a test file is an offender (a venv's lib64 link to lib reaches none).
+          if (linkedDir) {
+            if (reachesTestFile(full)) offenders.push(rel);
+            continue;
+          }
           walk(full);
-          continue;
-        }
-        // The walk does not follow a symlinked directory and vitest's glob does, so one that
-        // reaches a collected test is an offender (a venv's lib64 link to lib reaches none).
-        if (
-          entry.isSymbolicLink() &&
-          statSync(full, { throwIfNoEntry: false })?.isDirectory() &&
-          holdsCollectedTest(full)
-        ) {
-          offenders.push(rel);
           continue;
         }
         // A browser-suite file out here is an offender too: vite.config excludes it and the
         // browser config includes only tests/browser/, so it would run under neither.
-        if (/\.(test|spec)\.[cm]?[jt]sx?$/.test(rel)) offenders.push(rel);
+        if (TEST_NAMED.test(entry.name)) offenders.push(rel);
       }
     };
     walk(REPO_ROOT);
