@@ -60,6 +60,7 @@ import type {
   ItemInstancePayload,
   SimEvent,
 } from '../src/sim/types';
+import { WORLD_SEED } from '../src/sim/world_seed';
 import { completeCraftCast } from './helpers/enchant_family_cast';
 import { VENDOR_TEST_WORLD } from './sim_shared';
 
@@ -98,8 +99,19 @@ function grantReagents(sim: Sim, recipeId: string, pid: number, crafts = 1): voi
   }
 }
 
-function makeSim(seed = 7) {
-  return new Sim({ seed, playerClass: 'warrior', autoEquip: false, world: VENDOR_TEST_WORLD });
+// One seed for every Sim in the file, and the realm's own: a Sim builds the
+// active world's collider grids once per seed (about half a second each),
+// the live GameServer cases below already build WORLD_SEED's, and no case
+// reads a seed-probed roll (every proc arm forces its draw).
+const COMMISSION_SEED = WORLD_SEED;
+
+function makeSim() {
+  return new Sim({
+    seed: COMMISSION_SEED,
+    playerClass: 'warrior',
+    autoEquip: false,
+    world: VENDOR_TEST_WORLD,
+  });
 }
 
 function entityOf(sim: Sim, pid: number): Entity {
@@ -156,9 +168,9 @@ function pointOf(pos: { x: number; z: number } | undefined): { x: number; z: num
   return pos;
 }
 
-function makeTradeSim(seed = 42) {
+function makeTradeSim() {
   const sim = new Sim({
-    seed,
+    seed: COMMISSION_SEED,
     playerClass: 'warrior',
     autoEquip: false,
     noPlayer: true,
@@ -319,7 +331,7 @@ describe('commission opt-in at craft time', () => {
   });
 
   it('a commissioned masterwork proc composes: signer + rolled.masterwork + bindOnTrade on one payload', () => {
-    const sim = makeSim(20);
+    const sim = makeSim();
     const pid = sim.playerId;
     sim.acceptArchetypeQuest('tailoring');
     const meta = metaOf(sim, pid);
@@ -360,7 +372,7 @@ describe('commission opt-in at craft time', () => {
       level: 1,
       itemLevelBudget: 1,
     } as unknown as ProfessionRecipeRecord;
-    const sim = makeSim(21);
+    const sim = makeSim();
     const pid = sim.playerId;
     sim.acceptArchetypeQuest('tailoring');
     const meta = metaOf(sim, pid);
@@ -482,7 +494,7 @@ describe('bind on first trade, refuse on the second, re-bind after unbind', () =
   });
 
   it('the second trade is refused with the ONE localized deny; the piece never moves', () => {
-    const { sim, a, b } = makeTradeSim(43);
+    const { sim, a, b } = makeTradeSim();
     sim.ctx.addItemInstance(SWORD, { bindOnTrade: true, boundTo: b }, b);
     const errors = runTrade(sim, b, a, SWORD);
     expect(errors).toContain(BOUND_DENY);
@@ -491,7 +503,7 @@ describe('bind on first trade, refuse on the second, re-bind after unbind', () =
   });
 
   it('a NON-commission instance (a plain signed craft) trades onward freely, payload intact', () => {
-    const { sim, a, b } = makeTradeSim(44);
+    const { sim, a, b } = makeTradeSim();
     sim.ctx.addItemInstance(SWORD, { signer: 'Ayla' }, a);
     expect(runTrade(sim, a, b, SWORD)).toEqual([]);
     expect(runTrade(sim, b, a, SWORD)).toEqual([]);
@@ -501,7 +513,7 @@ describe('bind on first trade, refuse on the second, re-bind after unbind', () =
   });
 
   it('unbind restores tradeability and the next trade RE-binds to the new recipient', () => {
-    const { sim, a, b } = makeTradeSim(45);
+    const { sim, a, b } = makeTradeSim();
     sim.ctx.addItemInstance(SWORD, { bindOnTrade: true, boundTo: b }, b);
     standAtStation(sim, b);
     setCopper(sim, b, 5000);
@@ -933,7 +945,7 @@ describe('persistence: commission payloads survive save/load', () => {
 describe('mail/market: a commissioned equipment instance never mails or lists', () => {
   it('mailSend refuses armed AND bound sword copies (fungible-only escrow), payload intact', () => {
     const sim = new Sim({
-      seed: 42,
+      seed: COMMISSION_SEED,
       playerClass: 'warrior',
       noPlayer: true,
       world: VENDOR_TEST_WORLD,
@@ -962,7 +974,7 @@ describe('mail/market: a commissioned equipment instance never mails or lists', 
 
   it('marketList refuses armed AND bound copies with no escrow', () => {
     const sim = new Sim({
-      seed: 42,
+      seed: COMMISSION_SEED,
       playerClass: 'warrior',
       noPlayer: true,
       world: VENDOR_TEST_WORLD,
@@ -995,7 +1007,7 @@ describe('mail/market: a commissioned equipment instance never mails or lists', 
 describe('determinism: the commission arc replays byte-identically', () => {
   it('two same-seed sims running the same craft/unbind sequence agree on inventory and copper', () => {
     const run = () => {
-      const sim = makeSim(1234);
+      const sim = makeSim();
       const pid = sim.playerId;
       grantReagents(sim, SWORD_RECIPE, pid);
       craftItemComplete(sim, SWORD_RECIPE, true, pid);
