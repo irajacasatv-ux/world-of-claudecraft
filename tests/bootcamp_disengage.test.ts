@@ -24,10 +24,30 @@ import type { CrossHotbarAction } from '../src/game/cross_hotbar';
 import { GAMEPAD_CONFIRM, GAMEPAD_CYCLE_HUD, GAMEPAD_NONE, GP } from '../src/game/gamepad_map';
 import { Keybinds } from '../src/game/keybinds';
 import type { Renderer } from '../src/render/renderer';
-import { PROVING_SHORE_NPCS } from '../src/sim/content/proving_shore';
+import { PROVING_SHORE_CAMPS, PROVING_SHORE_NPCS } from '../src/sim/content/proving_shore';
+import { BUILTIN_WORLD } from '../src/sim/data';
 import { CRAB_SUMMON_SITE, LURE_ITEM_ID } from '../src/sim/interactions/crab_summon';
 import { Sim } from '../src/sim/sim';
+import type { WorldContent } from '../src/sim/types';
 import { BootcampOverlay } from '../src/ui/bootcamp';
+
+// The coach anchors its bubbles on the Proving Shore's static NPC records and
+// on the island's live lesson mobs, so the world keeps only the island camps.
+const PROVING_SHORE_WORLD: WorldContent = {
+  ...BUILTIN_WORLD,
+  camps: BUILTIN_WORLD.camps.filter((camp) => PROVING_SHORE_CAMPS.includes(camp)),
+  npcs: {},
+  groundObjects: [],
+};
+
+function makeSim(): Sim {
+  return new Sim({
+    seed: 4120,
+    playerClass: 'warrior',
+    autoEquip: true,
+    world: PROVING_SHORE_WORLD,
+  });
+}
 
 describe('BootcampOverlay.disengage', () => {
   beforeEach(() => {
@@ -199,7 +219,7 @@ describe('BootcampOverlay controller prompt wiring', () => {
   }
 
   it('paints the live detected-pad interact glyph over the quest giver', () => {
-    const sim = new Sim({ seed: 4120, playerClass: 'warrior', autoEquip: true });
+    const sim = makeSim();
     const tam = PROVING_SHORE_NPCS.warden_tam;
     sim.player.pos.x = tam.pos.x;
     sim.player.pos.z = tam.pos.z;
@@ -228,7 +248,7 @@ describe('BootcampOverlay controller prompt wiring', () => {
       if (closeFocused) focused?.setAttribute('aria-label', 'Close character');
       focused?.focus();
 
-      const sim = new Sim({ seed: 4120, playerClass: 'warrior', autoEquip: true });
+      const sim = makeSim();
       sim.player.pos.x = CRAB_SUMMON_SITE.x;
       sim.player.pos.z = CRAB_SUMMON_SITE.z;
       paintControllerPrompt(sim, { questId: 'q_ps_mother_of_pearl', state: 'active' }, [
@@ -242,7 +262,7 @@ describe('BootcampOverlay controller prompt wiring', () => {
   );
 
   it('paints the bare d-pad target control over an unselected training effigy', () => {
-    const sim = new Sim({ seed: 4120, playerClass: 'warrior', autoEquip: true });
+    const sim = makeSim();
     const effigy = [...sim.entities.values()].find(
       (entity) => entity.kind === 'mob' && entity.templateId === 'training_effigy',
     );
@@ -261,7 +281,7 @@ describe('BootcampOverlay controller prompt wiring', () => {
   });
 
   it('paints a swallowed d-pad slot as targeting while the cross hotbar is enabled', () => {
-    const sim = new Sim({ seed: 4120, playerClass: 'warrior', autoEquip: true });
+    const sim = makeSim();
     const effigy = [...sim.entities.values()].find(
       (entity) => entity.kind === 'mob' && entity.templateId === 'training_effigy',
     );
@@ -286,7 +306,7 @@ describe('BootcampOverlay controller prompt wiring', () => {
   });
 
   it('names the live Attack chord after the training effigy is selected', () => {
-    const sim = new Sim({ seed: 4120, playerClass: 'warrior', autoEquip: true });
+    const sim = makeSim();
     const effigy = [...sim.entities.values()].find(
       (entity) => entity.kind === 'mob' && entity.templateId === 'training_effigy',
     );
@@ -311,7 +331,7 @@ describe('BootcampOverlay controller prompt wiring', () => {
   });
 
   it('names the live taught-ability chord in the second effigy drill', () => {
-    const sim = new Sim({ seed: 4120, playerClass: 'warrior', autoEquip: true });
+    const sim = makeSim();
     const effigy = [...sim.entities.values()].find(
       (entity) => entity.kind === 'mob' && entity.templateId === 'training_effigy',
     );
@@ -333,7 +353,7 @@ describe('BootcampOverlay controller prompt wiring', () => {
   });
 
   it('keeps the turn-in prompt on Drillmaster Rook when Strike True is ready', () => {
-    const sim = new Sim({ seed: 4120, playerClass: 'warrior', autoEquip: true });
+    const sim = makeSim();
     const rook = PROVING_SHORE_NPCS.drillmaster_rook;
     sim.player.pos.x = rook.pos.x;
     sim.player.pos.z = rook.pos.z;
@@ -349,7 +369,7 @@ describe('BootcampOverlay controller prompt wiring', () => {
   });
 
   it('derives the ready Rook prompt from the live quest rail', () => {
-    const sim = new Sim({ seed: 4120, playerClass: 'warrior', autoEquip: true });
+    const sim = makeSim();
     sim.questsDone.add('q_ps_the_gauntlet');
     sim.questLog.set('q_ps_strike_true', {
       questId: 'q_ps_strike_true',
@@ -381,7 +401,7 @@ describe('BootcampOverlay controller prompt wiring', () => {
   });
 
   it('guides the Mister Crabs summon through HUD navigation, never the system button', () => {
-    const sim = new Sim({ seed: 4120, playerClass: 'warrior', autoEquip: true });
+    const sim = makeSim();
     sim.player.pos.x = CRAB_SUMMON_SITE.x;
     sim.player.pos.z = CRAB_SUMMON_SITE.z;
 
@@ -407,7 +427,7 @@ describe('BootcampOverlay controller prompt wiring', () => {
     ['useItem', 'A', 'Summon'],
   ] as const)('advances the Mister Crabs prompt at %s', (state, expected, verb) => {
     setBagControllerUiState(state);
-    const sim = new Sim({ seed: 4120, playerClass: 'warrior', autoEquip: true });
+    const sim = makeSim();
     sim.player.pos.x = CRAB_SUMMON_SITE.x;
     sim.player.pos.z = CRAB_SUMMON_SITE.z;
 
@@ -424,7 +444,7 @@ describe('BootcampOverlay controller prompt wiring', () => {
   });
 
   it('uses the HUD-navigation route for centered ring lessons', () => {
-    const sim = new Sim({ seed: 4120, playerClass: 'warrior', autoEquip: true });
+    const sim = makeSim();
 
     paintControllerPrompt(
       sim,
@@ -448,7 +468,7 @@ describe('BootcampOverlay controller prompt wiring', () => {
 
   it('keeps the centered ring lesson on keyboard guidance outside controller mode', () => {
     document.body.className = '';
-    const sim = new Sim({ seed: 4120, playerClass: 'warrior', autoEquip: true });
+    const sim = makeSim();
 
     paintControllerPrompt(
       sim,
@@ -471,7 +491,7 @@ describe('BootcampOverlay controller prompt wiring', () => {
 
   it('does not leak controller caps into the centered touch lesson', () => {
     document.body.className = 'mobile-touch';
-    const sim = new Sim({ seed: 4120, playerClass: 'warrior', autoEquip: true });
+    const sim = makeSim();
 
     paintControllerPrompt(
       sim,
@@ -491,7 +511,7 @@ describe('BootcampOverlay controller prompt wiring', () => {
   });
 
   it('keeps the pouch lesson centered on bags until the pouch is equipped', () => {
-    const sim = new Sim({ seed: 4120, playerClass: 'warrior', autoEquip: true });
+    const sim = makeSim();
     sim.addItem('linen_pouch', 1);
 
     paintControllerPrompt(sim, { questId: 'q_ps_pouch_and_purse', state: 'ready' }, [
@@ -516,7 +536,7 @@ describe('BootcampOverlay controller prompt wiring', () => {
     ['closeBlockingWindow', 'A'],
   ] as const)('closes the vendor before navigating to the purchased pouch at %s', (state, cap) => {
     setBagControllerUiState(state, 'linen_pouch');
-    const sim = new Sim({ seed: 4120, playerClass: 'warrior', autoEquip: true });
+    const sim = makeSim();
     sim.addItem('linen_pouch', 1);
 
     paintControllerPrompt(sim, { questId: 'q_ps_pouch_and_purse', state: 'ready' }, [
@@ -532,7 +552,7 @@ describe('BootcampOverlay controller prompt wiring', () => {
   });
 
   it('uses the HUD-navigation route for the Passing Stone lesson', () => {
-    const sim = new Sim({ seed: 4120, playerClass: 'warrior', autoEquip: true });
+    const sim = makeSim();
 
     paintControllerPrompt(sim, { questId: 'q_ps_the_long_walk', state: 'active' }, [
       { button: GP.BACK, action: 'bags' },
