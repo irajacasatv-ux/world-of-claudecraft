@@ -49,6 +49,7 @@ import { stationsOfType } from '../src/sim/professions/stations';
 import { resolveTrain } from '../src/sim/professions/training';
 import { Sim } from '../src/sim/sim';
 import { itemNames } from '../src/ui/i18n.catalog/items';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // The Phase 12 shared feast is a COOKING row whose output is NOT a dish (kind
 // 'junk', no foodHp: using it places a world entity instead of eating), so the
@@ -1163,6 +1164,11 @@ describe('FARM_RECIPES: the dish ItemDef shape, reopened by Phase 11 and closed 
   });
 });
 
+// The live craft and training arms read the player, the recipe tables and the
+// stations (kept by the empty world), never a camp, NPC or ground object, and
+// share one seed: a fresh seed builds its collider grids for nothing.
+const farmSim = (): Sim => new Sim({ seed: 7, playerClass: 'warrior', world: EMPTY_TEST_WORLD });
+
 describe('FARM_RECIPES: a dish crafts for real, and fine twins never substitute for base produce', () => {
   function countOf(sim: Sim, itemId: string): number {
     const meta = (sim as any).players.get(sim.playerId);
@@ -1180,7 +1186,7 @@ describe('FARM_RECIPES: a dish crafts for real, and fine twins never substitute 
     // of fine twins must NOT satisfy the base-produce slots, and the true
     // reagents must. recipe_eastbrook_root_pottage asks brook_carrot x2 +
     // fine_brook_carrot x1 + vale_wheat x1 at skillReq 0.
-    const sim = new Sim({ seed: 11, playerClass: 'warrior' });
+    const sim = farmSim();
     const pid = sim.playerId;
     const recipe = dishes.find((r) => r.id === 'recipe_eastbrook_root_pottage');
     expect(recipe, 'the pottage row exists').toBeDefined();
@@ -1232,7 +1238,7 @@ describe('FARM_RECIPES: a dish crafts for real, and fine twins never substitute 
     // through sim.tick(), so the tick-phase completion slot
     // (casting_lifecycle routing CRAFT_CAST_ID to ctx.completeCraftCast) is
     // exercised for farm rows, not hand-driven around.
-    const sim = new Sim({ seed: 13, playerClass: 'warrior' });
+    const sim = farmSim();
     const pid = sim.playerId;
     const tonic = requireTonic();
     const station = stationsOfType(STATIONS, tonic.stationType as never)[0];
@@ -1285,7 +1291,7 @@ describe('FARM_RECIPES: the trainer on-ramp on the settled R8 fee curve', () => 
   // can actually make. The arms still pin the acquisition shape so a future
   // availability gate cannot land silently.
   it('the on-ramp trains: rung-0 free, rung-25 and rung-50 charging, all resolving at their stations', () => {
-    const sim = new Sim({ seed: 7, playerClass: 'warrior' });
+    const sim = farmSim();
     const meta = (sim as any).players.get(sim.playerId);
     meta.copper = 100000;
     meta.craftSkills.cooking = 50; // teach tier for the rung-50 dish
@@ -1318,7 +1324,7 @@ describe('FARM_RECIPES: the trainer on-ramp on the settled R8 fee curve', () => 
     // refusal is provably about the CHANNEL and not about a skill gate, and
     // derived from the rung rule so it covers every flipped row rather than a
     // sample.
-    const sim = new Sim({ seed: 7, playerClass: 'warrior' });
+    const sim = farmSim();
     const meta = (sim as any).players.get(sim.playerId);
     meta.copper = 1000000;
     meta.craftSkills.cooking = 100;
