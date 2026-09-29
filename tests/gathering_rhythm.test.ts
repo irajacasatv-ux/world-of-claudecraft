@@ -49,6 +49,7 @@ import {
   gatherCastDurationSec,
   nodeMaterialFor,
 } from '../src/sim/professions/gathering';
+import { Rng } from '../src/sim/rng';
 import { type PlayerMeta, Sim } from '../src/sim/sim';
 import { readyArenaFighter } from '../src/sim/social/arena';
 import { fiestaDownEntity } from '../src/sim/social/fiesta';
@@ -288,11 +289,14 @@ describe('reel deadline boundary', () => {
 
 describe('hidden-state wire invariant', () => {
   it('castRem/castTot are identical across sims whose drawn bite delays differ', () => {
-    // The broadcast pair must carry ZERO bite information: two seeds that
-    // draw different delays walk byte-identical castTotal/castRemaining
-    // streams for the whole pre-miss window.
-    const run = (seed: number) => {
-      const sim = makeSim(seed);
+    // The broadcast pair must carry ZERO bite information: two rng streams
+    // that draw different delays walk byte-identical castTotal/castRemaining
+    // streams for the whole pre-miss window. Both Sims share the file's world
+    // seed (a fresh one builds its collider grids for nothing); the second
+    // re-seeds its rng, the only input the hidden delay draws from.
+    const run = (rngSeed?: number) => {
+      const sim = makeSim();
+      if (rngSeed !== undefined) sim.rng = new Rng(rngSeed);
       const meta = mustMeta(sim, sim.playerId);
       sim.addItem('simple_fishing_pole', 1); // #2343: casting needs an implement
       teleportToValeShore(sim);
@@ -306,7 +310,7 @@ describe('hidden-state wire invariant', () => {
       }
       return { delay, stream };
     };
-    const a = run(4242);
+    const a = run();
     const b = run(777);
     expect(a.delay).not.toBe(b.delay); // genuinely different hidden delays
     expect(a.stream).toEqual(b.stream); // identical broadcastable fields
@@ -436,7 +440,7 @@ describe('gather cast duration', () => {
   });
 
   it('a started gather cast pins castTotal to the formula output (live)', () => {
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+    const sim = new Sim({ seed: 4242, playerClass: 'warrior', noPlayer: true });
     const pid = sim.addPlayer('warrior', 'Timed');
     teleportOntoNode(sim, pid, 'ore_mirefen_t2'); // tier-2 vein
     sim.addItem('mithril_mining_pick', 1, pid); // mining tier 3
@@ -459,7 +463,7 @@ describe('gather cast duration', () => {
 
 describe('gather completion re-validation', () => {
   function simMidCast() {
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+    const sim = new Sim({ seed: 4242, playerClass: 'warrior', noPlayer: true });
     const pid = sim.addPlayer('warrior', 'Revalidated');
     sim.addItem('copper_mining_pick', 1, pid); // #2343: tier-1 tool keeps castTotal at base
     teleportOntoNode(sim, pid, NODE.id);
@@ -520,7 +524,7 @@ describe('node-tier-relative proficiency gain through the live cast loop', () =>
   // two gain tiers above it (green, 0.25) and mining 75 grays it out
   // entirely (queueGatheringGrant drops the 0: nothing is queued).
   function harvestAt(proficiency: number): { queued: number[]; settled: number } {
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+    const sim = new Sim({ seed: 4242, playerClass: 'warrior', noPlayer: true });
     const pid = sim.addPlayer('warrior', 'Curved');
     const meta = mustMeta(sim, pid);
     meta.gatheringProficiency.mining = proficiency;
@@ -545,7 +549,7 @@ describe('node-tier-relative proficiency gain through the live cast loop', () =>
 
 describe('move cancel is free', () => {
   it('moving cancels the gather cast: castStop false, zero draws, timer untouched, no grant', () => {
-    const sim = makeSim(42);
+    const sim = makeSim();
     despawnMobs(sim); // a mob-dead world ticks draw-free, so the observer is decisive
     const pid = sim.playerId;
     sim.addItem('copper_mining_pick', 1, pid); // #2343: node harvest needs the tool
@@ -625,7 +629,7 @@ describe('same-seed determinism across the whole rhythm loop', () => {
 
 describe('silence and lockout exemptions (with the demon-heal fold, byte-identical)', () => {
   function silencedCaster(castId: string, channeling: boolean): { sim: Sim; e: Entity } {
-    const sim = new Sim({ seed: 42, playerClass: 'mage', noPlayer: true });
+    const sim = new Sim({ seed: 4242, playerClass: 'mage', noPlayer: true });
     const pid = sim.addPlayer('mage', 'Muted');
     sim.tick();
     const e = sim.entities.get(pid);
@@ -679,7 +683,7 @@ describe('silence and lockout exemptions (with the demon-heal fold, byte-identic
 
 describe('interrupt immunity and damage-cancels-not-pushback', () => {
   it('an interrupt effect stops a mob spell cast but never a fishing or gather cast', () => {
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+    const sim = new Sim({ seed: 4242, playerClass: 'warrior', noPlayer: true });
     const kicker = sim.addPlayer('warrior', 'Kicker');
     const caster = sim.entities.get(kicker);
     const casterMeta = mustMeta(sim, kicker);
@@ -711,7 +715,7 @@ describe('interrupt immunity and damage-cancels-not-pushback', () => {
   });
 
   it('damage CANCELS a gather cast outright rather than pushing it back', () => {
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+    const sim = new Sim({ seed: 4242, playerClass: 'warrior', noPlayer: true });
     const pid = sim.addPlayer('warrior', 'Struck');
     sim.addItem('copper_mining_pick', 1, pid); // #2343: node harvest needs the tool
     teleportOntoNode(sim, pid, NODE.id);
@@ -749,7 +753,7 @@ describe('a fully absorbed hit still ends a session (and still pushes no spell b
     }) as Entity['auras'][number];
 
   it('a fully absorbed hit cancels a gather cast; the shield soaks and the timer survives', () => {
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+    const sim = new Sim({ seed: 4242, playerClass: 'warrior', noPlayer: true });
     const pid = sim.addPlayer('warrior', 'Shielded');
     sim.addItem('copper_mining_pick', 1, pid);
     teleportOntoNode(sim, pid, NODE.id);
@@ -798,7 +802,7 @@ describe('a fully absorbed hit still ends a session (and still pushes no spell b
   });
 
   it('a fully absorbed hit still pushes no SPELL back (the classic rule survives the widening)', () => {
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+    const sim = new Sim({ seed: 4242, playerClass: 'warrior', noPlayer: true });
     const pid = sim.addPlayer('warrior', 'Chanter');
     const p = sim.entities.get(pid);
     if (!p) throw new Error('missing entity');
@@ -826,7 +830,7 @@ describe('a BLOCKED swing still ends a session (and still pushes no spell back)'
   // knockback rider, so it must end a session exactly like a clean hit;
   // spell pushback keeps its classic hit-only gate.
   it('a blocked hit cancels a gather cast', () => {
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+    const sim = new Sim({ seed: 4242, playerClass: 'warrior', noPlayer: true });
     const pid = sim.addPlayer('warrior', 'Blocker');
     sim.addItem('copper_mining_pick', 1, pid);
     teleportOntoNode(sim, pid, NODE.id);
@@ -851,7 +855,7 @@ describe('a BLOCKED swing still ends a session (and still pushes no spell back)'
     // miss carries amount 0, which the amount conjunct also excludes, so
     // this pin feeds a SYNTHETIC amount through kind 'miss' to isolate the
     // kind axis: widening the kind list reds here and nowhere else.
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+    const sim = new Sim({ seed: 4242, playerClass: 'warrior', noPlayer: true });
     const pid = sim.addPlayer('warrior', 'Whiffed');
     sim.addItem('copper_mining_pick', 1, pid);
     teleportOntoNode(sim, pid, NODE.id);
@@ -896,7 +900,7 @@ describe('a BLOCKED swing still ends a session (and still pushes no spell back)'
   });
 
   it('a blocked hit still pushes no SPELL back', () => {
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+    const sim = new Sim({ seed: 4242, playerClass: 'warrior', noPlayer: true });
     const pid = sim.addPlayer('warrior', 'Chanter');
     const p = sim.entities.get(pid);
     if (!p) throw new Error('missing entity');
@@ -970,7 +974,7 @@ describe('every gather start-deny arm leaves no cast and draws nothing', () => {
   }
 
   it('dead, unknown node, too far, respawn-not-ready, toolless, bags-full: no cast, zero draws', () => {
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+    const sim = new Sim({ seed: 4242, playerClass: 'warrior', noPlayer: true });
     const pid = sim.addPlayer('warrior', 'Denied');
     const p = sim.entities.get(pid);
     const meta = mustMeta(sim, pid);
@@ -1018,7 +1022,7 @@ describe('every gather start-deny arm leaves no cast and draws nothing', () => {
   });
 
   it('busy: a mid-cast re-press denies without touching the running cast', () => {
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+    const sim = new Sim({ seed: 4242, playerClass: 'warrior', noPlayer: true });
     const pid = sim.addPlayer('warrior', 'Busy');
     const p = sim.entities.get(pid);
     if (!p) throw new Error('missing entity');
@@ -1069,7 +1073,7 @@ describe('death clears the hidden cast state (review fix)', () => {
   });
 
   it('a sourceless lethal blow mid-gather-cast leaves every hidden field inert', () => {
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+    const sim = new Sim({ seed: 4242, playerClass: 'warrior', noPlayer: true });
     const pid = sim.addPlayer('warrior', 'Slain');
     const p = sim.entities.get(pid);
     if (!p) throw new Error('missing entity');
@@ -1266,7 +1270,7 @@ describe('every other cast-end path returns the hidden fields to inert (QA pins)
 
 describe('the widened useItem busy guard covers the gather cast (QA pin)', () => {
   it('a potion press mid-gather-cast denies busy and leaves the cast untouched', () => {
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+    const sim = new Sim({ seed: 4242, playerClass: 'warrior', noPlayer: true });
     const pid = sim.addPlayer('warrior', 'Sipper');
     const p = sim.entities.get(pid);
     if (!p) throw new Error('missing entity');
