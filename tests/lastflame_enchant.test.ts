@@ -103,7 +103,12 @@ describe("Last Flame's Zeal", () => {
   ] as const)(
     'uses the un-hasted natural weapon speed for %s autos and specials',
     (form, speed) => {
-      const sim = new Sim({ seed: 44, playerClass: 'druid', autoEquip: false });
+      const sim = new Sim({
+        seed: 44,
+        playerClass: 'druid',
+        autoEquip: false,
+        world: EMPTY_TEST_WORLD,
+      });
       sim.setPlayerLevel(20);
       const source = sim.player;
       const ctx = (sim as unknown as { ctx: SimContext }).ctx;
@@ -157,7 +162,12 @@ describe("Last Flame's Zeal", () => {
   );
 
   it('a real ranged Auto Shot cannot trigger the mainhand melee enchant', () => {
-    const sim = new Sim({ seed: 44, playerClass: 'hunter', autoEquip: false });
+    const sim = new Sim({
+      seed: 44,
+      playerClass: 'hunter',
+      autoEquip: false,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.setPlayerLevel(20);
     const source = sim.player;
     const ctx = (sim as unknown as { ctx: SimContext }).ctx;
@@ -377,7 +387,12 @@ describe("Last Flame's Zeal", () => {
   });
 
   it('actual melee swings heal 200 and Strength benefits percentage stat buffs, then expires', () => {
-    const sim = new Sim({ seed: 44, playerClass: 'warrior', autoEquip: false });
+    const sim = new Sim({
+      seed: 44,
+      playerClass: 'warrior',
+      autoEquip: false,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.setPlayerLevel(20);
     const source = sim.player;
     const ctx = (sim as unknown as { ctx: SimContext }).ctx;
