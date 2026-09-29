@@ -7,7 +7,7 @@ import { activateDivineAscension, grantDevotion } from '../src/sim/paladin_devot
 import { Sim } from '../src/sim/sim';
 import { type Entity, IGNIVAR_BOSS_ID, type SimEvent } from '../src/sim/types';
 import { groundHeight } from '../src/sim/world';
-import { WORLD_WITHOUT_HUB_YARD } from './helpers/hub_yard';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 type TestSim = Sim & {
   nextId: number;
@@ -24,13 +24,18 @@ type TestSim = Sim & {
 // already grounded.
 const OPEN_GROUND = { x: -60, z: -2 } as const;
 
+// The rig stands on the empty world (the static colliders, plaza buildings
+// included, come with the seed, not the world content), and its rolls are
+// pinned rather than riding the seed's stream: with `next` at 0.9 every chance
+// under 90 percent fails, so every strike, chain and disc lands as a plain hit.
 function makeProtection(): TestSim {
   const sim = new Sim({
     seed: 7176,
     playerClass: 'paladin',
     autoEquip: true,
-    world: WORLD_WITHOUT_HUB_YARD,
+    world: EMPTY_TEST_WORLD,
   }) as TestSim;
+  sim.rng.next = () => 0.9;
   sim.setPlayerLevel(20);
   expect(sim.setSpec('protection')).toBe(true);
   sim.addItem('eastbrook_buckler', 1);
@@ -681,10 +686,10 @@ describe('Paladin Protection abilities', () => {
     expect(insideHp - sim.player.hp).toBe(100);
 
     const retribution = new Sim({
-      seed: 7172,
+      seed: 7176,
       playerClass: 'paladin',
       autoEquip: true,
-      world: WORLD_WITHOUT_HUB_YARD,
+      world: EMPTY_TEST_WORLD,
     }) as TestSim;
     retribution.setPlayerLevel(20);
     retribution.setSpec('retribution');
