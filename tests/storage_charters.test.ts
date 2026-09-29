@@ -57,8 +57,10 @@ const GRANT_TEST_WORLD: WorldContent = {
   groundObjects: [],
 };
 
-const makeSim = (seed = 42) =>
-  new Sim({ seed, playerClass: 'warrior', autoEquip: false, world: GRANT_TEST_WORLD });
+// Every Sim, the reload targets and the determinism twin included, shares one
+// seed: a fresh seed builds its collider grids and no case compares two seeds.
+const makeSim = () =>
+  new Sim({ seed: 42, playerClass: 'warrior', autoEquip: false, world: GRANT_TEST_WORLD });
 const meta = (sim: Sim, pid = sim.playerId) => sim.meta(pid)!;
 const hasLog = (evs: SimEvent[], text: string) =>
   evs.some((e) => e.type === 'log' && e.text === text);
@@ -316,7 +318,7 @@ describe('bankGrantStorageSlots (the server-originated grant command)', () => {
     );
     const state = sim.serializeCharacter(sim.playerId)!;
     const sim2 = new Sim({
-      seed: 5,
+      seed: 42,
       playerClass: 'warrior',
       noPlayer: true,
       world: GRANT_TEST_WORLD,
@@ -379,7 +381,7 @@ describe('bankGrantStorageSlots (the server-originated grant command)', () => {
 
   it('is deterministic: the same seed and the same grants produce identical saves', () => {
     const run = () => {
-      const sim = makeSim(7);
+      const sim = makeSim();
       bankGrantStorageSlots(sim.ctx, sim.playerId, 'strongbox_charter_1', 'key-s');
       bankGrantStorageSlots(sim.ctx, sim.playerId, 'strongbox_rung_03', 'key-t');
       for (let i = 0; i < 20; i++) sim.tick();
@@ -397,7 +399,7 @@ describe('bankGrantStorageSlots (the server-originated grant command)', () => {
     expect(savedBank.appliedStorageKeys).toEqual(['key-u']);
     expect(savedBank.purchasedSlots).toBe(12);
     const sim2 = new Sim({
-      seed: 9,
+      seed: 42,
       playerClass: 'warrior',
       noPlayer: true,
       world: GRANT_TEST_WORLD,
