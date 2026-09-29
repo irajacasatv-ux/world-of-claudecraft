@@ -521,28 +521,40 @@ describe('i18n Localization Key Coverage', () => {
     zone: 'Northshire',
   };
 
-  function verifyKeys(base: Record<string, unknown>, target: Record<string, unknown>, path = '') {
+  // Every leaf of `base` must exist in `target` as a non-empty string with no
+  // placeholder marker, and every branch as an object. The problems are
+  // collected and asserted once per locale: one expect() per key cost about a
+  // quarter second per locale over the ~10,000-key table, and the list also
+  // names every bad key instead of only the first.
+  function keyProblems(
+    base: Record<string, unknown>,
+    target: unknown,
+    path = '',
+    problems: string[] = [],
+  ): string[] {
     for (const key in base) {
       const currentPath = path ? `${path}.${key}` : key;
-      expect(target).toHaveProperty(key);
+      if (target === null || typeof target !== 'object' || !(key in target)) {
+        problems.push(`${currentPath} is missing`);
+        continue;
+      }
       const baseValue = base[key];
-      const targetValue = target[key];
+      const targetValue = (target as Record<string, unknown>)[key];
       if (typeof baseValue === 'object' && baseValue !== null) {
-        expect(typeof target[key]).toBe('object');
-        verifyKeys(
-          baseValue as Record<string, unknown>,
-          targetValue as Record<string, unknown>,
-          currentPath,
-        );
-      } else {
-        expect(typeof targetValue).toBe('string');
-        const text = targetValue as string;
-        expect(text.trim().length, `${currentPath} should not be empty`).toBeGreaterThan(0);
-        expect(text, `${currentPath} should not contain placeholder markers`).not.toMatch(
-          placeholderPattern,
-        );
+        if (typeof targetValue !== 'object') {
+          problems.push(`${currentPath} should be an object, not ${typeof targetValue}`);
+          continue;
+        }
+        keyProblems(baseValue as Record<string, unknown>, targetValue, currentPath, problems);
+      } else if (typeof targetValue !== 'string') {
+        problems.push(`${currentPath} should be a string, not ${typeof targetValue}`);
+      } else if (targetValue.trim().length === 0) {
+        problems.push(`${currentPath} should not be empty`);
+      } else if (placeholderPattern.test(targetValue)) {
+        problems.push(`${currentPath} should not contain placeholder markers`);
       }
     }
+    return problems;
   }
 
   function nestedString(target: Record<string, unknown>, key: string): string {
@@ -714,7 +726,7 @@ describe('i18n Localization Key Coverage', () => {
 
   for (const [code, locale] of Object.entries(locales)) {
     it(`should have 100% key match and non-empty translations for locale: ${code}`, () => {
-      verifyKeys(en, locale);
+      expect(keyProblems(en, locale)).toEqual([]);
     });
   }
 
