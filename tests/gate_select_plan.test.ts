@@ -1130,7 +1130,8 @@ describe('discovery scope matches vitest collection over the real tree', () => {
     };
     walk(REPO_ROOT);
     // If this ever fails, either move the test under tests/ or extend the
-    // discovery walk (and this guard) to the new location in the same change.
+    // discovery walk (and this guard) to the new location in the same change; a
+    // parked worktree or a stray copy is deleted instead.
     expect(offenders).toEqual([]);
   });
 
