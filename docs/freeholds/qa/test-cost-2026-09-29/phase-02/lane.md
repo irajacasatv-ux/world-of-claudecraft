@@ -70,7 +70,9 @@ the diet's best builds read the documented actuals (moongrove_1t 155.82, wildfan
 Found by reading the harnesses for runs that repeat a configuration or whose result another
 run already contains. None is changed here; each is a lever for its owner.
 
-1. The druid matrix's moongrove_3t and groveheart cells: 48 of the 96 nightly probes (8 seeds
+1. (Ruled 2026-09-29, "One seed, every row", and done: one seed, every capstone row above zero,
+   nightly-only; see `rulings-2026-09-29.md`.) The druid matrix's moongrove_3t and groveheart
+   cells: 48 of the 96 nightly probes (8 seeds
    x 3 capstones x 2 profiles, 123 s each), about 1,500 s of the file's 3,054 s, for an
    assertion ("the best capstone's seed average is above zero") that more seeds only weaken,
    since the average drops zero seeds. One seed of them, or real bands on them, would carry
@@ -92,6 +94,10 @@ run already contains. None is changed here; each is a lever for its owner.
    probes nightly).
 
 ## Ruling owed: production idle culling in the balance harnesses
+
+Ruled 2026-09-29 ("Adopt and re-band"), and done: the harnesses boot the cull through
+`scripts/probe_sim.ts` and every lane band was re-measured at it (`rulings-2026-09-29.md` in
+this record). The measurement below is what the ruling was asked on.
 
 Measured with a scratch probe that builds every harness Sim with
 `idleMobTickRadius: PLAYER_INTEREST_DROP_RADIUS` (what the server and the offline client
