@@ -15,6 +15,16 @@ import { activeWorldQuestsForCycle } from '../src/sim/world_quest_rotation';
 import { worldQuestTraceShape } from '../src/sim/world_quest_trace_variants';
 import { WORLD_SEED } from '../src/sim/world_seed';
 
+// The advanced-variant walk is a property sweep over every authored final
+// figure. Each PR walks the 'cross' figure both ways (the longest outline, and
+// one that differs from the base star, so a sim that drops the selected variant
+// goes off-path); the nightly tests job sets the flag and walks every figure.
+// Every figure stays covered on each PR by the placement case below (clear, dry,
+// gentle ground) and by the pure edge walk in world_quest_trace_variants.test.ts.
+const NIGHTLY_SWEEP = process.env.WOC_NIGHTLY_SWEEP === '1';
+const ADVANCED_SWEEP = NIGHTLY_SWEEP
+  ? WORLD_QUEST_CALLIGRAPHY_ADVANCED
+  : WORLD_QUEST_CALLIGRAPHY_ADVANCED.filter((shape) => shape.kind === 'cross');
 const NPC_ID = WORLD_QUEST_CALLIGRAPHY_NPC_IDS.calligraphy_instructor;
 const SHAPES = QUEST.objective.type === 'tracing' ? QUEST.objective.shapes : [];
 const POINTS = SHAPES[0].points;
@@ -131,7 +141,7 @@ describe('authoritative calligraphy world quest', () => {
       completions: meta.counters.questsCompleted,
     }).toEqual(rewards);
   });
-  it.each(WORLD_QUEST_CALLIGRAPHY_ADVANCED)(
+  it.each(ADVANCED_SWEEP)(
     'walks the selected $kind variant both ways with final-only rewards',
     (advanced) => {
       for (const reverse of [false, true]) {

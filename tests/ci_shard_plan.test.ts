@@ -555,6 +555,7 @@ describe('the long-sims lane (Phase 4)', () => {
       'tests/talent_tooltip_accuracy.test.ts',
       'tests/transport_lanes.test.ts',
       'tests/woc_market_delivery_pg_integration.test.ts',
+      'tests/world_quest_tracing.test.ts',
     ];
     // The corpus reaches every tracked root, not only the suites: a helper and a
     // script name the diet flag in comments, and the same collection finds a token of
