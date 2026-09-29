@@ -12,9 +12,12 @@ import { createMob } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
 import { revivePlayerAt } from '../src/sim/spirit';
 import type { Entity } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
+// Every case fights a wolf it places itself (or nothing), so the Sims run on
+// the empty world rather than the full overworld.
 function mage(spec: 'fire' | 'frost'): { sim: Sim; p: Entity } {
-  const sim = new Sim({ seed: 41, playerClass: 'mage', autoEquip: true });
+  const sim = new Sim({ seed: 41, playerClass: 'mage', autoEquip: true, world: EMPTY_TEST_WORLD });
   sim.setPlayerLevel(20);
   expect(sim.setSpec(spec)).toBe(true);
   sim.tick();
