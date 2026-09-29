@@ -110,6 +110,18 @@ function differing(emit: Emit, expected: Map<string, Buffer>, names: string[]): 
 }
 
 describe('i18n resolved-artifact reproducibility', () => {
+  it('perturbs the pair in every dimension it exists to vary', () => {
+    // The pair comes from tests/helpers/i18n_determinism.ts, which its own determinism
+    // suite shares, so one helper edit collapsing the two environments would blind
+    // both suites at once. Hold the pair here to what makes it a perturbation.
+    expect(PERTURBATIONS).toHaveLength(2);
+    const [a, b] = PERTURBATIONS;
+    for (const key of ['TZ', 'LC_ALL', 'LANG', 'prefix'] as const) expect(a[key]).not.toBe(b[key]);
+    // One side sits on a non-whole-hour offset, so a date formatted in local time
+    // would differ between the runs even on a machine whose own zone is UTC.
+    expect([a.TZ, b.TZ]).toContain('Asia/Kolkata');
+  });
+
   it('the generated dense artifact is committed (tracked by git)', () => {
     // An untracked artifact would leave the freshness assertion below comparing
     // against bytes nobody committed. Fail loudly if someone regenerates but
