@@ -27,8 +27,12 @@ import { expectScansOnlyThroughSharedWalkers } from './helpers/scan_guard_self_a
 import { sourceFilesUnder } from './helpers/source_files_under';
 import { stripComments } from './helpers/strip_comments';
 
-function playerWorld(seed = 42) {
-  const sim = new Sim({ seed, playerClass: 'warrior', noPlayer: true });
+// Every world in this file rides seed 42, the save/load target included: a
+// full-world Sim pays a collider-grid build per seed the file has not built
+// yet (about half a second), the twins need one shared seed, and no arm reads
+// a seed-probed value.
+function playerWorld() {
+  const sim = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
   const pid = sim.addPlayer('warrior', 'Aleph');
   sim.tick();
   // Drop the open-world mob population so the hundreds of real ticks every
@@ -450,7 +454,7 @@ describe('well fed: one food buff at a time (last eaten wins, whole family)', ()
 
     // Plate then dish: last eaten still wins, even downward. Classic rule:
     // the mint never compares power, it replaces on the shared id.
-    const b = playerWorld(43);
+    const b = playerWorld();
     eatToCompletion(b.sim, b.pid, b.p, 'stonepot_stew');
     expect(wellFedAuras(b.p)[0].value).toBe(6);
     eatToCompletion(b.sim, b.pid, b.p, 'evergarden_braised_greens');
@@ -509,7 +513,7 @@ describe('well fed: transient across save and load', () => {
     expect(state).toBeTruthy();
     expect('auras' in (state as unknown as Record<string, unknown>)).toBe(false);
 
-    const sim2 = new Sim({ seed: 43, playerClass: 'warrior', noPlayer: true });
+    const sim2 = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
     const pid2 = sim2.addPlayer('warrior', 'Restored', { state });
     sim2.tick();
     const p2 = sim2.entities.get(pid2)! as Entity;
@@ -528,7 +532,7 @@ describe('well fed: the mint draws zero rng', () => {
     p: Entity;
     calibration: number;
   } {
-    const { sim, pid, p } = playerWorld(4242);
+    const { sim, pid, p } = playerWorld();
     const draws: number[] = [];
     sim.rng.setObserver((value: number) => {
       draws.push(value);
