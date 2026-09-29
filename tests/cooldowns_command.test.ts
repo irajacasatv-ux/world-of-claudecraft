@@ -1,9 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { Sim } from '../src/sim/sim';
 import type { SimEvent } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
+// The readout reads only the players the case adds, so the ambient overworld
+// (camps, NPCs, ground objects) is pure construction cost: the empty world.
 function makeWorld() {
-  return new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+  return new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true, world: EMPTY_TEST_WORLD });
 }
 
 function errors(events: SimEvent[]): Extract<SimEvent, { type: 'error' }>[] {
