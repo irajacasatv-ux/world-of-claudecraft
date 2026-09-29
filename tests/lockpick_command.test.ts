@@ -7,8 +7,13 @@ import { solveLockActions, stepLock } from '../src/sim/lockpick';
 import { Sim } from '../src/sim/sim';
 import type { SimEvent } from '../src/sim/types';
 import { terrainHeight } from '../src/sim/world';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
-const makeSim = (seed = 42) => new Sim({ seed, playerClass: 'warrior', autoEquip: true });
+// The delve boss, chest and lock all come from DELVES data, never the ambient
+// overworld, so the empty world serves every case (the lockpick_hud_sync
+// pattern), and the determinism pair reruns the file's own seed.
+const makeSim = (seed = 42) =>
+  new Sim({ seed, playerClass: 'warrior', autoEquip: true, world: EMPTY_TEST_WORLD });
 
 function enterFinale(sim: Sim) {
   sim.setPlayerLevel(DELVES.collapsed_reliquary.minLevel);
@@ -356,6 +361,6 @@ describe('lockpick, determinism', () => {
       solveLock(sim, r);
       return { spec, tier: r.objectState[chestId].lootedTier, pageCount };
     };
-    expect(run(7)).toEqual(run(7));
+    expect(run(42)).toEqual(run(42));
   });
 });
