@@ -10,14 +10,18 @@ import { DELVES, MOBS } from '../src/sim/data';
 import { initDrownedLitanyBossState } from '../src/sim/delves/drowned_litany_boss';
 import { Sim } from '../src/sim/sim';
 import { terrainHeight } from '../src/sim/world';
+import { PRODUCTION_IDLE_CULL } from './helpers/production_idle_cull';
 
 const BELL_TEMPLATE_ID = 'tolling_bell';
 const SISTER_NHALIA_ID = 'sister_nhalia_drowned_canticle';
 // One sim tick = DT = 1/20 seconds.
 const DT = 1 / 20;
 
-function makeSim(seed = 42) {
-  return new Sim({ seed, playerClass: 'warrior', autoEquip: true });
+// One seed for the file (the Heroic case's second seed bought only a second
+// collider build), and the shipped idle-mob cull: the Litany runs in the delve
+// band, far from every overworld camp, and the boss and bells still tick.
+function makeSim() {
+  return new Sim({ seed: 42, playerClass: 'warrior', autoEquip: true, ...PRODUCTION_IDLE_CULL });
 }
 
 function teleport(sim: Sim, x: number, z: number) {
@@ -103,7 +107,7 @@ describe('Tolling Bells: mob template', () => {
 
 describe('Tolling Bells: Normal tier volley', () => {
   it('spawns 4 bell entities on Normal after the volley timer fires', () => {
-    const sim = makeSim(42);
+    const sim = makeSim();
     const run = enterLitanyFinale(sim, 'normal');
     expect(run).not.toBeNull();
     const boss = setupNhaliaCombat(sim, run);
@@ -123,7 +127,7 @@ describe('Tolling Bells: Normal tier volley', () => {
   });
 
   it('bells in one volley fly in 4 different directions (90 degrees apart)', () => {
-    const sim = makeSim(42);
+    const sim = makeSim();
     const run = enterLitanyFinale(sim, 'normal');
     expect(run).not.toBeNull();
     const boss = setupNhaliaCombat(sim, run);
@@ -146,7 +150,7 @@ describe('Tolling Bells: Normal tier volley', () => {
 
 describe('Tolling Bells: Heroic tier volley', () => {
   it('spawns 4 bell entities on Heroic', () => {
-    const sim = makeSim(99);
+    const sim = makeSim();
     const run = enterLitanyFinale(sim, 'heroic');
     expect(run).not.toBeNull();
     const boss = setupNhaliaCombat(sim, run);
@@ -166,7 +170,7 @@ describe('Tolling Bells: Heroic tier volley', () => {
 
 describe('Tolling Bells: wall pass-through despawn', () => {
   it('a bell despawns once it has flown past the apse walls', () => {
-    const sim = makeSim(42);
+    const sim = makeSim();
     const run = enterLitanyFinale(sim, 'normal');
     expect(run).not.toBeNull();
     const boss = setupNhaliaCombat(sim, run);
@@ -200,7 +204,7 @@ describe('Tolling Bells: wall pass-through despawn', () => {
 
 describe('Tolling Bells: bell movement', () => {
   it('bell entity moves each tick at the configured speed', () => {
-    const sim = makeSim(42);
+    const sim = makeSim();
     const run = enterLitanyFinale(sim, 'normal');
     expect(run).not.toBeNull();
     const boss = setupNhaliaCombat(sim, run);
@@ -230,7 +234,7 @@ describe('Tolling Bells: bell movement', () => {
   });
 
   it('in-flight bells are removed the tick after Sister Nhalia dies', () => {
-    const sim = makeSim(42);
+    const sim = makeSim();
     const run = enterLitanyFinale(sim, 'normal');
     expect(run).not.toBeNull();
     const boss = setupNhaliaCombat(sim, run);
@@ -257,7 +261,7 @@ describe('Tolling Bells: bell movement', () => {
 
 describe('Tolling Bells: contact damage and knockback', () => {
   it('player in contact with a bell takes damage and is displaced outward', () => {
-    const sim = makeSim(42);
+    const sim = makeSim();
     const run = enterLitanyFinale(sim, 'normal');
     expect(run).not.toBeNull();
     const boss = setupNhaliaCombat(sim, run);
@@ -294,7 +298,7 @@ describe('Tolling Bells: contact damage and knockback', () => {
 
 describe('Tolling Bells: expiry and despawn', () => {
   it('bell entities are removed from the world after their lifetime elapses', () => {
-    const sim = makeSim(42);
+    const sim = makeSim();
     const run = enterLitanyFinale(sim, 'normal');
     expect(run).not.toBeNull();
     const boss = setupNhaliaCombat(sim, run);
