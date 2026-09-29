@@ -11,6 +11,7 @@ import { appendFileSync } from 'node:fs';
 import {
   buildTargets,
   checkoutRefs,
+  gitRefLookupPath,
   pickActiveReleaseBranch,
   refNamesFromMatchingRefs,
   shaFromGitRefResponse,
@@ -62,7 +63,7 @@ async function listReleaseBranches() {
 async function resolveRefSha(branchName) {
   if (!repo || !token) return null;
   try {
-    const url = `${API}/repos/${repo}/git/ref/heads/${branchName}`;
+    const url = `${API}/repos/${repo}/${gitRefLookupPath(branchName)}`;
     const res = await fetch(url, {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -72,7 +73,7 @@ async function resolveRefSha(branchName) {
       signal: AbortSignal.timeout(30_000),
     });
     if (!res.ok) return null;
-    return shaFromGitRefResponse(await res.json());
+    return shaFromGitRefResponse(await res.json(), branchName);
   } catch {
     return null;
   }
@@ -124,6 +125,15 @@ if (inputRef.trim() !== '') {
 // run one commit (lib/nightly_plan.mjs checkoutRefs).
 const shas = checkoutRefs(targets, shaByRef);
 console.log(`[nightly_targets] checkouts ${JSON.stringify(shas)}`);
+for (const ref of targets) {
+  // A ref that did not resolve checks out by name, so its two test halves could still land on
+  // different commits if it moves: say so where the run's annotations show it.
+  if (shas[ref] === ref && !/^[0-9a-f]{40}$/.test(ref) && process.env.GITHUB_ACTIONS === 'true') {
+    console.log(
+      `::warning title=nightly checkout::${ref} did not resolve to a commit; its lanes check it out by name`,
+    );
+  }
+}
 const outputLine = `refs=${JSON.stringify(targets)}\nshas=${JSON.stringify(shas)}\n`;
 if (process.env.GITHUB_OUTPUT) {
   appendFileSync(process.env.GITHUB_OUTPUT, outputLine);

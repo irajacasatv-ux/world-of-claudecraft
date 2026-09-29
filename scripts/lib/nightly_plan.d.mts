@@ -33,7 +33,9 @@ export function dedupeTargetsBySha(
   shaByRef: Readonly<Record<string, string | null | undefined>>,
 ): string[];
 
-export function shaFromGitRefResponse(body: unknown): string | null;
+export function shaFromGitRefResponse(body: unknown, branch?: string): string | null;
+
+export function gitRefLookupPath(branch: string): string;
 
 export function checkoutRefs(
   targets: readonly string[],

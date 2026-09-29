@@ -205,17 +205,32 @@ export function dedupeTargetsBySha(names, shaByRef) {
  * (`GET /repos/{repo}/git/ref/heads/{branch}`). Anything that is not the
  * expected `{ object: { sha: string } }` shape resolves to null, which
  * `dedupeTargetsBySha` treats as "unknown": fail OPEN, never drop a target
- * on an unproven duplicate.
+ * on an unproven duplicate. With `branch`, the response must name exactly that branch
+ * (`refs/heads/<branch>`): a name the lookup URL mangled (a `#` read as a fragment) would
+ * otherwise resolve to another branch's commit, and every lane would test it under the
+ * requested name.
  *
  * @param {unknown} body
+ * @param {string} [branch]
  * @returns {string | null}
  */
-export function shaFromGitRefResponse(body) {
-  const sha =
-    body && typeof body === 'object'
-      ? /** @type {{ object?: { sha?: unknown } }} */ (body).object?.sha
-      : undefined;
+export function shaFromGitRefResponse(body, branch) {
+  if (!body || typeof body !== 'object') return null;
+  const ref = /** @type {{ ref?: unknown, object?: { sha?: unknown } }} */ (body);
+  if (branch !== undefined && ref.ref !== `refs/heads/${branch}`) return null;
+  const sha = ref.object?.sha;
   return typeof sha === 'string' && sha.length > 0 ? sha : null;
+}
+
+/**
+ * The git-refs lookup path for a branch name: each segment URL-encoded, so a `#`, `?` or `%`
+ * in a name reaches the API as the name rather than as URL syntax.
+ *
+ * @param {string} branch
+ * @returns {string}
+ */
+export function gitRefLookupPath(branch) {
+  return `git/ref/heads/${branch.split('/').map(encodeURIComponent).join('/')}`;
 }
 
 /**

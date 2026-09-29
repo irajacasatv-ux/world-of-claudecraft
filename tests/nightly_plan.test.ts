@@ -3,6 +3,7 @@ import {
   buildTargets,
   checkoutRefs,
   dedupeTargetsBySha,
+  gitRefLookupPath,
   labelEnsureFailed,
   NIGHTLY_DRILL_ISSUE_LABEL,
   NIGHTLY_DRILL_ISSUE_TITLE,
@@ -249,6 +250,20 @@ describe('shaFromGitRefResponse', () => {
     expect(shaFromGitRefResponse({ object: {} })).toBeNull();
     expect(shaFromGitRefResponse({ object: { sha: 42 } })).toBeNull();
     expect(shaFromGitRefResponse({ object: { sha: '' } })).toBeNull();
+  });
+
+  it('refuses a response for a different branch than the one asked for', () => {
+    const body = { ref: 'refs/heads/fix/a', object: { sha: 'abc123' } };
+    expect(shaFromGitRefResponse(body, 'fix/a')).toBe('abc123');
+    // `fix/a#b` sent unencoded reads `#b` as a fragment and resolves fix/a instead.
+    expect(shaFromGitRefResponse(body, 'fix/a#b')).toBeNull();
+    expect(shaFromGitRefResponse({ object: { sha: 'abc123' } }, 'fix/a')).toBeNull();
+  });
+
+  it('encodes each segment of a branch name in the lookup path', () => {
+    expect(gitRefLookupPath('release/v0.45.0')).toBe('git/ref/heads/release/v0.45.0');
+    expect(gitRefLookupPath('fix/a#b')).toBe('git/ref/heads/fix/a%23b');
+    expect(gitRefLookupPath('feature/x%2Fy')).toBe('git/ref/heads/feature/x%252Fy');
   });
 });
 
