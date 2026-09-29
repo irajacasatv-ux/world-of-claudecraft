@@ -19,7 +19,7 @@ import {
 } from '../scripts/lib/ci_shard_plan.mjs';
 import { collectSuiteVisibility } from '../scripts/lib/gate_discovery.mjs';
 import { auditDepthFlag } from './helpers/depth_flag_readers';
-import { sourceFilesUnder } from './helpers/source_files_under';
+import { SOURCE_EXTENSIONS, sourceFilesUnder } from './helpers/source_files_under';
 
 const REPO_ROOT = path.resolve(__dirname, '..');
 
@@ -50,13 +50,19 @@ function realSuite(): ReturnType<typeof collectSuiteVisibility> {
   return realSuiteMemo;
 }
 
-// Every source file under tests/ and scripts/, for the depth-flag reader audits
-// (tests/helpers/depth_flag_readers.ts): a reader could hide in a helper or a
-// script, so the audit reads the whole corpus, not only the collected suites.
+// Every source file under tests/ and scripts/ plus the repository-root sources (the
+// vitest and vite configs among them: a read in test.exclude could drop a suite from
+// every PR run), for the depth-flag reader audits (tests/helpers/depth_flag_readers.ts).
+// A reader could hide in a helper, a script or a config, so the audit reads the whole
+// corpus, not only the collected suites.
 let depthFlagSourcesMemo: Map<string, string> | undefined;
 function depthFlagSources(): Map<string, string> {
   if (depthFlagSourcesMemo) return depthFlagSourcesMemo;
   const sources = new Map<string, string>();
+  for (const entry of readdirSync(REPO_ROOT, { withFileTypes: true })) {
+    if (entry.isFile() && SOURCE_EXTENSIONS.some((ext) => entry.name.endsWith(ext)))
+      sources.set(entry.name, corpusRead(path.join(REPO_ROOT, entry.name)));
+  }
   for (const dir of ['tests', 'scripts']) {
     for (const { file, full } of sourceFilesUnder(path.join(REPO_ROOT, dir), {
       skipDirectories: ['node_modules'],
@@ -563,6 +569,10 @@ describe('the long-sims lane (Phase 4)', () => {
       'tests/skill_icons.test.ts',
       'tests/woc_market_delivery_pg_integration.test.ts',
     ];
+    // The corpus really holds the configs and a helper, not only suites.
+    expect(depthFlagSources().has('vite.config.ts')).toBe(true);
+    expect(depthFlagSources().has('tests/helpers/depth_flag_readers.ts')).toBe(true);
+    expect(depthFlagSources().has('scripts/lib/ci_shard_plan.mjs')).toBe(true);
     const audit = auditDepthFlag(
       'WOC_NIGHTLY_SWEEP',
       depthFlagSources(),

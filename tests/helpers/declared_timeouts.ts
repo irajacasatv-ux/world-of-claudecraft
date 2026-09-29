@@ -61,9 +61,15 @@ const HEAD_RE =
 /**
  * Replace comment text and string CONTENTS with spaces, preserving length and
  * indices. Template literals mask to spaces too, with `${` re-entering code
- * state so brackets inside interpolations still balance.
+ * state so brackets inside interpolations still balance. With `strings: false`
+ * only comments are masked: string, template and regex contents stay as written,
+ * for a scan that must see a name spelled anywhere but in a comment.
  */
-export function maskCommentsAndStrings(source: string): string {
+export function maskCommentsAndStrings(
+  source: string,
+  options: { strings?: boolean } = {},
+): string {
+  const maskStrings = options.strings ?? true;
   const out = source.split('');
   type State = 'code' | 'line' | 'block' | 'single' | 'double' | 'template' | 'regex';
   const stack: State[] = [];
@@ -107,8 +113,10 @@ export function maskCommentsAndStrings(source: string): string {
     }
     if (state === 'regex') {
       if (ch === '\\') {
-        out[i] = ' ';
-        if (i + 1 < source.length && source[i + 1] !== '\n') out[i + 1] = ' ';
+        if (maskStrings) {
+          out[i] = ' ';
+          if (i + 1 < source.length && source[i + 1] !== '\n') out[i + 1] = ' ';
+        }
         i++;
         continue;
       }
@@ -119,7 +127,7 @@ export function maskCommentsAndStrings(source: string): string {
         lastCode = '/';
         continue;
       }
-      out[i] = ' ';
+      if (maskStrings) out[i] = ' ';
       continue;
     }
     if (state === 'line') {
@@ -138,8 +146,10 @@ export function maskCommentsAndStrings(source: string): string {
     }
     // Inside a string. Quotes stay visible; contents mask to spaces.
     if (ch === '\\') {
-      out[i] = ' ';
-      if (i + 1 < source.length && source[i + 1] !== '\n') out[i + 1] = ' ';
+      if (maskStrings) {
+        out[i] = ' ';
+        if (i + 1 < source.length && source[i + 1] !== '\n') out[i + 1] = ' ';
+      }
       i++;
       continue;
     }
@@ -152,14 +162,14 @@ export function maskCommentsAndStrings(source: string): string {
       state = 'code';
       lastCode = ch;
     } else if (state === 'template' && ch === '$' && next === '{') {
-      out[i] = ' ';
+      if (maskStrings) out[i] = ' ';
       // Leave the `{` visible so bracket depth stays balanced with the `}`. An
       // interpolation opens an expression, so a `/` right after it is a regex.
       stack.push('template');
       state = 'code';
       lastCode = '{';
       i++;
-    } else if (ch !== '\n') out[i] = ' ';
+    } else if (ch !== '\n' && maskStrings) out[i] = ' ';
   }
   return out.join('');
 }

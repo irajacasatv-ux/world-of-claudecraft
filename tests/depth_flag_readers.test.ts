@@ -1,12 +1,15 @@
 // The depth-flag reader audit (tests/helpers/depth_flag_readers.ts) over synthetic
 // corpora: each escape the registries in tests/ci_shard_plan.test.ts must refuse, the
 // forms they must admit, and the list's exactness. The live registries run the same
-// function over the real tests/ and scripts/ trees.
+// function over the real tests/, scripts/ and repository-root sources.
 import { describe, expect, it } from 'vitest';
 import { auditDepthFlag } from './helpers/depth_flag_readers';
 
 const FLAG = 'WOC_DEMO_SWEEP';
 const READ = "const FULL = process.env.WOC_DEMO_SWEEP === '1';\n";
+const LISTED_OTHER_FORM = `tests/a.test.ts: names ${FLAG} outside a comment other than as the exact read process.env.${FLAG} === '1'`;
+const unlisted = (file: string) =>
+  `${file}: names ${FLAG} outside a comment but is not a listed reader`;
 
 function audit(files: Record<string, string>, listed: string[], pins: string[] = []) {
   return auditDepthFlag(FLAG, new Map(Object.entries(files)), listed, pins);
@@ -30,30 +33,28 @@ describe('depth-flag reader audit', () => {
     ['a truthy check', 'if (process.env.WOC_DEMO_SWEEP) run();\n'],
     ['a different value', "const FULL = process.env.WOC_DEMO_SWEEP === 'true';\n"],
     ['a destructure', 'const { WOC_DEMO_SWEEP } = process.env;\n'],
-  ])('refuses a listed reader that also reads the flag through %s', (_label, extra) => {
-    const result = audit({ 'tests/a.test.ts': `${READ}${extra}` }, ['tests/a.test.ts']);
-    expect(result.violations).toEqual([
-      `tests/a.test.ts: reads ${FLAG} in a form other than process.env.${FLAG} === '1'`,
-    ]);
-  });
-
-  it.each([
     ['a bracket key', "const FULL = process.env['WOC_DEMO_SWEEP'] === '1';\n"],
     ['a template key', 'const FULL = process.env[`WOC_DEMO_SWEEP`];\n'],
-  ])('refuses a listed reader that spells the flag in a string: %s', (_label, extra) => {
+    [
+      'a regex over the keys',
+      'const k = Object.keys(process.env).find((n) => /^WOC_DEMO_SWEEP$/.test(n));\n',
+    ],
+    ['a mid-string key', "const [, k] = 'env:WOC_DEMO_SWEEP'.split(':');\n"],
+    ['a key after an interpolation', "const k = `${''}WOC_DEMO_SWEEP`;\n"],
+  ])('refuses a listed reader that also names the flag through %s', (_label, extra) => {
     const result = audit({ 'tests/a.test.ts': `${READ}${extra}` }, ['tests/a.test.ts']);
-    expect(result.violations).toEqual([`tests/a.test.ts: spells ${FLAG} inside a string`]);
+    expect(result.violations).toEqual([LISTED_OTHER_FORM]);
   });
 
   it.each([
     ['a helper module', 'tests/helpers/depth.ts', READ],
     ['a script', 'scripts/sweep.mjs', "export const FULL = process.env['WOC_DEMO_SWEEP'];\n"],
     ['an unlisted suite', 'tests/d.test.ts', 'if (process.env.WOC_DEMO_SWEEP) run();\n'],
-  ])('refuses a read or a spelling in %s outside the list', (_label, file, text) => {
+    ['a config regex', 'vite.config.ts', 'const deep = /WOC_DEMO_SWEEP/.test(keys);\n'],
+    ['a config mid-string', 'vite.config.ts', "const key = 'env:WOC_DEMO_SWEEP'.slice(4);\n"],
+  ])('refuses a mention in %s outside the list', (_label, file, text) => {
     const result = audit({ 'tests/a.test.ts': READ, [file]: text }, ['tests/a.test.ts']);
-    expect(result.violations).toEqual([
-      `${file}: names ${FLAG} in code or a string but is not a listed reader`,
-    ]);
+    expect(result.violations).toEqual([unlisted(file)]);
   });
 
   it('reports every exact reader, so a list missing one or naming a non-reader differs', () => {
@@ -68,11 +69,16 @@ describe('depth-flag reader audit', () => {
     ).toEqual([]);
   });
 
-  it('lets the pin files spell the flag, and only them', () => {
-    const pin = "expect(workflow).not.toContain('WOC_DEMO_SWEEP');\n";
+  it('lets a pin file spell the flag in strings and patterns, never read it live', () => {
+    const pin =
+      "expect(workflow).not.toContain('WOC_DEMO_SWEEP');\nconst re = /WOC_DEMO_SWEEP/g;\n";
     expect(audit({ 'tests/pin.test.ts': pin }, [], ['tests/pin.test.ts']).violations).toEqual([]);
     expect(audit({ 'tests/pin.test.ts': pin }, []).violations).toEqual([
-      `tests/pin.test.ts: names ${FLAG} in code or a string but is not a listed reader`,
+      unlisted('tests/pin.test.ts'),
+    ]);
+    const livePin = `${pin}it.skipIf(!process.env.WOC_DEMO_SWEEP)('deep', () => {});\n`;
+    expect(audit({ 'tests/pin.test.ts': livePin }, [], ['tests/pin.test.ts']).violations).toEqual([
+      `tests/pin.test.ts: names ${FLAG} in live code but is a pin file`,
     ]);
   });
 });
