@@ -130,6 +130,29 @@ const COST_MARKER = /^(?:\/\/+|\/?\*+)\s*cost\s*:/i;
 const PARAGRAPH_END = /^(?:\/\/+|\/?\*+\/?)\s*(?:Guards:|$)/;
 const GUARDS_MIN_CHARS = 12;
 
+/** How a line reads given whether a block comment is open at its start: `pure` when every
+ *  character outside whitespace sits in a comment, `open` when a block is still open at its end.
+ *  Scanned token by token, so `*\/ /*` reopens a block and `/* x *\/ code` is code. */
+function scanCommentLine(line: string, inBlock: boolean): { pure: boolean; open: boolean } {
+  let i = 0;
+  let open = inBlock;
+  while (i < line.length) {
+    if (open) {
+      const close = line.indexOf('*/', i);
+      if (close < 0) return { pure: true, open: true };
+      open = false;
+      i = close + 2;
+      continue;
+    }
+    const rest = line.slice(i).trimStart();
+    if (rest === '' || rest.startsWith('//')) return { pure: true, open: false };
+    if (!rest.startsWith('/*')) return { pure: false, open: false };
+    open = true;
+    i = line.length - rest.length + 2;
+  }
+  return { pure: true, open };
+}
+
 /** The leading comment block: every comment line before the first line of code. A block
  *  comment runs from its opening to its closing whatever its lines start with, so an unstarred
  *  line inside one is a comment line too (and cannot close the cost field's paragraph). */
@@ -139,10 +162,10 @@ function leadingComment(source: string): string[] {
   for (const line of source.split('\n')) {
     const trimmed = line.trim();
     if (trimmed === '') continue;
-    if (!inBlock && !/^(\/\/|\/\*)/.test(trimmed)) break;
+    const scan = scanCommentLine(trimmed, inBlock);
+    if (!scan.pure) break;
     lines.push(trimmed);
-    if (inBlock) inBlock = !trimmed.includes('*/');
-    else if (trimmed.startsWith('/*')) inBlock = !trimmed.includes('*/', 2);
+    inBlock = scan.open;
   }
   return lines;
 }
@@ -504,6 +527,8 @@ describe('the new-test admission rule', () => {
       '// Cost: 1 s\n// Note: 2 min cold\n',
       '/**\n * Cost: 1 s\n   warm; 2 min cold\n */\n',
       '/* Cost: 1 s\n   2 min cold */\n',
+      '/*\n */ /*\n// Cost: 1 s\n   warm; 2 min cold\n */\n',
+      '/* x */ const s = 1;\n// Cost: 1 s\n',
     ])
       expect(read(refused), refused).toBeUndefined();
     expect(admissionStatement(afterDocblock).costMs).toBe(450);
