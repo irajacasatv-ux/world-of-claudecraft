@@ -1,10 +1,19 @@
 import { describe, expect, it } from 'vitest';
-import { GROUND_OBJECTS, ITEMS, QUESTS } from '../src/sim/data';
+import { BUILTIN_WORLD, GROUND_OBJECTS, ITEMS, QUESTS } from '../src/sim/data';
 import { Sim } from '../src/sim/sim';
-import type { Entity } from '../src/sim/types';
+import type { Entity, WorldContent } from '../src/sim/types';
 
 const QUEST_ID = 'q_bastion_door';
 const WARD_ITEM_ID = 'bastion_ward_stone';
+
+// The pickup reaches only the ward stones on the ground, so the world keeps
+// those and drops the camps and NPCs.
+const WARD_WORLD: WorldContent = {
+  ...BUILTIN_WORLD,
+  camps: [],
+  npcs: {},
+  groundObjects: BUILTIN_WORLD.groundObjects.filter((obj) => obj.itemId === WARD_ITEM_ID),
+};
 
 function teleportTo(sim: Sim, x: number, z: number): void {
   const pos = sim.groundPos(x, z);
@@ -22,7 +31,13 @@ describe('The Sunken Bastion ward stone', () => {
     expect(ITEMS[WARD_ITEM_ID]?.questId).toBe(QUEST_ID);
     expect(GROUND_OBJECTS.find((o) => o.itemId === WARD_ITEM_ID)).toBeTruthy();
 
-    const sim = new Sim({ seed: 20061, playerClass: 'warrior', playerName: 'Reuben', autoEquip: false });
+    const sim = new Sim({
+      seed: 20061,
+      playerClass: 'warrior',
+      playerName: 'Reuben',
+      autoEquip: false,
+      world: WARD_WORLD,
+    });
     sim.player.level = 15;
     sim.questLog.set(QUEST_ID, { questId: QUEST_ID, counts: [0], state: 'active' });
     expect(sim.questState(QUEST_ID)).toBe('active');
@@ -31,8 +46,9 @@ describe('The Sunken Bastion ward stone', () => {
     // wardstones. Before the fix, tryStartNythraxisWardChannel claimed the
     // interaction for ANY ward stone, even with no boss nearby, so the quest
     // pickup never ran and the objective could never be completed.
-    const wardStone = [...sim.entities.values()]
-      .find((e): e is Entity => e.kind === 'object' && e.objectItemId === WARD_ITEM_ID);
+    const wardStone = [...sim.entities.values()].find(
+      (e): e is Entity => e.kind === 'object' && e.objectItemId === WARD_ITEM_ID,
+    );
     expect(wardStone).toBeTruthy();
     teleportTo(sim, wardStone!.pos.x + 1, wardStone!.pos.z);
 
