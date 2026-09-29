@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { startWorldQuestActivityWire } from '../server/quest_command_wire';
 import { WISP_MAZE_PROFILES } from '../src/sim/content/wisp_maze_layouts';
-import { WISP_MAZE_NPC_ID, WISP_MAZE_QUEST_ID } from '../src/sim/content/world_quest_wisp_maze';
+import {
+  WISP_MAZE_NPC_DEF,
+  WISP_MAZE_NPC_ID,
+  WISP_MAZE_QUEST_ID,
+} from '../src/sim/content/world_quest_wisp_maze';
 import { Sim } from '../src/sim/sim';
 import {
   isWorldQuestDifficulty,
@@ -10,9 +14,14 @@ import {
 } from '../src/sim/world_quest_activity';
 import { WISP_MAZE_HARD_BONUS, worldQuestBonusCopper } from '../src/sim/world_quest_bonus';
 import { worldQuestCycleOfferingQuest } from '../src/sim/world_quest_rotation';
+import { EMPTY_TEST_WORLD } from './sim_shared';
+
+// The maze keeper is the only overworld content these starts reach for; the
+// maze's enemies come from its profile, never a camp.
+const WORLD = { ...EMPTY_TEST_WORLD, npcs: { [WISP_MAZE_NPC_DEF.id]: WISP_MAZE_NPC_DEF } };
 
 function armed(): Sim {
-  const sim = new Sim({ seed: 7, playerClass: 'warrior', devCommands: true });
+  const sim = new Sim({ seed: 7, playerClass: 'warrior', devCommands: true, world: WORLD });
   sim.resetDay = '2026-09-06';
   // The developer selector arms the offer and teleports beside the keeper.
   sim.chat('/dev wisps normal');
