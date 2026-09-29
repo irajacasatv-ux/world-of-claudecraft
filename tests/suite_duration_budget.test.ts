@@ -70,9 +70,10 @@ const FILE_ALLOWANCE_LEDGER: ReadonlyMap<string, number> = new Map([
   ['tests/ci_shard_plan.test.ts', 310_000],
   ['tests/discord_db_integration.test.ts', 420_000],
   ['tests/dragonkin_whelp_litter.test.ts', 420_000],
-  // 570_000 since 2026-09-27: a 30s case in biome's trailing-comma shape was
-  // invisible to the parser until then, not new.
-  ['tests/druid_balance_probe.test.ts', 570_000],
+  // 420_000 since 2026-09-29: the matrix case runs the same six culled cells at both
+  // depths (270s), the nightly-only one-seed case adds nothing at PR depth, and the
+  // live-mob and Bruin cases keep 30s, 60s and 60s.
+  ['tests/druid_balance_probe.test.ts', 420_000],
   ['tests/emerald_deck_escape.test.ts', 540_000],
   ['tests/guild_bank_pg_integration.test.ts', 840_000],
   // Lane-owned balance harness (diet arms: two 200s cases), invisible to the
