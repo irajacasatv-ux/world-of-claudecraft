@@ -33,6 +33,13 @@ import { Rng } from '../src/sim/rng';
 import { Sim } from '../src/sim/sim';
 import { payTreasureVault } from '../src/sim/treasure_vault';
 import type { ItemDef, PlayerClass, SimEvent } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
+
+// The payout and the discovery ledger read the player and the loot tables,
+// never the world, so every Sim builds the empty world on one seed: a fresh
+// seed builds its collider grids (about half a second) for nothing.
+const hoardSim = (playerClass: PlayerClass): Sim =>
+  new Sim({ seed: 7, playerClass, autoEquip: false, world: EMPTY_TEST_WORLD });
 
 const TIERS: readonly HoardLootTier[] = ['rare', 'epic', 'legendary'];
 const RARITIES = ['common', 'rare', 'epic', 'legendary'] as const;
@@ -305,7 +312,7 @@ describe('the payout', () => {
       hoardLootVariantId(id, 'legendary'),
     );
     // ONE sim, many payouts: a Sim is expensive to build and the odds are the point.
-    const sim = new Sim({ seed: 7, playerClass: 'mage', autoEquip: false });
+    const sim = hoardSim('mage');
     const seen = new Set<string>();
     for (let run = 0; run < 60; run++) {
       sim.drainEvents();
@@ -330,7 +337,7 @@ describe('the payout', () => {
   it('a common hoard pays its owner a tarnished piece about one time in ten', () => {
     let paid = 0;
     const runs = 400;
-    const sim = new Sim({ seed: 2024, playerClass: 'rogue', autoEquip: false });
+    const sim = hoardSim('rogue');
     for (let run = 0; run < runs; run++) {
       sim.drainEvents();
       const vault = { rarity: 'common', ownerPid: sim.playerId, headCount: 1, level: 20 } as const;
@@ -358,7 +365,7 @@ describe('the Reliquary slot', () => {
       expect(RELIQUARY_ITEM_TO_PAGES.has(hoardLootVariantId(base, 'rare'))).toBe(false);
       expect(RELIQUARY_ITEM_TO_PAGES.has(hoardLootVariantId(base, 'legendary'))).toBe(false);
     }
-    const sim = new Sim({ seed: 5, playerClass: 'warrior', autoEquip: false });
+    const sim = hoardSim('warrior');
     const found = sim.players.get(sim.playerId)?.deedStats.itemsDiscovered;
     if (!found) throw new Error('missing discovery ledger');
     sim.addItem('legendary_permafrost_legguards', 1);
@@ -368,7 +375,7 @@ describe('the Reliquary slot', () => {
   });
 
   it('a Tarnished piece is a rare find: it never claims the epic its piece is', () => {
-    const sim = new Sim({ seed: 6, playerClass: 'warrior', autoEquip: false });
+    const sim = hoardSim('warrior');
     const stats = sim.players.get(sim.playerId)?.deedStats;
     if (!stats) throw new Error('missing deed stats');
     expect(stats.visited.has('quality:epic')).toBe(false);
