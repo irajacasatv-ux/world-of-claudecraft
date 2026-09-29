@@ -74,6 +74,8 @@ function addFieldKitPlayer(sim: Sim, name: string): number {
   return pid;
 }
 
+// Every Sim shares seed 21: a fresh seed builds its collider grids (about
+// half a second) and no case here rides a roll or compares two seeds.
 function setup() {
   const sim = new Sim({
     seed: 21,
@@ -91,7 +93,7 @@ function setup() {
 describe('the real death hook: recordCorpseHarvestDeath is actually wired into handleDeath', () => {
   it('a live kill snapshots the killer and holds a bystander out for the window', () => {
     const sim = new Sim({
-      seed: 31,
+      seed: 21,
       playerClass: 'warrior',
       noPlayer: true,
       world: CORPSE_TEST_WORLD,
@@ -144,7 +146,7 @@ describe('the real death hook: recordCorpseHarvestDeath is actually wired into h
     // heroicRewardRecipients is [] and the corpse must still be openly
     // harvestable, never stuck unrecorded.
     const sim = new Sim({
-      seed: 32,
+      seed: 21,
       playerClass: 'warrior',
       noPlayer: true,
       world: CORPSE_TEST_WORLD,
@@ -225,7 +227,7 @@ describe('current party membership is not the rule: only the death snapshot is',
 describe('same display name, different characters: identity is by entity, not by name', () => {
   it('a same-named bystander gets no priority a namesake killer earned', () => {
     const sim = new Sim({
-      seed: 22,
+      seed: 21,
       playerClass: 'warrior',
       noPlayer: true,
       world: CORPSE_TEST_WORLD,
