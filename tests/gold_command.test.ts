@@ -1,9 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { Sim, formatMoney } from '../src/sim/sim';
-import { SimEvent } from '../src/sim/types';
+import { formatMoney, Sim } from '../src/sim/sim';
+import type { SimEvent } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
+// The purse readout reads only the asker's own copper, so every Sim runs on the
+// empty world.
 function makeSim() {
-  return new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+  return new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true, world: EMPTY_TEST_WORLD });
 }
 
 function errorTextFor(events: SimEvent[], pid: number): string | undefined {
