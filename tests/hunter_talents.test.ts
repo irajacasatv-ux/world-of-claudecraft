@@ -17,10 +17,17 @@ type TestSim = Sim & {
 // One seed on the empty test world for every case: each case fights a dummy
 // (and a pet) it spawns itself, so the ambient overworld only added tick time,
 // and each extra seed paid its own collider build (about half a second) the
-// first time a shot checked line of sight. Several cases need their shots to
-// land (a missed spender procs nothing), which is an rng draw: this seed lands
-// them, as the per-case seeds it replaced did.
+// first time a shot checked line of sight. The cases that need their shots to
+// land (a missed generator or spender procs nothing) pin every roll with
+// landEveryRoll below, so none of them rides this seed's draws.
 const HUNTER_SEED = 2920;
+
+// Every roll reads 0.9: the hit and resist rolls land and every crit or proc
+// chance under 90 percent fails, so a case that needs its shots to land holds
+// on any seed (the pin the paladin suites use).
+function landEveryRoll(sim: Sim): void {
+  sim.rng.next = () => 0.9;
+}
 
 function hunter(spec: string, rows: Partial<Record<5 | 8 | 11 | 14 | 17 | 20, string>>): TestSim {
   const sim = new Sim({
@@ -158,6 +165,7 @@ describe('Hunter v0.29 choice-row mechanics', () => {
 
   it("Predator's Pace follows a successful Focus generator and respects its cooldown", () => {
     const sim = hunter('marksmanship', { 5: 'hun_r5_predators_pace' });
+    landEveryRoll(sim);
     const target = addMob(sim, 20);
     sim.targetEntity(target.id);
 
@@ -226,6 +234,7 @@ describe('Hunter v0.29 choice-row mechanics', () => {
       }),
     ).toBe(true);
     const target = addMob(sim, 20);
+    landEveryRoll(sim);
     sim.targetEntity(target.id);
     sim.castAbility('concussive_shot');
     advance(sim, 2.5);
@@ -244,6 +253,7 @@ describe('Hunter v0.29 choice-row mechanics', () => {
       ['survival', 'bloodtrail_assault', 'mongoose_bite'],
     ] as const) {
       const sim = hunter(spec, { 17: 'hun_r17_apex_instinct' });
+      landEveryRoll(sim);
       sim.player.resource = 0;
       sim.castAbility(cooldown);
 
@@ -358,8 +368,9 @@ describe('Hunter v0.29 choice-row mechanics', () => {
   });
 
   it('Fang Chorus echoes every spender and turns the third echo into a clap', () => {
-    // A missed spender draws no echo and no clap (see HUNTER_SEED).
+    // A missed spender draws no echo and no clap, so all three must land.
     const sim = hunter('marksmanship', { 20: 'hun_r20_fang_chorus' });
+    landEveryRoll(sim);
     anchorProbeInOpenField(sim);
     addPet(sim);
     const primary = addMob(sim, 20);
@@ -395,6 +406,7 @@ describe('Hunter v0.29 choice-row mechanics', () => {
     // read a local copy of the multiplier that never carried the hunter_frenzy term.
     function fangChorusDamage(frenzied: boolean): number {
       const sim = hunter('beast_mastery', { 20: 'hun_r20_fang_chorus' });
+      landEveryRoll(sim);
       anchorProbeInOpenField(sim);
       addPet(sim);
       const primary = addMob(sim, 20);
