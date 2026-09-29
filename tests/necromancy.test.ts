@@ -10,6 +10,7 @@ import { type ArenaMatch, Sim } from '../src/sim/sim';
 import type { SimContext } from '../src/sim/sim_context';
 import type { Entity, SimEvent } from '../src/sim/types';
 import { abilityDisplayDescription } from '../src/ui/ability_description';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const NECROMANCY_IDS = new Set([
   'graveguard',
@@ -18,8 +19,17 @@ const NECROMANCY_IDS = new Set([
   'necromancy_gravewing',
 ]);
 
-function makeNecromancer(seed = 42): Sim {
-  const sim = new Sim({ seed, playerClass: 'warlock', autoEquip: true });
+// EMPTY_TEST_WORLD: every case fights targets it spawns itself, so the ambient
+// overworld (camps, NPCs, ground objects) was pure per-tick overhead, about
+// six sevenths of this file's test time. `fullWorld` keeps the one case whose
+// seed-43 harvest procs ride the full world's shared rng stream.
+function makeNecromancer(seed = 42, fullWorld = false): Sim {
+  const sim = new Sim({
+    seed,
+    playerClass: 'warlock',
+    autoEquip: true,
+    ...(fullWorld ? {} : { world: EMPTY_TEST_WORLD }),
+  });
   sim.setPlayerLevel(20);
   sim.setSpec('demonology');
   sim.player.resource = sim.player.maxResource;
@@ -209,7 +219,12 @@ describe('Necromancy Warlock', () => {
     expect(fragmentCount(inCombat.player)).toBe(0);
 
     for (const spec of [null, 'affliction', 'destruction'] as const) {
-      const other = new Sim({ seed: 42, playerClass: 'warlock', autoEquip: true });
+      const other = new Sim({
+        seed: 42,
+        playerClass: 'warlock',
+        autoEquip: true,
+        world: EMPTY_TEST_WORLD,
+      });
       other.setPlayerLevel(20);
       if (spec) other.setSpec(spec);
       for (let tick = 0; tick < 40 * 2; tick++) other.tick();
@@ -237,7 +252,12 @@ describe('Necromancy Warlock', () => {
   });
 
   it('rebuilds the owner kit when changing from Destruction to Necromancy', () => {
-    const sim = new Sim({ seed: 42, playerClass: 'warlock', autoEquip: true });
+    const sim = new Sim({
+      seed: 42,
+      playerClass: 'warlock',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.setPlayerLevel(20);
 
     expect(sim.setSpec('destruction')).toBe(true);
@@ -598,7 +618,12 @@ describe('Necromancy Warlock', () => {
   });
 
   it('keeps each committed Warlock kit free of legacy cross-spec fillers', () => {
-    const sim = new Sim({ seed: 42, playerClass: 'warlock', autoEquip: true });
+    const sim = new Sim({
+      seed: 42,
+      playerClass: 'warlock',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.setPlayerLevel(20);
 
     expect(sim.setSpec('destruction')).toBe(true);
@@ -625,7 +650,8 @@ describe('Necromancy Warlock', () => {
   });
 
   it('spends fragments to make every undead reap the primary target in unison', () => {
-    const sim = makeNecromancer(43);
+    // Full world: the harvest count below is tied to the full world's rng stream.
+    const sim = makeNecromancer(43, true);
     const primary = addTarget(sim);
     const secondary = addTarget(sim);
     secondary.pos.x = primary.pos.x + 2;
@@ -2084,6 +2110,7 @@ describe('Necromancy Warlock', () => {
       playerClass: 'warlock',
       noPlayer: true,
       autoEquip: true,
+      world: EMPTY_TEST_WORLD,
     });
     const pid = restored.addPlayer('warlock', 'Restored', { state });
 
@@ -2105,6 +2132,7 @@ describe('Necromancy Warlock', () => {
       playerClass: 'warlock',
       noPlayer: true,
       autoEquip: true,
+      world: EMPTY_TEST_WORLD,
     });
     const pid = restored.addPlayer('warlock', 'Restored', { state });
 
