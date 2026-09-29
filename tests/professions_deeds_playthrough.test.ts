@@ -261,15 +261,9 @@ describe('scripted playthrough (one sim, live sites only)', () => {
     expect(meta.deedsEarned.has('col_glimmerfin')).toBe(false);
   });
 
-  // 90s budget: the re-hunted koi session sits at index 9 in the shared
-  // stream, and every session ticks the REAL world to its bite.
-  // Raised timeout (the climb_slope idiom): this beat drives thousands of
-  // REAL world ticks (19 bite-and-reel sessions plus bounded combat waits),
-  // which overruns the 5s default under CI/core contention; every loop is
-  // guard-bounded, so a genuine hang still terminates into a failed pin.
-  it('beat 11: the koi lands through the REAL bite-and-reel loop and the deed fires on the catch', {
-    timeout: 90_000,
-  }, () => {
+  // Every loop below is guard-bounded, so a genuine hang still terminates
+  // into a failed pin.
+  it('beat 11: the koi lands through the REAL bite-and-reel loop and the deed fires on the catch', () => {
     // The rare catch is a skill-scaled row now (content/items.ts): its weight
     // is 1 in a hundred at band 0 and 6 at band 2. This angler is already at
     // fishing's cap (beat 9) but has been fishing on the starter pole, which
@@ -288,8 +282,11 @@ describe('scripted playthrough (one sim, live sites only)', () => {
       const before = sim.countItem(KOI, pid);
       startFishing(sim.ctx, player, meta);
       if (player.castingAbility !== FISHING_CAST_ID) throw new Error(`session ${s} did not cast`);
-      // Tick the REAL world to the drawn bite (the lifecycle fires it and
-      // arms the server-authoritative reel window).
+      // The drawn bite wait (3 s and up, about a hundred world ticks per
+      // session) is not what this beat is about: pull the deadline to the next
+      // tick, so the REAL lifecycle still fires the bite and arms the
+      // server-authoritative reel window, and the reel still draws the table.
+      player.fishBiteAtTick = sim.tickCount + 1;
       guard = 0;
       let bit = false;
       while (player.fishReelDeadlineTick === 0 && guard++ < 400) {
@@ -332,8 +329,11 @@ describe('scripted playthrough (one sim, live sites only)', () => {
     // feature/world-quests: the playtest move of one Evergarden hedge_knight camp
     // out of the wisp maze (c43178a68c) forks the shared stream, and moving that
     // camp back restores every release literal in this file (verified); the koi
-    // now lands on session index 17.
-    expect(koiSession).toBe(17);
+    // now lands on session index 17. Re-hunted once more when each session's
+    // bite deadline was pulled to the next tick (above): the sessions no
+    // longer tick the world through their drawn waits, which forks the shared
+    // stream; the koi now lands on session index 15.
+    expect(koiSession).toBe(15);
     expect(sawBiteOnKoiSession).toBe(true); // the celebration follows the bite moment
     expect(meta.deedsEarned.has('col_glimmerfin')).toBe(false); // grant sweeps at the tick tail
     const evs = sim.tick();
@@ -386,20 +386,22 @@ describe('scripted playthrough (one sim, live sites only)', () => {
     // swap (the keep castle out, the sites traded, Wyrmwatch stripped): the
     // reshaped world moves every shared-stream index downstream. Re-recorded in
     // order once more for the release/v0.43.0 merge into feature/world-quests,
-    // for the moved Evergarden hedge_knight camp (c43178a68c) named above.
+    // for the moved Evergarden hedge_knight camp (c43178a68c) named above,
+    // and again, in order, when the koi beat's sessions stopped ticking the
+    // world through each drawn bite wait (the same shared-stream fork).
     const hunts: { nodeId: string; deedId: string; itemId: string; hitAt: number }[] = [
-      { nodeId: 'ore_eastbrook_1', deedId: 'col_pristine_vein', itemId: 'copper_ore', hitAt: 195 },
+      { nodeId: 'ore_eastbrook_1', deedId: 'col_pristine_vein', itemId: 'copper_ore', hitAt: 153 },
       {
         nodeId: 'wood_eastbrook_1',
         deedId: 'col_ancient_heartwood',
         itemId: 'ironbark_log',
-        hitAt: 61,
+        hitAt: 28,
       },
       {
         nodeId: 'herb_eastbrook_1',
         deedId: 'col_moonlit_bloom',
         itemId: 'silverleaf_herb',
-        hitAt: 132,
+        hitAt: 133,
       },
     ];
     for (const hunt of hunts) {
@@ -469,8 +471,9 @@ describe('scripted playthrough (one sim, live sites only)', () => {
     // against the merged tree: combining the real HARVEST_CAST_SECONDS cast
     // (Intentional Gathering PR3) with the release's Eastbrook/Drakelands
     // world-layout re-hunt yields 2; the release/v0.43.0 merge into
-    // feature/world-quests yields 9 (the moved hedge_knight camp, c43178a68c).
-    expect(hitAt).toBe(9);
+    // feature/world-quests yields 9 (the moved hedge_knight camp, c43178a68c);
+    // the koi beat's pulled bite deadlines (fewer world ticks upstream) yield 10.
+    expect(hitAt).toBe(10);
     const specimen = meta.inventory.find((s) => s.itemId === 'pristine_hide');
     // The signature rides materialSources, not instance.signer (the two are
     // mutually exclusive; corpse_harvest_grant.test.ts / corpse_harvest_sim.test.ts
