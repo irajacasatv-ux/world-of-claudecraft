@@ -56,18 +56,23 @@ export async function computeResolvedHash() {
   const dataUrl = `data:text/javascript;base64,${Buffer.from(build.outputFiles[0].text).toString('base64')}`;
   const i18n = await import(dataUrl);
 
+  // A locale the barrel no longer exports would read as undefined, and JSON.stringify drops an
+  // undefined key silently, so the hash would shrink with nothing but the sha line to show it.
   const translations = {};
-  for (const lang of i18n.supportedLanguages) translations[lang] = i18n[lang];
+  for (const lang of i18n.supportedLanguages) {
+    if (i18n[lang] === undefined) throw new Error(`i18n:hash: the barrel exports no ${lang}`);
+    translations[lang] = i18n[lang];
+  }
 
   const serialized = JSON.stringify(sortDeep(translations));
   return {
-    locales: i18n.supportedLanguages.length,
+    locales: Object.keys(translations).length,
     bytes: Buffer.byteLength(serialized, 'utf8'),
     sha256: createHash('sha256').update(serialized, 'utf8').digest('hex'),
   };
 }
 
-// Run as a CLI only when invoked directly (not when imported by the test).
+// Run as a CLI only when invoked directly (not when another module imports computeResolvedHash).
 const invokedDirectly =
   process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
 

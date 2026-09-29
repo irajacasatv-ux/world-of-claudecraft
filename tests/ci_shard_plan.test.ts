@@ -343,7 +343,7 @@ describe('buildShardPlan: fail-closed fallbacks', () => {
 
   it('keeps a PRESENT generated i18n artifact selective and IN the related leg', () => {
     // The artifact is a graph node: its consumers (including suites that pin
-    // resolved-table content through the src/ui/i18n.ts re-export seam) are
+    // resolved-table content through src/ui/i18n.ts and its loaders) are
     // reachable only from the artifact side, so dropping it from the argv is
     // the silent-unselect failure mode this pin exists to catch.
     const plan = buildShardPlan({

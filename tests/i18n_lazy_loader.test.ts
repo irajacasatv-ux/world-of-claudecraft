@@ -8,8 +8,7 @@
 // (the caller - bootstrap / picker - catches it) without crashing, leaving English in place
 // and a retry possible.
 
-import { readFileSync } from 'node:fs';
-import ts from 'typescript';
+import { readdirSync } from 'node:fs';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   en,
@@ -19,7 +18,9 @@ import {
   setLanguage,
   t,
 } from '../src/ui/i18n';
-import { de_DE, es, fr_FR } from '../src/ui/i18n.resolved.generated';
+import { de_DE } from '../src/ui/i18n.resolved.generated/de_DE';
+import { es } from '../src/ui/i18n.resolved.generated/es';
+import { fr_FR } from '../src/ui/i18n.resolved.generated/fr_FR';
 import { LOCALE_LOADERS } from '../src/ui/i18n.resolved.generated/loaders';
 
 describe('lazy-locale loader: t() stays synchronous around ensureLocaleLoaded', () => {
@@ -185,50 +186,49 @@ describe('prefetchLocale (stored-locale modulepreload runtime prefetch)', () => 
   });
 });
 
-// The module-graph half of the lazy flip: src/ui/i18n.ts statically reaches only the eager
-// generated modules. A re-export of the barrel or a non-en slice is tree-shaken out of the
-// app chunk, so no bundle check would notice it, but vitest evaluates it in every suite that
-// imports src/ui/i18n (all 21 slices plus the barrel, about 0.6 s of import per file). The
-// specifiers come from TypeScript's parser, so a comment or a string never counts.
-function staticSpecifiers(source: string): string[] {
-  const file = ts.createSourceFile('i18n.ts', source, ts.ScriptTarget.Latest, false);
-  const out: string[] = [];
-  for (const statement of file.statements) {
-    if (
-      (ts.isImportDeclaration(statement) || ts.isExportDeclaration(statement)) &&
-      statement.moduleSpecifier !== undefined &&
-      ts.isStringLiteral(statement.moduleSpecifier)
-    )
-      out.push(statement.moduleSpecifier.text);
+// The module-graph half of the lazy flip: loading src/ui/i18n.ts evaluates only the eager
+// generated modules. A re-export of the barrel or a non-en slice is tree-shaken out of the app
+// chunk, so no bundle check would notice it, but vitest evaluates it in every suite that imports
+// src/ui/i18n (all 21 slices plus the barrel, about 0.6 s of import per file). Measured at
+// runtime, not read from source: every other generated module is mocked with a pass-through
+// factory that records its evaluation, so a direct re-export, a top-level dynamic import and a
+// reach through any intermediate module all count, however the path is spelled.
+const EAGER_GENERATED = new Set(['en.ts', 'en_XA.ts', 'loaders.ts', 'pending.ts']);
+const LAZY_GENERATED = readdirSync(new URL('../src/ui/i18n.resolved.generated/', import.meta.url))
+  .filter((file) => file.endsWith('.ts') && !EAGER_GENERATED.has(file))
+  .map((file) => `../src/ui/i18n.resolved.generated/${file.slice(0, -'.ts'.length)}`)
+  .sort();
+
+async function lazyGeneratedEvaluatedBy(load: () => Promise<unknown>): Promise<string[]> {
+  vi.resetModules();
+  const evaluated = new Set<string>();
+  for (const specifier of LAZY_GENERATED)
+    vi.doMock(specifier, async (importOriginal) => {
+      evaluated.add(specifier);
+      return importOriginal();
+    });
+  try {
+    await load();
+    // A top-level import() settles after the importing module; give it a macrotask.
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  } finally {
+    for (const specifier of LAZY_GENERATED) vi.doUnmock(specifier);
+    vi.resetModules();
   }
-  return out;
+  return [...evaluated].sort();
 }
 
-const EAGER_GENERATED = [
-  './i18n.resolved.generated/en',
-  './i18n.resolved.generated/en_XA',
-  './i18n.resolved.generated/loaders',
-  './i18n.resolved.generated/pending',
-];
-const generatedReach = (source: string): string[] =>
-  staticSpecifiers(source)
-    .filter((specifier) => specifier.startsWith('./i18n.resolved.generated'))
-    .sort();
-const I18N_SOURCE = readFileSync(new URL('../src/ui/i18n.ts', import.meta.url), 'utf8');
-
-describe('src/ui/i18n.ts reaches only the eager generated modules', () => {
-  it('imports en, en_XA, loaders and pending, never the barrel or a non-en slice', () => {
-    expect(generatedReach(I18N_SOURCE)).toEqual(EAGER_GENERATED);
+describe('src/ui/i18n.ts evaluates only the eager generated modules', () => {
+  it('evaluates no locale slice and not the barrel, directly, dynamically or transitively', async () => {
+    // The barrel plus every non-en slice (21 today); a floor, so an emptied list cannot pass.
+    expect(LAZY_GENERATED).toContain('../src/ui/i18n.resolved.generated/index');
+    expect(LAZY_GENERATED.length).toBeGreaterThanOrEqual(22);
+    expect(await lazyGeneratedEvaluatedBy(() => import('../src/ui/i18n'))).toEqual([]);
   });
 
-  it('sees a barrel re-export and a slice import, and not a commented-out one', () => {
-    const edited =
-      `${I18N_SOURCE}\nexport { es } from './i18n.resolved.generated';\n` +
-      `import { ru_RU } from './i18n.resolved.generated/ru_RU';\n` +
-      `// export { de_DE } from './i18n.resolved.generated';\n` +
-      `const decoy = "import { fr_FR } from './i18n.resolved.generated/fr_FR';";\n`;
-    expect(generatedReach(edited)).toEqual(
-      [...EAGER_GENERATED, './i18n.resolved.generated', './i18n.resolved.generated/ru_RU'].sort(),
-    );
+  it('records the barrel and every slice when the barrel itself is loaded (control)', async () => {
+    expect(
+      await lazyGeneratedEvaluatedBy(() => import('../src/ui/i18n.resolved.generated')),
+    ).toEqual(LAZY_GENERATED);
   });
 });

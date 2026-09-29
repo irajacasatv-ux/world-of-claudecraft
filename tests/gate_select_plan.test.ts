@@ -968,8 +968,8 @@ describe('always-run set over the real suite', () => {
     // Generated-i18n belt pattern: these witnesses are floored SOLELY by the
     // generated-i18n visibility entry (verified against the real reason sets:
     // every other pattern misses them), so deleting that entry turns exactly
-    // these assertions red. The artifact consumers reachable only through the
-    // src/ui/i18n.ts re-export seam are covered by the related-leg
+    // these assertions red. The artifact consumers reachable only through
+    // src/ui/i18n.ts and its loaders are covered by the related-leg
     // pass-through instead, not by this floor.
     expect(alwaysRun).toContain('tests/i18n_lazy_loader.test.ts');
     expect(alwaysRun).toContain('tests/i18n_dialect_resolution.test.ts');

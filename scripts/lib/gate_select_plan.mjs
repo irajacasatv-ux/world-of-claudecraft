@@ -99,9 +99,11 @@ export function isFullSuiteTrigger(p) {
  *
  * COVERAGE is owned by the import graph, WITH the artifacts as the entry
  * nodes: the artifacts are the most-connected runtime modules in the i18n
- * graph (src/ui/i18n.ts statically imports and re-exports the resolved
- * barrel), while their DRIVING sources (catalog, overlays) are build inputs
- * the runtime reaches only through type-erased edges, so `related` over a
+ * graph (src/ui/i18n.ts statically imports the eager slices and the loaders,
+ * whose per-locale dynamic imports reach every other slice; the suites that
+ * read a locale by name import its slice or the barrel directly), while
+ * their DRIVING sources (catalog, overlays) are build inputs the runtime
+ * reaches only through type-erased edges, so `related` over a
  * driving source selects almost nothing. The planner therefore feeds the
  * changed artifact paths THEMSELVES to `vitest related`, which walks the real
  * import graph to every consumer (measured: a single resolved slice reaches
@@ -389,8 +391,9 @@ export function buildSelectPlan({ changedPaths, alwaysRunFiles, exists, floorSan
   // The artifacts join the related leg as GRAPH NODES (see the header above):
   // their consumers are reachable only from the artifact side of the graph,
   // so dropping them here is what would silently unselect every suite that
-  // pins resolved-table content through the src/ui/i18n.ts re-export seam,
-  // or manifest content through its importers.
+  // pins resolved-table content through src/ui/i18n.ts and its loaders, or
+  // through a slice or the barrel it imports, or manifest content through
+  // its importers.
   const relatedWithArtifacts = [...relatedSources, ...generatedI18n, ...generatedManifests];
 
   if (relatedWithArtifacts.length === 0 && testFiles.length === 0) {

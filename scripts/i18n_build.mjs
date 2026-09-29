@@ -6,7 +6,7 @@
 // thunks + SUPPORTED_LANGUAGES, scaffolding for the later lazy flip), and pending.ts.
 // The single-file resolved table was split into this directory in the per-locale
 // emit split; the resolved-table hash printed by the scripts/i18n_resolved_hash.mjs
-// diagnostic is invariant under the split (it hashes src/ui/i18n.ts EXPORTS, not
+// diagnostic is invariant under the split (it hashes the barrel's EXPORTS, not
 // file bytes).
 //
 // This is the load-bearing tsc safety net for the i18n scaling refactor. `en`
@@ -281,7 +281,7 @@ function emitLoadersModule(locales) {
 // The back-compat barrel. Re-exports every dense locale slice + en_XA + pending and
 // assembles the runtime `translations` map. The key order is the LOCALES list, so
 // Object.keys(translations) - and therefore supportedLanguages - is unchanged. This
-// preserves the EXACT import surface src/ui/i18n.ts and the tests/hash harness expect:
+// preserves the EXACT import surface the tests and the hash harness expect:
 // directory-index resolution of './i18n.resolved.generated' -> index.ts under the
 // project's moduleResolution "Bundler".
 function emitBarrel(locales) {
