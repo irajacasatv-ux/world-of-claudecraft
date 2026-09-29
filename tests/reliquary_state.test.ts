@@ -76,10 +76,23 @@ import {
 import { type CharacterState, Sim } from '../src/sim/sim';
 import { runApplyEnchant, runCraft } from './helpers/enchant_family_cast';
 import { stripComments } from './helpers/strip_comments';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+// Most cases run on the empty test world (no camps, NPCs, or ground objects),
+// which a seed the file has already built serves in about a millisecond. The
+// few that need a vendor, a banker, or the construction-time draw sequence of
+// the hunted masterwork seed build the full world instead.
 function makeSim(seed = 42): Sim {
+  return new Sim({ seed, playerClass: 'warrior', autoEquip: false, world: EMPTY_TEST_WORLD });
+}
+
+/** The NPC cases share the masterwork case's hunted seed only so the file
+ *  builds one full world; any seed serves them. */
+const SHARED_FULL_WORLD_SEED = 21;
+
+function makeFullWorldSim(seed = SHARED_FULL_WORLD_SEED): Sim {
   return new Sim({ seed, playerClass: 'warrior', autoEquip: false });
 }
 
@@ -784,7 +797,7 @@ describe('Reliquary profession marks (Phase 7)', () => {
     expect(recipeById('recipe_eastbrook_ritual_vestments')!.professionId).toBe('tailoring');
     expect(RELIQUARY_MARK_IDS.has('masterwork:tailoring')).toBe(true);
 
-    const sim = makeSim(SEED);
+    const sim = makeFullWorldSim(SEED);
     const { meta } = primary(sim);
     const pid = sim.playerId;
     sim.addItemInstance('linen_scrap', { signer: meta.name }, pid);
@@ -816,7 +829,7 @@ describe('Reliquary profession marks (Phase 7)', () => {
     // so an unsigned control holding the primary's count is refused outright
     // (insufficient_materials). Reagent parity between the arms is impossible
     // by design; the load-bearing difference is the signature.
-    const control = makeSim(SEED);
+    const control = makeFullWorldSim(SEED);
     const mControl = primary(control).meta;
     const cid = control.playerId;
     for (let i = 0; i < 3; i++) control.addItem('linen_scrap', 1, cid);
@@ -1729,7 +1742,7 @@ describe('Reliquary obtain counts', () => {
     // a future refactor breaks silently (funnel a bank withdraw through
     // addItem and a player-visible number inflates on every bank visit), and
     // nothing else in the tree pinned it.
-    const sim = makeSim();
+    const sim = makeFullWorldSim();
     const { meta, e } = primary(sim);
     const banker = [...sim.entities.values()].find(
       (x) => x.kind === 'npc' && x.templateId === 'bursar_fernando',
@@ -1874,7 +1887,7 @@ describe('Reliquary obtain counts', () => {
   });
 
   it('a vendor buyback NEVER counts, but still discovers', () => {
-    const sim = makeSim();
+    const sim = makeFullWorldSim();
     const { meta, e } = primary(sim);
     // Stand at Trader Wilkes so the sell / buyback proximity gates pass (the
     // tests/items.test.ts idiom: dist2d over pos.x / pos.z is the whole gate).
@@ -2347,7 +2360,7 @@ describe('Reliquary movement flag at the remaining relocation sites', () => {
     // it back then fires its first-ever discovery through the vendor path. The
     // fixture models that arrival directly (bags mutated with no ledger write),
     // because the state, not the route, is what the vendor path sees.
-    const sim = makeSim();
+    const sim = makeFullWorldSim();
     const { meta, e } = primary(sim);
     const wilkes = [...sim.entities.values()].find((x) => x.templateId === 'trader_wilkes');
     e.pos.x = wilkes!.pos.x + 2;
@@ -2792,7 +2805,7 @@ describe('Reliquary catalog index memo', () => {
 describe('Reliquary determinism', () => {
   it('identical seeds and discover order produce identical firstFind, recent, and counts', () => {
     function run(): { first: string; recent: string[]; counts: string } {
-      const sim = makeSim(99);
+      const sim = makeSim();
       const { meta } = primary(sim);
       meta.deedStats.dungeonClears.hollow_crypt = 4;
       markItemDiscovered(sim.ctx, meta, NON_RELIC);
@@ -2897,7 +2910,7 @@ describe('Reliquary join seed is silent, flagged, and provenance-honest', () => 
     // And the full round trip: reload the save into a fresh sim and prove the
     // sparse entries stay sparse (restore must not synthesize a clears key).
     // The ledger already holds the ids, so the reload seeds nothing new.
-    const reloaded = new Sim({ seed: 43, playerClass: 'warrior', autoEquip: false });
+    const reloaded = makeSim();
     const rid = reloaded.addPlayer('warrior', 'reloaded', { state: saved });
     const rentries = Object.entries(reloaded.meta(rid)!.reliquary.firstFind);
     expect(rentries.length).toBe(SEEDED.length);
