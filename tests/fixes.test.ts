@@ -21,7 +21,13 @@ import { IGNIVAR_LIFT_ROOM_ID, isIgnivarRaidRoom } from '../src/sim/ignivar_raid
 import { enterDungeon } from '../src/sim/instances/dungeons';
 import { PLAYER_BODY_RADIUS, PLAYER_MAX_CLIMB_SLOPE } from '../src/sim/pathfind';
 import { Sim } from '../src/sim/sim';
-import { dist2d, type Entity, type LootEntry, type SimEvent } from '../src/sim/types';
+import {
+  dist2d,
+  type Entity,
+  type LootEntry,
+  PLAYER_INTEREST_DROP_RADIUS,
+  type SimEvent,
+} from '../src/sim/types';
 import {
   DECORATION_MAX_SLOPE,
   generateDecorationsInBounds,
@@ -51,6 +57,15 @@ const FRESH_CORPSE_TIMER = 60;
 
 function asHarness(sim: Sim): SimPrivateHarness {
   return sim as unknown as SimPrivateHarness;
+}
+
+// Production's idle culling (the server and the offline client both set it) for
+// the cases that tick the full world for hundreds of frames: an idle mob far from
+// every player skips its per-tick AI, and none of these cases reads one.
+const CULLED = { idleMobTickRadius: PLAYER_INTEREST_DROP_RADIUS } as const;
+
+function makeCulledSim(): Sim {
+  return new Sim({ seed: SEED, playerClass: 'warrior', ...CULLED });
 }
 
 describe('quest lifecycle', () => {
@@ -123,7 +138,7 @@ describe('quest lifecycle', () => {
 
 describe('collision & terrain', () => {
   it('players cannot walk through town buildings', () => {
-    const sim = makeSim();
+    const sim = makeCulledSim();
     const p = sim.player;
     const bank = EASTBROOK_BUILDINGS_BY_ID.eastbrook_bank;
     const approach = localToWorld(
@@ -150,7 +165,7 @@ describe('collision & terrain', () => {
     // warned, and that no invisible wall pinned the walker at the old vale
     // coast cutoff (a final-tick "still swimming" check used to pass only
     // because the x = 178 window cliff trapped the swimmer against it).
-    const sim = makeSim();
+    const sim = makeCulledSim();
     const p = sim.player;
     teleportTo(sim, 150, 0);
     p.facing = Math.PI / 2; // +x, into the strait
@@ -482,7 +497,7 @@ describe('swimming', () => {
   });
 
   it('ordinary mobs chase into deep water and keep dealing melee damage', () => {
-    const sim = makeSim();
+    const sim = makeCulledSim();
     const wolf = expectDefined(
       [...sim.entities.values()].find((e) => e.templateId === 'forest_wolf'),
     );
@@ -703,8 +718,8 @@ describe('dungeon instance placement and targetability', () => {
     for (const dungeon of DUNGEON_LIST) {
       const ignivarRaidRoom = isIgnivarRaidRoom(dungeon.id);
       const sim = ignivarRaidRoom
-        ? new Sim({ seed: SEED, playerClass: 'warrior', devCommands: true })
-        : makeSim();
+        ? new Sim({ seed: SEED, playerClass: 'warrior', devCommands: true, ...CULLED })
+        : makeCulledSim();
       if (dungeon.id === 'nythraxis_boss_arena') {
         sim.players.get(sim.playerId)?.questsDone.add('q_nythraxis_bound_guardian');
         formRaid(sim);
