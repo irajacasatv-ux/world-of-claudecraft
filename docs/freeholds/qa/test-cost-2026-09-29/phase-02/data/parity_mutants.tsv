@@ -1,0 +1,24 @@
+batch	mutant	expect	exit	tests_line	verdict	failing_files
+parity	control-comment	pass	0	Tests  161 passed (161)	OK	
+parity	msim-armor-dr	fail	1	Tests  11 failed | 150 passed (161)	OK	tests/parity/coverage_d.test.ts tests/parity/parity_a.test.ts tests/parity/parity_d.test.ts tests/parity/parity_e.test.ts tests/parity/parity_f.test.ts tests/parity/parity_g.test.ts
+parity	mrecipe-arena-full	fail	1	Tests  2 failed | 9 passed (11)	OK	tests/parity/parity_b.test.ts
+parity	mrecipe-arena-coverage-only	fail	1	Tests  1 failed | 4 passed | 6 skipped (11)	OK	tests/parity/parity_b.test.ts
+parity	L1-counter-fullpair	fail	1	Tests  84 failed | 77 passed (161)	OK	tests/parity/coverage_a.test.ts tests/parity/coverage_b.test.ts tests/parity/coverage_c.test.ts tests/parity/coverage_d.test.ts tests/parity/parity_a.test.ts tests/parity/parity_b.test.ts tests/parity/parity_c.test.ts tests/parity/parity_d.test.ts tests/parity/parity_e.test.ts tests/parity/parity_f.test.ts tests/parity/parity_g.test.ts
+parity	L1-counter-goldenonly	fail	1	Tests  73 failed | 88 passed (161)	OK	tests/parity/coverage_a.test.ts tests/parity/coverage_b.test.ts tests/parity/coverage_c.test.ts tests/parity/coverage_d.test.ts tests/parity/parity_a.test.ts tests/parity/parity_b.test.ts tests/parity/parity_c.test.ts tests/parity/parity_d.test.ts tests/parity/parity_e.test.ts tests/parity/parity_g.test.ts
+parity	L2-fishtable-fullpair	fail	1	Tests  1 failed | 160 passed (161)	OK	tests/parity/coverage_c.test.ts
+parity	L2-fishtable-goldenonly	pass	0	Tests  161 passed (161)	OK	
+parity	L2-fishtable-subsetpair	pass	0	Tests  161 passed (161)	OK	
+parity	L0-shared-rift-token-fullpair	fail	0	Tests  161 passed (161)	UNEXPECTED	
+guard	G1-undeclared-read-throws	fail	1	Tests  1 failed | 16 passed (17)	OK	tests/parity/parity_g.test.ts
+guard	G2-bound-splits-a-multi-case	fail	1		DID-NOT-RUN	tests/parity/coverage_c.test.ts
+guard	L0-shared-rift-token-rift_sim	fail	1	Tests  1 failed | 21 passed (22)	OK	tests/rift_sim.test.ts
+guard2	G3-control-comment	pass	0	Tests  24 passed (24)	OK	
+guard2	G4-case-mutates-shared-events	fail	1	Tests  1 failed | 10 passed (11)	OK	tests/parity/parity_b.test.ts
+guard2	G5-async-case	fail	1	Tests  1 failed | 10 passed (11)	OK	tests/parity/parity_b.test.ts
+guard2	G6-records-outside-the-cache	fail	1	Tests  1 failed | 13 passed (14)	OK	tests/parity/parity_d.test.ts
+guard2	G7-modified-scenario-object	fail	1	Tests  1 failed | 13 passed (14)	OK	tests/parity/parity_d.test.ts
+harness	H0-control-comment	pass	0	Tests  21 passed (21)	OK	
+harness	H1-meta-sampler-keeps-excluded	fail	1	Tests  1 failed | 20 passed (21)	OK	tests/parity/harness.test.ts
+harness	H2-entity-sampler-live-reference	fail	1	Tests  2 failed | 19 passed (21)	OK	tests/parity/harness.test.ts
+harness	H3-draw-digest-never-folds	fail	1	Tests  1 failed | 20 passed (21)	OK	tests/parity/harness.test.ts
+harness	H4-observer-never-counts	fail	1	Tests  1 failed | 20 passed (21)	OK	tests/parity/harness.test.ts
