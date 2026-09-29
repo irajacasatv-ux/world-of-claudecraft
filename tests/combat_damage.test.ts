@@ -11,11 +11,16 @@ import { MOBS } from '../src/sim/data';
 import { createMob } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
 import type { Aura, Entity } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 type AnyEntity = Entity & Record<string, any>;
 
-function makeSim(seed = 4242): Sim {
-  return new Sim({ seed, playerClass: 'warrior', autoEquip: true });
+// Every case strikes, kills or credits entities it places itself, so each Sim
+// stands on the empty world, all on one seed.
+const SEED = 4242;
+
+function makeSim(): Sim {
+  return new Sim({ seed: SEED, playerClass: 'warrior', autoEquip: true, world: EMPTY_TEST_WORLD });
 }
 
 // Spawn a hostile mob and register it on the roster (entities + spatial grids).
@@ -252,7 +257,13 @@ describe('combat/damage handleDeath', () => {
   });
 
   it('does not put an enemy-owned pet into evade when its player target dies', () => {
-    const sim = new Sim({ seed: 909, playerClass: 'hunter', noPlayer: true, autoEquip: true });
+    const sim = new Sim({
+      seed: SEED,
+      playerClass: 'hunter',
+      noPlayer: true,
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const ownerId = sim.addPlayer('hunter', 'Hunter');
     const victimId = sim.addPlayer('warrior', 'Victim');
     sim.setPlayerLevel(10, ownerId);
@@ -322,7 +333,13 @@ describe('combat/damage death recap', () => {
   });
 
   it('carries the killing player (not run through the mob-name matcher) in a PvP kill', () => {
-    const sim = new Sim({ seed: 1717, playerClass: 'warrior', noPlayer: true, autoEquip: true });
+    const sim = new Sim({
+      seed: SEED,
+      playerClass: 'warrior',
+      noPlayer: true,
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const killerId = sim.addPlayer('warrior', "Kill'er");
     const victimId = sim.addPlayer('warrior', 'Victim');
     sim.setPlayerLevel(20, killerId);
