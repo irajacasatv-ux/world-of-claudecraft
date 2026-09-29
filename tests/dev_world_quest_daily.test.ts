@@ -1,13 +1,30 @@
 import { describe, expect, it } from 'vitest';
-import { WORLD_QUESTS_BY_ID } from '../src/sim/data';
+import { BUILTIN_WORLD, WORLD_QUESTS_BY_ID } from '../src/sim/data';
 import { armDailyWorldQuestForDev } from '../src/sim/dev_world_quest_daily';
 import { Sim } from '../src/sim/sim';
+import type { WorldContent } from '../src/sim/types';
 import { resolveWorldQuestLeyPuzzle } from '../src/sim/world_quest_daily_levels';
 import { sanitizeWorldQuestProgress } from '../src/sim/world_quests';
+import { EMPTY_TEST_WORLD } from './sim_shared';
+
+// The selector stands the player at the quest's activation object and reads
+// nothing else from the overworld, so the file's world keeps only the two
+// activation objects (the candy box and the ley cache).
+const DAILY_WORLD: WorldContent = {
+  ...EMPTY_TEST_WORLD,
+  groundObjects: BUILTIN_WORLD.groundObjects.filter((object) =>
+    ['confection_game_box', 'leyline_cache'].includes(object.itemId),
+  ),
+};
 
 describe('developer daily world quest selector', () => {
   it('opens ley on day two without advancing the selected day', () => {
-    const sim = new Sim({ seed: 991, playerClass: 'warrior', devCommands: true });
+    const sim = new Sim({
+      seed: 991,
+      playerClass: 'warrior',
+      devCommands: true,
+      world: DAILY_WORLD,
+    });
     sim.chat('/dev wq candy 1');
     sim.chat('/dev wq ley 2');
     expect(sim.worldQuestCycle).toBe('wq1_1');
@@ -16,7 +33,12 @@ describe('developer daily world quest selector', () => {
   });
 
   it.each(['candy', 'ley'])('opens different %s days and repeats after thirty-two', (kind) => {
-    const sim = new Sim({ seed: 991, playerClass: 'warrior', devCommands: true });
+    const sim = new Sim({
+      seed: 991,
+      playerClass: 'warrior',
+      devCommands: true,
+      world: DAILY_WORLD,
+    });
     const id = kind === 'candy' ? 'wq_palmreach_confections' : 'wq_galecrest_wisps';
     const meta = sim.players.get(sim.playerId)!;
     const layouts: unknown[] = [];
@@ -41,7 +63,12 @@ describe('developer daily world quest selector', () => {
   });
 
   it('resets an already open attempt of the same day', () => {
-    const sim = new Sim({ seed: 991, playerClass: 'warrior', devCommands: true });
+    const sim = new Sim({
+      seed: 991,
+      playerClass: 'warrior',
+      devCommands: true,
+      world: DAILY_WORLD,
+    });
     sim.chat('/dev wq candy 3');
     const meta = sim.players.get(sim.playerId)!;
     const first = meta.worldQuestLog.get('wq_palmreach_confections')!;
@@ -58,7 +85,12 @@ describe('developer daily world quest selector', () => {
   it.each(['0', '-1', '1.5', 'Infinity', '9007199254740992', '1 extra', ''])(
     'rejects invalid day %s without changing progress',
     (input) => {
-      const sim = new Sim({ seed: 991, playerClass: 'warrior', devCommands: true });
+      const sim = new Sim({
+        seed: 991,
+        playerClass: 'warrior',
+        devCommands: true,
+        world: DAILY_WORLD,
+      });
       sim.chat('/dev wq candy 2');
       const meta = sim.players.get(sim.playerId)!;
       const cycle = meta.devWorldQuestCycle;
@@ -74,7 +106,12 @@ describe('developer daily world quest selector', () => {
   );
 
   it('does not enable daily previews on a production host', () => {
-    const sim = new Sim({ seed: 991, playerClass: 'warrior', devCommands: false });
+    const sim = new Sim({
+      seed: 991,
+      playerClass: 'warrior',
+      devCommands: false,
+      world: DAILY_WORLD,
+    });
     expect(armDailyWorldQuestForDev(sim.ctx, sim.playerId, 'ley', '1')).toBe(false);
     sim.chat('/dev wq candy 2');
     expect(sim.players.get(sim.playerId)?.devWorldQuestCycle).toBeNull();
