@@ -7,6 +7,7 @@ import type { SimContext } from '../src/sim/sim_context';
 import { addThreat } from '../src/sim/threat';
 import type { Entity } from '../src/sim/types';
 import { groundHeight } from '../src/sim/world';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // Entering Duskveil must drop the rogue out of every hostile's live targeting.
 //
@@ -51,7 +52,9 @@ function duelRig(foeClass: 'warlock' | 'hunter' = 'warlock'): {
   foe: Entity;
   rogueId: number;
 } {
-  const sim = new Sim({ seed: 17, playerClass: 'rogue', noPlayer: true });
+  // Every rogue, foe, pet and mob here is placed by hand, so each Sim in this
+  // file runs on the empty world.
+  const sim = new Sim({ seed: 17, playerClass: 'rogue', noPlayer: true, world: EMPTY_TEST_WORLD });
   const rogueId = sim.addPlayer('rogue', 'Slip');
   const foeId = sim.addPlayer(foeClass, 'Foe');
   sim.duels.set(rogueId, { a: rogueId, b: foeId, state: 'active', timer: 0 });
@@ -140,7 +143,12 @@ describe('entering Duskveil clears every hostile lock on the rogue', () => {
   });
 
   it('a hostile mob drops its live lock and then prunes if it cannot re-detect', () => {
-    const sim = new Sim({ seed: 17, playerClass: 'rogue', autoEquip: true });
+    const sim = new Sim({
+      seed: 17,
+      playerClass: 'rogue',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.setPlayerLevel(20);
     const rogue = sim.player;
     teleport(sim, rogue, 200, 0);
@@ -168,7 +176,12 @@ describe('entering Duskveil clears every hostile lock on the rogue', () => {
     // and Smokestep costs that same sweep plus the pet lookup its combat drop
     // needs (`petOf`, a shared scan this rule does not own).
     const sweepsFor = (ability: 'stealth' | 'vanish'): number => {
-      const sim = new Sim({ seed: 17, playerClass: 'rogue', autoEquip: true });
+      const sim = new Sim({
+        seed: 17,
+        playerClass: 'rogue',
+        autoEquip: true,
+        world: EMPTY_TEST_WORLD,
+      });
       sim.setPlayerLevel(20);
       const rogue = sim.player;
       teleport(sim, rogue, 200, 0);
@@ -205,7 +218,12 @@ describe('entering Duskveil clears every hostile lock on the rogue', () => {
   });
 
   it('Smokestep still drops the rogue out of combat while it clears the lock', () => {
-    const sim = new Sim({ seed: 17, playerClass: 'rogue', autoEquip: true });
+    const sim = new Sim({
+      seed: 17,
+      playerClass: 'rogue',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.setPlayerLevel(20);
     const rogue = sim.player;
     teleport(sim, rogue, 200, 0);
