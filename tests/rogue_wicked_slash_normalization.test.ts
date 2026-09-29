@@ -15,6 +15,7 @@ import { ABILITIES, MOBS } from '../src/sim/data';
 import { createMob } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
 import type { WeaponInfo } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 describe('normalizedInstantSpeed', () => {
   it('normalizes daggers to 1.7 and every other one-hander to 2.4', () => {
@@ -32,8 +33,13 @@ describe('normalizedInstantSpeed', () => {
 // are identical across weapons (weapon min/max/speed do not feed either), so any
 // difference in the result is purely the normalization.
 function wickedSlashHit(weapon: WeaponInfo): number {
-  const sim = new Sim({ seed: 4242, playerClass: 'rogue', autoEquip: true }) as Sim &
-    Record<string, any>;
+  // The dummy is placed by hand, so the Sim runs on the empty world.
+  const sim = new Sim({
+    seed: 4242,
+    playerClass: 'rogue',
+    autoEquip: true,
+    world: EMPTY_TEST_WORLD,
+  }) as Sim & Record<string, any>;
   sim.setPlayerLevel(20);
   const p = sim.player;
   p.critChance = 0;
