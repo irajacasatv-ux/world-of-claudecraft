@@ -34,8 +34,18 @@ import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const SCOPE_TEST_WORLD = { ...EMPTY_TEST_WORLD, roads: [] };
 
-function makeSim(seed: number): Sim {
-  return new Sim({ seed, playerClass: 'warrior', noPlayer: true, world: SCOPE_TEST_WORLD });
+// One seed for the whole file: every case builds its own fresh Sim and pins
+// a scope verdict, never a seed-probed roll, while each distinct seed paid a
+// fresh build of that seed's collider grids (about half a second).
+const SCOPE_SEED = 101;
+
+function makeSim(): Sim {
+  return new Sim({
+    seed: SCOPE_SEED,
+    playerClass: 'warrior',
+    noPlayer: true,
+    world: SCOPE_TEST_WORLD,
+  });
 }
 
 function mustEntity(sim: Sim, pid: number): Entity {
@@ -55,7 +65,7 @@ function spawnWolfAt(sim: Sim, id: number, pos: Entity['pos']): Entity {
 
 describe('dungeon/raid: same live SLOT, not just a matching partyKey string', () => {
   it('a real, correctly-owned claim (actor and corpse both in the SAME slot) is authorized', () => {
-    const sim = makeSim(101);
+    const sim = makeSim();
     const pid = sim.addPlayer('warrior', 'Alpha');
     sim.tick();
     const placement = placeInDungeon(sim, pid);
@@ -71,7 +81,7 @@ describe('dungeon/raid: same live SLOT, not just a matching partyKey string', ()
   });
 
   it('REGRESSION: two live slots sharing one partyKey must not authorize a corpse claimed by the WRONG slot', () => {
-    const sim = makeSim(102);
+    const sim = makeSim();
     const actorPid = sim.addPlayer('warrior', 'Actor');
     const fillerPid = sim.addPlayer('warrior', 'Filler');
     sim.tick();
@@ -103,7 +113,7 @@ describe('dungeon/raid: same live SLOT, not just a matching partyKey string', ()
   });
 
   it("REGRESSION: a stranger merely standing at the owner's coordinates, never having entered the party, must not be authorized", () => {
-    const sim = makeSim(107);
+    const sim = makeSim();
     const ownerPid = sim.addPlayer('warrior', 'Owner');
     const strangerPid = sim.addPlayer('warrior', 'Stranger');
     sim.tick();
@@ -128,7 +138,7 @@ describe('dungeon/raid: same live SLOT, not just a matching partyKey string', ()
   });
 
   it("REGRESSION: a claimed corpse dragged outside its own slot must not be authorized even for the slot's rightful owner", () => {
-    const sim = makeSim(108);
+    const sim = makeSim();
     const ownerPid = sim.addPlayer('warrior', 'Owner');
     sim.tick();
     const placement = placeInDungeon(sim, ownerPid);
@@ -150,7 +160,7 @@ describe('dungeon/raid: same live SLOT, not just a matching partyKey string', ()
 
 describe("rift: the corpse must belong to the live instance's OWN mob roster, not just its region", () => {
   it('a real, correctly-owned rift corpse (registered in mobIds, actor a member) is authorized', () => {
-    const sim = makeSim(103);
+    const sim = makeSim();
     const pid = sim.addPlayer('warrior', 'Alpha');
     sim.tick();
     const { instance } = placeInRift(sim, pid);
@@ -161,7 +171,7 @@ describe("rift: the corpse must belong to the live instance's OWN mob roster, no
   });
 
   it('REGRESSION: a mob merely standing in the region, absent from the instance mobIds roster, must not be authorized', () => {
-    const sim = makeSim(104);
+    const sim = makeSim();
     const pid = sim.addPlayer('warrior', 'Alpha');
     sim.tick();
     const { instance } = placeInRift(sim, pid);
@@ -175,7 +185,7 @@ describe("rift: the corpse must belong to the live instance's OWN mob roster, no
   });
 
   it('REGRESSION: a member who has walked back to the open world (position off the active floor) must not be authorized', () => {
-    const sim = makeSim(1041);
+    const sim = makeSim();
     const pid = sim.addPlayer('warrior', 'Alpha');
     sim.tick();
     const { instance } = placeInRift(sim, pid);
@@ -194,7 +204,7 @@ describe("rift: the corpse must belong to the live instance's OWN mob roster, no
 
 describe('delve: cold membership check, no mutating rebind', () => {
   it('a real, correctly-owned delve corpse (registered in mobIds, actor the live occupant) is authorized', () => {
-    const sim = makeSim(105);
+    const sim = makeSim();
     const ownerPid = sim.addPlayer('warrior', 'Owner');
     sim.tick();
     const { run } = placeInDelve(sim, ownerPid);
@@ -213,7 +223,7 @@ describe('delve: cold membership check, no mutating rebind', () => {
     // run for real (the owner disconnects) before the orphan walks in, so
     // the rebind condition genuinely holds and the cold view is the only
     // thing standing between "check" and "claim".
-    const sim = makeSim(106);
+    const sim = makeSim();
     const ownerPid = sim.addPlayer('warrior', 'Owner');
     const orphanPid = sim.addPlayer('warrior', 'Orphan');
     sim.tick();
@@ -239,7 +249,7 @@ describe('delve: cold membership check, no mutating rebind', () => {
   });
 
   it('REGRESSION: a non-finite actor position must never satisfy the band comparison (NaN is not <= 120)', () => {
-    const sim = makeSim(1061);
+    const sim = makeSim();
     const ownerPid = sim.addPlayer('warrior', 'Owner');
     sim.tick();
     const { run } = placeInDelve(sim, ownerPid);
@@ -253,7 +263,7 @@ describe('delve: cold membership check, no mutating rebind', () => {
   });
 
   it("REGRESSION: a registered delve corpse dragged outside its own run's band must not be authorized for the run's live occupant", () => {
-    const sim = makeSim(1071);
+    const sim = makeSim();
     const ownerPid = sim.addPlayer('warrior', 'Owner');
     sim.tick();
     const { run } = placeInDelve(sim, ownerPid);
@@ -269,7 +279,7 @@ describe('delve: cold membership check, no mutating rebind', () => {
   });
 
   it('REGRESSION: a non-finite CORPSE position must never satisfy the band comparison either', () => {
-    const sim = makeSim(1072);
+    const sim = makeSim();
     const ownerPid = sim.addPlayer('warrior', 'Owner');
     sim.tick();
     const { run } = placeInDelve(sim, ownerPid);
@@ -283,7 +293,7 @@ describe('delve: cold membership check, no mutating rebind', () => {
 
 describe('REGRESSION: non-finite positions are rejected up front, on every axis, before any context branch', () => {
   it('a non-finite actor Y position is rejected even for a real dungeon claim (y was never checked before)', () => {
-    const sim = makeSim(1081);
+    const sim = makeSim();
     const pid = sim.addPlayer('warrior', 'Alpha');
     sim.tick();
     const placement = placeInDungeon(sim, pid);
@@ -301,7 +311,7 @@ describe('REGRESSION: non-finite positions are rejected up front, on every axis,
   });
 
   it('a non-finite corpse Y position is rejected even for a real dungeon claim', () => {
-    const sim = makeSim(1082);
+    const sim = makeSim();
     const pid = sim.addPlayer('warrior', 'Alpha');
     sim.tick();
     const placement = placeInDungeon(sim, pid);
@@ -318,7 +328,7 @@ describe('REGRESSION: non-finite positions are rejected up front, on every axis,
   });
 
   it('a non-finite actor position is rejected in the open-world fallback too', () => {
-    const sim = makeSim(1083);
+    const sim = makeSim();
     const pid = sim.addPlayer('warrior', 'Alpha');
     sim.tick();
     const actor = mustEntity(sim, pid);
@@ -331,7 +341,7 @@ describe('REGRESSION: non-finite positions are rejected up front, on every axis,
 
 describe('no live claim: the instance-plane orphan check is symmetric on actor and corpse', () => {
   it('REGRESSION: an actor standing in the instance plane with no claim, and an open-world corpse, must not be authorized', () => {
-    const sim = makeSim(1091);
+    const sim = makeSim();
     const pid = sim.addPlayer('warrior', 'Alpha');
     sim.tick();
     const actor = mustEntity(sim, pid);
@@ -346,7 +356,7 @@ describe('no live claim: the instance-plane orphan check is symmetric on actor a
   });
 
   it('an ordinary open-world actor and corpse, both outside the instance plane with no claim, are authorized', () => {
-    const sim = makeSim(1092);
+    const sim = makeSim();
     const pid = sim.addPlayer('warrior', 'Alpha');
     sim.tick();
     const actor = mustEntity(sim, pid);
