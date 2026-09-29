@@ -13,12 +13,15 @@ empty included: a CPU profile (`node --import tsx --cpu-prof`, four fresh seeds 
 `EMPTY_TEST_WORLD`) puts it all under `sim.tick` > `updatePlayerMovement` >
 `supportHeightAt` > `gridFor` > `staticWorldColliders(seed)`, the seed's static collider
 grid with its decorations, whose terrain sampling (`terrainHeight`, `calmSkirtWidth`)
-dominates. The grid is cached per (world content object, seed) in `src/sim/colliders.ts`,
-so the seed is warm for the rest of the file (0.4 ms first tick), but every extra seed pays
-again, and a file that mixes the full world with a scoped one, or builds a world literal
-per Sim, pays twice. So in files that built a Sim per case on a fresh seed, the empty world
-alone barely helped (the Dirge suite went from about 15 s to 12.8 s); one seed per file was
-the real lever, and the empty world cut the per-tick cost (2.7 ms to 0.12 ms).
+dominates. `gridFor` caches the grid per seed, keyed on the module's ACTIVE world content
+(`getActiveWorldContent()`), never on `cfg.world` (`src/sim/sim.ts` states that colliders
+never read it), so the full world and every scoped world share one grid per seed. The seed
+is warm for the rest of the file (0.4 ms first tick), but every extra seed pays again. So in
+files that built a Sim per case on a fresh seed, the empty world alone barely helped (the
+Dirge suite went from about 15 s to 12.8 s); one seed per file was the real lever, and the
+empty world cut the per-tick cost (2.7 ms to 0.12 ms). (The first version of this record
+said the cache keyed on the world object, so a mixed or per-Sim world literal paid twice;
+that was wrong, and the fix round below corrects it.)
 
 ## Per file
 
@@ -27,7 +30,8 @@ back to back. The host ran at load 19 to 85 throughout (four forks plus other ag
 the before figures read well above the quiet baseline (`data/local_perfile_ms.tsv`); the
 ratio is the reliable part. Import time moved only with load: the one import change is
 affliction's locale slice. Every mutant ran through the scratchpad runner after its commit,
-each batch with a must-pass control that passed.
+each batch with a must-pass control that passed. The fix round at the end changed eight of
+these files again; its table supersedes their rows here.
 
 | File | CI ms | Verdict | Change | Tests s before / after | Import s before / after | Mutants killed (mutated source) |
 |---|---|---|---|---|---|---|
@@ -45,7 +49,7 @@ each batch with a must-pass control that passed.
 | trinkets | 24,313 | SLIM | `EMPTY_TEST_WORLD`; the determinism case moves to the file's seed 11; Gambler's Die rolls one wearer repeatedly (cooldown cleared) instead of a Sim per seed, dropping its 60 s timeout | 13.78 / 0.99 | 4.95 / 3.03 | 4/4: `trinkets.ts` Snake Eyes refund, die never rolls Snake Eyes, Paired Talons bleed; `sim.ts` `addItem` drawing rng for a bagged trinket |
 | paladin_devotion_balance | 23,482 | SLIM (blocking case), KEEP (three rotations) | the blocking case (stubbed rng) runs on `EMPTY_TEST_WORLD`, seed 53; its 29.65 s pin holds. The rotation pins ride the full world's stream: culling failed all three | 24.72 / 17.94 (the case: 2,420 to 91 ms) | 4.51 / 3.06 | 2/2: `paladin_devotion.ts` block ICD, block grant |
 | shaman_thundercall | 16,590 | SLIM | production idle culling (the empty world moved an Arc Overload proc); three roll-free arms reuse a seed the file builds (9 seeds to 5) | 12.49 / 4.63 | 5.12 / 3.69 | 5/5: `combat/shaman_thundercall.ts` Faultwake and Earthen Jolt per-charge bonus, charge cap; `casting_lifecycle.ts` Faultwake default target, refused cast eating charges |
-| v042_coldsight_integration | 20,808 | SLIM | the per-call world literal (a cache miss per Sim) and 16 seeds become one seed on the shared `EMPTY_TEST_WORLD` | 7.53 / 1.09 | 2.43 / 2.22 | 3/3: `casting_lifecycle.ts` pulse count, reserve at cast accept; `hunter_coldsight_read.ts` Long Draw mult |
+| v042_coldsight_integration | 20,808 | SLIM | 16 seeds become one seed on `EMPTY_TEST_WORLD` (the saving is the one seed: the per-call world literal it replaced never missed the grid cache) | 7.53 / 1.09 | 2.43 / 2.22 | 3/3: `casting_lifecycle.ts` pulse count, reserve at cast accept; `hunter_coldsight_read.ts` Long Draw mult |
 | wand_swing_between_queued_casts | 19,652 | SLIM | `EMPTY_TEST_WORLD` (seeds kept) | 10.84 / 1.27 | 5.35 / 4.66 | 2/2: `casting_lifecycle.ts` queue-fired swing call, swing-timer pre-decay |
 | v042_doctrine_rescue | 18,606 | SLIM | one seed (was 20) plus `EMPTY_TEST_WORLD` | 14.08 / 1.18 | 2.76 / 5.70 | 2/2: `doctrine_rescue.ts` max recipients; `effect_dispatch.ts` rescue call |
 | shaman_spiritmend | 22,396 | SLIM | production idle culling; five roll-free cases move to the default seed (8 seeds to 3) | 11.42 / 4.00 | 4.42 / 5.17 | 5/5: `combat/shaman_spiritmend.ts` unleash guard, tick drain, chain consume, pool cap; `content/classes.ts` Tidecall charges |
@@ -65,26 +69,56 @@ twenty files together on the final tree: 500 of 500 green twice (`--maxWorkers=4
   stream (the file records about ten re-pins). Moving them to the empty world or pinning
   only the 35 to 65 s band would save about 15 s locally; that is a re-pin, so it needs a
   maintainer ruling.
-- v042_offense_packets: `noCrit()` zeroes `critChance`, but spells roll `ctx.spellCrit`, so
-  the SP-delta cases ride the seed (seed 1001 fails them). Stubbing `spellCrit` in those
-  pins would free them from the seed. The Scouring Mercy case's comment calls an rng crit
-  "guaranteed".
+- v042_offense_packets, the Scouring Mercy heal case: its bounds (`2 * 130` to `2 * 155`)
+  rest on a false premise. A heal crit is 1.5x, not 2x, and the gear's Healing Power adds
+  about 27, so a crit spans about 236 to 273; the full world's seed 1402 happened to draw
+  260. The fix round pins the roll (0.9, reading 269) so the case no longer rides luck, but
+  re-deriving the bounds is a re-pin and needs a maintainer ruling.
 - Coverage gaps found by survivors (pre-existing, same result on the unmodified suites):
   Death Echo consume radius (necromancy), Forbidden Reflection lock length
   (warlock_class_talents), the enemy-action ICD's lower bound (affliction).
 - trinkets: the determinism case's trinket is a Spirit one that never touches melee, so it
   guards less than its title says.
-- chronomancy_balance_targets: seed 2 carries the loosest Cryo margin of the three, so a
-  Cryo-only loss is caught later on PR than on the nightly (stated in the file).
-- Single-seed files where some case needs a shot to land or a spell not to crit
-  (hunter_talents, v042_offense_packets, the paladin files) carry that luck on the one seed,
-  as their per-case seeds did; sweeps in the forks showed most seeds pass every case.
+- chronomancy_balance_targets: seed 2 carries the loosest Cryo margin of the three, so on PR
+  a Cryo-only loss trips only once its margin falls from about 50 to 12 percent (stated in
+  the file since the fix round; an accepted trade).
 
 ## Product-side lever (not touched)
 
 `gridFor` / `staticWorldColliders(seed)` in `src/sim/colliders.ts` costs 300 to 625 ms per
-fresh (world content object, seed). Keying the cache on only the content that feeds the
-static colliders (so the full world and a scoped world with the same props share one grid),
-building decoration cells lazily per region, or letting a test world opt out of static
-decorations would cut this across every suite that builds more than one seed, well beyond
+fresh seed (the cache already keys on the active world content, so scoped worlds share it).
+Building decoration cells lazily per region, or letting a test Sim opt out of static
+decorations, would cut this across every suite that builds more than one seed, well beyond
 this cluster.
+
+## Fix round (review findings, branch `test-cost/classes-a-fix` off `35e89ced9a`)
+
+A review found cases that still rode a seed's draws after the cuts above, and two false
+cost-model notes. Every fix pins the roll a case asserts on instead of hunting a seed; no
+expected value changed. Each pinned file was swept on seeds 1, 2, 7 and 11 (plus one of its
+old seeds) with all cases green; the unpinned paladin_core and hunter_talents failed two
+cases each on seed 7. Times: medians of three `--maxWorkers=1` runs on a quieter host,
+before and after back to back.
+
+| File | Finding | Fix | Tests s before / after |
+|---|---|---|---|
+| shaman_thundercall | the note said idle culling kept the hunted seeds' draws; culled mobs stop drawing, so the stream moved and the roll-riding cases passed on a new one | `rng.next` pinned at 0.9 in `setup` (every bolt lands, no crit or Arc Overload proc, a fixed damage roll); with nothing left on the stream, one seed on `EMPTY_TEST_WORLD` replaces culling and five seeds | 3.77 / 0.80 |
+| shaman_spiritmend | same false note; the deposit comparison and exact unleash burst rode heal rolls | same pin (no heal crit, a fixed heal roll), one seed on `EMPTY_TEST_WORLD` replaces culling and three seeds | 2.64 / 0.89 |
+| v042_offense_packets | `noCrit()` zeroed `critChance` only, but spells and heals roll `ctx.spellCrit`, so every spell comparison rode seed 202's crit luck; the Scouring Mercy heal's "guaranteed crit" was a full-world draw on seed 1402 | `noCrit(sim)` also pins `ctx.spellCrit` at 0; the heal case pins `ctx.spellCrit` at 1 and `rng.next` at 0.9; the Ruinous Brand origin is hit-capped (`hitBonus = 1`); both full-world exceptions are gone | 2.30 / 0.96 |
+| paladin_core_abilities | Hammer of Grace, Vowkeeper Strike (the exact Devotion 12) and both Final Edict cases rode seed 37's hit rolls | `landEveryRoll` (`rng.next` at 0.9, as the support suite does) in those four cases | 0.69 / 0.70 |
+| hunter_talents | Predator's Pace, Double Hush, Apex Instinct and both Fang Chorus cases rode `HUNTER_SEED` to land their shots | `landEveryRoll` in those five cases; the seed comment says so | 0.83 / 0.82 |
+| v042_ability_resolution | the header said no case draws on the rng; the Measured Fury cast rolls the melee table | that case pins `rng.next` at 0.9 (the strike lands and kills its wolf); header corrected | 0.72 / 0.67 |
+| v042_coldsight_integration | the note said the grid cache keyed on the world object, so the per-call world literal missed it | comment only: the cache keys on the active world content; the saving was the one seed | unchanged |
+| chronomancy_balance_targets | the PR arm still declared 240 s under a "twelve rotations" comment though it runs none of its own | `timeout: NIGHTLY_SWEEP ? 240_000 : 20_000`; the file's declared sum drops to 180 s, so its `tests/suite_duration_budget.test.ts` ledger row is deleted (the ratchet direction); the comment states that on PR a Cryo-only loss trips only once seed 2's margin falls from about 50 to 12 percent (a Frostbolt loss of about a quarter, against about a sixth on the nightly's seed 1) | unchanged; nightly arm green |
+
+Mutants, one batch after the commits, all through the runner: 15 of 15 killed, and the
+control (a comment appended to `combat/heal.ts`, run across all nine touched files) passed
+121 of 121. Killed: `combat/heal.ts` heal crit 1.5 to 1.3, `combat/destruction.ts` Brand
+copy 0.5 to 0.6 and `spec_output_tuning.ts` Doctrine spell 0.3 to 0.2 (offense_packets);
+`paladin_devotion.ts` Zealwing doubling off and `effect_dispatch.ts` Final Edict cue off
+(paladin_core); `combat/hunter_shared.ts` Fang Chorus clap on the fourth echo, Apex Focus 40
+to 30, Predator's Pace 1.2 to 1.3 (hunter_talents); `combat/ability_resolution.ts` Measured
+Fury 0.9 to 0.85; `combat/shaman_thundercall_kit.ts` Arc Overload always procs,
+`combat/shaman_thundercall.ts` Earthen Jolt per-charge 0.25 to 0.15 and charge cap 5 to 6;
+`combat/shaman_spiritmend.ts` pool cap 0.3 to 0.5, consume multiplier 1.25 to 1.5,
+Lifespring deposit bonus 0.2 to 0.
