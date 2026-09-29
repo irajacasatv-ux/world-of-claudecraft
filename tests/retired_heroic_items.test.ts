@@ -20,6 +20,7 @@ import type { MarketSave } from '../src/sim/market';
 import { type CharacterState, Sim } from '../src/sim/sim';
 import type { ItemDef } from '../src/sim/types';
 import { buildPaperdollView } from '../src/ui/char_view';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const RETIRED_IDS = [
   'deathless_warguard_legmail',
@@ -124,7 +125,7 @@ function legacyRogueState(equipment: CharacterState['equipment']): CharacterStat
 }
 
 function loadLegacyRogue(equipment: CharacterState['equipment']) {
-  const sim = new Sim({ seed: 42, playerClass: 'rogue', noPlayer: true });
+  const sim = new Sim({ seed: 42, playerClass: 'rogue', noPlayer: true, world: EMPTY_TEST_WORLD });
   const pid = sim.addPlayer('rogue', 'Legacy', { state: legacyRogueState(equipment) });
   const entity = sim.entities.get(pid);
   if (!entity) throw new Error('legacy player entity was not created');
@@ -285,7 +286,12 @@ describe('retired heroic items: the four ids v0.25.0 orphaned resolve again', ()
       ],
       nextMailId: 10,
     };
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+    const sim = new Sim({
+      seed: 42,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
 
     sim.loadMarket(marketSave);
     sim.loadMail(mailSave);

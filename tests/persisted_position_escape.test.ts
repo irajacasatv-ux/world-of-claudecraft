@@ -12,13 +12,19 @@ import {
 import { EASTBROOK_BUILDINGS_BY_ID, EASTBROOK_LAYOUT } from '../src/sim/eastbrook_layout';
 import { type CharacterState, Sim } from '../src/sim/sim';
 import { emptyZoneProps, type WorldContent } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const SEED = 2307;
 
+// Every load but the custom-world case runs on the empty world: the escape reads
+// only the static colliders of the active content, which the empty world keeps.
+let cachedBaseState: CharacterState | null = null;
 function baseState(): CharacterState {
-  const source = new Sim({ seed: SEED, playerClass: 'warrior' });
+  if (cachedBaseState) return cachedBaseState;
+  const source = new Sim({ seed: SEED, playerClass: 'warrior', world: EMPTY_TEST_WORLD });
   const state = source.serializeCharacter(source.playerId);
   if (!state) throw new Error('failed to create persisted-position fixture');
+  cachedBaseState = state;
   return state;
 }
 
@@ -31,7 +37,7 @@ function loadAt(position: { x: number; z: number }, world?: WorldContent) {
     seed: SEED,
     playerClass: 'warrior',
     noPlayer: true,
-    ...(world ? { world } : {}),
+    world: world ?? EMPTY_TEST_WORLD,
   });
   const pid = sim.addPlayer('warrior', 'Saved', { state: stateAt(position) });
   const player = sim.entities.get(pid);
@@ -94,7 +100,7 @@ describe('persisted overworld position escape', () => {
   });
 
   it('keeps fresh starts and dungeon/delve ejection semantics unchanged', () => {
-    const fresh = new Sim({ seed: SEED, playerClass: 'warrior' });
+    const fresh = new Sim({ seed: SEED, playerClass: 'warrior', world: EMPTY_TEST_WORLD });
     expect({ x: fresh.player.pos.x, z: fresh.player.pos.z }).toEqual(BUILTIN_WORLD.playerStart);
 
     const dungeon = DUNGEON_LIST[0];

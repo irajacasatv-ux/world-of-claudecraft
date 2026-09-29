@@ -9,9 +9,10 @@
 import { describe, expect, it } from 'vitest';
 import { Sim } from '../src/sim/sim';
 import { ALL_EQUIP_SLOTS, type EquipSlot } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 function makeWorld() {
-  return new Sim({ seed: 7, playerClass: 'warrior', noPlayer: true });
+  return new Sim({ seed: 7, playerClass: 'warrior', noPlayer: true, world: EMPTY_TEST_WORLD });
 }
 
 describe('serializeCharacter <-> addPlayer round-trip (G2 persistence)', () => {

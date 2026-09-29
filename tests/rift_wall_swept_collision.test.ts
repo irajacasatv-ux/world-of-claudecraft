@@ -16,6 +16,7 @@ import { PLAYER_BODY_RADIUS } from '../src/sim/pathfind';
 import { generateRiftFloor } from '../src/sim/rift/rift_gen';
 import { Sim } from '../src/sim/sim';
 import { MAX_LEVEL } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 function armWithRiftWall(sim: Sim): { origin: { x: number; z: number } } {
   const origin = riftInstanceOrigin(0, 0);
@@ -26,7 +27,12 @@ function armWithRiftWall(sim: Sim): { origin: { x: number; z: number } } {
 
 describe('rift walls stop swept relocations (Blink, Shadowstep, Vaulting Charge)', () => {
   it('Vaulting Charge aimed across a rift wall lands the player inside the shell', () => {
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', autoEquip: true });
+    const sim = new Sim({
+      seed: 42,
+      playerClass: 'warrior',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.setPlayerLevel(MAX_LEVEL);
     const { origin } = armWithRiftWall(sim);
     const p = sim.player;
@@ -43,7 +49,12 @@ describe('rift walls stop swept relocations (Blink, Shadowstep, Vaulting Charge)
   });
 
   it('Blink aimed across a rift wall lands the player inside the shell', () => {
-    const sim = new Sim({ seed: 42, playerClass: 'mage', autoEquip: true });
+    const sim = new Sim({
+      seed: 42,
+      playerClass: 'mage',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.setPlayerLevel(MAX_LEVEL);
     const { origin } = armWithRiftWall(sim);
     const p = sim.player;
@@ -57,7 +68,12 @@ describe('rift walls stop swept relocations (Blink, Shadowstep, Vaulting Charge)
   });
 
   it('relocateSwept (the shared Blink/Shadowstep helper) stops at a rift wall directly', () => {
-    const sim = new Sim({ seed: 42, playerClass: 'rogue', autoEquip: true });
+    const sim = new Sim({
+      seed: 42,
+      playerClass: 'rogue',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const { origin } = armWithRiftWall(sim);
     const p = sim.player;
     p.pos = { x: origin.x + 33.1, y: p.pos.y, z: origin.z + 61 };
@@ -77,7 +93,12 @@ describe('click-to-move A* cell walkability respects a rift wall (isBlocked rift
     // so the A* grid treated this rift wall as open floor and could string-pull
     // a route straight through it even though the destination itself was
     // already correctly rift-aware.
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', autoEquip: true });
+    const sim = new Sim({
+      seed: 42,
+      playerClass: 'warrior',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const { origin } = armWithRiftWall(sim);
     const x = origin.x + 35;
     const z = origin.z + 61;

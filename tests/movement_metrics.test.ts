@@ -19,6 +19,7 @@ import {
   type GroundTruthSample,
   MOVEMENT_METRICS_DEFAULTS,
 } from './helpers/movement_metrics';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // The metrics are the measuring instrument the latency baseline is read off, so
 // they are calibrated here against hand-built trajectories whose expected
@@ -158,7 +159,12 @@ describe('metric conventions', () => {
     // the client dep shape (tests/player_motion.test.ts idiom), must land
     // exactly where they say it will. Strafe rather than forward on purpose:
     // the strafe axis is where a sign or an axis swap would hide.
-    const sim = new Sim({ seed: WORLD_SEED, playerClass: 'warrior', autoEquip: true });
+    const sim = new Sim({
+      seed: WORLD_SEED,
+      playerClass: 'warrior',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const deps: PlayerMotionDeps = {
       seed: sim.cfg.seed,
       moveSpeedMult: (e) => moveSpeedMult(e, 0),

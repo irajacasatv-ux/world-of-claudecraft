@@ -6,6 +6,7 @@ import { createMob } from '../src/sim/entity';
 import { generateRiftFloor } from '../src/sim/rift/rift_gen';
 import { Sim } from '../src/sim/sim';
 import type { Entity } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // Rift floor generation scatters a handful of "clutter" circles (small
 // ground-debris props, see dungeon_layout.ts layoutColliders) across the
@@ -40,7 +41,7 @@ describe('rift floor clutter never blocks casting', () => {
   it('lets a hostile ranged spell complete past a rift floor-clutter piece', () => {
     const seed = 15;
     const baseLevel = 20;
-    const sim = new Sim({ seed, playerClass: 'mage', noPlayer: true });
+    const sim = new Sim({ seed, playerClass: 'mage', noPlayer: true, world: EMPTY_TEST_WORLD });
     const casterId = sim.addPlayer('mage', 'Caster');
     const caster = sim.entities.get(casterId);
     if (!caster) throw new Error('missing caster');

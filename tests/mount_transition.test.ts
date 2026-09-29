@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { expectDefined } from './helpers/defined';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // Mock the db layer so importing server/game (for wireEntity) needs no Postgres,
 // mirroring tests/mounts.test.ts / tests/snapshots.test.ts.
@@ -32,7 +33,7 @@ import { groundHeight, isInWaterBody, terrainHeight, waterLevelAt } from '../src
 const SEED = 42;
 
 function makeSim(): Sim {
-  return new Sim({ seed: SEED, playerClass: 'warrior', noPlayer: true });
+  return new Sim({ seed: SEED, playerClass: 'warrior', noPlayer: true, world: EMPTY_TEST_WORLD });
 }
 
 // A level-60 rider standing on flat vale ground near the hub. Level 60 makes every

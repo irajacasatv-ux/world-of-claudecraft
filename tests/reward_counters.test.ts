@@ -9,6 +9,7 @@
 import { describe, expect, it } from 'vitest';
 import { freshCounters, type RewardCounters } from '../src/sim/reward_counters';
 import { Sim } from '../src/sim/sim';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // Every key of the interface, written out ONCE as data. The `satisfies` makes it
 // exactly the interface's key set at compile time: a key added to RewardCounters
@@ -57,7 +58,7 @@ describe('freshCounters', () => {
   it('is what a new Sim actually starts from, so the module is really the owner', () => {
     // The extraction is only worth anything if sim.ts consumes it. Read the
     // counters off a real constructed Sim rather than trusting the import.
-    const sim = new Sim({ seed: 12345, playerClass: 'warrior' });
+    const sim = new Sim({ seed: 12345, playerClass: 'warrior', world: EMPTY_TEST_WORLD });
     expect(sim.counters).toEqual(freshCounters());
   });
 });

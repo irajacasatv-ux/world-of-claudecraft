@@ -15,6 +15,7 @@ import {
 } from '../src/sim/pathfind';
 import { Sim } from '../src/sim/sim';
 import { groundHeight, WATER_LEVEL } from '../src/sim/world';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // Highwatch paddock west run: an isolated, open-field fence with room to detour
 // on both sides, used to exercise generic fence-blocking / fence-jump pathfinding
@@ -154,7 +155,7 @@ describe('player pathfinding', () => {
   });
 
   it('blocks normal player movement through fences', () => {
-    const sim = new Sim({ seed: 20061, playerClass: 'warrior' });
+    const sim = new Sim({ seed: 20061, playerClass: 'warrior', world: EMPTY_TEST_WORLD });
     const p = sim.player;
     const fence = TEST_FENCE;
     const mx = (fence.x1 + fence.x2) / 2;
@@ -179,7 +180,7 @@ describe('player pathfinding', () => {
   });
 
   it('lets a jumping player clear a fence', () => {
-    const sim = new Sim({ seed: 20061, playerClass: 'warrior' });
+    const sim = new Sim({ seed: 20061, playerClass: 'warrior', world: EMPTY_TEST_WORLD });
     const p = sim.player;
     const fence = TEST_FENCE;
     const mx = (fence.x1 + fence.x2) / 2;
