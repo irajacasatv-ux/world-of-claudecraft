@@ -84,6 +84,7 @@ import type { IWorldVehicles } from '../src/world_api/vehicles';
 import type { IWorldWorldPvp } from '../src/world_api/world_pvp';
 import { expectScansOnlyThroughSharedWalkers } from './helpers/scan_guard_self_audit';
 import { tsFilesUnder } from './helpers/ts_files_under';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 type IWorldMemberKind = 'method' | 'data';
 
@@ -704,8 +705,10 @@ function assertDataMember(instance: object, name: string, label: string): void {
 let sim: Sim;
 let client: ClientWorld;
 
+// The contract reads members, never the overworld's camps, NPCs or ground
+// objects, so the probe Sim runs on the empty world.
 beforeAll(() => {
-  sim = new Sim({ seed: SIM_SEED, playerClass: PROBE_CLASS });
+  sim = new Sim({ seed: SIM_SEED, playerClass: PROBE_CLASS, world: EMPTY_TEST_WORLD });
   client = makeClientWorld();
 });
 
