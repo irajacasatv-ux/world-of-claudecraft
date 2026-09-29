@@ -11,7 +11,11 @@ import {
   worldQuestCycleForResetDay,
   worldQuestPuzzleVariantForCycle,
 } from '../src/sim/world_quest_rotation';
+import { WORLD_SEED } from '../src/sim/world_seed';
 
+// Every world here is built on the shipped seed: a seed the file has not built yet
+// costs a full collider bootstrap, and the boards and variants come from the
+// reset day, never the seed.
 type Match3Quest = WorldQuestDef & {
   objective: Extract<WorldQuestObjective, { type: 'match3' }>;
 };
@@ -199,7 +203,7 @@ describe('weekly world quest match-three', () => {
   it('rejects remote play, preserves a detached save, and completes after physical activation', () => {
     const { quest, levels } = fixture();
     if (quest.objective.type !== 'match3') throw new Error('Expected match-three fixture');
-    const sim = new Sim({ seed: 992, playerClass: 'warrior', autoEquip: true });
+    const sim = new Sim({ seed: WORLD_SEED, playerClass: 'warrior', autoEquip: true });
     sim.setPlayerLevel(20);
     sim.resetDay = '2026-08-31';
     useAuthoredLevels(sim);
@@ -306,7 +310,7 @@ describe('weekly world quest match-three', () => {
     const { quest } = fixture();
     if (quest.objective.type !== 'match3') throw new Error('Expected match-three fixture');
     const original = new Sim({
-      seed: 993,
+      seed: WORLD_SEED,
       playerClass: 'warrior',
       autoEquip: true,
     });
@@ -330,7 +334,7 @@ describe('weekly world quest match-three', () => {
     if (!before || !state) throw new Error('Missing persisted match-three state');
 
     const restored = new Sim({
-      seed: 993,
+      seed: WORLD_SEED,
       playerClass: 'warrior',
       noPlayer: true,
     });
@@ -376,7 +380,7 @@ describe('weekly world quest match-three', () => {
 
   it('rejects wrong objects and invalid play, and resets the authoritative level', () => {
     const { quest, levels } = fixture();
-    const sim = new Sim({ seed: 994, playerClass: 'warrior', autoEquip: true });
+    const sim = new Sim({ seed: WORLD_SEED, playerClass: 'warrior', autoEquip: true });
     sim.setPlayerLevel(20);
     sim.resetDay = '2026-08-31';
     useAuthoredLevels(sim);
@@ -442,7 +446,7 @@ describe('weekly world quest match-three', () => {
 
   it('authorizes reset only for a living player with the active match-three box open', () => {
     const { quest } = fixture();
-    const sim = new Sim({ seed: 995, playerClass: 'warrior', autoEquip: true });
+    const sim = new Sim({ seed: WORLD_SEED, playerClass: 'warrior', autoEquip: true });
     sim.setPlayerLevel(20);
     sim.resetDay = '2026-08-31';
     useAuthoredLevels(sim);
@@ -495,7 +499,7 @@ describe('weekly world quest match-three', () => {
     ] as const;
     for (const [resetDay, variant] of weeks) {
       const original = new Sim({
-        seed: 1_000 + variant,
+        seed: WORLD_SEED,
         playerClass: 'warrior',
         autoEquip: true,
       });
@@ -511,7 +515,7 @@ describe('weekly world quest match-three', () => {
       if (!state) throw new Error('Missing weekly match-three save');
 
       const restored = new Sim({
-        seed: 1_000 + variant,
+        seed: WORLD_SEED,
         playerClass: 'warrior',
         noPlayer: true,
       });
