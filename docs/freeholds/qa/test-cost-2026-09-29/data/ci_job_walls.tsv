@@ -1,0 +1,41 @@
+36493201427	Lint (changed files)	success	wall=5.63	checkout=-	Check out repository=4.57; Determine base ref=0.58
+36493201427	Classify changes	success	wall=0.13	checkout=-	
+36493201427	Release checks	skipped	wall=0.00	checkout=-	
+36493201427	Release tests	skipped	wall=0.00	checkout=-	
+36493201427	Release i18n	skipped	wall=0.00	checkout=-	
+36493201427	Release version gate	skipped	wall=-0.02	checkout=-	
+36493201427	Browser tests	success	wall=3.52	checkout=-	Check out repository=1; Run browser regressions=1.92
+36493201427	PR checks	success	wall=2.68	checkout=-	Check out repository=1.2
+36493201427	PR long sims B	success	wall=12.83	checkout=-	Check out repository=1.67; Run tests (PR tier, long-sims lane B)=10.75
+36493201427	PR tests (3)	success	wall=29.82	checkout=-	Check out repository=12.37; Run tests (PR tier, shard 3 of 8)=16.92
+36493201427	PR long sims A	success	wall=9.98	checkout=-	Check out repository=1.62; Run tests (PR tier, long-sims lane A)=7.85
+36493201427	PR tests (5)	success	wall=19.82	checkout=-	Check out repository=1.5; Run tests (PR tier, shard 5 of 8)=17.62
+36493201427	PR tests (1)	success	wall=14.08	checkout=-	Check out repository=1.33; Run tests (PR tier, shard 1 of 8)=11.95
+36493201427	PR tests (6)	success	wall=14.23	checkout=-	Check out repository=1.43; Run tests (PR tier, shard 6 of 8)=11.95
+36493201427	PR tests (4)	success	wall=24.02	checkout=-	Check out repository=5.48; Run tests (PR tier, shard 4 of 8)=17.82
+36493201427	PR tests (7)	success	wall=12.37	checkout=-	Check out repository=1.4; Run tests (PR tier, shard 7 of 8)=10.33
+36493201427	PR tests (8)	success	wall=19.73	checkout=-	Check out repository=1.55; Run tests (PR tier, shard 8 of 8)=17.45
+36493201427	PR tests (2)	success	wall=12.45	checkout=-	Check out repository=1.48; Run tests (PR tier, shard 2 of 8)=10.13
+36501749917	Classify changes	success	wall=0.12	checkout=-	
+36501749917	Lint (changed files)	success	wall=2.10	checkout=-	Check out repository=1.22; Determine base ref=0.52
+36501749917	Release i18n	skipped	wall=0.00	checkout=-	
+36501749917	Release tests	skipped	wall=0.00	checkout=-	
+36501749917	Release version gate	skipped	wall=0.00	checkout=-	
+36501749917	Release checks	skipped	wall=-0.12	checkout=-	
+36501749917	PR long sims A	success	wall=14.08	checkout=-	Check out repository=1.65; Run tests (PR tier, long-sims lane A)=12.08
+36501749917	PR checks	success	wall=2.57	checkout=-	Check out repository=1.08
+36501749917	PR long sims B	success	wall=8.83	checkout=-	Check out repository=1.72; Run tests (PR tier, long-sims lane B)=6.67
+36501749917	PR tests (1)	success	wall=12.68	checkout=-	Check out repository=1.43; Run tests (PR tier, shard 1 of 8)=10.55
+36501749917	Browser tests	success	wall=3.97	checkout=-	Check out repository=1.23; Run browser regressions=1.98
+36501749917	PR tests (8)	success	wall=13.60	checkout=-	Check out repository=1.43; Run tests (PR tier, shard 8 of 8)=11.33
+36501749917	PR tests (6)	success	wall=16.13	checkout=-	Check out repository=1.72; Run tests (PR tier, shard 6 of 8)=13.62
+36501749917	PR tests (2)	success	wall=19.32	checkout=-	Check out repository=1.45; Run tests (PR tier, shard 2 of 8)=17.32
+36501749917	PR tests (5)	success	wall=20.50	checkout=-	Check out repository=1.87; Run tests (PR tier, shard 5 of 8)=17.88
+36501749917	PR tests (3)	success	wall=18.55	checkout=-	Check out repository=1.58; Run tests (PR tier, shard 3 of 8)=16.4
+36501749917	PR tests (7)	success	wall=15.32	checkout=-	Check out repository=1.48; Run tests (PR tier, shard 7 of 8)=12.97
+36501749917	PR tests (4)	success	wall=19.47	checkout=-	Check out repository=1.5; Run tests (PR tier, shard 4 of 8)=17.22
+36480351546	Resolve nightly refs	success	wall=0.12	checkout=-	
+36480351546	Nightly checks (feature/freeholds)	success	wall=15.73	checkout=-	Check out repository=14.03; Typecheck + env/server/bot builds=0.62
+36480351546	Nightly browser (feature/freeholds)	success	wall=3.77	checkout=-	Check out repository=1.15; Run browser regressions=1.95
+36480351546	Nightly tests (feature/freeholds)	failure	wall=208.28	checkout=-	Check out repository=1.12; Run tests (full suite, PR tier)=201.15; Per-file memory budgets=5.5
+36480351546	Report nightly verdict	success	wall=0.13	checkout=-	

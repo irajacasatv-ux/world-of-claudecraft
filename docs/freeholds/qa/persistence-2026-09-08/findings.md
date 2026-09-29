@@ -5137,3 +5137,29 @@ browser suite 554 of 554.
 - `0462c0a7b8` (a declared timeout and its ratchet row) landed after the armed gate at
   `e57856af25`; the ratchet ran on it directly, and this docs commit's own full-mode CI run,
   which covers it, is reported to Fernando with the part's close.
+
+## PART 5, TEST COST AND TEST VALUE, 2026-09-29
+
+### THE GOAL AND THE RULINGS (Fernando, 2026-09-29), RECORDED VERBATIM
+
+The goal: "these tests are taking way too long. we need to continue driving this and cleaning
+tests up. unit, e2e, screenshots, etc. our CI times must go down and we must make sure that all
+new tests added and existing ones are actually worth it and not just taking up space and time."
+
+Standing rulings carried in: do not open GitHub issues (the vacuous CI lint job and the
+@vitest/spy upstream issue stay recorded only); the push go stands for this branch; never push to
+a fork; never open or merge a PR unless told.
+
+Asked at the session's start, with recommendations, all three answered as recommended:
+- "(a) Part 5 targets, measured against CI 36493201427/36501749917 and nightly 36480351546: cut
+  the slowest PR shard JOB wall (24.0 min) by at least 30%, the summed shard TEST time by at
+  least 25%, and the nightly (3 h 28 min) to under 2.5 h. Accept these?" answered "Accept as
+  proposed (Recommended)".
+- "(b) pr-gate timeout-minutes: shard 4's job took 24.0 min with a 5.5-min checkout (others
+  about 1.5 min). Counting that checkout as healthy gives 24.0 x 1.60 x 1.37 = 53; excluding it,
+  the worst healthy wall is shard 5's 19.8 min, which gives 43 and fits under 49. Part 5
+  re-derives the bound after its cuts either way." answered "49 stays (Recommended)".
+- "(c) Evidence screenshots under docs/screenshots (2,417 tracked files, 1.3 GB) that no test,
+  doc, script or provenance record references: may they leave the repo? Hash-sealed and
+  test-pinned files (for example freehold-crafted-content-2026-09-07/runtime) always stay. Git
+  history keeps every deleted file recoverable." answered "Delete unreferenced (Recommended)".

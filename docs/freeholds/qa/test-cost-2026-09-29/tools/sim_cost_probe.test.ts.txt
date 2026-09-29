@@ -1,0 +1,32 @@
+import { writeFileSync } from 'node:fs';
+import { it } from 'vitest';
+import { Sim } from '../src/sim/sim';
+import { PLAYER_INTEREST_DROP_RADIUS } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
+
+function time(fn: () => void) {
+  const a = performance.now();
+  fn();
+  return performance.now() - a;
+}
+
+it('sim cost probe', () => {
+  const out: Record<string, number[]> = { ctorFull: [], ctorEmpty: [], ctorNoPlayer: [] };
+  for (let i = 0; i < 5; i++) out.ctorFull.push(time(() => new Sim({ seed: 42 + i, playerClass: 'warrior' })));
+  for (let i = 0; i < 5; i++)
+    out.ctorEmpty.push(time(() => new Sim({ seed: 42 + i, playerClass: 'warrior', world: EMPTY_TEST_WORLD })));
+  for (let i = 0; i < 5; i++) out.ctorNoPlayer.push(time(() => new Sim({ seed: 42 + i, noPlayer: true })));
+  const ticks = (cfg: object) => {
+    const sim = new Sim({ seed: 42, playerClass: 'warrior', ...cfg });
+    sim.tick();
+    return time(() => {
+      for (let t = 0; t < 400; t++) sim.tick();
+    }) / 400;
+  };
+  out.tickFull = [ticks({}), ticks({})];
+  out.tickCulled = [ticks({ idleMobTickRadius: PLAYER_INTEREST_DROP_RADIUS }), ticks({ idleMobTickRadius: PLAYER_INTEREST_DROP_RADIUS })];
+  out.tickEmpty = [ticks({ world: EMPTY_TEST_WORLD }), ticks({ world: EMPTY_TEST_WORLD })];
+  const sim = new Sim({ seed: 42, playerClass: 'warrior' });
+  out.entities = [sim.entities.size];
+  writeFileSync(process.env.PROBE_OUT ?? '/dev/null', JSON.stringify(out));
+}, 300_000);
