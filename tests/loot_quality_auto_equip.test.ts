@@ -36,6 +36,48 @@ describe('quality loot auto equip', () => {
     sim.addItemInstance(item.id, quality(1));
     expect(sim.player.equippedInstances.chest?.lootQuality?.tier).toBe(4);
   });
+  it("counts the grant's quality armor against a different worn piece, and the worn copy's too", () => {
+    // Two leather chests where base armor and resolved armor disagree: the
+    // quality piece's base armor loses to the other chest, its tier IV armor
+    // wins. The same-item level rule cannot decide between two items.
+    const chests = Object.values(ITEMS).filter(
+      (i) =>
+        i.kind === 'armor' &&
+        i.armorType === 'leather' &&
+        i.slot === 'chest' &&
+        !i.requiredClass &&
+        (i.requiredLevel ?? 0) <= 20,
+    );
+    const baseArmor = (id: string) => ITEMS[id].stats?.armor ?? 0;
+    let pair: { enhanced: string; plain: string } | undefined;
+    for (const enhanced of chests) {
+      const resolved = baseArmor(enhanced.id) + lootQualityBonuses(enhanced, quality(4)).armor;
+      const plain = chests.find(
+        (other) => baseArmor(other.id) > baseArmor(enhanced.id) && baseArmor(other.id) < resolved,
+      );
+      if (plain) {
+        pair = { enhanced: enhanced.id, plain: plain.id };
+        break;
+      }
+    }
+    if (!pair) throw new Error('no leather chest pair where the quality armor decides');
+    // Worn plain piece, quality grant of the other: the grant's own armor wins.
+    const upgrade = rogue(true);
+    upgrade.setPlayerLevel(20);
+    upgrade.addItem(pair.plain, 1);
+    expect(upgrade.equipment.chest).toBe(pair.plain);
+    upgrade.addItemInstance(pair.enhanced, quality(4));
+    expect(upgrade.equipment.chest).toBe(pair.enhanced);
+    expect(upgrade.player.equippedInstances.chest?.lootQuality?.tier).toBe(4);
+    // Worn quality piece, plain grant of the other: the worn copy's armor holds.
+    const hold = rogue(true);
+    hold.setPlayerLevel(20);
+    hold.addItemInstance(pair.enhanced, quality(4));
+    expect(hold.equipment.chest).toBe(pair.enhanced);
+    hold.addItem(pair.plain, 1);
+    expect(hold.equipment.chest).toBe(pair.enhanced);
+  });
+
   it('equips an enhanced weapon into an empty slot', () => {
     const sim = rogue(true);
     sim.setPlayerLevel(20);
