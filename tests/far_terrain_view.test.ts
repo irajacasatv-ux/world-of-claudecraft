@@ -51,6 +51,13 @@ async function microtasks(): Promise<void> {
   for (let i = 0; i < 4; i++) await new Promise((r) => setImmediate(r));
 }
 
+// Four zero-delay TIMER turns: the window a negative about the eager lane
+// needs, since that lane itself yields on setTimeout(0) (far_terrain.ts
+// nextMacrotask) and setImmediate turns can all run before its timer is due.
+async function timerTurns(): Promise<void> {
+  for (let i = 0; i < 4; i++) await new Promise((r) => setTimeout(r, 0));
+}
+
 async function driveToComplete(view: FarTerrainView, stub: IdleStub): Promise<void> {
   for (let guard = 0; guard < 500; guard++) {
     if (view.builtTileCount() >= view.plannedTileCount()) return;
@@ -210,7 +217,7 @@ describe('buildFarTerrain lifecycle', () => {
     // after settle must wait on an idle slot, not run eagerly to done
     view.rebuildRegion(10, 10, 30, 30);
     const before = view.group.children.map((c) => (c as { geometry?: object }).geometry as object);
-    await microtasks();
+    await timerTurns();
     const changedEagerly = view.group.children.filter(
       (c, i) => ((c as { geometry?: object }).geometry as object) !== before[i],
     ).length;
