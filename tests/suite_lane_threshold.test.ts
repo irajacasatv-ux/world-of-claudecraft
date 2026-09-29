@@ -130,14 +130,19 @@ const COST_MARKER = /^(?:\/\/+|\/?\*+)\s*cost\s*:/i;
 const PARAGRAPH_END = /^(?:\/\/+|\/?\*+\/?)\s*(?:Guards:|$)/;
 const GUARDS_MIN_CHARS = 12;
 
-/** The leading comment block: every comment line before the first line of code. */
+/** The leading comment block: every comment line before the first line of code. A block
+ *  comment runs from its opening to its closing whatever its lines start with, so an unstarred
+ *  line inside one is a comment line too (and cannot close the cost field's paragraph). */
 function leadingComment(source: string): string[] {
   const lines: string[] = [];
+  let inBlock = false;
   for (const line of source.split('\n')) {
     const trimmed = line.trim();
     if (trimmed === '') continue;
-    if (/^(\/\/|\/\*|\*)/.test(trimmed)) lines.push(trimmed);
-    else break;
+    if (!inBlock && !/^(\/\/|\/\*)/.test(trimmed)) break;
+    lines.push(trimmed);
+    if (inBlock) inBlock = !trimmed.includes('*/');
+    else if (trimmed.startsWith('/*')) inBlock = !trimmed.includes('*/', 2);
   }
   return lines;
 }
@@ -196,7 +201,7 @@ function admissionProblems(
       problems.push(`${file.key}: no "Guards:" line saying what it uniquely guards`);
     if (costMs === undefined)
       problems.push(
-        `${file.key}: no "Cost:" field holding one measured time alone (for example "Cost: 0.4 s")`,
+        `${file.key}: no "Cost:" field holding one measured time alone and closing its paragraph (for example "Cost: 0.4 s")`,
       );
     // The lane rule, applied to a file the table cannot yet judge: its stated cost in CI time.
     else if (!inLane.has(file.key) && statedWeight(file.source) > LANE_THRESHOLD_MS)
@@ -453,7 +458,7 @@ describe('the new-test admission rule', () => {
     );
     const guards = (key: string) => `${key}: no "Guards:" line saying what it uniquely guards`;
     const cost = (key: string) =>
-      `${key}: no "Cost:" field holding one measured time alone (for example "Cost: 0.4 s")`;
+      `${key}: no "Cost:" field holding one measured time alone and closing its paragraph (for example "Cost: 0.4 s")`;
     expect(problems).toEqual([
       guards('tests/new_buried.test.ts'),
       cost('tests/new_buried.test.ts'),
@@ -497,6 +502,8 @@ describe('the new-test admission rule', () => {
       ' * Cost: 1 s\n * warm; 2 min cold\n */\n',
       '// Cost: 1 s\n//\n// cost : 120 s cold\n',
       '// Cost: 1 s\n// Note: 2 min cold\n',
+      '/**\n * Cost: 1 s\n   warm; 2 min cold\n */\n',
+      '/* Cost: 1 s\n   2 min cold */\n',
     ])
       expect(read(refused), refused).toBeUndefined();
     expect(admissionStatement(afterDocblock).costMs).toBe(450);
