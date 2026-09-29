@@ -14,6 +14,7 @@ import { MOBS } from '../src/sim/data';
 import { createMob } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
 import type { Entity, PlayerClass } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 type AnySim = Sim & Record<string, any>;
 type AnyEntity = Entity & Record<string, any>;
@@ -27,8 +28,15 @@ const NEVER = 0.999999;
 // The threat a pull seeds on its own (aggroMob), independent of any damage dealt.
 const AGGRO_SEED_THREAT = 1;
 
+// Every case fights a mob it spawns itself with the rng pinned, so the ambient
+// overworld is pure overhead: the empty world serves.
 function makeSim(cls: PlayerClass, level: number): { sim: AnySim; p: AnyEntity; meta: any } {
-  const sim = new Sim({ seed: 1234, playerClass: cls, autoEquip: true }) as AnySim;
+  const sim = new Sim({
+    seed: 1234,
+    playerClass: cls,
+    autoEquip: true,
+    world: EMPTY_TEST_WORLD,
+  }) as AnySim;
   sim.setPlayerLevel(level);
   const p = sim.player as AnyEntity;
   p.resource = p.maxResource;
