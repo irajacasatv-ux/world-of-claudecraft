@@ -603,6 +603,9 @@ describe('test discovery matches vitest collection', () => {
     ['tests/server/helpers/golden.test.ts', true],
     ['tests/browser/a11y.browser.test.ts', false],
     ['tests/foo.browser.test.ts', false],
+    // vitest excludes only the `.ts` browser suffix, so these run in a bare run.
+    ['tests/foo.browser.test.mjs', true],
+    ['tests/foo.browser.test.tsx', true],
     ['tests/helper.ts', false],
     ['node_modules/pkg/x.test.ts', false],
     ['tmp/leftover.test.ts', false],
@@ -1053,6 +1056,10 @@ describe('discovery scope matches vitest collection over the real tree', () => {
     'docs',
   ]);
 
+  // The names vite.config excludes only at the repo root (`.claude/**`, `docs/**`, ...); the
+  // others (node_modules, dist, the linked-worktree caches) the discovery walk skips anywhere.
+  const ROOT_ONLY_SKIP = new Set(['.claude', '.codex', '.agents', '.venv', 'tmp', 'docs']);
+
   it('finds no collected test file outside tests/', () => {
     const offenders: string[] = [];
     const walk = (dir: string) => {
@@ -1060,7 +1067,9 @@ describe('discovery scope matches vitest collection over the real tree', () => {
         const full = path.join(dir, entry.name);
         const rel = path.relative(REPO_ROOT, full).split(path.sep).join('/');
         if (entry.isDirectory()) {
-          if (SCOPE_SKIP.has(entry.name)) continue;
+          // vite.config excludes these names at the repo root only; nested, vitest collects them.
+          if (SCOPE_SKIP.has(entry.name) && (!ROOT_ONLY_SKIP.has(entry.name) || rel === entry.name))
+            continue;
           if (rel === 'tests') continue;
           walk(full);
           continue;
@@ -1087,6 +1096,14 @@ describe('discovery scope matches vitest collection over the real tree', () => {
     expect(collected).toEqual(['tests/alive.test.ts']);
   });
 
+  const holdsCollectedTest = (dir: string): boolean =>
+    readdirSync(dir, { withFileTypes: true }).some((entry) =>
+      entry.isDirectory()
+        ? holdsCollectedTest(path.join(dir, entry.name))
+        : /\.(test|spec)\.[cm]?[jt]sx?$/.test(entry.name) &&
+          !entry.name.endsWith('.browser.test.ts'),
+    );
+
   it('finds no directory under tests/ that a discovery walk skips but vitest collects', () => {
     // Both walkers skip directories by NAME at any depth (discovery's SKIP_DIRS, the shard
     // walk's names and dot-directories), while vitest excludes only the root-level paths
@@ -1102,7 +1119,11 @@ describe('discovery scope matches vitest collection over the real tree', () => {
         const full = path.join(dir, entry.name);
         const rel = path.relative(REPO_ROOT, full).split(path.sep).join('/');
         const skipped = walkerSkips.has(entry.name) || entry.name.startsWith('.');
-        if (skipped && rel !== 'tests/browser' && entry.name !== 'node_modules')
+        // vitest excludes node_modules and dist at any depth, so only the other names count, and
+        // only when the skipped subtree holds a file vitest would collect (a stray local cache
+        // or scratch directory with no test in it is not a divergence).
+        const vitestSkips = entry.name === 'node_modules' || entry.name === 'dist';
+        if (skipped && rel !== 'tests/browser' && !vitestSkips && holdsCollectedTest(full))
           offenders.push(rel);
         if (skipped) continue;
         walk(full);

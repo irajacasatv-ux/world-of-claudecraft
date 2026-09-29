@@ -52,8 +52,10 @@ export const SKIP_DIRS = Object.freeze([
 export function isCollectedTestFile(relPath) {
   const p = String(relPath ?? '');
   if (!TEST_FILE_RE.test(p)) return false;
-  // The opt-in Playwright suite has its own config and never joins a bare run.
-  if (p.includes('.browser.test.')) return false;
+  // The opt-in Playwright suite has its own config and never joins a bare run. vite.config
+  // excludes exactly `**/*.browser.test.ts`, so any other `.browser.test.*` name is collected
+  // by vitest and must be listed here too.
+  if (p.endsWith('.browser.test.ts')) return false;
   if (p.split('/').some((seg) => SKIP_DIRS.includes(seg))) return false;
   return true;
 }
