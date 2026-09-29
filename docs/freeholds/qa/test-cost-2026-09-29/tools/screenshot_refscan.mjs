@@ -15,6 +15,9 @@ import path from 'node:path';
 
 const root = process.argv[2];
 const out = process.argv[3];
+// Path prefixes whose files never count as a reference (this record's own data lists every
+// screenshot path, so a rescan must exclude it): node screenshot_refscan.mjs <root> <out> [prefix...]
+const excluded = process.argv.slice(4);
 const ls = execFileSync('git', ['-C', root, 'ls-tree', '-r', '-l', 'HEAD'], {
   maxBuffer: 1 << 30,
   encoding: 'utf8',
@@ -35,7 +38,12 @@ for (const s of shots) {
   byBase.get(b).push(s);
 }
 const TEXT = /\.(md|ts|mts|mjs|cjs|js|json|yml|yaml|txt|html|svelte|css|sh|py|toml|tsv|csv|log)$/i;
-const texts = all.filter((f) => TEXT.test(f.path) && f.size < 40_000_000);
+const texts = all.filter(
+  (f) =>
+    TEXT.test(f.path) &&
+    f.size < 40_000_000 &&
+    !excluded.some((prefix) => f.path.startsWith(prefix)),
+);
 const refsBy = new Map(); // shot path -> Set(referencing files) by path
 const baseBy = new Map(); // shot path -> Set(files) by bare basename only
 const spanSet = new Map(); // span under screenshots -> Set(files)
@@ -44,8 +52,8 @@ const add = (m, k, v) => {
   m.get(k).add(v);
 };
 const NAME =
-  /[\w.@%+\-]+\.(?:png|jpe?g|webp|gif|mp4|webm|json|md|txt|html|mjs|js|ts|log|csv|tsv|svg|glb|ya?ml|jsonl|wav|mp3|ogg)\b/gi;
-const SPAN = /screenshots\/([\w.@%+\-\/]+)/g;
+  /[\w.@%+-]+\.(?:png|jpe?g|webp|gif|mp4|webm|json|md|txt|html|mjs|js|ts|log|csv|tsv|svg|glb|ya?ml|jsonl|wav|mp3|ogg)\b/gi;
+const SPAN = /screenshots\/([\w.@%+\-/]+)/g;
 for (const t of texts) {
   let body;
   try {
