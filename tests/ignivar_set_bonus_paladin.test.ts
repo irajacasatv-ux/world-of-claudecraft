@@ -54,6 +54,12 @@ import { type ResolvedAbility, Sim } from '../src/sim/sim';
 import type { SimContext } from '../src/sim/sim_context';
 import type { Aura, Entity } from '../src/sim/types';
 import { expectDefined } from './helpers/defined';
+import { EMPTY_TEST_WORLD } from './sim_shared';
+
+// Every live rig stands on the empty world with hand-placed foes and allies and
+// pins any roll it reads, so one seed serves the file (a fresh seed costs a
+// collider grid build).
+const SEED = 9931;
 
 const SET_SLOTS = ['helmet', 'shoulder', 'chest', 'gloves', 'legs'] as const;
 
@@ -178,7 +184,12 @@ describe('Dawnforged 2pc: the beacon fraction, both readers', () => {
 
   it('live transfer: a wearer beacon copies 55 percent of effective healing (control 50)', () => {
     function transferredHeal(wearer: boolean): number {
-      const sim = new Sim({ seed: 211, playerClass: 'paladin', noPlayer: true });
+      const sim = new Sim({
+        seed: SEED,
+        playerClass: 'paladin',
+        noPlayer: true,
+        world: EMPTY_TEST_WORLD,
+      });
       const paladinId = sim.addPlayer('paladin', 'Aurelia');
       const allyId = sim.addPlayer('warrior', 'Borin');
       const beaconId = sim.addPlayer('priest', 'Celia');
@@ -209,7 +220,12 @@ describe('Dawnforged 2pc: the beacon fraction, both readers', () => {
   });
 
   it('the rider reaches the recalc and pushback does nothing to a wearer cast', () => {
-    const sim = new Sim({ seed: 31, playerClass: 'paladin', autoEquip: true });
+    const sim = new Sim({
+      seed: SEED,
+      playerClass: 'paladin',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.setPlayerLevel(20);
     expect(sim.setSpec('holy')).toBe(true);
     expect(sim.player.castPushbackReduction).toBe(0);
@@ -249,8 +265,13 @@ describe("Dawnforged 4pc: Radiant Resonance's empowered Dawn's Embrace is instan
     expect(radiantResonanceCastTime(resonant, 'holy_light', 2.5, wearerMods)).toBe(2.5);
   });
 
-  function makeHoly(pieces: number, seed = 4211): Sim {
-    const sim = new Sim({ seed, playerClass: 'paladin', autoEquip: true });
+  function makeHoly(pieces: number): Sim {
+    const sim = new Sim({
+      seed: SEED,
+      playerClass: 'paladin',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.setPlayerLevel(20);
     expect(sim.setSpec('holy')).toBe(true);
     if (pieces > 0) equipSet(sim, 'dawnforged', pieces);
@@ -406,7 +427,12 @@ describe('Zealfire 2pc: Final Edict and Dawnfall cut each other by 3 sec', () =>
 
   it('live cast: a wearer Final Edict cuts a running Dawnfall by 3 (control 2)', () => {
     function dawnfallAfterEdict(wearer: boolean): number {
-      const sim = new Sim({ seed: 9931, playerClass: 'paladin', autoEquip: true }) as Sim & {
+      const sim = new Sim({
+        seed: SEED,
+        playerClass: 'paladin',
+        autoEquip: true,
+        world: EMPTY_TEST_WORLD,
+      }) as Sim & {
         nextId: number;
         addEntity(entity: Entity): void;
       };
@@ -439,7 +465,12 @@ describe('Zealfire 2pc: Final Edict and Dawnfall cut each other by 3 sec', () =>
 
 describe("Zealfire 4pc: Dawn's Wrath bakes the wearer mult into the aura", () => {
   function makeRetribution(pieces: number): Sim {
-    const sim = new Sim({ seed: 9931, playerClass: 'paladin', autoEquip: true });
+    const sim = new Sim({
+      seed: SEED,
+      playerClass: 'paladin',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.setPlayerLevel(20);
     expect(sim.setSpec('retribution')).toBe(true);
     if (pieces > 0) equipSet(sim, 'zealfire', pieces);
