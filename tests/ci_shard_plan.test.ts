@@ -21,6 +21,33 @@ import { collectSuiteVisibility } from '../scripts/lib/gate_discovery.mjs';
 
 const REPO_ROOT = path.resolve(__dirname, '..');
 
+// The REAL collected suite, walked once per file. Four cases resolve against it
+// (the guard and lane pins and the two env-flag reader registries), and each
+// used to re-read every test source in the tree. The tree cannot change during
+// the run, so one walk and one read per file serve all four.
+const corpusSources = new Map<string, string>();
+function corpusRead(file: string): string {
+  let text = corpusSources.get(file);
+  if (text === undefined) {
+    text = readFileSync(file, 'utf8');
+    corpusSources.set(file, text);
+  }
+  return text;
+}
+const corpusSource = (rel: string): string => corpusRead(path.join(REPO_ROOT, rel));
+let realSuiteMemo: ReturnType<typeof collectSuiteVisibility> | undefined;
+function realSuite(): ReturnType<typeof collectSuiteVisibility> {
+  realSuiteMemo ??= collectSuiteVisibility({
+    root: REPO_ROOT,
+    readdirSync,
+    readFileSync: corpusRead,
+    join: path.join,
+    relative: path.relative,
+    sep: path.sep,
+  });
+  return realSuiteMemo;
+}
+
 // A realistic fixture: enough always-run files to clear the sanity floor, plus
 // every guard suite and a parity pin so the guard union resolves.
 const GUARDS = [...CI_GUARD_SUITES, 'tests/parity/golden_warrior.test.ts'];
@@ -131,14 +158,7 @@ describe('the floor union', () => {
   });
 
   it('resolves every guard against the REAL collected suite', () => {
-    const { testFiles, alwaysRun } = collectSuiteVisibility({
-      root: REPO_ROOT,
-      readdirSync,
-      readFileSync,
-      join: path.join,
-      relative: path.relative,
-      sep: path.sep,
-    });
+    const { testFiles, alwaysRun } = realSuite();
     const { floor, missingGuards } = buildFloor({
       alwaysRun,
       testFiles,
@@ -429,14 +449,7 @@ describe('the long-sims lane (Phase 4)', () => {
     // A deleted or renamed lane file must fail here loudly; collectedLaneFiles
     // filtering it out silently is the fail-safe RUNTIME behavior, not the
     // maintained state.
-    const { testFiles } = collectSuiteVisibility({
-      root: REPO_ROOT,
-      readdirSync,
-      readFileSync,
-      join: path.join,
-      relative: path.relative,
-      sep: path.sep,
-    });
+    const { testFiles } = realSuite();
     const collected = new Set(testFiles);
     for (const f of CI_LONG_SUITES) expect(collected.has(f), f).toBe(true);
   });
@@ -481,17 +494,8 @@ describe('the long-sims lane (Phase 4)', () => {
     // would silently run the diet nightly forever. Split so this registry
     // does not match itself.
     const needle = ['process.env.', "WOC_FULL_BALANCE_SWEEP === '1'"].join('');
-    const { testFiles } = collectSuiteVisibility({
-      root: REPO_ROOT,
-      readdirSync,
-      readFileSync,
-      join: path.join,
-      relative: path.relative,
-      sep: path.sep,
-    });
-    const readers = testFiles
-      .filter((f) => readFileSync(path.join(REPO_ROOT, f), 'utf8').includes(needle))
-      .sort();
+    const { testFiles } = realSuite();
+    const readers = testFiles.filter((f) => corpusSource(f).includes(needle)).sort();
     expect(readers).toEqual([
       'tests/druid_balance_probe.test.ts',
       'tests/hunter_dps_balance.test.ts',
@@ -517,17 +521,8 @@ describe('the long-sims lane (Phase 4)', () => {
     // thin its PR depth, and none may be a lane file (the lane has its own
     // flag and accounting). Same needle shape and split as the diet pin.
     const needle = ['process.env.', "WOC_NIGHTLY_SWEEP === '1'"].join('');
-    const { testFiles } = collectSuiteVisibility({
-      root: REPO_ROOT,
-      readdirSync,
-      readFileSync,
-      join: path.join,
-      relative: path.relative,
-      sep: path.sep,
-    });
-    const readers = testFiles
-      .filter((f) => readFileSync(path.join(REPO_ROOT, f), 'utf8').includes(needle))
-      .sort();
+    const { testFiles } = realSuite();
+    const readers = testFiles.filter((f) => corpusSource(f).includes(needle)).sort();
     expect(readers).toEqual([
       'tests/audit_conservation_property.test.ts',
       'tests/chronomancy_balance_targets.test.ts',
