@@ -5209,9 +5209,8 @@ OWED, in order, for the next session:
   the Scouring Mercy sanity bounds; the three `paladin_devotion_balance` rotation pins; the
   druid matrix's nightly-only cells (class owner).
 - Watch the first nightly: the skill icon history clone (`git clone --revision`).
-- Cleanup: the phase 2 agent worktrees under
-  `/Users/fernando/Documents/world-of-claudecraft/.claude/worktrees/agent-*` and their
-  `test-cost/*` branches are fully integrated and can go.
+- Cleanup: the phase 2 agent worktrees under the main checkout's `.claude/worktrees/agent-*`
+  and their `test-cost/*` branches are fully integrated and can go.
 
 CORRECTIONS TO COMMIT MESSAGES (the commits stay as written; the record is here): 35 commits
 of this part carry a body line over 90 columns where the rule asks for about 72 (rewriting them
