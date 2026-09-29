@@ -25,6 +25,7 @@ import { createWocMarketCustody, type WocCustodyGameHost } from '../../server/wo
 import { isCataloguedRelicItem } from '../../src/sim/content/reliquary';
 import { Sim } from '../../src/sim/sim';
 import type { InvSlot } from '../../src/sim/types';
+import { EMPTY_TEST_WORLD } from '../sim_shared';
 
 const RECIPIENT = { key: '4242', name: 'Buyer' };
 const REF = 'settlement:9';
@@ -40,7 +41,13 @@ function makeHost(over: Partial<WocCustodyGameHost> = {}): {
   persistParcelRow: (row: CustodyParcelRow) => Promise<void>;
 } {
   const parcelRows: CustodyParcelRow[] = [];
-  const sim = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+  // Parcels, bags and saves are all per-character state: the empty world serves them.
+  const sim = new Sim({
+    seed: 42,
+    playerClass: 'warrior',
+    noPlayer: true,
+    world: EMPTY_TEST_WORLD,
+  });
   const host: WocCustodyGameHost = {
     sim,
     wocCustodySession: () => null,
