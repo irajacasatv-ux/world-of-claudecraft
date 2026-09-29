@@ -32,13 +32,17 @@ function sortDeep(value) {
   return value;
 }
 
-// Bundle src/ui/i18n.ts and reassemble the resolved table from its exports.
-// `translations` itself is not exported, but every locale is an export named for
-// its code and `supportedLanguages` is the authoritative ordered key set.
+// Bundle the generated barrel (every locale is an export named for its code) beside
+// src/ui/i18n.ts's `supportedLanguages`, the authoritative ordered key set, and
+// reassemble the resolved table. src/ui/i18n.ts re-exports only `en`, so the other
+// locale consts are read from the barrel itself.
 export async function computeResolvedHash() {
   const build = await esbuild.build({
     stdin: {
-      contents: `export * from './src/ui/i18n.ts';`,
+      contents: [
+        `export * from './src/ui/i18n.resolved.generated/index.ts';`,
+        `export { supportedLanguages } from './src/ui/i18n.ts';`,
+      ].join('\n'),
       resolveDir: root,
       sourcefile: 'i18n-resolved-hash-entry.ts',
       loader: 'ts',

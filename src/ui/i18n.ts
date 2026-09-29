@@ -8,8 +8,7 @@
 // LOCALE_LOADERS[lang]()'s dynamic import() as its own content-hashed chunk, so a
 // default-English visitor downloads zero non-en locale bytes. These are imported from the
 // SPECIFIC generated modules (en / en_XA / pending / loaders), never the index.ts barrel,
-// so the only reference to the barrel below is the dead re-export line - which Rollup
-// tree-shakes out of the app chunk.
+// which this module does not reference at all.
 
 import type {
   DeepPartial,
@@ -25,39 +24,15 @@ import { LOCALE_LOADERS, SUPPORTED_LANGUAGES } from './i18n.resolved.generated/l
 import { pending } from './i18n.resolved.generated/pending';
 import { type InterpolationMemoEntry, interpolateWithMemo } from './i18n_interpolation';
 
-// Re-export the dense per-locale objects so const-importers of './i18n' keep an unchanged
-// surface: the S3 guard (tests/localization_fixes.test.ts) and the byte-equivalence
-// diagnostic (scripts/i18n_resolved_hash.mjs) read every locale const by name. This is a PURE
-// re-export (export-from, NO local binding): the app runtime references none of these names
-// through './i18n' - every read-path below (t, translationValue, hasTranslation, tOptional)
-// reads the lazy `resident` table instead - so Rollup drops the unused re-export and
-// tree-shakes the 21 non-en slices (and the barrel that assembles them) out of the app
-// chunk. THAT drop is the payload win of the lazy locale flip. `en` stays in the chunk via the eager
-// local import above (the universal English default), not via this line.
-export {
-  cs_CZ,
-  da_DK,
-  de_DE,
-  en,
-  en_CA,
-  es,
-  es_ES,
-  fr_CA,
-  fr_FR,
-  id_ID,
-  it_IT,
-  ja_JP,
-  ko_KR,
-  nl_NL,
-  pl_PL,
-  pt_BR,
-  ru_RU,
-  sv_SE,
-  tr_TR,
-  vi_VN,
-  zh_CN,
-  zh_TW,
-} from './i18n.resolved.generated';
+// `en` is re-exported from its eager local import (the universal English default). The 21
+// non-en dense slices are NOT re-exported: a reader that needs every locale's const by name
+// (the S3 guard in tests/localization_fixes.test.ts, scripts/i18n_resolved_hash.mjs)
+// imports the generated barrel './i18n.resolved.generated' directly. Rollup already
+// tree-shook such a re-export out of the app chunk, but vitest evaluates every module a
+// file reaches, so the re-export cost every suite importing './i18n' all 21 slices plus
+// the barrel (about 0.6 s of import per file locally, measured 2026-09-29 in
+// docs/freeholds/qa/test-cost-2026-09-29/README.md).
+export { en };
 // gameStrings is the post-cap/XP/leaderboard layer, which the table carries under the
 // `game` key. Source it from the eager generated dense `en` rather than re-exporting from
 // i18n.catalog, so importing './i18n' does not pull the full i18n.catalog base (en + shared content

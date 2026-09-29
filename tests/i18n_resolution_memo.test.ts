@@ -21,7 +21,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { MOBS } from '../src/sim/data';
 import { tEntity } from '../src/ui/entity_i18n';
-import { en, ensureLocaleLoaded, es, isLocaleResident, setLanguage, t } from '../src/ui/i18n';
+import { en, ensureLocaleLoaded, isLocaleResident, setLanguage, t } from '../src/ui/i18n';
+import { es } from '../src/ui/i18n.resolved.generated';
 
 afterEach(() => setLanguage('en'));
 

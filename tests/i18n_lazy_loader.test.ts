@@ -10,16 +10,14 @@
 
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
-  de_DE,
   en,
   ensureLocaleLoaded,
-  es,
-  fr_FR,
   isLocaleResident,
   prefetchLocale,
   setLanguage,
   t,
 } from '../src/ui/i18n';
+import { de_DE, es, fr_FR } from '../src/ui/i18n.resolved.generated';
 import { LOCALE_LOADERS } from '../src/ui/i18n.resolved.generated/loaders';
 
 describe('lazy-locale loader: t() stays synchronous around ensureLocaleLoaded', () => {

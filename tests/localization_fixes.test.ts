@@ -28,16 +28,21 @@ import { auraDisplayNameForHud } from '../src/ui/aura_display_name';
 import { dungeonText } from '../src/ui/entity_display_core';
 import { itemDisplayName, tEntityOptional } from '../src/ui/entity_i18n';
 import {
+  en,
+  ensureLocaleLoaded,
+  formatMoney as formatLocalizedMoney,
+  formatNumber,
+  setLanguage,
+  supportedLanguages,
+  t,
+} from '../src/ui/i18n';
+import {
   cs_CZ,
   da_DK,
   de_DE,
-  en,
   en_CA,
-  ensureLocaleLoaded,
   es,
   es_ES,
-  formatMoney as formatLocalizedMoney,
-  formatNumber,
   fr_CA,
   fr_FR,
   id_ID,
@@ -48,15 +53,12 @@ import {
   pl_PL,
   pt_BR,
   ru_RU,
-  setLanguage,
-  supportedLanguages,
   sv_SE,
-  t,
   tr_TR,
   vi_VN,
   zh_CN,
   zh_TW,
-} from '../src/ui/i18n';
+} from '../src/ui/i18n.resolved.generated';
 import { localizeLootText } from '../src/ui/loot_text_i18n_core';
 import { localizeServerText, DICT as serverDICT, tServer } from '../src/ui/server_i18n';
 import {

@@ -4,37 +4,39 @@ import { beforeAll, describe, expect, it } from 'vitest';
 // @ts-expect-error - shared zero-dep JS tool (no .d.ts); same pattern as tests/i18n_fill_worklist.test.ts.
 import { expandGlossaryTerms, patternToRegExp } from '../scripts/i18n_fill_worklist.mjs';
 import {
+  en,
+  ensureLocaleLoaded,
+  formatMoney,
+  hasTranslation,
+  languageTag,
+  type SupportedLanguage,
+  setLanguage,
+  supportedLanguages,
+  tPlural,
+} from '../src/ui/i18n';
+import {
   cs_CZ,
   da_DK,
   de_DE,
-  en,
   en_CA,
-  ensureLocaleLoaded,
   es,
   es_ES,
-  formatMoney,
   fr_CA,
   fr_FR,
-  hasTranslation,
   id_ID,
   it_IT,
   ja_JP,
   ko_KR,
-  languageTag,
   nl_NL,
   pl_PL,
   pt_BR,
   ru_RU,
-  type SupportedLanguage,
-  setLanguage,
-  supportedLanguages,
   sv_SE,
-  tPlural,
   tr_TR,
   vi_VN,
   zh_CN,
   zh_TW,
-} from '../src/ui/i18n';
+} from '../src/ui/i18n.resolved.generated';
 import { pending } from '../src/ui/i18n.resolved.generated/pending';
 
 // Whole-catalog i18n completeness guards that the per-key sample tests in
