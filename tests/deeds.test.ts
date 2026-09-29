@@ -35,8 +35,10 @@ import { completeCorpseHarvest } from './helpers/complete_corpse_harvest';
 import { runSalvage } from './helpers/enchant_family_cast';
 import { VENDOR_TEST_WORLD } from './sim_shared';
 
-function makeSim(seed = 42): Sim {
-  return new Sim({ seed, playerClass: 'warrior', autoEquip: false, world: VENDOR_TEST_WORLD });
+// Every Sim shares seed 42, the twins included: a fresh seed builds its
+// collider grids (about half a second) and no case compares two seeds.
+function makeSim(): Sim {
+  return new Sim({ seed: 42, playerClass: 'warrior', autoEquip: false, world: VENDOR_TEST_WORLD });
 }
 
 function primary(sim: Sim) {
@@ -715,8 +717,8 @@ describe('retro on join', () => {
   });
 
   it('the retro pass is a pure function of the loaded state and the catalog', () => {
-    const a = new Sim({ seed: 7, playerClass: 'mage', world: VENDOR_TEST_WORLD });
-    const b = new Sim({ seed: 7, playerClass: 'mage', world: VENDOR_TEST_WORLD });
+    const a = new Sim({ seed: 42, playerClass: 'mage', world: VENDOR_TEST_WORLD });
+    const b = new Sim({ seed: 42, playerClass: 'mage', world: VENDOR_TEST_WORLD });
     const pa = a.addPlayer('warrior', 'Same', { state: veteranState() });
     const pb = b.addPlayer('warrior', 'Same', { state: veteranState() });
     expect([...a.players.get(pa)!.deedsEarned.keys()].sort()).toEqual(
@@ -1202,7 +1204,7 @@ describe('persistence', () => {
 describe('determinism', () => {
   it('two sims with the same seed and script produce identical earned sets and event streams', () => {
     const run = () => {
-      const sim = makeSim(1234);
+      const sim = makeSim();
       const { meta } = primary(sim);
       const events: SimEvent[] = [];
       sim.setPlayerLevel(10);
@@ -2185,7 +2187,12 @@ describe('active border selection (setActiveBorder)', () => {
     ];
     for (const shape of hostile) {
       const tampered = { ...state, activeBorder: shape } as unknown as CharacterState;
-      const sim2 = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+      const sim2 = new Sim({
+        seed: 42,
+        playerClass: 'warrior',
+        noPlayer: true,
+        world: VENDOR_TEST_WORLD,
+      });
       let pid = -1;
       expect(
         () => {
