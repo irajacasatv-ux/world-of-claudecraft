@@ -34,11 +34,24 @@ import {
 import { MASTERWORK_CHANCE_CAP } from '../src/sim/professions/masterwork';
 import { stationsOfType } from '../src/sim/professions/stations';
 import type { ProfessionRecipeRecord } from '../src/sim/professions/types';
-import type { Rng } from '../src/sim/rng';
+import { Rng } from '../src/sim/rng';
 import { Sim } from '../src/sim/sim';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
-function makeSim(seed = 42) {
-  return new Sim({ seed, playerClass: 'warrior', autoEquip: false });
+// Crafting reads the player, the recipe tables and the stations (kept by the
+// empty world), never a camp, NPC or ground object, and every Sim shares one
+// seed: a fresh seed builds its collider grids (about half a second) and no
+// case compares two seeds. A case that rides the masterwork roll forces it
+// (rngWithFirstDraw) instead of hunting a world seed.
+function makeSim() {
+  return new Sim({ seed: 42, playerClass: 'warrior', autoEquip: false, world: EMPTY_TEST_WORLD });
+}
+
+/** A fresh Rng whose first draw satisfies `accept`: installed as `sim.rng`
+ *  right before a craft, it forces the single proc roll through the real draw
+ *  path, so the draw observer still counts the roll itself. */
+function rngWithFirstDraw(accept: (value: number) => boolean): Rng {
+  for (let seed = 1; ; seed++) if (accept(new Rng(seed).next())) return new Rng(seed);
 }
 
 function grantItem(sim: Sim, itemId: string, count: number, pid: number) {
@@ -359,7 +372,7 @@ describe('resolveCraft (#1127)', () => {
 
   it('a fixed-seed craft resolves to an identical result across two runs, masterwork field included', () => {
     const runOnce = () => {
-      const sim = makeSim(7);
+      const sim = makeSim();
       const pid = sim.playerId;
       grantItem(sim, 'spider_leg', 1, pid);
       const recipe = recipeById('recipe_tough_jerky')!;
@@ -393,7 +406,7 @@ describe('resolveCraft (#1127)', () => {
   });
 
   it('a successful craft consumes exactly one rng draw (the masterwork proc), zero on denial', () => {
-    const sim = makeSim(7);
+    const sim = makeSim();
     const pid = sim.playerId;
     const recipe = recipeById('recipe_tough_jerky')!;
 
@@ -876,8 +889,8 @@ describe('masterwork proc (Professions 2.0)', () => {
   // The output (eastbrook_ritual_vestments) is an equippable uncommon-def
   // piece with a primary-stat profile (int/spi), so the effect gate passes:
   // uncommon bumps to rare, under the major craft's unlimited ceiling.
-  function vestmentsScenario(seed: number) {
-    const sim = makeSim(seed);
+  function vestmentsScenario() {
+    const sim = makeSim();
     const pid = sim.playerId;
     sim.acceptArchetypeQuest('tailoring');
     const meta = (sim as any).players.get(pid);
@@ -895,15 +908,12 @@ describe('masterwork proc (Professions 2.0)', () => {
     return { sim, pid, meta };
   }
 
-  it('a proc mints a signed masterwork instance and surfaces it on every seam (hunted seed)', () => {
-    // Seed 2 was hunted (bounded scan from seed 1 upward, re-recorded after
-    // the Eastbrook camp respacing thinned the zone-1 camp counts and shifted
-    // the camp-driven world-gen draw sequence) so the single proc draw lands
-    // under the capped 15 percent chance; only the pinned literal is
-    // committed, per the suite's seed-pinning idiom. Spares on record: 21, 23,
-    // 27, and 28.
-    const { sim, pid, meta } = vestmentsScenario(2);
+  it('a proc mints a signed masterwork instance and surfaces it on every seam (forced roll)', () => {
+    // The single proc draw is forced under the capped 15 percent chance: the
+    // craft runs on a fresh Rng whose first draw lands below the cap.
+    const { sim, pid, meta } = vestmentsScenario();
     sim.drainEvents();
+    sim.rng = rngWithFirstDraw((value) => value < MASTERWORK_CHANCE_CAP);
     let draws = 0;
     const rng: Rng = (sim as any).ctx.rng;
     rng.setObserver(() => {
@@ -960,15 +970,15 @@ describe('masterwork proc (Professions 2.0)', () => {
     });
   });
 
-  it('a missed proc still draws exactly once and grants a plain common-def stack (hunted seed)', () => {
+  it('a missed proc still draws exactly once and grants a plain common-def stack (forced roll)', () => {
     // The same maximum-chance shape on a common-def output (the chain vest,
-    // under armorcrafting as the MAJOR craft). Seed 1 was hunted so the single
-    // proc draw lands ABOVE the capped 15 percent chance: the roll itself
-    // misses, decisively. The observed-roll pin below keeps that premise
-    // load-bearing (this def is armor-only, so the effect gate would ALSO
-    // deny; without the pin, a re-seeded roll under the cap would pass
-    // silently through the gate instead of proving a roll miss).
-    const sim = makeSim(1);
+    // under armorcrafting as the MAJOR craft). The single proc draw is forced
+    // ABOVE the capped 15 percent chance: the roll itself misses, decisively.
+    // The observed-roll pin below keeps that premise load-bearing (this def is
+    // armor-only, so the effect gate would ALSO deny; without the pin, a roll
+    // under the cap would pass silently through the gate instead of proving a
+    // roll miss).
+    const sim = makeSim();
     const pid = sim.playerId;
     sim.acceptArchetypeQuest('armorcrafting');
     const meta = (sim as any).players.get(pid);
@@ -980,6 +990,7 @@ describe('masterwork proc (Professions 2.0)', () => {
     sim.addItem('copper_ore', 3, pid);
     sim.addItem('smithing_flux', 9, pid);
     sim.drainEvents();
+    sim.rng = rngWithFirstDraw((value) => value >= MASTERWORK_CHANCE_CAP);
     let draws = 0;
     let roll = -1;
     const rng: Rng = (sim as any).ctx.rng;
@@ -991,7 +1002,7 @@ describe('masterwork proc (Professions 2.0)', () => {
     rng.setObserver(null);
 
     // The proc draw is unconditional on the success path: exactly one draw
-    // even when it misses, and the seed-1 draw really does land at or above
+    // even when it misses, and the forced draw really does land at or above
     // the capped chance, so the miss is the roll's doing.
     expect(draws).toBe(1);
     expect(roll).toBeGreaterThanOrEqual(MASTERWORK_CHANCE_CAP);
