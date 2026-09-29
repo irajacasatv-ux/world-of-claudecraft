@@ -109,11 +109,15 @@ describe('owned-class level 20 balance harness (healer probes)', () => {
       .find((event) => event.ability === 'Seraphic Vigil');
     expect(vigilHeal?.amount ?? 0).toBeGreaterThan(0);
     expect(priest.auras.some((aura) => aura.id === 'seraphic_vigil')).toBe(false);
-  }, 120_000);
+    // 60 s since 2026-09-29 (was 120 s): it reads cached profile runs and measured
+    // under 0.1 s local with the production idle cull, so it takes the 60 s floor.
+  }, 60_000);
 
   it('keeps role probes deterministic at the same fixed seed', () => {
     const first = profileRun('spiritmend', 3);
     expect(runOwnedHealerProbe('spiritmend', 3, PROBE_SEED, 'test-head')).toEqual(first);
     expect(runWarspiritOfftankProbe(PROBE_SEED)).toEqual(runWarspiritOfftankProbe(PROBE_SEED));
-  }, 120_000);
+    // 60 s since 2026-09-29 (was 120 s): 2.3 to 4.0 s local at one worker with the
+    // production idle cull, about ten times that is under the 60 s floor.
+  }, 60_000);
 });

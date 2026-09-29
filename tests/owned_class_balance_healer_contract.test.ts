@@ -76,8 +76,11 @@ describe('owned-class level 20 balance harness (healer contract)', () => {
       expect(doctrineGroup.resourceEnd).toBeGreaterThanOrEqual(band(227, 198));
       // Same owned-class matrix growth as the DPS metric test in
       // owned_class_balance_dps_metrics, same long-sims lane contention
-      // doubling; the diet runs two of the five seeds (~50s measured local).
+      // doubling; the diet runs two of the five seeds. With the production
+      // idle cull the case measured 27.1 s diet / 48.3 s full local at one
+      // worker (2026-09-29): about ten times that gives 510 s full, and the
+      // diet keeps its 240 s (never raised).
     },
-    FULL_SWEEP ? 720_000 : 240_000,
+    FULL_SWEEP ? 510_000 : 240_000,
   );
 });

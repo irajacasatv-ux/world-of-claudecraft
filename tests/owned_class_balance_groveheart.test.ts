@@ -23,7 +23,8 @@ describe('owned-class level 20 balance harness (Groveheart)', () => {
     expect(groveheart.hps).toBeGreaterThan(0);
     // One three-ally probe: 15.4 s in the PR lane, 19.2 s on the release/v0.45.0 and main
     // nightlies and 20.9 s (over the 20 s default) on a busier feature/freeholds nightly,
-    // so it carries a declared budget like its sibling below.
+    // so it carries a declared budget like its sibling below. With the production idle
+    // cull it measured 3.2 to 3.6 s local at one worker (2026-09-29): the 60 s floor.
   }, 60_000);
 
   it('holds the Groveheart interim healer contract on both profiles', () => {
@@ -58,5 +59,7 @@ describe('owned-class level 20 balance harness (Groveheart)', () => {
     // 100.97 / 92.98 over the 80 / 40 floors); the same relative margins give 80 / 37.
     expect(single).toBeGreaterThanOrEqual(80);
     expect(group).toBeGreaterThanOrEqual(37);
-  }, 300_000);
+    // 180 s since 2026-09-29 (was 300 s): 15.0 to 17.1 s local at one worker with the
+    // production idle cull, about ten times that rounded up to a whole 30 s.
+  }, 180_000);
 });
