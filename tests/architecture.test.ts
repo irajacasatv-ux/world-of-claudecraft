@@ -1278,15 +1278,21 @@ function scanImports(files: string[], forbid: (spec: string) => string | null): 
   return violations;
 }
 
-function scanLines(files: string[], re: RegExp): string[] {
-  const violations: string[] = [];
+// Several patterns ride one read and one strip of each file; the violations
+// come back grouped per pattern, in the order given, exactly as one scan per
+// pattern would list them concatenated.
+function scanLines(files: string[], ...patterns: RegExp[]): string[] {
+  const perPattern: string[][] = patterns.map(() => []);
   for (const file of files) {
     const lines = stripComments(readFileSync(file, 'utf8')).split('\n');
     lines.forEach((line, i) => {
-      if (re.test(line)) violations.push(`${relative(repoRoot, file)}:${i + 1}  ${line.trim()}`);
+      patterns.forEach((re, k) => {
+        if (re.test(line))
+          perPattern[k].push(`${relative(repoRoot, file)}:${i + 1}  ${line.trim()}`);
+      });
     });
   }
-  return violations;
+  return perPattern.flat();
 }
 
 describe('src/sim architecture invariants', () => {
@@ -1525,10 +1531,13 @@ describe('Reliquary sparse-state writes stay inside their owning module', () => 
   });
 
   it('no module outside src/sim/reliquary.ts writes firstFind / marks / recent / counts / illuminatedPages', () => {
-    const violations = scanLines(scanned, RELIQUARY_WRITE_RE)
-      .concat(scanLines(scanned, RELIQUARY_DELETE_RE))
-      .concat(scanLines(scanned, RELIQUARY_PREFIX_RE))
-      .concat(scanLines(scanned, RELIQUARY_OBJASSIGN_RE));
+    const violations = scanLines(
+      scanned,
+      RELIQUARY_WRITE_RE,
+      RELIQUARY_DELETE_RE,
+      RELIQUARY_PREFIX_RE,
+      RELIQUARY_OBJASSIGN_RE,
+    );
     expect(
       violations,
       'a Reliquary state write outside its owning module skips the wire-memo revision bump,\n' +
