@@ -42,6 +42,54 @@ function wildMob(sim: Sim) {
   return mob as any;
 }
 
+// A practice dummy never fights back and no hate table of its holds anyone
+// (combat/engaged_combat.ts), so only the pet's own trading blows, inside the
+// PET_COMBAT_LINGER window, can keep the owner in combat.
+function practiceDummy(sim: Sim) {
+  expect(MOBS.training_dummy.dummy).toBe(true);
+  const mob = createMob((sim as any).nextId++, MOBS.training_dummy, 20, { ...sim.player.pos });
+  mob.hostile = true;
+  (sim as any).addEntity(mob);
+  return mob as any;
+}
+
+// Park a high-HP target in melee range of the pet so it keeps swinging: the
+// pet's combatTimer stays low, so the owner stays in combat.
+function expectTradingBlowsHoldsOwner(makeTarget: (sim: Sim) => any) {
+  const { sim, p } = makeWarlock();
+  const pet = summonInfernal(sim, p);
+  const mob = makeTarget(sim);
+
+  mob.hp = 1_000_000;
+  mob.maxHp = 1_000_000;
+  pet.petMode = 'aggressive';
+  const place = () => {
+    pet.pos = { x: p.pos.x + 1, y: p.pos.y, z: p.pos.z };
+    mob.pos = { x: p.pos.x + 2, y: p.pos.y, z: p.pos.z };
+  };
+
+  p.inCombat = false;
+  p.combatTimer = 99;
+  // let the aggressive pet actually acquire the target and start trading
+  // blows before sampling the baseline (the warm-up takes a few seconds,
+  // and the owner legitimately regens until the first blows land)
+  for (let i = 0; i < 20 * 8 && pet.combatTimer >= 5; i++) {
+    place();
+    sim.tick();
+  }
+  p.hp = Math.floor(p.maxHp * 0.4);
+  const hpStart = p.hp;
+
+  for (let i = 0; i < 200; i++) {
+    place();
+    sim.tick();
+  }
+
+  expect(pet.aggroTargetId).toBe(mob.id);
+  expect(pet.combatTimer).toBeLessThan(5); // pet is genuinely fighting
+  expect(p.hp).toBe(hpStart); // owner remains in combat, no health regen
+}
+
 describe('pet-held combat does not block owner health regen', () => {
   it('an idle pet (not trading blows) lets the owner regen health', () => {
     const { sim, p } = makeWarlock();
@@ -74,38 +122,13 @@ describe('pet-held combat does not block owner health regen', () => {
   });
 
   it('a pet actively trading blows still keeps its owner in combat (no regen)', () => {
-    const { sim, p } = makeWarlock();
-    const pet = summonInfernal(sim, p);
-    const mob = wildMob(sim);
+    expectTradingBlowsHoldsOwner(wildMob);
+  });
 
-    // Park a high-HP target in melee range of the pet so it keeps swinging:
-    // the pet's combatTimer stays low, so the owner stays in combat.
-    mob.hp = 1_000_000;
-    mob.maxHp = 1_000_000;
-    pet.petMode = 'aggressive';
-    const place = () => {
-      pet.pos = { x: p.pos.x + 1, y: p.pos.y, z: p.pos.z };
-      mob.pos = { x: p.pos.x + 2, y: p.pos.y, z: p.pos.z };
-    };
-
-    p.inCombat = false;
-    p.combatTimer = 99;
-    // let the aggressive pet actually acquire the target and start trading
-    // blows before sampling the baseline (the warm-up takes a few seconds,
-    // and the owner legitimately regens until the first blows land)
-    for (let i = 0; i < 20 * 8 && pet.combatTimer >= 5; i++) {
-      place();
-      sim.tick();
-    }
-    p.hp = Math.floor(p.maxHp * 0.4);
-    const hpStart = p.hp;
-
-    for (let i = 0; i < 200; i++) {
-      place();
-      sim.tick();
-    }
-
-    expect(pet.combatTimer).toBeLessThan(5); // pet is genuinely fighting
-    expect(p.hp).toBe(hpStart); // owner remains in combat, no health regen
+  // The wild mob's hate table carries the pet, which alone holds the owner, so
+  // that case cannot see the pet's own combat link: the dummy's table holds no
+  // one, and the owner then stays in combat only while the pet keeps swinging.
+  it('a pet trading blows with a practice dummy keeps its owner in combat', () => {
+    expectTradingBlowsHoldsOwner(practiceDummy);
   });
 });
