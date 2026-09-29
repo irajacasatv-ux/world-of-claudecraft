@@ -1,6 +1,6 @@
 # Part 5 test cost, cluster economy-b
 
-Branch `test-cost/economy-b`, cut from `a2bd94a83e` and rebased onto `c1b40fd9bb` (the only
+Branch `test-cost/economy-b`, cut from `a2bd94a83e` and rebased onto `5b08a5f09a` (the only
 conflict was the `WOC_NIGHTLY_SWEEP` reader list in `tests/ci_shard_plan.test.ts`, resolved
 as the union). Twenty-one files, heaviest CI first: sixteen plain suites and five Postgres
 suites. The CI figure is the two baseline PR runs (`../data/ci_perfile_ms.tsv`, run
@@ -65,9 +65,9 @@ Totals over the 20 changed files: 176.67 s of local test time before, 71.49 s af
 - `tests/sim_quests_economy.test.ts`, the RL finiteness smoke: in 600 steps the rogue never
   enters combat, auto-attacks or starts a GCD, so a NaN on those observation slots passes
   it (checked on the original seed 123 too; a pre-existing gap, not a thinning loss).
-- `tests/suite_duration_budget.test.ts` is red on `c1b40fd9bb` from outside this cluster:
-  `tests/parity/run_scenarios.ts` passes `c.timeout` as a trailing timeout the ledger parser
-  cannot size. Reported to the coordinator.
+- (Closed.) `tests/suite_duration_budget.test.ts` was red on `c1b40fd9bb` from outside this
+  cluster (`tests/parity/run_scenarios.ts` passed an unsizable `c.timeout`); the coordinator
+  fixed it in `5b08a5f09a`, and it is green on this branch's rebased tip.
 - The CI weight rows of the changed files are stale until the harvest re-measures them.
 
 ## Product-side levers seen, not touched
