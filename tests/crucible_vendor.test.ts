@@ -12,21 +12,32 @@ import {
   CRUCIBLE_VENDOR_STOCK,
   IGNIVAR_VENDOR_NPCS,
 } from '../src/sim/content/ignivar_loot';
-import { ITEMS } from '../src/sim/data';
+import { BUILTIN_WORLD, ITEMS } from '../src/sim/data';
 import { Sim } from '../src/sim/sim';
-import type { Entity } from '../src/sim/types';
+import type { Entity, WorldContent } from '../src/sim/types';
 import { buildCrucibleVendorView } from '../src/ui/hud/vendor/crucible_vendor_view';
 
 type AnySim = Sim & Record<string, any>;
 type AnyEntity = Entity & Record<string, any>;
 
 // The vendor is a dynamic overworld singleton on the keep's landing court.
+// Every case reads the Quartermaster alone, so the roster keeps only him (no
+// authored NPC stands near the keep to veto a prop there) and the camps and
+// ground objects go: the overworld's spawn cost buys nothing here.
+const QUARTERMASTER_WORLD: WorldContent = {
+  ...BUILTIN_WORLD,
+  camps: [],
+  npcs: { [CRUCIBLE_VENDOR_NPC_ID]: BUILTIN_WORLD.npcs[CRUCIBLE_VENDOR_NPC_ID] },
+  groundObjects: [],
+};
+
 function vendorSim(playerClass: 'warrior' | 'mage' = 'warrior'): AnySim {
   const sim = new Sim({
     seed: 2786,
     playerClass,
     autoEquip: true,
     devCommands: true,
+    world: QUARTERMASTER_WORLD,
   }) as AnySim;
   return sim;
 }
