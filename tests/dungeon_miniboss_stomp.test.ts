@@ -10,9 +10,17 @@ import {
 } from '../src/sim/mob/dungeon_miniboss_stomp';
 import { Sim } from '../src/sim/sim';
 import { DT, type DungeonDifficulty, type Entity } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
+// The claim spawns the Approach's own mobs in its instance, so the
+// overworld's camps and NPCs are pure overhead: the empty world serves.
 function claimedApproach(difficulty: DungeonDifficulty = 'normal') {
-  const sim = new Sim({ seed: 9821, playerClass: 'warrior', devCommands: true });
+  const sim = new Sim({
+    seed: 9821,
+    playerClass: 'warrior',
+    devCommands: true,
+    world: EMPTY_TEST_WORLD,
+  });
   sim.setDungeonDifficulty(difficulty, sim.player.id);
   expect(enterDungeon(sim.ctx, IGNIVAR_FORGE_APPROACH_ID, sim.player.id, true)).toBe(true);
   const instance = sim.instances.find(
