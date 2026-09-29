@@ -9,9 +9,11 @@ import { describe, expect, it } from 'vitest';
 import { recalcPlayerStats } from '../src/sim/entity';
 import { persistedResource } from '../src/sim/serialize_resource';
 import { Sim } from '../src/sim/sim';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 function makeWorld() {
-  return new Sim({ seed: 7, playerClass: 'warrior', noPlayer: true });
+  // A save and reload of one player only: the empty world is enough.
+  return new Sim({ seed: 7, playerClass: 'warrior', noPlayer: true, world: EMPTY_TEST_WORLD });
 }
 
 // Put a druid into bear form through the real stat path: push the toggle aura,
