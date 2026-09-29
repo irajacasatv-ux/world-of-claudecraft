@@ -7,9 +7,17 @@ import {
 import type { VaultRewardClaim } from '../../server/vault_rewards_db';
 import type { RiftInstance } from '../../src/sim/rift/types';
 import { Sim } from '../../src/sim/sim';
+import { EMPTY_TEST_WORLD } from '../sim_shared';
 
+// The claim projects onto a live character and a hand-pushed vault instance, so
+// the empty world serves every case.
 function fixture() {
-  const sim = new Sim({ seed: 52, playerClass: 'warrior', noPlayer: true });
+  const sim = new Sim({
+    seed: 52,
+    playerClass: 'warrior',
+    noPlayer: true,
+    world: EMPTY_TEST_WORLD,
+  });
   const pid = sim.addPlayer('warrior', 'Owner', { characterId: 7 });
   sim.setPlayerLevel(20, pid);
   sim.riftInstances.push({ vault: { attemptId: '7:1', rarity: 'common' } } as RiftInstance);
