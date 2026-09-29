@@ -29,12 +29,17 @@ const metaOf = (sim: Sim, pid: number): PlayerMeta =>
 const OFFLINE_A = { kind: 'offline' as const, id: 'off:device-a:1' };
 const OFFLINE_B = { kind: 'offline' as const, id: 'off:device-a:2' };
 
-function bareSim(seed = 11): Sim {
-  return new Sim({ seed, playerClass: 'warrior', noPlayer: true });
+// One full-world seed for the file: a full-world Sim pays a collider-grid
+// build for every seed the file has not built yet (about half a second), and
+// no identity case here reads a seed-probed value.
+const BARE_SEED = 11;
+
+function bareSim(): Sim {
+  return new Sim({ seed: BARE_SEED, playerClass: 'warrior', noPlayer: true });
 }
 
 function serializedBaseline(): CharacterState {
-  const sim = bareSim(101);
+  const sim = bareSim();
   const pid = sim.addPlayer('warrior', 'Baseline');
   return expectDefined(sim.serializeCharacter(pid));
 }
@@ -98,12 +103,19 @@ describe('the identity a player joins with', () => {
 
     // Two seeds, two entity ids, one absent identity: nothing here is a source
     // of uniqueness, which is exactly why none of it is used.
-    const other = bareSim(999);
+    // The second seed rides the empty controlled world, which builds no
+    // collider grid, so it costs a fresh seed without a fresh world.
+    const other = new Sim({
+      seed: 999,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     expect(metaOf(other, other.addPlayer('warrior', 'Ana')).gathererIdentity).toBeUndefined();
   });
 
   it('carries the constructor-minted primary player its host identity', () => {
-    const sim = new Sim({ seed: 3, playerClass: 'warrior', gathererIdentity: OFFLINE_A });
+    const sim = new Sim({ seed: BARE_SEED, playerClass: 'warrior', gathererIdentity: OFFLINE_A });
     expect(metaOf(sim, sim.playerId).gathererIdentity).toEqual(OFFLINE_A);
   });
 });
