@@ -132,14 +132,14 @@ function buildDailyLeyCandidate(rng: Rng) {
 }
 
 export function generateDailyLeyPuzzle(day: number): WorldQuestBeamPuzzleDef {
-  return leyCatalog[variant(day)].puzzle;
+  return leyCatalog()[variant(day)].puzzle;
 }
 
 export function generateDailyLeyChallenge(day: number): {
   readonly puzzle: WorldQuestBeamPuzzleDef;
   readonly solution: readonly number[];
 } {
-  return leyCatalog[variant(day)];
+  return leyCatalog()[variant(day)];
 }
 
 /** Bonus boards past the daily solve: level 1 is 5x5, level 2 is 6x6. */
@@ -154,7 +154,7 @@ export function generateBonusLeyChallenge(
   readonly solution: readonly number[];
 } {
   const index = Math.max(1, Math.min(WORLD_QUEST_LEY_BONUS_LEVELS, Math.floor(level))) - 1;
-  return leyBonusCatalogs[index][variant(day)];
+  return leyBonusCatalogs()[index][variant(day)];
 }
 
 export function generateBonusLeyPuzzle(day: number, level: number): WorldQuestBeamPuzzleDef {
@@ -254,17 +254,25 @@ function buildLeyCatalog(size: number, seedBase: number) {
     }),
   );
 }
-const leyCatalog = buildLeyCatalog(4, 0x1e7be000);
+// The catalogs are built on first use, not at module load: each builder draws only from its
+// own fixed-seed Rng, so when it runs cannot change what it builds, and every importer that
+// never reads a daily board (most of the sim's) stops paying for all three at load.
+let leyCatalogMemo: ReturnType<typeof buildLeyCatalog> | undefined;
+const leyCatalog = () => (leyCatalogMemo ??= buildLeyCatalog(4, 0x1e7be000));
 // Bonus catalogs: their own seed lanes, so neither depends on the daily draws.
-const leyBonusCatalogs = Object.freeze(
-  WORLD_QUEST_LEY_BONUS_SIZES.map((size) => buildLeyCatalog(size, 0x1e7be000 + size * 0x10000)),
-);
-const match3Catalog = Object.freeze(
-  Array.from({ length: WORLD_QUEST_DAILY_GENERATION_CYCLE }, (_, day) =>
-    buildDailyMatch3Level(day),
-  ),
-);
+let leyBonusCatalogsMemo: readonly ReturnType<typeof buildLeyCatalog>[] | undefined;
+const leyBonusCatalogs = () =>
+  (leyBonusCatalogsMemo ??= Object.freeze(
+    WORLD_QUEST_LEY_BONUS_SIZES.map((size) => buildLeyCatalog(size, 0x1e7be000 + size * 0x10000)),
+  ));
+let match3CatalogMemo: readonly WorldQuestMatch3LevelDef[] | undefined;
+const match3Catalog = () =>
+  (match3CatalogMemo ??= Object.freeze(
+    Array.from({ length: WORLD_QUEST_DAILY_GENERATION_CYCLE }, (_, day) =>
+      buildDailyMatch3Level(day),
+    ),
+  ));
 
 export function generateDailyMatch3Level(day: number): WorldQuestMatch3LevelDef {
-  return match3Catalog[variant(day)];
+  return match3Catalog()[variant(day)];
 }
