@@ -208,6 +208,9 @@ describe('i18n status registry: states', () => {
     // every locale complete. The independent literal-row witness below catches
     // an export that accidentally claims fallback rows as locale-owned rows.
     const langs = NON_EN.filter((l) => l !== 'en_CA');
+    // simDictProvidedKeys builds a fresh Set of a locale's source keys on every
+    // call; read it once per locale, not once per (key, locale) pair.
+    const providedByLang = new Map(langs.map((lang) => [lang, simDictProvidedKeys(lang)]));
     let pendingSeen = 0;
     let carriedSeen = 0;
     const violations: string[] = [];
@@ -217,7 +220,7 @@ describe('i18n status registry: states', () => {
       for (const lang of langs) {
         const row = entry.locales[lang];
         if (row.state === 'blocked') continue;
-        const carried = simDictProvidedKeys(lang).has(key);
+        const carried = providedByLang.get(lang)?.has(key) ?? false;
         const want = carried ? 'translated' : 'pending';
         if (row.state !== want) violations.push(`${ck} ${lang}: ${row.state}, source says ${want}`);
         if (carried) carriedSeen++;
