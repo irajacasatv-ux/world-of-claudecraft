@@ -244,8 +244,9 @@ describe('mark escalation (a full pass always wins)', () => {
 
 describe('the scheduler-resolved witness sweep', () => {
   it('a scheduled world boss rise feeds the witness mark within 100 yd', () => {
+    // The file's seed: a fresh one builds its collider grids for nothing.
     const sim = new Sim({
-      seed: 7,
+      seed: 42,
       playerClass: 'warrior',
       autoEquip: false,
       worldBossAtBoot: true,
