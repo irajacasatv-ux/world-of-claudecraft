@@ -8,9 +8,11 @@ import { MOBS } from '../src/sim/data';
 import { createMob } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
 import type { Entity } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
+// Both targets are spawned beside the mage by hand, so the empty world serves.
 function makeMage(seed = 42): Sim {
-  const sim = new Sim({ seed, playerClass: 'mage', autoEquip: true });
+  const sim = new Sim({ seed, playerClass: 'mage', autoEquip: true, world: EMPTY_TEST_WORLD });
   sim.setPlayerLevel(20); // knows Polymorph
   return sim;
 }
