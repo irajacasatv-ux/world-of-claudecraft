@@ -1120,11 +1120,15 @@ describe('the DECISION F casts-to-200 model (Phase 11i)', () => {
     return casts * cycleSecFor(seg.rodTier);
   };
 
-  const evaluate = (gains: readonly number[]) => {
-    const sec = gains.map((g, i) => segmentSeconds(i, g));
+  /** The schedule-level combination of the four segment times: the ONE place
+   *  the total, the hours and the shares are computed, shared by evaluate()
+   *  and the derivation search below, so an edit here reaches both. */
+  const combine = (sec: readonly number[]) => {
     const total = sec.reduce((a, b) => a + b, 0);
     return { sec, total, hours: total / 3600, shares: sec.map((x) => x / total) };
   };
+
+  const evaluate = (gains: readonly number[]) => combine(gains.map((g, i) => segmentSeconds(i, g)));
 
   const SPAN_MIN_HOURS = 10;
   const SPAN_MAX_HOURS = 12;
@@ -1168,38 +1172,41 @@ describe('the DECISION F casts-to-200 model (Phase 11i)', () => {
     let legal = 0;
     let strict = 0;
     let best: { gains: number[]; distance: number } | null = null;
-    // evaluate() is four independent segmentSeconds terms, so the search reads
-    // each (segment, grid value) term from this table, built once by the same
-    // function, and combines them exactly as evaluate() does (the same sum in
-    // the same order, the same shares), instead of allocating four arrays for
-    // each of the 4.4M candidate schedules. The grid ascends, so g1 <= g0 is
-    // b <= a on the indices.
+    // evaluate() is combine() over four independent segmentSeconds terms, so
+    // the search reads each (segment, grid value) term from this table, built
+    // once, and runs the SAME combine() on it, instead of re-deriving four
+    // segment times (each a walk of the catch table) for each of the 4.4M
+    // candidate schedules. The grid ascends, so g1 <= g0 is b <= a on the
+    // indices.
     const secAt = SEGMENTS.map((_seg, i) => grid.map((g) => segmentSeconds(i, g)));
+    // Every table entry IS evaluate()'s own per-segment term, so an edit to
+    // how evaluate() derives a segment's time reds here rather than leaving
+    // the search on a stale table.
+    expect(secAt).toEqual(
+      SEGMENTS.map((_seg, i) => grid.map((g) => evaluate([g, g, g, g]).sec[i])),
+    );
     for (let a = 0; a < grid.length; a++)
       for (let b = 0; b <= a; b++) {
         for (let c = 0; c <= b; c++) {
           for (let d = 0; d <= c; d++) {
-            const s0 = secAt[0][a];
-            const s1 = secAt[1][b];
-            const s2 = secAt[2][c];
-            const s3 = secAt[3][d];
-            const total = s0 + s1 + s2 + s3;
-            const hours = total / 3600;
-            if (hours < SPAN_MIN_HOURS || hours > SPAN_MAX_HOURS) continue;
-            if (s1 < s0 || s2 < s1 || s3 < s2) continue;
-            if (Math.max(s0 / total, s1 / total, s2 / total, s3 / total) > BAND_SHARE_CAP) continue;
+            const r = combine([secAt[0][a], secAt[1][b], secAt[2][c], secAt[3][d]]);
+            if (r.hours < SPAN_MIN_HOURS || r.hours > SPAN_MAX_HOURS) continue;
+            let ramp = true;
+            for (let i = 1; i < 4; i++) if (r.sec[i] < r.sec[i - 1]) ramp = false;
+            if (!ramp) continue;
+            if (Math.max(...r.shares) > BAND_SHARE_CAP) continue;
             legal++;
             if (!(b < a && c < b && d < c)) continue;
             strict++;
-            const distance = Math.abs(hours - midpoint);
+            const distance = Math.abs(r.hours - midpoint);
             if (!best || distance < best.distance) {
               best = { gains: [grid[a], grid[b], grid[c], grid[d]], distance };
             }
           }
         }
       }
-    // The table really is the model: the winner re-evaluated through
-    // evaluate() itself lands on the same distance, bit for bit.
+    // The winner re-evaluated through evaluate() itself lands on the same
+    // distance, bit for bit.
     expect(best && Math.abs(evaluate(best.gains).hours - midpoint)).toBe(best?.distance);
     // The search space really is narrow, and it really does discriminate:
     // sixteen schedules clear every constraint and only three of those are
