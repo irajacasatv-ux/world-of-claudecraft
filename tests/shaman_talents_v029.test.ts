@@ -39,14 +39,23 @@ import { MOBS } from '../src/sim/data';
 import { createMob } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
 import type { Entity } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 function shaman(
   rows: Record<number, string> = {},
   spec: 'elemental' | 'enhancement' | 'restoration' = 'elemental',
 ): { sim: Sim; player: Entity; ally: Entity } {
-  // Seed re-hunted (2904 to 2905) after the v0.34.0 catch-up merge shifted the
-  // shared draw order; an avoided shock never lands its control effect.
-  const sim = new Sim({ seed: 2905, playerClass: 'shaman', noPlayer: true });
+  // Every case places its own dummy, so the rig stands on the empty world. An
+  // avoided shock never lands its control effect, so the rolls are pinned
+  // rather than riding a hunted seed: with `next` at 0.9 every chance under
+  // 90 percent fails, so every shock and swing lands and nothing crits.
+  const sim = new Sim({
+    seed: 2905,
+    playerClass: 'shaman',
+    noPlayer: true,
+    world: EMPTY_TEST_WORLD,
+  });
+  sim.rng.next = () => 0.9;
   const pid = sim.addPlayer('shaman', 'Talent Shaman');
   const allyId = sim.addPlayer('warrior', 'Protected Ally');
   sim.setPlayerLevel(20, pid);
