@@ -18,38 +18,33 @@
 import { describe, expect, it } from 'vitest';
 
 import { isOwnAura } from '../src/sim/aura_classify';
+import { MOBS } from '../src/sim/data';
+import { createMob } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
 import { createTargetDotsView, type TargetDotsInput } from '../src/ui/hud/target_dots';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
+// EMPTY_TEST_WORLD: the dots land on a mob this file spawns itself, so the ambient
+// overworld is pure construction and tick cost over these long drains.
 function makeSim() {
-  const sim = new Sim({ seed: 7, playerClass: 'warlock' });
+  const sim = new Sim({ seed: 7, playerClass: 'warlock', world: EMPTY_TEST_WORLD });
   sim.setPlayerLevel(20, sim.playerId);
   return sim;
 }
 
-/** The nearest living mob, moved next to the player and targeted. */
-function engageNearestMob(sim: Sim) {
+/** A hostile mob spawned next to the player and targeted. */
+function engageSpawnedMob(sim: Sim) {
   const player = sim.player;
-  let best: ReturnType<typeof sim.entities.get> | undefined;
-  let bestDist = Number.POSITIVE_INFINITY;
-  for (const entity of sim.entities.values()) {
-    if (entity.kind !== 'mob' || entity.dead) continue;
-    const dx = entity.pos.x - player.pos.x;
-    const dz = entity.pos.z - player.pos.z;
-    const dist = dx * dx + dz * dz;
-    if (dist < bestDist) {
-      bestDist = dist;
-      best = entity;
-    }
-  }
-  if (!best) throw new Error('no mob to engage');
-  best.pos.x = player.pos.x + 3;
-  best.pos.z = player.pos.z;
-  best.pos.y = player.pos.y;
-  best.hp = best.maxHp = 100000;
-  sim.rebucket?.(best);
-  sim.targetEntity(best.id, player.id);
-  return best;
+  const mob = createMob(sim.nextId++, MOBS.forest_wolf, 5, {
+    x: player.pos.x + 3,
+    y: player.pos.y,
+    z: player.pos.z,
+  });
+  mob.hostile = true;
+  mob.hp = mob.maxHp = 100000;
+  sim.addEntity(mob);
+  sim.targetEntity(mob.id, player.id);
+  return mob;
 }
 
 /** Remaining seconds of the player's own `abilityId` on `mobId`, 0 when absent. */
@@ -105,7 +100,7 @@ function tickView(view: ReturnType<typeof makeView>, sim: Sim) {
 describe('target dots against the live sim', () => {
   it('follows a refresh back up to full, though the sim swapped the aura object', () => {
     const sim = makeSim();
-    const mob = engageNearestMob(sim);
+    const mob = engageSpawnedMob(sim);
     castUntilApplied(sim, 'corruption', mob.id);
 
     const view = makeView(sim.playerId);
@@ -141,7 +136,7 @@ describe('target dots against the live sim', () => {
 
   it('keeps every existing row live when a second dot is applied', () => {
     const sim = makeSim();
-    const mob = engageNearestMob(sim);
+    const mob = engageSpawnedMob(sim);
     castUntilApplied(sim, 'corruption', mob.id);
     const view = makeView(sim.playerId);
 
@@ -175,7 +170,7 @@ describe('target dots against the live sim', () => {
 
   it('drops the row when the dot expires rather than freezing its last value', () => {
     const sim = makeSim();
-    const mob = engageNearestMob(sim);
+    const mob = engageSpawnedMob(sim);
     castUntilApplied(sim, 'corruption', mob.id);
     const view = makeView(sim.playerId);
     expect(tickView(view, sim).count).toBe(1);
