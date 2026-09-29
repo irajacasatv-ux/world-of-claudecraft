@@ -82,9 +82,11 @@ function moveFarFromBankers(sim: Sim, pid = sim.playerId): void {
   sim.rebucket(p);
 }
 
-const makeSim = (seed = 42) => {
+// Every Sim shares one seed: a fresh seed builds its collider grids (about
+// half a second) and no case compares two seeds.
+const makeSim = () => {
   const sim = new Sim({
-    seed,
+    seed: 42,
     playerClass: 'warrior',
     autoEquip: false,
     world: BANK_TEST_WORLD,
@@ -408,8 +410,8 @@ describe('bankUnlockSocket', () => {
 
 // ---------------------------------------------------------------------------
 // A sim with `n` sockets unlocked and the unlock copper already spent.
-function simWithSockets(n: number, seed = 42): Sim {
-  const sim = makeSim(seed);
+function simWithSockets(n: number): Sim {
+  const sim = makeSim();
   const m = meta(sim);
   m.copper = SOCKET_PRICES.slice(0, n).reduce((a, b) => a + b, 0);
   for (let i = 0; i < n; i++) sim.bankUnlockSocket();
@@ -983,7 +985,7 @@ describe('BankInfo socket readouts', () => {
 // ---------------------------------------------------------------------------
 describe('persistence', () => {
   it('round-trips socket state through serialize + addPlayer', () => {
-    const sim = simWithSockets(2, 7);
+    const sim = simWithSockets(2);
     const m = meta(sim);
     carry(sim, GENERAL_16);
     sim.bankSocketBag(GENERAL_16);
@@ -1002,7 +1004,7 @@ describe('persistence', () => {
     ]);
 
     const sim2 = new Sim({
-      seed: 7,
+      seed: 42,
       playerClass: 'warrior',
       noPlayer: true,
       world: BANK_TEST_WORLD,
@@ -1133,8 +1135,9 @@ describe('determinism', () => {
       for (let i = 0; i < 10; i++) sim.tick();
       return { bank: clone(m.bank), copper: m.copper, inv: clone(m.inventory) };
     };
-    const a = script(makeSim(1234));
-    const b = script(makeSim(1234));
+    // The file's seed: a fresh one builds its collider grids for nothing.
+    const a = script(makeSim());
+    const b = script(makeSim());
     // Work-happened anchor first: two identical all-refused runs would also
     // compare equal, so pin the end state the script must actually reach.
     expect(a.bank.socketBags).toEqual([null, SATCHEL_8, null, null]);
@@ -1343,7 +1346,7 @@ describe('the compounded worst-ordering over-capacity bound (the ceiling lesson)
 // ---------------------------------------------------------------------------
 describe('conservation across the socket op sweep', () => {
   it('every socket op, success or refusal, conserves total holdings', () => {
-    const sim = simWithSockets(2, 99);
+    const sim = simWithSockets(2);
     const m = meta(sim);
     carry(sim, GENERAL_6);
     carry(sim, SATCHEL_8);
