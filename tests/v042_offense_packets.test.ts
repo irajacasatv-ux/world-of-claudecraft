@@ -39,12 +39,28 @@ import { Sim } from '../src/sim/sim';
 import type { SimContext } from '../src/sim/sim_context';
 import type { Entity, PlayerClass, SimEvent } from '../src/sim/types';
 import { SPELL_COEFF_DIVISOR, SPELL_COEFF_MAX_CAST, SPELL_COEFF_MIN_CAST } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 function ctxOf(sim: Sim): SimContext {
   return sim as unknown as SimContext;
 }
 
+// The empty test world and one seed: every packet is one caster against a
+// dummy (or a pet) the case spawns itself, so the ambient overworld only added
+// tick time, and each extra seed paid its own collider build (about half a
+// second) on its first tick. Each comparison's two runs still share the seed,
+// so they stay in rng lockstep up to the roll.
+const PACKET_SEED = 202;
+
 function makeSim(cls: PlayerClass, seed: number): Sim {
+  return new Sim({ seed, playerClass: cls, autoEquip: true, world: EMPTY_TEST_WORLD });
+}
+
+// The full world, for the two cases whose outcome is an rng draw on the full
+// world's shared stream (a Gloom Bolt that must land to copy, a self-heal that
+// must crit): a scoped world moves that stream, so they keep the world their
+// seeds were chosen on.
+function makeFullWorldSim(cls: PlayerClass, seed: number): Sim {
   return new Sim({ seed, playerClass: cls, autoEquip: true });
 }
 
@@ -149,14 +165,14 @@ describe('v0.42.0 offense-only package: real combat-path packets', () => {
     }
 
     it('a low-Spell-Power Earthen Jolt (authored base dominates) scales by the literal 1.38 elemental total (mastery 0.15 + ability 0.18 + offense-only 0.05, lowered from 0.13 by the v0.44 Thundercall rework)', () => {
-      const base = castEarthenJoltNoCharge(null, 0, 10);
-      const boosted = castEarthenJoltNoCharge('elemental', 0, 10);
+      const base = castEarthenJoltNoCharge(null, 0, PACKET_SEED);
+      const boosted = castEarthenJoltNoCharge('elemental', 0, PACKET_SEED);
       expect(boosted / base).toBeCloseTo(1.38, 1);
     });
 
     it('a high-Spell-Power Earthen Jolt (the SP rider dominates) ALSO scales by 1.38, proving the rider moved with the base', () => {
-      const base = castEarthenJoltNoCharge(null, 1200, 10);
-      const boosted = castEarthenJoltNoCharge('elemental', 1200, 10);
+      const base = castEarthenJoltNoCharge(null, 1200, PACKET_SEED);
+      const boosted = castEarthenJoltNoCharge('elemental', 1200, PACKET_SEED);
       expect(boosted / base).toBeCloseTo(1.38, 1);
     });
 
@@ -192,8 +208,8 @@ describe('v0.42.0 offense-only package: real combat-path packets', () => {
     }
 
     it('a full 5-charge Thunder bank vents Earthen Jolt for exactly the literal 2.25x on top of the already-elemental-scaled hit (no double count of the offense bonus)', () => {
-      const unvented = castEarthenJolt(0, 202);
-      const vented = castEarthenJolt(5, 202);
+      const unvented = castEarthenJolt(0, PACKET_SEED);
+      const vented = castEarthenJolt(5, PACKET_SEED);
       // EARTHEN_JOLT_BONUS_PER_CHARGE = 0.25, 5 charges: 1 + 5*0.25 = 2.25. This
       // multiplier is a flat runtime factor applied to the ALREADY-resolved
       // (offense-inclusive) hit (effect_dispatch.ts: `dmg *= thundercallDamageMultiplier(...)`
@@ -229,7 +245,7 @@ describe('v0.42.0 offense-only package: real combat-path packets', () => {
     }
 
     it('the SP-rider delta (1200 vs 0 Spell Power) matches the literal 1.21 destruction total after the Gloom Bolt rank reduction', () => {
-      const delta = gloomBoltAmount(1200, 10) - gloomBoltAmount(0, 10);
+      const delta = gloomBoltAmount(1200, PACKET_SEED) - gloomBoltAmount(0, PACKET_SEED);
       // Rank-4 (level 20) castTime 3.0s, destruction's own castPct -0.03:
       // resolved cast time 3.0 * 0.97 = 2.91s (unclamped, between 1.5 and 3.5).
       // The approved Ruinbolt-cycle pass then moves later Gloom Bolt ranks to
@@ -278,13 +294,13 @@ describe('v0.42.0 offense-only package: real combat-path packets', () => {
         if (!amount) throw new Error('imp firebolt did not land');
         return amount.amount;
       }
-      const base = castImpBolt(0, 404);
-      const boosted = castImpBolt(0.1, 404);
+      const base = castImpBolt(0, PACKET_SEED);
+      const boosted = castImpBolt(0.1, PACKET_SEED);
       expect(boosted / base).toBeCloseTo(1.1, 1);
     });
 
     it('custom pet bypass: a real Pyre Colossus nova deals the literal fixed 66 (the explicit destruction-only fix, since this path bypasses petDmgPct entirely)', () => {
-      const sim = makeSim('warlock', 505);
+      const sim = makeSim('warlock', PACKET_SEED);
       sim.setPlayerLevel(20);
       expect(sim.setSpec('destruction')).toBe(true);
       const ctx = ctxOf(sim);
@@ -305,7 +321,7 @@ describe('v0.42.0 offense-only package: real combat-path packets', () => {
     });
 
     it('damage-derived copy: a Ruinous Brand copy is a fixed 0.5 fraction of the ALREADY offense-scaled origin hit, never re-scaled', () => {
-      const sim = makeSim('warlock', 606);
+      const sim = makeFullWorldSim('warlock', 606);
       sim.setPlayerLevel(20);
       expect(sim.setSpec('destruction')).toBe(true);
       const brandedPrimary = spawnDummy(sim, 9104, 5);
@@ -360,7 +376,7 @@ describe('v0.42.0 offense-only package: real combat-path packets', () => {
     }
 
     it('the SP-rider delta (1200 vs 0 Spell Power) matches the literal 1.416 demonology total exactly (0.10 legacy + 0.096 ability + 0.22 offense-only, engine-constant formula, independent of resolveTalentHitMult)', () => {
-      const delta = essenceReapAmount(1200, 707) - essenceReapAmount(0, 707);
+      const delta = essenceReapAmount(1200, PACKET_SEED) - essenceReapAmount(0, PACKET_SEED);
       // castTime 1.8s (unclamped): coeff = 1.8 / SPELL_COEFF_DIVISOR.
       const expectedDelta = Math.round(1200 * directCoeff(1.8) * 1.416);
       expect(delta).toBeCloseTo(expectedDelta, -1); // within ~10, well under the ~874 magnitude
@@ -398,13 +414,13 @@ describe('v0.42.0 offense-only package: real combat-path packets', () => {
         if (amount === undefined) throw new Error('Reaping Command did not land');
         return amount;
       }
-      const base = castReapingCommand(0, 808);
-      const boosted = castReapingCommand(0.42, 808);
+      const base = castReapingCommand(0, PACKET_SEED);
+      const boosted = castReapingCommand(0.42, PACKET_SEED);
       expect(boosted / base).toBeCloseTo(1.42, 1);
     });
 
     it('damage-derived copy: a Lich Soul Lance pierce is a fixed 0.5 fraction of the ALREADY offense-scaled landed hit, never re-scaled', () => {
-      const sim = makeSim('warlock', 909);
+      const sim = makeSim('warlock', PACKET_SEED);
       sim.setPlayerLevel(20);
       expect(sim.setSpec('demonology')).toBe(true);
       sim.player.auras.push({
@@ -457,8 +473,8 @@ describe('v0.42.0 offense-only package: real combat-path packets', () => {
         if (amount === undefined) throw new Error('Wicked Slash did not land');
         return amount;
       }
-      const base = castSinisterStrike(null, 1001);
-      const boosted = castSinisterStrike('assassination', 1001);
+      const base = castSinisterStrike(null, PACKET_SEED);
+      const boosted = castSinisterStrike('assassination', PACKET_SEED);
       expect(boosted / base).toBeCloseTo(1.32, 1);
     });
 
@@ -485,8 +501,8 @@ describe('v0.42.0 offense-only package: real combat-path packets', () => {
         if (amount === undefined) throw new Error('Rendclaw did not land');
         return amount;
       }
-      const base = castClaw(null, 1101);
-      const boosted = castClaw('feral', 1101);
+      const base = castClaw(null, PACKET_SEED);
+      const boosted = castClaw('feral', PACKET_SEED);
       expect(boosted / base).toBeCloseTo(1.8, 1);
     });
   });
@@ -512,8 +528,8 @@ describe('v0.42.0 offense-only package: real combat-path packets', () => {
         if (amount === undefined) throw new Error('Gutting Strike did not land');
         return amount;
       }
-      const base = castRaptorStrike(null, 1201);
-      const boosted = castRaptorStrike('survival', 1201);
+      const base = castRaptorStrike(null, PACKET_SEED);
+      const boosted = castRaptorStrike('survival', PACKET_SEED);
       expect(boosted / base).toBeCloseTo(1.45, 1);
     });
   });
@@ -538,14 +554,14 @@ describe('v0.42.0 offense-only package: real combat-path packets', () => {
     }
 
     it('a low-Spell-Power Scouring Hymn scales by the literal 1.30 discipline total', () => {
-      const base = castSmite(null, 0, 1301);
-      const boosted = castSmite('discipline', 0, 1301);
+      const base = castSmite(null, 0, PACKET_SEED);
+      const boosted = castSmite('discipline', 0, PACKET_SEED);
       expect(boosted / base).toBeCloseTo(1.3, 1);
     });
 
     it('a high-Spell-Power Scouring Hymn ALSO scales by 1.30, proving the SP rider moved with the base', () => {
-      const base = castSmite(null, 1200, 1301);
-      const boosted = castSmite('discipline', 1200, 1301);
+      const base = castSmite(null, 1200, PACKET_SEED);
+      const boosted = castSmite('discipline', 1200, PACKET_SEED);
       expect(boosted / base).toBeCloseTo(1.3, 1);
     });
   });
@@ -573,7 +589,7 @@ describe('v0.42.0 offense-only package: real combat-path packets', () => {
     }
 
     function scouringMercyHealOnSelf(spellPower: number, seed: number): number {
-      const sim = makeSim('priest', seed);
+      const sim = makeFullWorldSim('priest', seed);
       sim.setPlayerLevel(20);
       expect(sim.setSpec('discipline')).toBe(true);
       sim.targetEntity(sim.playerId); // scouring_mercy heals a friendly target
@@ -595,7 +611,7 @@ describe('v0.42.0 offense-only package: real combat-path packets', () => {
     }
 
     it("Scouring Mercy's hostile damage half grows by the literal 1.30 Doctrine factor (SP-delta, engine-constant formula)", () => {
-      const delta = scouringMercy(1200, 1401).damage - scouringMercy(0, 1401).damage;
+      const delta = scouringMercy(1200, PACKET_SEED).damage - scouringMercy(0, PACKET_SEED).damage;
       // castTime 0 (instant): coeff clamps to SPELL_COEFF_MIN_CAST / SPELL_COEFF_DIVISOR.
       const expectedDelta = Math.round(1200 * directCoeff(0) * 1.3);
       expect(delta).toBeCloseTo(expectedDelta, -1);
@@ -617,7 +633,7 @@ describe('v0.42.0 offense-only package: real combat-path packets', () => {
     });
 
     it("Necromancy's owner spell bonus grows Essence Reap but leaves Fiendhide's armor buff at its legacy (pre-offense) value", () => {
-      const sim = makeSim('warlock', 1501);
+      const sim = makeSim('warlock', PACKET_SEED);
       sim.setPlayerLevel(20);
       expect(sim.setSpec('demonology')).toBe(true);
       sim.player.resource = sim.player.maxResource;
