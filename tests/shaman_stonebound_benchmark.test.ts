@@ -9,6 +9,7 @@ import { createMob } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
 import { addThreat } from '../src/sim/threat';
 import { armorReduction, type Entity } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 function effectiveArmor(sim: Sim, entity: Entity): number {
   return (sim as unknown as { effectiveArmor(target: Entity): number }).effectiveArmor(entity);
@@ -20,7 +21,14 @@ function physicalEffectiveHealth(sim: Sim, entity: Entity, flatReduction: number
 }
 
 function enhancement(posture: 'galeheart' | 'stonebound'): { sim: Sim; player: Entity } {
-  const sim = new Sim({ seed: 2920, playerClass: 'shaman', autoEquip: true });
+  // The benchmark reads the player's own stats and a dummy it places itself, so
+  // both Sims run on the empty world.
+  const sim = new Sim({
+    seed: 2920,
+    playerClass: 'shaman',
+    autoEquip: true,
+    world: EMPTY_TEST_WORLD,
+  });
   sim.setPlayerLevel(20);
   expect(sim.setSpec('enhancement')).toBe(true);
   applyWarspiritPosture(sim.ctx, sim.player, posture);
@@ -51,7 +59,12 @@ describe('Stonebound PBE benchmark contract', () => {
     // warrior stays the pure-tank ceiling in both. Owner decision surfaced in
     // the v0.38 tank balance PR.
     const stone = enhancement('stonebound');
-    const protection = new Sim({ seed: 2920, playerClass: 'warrior', autoEquip: true });
+    const protection = new Sim({
+      seed: 2920,
+      playerClass: 'warrior',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     protection.setPlayerLevel(20);
     expect(protection.setSpec('prot')).toBe(true);
     protection.castAbility('defensive_stance');
