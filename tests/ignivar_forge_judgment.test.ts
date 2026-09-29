@@ -71,12 +71,25 @@ import {
   DT,
   type Entity,
   IGNIVAR_BOSS_ID,
+  PLAYER_INTEREST_DROP_RADIUS,
   type PlayerClass,
   type SimEvent,
 } from '../src/sim/types';
 
+// One seed for every case: a seed a test file has not built yet costs its
+// full-world Sim about half a second (the collider grids are built per seed),
+// a seed it has already built about 20 ms. A case that needs a seed-specific
+// draw (a golden trace) passes its own seed.
 function claimedEncounter(seed = 42, difficulty: 'normal' | 'heroic' = 'normal') {
-  const sim = new Sim({ seed, playerClass: 'warrior', devCommands: true });
+  // Production's idle culling (the server and the offline client both set it):
+  // the arena is its own instance, so the overworld's idle population skips its
+  // per-tick AI instead of costing each full-world tick.
+  const sim = new Sim({
+    seed,
+    playerClass: 'warrior',
+    devCommands: true,
+    idleMobTickRadius: PLAYER_INTEREST_DROP_RADIUS,
+  });
   if (difficulty === 'heroic') sim.setDungeonDifficulty('heroic', sim.player.id);
   expect(enterDungeon(sim.ctx, 'ignivar_raid_arena', sim.player.id, true)).toBe(true);
   const boss = [...sim.entities.values()].find((entity) => entity.templateId === IGNIVAR_BOSS_ID);
@@ -276,7 +289,7 @@ describe('Ignivar Forge Judgment', () => {
   });
 
   it('walks to the forge center before Judgment instead of teleporting there', () => {
-    const { sim, boss } = claimedEncounter(7300);
+    const { sim, boss } = claimedEncounter(42);
     if (!boss.ignivar) throw new Error('Ignivar state was not initialized');
     const origin = instanceOrigin(DUNGEONS.ignivar_raid_arena.index, 0);
     boss.pos = sim.ctx.groundPos(origin.x + 12, origin.z);
@@ -314,7 +327,7 @@ describe('Ignivar Forge Judgment', () => {
   });
 
   it('creates three random refuges, marks one safe, burns everywhere else and runs no rays', () => {
-    const { sim, boss } = claimedEncounter(7301);
+    const { sim, boss } = claimedEncounter(42);
     sim.player.devGod = true;
     boss.hp = Math.floor(boss.maxHp * IGNIVAR_JUDGMENT_HP_THRESHOLD) + 1;
     sim.tick();
@@ -430,7 +443,7 @@ describe('Ignivar Forge Judgment', () => {
   });
 
   it('keeps normal timers frozen for all 240 Judgment ticks and applies recovery floors', () => {
-    const { sim, boss } = claimedEncounter(7305);
+    const { sim, boss } = claimedEncounter(42);
     sim.player.devGod = true;
     if (!boss.ignivar) throw new Error('Ignivar state was not initialized');
     boss.hp = Math.floor(boss.maxHp * IGNIVAR_JUDGMENT_HP_THRESHOLD);
@@ -514,7 +527,7 @@ describe('Ignivar Forge Judgment', () => {
   });
 
   it('preserves every Brand when Heroic Judgment begins', () => {
-    const { sim, boss } = claimedEncounter(7319, 'heroic');
+    const { sim, boss } = claimedEncounter(42, 'heroic');
     const brandedAlly = addEncounterPlayer(sim, boss, 'Heroic Branded Ally');
     sim.player.devGod = true;
     brandedAlly.devGod = true;
@@ -537,7 +550,7 @@ describe('Ignivar Forge Judgment', () => {
   });
 
   it('keeps Heroic Brand proximity local inside the Judgment safe refuge', () => {
-    const { sim, boss } = claimedEncounter(7320, 'heroic');
+    const { sim, boss } = claimedEncounter(42, 'heroic');
     const closeAlly = addEncounterPlayer(sim, boss, 'Close Safe Ally');
     const farAlly = addEncounterPlayer(sim, boss, 'Far Safe Ally');
     applyBrand(sim.player, boss);
@@ -596,10 +609,15 @@ describe('Ignivar Forge Judgment', () => {
   });
 
   it('draws the random layout deterministically from the encounter RNG', () => {
-    const start = (seed: number) => {
-      const { sim, boss } = claimedEncounter(seed);
+    // One seed, a different encounter RNG position per start: burning draws
+    // before Judgment begins must move the layout, which pins that it is drawn
+    // from ctx.rng (a layout derived from the seed or the boss alone would not
+    // move), without building a fresh world per seed.
+    const start = (burnDraws: number) => {
+      const { sim, boss } = claimedEncounter();
       sim.player.devGod = true;
       if (!boss.ignivar) throw new Error('Ignivar state was not initialized');
+      for (let draw = 0; draw < burnDraws; draw++) sim.ctx.rng.next();
       boss.hp = Math.floor(boss.maxHp * IGNIVAR_JUDGMENT_HP_THRESHOLD);
       const events = sim.tick();
       return {
@@ -615,17 +633,17 @@ describe('Ignivar Forge Judgment', () => {
       };
     };
 
-    const first = start(7306);
-    const repeated = start(7306);
-    const second = start(7308);
-    const third = start(7404);
+    const first = start(0);
+    const repeated = start(0);
+    const second = start(2);
+    const third = start(4);
     expect(repeated).toEqual(first);
     expect(second).not.toEqual(first);
     expect(new Set([first.safeIndex, second.safeIndex, third.safeIndex]).size).toBe(3);
   });
 
   it('deals repeated floor pulses on the exact half-second cadence', () => {
-    const { sim, boss } = claimedEncounter(7307);
+    const { sim, boss } = claimedEncounter(42);
     const unsafe = addEncounterPlayer(sim, boss, 'Pulse Target');
     sim.player.devGod = true;
     unsafe.devGod = true;
@@ -655,7 +673,7 @@ describe('Ignivar Forge Judgment', () => {
   });
 
   it('queues Judgment behind an already warned meteor instead of cancelling it', () => {
-    const { sim, boss } = claimedEncounter(7304);
+    const { sim, boss } = claimedEncounter(42);
     sim.player.devGod = true;
     if (!boss.ignivar) throw new Error('Ignivar state was not initialized');
     boss.hp = Math.floor(boss.maxHp * IGNIVAR_JUDGMENT_HP_THRESHOLD);
@@ -682,7 +700,7 @@ describe('Ignivar Forge Judgment', () => {
       'waveActive',
     ] as const;
     for (const blocker of blockers) {
-      const { sim, boss } = claimedEncounter(7310 + blockers.indexOf(blocker));
+      const { sim, boss } = claimedEncounter(42);
       sim.player.devGod = true;
       if (!boss.ignivar) throw new Error('Ignivar state was not initialized');
       boss.hp = Math.floor(boss.maxHp * IGNIVAR_JUDGMENT_HP_THRESHOLD);
@@ -706,7 +724,7 @@ describe('Ignivar Forge Judgment', () => {
     expect(IGNIVAR_FINAL_ROTATING_RAYS_SPEED_MULTIPLIER).toBe(1.6);
     expect(IGNIVAR_FINAL_FRONTAL_EVERY).toBe(8);
 
-    const { sim, boss } = claimedEncounter(7302);
+    const { sim, boss } = claimedEncounter(42);
     sim.player.devGod = true;
     if (!boss.ignivar) throw new Error('Ignivar state was not initialized');
     boss.ignivar.forgeJudgmentPhase = 'done';
@@ -763,7 +781,7 @@ describe('Ignivar Forge Judgment', () => {
   });
 
   it('runs a deterministic finale with independent meteors and spaced major abilities', () => {
-    const first = finaleTrace(7320);
+    const first = finaleTrace(42);
     expect({
       castTicks: first.casts.map((cast) => [cast.id, cast.tick]),
       meteorTicks: [...new Set(first.meteors.map((meteor) => meteor.tick))],
@@ -775,7 +793,7 @@ describe('Ignivar Forge Judgment', () => {
       ],
       meteorTicks: [39, 219, 399, 579, 759],
     });
-    expect(finaleTrace(7320)).toEqual(first);
+    expect(finaleTrace(42)).toEqual(first);
     expect(first.casts.filter((cast) => cast.id === IGNIVAR_ROTATING_RAYS_CAST_ID).length).toBe(1);
     expect(new Set(first.meteors.map((meteor) => meteor.tick)).size).toBeGreaterThanOrEqual(4);
     expect(
@@ -790,10 +808,10 @@ describe('Ignivar Forge Judgment', () => {
       .map((cast) => cast.facing);
     expect(skyfireFacings).toHaveLength(1);
     expect(skyfireFacings.every((facing) => [0.950547, -1.249046].includes(facing))).toBe(true);
-  }, 45_000);
+  });
 
   it('always resolves Judgment before the finale after a direct health drop', () => {
-    const { sim, boss } = claimedEncounter(7303);
+    const { sim, boss } = claimedEncounter(42);
     sim.player.devGod = true;
     boss.hp = Math.floor(boss.maxHp * IGNIVAR_APOCALYPSE_HP_THRESHOLD * 0.1);
 
@@ -805,7 +823,7 @@ describe('Ignivar Forge Judgment', () => {
   });
 
   it('cannot start Judgment before Apocalypse has resolved', () => {
-    const { sim, boss } = claimedEncounter(7321);
+    const { sim, boss } = claimedEncounter(42);
     sim.player.devGod = true;
     if (!boss.ignivar) throw new Error('Ignivar state was not initialized');
     boss.ignivar.apocalypseTriggered = false;

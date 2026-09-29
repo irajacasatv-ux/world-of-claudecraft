@@ -124,7 +124,7 @@ describe('Ignivar encounter', () => {
   });
 
   it('clears the first tank before a complete two-strike rotation returns to them', () => {
-    const { sim, boss } = claimedEncounter(7440);
+    const { sim, boss } = claimedEncounter();
     const secondTankPid = sim.addPlayer('paladin', 'Rotation Tank');
     const secondTank = sim.entities.get(secondTankPid);
     if (!secondTank) throw new Error('Rotation tank did not spawn');
@@ -168,8 +168,8 @@ describe('Ignivar encounter', () => {
   });
 
   it('makes two real Forge Strike stacks amplify Ignivar melee swings by seventy percent', () => {
-    const normal = claimedEncounter(7441);
-    const molten = claimedEncounter(7441);
+    const normal = claimedEncounter();
+    const molten = claimedEncounter();
     normal.sim.setPlayerLevel(20);
     molten.sim.setPlayerLevel(20);
     normal.sim.player.maxHp = 1_000_000;
@@ -235,7 +235,7 @@ describe('Ignivar encounter', () => {
       return encounter;
     };
 
-    const ignivar = moltenEncounter(7442);
+    const ignivar = moltenEncounter(42);
     expect(
       ignivar.sim.ctx.dealDamage(
         ignivar.boss,
@@ -249,7 +249,7 @@ describe('Ignivar encounter', () => {
       ),
     ).toBe(170);
 
-    const foreign = moltenEncounter(7443);
+    const foreign = moltenEncounter(42);
     expect(
       foreign.sim.ctx.dealDamage(
         foreign.conduit,
@@ -471,7 +471,7 @@ describe('Ignivar encounter', () => {
 
   it('survives a real friendly dispel effect and still requires encounter water', () => {
     const sim = new Sim({
-      seed: 7,
+      seed: 42,
       playerClass: 'warlock',
       autoEquip: true,
       devCommands: true,
@@ -521,7 +521,7 @@ describe('Ignivar encounter', () => {
   });
 
   it('holds the boss at the arena center without wandering before combat', () => {
-    const sim = new Sim({ seed: 990, playerClass: 'warrior', devCommands: true });
+    const sim = new Sim({ seed: 42, playerClass: 'warrior', devCommands: true });
     expect(enterDungeon(sim.ctx, 'ignivar_raid_arena', sim.player.id, true)).toBe(true);
     const boss = [...sim.entities.values()].find((entity) => entity.templateId === IGNIVAR_BOSS_ID);
     if (!boss) throw new Error('Ignivar did not spawn');
@@ -540,7 +540,7 @@ describe('Ignivar encounter', () => {
   });
 
   it('re-seats on the highest-threat raider, not the lowest entity id, when the tank leaves the claim', () => {
-    const { sim, boss } = claimedEncounter(994);
+    const { sim, boss } = claimedEncounter();
     // The Wolf Form druid spawns first (lowest entity id after the tank) and
     // sits low on the hate table; the rogue joined later and has far more.
     const druid = addEncounterPlayer(sim, boss, 'Wolf Druid', 'druid');
@@ -568,7 +568,7 @@ describe('Ignivar encounter', () => {
   });
 
   it('chases the tank between mechanics when the tank moves out of melee', () => {
-    const { sim, boss } = claimedEncounter(991);
+    const { sim, boss } = claimedEncounter();
     const destination = {
       x: boss.pos.x + 18,
       y: boss.pos.y,
@@ -588,7 +588,7 @@ describe('Ignivar encounter', () => {
   });
 
   it('does not drift when the tank is already in melee and follows a forced tank over a bystander', () => {
-    const melee = claimedEncounter(992);
+    const melee = claimedEncounter();
     melee.sim.player.pos = {
       x: melee.boss.pos.x + 2,
       y: melee.boss.pos.y,
@@ -603,7 +603,7 @@ describe('Ignivar encounter', () => {
     expect(melee.boss.aiState).toBe('attack');
     expect(melee.boss.facing).toBeCloseTo(Math.PI / 2, 8);
 
-    const forced = claimedEncounter(993);
+    const forced = claimedEncounter();
     const forcedTank = addEncounterPlayer(forced.sim, forced.boss, 'Forced Tank', 'paladin');
     forced.sim.player.pos = {
       x: forced.boss.pos.x + 2,
@@ -630,7 +630,7 @@ describe('Ignivar encounter', () => {
     const mechanics = ['frontal', 'skyfire', 'rotating rays', 'forge wave', 'judgment'];
     for (let mechanicIndex = 0; mechanicIndex < mechanics.length; mechanicIndex++) {
       const mechanic = mechanics[mechanicIndex];
-      const { sim, boss } = claimedEncounter(1_100 + mechanicIndex);
+      const { sim, boss } = claimedEncounter();
       sim.player.devGod = true;
       updateIgnivarEncounter(sim.ctx, boss);
       if (!boss.ignivar) throw new Error('Ignivar state was not initialized');
@@ -783,7 +783,7 @@ describe('Ignivar encounter', () => {
   });
 
   it('tracks a moving tank until release so the tank can redirect the frontal', () => {
-    const { sim, boss } = claimedEncounter(8128);
+    const { sim, boss } = claimedEncounter();
     const origin = instanceOrigin(DUNGEONS.ignivar_raid_arena.index, 0);
     const conduits = [...sim.entities.values()].filter((entity) =>
       Object.values(IGNIVAR_WATER_CONDUIT_TEMPLATES).includes(
@@ -836,7 +836,7 @@ describe('Ignivar encounter', () => {
   });
 
   it('does not reactivate a spent conduit hit by another frontal', () => {
-    const { sim, boss, conduit } = claimedEncounter(8129);
+    const { sim, boss, conduit } = claimedEncounter();
     sim.player.pos = { ...conduit.pos };
     sim.player.prevPos = { ...sim.player.pos };
     updateIgnivarEncounter(sim.ctx, boss);
@@ -1245,7 +1245,7 @@ describe('Ignivar encounter', () => {
   });
 
   it('despawns Ashcaller and cancels armed meteors when Ignivar dies mid-mechanic', () => {
-    const { sim, boss } = claimedEncounter(453);
+    const { sim, boss } = claimedEncounter();
     sim.player.devGod = true;
     boss.hp = Math.floor(boss.maxHp * IGNIVAR_APOCALYPSE_HP_THRESHOLD);
     updateIgnivarEncounter(sim.ctx, boss);
@@ -1279,7 +1279,7 @@ describe('Ignivar encounter', () => {
   });
 
   it('clears raid mechanics through a real death and corpse resurrection', () => {
-    const { sim, boss } = claimedEncounter(454);
+    const { sim, boss } = claimedEncounter();
     const ally = addEncounterPlayer(sim, boss, 'Living Witness');
     updateIgnivarEncounter(sim.ctx, boss);
     isolateForgeChains(boss, 999);
@@ -1347,7 +1347,7 @@ describe('Ignivar encounter', () => {
   });
 
   it('resets a real all-dead wipe and starts the next pull without stale hazards', () => {
-    const { sim, boss } = claimedEncounter(455);
+    const { sim, boss } = claimedEncounter();
     const ally = addEncounterPlayer(sim, boss, 'Wipe Witness');
     updateIgnivarEncounter(sim.ctx, boss);
     if (!boss.ignivar) throw new Error('Ignivar state was not initialized');
@@ -1437,10 +1437,10 @@ describe('Ignivar encounter', () => {
         .sort((a, b) => a - b);
     };
 
-    const first = selectTargets(99);
+    const first = selectTargets(42);
     expect(first).toHaveLength(IGNIVAR_BRAND_TARGETS_NORMAL);
     expect(new Set(first).size).toBe(IGNIVAR_BRAND_TARGETS_NORMAL);
-    expect(selectTargets(99)).toEqual(first);
+    expect(selectTargets(42)).toEqual(first);
   });
 
   it('honors the ten-second active window and leaves the conduit spent for the pull', () => {
@@ -1549,7 +1549,7 @@ describe('Ignivar encounter', () => {
   });
 
   it('accelerates dispellable marks approaching the finale and keeps casting them in it', () => {
-    const { sim, boss } = claimedEncounter(9220);
+    const { sim, boss } = claimedEncounter();
     const marked = addEncounterPlayer(sim, boss, 'Late Brand Target', 'mage');
     sim.player.devGod = true;
     marked.devGod = true;
@@ -1599,7 +1599,7 @@ describe('Ignivar encounter', () => {
   });
 
   it('clears a legacy Shared Pyre mark instead of blocking Last Inferno', () => {
-    const { sim, boss } = claimedEncounter(9218);
+    const { sim, boss } = claimedEncounter();
     sim.player.devGod = true;
     updateIgnivarEncounter(sim.ctx, boss);
     if (!boss.ignivar) throw new Error('Ignivar state was not initialized');
@@ -1633,8 +1633,8 @@ describe('Ignivar encounter', () => {
   });
 
   it('increases Ignivar melee damage by thirty-five percent during Last Inferno', () => {
-    const normal = claimedEncounter(9217);
-    const enraged = claimedEncounter(9217);
+    const normal = claimedEncounter();
+    const enraged = claimedEncounter();
     normal.sim.setPlayerLevel(20);
     enraged.sim.setPlayerLevel(20);
     normal.boss.enraged = false;
@@ -1735,7 +1735,7 @@ describe('Ignivar encounter', () => {
   });
 
   it('opens a fresh pull with the approved signature yell', () => {
-    const { sim } = claimedEncounter(9220);
+    const { sim } = claimedEncounter();
 
     const events = sim.tick();
 
@@ -1753,7 +1753,7 @@ describe('Ignivar encounter', () => {
   });
 
   it('uses the two supporting defeat barks once per fallen pull participant', () => {
-    const { sim, boss } = claimedEncounter(9221);
+    const { sim, boss } = claimedEncounter();
     const first = addEncounterPlayer(sim, boss, 'First Fallen Spark');
     const second = addEncounterPlayer(sim, boss, 'Second Fallen Spark');
     sim.player.devGod = true;
@@ -1794,7 +1794,7 @@ describe('Ignivar encounter', () => {
   });
 
   it('defers a defeat bark until the current major mechanic has finished', () => {
-    const { sim, boss } = claimedEncounter(9222);
+    const { sim, boss } = claimedEncounter();
     const fallen = addEncounterPlayer(sim, boss, 'Deferred Fallen Spark');
     sim.player.devGod = true;
     sim.tick();
@@ -1829,7 +1829,7 @@ describe('Ignivar encounter', () => {
   });
 
   it('speaks the supporting Last Flame line on only the first final-phase brand', () => {
-    const { sim, boss } = claimedEncounter(9223);
+    const { sim, boss } = claimedEncounter();
     sim.player.devGod = true;
     sim.tick();
     if (!boss.ignivar) throw new Error('Ignivar state was not initialized');
@@ -2099,7 +2099,7 @@ describe('Ignivar encounter', () => {
   });
 
   it('recovers participating players long cooldowns when the pull wipes', () => {
-    const { sim, boss } = claimedEncounter(810);
+    const { sim, boss } = claimedEncounter();
     sim.setPlayerLevel(20);
     const meta = sim.meta(sim.player.id);
     const longAbility = meta?.known.find((ability) => ability.cooldown >= 120);
@@ -2117,7 +2117,7 @@ describe('Ignivar encounter', () => {
   });
 
   it('does not reset a remote nonparticipant cooldown when Ignivar wipes', () => {
-    const { sim, boss } = claimedEncounter(811);
+    const { sim, boss } = claimedEncounter();
     const outsiderId = sim.addPlayer('warrior', 'Remote Ignivar Visitor');
     sim.setPlayerLevel(20, outsiderId);
     const outsider = sim.entities.get(outsiderId);
@@ -2140,7 +2140,7 @@ describe('Ignivar encounter', () => {
   });
 
   it('keeps long cooldowns when Ignivar is reset without a wipe', () => {
-    const { sim, boss } = claimedEncounter(812);
+    const { sim, boss } = claimedEncounter();
     sim.setPlayerLevel(20);
     const meta = sim.meta(sim.player.id);
     const longAbility = meta?.known.find((ability) => ability.cooldown >= 120);

@@ -11,14 +11,36 @@ import {
 import { IGNIVAR_WATER_CONDUIT_TEMPLATES } from '../../src/sim/ignivar_arena';
 import { detachFromDungeon, enterDungeon } from '../../src/sim/instances/dungeons';
 import { Sim } from '../../src/sim/sim';
-import { type Entity, IGNIVAR_BOSS_ID, type PlayerClass } from '../../src/sim/types';
+import {
+  type Entity,
+  IGNIVAR_BOSS_ID,
+  PLAYER_INTEREST_DROP_RADIUS,
+  type PlayerClass,
+} from '../../src/sim/types';
 
+// Production's idle culling (the server and the offline client both set it):
+// the raid sits in its own instance, so the overworld's idle population is out
+// of every player's radius and skips its per-tick AI instead of costing each
+// full-world tick.
+function encounterSim(seed: number): Sim {
+  return new Sim({
+    seed,
+    playerClass: 'warrior',
+    devCommands: true,
+    idleMobTickRadius: PLAYER_INTEREST_DROP_RADIUS,
+  });
+}
+
+// One seed for every case: a seed a test file has not built yet costs its
+// full-world Sim about half a second (the collider grids are built per seed),
+// a seed it has already built about 20 ms. A case that needs a seed-specific
+// draw (a golden trace) passes its own seed.
 export function claimedEncounter(seed = 42): {
   sim: Sim;
   boss: NonNullable<ReturnType<Sim['entities']['get']>>;
   conduit: NonNullable<ReturnType<Sim['entities']['get']>>;
 } {
-  const sim = new Sim({ seed, playerClass: 'warrior', devCommands: true });
+  const sim = encounterSim(seed);
   expect(enterDungeon(sim.ctx, 'ignivar_raid_arena', sim.player.id, true)).toBe(true);
   const boss = [...sim.entities.values()].find((e) => e.templateId === IGNIVAR_BOSS_ID);
   if (!boss) throw new Error('Ignivar did not spawn');
@@ -33,7 +55,7 @@ export function claimedEncounter(seed = 42): {
 }
 
 export function claimedHeroicEncounter(seed = 42): ReturnType<typeof claimedEncounter> {
-  const sim = new Sim({ seed, playerClass: 'warrior', devCommands: true });
+  const sim = encounterSim(seed);
   sim.setDungeonDifficulty('heroic', sim.player.id);
   expect(enterDungeon(sim.ctx, 'ignivar_raid_arena', sim.player.id, true)).toBe(true);
   const instance = sim.instances.find((entry) => entry.dungeonId === 'ignivar_raid_arena');

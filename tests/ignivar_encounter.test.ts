@@ -715,9 +715,9 @@ describe('Ignivar encounter', () => {
 
   it('knocks Heroic Forge Wave victims farther than Normal victims', () => {
     const encounters = [
-      { ...claimedEncounter(8127), expectedKnockback: IGNIVAR_FORGE_WAVE_KNOCKBACK_NORMAL },
+      { ...claimedEncounter(), expectedKnockback: IGNIVAR_FORGE_WAVE_KNOCKBACK_NORMAL },
       {
-        ...claimedHeroicEncounter(8127),
+        ...claimedHeroicEncounter(),
         expectedKnockback: IGNIVAR_FORGE_WAVE_KNOCKBACK_HEROIC,
       },
     ];
@@ -761,7 +761,7 @@ describe('Ignivar encounter', () => {
   ])(
     'sweeps the opposite $name, damages once, and only nudges its victim',
     ({ bossOffset, victimOffset }) => {
-      const { sim, boss } = claimedEncounter(8126);
+      const { sim, boss } = claimedEncounter();
       const origin = instanceOrigin(DUNGEONS.ignivar_raid_arena.index, 0);
       boss.pos = { x: origin.x + bossOffset.x, y: boss.pos.y, z: origin.z + bossOffset.z };
       sim.player.pos = {
@@ -830,7 +830,7 @@ describe('Ignivar encounter', () => {
   });
 
   it('warns before three rays rotate, damages crossings, and reverses the next cast', () => {
-    const { sim, boss } = claimedEncounter(8120);
+    const { sim, boss } = claimedEncounter();
     const safePlayer = addEncounterPlayer(sim, boss, 'Ray Gap');
     updateIgnivarEncounter(sim.ctx, boss);
     if (!boss.ignivar) throw new Error('Ignivar state was not initialized');
@@ -901,7 +901,7 @@ describe('Ignivar encounter', () => {
   });
 
   it('keeps a clear gap after Revolving Inferno before another major ability', () => {
-    const { sim, boss } = claimedEncounter(8122);
+    const { sim, boss } = claimedEncounter();
     sim.player.devGod = true;
     updateIgnivarEncounter(sim.ctx, boss);
     if (!boss.ignivar) throw new Error('Ignivar state was not initialized');
@@ -962,22 +962,22 @@ describe('Ignivar encounter', () => {
       expect(boss.ignivar.skyfireTimer).toBeGreaterThanOrEqual(6);
     };
 
-    assertReleaseGap(8123, (boss) => {
+    assertReleaseGap(42, (boss) => {
       if (!boss.ignivar) throw new Error('Ignivar state was not initialized');
       boss.ignivar.frontalCastRemaining = DT;
     });
-    assertReleaseGap(8124, (boss) => {
+    assertReleaseGap(42, (boss) => {
       if (!boss.ignivar) throw new Error('Ignivar state was not initialized');
       boss.ignivar.skyfireCastRemaining = DT;
     });
-    assertReleaseGap(8125, (boss) => {
+    assertReleaseGap(42, (boss) => {
       if (!boss.ignivar) throw new Error('Ignivar state was not initialized');
       boss.ignivar.forgeWaveActiveRemaining = DT;
     });
   });
 
   it('keeps Revolving Inferno active for ten seconds and turns the rays by 144 degrees', () => {
-    const { sim, boss } = claimedEncounter(8121);
+    const { sim, boss } = claimedEncounter();
     sim.player.devGod = true;
     updateIgnivarEncounter(sim.ctx, boss);
     if (!boss.ignivar) throw new Error('Ignivar state was not initialized');
@@ -1020,7 +1020,7 @@ describe('Ignivar encounter', () => {
   });
 
   it('restores the boss facing when the encounter resets during rotating rays', () => {
-    const { sim, boss } = claimedEncounter(8126);
+    const { sim, boss } = claimedEncounter();
     updateIgnivarEncounter(sim.ctx, boss);
     if (!boss.ignivar) throw new Error('Ignivar state was not initialized');
     boss.ignivar.brandTimer = 999;
@@ -1043,7 +1043,7 @@ describe('Ignivar encounter', () => {
   });
 
   it('pulses an active rotating ray every half second without floating-point drift', () => {
-    const { sim, boss } = claimedEncounter(8122);
+    const { sim, boss } = claimedEncounter();
     updateIgnivarEncounter(sim.ctx, boss);
     if (!boss.ignivar) throw new Error('Ignivar state was not initialized');
     boss.ignivar.brandTimer = 999;
@@ -1076,7 +1076,7 @@ describe('Ignivar encounter', () => {
   });
 
   it('damages a player who enters a rotating ray between pulse boundaries', () => {
-    const { sim, boss } = claimedEncounter(8128);
+    const { sim, boss } = claimedEncounter();
     updateIgnivarEncounter(sim.ctx, boss);
     if (!boss.ignivar) throw new Error('Ignivar state was not initialized');
     boss.ignivar.brandTimer = 999;
@@ -1115,7 +1115,7 @@ describe('Ignivar encounter', () => {
   });
 
   it('does not double-hit a late ray entry on the next global pulse boundary', () => {
-    const { sim, boss } = claimedEncounter(8129);
+    const { sim, boss } = claimedEncounter();
     updateIgnivarEncounter(sim.ctx, boss);
     if (!boss.ignivar) throw new Error('Ignivar state was not initialized');
     boss.ignivar.brandTimer = 999;
@@ -1167,7 +1167,7 @@ describe('Ignivar encounter', () => {
   });
 
   it('telegraphs three skyfire cones, then releases three fire eruptions at cast end', () => {
-    const { sim, boss } = claimedEncounter(8102);
+    const { sim, boss } = claimedEncounter();
     const safePlayer = addEncounterPlayer(sim, boss, 'Safe Raider');
     updateIgnivarEncounter(sim.ctx, boss);
     if (!boss.ignivar) throw new Error('Ignivar state was not initialized');
@@ -1294,7 +1294,7 @@ describe('Ignivar encounter', () => {
   });
 
   it('warns with red meteor circles independently, then damages only on impact', () => {
-    const { sim, boss } = claimedEncounter(8103);
+    const { sim, boss } = claimedEncounter();
     const safePlayer = addEncounterPlayer(sim, boss, 'Meteor Safe');
     updateIgnivarEncounter(sim.ctx, boss);
     if (!boss.ignivar) throw new Error('Ignivar state was not initialized');
@@ -1360,7 +1360,7 @@ describe('Ignivar encounter', () => {
   });
 
   it('casts two additional Falling Cinders with the Heroic encounter path', () => {
-    const { sim, boss } = claimedHeroicEncounter(8103);
+    const { sim, boss } = claimedHeroicEncounter();
     const meteorTargets = Array.from({ length: IGNIVAR_METEOR_COUNT_HEROIC }, (_, index) => {
       const player = addEncounterPlayer(sim, boss, `Heroic Meteor ${index + 1}`);
       const angle = (index * Math.PI * 2) / IGNIVAR_METEOR_COUNT_HEROIC;
@@ -1413,7 +1413,7 @@ describe('Ignivar encounter', () => {
   });
 
   it('targets five distinct non-tanks and freezes their positions on Normal', () => {
-    const { sim, boss } = claimedEncounter(8113);
+    const { sim, boss } = claimedEncounter();
     const meteorTargets = Array.from({ length: IGNIVAR_METEOR_COUNT_NORMAL }, (_, index) => {
       const player = addEncounterPlayer(sim, boss, `Normal Meteor ${index + 1}`);
       const angle = (index * Math.PI * 2) / IGNIVAR_METEOR_COUNT_NORMAL;
@@ -1459,7 +1459,7 @@ describe('Ignivar encounter', () => {
   });
 
   it('starts Falling Cinders naturally after 13 seconds and every 17 seconds thereafter', () => {
-    const { sim, boss } = claimedEncounter(8104);
+    const { sim, boss } = claimedEncounter();
     sim.player.devGod = true;
     updateIgnivarEncounter(sim.ctx, boss);
     if (!boss.ignivar) throw new Error('Ignivar state was not initialized');
@@ -1492,7 +1492,7 @@ describe('Ignivar encounter', () => {
   });
 
   it('keeps Rain of Cinders on cadence without crowding another major ability', () => {
-    const { sim, boss } = claimedEncounter(8110);
+    const { sim, boss } = claimedEncounter();
     sim.player.devGod = true;
     updateIgnivarEncounter(sim.ctx, boss);
     if (!boss.ignivar) throw new Error('Ignivar state was not initialized');
@@ -1520,7 +1520,7 @@ describe('Ignivar encounter', () => {
   });
 
   it('never schedules Shared Pyre after it moves to Varkhul and clears a legacy mark', () => {
-    const { sim, boss } = claimedEncounter(8103);
+    const { sim, boss } = claimedEncounter();
     updateIgnivarEncounter(sim.ctx, boss);
     if (!boss.ignivar) throw new Error('Ignivar state was not initialized');
     boss.ignivar.brandTimer = 999;
@@ -1593,7 +1593,7 @@ describe('Ignivar encounter', () => {
   it.each([0, 1, 2])(
     'preserves historical Brand RNG slots with %i eligible non-tanks',
     (nonTankCount) => {
-      const { sim, boss } = claimedEncounter(8110 + nonTankCount);
+      const { sim, boss } = claimedEncounter();
       const activeTankMeta = sim.players.get(sim.player.id);
       if (!activeTankMeta) throw new Error('Active tank metadata is missing');
       activeTankMeta.talentMods.role = 'tank';
