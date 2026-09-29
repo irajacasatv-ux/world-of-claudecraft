@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { HOARD_REWARD_LETTER } from '../../src/sim/content/letters';
 import { Sim } from '../../src/sim/sim';
+import { EMPTY_TEST_WORLD } from '../sim_shared';
 
 const { saveMailPartitions } = vi.hoisted(() => ({
   saveMailPartitions: vi.fn(async (_partitions: unknown[]) => {}),
@@ -86,7 +87,13 @@ describe('vault mail take partition lock', () => {
   });
 
   it('keeps another real post-office recipient dirty after a targeted drain', () => {
-    const sim = new Sim({ seed: 29, playerClass: 'warrior', noPlayer: true });
+    // A system parcel books without a mailbox, so the empty world serves the post office.
+    const sim = new Sim({
+      seed: 29,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     for (const key of ['7', '8']) {
       expect(
         sim.mailSystemParcel(
