@@ -62,20 +62,14 @@ function equipSet(sim: Sim, setId: string, pieces: number): void {
   }
 }
 
-// Production's idle culling (the server and the offline client both set it)
-// by default: the cast and cooldown waits below stop paying for the far
-// overworld's idle AI. `cull: false` keeps the unculled shared rng stream for
-// the one case whose two damage rolls were probed against it.
-function liveWarlock(
-  seed: number,
-  spec: 'affliction' | 'demonology' | 'destruction',
-  cull = true,
-): Sim {
+// Production's idle culling (the server and the offline client both set it):
+// the cast and cooldown waits below stop paying for the far overworld's idle AI.
+function liveWarlock(seed: number, spec: 'affliction' | 'demonology' | 'destruction'): Sim {
   const sim = new Sim({
     seed,
     playerClass: 'warlock',
     autoEquip: true,
-    idleMobTickRadius: cull ? PLAYER_INTEREST_DROP_RADIUS : 0,
+    idleMobTickRadius: PLAYER_INTEREST_DROP_RADIUS,
   });
   sim.setPlayerLevel(20);
   expect(sim.setSpec(spec)).toBe(true);
@@ -387,7 +381,12 @@ describe('Gravebrand 4pc: unison strikes deal 25 percent more damage', () => {
   });
 
   it('an owner gear swap mid-fight moves the very next command (no pet-side state)', () => {
-    const sim = liveWarlock(518, 'demonology', false);
+    const sim = liveWarlock(518, 'demonology');
+    // Identical, non-critical rolls for both commands (the dawnreaver_damage
+    // rig's stub): the two strikes sit at different stream positions, so an
+    // unstubbed pair only matched on a probed seed.
+    sim.rng.next = () => 0.5;
+    sim.rng.chance = (chance) => chance > 0.5;
     const target = addHostileTarget(sim);
     finishCast(sim, 'raise_graveguard');
     for (let fragment = 0; fragment < 4; fragment++) finishCast(sim, 'soul_harvest', target);
