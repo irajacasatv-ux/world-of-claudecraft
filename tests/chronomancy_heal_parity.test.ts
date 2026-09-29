@@ -3,7 +3,7 @@
 // tests/helpers/chronomancy_harness.ts). Infinite-mana, zero-overheal
 // throughput isolates each healer's repeatable level-20 direct heal beside
 // Temporal Mend.
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 import { TALENTS } from '../src/sim/content/talents';
 import { Sim } from '../src/sim/sim';
 import type { Entity, PlayerClass } from '../src/sim/types';
@@ -90,7 +90,14 @@ function measureDirectHeals(seconds = 120): DirectHealMeasure[] {
 }
 
 describe('Chronomancy level-20 direct-heal parity', () => {
-  const results = measureDirectHeals();
+  // Measured in a hook, not at collection, so the full-world run (2,400 ticks,
+  // about 13 s locally) counts in the file's measured test time. It stays a
+  // full, unculled world: idle culling or a scoped world forks the shared rng
+  // stream the crit rolls draw from, and the ceilings below are read off it.
+  let results: DirectHealMeasure[] = [];
+  beforeAll(() => {
+    results = measureDirectHeals();
+  }, 60_000);
 
   it('reports real direct-heal throughput beside the other healer classes', () => {
     for (const result of results) {
