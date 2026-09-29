@@ -5,14 +5,24 @@ import { MOBS } from '../src/sim/data';
 import { createMob } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
 import type { Entity, SimEvent } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const GALEHEART_ID = 'galeheart_weapon';
 const STONEBOUND_ID = 'rockbiter_weapon';
 const STORMCAST_ID = 'shaman_stormcast';
 const STORMCAST_CHEAP_ID = 'shaman_stormcast_cheap';
 
-function setup(seed = 2810): { sim: Sim; shaman: Entity; target: Entity } {
-  const sim = new Sim({ seed, playerClass: 'shaman', noPlayer: true, autoEquip: true });
+// One seed on EMPTY_TEST_WORLD: every case fights the target it plants itself and
+// retries its swing until it lands, so the ambient overworld and each extra seed's
+// world build were pure construction and tick cost.
+function setup(): { sim: Sim; shaman: Entity; target: Entity } {
+  const sim = new Sim({
+    seed: 2810,
+    playerClass: 'shaman',
+    noPlayer: true,
+    autoEquip: true,
+    world: EMPTY_TEST_WORLD,
+  });
   const pid = sim.addPlayer('shaman', 'Cadence');
   sim.setPlayerLevel(20, pid);
   expect(sim.setSpec('enhancement', pid)).toBe(true);
@@ -89,7 +99,7 @@ describe('Shaman v0.29 Warspirit', () => {
   });
 
   it('lets Ancestral Strike add two steps but trigger at most one Galeheart event', () => {
-    const { sim, shaman, target } = setup(2811);
+    const { sim, shaman, target } = setup();
     castInstant(sim, shaman, GALEHEART_ID);
     landedSwing(sim, shaman, target);
 
@@ -100,7 +110,7 @@ describe('Shaman v0.29 Warspirit', () => {
   });
 
   it('spends Stormcast only after a successful eligible cast and halves its Mana cost', () => {
-    const { sim, shaman, target } = setup(2812);
+    const { sim, shaman, target } = setup();
     castInstant(sim, shaman, STONEBOUND_ID);
     for (let step = 0; step < 3; step++) landedSwing(sim, shaman, target);
     const stormcast = shaman.auras.find((aura) => aura.id === STORMCAST_ID);
@@ -123,7 +133,7 @@ describe('Shaman v0.29 Warspirit', () => {
   });
 
   it('uses Stormcast for its instant half-cost spell without consuming Clearcasting', () => {
-    const { sim, shaman, target } = setup(2816);
+    const { sim, shaman, target } = setup();
     castInstant(sim, shaman, STONEBOUND_ID);
     for (let step = 0; step < 3; step++) landedSwing(sim, shaman, target);
     shaman.auras.push({
@@ -150,7 +160,7 @@ describe('Shaman v0.29 Warspirit', () => {
   });
 
   it('refunds both Stormcast components when an Arc Bolt projectile fizzles', () => {
-    const { sim, shaman, target } = setup(2814);
+    const { sim, shaman, target } = setup();
     castInstant(sim, shaman, STONEBOUND_ID);
     for (let step = 0; step < 3; step++) landedSwing(sim, shaman, target);
 
@@ -169,7 +179,7 @@ describe('Shaman v0.29 Warspirit', () => {
   });
 
   it('advances the shared cadence from both real dual-wield auto attacks', () => {
-    const { sim, shaman, target } = setup(2815);
+    const { sim, shaman, target } = setup();
     sim.addItem('training_mace', 1, shaman.id);
     sim.equipItem('training_mace', shaman.id);
     expect(shaman.dualWielding).toBe(true);
@@ -199,7 +209,7 @@ describe('Shaman v0.29 Warspirit', () => {
   });
 
   it('does not add the generic dual-wield miss penalty to its cadence weapons', () => {
-    const { sim, shaman, target } = setup(2817);
+    const { sim, shaman, target } = setup();
     sim.addItem('training_mace', 1, shaman.id);
     sim.equipItem('training_mace', shaman.id);
     expect(shaman.dualWielding).toBe(true);
@@ -228,7 +238,7 @@ describe('Shaman v0.29 Warspirit', () => {
   });
 
   it('makes Stonebound an exclusive defensive posture and removes every rider on exit', () => {
-    const { sim, shaman, target } = setup(2813);
+    const { sim, shaman, target } = setup();
     castInstant(sim, shaman, GALEHEART_ID);
     expect(shaman.auras.some((aura) => aura.id === GALEHEART_ID)).toBe(true);
 
