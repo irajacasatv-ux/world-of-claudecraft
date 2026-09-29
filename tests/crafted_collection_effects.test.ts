@@ -22,6 +22,7 @@ import { createMob, createPlayer, recalcPlayerStats } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
 import type { SimContext } from '../src/sim/sim_context';
 import type { Aura, Entity } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 function wearer(id: number, collection = 'crucible_str_mail'): Entity {
   const entity = createPlayer(id, 'warrior', { x: 0, y: 0, z: 0 }, 'Crafter');
@@ -205,7 +206,8 @@ describe('crafted collection tank shelter', () => {
 });
 
 function liveCollection(collection: string, cls: 'warrior' | 'mage' | 'priest' = 'warrior') {
-  const sim = new Sim({ seed: 42, playerClass: cls, autoEquip: false });
+  // The rig fights the dummy it places itself, so the empty world serves.
+  const sim = new Sim({ seed: 42, playerClass: cls, autoEquip: false, world: EMPTY_TEST_WORLD });
   sim.setPlayerLevel(20);
   const source = sim.player;
   const meta = sim.players.get(source.id)!;
