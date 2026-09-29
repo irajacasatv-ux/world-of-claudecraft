@@ -356,10 +356,20 @@ function formerSkillBlobIssues(pin: SkillNormalizationPin['supersedes'], bytes: 
   return issues;
 }
 
+// Local objects only. The PR test shards check out a blobless depth-1 partial
+// clone, where git would otherwise FETCH the missing commit, then each tree and
+// blob, from the promisor remote on demand: a network round trip per asset,
+// measured at 28 to 35 seconds of this file per PR run, for history the always-on
+// literal aggregate already pins. GIT_NO_LAZY_FETCH (git 2.44 and newer; an older
+// git ignores it) makes such a clone answer "absent", as the nightly's plain
+// shallow clone already does, while a full local clone still verifies every blob.
+const localObjectsOnly = { ...process.env, GIT_NO_LAZY_FETCH: '1' };
+
 function sourceCommitIsAvailable(commit: string): boolean {
   return (
     spawnSync('git', ['cat-file', '-e', `${commit}^{commit}`], {
       cwd: repoRoot,
+      env: localObjectsOnly,
       stdio: 'ignore',
     }).status === 0
   );
@@ -368,6 +378,7 @@ function sourceCommitIsAvailable(commit: string): boolean {
 function sourceCommitBlob(commit: string, repoRelativePath: string): Buffer {
   return execFileSync('git', ['show', `${commit}:${repoRelativePath}`], {
     cwd: repoRoot,
+    env: localObjectsOnly,
     encoding: 'buffer',
     maxBuffer: 32 * 1024 * 1024,
   });
