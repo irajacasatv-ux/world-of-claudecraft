@@ -4,6 +4,7 @@ import { spawnNythraxisAdds } from '../src/sim/encounters/nythraxis';
 import { createMob } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
 import type { Entity } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // Boss-summoned adds spawn seeded on the boss's current target (the tank) with
 // a REAL threat lead, not a token one. The old seed was 1 point: the healer's
@@ -14,10 +15,17 @@ import type { Entity } from '../src/sim/types';
 // from DPS can still legitimately rip an add loose (taunt and tank threat
 // answer it, the classic dance).
 
+// Every case fights a boss and adds it places itself, so each Sim stands on the
+// empty world.
 const SEED = 4242;
 
 function setup() {
-  const sim = new Sim({ seed: SEED, playerClass: 'warrior', noPlayer: true });
+  const sim = new Sim({
+    seed: SEED,
+    playerClass: 'warrior',
+    noPlayer: true,
+    world: EMPTY_TEST_WORLD,
+  });
   const tankPid = sim.addPlayer('warrior', 'Tank');
   sim.setPlayerLevel(20, tankPid);
   const tank = sim.entities.get(tankPid)!;
@@ -48,7 +56,12 @@ function setup() {
 
 describe('summon threat seeding', () => {
   it('the raid script waves carry the same seed as spawnBossAdds', () => {
-    const sim = new Sim({ seed: SEED, playerClass: 'warrior', noPlayer: true });
+    const sim = new Sim({
+      seed: SEED,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const tankPid = sim.addPlayer('warrior', 'Tank');
     sim.setPlayerLevel(20, tankPid);
     const tank = sim.entities.get(tankPid)!;
