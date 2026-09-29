@@ -529,6 +529,7 @@ describe('the long-sims lane (Phase 4)', () => {
       .filter((f) => readFileSync(path.join(REPO_ROOT, f), 'utf8').includes(needle))
       .sort();
     expect(readers).toEqual([
+      'tests/audit_conservation_property.test.ts',
       'tests/chronomancy_balance_targets.test.ts',
       'tests/emerald_deck_escape.test.ts',
       'tests/lake_shores.test.ts',

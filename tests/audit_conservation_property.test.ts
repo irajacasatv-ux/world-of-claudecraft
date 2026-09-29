@@ -1242,7 +1242,27 @@ async function applyEvent(w: World, s: Step): Promise<void> {
       });
       const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       const dirty = a.session.dirtyGuildBanks.size;
-      await priv(w.server).saveCharacterOnLeave(a.session);
+      // The leave save's retry backoff (server/leave_character_save.ts: 250,
+      // 500, 1000 and 2000 ms between the five attempts) is wall time the
+      // property does not read. Only setTimeout is faked, for this one call,
+      // and the clock is stepped timer by timer until the call settles, so
+      // every attempt still runs, in order, against the same failing save.
+      vi.useFakeTimers({ toFake: ['setTimeout'] });
+      try {
+        let settled = false;
+        const leave = priv(w.server)
+          .saveCharacterOnLeave(a.session)
+          .finally(() => {
+            settled = true;
+          });
+        for (let step = 0; !settled; step++) {
+          if (step > 1_000) throw new Error('the leave save never settled on the faked clock');
+          await vi.advanceTimersToNextTimerAsync();
+        }
+        await leave;
+      } finally {
+        vi.useRealTimers();
+      }
       errSpy.mockRestore();
       if (orig) store.saveCharacterAndMarketState.mockImplementation(orig);
       // One arm only since the escrow root fix: there is no evict-and-reload
@@ -1629,6 +1649,20 @@ function reportFailures(label: string, failures: Failure[]): string {
 }
 
 const seeds = (n: number, from = 1): number[] => Array.from({ length: n }, (_, i) => from + i);
+
+// Sweep depth. Each property sweep's full seed count is its NIGHTLY depth,
+// run only under the flag the nightly tests job alone sets; every PR runs the
+// first fifth of the same seeds. What that PR representative still catches:
+// every sweep keeps its whole op and event alphabet with both officers acting
+// and saving, so a conservation hole on any common path (a mint, a lost copy,
+// a torn escrow, an undo that misses an op) still reds on the PR; the named
+// witnesses below (P4 lease-fence, P4-CONSUMED, P4-CLOSED, the P5 window, P6)
+// run whole on every PR; and the coverage floor at the bottom holds the
+// thinned sweeps to reaching every op and every injected event arm. The
+// nightly depth is what hunts the rarer interleavings.
+const NIGHTLY_SWEEP_DEPTH = process.env.WOC_NIGHTLY_SWEEP === '1';
+const sweepSeeds = (nightlyCount: number, from = 1): number[] =>
+  seeds(NIGHTLY_SWEEP_DEPTH ? nightlyCount : Math.ceil(nightlyCount / 5), from);
 
 beforeEach(() => {
   store.reset();
@@ -2134,7 +2168,7 @@ describe('top-level instance payload contract', () => {
 describe('P1 conservation across op sequences (no injected events)', () => {
   it('holds for every seed', async () => {
     const cfg: GenConfig = { depth: 40, eventRate: 0, events: [] };
-    const list = seeds(600);
+    const list = sweepSeeds(600);
     const { failures, opsSeen } = await sweep(list, cfg, 'effective');
     expect(reportFailures('P1', failures)).toBe('');
     // Coverage floor: every op in the alphabet actually succeeded somewhere.
@@ -2155,7 +2189,7 @@ describe('P2 conservation with save events interleaved', () => {
       eventRate: 0.3,
       events: ['autosave', 'saveall', 'leaveflush', 'writerwait', 'purge'],
     };
-    const { failures } = await sweep(seeds(400, 1000), cfg, 'effective');
+    const { failures } = await sweep(sweepSeeds(400, 1000), cfg, 'effective');
     expect(reportFailures('P2', failures)).toBe('');
   }, 240_000);
 });
@@ -2170,7 +2204,7 @@ describe('P3 durable conservation after a clean flush, ledger agreeing', () => {
       eventRate: 0.25,
       events: ['autosave', 'saveall', 'writerwait', 'purge'],
     };
-    const { failures } = await sweep(seeds(350, 2000), cfg, 'durable-after-quiesce');
+    const { failures } = await sweep(sweepSeeds(350, 2000), cfg, 'durable-after-quiesce');
     expect(reportFailures('P3', failures)).toBe('');
   }, 240_000);
 });
@@ -2193,7 +2227,7 @@ describe('P4 conservation across lease fences (self-takeover + own-ops undo)', (
       eventRate: 0.28,
       events: ['autosave', 'fence', 'writerwait', 'leaveflush', 'purge'],
     };
-    const { failures } = await sweep(seeds(300, 3000), cfg, 'effective');
+    const { failures } = await sweep(sweepSeeds(300, 3000), cfg, 'effective');
     expect(reportFailures('P4-fence', failures)).toBe('');
   }, 240_000);
 
@@ -2203,7 +2237,7 @@ describe('P4 conservation across lease fences (self-takeover + own-ops undo)', (
       eventRate: 0.3,
       events: ['autosave', 'fence', 'writerwait', 'purge'],
     };
-    const { failures } = await sweep(seeds(300, 4000), cfg, 'durable-after-quiesce-no-ledger');
+    const { failures } = await sweep(sweepSeeds(300, 4000), cfg, 'durable-after-quiesce-no-ledger');
     expect(reportFailures('P4-durable', failures)).toBe('');
   }, 240_000);
 
@@ -2213,7 +2247,7 @@ describe('P4 conservation across lease fences (self-takeover + own-ops undo)', (
       eventRate: 0.28,
       events: ['autosave', 'fence', 'writerwait', 'purge'],
     };
-    const { failures } = await sweep(seeds(300, 6000), cfg, 'effective');
+    const { failures } = await sweep(sweepSeeds(300, 6000), cfg, 'effective');
     expect(reportFailures('P4-other-dirty', failures)).toBe('');
   }, 240_000);
 
@@ -2423,7 +2457,7 @@ describe('P4-EXPLOIT the two-account money printer, measured', () => {
   it('conserves on every generated instance of the shape', async () => {
     const failures: Failure[] = [];
     let ran = 0;
-    for (const seed of seeds(300, 7000)) {
+    for (const seed of sweepSeeds(300, 7000)) {
       const steps = genExploitSteps(seed);
       ran++;
       const r = await runSteps(steps, 'durable-after-quiesce-no-ledger');
@@ -2436,12 +2470,12 @@ describe('P4-EXPLOIT the two-account money printer, measured', () => {
       `[exploit sweep] ran=${ran} failures=${failures.length} (carry-and-record printed on this shape; refusing does not)`,
     );
     expect(reportFailures('P4-EXPLOIT', failures)).toBe('');
-    expect(ran).toBe(300);
+    expect(ran).toBe(NIGHTLY_SWEEP_DEPTH ? 300 : 60);
   }, 240_000);
 
   it('the LIVE view conserves across it too, at every step', async () => {
     const failures: Failure[] = [];
-    for (const seed of seeds(200, 9000)) {
+    for (const seed of sweepSeeds(200, 9000)) {
       const r = await runSteps(genExploitSteps(seed), 'effective');
       if (!r.ok) {
         failures.push({ seed, detail: r.detail, minimized: genExploitSteps(seed) });
@@ -2467,7 +2501,7 @@ describe('P5 durable conservation across an unannounced crash', () => {
       eventRate: 0.3,
       events: ['autosave', 'saveall', 'writerwait', 'leaveflush'],
     };
-    const { failures } = await sweep(seeds(300, 5000), cfg, 'durable-crash');
+    const { failures } = await sweep(sweepSeeds(300, 5000), cfg, 'durable-crash');
     expect(reportFailures('P5', failures)).toBe('');
   }, 240_000);
 
@@ -2492,8 +2526,8 @@ describe('P5 durable conservation across an unannounced crash', () => {
 
 // ---------------------------------------------------------------------------
 // P6: the EXHAUSTED LEAVE FLUSH arm of reconcileUnflushableGuildBooks. Kept out
-// of the sweeps because each one burns the real 250/500/1000/2000 ms retry
-// backoff; driven here as explicit scenarios instead.
+// of the sweeps (each drive walks the leave save's whole five-attempt retry
+// ladder); driven here as explicit scenarios instead.
 // ---------------------------------------------------------------------------
 describe('P6 conservation when a leave flush exhausts its retries', () => {
   it('conserves for a lone officer with unflushed gold and item ops', async () => {
