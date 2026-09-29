@@ -3,14 +3,21 @@ import { MOBS } from '../src/sim/data';
 import { createMob } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
 import type { Entity, SimEvent } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 type TestSim = Sim & {
   addEntity(entity: Entity): void;
   nextId: number;
 };
 
+// Every case tends pets it places itself, so the hunter stands on the empty world.
 function makeHunter(rows: Record<number, string> = {}): TestSim {
-  const sim = new Sim({ seed: 2614, playerClass: 'hunter', autoEquip: false }) as TestSim;
+  const sim = new Sim({
+    seed: 2614,
+    playerClass: 'hunter',
+    autoEquip: false,
+    world: EMPTY_TEST_WORLD,
+  }) as TestSim;
   sim.setPlayerLevel(20);
   expect(sim.applyTalents({ spec: null, rows })).toBe(true);
   sim.player.resource = sim.player.maxResource;
