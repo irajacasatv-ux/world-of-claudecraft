@@ -39,8 +39,10 @@ const MOUNT_RACE_TEST_WORLD: WorldContent = {
   groundObjects: [],
 };
 
-const makeSim = (seed = 1) =>
-  new Sim({ seed, playerClass: 'warrior', autoEquip: true, world: MOUNT_RACE_TEST_WORLD });
+// Every Sim in the file runs on seed 1: the course, its colliders and the race
+// timers read no seed, and a fresh seed pays its own collider bootstrap.
+const makeSim = () =>
+  new Sim({ seed: 1, playerClass: 'warrior', autoEquip: true, world: MOUNT_RACE_TEST_WORLD });
 
 type RaceEvent<T extends SimEvent['type']> = Extract<SimEvent, { type: T }>;
 function findEv<T extends SimEvent['type']>(events: SimEvent[], type: T): RaceEvent<T> | undefined {
@@ -454,7 +456,7 @@ describe('losing a race', () => {
 
   it('leaving the game mid-race discards the session with the player', () => {
     const sim = new Sim({
-      seed: 5,
+      seed: 1,
       playerClass: 'warrior',
       autoEquip: true,
       noPlayer: true,
@@ -474,7 +476,7 @@ describe('losing a race', () => {
 describe('per-player isolation (the online concurrency requirement)', () => {
   it('two riders race the same course at once with independent timers and progress', () => {
     const sim = new Sim({
-      seed: 9,
+      seed: 1,
       playerClass: 'warrior',
       autoEquip: true,
       noPlayer: true,
@@ -521,7 +523,7 @@ describe('per-player isolation (the online concurrency requirement)', () => {
 describe('determinism', () => {
   it('the same seed and the same ride produce the same race events (no rng drawn)', () => {
     const run = () => {
-      const sim = makeSim(77);
+      const sim = makeSim();
       mountUp(sim, sim.playerId);
       const trace: string[] = [];
       const record = (events: SimEvent[]) => {
