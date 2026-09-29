@@ -45,6 +45,7 @@ import {
   runDisenchant,
   runSalvage,
 } from './helpers/enchant_family_cast';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // A common-quality one-hand weapon: disenchants to arcane_dust with NO typed
 // secondary, salvages to bone_fragments, and takes the mainhand Might enchant.
@@ -66,7 +67,11 @@ const DUST = 'arcane_dust';
 // enchanted and sitting in the bags.
 const WORN_WEAPON = 'bronzework_mace';
 
-const makeSim = (seed = 7): Sim => new Sim({ seed, playerClass: 'warrior', autoEquip: false });
+// The offline commands read the player's bags and gear, never a camp, NPC or
+// ground object, and every offline Sim shares one seed: a fresh seed builds
+// its collider grids (about half a second) and no case compares two seeds.
+const makeSim = (): Sim =>
+  new Sim({ seed: 7, playerClass: 'warrior', autoEquip: false, world: EMPTY_TEST_WORLD });
 
 function eventsOfType(events: SimEvent[], type: SimEvent['type']): SimEvent[] {
   return events.filter((ev) => ev.type === type);
@@ -196,7 +201,7 @@ describe('offline Sim enchanting commands: stash + single pid-scoped emit', () =
     expect(sim.countItem(DUST, pid)).toBe(5);
 
     // insufficient_materials enchant deny (sword held, no dust).
-    const sim2 = makeSim(11);
+    const sim2 = makeSim();
     const pid2 = sim2.playerId;
     sim2.addItem(COMMON_WEAPON, 1, pid2);
     sim2.drainEvents();
