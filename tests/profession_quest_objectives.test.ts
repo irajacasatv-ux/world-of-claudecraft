@@ -10,6 +10,7 @@ import { Sim } from '../src/sim/sim';
 import type { QuestDef, QuestObjective, QuestProgress } from '../src/sim/types';
 import { terrainHeight } from '../src/sim/world';
 import { runCraft } from './helpers/enchant_family_cast';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const TEST_QUEST_ID = 'q_test_profession_objectives';
 const originalQuest = QUESTS[TEST_QUEST_ID];
@@ -38,7 +39,12 @@ function installQuest(objectives: QuestObjective[]): void {
 
 function trackedSim(objectives: QuestObjective[]): { sim: Sim; pid: number; qp: QuestProgress } {
   installQuest(objectives);
-  const sim = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+  const sim = new Sim({
+    seed: 42,
+    playerClass: 'warrior',
+    noPlayer: true,
+    world: EMPTY_TEST_WORLD,
+  });
   const pid = sim.addPlayer('warrior', 'Artisan');
   const qp: QuestProgress = {
     questId: TEST_QUEST_ID,

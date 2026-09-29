@@ -4,13 +4,17 @@ import { announceAttunement } from '../src/sim/professions/attunement_events';
 import { Sim } from '../src/sim/sim';
 import type { SimContext } from '../src/sim/sim_context';
 import type { SimEvent } from '../src/sim/types';
+import { worldWithOnlyNpcs } from './helpers/npc_world';
 
 const PAIR = 'weaponcrafting+armorcrafting';
 const SMITH_MASTER = 'forgemistress_darva';
 const WEAPON_ARMOR = 'weaponcrafting+armorcrafting';
 
+// The attune quest needs only its master standing in the world.
+const DARVA_WORLD = worldWithOnlyNpcs(SMITH_MASTER);
+
 function makeSim(seed = 6161): Sim {
-  return new Sim({ seed, playerClass: 'warrior', autoEquip: true });
+  return new Sim({ seed, playerClass: 'warrior', autoEquip: true, world: DARVA_WORLD });
 }
 
 /** A minimal ctx exposing only what announceAttunement + emitToZonePlayers read:

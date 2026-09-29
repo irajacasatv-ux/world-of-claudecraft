@@ -40,6 +40,7 @@ import type { CraftSkills } from '../src/sim/professions/wheel';
 import { Sim } from '../src/sim/sim';
 import { expectScansOnlyThroughSharedWalkers } from './helpers/scan_guard_self_audit';
 import { tsFilesUnder } from './helpers/ts_files_under';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 /** Repo root, from this file's location (the tests/ tree sits one below). */
 const repoRoot = path.join(__dirname, '..');
@@ -63,7 +64,7 @@ function productionSources(): { rel: string; source: string }[] {
 }
 
 function makeSim(seed = 42) {
-  return new Sim({ seed, playerClass: 'warrior', autoEquip: true });
+  return new Sim({ seed, playerClass: 'warrior', autoEquip: true, world: EMPTY_TEST_WORLD });
 }
 
 // Two distinct craft ids from the ten-craft ring, used throughout.

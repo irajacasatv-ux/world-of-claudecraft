@@ -13,6 +13,7 @@ import { Sim } from '../src/sim/sim';
 import type { SimContext } from '../src/sim/sim_context';
 import type { Entity, SimEvent } from '../src/sim/types';
 import { localizeSimText } from '../src/ui/sim_i18n';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const RAW_CATCH_IDS = [
   'raw_mirror_trout',
@@ -35,7 +36,7 @@ const REFUSE = 'That is raw. Cook it first.';
 const COOKED_CONTROL = 'pan_seared_perch';
 
 function makeWorld() {
-  return new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+  return new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true, world: EMPTY_TEST_WORLD });
 }
 
 function ctxOf(sim: Sim): SimContext {

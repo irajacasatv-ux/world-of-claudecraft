@@ -12,9 +12,16 @@ import {
   queueGatheringGrant,
 } from '../src/sim/professions/gathering';
 import { Sim } from '../src/sim/sim';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 function makeSim(seed = 42) {
-  return new Sim({ seed, playerClass: 'warrior', autoEquip: true, devCommands: true });
+  return new Sim({
+    seed,
+    playerClass: 'warrior',
+    autoEquip: true,
+    devCommands: true,
+    world: EMPTY_TEST_WORLD,
+  });
 }
 
 describe('gathering profession proficiency (#1119)', () => {
@@ -101,7 +108,12 @@ describe('gathering profession proficiency (#1119)', () => {
     });
 
     // Fresh Sim, same character, loading the saved state back in.
-    const sim2 = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+    const sim2 = new Sim({
+      seed: 42,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const loadedPid = sim2.addPlayer('warrior', 'Loaded', { state });
     const meta2 = (sim2 as any).players.get(loadedPid);
     expect(meta2.gatheringProficiency).toEqual({
@@ -140,7 +152,12 @@ describe('gathering profession proficiency (#1119)', () => {
       farming: 0,
     });
 
-    const sim2 = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+    const sim2 = new Sim({
+      seed: 42,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const loadedPid = sim2.addPlayer('warrior', 'RoundTrip', { state });
     const meta2 = (sim2 as any).players.get(loadedPid);
     expect(meta2.gatheringProficiency).toEqual({
@@ -167,7 +184,12 @@ describe('gathering profession proficiency (#1119)', () => {
     delete state.professions.fishing;
     delete state.gatheringProficiency.fishing;
 
-    const sim2 = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+    const sim2 = new Sim({
+      seed: 42,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const loadedPid = sim2.addPlayer('warrior', 'RolledBack', { state });
     const meta2 = (sim2 as any).players.get(loadedPid);
     expect(meta2.gatheringProficiency).toEqual({
@@ -187,11 +209,21 @@ describe('gathering profession proficiency (#1119)', () => {
 
     let loadedPid = -1;
     expect(() => {
-      const sim2 = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+      const sim2 = new Sim({
+        seed: 42,
+        playerClass: 'warrior',
+        noPlayer: true,
+        world: EMPTY_TEST_WORLD,
+      });
       loadedPid = sim2.addPlayer('warrior', 'Old', { state });
     }).not.toThrow();
 
-    const sim2 = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+    const sim2 = new Sim({
+      seed: 42,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     loadedPid = sim2.addPlayer('warrior', 'Old', { state });
     const meta2 = (sim2 as any).players.get(loadedPid);
     expect(meta2.gatheringProficiency).toEqual({
@@ -221,7 +253,12 @@ describe('gathering profession proficiency (#1119)', () => {
       farming: 0,
     });
 
-    const sim2 = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+    const sim2 = new Sim({
+      seed: 42,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const loadedPid = sim2.addPlayer('warrior', 'PreRename', { state });
     const meta2 = (sim2 as any).players.get(loadedPid);
     // Regression pin for the dead reassignments that dropped this fallback:
@@ -355,7 +392,12 @@ describe('gathering profession proficiency (#1119)', () => {
     expect(meta.gatheringProficiency.mining).toBe(0);
 
     // Loading that save resumes with the grant applied and nothing queued.
-    const sim2 = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+    const sim2 = new Sim({
+      seed: 42,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const loadedPid = sim2.addPlayer('warrior', 'Kept', { state });
     const meta2 = (sim2 as any).players.get(loadedPid);
     expect(meta2.gatheringProficiency.mining).toBe(5);
@@ -405,7 +447,12 @@ describe('gathering profession proficiency (#1119)', () => {
   });
 
   it('the /dev gather cheat is gated by devCommands (never a bypass path)', () => {
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', autoEquip: true }); // devCommands off
+    const sim = new Sim({
+      seed: 42,
+      playerClass: 'warrior',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    }); // devCommands off
     const pid = sim.playerId;
     sim.chat('/dev gather mining 5', pid);
     sim.tick();

@@ -8,9 +8,10 @@ import { describe, expect, it } from 'vitest';
 import { CRAFT_RING, oppositeCraft } from '../src/sim/content/professions';
 import { getHobbyCraft } from '../src/sim/professions/archetype';
 import { Sim } from '../src/sim/sim';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 function makeSim(seed = 11) {
-  return new Sim({ seed, playerClass: 'warrior', autoEquip: true });
+  return new Sim({ seed, playerClass: 'warrior', autoEquip: true, world: EMPTY_TEST_WORLD });
 }
 
 const CRAFT_A = CRAFT_RING[0].id;

@@ -13,9 +13,10 @@ import {
   getArchetypeTitle,
 } from '../src/sim/professions/archetype';
 import { Sim } from '../src/sim/sim';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 function makeSim(seed = 7) {
-  return new Sim({ seed, playerClass: 'warrior', autoEquip: true });
+  return new Sim({ seed, playerClass: 'warrior', autoEquip: true, world: EMPTY_TEST_WORLD });
 }
 
 describe('getArchetypeTitle (#1130, pair-named)', () => {

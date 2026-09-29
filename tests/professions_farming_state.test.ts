@@ -26,6 +26,7 @@ import {
   projectFarmPlots,
 } from '../src/sim/professions/farm_projection';
 import { type CharacterState, type PlayerMeta, Sim } from '../src/sim/sim';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // Fixture allowlists for the pure arms: the leaf takes its allowlists as
 // arguments precisely so its unit tests never depend on shipped content. The
@@ -660,17 +661,20 @@ describe('the save round trip through a real Sim', () => {
       playerClass: 'warrior',
       autoEquip: false,
       lockoutNowMs: () => NOW_MS,
+      world: EMPTY_TEST_WORLD,
     });
     return seed.serializeCharacter(seed.playerId) as CharacterState;
   };
   // noPlayer so the loaded character IS the primary and the `myFarmPlots`
-  // getter reads it.
+  // getter reads it. The beds and crops are static content, so the empty
+  // world serves every load.
   const load = (state: CharacterState) => {
     const sim = new Sim({
       seed: 11,
       playerClass: 'warrior',
       noPlayer: true,
       lockoutNowMs: () => NOW_MS,
+      world: EMPTY_TEST_WORLD,
     });
     const pid = sim.addPlayer('warrior', 'Farmhand', { state });
     return { sim, pid, meta: sim.meta(pid) as PlayerMeta };

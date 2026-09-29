@@ -25,6 +25,7 @@ import {
   SALVAGE_CAST_ID,
 } from '../src/sim/types';
 import { completeEnchantFamilyCast } from './helpers/enchant_family_cast';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const SWORD = 'eastbrook_arming_sword';
 const MIGHT = 'enchant_weapon_might';
@@ -33,7 +34,7 @@ const INTELLECT = 'enchant_weapon_intellect';
 const TUNIC = 'recruit_tunic';
 
 function makeSim(seed = 42): Sim {
-  return new Sim({ seed, playerClass: 'warrior', autoEquip: false });
+  return new Sim({ seed, playerClass: 'warrior', autoEquip: false, world: EMPTY_TEST_WORLD });
 }
 
 function playerOf(sim: Sim): { p: Entity; meta: PlayerMeta; pid: number } {

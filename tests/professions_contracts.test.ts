@@ -10,9 +10,13 @@ import type { ProfessionRecord } from '../src/sim/professions';
 import { emptyCraftSkills } from '../src/sim/professions/wheel';
 import { Sim } from '../src/sim/sim';
 import type { PlayerClass } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const SIM_SEED = 1;
 const PROBE_CLASS: PlayerClass = 'warrior';
+// Both Sims run on the empty world: it keeps the built-in services object, so
+// its station list is still the builtin STATIONS reference (the builtin-world
+// Sim's own identity pin lives in tests/world_content_services.test.ts).
 
 // A DOM-less, network-free WebSocket stand-in for the ClientWorld ctor (see
 // tests/world_api_parity.test.ts for the full-featured version this mirrors).
@@ -55,7 +59,7 @@ function makeClientWorld(): ClientWorld {
 
 describe('professions contracts (#1164)', () => {
   it('IWorldProfessions.professionsState carries the five all-zero gathering skills on a fresh Sim', () => {
-    const sim = new Sim({ seed: SIM_SEED, playerClass: PROBE_CLASS });
+    const sim = new Sim({ seed: SIM_SEED, playerClass: PROBE_CLASS, world: EMPTY_TEST_WORLD });
     // Pins the enforced per-profession caps
     // (mining/logging/herbalism/farming 100, fishing 200) replace the old
     // uniform 300, and the append-last order farming joined in.
@@ -79,7 +83,7 @@ describe('professions contracts (#1164)', () => {
     // Identity holds because the active bundle wraps the builtin STATIONS
     // reference on every shipped host, not because either side pins the
     // static const anymore.
-    const sim = new Sim({ seed: SIM_SEED, playerClass: PROBE_CLASS });
+    const sim = new Sim({ seed: SIM_SEED, playerClass: PROBE_CLASS, world: EMPTY_TEST_WORLD });
     const client = makeClientWorld();
     expect(sim.stationPlacements).toBe(STATIONS);
     expect(client.stationPlacements).toBe(STATIONS);

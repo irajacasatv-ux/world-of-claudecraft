@@ -20,11 +20,14 @@ import { describe, expect, it } from 'vitest';
 import { GATHER_NODES } from '../src/sim/content/gather_nodes';
 import { PRE_TRAINING_RECIPE_IDS } from '../src/sim/professions/training';
 import { type CharacterState, type PlayerMeta, Sim } from '../src/sim/sim';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // Every reload builds a FRESH Sim on the file's one seed: a save/load
 // round trip needs a fresh world, not a different one, and each distinct
 // seed paid a fresh full-world collider-grid build (about half a second).
-const makeSim = () => new Sim({ seed: 21, playerClass: 'warrior', autoEquip: false });
+// The blob reads no camp, NPC or ground object, so the empty world serves.
+const makeSim = () =>
+  new Sim({ seed: 21, playerClass: 'warrior', autoEquip: false, world: EMPTY_TEST_WORLD });
 
 // Every professions-owned key on CharacterState, pinned as a literal list so a
 // rename fails the presence pin instead of silently leaving the sweep.

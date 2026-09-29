@@ -42,9 +42,14 @@ import {
 } from '../src/sim/professions/stations';
 import { Sim } from '../src/sim/sim';
 import { completeCraftCast } from './helpers/enchant_family_cast';
+import { worldWithOnlyNpcs } from './helpers/npc_world';
+
+// Stations are services, which the spread keeps; the only NPC a case reaches
+// for is Quartermaster Bree.
+const BREE_WORLD = worldWithOnlyNpcs('quartermaster_bree');
 
 function makeSim(seed = 42) {
-  return new Sim({ seed, playerClass: 'warrior', autoEquip: false });
+  return new Sim({ seed, playerClass: 'warrior', autoEquip: false, world: BREE_WORLD });
 }
 
 function grantItem(sim: Sim, itemId: string, count: number, pid: number) {
@@ -401,7 +406,7 @@ describe('resolveCraft station gate (position-only, per type)', () => {
     expect(state).not.toBeNull();
     expect(JSON.stringify(state)).not.toContain('mobileStation');
 
-    const reloaded = makeSim(7);
+    const reloaded = makeSim();
     const reloadedPid = reloaded.addPlayer('warrior', 'Reloaded', { state: state ?? undefined });
     expect((reloaded as any).players.get(reloadedPid).mobileStation).toBeNull();
   });
