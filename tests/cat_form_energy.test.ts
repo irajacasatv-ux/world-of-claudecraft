@@ -22,12 +22,16 @@ import { createMob } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
 import { readyArenaFighter } from '../src/sim/social/arena';
 import type { Entity, SimEvent } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 /** Ticks per classic regen tick (updateRegen pays every 40th sim tick). */
 const REGEN_TICK = 40;
 
+// Both Sims run on EMPTY_TEST_WORLD and one seed: every case reads the player's
+// own energy against a mob it spawns, so the ambient overworld and a second seed's
+// world build were pure construction and tick cost.
 function feralDruid(): { sim: Sim; p: Entity } {
-  const sim = new Sim({ seed: 43, playerClass: 'druid', autoEquip: true });
+  const sim = new Sim({ seed: 43, playerClass: 'druid', autoEquip: true, world: EMPTY_TEST_WORLD });
   sim.setPlayerLevel(20);
   expect(sim.applyTalents({ spec: 'feral', rows: {} })).toBe(true);
   const p = sim.player;
@@ -195,7 +199,12 @@ describe('parked Cat energy: the edges', () => {
   });
 
   it('never parks anything for a rogue, whose bar is energy without a form', () => {
-    const sim = new Sim({ seed: 44, playerClass: 'rogue', autoEquip: true });
+    const sim = new Sim({
+      seed: 43,
+      playerClass: 'rogue',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.setPlayerLevel(20);
     const p = sim.player;
     p.resource = 30;
