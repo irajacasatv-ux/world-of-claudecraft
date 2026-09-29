@@ -120,9 +120,10 @@ function fakeHost(
     backgroundGpuWork: {
       // Yields before running, like real GPU work does: without this the whole
       // pass completes inside one microtask turn and a serialization test could
-      // not tell a chained queue from three parallel ones.
+      // not tell a chained queue from three parallel ones. One macrotask hop
+      // (see `hop` below).
       run: async <T>(work: () => T | Promise<T>) => {
-        await new Promise((resolve) => setTimeout(resolve, 0));
+        await hop();
         return work();
       },
     },
@@ -145,6 +146,12 @@ function fakeHost(
   return host;
 }
 
+// Every macrotask this file schedules (the idle shim, the GPU-work yield, the
+// drain) is one setImmediate hop. The pass reads no clock, so what a drain
+// budgets is a hop COUNT; setTimeout(0) spent the same count at Node's 1 ms
+// timer floor (about 0.5 s of wall clock per test) for no extra coverage.
+const hop = (): Promise<void> => new Promise((resolve) => setImmediate(resolve));
+
 // The pass drains through requestIdleCallback; drive it by hand so a test never
 // waits on a real idle period.
 function installImmediateIdle(): () => void {
@@ -154,7 +161,7 @@ function installImmediateIdle(): () => void {
   const had = 'requestIdleCallback' in win;
   const previous = win.requestIdleCallback;
   win.requestIdleCallback = (cb: (deadline: unknown) => void) => {
-    setTimeout(() => cb({ didTimeout: false, timeRemaining: () => 5 }), 0);
+    setImmediate(() => cb({ didTimeout: false, timeRemaining: () => 5 }));
     return 1;
   };
   return () => {
@@ -164,7 +171,7 @@ function installImmediateIdle(): () => void {
 }
 
 const drain = async (): Promise<void> => {
-  for (let i = 0; i < 200; i++) await new Promise((resolve) => setTimeout(resolve, 0));
+  for (let i = 0; i < 200; i++) await hop();
 };
 
 // Watch every material under a staged root from the moment the pass compiles
