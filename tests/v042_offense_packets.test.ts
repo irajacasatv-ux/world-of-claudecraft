@@ -33,10 +33,11 @@ import {
   tickPyreGuardian,
 } from '../src/sim/combat/destruction';
 import { addSoulFragments, pierceLichSoulLance } from '../src/sim/combat/necromancy';
-import { MOBS } from '../src/sim/data';
+import { ABILITIES, MOBS } from '../src/sim/data';
 import { createMob } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
 import type { SimContext } from '../src/sim/sim_context';
+import { HEALING_SP_SCALE } from '../src/sim/spell_scaling';
 import type { Entity, PlayerClass, SimEvent } from '../src/sim/types';
 import { SPELL_COEFF_DIVISOR, SPELL_COEFF_MAX_CAST, SPELL_COEFF_MIN_CAST } from '../src/sim/types';
 import { EMPTY_TEST_WORLD } from './sim_shared';
@@ -589,7 +590,15 @@ describe('v0.42.0 offense-only package: real combat-path packets', () => {
       return { damage, heal: 0 };
     }
 
-    function scouringMercyHealOnSelf(spellPower: number, seed: number): number {
+    // The heal half's read, plus the two player inputs its bounds derive from,
+    // both as the sim computed them for this priest.
+    interface MercyHealRead {
+      amount: number;
+      healPower: number;
+      critDmgHealBonus: number;
+    }
+
+    function scouringMercyHealOnSelf(spellPower: number, seed: number): MercyHealRead {
       const sim = makeSim('priest', seed);
       sim.setPlayerLevel(20);
       expect(sim.setSpec('discipline')).toBe(true);
@@ -614,8 +623,17 @@ describe('v0.42.0 offense-only package: real combat-path packets', () => {
         (e) => e.type === 'heal2' && e.sourceId === sim.playerId && e.targetId === sim.playerId,
       ) as (SimEvent & { amount: number }) | undefined;
       if (!healEvent) throw new Error('Scouring Mercy heal half did not land');
-      return healEvent.amount;
+      return {
+        amount: healEvent.amount,
+        healPower: sim.player.healPower,
+        critDmgHealBonus: sim.player.critDmgHealBonus,
+      };
     }
+
+    // The classic heal crit, written as a LITERAL: combat/heal.ts applyHeal
+    // inlines `1.5 + critDmgHealBonus`, so reading the multiplier from the sim
+    // would drift both sides together and a wrong engine multiplier would pass.
+    const HEAL_CRIT_MULT = 1.5;
 
     it("Scouring Mercy's hostile damage half grows by the literal 1.30 Doctrine factor (SP-delta, engine-constant formula)", () => {
       const delta = scouringMercy(1200, PACKET_SEED).damage - scouringMercy(0, PACKET_SEED).damage;
@@ -627,18 +645,33 @@ describe('v0.42.0 offense-only package: real combat-path packets', () => {
     it("Scouring Mercy's heal half does NOT move: unaffected by Spell Power AND by Doctrine's offense-only bonus (both would move it if it leaked into healMult)", () => {
       // The self-cast's crit and heal roll are pinned in scouringMercyHealOnSelf
       // (it is not a guaranteed crit: both used to ride the full world's rng
-      // stream on seed 1402). The pinned read is 269 at either Spell Power: a
-      // 1.5x heal crit on a 0.9 roll of the 130-155 range plus the gear's
-      // Healing Power, so the 2x-authored-range bounds below hold for this roll,
-      // not for every roll (a crit spans about 236 to 273). The flatness is the
-      // proof this case needs: if Doctrine's 1.30 (or any Spell Power scaling)
-      // leaked into this heal's mult, spellPower 0 and 1200 would read
-      // DIFFERENT amounts, and/or the amount would clear the 310 ceiling.
+      // stream on seed 1402). The flatness is the proof this case needs: if
+      // Doctrine's 1.30 (or any Spell Power scaling) leaked into this heal's
+      // mult, spellPower 0 and 1200 would read DIFFERENT amounts.
       const atZeroSp = scouringMercyHealOnSelf(0, PACKET_SEED);
       const atHighSp = scouringMercyHealOnSelf(1200, PACKET_SEED);
-      expect(atHighSp).toBe(atZeroSp);
-      expect(atZeroSp).toBeGreaterThanOrEqual(2 * 130);
-      expect(atZeroSp).toBeLessThanOrEqual(2 * 155);
+      expect(atHighSp.amount).toBe(atZeroSp.amount);
+      // The bounds are the crit of the authored heal range, derived as the sim
+      // resolves it (combat/effect_dispatch.ts `heal`, then combat/heal.ts
+      // applyHeal): the rolled amount in [min, max) PLUS the Healing Power rider
+      // Math.round(healPower * HEALING_SP_SCALE * the instant's 1.5 / 3.5
+      // coefficient), added BEFORE the crit; applyHeal then multiplies the sum
+      // by 1.5 + critDmgHealBonus and rounds once. Every other multiplier on
+      // that path is 1 for this self-cast (primaryHealingMultiplier is 1 for a
+      // priest; no talent, heal-done or healing-taken aura is up). At Healing
+      // Power 32 (rider 27) the pinned 0.9 roll reads 269 inside 236 to 273, so a
+      // leaked heal multiplier above about 1.015 clears the ceiling; a 2x crit
+      // reads about 359, a 1.3x one about 233.
+      const heal = ABILITIES.scouring_mercy.effects.find((e) => e.type === 'heal');
+      if (heal?.type !== 'heal') throw new Error('Scouring Mercy lost its heal effect');
+      const healPowerRider = Math.round(atZeroSp.healPower * HEALING_SP_SCALE * directCoeff(0));
+      const critMult = HEAL_CRIT_MULT + atZeroSp.critDmgHealBonus;
+      expect(atZeroSp.amount).toBeGreaterThanOrEqual(
+        Math.round((heal.min + healPowerRider) * critMult),
+      );
+      expect(atZeroSp.amount).toBeLessThanOrEqual(
+        Math.round((heal.max + healPowerRider) * critMult),
+      );
     });
 
     it("Necromancy's owner spell bonus grows Essence Reap but leaves Fiendhide's armor buff at its legacy (pre-offense) value", () => {
