@@ -737,7 +737,9 @@ describe('node tool gate ordering', () => {
 describe('gated-path determinism (same seed, same drive)', () => {
   it('two Sims produce identical event streams and post-state through the gated paths', () => {
     const run = () => {
-      const sim = new Sim({ seed: 4242, playerClass: 'warrior', noPlayer: true });
+      // The file's default seed: a run-twice equality needs no seed of its
+      // own, and a fresh one would pay another full collider-grid build.
+      const sim = makeWorld();
       const pid = sim.addPlayer('warrior', 'Det');
       sim.tick();
       const meta = mustMeta(sim, pid);
