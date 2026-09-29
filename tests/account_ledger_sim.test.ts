@@ -31,6 +31,7 @@ import {
 } from '../src/sim/reliquary';
 import { type CharacterState, Sim } from '../src/sim/sim';
 import type { SimEvent } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const CATALOGUE_RELIC = 'cryptbone_helm';
 const PAGE_ID = 'conquerors_hollow_crypt';
@@ -45,10 +46,16 @@ const BORDER_DEED = DEED_ORDER.find((id) => DEEDS[id].reward?.kind === 'border')
 
 const ALT: AccountEarner = { characterId: 99, name: 'Bram', cls: 'mage', day: '2026-09-01' };
 
+// The ledger reads only the players' own records, so every Sim runs on the
+// empty world on one seed.
+function bareSim(): Sim {
+  return new Sim({ seed: 42, playerClass: 'warrior', autoEquip: false, world: EMPTY_TEST_WORLD });
+}
+
 /** A complete, restorable CharacterState (a fresh warrior's save) with a patch
  *  spread over it: the restore path expects every array present. */
 function fullState(patch: Partial<CharacterState>): CharacterState {
-  const sim = new Sim({ seed: 7, playerClass: 'warrior', autoEquip: false });
+  const sim = bareSim();
   const base = sim.serializeCharacter(sim.playerId)!;
   return { ...base, ...patch };
 }
@@ -57,7 +64,7 @@ function makeSim(opts?: {
   state?: CharacterState;
   ledger?: ReturnType<typeof freshAccountLedger>;
 }) {
-  const sim = new Sim({ seed: 42, playerClass: 'warrior', autoEquip: false });
+  const sim = bareSim();
   if (opts?.state || opts?.ledger) {
     // A second, explicitly configured player beside the sandbox primary.
     const pid = sim.addPlayer('warrior', 'Second', {
