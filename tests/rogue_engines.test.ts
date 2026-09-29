@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { onCastCompleted } from '../src/sim/combat/talent_procs';
-import { MOBS } from '../src/sim/data';
+import { ITEMS, MOBS } from '../src/sim/data';
 import { equipReferenceEpicKitForDev } from '../src/sim/dev/bis_gear';
 import { resetCombatForDev } from '../src/sim/dev_commands';
 import { createMob } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
-import type { Entity, SimEvent } from '../src/sim/types';
+import type { Entity, EquipSlot, SimEvent } from '../src/sim/types';
 import { auraEffectDescriptor } from '../src/ui/aura_effect';
 import { EMPTY_TEST_WORLD } from './sim_shared';
 
@@ -340,6 +340,12 @@ describe('Skulduggery: the Gloam bank and its detonation', () => {
       (sim as unknown as { ctx: Parameters<typeof equipReferenceEpicKitForDev>[0] }).ctx,
       p.id,
     ); // Lurker's Strike requires a dagger
+    // The kit wears the whole Ashveil set, whose 4pc bakes a +100% edge
+    // (ignivar_set_bonuses.ts): strip every piece so this is the non-set edge.
+    const equipment = sim.meta(p.id)?.equipment ?? {};
+    for (const [slot, itemId] of Object.entries(equipment) as [EquipSlot, string][]) {
+      if (ITEMS[itemId]?.set === 'ashveil') expect(sim.unequipItem(slot)).toBe(true);
+    }
     p.critChance = 0; // crits keep kind 'hit' (crit flag), so pin them off
     // Pin the miss off too: the detonation is ONE swing, and hitBonus 1
     // floors player-to-mob miss at 0 (swingMissChance). The formula dodge slot
@@ -402,6 +408,9 @@ describe('Skulduggery: the Gloam bank and its detonation', () => {
     }
     expect(plain).toBeDefined();
     expect(edged?.amount ?? 0).toBeGreaterThan((plain?.amount ?? 0) * 1.3);
+    // +50% of the WEAPON damage only: the strike's flat bonus rides unscaled,
+    // so the whole hit lands under one and a half times the plain one.
+    expect(edged?.amount ?? 0).toBeLessThan((plain?.amount ?? 0) * 1.5);
   });
 
   it('without an armed bank an unstealthed opener is still rejected', () => {
