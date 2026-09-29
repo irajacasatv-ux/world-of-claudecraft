@@ -36,7 +36,13 @@ import { castAbility, updateCasting } from '../src/sim/combat/casting_lifecycle'
 import { resolveDruidOverbloom } from '../src/sim/combat/druid_engines';
 import { Sim } from '../src/sim/sim';
 import type { Entity } from '../src/sim/types';
-import { WORLD_WITHOUT_HUB_YARD } from './helpers/hub_yard';
+import { EMPTY_TEST_WORLD } from './sim_shared';
+
+// Every Sim here runs on one seed and EMPTY_TEST_WORLD: each reader pins the rng
+// or reads a deterministic value off a caster and ally it adds itself, so the
+// ambient overworld and each extra seed's world build were pure cost. The empty
+// world also has no hub practice yard, which the AoE heal case must not reach.
+const SEED = 5;
 
 const BASE_POWER = 70;
 const HEALING_POWER_DELTA = 140; // the flat Healing Power robe of the boost arm
@@ -99,7 +105,12 @@ describe('chain heal reads healPower (effect_dispatch chainHeal)', () => {
   // packet (base + rider) once, before rounding: first hop =
   // round((132.5 + rider) * 1.10).
   function firstHopHeal(arm: StatArm): number {
-    const sim = new Sim({ seed: 5, playerClass: 'shaman', noPlayer: true });
+    const sim = new Sim({
+      seed: SEED,
+      playerClass: 'shaman',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const casterId = sim.addPlayer('shaman', 'Chainer');
     const allyId = sim.addPlayer('warrior', 'Hurt Ally');
     sim.setPlayerLevel(18, casterId);
@@ -135,7 +146,12 @@ describe('pure HoT reads healPower (effect_dispatch hot)', () => {
   // round(healPower * 2 * (15/15) / 5) = round(healPower * 0.4):
   // 70 -> 28, 210 -> 84. An unspecced priest carries no heal multiplier.
   function renewTickValue(arm: StatArm | 'zero'): number {
-    const sim = new Sim({ seed: 9, playerClass: 'priest', autoEquip: true });
+    const sim = new Sim({
+      seed: SEED,
+      playerClass: 'priest',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.setPlayerLevel(12);
     const p = sim.player;
     p.resource = p.maxResource;
@@ -167,7 +183,12 @@ describe('coefficient absorb reads healPower (effect_dispatch absorb)', () => {
   // (MAGE_PERSONAL_BARRIER_SPELL_POWER_COEFF): 70 -> 85, 210 -> 155. Frost
   // carries no heal or absorb multiplier.
   function barrierValue(arm: StatArm): number {
-    const sim = new Sim({ seed: 13, playerClass: 'mage', autoEquip: true });
+    const sim = new Sim({
+      seed: SEED,
+      playerClass: 'mage',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.setPlayerLevel(11);
     expect(sim.setSpec('frost')).toBe(true);
     const p = sim.player;
@@ -197,10 +218,10 @@ describe('direct AoE heal reads healPower (effect_dispatch aoeHeal)', () => {
   // factor (1.10) now scales the whole raw packet once: round((100 + rider) * 1.10).
   function selfAoeHeal(arm: StatArm): number {
     const sim = new Sim({
-      seed: 17,
+      seed: SEED,
       playerClass: 'paladin',
       autoEquip: true,
-      world: WORLD_WITHOUT_HUB_YARD,
+      world: EMPTY_TEST_WORLD,
     });
     sim.setPlayerLevel(14);
     expect(sim.setSpec('holy')).toBe(true);
@@ -234,7 +255,12 @@ describe('channeled AoE heal pulse reads healPower (casting_lifecycle aoeHeal ar
   // regressed to spellPower via abilityScalingPower (fixed in the same change
   // as this test).
   function selfChannelHealTotal(arm: StatArm): number {
-    const sim = new Sim({ seed: 21, playerClass: 'druid', autoEquip: true });
+    const sim = new Sim({
+      seed: SEED,
+      playerClass: 'druid',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.setPlayerLevel(20);
     expect(sim.applyTalents({ spec: null, rows: { 17: 'dru_r17_frenzied_regeneration' } })).toBe(
       true,
@@ -284,7 +310,12 @@ describe('druid Overbloom replant reads healPower (druid_engines replantWildbloo
   // delta-style assertion here would drift by rounding noise instead of
   // proving the actual formula.
   function replantTickValue(arm: StatArm | 'zero'): { value: number } {
-    const sim = new Sim({ seed: 25, playerClass: 'druid', autoEquip: true });
+    const sim = new Sim({
+      seed: SEED,
+      playerClass: 'druid',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.setPlayerLevel(10);
     expect(sim.setSpec('restoration')).toBe(true);
     const p = sim.player;
@@ -330,7 +361,12 @@ describe('Paladin Aegis reads healPower (paladin_aegis tick and final burst)', (
   // recalc rescales hp by fraction), re-hurting the ally each step so no heal
   // clamps against the real pool.
   function allyAegisHeals(arm: StatArm): number[] {
-    const sim = new Sim({ seed: 29, playerClass: 'paladin', autoEquip: true });
+    const sim = new Sim({
+      seed: SEED,
+      playerClass: 'paladin',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.setPlayerLevel(20);
     expect(sim.setSpec('holy')).toBe(true);
     const allyId = sim.addPlayer('priest', 'Dawn Ally');
