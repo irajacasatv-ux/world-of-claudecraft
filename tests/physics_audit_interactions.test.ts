@@ -7,9 +7,11 @@ import {
   STALL_CANOPY_TOP,
   supportHeightAt,
 } from '../src/sim/colliders';
-import { DUNGEONS, instanceOrigin, MOBS } from '../src/sim/data';
+import { DUNGEONS, instanceOrigin, MOBS, PROPS } from '../src/sim/data';
 import { CRYPT_LAYOUT, DAIS_HEIGHT, tombSlotRoll } from '../src/sim/dungeon_layout';
 import { createMob } from '../src/sim/entity';
+import { runMobSwingAffixes } from '../src/sim/mob/mob_swing';
+import { PLAYER_BODY_RADIUS } from '../src/sim/pathfind';
 import { findLedgeGrab } from '../src/sim/physics/ledge';
 import { moveSpeedMult, type PlayerMotionDeps, stepPlayerMotion } from '../src/sim/player_motion';
 import { Sim } from '../src/sim/sim';
@@ -88,27 +90,56 @@ function climbOntoCanopy(sim: Sim): void {
 describe('knockbacks x roofs', () => {
   it('knocked INTO the stall face: stopped at the rim, never embedded', () => {
     const sim = makeSim();
-    teleport(sim, -8.5, 0.2, Math.PI); // just south of the rim, facing away
     const p = sim.player;
-    // Knockback the sim way: the shared relocation seat. Use the wolf's
-    // knockback template through a real swing.
-    const tmpl = MOBS.forest_wolf;
-    const saved = tmpl.knockback?.chance;
-    if (tmpl.knockback) tmpl.knockback.chance = 1;
-    const mob = createMob(sim.nextId++, tmpl, 5, { x: -8.5, y: p.pos.y, z: -1.2 });
+    // The zone 3 stables feed stall: a legacy market stand, the normalized
+    // 3.1 x 2.5 box (colliders.ts), so its front face sits 2.5 / 2 yd out
+    // along the stand's local z. A moved or resized stand fails here, loudly,
+    // instead of leaving the shove to cross open ground.
+    const stall = PROPS.stalls.find((s) => s.x === 365 && s.z === 603);
+    expect(stall, 'the stables feed stall').toBeTruthy();
+    if (!stall) return;
+    expect(stall.w, 'a legacy stand, not a sized OBB').toBeUndefined();
+    const FACE = 2.5 / 2;
+    const rot = stall.rot ?? 0;
+    // World point `lz` yd out along the stand's local +z, and back again.
+    const out = (lz: number) => ({
+      x: stall.x + lz * Math.sin(rot),
+      z: stall.z + lz * Math.cos(rot),
+    });
+    const localZ = () => (p.pos.x - stall.x) * Math.sin(rot) + (p.pos.z - stall.z) * Math.cos(rot);
+    const START = FACE + 2;
+    const at = out(START);
+    teleport(sim, at.x, at.z, rot + Math.PI);
+    // The real landed-hit cascade: Marrowlord Varkas's Crushing Sweep, its
+    // chance forced to 1, shoves the player straight away from him, which is
+    // straight at the stall face: 6 yd would carry the body clean through.
+    const tmpl = MOBS.marrowlord_varkas;
+    const knockback = tmpl.knockback;
+    if (!knockback) throw new Error('marrowlord_varkas lost its knockback');
+    expect(knockback.distance).toBeGreaterThan(START + FACE);
+    const saved = knockback.chance;
+    knockback.chance = 1;
+    // The swing source only: never added to the world, so nothing chases or
+    // swings again in the ticks that follow.
+    const behind = out(START + 1.5);
+    const mob = createMob(sim.nextId++, tmpl, 60, { x: behind.x, y: p.pos.y, z: behind.z });
     mob.hostile = true;
-    sim.addEntity(mob);
     try {
-      for (let i = 0; i < 200; i++) {
-        hold(sim, {}, 1);
-        // The wolf pushes the player north into the stall: the body must
-        // never end up inside the stall footprint at street height.
-        const d = Math.hypot(p.pos.x - -8.5, p.pos.z - 3);
-        const rel = p.pos.y - groundHeight(p.pos.x, p.pos.z, SEED);
-        if (rel < 1.0) expect(d).toBeGreaterThan(1.7 + 0.4);
-      }
+      runMobSwingAffixes(sim.ctx, mob, p, { dealt: 1, crit: false, rawDmg: 1 });
     } finally {
-      if (tmpl.knockback && saved !== undefined) tmpl.knockback.chance = saved;
+      knockback.chance = saved;
+    }
+    // The shove happened and moved the body toward the stall, then stopped at
+    // the rim: outside the face by at least the body radius, and within one
+    // half-yard shove step of that contact (never short, never through).
+    expect(localZ()).toBeLessThan(START - 1);
+    expect(localZ()).toBeGreaterThanOrEqual(FACE + PLAYER_BODY_RADIUS);
+    expect(localZ()).toBeLessThan(FACE + PLAYER_BODY_RADIUS + 0.5);
+    // And it stays there at street height, neither embedded nor on the roof.
+    for (let i = 0; i < 20; i++) {
+      hold(sim, {}, 1);
+      expect(localZ()).toBeGreaterThanOrEqual(FACE + PLAYER_BODY_RADIUS);
+      expect(p.pos.y - groundHeight(p.pos.x, p.pos.z, SEED)).toBeLessThan(0.5);
     }
   });
 });
