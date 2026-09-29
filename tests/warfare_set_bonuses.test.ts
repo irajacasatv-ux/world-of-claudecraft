@@ -12,6 +12,7 @@ import { createMob, createPlayer, recalcPlayerStats } from '../src/sim/entity';
 import { PVP_DEFENSE_CAP, PVP_OFFENSE_CAP, pvpFractionsFromRatings } from '../src/sim/pvp';
 import { Sim } from '../src/sim/sim';
 import type { CrowdControlDrCategory, Entity, EquipSlot, ItemSet, SetProc } from '../src/sim/types';
+import { RL_TEST_WORLD } from './sim_shared';
 
 const PROBE_SET = 'warfare_phase1_probe';
 const counts = (m: Record<string, number>) => new Map(Object.entries(m));
@@ -87,6 +88,12 @@ function requireDuel(sim: Sim, id: number): NonNullable<ReturnType<Sim['duels'][
   const duel = sim.duels.get(id);
   if (!duel) throw new Error(`missing test duel ${id}`);
   return duel;
+}
+
+// The duels and procs need two players and, for the PvE arms, any wild mob: the
+// one-wolf-camp world serves every Sim here.
+function makeSim(): Sim {
+  return new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true, world: RL_TEST_WORLD });
 }
 
 function requireMob(sim: Sim): Entity {
@@ -210,7 +217,7 @@ describe('the crowd-control duration hook', () => {
   ];
 
   function duelists(): { sim: Sim; source: Entity; target: Entity } {
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+    const sim = makeSim();
     const a = sim.addPlayer('warrior', 'Striker');
     const b = sim.addPlayer('mage', 'Struck');
     sim.duels.set(a, { a, b, state: 'active', timer: 0 });
@@ -301,7 +308,7 @@ describe('pvpOnly set procs', () => {
   };
 
   function world(): { sim: Sim; a: Entity; b: Entity } {
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+    const sim = makeSim();
     const pa = sim.addPlayer('warrior', 'Victor');
     const pb = sim.addPlayer('mage', 'Fallen');
     sim.duels.set(pa, { a: pa, b: pb, state: 'active', timer: 0 });
@@ -352,7 +359,7 @@ describe('pvpOnly set procs', () => {
   });
 
   it('does not fire on a friendly player or on itself', () => {
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+    const sim = makeSim();
     const pa = sim.addPlayer('warrior', 'Solo');
     const pb = sim.addPlayer('priest', 'Ally');
     const a = requireEntity(sim, pa);
@@ -387,7 +394,7 @@ describe('the kill trigger dispatch', () => {
   };
 
   function world(): { sim: Sim; killer: Entity; victim: Entity } {
-    const sim = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+    const sim = makeSim();
     const pa = sim.addPlayer('warrior', 'Killer');
     const pb = sim.addPlayer('mage', 'Victim');
     sim.duels.set(pa, { a: pa, b: pb, state: 'active', timer: 0 });
