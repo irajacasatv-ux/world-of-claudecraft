@@ -169,7 +169,11 @@ describe('mob.update high-load regression budget', () => {
     // Warm up: bucket the crowd into the spatial grid and settle mob states.
     for (let i = 0; i < 10; i++) sim.tick();
 
-    const MEASURE_TICKS = 120;
+    // Forty measured ticks: each pile-up tick costs tens of milliseconds of
+    // whole-sim work around the mob phase, and a median of forty still needs
+    // twenty spiked ticks to move, which a sustained regression makes and
+    // scheduling noise does not.
+    const MEASURE_TICKS = 40;
     const samples: number[] = [];
     for (let i = 0; i < MEASURE_TICKS; i++) {
       mobUpdateThisTick = 0;
