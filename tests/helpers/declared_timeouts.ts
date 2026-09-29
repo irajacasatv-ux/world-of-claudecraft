@@ -58,6 +58,36 @@ const MIN_COUNTED_MS = 20_001;
 const HEAD_RE =
   /(?:\b(?:it|test|bench|describe)\b(?:\.(?:only|skip|todo|fails|concurrent|sequential|shuffle|each|for|skipIf|runIf|extend)\b)*|\b(?:beforeAll|beforeEach|afterAll|afterEach)\b|\bvi\.setConfig)\s*\(/g;
 
+// Keywords after which a `/` begins a regex literal, never a division: after
+// `return /x/` the old guess (the last code character is a word character, so a
+// value, so division) opened a fake block comment on `/*` inside the pattern and
+// masked every line after it.
+const REGEX_AFTER_WORD = new Set([
+  'return',
+  'typeof',
+  'case',
+  'in',
+  'of',
+  'void',
+  'yield',
+  'await',
+  'delete',
+  'throw',
+  'else',
+  'do',
+  'instanceof',
+  'new',
+]);
+
+/** The identifier ending just before index `end`, skipping whitespace. */
+function wordBefore(source: string, end: number): string {
+  let j = end - 1;
+  while (j >= 0 && /\s/.test(source[j])) j--;
+  const stop = j;
+  while (j >= 0 && /[\w$]/.test(source[j])) j--;
+  return source.slice(j + 1, stop + 1);
+}
+
 /**
  * Replace comment text and string CONTENTS with spaces, preserving length and
  * indices. Template literals mask to spaces too, with `${` re-entering code
@@ -94,7 +124,12 @@ export function maskCommentsAndStrings(
         out[i] = ' ';
         out[i + 1] = ' ';
         i++;
-      } else if (ch === '/' && (lastCode === '' || /[(,=:[!&|?{};+\-*%<>~^]/.test(lastCode))) {
+      } else if (
+        ch === '/' &&
+        (lastCode === '' ||
+          /[(,=:[!&|?{};+\-*%<>~^]/.test(lastCode) ||
+          (/[\w$]/.test(lastCode) && REGEX_AFTER_WORD.has(wordBefore(source, i))))
+      ) {
         state = 'regex';
         inClass = false;
       } else if (ch === "'") state = 'single';
