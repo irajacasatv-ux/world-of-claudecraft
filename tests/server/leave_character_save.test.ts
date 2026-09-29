@@ -4,7 +4,7 @@
 // coordinator suites, and the extraction that created this module broke exactly
 // those. A seam with a behaviour test cannot be broken silently by the next one.
 
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, type Mock, vi } from 'vitest';
 import {
   LEAVE_SAVE_MAX_ATTEMPTS,
   LEAVE_SAVE_RETRY_BASE_MS,
@@ -16,8 +16,8 @@ import {
 } from '../../server/leave_character_save';
 
 // The backoff's real sleeps (3.75 s per exhausted ladder) prove nothing the
-// literal ladder pin below does not, so the retrying cases run the ladder on the
-// faked clock: every attempt, log line and reconcile still happens in order.
+// faked clock does not, so the retrying cases run the ladder on the faked clock:
+// every attempt, log line and reconcile still happens in order.
 async function onFakeClock<T>(run: () => Promise<T>): Promise<T> {
   vi.useFakeTimers();
   try {
@@ -26,6 +26,25 @@ async function onFakeClock<T>(run: () => Promise<T>): Promise<T> {
     return await done;
   } finally {
     vi.useRealTimers();
+  }
+}
+
+// The sleep before each retry, as literals from the documented schedule: the
+// base 250 ms, doubled per attempt, capped at 4000 ms. Five attempts sleep four
+// times, so the cap is never reached on a real ladder.
+const BACKOFF_MS = [250, 500, 1000, 2000];
+
+// Step the faked clock through the given sleeps one at a time: 1 ms short of
+// each sleep the next attempt has NOT run, at the sleep it has. runAllTimersAsync
+// runs any sleep out, so a ladder with a sleep dropped, shortened or shifted
+// passes it; this does not.
+async function stepBackoff(save: Mock, sleeps: number[]): Promise<void> {
+  expect(save).toHaveBeenCalledTimes(1);
+  for (const [i, sleep] of sleeps.entries()) {
+    await vi.advanceTimersByTimeAsync(sleep - 1);
+    expect(save).toHaveBeenCalledTimes(i + 1);
+    await vi.advanceTimersByTimeAsync(1);
+    expect(save).toHaveBeenCalledTimes(i + 2);
   }
 }
 
@@ -61,8 +80,16 @@ describe('the leaving character save', () => {
     });
     const reconcile = vi.fn();
     const errors = vi.spyOn(console, 'error').mockImplementation(() => undefined);
-    await onFakeClock(() => saveLeavingCharacter('Ashwen', save, reconcile));
-    errors.mockRestore();
+    vi.useFakeTimers();
+    try {
+      const done = saveLeavingCharacter('Ashwen', save, reconcile);
+      // Two failures, so two sleeps: the first two steps of the ladder.
+      await stepBackoff(save, BACKOFF_MS.slice(0, 2));
+      await done;
+    } finally {
+      vi.useRealTimers();
+      errors.mockRestore();
+    }
     expect(save).toHaveBeenCalledTimes(3);
     // It SUCCEEDED, so nothing is undone: reconciliation is the last attempt's
     // job alone.
@@ -78,8 +105,16 @@ describe('the leaving character save', () => {
     const errors = vi
       .spyOn(console, 'error')
       .mockImplementation((message: unknown) => void lines.push(String(message)));
-    await onFakeClock(() => saveLeavingCharacter('Ashwen', save, reconcile));
-    errors.mockRestore();
+    vi.useFakeTimers();
+    try {
+      const done = saveLeavingCharacter('Ashwen', save, reconcile);
+      // The whole ladder, one sleep at a time; no sleep follows the last attempt.
+      await stepBackoff(save, BACKOFF_MS);
+      await done;
+    } finally {
+      vi.useRealTimers();
+      errors.mockRestore();
+    }
     expect(save).toHaveBeenCalledTimes(LEAVE_SAVE_MAX_ATTEMPTS);
     // ONCE, on the last attempt: this session will never save again, so the live
     // book is ahead of durable truth with nothing left to converge it.
