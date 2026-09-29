@@ -7,6 +7,7 @@ import { Sim } from '../src/sim/sim';
 import type { Entity, PlayerClass } from '../src/sim/types';
 import { setLanguage } from '../src/ui/i18n';
 import { tTalent } from '../src/ui/talent_i18n';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 function rig(
   cls: PlayerClass,
@@ -15,7 +16,8 @@ function rig(
   spec: string | null = null,
   seed = 1,
 ) {
-  const sim = new Sim({ seed, playerClass: cls, autoEquip: true });
+  // Every case fights the wolf it spawns or nothing, so the empty world serves.
+  const sim = new Sim({ seed, playerClass: cls, autoEquip: true, world: EMPTY_TEST_WORLD });
   sim.setPlayerLevel(level);
   expect(sim.applyTalents({ spec, rows })).toBe(true);
   const p = sim.player;
