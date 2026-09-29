@@ -996,7 +996,7 @@ describe('hunter pets', () => {
     sim.castAbility('tame_beast');
     for (let i = 0; i < 20 * 7; i++) sim.tick(); // 6s cast
     const pet = expectDefined(sim.petOf(sim.playerId));
-    return { sim, wolf: pet, originalWolfId };
+    return { sim, wolf: pet, originalWolfId, wild: wolf };
   }
 
   function activePetDuel() {
@@ -1013,18 +1013,32 @@ describe('hunter pets', () => {
   }
 
   it('tame beast creates a loyal pet copy and temporarily despawns the wild target', () => {
-    const { sim, wolf, originalWolfId } = tamedSetup();
+    const { sim, wolf, originalWolfId, wild } = tamedSetup();
     expect(wolf.ownerId).toBe(sim.playerId);
     expect(wolf.hostile).toBe(false);
     expect(sim.petOf(sim.playerId)).toBe(wolf);
     expect(wolf.id).not.toBe(originalWolfId);
     expect(sim.entities.has(originalWolfId)).toBe(false);
-    for (let i = 0; i < 20 * 61; i++) sim.tick();
-    expect(
-      [...sim.entities.values()].some(
-        (e) => e.kind === 'mob' && e.ownerId === null && e.templateId === 'forest_wolf',
-      ),
-    ).toBe(true);
+    // The camp holds other wild wolves the whole time, so "some wild wolf
+    // exists" proves nothing: the respawn is the tamed one's own replacement,
+    // a fresh wild wolf of its level on its spawn point, a minute after the tame.
+    const respawns = () =>
+      [...sim.entities.values()].filter(
+        (e) =>
+          e.kind === 'mob' &&
+          e.ownerId === null &&
+          e.templateId === 'forest_wolf' &&
+          e.spawnPos.x === wild.spawnPos.x &&
+          e.spawnPos.z === wild.spawnPos.z,
+      );
+    for (let i = 0; i < 20 * 59; i++) sim.tick();
+    expect(respawns()).toEqual([]);
+    for (let i = 0; i < 20 * 2; i++) sim.tick();
+    const back = respawns();
+    expect(back).toHaveLength(1);
+    expect(back[0].id).not.toBe(originalWolfId);
+    expect(back[0].level).toBe(wild.level);
+    expect(back[0].hostile).toBe(true);
   }, 90_000);
 
   it('drops a stale enemy player target when that player stealths out of detection', () => {
