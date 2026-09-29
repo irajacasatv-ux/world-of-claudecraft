@@ -29,7 +29,7 @@
 // fight-long damage, pinned by the sustained block at 60s and 120s plus the
 // Ignite contract at duration (pre-fix, sustained fire ran 2.2x-2.9x frost
 // at every duration and Ignite was 46% of all damage).
-import { afterAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { TALENTS } from '../src/sim/content/talents';
 import { ABILITIES, BUILTIN_WORLD, ITEMS, MOBS, setActiveWorldContent } from '../src/sim/data';
 import { createMob, type PlayerEquipment, recalcPlayerStats } from '../src/sim/entity';
@@ -52,7 +52,9 @@ const FIRE_TEST_WORLD: WorldContent = {
   roads: [],
 };
 
-// Measurements are built while describe blocks are collected, before hooks run.
+// Every measurement runs in a beforeAll, so its cost shows in the file's measured
+// test time (the CI shard weights) instead of hiding in collection. The world
+// content is set here, at collection, ahead of every hook.
 setActiveWorldContent(FIRE_TEST_WORLD);
 afterAll(() => setActiveWorldContent(null));
 
@@ -327,8 +329,10 @@ function runShortFight(spec: Spec, seconds: number, seed = 41, rows?: Rows): Bur
 }
 
 describe('fire mage short-fight burst (27s live report harness)', () => {
-  const fire = runShortFight('fire', FIGHT_SECONDS);
-  const frost = runShortFight('frost', FIGHT_SECONDS);
+  let fire!: BurstResult;
+  let frost!: BurstResult;
+  let fireMean = 0;
+  let frostMean = 0;
   // Post-#2358 (crit/haste rating halved) the naked frost 27s cell is
   // proc-luck heavy: ~8 Rimelances fit the window, so a single seed has a
   // 27% chance of ZERO Fingers procs and its DPS swings ~40%. The band
@@ -339,12 +343,20 @@ describe('fire mage short-fight burst (27s live report harness)', () => {
   // otherwise weigh 41 on both sides. This band compares naked fire against
   // naked frost, never against a seed-41 baseline, so it keeps 41.
   const BAND_SEEDS = [41, 101, 108, 115, 122];
-  const fireMean =
-    BAND_SEEDS.map((s) => runShortFight('fire', FIGHT_SECONDS, s).dps).reduce((a, b) => a + b, 0) /
-    BAND_SEEDS.length;
-  const frostMean =
-    BAND_SEEDS.map((s) => runShortFight('frost', FIGHT_SECONDS, s).dps).reduce((a, b) => a + b, 0) /
-    BAND_SEEDS.length;
+  beforeAll(() => {
+    fire = runShortFight('fire', FIGHT_SECONDS);
+    frost = runShortFight('frost', FIGHT_SECONDS);
+    fireMean =
+      BAND_SEEDS.map((s) => runShortFight('fire', FIGHT_SECONDS, s).dps).reduce(
+        (a, b) => a + b,
+        0,
+      ) / BAND_SEEDS.length;
+    frostMean =
+      BAND_SEEDS.map((s) => runShortFight('frost', FIGHT_SECONDS, s).dps).reduce(
+        (a, b) => a + b,
+        0,
+      ) / BAND_SEEDS.length;
+  }, 30_000);
 
   it('the reported gear resolves (every id exists on its slot)', () => {
     for (const [slot, id] of Object.entries(BIS_GEAR)) {
@@ -431,14 +443,19 @@ describe('talented burst window (Monte Carlo 2026-07-24, designer round 2026-07-
   // seeds), so keeping 41 on both sides made the guard compare the talented
   // mean partly against itself at its single luckiest naked roll.
   const CEILING_SEEDS = [101, 108, 115, 122, 129];
-  const fire = CEILING_SEEDS.map((seed) =>
-    runShortFight('fire', FIGHT_SECONDS, seed, TOP_TALENTED_ROWS),
-  );
-  const frost = CEILING_SEEDS.map((seed) =>
-    runShortFight('frost', FIGHT_SECONDS, seed, FROST_TOP_ROWS),
-  );
-  const mean = fire.reduce((a, r) => a + r.dps, 0) / fire.length;
-  const frostMean = frost.reduce((a, r) => a + r.dps, 0) / frost.length;
+  let fire: BurstResult[] = [];
+  let mean = 0;
+  let frostMean = 0;
+  beforeAll(() => {
+    fire = CEILING_SEEDS.map((seed) =>
+      runShortFight('fire', FIGHT_SECONDS, seed, TOP_TALENTED_ROWS),
+    );
+    const frost = CEILING_SEEDS.map((seed) =>
+      runShortFight('frost', FIGHT_SECONDS, seed, FROST_TOP_ROWS),
+    );
+    mean = fire.reduce((a, r) => a + r.dps, 0) / fire.length;
+    frostMean = frost.reduce((a, r) => a + r.dps, 0) / frost.length;
+  }, 30_000);
 
   it('reports the talented burst numbers (owner harness)', () => {
     const per = fire.map((r, k) => `${CEILING_SEEDS[k]}:${r.dps.toFixed(1)}`).join(' ');
@@ -499,7 +516,21 @@ describe('sustained parity, entire fight (Monte Carlo follow-up 2026-07-24)', ()
   // a rule-defined pool exists to prevent
   // (tests/chronomancy_balance_targets.test.ts keeps its own sub-target seed
   // for the same reason).
-  const SUSTAINED_SEEDS = Array.from({ length: 40 }, (_, i) => i + 1);
+  //
+  // The 40-seed pool is a NIGHTLY sweep: 160 fights of 60 and 120 seconds, about
+  // 40 s of CPU, once hidden in collection on every PR shard. PR, merge-queue,
+  // release and local gate runs take the pool's first five seeds (the same rule,
+  // a smaller size) and assert what five seeds decide reliably: both ceilings,
+  // the Ignite share and Ignite conservation. Those catch the regression class
+  // this block exists for, the pre-fix sim's 2.2x to 2.9x sustained explosion,
+  // the 46 percent Ignite share and the 1.05 to 1.2 double-dip, by a wide
+  // margin (on this tree the five-seed ratios read 1.08 at 60s and 1.00 at
+  // 120s under the 1.25 ceiling, the share 16 percent, conservation 0.98 to
+  // 1.00). The 0.95 floor is decided on the mean alone, and a five-seed mean
+  // swings about 0.07 at 60s (single seeds read 0.73 to 1.40), so the floor
+  // runs only on the nightly's full pool, never on a smaller one.
+  const NIGHTLY_SWEEP = process.env.WOC_NIGHTLY_SWEEP === '1';
+  const SUSTAINED_SEEDS = Array.from({ length: NIGHTLY_SWEEP ? 40 : 5 }, (_, i) => i + 1);
   const SUSTAINED_CEILING = 1.25; // x talented frost, per duration
   // Owner ruling 2026-07-25: frost is the PvP-leaning spec, so fire must
   // NEVER fall below it in PvE damage, at any fight length. The floor was
@@ -528,8 +559,12 @@ describe('sustained parity, entire fight (Monte Carlo follow-up 2026-07-24)', ()
     const igniteBanked = fire.reduce((a, r) => a + r.igniteBanked, 0);
     return { fireMean, frostMean, igniteShare, ignitePaid, igniteBanked };
   };
-  const at60 = measure(60);
-  const at120 = measure(120);
+  let at60!: ReturnType<typeof measure>;
+  let at120!: ReturnType<typeof measure>;
+  beforeAll(() => {
+    at60 = measure(60);
+    at120 = measure(120);
+  }, 180_000);
 
   it('reports the sustained numbers (owner harness)', () => {
     const fmt = (label: string, m: { fireMean: number; frostMean: number; igniteShare: number }) =>
@@ -546,10 +581,13 @@ describe('sustained parity, entire fight (Monte Carlo follow-up 2026-07-24)', ()
     expect(at120.fireMean).toBeLessThanOrEqual(at120.frostMean * SUSTAINED_CEILING);
   });
 
-  it('and never falls below frost in PvE (owner ruling: frost is the PvP spec)', () => {
-    expect(at120.fireMean).toBeGreaterThanOrEqual(at120.frostMean * SUSTAINED_FLOOR);
-    expect(at60.fireMean).toBeGreaterThanOrEqual(at60.frostMean * SUSTAINED_FLOOR);
-  });
+  it.runIf(NIGHTLY_SWEEP)(
+    'and never falls below frost in PvE (owner ruling: frost is the PvP spec)',
+    () => {
+      expect(at120.fireMean).toBeGreaterThanOrEqual(at120.frostMean * SUSTAINED_FLOOR);
+      expect(at60.fireMean).toBeGreaterThanOrEqual(at60.frostMean * SUSTAINED_FLOOR);
+    },
+  );
 
   it('Ignite pays its stated contract at duration (share stays bounded)', () => {
     expect(at120.igniteShare).toBeLessThanOrEqual(IGNITE_SHARE_CEILING);
