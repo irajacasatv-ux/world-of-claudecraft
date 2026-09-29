@@ -13,6 +13,7 @@ import { Sim } from '../src/sim/sim';
 import type { AuraKind, Entity, PlayerClass, SimEvent } from '../src/sim/types';
 import { DT } from '../src/sim/types';
 import { placePlayerInOpenField } from './helpers/open_field';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 type CapturedEvent = SimEvent & { __tick?: number };
 type WandBoltEvent = Extract<SimEvent, { type: 'spellfx' }> & { wand: true; __tick?: number };
@@ -21,7 +22,9 @@ type EmittingSim = Sim & {
 };
 
 function makeSim(seed = 7, cls: PlayerClass = 'mage'): { sim: Sim; p: Entity } {
-  const sim = new Sim({ seed, playerClass: cls, autoEquip: true });
+  // The empty test world: every case casts at a practice dummy it spawns on
+  // open ground, so the ambient overworld only added tick cost.
+  const sim = new Sim({ seed, playerClass: cls, autoEquip: true, world: EMPTY_TEST_WORLD });
   sim.setPlayerLevel(20);
   placePlayerInOpenField(sim);
   const p = sim.player;
