@@ -771,10 +771,14 @@ jobs:
       # and the npm-test legs skip their lifecycle copy). The freshness diff
       # lives in pr-checks. Worker count resolves inside the script: the
       # half-cores measured default unless a step env sets a valid
-      # WOC_TEST_WORKERS. None is set: both alternatives were measured and
-      # regressed (4 workers, run 31107474546; 3 workers, run 31771637461,
-      # three unrelated default-timeout blowouts for at most a minute of
-      # wall). The ruling lives in scripts/ci_shard_test.mjs.
+      # WOC_TEST_WORKERS. Both alternatives were measured and regressed (4
+      # workers, run 31107474546; 3 workers, run 31771637461, three unrelated
+      # default-timeout blowouts for at most a minute of wall). A new 3-worker
+      # trial on the shard legs only (the lanes stay at 2) runs under
+      # Fernando's ruling of 2026-09-29, after the heavy suites were slimmed and
+      # the balance lane culled: kept only if two full-mode runs are green with
+      # no timeout and the summed shard test step falls at least 5 percent,
+      # otherwise reverted. The ruling lives in scripts/ci_shard_test.mjs.
       #
       # Phase 2 (docs/qa-gate.md, "Selective PR-tier CI"): the runner reads the
       # changes job's selection decision. test_mode=full spawns the old step
@@ -793,6 +797,7 @@ jobs:
           TEST_MODE: ${{ needs.changes.outputs.test_mode }}
           TEST_MODE_REASON: ${{ needs.changes.outputs.test_mode_reason }}
           CHANGED_FILES: ${{ needs.changes.outputs.changed_files }}
+          WOC_TEST_WORKERS: '3'
         run: node scripts/ci_shard_test.mjs --shard=${{ matrix.shard }}/8
 
   # The long-sims lanes (Phase 4 of the CI/CD performance packet; split into
@@ -873,7 +878,19 @@ jobs:
     # 12.07); run 36448553184, lane A 13.43 and lane B 16.22. The worst
     # healthy wall is lane B at 16.22: 16.22 x 1.60 x 1.37 = 35.6, so 36,
     # under pr-gate's bound, which stays the queue's critical path.
-    timeout-minutes: 36
+    #
+    # 2026-09-29 re-derivation, after the balance harnesses booted production's
+    # idle cull (the lane's test steps fell to 1.1 to 2.3 minutes). Full-mode
+    # walls on feature/freeholds: run 36607633402 lane A 4.13 and lane B 4.88;
+    # run 36610517548 lane A 7.70 (a 4.92 minute checkout stall, excluded) and
+    # lane B 3.40. The formula gives 4.88 x 1.60 x 1.37 = 10.7, but a checkout
+    # stall that completes and then runs the tests past the bound is killed in
+    # the test step, which ci-stall-rerun.yml does not rerun, and 6 of 22
+    # test-job checkouts across those two runs stalled for 3.8 to 8.2 minutes.
+    # Fernando ruled (2026-09-29) a stall floor instead: the worst observed stall
+    # (8.2) plus setup (0.5) plus a slow-runner test step (2.3 x 1.60), times the
+    # 1.37 margin, is 17.0, so 17.
+    timeout-minutes: 17
     runs-on: ubuntu-latest
 
     steps:
@@ -978,7 +995,7 @@ jobs:
     if: ((github.event_name == 'pull_request' && (github.base_ref != 'main' || !startsWith(github.head_ref, 'release/'))) || (github.event_name == 'push' && !startsWith(github.ref, 'refs/heads/release/')) || github.event_name == 'workflow_dispatch' || github.event_name == 'merge_group') && needs.changes.outputs.code != 'false'
     # Sized with pr-long-sims-a (evidence there, in the lane-diet PR, and in
     # the dated re-derivations the sibling comment carries).
-    timeout-minutes: 36
+    timeout-minutes: 17
     runs-on: ubuntu-latest
 
     steps:

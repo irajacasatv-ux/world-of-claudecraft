@@ -75,7 +75,12 @@ const planOnly = argv.includes('--plan-only');
 // is calibrated against this bound; raise it only with a green measured
 // run at the new value. WOC_TEST_WORKERS is the knob that produces such a
 // run (resolveWorkerCount validates it; anything malformed or out of
-// range falls back to this default, loudly).
+// range falls back to this default, loudly). 2026-09-29: Fernando ruled a
+// new 3-worker trial on the shard legs only (ci.yml sets the knob on the
+// pr-gate step; the lanes keep this default), now that the heavy suites are
+// slimmed and the balance lane culled: kept only if two full-mode runs are
+// green with no timeout and the summed shard test step falls at least 5
+// percent, otherwise reverted.
 const workerResolution = resolveWorkerCount({
   cores: os.availableParallelism(),
   envValue: process.env.WOC_TEST_WORKERS,
