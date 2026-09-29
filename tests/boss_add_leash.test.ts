@@ -18,12 +18,21 @@ import { MOBS } from '../src/sim/data';
 import { enterDungeon } from '../src/sim/instances/dungeons';
 import { Sim } from '../src/sim/sim';
 import type { Entity } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 type AnySim = Sim & Record<string, any>;
 type AnyEntity = Entity & Record<string, any>;
 
-function makeSim(seed = 99): AnySim {
-  return new Sim({ seed, playerClass: 'warrior', noPlayer: true }) as AnySim;
+// Every case fights inside the Sanctum instance, so each builds the empty
+// overworld on one seed: the adds' levels and weapons are fixed by the
+// templates and tuning, never by a seed.
+function makeSim(): AnySim {
+  return new Sim({
+    seed: 99,
+    playerClass: 'warrior',
+    noPlayer: true,
+    world: EMPTY_TEST_WORLD,
+  }) as AnySim;
 }
 
 function teleport(sim: AnySim, e: AnyEntity, x: number, z: number): void {
@@ -114,7 +123,7 @@ describe('boss adds anchor where they erupt', () => {
 
 describe('heroic boss adds swing at addDamageMultiplier', () => {
   it("Velkhar's heroic bonewalkers use the softer add multiplier, the boss the full one", () => {
-    const sim = makeSim(123);
+    const sim = makeSim();
     const pid = sim.addPlayer('warrior', 'Hero');
     sim.setDungeonDifficulty('heroic', pid);
     enterDungeon(sim.ctx, 'gravewyrm_sanctum', pid);
@@ -147,7 +156,7 @@ describe('heroic boss adds swing at addDamageMultiplier', () => {
   });
 
   it('normal-difficulty adds use the normal per-mob retune, not the heroic add multiplier', () => {
-    const sim = makeSim(321);
+    const sim = makeSim();
     const pid = sim.addPlayer('warrior', 'Normie');
     enterDungeon(sim.ctx, 'gravewyrm_sanctum', pid);
     const boss = velkharIn(sim, claimedSanctum(sim, 'normal'));
