@@ -1021,7 +1021,9 @@ describe('hunter pets', () => {
     expect(sim.entities.has(originalWolfId)).toBe(false);
     // The camp holds other wild wolves the whole time, so "some wild wolf
     // exists" proves nothing: the respawn is the tamed one's own replacement,
-    // a fresh wild wolf of its level on its spawn point, a minute after the tame.
+    // a fresh wild wolf of its level on its spawn point, a minute after the tame
+    // (which landed just under a second before the setup returned, so the
+    // checks sit well clear of that minute on either side).
     const respawns = () =>
       [...sim.entities.values()].filter(
         (e) =>
@@ -1031,9 +1033,9 @@ describe('hunter pets', () => {
           e.spawnPos.x === wild.spawnPos.x &&
           e.spawnPos.z === wild.spawnPos.z,
       );
-    for (let i = 0; i < 20 * 59; i++) sim.tick();
+    for (let i = 0; i < 20 * 55; i++) sim.tick();
     expect(respawns()).toEqual([]);
-    for (let i = 0; i < 20 * 2; i++) sim.tick();
+    for (let i = 0; i < 20 * 6; i++) sim.tick();
     const back = respawns();
     expect(back).toHaveLength(1);
     expect(back[0].id).not.toBe(originalWolfId);
