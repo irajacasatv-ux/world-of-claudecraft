@@ -69,7 +69,6 @@ const FILE_ALLOWANCE_LEDGER: ReadonlyMap<string, number> = new Map([
   // file keep the exact aggregate just above the default.
   ['tests/ci_shard_plan.test.ts', 310_000],
   ['tests/discord_db_integration.test.ts', 420_000],
-  ['tests/dragonkin_whelp_litter.test.ts', 420_000],
   // 420_000 since 2026-09-29: the matrix case runs the same six culled cells at both
   // depths (270s), the nightly-only one-seed case adds nothing at PR depth, and the
   // live-mob and Bruin cases keep 30s, 60s and 60s.
