@@ -15,6 +15,9 @@ import { createMob } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
 import type { Entity, SimEvent } from '../src/sim/types';
 import { SHIELD_BLOCK_BASE } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
+
+// Every mob and attacker is placed by hand, so each Sim runs on the empty world.
 
 type AnySim = Sim & {
   nextId: number;
@@ -42,7 +45,12 @@ function spawnMobInFront(sim: AnySim, player: Entity): Entity {
 
 describe('shield block', () => {
   it('the starting shield equips block stats', () => {
-    const sim = new Sim({ seed: 7, playerClass: 'warrior', autoEquip: true });
+    const sim = new Sim({
+      seed: 7,
+      world: EMPTY_TEST_WORLD,
+      playerClass: 'warrior',
+      autoEquip: true,
+    });
     // A fresh warrior now spawns with the buckler already in the offhand.
     expect(sim.player.offhandItemId).toBe('eastbrook_buckler');
     expect(SHIELD_BLOCK_BASE).toBe(0.05);
@@ -52,7 +60,12 @@ describe('shield block', () => {
   });
 
   it('a Protection Paladin gains block stats by equipping a shield', () => {
-    const sim = new Sim({ seed: 7, playerClass: 'paladin', autoEquip: true });
+    const sim = new Sim({
+      seed: 7,
+      world: EMPTY_TEST_WORLD,
+      playerClass: 'paladin',
+      autoEquip: true,
+    });
     sim.setPlayerLevel(20);
     expect(sim.setSpec('protection')).toBe(true);
     sim.addItem('eastbrook_buckler', 1);
@@ -64,13 +77,23 @@ describe('shield block', () => {
   });
 
   it('unrelated classes do not gain block stats without an eligible shield', () => {
-    const sim = new Sim({ seed: 7, playerClass: 'rogue', autoEquip: true });
+    const sim = new Sim({
+      seed: 7,
+      world: EMPTY_TEST_WORLD,
+      playerClass: 'rogue',
+      autoEquip: true,
+    });
     expect(sim.player.blockChance).toBe(0);
     expect(sim.player.blockValue).toBe(0);
   });
 
   it('mob melee from the front is reduced by blockValue; from behind it is not', () => {
-    const sim = new Sim({ seed: 7, playerClass: 'warrior', autoEquip: true }) as AnySim;
+    const sim = new Sim({
+      seed: 7,
+      world: EMPTY_TEST_WORLD,
+      playerClass: 'warrior',
+      autoEquip: true,
+    }) as AnySim;
     const player = sim.player;
     const mob = spawnMobInFront(sim, player);
     player.dodgeChance = 0;
@@ -102,6 +125,7 @@ describe('shield block', () => {
   it('Protection Paladin mob blocks reduce 20% of the physical hit plus blockValue', () => {
     const sim = new Sim({
       seed: 7,
+      world: EMPTY_TEST_WORLD,
       playerClass: 'paladin',
       autoEquip: true,
     }) as AnySim;
@@ -137,6 +161,7 @@ describe('shield block', () => {
   it('non-Protection Paladin mob blocks retain the flat blockValue behavior', () => {
     const sim = new Sim({
       seed: 7,
+      world: EMPTY_TEST_WORLD,
       playerClass: 'paladin',
       autoEquip: true,
     }) as AnySim;
@@ -163,7 +188,12 @@ describe('shield block', () => {
   });
 
   it('player melee into a shielded target is reduced only from the front', () => {
-    const sim = new Sim({ seed: 7, playerClass: 'warrior', autoEquip: true }) as AnySim;
+    const sim = new Sim({
+      seed: 7,
+      world: EMPTY_TEST_WORLD,
+      playerClass: 'warrior',
+      autoEquip: true,
+    }) as AnySim;
     const attacker = sim.player;
     const defenderId = sim.addPlayer('warrior', 'Shielded');
     const defender = sim.entities.get(defenderId);
@@ -197,6 +227,7 @@ describe('shield block', () => {
   it('Protection Paladin blocks use the same 20% reduction against player melee', () => {
     const sim = new Sim({
       seed: 7,
+      world: EMPTY_TEST_WORLD,
       playerClass: 'warrior',
       autoEquip: true,
       noPlayer: true,
@@ -241,6 +272,7 @@ describe('shield block', () => {
   it('non-Protection Paladin blocks retain flat blockValue against player melee', () => {
     const sim = new Sim({
       seed: 7,
+      world: EMPTY_TEST_WORLD,
       playerClass: 'warrior',
       autoEquip: true,
       noPlayer: true,
@@ -276,7 +308,12 @@ describe('shield block', () => {
   });
 
   it('Paladin without a shield and shield-ineligible classes do not block mob swings', () => {
-    const unshielded = new Sim({ seed: 7, playerClass: 'paladin', autoEquip: true }) as AnySim;
+    const unshielded = new Sim({
+      seed: 7,
+      world: EMPTY_TEST_WORLD,
+      playerClass: 'paladin',
+      autoEquip: true,
+    }) as AnySim;
     const paladin = unshielded.player;
     const paladinMob = spawnMobInFront(unshielded, paladin);
     paladin.dodgeChance = 0;
@@ -296,7 +333,12 @@ describe('shield block', () => {
     expect(unshieldedHit?.kind).toBe('hit');
     expect(unshieldedHit?.amount).toBe(20);
 
-    const rogueSim = new Sim({ seed: 7, playerClass: 'rogue', autoEquip: true }) as AnySim;
+    const rogueSim = new Sim({
+      seed: 7,
+      world: EMPTY_TEST_WORLD,
+      playerClass: 'rogue',
+      autoEquip: true,
+    }) as AnySim;
     const rogue = rogueSim.player;
     const rogueMob = spawnMobInFront(rogueSim, rogue);
     rogue.dodgeChance = 0;
@@ -315,7 +357,12 @@ describe('shield block', () => {
     expect(rogueHit?.amount).toBe(20);
   });
   it('a Paladin shield aimed at offhand keeps block stats after stat recalculation', () => {
-    const sim = new Sim({ seed: 7, playerClass: 'paladin', autoEquip: true });
+    const sim = new Sim({
+      seed: 7,
+      world: EMPTY_TEST_WORLD,
+      playerClass: 'paladin',
+      autoEquip: true,
+    });
     sim.addItem('eastbrook_buckler', 1);
 
     sim.equipItemToSlot('eastbrook_buckler', 'offhand');
@@ -332,7 +379,12 @@ describe('shield block', () => {
   });
 
   it('Paladin with a shield blocks a frontal mob swing without gaining Warrior parry', () => {
-    const sim = new Sim({ seed: 7, playerClass: 'paladin', autoEquip: true }) as AnySim;
+    const sim = new Sim({
+      seed: 7,
+      world: EMPTY_TEST_WORLD,
+      playerClass: 'paladin',
+      autoEquip: true,
+    }) as AnySim;
     const player = sim.player;
     sim.addItem('eastbrook_buckler', 1);
     sim.equipItem('eastbrook_buckler');
