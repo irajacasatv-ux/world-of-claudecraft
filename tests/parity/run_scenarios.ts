@@ -85,7 +85,6 @@ const MULTI_SCENARIO_CASES: ReadonlyMap<string, readonly string[]> = new Map([
 interface CoverageCase {
   title: string;
   fn: () => void;
-  timeout: number;
   reads: ReadonlySet<string>;
   // Index into SCENARIOS of the last scenario it reads: it runs after that
   // scenario's gate case.
@@ -106,6 +105,13 @@ function collectCoverageCases(): CoverageCase[] {
   const usedMulti = new Set<string>();
   const register: CoverageIt = (title, fn, timeout) => {
     if (titles.has(title)) throw new Error(`duplicate coverage case title: ${title}`);
+    // Every coverage case runs under COVERAGE_TIMEOUT_MS, passed as a same-file const
+    // at the one registration below so tests/suite_duration_budget.test.ts can size
+    // it; a case asking for anything else must change that const, not slip past it.
+    if (timeout !== undefined && timeout !== COVERAGE_TIMEOUT_MS)
+      throw new Error(
+        `coverage case "${title}" asks for ${timeout} ms, not ${COVERAGE_TIMEOUT_MS}`,
+      );
     titles.add(title);
     const multi = MULTI_SCENARIO_CASES.get(title);
     if (multi) usedMulti.add(title);
@@ -124,7 +130,6 @@ function collectCoverageCases(): CoverageCase[] {
     cases.push({
       title,
       fn,
-      timeout: timeout ?? COVERAGE_TIMEOUT_MS,
       reads: new Set(names),
       after,
     });
@@ -261,7 +266,7 @@ function coverageCase(position: number): void {
         for (const name of c.reads) if (LAST_READER.get(name) === position) releaseRecording(name);
       }
     },
-    c.timeout,
+    COVERAGE_TIMEOUT_MS,
   );
 }
 
