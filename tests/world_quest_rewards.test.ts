@@ -14,16 +14,11 @@ import {
   WORLD_QUEST_XP_RATE,
   WORLD_QUESTS_BY_ID,
 } from '../src/sim/content/world_quests';
-import { ITEMS } from '../src/sim/data';
+import { ITEMS, MOBS } from '../src/sim/data';
+import { createMob } from '../src/sim/entity';
 import { worldQuestStandingReward } from '../src/sim/factions';
 import { type PlayerMeta, Sim } from '../src/sim/sim';
-import {
-  type Entity,
-  MAX_LEVEL,
-  type SimEvent,
-  type WorldQuestDef,
-  xpForLevel,
-} from '../src/sim/types';
+import { MAX_LEVEL, type SimEvent, type WorldQuestDef, xpForLevel } from '../src/sim/types';
 import { terrainHeight } from '../src/sim/world';
 import { FARSHORE_SALVAGE_AMBUSH } from '../src/sim/world_quest_ambush';
 import { WISP_MAZE_HARD_BONUS, worldQuestBonusCopper } from '../src/sim/world_quest_bonus';
@@ -47,6 +42,7 @@ import {
   worldQuestCopperReward,
   worldQuestXpReward,
 } from '../src/sim/world_quests';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const EPOCH_DAY = Date.UTC(2026, 7, 31);
 
@@ -91,8 +87,10 @@ function killQuestOffTheSlots(): { day: string; quest: WorldQuestDef } {
 
 // Auto-equip stays OFF so a granted piece stays in the bags, where countItem
 // reads; with it on the sim would equip the day's gear straight out of them.
+// The credit arm reads only the slain mob's template and position, so each case
+// places its own target on the empty world instead of seating every camp.
 function questSim(day: string, quest: WorldQuestDef, level: number, seed = 4711): Sim {
-  const sim = new Sim({ seed, playerClass: 'warrior', autoEquip: false });
+  const sim = new Sim({ seed, playerClass: 'warrior', autoEquip: false, world: EMPTY_TEST_WORLD });
   sim.setPlayerLevel(level);
   sim.utcDay = day;
   sim.resetDay = day;
@@ -116,12 +114,13 @@ function metaOf(sim: Sim): PlayerMeta {
 function complete(sim: Sim, quest: WorldQuestDef): SimEvent[] {
   if (quest.objective.type !== 'kill') throw new Error(`Expected a kill objective ${quest.id}`);
   const targetMobId = quest.objective.targetMobId;
-  const target = [...sim.entities.values()].find(
-    (entity): entity is Entity => entity.kind === 'mob' && entity.templateId === targetMobId,
+  const target = createMob(
+    sim.ctx.nextId++,
+    MOBS[targetMobId],
+    quest.minLevel,
+    sim.groundPos(quest.area.x, quest.area.z),
   );
-  if (!target) throw new Error(`Missing target ${targetMobId}`);
-  target.pos.x = quest.area.x;
-  target.pos.z = quest.area.z;
+  sim.ctx.addEntity(target);
   const meta = metaOf(sim);
   for (let i = 0; i < quest.count; i++) onMobKilledForWorldQuests(sim.ctx, target, meta);
   expect(sim.worldQuestLog.get(quest.id)?.state).toBe('completed');
