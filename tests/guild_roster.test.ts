@@ -17,11 +17,13 @@ import {
   refundGuildRosterPage,
 } from '../src/sim/guild_roster';
 import { Sim } from '../src/sim/sim';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const GOLD = 10_000;
 
 function freshSim(): Sim {
-  return new Sim({ seed: 7, playerClass: 'warrior', autoEquip: true });
+  // The roster is the player's own guild state, so the Sim runs on the empty world.
+  return new Sim({ seed: 7, playerClass: 'warrior', autoEquip: true, world: EMPTY_TEST_WORLD });
 }
 
 const meta = (sim: Sim) => {

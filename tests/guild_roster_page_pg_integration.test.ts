@@ -10,6 +10,7 @@ import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { materialSourceConnection } from '../server/material_source_connection';
 import type { CharacterState } from '../src/sim/character_state';
 import { Sim } from '../src/sim/sim';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const ADMIN_URL = process.env.TEST_DATABASE_URL;
 const VERIFY_DB = 'wocc_guild_roster_page_verify';
@@ -33,7 +34,13 @@ const LEASE = 'lease-roster-1';
 /** A REAL serialized character (the save path sanitizes bags, quests, and
  *  friends, so a bare object is not a CharacterState), with the purse set. */
 function characterState(copper: number): CharacterState {
-  const sim = new Sim({ seed: 3, playerClass: 'warrior', autoEquip: true });
+  // Only the serialized character is needed, so the Sim runs on the empty world.
+  const sim = new Sim({
+    seed: 3,
+    playerClass: 'warrior',
+    autoEquip: true,
+    world: EMPTY_TEST_WORLD,
+  });
   const state = sim.serializeCharacter(sim.playerId);
   if (!state) throw new Error('sim did not serialize its player');
   return { ...state, copper };

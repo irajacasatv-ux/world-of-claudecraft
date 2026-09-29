@@ -17,6 +17,7 @@ import {
   guildBankLogSignature,
 } from '../src/ui/guild_bank_log_view';
 import type { GuildBankLogEntry, GuildBankLogOp, GuildBankLogView } from '../src/world_api';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const AT = 1_770_000_000_000;
 
@@ -207,7 +208,8 @@ describe('the OFFLINE world arm feeds the core safely', () => {
     // and the signature scans, so if either ever reached for the input array in
     // place, offline play would throw on the first paint of the pane. Cheap to
     // pin, silent to regress.
-    const sim = new Sim({ seed: 7, playerClass: 'warrior' });
+    // An offline Sim's log needs nothing from the world, so it runs on the empty world.
+    const sim = new Sim({ seed: 7, playerClass: 'warrior', world: EMPTY_TEST_WORLD });
     const offline = sim.guildBankLog();
     expect(offline).toEqual(view({ state: 'ready', entries: [] }));
     expect(Object.isFrozen(offline)).toBe(true);

@@ -12,6 +12,7 @@ import {
   guildRosterTransport,
 } from '../server/guild_roster_transport';
 import { Sim } from '../src/sim/sim';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const GOLD = 10_000;
 const CHAR = 7;
@@ -33,7 +34,13 @@ interface HarnessOptions {
 }
 
 function harness(opts: HarnessOptions = {}) {
-  const sim = new Sim({ seed: 3, playerClass: 'warrior', autoEquip: true });
+  // The transport reads only the player's purse and guild, so the Sim runs on the empty world.
+  const sim = new Sim({
+    seed: 3,
+    playerClass: 'warrior',
+    autoEquip: true,
+    world: EMPTY_TEST_WORLD,
+  });
   const pid = sim.playerId;
   const meta = sim.players.get(pid);
   if (!meta) throw new Error('missing meta');
