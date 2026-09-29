@@ -6,6 +6,7 @@
 import { describe, expect, it } from 'vitest';
 import { dailyRewardsStub } from '../src/sim/daily_rewards_stub';
 import { Sim } from '../src/sim/sim';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // Spelled out here as literals rather than derived from the module under test:
 // the point is that the readout is a CONSTANT, so the expectation has to be an
@@ -56,7 +57,13 @@ describe('the offline daily-rewards stub', () => {
   });
 
   it('is what the Sim facade resolves for an offline world', async () => {
-    const sim = new Sim({ seed: 7, playerClass: 'warrior', noPlayer: true });
+    // The facade reads no world content, so the empty world serves.
+    const sim = new Sim({
+      seed: 7,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     expect(await sim.dailyRewards()).toStrictEqual(OFFLINE_READOUT);
   });
 });
