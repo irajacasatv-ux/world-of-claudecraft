@@ -2,6 +2,10 @@ import { describe, expect, it } from 'vitest';
 import { ITEMS } from '../src/sim/data';
 import { canDualWield, canDualWieldTwoHand } from '../src/sim/equipment_rules';
 import { Sim } from '../src/sim/sim';
+import { EMPTY_TEST_WORLD } from './sim_shared';
+
+// Every case equips on one seed and the empty world: the routing reads only
+// the character's class, spec and bags, never the seed or the overworld.
 
 function addWithoutAutoEquip(sim: Sim, itemId: string, count = 1): void {
   const meta = sim.meta(sim.player.id)!;
@@ -11,7 +15,12 @@ function addWithoutAutoEquip(sim: Sim, itemId: string, count = 1): void {
 
 describe('v0.26 canonical right-click equip routing', () => {
   it('keeps ordinary one-hand routing in the mainhand and preserves a shield', () => {
-    const sim = new Sim({ seed: 2610, playerClass: 'paladin', autoEquip: true });
+    const sim = new Sim({
+      seed: 2610,
+      playerClass: 'paladin',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     addWithoutAutoEquip(sim, 'redbrook_blade');
 
     sim.equipItem('redbrook_blade');
@@ -21,7 +30,12 @@ describe('v0.26 canonical right-click equip routing', () => {
   });
 
   it('delegates Rogue one-hand routing to the canonical dual-wield rule', () => {
-    const sim = new Sim({ seed: 2611, playerClass: 'rogue', autoEquip: true });
+    const sim = new Sim({
+      seed: 2610,
+      playerClass: 'rogue',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     addWithoutAutoEquip(sim, 'keen_dirk');
 
     sim.equipItem('keen_dirk');
@@ -32,7 +46,12 @@ describe('v0.26 canonical right-click equip routing', () => {
   });
 
   it('routes a Fury one-hander to the offhand', () => {
-    const sim = new Sim({ seed: 2612, playerClass: 'warrior', autoEquip: true });
+    const sim = new Sim({
+      seed: 2610,
+      playerClass: 'warrior',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.setPlayerLevel(20);
     expect(sim.setSpec('fury')).toBe(true);
     addWithoutAutoEquip(sim, 'redbrook_blade');
@@ -45,7 +64,12 @@ describe('v0.26 canonical right-click equip routing', () => {
   });
 
   it('uses the natural two-click Titan Grip flow and benches the illegal offhand on switch', () => {
-    const sim = new Sim({ seed: 2613, playerClass: 'warrior', autoEquip: true });
+    const sim = new Sim({
+      seed: 2610,
+      playerClass: 'warrior',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.setPlayerLevel(20);
     expect(sim.setSpec('fury')).toBe(true);
     addWithoutAutoEquip(sim, 'eastbrook_greatsword', 2);
