@@ -561,6 +561,7 @@ describe('the long-sims lane (Phase 4)', () => {
     expect(depthFlagSources(DIET_FLAG).has('scripts/lib/ci_shard_plan.mjs')).toBe(true);
     expect(depthFlagSources('BalancedSequencer').has('vite.config.ts')).toBe(true);
     expect(depthFlagSources('export const WORLD_SEED').has('src/sim/world_seed.ts')).toBe(true);
+    expect(depthFlagSources('<script').has('src/admin/App.svelte')).toBe(true);
     const audit = auditDepthFlag(NIGHTLY_FLAG, depthFlagSources(NIGHTLY_FLAG), listed);
     expect(audit.violations).toEqual([]);
     expect(audit.readers).toEqual(listed);

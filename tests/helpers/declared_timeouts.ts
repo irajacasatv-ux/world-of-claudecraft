@@ -81,17 +81,22 @@ const REGEX_AFTER_WORD = new Set([
 
 /**
  * The keyword ending just before index `end` in the text masked so far (comments
- * already blank, so a line comment ending in `of` cannot lend its word), skipping
- * whitespace. A word reached through `.` or `?.` is a property (`x.in / 2` divides),
- * never a keyword, so it reads as ''.
+ * already blank, so a line comment ending in a keyword cannot lend its word), skipping
+ * whitespace. A word reached as a property (`x.in / 2`, `opts?.do`, `x.\n in`) or a
+ * private field (`this.#in`) is a value, never a keyword, so it reads as ''; the
+ * third dot of a spread (`...await /x/`) is no property access.
  */
 function wordBefore(masked: readonly string[], end: number): string {
   let j = end - 1;
   while (j >= 0 && /\s/.test(masked[j])) j--;
   const stop = j;
   while (j >= 0 && /[\w$]/.test(masked[j])) j--;
-  if (j >= 0 && masked[j] === '.') return '';
-  return masked.slice(j + 1, stop + 1).join('');
+  const word = masked.slice(j + 1, stop + 1).join('');
+  if (j >= 0 && masked[j] === '#') return '';
+  let k = j;
+  while (k >= 0 && /\s/.test(masked[k])) k--;
+  if (k >= 0 && masked[k] === '.' && !(k >= 1 && masked[k - 1] === '.')) return '';
+  return word;
 }
 
 /**
