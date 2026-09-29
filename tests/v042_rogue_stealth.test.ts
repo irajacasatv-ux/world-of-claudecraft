@@ -27,6 +27,7 @@ import { Sim } from '../src/sim/sim';
 import type { SimContext } from '../src/sim/sim_context';
 import type { Aura, Entity } from '../src/sim/types';
 import { expectDefined } from './helpers/defined';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const SET_SLOTS = ['helmet', 'shoulder', 'chest', 'gloves', 'legs'] as const;
 
@@ -45,8 +46,16 @@ function equipSet(sim: Sim, setId: string, pieces: number): void {
   }
 }
 
-function rogueSim(spec: string, seed: number): TestSim {
-  const sim = new Sim({ seed, playerClass: 'rogue', autoEquip: true }) as TestSim;
+// One seed on EMPTY_TEST_WORLD: every case pushes its own auras and reads the
+// helpers directly, so the ambient overworld and each extra seed's world build
+// were pure cost.
+function rogueSim(spec: string): TestSim {
+  const sim = new Sim({
+    seed: 101,
+    playerClass: 'rogue',
+    autoEquip: true,
+    world: EMPTY_TEST_WORLD,
+  }) as TestSim;
   sim.setPlayerLevel(25);
   expect(sim.setSpec(spec)).toBe(true);
   return sim;
@@ -81,26 +90,26 @@ function gloamBank(sourceId: number): Aura {
 
 describe('capturedTrueStealthAmbush: the genuine-stealth snapshot', () => {
   it('is false for anything other than ambush', () => {
-    const sim = rogueSim('subtlety', 101);
+    const sim = rogueSim('subtlety');
     sim.player.auras.push(stealthAura(sim.playerId));
     expect(capturedTrueStealthAmbush(sim.ctx, sim.player, 'backstab')).toBe(false);
     expect(capturedTrueStealthAmbush(sim.ctx, sim.player, 'garrote')).toBe(false);
   });
 
   it('is false for a non-subtlety rogue even while genuinely stealthed', () => {
-    const sim = rogueSim('assassination', 102);
+    const sim = rogueSim('assassination');
     sim.player.auras.push(stealthAura(sim.playerId));
     expect(capturedTrueStealthAmbush(sim.ctx, sim.player, 'ambush')).toBe(false);
   });
 
   it('is false for subtlety when not actually stealthed (e.g. a veil-window opener)', () => {
-    const sim = rogueSim('subtlety', 103);
+    const sim = rogueSim('subtlety');
     expect(sim.player.auras.some((a) => a.kind === 'stealth')).toBe(false);
     expect(capturedTrueStealthAmbush(sim.ctx, sim.player, 'ambush')).toBe(false);
   });
 
   it("is true for a genuinely stealthed subtlety Lurker's Strike", () => {
-    const sim = rogueSim('subtlety', 104);
+    const sim = rogueSim('subtlety');
     sim.player.auras.push(stealthAura(sim.playerId));
     expect(capturedTrueStealthAmbush(sim.ctx, sim.player, 'ambush')).toBe(true);
   });
@@ -109,7 +118,7 @@ describe('capturedTrueStealthAmbush: the genuine-stealth snapshot', () => {
     // The mechanic requires reading BEFORE the cast's own breakStealth call
     // removes the aura (see the module header for the exact call order).
     // This pins the read itself: once stealth is gone, the snapshot is false.
-    const sim = rogueSim('subtlety', 105);
+    const sim = rogueSim('subtlety');
     const aura = stealthAura(sim.playerId);
     sim.player.auras.push(aura);
     expect(capturedTrueStealthAmbush(sim.ctx, sim.player, 'ambush')).toBe(true);
@@ -143,7 +152,7 @@ describe('No stack with Veiled Edge: structural guarantee', () => {
     // refuses while the player is genuinely stealthed (rogue_engines.ts), so
     // a cast capturedTrueStealthAmbush reports true for can never also carry
     // a live Veiled Edge to double-consume.
-    const sim = rogueSim('subtlety', 106);
+    const sim = rogueSim('subtlety');
     sim.player.auras.push(stealthAura(sim.playerId));
     sim.player.auras.push(gloamBank(sim.playerId));
     rogueGloamDetonation(sim.ctx, sim.player, 'ambush');
@@ -158,7 +167,7 @@ describe('No stack with Veiled Edge: structural guarantee', () => {
 describe('Repeatable Gloam Edge halved: +100% -> +50%', () => {
   it('VEILED_EDGE_BONUS is 0.5, so consumeVeiledEdge returns 1.5 for a non-set wearer', () => {
     expect(VEILED_EDGE_BONUS).toBe(0.5);
-    const sim = rogueSim('subtlety', 107);
+    const sim = rogueSim('subtlety');
     sim.player.auras.push(gloamBank(sim.playerId));
     rogueGloamDetonation(sim.ctx, sim.player, 'ambush');
     const edge = expectDefined(sim.player.auras.find((a) => a.id === VEILED_EDGE_ID));
@@ -168,7 +177,7 @@ describe('Repeatable Gloam Edge halved: +100% -> +50%', () => {
 
   it('Ashveil 4pc is halved too: +200% -> +100% (value 1, consume returns 2)', () => {
     expect(ASHVEIL_4PC_VEILED_EDGE_BONUS).toBe(1);
-    const sim = rogueSim('subtlety', 108);
+    const sim = rogueSim('subtlety');
     equipSet(sim, 'ashveil', 4);
     sim.player.auras.push(gloamBank(sim.playerId));
     rogueGloamDetonation(sim.ctx, sim.player, 'ambush');
