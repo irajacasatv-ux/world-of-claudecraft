@@ -9,11 +9,20 @@ import { type Entity, NYTHRAXIS_BOSS_ID } from '../src/sim/types';
 import { abilityBuffValue } from '../src/ui/ability_damage';
 import { hasExplicitAbilityIcon } from '../src/ui/icons';
 import { placePlayerInOpenField } from './helpers/open_field';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const FORM_ID = 'fireball_form';
 
+// Every case casts in the open field or inside an instance, against at most a
+// dummy it places itself, so the Mage stands on the empty world.
 function mageWithSpec(spec: 'fire' | 'frost' | 'arcane', devCommands = false): Sim {
-  const sim = new Sim({ seed: 73, playerClass: 'mage', autoEquip: true, devCommands });
+  const sim = new Sim({
+    seed: 73,
+    playerClass: 'mage',
+    autoEquip: true,
+    devCommands,
+    world: EMPTY_TEST_WORLD,
+  });
   sim.setPlayerLevel(11);
   placePlayerInOpenField(sim);
   expect(sim.setSpec(spec)).toBe(true);
