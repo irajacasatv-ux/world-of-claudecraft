@@ -40,6 +40,7 @@ import { Sim } from '../src/sim/sim';
 import type { Aura, Entity } from '../src/sim/types';
 import { IGNIVAR_BOSS_ID, MELEE_RANGE } from '../src/sim/types';
 import { makeSlotState } from '../src/ui/hud/action_bar/action_bar_view';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 type Spec = 'balance' | 'feral' | 'restoration';
 
@@ -48,8 +49,17 @@ type Spec = 'balance' | 'feral' | 'restoration';
  *  the rig's draw order changes, never to make a drifted rate pass. */
 const RATE_PIN_ARMS_AT_SEED_43 = 41;
 
-function rig(spec: Spec) {
-  const sim = new Sim({ seed: 43, playerClass: 'druid', autoEquip: true });
+// EMPTY_TEST_WORLD by default: every case fights a mob it spawns itself, so the
+// ambient overworld is pure construction and tick cost. 'full' keeps the built-in
+// world for the two cases that read seed 43's own draws on that world's stream
+// (the exact rate count, and a Claw that has to connect); their expectations stay.
+function rig(spec: Spec, world: 'empty' | 'full' = 'empty') {
+  const sim = new Sim({
+    seed: 43,
+    playerClass: 'druid',
+    autoEquip: true,
+    ...(world === 'empty' ? { world: EMPTY_TEST_WORLD } : {}),
+  });
   sim.setPlayerLevel(20);
   expect(sim.applyTalents({ spec, rows: {} })).toBe(true);
   sim.player.resource = sim.player.maxResource;
@@ -346,7 +356,7 @@ describe("3. Nature's Boon", () => {
     // from both neighbours: the same stream arms 61 times at 1-in-10 and 33
     // at 1-in-20, so a drifted threshold reds this even when every other
     // test (which forces the roll through armBoon) stays green.
-    const { sim, player } = rig('feral');
+    const { sim, player } = rig('feral', 'full');
     const ctx = rawCtx(sim);
     const swings = 600;
     let armed = 0;
@@ -587,7 +597,7 @@ describe('5. Stalk enters Cat Form from anywhere', () => {
   });
 
   it('is still refused in combat', () => {
-    const { sim, player } = rig('feral');
+    const { sim, player } = rig('feral', 'full');
     const mob = spawnMob(sim, 3);
     sim.castAbility('cat_form');
     for (let tick = 0; tick < 40; tick++) sim.tick();
