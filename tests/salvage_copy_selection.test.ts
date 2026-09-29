@@ -19,12 +19,14 @@ import { describe, expect, it } from 'vitest';
 import { Sim } from '../src/sim/sim';
 import type { ItemInstancePayload, SimEvent } from '../src/sim/types';
 import { completeEnchantFamilyCast } from './helpers/enchant_family_cast';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 /** A salvageable common weapon, the fixture the sibling suites use. */
 const COMMON_WEAPON = 'eastbrook_arming_sword';
 
+// Salvage is a bag cast with no station or NPC, so the empty world serves it.
 function makeSim(): Sim {
-  return new Sim({ seed: 7, playerClass: 'warrior', autoEquip: false });
+  return new Sim({ seed: 7, playerClass: 'warrior', autoEquip: false, world: EMPTY_TEST_WORLD });
 }
 
 /** Give the player two copies of one id: an INSTANCED one first, then a plain
