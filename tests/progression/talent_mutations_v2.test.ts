@@ -5,6 +5,8 @@ import { rowForLevel, talentsFor } from '../../src/sim/content/talents';
 import { Sim } from '../../src/sim/sim';
 import { EMPTY_TEST_WORLD } from '../sim_shared';
 
+// Every rig in this file stands on the empty world on seed 71 and reads no
+// seed-specific draw: one collider grid build serves the file.
 function maxLevelWarrior(): Sim {
   const sim = new Sim({
     seed: 71,
@@ -75,7 +77,7 @@ describe('canonical Talent V2 live mutations', () => {
     const state = source.serializeCharacter(source.player.id)!;
 
     const restored = new Sim({
-      seed: 72,
+      seed: 71,
       playerClass: 'warrior',
       noPlayer: true,
       world: EMPTY_TEST_WORLD,
@@ -126,7 +128,7 @@ describe('canonical Talent V2 live mutations', () => {
     // The rogue v0.29 redesign removed the rogue charge-model row, so the
     // mage Twin Icebind option (frost_nova bonusCharges) carries this test.
     const mage = new Sim({
-      seed: 73,
+      seed: 71,
       playerClass: 'mage',
       autoEquip: false,
       world: EMPTY_TEST_WORLD,
@@ -154,7 +156,7 @@ describe('canonical Talent V2 live mutations', () => {
     // cooldown into a recharge with ONE use spent: the new extra use is stored
     // and castable, the running timer is neither wiped nor reset.
     const adding = new Sim({
-      seed: 75,
+      seed: 71,
       playerClass: 'mage',
       autoEquip: false,
       world: EMPTY_TEST_WORLD,
@@ -227,7 +229,7 @@ describe('canonical Talent V2 live mutations', () => {
 
   it('cleans removed proc payoffs and partial counters at the recompute choke point', () => {
     const rogue = new Sim({
-      seed: 74,
+      seed: 71,
       playerClass: 'rogue',
       autoEquip: false,
       world: EMPTY_TEST_WORLD,
