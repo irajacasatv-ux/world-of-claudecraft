@@ -16,6 +16,7 @@ import {
   type BotSteer,
   freshBotSteer,
 } from '../src/sim/social/fiesta_bots';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const GOAL = 0; // steering goal heading used throughout; bends are +-PI/2 off it
 
@@ -140,8 +141,10 @@ describe('fiesta bots: advanceBotSteer', () => {
 // Real-path proof: a driven bot whose nearest enemy sits directly across the
 // centre-diamond pillar (numerically in melee reach, no line of sight) must
 // round the pillar and land hits, and the whole run must replay identically.
+// The bout is a private arena slot with its own bots, so the Sims run on the
+// empty world rather than ticking the overworld through the queue and bout.
 function runWedgedBot(): { trace: string[]; hpDropTick: number } {
-  const sim = new Sim({ seed: 11, playerClass: 'warrior' });
+  const sim = new Sim({ seed: 11, playerClass: 'warrior', world: EMPTY_TEST_WORLD });
   expect(sim.startFiestaPractice()).toBe(true);
   let match: ReturnType<typeof sim.arenaMatchFor> = null;
   for (let i = 0; i < 20 * 30 && match?.state !== 'active'; i++) {
@@ -204,7 +207,7 @@ describe('fiesta bots: cover recovery on the real drive path', () => {
 // the moment the GCD is clear.
 describe('fiesta bots: bare-GCD presses are skipped, not queued', () => {
   it('skips the press on a bare running GCD and presses once the GCD clears', () => {
-    const sim = new Sim({ seed: 11, playerClass: 'warrior' });
+    const sim = new Sim({ seed: 11, playerClass: 'warrior', world: EMPTY_TEST_WORLD });
     expect(sim.startFiestaPractice()).toBe(true);
     let match: ReturnType<typeof sim.arenaMatchFor> = null;
     for (let i = 0; i < 20 * 30 && match?.state !== 'active'; i++) {
