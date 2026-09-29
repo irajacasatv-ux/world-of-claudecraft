@@ -531,6 +531,15 @@ function collectViolations(): Violation[] {
   return out;
 }
 
+// The whole-tree scan, made once and read by both the gate and the first arm of
+// the determinism pair (the pair's second arm is a fresh scan, so the pair still
+// compares two independent scans); each scan walks every surface above.
+let firstScan: Violation[] | null = null;
+function firstViolations(): Violation[] {
+  firstScan ??= collectViolations();
+  return firstScan;
+}
+
 describe('ip_scrub - verbatim-WoW denylist scanner (G0)', () => {
   it('arms a non-empty denylist seeded from the NAME-MAP old column plus the hardcoded verbatim list', () => {
     expect(DENYLIST.length).toBeGreaterThanOrEqual(HARDCODED_VERBATIM.length);
@@ -729,7 +738,7 @@ describe('ip_scrub - verbatim-WoW denylist scanner (G0)', () => {
   });
 
   it('is deterministic: two scans over the same tree produce the identical violation list', () => {
-    const a = collectViolations();
+    const a = firstViolations();
     const b = collectViolations();
     expect(JSON.stringify(a)).toBe(JSON.stringify(b));
   });
@@ -738,7 +747,7 @@ describe('ip_scrub - verbatim-WoW denylist scanner (G0)', () => {
   // (seeded in ip-refactor/02-WORKING-MEMORY.md). The V/C/W/T tracks turn it
   // green by applying the LOCKED NAME-MAP; Z1 requires zero residual.
   it('player-visible display fields contain no denylisted WoW name', () => {
-    const violations = collectViolations();
+    const violations = firstViolations();
     const byEntry = new Map<string, number>();
     for (const v of violations)
       byEntry.set(v.denylistEntry, (byEntry.get(v.denylistEntry) ?? 0) + 1);
