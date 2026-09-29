@@ -449,14 +449,34 @@ describe('the variance roll actually changes the masterwork outcome (#1296, forc
   });
 
   it('a normal roll changes nothing: draws twice, still masterwork-eligible on the ordinary chance (forced roll)', () => {
-    const sim = makeSim();
-    const pid = sim.playerId;
-    const meta = metaOf(sim, pid);
-    vestmentsScenario(sim, pid, meta, true);
-    sim.rng = rngWithFirstDraws(
-      (variance) => variance >= JACK_VARIANCE_WORSE_CHANCE + JACK_VARIANCE_BETTER_CHANCE,
-    );
-    runCraft(sim, 'recipe_eastbrook_ritual_vestments', false, pid);
-    expect(sim.lastCraftResult?.variance).toBe('normal');
+    // Both halves of "changes nothing", each on the proc window the other two
+    // arms use: under the capped 0.15 chance a normal roll still procs (the
+    // worse gate stays off), and between the 0.03 base and the 0.08 boosted
+    // chance it still misses (the better bonus stays off).
+    const craftNormal = (maxChance: boolean, proc: (roll: number) => boolean) => {
+      const sim = makeSim();
+      const pid = sim.playerId;
+      vestmentsScenario(sim, pid, metaOf(sim, pid), maxChance);
+      sim.rng = rngWithFirstDraws(
+        (variance) => variance >= JACK_VARIANCE_WORSE_CHANCE + JACK_VARIANCE_BETTER_CHANCE,
+        proc,
+      );
+      let draws = 0;
+      const rng: Rng = ctxOf(sim).rng;
+      rng.setObserver(() => {
+        draws++;
+      });
+      runCraft(sim, 'recipe_eastbrook_ritual_vestments', false, pid);
+      rng.setObserver(null);
+      return { draws, result: sim.lastCraftResult };
+    };
+    const capped = craftNormal(true, (proc) => proc < 0.15);
+    expect(capped.draws).toBe(2);
+    expect(capped.result?.variance).toBe('normal');
+    expect(capped.result?.masterwork).toBe(true);
+    const base = craftNormal(false, (proc) => proc >= 0.03 && proc < 0.08);
+    expect(base.draws).toBe(2);
+    expect(base.result?.variance).toBe('normal');
+    expect(base.result?.masterwork).toBeUndefined();
   });
 });
