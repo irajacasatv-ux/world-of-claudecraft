@@ -205,6 +205,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Malicious-code gate
+        run: npm run security:gate
+
       - name: Generate i18n artifacts
         run: npm run i18n:gen
 
@@ -213,9 +216,6 @@ jobs:
 
       - name: Verify committed i18n artifacts are fresh
         run: git diff --exit-code -- src/ui/i18n.resolved.generated src/admin/i18n.resolved.generated src/ui/i18n.catalog/translation_keys.generated.ts
-
-      - name: Malicious-code gate
-        run: npm run security:gate
 
       # Same turbo multi-task run gate.mjs uses for wall-clock overlap across
       # these four independent pure steps (scripts/lib/gate_steps.mjs), mirrored

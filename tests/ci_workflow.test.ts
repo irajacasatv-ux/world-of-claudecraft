@@ -987,6 +987,13 @@ describe('CI workflow parity', () => {
       expect(laneJob).not.toContain('run: npm test');
       expect(laneJob).not.toContain('Cache tsc incremental buildinfo');
     }
+    // The malware gate is the only whole-tree scan on a PR, so it runs first among
+    // the checks: a red on a later step (a stale i18n artifact) must not hide its
+    // verdict. release-checks holds the same order below, and the nightly checks
+    // job mirrors release-checks' run lines in order (tests/nightly_workflow.test.ts).
+    expect(prChecks.indexOf('run: npm run security:gate')).toBeLessThan(
+      prChecks.indexOf('run: npm run i18n:gen'),
+    );
     // ...and a structural count, the same backstop release-gate has: an added
     // or removed pr-checks step must consciously update this test rather than
     // slipping in beside the by-name pins above.
@@ -1022,6 +1029,9 @@ describe('CI workflow parity', () => {
     // eight check steps (i18n gen/summary/freshness, malware, tsc cache, the
     // combined typecheck + env/server/bot builds turbo call, client build,
     // manifest freshness). An accidental extra step would otherwise stay green.
+    expect(releaseChecks.indexOf('run: npm run security:gate')).toBeLessThan(
+      releaseChecks.indexOf('run: npm run i18n:gen'),
+    );
     expect(releaseChecks.match(/\n {6}- name: /g)).toHaveLength(12);
     expect(jobSource('pr-checks').match(/\n {6}- name: /g)).toHaveLength(12);
     // tsc incremental cache (#2758) must land on both check jobs, never on a

@@ -1112,6 +1112,17 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # Release-gate malicious-code scan. The flagger is high-recall (most hits are
+      # expected dev-tooling false positives), so this uses --gate: it fails only on
+      # a HIGH-severity signature that survives the path-aware priors (a wallet
+      # drainer, a hardcoded-credential auth bypass, an exfil channel, a planted
+      # instruction-file injection). This step IS the whole-tree check on a PR:
+      # tests/malware_scan.test.ts pins the scanner's rules, not the tree. It runs
+      # first among the checks, so a red on a later step (a stale i18n artifact)
+      # can never hide its verdict.
+      - name: Malicious-code gate
+        run: npm run security:gate
+
       - name: Generate i18n artifacts
         run: npm run i18n:gen
 
@@ -1128,15 +1139,6 @@ jobs:
       # surfaces it sooner.
       - name: Verify committed i18n artifacts are fresh
         run: git diff --exit-code -- src/ui/i18n.resolved.generated src/admin/i18n.resolved.generated src/ui/i18n.catalog/translation_keys.generated.ts
-
-      # Release-gate malicious-code scan. The flagger is high-recall (most hits are
-      # expected dev-tooling false positives), so this uses --gate: it fails only on
-      # a HIGH-severity signature that survives the path-aware priors (a wallet
-      # drainer, a hardcoded-credential auth bypass, an exfil channel, a planted
-      # instruction-file injection). This step IS the whole-tree check on a PR:
-      # tests/malware_scan.test.ts pins the scanner's rules, not the tree.
-      - name: Malicious-code gate
-        run: npm run security:gate
 
       # tsc's own incremental cache (node_modules/.cache/tsc/buildinfo.json, via
       # check:ts's --incremental flag). Keyed on the lockfile and tsconfig so a
@@ -1492,6 +1494,12 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # Release-tier malicious-code scan (see pr-checks for the rationale).
+      # --gate fails only on a HIGH-severity signature surviving the path-aware
+      # priors; the full agent-judged pass is the `release-malware-audit` skill.
+      - name: Malicious-code gate
+        run: npm run security:gate
+
       - name: Generate i18n artifacts
         run: npm run i18n:gen
 
@@ -1508,12 +1516,6 @@ jobs:
       # surfaces it sooner.
       - name: Verify committed i18n artifacts are fresh
         run: git diff --exit-code -- src/ui/i18n.resolved.generated src/admin/i18n.resolved.generated src/ui/i18n.catalog/translation_keys.generated.ts
-
-      # Release-tier malicious-code scan (see pr-checks for the rationale).
-      # --gate fails only on a HIGH-severity signature surviving the path-aware
-      # priors; the full agent-judged pass is the `release-malware-audit` skill.
-      - name: Malicious-code gate
-        run: npm run security:gate
 
       # Same tsc incremental cache as pr-checks (#2758). release-checks is not
       # matrixed, so no matrix.shard gate (Phase 4: checks run once, not on
