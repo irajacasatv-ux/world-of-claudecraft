@@ -421,16 +421,12 @@ describeDb('lease-fenced character saves (REAL Postgres)', () => {
       // measured 2,909 ms of real wait under this same 2s bound). The bound on
       // the whole write is the STATEMENT bound. Driven through the production
       // bound applier so the figures under test are the shipped ones.
-      const overLockBoundSec = (OFFLINE_CHARACTER_SAVE_LOCK_TIMEOUT_MS + 500) / 1000;
-      const startedAt = Date.now();
-      await db.runWithStatementTimeout(OFFLINE_CHARACTER_SAVE_STATEMENT_TIMEOUT_MS, async (q) => {
-        await applyOfflineCharacterSaveBounds(q);
-        await q(`SELECT pg_sleep(${overLockBoundSec})`);
-      });
-      // It ran well past the lock bound and was not cancelled.
-      expect(Date.now() - startedAt).toBeGreaterThanOrEqual(OFFLINE_CHARACTER_SAVE_LOCK_TIMEOUT_MS);
-
-      // The statement bound is what actually stops it, with 57014, not 55P03.
+      //
+      // One running statement proves both halves: it runs past the lock bound
+      // uncancelled (a lock_timeout that bounded a running statement would end
+      // it near 2s with 55P03, failing both assertions below) and the
+      // statement bound is what stops it, with 57014. The constants' own
+      // values and order are pinned in tests/server/save_offline_character_state.test.ts.
       let code: string | undefined;
       const cancelledAt = Date.now();
       await expect(
