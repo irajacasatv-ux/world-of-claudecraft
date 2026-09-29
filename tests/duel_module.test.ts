@@ -7,11 +7,18 @@ import { describe, expect, it } from 'vitest';
 import { Sim } from '../src/sim/sim';
 import * as duel from '../src/sim/social/duel';
 import { groundHeight } from '../src/sim/world';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 type AnySim = Sim & Record<string, any>;
 
+// Duels touch only the two players each case adds: the empty world serves.
 function makeWorld(): AnySim {
-  return new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true }) as AnySim;
+  return new Sim({
+    seed: 42,
+    playerClass: 'warrior',
+    noPlayer: true,
+    world: EMPTY_TEST_WORLD,
+  }) as AnySim;
 }
 
 function teleport(sim: AnySim, pid: number, x: number, z: number): void {
