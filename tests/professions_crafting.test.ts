@@ -34,24 +34,18 @@ import {
 import { MASTERWORK_CHANCE_CAP } from '../src/sim/professions/masterwork';
 import { stationsOfType } from '../src/sim/professions/stations';
 import type { ProfessionRecipeRecord } from '../src/sim/professions/types';
-import { Rng } from '../src/sim/rng';
+import type { Rng } from '../src/sim/rng';
 import { Sim } from '../src/sim/sim';
+import { rngWithFirstDraws } from './helpers/forced_rng';
 import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // Crafting reads the player, the recipe tables and the stations (kept by the
 // empty world), never a camp, NPC or ground object, and every Sim shares one
 // seed: a fresh seed builds its collider grids (about half a second) and no
 // case compares two seeds. A case that rides the masterwork roll forces it
-// (rngWithFirstDraw) instead of hunting a world seed.
+// (rngWithFirstDraws) instead of hunting a world seed.
 function makeSim() {
   return new Sim({ seed: 42, playerClass: 'warrior', autoEquip: false, world: EMPTY_TEST_WORLD });
-}
-
-/** A fresh Rng whose first draw satisfies `accept`: installed as `sim.rng`
- *  right before a craft, it forces the single proc roll through the real draw
- *  path, so the draw observer still counts the roll itself. */
-function rngWithFirstDraw(accept: (value: number) => boolean): Rng {
-  for (let seed = 1; ; seed++) if (accept(new Rng(seed).next())) return new Rng(seed);
 }
 
 function grantItem(sim: Sim, itemId: string, count: number, pid: number) {
@@ -913,7 +907,7 @@ describe('masterwork proc (Professions 2.0)', () => {
     // craft runs on a fresh Rng whose first draw lands below the cap.
     const { sim, pid, meta } = vestmentsScenario();
     sim.drainEvents();
-    sim.rng = rngWithFirstDraw((value) => value < MASTERWORK_CHANCE_CAP);
+    sim.rng = rngWithFirstDraws((value) => value < MASTERWORK_CHANCE_CAP);
     let draws = 0;
     const rng: Rng = (sim as any).ctx.rng;
     rng.setObserver(() => {
@@ -990,7 +984,7 @@ describe('masterwork proc (Professions 2.0)', () => {
     sim.addItem('copper_ore', 3, pid);
     sim.addItem('smithing_flux', 9, pid);
     sim.drainEvents();
-    sim.rng = rngWithFirstDraw((value) => value >= MASTERWORK_CHANCE_CAP);
+    sim.rng = rngWithFirstDraws((value) => value >= MASTERWORK_CHANCE_CAP);
     let draws = 0;
     let roll = -1;
     const rng: Rng = (sim as any).ctx.rng;
