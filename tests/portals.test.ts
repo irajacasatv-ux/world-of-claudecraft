@@ -9,11 +9,14 @@ import { PORTALS, zoneAt } from '../src/sim/data';
 import { Sim } from '../src/sim/sim';
 import type { SimEvent } from '../src/sim/types';
 import { groundHeight } from '../src/sim/world';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const PORTAL = REALM_PORTALS[0];
 
+// The passage is a content table the empty world keeps and every traveler is a
+// player the case adds, so the overworld's camps, NPCs and objects buy nothing.
 function makeWorld() {
-  return new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+  return new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true, world: EMPTY_TEST_WORLD });
 }
 
 function teleport(sim: Sim, pid: number, x: number, z: number) {
