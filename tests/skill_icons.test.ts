@@ -1,6 +1,16 @@
 import { execFileSync, spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { closeSync, existsSync, openSync, readdirSync, readFileSync, readSync } from 'node:fs';
+import {
+  closeSync,
+  existsSync,
+  mkdtempSync,
+  openSync,
+  readdirSync,
+  readFileSync,
+  readSync,
+  rmSync,
+} from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
@@ -359,25 +369,70 @@ function formerSkillBlobIssues(pin: SkillNormalizationPin['supersedes'], bytes: 
 // Local objects only. The PR test shards check out a blobless depth-1 partial
 // clone, where git would otherwise FETCH the missing commit, then each tree and
 // blob, from the promisor remote on demand: a network round trip per asset,
-// measured at 28 to 35 seconds of this file per PR run, for history the always-on
-// literal aggregate already pins. GIT_NO_LAZY_FETCH (git 2.44 and newer; an older
-// git ignores it) makes such a clone answer "absent", as the nightly's plain
-// shallow clone already does, while a full local clone still verifies every blob.
+// measured at 28 to 35 seconds of this file per PR run. GIT_NO_LAZY_FETCH (git 2.44
+// and newer; an older git ignores it) makes such a clone answer "absent" instead.
 const localObjectsOnly = { ...process.env, GIT_NO_LAZY_FETCH: '1' };
 
-function sourceCommitIsAvailable(commit: string): boolean {
+// The former-blob history arm runs at nightly depth: every CI clone is depth 1 (the
+// PR shards and release-gate blobless, the nightly a plain one), so none of them
+// holds the pinned source commit, and on PR the always-on literal aggregate is the
+// history pin. The nightly (which alone sets this flag) fetches the commit's trees
+// and exactly the former asset blobs into a throwaway blobless clone and verifies
+// them there; a full-history local clone verifies from its own objects.
+const NIGHTLY_SWEEP = process.env.WOC_NIGHTLY_SWEEP === '1';
+
+function hasLocalObject(cwd: string, spec: string): boolean {
   return (
-    spawnSync('git', ['cat-file', '-e', `${commit}^{commit}`], {
-      cwd: repoRoot,
-      env: localObjectsOnly,
-      stdio: 'ignore',
-    }).status === 0
+    spawnSync('git', ['cat-file', '-e', spec], { cwd, env: localObjectsOnly, stdio: 'ignore' })
+      .status === 0
   );
 }
 
-function sourceCommitBlob(commit: string, repoRelativePath: string): Buffer {
-  return execFileSync('git', ['show', `${commit}:${repoRelativePath}`], {
+// The commit AND one of its blobs: a blobless full-history clone carries the commit
+// but no blobs, and with lazy fetch off every read there would fail.
+function formerBlobsAreLocal(cwd: string, commit: string, probePath: string): boolean {
+  return hasLocalObject(cwd, `${commit}^{commit}`) && hasLocalObject(cwd, `${commit}:${probePath}`);
+}
+
+/** Nightly only: a blobless depth-1 clone of the pinned commit (its commit and
+ *  trees, one round trip, a few MB), then one checkout of the asset paths, which
+ *  fetches every blob it is missing in a single batch. A plain depth-1 fetch into
+ *  the nightly's own clone would instead pull the whole old tree, about 560 MB. */
+function fetchFormerBlobs(commit: string, repoRelativePaths: string[]): string {
+  const origin = execFileSync('git', ['remote', 'get-url', 'origin'], {
     cwd: repoRoot,
+    encoding: 'utf8',
+  }).trim();
+  const dir = mkdtempSync(path.join(os.tmpdir(), 'skill-icon-history-'));
+  try {
+    execFileSync(
+      'git',
+      [
+        'clone',
+        '--quiet',
+        '--no-checkout',
+        '--filter=blob:none',
+        '--depth=1',
+        `--revision=${commit}`,
+        origin,
+        dir,
+      ],
+      { stdio: 'pipe' },
+    );
+    execFileSync('git', ['checkout', '--quiet', commit, '--', ...repoRelativePaths], {
+      cwd: dir,
+      stdio: 'pipe',
+    });
+  } catch (error) {
+    rmSync(dir, { recursive: true, force: true });
+    throw error;
+  }
+  return dir;
+}
+
+function sourceCommitBlob(cwd: string, commit: string, repoRelativePath: string): Buffer {
+  return execFileSync('git', ['show', `${commit}:${repoRelativePath}`], {
+    cwd,
     env: localObjectsOnly,
     encoding: 'buffer',
     maxBuffer: 32 * 1024 * 1024,
@@ -676,8 +731,10 @@ describe('class ability webp icons', () => {
     // Sharp re-normalization over the whole shipping icon set: measured
     // ~19s inside a loaded 2-worker CI shard (timed out at the 20s default
     // on run 31768, the borderline-default class), ~1s solo. 60s follows
-    // the suite's ~2.5x-measured-plus-contention sizing convention.
-    timeout: 60_000,
+    // the suite's ~2.5x-measured-plus-contention sizing convention; the
+    // nightly's history fetch (a blobless clone of one commit plus 36 blobs)
+    // adds its network time on top, hence 120s.
+    timeout: 120_000,
   }, async () => {
     const manifest = skillNormalizationManifest();
     const expected = Object.entries(NORMALIZED_SKILL_IDS)
@@ -727,15 +784,33 @@ describe('class ability webp icons', () => {
       SKILL_NORMALIZATION_EVIDENCE_DIGEST,
     );
 
-    // Local worktrees and full-history release gates verify the former bytes straight from the
-    // recorded commit. Shallow CI checkouts may not carry that parent object, so the independent
-    // literal aggregate above remains the always-on history pin there.
-    if (sourceCommitIsAvailable(SKILL_NORMALIZATION_SOURCE_COMMIT)) {
+    // The former bytes, verified straight from the recorded commit: from a full-history
+    // local clone's own objects, or on the nightly from a fetch of exactly that commit
+    // (see NIGHTLY_SWEEP). No PR clone holds the commit, so there the independent literal
+    // aggregate above is the history pin.
+    const formerPaths = manifest.assets.map((asset) => `public${asset.runtimeUrl}`);
+    let historyRoot: string | null = formerBlobsAreLocal(
+      repoRoot,
+      SKILL_NORMALIZATION_SOURCE_COMMIT,
+      formerPaths[0] ?? '',
+    )
+      ? repoRoot
+      : null;
+    let fetchedClone: string | null = null;
+    if (historyRoot === null && NIGHTLY_SWEEP) {
+      fetchedClone = fetchFormerBlobs(SKILL_NORMALIZATION_SOURCE_COMMIT, formerPaths);
+      historyRoot = fetchedClone;
+    }
+    if (historyRoot !== null) {
       const sourceIssues: string[] = [];
       for (const asset of manifest.assets) {
         const repoRelativePath = `public${asset.runtimeUrl}`;
         try {
-          const bytes = sourceCommitBlob(SKILL_NORMALIZATION_SOURCE_COMMIT, repoRelativePath);
+          const bytes = sourceCommitBlob(
+            historyRoot,
+            SKILL_NORMALIZATION_SOURCE_COMMIT,
+            repoRelativePath,
+          );
           sourceIssues.push(
             ...formerSkillBlobIssues(asset.supersedes, bytes).map(
               (issue) => `${asset.class}/${asset.id}: ${issue}`,
@@ -749,6 +824,7 @@ describe('class ability webp icons', () => {
           );
         }
       }
+      if (fetchedClone) rmSync(fetchedClone, { recursive: true, force: true });
       expect(sourceIssues, 'former pins must match exact source-commit Git blobs').toEqual([]);
     }
 

@@ -560,6 +560,7 @@ describe('the long-sims lane (Phase 4)', () => {
       'tests/fire_short_fight_tuning.test.ts',
       'tests/lake_shores.test.ts',
       'tests/rogue_dps_balance.test.ts',
+      'tests/skill_icons.test.ts',
       'tests/woc_market_delivery_pg_integration.test.ts',
     ];
     const audit = auditDepthFlag(
