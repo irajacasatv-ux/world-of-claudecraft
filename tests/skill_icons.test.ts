@@ -380,6 +380,7 @@ const localObjectsOnly = { ...process.env, GIT_NO_LAZY_FETCH: '1' };
 // and exactly the former asset blobs into a throwaway blobless clone and verifies
 // them there; a full-history local clone verifies from its own objects.
 const NIGHTLY_SWEEP = process.env.WOC_NIGHTLY_SWEEP === '1';
+const HISTORY_FETCH_TIMEOUT_MS = 90_000;
 
 function hasLocalObject(cwd: string, spec: string): boolean {
   return (
@@ -417,11 +418,14 @@ function fetchFormerBlobs(commit: string, repoRelativePaths: string[]): string {
         origin,
         dir,
       ],
-      { stdio: 'pipe' },
+      // A sync spawn blocks the worker, so the case timeout cannot fire during it:
+      // each git call carries its own bound and throws (red, never open) on a stall.
+      { stdio: 'pipe', timeout: HISTORY_FETCH_TIMEOUT_MS },
     );
     execFileSync('git', ['checkout', '--quiet', commit, '--', ...repoRelativePaths], {
       cwd: dir,
       stdio: 'pipe',
+      timeout: HISTORY_FETCH_TIMEOUT_MS,
     });
   } catch (error) {
     rmSync(dir, { recursive: true, force: true });
@@ -733,8 +737,8 @@ describe('class ability webp icons', () => {
     // on run 31768, the borderline-default class), ~1s solo. 60s follows
     // the suite's ~2.5x-measured-plus-contention sizing convention; the
     // nightly's history fetch (a blobless clone of one commit plus 36 blobs)
-    // adds its network time on top, hence 120s.
-    timeout: 120_000,
+    // adds its network time on top, hence 120s there only.
+    timeout: NIGHTLY_SWEEP ? 120_000 : 60_000,
   }, async () => {
     const manifest = skillNormalizationManifest();
     const expected = Object.entries(NORMALIZED_SKILL_IDS)
@@ -801,7 +805,13 @@ describe('class ability webp icons', () => {
       fetchedClone = fetchFormerBlobs(SKILL_NORMALIZATION_SOURCE_COMMIT, formerPaths);
       historyRoot = fetchedClone;
     }
-    if (historyRoot !== null) {
+    if (historyRoot === null) {
+      // Say so in the log: without the commit's blobs the history arm is skipped and
+      // the literal aggregate above is this run's only history pin.
+      console.log(
+        `skill_icons: former-blob history arm skipped (no local blobs of ${SKILL_NORMALIZATION_SOURCE_COMMIT}); the literal aggregate is the pin`,
+      );
+    } else {
       const sourceIssues: string[] = [];
       for (const asset of manifest.assets) {
         const repoRelativePath = `public${asset.runtimeUrl}`;
