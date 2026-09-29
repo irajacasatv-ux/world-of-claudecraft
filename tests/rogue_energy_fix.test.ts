@@ -9,9 +9,12 @@ import { describe, expect, it } from 'vitest';
 import { rogueEngineOnCast } from '../src/sim/combat/rogue_engines';
 import { onCastCompleted } from '../src/sim/combat/talent_procs';
 import { Sim } from '../src/sim/sim';
+import { EMPTY_TEST_WORLD } from './sim_shared';
+
+// The hooks run directly on the rogue itself, so the Sim runs on the empty world.
 
 function rogue(spec: string, rows: Record<number, string> = {}) {
-  const sim = new Sim({ seed: 7, playerClass: 'rogue', autoEquip: true });
+  const sim = new Sim({ seed: 7, playerClass: 'rogue', autoEquip: true, world: EMPTY_TEST_WORLD });
   sim.setPlayerLevel(20);
   sim.setSpec(spec);
   for (const [lvl, row] of Object.entries(rows)) {
