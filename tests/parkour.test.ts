@@ -21,7 +21,7 @@ import {
   stepPlayerMotion,
 } from '../src/sim/player_motion';
 import { Sim } from '../src/sim/sim';
-import type { Entity, MoveInput, WorldContent } from '../src/sim/types';
+import { DT, type Entity, type MoveInput, RUN_SPEED, type WorldContent } from '../src/sim/types';
 import {
   generateDecorations,
   groundHeight,
@@ -613,18 +613,22 @@ describe('step-up cannot manufacture speed', () => {
   // margin of the same run on flat ground.
   it('a staircase of kerbs averages within 5 percent of flat run speed', () => {
     const CX = COURSE.x;
-    const distanceOver = (benches: WorldContent['props']['benches']): number => {
+    // The run must end on the flat strip: past its far end the terrain or a
+    // prop stops both runs dead, and two runs parked against the same wall
+    // measure where the wall is, not how fast they got there. 45 ticks at run
+    // speed is 15.75 yd from the start, inside the 18 yd strip.
+    const TICKS = 45;
+    const run = (benches: WorldContent['props']['benches']): number => {
       setActiveWorldContent(world({ benches }));
       const sim = makeSim();
       teleport(sim, CX, COURSE.z0 + 1);
       const meta = sim.players.get(sim.player.id);
       if (!meta) throw new Error('no meta');
-      const startZ = sim.player.pos.z;
-      for (let i = 0; i < 80; i++) {
+      for (let i = 0; i < TICKS; i++) {
         Object.assign(meta.moveInput, mi({ forward: true }));
         sim.tick();
       }
-      return sim.player.pos.z - startZ;
+      return sim.player.pos.z;
     };
     // Kerb-height standables (the civic bench draws 0.40 tall, well inside
     // MAX_STEP_HEIGHT) laid across the lane every 1.8 yd: every crossing is
@@ -639,9 +643,13 @@ describe('step-up cannot manufacture speed', () => {
       rot: 0,
       height: 1,
     }));
-    const course = distanceOver(staircase);
-    const flat = distanceOver([]);
-    expect(course).toBeGreaterThan(flat * 0.5); // the staircase was crossed
-    expect(course).toBeLessThanOrEqual(flat * 1.05);
+    const startZ = COURSE.z0 + 1;
+    const flat = run([]) - startZ;
+    // The flat run was never stopped: it covered exactly its ticks at run speed.
+    expect(flat).toBeCloseTo(TICKS * RUN_SPEED * DT, 6);
+    const courseEnd = run(staircase);
+    const lastKerb = staircase[staircase.length - 1];
+    expect(courseEnd).toBeGreaterThan(lastKerb.z + lastKerb.d / 2); // the staircase was crossed
+    expect(courseEnd - startZ).toBeLessThanOrEqual(flat * 1.05);
   });
 });
