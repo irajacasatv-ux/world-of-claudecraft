@@ -4,6 +4,7 @@ import { collectionFitsRole, selectLegalGear } from '../src/sim/dev/gear_selecti
 import { canEquipItem } from '../src/sim/equipment_rules';
 import { Sim } from '../src/sim/sim';
 import { armorReduction, type EquipSlot, type ItemDef, type PlayerClass } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // Tank parity (2026-07): the three committed tanks land within a band of each
 // other in effective HP against a level-22 heroic mob, each with a distinct
@@ -15,7 +16,9 @@ import { armorReduction, type EquipSlot, type ItemDef, type PlayerClass } from '
 // druid at 66% of the warrior's EHP.
 
 function tankEhp(cls: PlayerClass, spec: string, form?: string): number {
-  const sim = new Sim({ seed: 1, playerClass: 'warrior', noPlayer: true });
+  // Effective health is the tank's own stats and kit, so the Sim runs on the
+  // empty world.
+  const sim = new Sim({ seed: 1, playerClass: 'warrior', noPlayer: true, world: EMPTY_TEST_WORLD });
   const pid = sim.addPlayer(cls, 'T');
   sim.setPlayerLevel(20, pid);
   sim.applyTalents({ spec, rows: {} }, pid);
