@@ -351,6 +351,7 @@ describe('the new-test admission rule', () => {
         file('tests/new_one_line.test.ts', '// Guards: Cost:\n'),
         file('tests/new_prose.test.ts', '// This file has no Guards: or Cost: statement.\n'),
         file('tests/new_no_number.test.ts', '// SafeGuards: the pause path.\n// Cost: cheap\n'),
+        file('tests/new_terse.test.ts', '// Guards: yes\n// Cost: 1 s\n'),
         file('tests/measured.test.ts', 'import x from "y";\n'),
         file('tests/carried.test.ts', 'import x from "y";\n'),
       ],
@@ -371,6 +372,7 @@ describe('the new-test admission rule', () => {
       cost('tests/new_prose.test.ts'),
       guards('tests/new_no_number.test.ts'),
       cost('tests/new_no_number.test.ts'),
+      guards('tests/new_terse.test.ts'),
       guards('tests/carried.test.ts'),
       cost('tests/carried.test.ts'),
     ]);
