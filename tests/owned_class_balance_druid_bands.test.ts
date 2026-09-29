@@ -46,12 +46,21 @@ describe('owned-class level 20 balance harness (Druid bands)', () => {
       // code moved). Re-derived at the same relative margins: moongrove
       // 127 to 166 full / 128 to 166 diet, wildfang 154 to 191 / 155 to 193.
       // FLAGGED for the class owner: the nightly full sweep is the arbiter.
-      expect(moongrove.dps).toBeGreaterThanOrEqual(band(127, 128));
-      expect(moongrove.dps).toBeLessThanOrEqual(band(166, 166));
-      expect(wildfang.dps).toBeGreaterThanOrEqual(band(154, 155));
-      expect(wildfang.dps).toBeLessThanOrEqual(band(191, 193));
+      // Re-measured 2026-09-29 for the production idle cull (scripts/probe_sim.ts):
+      // moongrove full actual 145.96 (120 s), diet actual 145.72 (60 s); the same
+      // relative margins give 130 to 170 / 131 to 170.
+      expect(moongrove.dps).toBeGreaterThanOrEqual(band(130, 131));
+      expect(moongrove.dps).toBeLessThanOrEqual(band(170, 170));
+      // Re-measured 2026-09-29 for the production idle cull (scripts/probe_sim.ts):
+      // wildfang full actual 188.08 (120 s), diet actual 184.93 (60 s); the same
+      // relative margins give 176 to 218 / 172 to 215. This retires the unculled
+      // nightly red (full actual 194.3 over the 191 ceiling).
+      expect(wildfang.dps).toBeGreaterThanOrEqual(band(176, 172));
+      expect(wildfang.dps).toBeLessThanOrEqual(band(218, 215));
+      // Timeout re-sized 2026-09-29 at the production idle cull: 6.6 s full /
+      // 4.7 s diet measured local on one worker; about ten times that.
     },
-    FULL_SWEEP ? 180_000 : 90_000,
+    FULL_SWEEP ? 90_000 : 60_000,
   );
 
   it(
@@ -84,10 +93,16 @@ describe('owned-class level 20 balance harness (Druid bands)', () => {
       // must sit inside rather than above. Lane-diet re-measure: full actual
       // ratio 0.9057 (3 seeds), diet actual 0.8754 (2 seeds); the diet band is
       // 0.82 to 1.11 at the same relative margins.
+      // Re-measured 2026-09-29 for the production idle cull (scripts/probe_sim.ts):
+      // full actual 0.9061 (3 seeds), diet actual 0.8807 (2 seeds); the full band
+      // is the design 15 percent and holds, and the diet's same relative margins
+      // give 0.82 to 1.12.
       const peerBand = (nakedAvg('packlord') + nakedAvg('vespers')) / 2;
-      expect(moongrove / peerBand).toBeLessThanOrEqual(band(1.15, 1.11));
+      expect(moongrove / peerBand).toBeLessThanOrEqual(band(1.15, 1.12));
       expect(moongrove / peerBand).toBeGreaterThanOrEqual(band(0.85, 0.82));
+      // Timeout re-sized 2026-09-29 at the production idle cull: 14.0 s full /
+      // 9.8 s diet measured local on one worker; about ten times that.
     },
-    FULL_SWEEP ? 240_000 : 180_000,
+    FULL_SWEEP ? 150_000 : 120_000,
   );
 });

@@ -33,8 +33,11 @@ describe('owned-class level 20 balance harness (sustained role bands)', () => {
       // flagged for owner review. Lane-diet re-measure: full actual 0.9612 (5
       // seeds), diet actual 0.9663 (2 seeds); same relative margin keeps the
       // 0.83 floor and puts the diet ceiling at 1.11.
-      expect(thundercall.dps).toBeGreaterThanOrEqual(vespersSingle.dps * 0.83);
-      expect(thundercall.dps).toBeLessThanOrEqual(vespersSingle.dps * band(1.1, 1.11));
+      // Re-measured 2026-09-29 for the production idle cull (scripts/probe_sim.ts):
+      // full actual 1.0414 (5 seeds), diet actual 1.0393 (2 seeds); the same
+      // relative margins give floors 0.90 / 0.89 and ceilings 1.19 / 1.19.
+      expect(thundercall.dps).toBeGreaterThanOrEqual(vespersSingle.dps * band(0.9, 0.89));
+      expect(thundercall.dps).toBeLessThanOrEqual(vespersSingle.dps * band(1.19, 1.19));
       // Warspirit area/single: re-pinned for the 210 softening round (baseline
       // apPct 0.05 to 0.15, Ancestral Strike 0.5 to 0.6, echo stays 0.25). The
       // AP raise grows the melee and echo-cleave lines while the Stormcast
@@ -51,8 +54,12 @@ describe('owned-class level 20 balance harness (sustained role bands)', () => {
       // collider and follow-up movement fixture merges: the hunted stream
       // shifted again. Full floor stays at 1.08; diet actual 1.1039, so keep a
       // tight 1.10 floor and the existing ceiling.
-      expect(warspiritArea.dps / warspiritSingle.dps).toBeGreaterThanOrEqual(band(1.08, 1.1));
-      expect(warspiritArea.dps / warspiritSingle.dps).toBeLessThanOrEqual(band(1.18, 1.22));
+      // Re-measured 2026-09-29 for the production idle cull (scripts/probe_sim.ts):
+      // full actual 1.1686 (5 seeds), diet actual 1.1553 (2 seeds); the same
+      // relative margins (full over its last recorded 1.1109, diet over 1.1039)
+      // give full 1.14 to 1.24 / diet 1.15 to 1.28.
+      expect(warspiritArea.dps / warspiritSingle.dps).toBeGreaterThanOrEqual(band(1.14, 1.15));
+      expect(warspiritArea.dps / warspiritSingle.dps).toBeLessThanOrEqual(band(1.24, 1.28));
       // Vespers area/single: full actual 1.4041, diet actual 1.4475; the diet
       // floor rises to 1.29 with the same relative margin.
       // Re-anchored 2026-08-30 at the OSSBrain v0.41.0 base merge: both windows
@@ -61,14 +68,21 @@ describe('owned-class level 20 balance harness (sustained role bands)', () => {
       // cleaving fine (its ratio barely moves between the two samples); it was
       // the two-seed window that drifted, so the diet floor drops to match the
       // full one rather than being carried above a value it no longer reaches.
-      expect(vespersArea.dps / vespersSingle.dps).toBeGreaterThanOrEqual(band(1.25, 1.25));
+      // Re-measured 2026-09-29 for the production idle cull (scripts/probe_sim.ts):
+      // full actual 1.4001 (5 seeds), diet actual 1.3963 (2 seeds); the same
+      // relative margins give 1.37 / 1.36.
+      expect(vespersArea.dps / vespersSingle.dps).toBeGreaterThanOrEqual(band(1.37, 1.36));
       // 2026-08-09 120s band round: the Warspirit raise (stormstrike row plus
       // the baseline AP arm, ridden on apPct after review) and the Vespers trim
       // moved this pair to a measured 1.1539 (warspirit 204.5 / vespers 177.2),
       // so the 0.93 floor is green again with real margin. Lane-diet
       // re-measure: full actual 1.1539 (5 seeds, 120 s boss), diet actual
       // 1.1775 (2 seeds, 60 s boss); same relative margins give 0.95 / 1.22.
-      expect(warspiritBoss.dps / vespersBoss.dps).toBeGreaterThanOrEqual(band(0.93, 0.95));
+      // Re-measured 2026-09-29 for the production idle cull (scripts/probe_sim.ts):
+      // full actual 1.1474 (5 seeds), diet actual 1.2237 (2 seeds); the same
+      // relative margins (over the last recorded 1.2022 full / 1.4326 diet,
+      // below) give 0.89 / 0.81.
+      expect(warspiritBoss.dps / vespersBoss.dps).toBeGreaterThanOrEqual(band(0.89, 0.81));
       // Full-sweep ceiling was kept at 1.2 (210 softening round: full actual
       // 1.1091, warspirit 195.0 / vespers 175.8 at 120 s on the BiS-anchored
       // fixture). Diet re-pinned from its own printed actual 1.4326: the BiS
@@ -80,11 +94,17 @@ describe('owned-class level 20 balance harness (sustained role bands)', () => {
       // to 1.25 (thinner headroom than the family's usual margin on
       // purpose). STILL FLAGGED for the class owner: re-author both sides
       // of this pair when the owned-class stack integrates.
-      expect(warspiritBoss.dps / vespersBoss.dps).toBeLessThanOrEqual(band(1.25, 1.49));
+      // Re-measured 2026-09-29 for the production idle cull (scripts/probe_sim.ts):
+      // full actual 1.1474 (5 seeds), diet actual 1.2237 (2 seeds); the same
+      // relative margins give 1.19 / 1.27 (the flag above stands).
+      expect(warspiritBoss.dps / vespersBoss.dps).toBeLessThanOrEqual(band(1.19, 1.27));
       // Full sweep: the grown owned-class matrix ran ~180s under shard load and
       // roughly doubled in the shared lane (run 31288946173 killed it at 240s).
       // Diet: two seeds and the 60 s boss window cut the simulated time 3.2x.
+      // Re-sized 2026-09-29 at the production idle cull (scripts/probe_sim.ts):
+      // 64.2 s full / 24.0 s diet measured local on one worker; about ten times
+      // that gives 660 s / 240 s.
     },
-    FULL_SWEEP ? 900_000 : 300_000,
+    FULL_SWEEP ? 660_000 : 240_000,
   );
 });

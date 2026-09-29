@@ -35,20 +35,31 @@ describe('owned-class raid-level balance harness (sustain bands)', () => {
         // at 0.69 (the arbiter), while the diet seeds now roll Thundercall
         // low (actual 0.6727), so the diet floor sits a hair under that low
         // roll, the Warspirit-floor convention below.
-        expect(thundercall.dps).toBeGreaterThanOrEqual(vespers.dps * band(0.69, 0.66));
+        // Re-measured 2026-09-29 for the production idle cull (scripts/probe_sim.ts):
+        // full actual 0.9290 (5 seeds, lowest level), diet actual 0.9535 (2 seeds);
+        // the same relative margins (over 0.7827 full / 0.6727 diet) give 0.82 / 0.94.
+        expect(thundercall.dps).toBeGreaterThanOrEqual(vespers.dps * band(0.82, 0.94));
         // Cadence actuals are identical at both configurations (readyIdle 0.00,
         // buttons 72.0), so these bounds carry over unchanged.
+        // Re-measured 2026-09-29 for the production idle cull (scripts/probe_sim.ts):
+        // readyIdle stays 0.00 at both (no relative margin exists over zero, so the
+        // 15 s cap holds); buttons full actual 78.6 (5 seeds, lowest level), diet
+        // actual 79.0 (2 seeds); the same relative margin gives 71 / 71.
         expect(thundercall.readyIdleSeconds).toBeLessThanOrEqual(15);
-        expect(thundercall.buttonsPressed).toBeGreaterThanOrEqual(65);
+        expect(thundercall.buttonsPressed).toBeGreaterThanOrEqual(71);
         // 2026-08-09 120s band round measured 1.0568 / 1.0266 / 0.9776 by
         // target level at five seeds, backing the full-sweep 0.81 floor.
         // Lane-diet re-measure at L24: full actual 0.9776, diet actual 0.9143
         // (seeds 29_930/29_931 roll Warspirit low), so the diet floor is 0.76
         // and ceiling 1.05, the same relative margins at the diet actual.
-        // The floors deliberately stay at that low-rolling round after the
+        // The floors deliberately stayed at that low-rolling round through the
         // 2026-08-26 re-measure below: re-authoring them off a high-rolling
         // shuffle would flap the next time these seeds roll Warspirit low.
-        expect(warspirit.dps).toBeGreaterThanOrEqual(vespers.dps * band(0.81, 0.76));
+        // Re-measured 2026-09-29 for the production idle cull (scripts/probe_sim.ts):
+        // full actual 1.0389 (5 seeds, lowest level), diet actual 1.0636 (2 seeds);
+        // the same relative margins over the 2026-08-26 actuals (1.0717 full,
+        // 1.0113 diet), which carry that low-roll slack forward, give 0.79 / 0.80.
+        expect(warspirit.dps).toBeGreaterThanOrEqual(vespers.dps * band(0.79, 0.8));
         // 2026-08-26 Ignivar raid consolidation re-measure: the raid's content
         // adds reshuffled the shared-rng draws at the fixed seeds (the known
         // content-add class; no owned-class code moved and the cast cadence
@@ -62,7 +73,10 @@ describe('owned-class raid-level balance harness (sustain bands)', () => {
         // 1.176 (cast cadence identical, no owned-class code moved), so the
         // full ceiling re-authors at the same 3 percent margin over its new
         // actual; the diet roll stays within the old ceiling and keeps it.
-        expect(warspirit.dps).toBeLessThanOrEqual(vespers.dps * band(1.21, 1.16));
+        // Re-measured 2026-09-29 for the production idle cull (scripts/probe_sim.ts):
+        // full actual 1.0868 (5 seeds, highest level), diet actual 1.0636 (2 seeds);
+        // the same relative margins (over 1.176 full / 1.0113 diet) give 1.12 / 1.22.
+        expect(warspirit.dps).toBeLessThanOrEqual(vespers.dps * band(1.12, 1.22));
         // 200 DPS convergence package re-measure (echo 0.25, baseline apPct
         // 0.05, Ancestral Strike 0.5, BiS-anchored fixture with the Unleash
         // weave): readyIdle actuals 44.6 to 45.5 full / 45.05 diet, buttons
@@ -71,11 +85,22 @@ describe('owned-class raid-level balance harness (sustain bands)', () => {
         // the spec-by-spec study). Bounds re-pinned at about a 10 percent
         // margin instead of the old 2x slack so the tripwire stays meaningful;
         // vespers resourceEnd unchanged (2201.0 / 2133.5).
-        expect(warspirit.readyIdleSeconds).toBeLessThanOrEqual(band(50, 50));
+        // Re-measured 2026-09-29 for the production idle cull (scripts/probe_sim.ts):
+        // readyIdle full actual 42.55 (5 seeds, highest level), diet actual 41.70
+        // (2 seeds); the same relative margins give 47 / 46.
+        expect(warspirit.readyIdleSeconds).toBeLessThanOrEqual(band(47, 46));
+        // Re-measured 2026-09-29 for the production idle cull (scripts/probe_sim.ts):
+        // full actual 53.8 (5 seeds, lowest level), diet actual 54.0 (2 seeds); the
+        // same relative margins give 50 / 50.
         expect(warspirit.buttonsPressed).toBeGreaterThanOrEqual(50);
-        expect(vespers.resourceEnd).toBeGreaterThanOrEqual(band(800, 775));
+        // Re-measured 2026-09-29 for the production idle cull (scripts/probe_sim.ts):
+        // full actual 2434.2 (5 seeds, lowest level), diet actual 2459.5 (2 seeds);
+        // the same relative margins give 885 / 893.
+        expect(vespers.resourceEnd).toBeGreaterThanOrEqual(band(885, 893));
         // Nonzero avoidance pins hold with margin at the diet configuration
-        // too (resist 15.5 / 1.5 averaged, miss+dodge 29).
+        // too (resist 15.5 / 1.5 averaged, miss+dodge 29). At the production
+        // idle cull (2026-09-29) the diet averages read resist 10.5 / 4.5 and
+        // miss+dodge 12.0 (full sweep lowest level: 6.6 / 1.6 and 10.2).
         expect(thundercall.outcomes.resist).toBeGreaterThan(0);
         expect(warspirit.outcomes.miss + warspirit.outcomes.dodge).toBeGreaterThan(0);
         expect(vespers.outcomes.resist).toBeGreaterThan(0);
@@ -84,8 +109,10 @@ describe('owned-class raid-level balance harness (sustain bands)', () => {
       // measured on the integrated tree solo; in a lane at workers=2 it shared
       // the runner with the level-20 harness marathon and run 31288946173
       // killed it at 600s. Diet: 1 scenario x 3 specs x 2 seeds, ~56s measured
-      // local.
+      // local. Re-sized 2026-09-29 at the production idle cull
+      // (scripts/probe_sim.ts): 129.4 s full / 20.8 s diet measured local on one
+      // worker; about ten times that gives 1,320 s / 210 s.
     },
-    FULL_SWEEP ? 1_800_000 : 240_000,
+    FULL_SWEEP ? 1_320_000 : 210_000,
   );
 });

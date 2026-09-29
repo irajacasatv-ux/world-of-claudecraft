@@ -140,9 +140,11 @@ describe('owned-class level 20 balance harness (DPS metrics)', () => {
         expect(packlordBurst?.damageBySource.Stampede).toBeGreaterThan(0);
       }
       // OWNED_DPS_SPECS grew 6 -> 8 with the druid overhaul (moongrove/wildfang).
-      // Diet budget: ~67s measured local; 300s keeps the ~2.5x fast-runner
-      // margin plus lane headroom.
+      // Diet budget: ~67s measured local before the idle cull, which 300s
+      // covered. Re-sized 2026-09-29 at the production idle cull
+      // (scripts/probe_sim.ts): 32.4 s full / 17.3 s diet measured local on one
+      // worker; about ten times that gives 330 s / 180 s.
     },
-    FULL_SWEEP ? 480_000 : 300_000,
+    FULL_SWEEP ? 330_000 : 180_000,
   );
 });

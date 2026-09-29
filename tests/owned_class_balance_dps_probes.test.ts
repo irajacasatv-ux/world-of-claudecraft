@@ -8,7 +8,9 @@ import {
 
 // Part of the owned-class level 20 balance family (docs/qa-gate.md, "The
 // long-sims lanes"). This file reads no diet flag: its probes run the same
-// configuration at PR time and nightly.
+// configuration at PR time and nightly. Timeouts re-sized 2026-09-29 at the
+// production idle cull (scripts/probe_sim.ts): the three probe cases measure
+// 4.6 / 1.5 / 4.3 s local on one worker, so each declares the 60 s floor.
 
 // The sustained single-target Fieldcraft run at the Bloodhook seed, paid once per
 // file: the Bloodhook case reads it, and the determinism case re-runs the same
@@ -30,7 +32,7 @@ describe('owned-class level 20 balance harness (DPS probes)', () => {
     expect(runOwnedClassDpsProbe('fieldcraft', OWNED_CLASS_BALANCE_SCENARIOS[1], 29_902)).toEqual(
       first,
     );
-  }, 120_000);
+  }, 60_000);
 
   it('pins a Fieldcraft sustained-damage ceiling against the ranged Hunter specs and pays Bloodhook', () => {
     const scenario = OWNED_CLASS_BALANCE_SCENARIOS[1];
@@ -42,20 +44,28 @@ describe('owned-class level 20 balance harness (DPS probes)', () => {
     // combat changes shift this pair a few percent; re-author when it lands.
     // Ceiling only, deliberately: there is no matching floor here pending the
     // Hunter kit debt, so a real downside swing is allowed to pass.
+    // Both bounds are the design statements this case was authored with (near
+    // the ranged baseline, Bloodhook a meaningful share), never tied to a printed
+    // actual. Re-measured 2026-09-29 for the production idle cull
+    // (scripts/probe_sim.ts): ratio 1.0544, wound share 0.0935 (unculled parent
+    // 0.9377 / 0.1060); both design bounds hold unmoved.
     expect(fieldcraft.dps).toBeLessThanOrEqual(coldsight.dps * 1.25);
     expect(woundDamage / fieldcraft.totalDamage).toBeGreaterThanOrEqual(0.05);
-  }, 120_000);
+  }, 60_000);
 
   it('keeps Vespers sustained damage in the DPS caster band', () => {
     const scenario = OWNED_CLASS_BALANCE_SCENARIOS[1];
     const thundercall = runOwnedClassDpsProbe('thundercall', scenario, 29_903);
     const vespers = runOwnedClassDpsProbe('vespers', scenario, 29_903);
 
+    // The design caster band (Vespers at least 90 percent of Thundercall).
+    // Re-measured 2026-09-29 for the production idle cull (scripts/probe_sim.ts):
+    // ratio 0.9222 (unculled parent 0.9330); the design bounds hold unmoved.
     expect(vespers.dps).toBeGreaterThanOrEqual(thundercall.dps * 0.9);
     // Band widened for the stacked v0.29 rogue redesign (#2328): its shared
     // combat changes shift this pair a few percent; re-author when it lands.
     expect(vespers.dps).toBeLessThanOrEqual(thundercall.dps * 1.2);
-  }, 120_000);
+  }, 60_000);
 
   it('records Warspirit mitigation, threat, forced-target uptime, and exit behavior', () => {
     const result = runWarspiritOfftankProbe(29_920, 'test-head');

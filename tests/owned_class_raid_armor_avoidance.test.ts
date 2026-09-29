@@ -5,7 +5,7 @@ import {
   runOwnedClassDpsProbe,
   runOwnedClassRaidMatrix,
 } from '../scripts/owned_class_balance_probe';
-import { raidScenariosUnderTest } from './helpers/balance_diet';
+import { bandAt, raidScenariosUnderTest } from './helpers/balance_diet';
 
 // PR-tier diet vs the nightly full sweep: the family contract lives in
 // tests/helpers/balance_diet.ts (docs/qa-gate.md, "The balance-harness
@@ -17,6 +17,7 @@ import { raidScenariosUnderTest } from './helpers/balance_diet';
 // files for the literal.
 const FULL_SWEEP = process.env.WOC_FULL_BALANCE_SWEEP === '1';
 const RAID_SCENARIOS_UNDER_TEST = raidScenariosUnderTest(FULL_SWEEP);
+const band = bandAt(FULL_SWEEP);
 
 describe('owned-class raid-level balance harness (armor and avoidance)', () => {
   it('defines 120-second Nythraxis profiles at levels 22 through 24', () => {
@@ -95,8 +96,10 @@ describe('owned-class raid-level balance harness (armor and avoidance)', () => {
       // demanding one in every single 120-second window turns the pin into a
       // seed lottery. (The diet's single level-24 window is where avoidance
       // rolls are most frequent; measured avoided counts per spec at the diet
-      // configuration run 3 to 46, deterministic at the fixed seed, with
-      // vespers the 3-count minimum.)
+      // configuration ran 3 to 46 when this was written; re-measured 2026-09-29
+      // at the production idle cull they run 6 to 24, deterministic at the
+      // fixed seed, with vespers the 6-count minimum, and 2 at the full sweep's
+      // level 22.)
       for (const [spec, avoided] of avoidedBySpec) {
         expect(avoided, spec).toBeGreaterThan(0);
       }
@@ -175,16 +178,25 @@ describe('owned-class raid-level balance harness (armor and avoidance)', () => {
         const bestOtherDps = Math.max(
           ...levelResults.filter((result) => result.spec !== 'vespers').map((result) => result.dps),
         );
+        // Re-measured 2026-09-29 for the production idle cull (scripts/probe_sim.ts):
+        // full actual 0.9324 (seed 29_931, highest level), diet actual 0.8847
+        // (level 24). No actual was recorded at the re-hunted seed, so the margin
+        // is 1.12 over the unculled parent's 0.9189 (both depths); the same
+        // relative margins give 1.14 / 1.08. The 0.95 median floor is the design
+        // band this suite was authored with and holds (full lowest 0.9858, diet
+        // 1.0244).
         const vespersDps = levelResults.find((result) => result.spec === 'vespers')?.dps ?? 0;
         expect(vespersDps).toBeGreaterThanOrEqual(medianDps * 0.95);
-        expect(vespersDps).toBeLessThanOrEqual(bestOtherDps * 1.12);
+        expect(vespersDps).toBeLessThanOrEqual(bestOtherDps * band(1.14, 1.08));
       }
       // OWNED_DPS_SPECS grew 6 -> 8 with the druid overhaul (moongrove/wildfang).
       // Long-sims lane contention (workers=2, run 31288946173) roughly doubles
       // the shard-calibrated wall. Diet budget: PR #4112's GitHub lane measured
-      // this case at 311.249s, so 360s keeps the timeout above observed CI
-      // contention while staying well below the nightly full-sweep budget.
+      // this case at 311.249s unculled, which 360s covered. Re-sized 2026-09-29
+      // at the production idle cull (scripts/probe_sim.ts): 82.7 s full / 22.2 s
+      // diet measured local on one worker; about ten times that gives 840 s /
+      // 240 s.
     },
-    FULL_SWEEP ? 900_000 : 360_000,
+    FULL_SWEEP ? 840_000 : 240_000,
   );
 });
