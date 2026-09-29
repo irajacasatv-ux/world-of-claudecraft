@@ -939,7 +939,8 @@ describe('the World Market: the Merchant', () => {
     // second) that ends half a second short of due leaves it on the board,
     // and the next two seconds carry a sweep past due that returns it.
     const due = listing.expiresAt;
-    expect(Number.isFinite(due) && due > sim.time).toBe(true);
+    expect(Number.isFinite(due)).toBe(true);
+    expect(due).toBeGreaterThan(sim.time);
     sim.time = due - 1.5;
     for (let i = 0; i < 20; i++) sim.tick();
     expect(sim.marketListings.some((l) => l.id === listing.id)).toBe(true);
