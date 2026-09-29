@@ -1,9 +1,10 @@
-// Shared runner for the sharded parity gate: eleven shard files, each a single
-// runParityShard(n) call over one CONTIGUOUS slice of SCENARIOS, so vitest can
-// spread the recordings over parallel worker files. parity_a..g.test.ts are
-// shards 0..6 and coverage_a..d.test.ts shards 7..10: the four coverage files
-// keep their names (and with them their rows in the CI shard-weight table), but
-// they are ordinary gate shards like the other seven. Nothing about what is
+// Shared runner for the sharded parity gate: one shard file per SHARD_BOUNDS
+// slice, each a single runParityShard(n) call over one CONTIGUOUS slice of
+// SCENARIOS, so vitest can spread the recordings over parallel worker files
+// (harness.test.ts pins that the files call every index exactly once).
+// parity_a..g.test.ts come first and coverage_a..d.test.ts after them: the
+// coverage files keep their names (and with them their rows in the CI
+// shard-weight table), but they are ordinary gate shards like the others. Nothing about what is
 // recorded, how goldens resolve, or how UPDATE_PARITY mints changes: each shard
 // mints exactly its own slice's goldens into the same tests/parity/golden dir.
 //

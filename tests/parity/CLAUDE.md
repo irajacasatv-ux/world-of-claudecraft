@@ -102,19 +102,21 @@ post-completion cast). It exists because the phase-10 reel-arm hoist above the
 in-combat and swim denials was a guard reorder the old cancel-only coverage
 (scenarios hand-assigning `castingAbility`) could not see.
 
-Layout note: the gate is SHARDED for wall-time: eleven one-line shard files
-(`parity_a..g.test.ts` + `coverage_a..d.test.ts`; the coverage files kept their names
-and their CI shard-weight rows, but are ordinary gate shards), each a contiguous
-scenario slice over the shared runner in `run_scenarios.ts`, which runs every
-scenario's gate case followed by its coverage cases. `npx vitest run tests/parity` and
+Layout note: the gate is SHARDED for wall-time: one one-line shard file per
+`SHARD_BOUNDS` slice in `run_scenarios.ts` (`parity_a..g.test.ts` +
+`coverage_a..d.test.ts`; the coverage files kept their names and their CI shard-weight
+rows, but are ordinary gate shards). Each file calls `runParityShard(n)` for its own
+index, and `harness.test.ts` pins that the files cover every index exactly once. The
+shared runner runs every scenario's gate case followed by its coverage cases. `npx vitest run tests/parity` and
 `UPDATE_PARITY=1` work unchanged (coverage still runs when minting), and a shard minting
 run touches only its own slice's goldens. `-t` filters still select by the full test
 names, which did not change; a coverage case selected without its gate case records its
 scenario itself. Which FILE runs a scenario follows `SHARD_BOUNDS`, not the file's name,
 so select one across the directory (`npx vitest run tests/parity -t <scenario>`). A held
-recording is shared by its readers, so `recording_cache.ts` freezes its event list, notes
-and frames and fails a case that is async, reads a scenario it did not declare, or
-records anything itself.
+recording is shared by its readers, so `recording_cache.ts` deep-freezes its events,
+notes and frames, freezes its final Sim's entities and player records (a field write
+throws), refuses a tick of that Sim, and fails a case that is async, reads a scenario it
+did not declare, passes a modified scenario, or records anything itself.
 
 ## The determinism pair (why the gate records every scenario twice)
 

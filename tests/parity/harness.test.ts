@@ -1,10 +1,14 @@
 // Direct unit tests for the harness primitives — the samplers, canonicalization,
 // and the rng draw-order log — independent of the golden gate.
 
+import { readdirSync, readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { Rng } from '../../src/sim/rng';
 import { Sim } from '../../src/sim/sim';
 import { recordTrace } from './record';
+import { PARITY_SHARD_COUNT } from './run_scenarios';
 import { SCENARIOS } from './scenarios';
 import {
   canonical,
@@ -365,5 +369,28 @@ describe('draw-order digest in the trace', () => {
     const warrior = warriorTrace ?? recordTrace(warriorScenario);
     const mage = recordTrace(SCENARIOS.find((s) => s.name === 'solo_mage')!);
     expect(warrior.drawDigest).not.toBe(mage.drawDigest);
+  });
+});
+
+describe('shard files', () => {
+  // Every scenario runs on exactly one surface only if the shard files call
+  // runParityShard(n) once for each n in 0..PARITY_SHARD_COUNT-1. A copied file
+  // left calling its source's shard would run that slice twice and leave another
+  // slice on no surface, with every other pin green. Comments are stripped
+  // first, so a commented-out call cannot satisfy this, and a call whose
+  // argument is not a literal fails rather than being skipped.
+  it('call runParityShard once for every shard index', () => {
+    const here = dirname(fileURLToPath(import.meta.url));
+    const shards: number[] = [];
+    for (const file of readdirSync(here).filter((f) => f.endsWith('.test.ts'))) {
+      const code = readFileSync(join(here, file), 'utf8')
+        .replace(/\/\*[\s\S]*?\*\//g, '')
+        .replace(/\/\/[^\n]*/g, '');
+      const calls = code.match(/\brunParityShard\s*\(/g)?.length ?? 0;
+      const literal = [...code.matchAll(/\brunParityShard\((\d+)\)/g)].map((m) => Number(m[1]));
+      expect(literal.length, `${file} passes runParityShard a non-literal`).toBe(calls);
+      shards.push(...literal);
+    }
+    expect(shards.sort((a, b) => a - b)).toEqual([...Array(PARITY_SHARD_COUNT).keys()]);
   });
 });
