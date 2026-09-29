@@ -112,17 +112,33 @@ const FERAL_LOADOUT = {
 // Measured identically on the integration tip and on the faction ladder
 // branch (PR 4169). Moongrove (5982/225/5983/7) and Bruin (3060/139/
 // 10541.4575/4) stayed inside their bands and keep their anchors.
+// Re-measured 2026-09-29 for the production idle cull (scripts/probe_sim.ts):
+// actual at seed 42420 (the same at both depths; these probes have no diet)
+// moongrove 5945/228/5946/7, wildfang 7165/176/8395.7975/12, bruin
+// 3265/112/10421.87375/4; the same relative margins (BAND either side, payoffs
+// exact) give the anchors below. The cull moves idle rolls onto per-mob lanes, so
+// every trace after construction re-rolls: the unculled parent read moongrove
+// 5982/225/5983/7, wildfang 5537/201/6488.5955/8 and bruin 2946/132/9996.6275/4
+// at this seed, and under the cull seeds 42421 to 42425 land wildfang 5749 to
+// 7096 (10 to 12 payoffs), so the wildfang jump is the Boon trace re-rolling onto
+// a 12-payoff row (as at 2026-09-10), not a rotation change.
 const LIVE_MOB_MEASURED = {
-  moongrove: { damage: 5956, incomingDamage: 212, threat: 5957, payoffs: 7 },
-  wildfang: { damage: 5315, incomingDamage: 201, threat: 6228.5225, payoffs: 8 },
-  bruin: { damage: 3082, incomingDamage: 131, threat: 10651.925, payoffs: 4 },
+  moongrove: { damage: 5945, incomingDamage: 228, threat: 5946, payoffs: 7 },
+  wildfang: { damage: 7165, incomingDamage: 176, threat: 8395.7975, payoffs: 12 },
+  bruin: { damage: 3265, incomingDamage: 112, threat: 10421.87375, payoffs: 4 },
 } as const;
+// Re-measured 2026-09-29 for the production idle cull (scripts/probe_sim.ts):
+// actual at seed 42920 (both depths) wolf 239, bear 153 (35.98 percent less),
+// 214.5 threat per 100 damage (unchanged: a flat multiplier product), snap threat
+// 1012.44 (unchanged by the cull; the unculled parent already read 1012.44, inside
+// the old 990.99 band); the same relative margins give the anchors below and the
+// mitigation band in the Bruin case.
 const BRUIN_TANK_MEASURED = {
-  wolfIncomingDamage: 220,
-  bruinIncomingDamage: 143,
-  bruinMitigationPct: 0.35,
+  wolfIncomingDamage: 239,
+  bruinIncomingDamage: 153,
+  bruinMitigationPct: 0.3598,
   bruinThreatFrom100Damage: 214.5,
-  marrowbreakSnapThreat: 990.99,
+  marrowbreakSnapThreat: 1012.44,
 } as const;
 const BAND = 0.08;
 
@@ -132,7 +148,8 @@ const BAND = 0.08;
 // the case below defines. The matrix bands are pinned per configuration via
 // band(full, diet): the eight-seed bands keep the one-seed bands' relative width
 // around their own measurement (2026-09-27: moongrove_1t 155.82 at one seed and
-// 149.27 at eight, wildfang 198.89 and 191.86); re-pin each from its own actuals.
+// 149.27 at eight, wildfang 198.89 and 191.86; 2026-09-29 at the production idle
+// cull: 150.80 and 148.32, 198.22 and 194.57); re-pin each from its own actuals.
 // The diet also runs only the two band-carrying profiles (moongrove_1t and
 // wildfang, every capstone each). moongrove_3t and groveheart carry no band, only
 // "the best capstone reads above zero", a pin that never saw a zero confined to
@@ -230,18 +247,22 @@ describe('Druid v0.29 balance and live-mob harness', () => {
   // window take about 90 to 125 s solo (the eight measured 994 s together on
   // 2026-09-27); in the long-sims lane (workers=2) two heavy suites share the runner,
   // roughly doubling wall time (run 31288946173 failed one against a 150 s bound). The
-  // nightly bound is per seed, 900 s, under 3x the more than 300 s a seed averaged in
-  // that nightly. A probe runs synchronously, so a bound fails an over-long case when it
-  // finishes rather than cutting it short: 8 x 900 = 7,200 s is the most a passing sweep
-  // may take, not a cap on its wall time, which the nightly job's 300-minute limit (shared
-  // with the rest of that job) bounds. The diet's seed runs six of the twelve combos.
+  // unculled nightly bound was per seed, 900 s, under 3x the more than 300 s a seed
+  // averaged in that nightly. A probe runs synchronously, so a bound fails an over-long
+  // case when it finishes rather than cutting it short: 8 x 660 = 5,280 s is the most a
+  // passing sweep may take, not a cap on its wall time, which the nightly job's 300-minute
+  // limit (shared with the rest of that job) bounds. The diet's seed runs six of the
+  // twelve combos.
+  // Re-sized 2026-09-29 for the production idle cull (scripts/probe_sim.ts), about ten
+  // times the local case time rounded up to 30 s: a full seed case measured 34 to 64 s
+  // locally, one worker (the largest gives 660 s), the diet's seed case 25 s (270 s).
   it.each(MATRIX_SEEDS.map((seed, index) => [seed, index + 1]))(
     'runs the matrix at seed %i (run %i)',
     (seed) => {
       ranSeeds.push(seed);
       seedRuns.push(runDruidBalanceSeed(seed, DRUID_PROBE_SECONDS, MATRIX_PROFILES));
     },
-    FULL_SWEEP ? 900_000 : 420_000,
+    FULL_SWEEP ? 660_000 : 270_000,
   );
 
   it('lands every profile and capstone, and the best builds inside their bands', () => {
@@ -275,10 +296,18 @@ describe('Druid v0.29 balance and live-mob harness', () => {
     // Nythraxis anchor; on this proxy it reads ~160. Wildfang (agility melee) is
     // not under-geared here, so the arms are not directly comparable on the proxy
     // (real BiS parity is the montecarlo's job). These bands guard the proxy only.
-    expect(moongrove?.value).toBeGreaterThanOrEqual(band(134, 140));
-    expect(moongrove?.value).toBeLessThanOrEqual(band(178, 185));
-    expect(wildfang?.value).toBeGreaterThanOrEqual(band(159, 165));
-    expect(wildfang?.value).toBeLessThanOrEqual(band(198, 205));
+    // Re-measured 2026-09-29 for the production idle cull (scripts/probe_sim.ts):
+    // moongrove_1t full actual 148.32 (8 seeds), diet actual 150.80 (1 seed);
+    // wildfang full actual 194.57 (8 seeds), diet actual 198.22 (1 seed). The
+    // 2026-09-27 margins (floor and ceiling over 149.27 / 155.82 and 191.86 /
+    // 198.89, which the unculled parent still read exactly) give moongrove
+    // 133.2 / 135.5 and 176.8 / 179, wildfang 161.3 / 164.5 and 200.7 / 204.3,
+    // each rounded inward to one decimal. The argmax winners moved with the
+    // re-roll (diet wildfang is now Nature's Fury, full is still Quickening).
+    expect(moongrove?.value).toBeGreaterThanOrEqual(band(133.2, 135.5));
+    expect(moongrove?.value).toBeLessThanOrEqual(band(176.8, 179));
+    expect(wildfang?.value).toBeGreaterThanOrEqual(band(161.3, 164.5));
+    expect(wildfang?.value).toBeLessThanOrEqual(band(200.7, 204.3));
     if (FULL_SWEEP) {
       expect(best.find((result) => result.profile === 'moongrove_3t')?.value).toBeGreaterThan(0);
       expect(best.find((result) => result.profile === 'groveheart')?.value).toBeGreaterThan(0);
@@ -311,6 +340,8 @@ describe('Druid v0.29 balance and live-mob harness', () => {
   it.each(['moongrove', 'wildfang', 'bruin'] as const)(
     'executes the %s rotation against an attacking live mob inside its measured band',
     (arm) => {
+      // Anchors re-measured 2026-09-29 for the production idle cull (the
+      // LIVE_MOB_MEASURED record above: same BAND, payoffs exact).
       const result = runDruidLiveMobProbe(arm, 42_420);
       const measured = LIVE_MOB_MEASURED[arm];
       const [dmgLo, dmgHi] = within(measured.damage);
@@ -334,14 +365,18 @@ describe('Druid v0.29 balance and live-mob harness', () => {
     // The two incoming figures and the mitigation they imply are banded on
     // the 2026-09-08 measurement (wolf 220, bear 143, 35 percent less):
     // the drift the audit read (bear +12 percent) reds on the bear figure.
+    // Re-measured 2026-09-29 for the production idle cull (scripts/probe_sim.ts):
+    // actual wolf 239, bear 153, mitigation 0.3598 at seed 42920 (both depths);
+    // the same relative margins (BAND on the figures, 0.3 / 0.42 over 0.35 on
+    // the mitigation, rounded inward) give the anchors above and 0.309 / 0.431.
     const [wolfLo, wolfHi] = within(BRUIN_TANK_MEASURED.wolfIncomingDamage);
     expect(result.wolfIncomingDamage).toBeGreaterThanOrEqual(wolfLo);
     expect(result.wolfIncomingDamage).toBeLessThanOrEqual(wolfHi);
     const [bearLo, bearHi] = within(BRUIN_TANK_MEASURED.bruinIncomingDamage);
     expect(result.bruinIncomingDamage).toBeGreaterThanOrEqual(bearLo);
     expect(result.bruinIncomingDamage).toBeLessThanOrEqual(bearHi);
-    expect(result.bruinMitigationPct).toBeGreaterThanOrEqual(0.3);
-    expect(result.bruinMitigationPct).toBeLessThanOrEqual(0.42);
+    expect(result.bruinMitigationPct).toBeGreaterThanOrEqual(0.309);
+    expect(result.bruinMitigationPct).toBeLessThanOrEqual(0.431);
     // Bear form multiplies all threat by 1.3 (threat.ts) on top of the feral
     // tank talent bonus; a 100-damage hit must clear the bare 100 by half,
     // and the measured figure is pinned exactly (a flat multiplier product).
@@ -352,6 +387,9 @@ describe('Druid v0.29 balance and live-mob harness', () => {
     );
     // A full-bank Marrowbreak is the snap-threat button: several swings' worth
     // of threat in one press, banded on the measurement.
+    // Re-measured 2026-09-29 for the production idle cull (scripts/probe_sim.ts):
+    // actual 1012.44 at seed 42920 (both depths); BAND either side gives the
+    // re-anchored band (about 931.4 / 1093.4).
     expect(result.marrowbreakSnapThreat).toBeGreaterThanOrEqual(
       result.bruinThreatFrom100Damage * 4,
     );
