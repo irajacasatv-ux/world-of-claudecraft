@@ -17,6 +17,9 @@ const QUEST_ID = 'wq_eastbrook_caravan';
 const ESCORT_ID = EASTBROOK_FREIGHT_CARAVAN_ESCORT_ID;
 const DEF = ESCORTS[ESCORT_ID];
 const QUEST = WORLD_QUESTS_BY_ID[QUEST_ID];
+// Every Sim runs on the shipped seed: the waves and credit read no seed, and
+// the placement checks below already build that seed's collider grid, which a
+// Sim on any other seed would bootstrap again.
 const TEST_WORLD: WorldContent = {
   ...BUILTIN_WORLD,
   camps: [],
@@ -48,7 +51,7 @@ function caravan(sim: Sim): Entity | undefined {
 describe('Eastbrook world-quest caravan', () => {
   it('can be armed immediately in a local dev session', () => {
     const sim = new Sim({
-      seed: 9191,
+      seed: WORLD_SEED,
       playerClass: 'warrior',
       noPlayer: true,
       world: TEST_WORLD,
@@ -134,7 +137,7 @@ describe('Eastbrook world-quest caravan', () => {
     }
 
     const sim = new Sim({
-      seed: 424242,
+      seed: WORLD_SEED,
       playerClass: 'warrior',
       noPlayer: true,
       world: TEST_WORLD,
@@ -228,7 +231,7 @@ describe('Eastbrook world-quest caravan', () => {
   it('stays absent off-rotation and deterministically cleans the caravan and live wave on rollover', () => {
     const run = () => {
       const sim = new Sim({
-        seed: 7878,
+        seed: WORLD_SEED,
         playerClass: 'warrior',
         noPlayer: true,
         world: TEST_WORLD,
