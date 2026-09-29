@@ -84,7 +84,11 @@ afterEach(() => {
   CLUE_HUNT_TEST_POOL.length = 0;
 });
 
-function huntSim(seed = 4711, level = CLUE_SCROLL_MIN_LEVEL, autoEquip = true): Sim {
+// One seed for the whole file: the full-world hunt and slate Sims and the
+// empty-world ones share its terrain build.
+const SEED = 4711;
+
+function huntSim(seed = SEED, level = CLUE_SCROLL_MIN_LEVEL, autoEquip = true): Sim {
   const sim = new Sim({ seed, playerClass: 'warrior', autoEquip, devCommands: true });
   sim.setPlayerLevel(level);
   sim.utcDay = '2026-08-31';
@@ -251,7 +255,7 @@ describe('worldQuestSlateComplete', () => {
 
 const THORNPEAK = 'wq_thornpeak_stormcrag';
 
-function slateSim(level: number, seed = 4711): Sim {
+function slateSim(level: number, seed = SEED): Sim {
   const sim = new Sim({ seed, playerClass: 'warrior', autoEquip: true });
   const quest = WORLD_QUESTS_BY_ID[THORNPEAK];
   sim.setPlayerLevel(level);
@@ -448,15 +452,20 @@ describe('using a scroll', () => {
       { id: 'hunt_test_c', steps: [{ kind: 'dig', zoneId: 'drakelands', x: 2, z: 2 }] },
     );
     // The draw needs no world content: an empty world keeps the loop cheap.
-    const light = (seed: number) => {
-      const sim = new Sim({ seed, playerClass: 'warrior', world: EMPTY_TEST_WORLD });
+    // Twelve rng states on the file's one seed (the stream advanced by `skip`
+    // draws before the scroll is read) stand in for twelve seeds: a pair that
+    // shares a state must open the same hunt, and the states must not all
+    // open one. Each fresh seed cost its own terrain build.
+    const light = (skip: number) => {
+      const sim = new Sim({ seed: SEED, playerClass: 'warrior', world: EMPTY_TEST_WORLD });
       sim.setPlayerLevel(CLUE_SCROLL_MIN_LEVEL);
+      for (let i = 0; i < skip; i++) sim.rng.next();
       return sim;
     };
     const picks = new Set<string>();
-    for (const seed of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]) {
-      const a = light(seed);
-      const b = light(seed);
+    for (let skip = 0; skip < 12; skip++) {
+      const a = light(skip);
+      const b = light(skip);
       startHunt(a);
       startHunt(b);
       expect(metaOf(a).clueHunt?.huntId).toBe(metaOf(b).clueHunt?.huntId);
@@ -471,7 +480,7 @@ describe('using a scroll', () => {
     CLUE_HUNT_TEST_POOL.length = 0;
     const shipped = (CLUE_HUNTS as ClueHuntDef[]).splice(0);
     try {
-      const sim = new Sim({ seed: 42, playerClass: 'warrior', world: EMPTY_TEST_WORLD });
+      const sim = new Sim({ seed: SEED, playerClass: 'warrior', world: EMPTY_TEST_WORLD });
       const evs = startHunt(sim);
       expect(sim.countItem(CLUE_SCROLL_ITEM_ID)).toBe(1);
       expect(metaOf(sim).clueHunt).toBeNull();
@@ -741,7 +750,7 @@ describe('abandon', () => {
 
 describe('the Treasure Casket', () => {
   it('pays the copper formula and a stack of one top-tier material, bumps the count and marks deeds dirty', () => {
-    const sim = huntSim(4711, 20, false);
+    const sim = huntSim(SEED, 20, false);
     const meta = metaOf(sim);
     sim.addItem(TREASURE_CASKET_ITEM_ID, 1);
     sim.drainEvents();
@@ -873,7 +882,7 @@ describe('the Treasure Casket', () => {
 describe('the character save', () => {
   it('serializes byte-identically to a pre-feature save when nothing is set', () => {
     const sim = new Sim({
-      seed: 42,
+      seed: SEED,
       playerClass: 'warrior',
       devCommands: true,
       world: EMPTY_TEST_WORLD,
@@ -901,7 +910,12 @@ describe('the character save', () => {
     expect(state.worldQuests?.clueScrollCycle).toBe(meta.worldQuestCycle);
     expect(state.worldQuests?.clueCasketsOpened).toBe(3);
 
-    const restored = new Sim({ seed: 4711, playerClass: 'warrior', noPlayer: true });
+    const restored = new Sim({
+      seed: SEED,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const pid = restored.addPlayer('warrior', 'Digger', { state });
     const restoredMeta = restored.meta(pid);
     if (!restoredMeta) throw new Error('Missing restored player');
@@ -916,7 +930,7 @@ describe('the character save', () => {
 
   it('carries the fields even when the character has no active board', () => {
     const sim = new Sim({
-      seed: 42,
+      seed: SEED,
       playerClass: 'warrior',
       devCommands: true,
       world: EMPTY_TEST_WORLD,
@@ -941,7 +955,12 @@ describe('the character save', () => {
     const state = sim.serializeCharacter(sim.playerId);
     if (!state?.worldQuests) throw new Error('Missing serialized character');
     const load = (patch: Partial<NonNullable<typeof state.worldQuests>>) => {
-      const host = new Sim({ seed: 4711, playerClass: 'warrior', noPlayer: true });
+      const host = new Sim({
+        seed: SEED,
+        playerClass: 'warrior',
+        noPlayer: true,
+        world: EMPTY_TEST_WORLD,
+      });
       const pid = host.addPlayer('warrior', 'Loaded', {
         state: { ...state, worldQuests: { ...state.worldQuests, ...patch } as never },
       });
@@ -1005,7 +1024,7 @@ describe('the daily reset', () => {
 describe('/dev clue', () => {
   function devSim(): Sim {
     const sim = new Sim({
-      seed: 42,
+      seed: SEED,
       playerClass: 'warrior',
       devCommands: true,
       world: EMPTY_TEST_WORLD,
@@ -1056,7 +1075,7 @@ describe('/dev clue', () => {
     sim.chat('/dev clue casket');
     expect(sim.countItem(TREASURE_CASKET_ITEM_ID)).toBe(1);
     const plain = new Sim({
-      seed: 42,
+      seed: SEED,
       playerClass: 'warrior',
       devCommands: false,
       world: EMPTY_TEST_WORLD,
