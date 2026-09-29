@@ -115,8 +115,9 @@ describe('the lane threshold over the measured shard weights', () => {
 // table: the ones that predate the rule are pinned by name below, and any new one must carry the
 // statement too. The Playwright browser suite runs under its own config and is reviewed by hand.
 const GUARDS_LINE = /^(?:\/\/+|\/?\*+)\s*Guards:\s*(\S.*)$/;
-// The number stands alone: `1,200 ms` is refused (it would read as 200), `1200 ms` is not.
-const COST_LINE = /^(?:\/\/+|\/?\*+)\s*Cost:\s*.*?(?<![\d,.])(\d+(?:\.\d+)?)\s*(ms|s)\b/;
+// The time is the first number on the line and stands alone: `1200 ms` and `about 1.2 s` read,
+// while `1,200 ms`, `25 000 ms` and `2 min 30 s` are refused rather than read low.
+const COST_LINE = /^(?:\/\/+|\/?\*+)\s*Cost:[^\d\n]*?(\d+(?:\.\d+)?)\s*(ms|s)\b/;
 const GUARDS_MIN_CHARS = 12;
 
 /** The leading comment block: every comment line before the first line of code. */
@@ -177,7 +178,9 @@ function admissionProblems(
     if (guards === undefined)
       problems.push(`${file.key}: no "Guards:" line saying what it uniquely guards`);
     if (costMs === undefined)
-      problems.push(`${file.key}: no "Cost:" line with a measured time (ms or s)`);
+      problems.push(
+        `${file.key}: no "Cost:" line opening with a measured time (a plain number, ms or s)`,
+      );
     // The lane rule, applied to a file the table cannot yet judge: its stated cost in CI time.
     else if (!inLane.has(file.key) && statedWeight(file.source) > LANE_THRESHOLD_MS)
       problems.push(
@@ -247,17 +250,16 @@ const OUTSIDE_TABLE_NEWCOMERS: readonly WalkedFile[] = (() => {
     .map((key) => ({ key, source: readFileSync(join(REPO_ROOT, key), 'utf8') }));
 })();
 
+// What the ratchet adds beyond the table: every walked file and every newcomer outside it.
+const RATCHET_UNMEASURED_INPUT: readonly WalkedFile[] = [...WALKED, ...OUTSIDE_TABLE_NEWCOMERS];
+
 // The total-CI-time ratchet (scripts/lib/ci_shard_plan.mjs, beside the lane rule): the summed
 // CI-time weight of the shard pool and of the lane, a new file counted at its stated cost, may
 // not pass their ceilings, and a ceiling left well above its pool after a cut is stale.
 describe('the total CI time ratchet over the measured weights', () => {
   it('holds the shard pool and the lane under their ceilings, neither ceiling stale', () => {
     const measured = poolWeights(MEASURED_WEIGHTS, CARRIED, CI_LONG_SUITES);
-    const added = unmeasuredPools(
-      [...WALKED, ...OUTSIDE_TABLE_NEWCOMERS],
-      MEASURED_WEIGHTS,
-      CI_LONG_SUITES,
-    );
+    const added = unmeasuredPools(RATCHET_UNMEASURED_INPUT, MEASURED_WEIGHTS, CI_LONG_SUITES);
     const pools = { shard: measured.shard + added.shard, lane: measured.lane + added.lane };
     expect(
       ratchetProblems(pools, { shard: SHARD_POOL_CEILING_MS, lane: LANE_POOL_CEILING_MS }),
@@ -365,6 +367,14 @@ describe('the new-test admission rule', () => {
     }).filter((file) => !table.has(file));
     // Non-vacuous: the collected walk sees the legacy files, so it sees a new one beside them.
     expect(outside).toEqual(expect.arrayContaining([...LEGACY_OUTSIDE_TABLE]));
+    // And the newcomers the ratchet counts are exactly the rest of it, walked and outside alike.
+    expect(
+      [...OUTSIDE_TABLE_NEWCOMERS.map(({ key }) => key), ...LEGACY_OUTSIDE_TABLE].sort(),
+    ).toEqual([...outside].sort());
+    const ratchetKeys = new Set(RATCHET_UNMEASURED_INPUT.map(({ key }) => key));
+    expect([...table, ...outside].filter((key) => !ratchetKeys.has(key))).toEqual([
+      ...LEGACY_OUTSIDE_TABLE,
+    ]);
     expect(
       admissionProblems(OUTSIDE_TABLE_NEWCOMERS, {}, {}),
       'a new test file outside the weight table states what it guards and costs too',
@@ -396,6 +406,14 @@ describe('the new-test admission rule', () => {
           "// Guards: the pause toggle's replay path.\n// Cost: 1,200 ms\n",
         ),
         file(
+          'tests/new_spaced.test.ts',
+          "// Guards: the pause toggle's replay path.\n// Cost: 25 000 ms\n",
+        ),
+        file(
+          'tests/new_minutes.test.ts',
+          "// Guards: the pause toggle's replay path.\n// Cost: 1 min 5 s\n",
+        ),
+        file(
           'tests/new_heavy.test.ts',
           "// Guards: the pause toggle's replay path.\n// Cost: 30 s\n",
         ),
@@ -406,7 +424,8 @@ describe('the new-test admission rule', () => {
       { 'tests/carried.test.ts': { method: 'local-median' } },
     );
     const guards = (key: string) => `${key}: no "Guards:" line saying what it uniquely guards`;
-    const cost = (key: string) => `${key}: no "Cost:" line with a measured time (ms or s)`;
+    const cost = (key: string) =>
+      `${key}: no "Cost:" line opening with a measured time (a plain number, ms or s)`;
     expect(problems).toEqual([
       guards('tests/new_buried.test.ts'),
       cost('tests/new_buried.test.ts'),
@@ -421,6 +440,8 @@ describe('the new-test admission rule', () => {
       cost('tests/new_no_number.test.ts'),
       guards('tests/new_terse.test.ts'),
       cost('tests/new_comma.test.ts'),
+      cost('tests/new_spaced.test.ts'),
+      cost('tests/new_minutes.test.ts'),
       'tests/new_heavy.test.ts: its stated cost is 120000 ms in CI time, over LANE_THRESHOLD_MS: ' +
         'split it or make it cheaper',
       guards('tests/carried.test.ts'),
@@ -428,6 +449,7 @@ describe('the new-test admission rule', () => {
     ]);
     expect(admissionStatement(stated).costMs).toBe(200);
     expect(admissionStatement('// Cost: 1200 ms\n').costMs).toBe(1200);
+    expect(admissionStatement('// Cost: about 1.2 s at one worker\n').costMs).toBe(1200);
     expect(admissionStatement(afterDocblock).costMs).toBe(450);
   });
 });

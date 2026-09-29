@@ -129,8 +129,10 @@ for (const ref of targets) {
   // A ref that did not resolve checks out by name, so its two test halves could still land on
   // different commits if it moves: say so where the run's annotations show it.
   if (shas[ref] === ref && !/^[0-9a-f]{40}$/.test(ref) && process.env.GITHUB_ACTIONS === 'true') {
+    // Workflow-command data escaping, so a dispatched name cannot open a second command.
+    const data = ref.replace(/%/g, '%25').replace(/\r/g, '%0D').replace(/\n/g, '%0A');
     console.log(
-      `::warning title=nightly checkout::${ref} did not resolve to a commit; its lanes check it out by name`,
+      `::warning title=nightly checkout::${data} did not resolve to a commit; its lanes check it out by name`,
     );
   }
 }

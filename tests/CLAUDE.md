@@ -286,9 +286,11 @@ suite that does not), and `Cost:` and what it costs as a measured time (its loca
 one worker, from `npx vitest run <file> --maxWorkers=1`, for example `Cost: 0.4 s`). Before adding
 one, look for the suite that should own the case, and pick the cheapest form that keeps the guard
 (the remedies above). The lane-threshold suite checks the statement on every `.test.ts` the
-weight table has not measured yet (no row, or a carried one) and counts its `Cost:` into the
-total-time ratchet until a harvest measures the file; the statement then stays as the file's
-record; a stated cost over the lane threshold in CI time fails at once. Cases added to a file
+weight table has not measured yet (no row, or a carried one). A file with no row counts its
+`Cost:` into the total-time ratchet in CI time (scaled by `CARRIED_LOCAL_TO_CI_RATIO`, never
+below the measured-median fallback) until a harvest measures it, and outside the lane a stated
+cost over the lane threshold in CI time fails at once; a carried row counts its carried value
+instead. The statement then stays as the file's record. Cases added to a file
 that already has a row reach the ratchet at the next harvest. A new collected test file outside
 the table (a `.test.mjs`, a `.spec.ts`) is checked the same way and its stated cost stays in the
 ratchet for good, since no harvest measures it; the few `.test.mjs` suites older than the rule
