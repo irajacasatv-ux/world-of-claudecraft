@@ -15,16 +15,25 @@
 // own line reds here.
 
 import { describe, expect, it } from 'vitest';
+import { BUILTIN_WORLD } from '../src/sim/data';
 import * as items from '../src/sim/items';
 import { Sim } from '../src/sim/sim';
 import type { SimContext } from '../src/sim/sim_context';
-import type { Entity, InvSlot, SimEvent } from '../src/sim/types';
+import type { Entity, InvSlot, SimEvent, WorldContent } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 /** A plain, stackable, vendor-sellable id with no bind or quest rule of its own. */
 const ITEM = 'wolf_fang';
 
+// The sell clamp needs only Trader Wilkes in reach, so the Sims run on the empty
+// world plus that one vendor.
+const TRADER_WORLD: WorldContent = {
+  ...EMPTY_TEST_WORLD,
+  npcs: { trader_wilkes: BUILTIN_WORLD.npcs.trader_wilkes },
+};
+
 function makeSim(seed = 11): Sim {
-  return new Sim({ seed, playerClass: 'warrior', autoEquip: false });
+  return new Sim({ seed, playerClass: 'warrior', autoEquip: false, world: TRADER_WORLD });
 }
 
 function ctxOf(sim: Sim): SimContext {
