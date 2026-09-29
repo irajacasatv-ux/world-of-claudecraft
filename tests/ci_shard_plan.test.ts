@@ -552,6 +552,7 @@ describe('the long-sims lane (Phase 4)', () => {
       'tests/lake_shores.test.ts',
       'tests/rogue_dps_balance.test.ts',
       'tests/skill_icons.test.ts',
+      'tests/talent_tooltip_accuracy.test.ts',
       'tests/transport_lanes.test.ts',
       'tests/woc_market_delivery_pg_integration.test.ts',
     ];

@@ -844,15 +844,24 @@ describe('talent tooltip accuracy for specs, masteries, and choice rows', () => 
 // other check here, since none of them scan for stray notation.
 describe('talent tooltip generator never leaks raw notation', () => {
   const RAW_NOTATION = /(->|<=|>=|(?:^|[\s(])@(?:[\s)]|$))/;
+  // The generator's code is shared by every locale; only its connector words and
+  // labels are per-locale tables (talent_i18n.ts and talent_i18n.newlocales.ts). Every
+  // PR walks one locale from each table plus a CJK one, which catches a generator path
+  // that splices raw shorthand again; the whole locale set, which also catches a
+  // single locale's table entry, rides the nightly depth flag (WOC_NIGHTLY_SWEEP,
+  // docs/qa-gate.md "Nightly-only sweep depth").
+  const NIGHTLY_SWEEP = process.env.WOC_NIGHTLY_SWEEP === '1';
+  const SWEPT: typeof supportedLanguages = NIGHTLY_SWEEP
+    ? supportedLanguages.filter((lang) => lang !== 'en' && lang !== 'en_CA')
+    : ['es', 'zh_CN', 'cs_CZ'];
 
-  it('every generated description, across every locale, is free of @ -> <= >= shorthand', async () => {
+  it('every generated description, in every swept locale, is free of @ -> <= >= shorthand', async () => {
     const rowChoices = allEntries();
     const masteriesAndRows = effectEntries();
     const specs = specEntries();
     const offenders: string[] = [];
 
-    for (const lang of supportedLanguages) {
-      if (lang === 'en' || lang === 'en_CA') continue;
+    for (const lang of SWEPT) {
       await ensureLocaleLoaded(lang);
       setLanguage(lang);
       for (const entry of [...rowChoices, ...masteriesAndRows, ...specs]) {
