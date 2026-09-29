@@ -22,6 +22,7 @@ import { stationsOfType } from '../src/sim/professions/stations';
 import type { ProfessionRecipeRecord } from '../src/sim/professions/types';
 import type { PlayerMeta } from '../src/sim/sim';
 import { Sim } from '../src/sim/sim';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 const RECIPE_ID = 'recipe_quickening_catalyst';
 const DAY_ONE = '2026-08-11';
@@ -37,8 +38,12 @@ function catalystRecipe(): ProfessionRecipeRecord {
   return recipe;
 }
 
-function makeSim(seed = 42): Sim {
-  return new Sim({ seed, playerClass: 'warrior', noPlayer: true });
+// Every case rigs its own crafter at a station from the STATIONS table and
+// crafts through the command wrappers, so none needs the overworld's camps,
+// NPCs or ground objects, and one seed serves them all (each fresh seed of the
+// full world cost about a second and a half of collider build).
+function makeSim(): Sim {
+  return new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true, world: EMPTY_TEST_WORLD });
 }
 
 /** A skill-75 alchemist standing at the recipe's station, knowing the recipe
@@ -438,7 +443,7 @@ describe('persistence hardening (the wyrmfallDaily load-clamp arm)', () => {
 describe('determinism', () => {
   it('the craft-refuse-next-day sequence replays byte-identically', () => {
     const run = () => {
-      const sim = makeSim(7);
+      const sim = makeSim();
       sim.resetDay = DAY_ONE;
       const recipe = catalystRecipe();
       const pid = rigCrafter(sim, 2);
@@ -492,7 +497,7 @@ describe('the refusal countdown (Masterwrought phase 14, retryAfterSeconds)', ()
   });
 
   it('the batch auto-continue refusal carries the same countdown', () => {
-    const sim = makeSim(12);
+    const sim = makeSim();
     sim.resetDay = DAY_ONE;
     sim.dailyResetRemainingSec = 777;
     const pid = rigCrafter(sim, 2);
@@ -557,7 +562,7 @@ describe('the refusal countdown (Masterwrought phase 14, retryAfterSeconds)', ()
 
 describe('batch (shift-craft) never overpromises', () => {
   it('maxCraftCountForRecipe previews at most 1, and 0 once stamped', () => {
-    const sim = makeSim(11);
+    const sim = makeSim();
     sim.resetDay = DAY_ONE;
     const recipe = catalystRecipe();
     const pid = rigCrafter(sim, 2);
@@ -568,7 +573,7 @@ describe('batch (shift-craft) never overpromises', () => {
   });
 
   it('a count-2 shift-craft clamps to one craft and starts no second cast', () => {
-    const sim = makeSim(11);
+    const sim = makeSim();
     sim.resetDay = DAY_ONE;
     const recipe = catalystRecipe();
     const pid = rigCrafter(sim, 2);
@@ -585,7 +590,7 @@ describe('batch (shift-craft) never overpromises', () => {
     // in-flight session fields directly: this pins the auto-continue's own
     // stop rule, the reason the gate lives in the SHARED admission (cast
     // start, complete resolve, and batch continue all deny from one check).
-    const sim = makeSim(12);
+    const sim = makeSim();
     sim.resetDay = DAY_ONE;
     const recipe = catalystRecipe();
     const pid = rigCrafter(sim, 2);
