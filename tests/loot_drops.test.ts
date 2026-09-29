@@ -6,7 +6,7 @@ import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // Drives the authoritative loot roller (Sim.rollLoot) directly against the
 // dungeon mob templates, the same way combat death does, to verify the
-// Inventory 2.0 drops fire at roughly their configured rates — and do so
+// Inventory 2.0 drops fire at roughly their configured rates, and do so
 // deterministically (same seed ⇒ identical empirical rate). The roller reads
 // only the template and the rng, so every Sim builds the empty world on the one
 // seed (a fresh seed builds its collider grids, about half a second).
@@ -30,17 +30,17 @@ function dropRate(mobId: string, itemId: string, n = 20000): number {
 }
 
 describe('Inventory 2.0 dungeon drops', () => {
-  // [mob, item, configured chance] — the per-kill marginal drop probability.
+  // [mob, item, configured chance]: the per-kill marginal drop probability.
   const CASES: [string, string, number][] = [
-    // Drowned dungeon (Sunken Bastion) trash/elite — single-item bonus groups.
+    // Drowned dungeon (Sunken Bastion) trash/elite: single-item bonus groups.
     ['bastion_revenant', 'mistveil_cord', 0.06],
     ['tidebound_acolyte', 'mistveil_grips', 0.06],
-    // Wyrm dungeon (Gravewyrm Sanctum) trash/elite — two-item partitioned groups.
+    // Wyrm dungeon (Gravewyrm Sanctum) trash/elite: two-item partitioned groups.
     ['sanctum_drakonid', 'gravewyrm_mantle', 0.05],
     ['sanctum_drakonid', 'gravewyrm_gauntlets', 0.05],
     ['sanctum_boneguard', 'boundstone_helm', 0.04],
     ['sanctum_boneguard', 'boundstone_girdle', 0.04],
-    // Korzul (final boss) — the three archetype epics share the korzul_bonus partition.
+    // Korzul (final boss): the three archetype epics share the korzul_bonus partition.
     ['korzul_the_gravewyrm', 'deathlords_dread_visage', 0.04],
     ['korzul_the_gravewyrm', 'necromancers_soulspire_mantle', 0.04],
     ['korzul_the_gravewyrm', 'wyrmshadow_talongrips', 0.04],
@@ -50,13 +50,13 @@ describe('Inventory 2.0 dungeon drops', () => {
     it(`${mob} drops ${item} near ${(chance * 100).toFixed(0)}%`, () => {
       const rate = dropRate(mob, item);
       // Wide enough to never flake (~10σ at these n), tight enough to prove the
-      // item drops at the intended rate — not 0, not 100%, not an adjacent slice.
+      // item drops at the intended rate, not 0, not 100%, not an adjacent slice.
       expect(rate).toBeGreaterThan(chance - 0.02);
       expect(rate).toBeLessThan(chance + 0.02);
     });
   }
 
-  it('is deterministic — identical seed reproduces the exact empirical rate', () => {
+  it('is deterministic: identical seed reproduces the exact empirical rate', () => {
     expect(dropRate('bastion_revenant', 'mistveil_cord', 5000)).toBe(
       dropRate('bastion_revenant', 'mistveil_cord', 5000),
     );
