@@ -1,11 +1,20 @@
 import { describe, expect, it } from 'vitest';
-import { DELVES } from '../src/sim/data';
+import { BUILTIN_WORLD, DELVES } from '../src/sim/data';
 import { updateDelveCompanion } from '../src/sim/delves/companion';
 import { Sim } from '../src/sim/sim';
+import type { WorldContent } from '../src/sim/types';
 import { terrainHeight } from '../src/sim/world';
+import { EMPTY_TEST_WORLD } from './sim_shared';
+
+// A delve run spawns its own companion, props and mobs; the hunter cases tame
+// a wild boar from the overworld, so the file's world keeps only the boar camps.
+const BOAR_WORLD: WorldContent = {
+  ...EMPTY_TEST_WORLD,
+  camps: BUILTIN_WORLD.camps.filter((camp) => camp.mobId === 'wild_boar'),
+};
 
 function makeSim(cls: 'hunter' | 'warrior' = 'warrior', seed = 42) {
-  return new Sim({ seed, playerClass: cls, autoEquip: true });
+  return new Sim({ seed, playerClass: cls, autoEquip: true, world: BOAR_WORLD });
 }
 
 function teleport(sim: Sim, x: number, z: number) {
