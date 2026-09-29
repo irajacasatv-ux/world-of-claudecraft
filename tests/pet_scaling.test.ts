@@ -21,6 +21,7 @@ import {
 import { Sim } from '../src/sim/sim';
 import { DT, type Entity, type ItemDef, RUN_SPEED, type Vec3 } from '../src/sim/types';
 import { terrainHeight } from '../src/sim/world';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // A hunter pet used to be frozen at tame time: its health and damage came only
 // from the wild-mob template it was tamed from, and Entity.attackPower stayed 0
@@ -28,13 +29,21 @@ import { terrainHeight } from '../src/sim/world';
 // 7.7 yd/s floor, which every mount outran. These pin the owner-share inheritance
 // and the owner-tracking heel speed that replaced both.
 
+// One seed for the file (a fresh seed costs a collider grid build). The hunter and
+// warlock rigs stand on the empty world with the beasts they spawn themselves; the
+// mounted-owner case adopts a wild mob, so it keeps the full world.
 const SEED = 42;
 
 type AnySim = Sim & Record<string, any>;
 type AnyEntity = Entity & Record<string, any>;
 
-function hunterWorld(level = 20, seed = 11): { sim: AnySim; hid: number; hunter: AnyEntity } {
-  const sim = new Sim({ seed, playerClass: 'hunter', noPlayer: true }) as AnySim;
+function hunterWorld(level = 20): { sim: AnySim; hid: number; hunter: AnyEntity } {
+  const sim = new Sim({
+    seed: SEED,
+    playerClass: 'hunter',
+    noPlayer: true,
+    world: EMPTY_TEST_WORLD,
+  }) as AnySim;
   const hid = sim.addPlayer('hunter', 'Owner') as number;
   sim.setPlayerLevel(level, hid);
   return { sim, hid, hunter: sim.entities.get(hid) as AnyEntity };
@@ -414,7 +423,12 @@ describe('pet_scaling: scope', () => {
   });
 
   it('leaves a warlock demon on its authored pool', () => {
-    const sim = new Sim({ seed: 5, playerClass: 'warlock', noPlayer: true }) as AnySim;
+    const sim = new Sim({
+      seed: SEED,
+      playerClass: 'warlock',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    }) as AnySim;
     const wid = sim.addPlayer('warlock', 'Caster') as number;
     sim.setPlayerLevel(20, wid);
     const warlock = sim.entities.get(wid) as AnyEntity;
