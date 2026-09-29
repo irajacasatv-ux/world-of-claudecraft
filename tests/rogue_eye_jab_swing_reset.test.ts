@@ -4,6 +4,7 @@ import { createMob } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
 import type { Entity } from '../src/sim/types';
 import { placePlayerInOpenField } from './helpers/open_field';
+import { EMPTY_TEST_WORLD } from './sim_shared';
 
 // Eye Jab (gouge) is a direct-damage incapacitate: instant, no cast time, used at
 // melee range while the rogue is already auto-attacking. Its own damage cannot
@@ -14,7 +15,9 @@ import { placePlayerInOpenField } from './helpers/open_field';
 // trigger #7 for why the tooltip must say so).
 
 function rig(): { sim: Sim; p: Entity; mob: Entity } {
-  const sim = new Sim({ seed: 11, playerClass: 'rogue', autoEquip: true });
+  // The rig places its own wolf in the open field, so the empty world holds
+  // everything the cases reach.
+  const sim = new Sim({ seed: 11, playerClass: 'rogue', autoEquip: true, world: EMPTY_TEST_WORLD });
   sim.setPlayerLevel(20);
   placePlayerInOpenField(sim);
   const p = sim.player;
