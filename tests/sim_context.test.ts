@@ -851,7 +851,9 @@ describe('createSimContext (isolated, fake host)', () => {
 });
 
 describe('Sim.ctx (real seam delegation)', () => {
-  const makeSim = (seed = 42) => new Sim({ seed, playerClass: 'warrior', autoEquip: true });
+  // One seed for the block: the delegation and determinism pairs compare two
+  // same-seed Sims, and seed 7 paid a second full build for nothing.
+  const makeSim = () => new Sim({ seed: 42, playerClass: 'warrior', autoEquip: true });
 
   it('exposes the live shared rng/entities/time/tickCount', () => {
     const sim = makeSim();
@@ -917,8 +919,8 @@ describe('Sim.ctx (real seam delegation)', () => {
   });
 
   it('a mutating callback (dealDamage) delegates identically to Sim.dealDamage', () => {
-    const viaCtx = makeSim(7);
-    const viaDirect = makeSim(7);
+    const viaCtx = makeSim();
+    const viaDirect = makeSim();
     const pa = viaCtx.entities.get(viaCtx.primaryId) as Entity;
     const pb = viaDirect.entities.get(viaDirect.primaryId) as Entity;
     const hp0 = pa.hp;
@@ -933,7 +935,7 @@ describe('Sim.ctx (real seam delegation)', () => {
 
   it('does not perturb determinism (same seed -> same world through the seam)', () => {
     const run = () => {
-      const sim = makeSim(7);
+      const sim = makeSim();
       for (let i = 0; i < 40; i++) sim.tick();
       const p = sim.entities.get(sim.primaryId) as Entity;
       return { time: sim.ctx.time, tick: sim.ctx.tickCount, hp: p.hp, pos: { ...p.pos } };
