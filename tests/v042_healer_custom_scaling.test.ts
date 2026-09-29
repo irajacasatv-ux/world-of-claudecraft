@@ -30,6 +30,12 @@ import { primaryHealingMultiplier } from '../src/sim/spec_output_tuning';
 import { channelTickBonus, directHealBonus, hotTickBonus } from '../src/sim/spell_scaling';
 import { resolveTalentHitMult } from '../src/sim/talent_hit_mult';
 import type { AbilityEffect, Entity } from '../src/sim/types';
+import { EMPTY_TEST_WORLD } from './sim_shared';
+
+// Every Sim here runs on one seed and EMPTY_TEST_WORLD: each case adds its own
+// allies and targets and pins the rng it reads, so the ambient overworld is pure
+// cost, and each extra seed paid its own collider build (about half a second).
+const SEED = 1701;
 
 function ctxOf(sim: Sim): SimContext {
   return (sim as unknown as { ctx: SimContext }).ctx;
@@ -66,7 +72,12 @@ describe('Sunmender primary-healing factor: Aegis of the First Dawn', () => {
   });
 
   it('reproduces and corrects the missing talent healing multiplier on the SP rider, then scales the complete tick and burst exactly once', () => {
-    const sim = new Sim({ seed: 1701, playerClass: 'paladin', autoEquip: true });
+    const sim = new Sim({
+      seed: SEED,
+      playerClass: 'paladin',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.setPlayerLevel(20);
     expect(sim.setSpec('holy')).toBe(true);
     const ally = partyAlly(sim, 'priest', 20);
@@ -143,7 +154,12 @@ describe('Aegis reproduces a real non-1 talentHealMult (Fiesta healing augment)'
   // dead code: it reaches the SP rider for a real, non-1 multiplier, on top
   // of (never instead of) the independent 1.10 Sunmender primary factor.
   it('threads aug_mending into the SP rider exactly once, alongside the independent Sunmender primary factor', () => {
-    const sim = new Sim({ seed: 4242, playerClass: 'paladin', autoEquip: true });
+    const sim = new Sim({
+      seed: SEED,
+      playerClass: 'paladin',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.setPlayerLevel(20);
     expect(sim.setSpec('holy')).toBe(true);
     const ally = partyAlly(sim, 'priest', 20);
@@ -221,7 +237,12 @@ describe('Groveheart primary-healing factor: Wildbloom replant', () => {
   });
 
   it('reproduces and corrects the missing talent/hotHealPct multiplier on the replant rider, then scales the complete tick exactly once', () => {
-    const sim = new Sim({ seed: 29, playerClass: 'druid', autoEquip: true });
+    const sim = new Sim({
+      seed: SEED,
+      playerClass: 'druid',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.setPlayerLevel(20);
     expect(sim.setSpec('restoration')).toBe(true);
     const p = sim.player;
@@ -278,7 +299,12 @@ describe('Groveheart primary-healing factor: Wildbloom replant', () => {
 
 describe('Sunmender-only heal on the class-wide Perpetual Sun', () => {
   function rig(spec: string): { sim: Sim; ally: Entity; enemy: Entity; ctx: SimContext } {
-    const sim = new Sim({ seed: 5, playerClass: 'paladin', autoEquip: true });
+    const sim = new Sim({
+      seed: SEED,
+      playerClass: 'paladin',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.setPlayerLevel(20);
     expect(sim.setSpec(spec)).toBe(true);
     const ally = partyAlly(sim, 'warrior', 20);
@@ -315,7 +341,12 @@ describe('Sunmender-only heal on the class-wide Perpetual Sun', () => {
 // MY OWN custom sources apply their own factor exactly once.
 describe('Beacon of Light copies the already-scaled effective heal exactly once', () => {
   it('transfers 50% of the Sunmender-scaled primary heal, not a second 1.10 factor on top', () => {
-    const sim = new Sim({ seed: 4501, playerClass: 'paladin', noPlayer: true });
+    const sim = new Sim({
+      seed: SEED,
+      playerClass: 'paladin',
+      noPlayer: true,
+      world: EMPTY_TEST_WORLD,
+    });
     const paladinId = sim.addPlayer('paladin', 'Aurelia');
     const allyId = sim.addPlayer('warrior', 'Borin');
     const beaconId = sim.addPlayer('priest', 'Celia');
@@ -389,7 +420,12 @@ describe('Beacon of Light copies the already-scaled effective heal exactly once'
 
 describe('Dawn Echo copies the already-scaled effective heal exactly once', () => {
   it("repeats 40% of the third proc's Sunmender-scaled effective heal, not a second 1.10 factor", () => {
-    const sim = new Sim({ seed: 4701, playerClass: 'paladin', autoEquip: true });
+    const sim = new Sim({
+      seed: SEED,
+      playerClass: 'paladin',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.setPlayerLevel(20);
     expect(sim.applyTalents({ spec: 'holy', rows: { 20: 'pal_r20_dawn_echo' } })).toBe(true);
     const ally = partyAlly(sim, 'warrior', 20);
@@ -438,7 +474,12 @@ describe('Dawn Echo copies the already-scaled effective heal exactly once', () =
 
 describe('Groveheart Overbloom harvest copies the already-scaled stored HoT exactly once', () => {
   it('harvests 60% of the stored (already Groveheart-scaled) remaining HoT healing, not a second 1.05 factor', () => {
-    const sim = new Sim({ seed: 4601, playerClass: 'druid', autoEquip: true });
+    const sim = new Sim({
+      seed: SEED,
+      playerClass: 'druid',
+      autoEquip: true,
+      world: EMPTY_TEST_WORLD,
+    });
     sim.setPlayerLevel(20);
     expect(sim.setSpec('restoration')).toBe(true);
     const p = sim.player;
