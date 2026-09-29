@@ -21,7 +21,7 @@ import {
   stepPlayerMotion,
 } from '../src/sim/player_motion';
 import { Sim } from '../src/sim/sim';
-import { DT, type Entity, type MoveInput, RUN_SPEED, type WorldContent } from '../src/sim/types';
+import type { Entity, MoveInput, WorldContent } from '../src/sim/types';
 import {
   generateDecorations,
   groundHeight,
@@ -645,8 +645,9 @@ describe('step-up cannot manufacture speed', () => {
     }));
     const startZ = COURSE.z0 + 1;
     const flat = run([]) - startZ;
-    // The flat run was never stopped: it covered exactly its ticks at run speed.
-    expect(flat).toBeCloseTo(TICKS * RUN_SPEED * DT, 6);
+    // The flat run was never stopped: it covered exactly its ticks at the classic
+    // 7 yd/s run speed on the fixed 20 Hz tick.
+    expect(flat).toBeCloseTo((TICKS * 7) / 20, 6);
     const courseEnd = run(staircase);
     const lastKerb = staircase[staircase.length - 1];
     expect(courseEnd).toBeGreaterThan(lastKerb.z + lastKerb.d / 2); // the staircase was crossed
