@@ -37,9 +37,13 @@ import { dist2d, type Entity, type PlayerClass } from '../src/sim/types';
 import { drawWeapon, toggleWeaponStow } from '../src/sim/weapon_stow';
 import { terrainHeight } from '../src/sim/world';
 import { bareClient } from './helpers/bare_client';
+import { WOLF_TEST_WORLD } from './sim_shared';
 
+// The wolf world keeps the forest wolves the combat cases pull and sheds the
+// rest of the overworld (every other camp and the town's NPCs), which only
+// added construction and ticks; the wire case keeps its real GameServer.
 function makeSim(cls: 'warrior' | 'mage' = 'warrior', seed = 42) {
-  return new Sim({ seed, playerClass: cls, autoEquip: true });
+  return new Sim({ seed, playerClass: cls, autoEquip: true, world: WOLF_TEST_WORLD });
 }
 
 function nearestMob(sim: Sim, templateId?: string) {
@@ -143,7 +147,12 @@ describe('persistence (JSONB back-compat)', () => {
     const stowed = sim.serializeCharacter(sim.playerId);
     expect(stowed?.weaponStowed).toBe(true);
 
-    const resume = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+    const resume = new Sim({
+      seed: 42,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: WOLF_TEST_WORLD,
+    });
     const pid = resume.addPlayer('warrior', 'Resumer', { state: stowed ?? undefined });
     expect(resume.entities.get(pid)?.weaponStowed).toBe(true);
   });
@@ -153,7 +162,12 @@ describe('persistence (JSONB back-compat)', () => {
     const state = sim.serializeCharacter(sim.playerId);
     if (!state) throw new Error('no state');
     expect('weaponStowed' in state).toBe(false); // the legacy-save shape
-    const resume = new Sim({ seed: 42, playerClass: 'warrior', noPlayer: true });
+    const resume = new Sim({
+      seed: 42,
+      playerClass: 'warrior',
+      noPlayer: true,
+      world: WOLF_TEST_WORLD,
+    });
     const pid = resume.addPlayer('warrior', 'Legacy', { state });
     expect(resume.entities.get(pid)?.weaponStowed).toBe(false);
   });
