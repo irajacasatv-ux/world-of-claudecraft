@@ -11,8 +11,8 @@ shared host (load about 20 to 30); compare a row's two numbers, not rows with ea
 89 SLIM, 14 KEEP. The 89 changed files went from 219.98 s to 111.07 s of local test time. Mutants:
 96 runs, 91 killed, 5 survived, every control green (1,331 tests in the all-files control); each of
 the five survivors also survives the base file (three were replaced by a mutant on the live path,
-which is killed). Specs: `scratchpad/p5/mut_all.json`, `mut_fix1.json`, `mut_fix2.json` (session
-scratch, not committed).
+which is killed). The mutant specs lived in the session's scratch space and are not kept in the
+repository.
 
 Unless the Change column says otherwise, the change is "empty world" (`EMPTY_TEST_WORLD`), and the
 file's one mutant was killed.

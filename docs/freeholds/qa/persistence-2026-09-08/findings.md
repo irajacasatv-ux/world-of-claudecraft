@@ -5164,7 +5164,7 @@ Asked at the session's start, with recommendations, all three answered as recomm
   test-pinned files (for example freehold-crafted-content-2026-09-07/runtime) always stay. Git
   history keeps every deleted file recoverable." answered "Delete unreferenced (Recommended)".
 
-### STATUS AT THE PAUSE (2026-09-29, paused at Fernando's request, pushed)
+### STATUS AT THE PAUSE (2026-09-29, paused at Fernando's request, pushed; closed below)
 
 Phases 1 and 2 are done with their QA docs; phase 3's import cuts have landed but its QA is
 not run; phases 4 to 6 and the close are not started. The measured record is
@@ -5219,3 +5219,115 @@ would invalidate the landed SHAs the cluster records cite): 4f21570cb9 575890169
 fbd78cfb14 67db6d5790 1a0b2bf703 c3cc060fe2 9bcc0431f4 38f53752ee a60deef7dc 31d393def4
 0f6594ffbc a881e6344b b037100a40 1f6774ce30 3a4ae5fba5 9c4f3cfaae 044b719747 26f7986a80
 162689d483 0f1da76468 49a853ac69 533960327a b9844277cf 627e34245d 829bdc9811 c079279b56.
+
+### THE CLOSE (2026-09-29): WHAT CHANGED, MEASURED
+
+Resumed on a second machine from the pause. The record is
+`docs/freeholds/qa/test-cost-2026-09-29/`: the rulings (`rulings-2026-09-29.md`, now six, the two
+later ones recorded verbatim), one QA record per step (`phase-03-imports-qa.md` to
+`phase-06-ratchet-qa.md`), and the per-file verdicts of the second and third slimming rounds
+(`round-two/`, `round-three/`). Every step's changes were read by fresh reviewers round by round
+until a round came back without a should-fix; every change to a test's guard carried a mutant
+through the restore-verifying runner with a passing control first.
+
+Against the ruled targets (baseline: CI 36493201427/36501749917, nightly 36480351546):
+
+| Measure | Baseline | Target | At the pause (36583005398) | Final |
+|---|---|---|---|---|
+| Summed PR shard test steps | 115.73 min | at most 86.8 | 95.90 | 78.03 (run 36648684156), 73.05 (run 36654475632) |
+| Slowest PR shard job wall | 24.0 min | at most 16.8 | 15.95 | 13.85 (run 36648684156), 13.40 (run 36654475632) |
+| Nightly end to end | 3 h 28 min | under 2.5 h | not run | 60 min (36607799389), 50.5 min (36654497639) |
+| Long-sims lane test steps | A 9.17, B 9.73 | | A 9.17, B 9.73 | A 1.77, B 2.10 (run 36654475632) |
+| Shard pool (harvested CI weight) | 9,745,423 ms | | 9,745,423 | 4,937,172 ms (49 percent less) |
+| Lane pool | 2,905,969 ms | | 2,905,969 | 307,115 to 418,492 ms (runner-bound) |
+
+What changed, in order:
+- Imports (step 3): the locale slices out of `src/ui/i18n.ts`'s barrel and lazy daily world quest
+  catalogs; locale modules 773.7 s to 96.8 s of local import self time, daily generation 92.2 s to
+  1.9 s, the local full run's import 3,439.84 s to 2,650.80 s (22.9 percent), CI shard import down
+  16.6 percent. The sim memo is a documented single exception in `src/sim/CLAUDE.md`.
+- Screenshots and scripts (step 4): 465 evidence files (231.3 MB, 67 whole directories) nothing
+  named, and 85 capture scripts nothing ran, deleted under ruling (c); the browser suite audited
+  (no whole-file delete; the keyboard-nav file slimmed to the cases Node cannot pin).
+- The lane: the balance probes run under the shipped idle-mob cull (ruling 1, every band re-derived
+  from culled actuals); the lane pool fell 88.6 percent and each lane job from about 12 minutes to
+  about 4; the lane bound is 29 minutes by the stall-floor ruling (6).
+- The nightly: sharded two ways per ref and checked out at one resolved commit; 3 h 28 min to
+  about an hour.
+- The worker trial (ruling 5): three workers per shard summed about 11 percent less shard test
+  step but inflated per-file time 28 to 49 percent and timed out a subprocess; reverted.
+- Three slimming rounds: the first (step 2) over every file over 10 s; the second over 285 files of
+  the 5 to 20 s tier (238 changed, about 877 s of local test time saved); the third over 515 files
+  of the 2 to 5 s tier that still built a full-world Sim (473 changed, 818 s saved). Remedies: a
+  scoped world, one seed per file, the idle cull, forced rolls instead of hunted seeds, and costly
+  sweeps kept whole only at nightly depth behind a PR representative.
+- Test value: the rounds' mutants and reviews found cases that claimed a guard they did not hold;
+  about 50 were fixed until each killed its mutant (a lockpick sweep that counted a burnt try as
+  opened, a hub gate never checked for the queued tier, a tamed-wolf respawn case satisfied by any
+  wild wolf, a heroic swap the chosen seed never ran, a charge case aimed at a stall the town no
+  longer has, a restore two yards underground that passed, and more), and vacuous cases were
+  deleted with proof another case keeps the guard.
+- Three harvests of the shard weights, each lowering the stale shard ceiling in the same commit.
+- The total-CI-time ratchet and the admission rule (step 6): the shard pool and the lane held under
+  pinned ceilings on every PR; a new test file states what it uniquely guards and its measured
+  cost in a strict `Cost:` field, counted into the ratchet until a harvest measures it.
+- Fixed on the way (release-owned too): the druid bands' nightly red (gone at the culled config),
+  an SFX Studio draft leak between files one worker shares, the greeting-decline floors after the
+  script prune, and the gate's discovery of browser-named test files.
+
+### WHAT DID NOT PAY OFF
+
+- Three workers per shard (reverted, above).
+- Import levers measured and left: `en_XA` lazy (about 37 s of local import), extracting
+  `wireEntity` (about 7 s), a skirt memo in the collider build (14.6 percent duplicate probes).
+- No checkout option was shown better by measured evidence; stalls of 3.8 to 16.45 minutes stay the
+  runner's.
+- Merging the two lane jobs (they now spend more on checkout than on tests) would change required
+  check names: a maintainer decision.
+- Several slims measured as noise and were reverted to KEEP (recorded per file).
+- The admission rule's first parser read free text; each of four review rounds found a phrasing
+  that read low, so it became a strict field, reviewed until a round came back clean.
+
+### THE REVIEWS AND THE GATE
+
+- Each step's reviews are in its QA record; the ratchet and admission rule took seventeen
+  fresh reads; the slimming rounds each had coverage audits, and their findings were all applied.
+- A final QA checklist over the 611 commits since the pause: PASS (INFO notes applied). An accuracy
+  read of the records against the repo and CI: nine small corrections, applied.
+- The armed gate (`node scripts/gate_select.mjs`, Postgres armed and proven 16 of 16): green on all
+  12 steps at `f401981a04` (74,020 tests; the browser suite 67 files and 550 tests; the full vitest
+  step 1,133 s at ten workers). A first run under heavy host load failed only in the browser harness
+  (a module fetch and an iframe connection, in two files Part 5 did not touch) and passed on the
+  rerun.
+
+### OWED, FOR FERNANDO
+
+- Confirm the lane ratchet band (`LANE_RATCHET_HEADROOM` 0.5, `LANE_RATCHET_SLACK` 0.8, the lane
+  ceiling 366,000 to 461,000): a calibration fix to this branch's own ratchet from three harvests
+  of an unchanged lane (307,115 to 418,492 ms), which also loosens it (a lane growing up to about 50
+  percent on a fast-runner harvest passes). The alternative is lane rows harvested as a median of
+  several runs, sharing the shard band.
+- The collider grid build (about 1.1 to 1.8 s per seed, keyed by the active built-in world, not
+  the Sim's `world:`) is now the floor of hundreds of suites; a lazy or cached build in
+  `src/sim/colliders.ts` is the next test-time lever, a product change. GameServer has no world
+  option either.
+- Product questions surfaced by the tests: Swiftmend with no HoT spends mana and goes on cooldown;
+  a save keeps only the feet's (x, z), so a roof save reloads beside the building; the overpower
+  readout's player text carries a dash character the copy rule forbids; `src/sim/combat/
+  stealth_focus.ts` has no importer; the self-centred AoE channel branch is unreachable (its
+  comment names Bladestorm); the `/dev attune` header comment contradicts its body.
+- The balance items from the rulings record: Groveheart's capstone insensitivity, the tight
+  re-derived bands, the demonology end-pool rule never measured for demonology.
+- The release-gate bound re-derivation on the first `release/**` push after this lands.
+- `mail_instance` pays a real 47 s flight per case; only a product clock seam would shorten it.
+
+### THE FINAL RUNS
+
+- CI 36654475632 at `f401981a04` (the tip before this record): fully green in full mode. The
+  summed shard test step 73.05 min (36.9 percent under the 115.73 baseline), the slowest shard job
+  13.40 min (44.2 percent under 24.0), the whole run about 13.6 minutes, the lane test steps 1.77
+  and 2.10 min. The shards spread 6.75 to 11.30 min: the weights count test time, not import time,
+  which now carries a large share of a shard, so counting import in the weights is the next
+  balance lever.
+- Nightly 36654497639 at the same tip (the drill identity): green, 50.5 minutes end to end (the two
+  halves 48.4 and 50.1 minutes of wall), against 3 h 28 min at the baseline.

@@ -67,6 +67,25 @@ Only what the next session needs. Update at the end of every phase and QA.
 
 ## Current phase
 
+**PART 5, TEST COST AND TEST VALUE, DONE 2026-09-29, PUSHED.** Every ruled target is met on green
+full-mode CI: the summed PR shard test step 115.73 min to 73.05 min (36.9 percent down; the bar
+was 25), the slowest shard job 24.0 min to 13.40 min (44.2 percent down; the bar was 30), and the
+nightly 3 h 28 min to 50.5 minutes (the bar was 2.5 h). The cuts: lazy locale slices and daily world
+quest catalogs (import 22.9 percent down), 465 unreferenced evidence screenshots and 85 capture
+scripts gone, the balance probes on the shipped idle cull (the lane pool 88.6 percent down, lane
+jobs about 12 minutes to 4), the nightly sharded two ways, and three slimming rounds over about
+1,000 suites (scoped worlds, one seed per file, forced rolls, sweeps whole only at nightly depth),
+each change carrying a mutant; the shard weight pool fell 49 percent over three harvests. The
+rounds' mutants found about 50 tests that claimed a guard they did not hold, now fixed. A
+total-CI-time ratchet and a new-test admission rule (a `Guards:` statement and a measured `Cost:`
+field) hold the gains. Three workers per shard did not pay (reverted). Six rulings, recorded
+verbatim. The armed gate green on all 12 steps at `f401981a04` (74,020 tests, browser 550).
+OWED: confirm the lane ratchet band (a calibration raise from measured runner noise), the
+collider grid build as the next test-time lever (a product change), the product questions the
+tests surfaced, the release-gate re-derivation. Detail: [the ledger](qa/persistence-2026-09-08/findings.md),
+PART 5, and `qa/test-cost-2026-09-29/`.
+
+(Superseded 2026-09-29 by the paragraph above: Part 5 is done.)
 **PART 5, TEST COST AND TEST VALUE, PAUSED 2026-09-29 AT FERNANDO'S REQUEST, PUSHED.** Fernando
 ruled the three Step 0 questions as recommended (targets: the slowest PR shard job wall at least
 30 percent down, the summed shard test steps at least 25 percent, the nightly under 2.5 h;
