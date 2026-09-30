@@ -10,6 +10,7 @@ import { ITEMS, MOBS } from '../src/sim/data';
 import { enterDungeon } from '../src/sim/instances/dungeons';
 import { TWOHAND_DPS_MULT, weaponDpsBudget } from '../src/sim/item_budget';
 import { expectedStatBudget, itemLevel, primaryStatSum } from '../src/sim/item_level';
+import { Rng } from '../src/sim/rng';
 import { Sim } from '../src/sim/sim';
 import type { Entity, ItemDef } from '../src/sim/types';
 import { itemDisplayName } from '../src/ui/entity_i18n';
@@ -189,8 +190,20 @@ describe('heroic loot flair: weapon dps tracks item level', () => {
 });
 
 describe('heroic loot flair: the drop swap in a heroic instance', () => {
-  function killKorzul(difficulty: 'normal' | 'heroic'): any[] {
-    // Korzul spawns in his own dungeon instance, so the Sim runs on the empty world.
+  // Every draw lands in the bottom 4 percent, so each chance entry on the
+  // table drops and each roll group pays its first entry. A forced roll, not a
+  // hunted seed: the drop the swap acts on must be there on every merge.
+  class LowRollRng extends Rng {
+    next(): number {
+      return super.next() * 0.04;
+    }
+  }
+
+  function killDrakonid(difficulty: 'normal' | 'heroic'): string[] {
+    // Korzul's own table is Normal-only (his heroic loot is listed outright in
+    // HEROIC_BOSS_LOOT), so the swap is carried by the Sanctum drakonid's rare
+    // drops. The drakonid spawns in the dungeon instance, so the Sim runs on
+    // the empty world.
     const sim = new Sim({
       seed: 7,
       playerClass: 'warrior',
@@ -204,32 +217,33 @@ describe('heroic loot flair: the drop swap in a heroic instance', () => {
       (i) =>
         i.dungeonId === 'gravewyrm_sanctum' && i.difficulty === difficulty && i.partyKey !== null,
     );
-    const korzul = inst.mobIds
+    const drakonid = inst.mobIds
       .map((id: number) => sim.entities.get(id))
-      .find((e: AnyEntity | undefined) => e?.templateId === 'korzul_the_gravewyrm') as AnyEntity;
+      .find((e: AnyEntity | undefined) => e?.templateId === 'sanctum_drakonid') as AnyEntity;
     const p = sim.entities.get(pid) as AnyEntity;
-    p.pos = { x: korzul.pos.x + 1, y: korzul.pos.y, z: korzul.pos.z };
+    p.pos = { x: drakonid.pos.x + 1, y: drakonid.pos.y, z: drakonid.pos.z };
     p.prevPos = { ...p.pos };
     sim.rebucket(p);
-    (sim as any).dealDamage(p, korzul, korzul.hp + 100, false, 'physical', null, 'hit');
-    return (korzul.loot?.items ?? []) as any[];
+    sim.rng = new LowRollRng(1);
+    (sim as any).dealDamage(p, drakonid, drakonid.hp + 100, false, 'physical', null, 'hit');
+    return ((drakonid.loot?.items ?? []) as any[]).map((s) => s.itemId);
   }
 
-  it('never leaves a swappable base epic un-upgraded on a heroic kill', () => {
-    const items = killKorzul('heroic');
-    for (const s of items) {
-      const def = ITEMS[s.itemId];
-      if (!def || def.heroicOf) continue; // variants are already upgraded
-      // any base epic that HAS a variant must have been swapped, not dropped raw
-      const variant = ITEMS[heroicVariantId(s.itemId)];
-      const isUpgrade = variant && (itemLevel(variant) ?? 0) > (itemLevel(def) ?? 0);
-      expect(isUpgrade, `un-swapped base epic leaked: ${s.itemId}`).toBeFalsy();
-    }
+  it('swaps each rare that has a Heroic variant on a heroic kill, and leaves the rest', () => {
+    const items = killDrakonid('heroic');
+    // The drakonid table: a scale (no variant), then the Mantle from its bonus
+    // group and the Thornmaul, both rares with a Heroic variant.
+    expect(items).toEqual([
+      'cracked_wyrm_scale',
+      'heroic_gravewyrm_mantle',
+      'heroic_gravewyrm_thornmaul',
+    ]);
   });
 
-  it('drops base (un-swapped) epics on a normal kill', () => {
-    const items = killKorzul('normal');
+  it('drops the base rares on a normal kill', () => {
+    const items = killDrakonid('normal');
+    expect(items).toEqual(['cracked_wyrm_scale', 'gravewyrm_mantle', 'gravewyrm_thornmaul']);
     // no heroic variant ids appear on a normal difficulty corpse
-    expect(items.some((s) => ITEMS[s.itemId]?.heroicOf)).toBe(false);
+    expect(items.some((itemId) => ITEMS[itemId]?.heroicOf)).toBe(false);
   });
 });
