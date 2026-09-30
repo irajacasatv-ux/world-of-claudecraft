@@ -38,9 +38,16 @@ describe('measureHoardRoom', () => {
     expect(room.halfWidth).toBeGreaterThanOrEqual(8);
     expect(room.clearDepth).toBeGreaterThan(10);
     expect(room.clearDepth).toBeLessThanOrEqual(40);
-    // The walk is in two yard steps and stops at the depth it was given.
+    // The walk is in two yard steps and stops at the depth it was given: inside
+    // the clear run, a depth cap reads back as the last even step under it.
     expect(room.clearDepth % 2).toBe(0);
-    expect(measureHoardRoom(inst, boss, 8, 12).clearDepth).toBeLessThanOrEqual(12);
+    const capped: number[] = [];
+    const evenFloor: number[] = [];
+    for (let cap = 0; cap <= room.clearDepth; cap++) {
+      capped.push(measureHoardRoom(inst, boss, 8, cap).clearDepth);
+      evenFloor.push(cap - (cap % 2));
+    }
+    expect(capped).toEqual(evenFloor);
     // Same floor, same answer: it regenerates the layout from the seed, no rng.
     expect(measureHoardRoom(inst, boss, 8, 40)).toEqual(room);
   });
