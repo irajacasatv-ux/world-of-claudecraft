@@ -3,7 +3,7 @@
 // WHY THIS FILE EXISTS. src/sim/reward_counters.ts was extracted out of sim.ts so
 // one module owns the shape, and the extraction surfaced that nothing pinned it:
 // deleting a single `levelUps: 0` line survived every suite in the repo. The
-// consequence is not a crash. headless/env_server.ts computes its RL reward as
+// consequence is not a crash. headless/env.ts computes its RL reward as
 // `(c.levelUps - this.prev.levelUps) * r.levelUp`, so a missing zero makes the
 // reward NaN from the first step, silently, for as long as a training run lasts.
 import { describe, expect, it } from 'vitest';

@@ -396,7 +396,7 @@ persistence (`serializeCharacter`/`addPlayer`), the shared entry points above, a
 
 ## Talking to the outside
 - Output is the **`SimEvent`** union (`types.ts`). Code calls `this.emit(ev)` (or `ctx.emit` from a module); `tick()` returns the drained `SimEvent[]`. An event with `pid` is personal (delivered only to that player's owner); without `pid` it's world-visible.
-- Stepping: callers run `sim.tick()` per frame (`server/game.ts`; `headless/env_server.ts` loops it `frameSkip` times). The sim never self-schedules.
+- Stepping: callers run `sim.tick()` per frame (`server/game.ts`; `headless/env.ts` loops it `frameSkip` times). The sim never self-schedules.
 
 ## Player-facing text is English here (localized at the client)
 - The sim carries **no `t()`/DOM/i18n imports**. Player-visible strings are emitted as
