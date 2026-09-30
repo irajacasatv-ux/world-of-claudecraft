@@ -1,14 +1,21 @@
 import { describe, expect, it } from 'vitest';
+import { addGloomtithe } from '../src/sim/combat/priest/vespers';
 import { ABILITIES, abilitiesKnownAt } from '../src/sim/content/classes';
 import {
   computeTalentModifiers,
   emptyAllocation,
   type TalentAllocation,
 } from '../src/sim/content/talents';
+import { MOBS } from '../src/sim/data';
+import { createMob } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
+import type { SimContext } from '../src/sim/sim_context';
+import type { Entity, SimEvent } from '../src/sim/types';
 import { syncHotbarActions } from '../src/ui/hud/action_bar/hotbar';
 import { en } from '../src/ui/i18n.catalog';
 import { EMPTY_TEST_WORLD } from './sim_shared';
+
+type ErrorEvent = Extract<SimEvent, { type: 'error' }>;
 
 const alloc = (spec: string | null): TalentAllocation => ({ ...emptyAllocation(), spec });
 
@@ -110,16 +117,54 @@ describe('Priest v0.28 spec kits', () => {
     });
     sim.setPlayerLevel(20);
     expect(sim.setSpec('discipline')).toBe(true);
-    const resourceBefore = sim.player.resource;
+    const priest = sim.player;
+    // Everything the summon asks of a Shadow priest is in place, a Gloomtithe
+    // bank and an enemy under this priest's own Dirge of Decay in range, so the
+    // only gate left to refuse the Doctrine priest is the spec kit itself.
+    const target = createMob(9930, MOBS.training_dummy, 20, {
+      x: priest.pos.x,
+      y: priest.pos.y,
+      z: priest.pos.z + 8,
+    });
+    target.hostile = true;
+    target.auras.push({
+      id: 'shadow_word_pain',
+      name: 'Dirge of Decay',
+      kind: 'dot',
+      remaining: 60,
+      duration: 60,
+      value: 1,
+      sourceId: priest.id,
+      school: 'shadow',
+    });
+    (sim as unknown as { addEntity(entity: Entity): void }).addEntity(target);
+    const ctx = (sim as unknown as { ctx: SimContext }).ctx;
+    addGloomtithe(ctx, priest, 5);
+    const resourceBefore = priest.resource;
+    const tithefiendSummoned = () =>
+      [...sim.entities.values()].some(
+        (entity) => entity.ownerId === priest.id && entity.guardianState?.key === 'tithefiend',
+      );
 
     sim.castAbility('summon_tithefiend');
+    const errors = sim
+      .tick()
+      .filter((event): event is ErrorEvent => event.type === 'error' && event.pid === priest.id)
+      .map((event) => event.text);
 
-    expect(sim.player.resource).toBe(resourceBefore);
-    expect(sim.player.cooldowns.has('summon_tithefiend')).toBe(false);
-    expect(
-      [...sim.entities.values()].some(
-        (entity) => entity.ownerId === sim.playerId && entity.guardianState?.key === 'tithefiend',
-      ),
-    ).toBe(false);
+    expect(errors).toEqual(['You do not know that ability.']);
+    expect(priest.resource).toBe(resourceBefore);
+    expect(priest.cooldowns.has('summon_tithefiend')).toBe(false);
+    expect(tithefiendSummoned()).toBe(false);
+
+    // The same setup does summon once the priest commits to Shadow, so the
+    // refusal above came from the spec and nothing else.
+    expect(sim.setSpec('shadow')).toBe(true);
+    addGloomtithe(ctx, priest, 5);
+    priest.gcdRemaining = 0;
+    priest.resource = priest.maxResource;
+    sim.castAbility('summon_tithefiend');
+    sim.tick();
+    expect(tithefiendSummoned()).toBe(true);
   });
 });
