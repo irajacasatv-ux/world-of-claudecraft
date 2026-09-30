@@ -218,8 +218,19 @@ describe('the RL env releases a discarded episode seed from every seed-keyed cac
       'src/sim/seed_caches.ts',
     ]);
     // The caches themselves are exported for their two readers only, so no
-    // other module can clear one behind the release's back.
-    expect(matching(/from '[./]*(?:src\/sim\/)?seed_caches'/)).toEqual([
+    // other module can clear one behind the release's back. Any specifier
+    // spelling counts: a static or re-export `from`, `import(...)`, `require(...)`.
+    const importsOwner =
+      /(?:\bfrom|\bimport\(|\brequire\()\s*['"`][^'"`\n]*\bseed_caches(?:\.[cm]?[jt]s)?['"`]/;
+    for (const spelling of [
+      "from './seed_caches'",
+      "from '../sim/seed_caches'",
+      'from "../../src/sim/seed_caches.ts"',
+      "import('../sim/seed_caches')",
+    ]) {
+      expect(importsOwner.test(spelling), spelling).toBe(true);
+    }
+    expect(matching(importsOwner)).toEqual([
       'headless/env.ts',
       'src/sim/colliders.ts',
       'src/sim/world.ts',
