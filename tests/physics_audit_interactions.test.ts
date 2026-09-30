@@ -1,12 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createStepSmooth, stepSmoothHeight } from '../src/render/step_smooth_core';
-import {
-  moverHeight,
-  resolveMovement,
-  STALL_CANOPY_EAVE,
-  STALL_CANOPY_TOP,
-  supportHeightAt,
-} from '../src/sim/colliders';
+import { moverHeight, resolveMovement, supportHeightAt } from '../src/sim/colliders';
 import { CHARGE_ARRIVE_RANGE } from '../src/sim/combat/charge_route';
 import { DUNGEONS, instanceOrigin, MOBS, PROPS, setActiveWorldContent } from '../src/sim/data';
 import {
@@ -60,6 +54,9 @@ function makeSim(): Sim {
   return sim;
 }
 
+// Open, rising ground clear of every prop at SEED (a save here is not moved on load).
+const SAVED_SPOT = { x: -8.5, z: 22.8 };
+
 function teleport(sim: Sim, x: number, z: number, facing: number): void {
   const p = sim.player;
   p.pos.x = x;
@@ -82,17 +79,6 @@ function hold(sim: Sim, input: Partial<MoveInput>, ticks: number): void {
     Object.assign(meta.moveInput, IDLE, input);
     sim.tick();
   }
-}
-
-function climbOntoCanopy(sim: Sim): void {
-  teleport(sim, -8.5, -0.3, 0);
-  const p = sim.player;
-  for (let i = 0; i < 140; i++) {
-    hold(sim, { forward: true, jump: true }, 1);
-    const rel = p.pos.y - groundHeight(-8.5, 3, SEED);
-    if (p.onGround && rel > STALL_CANOPY_EAVE - 0.1) return;
-  }
-  throw new Error('never reached the canopy');
 }
 
 describe('knockbacks x roofs', () => {
@@ -229,13 +215,15 @@ describe('client predictor parity in dungeons', () => {
   });
 });
 
-describe('persistence on a roof', () => {
-  it('serialize/restore a player standing on the canopy keeps a sane y', () => {
+describe('persistence of a saved position', () => {
+  // A save keeps only the feet's (x, z); the load re-grounds the player there (a save
+  // trapped inside a prop moves to clear ground instead, which
+  // tests/persisted_position_escape.test.ts pins). So a player saved on a roof comes back
+  // beside the building, and the height a save must restore is the ground's.
+  it('restores a saved player at its spot on the ground, before any tick', () => {
     const sim = makeSim();
-    climbOntoCanopy(sim);
-    const p = sim.player;
-    const yBefore = p.pos.y;
-    const saved = sim.serializeCharacter(p.id);
+    teleport(sim, SAVED_SPOT.x, SAVED_SPOT.z, 0);
+    const saved = sim.serializeCharacter(sim.player.id);
     expect(saved).toBeTruthy();
     if (!saved) return;
     const sim2 = new Sim({
@@ -244,21 +232,12 @@ describe('persistence on a roof', () => {
       noPlayer: true,
       world: EMPTY_TEST_WORLD,
     });
-    const pid = sim2.addPlayer('warrior', 'Restored', { state: saved });
-    const restored = sim2.entities.get(pid);
+    const restored = sim2.entities.get(sim2.addPlayer('warrior', 'Restored', { state: saved }));
     expect(restored).toBeTruthy();
     if (!restored) return;
-    for (let i = 0; i < 40; i++) sim2.tick();
-    // Restored on (or settled onto) the canopy, never inside/below the street.
-    const rel = restored.pos.y - groundHeight(restored.pos.x, restored.pos.z, SEED);
-    console.log(
-      'restored rel height',
-      rel.toFixed(2),
-      'saved at',
-      (yBefore - groundHeight(-8.5, 3, SEED)).toFixed(2),
-    );
-    expect(rel).toBeGreaterThanOrEqual(-0.01);
-    expect(rel).toBeLessThanOrEqual(STALL_CANOPY_TOP + 0.05);
+    expect(restored.pos.x).toBeCloseTo(SAVED_SPOT.x, 6);
+    expect(restored.pos.z).toBeCloseTo(SAVED_SPOT.z, 6);
+    expect(restored.pos.y).toBeCloseTo(groundHeight(SAVED_SPOT.x, SAVED_SPOT.z, SEED), 6);
   });
 });
 
