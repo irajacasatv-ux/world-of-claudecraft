@@ -23,6 +23,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { formatLegHeader, runLegsWithFlakeRetry } from './lib/ci_leg_runner.mjs';
+import { formatCalibrationLine, runCalibration } from './lib/ci_runner_calibration.mjs';
 import {
   buildLanePlan,
   buildShardPlan,
@@ -227,6 +228,22 @@ if (planOnly) {
   }
   console.log(`\n[ci-shard] plan-only: ${plan.legs.length} leg(s) printed, nothing spawned`);
 } else {
+  // Runner-speed calibration, before anything else runs on the job: a fixed,
+  // deterministic CPU workload of about one to two seconds that touches no test
+  // state, printed as ONE line the shard-weight harvest reads to scale this
+  // job's per-file weights to a reference runner speed
+  // (lib/ci_runner_calibration.mjs). Runner speed moved every file of a job
+  // together by up to 1.8 times across one tree's runs, which the harvested
+  // pools inherited. A zero-leg lane measures nothing, so it skips this too.
+  // It can never fail the job: an error prints a line the harvest reads as no
+  // calibration (that job is then harvested raw, loudly).
+  if (plan.legs.length > 0) {
+    try {
+      console.log(formatCalibrationLine({ ...runCalibration(), cpu: os.cpus()[0]?.model ?? '' }));
+    } catch (err) {
+      console.log(`[ci-calibration] skipped: ${err instanceof Error ? err.message : String(err)}`);
+    }
+  }
   // Artifact regeneration happens ONCE here, at the entry, for every mode:
   // the merged selective leg is a bare `npx vitest related` with no npm
   // lifecycle, so pretest cannot ride it, and the npm-test legs then skip

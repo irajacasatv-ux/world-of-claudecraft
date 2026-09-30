@@ -67,6 +67,7 @@ export const SELECTION_PIPELINE_FILES = Object.freeze([
   'scripts/lib/ci_test_select.mjs',
   'scripts/lib/ci_shard_plan.mjs',
   'scripts/lib/ci_leg_runner.mjs',
+  'scripts/lib/ci_runner_calibration.mjs',
   'scripts/lib/gate_artifact_skip.mjs',
   'scripts/lib/gate_discovery.mjs',
   'scripts/lib/gate_select_plan.mjs',
