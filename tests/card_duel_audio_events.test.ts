@@ -110,7 +110,11 @@ describe('Card Duel audio event wiring', () => {
         (e): e is Extract<SimEvent, { type: 'cardRoundResolved' }> =>
           e.type === 'cardRoundResolved',
       );
-    expect(resolved.every((e) => e.outcome === 'push')).toBe(true);
+    // One event per side, so an empty list cannot pass the push checks below.
+    expect(resolved.map((e) => e.pid).sort()).toEqual([a, b].sort());
+    for (const e of resolved) {
+      expect(e).toMatchObject({ mine: 5, theirs: 5, outcome: 'push', reshuffled: false });
+    }
   });
 
   it('flags reshuffled:true only for the side whose deck ran out this draw', () => {
