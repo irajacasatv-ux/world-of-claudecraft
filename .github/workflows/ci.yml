@@ -268,7 +268,7 @@ jobs:
     # stall-floor ruling, plus a second stall-prone git transfer this job
     # carries: the "Determine base ref" fetch, not a setup step, so a stall
     # there is never auto-rerun (5.38 minutes in run 36610517548 against a
-    # healthy 0.6 to 1.0). (16.45 worst checkout stall + 0.5 setup + the
+    # healthy 0.6 to 1.4). (16.45 worst checkout stall + 0.5 setup + the
     # worst healthy post-checkout work, 1.85 minutes (run 36635499592),
     # x 1.60 + the 5.38 base-ref stall) x 1.37 = 34.6, so 35.
     timeout-minutes: 35
