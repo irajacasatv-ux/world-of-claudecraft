@@ -675,6 +675,58 @@ describe('consumableAuraIndex', () => {
   });
 });
 
+// Quickening, the level-20 row's third option (src/sim/content/choice_rows_classic.ts): every
+// Moontide, Old Blood or Verdance stage gained restores 2% of maximum mana, 5 energy or 3 rage,
+// matching the current form. A stage a full bank cannot take is not gained and restores
+// nothing. The expected values are the tooltip's literals, never the engine's constants.
+describe('Quickening', () => {
+  const QUICKENING = { 20: 'dru_r20_tranquility' };
+
+  it('restores 2% of maximum mana per Verdance gained, and nothing at a full bank', () => {
+    const { sim, player } = rig('restoration', QUICKENING);
+    const perStage = Math.round(player.maxResource * 0.02);
+    expect(perStage).toBeGreaterThan(0);
+    player.resource = 100;
+    for (let stage = 1; stage <= 5; stage++) {
+      druidEngineOnHotPlanted(ctx(sim), player, stage % 2 ? 'rejuvenation' : 'regrowth');
+      expect(stacks(player, VERDANCE_ID)).toBe(stage);
+      expect(player.resource).toBe(100 + stage * perStage);
+    }
+    druidEngineOnHotPlanted(ctx(sim), player, 'rejuvenation');
+    expect(stacks(player, VERDANCE_ID)).toBe(5);
+    expect(player.resource).toBe(100 + 5 * perStage);
+
+    // The other capstone rows bank the same stage and restore nothing.
+    const other = rig('restoration', { 20: 'dru_r20_berserk' });
+    other.player.resource = 100;
+    druidEngineOnHotPlanted(ctx(other.sim), other.player, 'rejuvenation');
+    expect(stacks(other.player, VERDANCE_ID)).toBe(1);
+    expect(other.player.resource).toBe(100);
+  });
+
+  it('restores 5 energy in Cat Form and 3 rage in Bruin Form per Old Blood gained', () => {
+    const { sim, player } = rig('feral', QUICKENING);
+    sim.castAbility('cat_form');
+    expect(player.resourceType).toBe('energy');
+    player.resource = 10;
+    druidEngineOnLandedStrike(ctx(sim), player, 'claw');
+    expect(stacks(player, OLD_BLOOD_ID)).toBe(1);
+    expect(player.resource).toBe(15);
+
+    player.gcdRemaining = 0;
+    sim.castAbility('bear_form');
+    expect(player.resourceType).toBe('rage');
+    player.resource = 0;
+    druidEngineOnLandedStrike(ctx(sim), player, 'maul');
+    druidEngineOnLandedStrike(ctx(sim), player, 'maul');
+    expect(stacks(player, OLD_BLOOD_ID)).toBe(3);
+    expect(player.resource).toBe(6);
+    druidEngineOnLandedStrike(ctx(sim), player, 'maul');
+    expect(stacks(player, OLD_BLOOD_ID)).toBe(3);
+    expect(player.resource).toBe(6);
+  });
+});
+
 describe('Loping Stride', () => {
   it('stamps a real move-speed multiplier so shapeshifting actually sprints', () => {
     // Baseline since the Wildfang kit pass 2: no row 5 talent selected.

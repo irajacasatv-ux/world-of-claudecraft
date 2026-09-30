@@ -23,7 +23,8 @@ const groveheartSingle = (): OwnedHealerBalanceResult =>
   (singleRun ??= runOwnedHealerProbe('groveheart', 1, 29_914));
 
 // The three level-20 capstones (the druid row 20 in src/sim/content/choice_rows_classic.ts),
-// by their literal row ids, so a harness that swapped or dropped a row reads as a mismatch.
+// by their literal row ids: applyTalents refuses an unknown id, and a run that applied the
+// wrong capstone reds the mechanic checks in the capstone case.
 const CAPSTONE_ROWS = {
   naturesEcho: 'dru_r20_improved_hurricane',
   wildApex: 'dru_r20_berserk',
@@ -91,7 +92,10 @@ describe('owned-class level 20 balance harness (Groveheart)', () => {
   // expected values come from the tooltips, never from a run: Overbloom heals 60 percent of
   // what the harvested effects had left, Wild Apex makes it 25 percent stronger, Nature's
   // Echo refills the spent bank with 1 already gained, and Quickening restores 2 percent of
-  // maximum mana per Verdance gained (capped at the pool, after the cast's cost).
+  // maximum mana per Verdance gained (capped at the pool, after the cast's cost). The fixture
+  // wears no Grovespring set, whose 4pc would lift the harvest to 75 percent and bank a
+  // Verdance after the spend. Quickening at a full bank and its energy and rage arms are
+  // unit-pinned in tests/druid_engines.test.ts.
   it('tells the three capstones apart by their documented mechanics', () => {
     expect(OWNED_CLASS_PBE_TALENTS.groveheart?.rows[20]).toBe(CAPSTONE_ROWS.wildApex);
     for (const [capstone, row] of Object.entries(CAPSTONE_ROWS)) {
