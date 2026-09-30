@@ -122,7 +122,7 @@ describe('headless environment protocol validation', () => {
   });
 
   it('exposes no housing verb in the RL action space', () => {
-    // The sim code is identical on this host (env_server.ts passes freeholdsEnabled
+    // The sim code is identical on this host (headless/env.ts passes freeholdsEnabled
     // to its Sim), but housing is a player-facing surface the env never drives: no
     // reward term reads a freehold, and ACTIONS is append-only because every trained
     // policy's action head is positional. headless/CLAUDE.md records the cut. The

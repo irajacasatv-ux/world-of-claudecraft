@@ -3,7 +3,7 @@
 
 # headless/: RL environment server
 
-`env_server.ts` wraps the deterministic `src/sim` `Sim` as a gym-like RL env.
+`env.ts` wraps the deterministic `src/sim` `Sim` as a gym-like RL env; `env_server.ts` serves it.
 Same sim core as the browser/server hosts, so episodes are byte-reproducible from a
 seed, which is the whole point of using it for RL. The Python half is `python/`.
 
@@ -17,7 +17,7 @@ seed, which is the whole point of using it for RL. The Python half is `python/`.
   training run on random seeds grows by a world's collider grid per episode.
   This env is the only caller (pinned by `tests/seed_caches.test.ts`).
 - Action/observation surface is **not defined here**, it comes from
-  `src/sim/obs.ts` (`ACTIONS`, `applyAction`, `encodeObs`, `obsSize`). This file
+  `src/sim/obs.ts` (`ACTIONS`, `applyAction`, `encodeObs`, `obsSize`). `env.ts`
   only adds episode framing (frame-skip, termination, reward).
 - Input validation (action bounds, player-class names, the 1 MiB stdin line cap)
   lives in the pure sibling `headless/protocol.ts`, not `env_server.ts`.
