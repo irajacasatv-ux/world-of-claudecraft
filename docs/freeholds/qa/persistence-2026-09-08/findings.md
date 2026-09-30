@@ -5306,7 +5306,9 @@ What changed, in order:
   ceiling 366,000 to 461,000): a calibration fix to this branch's own ratchet from three harvests
   of an unchanged lane (307,115 to 418,492 ms), which also loosens it (a lane growing up to about 50
   percent on a fast-runner harvest passes). The alternative is lane rows harvested as a median of
-  several runs, sharing the shard band.
+  several runs, sharing the shard band. Settled 2026-09-30 by runner calibration instead: the lane
+  shares the shard band again (`docs/freeholds/qa/test-cost-2026-09-29/`, the ratchet record's
+  "The calibrated re-base").
 - The collider grid build (about 1.1 to 1.8 s per seed, keyed by the active built-in world, not
   the Sim's `world:`) is now the floor of hundreds of suites; a lazy or cached build in
   `src/sim/colliders.ts` is the next test-time lever, a product change. GameServer has no world

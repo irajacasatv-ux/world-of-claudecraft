@@ -31,6 +31,8 @@ applied).
   the constant's comment, is that a lane growing up to about 50 percent on a fast-runner harvest
   still passes. Taking lane rows as the median of several runs would let the lane share the shard
   band again. The shard ceiling came down to 5,431,000 in the same commit (pool 4,937,172 ms).
+  Superseded 2026-09-30: runner calibration let the lane share the shard band (see "The
+  calibrated re-base" below).
 - **The admission rule** (`tests/CLAUDE.md`, "Test cost"; `docs/qa-gate.md`): a new test file's
   leading comment says what it uniquely guards and what it costs, on `Guards:` and `Cost:` lines.
   The same suite checks it on every `.test.ts` the weight table has not measured (no row, or a
@@ -153,3 +155,84 @@ Recorded, not changed: English prose that qualifies the cost from inside the Gua
 another paragraph (for example "cold at 8 workers it is 2 min" as a Guards continuation) is not
 parsed; that is the stated boundary, a reviewer reads it, and the harvest replaces the field with
 the measured row on the file's first CI run.
+
+## The calibrated re-base (2026-09-30)
+
+Verdict: PASS (the last fresh gate-integrity read came back without a should-fix; its INFO notes
+that change behavior or pins are applied).
+
+The maintainer delegated the decision; the evidence decided it.
+
+- **The evidence.** Five full-mode runs of nearly one tree (36724442671, 36726951063,
+  36730711359, 36735089417, 36737663127; the first two had one failing shard from a since-fixed
+  test, the last a browser-job setup failure) printed the calibration line in every test job. The
+  50 job medians ran 100.8 to 202.4 ms, median 177.75. With each job scaled by that median over
+  its own line, the shard pool's spread across the runs fell from 1.249 raw to 1.069 and the
+  lane's from 1.384 to 1.064, the heaviest run 4.6 percent over the five-run median in both:
+  calibration removes the runner's share of the noise, so the lane no longer needs its own band.
+- **The anchor** (`4005ec8cd9`). `CALIBRATION_REFERENCE_MS` 178 (the median, rounded) and
+  `CALIBRATION_REFERENCE_ANCHORED` true. A calibrated weight is CI time on a median runner, the
+  unit `LANE_THRESHOLD_MS` and `CARRIED_LOCAL_TO_CI_RATIO` were set in, so both keep their
+  values; their meaning holds to within the fleet's mean-versus-median skew (the calibrated pools
+  averaged about 7 percent over the raw ones), which tightens the lane line and loosens the carry
+  conversion inside its margin.
+- **The harvest** (`4005ec8cd9`). Run 36735089417 (fully green): all ten jobs calibrated
+  (factors 0.9022 to 1.1237, four CPU models), none raw, no outlier fallback, 5,060 rows. Its
+  pools are 5,350,684 ms (shard) and 421,627 ms (lane); no shard-pool row is over 54 s.
+- **The table contract** (`ed847a6d3b`, `26346cca83`, `190d699128`). Once anchored,
+  `calibrationTableDefects` refuses a raw or partial harvest, a table with no calibration block,
+  and a `calibrated` block no harvest writes (a raw map, a warning, no job, a jobs array); the
+  anchoring is injectable so both arms are pinned. It is load-bearing: a raw harvest of the same
+  run (5,369,243 and 422,975 ms) passes the ratchet against the new ceilings. The harvest's
+  change-of-scale note is judged against HEAD's committed table, not the working-tree file (a
+  refused harvest left on disk set nothing), and with the reference anchored it sends a partial
+  harvest to another run instead of advising a re-base.
+- **The re-base** (`b9935a8daa`). `LANE_RATCHET_HEADROOM` and `LANE_RATCHET_SLACK` are gone;
+  both pools use `RATCHET_HEADROOM` 0.1 and `RATCHET_SLACK` 0.2. `SHARD_POOL_CEILING_MS` went from
+  5,431,000 to 5,886,000 and `LANE_POOL_CEILING_MS` from 461,000 to 464,000, each the calibrated
+  pool plus 10 percent. That is a change of unit, not a raise: raw, the same tree's shard pool read
+  4,558,572 to 5,693,364 ms across the five runs, and in the new unit the heaviest run (about
+  5,621,600) was over the old shard ceiling. Run 36648684156, behind the old ceilings, printed no
+  calibration, so its move cannot be split into runner speed and growth. Across the five runs the
+  shard ceiling sits 4.7 percent over the heaviest and the lightest 7.2 percent over the stale
+  point; the lane's are 10.1 and 2.5 percent, since the harvest drew the heaviest lane of the five.
+  A lane read stale right after a re-harvest of an unchanged lane is the signal to revisit the band
+  on more runs (the `RATCHET_SLACK` comment says so).
+
+### Mutants
+
+Through the restore-verifying runner, a must-pass control first each batch, all killed:
+
+| Mutant | Killed by |
+|---|---|
+| the shard ceiling left at 5,431,000, the lane ceiling at 461,000 | the literal pins (both old values sit between the pool and the stale point, so the live case alone passes) |
+| the lane band restored, its slack only, its headroom only | the synthetic both-directions case |
+| the slack loosened to 0.8 | the literal pins and the synthetic case |
+| the reference left provisional, left at 200 | the literal pins, and separately the committed-table pin |
+| a raw harvest of the same run, a pre-calibration table, a partial table, a calibrated block with a raw map, committed | the committed-table pin |
+| the anchored arm, the partial arm, the edited-block check, the empty-jobs check, the default anchoring | the synthetic table-contract cases (the default also by the committed-table pin) |
+| the harvest writing raw rows under a calibrated block | the harvest end-to-end pin |
+| the scale note's anchored arms removed, ignoring the anchoring, defaulting provisional | the scale-note case (a removal also by the harvest end-to-end pin) |
+| the scale note judged on the working-tree table, preferring it, or on `HEAD~1`; the git call without the checkout root or with stderr inherited; the basis named backwards | the harvest's committed-basis case (the naming also by the partial-harvest case) |
+| a warning or a jobs array accepted in a calibrated block | the synthetic table-contract case |
+
+### Reviews
+
+- `4223eb0b5f..b9935a8daa`: PASS, no should-fix. Its INFO notes (the old lane ceiling's source,
+  the partial harvest's contradictory scale note, the mean-versus-median skew, the lane's thin
+  stale margin, an edited calibrated block, "every harvested row", this record's pointers) were
+  applied in `26346cca83` and here; the shard ceiling's move reads as a raise in the diff, so the
+  PR that lands it states the reason (`tests/CLAUDE.md`, "Test cost").
+- `26346cca83`: one should-fix. A refused raw or partial harvest left on disk read as the prior,
+  so the next calibrated harvest was told to re-base thresholds nothing had set. Fixed in
+  `190d699128` (the note reads HEAD's table), with its INFO notes (a warning or jobs array in a
+  calibrated block, "about 7 percent" in one comment, the carried-row sentence) applied.
+- `190d699128`: PASS, no should-fix. The reader walked the anchoring moment, a version bump,
+  uncommitted constants, detached and shallow checkouts and a missing file, and found the HEAD
+  basis right in each (the index or the merge base would not be). INFO notes applied in
+  `658b5229e6`: the note names the table it judged against, and the pin holds the git call's
+  root and quiet stderr and restores its stub in a `finally`. Recorded, not changed: when git
+  fails the fallback judges against the working-tree table, so a refused raw leftover could still
+  draw the re-base advice there (the note now says which table it read); the carried-rows report
+  still reads the working-tree table (older than this change); the tripwire does not check the
+  entries inside `jobs`.
