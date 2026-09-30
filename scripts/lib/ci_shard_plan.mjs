@@ -190,9 +190,9 @@ export function laneThresholdOver(weights, carried, lane) {
  * stale, so a cut of more than about 8 percent (1.10 against 1.20) forces the ceiling down in
  * the same change, to the pool plus RATCHET_HEADROOM; a smaller cut leaves room a later change
  * may regrow into. The lane, a small pool one runner's speed moves whole, has its own wider band
- * (LANE_RATCHET_HEADROOM, LANE_RATCHET_SLACK). Moving a file from the shard pool to the lane moves its weight between the
- * two ceilings, so laning one needs a maintainer raise of LANE_POOL_CEILING_MS, as any raise
- * does (its reason in the PR body). The ceilings are measured at the CI worker count they were
+ * (LANE_RATCHET_HEADROOM, LANE_RATCHET_SLACK). Moving a file from the shard pool to the lane
+ * moves its weight between the two ceilings, so laning one needs a maintainer raise of
+ * LANE_POOL_CEILING_MS, as any raise does (its reason in the PR body). The ceilings are measured at the CI worker count they were
  * harvested at (scripts/ci_shard_test.mjs): a change of worker count re-bases them from the
  * first green full-mode harvest at the new count, in the same change.
  */
@@ -214,10 +214,13 @@ export const RATCHET_HEADROOM = 0.1;
 export const RATCHET_SLACK = 0.2;
 /**
  * The lane's band. The lane is a handful of files on two jobs, so one runner's speed moves the
- * whole pool: three harvests of an unchanged lane read 307,115 to 418,492 ms (1.36 times). Its
- * headroom covers that spread and the shard pool's 10 percent (1.36 times 1.1 is about 1.5), and
- * its slack keeps the shard pool's ratio to the headroom (a stale lane ceiling means a real cut,
- * not a fast runner).
+ * whole pool: three harvests of an unchanged lane read 307,115 to 418,492 ms (1.36 times; one half
+ * alone read 102,982 to 203,705 ms). Its headroom covers that spread and the shard pool's 10
+ * percent (1.36 times 1.1 is about 1.5). Its slack puts the stale point 1.2 times the set point
+ * (the shard pool's is 1.09), so only a cut of about 17 percent forces the lane ceiling down and a
+ * fast runner alone does not. The price is a looser lane: on a fast-runner harvest a lane that
+ * grew up to about 30 percent still passes, and nothing else automatic bounds the lane but its
+ * jobs' timeouts; taking lane rows as a median of several runs would let it share the shard band.
  */
 export const LANE_RATCHET_HEADROOM = 0.5;
 export const LANE_RATCHET_SLACK = 0.8;
@@ -243,7 +246,8 @@ export function poolWeights(weights, carried, lane) {
 
 /**
  * The ratchet's judgment, as problem lines (empty when both pools hold): a pool over its
- * ceiling, or a ceiling left more than RATCHET_SLACK above its pool.
+ * ceiling, or a ceiling left more than its pool's slack (RATCHET_SLACK for the shard pool,
+ * LANE_RATCHET_SLACK for the lane) above it.
  *
  * @param {{ shard: number, lane: number }} pools
  * @param {{ shard: number, lane: number }} ceilings
