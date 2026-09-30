@@ -112,8 +112,10 @@ export const CI_GUARD_PREFIXES = Object.freeze(['tests/parity/']);
  * holds every file outside CI_LONG_SUITES under it, reading this constant rather
  * than a literal of its own. Set in raw CI time before the harvest was calibrated;
  * CALIBRATION_REFERENCE_MS is the hosted fleet's median runner, so a calibrated
- * row is raw CI time on a median runner and 90 seconds keeps its meaning (the
- * first calibrated harvest, run 36735089417, has no shard-pool row over 54 s).
+ * row is raw CI time on a median runner and 90 seconds keeps its meaning, a few
+ * percent tighter than against the mean runner (the fleet's mean-versus-median
+ * skew, stated there), the safe way. The first calibrated harvest, run
+ * 36735089417, has no shard-pool row over 54 s.
  */
 export const LANE_THRESHOLD_MS = 90_000;
 
@@ -128,7 +130,10 @@ export const LANE_THRESHOLD_MS = 90_000;
  *
  * In CI time at the calibration reference speed, which is raw CI time on a median
  * hosted runner (scripts/lib/ci_runner_calibration.mjs, CALIBRATION_REFERENCE_MS),
- * so the ratio measured in raw CI time below keeps its meaning.
+ * so the ratio measured in raw CI time below keeps its meaning to within the
+ * fleet's mean-versus-median skew (about 7 percent, stated there): a carried row
+ * may convert that much light, which the margin of 4 over the 3.13 and 2.91
+ * family ratios below absorbs.
  *
  * Measured at the 2026-09-28 harvest (run 36448553184). The files near the line
  * are what matter: the two families split that day ran 3.13x (coverage_c,
@@ -213,10 +218,13 @@ export function laneThresholdOver(weights, carried, lane) {
 // raise or a cut: the ceilings before (5,431,000 and 461,000) were set in raw runner time, and
 // nearly one tree summed 4,558,572 to 5,693,364 ms raw in its shard pool and 310,974 to 430,448
 // ms in its lane across five full-mode runs (36724442671, 36726951063, 36730711359, 36735089417,
-// 36737663127), a band the raw harvest they were set from (4,937,172 and 418,492 ms at run
-// 36648684156) sits inside. The lane ceiling is no longer the raw 461,000 raise (the fastest of
-// three raw lane readings times 1.5): calibrated, the lane's five readings spread 1.064 times, as
-// narrow as the shard pool's 1.069, so it shares the shard band.
+// 36737663127), a band the shard ceiling's raw harvest sits inside (4,937,172 ms at run
+// 36648684156, its lane 418,492). The lane ceiling is no longer the raw 461,000 raise (307,115 ms
+// at run 36635499592, the fastest of three raw lane readings, times 1.5): calibrated, the lane's
+// five readings spread 1.064 times, as narrow as the shard pool's 1.069, so it shares the shard
+// band. Run 36648684156 printed no calibration, so its move to this pool cannot be split into
+// runner speed and growth; in the new unit the old shard ceiling was under the heaviest of the
+// five calibrated runs (about 5,621,600 ms), so it had to move with the unit.
 export const SHARD_POOL_CEILING_MS = 5_886_000;
 export const LANE_POOL_CEILING_MS = 464_000;
 /**
@@ -232,7 +240,10 @@ export const RATCHET_HEADROOM = 0.1;
  * at a pool plus RATCHET_HEADROOM, the stale point is 1.1 over 1.2 of that pool, so a pool about
  * 8 percent below its harvest reads as a cut; the calibrated runs' lightest pools sat 6.5 (shard)
  * and 6.0 (lane) percent under their heaviest, so a light re-harvest after a heavy one is not read
- * as a cut, and 0.2 stands.
+ * as a cut, and 0.2 stands. The lane's margin is the thinner: its ceiling was set on the heaviest
+ * of the five lane readings, and the lightest clears the stale point by about 2.5 percent, so a
+ * lane read stale right after a re-harvest of an unchanged lane is the signal to revisit this
+ * band on more than five runs (a stale trip only forces the ceiling down, never skips a test).
  */
 export const RATCHET_SLACK = 0.2;
 

@@ -88,6 +88,7 @@ export function calibrationProvenance(
 export function calibrationScaleNote(
   priorProvenance: Record<string, unknown> | undefined,
   next: { status: string; version: string; referenceMs: number },
+  opts?: { anchored?: boolean },
 ): string | null;
 
 export interface ReportJob {

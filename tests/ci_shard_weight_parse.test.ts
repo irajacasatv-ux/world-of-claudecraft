@@ -214,6 +214,9 @@ describe('CI shard weight harvester provenance', () => {
       '[harvest] NOTE: tests/ci_shard_partition.test.ts refuses this table until fixed: ' +
         'calibration status partial while CALIBRATION_REFERENCE_MS is anchored',
     );
+    // And the scale note sends the operator to another run, not to a re-base.
+    expect(logged).toContain('so harvest a run whose every job printed a usable calibration line');
+    expect(logged).not.toContain('so re-base what is set in the old unit');
   });
 
   it('harvests an old run with no calibration line at all raw, and says so in provenance', async () => {

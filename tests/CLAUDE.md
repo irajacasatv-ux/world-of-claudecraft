@@ -249,7 +249,7 @@ guards hold the line, each naming its own remedy:
   (`scripts/lib/ci_runner_calibration.mjs`; `CALIBRATION_REFERENCE_MS` is anchored to the hosted
   fleet's median runner, so a weight is CI time on a median runner), so a runner's speed stops
   moving the pools while a real slowdown still does. A job without a usable line is harvested
-  raw, loudly, and the committed table must be calibrated in full
+  raw, loudly, and every harvested row of the committed table must be calibrated
   (`tests/ci_shard_partition.test.ts`), so harvest a run whose every job printed one;
   `node scripts/ci_shard_weights_harvest.mjs --report <run-id>` prints a run's pools raw and
   calibrated without writing the table.

@@ -55,10 +55,13 @@ export const CALIBRATION_ROUNDS = 5;
  * percent over the five runs' median pool in both. At this reference a
  * calibrated weight is raw CI time on a median runner, the unit LANE_THRESHOLD_MS
  * and CARRIED_LOCAL_TO_CI_RATIO (scripts/lib/ci_shard_plan.mjs) were set in on
- * the same fleet, so both keep their meaning and their values. Never move it:
- * moving it rescales every future table against the thresholds and ceilings set
- * in its unit (a changed workload bumps CALIBRATION_VERSION and is anchored
- * afresh instead).
+ * the same fleet, so both keep their values: their meaning holds to within the
+ * fleet's mean-versus-median skew (the five runs' calibrated pools averaged about
+ * 7 percent over their raw ones, a fast tail pulling the mean runner ahead of the
+ * median), which tightens the lane line, the safe way, and loosens the carried
+ * conversion by as much, inside its margin. Never move it: moving it rescales
+ * every future table against the thresholds and ceilings set in its unit (a
+ * changed workload bumps CALIBRATION_VERSION and is anchored afresh instead).
  */
 export const CALIBRATION_REFERENCE_MS = 178;
 
@@ -366,20 +369,39 @@ function scaleOf(calibration) {
  * different scale (an old raw table, a partial harvest, another version or
  * reference): the pools then move by the change of scale, not by the suite, so
  * the ratchet's ceilings need a maintainer's re-base rather than a reading as
- * growth or a cut. Null when both tables share one full scale.
+ * growth or a cut. Null when both tables share one full scale. With the
+ * reference anchored, a harvest that is not calibrated in full is the wrong
+ * unit rather than a new one to re-base on (calibrationTableDefects refuses it),
+ * so the note sends the maintainer to another run instead.
  *
  * @param {Record<string, unknown> | undefined} priorProvenance the replaced table's __provenance
  * @param {{ status: string, version: string, referenceMs: number }} next this harvest's block
+ * @param {{ anchored?: boolean }} [opts] the anchoring to judge against
+ *   (CALIBRATION_REFERENCE_ANCHORED by default; injectable so both arms are testable)
  * @returns {string | null}
  */
-export function calibrationScaleNote(priorProvenance, next) {
+export function calibrationScaleNote(
+  priorProvenance,
+  next,
+  { anchored = CALIBRATION_REFERENCE_ANCHORED } = {},
+) {
   const was = scaleOf(priorProvenance?.calibration);
   const now = scaleOf(next);
   if (was === now && next.status !== 'partial') return null;
+  const head = `the replaced table is in ${was} and this harvest is in ${now}: `;
+  if (anchored && next.status !== 'calibrated') {
+    return (
+      head +
+      'with the reference anchored, the ratchet ceilings, LANE_THRESHOLD_MS and ' +
+      'CARRIED_LOCAL_TO_CI_RATIO are set at the reference speed, so harvest a run whose every ' +
+      'job printed a usable calibration line rather than re-base them'
+    );
+  }
   return (
-    `the replaced table is in ${was} and this harvest is in ${now}: its rows change scale, ` +
-    'so re-base what is set in the old unit in the same change (the ratchet ceilings, ' +
-    'LANE_THRESHOLD_MS and CARRIED_LOCAL_TO_CI_RATIO) rather than read the move as growth or a cut'
+    head +
+    'its rows change scale, so re-base what is set in the old unit in the same change (the ' +
+    'ratchet ceilings, LANE_THRESHOLD_MS and CARRIED_LOCAL_TO_CI_RATIO) rather than read the ' +
+    'move as growth or a cut'
   );
 }
 
@@ -388,9 +410,10 @@ export function calibrationScaleNote(priorProvenance, next) {
  * always in the unit its thresholds are set in. While the reference is
  * provisional (`anchored` false) that is raw runner time, and calibrated rows
  * (status `calibrated` or `partial`) are the defect. Once it is anchored that is
- * the reference speed, and anything short of every row calibrated is: status
- * `raw`, `partial` or anything else, or no calibration block at all (a harvest
- * from before calibration existed). A block with calibrated rows must also be at
+ * the reference speed, and anything short of every harvested row calibrated is:
+ * status `raw`, `partial` or anything else, no calibration block at all (a
+ * harvest from before calibration existed), or a `calibrated` block no harvest
+ * writes (with a raw map, or no job). A block with calibrated rows must also be at
  * the live version and reference, so a moved reference cannot leave a committed
  * table in a unit nothing names. The harvest prints any it writes, and
  * tests/ci_shard_partition.test.ts holds the committed table to none.
@@ -426,6 +449,18 @@ export function calibrationTableDefects(
       `calibration status ${block.status} while CALIBRATION_REFERENCE_MS is anchored: rows not ` +
         'all at the reference speed (__provenance.calibration.raw names any raw job), so ' +
         'harvest a run whose every job printed a usable calibration line',
+    );
+  } else if (
+    block.raw !== undefined ||
+    !block.jobs ||
+    typeof block.jobs !== 'object' ||
+    Object.keys(block.jobs).length === 0
+  ) {
+    // calibrationProvenance never writes a calibrated block with a raw map or no job, so
+    // such a block was edited by hand and its status cannot be trusted.
+    defects.push(
+      'calibration status calibrated but the block names raw jobs or no calibrated job, ' +
+        'which no harvest writes: re-harvest rather than edit the block',
     );
   }
   if (block.version !== CALIBRATION_VERSION) {

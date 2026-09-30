@@ -277,6 +277,34 @@ describe('scaling a job to the reference speed', () => {
     expect(
       calibrationScaleNote({ calibration: calibrated }, { ...calibrated, status: 'partial' }),
     ).toContain('partly calibrated');
+    // What it asks for: a re-base of the thresholds for a full change of scale, anchored or
+    // not; with the reference anchored, another run for a harvest that is not calibrated in
+    // full (the committed-table pin refuses that table, so a re-base would be wrong advice).
+    const REBASE = 'so re-base what is set in the old unit in the same change';
+    const ANOTHER_RUN =
+      'with the reference anchored, the ratchet ceilings, LANE_THRESHOLD_MS and ' +
+      'CARRIED_LOCAL_TO_CI_RATIO are set at the reference speed, so harvest a run whose every ' +
+      'job printed a usable calibration line rather than re-base them';
+    for (const anchored of [false, true]) {
+      expect(calibrationScaleNote({ run: '1' }, calibrated, { anchored })).toContain(REBASE);
+    }
+    const toPartial = [{ run: '1' }, { ...calibrated, status: 'partial' }] as const;
+    expect(calibrationScaleNote(...toPartial, { anchored: false })).toContain(REBASE);
+    expect(calibrationScaleNote(...toPartial, { anchored: true })).toBe(
+      `the replaced table is in raw runner time and this harvest is in partly calibrated, ` +
+        `partly raw: ${ANOTHER_RUN}`,
+    );
+    expect(
+      calibrationScaleNote(
+        { calibration: calibrated },
+        { ...calibrated, status: 'raw' },
+        {
+          anchored: true,
+        },
+      ),
+    ).toContain(ANOTHER_RUN);
+    // The live default is anchored.
+    expect(calibrationScaleNote(...toPartial)).toContain(ANOTHER_RUN);
   });
 
   it('reports a run raw and calibrated, per job and per pool, the lane split as the ratchet splits it', () => {
@@ -327,6 +355,12 @@ describe('scaling a job to the reference speed', () => {
 
 describe('a table stands only in the unit its thresholds are set in', () => {
   const live = { version: CALIBRATION_VERSION, referenceMs: CALIBRATION_REFERENCE_MS };
+  // A calibrated block as the harvest writes it: every job named with its line and factor.
+  const calibratedBlock = {
+    ...live,
+    status: 'calibrated',
+    jobs: { 'PR tests (1)': { ms: 178, factor: 1 } },
+  };
   const HARVEST_CALIBRATED = 'harvest a run whose every job printed a usable calibration line';
   const rawUnit = (what: string) =>
     `rows in raw runner time (${what}) while CALIBRATION_REFERENCE_MS is anchored: the ratchet ` +
@@ -346,9 +380,7 @@ describe('a table stands only in the unit its thresholds are set in', () => {
 
   it('once anchored, stands a calibrated table and refuses a raw, partial or pre-calibration one', () => {
     const anchored = { anchored: true };
-    expect(
-      calibrationTableDefects({ calibration: { ...live, status: 'calibrated' } }, anchored),
-    ).toEqual([]);
+    expect(calibrationTableDefects({ calibration: calibratedBlock }, anchored)).toEqual([]);
     // A table harvested before calibration existed, or with a block that is not an object.
     expect(calibrationTableDefects(undefined, anchored)).toEqual([rawUnit('no calibration block')]);
     expect(calibrationTableDefects({ run: '1' }, anchored)).toEqual([
@@ -370,6 +402,22 @@ describe('a table stands only in the unit its thresholds are set in', () => {
     }
   });
 
+  it('once anchored, refuses a calibrated block no harvest writes (a raw map, or no job)', () => {
+    const edited =
+      'calibration status calibrated but the block names raw jobs or no calibrated job, ' +
+      'which no harvest writes: re-harvest rather than edit the block';
+    const anchored = { anchored: true };
+    for (const block of [
+      { ...calibratedBlock, raw: { 'PR tests (2)': 'no calibration line' } },
+      { ...calibratedBlock, raw: {} },
+      { ...calibratedBlock, jobs: {} },
+      { ...live, status: 'calibrated' },
+      { ...calibratedBlock, jobs: 'PR tests (1)' },
+    ]) {
+      expect(calibrationTableDefects({ calibration: block }, anchored)).toEqual([edited]);
+    }
+  });
+
   it('holds calibrated rows to the live version and reference, anchored or not', () => {
     for (const anchored of [false, true]) {
       const stale = calibrationTableDefects(
@@ -385,7 +433,7 @@ describe('a table stands only in the unit its thresholds are set in', () => {
 
   it('judges by the live CALIBRATION_REFERENCE_ANCHORED when no anchoring is given', () => {
     // Anchored: calibrated rows at the live constants stand and a pre-calibration table does not.
-    expect(calibrationTableDefects({ calibration: { ...live, status: 'calibrated' } })).toEqual([]);
+    expect(calibrationTableDefects({ calibration: calibratedBlock })).toEqual([]);
     expect(calibrationTableDefects({ run: '1' })).toEqual([rawUnit('no calibration block')]);
   });
 });
