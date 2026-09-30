@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
+  CALIBRATION_CHECKSUM,
   CALIBRATION_REFERENCE_MS,
   type CalibrationProvenance,
   formatCalibrationLine,
@@ -25,7 +26,12 @@ const ESC = String.fromCharCode(27);
 // The rigs below print it at the reference median (factor 1), as a current run does, so
 // the cases about other provenance stay free of the raw-harvest warning.
 const calibrationLine = (medianMs: number) =>
-  formatCalibrationLine({ medianMs, roundsMs: [medianMs], checksum: 0x915fc3cc, cpu: 'rig cpu' });
+  formatCalibrationLine({
+    medianMs,
+    roundsMs: [medianMs],
+    checksum: CALIBRATION_CHECKSUM,
+    cpu: 'rig cpu',
+  });
 const REFERENCE_LINE = calibrationLine(CALIBRATION_REFERENCE_MS);
 
 describe('ci shard weight log parser', () => {
@@ -200,9 +206,13 @@ describe('CI shard weight harvester provenance', () => {
     expect(calibration.warning).toContain('PR tests (3)');
     const warned = warns.mock.calls.map(([line]) => String(line)).join('\n');
     expect(warned).toContain('[harvest] WARNING: 1 of 10 job(s) harvested RAW');
-    // The replaced table was raw, so the change of scale is named too.
-    expect(logs.mock.calls.map(([line]) => String(line)).join('\n')).toContain(
-      '[harvest] NOTE: the replaced table is in raw runner time',
+    // The replaced table was raw, so the change of scale is named too, and while the
+    // reference is provisional the committed-table pin's refusal is announced.
+    const logged = logs.mock.calls.map(([line]) => String(line)).join('\n');
+    expect(logged).toContain('[harvest] NOTE: the replaced table is in raw runner time');
+    expect(logged).toContain(
+      '[harvest] NOTE: tests/ci_shard_partition.test.ts refuses this table until fixed: ' +
+        'calibrated rows while CALIBRATION_REFERENCE_MS is provisional',
     );
   });
 
@@ -253,6 +263,9 @@ describe('CI shard weight harvester provenance', () => {
     });
     await expect(runHarvester(['123456789', '987654321'])).rejects.toBe(exited);
     expect(exit).toHaveBeenCalledWith(1);
+    expect(harvestIo.writeFileSync).not.toHaveBeenCalled();
+    // Beside a maintenance mode that writes, the flag is refused, not ignored.
+    await expect(runHarvester(['--prune-missing', '--report'])).rejects.toBe(exited);
     expect(harvestIo.writeFileSync).not.toHaveBeenCalled();
   });
 

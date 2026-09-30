@@ -265,7 +265,11 @@ never by a ratio to another table or job, so a uniform code slowdown still shows
 a usable line (an old run, or a calibration more than `CALIBRATION_OUTLIER_RATIO` from its run's
 median) is harvested raw with a warning in `__provenance.calibration`; carried rows stay in local
 time. `node scripts/ci_shard_weights_harvest.mjs --report <run-id>` prints a run's shard and lane
-pools raw and calibrated, per job, without writing the table.
+pools raw and calibrated, per job, without writing the table. `CALIBRATION_REFERENCE_MS` is
+provisional until `CALIBRATION_REFERENCE_ANCHORED` is set from the first calibrated runs' report:
+until then `tests/ci_shard_partition.test.ts` refuses a committed table with calibrated rows,
+because the ratchet ceilings, `LANE_THRESHOLD_MS` and `CARRIED_LOCAL_TO_CI_RATIO` are set in raw
+CI time and re-base with the first calibrated harvest.
 `tests/ci_shard_partition.test.ts` grades it two ways: at least 95 percent of the walked
 test tree must carry a row (below that the balance claim stops being measured, since the
 rest is planned at one shared guess), and every row the newest harvest did NOT measure must

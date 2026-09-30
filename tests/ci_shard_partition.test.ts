@@ -12,6 +12,7 @@ import {
   partitionForCi,
   weightForTestFile,
 } from '../scripts/ci_shard_partition.mjs';
+import { calibrationTableDefects } from '../scripts/lib/ci_runner_calibration.mjs';
 // The walk is SHARED with the shard-weight harvester: the population this pin
 // grades and the population local-missing carry enumerates must be identical.
 import { walkShardTestFiles } from '../scripts/lib/ci_shard_walk.mjs';
@@ -324,6 +325,18 @@ describe('ci_shard_partition (D11 path-matrix)', () => {
 const committedTable = JSON.parse(
   readFileSync(join(root, 'scripts/ci_shard_weights.generated.json'), 'utf8'),
 ) as Record<string, unknown>;
+
+describe('committed weight table calibration', () => {
+  it('carries calibrated rows only at the live, anchored reference', () => {
+    // A harvest writes calibrated rows at a provisional reference for inspection; the
+    // table cannot be committed until the reference is anchored and the thresholds set in
+    // raw CI time are re-based (scripts/lib/ci_runner_calibration.mjs names them). A raw
+    // table, or one harvested before calibration existed, passes as it stands.
+    expect(calibrationTableDefects(committedTable.__provenance as Record<string, unknown>)).toEqual(
+      [],
+    );
+  });
+});
 
 // A complete CI refresh replaces every local carry with a harvested weight.
 // Exercise the same committed-table assertions in both states: the production

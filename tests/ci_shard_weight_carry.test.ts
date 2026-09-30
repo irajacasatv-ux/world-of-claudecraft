@@ -10,6 +10,7 @@
 // rather than prose-only contracts.
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
+  CALIBRATION_CHECKSUM,
   CALIBRATION_REFERENCE_MS,
   formatCalibrationLine,
 } from '../scripts/lib/ci_runner_calibration.mjs';
@@ -782,7 +783,7 @@ describe('the harvest entry: full harvest and local-carry modes (injected I/O)',
       const calibration = formatCalibrationLine({
         medianMs: CALIBRATION_REFERENCE_MS,
         roundsMs: [CALIBRATION_REFERENCE_MS],
-        checksum: 1,
+        checksum: CALIBRATION_CHECKSUM,
       });
       return (
         '[ci-shard-test] changes-job decision: mode=full\n' +

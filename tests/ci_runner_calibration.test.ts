@@ -3,17 +3,20 @@
 // per-file weights to one reference runner speed. The harvester itself is driven end to
 // end in tests/ci_shard_weight_parse.test.ts; this file pins the units it composes.
 //
-// Guards: the calibration line's exact format, its parser (first line, version, refusals),
-// the per-job scaling to CALIBRATION_REFERENCE_MS and its raw fallback, the provenance
-// block and the scale-change note, and the entry's placement of the calibration before
-// the tests; the nearest suite, tests/ci_shard_weight_parse.test.ts, pins the reporter
-// parser and the harvester's writes, not these.
-// Cost: 21 ms
+// Guards: the calibration line's exact format, its parser (first line, version, checksum,
+// refusals), the per-job scaling to CALIBRATION_REFERENCE_MS and its raw and outlier
+// fallbacks, the provenance block, the scale-change note, the calibrated-table contract,
+// and the entry's placement of the calibration before the tests; the nearest suite,
+// tests/ci_shard_weight_parse.test.ts, pins the reporter parser and the harvester's writes,
+// not these.
+// Cost: 143 ms
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import {
+  CALIBRATION_CHECKSUM,
   CALIBRATION_ITERATIONS,
   CALIBRATION_OUTLIER_RATIO,
+  CALIBRATION_REFERENCE_ANCHORED,
   CALIBRATION_REFERENCE_MS,
   CALIBRATION_ROUNDS,
   CALIBRATION_VERSION,
@@ -22,6 +25,7 @@ import {
   calibrationProvenance,
   calibrationReportLines,
   calibrationScaleNote,
+  calibrationTableDefects,
   calibrationWork,
   formatCalibrationLine,
   parseCalibrationLine,
@@ -35,7 +39,7 @@ const LINE = (medianMs: number, cpu = 'AMD EPYC 7763 64-Core Processor') =>
   formatCalibrationLine({
     medianMs,
     roundsMs: [200.3, 201.3, 202.6, 201.3, 203.3],
-    checksum: 0x915fc3cc,
+    checksum: CALIBRATION_CHECKSUM,
     cpu,
   });
 
@@ -47,6 +51,19 @@ describe('the calibration workload', () => {
     expect(CALIBRATION_ITERATIONS).toBe(600_000);
     expect(CALIBRATION_ROUNDS).toBe(5);
     expect(CALIBRATION_REFERENCE_MS).toBe(200);
+    // Anchoring the reference (the maintainer's edit after the first calibrated runs) flips
+    // this and is a visible edit here, as the reference itself is.
+    expect(CALIBRATION_REFERENCE_ANCHORED).toBe(false);
+  });
+
+  it("pins the full workload's checksum beside its version, and the constant matches the work", () => {
+    // The parser refuses any other checksum, so a workload changed under the same version
+    // harvests raw and loudly instead of landing on a silently new scale.
+    expect({ version: CALIBRATION_VERSION, checksum: CALIBRATION_CHECKSUM }).toEqual({
+      version: 'v1',
+      checksum: 0x8e85df4d,
+    });
+    expect(calibrationWork(CALIBRATION_ITERATIONS)).toBe(CALIBRATION_CHECKSUM);
   });
 
   it('is deterministic work with a fixed checksum on every machine', () => {
@@ -78,7 +95,7 @@ describe('the calibration line', () => {
   it('prints one exact, parseable line', () => {
     expect(LINE(201.3)).toBe(
       '[ci-calibration] v1 median-ms=201.3 rounds-ms=200.3,201.3,202.6,201.3,203.3 ' +
-        'checksum=915fc3cc cpu="AMD EPYC 7763 64-Core Processor"',
+        'checksum=8e85df4d cpu="AMD EPYC 7763 64-Core Processor"',
     );
     // A short checksum pads to eight digits and a quote cannot break the cpu field.
     expect(
@@ -113,6 +130,13 @@ describe('the calibration line', () => {
     if (!v2.ok) expect(v2.reason).toContain('v2 is not v1');
     const zero = parseCalibrationLine(LINE(200).replace('median-ms=200.0', 'median-ms=0.0'));
     expect(zero.ok).toBe(false);
+    const otherWork = parseCalibrationLine(
+      LINE(200).replace('checksum=8e85df4d', 'checksum=915fc3cc'),
+    );
+    expect(otherWork).toEqual({
+      ok: false,
+      reason: "calibration checksum 915fc3cc is not 8e85df4d, the v1 workload's",
+    });
   });
 });
 
@@ -290,6 +314,28 @@ describe('scaling a job to the reference speed', () => {
       /^\[report\] run 42 lane pool: raw 9000 ms, calibrated 9000 ms/,
     );
     expect(lines.at(-1)).toMatch(/^\[report\] WARNING: 1 of 2 job\(s\) harvested RAW/);
+  });
+});
+
+describe('a calibrated table stands only at the live, anchored reference', () => {
+  it('holds a raw or pre-calibration table to nothing, and a calibrated one to the live constants', () => {
+    expect(calibrationTableDefects(undefined)).toEqual([]);
+    expect(calibrationTableDefects({ run: '1' })).toEqual([]);
+    expect(calibrationTableDefects({ calibration: { status: 'raw' } })).toEqual([]);
+    const live = { version: CALIBRATION_VERSION, referenceMs: CALIBRATION_REFERENCE_MS };
+    // While the reference is provisional, calibrated or partial rows cannot stand.
+    for (const status of ['calibrated', 'partial']) {
+      const defects = calibrationTableDefects({ calibration: { ...live, status } });
+      expect(defects).toHaveLength(1);
+      expect(defects[0]).toMatch(/^calibrated rows while CALIBRATION_REFERENCE_MS is provisional/);
+    }
+    const stale = calibrationTableDefects({
+      calibration: { status: 'calibrated', version: 'v0', referenceMs: 180 },
+    });
+    expect(stale).toContain(`calibration v0 is not the live ${CALIBRATION_VERSION}`);
+    expect(stale).toContain(
+      `calibration reference 180 ms is not the live ${CALIBRATION_REFERENCE_MS} ms`,
+    );
   });
 });
 

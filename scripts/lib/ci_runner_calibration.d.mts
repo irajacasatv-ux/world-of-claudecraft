@@ -5,6 +5,8 @@ export const CALIBRATION_VERSION: string;
 export const CALIBRATION_ITERATIONS: number;
 export const CALIBRATION_ROUNDS: number;
 export const CALIBRATION_REFERENCE_MS: number;
+export const CALIBRATION_REFERENCE_ANCHORED: boolean;
+export const CALIBRATION_CHECKSUM: number;
 export const CALIBRATION_LINE_PREFIX: string;
 
 export interface CalibrationRun {
@@ -105,3 +107,5 @@ export function calibrationReportLines(input: {
   rawWeights: Readonly<Record<string, number>>;
   calibratedWeights: Readonly<Record<string, number>>;
 }): string[];
+
+export function calibrationTableDefects(provenance: Record<string, unknown> | undefined): string[];

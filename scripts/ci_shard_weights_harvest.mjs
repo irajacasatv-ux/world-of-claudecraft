@@ -55,6 +55,7 @@ import {
   calibrationProvenance,
   calibrationReportLines,
   calibrationScaleNote,
+  calibrationTableDefects,
   parseCalibrationLine,
 } from './lib/ci_runner_calibration.mjs';
 import {
@@ -74,6 +75,18 @@ import { parseWeightLines } from './lib/ci_shard_weight_parse.mjs';
 const target = resolve(import.meta.dirname, 'ci_shard_weights.generated.json');
 const ROOT = dirname(import.meta.dirname);
 const today = () => new Date().toISOString().slice(0, 10);
+
+// `--report` belongs to the run-id form only: beside a maintenance mode it would
+// be ignored while that mode writes the table, so the pairing is refused.
+if (
+  ['--carry-local', '--carry-local-missing', '--prune-missing'].includes(process.argv[2]) &&
+  process.argv.includes('--report')
+) {
+  console.error(
+    `[harvest] --report reads a run and writes nothing; it does not combine with ${process.argv[2]}`,
+  );
+  process.exit(1);
+}
 
 if (process.argv[2] === '--carry-local') {
   // Both refusals below are ordinary operator mistakes (a mistyped token, a
@@ -455,5 +468,13 @@ if (process.argv[2] === '--carry-local') {
     }
     writeFileSync(target, serializeWeightTable(out));
     console.log(`[harvest] wrote ${Object.keys(sorted).length} weights to ${target}`);
+    // Calibrated rows at a provisional reference are written for inspection
+    // only: the committed-table pin refuses them until the reference is
+    // anchored and the raw-time thresholds re-based in the same change.
+    for (const defect of calibrationTableDefects(out.__provenance)) {
+      console.log(
+        `[harvest] NOTE: tests/ci_shard_partition.test.ts refuses this table until fixed: ${defect}`,
+      );
+    }
   }
 }

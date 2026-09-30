@@ -19,7 +19,8 @@
 // The version couples the workload to the reference: changing calibrationWork,
 // CALIBRATION_ITERATIONS or CALIBRATION_ROUNDS changes what a reference
 // millisecond means, so it bumps CALIBRATION_VERSION, and the parser treats any
-// other version as no calibration (raw, loudly).
+// other version, or a line whose checksum is not CALIBRATION_CHECKSUM (the
+// workload changed under the same version), as no calibration (raw, loudly).
 
 import {
   CI_LONG_SUITES,
@@ -47,11 +48,30 @@ export const CALIBRATION_ROUNDS = 5;
  * scale down, a faster job's up. PROVISIONAL until the first calibrated CI runs
  * (a round figure within the desktop's range above; no hosted runner has
  * printed a line yet): anchor it ONCE to the median calibration those runs
- * print (`--report`), before the first calibrated harvest is committed, and
- * never move it after, since moving it rescales every future table against
- * the ratchet's ceilings.
+ * print (`--report`) and set CALIBRATION_REFERENCE_ANCHORED, before the first
+ * calibrated harvest is committed, and never move it after, since moving it
+ * rescales every future table against the thresholds set in its unit.
  */
 export const CALIBRATION_REFERENCE_MS = 200;
+
+/**
+ * Whether CALIBRATION_REFERENCE_MS has been anchored to hosted-runner evidence.
+ * Until it is, a table with calibrated rows fails calibrationTableDefects, so
+ * tests/ci_shard_partition.test.ts refuses to let one be committed (the harvest
+ * still writes it for inspection and says so, and `--report` prints the same
+ * figures without writing): the reference sets the unit of every calibrated
+ * table, and the lane rule's LANE_THRESHOLD_MS, the carried-row
+ * CARRIED_LOCAL_TO_CI_RATIO and the ratchet's ceilings
+ * (scripts/lib/ci_shard_plan.mjs) are all set in raw CI time, so the first
+ * calibrated harvest re-bases them in the same change.
+ */
+export const CALIBRATION_REFERENCE_ANCHORED = false;
+
+/**
+ * The checksum of CALIBRATION_ITERATIONS of calibrationWork: a line printing any
+ * other ran a different workload than the reference is for.
+ */
+export const CALIBRATION_CHECKSUM = 0x8e85df4d;
 
 /** The line's fixed prefix, which the parser anchors on. */
 export const CALIBRATION_LINE_PREFIX = '[ci-calibration]';
@@ -174,6 +194,13 @@ export function parseCalibrationLine(logText) {
     return {
       ok: false,
       reason: `calibration ${m[1]} is not ${CALIBRATION_VERSION}, the version the reference is for`,
+    };
+  }
+  const expected = CALIBRATION_CHECKSUM.toString(16).padStart(8, '0');
+  if (m[3] !== expected) {
+    return {
+      ok: false,
+      reason: `calibration checksum ${m[3]} is not ${expected}, the ${CALIBRATION_VERSION} workload's`,
     };
   }
   const medianMs = Number(m[2]);
@@ -342,9 +369,44 @@ export function calibrationScaleNote(priorProvenance, next) {
   const now = scaleOf(next);
   if (was === now && next.status !== 'partial') return null;
   return (
-    `the replaced table is in ${was} and this harvest is in ${now}: its pools change scale, ` +
-    'so judge the total-time ratchet against a re-based ceiling, not as growth or a cut'
+    `the replaced table is in ${was} and this harvest is in ${now}: its rows change scale, ` +
+    'so re-base what is set in the old unit in the same change (the ratchet ceilings, ' +
+    'LANE_THRESHOLD_MS and CARRIED_LOCAL_TO_CI_RATIO) rather than read the move as growth or a cut'
   );
+}
+
+/**
+ * What stops a table's calibration block from standing: calibrated rows (status
+ * `calibrated` or `partial`) written while CALIBRATION_REFERENCE_ANCHORED is
+ * false, or at another version or reference than the live constants, so a moved
+ * reference cannot leave a committed table in a unit nothing names. A raw table
+ * (or one with no block, harvested before calibration existed) has none. The
+ * harvest prints any it writes, and tests/ci_shard_partition.test.ts holds the
+ * committed table to none.
+ *
+ * @param {Record<string, any> | undefined} provenance a table's __provenance
+ * @returns {string[]}
+ */
+export function calibrationTableDefects(provenance) {
+  const cal = provenance?.calibration;
+  if (!cal || typeof cal !== 'object' || cal.status === 'raw') return [];
+  const defects = [];
+  if (!CALIBRATION_REFERENCE_ANCHORED) {
+    defects.push(
+      'calibrated rows while CALIBRATION_REFERENCE_MS is provisional: anchor it to the ' +
+        'median calibration the --report of the first calibrated runs prints, set ' +
+        'CALIBRATION_REFERENCE_ANCHORED, and re-base the raw-time thresholds in the same change',
+    );
+  }
+  if (cal.version !== CALIBRATION_VERSION) {
+    defects.push(`calibration ${cal.version} is not the live ${CALIBRATION_VERSION}`);
+  }
+  if (cal.referenceMs !== CALIBRATION_REFERENCE_MS) {
+    defects.push(
+      `calibration reference ${cal.referenceMs} ms is not the live ${CALIBRATION_REFERENCE_MS} ms`,
+    );
+  }
+  return defects;
 }
 
 /**
