@@ -247,10 +247,15 @@ describe('/dev attune + /dev raid cheats', () => {
   it('/dev attune does NOT wipe the in-progress quest log', () => {
     const { sim, pid } = godSim();
     const meta = sim.players.get(pid)!;
-    const hadQuests = meta.questLog.size;
+    // A fresh character's log is empty, so seed a quest part way through:
+    // an empty log cannot show a wipe.
+    meta.questLog.set('q_wolves', { questId: 'q_wolves', counts: [3], state: 'active' });
     sim.chat('/dev attune', pid);
     // Stamps questsDone but leaves any in-progress quest tracker intact.
-    expect(meta.questLog.size).toBe(hadQuests);
+    expect(meta.questsDone.has('q_wolves')).toBe(true);
+    expect([...meta.questLog.values()]).toEqual([
+      { questId: 'q_wolves', counts: [3], state: 'active' },
+    ]);
   });
 
   it('is gated: without dev commands, /dev attune does nothing', () => {
