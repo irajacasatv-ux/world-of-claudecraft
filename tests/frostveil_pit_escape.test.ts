@@ -26,7 +26,6 @@ import { expectDefined } from './helpers/defined';
 
 // The production seed: the report is seed-pinned world geometry.
 const SEED = 20061;
-const NIGHTLY_SWEEP = process.env.WOC_NIGHTLY_SWEEP === '1';
 
 // Terrain and collider geometry read the module-global active world content
 // (data.ts), never Sim's cfg.world (see the sim.ts constructor invariant
@@ -111,29 +110,20 @@ function walkHeading(
 // whether one exists.
 const SWEEP_ORDER = [12, 11, 13, 10, 14, 9, 15, 8, 0, 7, 1, 6, 2, 5, 3, 4];
 
-// Sixteen-azimuth sweep out of the bowl. Returns the headings (in degrees) that
-// reached the rim. Both depths assert the one property the case names, that SOME
-// heading of the sixteen reaches the rim: a PR stops at the first heading that
-// does (due west today, one walk), and the nightly depth flag walks all sixteen
-// (225 to 315 escape today). Closing one exit leaves both depths green while
-// another heading still escapes; a bowl that traps every heading walks all
-// sixteen and reds both.
-function escapeHeadings(
-  spot: { x: number; z: number },
-  seconds: number,
-  firstOnly: boolean,
-): number[] {
-  const out: number[] = [];
+// Sixteen-azimuth sweep out of the bowl, asserting the one property the case names: SOME
+// heading of the sixteen reaches the rim. The sweep stops at the first heading that does
+// (due west today, one walk; 225 to 315 escape). Closing one exit leaves it green while
+// another heading still escapes; a bowl that traps every heading walks all sixteen and fails.
+/** The first of the sixteen headings, in SWEEP_ORDER, whose walk reaches the rim, or undefined
+ *  when none does (then every heading was walked). */
+function firstEscapeHeading(spot: { x: number; z: number }, seconds: number): number | undefined {
   for (const k of SWEEP_ORDER) {
     const facing = (k * Math.PI) / 8;
     const end = walkHeading(spot, facing, seconds);
     const moved = Math.hypot(end.x - spot.x, end.z - spot.z);
-    if (moved > 8 && onRim(end.x, end.z)) {
-      out.push(Math.round((facing * 180) / Math.PI));
-      if (firstOnly) break;
-    }
+    if (moved > 8 && onRim(end.x, end.z)) return Math.round((facing * 180) / Math.PI);
   }
-  return out;
+  return undefined;
 }
 
 const r = GLACIER_TARN_RAMP;
@@ -143,8 +133,10 @@ const DOWN_THE_RAMP = Math.atan2(r.ax - r.bx, r.az - r.bz);
 
 describe('the Glacier Tarn bowl is leavable on foot', () => {
   it('walks out of the reported stranding spot', { timeout: 90_000 }, () => {
-    const headings = escapeHeadings(STRANDED, 12, !NIGHTLY_SWEEP);
-    expect(headings.length, 'no heading out of the pond floor reaches the rim').toBeGreaterThan(0);
+    expect(
+      firstEscapeHeading(STRANDED, 12),
+      'no heading out of the pond floor reaches the rim',
+    ).toBeDefined();
   });
 
   it('leaves by the authored ramp, straight up the west flank', { timeout: 60_000 }, () => {
