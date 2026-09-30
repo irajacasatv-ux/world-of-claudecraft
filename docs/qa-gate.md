@@ -255,6 +255,16 @@ approximate until the first post-wiring harvest lands.
 **The shard weight table and its carried rows.** `scripts/ci_shard_weights.generated.json`
 holds one measured millisecond cost per test file; the LPT partition packs the shards from
 it, and a file with no row is planned at `MEASURED_FALLBACK_MS` (the table's own median).
+The table is test time only (the lane rule and the total-time ratchet read it so); the packer
+prices each file at its weight plus `PER_FILE_OVERHEAD_MS` (`packingCost` in
+`scripts/ci_shard_partition.mjs`), the transform, setup and import every file pays, with its fit
+recorded on the constant. Each harvested row is at one reference runner speed: every CI vitest
+leg prints a short fixed CPU calibration line before its tests, and the harvest scales that
+job's rows by `CALIBRATION_REFERENCE_MS` over its median (`scripts/lib/ci_runner_calibration.mjs`),
+never by a ratio to another table or job, so a uniform code slowdown still shows. A job without
+the line (an old run) is harvested raw with a warning in `__provenance.calibration`, and
+`node scripts/ci_shard_weights_harvest.mjs --report <run-id>` prints a run's shard and lane pools
+raw and calibrated, per job, without writing the table.
 `tests/ci_shard_partition.test.ts` grades it two ways: at least 95 percent of the walked
 test tree must carry a row (below that the balance claim stops being measured, since the
 rest is planned at one shared guess), and every row the newest harvest did NOT measure must
