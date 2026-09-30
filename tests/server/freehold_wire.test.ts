@@ -786,8 +786,10 @@ describe('the realm Sim boot config maps FREEHOLDS_ENABLED to SimConfig.freehold
     // pin unread.
     const expected: ReadonlyArray<[string, string]> = [
       ['src/main.ts', 'offlineWorldConfig('],
-      ['headless/env_server.ts', 'freeholdsEnabled: true'],
+      ['headless/env.ts', 'freeholdsEnabled: true'],
     ];
+    // The headless host's Sim lives in its Env module; the NDJSON shell around it builds none.
+    expect(codeOnly(repoFile('headless/env_server.ts'))).not.toMatch(/new\s+Sim\s*[<(]/);
     for (const [rel, literal] of expected) {
       const src = codeOnly(repoFile(rel));
       // The occurrence bound sees every spelling of a construction (a type

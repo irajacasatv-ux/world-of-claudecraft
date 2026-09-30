@@ -9,6 +9,8 @@ seed, which is the whole point of using it for RL. The Python half is `python/`.
 
 ## What it is
 - One process, one `Env` holding one `Sim`. No networking, no DB, no threads.
+  The `Env` class lives in `env.ts` (side-effect free, so tests drive its real
+  reset path in process); `env_server.ts` is the NDJSON process shell around it.
 - Action/observation surface is **not defined here**, it comes from
   `src/sim/obs.ts` (`ACTIONS`, `applyAction`, `encodeObs`, `obsSize`). This file
   only adds episode framing (frame-skip, termination, reward).
@@ -84,7 +86,7 @@ header comment of `env_server.ts`; that header is the reference, don't restate i
   next transition; policies and benchmark baselines trained before the queue
   landed see changed dynamics with an unchanged obs shape.
 
-## Episode framing (this file's job)
+## Episode framing (`env.ts`'s job)
 - **`step`**: `applyAction` once, then `sim.tick()` runs `frameSkip` times (default
   5, so 4 decisions/sim-sec @ 20 Hz), then diff `sim.counters` (`RewardCounters`) for reward.
 - **reward** = weighted sum of counter deltas (xp, damageDealt/Taken, kills,
