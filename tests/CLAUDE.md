@@ -241,14 +241,16 @@ guards hold the line, each naming its own remedy:
   the monolith-budget mold), counting a new file with no row at its stated `Cost:` in CI time: a
   new file, a harvest or a carried row that grows a pool past its ceiling fails, and a ceiling
   more than `RATCHET_SLACK` above its pool fails as stale, so a cut of more than about 8 percent
-  lowers it in the same change (a smaller cut leaves room a later change may regrow into). The
-  lane, a small pool one runner's speed moves whole, has its own wider band
-  (`LANE_RATCHET_HEADROOM`, `LANE_RATCHET_SLACK`).
+  lowers it in the same change (a smaller cut leaves room a later change may regrow into). Both
+  pools share that band (`RATCHET_HEADROOM`, `RATCHET_SLACK`).
   Raising a ceiling is a maintainer decision with its reason in the PR body, and a change of the
   CI worker count re-bases both from a harvest at the new count. The harvest scales each CI job's
   rows to one reference runner speed by the calibration line its entry prints before its tests
-  (`scripts/lib/ci_runner_calibration.mjs`; a job without a usable line is harvested raw,
-  loudly), so a runner's speed stops moving the pools while a real slowdown still does;
+  (`scripts/lib/ci_runner_calibration.mjs`; `CALIBRATION_REFERENCE_MS` is anchored to the hosted
+  fleet's median runner, so a weight is CI time on a median runner), so a runner's speed stops
+  moving the pools while a real slowdown still does. A job without a usable line is harvested
+  raw, loudly, and the committed table must be calibrated in full
+  (`tests/ci_shard_partition.test.ts`), so harvest a run whose every job printed one;
   `node scripts/ci_shard_weights_harvest.mjs --report <run-id>` prints a run's pools raw and
   calibrated without writing the table.
 - **Declared time.** `tests/suite_duration_budget.test.ts` rations declared timeouts (below).

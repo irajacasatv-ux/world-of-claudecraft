@@ -107,9 +107,13 @@ export const CI_GUARD_PREFIXES = Object.freeze(['tests/parity/']);
  */
 /**
  * The lane rule's threshold, in the unit of scripts/ci_shard_weights.generated.json
- * (per-file ms inside a full-mode CI shard). tests/suite_lane_threshold.test.ts
+ * (per-file ms inside a full-mode CI shard, at the calibration reference speed:
+ * scripts/lib/ci_runner_calibration.mjs). tests/suite_lane_threshold.test.ts
  * holds every file outside CI_LONG_SUITES under it, reading this constant rather
- * than a literal of its own.
+ * than a literal of its own. Set in raw CI time before the harvest was calibrated;
+ * CALIBRATION_REFERENCE_MS is the hosted fleet's median runner, so a calibrated
+ * row is raw CI time on a median runner and 90 seconds keeps its meaning (the
+ * first calibrated harvest, run 36735089417, has no shard-pool row over 54 s).
  */
 export const LANE_THRESHOLD_MS = 90_000;
 
@@ -121,6 +125,10 @@ export const LANE_THRESHOLD_MS = 90_000;
  * judged against LANE_THRESHOLD_MS unscaled it would understate the file until
  * the next harvest replaces it; ciTimeWeight scales every carried row by this
  * factor for tests/suite_lane_threshold.test.ts.
+ *
+ * In CI time at the calibration reference speed, which is raw CI time on a median
+ * hosted runner (scripts/lib/ci_runner_calibration.mjs, CALIBRATION_REFERENCE_MS),
+ * so the ratio measured in raw CI time below keeps its meaning.
  *
  * Measured at the 2026-09-28 harvest (run 36448553184). The files near the line
  * are what matter: the two families split that day ran 3.13x (coverage_c,
@@ -189,43 +197,44 @@ export function laneThresholdOver(weights, carried, lane) {
  * (tests/CLAUDE.md, "Test cost"). A ceiling more than RATCHET_SLACK above its pool fails as
  * stale, so a cut of more than about 8 percent (1.10 against 1.20) forces the ceiling down in
  * the same change, to the pool plus RATCHET_HEADROOM; a smaller cut leaves room a later change
- * may regrow into. The lane, a small pool one runner's speed moves whole, has its own wider band
- * (LANE_RATCHET_HEADROOM, LANE_RATCHET_SLACK). Moving a file from the shard pool to the lane
- * moves its weight between the two ceilings, so laning one needs a maintainer raise of
- * LANE_POOL_CEILING_MS, as any raise does (its reason in the PR body). The ceilings are
- * measured at the CI worker count they were harvested at (scripts/ci_shard_test.mjs): a change
- * of worker count re-bases them from the first green full-mode harvest at the new count, in the
- * same change.
+ * may regrow into. Both pools share that band: the harvest scales each job to one reference
+ * runner speed (scripts/lib/ci_runner_calibration.mjs), which takes the runner out of the lane,
+ * a small pool one runner's speed once moved whole, as it does out of the shard pool. Moving a
+ * file from the shard pool to the lane moves its weight between the two ceilings, so laning
+ * one needs a maintainer raise of LANE_POOL_CEILING_MS, as any raise does (its reason in the PR
+ * body). The ceilings are in calibrated CI time, measured at the CI worker count they were
+ * harvested at (scripts/ci_shard_test.mjs): a change of worker count, or of the calibration's
+ * version or reference, re-bases them from the first green full-mode harvest in the new unit,
+ * in the same change.
  */
-// Set 2026-09-29 (the third harvest's provenance reads 2026-09-30, a UTC date). The shard
-// ceiling is the harvest of run 36648684156 (after the third slimming
-// round) plus RATCHET_HEADROOM: its pool summed 4,937,172 ms (7,038,584 at run 36610517548 and
-// 5,912,504 at run 36635499592, each cut lowering it in the same change). The lane ceiling is
-// the fastest of three harvests of an unchanged lane (307,115 ms at run 36635499592; 332,450 and
-// 418,492 ms at the other two) plus LANE_RATCHET_HEADROOM, which also sits 10 percent over the
-// slowest.
-export const SHARD_POOL_CEILING_MS = 5_431_000;
-export const LANE_POOL_CEILING_MS = 461_000;
+// Re-based 2026-09-30 to the first calibrated harvest (run 36735089417, all ten jobs at the
+// reference speed, none raw): its shard pool summed 5,350,684 ms and its lane 421,627 ms, each
+// ceiling that pool plus RATCHET_HEADROOM, rounded up to the thousand. A change of unit, not a
+// raise or a cut: the ceilings before (5,431,000 and 461,000) were set in raw runner time, and
+// nearly one tree summed 4,558,572 to 5,693,364 ms raw in its shard pool and 310,974 to 430,448
+// ms in its lane across five full-mode runs (36724442671, 36726951063, 36730711359, 36735089417,
+// 36737663127), a band the raw harvest they were set from (4,937,172 and 418,492 ms at run
+// 36648684156) sits inside. The lane ceiling is no longer the raw 461,000 raise (the fastest of
+// three raw lane readings times 1.5): calibrated, the lane's five readings spread 1.064 times, as
+// narrow as the shard pool's 1.069, so it shares the shard band.
+export const SHARD_POOL_CEILING_MS = 5_886_000;
+export const LANE_POOL_CEILING_MS = 464_000;
 /**
- * The room the shard ceiling is set with above its pool. Two green full-mode runs of one tree
- * summed their per-file test time 2.6 percent apart (runs 36493201427 and 36501749917: 10,541 s
- * and 10,814 s), so a re-harvest alone must not trip it.
+ * The room a ceiling is set with above its pool, so a re-harvest of an unchanged tree does not
+ * trip it. Calibrated, five full-mode runs of nearly one tree put each pool's heaviest run 4.6
+ * percent over the five-run median (runs 36724442671 to 36737663127, the evidence on
+ * CALIBRATION_REFERENCE_MS), and a ceiling set on the lightest of them would still clear the
+ * heaviest (1.069 and 1.064 times, max over min), so 10 percent stands.
  */
 export const RATCHET_HEADROOM = 0.1;
-/** A shard ceiling more than this fraction above its pool is stale and must come down. */
-export const RATCHET_SLACK = 0.2;
 /**
- * The lane's band. The lane is a handful of files on two jobs, so one runner's speed moves the
- * whole pool: three harvests of an unchanged lane read 307,115 to 418,492 ms (1.36 times; one half
- * alone read 102,982 to 203,705 ms). Its headroom covers that spread and the shard pool's 10
- * percent (1.36 times 1.1 is about 1.5). Its slack puts the stale point 1.2 times the set point
- * (the shard pool's is 1.09), so only a cut of about 17 percent forces the lane ceiling down and a
- * fast runner alone does not. The price is a looser lane: on a fast-runner harvest a lane that
- * grew up to about 50 percent still passes, and nothing else automatic bounds the lane but its
- * jobs' timeouts; taking lane rows as a median of several runs would let it share the shard band.
+ * A ceiling more than this fraction above its pool is stale and must come down. With the ceiling
+ * at a pool plus RATCHET_HEADROOM, the stale point is 1.1 over 1.2 of that pool, so a pool about
+ * 8 percent below its harvest reads as a cut; the calibrated runs' lightest pools sat 6.5 (shard)
+ * and 6.0 (lane) percent under their heaviest, so a light re-harvest after a heavy one is not read
+ * as a cut, and 0.2 stands.
  */
-export const LANE_RATCHET_HEADROOM = 0.5;
-export const LANE_RATCHET_SLACK = 0.8;
+export const RATCHET_SLACK = 0.2;
 
 /**
  * The summed CI-time weight of the shard pool and of the lane, in whole ms.
@@ -248,8 +257,7 @@ export function poolWeights(weights, carried, lane) {
 
 /**
  * The ratchet's judgment, as problem lines (empty when both pools hold): a pool over its
- * ceiling, or a ceiling left more than its pool's slack (RATCHET_SLACK for the shard pool,
- * LANE_RATCHET_SLACK for the lane) above it.
+ * ceiling, or a ceiling left more than RATCHET_SLACK above its pool (both pools share the band).
  *
  * @param {{ shard: number, lane: number }} pools
  * @param {{ shard: number, lane: number }} ceilings
@@ -260,13 +268,11 @@ export function ratchetProblems(pools, ceilings) {
   for (const name of /** @type {const} */ (['shard', 'lane'])) {
     const pool = pools[name];
     const ceiling = ceilings[name];
-    const headroom = name === 'lane' ? LANE_RATCHET_HEADROOM : RATCHET_HEADROOM;
-    const slack = name === 'lane' ? LANE_RATCHET_SLACK : RATCHET_SLACK;
     if (pool > ceiling) problems.push(`${name} pool ${pool} ms is over its ceiling ${ceiling} ms`);
-    else if (ceiling > pool * (1 + slack))
+    else if (ceiling > pool * (1 + RATCHET_SLACK))
       problems.push(
         `${name} ceiling ${ceiling} ms is stale over its pool ${pool} ms: lower it to about ` +
-          `${Math.ceil(pool * (1 + headroom) - 1e-6)} ms`,
+          `${Math.ceil(pool * (1 + RATCHET_HEADROOM) - 1e-6)} ms`,
       );
   }
   return problems;

@@ -266,10 +266,12 @@ a usable line (an old run, or a calibration more than `CALIBRATION_OUTLIER_RATIO
 median) is harvested raw with a warning in `__provenance.calibration`; carried rows stay in local
 time. `node scripts/ci_shard_weights_harvest.mjs --report <run-id>` prints a run's shard and lane
 pools raw and calibrated, per job, without writing the table. `CALIBRATION_REFERENCE_MS` is
-provisional until `CALIBRATION_REFERENCE_ANCHORED` is set from the first calibrated runs' report:
-until then `tests/ci_shard_partition.test.ts` refuses a committed table with calibrated rows,
-because the ratchet ceilings, `LANE_THRESHOLD_MS` and `CARRIED_LOCAL_TO_CI_RATIO` are set in raw
-CI time and re-base with the first calibrated harvest.
+anchored (`CALIBRATION_REFERENCE_ANCHORED`) to the median calibration of the first calibrated
+full-mode runs, the hosted fleet's median runner, so a calibrated row is CI time on a median
+runner: `LANE_THRESHOLD_MS` and `CARRIED_LOCAL_TO_CI_RATIO`, set in raw CI time on the same
+fleet, keep their meaning, and the ratchet ceilings were re-based on the first calibrated
+harvest. The committed table is held to that unit (`calibrationTableDefects`): a raw or
+partial harvest, or calibrated rows at another version or reference, cannot be committed.
 `tests/ci_shard_partition.test.ts` grades it two ways: at least 95 percent of the walked
 test tree must carry a row (below that the balance claim stops being measured, since the
 rest is planned at one shared guess), and every row the newest harvest did NOT measure must
@@ -408,14 +410,14 @@ shard pool and of the lane under `SHARD_POOL_CEILING_MS` and `LANE_POOL_CEILING_
 (`poolWeights` and `ratchetProblems` beside the lane rule in `scripts/lib/ci_shard_plan.mjs`, the
 `tests/monolith_budget.test.ts` mold): a new file, a harvest or a carried row that grows a pool
 past its ceiling fails where it lands, and a ceiling more than `RATCHET_SLACK` above its pool
-fails as stale, so a cut of more than about 8 percent lowers it in the same change (the lane, a
-small pool one runner's speed moves whole, has its own wider band); raising one
-(including laning a file, which moves its weight into the lane pool) is a maintainer decision,
-and a change of the CI worker count re-bases both. It also checks the admission rule: every
-`.test.ts` the table has not measured yet (no row, or a carried one) says in its leading comment
-what it uniquely guards and its measured local cost, on `Guards:` and `Cost:` lines, and that
-cost counts into the ratchet until a harvest measures the file (`tests/CLAUDE.md`, "Test
-cost").
+fails as stale, so a cut of more than about 8 percent lowers it in the same change (both pools
+share one band, since the harvest's runner calibration takes the runner's speed out of each);
+raising one (including laning a file, which moves its weight into the lane pool) is a
+maintainer decision, and a change of the CI worker count re-bases both. It also checks the
+admission rule: every `.test.ts` the table has not measured yet (no row, or a carried one) says
+in its leading comment what it uniquely guards and its measured local cost, on `Guards:` and
+`Cost:` lines, and that cost counts into the ratchet until a harvest measures the file
+(`tests/CLAUDE.md`, "Test cost").
 
 **Per-file memory budgets.** `npm run test:memory` (`scripts/test_memory_probe.mjs`, the pure
 judge in `scripts/lib/test_memory_budget.mjs`, the probe config `vitest.memory.config.ts`) runs

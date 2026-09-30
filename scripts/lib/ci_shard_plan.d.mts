@@ -12,8 +12,6 @@ export const SHARD_POOL_CEILING_MS: number;
 export const LANE_POOL_CEILING_MS: number;
 export const RATCHET_HEADROOM: number;
 export const RATCHET_SLACK: number;
-export const LANE_RATCHET_HEADROOM: number;
-export const LANE_RATCHET_SLACK: number;
 export function poolWeights(
   weights: Readonly<Record<string, number>>,
   carried: Readonly<Record<string, object>>,
