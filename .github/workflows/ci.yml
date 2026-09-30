@@ -425,7 +425,7 @@ jobs:
         # mirror (the stall class lives on the azure mirror), and fails
         # LOUDLY, still inside this setup step's auto-rerunnable class,
         # only when no route produced the fonts the suite demonstrably
-        # needs. Worst-case degraded wall is about 3.7 minutes on top of
+        # needs. Worst-case degraded wall is about 5.5 minutes on top of
         # the 3.73-minute healthy wall, inside this job's 10-minute bound.
         # A timed-out install-deps leaves its package install running
         # (timeout stops only npx) and holding the dpkg lock, which failed the
