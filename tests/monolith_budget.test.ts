@@ -2278,7 +2278,9 @@ const MONOLITHS: MonolithRow[] = [
     // RE-PINNED at the Freeholds sync of release/v0.45.0 at ac9ed4db24: wc -l on the
     // merged tree measures 5154 (this branch 5151, the release 5182: its wisp maze
     // pad import and call). Exact merged count, zero slack.
-    ceiling: 5154,
+    // LOWERED 5154 -> 5153 when the calm tables and steepness memo moved to
+    // seed_caches.ts, which the RL env releases per seed. wc -l. Exact count.
+    ceiling: 5153,
     seam: 'zone/terrain data as content records; logic as sim sibling modules',
   },
   {
@@ -2572,7 +2574,9 @@ const MONOLITHS: MonolithRow[] = [
     // Parent pins: Freeholds 2456 (exact), incoming 2513 (the ferry berth
     // gate's +27); wc -l on the merged tree measures 2483, the release's
     // growth over this branch's extraction. Exact merged count, zero slack.
-    ceiling: 2483,
+    // LOWERED 2483 -> 2477 when the grid caches and pending gate wishes moved to
+    // seed_caches.ts, which the RL env releases per seed. wc -l. Exact count.
+    ceiling: 2477,
     seam: 'per-zone collider data beside the zone content; shared logic stays here',
   },
   {

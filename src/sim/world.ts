@@ -44,6 +44,7 @@ import { applyKeepSitePad, keepSitePadWeight } from './keep_site';
 import { reachDeckClear } from './reach_decks';
 import { fbm2, hash2, noise2 } from './rng';
 import { carveSeaChannels } from './sea_channels';
+import { calmSeedTables, steepnessCache } from './seed_caches';
 import {
   CALM_SKIRT_MAX_WIDTH,
   type CalmProbe,
@@ -3051,23 +3052,22 @@ interface CalmAnchor {
   rOut: number;
 }
 
-// Per-seed calm tables: the anchor bucket index plus a [rIn, rOut] ring pair
-// per CAMPS entry. Keyed by seed because every skirt is sized from the
-// MEASURED legacy-vs-natural divergence around its pad
-// (terrain_calm_anchors.ts): a pad whose divergence already fits its classic
-// ring keeps that ring bit-identical, while a pad on a craggy mountainside
-// earns a wide walkable ramp instead of an unreachable ledge.
+// Per-seed calm tables (the map lives in seed_caches.ts): the anchor bucket
+// index plus a [rIn, rOut] ring pair per CAMPS entry. Keyed by seed because
+// every skirt is sized from the MEASURED legacy-vs-natural divergence around
+// its pad (terrain_calm_anchors.ts): a pad whose divergence already fits its
+// classic ring keeps that ring bit-identical, while a pad on a craggy
+// mountainside earns a wide walkable ramp instead of an unreachable ledge.
 //
 // Skirts are sized LAZILY, on the first sample that lands inside a pad's
 // maximum possible ring: sizing is a pure per-pad probe, so the values are
 // identical whatever order gameplay touches them in, and the ~1200-pad
 // roster never stalls the load path with one big probe pass.
-interface CalmSeedTables {
+export interface CalmSeedTables {
   seed: number;
   anchors: Map<number, CalmAnchor[]>;
   campRings: Float32Array;
 }
-const calmSeedTables = new Map<number, CalmSeedTables>();
 
 // Build-time probe override: evaluates the finished height with the calm
 // factor FORCED to an endpoint. The override short-circuits terrainCalmAt
@@ -4537,10 +4537,9 @@ export function terrainSteepness(x: number, z: number, seed: number): number {
 // Memoized 1-yard-cell view of terrainSteepness for the per-tick movement gates
 // (every moving mob evaluates its step fan every tick; the exact helper costs
 // four heightfield samples). A cache over a pure function of (cell, seed) stays
-// fully deterministic; the cap just bounds memory on long-running hosts. Cell
-// granularity only shifts a gate line by under a yard, far inside the walls'
-// steepness margin (tests/terrain_walls.test.ts).
-const steepnessCache = new Map<number, Map<number, number>>(); // seed -> cell -> steepness
+// fully deterministic; the cap bounds memory on long-running hosts, and the map
+// lives in seed_caches.ts. Cell granularity only shifts a gate line by under a
+// yard, far inside the walls' steepness margin (tests/terrain_walls.test.ts).
 const STEEPNESS_CACHE_MAX = 400_000; // cells per seed; ~the whole overworld
 const STEEPNESS_CACHE_MAX_SEEDS = 4; // hosts run one seed; only test runs see more
 const STEEPNESS_CELL_SPAN = 16384; // cells per axis in the packed key

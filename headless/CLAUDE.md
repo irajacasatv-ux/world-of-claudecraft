@@ -11,6 +11,11 @@ seed, which is the whole point of using it for RL. The Python half is `python/`.
 - One process, one `Env` holding one `Sim`. No networking, no DB, no threads.
   The `Env` class lives in `env.ts` (side-effect free, so tests drive its real
   reset path in process); `env_server.ts` is the NDJSON process shell around it.
+- **Episode seeds and memory:** a reset onto a DIFFERENT seed, and `close`,
+  release the outgoing seed's module caches (`src/sim/seed_caches.ts`
+  `releaseSeedCaches`); a reset onto the same seed keeps them warm. Without it a
+  training run on random seeds grows by a world's collider grid per episode.
+  This env is the only caller (pinned by `tests/seed_caches.test.ts`).
 - Action/observation surface is **not defined here**, it comes from
   `src/sim/obs.ts` (`ACTIONS`, `applyAction`, `encodeObs`, `obsSize`). This file
   only adds episode framing (frame-skip, termination, reward).

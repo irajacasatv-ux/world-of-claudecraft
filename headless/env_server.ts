@@ -137,6 +137,7 @@ function serve(): void {
           send(executeGatheringGoalCommand(env.sim, msg));
           break;
         case 'close':
+          env.close();
           send({ ok: true });
           process.exit(0);
           break;
@@ -147,7 +148,10 @@ function serve(): void {
       send({ error: String(err?.message ?? err) });
     }
   });
-  rl.on('close', () => process.exit(0));
+  rl.on('close', () => {
+    env.close();
+    process.exit(0);
+  });
 }
 
 if (process.argv.includes('--bench')) bench();

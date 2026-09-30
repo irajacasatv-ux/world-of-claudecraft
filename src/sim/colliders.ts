@@ -104,11 +104,11 @@ import {
   TOWN_WALL_TALL_PILLAR_ALONG,
 } from './prop_layout';
 import { riftRegionAt } from './rift_regions';
+import { gridCaches, pendingGateStates } from './seed_caches';
 import { type PlacedStreetlamp, planStreetlamps, styleStreetlampSites } from './streetlamp_layout';
 import { STREETLAMP_COLLIDER_RADIUS, STREETLAMP_FIXTURE_HEIGHT } from './streetlamp_style';
 import { townPropPlacements } from './town_props';
 import { transportBerthColliders, transportGatesClosedAtBuild } from './transport_gates';
-import type { WorldContent } from './types';
 import {
   crossesSealedBorder,
   farshorePalmSpots,
@@ -1379,7 +1379,7 @@ const BLOCKER_WALL_HEIGHT = 6;
  * regardless (see sim `Entity.jumping`). */
 const FENCE_RAIL_HEIGHT = 0.95;
 
-interface ColliderGrid {
+export interface ColliderGrid {
   cells: Map<number, Collider[]>;
   // The authored prop grid above is cheap and eager. The multi-realm
   // decoration field is generated one queried cell at a time, then combined
@@ -1406,14 +1406,8 @@ interface ColliderGrid {
 }
 
 // cellKey / cellKeyAt moved to collider_cells.ts (shared with the rift
-// region indexes); imported above.
-
-// Grids are cached per (active world content, seed). The WeakMap keeps the
-// built-in world's grid warm forever and lets swapped-out custom maps be
-// collected; the editor invalidates explicitly after mutating placements.
-const gridCaches = new WeakMap<WorldContent, Map<number, ColliderGrid>>();
-// Gate states requested before their grid was built (setColliderGateOpen).
-const pendingGateStates = new WeakMap<WorldContent, Map<number, Map<string, boolean>>>();
+// region indexes); imported above. The grid caches (per active content, then
+// per seed) live in seed_caches.ts, which can release one seed from them.
 
 /** Drop the cached collider grid for the ACTIVE world content (editor-only:
  * call after mutating its placements/props in place). */

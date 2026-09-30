@@ -1,10 +1,17 @@
 // The RL env's episode state: one `Env` holds one `Sim` and frames it as a
 // gym-like environment (frame-skip, termination, reward). `env_server.ts` is the
-// NDJSON process shell around it; this module is side-effect free, so tests can
-// drive the real reset path in process.
+// NDJSON process shell around it; this module is side-effect free, so tests
+// drive the real reset path in process (tests/seed_caches.test.ts).
+//
+// Episode lifecycle and the seed caches: `src/sim/seed_caches.ts` holds the
+// module caches that can keep more than one world seed, and only a host that
+// discards its Sims may release them. This env does, at the two points it
+// discards one: a reset onto a DIFFERENT seed (a reset onto the same seed keeps
+// the warm caches, exactly as before) and close.
 
 import type { TalentAllocation } from '../src/sim/content/talents';
 import { applyAction, encodeObs } from '../src/sim/obs';
+import { releaseSeedCaches } from '../src/sim/seed_caches';
 import { type RewardCounters, Sim } from '../src/sim/sim';
 import { MAX_LEVEL, type PlayerClass } from '../src/sim/types';
 import { allocateHeadlessGathererIdentity } from './gatherer_identity';
@@ -75,6 +82,7 @@ export class Env {
       rewards: { ...DEFAULT_CONFIG.rewards, ...(cfg.rewards ?? {}) },
     };
     this.playerClass = playerClass;
+    const outgoingSeed = this.sim?.cfg.seed;
     this.sim = new Sim({
       seed,
       playerClass,
@@ -90,6 +98,8 @@ export class Env {
       // gatherer record.
       gathererIdentity: allocateHeadlessGathererIdentity(),
     });
+    // The outgoing episode's Sim is gone: release its seed unless this one reuses it.
+    if (outgoingSeed !== undefined && outgoingSeed !== seed) releaseSeedCaches(outgoingSeed);
     // RL episodes deliberately have no wall calendar: resetDay stays empty, so
     // calendar-window systems (including rotating World Quests) remain dormant
     // instead of making a seeded episode depend on the machine's date or zone.
@@ -135,6 +145,13 @@ export class Env {
       truncated,
       info: this.infoDict(),
     };
+  }
+
+  /** End the env: discard the episode's Sim and release its seed caches. */
+  close(): void {
+    if (this.sim) releaseSeedCaches(this.sim.cfg.seed);
+    this.sim = null;
+    this.prev = null;
   }
 
   infoDict(): object {
