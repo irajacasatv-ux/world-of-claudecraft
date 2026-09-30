@@ -10,6 +10,7 @@
 // entities helpers live in run_scenarios.ts.
 
 import { describe, expect, it } from 'vitest';
+import { ITEM_GUID_PATTERN } from '../../src/sim/item_provenance';
 import {
   HEROIC_DUNGEON_TUNING,
   HEROIC_MARK_ITEM_ID,
@@ -1726,10 +1727,14 @@ describe('coverage: each scenario fires its subsystem', { timeout: 90_000 }, () 
     // the stamp on, the R5 delta merged (an int 8 / sta 6 neck with a +1
     // delta: largest-remainder puts the point on int).
     const neck = meta.inventory.find((s: any) => s.itemId === 'wyrmfall_pendant');
+    // Plus the tracked-copy pair (src/sim/item_tracking.ts): an epic neck is
+    // minted with a guid and an origin record at the hub, deterministic here.
     expect(neck?.instance).toEqual({
       boundTo: meta.entityId,
       perfected: true,
       rolled: { stats: { int: 1 } },
+      guid: expect.stringMatching(ITEM_GUID_PATTERN),
+      provenance: expect.objectContaining({ by: expect.any(String), source: 'world' }),
     });
     // The worn copy: seated on ring1 by the resolver, bound by its first
     // attempt, mid-track (two attempts can never stamp), never stat-baked.

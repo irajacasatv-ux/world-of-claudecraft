@@ -53,32 +53,16 @@ export const pending: Record<string, readonly string[]> = {
     "hudChrome.itemTooltip.questRewardTo"
   ],
   "zh_CN": [
-    "hudChrome.itemTooltip.itemGuid",
-    "hudChrome.itemTooltip.lootedBy",
-    "hudChrome.itemTooltip.obtainedBy",
-    "hudChrome.itemTooltip.previousOwners",
-    "hudChrome.itemTooltip.questRewardTo"
+    "hudChrome.itemTooltip.itemGuid"
   ],
   "zh_TW": [
-    "hudChrome.itemTooltip.itemGuid",
-    "hudChrome.itemTooltip.lootedBy",
-    "hudChrome.itemTooltip.obtainedBy",
-    "hudChrome.itemTooltip.previousOwners",
-    "hudChrome.itemTooltip.questRewardTo"
+    "hudChrome.itemTooltip.itemGuid"
   ],
   "ko_KR": [
-    "hudChrome.itemTooltip.itemGuid",
-    "hudChrome.itemTooltip.lootedBy",
-    "hudChrome.itemTooltip.obtainedBy",
-    "hudChrome.itemTooltip.previousOwners",
-    "hudChrome.itemTooltip.questRewardTo"
+    "hudChrome.itemTooltip.itemGuid"
   ],
   "ja_JP": [
-    "hudChrome.itemTooltip.itemGuid",
-    "hudChrome.itemTooltip.lootedBy",
-    "hudChrome.itemTooltip.obtainedBy",
-    "hudChrome.itemTooltip.previousOwners",
-    "hudChrome.itemTooltip.questRewardTo"
+    "hudChrome.itemTooltip.itemGuid"
   ],
   "pt_BR": [
     "hudChrome.itemTooltip.itemGuid",
@@ -88,11 +72,7 @@ export const pending: Record<string, readonly string[]> = {
     "hudChrome.itemTooltip.questRewardTo"
   ],
   "ru_RU": [
-    "hudChrome.itemTooltip.itemGuid",
-    "hudChrome.itemTooltip.lootedBy",
-    "hudChrome.itemTooltip.obtainedBy",
-    "hudChrome.itemTooltip.previousOwners",
-    "hudChrome.itemTooltip.questRewardTo"
+    "hudChrome.itemTooltip.itemGuid"
   ],
   "cs_CZ": [
     "hudChrome.itemTooltip.itemGuid",

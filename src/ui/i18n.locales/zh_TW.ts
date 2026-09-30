@@ -14565,6 +14565,10 @@ export const zh_TW: Partial<Record<TranslationKey, string>> = {
     '在接下來的{time}內，你可以將此物品交易給共同獲得該掉落的玩家。裝備後交易期限即告結束。',
   'hudChrome.itemTooltip.perfectedBadge': '臻至完美',
   'hudChrome.itemTooltip.perfectingRank': '完美化：第{rank}階，共{ranks}階',
+  'hudChrome.itemTooltip.lootedBy': '{name} 於 {date} 拾取',
+  'hudChrome.itemTooltip.questRewardTo': '{date} 任務獎勵予 {name}',
+  'hudChrome.itemTooltip.obtainedBy': '{name} 於 {date} 獲得',
+  'hudChrome.itemTooltip.previousOwners': '曾經的持有者：{count}',
   'devCommand.actions.kit.description':
     '為指定專精穿上聖所前的20級預設裝備，優先裝備背包。僅限裝備。',
   'devCommand.actions.kit.label': '裝備新手20級套裝',

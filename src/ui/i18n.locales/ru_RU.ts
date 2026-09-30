@@ -15548,6 +15548,10 @@ export const ru_RU: Partial<Record<TranslationKey, string>> = {
     'Вы можете передать этот предмет игрокам, разделившим эту добычу, ещё в течение {time}. Надев предмет, вы завершите период обмена.',
   'hudChrome.itemTooltip.perfectedBadge': 'Доведён до совершенства',
   'hudChrome.itemTooltip.perfectingRank': 'Совершенствование: ранг {rank} из {ranks}',
+  'hudChrome.itemTooltip.lootedBy': 'Добыто: {name}, {date}',
+  'hudChrome.itemTooltip.questRewardTo': 'Награда за задание: {name}, {date}',
+  'hudChrome.itemTooltip.obtainedBy': 'Получено: {name}, {date}',
+  'hudChrome.itemTooltip.previousOwners': 'Предыдущие владельцы: {count}',
   'devCommand.actions.kit.description':
     'Надеть комплект уровня 20 (до Sanctum) для выбранной специализации, сначала сумки. Только снаряжение.',
   'devCommand.actions.kit.label': 'Экипировать комплект свежего 20 уровня',
