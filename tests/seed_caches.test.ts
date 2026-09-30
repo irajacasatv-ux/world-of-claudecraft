@@ -11,7 +11,7 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 import { Env } from '../headless/env';
 import {
   type ColliderGrid,
@@ -115,6 +115,11 @@ function eagerGridSignature(grid: ColliderGrid): string[] {
 }
 
 describe('the RL env releases a discarded episode seed from every seed-keyed cache', () => {
+  // Each case starts from empty caches even when an earlier one failed midway.
+  afterEach(() => {
+    for (const seed of [SEED_A, SEED_B]) releaseSeedCaches(seed);
+  });
+
   it('keeps only the live seed across resets and close, and a released seed rebuilds bit-identical', () => {
     const env = new Env();
     expect(cachedSeeds()).toEqual([]);
