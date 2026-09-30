@@ -2426,11 +2426,14 @@ function applyChannelTick(
     return;
   }
 
-  // Self-centered AoE channel (Steel Cyclone / bladestorm): a targetless channel
-  // whose storm follows the CASTER, pulsing its aoeDamage on every hostile in
-  // radius around the caster each tick (center is live p.pos, so it moves with
-  // the warrior). Distinct from the position channel above (which clamps a
-  // ground point) and from the single-target channel below.
+  // Targetless AoE channel WITHOUT targetMode 'position': pulses its aoeDamage
+  // on every hostile in radius around the caster's live p.pos each tick. No
+  // shipped ability reaches it today: every shipped channelled AoE is
+  // position-targeted and takes the branch above (bladestorm included, whose
+  // selfCentered flag centers that branch on the caster). It exists for a
+  // future targetless aoeDamage channel authored without targetMode, which
+  // would otherwise fall to the single-target arm below and cancel for want of
+  // a target.
   if (!res.def.requiresTarget && res.effects.some((eff) => eff.type === 'aoeDamage')) {
     const isSpell = res.def.school !== 'physical';
     const channelSp = channelTickBonus(abilityScalingPower(p, res.def), res.def, talentDmgMult);

@@ -99,7 +99,8 @@ export function completeQuestForDev(ctx: SimContext, questId: string, pid?: numb
 // gates open (notably the Nythraxis raid door, which checks
 // questsDone.has('q_nythraxis_bound_guardian')). Unlike the per-quest cheats this
 // does not run the accept/turn-in reward flow (which would flood a 16-slot bag with
-// dozens of reward items); it just stamps questsDone and drops in-progress trackers.
+// dozens of reward items); it just stamps questsDone and leaves every in-progress
+// tracker in the quest log (pinned by tests/dev_god.test.ts).
 // The raid entry check reads questsDone server-side, so attunement takes effect at
 // once; wireRev is bumped so the client's quest log reflects it promptly.
 export function completeAllQuestsForDev(ctx: SimContext, pid?: number): number {
