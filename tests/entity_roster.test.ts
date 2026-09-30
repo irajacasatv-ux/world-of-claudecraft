@@ -714,9 +714,16 @@ describe('paladin-sourced despawn cleanup gate', () => {
 
     const bystander = createMob(880001, MOBS.ridge_stalker, 3, { x: 4, y: 0, z: 4 });
     addEntityToRoster(ctx, bystander);
+    // A second devotion naming the bystander as its source, a state play
+    // cannot reach: it survives only because a non-paladin despawn skips the
+    // source-keyed cleanup walks outright, which is what the gate is for.
+    plantDevotion(sim.player, bystander.id);
     dropEntityFromRoster(ctx, bystander.id);
 
-    expect(sim.player.auras.some((a) => a.id === 'devotion_ward')).toBe(true);
+    const devotionSources = sim.player.auras
+      .filter((a) => a.id === 'devotion_ward')
+      .map((a) => a.sourceId);
+    expect(devotionSources).toEqual([sim.player.id, bystander.id]);
   });
 
   it('still strips every sourced devotion when the paladin despawns', () => {
