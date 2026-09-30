@@ -174,6 +174,11 @@ for the lock inside its existing bounds, so the job's worst case stays under its
 and the capability check that keeps a font-less suite red is unchanged. A fresh gate read passed
 it; its notes are applied, each guarded line killed as a mutant.
 
+A second latent flake surfaced in the local gate: `tests/water_paint_order.test.ts` builds the
+whole world's water in its `beforeAll` (about 6 s alone on this host) under the 10 s default hook
+bound, and timed out once the machine was loaded. The hook now has an explicit 60 s bound
+(`5cb85475c7`), inside the file's default declared-timeout allowance.
+
 ## Kept as they are
 
 - The two lane jobs stay separate: they run beside the shards and finish in about four minutes
