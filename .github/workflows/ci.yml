@@ -885,14 +885,16 @@ jobs:
     # stall that completes and then runs the tests past the bound is killed in
     # the test step, which ci-stall-rerun.yml does not rerun, and 6 of 22
     # test-job checkouts across those two runs stalled for 3.8 to 8.2 minutes.
-    # Fernando ruled (2026-09-29) a stall floor instead: the worst observed stall
+    # A 2026-09-29 ruling (docs/freeholds/qa/test-cost-2026-09-29/rulings-2026-09-29.md)
+    # set a stall floor instead: the worst observed stall
     # plus setup (0.5) plus a slow-runner test step (2.3 x 1.60), times the 1.37
     # margin. From the 8.2 minute stall first seen that gave 17; later the same
     # day a lane A checkout stalled 14.8 minutes and was killed at 17 in its test
     # step (run 36622924538), and a shard checkout stalled 16.45 (run
     # 36615627398). The same arithmetic on 16.45 is (16.45 + 0.5 + 3.68) x 1.37
-    # = 28.3, so 29. It also covers the one sanctioned flake retry
-    # (lib/ci_leg_runner.mjs), which runs the step twice.
+    # = 28.3, so 29. The one sanctioned flake retry (lib/ci_leg_runner.mjs), which
+    # runs the step twice, fits only inside the 1.37 margin: the stall, setup and
+    # two slow test steps come to 24.3.
     timeout-minutes: 29
     runs-on: ubuntu-latest
 

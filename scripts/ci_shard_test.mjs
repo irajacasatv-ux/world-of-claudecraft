@@ -75,7 +75,8 @@ const planOnly = argv.includes('--plan-only');
 // is calibrated against this bound; raise it only with a green measured
 // run at the new value. WOC_TEST_WORKERS is the knob that produces such a
 // run (resolveWorkerCount validates it; anything malformed or out of
-// range falls back to this default, loudly). 2026-09-29: Fernando ruled a
+// range falls back to this default, loudly). 2026-09-29: a ruling
+// (docs/freeholds/qa/test-cost-2026-09-29/rulings-2026-09-29.md) set a
 // new 3-worker trial on the shard legs only, kept only if two full-mode runs
 // were green with no timeout and the summed shard test step fell at least 5
 // percent. Runs 36615627398, 36619850946 and 36622924538 summed 81.4, 90.8

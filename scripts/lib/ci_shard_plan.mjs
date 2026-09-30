@@ -192,11 +192,13 @@ export function laneThresholdOver(weights, carried, lane) {
  * may regrow into. The lane, a small pool one runner's speed moves whole, has its own wider band
  * (LANE_RATCHET_HEADROOM, LANE_RATCHET_SLACK). Moving a file from the shard pool to the lane
  * moves its weight between the two ceilings, so laning one needs a maintainer raise of
- * LANE_POOL_CEILING_MS, as any raise does (its reason in the PR body). The ceilings are measured at the CI worker count they were
- * harvested at (scripts/ci_shard_test.mjs): a change of worker count re-bases them from the
- * first green full-mode harvest at the new count, in the same change.
+ * LANE_POOL_CEILING_MS, as any raise does (its reason in the PR body). The ceilings are
+ * measured at the CI worker count they were harvested at (scripts/ci_shard_test.mjs): a change
+ * of worker count re-bases them from the first green full-mode harvest at the new count, in the
+ * same change.
  */
-// Set 2026-09-29. The shard ceiling is the harvest of run 36648684156 (after the third slimming
+// Set 2026-09-29 (the third harvest's provenance reads 2026-09-30, a UTC date). The shard
+// ceiling is the harvest of run 36648684156 (after the third slimming
 // round) plus RATCHET_HEADROOM: its pool summed 4,937,172 ms (7,038,584 at run 36610517548 and
 // 5,912,504 at run 36635499592, each cut lowering it in the same change). The lane ceiling is
 // the fastest of three harvests of an unchanged lane (307,115 ms at run 36635499592; 332,450 and
@@ -219,7 +221,7 @@ export const RATCHET_SLACK = 0.2;
  * percent (1.36 times 1.1 is about 1.5). Its slack puts the stale point 1.2 times the set point
  * (the shard pool's is 1.09), so only a cut of about 17 percent forces the lane ceiling down and a
  * fast runner alone does not. The price is a looser lane: on a fast-runner harvest a lane that
- * grew up to about 30 percent still passes, and nothing else automatic bounds the lane but its
+ * grew up to about 50 percent still passes, and nothing else automatic bounds the lane but its
  * jobs' timeouts; taking lane rows as a median of several runs would let it share the shard band.
  */
 export const LANE_RATCHET_HEADROOM = 0.5;
