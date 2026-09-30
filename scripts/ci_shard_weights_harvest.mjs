@@ -74,6 +74,22 @@ import { parseWeightLines } from './lib/ci_shard_weight_parse.mjs';
 
 const target = resolve(import.meta.dirname, 'ci_shard_weights.generated.json');
 const ROOT = dirname(import.meta.dirname);
+
+/** The weight table as committed at HEAD, or undefined outside a checkout (or unparsable). */
+function committedTable() {
+  try {
+    return JSON.parse(
+      execFileSync('git', ['show', 'HEAD:scripts/ci_shard_weights.generated.json'], {
+        cwd: ROOT,
+        encoding: 'utf8',
+        maxBuffer: 64 * 1024 * 1024,
+        stdio: ['ignore', 'pipe', 'ignore'],
+      }),
+    );
+  } catch {
+    return undefined;
+  }
+}
 const today = () => new Date().toISOString().slice(0, 10);
 
 // `--report` belongs to the run-id form only: beside a maintenance mode it would
@@ -429,8 +445,9 @@ if (process.argv[2] === '--carry-local') {
     // A wholesale re-harvest replaces every carried row with a CI measurement.
     // Report the current machine-readable map before overwriting it, and warn on
     // unknown provenance fields rather than silently discarding a future shape.
+    let prior;
     try {
-      const prior = JSON.parse(readFileSync(target, 'utf8'));
+      prior = JSON.parse(readFileSync(target, 'utf8'));
       const provenance = prior.__provenance;
       const carriedFiles = Object.keys(carriedRows(prior)).length;
       if (carriedFiles > 0) {
@@ -458,13 +475,20 @@ if (process.argv[2] === '--carry-local') {
             'before trusting the new table.',
         );
       }
-      // An old raw table (or another reference) replaced by this one moves the
-      // pools by the change of scale alone; say so before anyone reads the
-      // ratchet's verdict on the new table as growth or a cut.
-      const scaleNote = calibrationScaleNote(provenance, calibration);
-      if (scaleNote) console.log(`[harvest] NOTE: ${scaleNote}`);
     } catch {
       // No prior table (or unreadable): nothing to report.
+    }
+    // An old raw table (or another reference) replaced by this one moves the
+    // pools by the change of scale alone; say so before anyone reads the
+    // ratchet's verdict on the new table as growth or a cut. The thresholds were
+    // set against the COMMITTED table, so the scale is judged against HEAD's: a
+    // raw or partial harvest the committed-table pin refused is left on disk for
+    // inspection and set nothing, so a calibrated harvest replacing it is no
+    // change of unit. Outside a checkout the working-tree table stands in.
+    const basis = committedTable() ?? prior;
+    if (basis && typeof basis === 'object') {
+      const scaleNote = calibrationScaleNote(basis.__provenance, calibration);
+      if (scaleNote) console.log(`[harvest] NOTE: ${scaleNote}`);
     }
     writeFileSync(target, serializeWeightTable(out));
     console.log(`[harvest] wrote ${Object.keys(sorted).length} weights to ${target}`);

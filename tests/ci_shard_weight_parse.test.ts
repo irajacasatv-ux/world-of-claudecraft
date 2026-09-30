@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   CALIBRATION_CHECKSUM,
   CALIBRATION_REFERENCE_MS,
+  CALIBRATION_VERSION,
   type CalibrationProvenance,
   formatCalibrationLine,
 } from '../scripts/lib/ci_runner_calibration.mjs';
@@ -255,6 +256,63 @@ describe('CI shard weight harvester provenance', () => {
     expect(calibration.status).toBe('partial');
     expect(calibration.raw?.['PR tests (4)']).toMatch(/more than 2 times from the run's median/);
     expect(warns.mock.calls.map(([line]) => String(line)).join('\n')).toContain('PR tests (4)');
+  });
+
+  it('judges the change of scale against the committed table, not a refused table left on disk', async () => {
+    // A fully calibrated harvest. The working tree holds the partial table a refused harvest
+    // left for inspection; HEAD holds the committed table the thresholds were set against.
+    primeCalibratedRun(() => CALIBRATION_REFERENCE_MS);
+    const logsFor = async (committed: unknown) => {
+      const inner = harvestIo.execFileSync.getMockImplementation();
+      harvestIo.execFileSync.mockImplementation((file: string, args: string[], opts: unknown) =>
+        file === 'git' ? JSON.stringify(committed) : inner?.(file, args, opts),
+      );
+      harvestIo.readFileSync.mockReturnValue(
+        JSON.stringify({
+          __provenance: {
+            run: '2',
+            calibration: {
+              status: 'partial',
+              version: 'v1',
+              referenceMs: CALIBRATION_REFERENCE_MS,
+            },
+          },
+        }),
+      );
+      const logs = vi.spyOn(console, 'log').mockImplementation(() => {});
+      vi.spyOn(console, 'warn').mockImplementation(() => {});
+      await runHarvester();
+      expect(harvestIo.execFileSync).toHaveBeenCalledWith(
+        'git',
+        ['show', 'HEAD:scripts/ci_shard_weights.generated.json'],
+        expect.objectContaining({ encoding: 'utf8' }),
+      );
+      const logged = logs.mock.calls.map(([line]) => String(line)).join('\n');
+      logs.mockRestore();
+      harvestIo.execFileSync.mockImplementation(inner ?? (() => ''));
+      return logged;
+    };
+    // Committed calibrated at the live constants: no change of unit, so no note at all (the
+    // leftover would have read as partly calibrated and drawn one).
+    const onCalibrated = await logsFor({
+      __provenance: {
+        run: '1',
+        calibration: {
+          status: 'calibrated',
+          version: CALIBRATION_VERSION,
+          referenceMs: CALIBRATION_REFERENCE_MS,
+          jobs: { 'PR tests (1)': { ms: CALIBRATION_REFERENCE_MS, factor: 1 } },
+        },
+      },
+    });
+    expect(onCalibrated).not.toContain('[harvest] NOTE:');
+    // Committed raw (the change that anchors the reference): the re-base is due.
+    harvestIo.writeFileSync.mockClear();
+    const onRaw = await logsFor({ __provenance: { run: '1' } });
+    expect(onRaw).toContain(
+      '[harvest] NOTE: the replaced table is in raw runner time and this harvest is in calibrated',
+    );
+    expect(onRaw).toContain('so re-base what is set in the old unit in the same change');
   });
 
   it('--report counts in any position and never falls through to a write', async () => {

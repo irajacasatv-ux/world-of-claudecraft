@@ -332,7 +332,8 @@ describe('committed weight table calibration', () => {
     // harvest, or a table from before calibration existed, cannot be committed (the harvest
     // writes one for inspection and names the refusal), nor can calibrated rows at another
     // version or reference (scripts/lib/ci_runner_calibration.mjs, calibrationTableDefects).
-    // Carried rows stay in local time by design and are scaled by CARRIED_LOCAL_TO_CI_RATIO.
+    // Carried rows stay in local time by design and are scaled by CARRIED_LOCAL_TO_CI_RATIO
+    // where they are judged in CI time (the lane rule and the ratchet, not the packer).
     expect(calibrationTableDefects(committedTable.__provenance as Record<string, unknown>)).toEqual(
       [],
     );

@@ -372,9 +372,13 @@ function scaleOf(calibration) {
  * growth or a cut. Null when both tables share one full scale. With the
  * reference anchored, a harvest that is not calibrated in full is the wrong
  * unit rather than a new one to re-base on (calibrationTableDefects refuses it),
- * so the note sends the maintainer to another run instead.
+ * so the note sends the maintainer to another run instead; and a partly raw
+ * replaced table was never committed, so nothing was set in its unit. The
+ * harvest passes the COMMITTED table's provenance (HEAD's), since that is what
+ * the thresholds were set against: with the reference anchored a raw committed
+ * table exists only in the change that anchors it, where the re-base is due.
  *
- * @param {Record<string, unknown> | undefined} priorProvenance the replaced table's __provenance
+ * @param {Record<string, unknown> | undefined} priorProvenance the committed table's __provenance
  * @param {{ status: string, version: string, referenceMs: number }} next this harvest's block
  * @param {{ anchored?: boolean }} [opts] the anchoring to judge against
  *   (CALIBRATION_REFERENCE_ANCHORED by default; injectable so both arms are testable)
@@ -389,6 +393,14 @@ export function calibrationScaleNote(
   const now = scaleOf(next);
   if (was === now && next.status !== 'partial') return null;
   const head = `the replaced table is in ${was} and this harvest is in ${now}: `;
+  const prior = priorProvenance?.calibration;
+  if (anchored && next.status === 'calibrated' && prior?.status === 'partial') {
+    return (
+      head +
+      'a partly raw table is never committed, so no threshold was set in its unit: re-base ' +
+      'nothing, and judge this table against the ceilings as they stand'
+    );
+  }
   if (anchored && next.status !== 'calibrated') {
     return (
       head +
@@ -413,7 +425,7 @@ export function calibrationScaleNote(
  * the reference speed, and anything short of every harvested row calibrated is:
  * status `raw`, `partial` or anything else, no calibration block at all (a
  * harvest from before calibration existed), or a `calibrated` block no harvest
- * writes (with a raw map, or no job). A block with calibrated rows must also be at
+ * writes (with a raw map or a warning, or no job). A block with calibrated rows must also be at
  * the live version and reference, so a moved reference cannot leave a committed
  * table in a unit nothing names. The harvest prints any it writes, and
  * tests/ci_shard_partition.test.ts holds the committed table to none.
@@ -452,15 +464,18 @@ export function calibrationTableDefects(
     );
   } else if (
     block.raw !== undefined ||
+    block.warning !== undefined ||
     !block.jobs ||
     typeof block.jobs !== 'object' ||
+    Array.isArray(block.jobs) ||
     Object.keys(block.jobs).length === 0
   ) {
-    // calibrationProvenance never writes a calibrated block with a raw map or no job, so
-    // such a block was edited by hand and its status cannot be trusted.
+    // calibrationProvenance never writes a calibrated block with a raw map, a warning or no
+    // job, so such a block was edited by hand and its status cannot be trusted (a tripwire
+    // for a careless edit, not proof against a forged block).
     defects.push(
-      'calibration status calibrated but the block names raw jobs or no calibrated job, ' +
-        'which no harvest writes: re-harvest rather than edit the block',
+      'calibration status calibrated but the block names raw jobs, carries a warning or ' +
+        'names no calibrated job, which no harvest writes: re-harvest rather than edit the block',
     );
   }
   if (block.version !== CALIBRATION_VERSION) {

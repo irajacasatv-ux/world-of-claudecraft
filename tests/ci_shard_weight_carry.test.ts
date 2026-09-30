@@ -797,7 +797,14 @@ describe('the harvest entry: full harvest and local-carry modes (injected I/O)',
     const { exitCode, out } = await runEntry(['456']);
     expect(exitCode).toBe(0);
     expect(out).toContain('replacing 1 carried weights with CI-harvested weights');
-    expect(entryIo.execFileSync).toHaveBeenCalledTimes(11);
+    // The job list, ten job logs, and HEAD's table for the change-of-scale note (this rig's
+    // stub answers it with a log, so the note falls back to the working-tree table).
+    expect(entryIo.execFileSync).toHaveBeenCalledTimes(12);
+    expect(entryIo.execFileSync).toHaveBeenCalledWith(
+      'git',
+      ['show', 'HEAD:scripts/ci_shard_weights.generated.json'],
+      expect.objectContaining({ encoding: 'utf8' }),
+    );
     const refreshed = written();
     expect(refreshed[CARRIED]).toBe(210);
     expect(refreshed.__provenance).toEqual({

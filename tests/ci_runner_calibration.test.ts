@@ -285,9 +285,24 @@ describe('scaling a job to the reference speed', () => {
       'with the reference anchored, the ratchet ceilings, LANE_THRESHOLD_MS and ' +
       'CARRIED_LOCAL_TO_CI_RATIO are set at the reference speed, so harvest a run whose every ' +
       'job printed a usable calibration line rather than re-base them';
+    // A raw committed table replaced by a calibrated harvest: the change that anchors the
+    // reference, where the re-base is due (anchored, the committed table is otherwise always
+    // calibrated).
     for (const anchored of [false, true]) {
       expect(calibrationScaleNote({ run: '1' }, calibrated, { anchored })).toContain(REBASE);
     }
+    // A partly raw table is never committed: replaced by a calibrated harvest, it set nothing,
+    // so anchored the note says so (provisional, the partial prior still reads as a re-base).
+    const fromPartial = [
+      { calibration: { ...calibrated, status: 'partial' } },
+      calibrated,
+    ] as const;
+    expect(calibrationScaleNote(...fromPartial, { anchored: true })).toBe(
+      'the replaced table is in partly calibrated, partly raw and this harvest is in calibrated ' +
+        'v1 at a 200 ms reference: a partly raw table is never committed, so no threshold was ' +
+        'set in its unit: re-base nothing, and judge this table against the ceilings as they stand',
+    );
+    expect(calibrationScaleNote(...fromPartial, { anchored: false })).toContain(REBASE);
     const toPartial = [{ run: '1' }, { ...calibrated, status: 'partial' }] as const;
     expect(calibrationScaleNote(...toPartial, { anchored: false })).toContain(REBASE);
     expect(calibrationScaleNote(...toPartial, { anchored: true })).toBe(
@@ -402,10 +417,10 @@ describe('a table stands only in the unit its thresholds are set in', () => {
     }
   });
 
-  it('once anchored, refuses a calibrated block no harvest writes (a raw map, or no job)', () => {
+  it('once anchored, refuses a calibrated block no harvest writes (a raw map, a warning, no job)', () => {
     const edited =
-      'calibration status calibrated but the block names raw jobs or no calibrated job, ' +
-      'which no harvest writes: re-harvest rather than edit the block';
+      'calibration status calibrated but the block names raw jobs, carries a warning or names ' +
+      'no calibrated job, which no harvest writes: re-harvest rather than edit the block';
     const anchored = { anchored: true };
     for (const block of [
       { ...calibratedBlock, raw: { 'PR tests (2)': 'no calibration line' } },
@@ -413,6 +428,8 @@ describe('a table stands only in the unit its thresholds are set in', () => {
       { ...calibratedBlock, jobs: {} },
       { ...live, status: 'calibrated' },
       { ...calibratedBlock, jobs: 'PR tests (1)' },
+      { ...calibratedBlock, jobs: [{ ms: 178, factor: 1 }] },
+      { ...calibratedBlock, warning: '1 of 10 job(s) harvested RAW' },
     ]) {
       expect(calibrationTableDefects({ calibration: block }, anchored)).toEqual([edited]);
     }

@@ -112,7 +112,7 @@ export const CI_GUARD_PREFIXES = Object.freeze(['tests/parity/']);
  * holds every file outside CI_LONG_SUITES under it, reading this constant rather
  * than a literal of its own. Set in raw CI time before the harvest was calibrated;
  * CALIBRATION_REFERENCE_MS is the hosted fleet's median runner, so a calibrated
- * row is raw CI time on a median runner and 90 seconds keeps its meaning, a few
+ * row is raw CI time on a median runner and 90 seconds keeps its meaning, about 7
  * percent tighter than against the mean runner (the fleet's mean-versus-median
  * skew, stated there), the safe way. The first calibrated harvest, run
  * 36735089417, has no shard-pool row over 54 s.
