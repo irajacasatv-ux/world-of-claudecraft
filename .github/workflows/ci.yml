@@ -427,14 +427,20 @@ jobs:
         # only when no route produced the fonts the suite demonstrably
         # needs. Worst-case degraded wall is about 3.7 minutes on top of
         # the 3.73-minute healthy wall, inside this job's 10-minute bound.
+        # A timed-out install-deps leaves its package install running
+        # (timeout stops only npx) and holding the dpkg lock, which failed the
+        # fallback at once in run 36737663127; the fallback stops it first
+        # and waits for the lock inside its own bounds, so the wall is
+        # unchanged.
         run: |
           npx playwright install chromium
           if ! timeout -k 15 100 npx playwright install-deps chromium; then
             echo "install-deps unavailable (exit $?); verifying CJK font coverage directly"
             if ! fc-list :lang=ja | grep -q .; then
+              sudo pkill -x apt-get || true
               sudo sed -i 's|azure.archive.ubuntu.com|archive.ubuntu.com|g' /etc/apt/sources.list.d/ubuntu.sources /etc/apt/sources.list 2>/dev/null || true
-              timeout -k 15 60 sudo apt-get update || true
-              timeout -k 15 90 sudo apt-get install -y --no-install-recommends fonts-noto-cjk || true
+              timeout -k 15 60 sudo apt-get -o DPkg::Lock::Timeout=45 update || true
+              timeout -k 15 90 sudo apt-get -o DPkg::Lock::Timeout=45 install -y --no-install-recommends fonts-noto-cjk || true
             fi
             fc-list :lang=ja | grep -q . || { echo "no CJK font coverage by any route; the browser suite cannot pass without it"; exit 1; }
           fi

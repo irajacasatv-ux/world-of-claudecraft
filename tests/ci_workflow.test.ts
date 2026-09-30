@@ -628,11 +628,13 @@ describe('CI workflow parity', () => {
     // additionally holds gate.mjs to still invoking it, which is what actually
     // makes the resolution reachable.
     // The blanket apt-get ban became a count pin when browser-gate's font
-    // fallback earned the workflow's ONE sanctioned apt use (the two lines of
-    // the Install Chromium block, pinned whole above): FFmpeg stays banned by
-    // name, and any third apt-get line is new creep this count refuses.
+    // fallback earned the workflow's ONE sanctioned apt use (the three lines of
+    // the Install Chromium block, pinned whole above: stopping a package
+    // install a timed-out install-deps left holding the dpkg lock, then the
+    // update and the font install): FFmpeg stays banned by name, and any
+    // fourth apt-get line is new creep this count refuses.
     expect(workflow).not.toMatch(/apt-get[^\n]*ffmpeg/i);
-    expect(workflow.match(/apt-get/g) ?? []).toHaveLength(2);
+    expect(workflow.match(/apt-get/g) ?? []).toHaveLength(3);
     expect(preflightCode).toContain("from '../sfx/ffmpeg_paths.mjs'");
     expect(gateCode).toContain('runGatePreflights');
   });
