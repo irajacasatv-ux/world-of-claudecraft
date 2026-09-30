@@ -1,6 +1,8 @@
 # Part 5, phase 5 (harvest, rebalance, bounds, the nightly): QA
 
-Verdict: PENDING (the three-worker trial and its review are in flight).
+Verdict: PASS (every bar met on green full-mode CI: the summed shard test step 78.03 min and the
+slowest shard job 13.85 min at run 36648684156; the nightly under 2.5 h; the trial reverted on its
+own bar; every harvest and bound change read fresh).
 
 ## The CI runs on the branch tip
 
@@ -9,12 +11,13 @@ Verdict: PENDING (the three-worker trial and its review are in flight).
 | 36583005398 | `07d6b4dad4` (the pause) | full | green | 95.90 min | 15.95 | A 9.17, B 9.73 min |
 | 36607633402 | `5afc5f1ab7` | full | red: shard 2 (the greeting-decline floors, below); browser cancelled by a 7.7 minute checkout stall | 94.02 min | 21.10 (an 8.2 minute checkout stall; healthiest-worst 16.12) | A 2.17, B 2.12 min |
 | 36610517548 | `fb6f9127f8` | full | green, the harvest source | 98.95 min | 18.03 (a 4.98 minute checkout stall; healthiest-worst 15.65) | A 2.32, B 1.13 min |
-| 36635499592 | `f0b175c0c8` (after the second slimming round) | full | green, the second harvest source | 87.78 min | 14.55 (no stall; the whole run 14.7 min) | A 1.70, B 1.55 min |
+| 36635499592 | `f0b175c0c8` (after the second slimming round) | full | green, the second harvest source | 87.78 min | 14.55 (no stall; the whole run 14.8 min) | A 1.70, B 1.55 min |
 | 36648684156 | `481a87079f` (after the third slimming round) | full | green, the third harvest source | 78.03 min | 13.85 (no stall; the whole run 14.1 min) | A 2.17, B 2.13 min |
 
 The baseline of ruling (a) was a mean of 115.73 min summed and 24.0 min slowest shard job. The
-shard pool's test content barely moved between these runs (the lane and the imports are where
-this session's cuts landed), so the 94.0 to 99.0 spread is runner variance.
+shard pool's test content barely moved across the first three runs (the lane and the imports are
+where the cuts before the slimming rounds landed), so their 94.0 to 99.0 spread is runner
+variance; the last two runs follow the second and third slimming rounds.
 
 CI found one real regression the local checks missed: retiring 85 capture scripts took
 `tests/greeting_decline.test.ts`'s scanned decline lines with them, so its non-vacuous floors
@@ -50,8 +53,8 @@ workers, largest file by bytes first) over run 36607633402's in-lane weights, th
 wall 106.8 and 102.9 s; an exhaustive search over every split finds 103.9 and 103.8 s at best,
 five moves for three seconds. Measured, the halves took 118.2 and 115.1 s of vitest wall.
 
-Every lane file now weighs under the 90 s lane rule in CI (the heaviest, the Eastbrook
-integration file, 66.4 s in one run and 33 s in the other). The family stays lane-owned as a unit
+Every lane file now weighs under the 90 s lane rule in CI (the heaviest, 66.4 s, the Eastbrook
+integration file in run 36607633402, and 36.7 s, nythraxis_matrix, in run 36610517548). The family stays lane-owned as a unit
 (the diet-flag registry needs it), and two lane jobs now spend more on checkout and setup (about
 2 min each) than on tests; merging them into one job would change required check names, which
 `docs/merge-queue.md` makes a maintainer decision. Recorded, not done.
@@ -140,7 +143,7 @@ second harvest's table, whose packing spread the shards 6.27 to 11.58 min.
 Its harvest (`bf4ce76659`) cut the shard pool another 16.5 percent (5,912,504 to 4,937,172 ms), so
 `SHARD_POOL_CEILING_MS` came down to 5,431,000 in the same commit. The same harvest read the lane
 at 418,492 ms against 307,115 and 332,450 at the two before, with no lane file changed: every lane
-row 25 to 70 percent slower, the lane jobs 2.17 and 2.13 min against 1.70 and 1.55, one runner's
+row 23 to 74 percent slower than at the harvest before, the lane jobs 2.17 and 2.13 min against 1.70 and 1.55, one runner's
 speed moving the whole small pool. The lane got its own band sized on that measured spread
 (`LANE_RATCHET_HEADROOM` 0.5, `LANE_RATCHET_SLACK` 0.8, a ceiling of 461,000: the fastest reading
 times 1.5, 10 percent over the slowest); `phase-06-ratchet-qa.md` has the reasoning and its

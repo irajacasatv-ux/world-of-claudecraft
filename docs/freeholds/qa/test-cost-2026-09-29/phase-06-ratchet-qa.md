@@ -20,7 +20,7 @@ applied).
   carried row for a new file, a superseded row.
 - **The lane's own band** (`bf4ce76659`, `541becaa24`). The third harvest (run 36648684156) read
   the lane at 418,492 ms against 307,115 and 332,450 at the two before, with no lane file changed:
-  every lane row 25 to 70 percent slower (one half alone 102,982 to 203,705 ms across the three),
+  every lane row 23 to 74 percent slower than at the harvest before (one half alone 102,982 to 203,705 ms across the three),
   one runner's speed moving the whole small pool. The single band would have failed that harvest
   as growth. The lane now has `LANE_RATCHET_HEADROOM` 0.5 (the 1.36 times spread and the shard
   pool's 10 percent) and `LANE_RATCHET_SLACK` 0.8 (a stale point 1.2 times the set point, so only
@@ -28,7 +28,7 @@ applied).
   reading times 1.5, 10 percent over the slowest). This is a raise of the pinned lane ceiling from
   366,000 (26 percent), made as a calibration fix to a ratchet this same branch introduced, from
   measured evidence, and flagged to the maintainer as a decision to confirm; its price, stated in
-  the constant's comment, is that a lane growing up to about 30 percent on a fast-runner harvest
+  the constant's comment, is that a lane growing up to about 50 percent on a fast-runner harvest
   still passes. Taking lane rows as the median of several runs would let the lane share the shard
   band again. The shard ceiling came down to 5,431,000 in the same commit (pool 4,937,172 ms).
 - **The admission rule** (`tests/CLAUDE.md`, "Test cost"; `docs/qa-gate.md`): a new test file's
@@ -145,7 +145,8 @@ applied and read fresh again.
   across lines in the docs), applied in `c1ad6405e3` (its mutant killed).
 - `bf4ce76659` (the lane band): PASS. The reader recomputed the three lane pools from the committed
   table history and confirmed no lane file or helper changed between the harvests; INFO notes (the
-  comment misstated the lane slack's ratio, a doc named one slack, a long line, and the looser lane
+  comment misstated the lane slack's ratio, a doc named one slack, a long line (rewrapped in the
+  record's last fix round), and the looser lane
   protection to state) applied in `541becaa24`.
 
 Recorded, not changed: English prose that qualifies the cost from inside the Guards text or

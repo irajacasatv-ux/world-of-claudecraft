@@ -61,7 +61,7 @@ changes only; a passing control first; every kill re-run after the commit):
   consolation loot as opened (`101080eb9a`), and the town focus hub gate was never checked for the
   time tier (`36b368e245`).
 
-Two fresh coverage audits then read the round: one the thirty-one fix commits above, one the
+Two fresh coverage audits then read the round: one the thirty-one fixer commits above, one the
 round's riskiest decisions (the ten nightly moves, the three deletions, the forced-roll helpers,
 the fake-timer suites, the architecture scan rewrite). Both came back FIX with one should-fix each
 and INFO notes; all were applied:

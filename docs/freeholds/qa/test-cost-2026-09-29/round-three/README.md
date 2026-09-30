@@ -24,12 +24,12 @@ other.
 
 | Part | Files | SLIM | KEEP | Local s before, after (changed files) | Record |
 |---|---|---|---|---|---|
-| 1 | 103 | 97 | 6 | 390.93, 143.97 | `part1.md` |
+| 1 | 103 | 97 | 6 | 391.70, 143.73 | `part1.md` |
 | 2 | 103 | 92 | 11 | 249.38, 96.11 | `part2.md` |
 | 3 | 103 | 99 | 4 | 267.93, 101.90 | `part3.md` |
 | 4 | 103 | 96 | 7 | 263.39, 120.99 | `part4.md` |
 | 5 | 103 | 89 | 14 | 219.98, 111.07 | `part5.md` |
-| all | 515 | 473 | 42 | 1,391.61, 574.04 (59 percent less) | |
+| all | 515 | 473 | 42 | 1,392.38, 573.80 (59 percent less) | |
 
 Every SLIM file killed its mutant. Where a first mutant hit a path the file never reaches, a
 replacement on the live path was killed and the first recorded. Measured in CI (run 36648684156,
@@ -48,8 +48,9 @@ worlds more tightly.
 
 ## Integration
 
-The five parts landed by cherry-pick, each part's changed files run at the tip before the next
-(97, 188 across parts 2 and 4, 99 and 89 files, all green), with `tsc` and the cross-cutting guard
+The five parts landed by cherry-pick in the order they finished (5, 2 with 4, 3, then 1), each
+landing's changed files run at the tip before the next (89, then 188 across parts 2 and 4, 99 and
+97 files, all green), with `tsc` and the cross-cutting guard
 suites after the last. Parts 3 and 4 each added the same NPC-world helper under a different name;
 they were merged into `worldWithOnlyNpcs` (`1de5a2b23a`). A part-2 helper's `git stash pop` took
 part 1's stashed change (git's stash is shared across every worktree of one repository); part 1

@@ -7,7 +7,8 @@ Method as in `classes.md`.
 
 ## Verdicts
 
-39 changed (three partly MOVE TO NIGHTLY, one deletes a duplicated case), 10 KEEP. The 39 changed
+39 changed (three partly MOVE TO NIGHTLY, one of them later back to a single depth; one deletes
+a duplicated case), 10 KEEP. The 39 changed
 files went from 226.2 s to 87.8 s of local test time. Every survivor in the table also survives the
 base file, so no coverage was lost.
 
@@ -37,7 +38,7 @@ base file, so no coverage was lost.
 | env_protocol | 7.4 | SLIM | one seed | 8.35, 2.77 | 4/0 |
 | lockpick_hud_sync | 6.9 | DELETE (one case) | its 30-seed no-drain loop was line for line the one in lockpick_bountiful_jam | 5.46, 0.37 | see below |
 | orange_promotion | 6.8 | SLIM | one seed; the reload Sim on the empty world | 6.93, 1.58 | 5/0 |
-| physics_character | 6.8 | SLIM | one content object per layout; idle cull | 7.91, 4.71 | 2/1 |
+| physics_character | 6.8 | SLIM | one content object per layout; idle cull (a later audit deleted a case that compared one expression with itself, `6f28dcc5e6`) | 7.91, 4.71 | 2/1 |
 | physics_audit_interactions | 6.7 | SLIM | empty world | 4.55, 1.69 | 1/1 |
 | ghost_dead_gate | 6.6 | SLIM | vendor world with its ground objects kept | 4.48, 2.29 | 4/0 |
 | r5_envelope_probe | 6.6 | KEEP | lane durations calibrated to pinned floors; the probe script is outside the list | | |
@@ -51,7 +52,7 @@ base file, so no coverage was lost.
 | curator_broadcast | 5.7 | KEEP | a GameServer per case | | |
 | server/http/parity | 5.6 | KEEP | one beforeAll runs the whole corpus once | | |
 | swim_dive | 5.6 | SLIM | one deep-lake content object | 3.60, 1.83 | 3/0 |
-| frostveil_pit_escape | 5.5 | MOVE TO NIGHTLY (part) | PR walks the 4 cardinal headings, nightly all 16 | 4.22, 2.35 | 2/0 at both depths |
+| frostveil_pit_escape | 5.5 | MOVE TO NIGHTLY (part), later reverted | PR walks the 4 cardinal headings, nightly all 16; after an audit both depths assert that some heading escapes (`4f22694c34`), so the flag read went (`481a87079f`) | 4.22, 2.35 | 2/0 at both depths |
 | border_waters | 5.4 | SLIM | actor-template Sims on the empty world | 3.57, 3.14 | 2/0 |
 | furnishing_commerce_parity | 5.4 | KEEP | the offline side already scoped; the online side is a GameServer | | |
 | dev_bis_gear | 5.3 | SLIM | empty world, one seed | 3.54, 0.44 | 3/0 |

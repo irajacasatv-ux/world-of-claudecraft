@@ -8,7 +8,8 @@ quiet); compare a row's two numbers, not rows with each other. (b) marks a secon
 
 ## Verdicts
 
-97 SLIM, 6 KEEP. The 97 changed files went from 390.93 s to 143.97 s of local test time. Every SLIM
+97 SLIM, 6 KEEP. The 97 changed files went from 391.70 s to 143.73 s of local test time (the
+table's own sum; the part's report quoted 390.93 and 143.97 before four rows were re-timed). Every SLIM
 file kills one source mutant; every control passed. Six fresh reviewers then traced every SLIM file
 for a case that now passed vacuously, which led to the fixes listed below the table.
 
