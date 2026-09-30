@@ -10,7 +10,6 @@
 // entities helpers live in run_scenarios.ts.
 
 import { describe, expect, it } from 'vitest';
-import { ITEM_GUID_PATTERN } from '../../src/sim/item_provenance';
 import {
   HEROIC_DUNGEON_TUNING,
   HEROIC_MARK_ITEM_ID,
@@ -20,6 +19,7 @@ import { HEROIC_BOSS_LOOT } from '../../src/sim/content/heroic_loot';
 import { heroicVariantId } from '../../src/sim/content/heroic_variants';
 import { ITEMS, MOBS } from '../../src/sim/data';
 import { countRawInSlots, countUnlockedInSlots } from '../../src/sim/item_lock';
+import { ITEM_GUID_PATTERN } from '../../src/sim/item_provenance';
 import { RIFT_IMPAIRED_FUSE_CAP } from '../../src/sim/mob/rift_escape_window';
 import {
   FARM_GOLDEN_BONUS_PATTERN_IDS,
