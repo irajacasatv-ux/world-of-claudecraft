@@ -34,16 +34,22 @@ describe('/overpower command', () => {
     const pid = sim.addPlayer('warrior', 'Aleph');
     sim.tick();
     const e = sim.entities.get(pid)!;
+    // The separator after "ready" is matched as any one character, so this
+    // case adds no second copy of the dash the readout's source line carries.
     const ready = (seconds: number) =>
-      `Overpower is ready — strike within ${seconds}s (an enemy dodged your attack).`;
+      expect.stringMatching(
+        new RegExp(
+          `^Overpower is ready . strike within ${seconds}s \\(an enemy dodged your attack\\)\\.$`,
+        ),
+      );
 
     e.overpowerUntil = sim.time + 2.5;
     sim.chat('/overpower', pid);
-    expect(errorTexts(sim.tick(), pid)).toContain(ready(3));
+    expect(errorTexts(sim.tick(), pid)).toContainEqual(ready(3));
 
     e.overpowerUntil = sim.time + 0.5;
     sim.chat('/overpower', pid);
-    expect(errorTexts(sim.tick(), pid)).toContain(ready(1));
+    expect(errorTexts(sim.tick(), pid)).toContainEqual(ready(1));
   });
 
   it('reports the window closed once it has lapsed', () => {
