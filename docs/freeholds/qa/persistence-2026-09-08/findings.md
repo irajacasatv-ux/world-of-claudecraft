@@ -5356,4 +5356,7 @@ decisions-2026-09-30.md`. In short:
 - Found on the way and fixed: the browser jobs' font fallback raced a leftover package install.
 - Kept as they are, with reasons: roof save heights, the two lane jobs, the release-gate bound,
   and the sim readouts' dash characters (a separate copy pass).
+- The final runs: the armed gate green on all 12 steps at `450c7a95c2`; CI 36752774485 green in
+  full mode there (summed shard test step 85.07 min on a slow runner draw, the calibrated pool
+  beside the harvest's; one checkout stalled 9.47 minutes); nightly 36752778164 green, 52.9 min.
 

@@ -186,3 +186,15 @@ bound, and timed out once the machine was loaded. The hook now has an explicit 6
   change required check names the merge queue's ruleset holds outside git.
 - The release-gate bound stays at 36 until the first `release/**` push measures it (its shards
   carry the lane files, which no run on this branch exercises).
+
+## The final runs
+
+The armed gate green on all 12 steps at `450c7a95c2` (74,060 tests; the browser suite 67 files,
+550 tests), after it had caught the water paint hook flake. CI 36752774485 at `450c7a95c2`, fully
+green in full mode: the summed shard test step 85.07 min (under the 86.8 bar on a slow draw: five
+of the eight shards landed on slower processors) and a calibrated shard pool of 5,245,267 ms
+beside the harvest's 5,350,684, so nothing grew; its slowest shard job took 21.48 min only because
+its checkout stalled 9.47 minutes (the runner-side class the lane stall floor was ruled for), with
+healthy shard jobs at about 9 to 13 minutes. Nightly 36752778164 at the same tip: green, 52.9
+minutes end to end, the changed browser install block included.
+
