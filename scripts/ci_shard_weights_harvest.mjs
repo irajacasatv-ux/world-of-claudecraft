@@ -7,6 +7,14 @@
 //   workflow (a selective run only covers the selected slice and would
 //   silently shrink the table; the vacuity pin in
 //   tests/ci_shard_partition.test.ts refuses a shrunken result).
+//   Each job's rows are scaled to one reference runner speed by the calibration
+//   line its CI leg printed before its tests (scripts/lib/ci_runner_calibration.mjs);
+//   a job without a usable line is harvested raw, with a loud warning in the log
+//   and in __provenance.calibration.
+//
+//        node scripts/ci_shard_weights_harvest.mjs --report <run-id>
+//   Reads the run exactly as a harvest does and prints each job's calibration and
+//   the run's shard and lane pools, raw and calibrated, without writing the table.
 //
 //        node scripts/ci_shard_weights_harvest.mjs --carry-local \
 //             [--reason "<why>"] tests/foo.test.ts=<ms>,<ms>,<ms> [more...]
@@ -42,6 +50,12 @@ import { execFileSync, spawnSync } from 'node:child_process';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { MEASURED_FALLBACK_MS } from './ci_shard_partition.mjs';
+import {
+  calibrateJob,
+  calibrationProvenance,
+  calibrationReportLines,
+  calibrationScaleNote,
+} from './lib/ci_runner_calibration.mjs';
 import {
   applyLocalCarry,
   carriedDefects,
@@ -256,9 +270,14 @@ if (process.argv[2] === '--carry-local') {
     process.exitCode = 0;
   }
 } else {
-  const runId = process.argv[2];
+  // `--report <run-id>` reads a run exactly as the harvest does, calibration
+  // included, and prints its raw and calibrated pools per job and whole WITHOUT
+  // writing the table, so runs can be compared before one is harvested.
+  const reportOnly = process.argv[2] === '--report';
+  const runId = process.argv[reportOnly ? 3 : 2];
   if (!runId || !/^\d+$/.test(runId)) {
     console.error('usage: node scripts/ci_shard_weights_harvest.mjs <run-id>');
+    console.error('       node scripts/ci_shard_weights_harvest.mjs --report <run-id>');
     console.error('       node scripts/ci_shard_weights_harvest.mjs --carry-local <path>=<ms>,...');
     console.error(
       '       node scripts/ci_shard_weights_harvest.mjs --carry-local-missing [--runs N]',
@@ -294,8 +313,14 @@ if (process.argv[2] === '--carry-local') {
     process.exit(1);
   }
 
+  // `weights` is the table: each job's rows at the calibration reference speed
+  // (lib/ci_runner_calibration.mjs), or raw for a job without a usable line.
+  // `rawWeights` is the same merge unscaled, for the report.
   /** @type {Record<string, number>} */
   const weights = {};
+  /** @type {Record<string, number>} */
+  const rawWeights = {};
+  const jobResults = [];
   for (const job of jobs) {
     let log = execFileSync('gh', ['run', 'view', runId, '--log', '--job', String(job.id)], {
       encoding: 'utf8',
@@ -326,53 +351,108 @@ if (process.argv[2] === '--carry-local') {
       console.error(`[harvest] ${verdict.reason}`);
       process.exit(1);
     }
-    const before = Object.keys(weights).length;
+    // Runner speed moves every file of a job together, so the job's rows move
+    // to the reference speed by the job's own calibration line, never by a
+    // ratio to another table or job (that would hide a uniform slowdown).
+    const calibrated = calibrateJob(own, log);
+    const sum = (rows) => Object.values(rows).reduce((a, ms) => a + ms, 0);
+    jobResults.push({
+      name: job.name,
+      files: Object.keys(own).length,
+      rawMs: sum(own),
+      calibratedMs: sum(calibrated.weights),
+      ...calibrated,
+    });
     for (const [file, ms] of Object.entries(own)) {
+      rawWeights[file] = Math.max(rawWeights[file] ?? 0, ms);
+    }
+    const before = Object.keys(weights).length;
+    for (const [file, ms] of Object.entries(calibrated.weights)) {
       weights[file] = Math.max(weights[file] ?? 0, ms);
     }
     const added = Object.keys(weights).length - before;
-    console.log(`[harvest] ${job.name}: ${Object.keys(own).length} files parsed, +${added} new`);
+    const speed =
+      calibrated.medianMs === null
+        ? `RAW: ${calibrated.reason}`
+        : `calibration ${calibrated.medianMs} ms, factor ${calibrated.factor.toFixed(4)}`;
+    console.log(
+      `[harvest] ${job.name}: ${Object.keys(own).length} files parsed, +${added} new (${speed})`,
+    );
   }
+  const calibration = calibrationProvenance(jobResults);
 
-  const sorted = Object.fromEntries(Object.entries(weights).sort(([a], [b]) => (a < b ? -1 : 1)));
-  const out = {
-    __provenance: {
-      run: runId,
-      harvested: today(),
-      files: Object.keys(sorted).length,
-      // A wholesale harvest MEASURED every row it wrote, so it declares the
-      // attribution rather than leaving the map absent for the next union to
-      // infer: harvestedFiles equals the row count and nothing is carried.
-      harvestedFiles: Object.keys(sorted).length,
-      carried: {},
-    },
-    ...sorted,
-  };
-  // A wholesale re-harvest replaces every carried row with a CI measurement.
-  // Report the current machine-readable map before overwriting it, and warn on
-  // unknown provenance fields rather than silently discarding a future shape.
-  try {
-    const prior = JSON.parse(readFileSync(target, 'utf8'));
-    const provenance = prior.__provenance;
-    const carriedFiles = Object.keys(carriedRows(prior)).length;
-    if (carriedFiles > 0) {
-      console.log(`[harvest] replacing ${carriedFiles} carried weights with CI-harvested weights`);
+  if (reportOnly) {
+    for (const line of calibrationReportLines({
+      runId,
+      jobs: jobResults,
+      rawWeights,
+      calibratedWeights: weights,
+    })) {
+      console.log(line);
     }
-    const known = new Set(['run', 'harvested', 'files', 'harvestedFiles', 'carried', 'backfill']);
-    const unknown =
-      provenance && typeof provenance === 'object'
-        ? Object.keys(provenance).filter((key) => !known.has(key))
-        : [];
-    if (unknown.length > 0) {
-      console.warn(
-        `[harvest] unrecognized __provenance shape (keys: ${Object.keys(provenance).join(', ')}); ` +
-          'the prior table may carry weights this rewrite DISCARDS. Inspect the old provenance ' +
-          'before trusting the new table.',
-      );
+    console.log('[report] nothing written');
+    process.exitCode = 0;
+  } else {
+    // A job harvested raw is loud twice: here, and in the table's own provenance.
+    if (calibration.warning) console.warn(`[harvest] WARNING: ${calibration.warning}`);
+    const sorted = Object.fromEntries(Object.entries(weights).sort(([a], [b]) => (a < b ? -1 : 1)));
+    const out = {
+      __provenance: {
+        run: runId,
+        harvested: today(),
+        files: Object.keys(sorted).length,
+        // A wholesale harvest MEASURED every row it wrote, so it declares the
+        // attribution rather than leaving the map absent for the next union to
+        // infer: harvestedFiles equals the row count and nothing is carried.
+        harvestedFiles: Object.keys(sorted).length,
+        carried: {},
+        // How the rows are scaled (lib/ci_runner_calibration.mjs): the reference,
+        // every job's calibration and factor, and any job harvested raw.
+        calibration,
+      },
+      ...sorted,
+    };
+    // A wholesale re-harvest replaces every carried row with a CI measurement.
+    // Report the current machine-readable map before overwriting it, and warn on
+    // unknown provenance fields rather than silently discarding a future shape.
+    try {
+      const prior = JSON.parse(readFileSync(target, 'utf8'));
+      const provenance = prior.__provenance;
+      const carriedFiles = Object.keys(carriedRows(prior)).length;
+      if (carriedFiles > 0) {
+        console.log(
+          `[harvest] replacing ${carriedFiles} carried weights with CI-harvested weights`,
+        );
+      }
+      const known = new Set([
+        'run',
+        'harvested',
+        'files',
+        'harvestedFiles',
+        'carried',
+        'backfill',
+        'calibration',
+      ]);
+      const unknown =
+        provenance && typeof provenance === 'object'
+          ? Object.keys(provenance).filter((key) => !known.has(key))
+          : [];
+      if (unknown.length > 0) {
+        console.warn(
+          `[harvest] unrecognized __provenance shape (keys: ${Object.keys(provenance).join(', ')}); ` +
+            'the prior table may carry weights this rewrite DISCARDS. Inspect the old provenance ' +
+            'before trusting the new table.',
+        );
+      }
+      // An old raw table (or another reference) replaced by this one moves the
+      // pools by the change of scale alone; say so before anyone reads the
+      // ratchet's verdict on the new table as growth or a cut.
+      const scaleNote = calibrationScaleNote(provenance, calibration);
+      if (scaleNote) console.log(`[harvest] NOTE: ${scaleNote}`);
+    } catch {
+      // No prior table (or unreadable): nothing to report.
     }
-  } catch {
-    // No prior table (or unreadable): nothing to report.
+    writeFileSync(target, serializeWeightTable(out));
+    console.log(`[harvest] wrote ${Object.keys(sorted).length} weights to ${target}`);
   }
-  writeFileSync(target, serializeWeightTable(out));
-  console.log(`[harvest] wrote ${Object.keys(sorted).length} weights to ${target}`);
 }

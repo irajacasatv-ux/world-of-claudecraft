@@ -10,7 +10,9 @@ import {
 } from '../scripts/lib/ci_shard_weight_harvest_guard.mjs';
 import { stripComments } from './helpers/strip_comments';
 
-const FULL_HARVEST_ENTRY = 'const runId = process.argv[2];';
+// The full-harvest branch (its --report arm reads the same flow and writes nothing,
+// driven in tests/ci_shard_weight_parse.test.ts).
+const FULL_HARVEST_ENTRY = 'const runId = process.argv[reportOnly ? 3 : 2];';
 
 function expectFullHarvestOrdering(harvest: string): void {
   // Local carry and prune modes write independently before this branch.

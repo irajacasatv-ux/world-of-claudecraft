@@ -9,6 +9,10 @@
 // with injected I/O, so output, parsing and refusal paths remain executable
 // rather than prose-only contracts.
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import {
+  CALIBRATION_REFERENCE_MS,
+  formatCalibrationLine,
+} from '../scripts/lib/ci_runner_calibration.mjs';
 import type {
   CarriedProvenance,
   CarriedWeightTable,
@@ -774,8 +778,15 @@ describe('the harvest entry: full harvest and local-carry modes (injected I/O)',
         job <= 8
           ? `${SHARD_FILLER_FILES.map((f, i) => `\u2713 ${f} (1 test) ${100 + i}ms`).join('\n')}\n`
           : '';
+      // Each leg's calibration line at the reference median: factor 1, rows as parsed.
+      const calibration = formatCalibrationLine({
+        medianMs: CALIBRATION_REFERENCE_MS,
+        roundsMs: [CALIBRATION_REFERENCE_MS],
+        checksum: 1,
+      });
       return (
         '[ci-shard-test] changes-job decision: mode=full\n' +
+        `${calibration}\n` +
         shardFiller +
         `\u2713 ${CARRIED} (1 test) ${200 + job}ms\n` +
         `\u2713 tests/full_${job}.test.ts (1 test) ${30 + job}ms`
@@ -794,6 +805,10 @@ describe('the harvest entry: full harvest and local-carry modes (injected I/O)',
       files: SHARD_LOG_FILE_FLOOR + 11,
       harvestedFiles: SHARD_LOG_FILE_FLOOR + 11,
       carried: {},
+      calibration: expect.objectContaining({
+        status: 'calibrated',
+        referenceMs: CALIBRATION_REFERENCE_MS,
+      }),
     });
     expect(carriedDefects(refreshed, { fallbackMs: 41, requireMap: true })).toEqual([]);
     expect(entryIo.spawnSync).not.toHaveBeenCalled();

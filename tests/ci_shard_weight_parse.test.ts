@@ -1,4 +1,9 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import {
+  CALIBRATION_REFERENCE_MS,
+  type CalibrationProvenance,
+  formatCalibrationLine,
+} from '../scripts/lib/ci_runner_calibration.mjs';
 import { SHARD_LOG_FILE_FLOOR } from '../scripts/lib/ci_shard_weight_harvest_guard.mjs';
 import { parseWeightLines, SKIPPED_FILE_WEIGHT_MS } from '../scripts/lib/ci_shard_weight_parse.mjs';
 
@@ -15,6 +20,13 @@ vi.mock('node:fs', () => ({
 }));
 
 const ESC = String.fromCharCode(27);
+
+// The line every CI leg prints before its tests (scripts/lib/ci_runner_calibration.mjs).
+// The rigs below print it at the reference median (factor 1), as a current run does, so
+// the cases about other provenance stay free of the raw-harvest warning.
+const calibrationLine = (medianMs: number) =>
+  formatCalibrationLine({ medianMs, roundsMs: [medianMs], checksum: 0x915fc3cc, cpu: 'rig cpu' });
+const REFERENCE_LINE = calibrationLine(CALIBRATION_REFERENCE_MS);
 
 describe('ci shard weight log parser', () => {
   it('parses both ANSI encodings, both duration units, and skip-count lines', () => {
@@ -77,7 +89,7 @@ describe('CI shard weight harvester provenance', () => {
       // The THIRD shard is the short one: a refusal must not depend on the
       // truncated shard being the first log the harvester reads.
       const count = logCall === 3 ? files : SHARD_LOG_FILE_FLOOR + 20;
-      return `changes-job decision: mode=full\n${lines(count)}`;
+      return `changes-job decision: mode=full\n${REFERENCE_LINE}\n${lines(count)}`;
     });
     harvestIo.writeFileSync.mockClear();
   }
@@ -105,23 +117,128 @@ describe('CI shard weight harvester provenance', () => {
     harvestIo.execFileSync.mockImplementation((_file: string, args: string[]) =>
       args.includes('--json')
         ? JSON.stringify(jobs)
-        : `changes-job decision: mode=full\n${fileLines}`,
+        : `changes-job decision: mode=full\n${REFERENCE_LINE}\n${fileLines}`,
     );
     harvestIo.writeFileSync.mockClear();
   }
 
-  async function runHarvester() {
+  /** A green run whose job `id` printed a calibration line at `medianFor(id)` ms (none
+   *  for null), each job with its own files at 40 ms, so the scaling reads per job. */
+  function primeCalibratedRun(medianFor: (jobId: number) => number | null) {
+    const jobs = [
+      ...Array.from({ length: 8 }, (_, i) => ({
+        id: i + 1,
+        name: `PR tests (${i + 1})`,
+        conclusion: 'success',
+      })),
+      { id: 9, name: 'PR long sims A', conclusion: 'success' },
+      { id: 10, name: 'PR long sims B', conclusion: 'success' },
+    ];
+    harvestIo.execFileSync.mockImplementation((_file: string, args: string[]) => {
+      if (args.includes('--json')) return JSON.stringify(jobs);
+      const id = Number(args[args.indexOf('--job') + 1]);
+      const median = medianFor(id);
+      const files = Array.from(
+        { length: SHARD_LOG_FILE_FLOOR + 20 },
+        (_unused, i) => `\u2713 tests/job${id}_${i}.test.ts (1 test) 40ms`,
+      ).join('\n');
+      const line = median === null ? '' : `${calibrationLine(median)}\n`;
+      return `changes-job decision: mode=full\n${line}${files}`;
+    });
+    harvestIo.writeFileSync.mockClear();
+  }
+
+  async function runHarvester(args: string[] = ['123456789']) {
     vi.resetModules();
-    const priorArg = process.argv[2];
-    process.argv[2] = '123456789';
+    const priorArgs = process.argv.slice(2);
+    process.argv.splice(2, process.argv.length - 2, ...args);
     try {
       // @ts-expect-error The executable intentionally has no public module API.
       await import('../scripts/ci_shard_weights_harvest.mjs');
     } finally {
-      if (priorArg === undefined) process.argv.splice(2, 1);
-      else process.argv[2] = priorArg;
+      process.argv.splice(2, process.argv.length - 2, ...priorArgs);
     }
   }
+
+  const writtenTable = () => {
+    const { __provenance, ...rows } = JSON.parse(
+      String(harvestIo.writeFileSync.mock.calls[0]?.[1]),
+    ) as { __provenance: { calibration: CalibrationProvenance } } & Record<string, unknown>;
+    return { rows: rows as Record<string, number>, calibration: __provenance.calibration };
+  };
+
+  it("scales each job's rows by its OWN calibration line, and a job without one raw and loudly", async () => {
+    // Job 1 ran on a runner twice the reference's time (rows halve), job 2 on one twice as
+    // fast (rows double), job 3 printed no line (raw, warned), the rest at the reference.
+    primeCalibratedRun((id) =>
+      id === 1
+        ? CALIBRATION_REFERENCE_MS * 2
+        : id === 2
+          ? CALIBRATION_REFERENCE_MS / 2
+          : id === 3
+            ? null
+            : CALIBRATION_REFERENCE_MS,
+    );
+    harvestIo.readFileSync.mockReturnValue(JSON.stringify({ __provenance: { run: '1' } }));
+    const logs = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const warns = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    await runHarvester();
+
+    const { rows, calibration } = writtenTable();
+    expect(rows['tests/job1_0.test.ts']).toBe(20);
+    expect(rows['tests/job2_0.test.ts']).toBe(80);
+    expect(rows['tests/job3_0.test.ts']).toBe(40);
+    expect(rows['tests/job4_0.test.ts']).toBe(40);
+    expect(calibration.status).toBe('partial');
+    expect(calibration.referenceMs).toBe(CALIBRATION_REFERENCE_MS);
+    expect(calibration.jobs['PR tests (1)']).toEqual({
+      ms: CALIBRATION_REFERENCE_MS * 2,
+      factor: 0.5,
+      cpu: 'rig cpu',
+    });
+    expect(calibration.raw).toEqual({ 'PR tests (3)': 'no calibration line' });
+    expect(calibration.warning).toContain('PR tests (3)');
+    const warned = warns.mock.calls.map(([line]) => String(line)).join('\n');
+    expect(warned).toContain('[harvest] WARNING: 1 of 10 job(s) harvested RAW');
+    // The replaced table was raw, so the change of scale is named too.
+    expect(logs.mock.calls.map(([line]) => String(line)).join('\n')).toContain(
+      '[harvest] NOTE: the replaced table is in raw runner time',
+    );
+  });
+
+  it('harvests an old run with no calibration line at all raw, and says so in provenance', async () => {
+    primeCalibratedRun(() => null);
+    harvestIo.readFileSync.mockReturnValue(JSON.stringify({ __provenance: { run: '1' } }));
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    const warns = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    await runHarvester();
+
+    const { rows, calibration } = writtenTable();
+    expect(rows['tests/job1_0.test.ts']).toBe(40);
+    expect(calibration.status).toBe('raw');
+    expect(calibration.warning).toContain('10 of 10 job(s) harvested RAW');
+    expect(warns).toHaveBeenCalled();
+  });
+
+  it('--report prints the raw and calibrated pools and writes nothing', async () => {
+    primeCalibratedRun(() => CALIBRATION_REFERENCE_MS * 2);
+    harvestIo.readFileSync.mockReturnValue(JSON.stringify({ __provenance: { run: '1' } }));
+    const logs = vi.spyOn(console, 'log').mockImplementation(() => {});
+    await runHarvester(['--report', '123456789']);
+
+    expect(harvestIo.writeFileSync).not.toHaveBeenCalled();
+    const printed = logs.mock.calls.map(([line]) => String(line));
+    // Ten jobs of 120 files at 40 ms, none in the lane list: 48,000 ms raw, halved.
+    expect(printed).toContain(
+      `[report] run 123456789 shard pool: raw 48000 ms, calibrated 24000 ms (ceiling ${
+        printed.join('\n').match(/shard pool: .*\(ceiling (\d+) ms\)/)?.[1]
+      } ms)`,
+    );
+    expect(printed.some((l) => l.startsWith('[report]   PR tests (1): median 400.0 ms'))).toBe(
+      true,
+    );
+    expect(printed).toContain('[report] nothing written');
+  });
 
   it('reports the checked-in carried rows before replacing them', async () => {
     primeGreenRun();
