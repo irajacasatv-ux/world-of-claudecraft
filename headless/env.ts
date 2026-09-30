@@ -45,7 +45,7 @@ export interface EnvStepResult {
 
 export const DEFAULT_CONFIG: EnvConfig = {
   frameSkip: 5, // 4 decisions per sim-second
-  // the cap is level 20 across three zones now — episodes need room to breathe
+  // the cap is level 20 across three zones now: episodes need room to breathe
   maxSteps: 8000,
   respawnSeconds: 15,
   terminateOnDeath: false,

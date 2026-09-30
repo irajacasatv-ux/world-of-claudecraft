@@ -9160,7 +9160,7 @@ export interface SimConfig {
   // needs the world to tick the way players meet it opts into the shipped value
   // (tests/helpers/production_idle_cull.ts), a fraction of an unculled tick's cost.
   // The headless RL env keeps its own intentional 80-unit throttle
-  // (headless/env_server.ts). Positive values also move every passive idle roll to the
+  // (headless/env.ts). Positive values also move every passive idle roll to the
   // per-mob lane; see mob/idle_rng.ts.
   idleMobTickRadius?: number;
   // When true, the Sowfield auto-runs a bot-vs-bot showcase match after a stretch

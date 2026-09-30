@@ -1841,7 +1841,7 @@ export interface PendingMobRespawn {
 
 // RewardCounters and its zero value moved to reward_counters.ts: one module owns
 // the shape, so a counter added without a matching zero cannot ship. Re-exported
-// here so headless/env_server.ts's import stays byte-identical.
+// here so the headless env's import (headless/env.ts) stays byte-identical.
 export type { RewardCounters };
 
 // The offline guild bank log answer: a FROZEN empty ready view. Offline play
