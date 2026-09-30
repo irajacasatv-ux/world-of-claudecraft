@@ -63,7 +63,9 @@ export const CALIBRATION_REFERENCE_MS = 200;
  * table, and the lane rule's LANE_THRESHOLD_MS, the carried-row
  * CARRIED_LOCAL_TO_CI_RATIO and the ratchet's ceilings
  * (scripts/lib/ci_shard_plan.mjs) are all set in raw CI time, so the first
- * calibrated harvest re-bases them in the same change.
+ * calibrated harvest re-bases them in the same change. Once it is, the same
+ * check turns the other way: a table whose rows are not all calibrated fails,
+ * since the ceilings are then set at the reference speed.
  */
 export const CALIBRATION_REFERENCE_ANCHORED = false;
 
@@ -376,34 +378,56 @@ export function calibrationScaleNote(priorProvenance, next) {
 }
 
 /**
- * What stops a table's calibration block from standing: calibrated rows (status
- * `calibrated` or `partial`) written while CALIBRATION_REFERENCE_ANCHORED is
- * false, or at another version or reference than the live constants, so a moved
- * reference cannot leave a committed table in a unit nothing names. A raw table
- * (or one with no block, harvested before calibration existed) has none. The
- * harvest prints any it writes, and tests/ci_shard_partition.test.ts holds the
- * committed table to none.
+ * What stops a table's calibration block from standing, so a committed table is
+ * always in the unit its thresholds are set in. While the reference is
+ * provisional (`anchored` false) that is raw runner time, and calibrated rows
+ * (status `calibrated` or `partial`) are the defect. Once it is anchored that is
+ * the reference speed, and anything short of every row calibrated is: status
+ * `raw`, `partial` or anything else, or no calibration block at all (a harvest
+ * from before calibration existed). A block with calibrated rows must also be at
+ * the live version and reference, so a moved reference cannot leave a committed
+ * table in a unit nothing names. The harvest prints any it writes, and
+ * tests/ci_shard_partition.test.ts holds the committed table to none.
  *
  * @param {Record<string, any> | undefined} provenance a table's __provenance
+ * @param {{ anchored?: boolean }} [opts] the anchoring to judge against
+ *   (CALIBRATION_REFERENCE_ANCHORED by default; injectable so both arms are testable)
  * @returns {string[]}
  */
-export function calibrationTableDefects(provenance) {
+export function calibrationTableDefects(
+  provenance,
+  { anchored = CALIBRATION_REFERENCE_ANCHORED } = {},
+) {
   const cal = provenance?.calibration;
-  if (!cal || typeof cal !== 'object' || cal.status === 'raw') return [];
+  const block = cal && typeof cal === 'object' ? cal : undefined;
+  if (block === undefined || block.status === 'raw') {
+    if (!anchored) return [];
+    return [
+      `rows in raw runner time (${block === undefined ? 'no calibration block' : 'status raw'}) ` +
+        'while CALIBRATION_REFERENCE_MS is anchored: the ratchet ceilings are set at the ' +
+        'reference speed, so harvest a run whose every job printed a usable calibration line',
+    ];
+  }
   const defects = [];
-  if (!CALIBRATION_REFERENCE_ANCHORED) {
+  if (!anchored) {
     defects.push(
       'calibrated rows while CALIBRATION_REFERENCE_MS is provisional: anchor it to the ' +
         'median calibration the --report of the first calibrated runs prints, set ' +
         'CALIBRATION_REFERENCE_ANCHORED, and re-base the raw-time thresholds in the same change',
     );
-  }
-  if (cal.version !== CALIBRATION_VERSION) {
-    defects.push(`calibration ${cal.version} is not the live ${CALIBRATION_VERSION}`);
-  }
-  if (cal.referenceMs !== CALIBRATION_REFERENCE_MS) {
+  } else if (block.status !== 'calibrated') {
     defects.push(
-      `calibration reference ${cal.referenceMs} ms is not the live ${CALIBRATION_REFERENCE_MS} ms`,
+      `calibration status ${block.status} while CALIBRATION_REFERENCE_MS is anchored: rows not ` +
+        'all at the reference speed (__provenance.calibration.raw names any raw job), so ' +
+        'harvest a run whose every job printed a usable calibration line',
+    );
+  }
+  if (block.version !== CALIBRATION_VERSION) {
+    defects.push(`calibration ${block.version} is not the live ${CALIBRATION_VERSION}`);
+  }
+  if (block.referenceMs !== CALIBRATION_REFERENCE_MS) {
+    defects.push(
+      `calibration reference ${block.referenceMs} ms is not the live ${CALIBRATION_REFERENCE_MS} ms`,
     );
   }
   return defects;

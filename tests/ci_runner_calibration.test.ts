@@ -317,25 +317,70 @@ describe('scaling a job to the reference speed', () => {
   });
 });
 
-describe('a calibrated table stands only at the live, anchored reference', () => {
-  it('holds a raw or pre-calibration table to nothing, and a calibrated one to the live constants', () => {
-    expect(calibrationTableDefects(undefined)).toEqual([]);
-    expect(calibrationTableDefects({ run: '1' })).toEqual([]);
-    expect(calibrationTableDefects({ calibration: { status: 'raw' } })).toEqual([]);
-    const live = { version: CALIBRATION_VERSION, referenceMs: CALIBRATION_REFERENCE_MS };
-    // While the reference is provisional, calibrated or partial rows cannot stand.
+describe('a table stands only in the unit its thresholds are set in', () => {
+  const live = { version: CALIBRATION_VERSION, referenceMs: CALIBRATION_REFERENCE_MS };
+  const HARVEST_CALIBRATED = 'harvest a run whose every job printed a usable calibration line';
+  const rawUnit = (what: string) =>
+    `rows in raw runner time (${what}) while CALIBRATION_REFERENCE_MS is anchored: the ratchet ` +
+    `ceilings are set at the reference speed, so ${HARVEST_CALIBRATED}`;
+
+  it('while the reference is provisional, holds a raw or pre-calibration table to nothing and refuses calibrated rows', () => {
+    const provisional = { anchored: false };
+    expect(calibrationTableDefects(undefined, provisional)).toEqual([]);
+    expect(calibrationTableDefects({ run: '1' }, provisional)).toEqual([]);
+    expect(calibrationTableDefects({ calibration: { status: 'raw' } }, provisional)).toEqual([]);
     for (const status of ['calibrated', 'partial']) {
-      const defects = calibrationTableDefects({ calibration: { ...live, status } });
+      const defects = calibrationTableDefects({ calibration: { ...live, status } }, provisional);
       expect(defects).toHaveLength(1);
       expect(defects[0]).toMatch(/^calibrated rows while CALIBRATION_REFERENCE_MS is provisional/);
     }
-    const stale = calibrationTableDefects({
-      calibration: { status: 'calibrated', version: 'v0', referenceMs: 180 },
-    });
-    expect(stale).toContain(`calibration v0 is not the live ${CALIBRATION_VERSION}`);
-    expect(stale).toContain(
-      `calibration reference 180 ms is not the live ${CALIBRATION_REFERENCE_MS} ms`,
-    );
+  });
+
+  it('once anchored, stands a calibrated table and refuses a raw, partial or pre-calibration one', () => {
+    const anchored = { anchored: true };
+    expect(
+      calibrationTableDefects({ calibration: { ...live, status: 'calibrated' } }, anchored),
+    ).toEqual([]);
+    // A table harvested before calibration existed, or with a block that is not an object.
+    expect(calibrationTableDefects(undefined, anchored)).toEqual([rawUnit('no calibration block')]);
+    expect(calibrationTableDefects({ run: '1' }, anchored)).toEqual([
+      rawUnit('no calibration block'),
+    ]);
+    expect(calibrationTableDefects({ calibration: 'calibrated' }, anchored)).toEqual([
+      rawUnit('no calibration block'),
+    ]);
+    expect(calibrationTableDefects({ calibration: { ...live, status: 'raw' } }, anchored)).toEqual([
+      rawUnit('status raw'),
+    ]);
+    // A partial harvest (some jobs raw) and any status the harvest does not write.
+    for (const status of ['partial', 'unknown']) {
+      expect(calibrationTableDefects({ calibration: { ...live, status } }, anchored)).toEqual([
+        `calibration status ${status} while CALIBRATION_REFERENCE_MS is anchored: rows not all ` +
+          'at the reference speed (__provenance.calibration.raw names any raw job), so ' +
+          HARVEST_CALIBRATED,
+      ]);
+    }
+  });
+
+  it('holds calibrated rows to the live version and reference, anchored or not', () => {
+    for (const anchored of [false, true]) {
+      const stale = calibrationTableDefects(
+        { calibration: { status: 'calibrated', version: 'v0', referenceMs: 180 } },
+        { anchored },
+      );
+      expect(stale).toContain(`calibration v0 is not the live ${CALIBRATION_VERSION}`);
+      expect(stale).toContain(
+        `calibration reference 180 ms is not the live ${CALIBRATION_REFERENCE_MS} ms`,
+      );
+    }
+  });
+
+  it('judges by the live CALIBRATION_REFERENCE_ANCHORED when no anchoring is given', () => {
+    // Provisional today: a raw table stands and calibrated rows do not.
+    expect(calibrationTableDefects({ run: '1' })).toEqual([]);
+    expect(
+      calibrationTableDefects({ calibration: { ...live, status: 'calibrated' } }),
+    ).toHaveLength(1);
   });
 });
 

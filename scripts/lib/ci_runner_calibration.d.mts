@@ -108,4 +108,7 @@ export function calibrationReportLines(input: {
   calibratedWeights: Readonly<Record<string, number>>;
 }): string[];
 
-export function calibrationTableDefects(provenance: Record<string, unknown> | undefined): string[];
+export function calibrationTableDefects(
+  provenance: Record<string, unknown> | undefined,
+  opts?: { anchored?: boolean },
+): string[];
