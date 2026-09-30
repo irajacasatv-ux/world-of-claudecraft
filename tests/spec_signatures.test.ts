@@ -104,6 +104,24 @@ function producesEffect(
       school: 'fire',
     });
   }
+  // Groveheart's signature, Fleetmend, consumes a heal-over-time and is refused
+  // at no cost without one (classic Swiftmend), so the caster carries one of
+  // its own Rejuvenations. Only the caster: on the ally its ticks would raise
+  // the ally's health, which the check below reads as the cast's.
+  if (sig === 'swiftmend') {
+    p.auras.push({
+      id: 'rejuvenation',
+      name: ABILITIES.rejuvenation.name,
+      kind: 'hot',
+      value: 10,
+      remaining: 12,
+      duration: 12,
+      tickInterval: 3,
+      tickTimer: 3,
+      sourceId: pid,
+      school: 'nature',
+    });
+  }
   // The effect check counts only what the CAST did. The rig already makes
   // things happen without any cast, so each of those is excluded: the seeded
   // DoTs tick for the caster (their damage is not the signature's), a spec
