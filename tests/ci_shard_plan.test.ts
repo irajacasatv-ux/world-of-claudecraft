@@ -962,6 +962,9 @@ describe('ci_shard_test.mjs entry (subprocess, --plan-only)', () => {
     // \b so a --maxWorkers=10..19 from a wide-cores regression cannot satisfy
     // a bare prefix match.
     expect(run.log).toMatch(/--maxWorkers=1\b/);
+    // Plan-only spawns nothing, so it never pays for the runner calibration
+    // (lib/ci_runner_calibration.mjs) either, whatever the branch's shape.
+    expect(run.log).not.toContain('[ci-calibration]');
   });
 
   it('falls back loudly to the measured default on a junk WOC_TEST_WORKERS', async () => {

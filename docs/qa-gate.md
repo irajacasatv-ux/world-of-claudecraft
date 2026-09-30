@@ -258,8 +258,8 @@ it, and a file with no row is planned at `MEASURED_FALLBACK_MS` (the table's own
 The table is test time only (the lane rule and the total-time ratchet read it so); the packer
 prices each file at its weight plus `PER_FILE_OVERHEAD_MS` (`packingCost` in
 `scripts/ci_shard_partition.mjs`), the transform, setup and import every file pays, with its fit
-recorded on the constant. Each harvested row is at one reference runner speed: every CI vitest
-leg prints a short fixed CPU calibration line before its tests, and the harvest scales that
+recorded on the constant. Each harvested row is at one reference runner speed: every CI test
+job's entry prints a short fixed CPU calibration line once, before its tests, and the harvest scales that
 job's rows by `CALIBRATION_REFERENCE_MS` over its median (`scripts/lib/ci_runner_calibration.mjs`),
 never by a ratio to another table or job, so a uniform code slowdown still shows. A job without
 a usable line (an old run, or a calibration more than `CALIBRATION_OUTLIER_RATIO` from its run's

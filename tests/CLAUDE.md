@@ -246,7 +246,7 @@ guards hold the line, each naming its own remedy:
   (`LANE_RATCHET_HEADROOM`, `LANE_RATCHET_SLACK`).
   Raising a ceiling is a maintainer decision with its reason in the PR body, and a change of the
   CI worker count re-bases both from a harvest at the new count. The harvest scales each CI job's
-  rows to one reference runner speed by the calibration line its leg prints before its tests
+  rows to one reference runner speed by the calibration line its entry prints before its tests
   (`scripts/lib/ci_runner_calibration.mjs`; a job without a usable line is harvested raw,
   loudly), so a runner's speed stops moving the pools while a real slowdown still does;
   `node scripts/ci_shard_weights_harvest.mjs --report <run-id>` prints a run's pools raw and

@@ -7,8 +7,8 @@
 // swung the harvested shard pool 14.4 percent (4,562,805 to 5,221,653 ms) on
 // nearly one tree and left a table that inherits its harvest jobs' speeds.
 //
-// How: every CI vitest leg (scripts/ci_shard_test.mjs) runs a short, fixed,
-// deterministic CPU workload before its tests and prints ONE line with the
+// How: every CI test job's entry (scripts/ci_shard_test.mjs) runs a short, fixed,
+// deterministic CPU workload once, before its tests, and prints ONE line with the
 // median round time. The harvest (scripts/ci_shard_weights_harvest.mjs) reads
 // that line per job and scales the job's weights by
 // CALIBRATION_REFERENCE_MS / measured, so every row lands at one fixed
