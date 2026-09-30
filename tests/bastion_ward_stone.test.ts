@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { BUILTIN_WORLD, GROUND_OBJECTS, ITEMS, QUESTS } from '../src/sim/data';
+import { BUILTIN_WORLD, GROUND_OBJECTS, ITEMS, MOBS, QUESTS } from '../src/sim/data';
+import { createMob } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
-import type { Entity, WorldContent } from '../src/sim/types';
+import { type Entity, NYTHRAXIS_BOSS_ID, type WorldContent } from '../src/sim/types';
 
 const QUEST_ID = 'q_bastion_door';
 const WARD_ITEM_ID = 'bastion_ward_stone';
@@ -50,6 +51,15 @@ describe('The Sunken Bastion ward stone', () => {
       (e): e is Entity => e.kind === 'object' && e.objectItemId === WARD_ITEM_ID,
     );
     expect(wardStone).toBeTruthy();
+    // A live Nythraxis stands 150 yards off, as in its own raid arena: the
+    // raid claim must measure the distance, not just find a live boss.
+    const boss = createMob(990001, MOBS[NYTHRAXIS_BOSS_ID], 20, {
+      x: wardStone!.pos.x + 150,
+      y: wardStone!.pos.y,
+      z: wardStone!.pos.z,
+    });
+    (sim as unknown as { addEntity(entity: Entity): void }).addEntity(boss);
+    expect(boss.dead).toBe(false);
     teleportTo(sim, wardStone!.pos.x + 1, wardStone!.pos.z);
 
     sim.pickUpObject(wardStone!.id);
