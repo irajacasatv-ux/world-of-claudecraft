@@ -54,7 +54,10 @@ describe('water paint order is pinned, not camera-derived', () => {
     [apron] = water.meshes;
     const built = water.ensureZone(zoneAtFn(0, 0));
     [zonePlaneA] = await built;
-  });
+    // One whole-world water build (about 6 s alone on a slow host) runs in this
+    // hook, so the 10 s default hook bound left under two times of margin and
+    // timed out under a loaded local gate; 60 s keeps a hang bounded.
+  }, 60_000);
 
   afterAll(() => {
     vi.restoreAllMocks();
