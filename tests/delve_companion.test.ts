@@ -387,10 +387,10 @@ describe('delve companions', () => {
     run.moduleIndex = 0;
     (sim as any).spawnDelveModule(run);
     const companion = sim.entities.get(run.companion!.entityId)!;
-    const mob = [...sim.entities.values()].find(
-      (e) => e.kind === 'mob' && e.hostile && e.templateId !== 'acolyte_tessa',
-    )!;
-    expect(mob).toBeDefined();
+    // One of the module's own mobs: the first hostile mob in the roster is an
+    // overworld boar from this file's world, which says nothing about a delve.
+    const mob = sim.entities.get(run.mobIds[0])!;
+    expect(mob.kind).toBe('mob');
     const hpBefore = mob.hp;
     sim.player.targetId = mob.id;
     sim.player.autoAttack = true;
@@ -480,10 +480,10 @@ describe('delve companions', () => {
     run.moduleIndex = 0;
     (sim as any).spawnDelveModule(run);
     const companion = sim.entities.get(run.companion!.entityId)!;
-    const mob = [...sim.entities.values()].find(
-      (e) => e.kind === 'mob' && e.hostile && e.templateId !== 'acolyte_tessa',
-    )!;
-    expect(mob).toBeDefined();
+    // One of the module's own mobs: the first hostile mob in the roster is an
+    // overworld boar from this file's world, which says nothing about a delve.
+    const mob = sim.entities.get(run.mobIds[0])!;
+    expect(mob.kind).toBe('mob');
     const hpBefore = mob.hp;
     sim.player.targetId = mob.id; // companion prefers the owner's target
     companion.pos = { ...mob.pos };
