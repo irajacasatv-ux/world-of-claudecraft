@@ -261,9 +261,14 @@ jobs:
     name: Lint (changed files)
     # Unmatrixed single toolchain-setup-plus-checks job, comparable in shape to
     # browser-gate: checkout, pnpm install, a base-ref fetch, then one biome
-    # pass. 15 keeps a margin over browser-gate's 10 minute bound for the extra
-    # base-ref resolution step.
-    timeout-minutes: 15
+    # pass. A completed checkout stall leaves the rest too little of a tight
+    # bound, and a kill after checkout is outside ci-stall-rerun.yml's safe
+    # predicate: 15 came within seconds of it (a 9.52 minute stall in a
+    # 14.90 minute wall, run 36622924538). Sized by the 2026-09-29
+    # stall-floor ruling: (16.45 worst stall + 0.5 setup + the worst healthy
+    # post-checkout work, 5.82 minutes (run 36610517548, the base-ref fetch
+    # included), x 1.60) x 1.37 = 36.0, so 36.
+    timeout-minutes: 36
     runs-on: ubuntu-latest
 
     steps:
@@ -360,14 +365,19 @@ jobs:
     # why "Classify changes" must itself be a required check.
     needs: changes
     if: needs.changes.outputs.code != 'false'
-    # Fail fast on the checkout-stall class (rationale and evidence on the
-    # pr-gate bound): the slowest healthy wall observed in the 24 hour
-    # replay is 3.73 minutes (run 31053693012), and that sample already
-    # contains the slowest observed cold Playwright Chromium install (2.33
-    # minutes), so 10 keeps a 2.7x margin over a cold-cache day. Its one
-    # stalled run sat 17.5 minutes in checkout inside an 18.4 minute wall
-    # (run 31107474546).
-    timeout-minutes: 10
+    # The checkout-stall class (rationale and evidence on the pr-gate bound)
+    # does not always die in checkout: a stall that completes leaves the
+    # tests too little of a tight bound, and a job killed in its test step
+    # is outside ci-stall-rerun.yml's safe predicate, so it holds the
+    # required check red. 10 (the healthy 3.73 minute wall times 2.7) was
+    # hit so on 2026-09-30: an 8.25 minute checkout, then the suite cancelled
+    # a minute in (run 36759354893). Sized like the lanes by the 2026-09-29
+    # stall-floor ruling: the worst observed stall (16.45) plus setup (0.5)
+    # plus the worst healthy post-checkout work (4.23 minutes, run
+    # 36752774485, install and tests) times the 1.60 slow-runner ratio,
+    # times the 1.37 margin: (16.45 + 0.5 + 6.77) x 1.37 = 32.5, so 33. The
+    # degraded font-fallback path (about 5.5 minutes) fits inside it.
+    timeout-minutes: 33
     runs-on: ubuntu-latest
 
     steps:
@@ -1105,8 +1115,13 @@ jobs:
     # pr-gate's own bound has since moved for its sim-heavy selective test
     # packs, which this job does not run, so the two values parted on
     # purpose. A stalled runner here still dies and reruns instead of
-    # holding a required check for hours.
-    timeout-minutes: 20
+    # holding a required check for hours. Sized by the 2026-09-29
+    # stall-floor ruling, since a completed checkout stall then a kill in
+    # the checks is outside ci-stall-rerun.yml's safe predicate (a 9.38
+    # minute stall already made a 10.73 minute wall, run 36635499592):
+    # (16.45 worst stall + 0.5 setup + the worst healthy post-checkout work,
+    # 1.93 minutes (run 36730711359), x 1.60) x 1.37 = 27.5, so 28.
+    timeout-minutes: 28
     runs-on: ubuntu-latest
 
     steps:

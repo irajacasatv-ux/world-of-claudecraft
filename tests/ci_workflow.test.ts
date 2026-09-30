@@ -1373,22 +1373,25 @@ describe('CI workflow parity', () => {
       // rebalance without re-sizing.
       ['pr-long-sims-a', 29],
       ['pr-long-sims-b', 29],
-      ['browser-gate', 10],
+      // browser-gate, lint and pr-checks: 33, 36 and 28 by the same stall-floor
+      // ruling as the lanes (2026-09-30: a completed 8.25 minute checkout stall
+      // left the browser suite a minute of its 10, and a kill after checkout is
+      // outside the stall-rerun predicate); the arithmetic is on each bound.
+      ['browser-gate', 33],
       // 8 is a measured decision like the rest (healthy worst 4.42 min, all
       // observed stalls over 8), so it is pinned exactly here beside the
       // single-digit shape check the classifier test keeps.
       ['changes', 8],
       // lint is an unmatrixed single toolchain-setup-plus-checks job like
       // browser-gate, but lighter (no browser download): checkout, pnpm
-      // install, a base-ref fetch, one biome pass. 15 keeps a margin over
-      // browser-gate's 10 for the extra base-ref resolution step.
-      ['lint', 15],
+      // install, a base-ref fetch, one biome pass; its base-ref fetch makes
+      // its post-checkout work the longest of the three (5.82 minutes).
+      ['lint', 36],
       // pr-checks and release-checks are the same shape as lint but heavier:
-      // i18n generation, the malware gate, a typecheck, and four builds. 20
-      // was sized beside the shard matrices' original bound and still fits
-      // this serialized check list; the test matrices' bounds have since
-      // moved for their own workloads, deliberately without dragging these.
-      ['pr-checks', 20],
+      // i18n generation, the malware gate, a typecheck, and four builds.
+      // pr-checks carries the stall floor (its work is under two minutes);
+      // release-checks keeps 20 until a release push measures it.
+      ['pr-checks', 28],
       ['release-checks', 20],
       // release-version-gate and release-i18n are both unsharded jobs whose
       // own work is fast (one small version-surface check; five test files,
