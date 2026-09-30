@@ -198,9 +198,10 @@ describe('scaling a job to the reference speed', () => {
       "calibration 401 ms is more than 2 times from the run's median of 200 ms",
     );
     expect(byName.under).toMatchObject({ factor: 1, medianMs: null });
-    // Under three calibrated jobs there is no run to judge against.
-    const pair = calibrateJobs([job('a', 200), job('far', 900)]);
-    expect(pair[1].factor).toBeCloseTo(200 / 900, 12);
+    // Under three calibrated jobs there is no run to judge against: this pair's fast job
+    // sits more than twice under the pair's median (125 ms), and still scales by its line.
+    const pair = calibrateJobs([job('a', 200), job('fast', 50)]);
+    expect(pair[1].factor).toBe(4);
   });
 
   it('records every job in provenance, and a raw job as a warning naming it', () => {
