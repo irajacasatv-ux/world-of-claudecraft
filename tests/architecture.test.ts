@@ -212,6 +212,9 @@ const UI_PURE_CORES = [
   'src/ui/frame_presets_core.ts',
   'src/ui/frame_menu_core.ts',
   'src/ui/loot_quality_view.ts',
+  // The tracked epic/legendary copy's provenance footer lines (origin,
+  // previous owners, item ID); hud.ts composes them under the card.
+  'src/ui/item_provenance_view.ts',
   'src/ui/item_combat_tooltip_view.ts',
   'src/ui/trinket_tooltip_view.ts',
   // The trinket auras' tooltip descriptor and their item-icon art map.

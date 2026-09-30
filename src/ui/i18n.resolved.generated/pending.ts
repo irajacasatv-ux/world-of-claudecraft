@@ -9,25 +9,145 @@
 // Reproducibility is checked by tests/i18n_resolved_equivalence.test.ts.
 
 export const pending: Record<string, readonly string[]> = {
-  "es": [],
-  "es_ES": [],
-  "fr_FR": [],
-  "fr_CA": [],
+  "es": [
+    "hudChrome.itemTooltip.itemGuid",
+    "hudChrome.itemTooltip.lootedBy",
+    "hudChrome.itemTooltip.obtainedBy",
+    "hudChrome.itemTooltip.previousOwners",
+    "hudChrome.itemTooltip.questRewardTo"
+  ],
+  "es_ES": [
+    "hudChrome.itemTooltip.itemGuid",
+    "hudChrome.itemTooltip.lootedBy",
+    "hudChrome.itemTooltip.obtainedBy",
+    "hudChrome.itemTooltip.previousOwners",
+    "hudChrome.itemTooltip.questRewardTo"
+  ],
+  "fr_FR": [
+    "hudChrome.itemTooltip.itemGuid",
+    "hudChrome.itemTooltip.lootedBy",
+    "hudChrome.itemTooltip.obtainedBy",
+    "hudChrome.itemTooltip.previousOwners",
+    "hudChrome.itemTooltip.questRewardTo"
+  ],
+  "fr_CA": [
+    "hudChrome.itemTooltip.itemGuid",
+    "hudChrome.itemTooltip.lootedBy",
+    "hudChrome.itemTooltip.obtainedBy",
+    "hudChrome.itemTooltip.previousOwners",
+    "hudChrome.itemTooltip.questRewardTo"
+  ],
   "en_CA": [],
-  "it_IT": [],
-  "de_DE": [],
-  "zh_CN": [],
-  "zh_TW": [],
-  "ko_KR": [],
-  "ja_JP": [],
-  "pt_BR": [],
-  "ru_RU": [],
-  "cs_CZ": [],
-  "nl_NL": [],
-  "pl_PL": [],
-  "id_ID": [],
-  "tr_TR": [],
-  "sv_SE": [],
-  "vi_VN": [],
-  "da_DK": []
+  "it_IT": [
+    "hudChrome.itemTooltip.itemGuid",
+    "hudChrome.itemTooltip.lootedBy",
+    "hudChrome.itemTooltip.obtainedBy",
+    "hudChrome.itemTooltip.previousOwners",
+    "hudChrome.itemTooltip.questRewardTo"
+  ],
+  "de_DE": [
+    "hudChrome.itemTooltip.itemGuid",
+    "hudChrome.itemTooltip.lootedBy",
+    "hudChrome.itemTooltip.obtainedBy",
+    "hudChrome.itemTooltip.previousOwners",
+    "hudChrome.itemTooltip.questRewardTo"
+  ],
+  "zh_CN": [
+    "hudChrome.itemTooltip.itemGuid",
+    "hudChrome.itemTooltip.lootedBy",
+    "hudChrome.itemTooltip.obtainedBy",
+    "hudChrome.itemTooltip.previousOwners",
+    "hudChrome.itemTooltip.questRewardTo"
+  ],
+  "zh_TW": [
+    "hudChrome.itemTooltip.itemGuid",
+    "hudChrome.itemTooltip.lootedBy",
+    "hudChrome.itemTooltip.obtainedBy",
+    "hudChrome.itemTooltip.previousOwners",
+    "hudChrome.itemTooltip.questRewardTo"
+  ],
+  "ko_KR": [
+    "hudChrome.itemTooltip.itemGuid",
+    "hudChrome.itemTooltip.lootedBy",
+    "hudChrome.itemTooltip.obtainedBy",
+    "hudChrome.itemTooltip.previousOwners",
+    "hudChrome.itemTooltip.questRewardTo"
+  ],
+  "ja_JP": [
+    "hudChrome.itemTooltip.itemGuid",
+    "hudChrome.itemTooltip.lootedBy",
+    "hudChrome.itemTooltip.obtainedBy",
+    "hudChrome.itemTooltip.previousOwners",
+    "hudChrome.itemTooltip.questRewardTo"
+  ],
+  "pt_BR": [
+    "hudChrome.itemTooltip.itemGuid",
+    "hudChrome.itemTooltip.lootedBy",
+    "hudChrome.itemTooltip.obtainedBy",
+    "hudChrome.itemTooltip.previousOwners",
+    "hudChrome.itemTooltip.questRewardTo"
+  ],
+  "ru_RU": [
+    "hudChrome.itemTooltip.itemGuid",
+    "hudChrome.itemTooltip.lootedBy",
+    "hudChrome.itemTooltip.obtainedBy",
+    "hudChrome.itemTooltip.previousOwners",
+    "hudChrome.itemTooltip.questRewardTo"
+  ],
+  "cs_CZ": [
+    "hudChrome.itemTooltip.itemGuid",
+    "hudChrome.itemTooltip.lootedBy",
+    "hudChrome.itemTooltip.obtainedBy",
+    "hudChrome.itemTooltip.previousOwners",
+    "hudChrome.itemTooltip.questRewardTo"
+  ],
+  "nl_NL": [
+    "hudChrome.itemTooltip.itemGuid",
+    "hudChrome.itemTooltip.lootedBy",
+    "hudChrome.itemTooltip.obtainedBy",
+    "hudChrome.itemTooltip.previousOwners",
+    "hudChrome.itemTooltip.questRewardTo"
+  ],
+  "pl_PL": [
+    "hudChrome.itemTooltip.itemGuid",
+    "hudChrome.itemTooltip.lootedBy",
+    "hudChrome.itemTooltip.obtainedBy",
+    "hudChrome.itemTooltip.previousOwners",
+    "hudChrome.itemTooltip.questRewardTo"
+  ],
+  "id_ID": [
+    "hudChrome.itemTooltip.itemGuid",
+    "hudChrome.itemTooltip.lootedBy",
+    "hudChrome.itemTooltip.obtainedBy",
+    "hudChrome.itemTooltip.previousOwners",
+    "hudChrome.itemTooltip.questRewardTo"
+  ],
+  "tr_TR": [
+    "hudChrome.itemTooltip.itemGuid",
+    "hudChrome.itemTooltip.lootedBy",
+    "hudChrome.itemTooltip.obtainedBy",
+    "hudChrome.itemTooltip.previousOwners",
+    "hudChrome.itemTooltip.questRewardTo"
+  ],
+  "sv_SE": [
+    "hudChrome.itemTooltip.itemGuid",
+    "hudChrome.itemTooltip.lootedBy",
+    "hudChrome.itemTooltip.obtainedBy",
+    "hudChrome.itemTooltip.previousOwners",
+    "hudChrome.itemTooltip.questRewardTo"
+  ],
+  "vi_VN": [
+    "hudChrome.itemTooltip.itemGuid",
+    "hudChrome.itemTooltip.lootedBy",
+    "hudChrome.itemTooltip.obtainedBy",
+    "hudChrome.itemTooltip.previousOwners",
+    "hudChrome.itemTooltip.questRewardTo"
+  ],
+  "da_DK": [
+    "hudChrome.itemTooltip.itemGuid",
+    "hudChrome.itemTooltip.lootedBy",
+    "hudChrome.itemTooltip.obtainedBy",
+    "hudChrome.itemTooltip.previousOwners",
+    "hudChrome.itemTooltip.questRewardTo"
+  ]
 };

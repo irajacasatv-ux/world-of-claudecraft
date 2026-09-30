@@ -5997,6 +5997,16 @@ export const hudChromeStrings = {
     // the sim's PERFECTING_RANKS, never literals in copy.
     perfectedBadge: 'Perfected',
     perfectingRank: 'Perfecting: rank {rank} of {ranks}',
+    // Tracked epic/legendary copy provenance (item_provenance_view.ts): the
+    // origin line keyed by the record's source (a kill, a quest reward, or
+    // anything else), the hands-changed count once it is above zero, and
+    // the copy's item ID (the guid a support request quotes). Owner-only:
+    // peers never receive the fields.
+    lootedBy: 'Looted by {name} on {date}',
+    questRewardTo: 'Quest reward to {name} on {date}',
+    obtainedBy: 'Obtained by {name} on {date}',
+    previousOwners: 'Previous owners: {count}',
+    itemGuid: 'Item ID: {guid}',
     // Per-unit material provenance (item_instance_tooltip.ts
     // materialSourceLines over the pure material_sources_view.ts model): one
     // line per recorded descriptor, stating the surviving unit count first so a

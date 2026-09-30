@@ -646,9 +646,9 @@ import {
   instanceLockLine,
   instancePartyTradeLine,
   instanceTitleHtml,
+  itemFooterMarkLines,
   itemNumber,
   itemRequiredLevelLine,
-  materialMakersMarkLines,
   tooltipEffectiveQuality,
   vendorSellTooltipLine,
 } from './item_instance_tooltip';
@@ -6665,7 +6665,7 @@ export class Hud {
     html += itemRequiredLevelLine(item, this.sim.player.level);
     html += this.itemProcBlock(item) + trinketTooltipLines(item, this.sim.player);
     html += this.itemSetBlock(item);
-    html += materialMakersMarkLines(item, instance, materialSources);
+    html += itemFooterMarkLines(item, instance, materialSources);
     // Stackables state their per-slot cap (sim/bags.ts stackSizeOf), so a
     // player holding a single potion learns more copies will share the slot;
     // 1-per-slot kinds, mounts, and charge-bearing payloads render nothing.
