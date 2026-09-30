@@ -67,9 +67,20 @@ describe('Demonology full-BiS five-minute inert-boss balance', () => {
   // ordering is claimed or tested here.
   // Re-measured 2026-09-29 for the production idle cull (scripts/probe_sim.ts):
   // seed-42 actual 253.67 against the 228.92 above; the same relative margins
-  // give 213 / 298. The 0.12 end pool is the finite-pool invariant copied from
-  // the affliction line, never a demonology measurement, so it stays (0.006
-  // measured, 0.018 before the cull).
+  // give 213 / 298.
+  // The 0.12 end pool is a design constant, not a measured band. Measured
+  // 2026-09-30 (this file reads no diet flag, so both depths run one probe):
+  // end pool actual 0.0059 at both depths; affliction's margin would give 0.0072.
+  // That figure is no band: the rotation holds the pool at its Hard Bargain
+  // floor (0.30, tryDemonology in scripts/warlock_balance_probe.ts) while health
+  // lasts, health runs out at about 260 s, and the pool then drains to whatever
+  // is left under the next cast when the window closes: 0.0096 to 0.0186 at
+  // seeds 1337, 9001, 777, 43 and 44, 0.018 here before the cull and 0.032 at a
+  // 295 s window, each past 0.0072 with no balance change. The rule is this
+  // file's finite-pool invariant, the pool spent rather than held at the tap
+  // floor, and 0.12 sits between the two: a free Hard Bargain ends at 0.329
+  // (dps 242.8, starved 0, inside every other check here) and only this line
+  // reds it.
   it('lands the Necromancy-buffed sustained DPS corridor', () => {
     const result = runWarlockBalanceProbe('demonology', 42, 300);
 
