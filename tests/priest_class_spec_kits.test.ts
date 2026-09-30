@@ -147,8 +147,9 @@ describe('Priest v0.28 spec kits', () => {
       );
 
     sim.castAbility('summon_tithefiend');
-    const errors = sim
-      .tick()
+    // Read off the event buffer with no tick: the refusal is emitted at the
+    // command, and this Sim's first tick would cost the case about a second.
+    const errors = sim.events
       .filter((event): event is ErrorEvent => event.type === 'error' && event.pid === priest.id)
       .map((event) => event.text);
 
@@ -164,7 +165,6 @@ describe('Priest v0.28 spec kits', () => {
     priest.gcdRemaining = 0;
     priest.resource = priest.maxResource;
     sim.castAbility('summon_tithefiend');
-    sim.tick();
     expect(tithefiendSummoned()).toBe(true);
   });
 });
