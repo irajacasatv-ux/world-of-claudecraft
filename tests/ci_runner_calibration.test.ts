@@ -50,10 +50,11 @@ describe('the calibration workload', () => {
     expect(CALIBRATION_VERSION).toBe('v1');
     expect(CALIBRATION_ITERATIONS).toBe(600_000);
     expect(CALIBRATION_ROUNDS).toBe(5);
-    expect(CALIBRATION_REFERENCE_MS).toBe(200);
-    // Anchoring the reference (the maintainer's edit after the first calibrated runs) flips
-    // this and is a visible edit here, as the reference itself is.
-    expect(CALIBRATION_REFERENCE_ANCHORED).toBe(false);
+    // Anchored to the median of the 50 calibration lines five full-mode runs printed (177.75
+    // ms, rounded): the unit of every calibrated table and of the ratchet's ceilings, so moving
+    // it, or un-anchoring it, is a visible edit here.
+    expect(CALIBRATION_REFERENCE_MS).toBe(178);
+    expect(CALIBRATION_REFERENCE_ANCHORED).toBe(true);
   });
 
   it("pins the full workload's checksum beside its version, and the constant matches the work", () => {
@@ -195,8 +196,8 @@ describe('scaling a job to the reference speed', () => {
   });
 
   it("harvests raw a job whose calibration sits more than the outlier ratio from the run's median", () => {
-    // The run's median is a check, never a scale: a trusted job still scales by its own
-    // line, and exactly at the ratio (either side) is still trusted.
+    // The run's median (200 ms here) is a check, never a scale: a trusted job still scales by
+    // its own line to the 178 ms reference, and exactly at the ratio (either side) is trusted.
     expect(CALIBRATION_OUTLIER_RATIO).toBe(2);
     const job = (name: string, medianMs: number) => ({
       name,
@@ -213,9 +214,9 @@ describe('scaling a job to the reference speed', () => {
       job('under', 99),
     ]);
     const byName = Object.fromEntries(results.map((r) => [r.name, r]));
-    expect(byName.c.weights).toEqual({ 'tests/c.test.ts': 800 });
-    expect(byName.at_high.factor).toBe(0.5);
-    expect(byName.at_low.factor).toBe(2);
+    expect(byName.c.weights).toEqual({ 'tests/c.test.ts': 712 });
+    expect(byName.at_high.factor).toBe(0.445);
+    expect(byName.at_low.factor).toBe(1.78);
     expect(byName.over).toMatchObject({ factor: 1, medianMs: null });
     expect(byName.over.weights).toEqual({ 'tests/over.test.ts': 1_000 });
     expect(byName.over.reason).toBe(
@@ -225,7 +226,7 @@ describe('scaling a job to the reference speed', () => {
     // Under three calibrated jobs there is no run to judge against: this pair's fast job
     // sits more than twice under the pair's median (125 ms), and still scales by its line.
     const pair = calibrateJobs([job('a', 200), job('fast', 50)]);
-    expect(pair[1].factor).toBe(4);
+    expect(pair[1].factor).toBe(3.56);
   });
 
   it('records every job in provenance, and a raw job as a warning naming it', () => {
@@ -236,14 +237,21 @@ describe('scaling a job to the reference speed', () => {
       cpu: medianMs === null ? '' : 'cpu',
       reason: medianMs === null ? 'no calibration line' : '',
     });
-    const all = calibrationProvenance([job('PR tests (1)', 250), job('PR long sims A', 160)]);
+    // A factor is recorded to four places: 178 / 250 is 0.712, 178 / 160 is 1.1125, and
+    // 178 / 534 (a third) is 0.3333.
+    const all = calibrationProvenance([
+      job('PR tests (1)', 250),
+      job('PR long sims A', 160),
+      job('PR long sims B', 534),
+    ]);
     expect(all).toEqual({
       version: 'v1',
-      referenceMs: CALIBRATION_REFERENCE_MS,
+      referenceMs: 178,
       status: 'calibrated',
       jobs: {
-        'PR tests (1)': { ms: 250, factor: 0.8, cpu: 'cpu' },
-        'PR long sims A': { ms: 160, factor: 1.25, cpu: 'cpu' },
+        'PR tests (1)': { ms: 250, factor: 0.712, cpu: 'cpu' },
+        'PR long sims A': { ms: 160, factor: 1.1125, cpu: 'cpu' },
+        'PR long sims B': { ms: 534, factor: 0.3333, cpu: 'cpu' },
       },
     });
     const partial = calibrationProvenance([job('PR tests (1)', 250), job('PR tests (2)', null)]);
@@ -376,11 +384,9 @@ describe('a table stands only in the unit its thresholds are set in', () => {
   });
 
   it('judges by the live CALIBRATION_REFERENCE_ANCHORED when no anchoring is given', () => {
-    // Provisional today: a raw table stands and calibrated rows do not.
-    expect(calibrationTableDefects({ run: '1' })).toEqual([]);
-    expect(
-      calibrationTableDefects({ calibration: { ...live, status: 'calibrated' } }),
-    ).toHaveLength(1);
+    // Anchored: calibrated rows at the live constants stand and a pre-calibration table does not.
+    expect(calibrationTableDefects({ calibration: { ...live, status: 'calibrated' } })).toEqual([]);
+    expect(calibrationTableDefects({ run: '1' })).toEqual([rawUnit('no calibration block')]);
   });
 });
 

@@ -206,20 +206,20 @@ describe('CI shard weight harvester provenance', () => {
     expect(calibration.warning).toContain('PR tests (3)');
     const warned = warns.mock.calls.map(([line]) => String(line)).join('\n');
     expect(warned).toContain('[harvest] WARNING: 1 of 10 job(s) harvested RAW');
-    // The replaced table was raw, so the change of scale is named too, and while the
-    // reference is provisional the committed-table pin's refusal is announced.
+    // The replaced table was raw, so the change of scale is named too, and with the reference
+    // anchored the committed-table pin's refusal of a partly raw table is announced.
     const logged = logs.mock.calls.map(([line]) => String(line)).join('\n');
     expect(logged).toContain('[harvest] NOTE: the replaced table is in raw runner time');
     expect(logged).toContain(
       '[harvest] NOTE: tests/ci_shard_partition.test.ts refuses this table until fixed: ' +
-        'calibrated rows while CALIBRATION_REFERENCE_MS is provisional',
+        'calibration status partial while CALIBRATION_REFERENCE_MS is anchored',
     );
   });
 
   it('harvests an old run with no calibration line at all raw, and says so in provenance', async () => {
     primeCalibratedRun(() => null);
     harvestIo.readFileSync.mockReturnValue(JSON.stringify({ __provenance: { run: '1' } }));
-    vi.spyOn(console, 'log').mockImplementation(() => {});
+    const logs = vi.spyOn(console, 'log').mockImplementation(() => {});
     const warns = vi.spyOn(console, 'warn').mockImplementation(() => {});
     await runHarvester();
 
@@ -228,6 +228,12 @@ describe('CI shard weight harvester provenance', () => {
     expect(calibration.status).toBe('raw');
     expect(calibration.warning).toContain('10 of 10 job(s) harvested RAW');
     expect(warns).toHaveBeenCalled();
+    // With the reference anchored a raw table is in the wrong unit for the ceilings, and the
+    // committed-table pin's refusal is announced where the table is written.
+    expect(logs.mock.calls.map(([line]) => String(line)).join('\n')).toContain(
+      '[harvest] NOTE: tests/ci_shard_partition.test.ts refuses this table until fixed: ' +
+        'rows in raw runner time (status raw) while CALIBRATION_REFERENCE_MS is anchored',
+    );
   });
 
   it("harvests raw, loudly, a job whose calibration is far from the run's others", async () => {
@@ -283,9 +289,14 @@ describe('CI shard weight harvester provenance', () => {
         printed.join('\n').match(/shard pool: .*\(ceiling (\d+) ms\)/)?.[1]
       } ms)`,
     );
-    expect(printed.some((l) => l.startsWith('[report]   PR tests (1): median 400.0 ms'))).toBe(
-      true,
-    );
+    expect(
+      printed.some((l) =>
+        l.startsWith(
+          `[report]   PR tests (1): median ${(CALIBRATION_REFERENCE_MS * 2).toFixed(1)} ms, ` +
+            'factor 0.5000',
+        ),
+      ),
+    ).toBe(true);
     expect(printed).toContain('[report] nothing written');
   });
 
@@ -322,6 +333,11 @@ describe('CI shard weight harvester provenance', () => {
     expect(replacement).toContain('2 carried weights');
     expect(warns).not.toHaveBeenCalled();
     expect(harvestIo.writeFileSync).toHaveBeenCalledOnce();
+    // Every job calibrated at the live, anchored reference: a table the pin accepts, so no
+    // refusal is announced.
+    expect(logs.mock.calls.map(([line]) => String(line)).join('\n')).not.toContain(
+      'refuses this table',
+    );
   });
 
   it('speaks up on an unrecognized provenance shape instead of a silent discard', async () => {

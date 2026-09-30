@@ -327,11 +327,11 @@ const committedTable = JSON.parse(
 ) as Record<string, unknown>;
 
 describe('committed weight table calibration', () => {
-  it('carries calibrated rows only at the live, anchored reference', () => {
-    // A harvest writes calibrated rows at a provisional reference for inspection; the
-    // table cannot be committed until the reference is anchored and the thresholds set in
-    // raw CI time are re-based (scripts/lib/ci_runner_calibration.mjs names them). A raw
-    // table, or one harvested before calibration existed, passes as it stands.
+  it('is in the unit its thresholds are set in: every row calibrated at the live, anchored reference', () => {
+    // The ratchet's ceilings are set at the anchored reference speed, so a raw or partial
+    // harvest, or a table from before calibration existed, cannot be committed (the harvest
+    // writes one for inspection and names the refusal), nor can calibrated rows at another
+    // version or reference (scripts/lib/ci_runner_calibration.mjs, calibrationTableDefects).
     expect(calibrationTableDefects(committedTable.__provenance as Record<string, unknown>)).toEqual(
       [],
     );

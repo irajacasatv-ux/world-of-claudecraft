@@ -45,29 +45,35 @@ export const CALIBRATION_ROUNDS = 5;
 /**
  * The fixed reference speed, as a median round time in ms: a job whose median
  * round took this long keeps its weights as measured, a slower job's weights
- * scale down, a faster job's up. PROVISIONAL until the first calibrated CI runs
- * (a round figure within the desktop's range above; no hosted runner has
- * printed a line yet): anchor it ONCE to the median calibration those runs
- * print (`--report`) and set CALIBRATION_REFERENCE_ANCHORED, before the first
- * calibrated harvest is committed, and never move it after, since moving it
- * rescales every future table against the thresholds set in its unit.
+ * scale down, a faster job's up. Anchored 2026-09-30 to the hosted fleet's
+ * median runner: the 50 test jobs of the full-mode runs 36724442671,
+ * 36726951063, 36730711359, 36735089417 and 36737663127, nearly one tree,
+ * printed medians of 100.8 to 202.4 ms, median 177.75, rounded here. Summed per
+ * run with each job scaled by that median over its own line, the five runs'
+ * shard pools spread 1.069 times (max over min) where raw they spread 1.249,
+ * and their lane pools 1.064 where raw 1.384; the heaviest run's pool sat 4.6
+ * percent over the five runs' median pool in both. At this reference a
+ * calibrated weight is raw CI time on a median runner, the unit LANE_THRESHOLD_MS
+ * and CARRIED_LOCAL_TO_CI_RATIO (scripts/lib/ci_shard_plan.mjs) were set in on
+ * the same fleet, so both keep their meaning and their values. Never move it:
+ * moving it rescales every future table against the thresholds and ceilings set
+ * in its unit (a changed workload bumps CALIBRATION_VERSION and is anchored
+ * afresh instead).
  */
-export const CALIBRATION_REFERENCE_MS = 200;
+export const CALIBRATION_REFERENCE_MS = 178;
 
 /**
- * Whether CALIBRATION_REFERENCE_MS has been anchored to hosted-runner evidence.
- * Until it is, a table with calibrated rows fails calibrationTableDefects, so
- * tests/ci_shard_partition.test.ts refuses to let one be committed (the harvest
- * still writes it for inspection and says so, and `--report` prints the same
- * figures without writing): the reference sets the unit of every calibrated
- * table, and the lane rule's LANE_THRESHOLD_MS, the carried-row
- * CARRIED_LOCAL_TO_CI_RATIO and the ratchet's ceilings
- * (scripts/lib/ci_shard_plan.mjs) are all set in raw CI time, so the first
- * calibrated harvest re-bases them in the same change. Once it is, the same
- * check turns the other way: a table whose rows are not all calibrated fails,
- * since the ceilings are then set at the reference speed.
+ * Whether CALIBRATION_REFERENCE_MS is anchored to hosted-runner evidence (it is:
+ * above). calibrationTableDefects holds the committed table to the unit this
+ * names, both ways: while it is false the thresholds are in raw CI time and a
+ * table with calibrated rows cannot stand; now that it is true the ratchet's
+ * ceilings (scripts/lib/ci_shard_plan.mjs) are in calibrated time, so a table
+ * whose rows are not all calibrated (a raw or partial harvest, or one with no
+ * calibration block) cannot stand, since its pools would be read against them
+ * in the wrong unit. tests/ci_shard_partition.test.ts refuses such a table (the
+ * harvest still writes it for inspection and says so).
  */
-export const CALIBRATION_REFERENCE_ANCHORED = false;
+export const CALIBRATION_REFERENCE_ANCHORED = true;
 
 /**
  * The checksum of CALIBRATION_ITERATIONS of calibrationWork: a line printing any

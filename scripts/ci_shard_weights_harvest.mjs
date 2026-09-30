@@ -468,9 +468,10 @@ if (process.argv[2] === '--carry-local') {
     }
     writeFileSync(target, serializeWeightTable(out));
     console.log(`[harvest] wrote ${Object.keys(sorted).length} weights to ${target}`);
-    // Calibrated rows at a provisional reference are written for inspection
-    // only: the committed-table pin refuses them until the reference is
-    // anchored and the raw-time thresholds re-based in the same change.
+    // A table in the wrong unit for its thresholds (with the reference
+    // anchored: a raw or partial harvest; at a provisional one: calibrated
+    // rows) is written for inspection only, and the committed-table pin
+    // refuses it, so the refusal is named here where it is written.
     for (const defect of calibrationTableDefects(out.__provenance)) {
       console.log(
         `[harvest] NOTE: tests/ci_shard_partition.test.ts refuses this table until fixed: ${defect}`,
