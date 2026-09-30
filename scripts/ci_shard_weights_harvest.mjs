@@ -75,10 +75,10 @@ import { parseWeightLines } from './lib/ci_shard_weight_parse.mjs';
 const target = resolve(import.meta.dirname, 'ci_shard_weights.generated.json');
 const ROOT = dirname(import.meta.dirname);
 
-/** The weight table as committed at HEAD, or undefined outside a checkout (or unparsable). */
+/** The weight table as committed at HEAD, or undefined outside a checkout (or not a table). */
 function committedTable() {
   try {
-    return JSON.parse(
+    const table = JSON.parse(
       execFileSync('git', ['show', 'HEAD:scripts/ci_shard_weights.generated.json'], {
         cwd: ROOT,
         encoding: 'utf8',
@@ -86,6 +86,7 @@ function committedTable() {
         stdio: ['ignore', 'pipe', 'ignore'],
       }),
     );
+    return table && typeof table === 'object' ? table : undefined;
   } catch {
     return undefined;
   }
@@ -490,9 +491,9 @@ if (process.argv[2] === '--carry-local') {
     if (basis && typeof basis === 'object') {
       const scaleNote = calibrationScaleNote(basis.__provenance, calibration);
       const against =
-        committed === undefined
-          ? 'the working-tree table, since git show HEAD failed'
-          : "HEAD's committed table";
+        basis === committed
+          ? "HEAD's committed table"
+          : "the working-tree table, since HEAD's could not be read";
       if (scaleNote) console.log(`[harvest] NOTE: ${scaleNote} (judged against ${against})`);
     }
     writeFileSync(target, serializeWeightTable(out));

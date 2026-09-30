@@ -223,7 +223,9 @@ describe('CI shard weight harvester provenance', () => {
     // And the scale note sends the operator to another run, not to a re-base, naming the table
     // it judged against (this rig's git stub answers with a log, so the working-tree one).
     expect(logged).toContain('so harvest a run whose every job printed a usable calibration line');
-    expect(logged).toContain('(judged against the working-tree table, since git show HEAD failed)');
+    expect(logged).toContain(
+      "(judged against the working-tree table, since HEAD's could not be read)",
+    );
     expect(logged).not.toContain('so re-base what is set in the old unit');
   });
 
@@ -288,6 +290,8 @@ describe('CI shard weight harvester provenance', () => {
       );
       const logs = vi.spyOn(console, 'log').mockImplementation(() => {});
       vi.spyOn(console, 'warn').mockImplementation(() => {});
+      // Run from elsewhere: the git call must still name this checkout's root, not the cwd.
+      vi.spyOn(process, 'cwd').mockReturnValue(dirname(REPO_ROOT));
       harvestIo.execFileSync.mockClear();
       try {
         await runHarvester();
