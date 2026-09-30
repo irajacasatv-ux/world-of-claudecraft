@@ -198,7 +198,7 @@ describe('the RL env releases a discarded episode seed from every seed-keyed cac
     expect(cachedSeeds()).toEqual([]);
   });
 
-  it('is called by the RL env alone: no server, client or sim path releases a seed', () => {
+  it('is released by the RL env alone, and its caches are imported only by their readers', () => {
     const walk = (dir: string): string[] =>
       readdirSync(dir).flatMap((name) => {
         const full = join(dir, name);
@@ -208,10 +208,21 @@ describe('the RL env releases a discarded episode seed from every seed-keyed cac
     const scanned = ['src', 'server', 'headless'].flatMap((d) => walk(join(repoRoot, d)));
     // Floor so a walk that lost a root cannot pass empty.
     expect(scanned.length).toBeGreaterThan(1000);
-    const users = scanned
-      .filter((f) => /\breleaseSeedCaches\b/.test(readFileSync(f, 'utf8')))
-      .map((f) => relative(repoRoot, f).split('\\').join('/'))
-      .sort();
-    expect(users).toEqual(['headless/env.ts', 'src/sim/seed_caches.ts']);
+    const matching = (re: RegExp): string[] =>
+      scanned
+        .filter((f) => re.test(readFileSync(f, 'utf8')))
+        .map((f) => relative(repoRoot, f).split('\\').join('/'))
+        .sort();
+    expect(matching(/\breleaseSeedCaches\b/)).toEqual([
+      'headless/env.ts',
+      'src/sim/seed_caches.ts',
+    ]);
+    // The caches themselves are exported for their two readers only, so no
+    // other module can clear one behind the release's back.
+    expect(matching(/from '[./]*(?:src\/sim\/)?seed_caches'/)).toEqual([
+      'headless/env.ts',
+      'src/sim/colliders.ts',
+      'src/sim/world.ts',
+    ]);
   });
 });

@@ -19,7 +19,8 @@
 // Caches that hold at most one seed at a time (the sea-cell memo, the palm,
 // lily and willow spot lists, the vault pad anchor) replace themselves on the
 // next seed's first read and are not listed here; neither are the per-grid
-// WeakMaps (streetlamps, banker chests), which go with their grid.
+// WeakMaps (streetlamps, banker chests), which go with their grid, nor the
+// maze layout caches (yumi_maze_layout.ts), keyed by the fixed maze seed.
 
 import type { ColliderGrid } from './colliders';
 import { getActiveWorldContent } from './data';

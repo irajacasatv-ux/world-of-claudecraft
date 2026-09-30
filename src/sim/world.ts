@@ -4541,7 +4541,7 @@ export function terrainSteepness(x: number, z: number, seed: number): number {
 // lives in seed_caches.ts. Cell granularity only shifts a gate line by under a
 // yard, far inside the walls' steepness margin (tests/terrain_walls.test.ts).
 const STEEPNESS_CACHE_MAX = 400_000; // cells per seed; ~the whole overworld
-const STEEPNESS_CACHE_MAX_SEEDS = 4; // hosts run one seed; only test runs see more
+const STEEPNESS_CACHE_MAX_SEEDS = 4; // hosts run one seed; tests see more (the RL env releases)
 const STEEPNESS_CELL_SPAN = 16384; // cells per axis in the packed key
 // The heightfield is a function of (x, z, seed) AND the active content (its
 // lakes, edits, camps): drop the memo whenever the content swaps (editor
