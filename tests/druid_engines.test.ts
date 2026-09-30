@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { isRooted } from '../src/sim/combat/cc';
+import { type ConsumeAuraEffect, consumableAuraIndex } from '../src/sim/combat/consume_aura_match';
 import { handleDeath } from '../src/sim/combat/damage';
 import {
   druidEngineCombatState,
@@ -513,6 +514,97 @@ describe('Groveheart engine', () => {
     expect(player.hp).toBe(hpAfterHarvest);
   });
 
+  // Fleetmend (swiftmend) with nothing to consume is refused at the cast gate,
+  // classic style: no mana, no cooldown, no GCD, only the error. The gate reads
+  // the RESOLVED target, so the caster's own HoT never stands in for an ally's.
+  it('refuses Fleetmend with nothing to consume before mana, cooldown and GCD', () => {
+    const { sim, player } = rig('restoration');
+    const allyId = sim.addPlayer('warrior', 'Unbloomed');
+    const ally = sim.entities.get(allyId) as Entity;
+    ally.pos = { ...player.pos, z: player.pos.z + 4 };
+    ally.prevPos = { ...ally.pos };
+    player.hp = Math.round(player.maxHp * 0.4);
+    ally.hp = Math.round(ally.maxHp * 0.4);
+
+    const press = (): string[] => {
+      player.gcdRemaining = 0;
+      player.resource = player.maxResource;
+      sim.drainEvents();
+      sim.castAbility('swiftmend');
+      return sim.drainEvents().flatMap((event) => (event.type === 'error' ? [event.text] : []));
+    };
+    const expectRefusedAtNoCost = (errors: string[]) => {
+      expect(errors).toEqual(['Nothing to consume.']);
+      expect(player.resource).toBe(player.maxResource);
+      expect(player.cooldowns.has('swiftmend')).toBe(false);
+      expect(player.gcdRemaining).toBe(0);
+    };
+
+    // Self-cast, no HoT anywhere.
+    const selfHp = player.hp;
+    expectRefusedAtNoCost(press());
+    expect(player.hp).toBe(selfHp);
+
+    // An ally with no HoT while the caster wears Wildbloom: still refused, and
+    // the caster's own HoT is left alone.
+    player.auras.push({
+      id: 'rejuvenation',
+      name: 'Wildbloom',
+      kind: 'hot',
+      remaining: 12,
+      duration: 15,
+      value: 20,
+      tickInterval: 3,
+      tickTimer: 3,
+      sourceId: player.id,
+      school: 'nature',
+    });
+    sim.targetEntity(allyId);
+    const allyHp = ally.hp;
+    expectRefusedAtNoCost(press());
+    expect(ally.hp).toBe(allyHp);
+    expect(player.auras.some((aura) => aura.id === 'rejuvenation')).toBe(true);
+  });
+
+  it.each([
+    ['rejuvenation', 'Wildbloom'],
+    ['regrowth', 'Second Bloom'],
+  ])('Fleetmend still consumes %s on an ally, heals, and pays', (hotId, hotName) => {
+    const { sim, player } = rig('restoration');
+    const allyId = sim.addPlayer('warrior', 'Bloomed');
+    const ally = sim.entities.get(allyId) as Entity;
+    ally.pos = { ...player.pos, z: player.pos.z + 4 };
+    ally.prevPos = { ...ally.pos };
+    ally.hp = Math.round(ally.maxHp * 0.4);
+    ally.auras.push({
+      id: hotId,
+      name: hotName,
+      kind: 'hot',
+      remaining: 12,
+      duration: 15,
+      value: 20,
+      tickInterval: 3,
+      tickTimer: 3,
+      sourceId: player.id,
+      school: 'nature',
+    });
+    sim.targetEntity(allyId);
+    player.gcdRemaining = 0;
+    player.resource = player.maxResource;
+    const cost = sim.resolvedAbility('swiftmend')?.cost ?? 0;
+    const allyHp = ally.hp;
+    sim.drainEvents();
+    sim.castAbility('swiftmend');
+
+    expect(sim.drainEvents().some((event) => event.type === 'error')).toBe(false);
+    expect(ally.auras.some((aura) => aura.id === hotId)).toBe(false);
+    expect(ally.hp).toBeGreaterThan(allyHp);
+    expect(cost).toBeGreaterThan(0);
+    expect(player.resource).toBe(player.maxResource - cost);
+    expect(player.cooldowns.has('swiftmend')).toBe(true);
+    expect(player.gcdRemaining).toBeGreaterThan(0);
+  });
+
   it('clears the bank on a same-spec row repick', () => {
     const { sim, player } = rig('restoration');
     druidEngineOnHotPlanted(ctx(sim), player, 'rejuvenation');
@@ -525,6 +617,61 @@ describe('Groveheart engine', () => {
       }),
     ).toBe(true);
     expect(player.auras.some((aura) => aura.id === VERDANCE_ID)).toBe(false);
+  });
+});
+
+// The one pick the Fleetmend cast gate and the consumeAura effect share
+// (combat/consume_aura_match.ts), driven directly. The Grovespring 2pc
+// own-bloom preference and its fallback are pinned through real casts in
+// ignivar_set_bonus_druid.test.ts.
+describe('consumableAuraIndex', () => {
+  const aura = (id: string, kind: Aura['kind'], sourceId: number): Aura => ({
+    id,
+    name: id,
+    kind,
+    remaining: 12,
+    duration: 12,
+    value: 10,
+    tickInterval: 3,
+    tickTimer: 3,
+    sourceId,
+    school: 'nature',
+  });
+  const hot: ConsumeAuraEffect = { type: 'consumeAura', auraKind: 'hot' };
+
+  it('finds nothing on a missing or dead target', () => {
+    const { sim, player } = rig('restoration');
+    expect(consumableAuraIndex(ctx(sim), player, null, hot)).toBe(-1);
+    player.auras.push(aura('rejuvenation', 'hot', player.id));
+    expect(consumableAuraIndex(ctx(sim), player, player, hot)).toBe(player.auras.length - 1);
+    const mob = targetMob(sim);
+    mob.auras.push(aura('rejuvenation', 'hot', player.id));
+    expect(consumableAuraIndex(ctx(sim), player, mob, hot)).toBe(mob.auras.length - 1);
+    mob.dead = true;
+    expect(consumableAuraIndex(ctx(sim), player, mob, hot)).toBe(-1);
+  });
+
+  it('never picks a non-DoT, non-HoT aura, even one named by id', () => {
+    const { sim, player } = rig('restoration');
+    const byId: ConsumeAuraEffect = { type: 'consumeAura', auraIds: ['buff_named', 'named_hot'] };
+    player.auras.push(aura('buff_named', 'buff_spellpower', player.id));
+    expect(consumableAuraIndex(ctx(sim), player, player, byId)).toBe(-1);
+    player.auras.push(aura('named_hot', 'hot', player.id));
+    expect(consumableAuraIndex(ctx(sim), player, player, byId)).toBe(player.auras.length - 1);
+  });
+
+  it("takes any matching HoT on a friend but only the caster's own DoT on a foe", () => {
+    const { sim, player } = rig('restoration');
+    const before = player.auras.length;
+    player.auras.push(aura('rejuvenation', 'hot', 999_999));
+    expect(consumableAuraIndex(ctx(sim), player, player, hot)).toBe(before);
+
+    const dot: ConsumeAuraEffect = { type: 'consumeAura', auraKind: 'dot' };
+    const mob = targetMob(sim);
+    mob.auras.push(aura('moonfire', 'dot', 999_999));
+    expect(consumableAuraIndex(ctx(sim), player, mob, dot)).toBe(-1);
+    mob.auras.push(aura('moonfire', 'dot', player.id));
+    expect(consumableAuraIndex(ctx(sim), player, mob, dot)).toBe(mob.auras.length - 1);
   });
 });
 

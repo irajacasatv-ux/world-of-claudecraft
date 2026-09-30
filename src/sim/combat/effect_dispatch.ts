@@ -116,6 +116,7 @@ import {
   selectCascadeTargets,
 } from './chronomancy';
 import { cascadeReliefMultiplier } from './chronomancy_echo_distribution';
+import { consumableAuraIndex } from './consume_aura_match';
 import {
   advanceBurningPactTick,
   applyDuskfireClaim,
@@ -379,43 +380,6 @@ function removeRootAuras(ctx: SimContext, entity: Entity): void {
       gained: false,
     });
   }
-}
-
-function consumeMatchingAura(
-  ctx: SimContext,
-  caster: Entity,
-  target: Entity | null,
-  eff: Extract<ResolvedAbility['effects'][number], { type: 'consumeAura' }>,
-): number {
-  if (!target) return -1;
-  // Grovespring 2pc: Swiftmend (the only hot-kind consumer) prefers the
-  // caster's OWN Wildbloom or Second Bloom, so a wearer stops eating another
-  // healer's HoT while their own is up. With none of their own present the
-  // base pick below still applies (the set doc's explicit fallback: a paid
-  // cast must never turn into a silent no-heal). Selection only; draws no
-  // rng and never changes which auras are eligible for anyone else.
-  if (eff.auraKind === 'hot' && wearsSetBonus(ctx, caster, 'grovespring', 2)) {
-    const own = target.auras.findIndex(
-      (a) =>
-        a.kind === 'hot' &&
-        a.sourceId === caster.id &&
-        (a.id === 'rejuvenation' || a.id === 'regrowth'),
-    );
-    if (own >= 0) return own;
-  }
-  return target.auras.findIndex((a) => {
-    // Only dot/hot auras are consumable, even by id: a raw splice skips the
-    // stat-aura teardown expiry performs, so consuming a stat-carrying aura
-    // (buff_*/form_*) would leak its contribution permanently.
-    if (a.kind !== 'dot' && a.kind !== 'hot') return false;
-    const matchesId = eff.auraIds?.includes(a.id);
-    const matchesKind = eff.auraKind !== undefined && a.kind === eff.auraKind;
-    if (!matchesId && !matchesKind) return false;
-    if (target !== caster && ctx.isHostileTo(caster, target) && a.kind === 'dot') {
-      return a.sourceId === caster.id;
-    }
-    return true;
-  });
 }
 
 function friendliesInRadius(ctx: SimContext, source: Entity, radius: number): Entity[] {
@@ -3554,12 +3518,11 @@ export function runEffects(
         break;
       }
       case 'consumeAura': {
-        if (!target || target.dead) {
-          ctx.error(p.id, 'Nothing to consume.');
-          break;
-        }
-        const auraIdx = consumeMatchingAura(ctx, p, target, eff);
-        if (auraIdx < 0) {
+        // The same pick castAbility's gate refused on (consume_aura_match.ts), so
+        // this arm is a defensive guard: no shipped cast reaches it with nothing
+        // to consume (Swiftmend is instant and resolves in the gate's own call).
+        const auraIdx = consumableAuraIndex(ctx, p, target, eff);
+        if (!target || auraIdx < 0) {
           ctx.error(p.id, 'Nothing to consume.');
           break;
         }

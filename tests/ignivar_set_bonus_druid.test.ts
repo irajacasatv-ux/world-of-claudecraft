@@ -12,7 +12,7 @@
 // DELIVERED (0.495 against the v0.42.0 Wildfang-raised 1.65 Primal Heart
 // baseline) plus the flag-gated skip of the one directDamage break, so the
 // guard shields AND the strike lands with its authored threat. Grovespring 2pc prefers the caster's own
-// blooms at the consumeMatchingAura pick (with the explicit any-HoT fallback)
+// blooms at the consumableAuraIndex pick (with the explicit any-HoT fallback)
 // and rewrites the resolved consumeAura heal x1.25; 4pc rewrites the resolved
 // harvest fraction (0.6 to 0.75) and banks 1 Verdance via setBank after the
 // Nature's Fury seed.

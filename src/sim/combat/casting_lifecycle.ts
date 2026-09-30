@@ -123,6 +123,7 @@ import {
   PERFECT_MOMENT_DARTS_DAMAGE_MULT,
   perfectMomentActive,
 } from './chronomancy';
+import { consumableAuraIndex } from './consume_aura_match';
 import { onCraftedCollectionHeal } from './crafted_collection_effects';
 import {
   consumeDesolationForCast,
@@ -1703,6 +1704,17 @@ export function castAbility(
           return;
         }
       }
+    }
+  }
+  // Swiftmend (consumeAura): a target carrying nothing to consume refuses the
+  // press here, before mana, cooldown and GCD are paid, as classic Swiftmend
+  // does. Same pick the effect splices (consume_aura_match.ts), so gate and
+  // executor agree; reads the resolved effects, so the Overbloom transform
+  // (no consumeAura) never reaches it. Draws no rng.
+  for (const eff of res.effects) {
+    if (eff.type === 'consumeAura' && consumableAuraIndex(ctx, p, target, eff) < 0) {
+      ctx.error(p.id, 'Nothing to consume.');
+      return;
     }
   }
   const afflictionTargetError = afflictionTargetCastError(p, target, ability);

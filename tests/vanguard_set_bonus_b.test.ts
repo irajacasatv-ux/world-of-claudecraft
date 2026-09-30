@@ -730,6 +730,21 @@ describe('Thistlebloom Vestment (restoration druid)', () => {
     expect(moveSpeedMult(p)).toBeCloseTo(B.VANGUARD_RESTO_DRUID_4PC_SPEED_MULT, 6);
     expect(fleetmendSpeed(3).aura).toBeUndefined();
   });
+
+  it('4pc: a Fleetmend refused for want of a HoT pays nothing and grants no speed', () => {
+    const sim = live('druid', 'restoration', SET, 4);
+    const ally = addAlly(sim, 'Unbloomed');
+    ally.hp = Math.round(ally.maxHp * 0.3);
+    sim.targetEntity(ally.id);
+    ready(sim, 'swiftmend');
+    sim.drainEvents();
+    sim.castAbility('swiftmend');
+    const errors = sim.drainEvents().flatMap((e) => (e.type === 'error' ? [e.text] : []));
+    expect(errors).toEqual(['Nothing to consume.']);
+    expect(sim.player.resource).toBe(sim.player.maxResource);
+    expect(sim.player.cooldowns.has('swiftmend')).toBe(false);
+    expect(auraOn(sim.player, 'set_vanguard_druid_restoration_4pc')).toBeUndefined();
+  });
 });
 
 describe('Vanguard B sets: tooltip numbers match the constants', () => {
