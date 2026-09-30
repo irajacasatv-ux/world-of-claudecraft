@@ -31,7 +31,11 @@ import {
 /** The workload's version, printed in the line and required by the parser. */
 export const CALIBRATION_VERSION = 'v1';
 
-/** Iterations of calibrationWork per round (about 150 ms on a desktop core). */
+/**
+ * Iterations of calibrationWork per round: 150 to 250 ms a round on the
+ * maintainer's desktop (an i9-10900K under varying load), 0.9 to 1.4 s for the
+ * whole calibration with its warm-up.
+ */
 export const CALIBRATION_ITERATIONS = 600_000;
 
 /** Timed rounds, after one untimed warm-up round; the line reports their median. */
@@ -41,11 +45,11 @@ export const CALIBRATION_ROUNDS = 5;
  * The fixed reference speed, as a median round time in ms: a job whose median
  * round took this long keeps its weights as measured, a slower job's weights
  * scale down, a faster job's up. PROVISIONAL until the first calibrated CI runs
- * (it is the local desktop figure times about 1.3, the single-thread gap to a
- * hosted runner): anchor it ONCE to the median calibration those runs print
- * (`--report`), before the first calibrated harvest is committed, and never
- * move it after, since moving it rescales every future table against the
- * ratchet's ceilings.
+ * (a round figure within the desktop's range above; no hosted runner has
+ * printed a line yet): anchor it ONCE to the median calibration those runs
+ * print (`--report`), before the first calibrated harvest is committed, and
+ * never move it after, since moving it rescales every future table against
+ * the ratchet's ceilings.
  */
 export const CALIBRATION_REFERENCE_MS = 200;
 
@@ -201,26 +205,75 @@ export function scaleWeights(weights, factor) {
 }
 
 /**
- * One job's contribution to the harvest: its weights at the reference speed
- * when its log carries a valid calibration, else its raw weights (factor 1)
- * and the reason, which the harvest records as a loud warning.
- *
- * @param {Readonly<Record<string, number>>} weights the job's parsed weights
- * @param {string} logText the job's log
- * @returns {{ weights: Record<string, number>, factor: number, medianMs: number | null, cpu: string, reason: string }}
+ * How far one job's calibration may sit from its run's median calibration
+ * before the harvest distrusts it. Across the 24 shard jobs of runs
+ * 36648684156, 36654475632 and 36658730347 the jobs' test-time speeds spanned
+ * 0.67 to 1.19 of their mean, so no real runner sat 1.5 times from its run's
+ * median; a calibration twice as far or more measured a throttled or
+ * disturbed second, not the runner the tests then ran on. The run's median is
+ * a CHECK here, never a scale: a trusted job still scales by its own line.
  */
-export function calibrateJob(weights, logText) {
-  const cal = parseCalibrationLine(logText);
-  if (!cal.ok)
-    return { weights: { ...weights }, factor: 1, medianMs: null, cpu: '', reason: cal.reason };
-  const factor = calibrationFactor(cal.medianMs);
-  return {
-    weights: scaleWeights(weights, factor),
-    factor,
-    medianMs: cal.medianMs,
-    cpu: cal.cpu,
-    reason: '',
-  };
+export const CALIBRATION_OUTLIER_RATIO = 2;
+
+/**
+ * Every job's contribution to the harvest, in input order: its rows at the
+ * reference speed when its calibration parsed and sits within
+ * CALIBRATION_OUTLIER_RATIO of the run's median calibration (judged once three
+ * or more jobs calibrated), else its raw rows (factor 1) and the reason, which
+ * the harvest records as a loud warning.
+ *
+ * @param {ReadonlyArray<{ name: string, weights: Readonly<Record<string, number>>,
+ *   calibration: ReturnType<typeof parseCalibrationLine> }>} jobs
+ * @returns {Array<{ name: string, raw: Record<string, number>, weights: Record<string, number>,
+ *   files: number, rawMs: number, calibratedMs: number, factor: number,
+ *   medianMs: number | null, cpu: string, reason: string }>}
+ */
+export function calibrateJobs(jobs) {
+  const medians = jobs.filter((j) => j.calibration.ok).map((j) => j.calibration.medianMs);
+  const runMedian = medians.length >= 3 ? median(medians) : null;
+  const sum = (rows) => Object.values(rows).reduce((a, ms) => a + ms, 0);
+  return jobs.map(({ name, weights, calibration }) => {
+    let reason = calibration.ok ? '' : calibration.reason;
+    if (
+      calibration.ok &&
+      runMedian !== null &&
+      (calibration.medianMs > runMedian * CALIBRATION_OUTLIER_RATIO ||
+        calibration.medianMs * CALIBRATION_OUTLIER_RATIO < runMedian)
+    ) {
+      reason =
+        `calibration ${calibration.medianMs} ms is more than ${CALIBRATION_OUTLIER_RATIO} ` +
+        `times from the run's median of ${runMedian} ms`;
+    }
+    const raw = { ...weights };
+    if (reason !== '') {
+      return {
+        name,
+        raw,
+        weights: { ...weights },
+        files: Object.keys(raw).length,
+        rawMs: sum(raw),
+        calibratedMs: sum(raw),
+        factor: 1,
+        medianMs: null,
+        cpu: '',
+        reason,
+      };
+    }
+    const factor = calibrationFactor(calibration.medianMs);
+    const scaled = scaleWeights(weights, factor);
+    return {
+      name,
+      raw,
+      weights: scaled,
+      files: Object.keys(raw).length,
+      rawMs: sum(raw),
+      calibratedMs: sum(scaled),
+      factor,
+      medianMs: calibration.medianMs,
+      cpu: calibration.cpu,
+      reason: '',
+    };
+  });
 }
 
 /**
@@ -256,7 +309,7 @@ export function calibrationProvenance(jobs) {
       ? {
           raw,
           warning:
-            `${rawNames.length} of ${jobs.length} job(s) harvested RAW (no usable calibration line): ` +
+            `${rawNames.length} of ${jobs.length} job(s) harvested RAW (no usable calibration): ` +
             `${rawNames.join(', ')}. Their rows are in that runner's time, not the reference ` +
             "speed's, so this table's pools are not comparable with a calibrated harvest's.",
         }

@@ -12,7 +12,7 @@ import { stripComments } from './helpers/strip_comments';
 
 // The full-harvest branch (its --report arm reads the same flow and writes nothing,
 // driven in tests/ci_shard_weight_parse.test.ts).
-const FULL_HARVEST_ENTRY = 'const runId = process.argv[reportOnly ? 3 : 2];';
+const FULL_HARVEST_ENTRY = 'const runId = runArgs.length === 1 ? runArgs[0] : undefined;';
 
 function expectFullHarvestOrdering(harvest: string): void {
   // Local carry and prune modes write independently before this branch.

@@ -13,10 +13,11 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import {
   CALIBRATION_ITERATIONS,
+  CALIBRATION_OUTLIER_RATIO,
   CALIBRATION_REFERENCE_MS,
   CALIBRATION_ROUNDS,
   CALIBRATION_VERSION,
-  calibrateJob,
+  calibrateJobs,
   calibrationFactor,
   calibrationProvenance,
   calibrationReportLines,
@@ -128,25 +129,78 @@ describe('scaling a job to the reference speed', () => {
     expect(scaleWeights({ 'tests/c.test.ts': 3 }, 0.1)).toEqual({ 'tests/c.test.ts': 1 });
   });
 
-  it("applies the job's own line, and harvests a job without one raw with the reason", () => {
+  it("applies each job's own line, and harvests a job without one raw with the reason", () => {
     const weights = { 'tests/a.test.ts': 4_000, 'tests/b.test.ts': 30 };
-    const slow = calibrateJob(weights, `x\n${LINE(CALIBRATION_REFERENCE_MS * 2)}\n`);
+    const [slow, raw] = calibrateJobs([
+      {
+        name: 'slow',
+        weights,
+        calibration: parseCalibrationLine(`x\n${LINE(CALIBRATION_REFERENCE_MS * 2)}\n`),
+      },
+      {
+        name: 'old',
+        weights,
+        calibration: parseCalibrationLine('an old log with no calibration line\n'),
+      },
+    ]);
     expect(slow).toEqual({
+      name: 'slow',
+      raw: weights,
       weights: { 'tests/a.test.ts': 2_000, 'tests/b.test.ts': 15 },
+      files: 2,
+      rawMs: 4_030,
+      calibratedMs: 2_015,
       factor: 0.5,
       medianMs: CALIBRATION_REFERENCE_MS * 2,
       cpu: 'AMD EPYC 7763 64-Core Processor',
       reason: '',
     });
-    const raw = calibrateJob(weights, 'an old log with no calibration line\n');
     expect(raw).toEqual({
+      name: 'old',
+      raw: weights,
       weights,
+      files: 2,
+      rawMs: 4_030,
+      calibratedMs: 4_030,
       factor: 1,
       medianMs: null,
       cpu: '',
       reason: 'no calibration line',
     });
     expect(raw.weights).not.toBe(weights);
+  });
+
+  it("harvests raw a job whose calibration sits more than the outlier ratio from the run's median", () => {
+    // The run's median is a check, never a scale: a trusted job still scales by its own
+    // line, and exactly at the ratio (either side) is still trusted.
+    expect(CALIBRATION_OUTLIER_RATIO).toBe(2);
+    const job = (name: string, medianMs: number) => ({
+      name,
+      weights: { [`tests/${name}.test.ts`]: 1_000 },
+      calibration: parseCalibrationLine(LINE(medianMs)),
+    });
+    const results = calibrateJobs([
+      job('a', 200),
+      job('b', 200),
+      job('c', 250),
+      job('at_high', 400),
+      job('at_low', 100),
+      job('over', 401),
+      job('under', 99),
+    ]);
+    const byName = Object.fromEntries(results.map((r) => [r.name, r]));
+    expect(byName.c.weights).toEqual({ 'tests/c.test.ts': 800 });
+    expect(byName.at_high.factor).toBe(0.5);
+    expect(byName.at_low.factor).toBe(2);
+    expect(byName.over).toMatchObject({ factor: 1, medianMs: null });
+    expect(byName.over.weights).toEqual({ 'tests/over.test.ts': 1_000 });
+    expect(byName.over.reason).toBe(
+      "calibration 401 ms is more than 2 times from the run's median of 200 ms",
+    );
+    expect(byName.under).toMatchObject({ factor: 1, medianMs: null });
+    // Under three calibrated jobs there is no run to judge against.
+    const pair = calibrateJobs([job('a', 200), job('far', 900)]);
+    expect(pair[1].factor).toBeCloseTo(200 / 900, 12);
   });
 
   it('records every job in provenance, and a raw job as a warning naming it', () => {

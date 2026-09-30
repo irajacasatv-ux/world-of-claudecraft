@@ -51,10 +51,11 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { MEASURED_FALLBACK_MS } from './ci_shard_partition.mjs';
 import {
-  calibrateJob,
+  calibrateJobs,
   calibrationProvenance,
   calibrationReportLines,
   calibrationScaleNote,
+  parseCalibrationLine,
 } from './lib/ci_runner_calibration.mjs';
 import {
   applyLocalCarry,
@@ -272,9 +273,13 @@ if (process.argv[2] === '--carry-local') {
 } else {
   // `--report <run-id>` reads a run exactly as the harvest does, calibration
   // included, and prints its raw and calibrated pools per job and whole WITHOUT
-  // writing the table, so runs can be compared before one is harvested.
-  const reportOnly = process.argv[2] === '--report';
-  const runId = process.argv[reportOnly ? 3 : 2];
+  // writing the table, so runs can be compared before one is harvested. The
+  // flag counts in any position, and anything beyond one run id is refused, so
+  // a misplaced flag can never fall through to a write.
+  const harvestArgs = process.argv.slice(2);
+  const reportOnly = harvestArgs.includes('--report');
+  const runArgs = harvestArgs.filter((a) => a !== '--report');
+  const runId = runArgs.length === 1 ? runArgs[0] : undefined;
   if (!runId || !/^\d+$/.test(runId)) {
     console.error('usage: node scripts/ci_shard_weights_harvest.mjs <run-id>');
     console.error('       node scripts/ci_shard_weights_harvest.mjs --report <run-id>');
@@ -320,7 +325,7 @@ if (process.argv[2] === '--carry-local') {
   const weights = {};
   /** @type {Record<string, number>} */
   const rawWeights = {};
-  const jobResults = [];
+  const parsedJobs = [];
   for (const job of jobs) {
     let log = execFileSync('gh', ['run', 'view', runId, '--log', '--job', String(job.id)], {
       encoding: 'utf8',
@@ -351,19 +356,15 @@ if (process.argv[2] === '--carry-local') {
       console.error(`[harvest] ${verdict.reason}`);
       process.exit(1);
     }
-    // Runner speed moves every file of a job together, so the job's rows move
-    // to the reference speed by the job's own calibration line, never by a
-    // ratio to another table or job (that would hide a uniform slowdown).
-    const calibrated = calibrateJob(own, log);
-    const sum = (rows) => Object.values(rows).reduce((a, ms) => a + ms, 0);
-    jobResults.push({
-      name: job.name,
-      files: Object.keys(own).length,
-      rawMs: sum(own),
-      calibratedMs: sum(calibrated.weights),
-      ...calibrated,
-    });
-    for (const [file, ms] of Object.entries(own)) {
+    parsedJobs.push({ name: job.name, weights: own, calibration: parseCalibrationLine(log) });
+  }
+  // Runner speed moves every file of a job together, so each job's rows move to
+  // the reference speed by the job's OWN calibration line, never by a ratio to
+  // another table or job (that would hide a uniform slowdown). A job with no
+  // usable line, or one far from the run's other calibrations, stays raw.
+  const jobResults = calibrateJobs(parsedJobs);
+  for (const calibrated of jobResults) {
+    for (const [file, ms] of Object.entries(calibrated.raw)) {
       rawWeights[file] = Math.max(rawWeights[file] ?? 0, ms);
     }
     const before = Object.keys(weights).length;
@@ -376,7 +377,7 @@ if (process.argv[2] === '--carry-local') {
         ? `RAW: ${calibrated.reason}`
         : `calibration ${calibrated.medianMs} ms, factor ${calibrated.factor.toFixed(4)}`;
     console.log(
-      `[harvest] ${job.name}: ${Object.keys(own).length} files parsed, +${added} new (${speed})`,
+      `[harvest] ${calibrated.name}: ${calibrated.files} files parsed, +${added} new (${speed})`,
     );
   }
   const calibration = calibrationProvenance(jobResults);

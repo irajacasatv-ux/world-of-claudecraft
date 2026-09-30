@@ -220,6 +220,42 @@ describe('CI shard weight harvester provenance', () => {
     expect(warns).toHaveBeenCalled();
   });
 
+  it("harvests raw, loudly, a job whose calibration is far from the run's others", async () => {
+    // A runner throttled for its calibration second but not for its tests: five times the
+    // run's median would scale its rows by a fifth, so it is distrusted instead.
+    primeCalibratedRun((id) =>
+      id === 4 ? CALIBRATION_REFERENCE_MS * 5 : CALIBRATION_REFERENCE_MS,
+    );
+    harvestIo.readFileSync.mockReturnValue(JSON.stringify({ __provenance: { run: '1' } }));
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    const warns = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    await runHarvester();
+
+    const { rows, calibration } = writtenTable();
+    expect(rows['tests/job4_0.test.ts']).toBe(40);
+    expect(calibration.status).toBe('partial');
+    expect(calibration.raw?.['PR tests (4)']).toMatch(/more than 2 times from the run's median/);
+    expect(warns.mock.calls.map(([line]) => String(line)).join('\n')).toContain('PR tests (4)');
+  });
+
+  it('--report counts in any position and never falls through to a write', async () => {
+    primeCalibratedRun(() => CALIBRATION_REFERENCE_MS);
+    harvestIo.readFileSync.mockReturnValue(JSON.stringify({ __provenance: { run: '1' } }));
+    const logs = vi.spyOn(console, 'log').mockImplementation(() => {});
+    await runHarvester(['123456789', '--report']);
+    expect(harvestIo.writeFileSync).not.toHaveBeenCalled();
+    expect(logs.mock.calls.map(([line]) => String(line))).toContain('[report] nothing written');
+    // A second run id (or any stray argument) is a usage error, never a harvest.
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    const exited = new Error('process.exit');
+    const exit = vi.spyOn(process, 'exit').mockImplementation(() => {
+      throw exited;
+    });
+    await expect(runHarvester(['123456789', '987654321'])).rejects.toBe(exited);
+    expect(exit).toHaveBeenCalledWith(1);
+    expect(harvestIo.writeFileSync).not.toHaveBeenCalled();
+  });
+
   it('--report prints the raw and calibrated pools and writes nothing', async () => {
     primeCalibratedRun(() => CALIBRATION_REFERENCE_MS * 2);
     harvestIo.readFileSync.mockReturnValue(JSON.stringify({ __provenance: { run: '1' } }));

@@ -28,9 +28,7 @@ export function formatCalibrationLine(c: {
   cpu?: string;
 }): string;
 
-export function parseCalibrationLine(
-  logText: string,
-): { ok: true; medianMs: number; cpu: string } | { ok: false; reason: string };
+export function parseCalibrationLine(logText: string): ParsedCalibration;
 
 export function calibrationFactor(medianMs: number): number;
 
@@ -39,18 +37,32 @@ export function scaleWeights(
   factor: number,
 ): Record<string, number>;
 
+export const CALIBRATION_OUTLIER_RATIO: number;
+
+export type ParsedCalibration =
+  | { ok: true; medianMs: number; cpu: string }
+  | { ok: false; reason: string };
+
 export interface CalibratedJob {
+  name: string;
+  raw: Record<string, number>;
   weights: Record<string, number>;
+  files: number;
+  rawMs: number;
+  calibratedMs: number;
   factor: number;
   medianMs: number | null;
   cpu: string;
   reason: string;
 }
 
-export function calibrateJob(
-  weights: Readonly<Record<string, number>>,
-  logText: string,
-): CalibratedJob;
+export function calibrateJobs(
+  jobs: ReadonlyArray<{
+    name: string;
+    weights: Readonly<Record<string, number>>;
+    calibration: ParsedCalibration;
+  }>,
+): CalibratedJob[];
 
 export interface CalibrationProvenance {
   version: string;

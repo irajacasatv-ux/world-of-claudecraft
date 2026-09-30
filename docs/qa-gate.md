@@ -262,9 +262,10 @@ recorded on the constant. Each harvested row is at one reference runner speed: e
 leg prints a short fixed CPU calibration line before its tests, and the harvest scales that
 job's rows by `CALIBRATION_REFERENCE_MS` over its median (`scripts/lib/ci_runner_calibration.mjs`),
 never by a ratio to another table or job, so a uniform code slowdown still shows. A job without
-the line (an old run) is harvested raw with a warning in `__provenance.calibration`, and
-`node scripts/ci_shard_weights_harvest.mjs --report <run-id>` prints a run's shard and lane pools
-raw and calibrated, per job, without writing the table.
+a usable line (an old run, or a calibration more than `CALIBRATION_OUTLIER_RATIO` from its run's
+median) is harvested raw with a warning in `__provenance.calibration`; carried rows stay in local
+time. `node scripts/ci_shard_weights_harvest.mjs --report <run-id>` prints a run's shard and lane
+pools raw and calibrated, per job, without writing the table.
 `tests/ci_shard_partition.test.ts` grades it two ways: at least 95 percent of the walked
 test tree must carry a row (below that the balance claim stops being measured, since the
 rest is planned at one shared guess), and every row the newest harvest did NOT measure must
