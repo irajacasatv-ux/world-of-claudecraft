@@ -12816,7 +12816,6 @@ export const TARGETS = [
     when: [
       'ui/hud/action_bar/ability_requirement_keys',
       'sim/incapacitate_dr',
-      'sim/combat/stealth_focus',
       'sim/combat/auto_attack',
       // Weapon coats decide the whole rogue-poison tooltip family: what the
       // coat does per swing, and whether the row asks for a target at all.

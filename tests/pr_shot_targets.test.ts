@@ -398,7 +398,6 @@ describe('classifyDiff', () => {
     for (const file of [
       'src/ui/hud/action_bar/ability_requirement_keys.ts',
       'src/sim/incapacitate_dr.ts',
-      'src/sim/combat/stealth_focus.ts',
       'src/sim/combat/auto_attack.ts',
       'src/sim/combat/poison_coating.ts',
       'src/ui/ability_imbue_text.ts',
