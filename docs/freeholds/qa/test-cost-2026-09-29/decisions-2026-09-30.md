@@ -186,7 +186,9 @@ check stayed red. The same trap sits on every required job with real work after 
 lint came within seconds of its 15 (a 9.52 minute stall in a 14.90 minute wall) and PR checks
 already walled 10.73 of its 20 behind a 9.38 minute stall. Decision: the lanes' ruled stall floor
 (the worst observed stall, 16.45, plus setup, plus the worst healthy post-checkout work times the
-1.60 slow-runner ratio, times 1.37) now sizes these three too: browser 33, lint 36, PR checks 28
+1.60 slow-runner ratio, times 1.37) now sizes these three too: browser 33, lint 35 (its
+base-ref fetch is a second stall-prone transfer outside the rerun predicate, so its observed 5.38
+minute stall is added), PR checks 28
 (`a20813b5e9`; each old value killed as a mutant). All stay under pr-gate's 49, so the merge queue's
 critical path is unchanged; the release-only jobs keep theirs until a release push measures them.
 

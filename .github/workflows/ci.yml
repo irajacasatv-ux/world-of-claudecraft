@@ -265,10 +265,13 @@ jobs:
     # bound, and a kill after checkout is outside ci-stall-rerun.yml's safe
     # predicate: 15 came within seconds of it (a 9.52 minute stall in a
     # 14.90 minute wall, run 36622924538). Sized by the 2026-09-29
-    # stall-floor ruling: (16.45 worst stall + 0.5 setup + the worst healthy
-    # post-checkout work, 5.82 minutes (run 36610517548, the base-ref fetch
-    # included), x 1.60) x 1.37 = 36.0, so 36.
-    timeout-minutes: 36
+    # stall-floor ruling, plus a second stall-prone git transfer this job
+    # carries: the "Determine base ref" fetch, not a setup step, so a stall
+    # there is never auto-rerun (5.38 minutes in run 36610517548 against a
+    # healthy 0.6 to 1.0). (16.45 worst checkout stall + 0.5 setup + the
+    # worst healthy post-checkout work, 1.85 minutes (run 36635499592),
+    # x 1.60 + the 5.38 base-ref stall) x 1.37 = 34.6, so 35.
+    timeout-minutes: 35
     runs-on: ubuntu-latest
 
     steps:

@@ -1373,7 +1373,7 @@ describe('CI workflow parity', () => {
       // rebalance without re-sizing.
       ['pr-long-sims-a', 29],
       ['pr-long-sims-b', 29],
-      // browser-gate, lint and pr-checks: 33, 36 and 28 by the same stall-floor
+      // browser-gate, lint and pr-checks: 33, 35 and 28 by the same stall-floor
       // ruling as the lanes (2026-09-30: a completed 8.25 minute checkout stall
       // left the browser suite a minute of its 10, and a kill after checkout is
       // outside the stall-rerun predicate); the arithmetic is on each bound.
@@ -1384,9 +1384,10 @@ describe('CI workflow parity', () => {
       ['changes', 8],
       // lint is an unmatrixed single toolchain-setup-plus-checks job like
       // browser-gate, but lighter (no browser download): checkout, pnpm
-      // install, a base-ref fetch, one biome pass; its base-ref fetch makes
-      // its post-checkout work the longest of the three (5.82 minutes).
-      ['lint', 36],
+      // install, a base-ref fetch, one biome pass; the base-ref fetch is a
+      // second git transfer that can stall outside the rerun predicate, so its
+      // observed stall (5.38 minutes) is added to the floor.
+      ['lint', 35],
       // pr-checks and release-checks are the same shape as lint but heavier:
       // i18n generation, the malware gate, a typecheck, and four builds.
       // pr-checks carries the stall floor (its work is under two minutes);
