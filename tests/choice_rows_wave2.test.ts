@@ -88,8 +88,16 @@ describe('rogue wave 2 choice rows', () => {
     castAndSettle(sim, 'instant_poison', 2);
     p.resource = 20;
     sim.startAutoAttack();
-    for (let i = 0; i < 20 * 6 && p.resource <= 20; i++) sim.tick();
-    expect(p.resource).toBeGreaterThan(20);
+    // Natural regen pays 20 energy on the two-second tick, so a rising bar
+    // proves nothing. Venom Dividend pays 10 on a landed poisoned swing: that
+    // gain can only come from the proc.
+    const gains: number[] = [];
+    for (let i = 0; i < 20 * 6 && !gains.includes(10); i++) {
+      const before = p.resource;
+      sim.tick();
+      if (p.resource > before) gains.push(p.resource - before);
+    }
+    expect(gains).toContain(10);
   });
 
   it('Cheat Death prevents one killing blow', () => {
