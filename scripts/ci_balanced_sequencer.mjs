@@ -18,6 +18,8 @@ import { BaseSequencer } from 'vitest/node';
 import {
   assertPartitionCompleteness,
   MEASURED_WEIGHTS,
+  PER_FILE_OVERHEAD_MS,
+  packingCost,
   partitionForCi,
   weightForTestFile,
 } from './ci_shard_partition.mjs';
@@ -56,8 +58,9 @@ export class BalancedSequencer extends BaseSequencer {
       };
     });
 
-    // Active strategy: LPT over measured weights (see ci_shard_partition.mjs
-    // for the history; stripe and static-weight LPT both measured worse).
+    // Active strategy: LPT over measured weights plus the per-file overhead
+    // (see ci_shard_partition.mjs for the history and the overhead's fit;
+    // stripe and static-weight LPT both measured worse).
     const packs = partitionForCi(items, count);
     const complete = assertPartitionCompleteness(items, packs);
     if (!complete.ok) throw new Error(`[balanced-sequencer] ${complete.reason}`);
@@ -74,11 +77,16 @@ export class BalancedSequencer extends BaseSequencer {
       )
       .digest('hex')
       .slice(0, 12);
+    // Two views of each pack: its summed test time (the table's unit) and the
+    // packing cost it was balanced on (plus the per-file overhead), the latter
+    // comparable to the worker time vitest's Duration line reports.
     const loads = packs.map((p) => Math.round(p.reduce((s, x) => s + x.weight, 0) / 1000));
+    const costs = packs.map((p) => Math.round(p.reduce((s, x) => s + packingCost(x), 0) / 1000));
     console.log(
       `[balanced-sequencer] lpt shard ${index}/${count}: ${items.length} files ` +
         `(${measuredHits} measured, ${items.length - measuredHits} fallback), ` +
-        `set digest ${digest}, pack loads s ${loads.join('/')}`,
+        `set digest ${digest}, pack loads s ${loads.join('/')}, ` +
+        `pack costs s ${costs.join('/')} (${PER_FILE_OVERHEAD_MS} ms per file)`,
     );
     // vitest shard index is 1-based.
     return packs[index - 1].map((item) => item.id);

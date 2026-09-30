@@ -53,15 +53,18 @@ export function partitionByStripe(items, count) {
 
 /**
  * Partition items into `count` packs by LPT (kept for unit tests / overlays).
- * - Sort by weight desc, then key asc (stable).
+ * - Sort by cost desc, then key asc (stable).
  * - Assign each item to the pack with the smallest current load; ties break
  *   toward the lower pack index.
+ * `cost` defaults to the item's weight; the CI packer passes packingCost.
+ * The packs hold the items themselves, so a caller still reads `weight`.
  *
  * @param {WeightedItem[]} items
  * @param {number} count
+ * @param {(item: WeightedItem) => number} [cost]
  * @returns {WeightedItem[][]}
  */
-export function partitionByLpt(items, count) {
+export function partitionByLpt(items, count, cost = (item) => item.weight) {
   if (!Number.isInteger(count) || count < 1) {
     throw new Error(`partitionByLpt: count must be a positive integer, got ${count}`);
   }
@@ -70,20 +73,68 @@ export function partitionByLpt(items, count) {
   const load = Array.from({ length: count }, () => 0);
   if (items.length === 0) return packs;
 
-  const ordered = [...items].sort((a, b) => {
-    if (b.weight !== a.weight) return b.weight - a.weight;
-    return a.key < b.key ? -1 : a.key > b.key ? 1 : 0;
+  const costed = items.map((item) => ({ item, cost: cost(item) }));
+  costed.sort((a, b) => {
+    if (b.cost !== a.cost) return b.cost - a.cost;
+    return a.item.key < b.item.key ? -1 : a.item.key > b.item.key ? 1 : 0;
   });
 
-  for (const item of ordered) {
+  for (const { item, cost: itemCost } of costed) {
     let best = 0;
     for (let i = 1; i < count; i++) {
       if (load[i] < load[best]) best = i;
     }
     packs[best].push(item);
-    load[best] += item.weight;
+    load[best] += itemCost;
   }
   return packs;
+}
+
+/**
+ * The worker time a test file costs a shard beyond its table weight, in ms: the
+ * weight is the vitest reporter's per-file TEST time, and every file also pays
+ * transform, setup, import and environment before its first case. The table
+ * stays test time only (the lane rule and the total-time ratchet read it as
+ * that); the overhead lives only in the packing cost.
+ *
+ * The fit (2026-09-30), from the 24 shard jobs of green full-mode runs
+ * 36648684156, 36654475632 and 36658730347: vitest's own Duration line splits
+ * each job's worker time, so the per-file overhead is read directly as the
+ * job's transform + setup + import + environment seconds over its file count,
+ * after dividing out the job's runner speed (each job's median per-file ratio
+ * to the same files in the other runs: 0.67 to 1.19). Pooled 803 ms (import
+ * alone 651), per job 697 to 939, and 797 to 811 with any one run left out.
+ * The check against each shard's wall: vitest's wall = 0.510 x (weights + 800
+ * ms x files x runner speed), through the origin, i.e. total worker time over
+ * 1.96 of the 2 workers, residuals RMS 15.8 s, max 35.6 s (6.9 percent),
+ * median 1.8 percent. The wall alone cannot pin the constant: every shard ran
+ * 632 or 633 files, so a per-file term is collinear with a per-shard one, and
+ * fitting the test-step wall with a free intercept is nearly flat in it (RMS
+ * 14.3 s at 0 ms, 13.4 s at the 200 ms optimum, 16.0 s at 800 ms, the 0 ms fit
+ * buying its fit with a 51 s intercept no per-shard cost explains: the step
+ * spends 8 to 13 s outside vitest). So the decomposition sets it.
+ *
+ * The modeled gain is NIL today, stated so nobody re-derives it: LPT over this
+ * table already gives every shard 630 or 631 files (the long tail of small
+ * files fills round-robin), so the packs are byte-identical for any overhead
+ * from 0 to 2000 ms, on the committed table and on each of the three runs'
+ * own measurements, and the predicted slowest shard moves 0.0 s. The shards'
+ * 6.75 to 11.30 min spread at run 36654475632 was runner speed (0.73 to 1.14
+ * in that run) plus a table that inherits its harvest jobs' speeds; the
+ * harvest's runner calibration (scripts/lib/ci_runner_calibration.mjs) is
+ * the lever for both. The constant keeps the cost model honest where counts
+ * do diverge (a small or heavy-tailed pack) and prices an unknown file at a
+ * realistic cost.
+ */
+export const PER_FILE_OVERHEAD_MS = 800;
+
+/**
+ * The CI packer's cost for one item: its weight plus PER_FILE_OVERHEAD_MS.
+ * @param {WeightedItem} item
+ * @returns {number}
+ */
+export function packingCost(item) {
+  return item.weight + PER_FILE_OVERHEAD_MS;
 }
 
 /** Active pack strategy for the CI sequencer (approach 2). */
@@ -95,8 +146,16 @@ export function partitionByLpt(items, count) {
 // worst shard) and stays rejected; LPT over measured weights lands 9.79m
 // worst with 0.06m spread, PROVIDED unknown files take the measured-scale
 // fallback (raw heuristic units regressed to 11.21m, the review round's
-// central catch).
-export const partitionForCi = partitionByLpt;
+// central catch). 2026-09-30: packed on packingCost (weight plus the per-file
+// overhead above), not the bare weight.
+/**
+ * @param {WeightedItem[]} items
+ * @param {number} count
+ * @returns {WeightedItem[][]}
+ */
+export function partitionForCi(items, count) {
+  return partitionByLpt(items, count, packingCost);
+}
 
 /**
  * Known long-Duration files from Phase 3 CI evidence (run 30712431702 and

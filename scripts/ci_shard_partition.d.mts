@@ -16,9 +16,17 @@ export declare function partitionByStripe(
 export declare function partitionByLpt(
   items: ReadonlyArray<WeightedItem>,
   count: number,
+  cost?: (item: WeightedItem) => number,
 ): WeightedItem[][];
 
-export declare const partitionForCi: typeof partitionByLpt;
+export declare const PER_FILE_OVERHEAD_MS: number;
+
+export declare function packingCost(item: WeightedItem): number;
+
+export declare function partitionForCi(
+  items: ReadonlyArray<WeightedItem>,
+  count: number,
+): WeightedItem[][];
 
 export declare function weightForTestFile(relPath: string, body: string, size: number): number;
 

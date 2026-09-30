@@ -5,6 +5,8 @@ import {
   assertPartitionCompleteness,
   MEASURED_FALLBACK_MS,
   MEASURED_WEIGHTS,
+  PER_FILE_OVERHEAD_MS,
+  packingCost,
   partitionByLpt,
   partitionByStripe,
   partitionForCi,
@@ -110,8 +112,37 @@ describe('ci_shard_partition (D11 path-matrix)', () => {
     expect(Math.max(...counts) - Math.min(...counts)).toBeLessThanOrEqual(1);
     // CI active strategy is LPT over MEASURED weights (re-wired 2026-08-14
     // after the harness splits; stripe re-measured WORSE than contiguous
-    // with real durations and stays rejected).
-    expect(partitionForCi).toBe(partitionByLpt);
+    // with real durations and stays rejected); the next case pins what the CI
+    // packer is.
+  });
+
+  it('packs the CI shards on the weight plus the per-file overhead', () => {
+    // The overhead (its fit and its nil modeled gain today live on the constant)
+    // is part of the packing cost only; the pack still carries the bare weight.
+    expect(PER_FILE_OVERHEAD_MS).toBe(800);
+    const probe = { id: 'p', key: 'p', weight: 37 };
+    expect(packingCost(probe)).toBe(837);
+    // One heavy file and six free ones on two shards. On the bare weight the free
+    // files never raise the second pack's load, so all six pile onto it (1 and 6
+    // files); priced at the overhead they fill it until it passes the heavy pack,
+    // and the last one lands beside the heavy file (2 and 5).
+    const items = [
+      { id: 'heavy', key: 'heavy', weight: 3_000 },
+      ...[1, 2, 3, 4, 5, 6].map((n) => ({ id: `z${n}`, key: `z${n}`, weight: 0 })),
+    ];
+    const keys = (packs: { key: string }[][]) => packs.map((p) => p.map((x) => x.key));
+    expect(keys(partitionByLpt(items, 2))).toEqual([
+      ['heavy'],
+      ['z1', 'z2', 'z3', 'z4', 'z5', 'z6'],
+    ]);
+    const ci = partitionForCi(items, 2);
+    expect(keys(ci)).toEqual([
+      ['heavy', 'z6'],
+      ['z1', 'z2', 'z3', 'z4', 'z5'],
+    ]);
+    expect(keys(partitionByLpt(items, 2, packingCost))).toEqual(keys(ci));
+    expect(ci[0][0]).toBe(items[0]);
+    expect(assertPartitionCompleteness(items, ci)).toEqual({ ok: true });
   });
 
   it('rejects a non-positive shard count', () => {
