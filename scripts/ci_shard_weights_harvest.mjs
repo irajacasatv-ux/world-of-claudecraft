@@ -485,10 +485,15 @@ if (process.argv[2] === '--carry-local') {
     // raw or partial harvest the committed-table pin refused is left on disk for
     // inspection and set nothing, so a calibrated harvest replacing it is no
     // change of unit. Outside a checkout the working-tree table stands in.
-    const basis = committedTable() ?? prior;
+    const committed = committedTable();
+    const basis = committed ?? prior;
     if (basis && typeof basis === 'object') {
       const scaleNote = calibrationScaleNote(basis.__provenance, calibration);
-      if (scaleNote) console.log(`[harvest] NOTE: ${scaleNote}`);
+      const against =
+        committed === undefined
+          ? 'the working-tree table, since git show HEAD failed'
+          : "HEAD's committed table";
+      if (scaleNote) console.log(`[harvest] NOTE: ${scaleNote} (judged against ${against})`);
     }
     writeFileSync(target, serializeWeightTable(out));
     console.log(`[harvest] wrote ${Object.keys(sorted).length} weights to ${target}`);

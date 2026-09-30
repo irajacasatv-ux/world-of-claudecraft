@@ -1,3 +1,5 @@
+import { dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   CALIBRATION_CHECKSUM,
@@ -8,6 +10,9 @@ import {
 } from '../scripts/lib/ci_runner_calibration.mjs';
 import { SHARD_LOG_FILE_FLOOR } from '../scripts/lib/ci_shard_weight_harvest_guard.mjs';
 import { parseWeightLines, SKIPPED_FILE_WEIGHT_MS } from '../scripts/lib/ci_shard_weight_parse.mjs';
+
+// The checkout root, as the harvester resolves it (the directory above scripts/).
+const REPO_ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 
 const harvestIo = vi.hoisted(() => ({
   execFileSync: vi.fn(),
@@ -215,8 +220,10 @@ describe('CI shard weight harvester provenance', () => {
       '[harvest] NOTE: tests/ci_shard_partition.test.ts refuses this table until fixed: ' +
         'calibration status partial while CALIBRATION_REFERENCE_MS is anchored',
     );
-    // And the scale note sends the operator to another run, not to a re-base.
+    // And the scale note sends the operator to another run, not to a re-base, naming the table
+    // it judged against (this rig's git stub answers with a log, so the working-tree one).
     expect(logged).toContain('so harvest a run whose every job printed a usable calibration line');
+    expect(logged).toContain('(judged against the working-tree table, since git show HEAD failed)');
     expect(logged).not.toContain('so re-base what is set in the old unit');
   });
 
@@ -281,15 +288,24 @@ describe('CI shard weight harvester provenance', () => {
       );
       const logs = vi.spyOn(console, 'log').mockImplementation(() => {});
       vi.spyOn(console, 'warn').mockImplementation(() => {});
-      await runHarvester();
+      harvestIo.execFileSync.mockClear();
+      try {
+        await runHarvester();
+      } finally {
+        harvestIo.execFileSync.mockImplementation(inner ?? (() => ''));
+      }
+      // HEAD's table from this checkout's root, quietly (a failure falls back, never prompts).
       expect(harvestIo.execFileSync).toHaveBeenCalledWith(
         'git',
         ['show', 'HEAD:scripts/ci_shard_weights.generated.json'],
-        expect.objectContaining({ encoding: 'utf8' }),
+        expect.objectContaining({
+          cwd: REPO_ROOT,
+          encoding: 'utf8',
+          stdio: ['ignore', 'pipe', 'ignore'],
+        }),
       );
       const logged = logs.mock.calls.map(([line]) => String(line)).join('\n');
       logs.mockRestore();
-      harvestIo.execFileSync.mockImplementation(inner ?? (() => ''));
       return logged;
     };
     // Committed calibrated at the live constants: no change of unit, so no note at all (the
@@ -313,6 +329,7 @@ describe('CI shard weight harvester provenance', () => {
       '[harvest] NOTE: the replaced table is in raw runner time and this harvest is in calibrated',
     );
     expect(onRaw).toContain('so re-base what is set in the old unit in the same change');
+    expect(onRaw).toContain("(judged against HEAD's committed table)");
   });
 
   it('--report counts in any position and never falls through to a write', async () => {
