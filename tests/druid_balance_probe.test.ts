@@ -164,7 +164,9 @@ const BAND = 0.08;
 // (owned_class_balance_dps_metrics, damage on every target) and Groveheart under
 // dru_r20_berserk (owned_class_balance_healer_probes and _groveheart); a zero under
 // the other capstone rows alone is nightly-only, in the one-seed case below. The
-// capstone engines themselves are unit-pinned in tests/druid_engines.test.ts. Each
+// capstone engines themselves are pinned in tests/druid_engines.test.ts and
+// tests/natures_fury.test.ts, and on the Groveheart probe, where this matrix's hps cannot
+// tell them apart, by tests/owned_class_balance_groveheart.test.ts. Each
 // cell is its own fresh Sim, so the kept cells, and the bands on them, read exactly
 // what they read in the whole matrix.
 const FULL_SWEEP = process.env.WOC_FULL_BALANCE_SWEEP === '1';
@@ -326,7 +328,11 @@ describe('Druid v0.29 balance and live-mob harness', () => {
   // the PR arm never runs, so it keeps the 20 s default; the nightly arm is about ten
   // times its 16.5 s local case time, rounded up to 30 s. Measured 2026-09-29 at the
   // production idle cull, Nature's Fury / Wild Apex / Quickening: moongrove_3t
-  // 156.39 / 161.56 / 152.11 dps, groveheart 63.26 / 63.26 / 63.26 hps.
+  // 156.39 / 161.56 / 152.11 dps, groveheart 63.26 / 63.26 / 63.26 hps. The groveheart
+  // rows match by construction, not by accident: the three-ally pressure wipes the party
+  // (about 40 s) before Verdance reaches 5, so Overbloom, the only spend Nature's Echo
+  // and Wild Apex act on, never fires, and Quickening's mana never binds while an ally
+  // lives. The Groveheart suite tells the three apart by their mechanics.
   it.runIf(FULL_SWEEP)(
     'lands every moongrove_3t and groveheart capstone row above zero at one seed',
     () => {

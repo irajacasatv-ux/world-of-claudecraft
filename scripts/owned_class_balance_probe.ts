@@ -14,6 +14,7 @@ import {
   type PlayerClass,
   type SimEvent,
 } from '../src/sim/types';
+import { GroveheartEngineRecorder, type GroveheartEngineTrace } from './groveheart_engine_trace';
 import { anchorProbeInOpenField } from './probe_anchor';
 import { newProbeSim } from './probe_sim';
 
@@ -102,6 +103,9 @@ export interface OwnedHealerBalanceResult {
   resource: { start: number; end: number; max: number };
   equipment: Record<string, string | null>;
   talents: TalentAllocation;
+  /** Groveheart runs only: the engine the level-20 capstones act on, read at the cast
+   *  (scripts/groveheart_engine_trace.ts). */
+  groveheartEngine?: GroveheartEngineTrace;
 }
 
 export interface OwnedClassDpsAverage {
@@ -1023,6 +1027,7 @@ function healerCast(
   abilityId: string,
   target: Entity,
   castsByAbility: Record<string, number>,
+  engine?: GroveheartEngineRecorder,
 ): boolean {
   const resolved = sim.resolvedAbility(abilityId, caster.id);
   if (!resolved || caster.resource < resolved.cost) return false;
@@ -1030,8 +1035,11 @@ function healerCast(
   caster.facing = Math.atan2(target.pos.x - caster.pos.x, target.pos.z - caster.pos.z);
   caster.prevFacing = caster.facing;
   const before = castFingerprint(sim, resolved.def.id);
+  engine?.beforeCast(resolved.def.id, resolved.cost, sim.entities.values());
   sim.castAbility(abilityId, caster.id);
-  if (castFingerprint(sim, resolved.def.id) === before) return false;
+  const landed = castFingerprint(sim, resolved.def.id) !== before;
+  engine?.afterCast(landed);
+  if (!landed) return false;
   castsByAbility[resolved.def.name] = (castsByAbility[resolved.def.name] ?? 0) + 1;
   return true;
 }
@@ -1043,6 +1051,7 @@ function runHealerRotation(
   allies: Entity[],
   enemy: Entity,
   castsByAbility: Record<string, number>,
+  engine?: GroveheartEngineRecorder,
 ): void {
   if (healer.dead || healer.castingAbility || healer.gcdRemaining > 0.001) return;
   const lowest = lowestHealth(allies);
@@ -1055,24 +1064,25 @@ function runHealerRotation(
     if (
       healer.resource < healer.maxResource * 0.4 &&
       !healer.cooldowns.has('innervate') &&
-      healerCast(sim, healer, 'innervate', healer, castsByAbility)
+      healerCast(sim, healer, 'innervate', healer, castsByAbility, engine)
     ) {
       return;
     }
     const verdance = healer.auras.find((aura) => aura.id === 'verdance');
     if ((verdance?.stacks ?? 0) >= 5) {
-      if (healerCast(sim, healer, 'swiftmend', lowest, castsByAbility)) return;
+      if (healerCast(sim, healer, 'swiftmend', lowest, castsByAbility, engine)) return;
     }
     if (lowest.hp / lowest.maxHp < 0.55) {
-      if (healerCast(sim, healer, 'healing_touch', lowest, castsByAbility)) return;
+      if (healerCast(sim, healer, 'healing_touch', lowest, castsByAbility, engine)) return;
     }
     const unseeded = allies.find((ally) => !ownAura(ally, 'rejuvenation', healer.id));
-    if (unseeded && healerCast(sim, healer, 'rejuvenation', unseeded, castsByAbility)) return;
+    if (unseeded && healerCast(sim, healer, 'rejuvenation', unseeded, castsByAbility, engine))
+      return;
     if (!ownAura(lowest, 'regrowth', healer.id)) {
-      if (healerCast(sim, healer, 'regrowth', lowest, castsByAbility)) return;
+      if (healerCast(sim, healer, 'regrowth', lowest, castsByAbility, engine)) return;
     }
     if (lowest.hp / lowest.maxHp < 0.8) {
-      healerCast(sim, healer, 'healing_touch', lowest, castsByAbility);
+      healerCast(sim, healer, 'healing_touch', lowest, castsByAbility, engine);
     }
     return;
   }
@@ -1166,12 +1176,14 @@ export function runOwnedHealerProbe(
   healer.resource = healer.maxResource;
   const resourceStart = healer.resource;
   const castsByAbility: Record<string, number> = {};
+  const engine = spec === 'groveheart' ? new GroveheartEngineRecorder(healer) : undefined;
   let effectiveHealing = 0;
   let overhealing = 0;
   let absorbedDamage = 0;
   const healingBySource: Record<string, number> = {};
   const originalApplyHeal = sim.ctx.applyHeal;
   sim.ctx.applyHeal = (...args): number => {
+    engine?.onHeal(args[1].id, args[2], args[4]);
     // resolution is the LAST applyHeal parameter: the merge put #2428's
     // beaconTransferEligible/alreadyResolved flags ahead of it at 7 and 8.
     const callerResolution = args[9];
@@ -1188,7 +1200,7 @@ export function runOwnedHealerProbe(
   let emergencyRecoverySeconds: number | null = null;
   let recovered = false;
   for (let tick = 0; tick < seconds * 20; tick++) {
-    runHealerRotation(spec, sim, healer, allies, enemy, castsByAbility);
+    runHealerRotation(spec, sim, healer, allies, enemy, castsByAbility, engine);
     const events = sim.tick();
     for (const event of events) {
       if (event.type !== 'heal2' || event.sourceId !== healer.id) continue;
@@ -1274,6 +1286,7 @@ export function runOwnedHealerProbe(
     resource: { start: resourceStart, end: healer.resource, max: healer.maxResource },
     equipment: { ...meta.equipment },
     talents,
+    ...(engine ? { groveheartEngine: engine.trace } : {}),
   };
 }
 
