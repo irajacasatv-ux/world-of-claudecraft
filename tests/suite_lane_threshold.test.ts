@@ -20,6 +20,8 @@ import {
   CI_LONG_SUITES,
   ciTimeWeight,
   LANE_POOL_CEILING_MS,
+  LANE_RATCHET_HEADROOM,
+  LANE_RATCHET_SLACK,
   LANE_THRESHOLD_MS,
   laneThresholdOver,
   poolWeights,
@@ -351,10 +353,12 @@ describe('the total CI time ratchet over the measured weights', () => {
   it('pins the ceilings, the headroom and the slack as literals', () => {
     // A raise, a looser slack or a wider headroom is then a visible edit to this file, as a
     // monolith ceiling is (tests/monolith_budget.test.ts), never a quiet one in the lib alone.
-    expect(SHARD_POOL_CEILING_MS).toBe(6_504_000);
-    expect(LANE_POOL_CEILING_MS).toBe(366_000);
+    expect(SHARD_POOL_CEILING_MS).toBe(5_431_000);
+    expect(LANE_POOL_CEILING_MS).toBe(461_000);
     expect(RATCHET_HEADROOM).toBe(0.1);
     expect(RATCHET_SLACK).toBe(0.2);
+    expect(LANE_RATCHET_HEADROOM).toBe(0.5);
+    expect(LANE_RATCHET_SLACK).toBe(0.8);
   });
 
   it('sums pools through the CI-time weight and judges both directions for both pools', () => {
@@ -373,17 +377,14 @@ describe('the total CI time ratchet over the measured weights', () => {
       'shard pool 14000 ms is over its ceiling 13999 ms',
       'lane pool 50000 ms is over its ceiling 49999 ms',
     ]);
-    // Stale: more than RATCHET_SLACK above the pool; exactly at the slack still holds.
-    expect(
-      ratchetProblems(pools, { shard: 14_000 * 1.2, lane: 50_000 * (1 + RATCHET_SLACK) }),
-    ).toEqual([]);
-    expect(ratchetProblems(pools, { shard: 16_801, lane: 60_001 })).toEqual([
-      `shard ceiling 16801 ms is stale over its pool 14000 ms: lower it to about ${Math.ceil(
-        14_000 * (1 + RATCHET_HEADROOM),
-      )} ms`,
-      `lane ceiling 60001 ms is stale over its pool 50000 ms: lower it to about ${Math.ceil(
-        50_000 * (1 + RATCHET_HEADROOM),
-      )} ms`,
+    // Stale: more than the pool's slack above it (0.2 for the shard pool, 0.8 for the lane);
+    // exactly at the slack still holds, and a lane ceiling the shard slack would call stale
+    // is not (a slow lane runner is not a cut).
+    expect(ratchetProblems(pools, { shard: 16_800, lane: 90_000 })).toEqual([]);
+    expect(ratchetProblems(pools, { shard: 14_000, lane: 60_001 })).toEqual([]);
+    expect(ratchetProblems(pools, { shard: 16_801, lane: 90_001 })).toEqual([
+      'shard ceiling 16801 ms is stale over its pool 14000 ms: lower it to about 15400 ms',
+      'lane ceiling 90001 ms is stale over its pool 50000 ms: lower it to about 75000 ms',
     ]);
   });
 

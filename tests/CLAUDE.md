@@ -241,7 +241,9 @@ guards hold the line, each naming its own remedy:
   the monolith-budget mold), counting a new file with no row at its stated `Cost:` in CI time: a
   new file, a harvest or a carried row that grows a pool past its ceiling fails, and a ceiling
   more than `RATCHET_SLACK` above its pool fails as stale, so a cut of more than about 8 percent
-  lowers it in the same change (a smaller cut leaves room a later change may regrow into).
+  lowers it in the same change (a smaller cut leaves room a later change may regrow into). The
+  lane, a small pool one runner's speed moves whole, has its own wider band
+  (`LANE_RATCHET_HEADROOM`, `LANE_RATCHET_SLACK`).
   Raising a ceiling is a maintainer decision with its reason in the PR body, and a change of the
   CI worker count re-bases both from a harvest at the new count.
 - **Declared time.** `tests/suite_duration_budget.test.ts` rations declared timeouts (below).

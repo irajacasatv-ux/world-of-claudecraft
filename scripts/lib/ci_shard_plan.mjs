@@ -189,28 +189,38 @@ export function laneThresholdOver(weights, carried, lane) {
  * (tests/CLAUDE.md, "Test cost"). A ceiling more than RATCHET_SLACK above its pool fails as
  * stale, so a cut of more than about 8 percent (1.10 against 1.20) forces the ceiling down in
  * the same change, to the pool plus RATCHET_HEADROOM; a smaller cut leaves room a later change
- * may regrow into. Moving a file from the shard pool to the lane moves its weight between the
+ * may regrow into. The lane, a small pool one runner's speed moves whole, has its own wider band
+ * (LANE_RATCHET_HEADROOM, LANE_RATCHET_SLACK). Moving a file from the shard pool to the lane moves its weight between the
  * two ceilings, so laning one needs a maintainer raise of LANE_POOL_CEILING_MS, as any raise
  * does (its reason in the PR body). The ceilings are measured at the CI worker count they were
  * harvested at (scripts/ci_shard_test.mjs): a change of worker count re-bases them from the
  * first green full-mode harvest at the new count, in the same change.
  */
-// Set 2026-09-29 from the harvest of run 36610517548 (the table after the test-cost cuts and the
-// culled balance lane): the shard pool summed 7,038,584 ms and the lane 332,450 ms (2,905,969 ms
-// in the table before, the unculled lane), each ceiling that pool plus RATCHET_HEADROOM. The
-// shard ceiling came down the same day at the harvest of run 36635499592, after a second
-// slimming round: its pool summed 5,912,504 ms (16 percent less), and the lane's 307,115 ms
-// stayed inside its slack, so the lane ceiling held.
-export const SHARD_POOL_CEILING_MS = 6_504_000;
-export const LANE_POOL_CEILING_MS = 366_000;
+// Set 2026-09-29. The shard ceiling is the harvest of run 36648684156 (after the third slimming
+// round) plus RATCHET_HEADROOM: its pool summed 4,937,172 ms (7,038,584 at run 36610517548 and
+// 5,912,504 at run 36635499592, each cut lowering it in the same change). The lane ceiling is
+// the fastest of three harvests of an unchanged lane (307,115 ms at run 36635499592; 332,450 and
+// 418,492 ms at the other two) plus LANE_RATCHET_HEADROOM, which also sits 10 percent over the
+// slowest.
+export const SHARD_POOL_CEILING_MS = 5_431_000;
+export const LANE_POOL_CEILING_MS = 461_000;
 /**
- * The room a ceiling is set with above its pool. Two green full-mode runs of one tree summed
- * their per-file test time 2.6 percent apart (runs 36493201427 and 36501749917: 10,541 s and
- * 10,814 s), so a re-harvest alone must not trip it.
+ * The room the shard ceiling is set with above its pool. Two green full-mode runs of one tree
+ * summed their per-file test time 2.6 percent apart (runs 36493201427 and 36501749917: 10,541 s
+ * and 10,814 s), so a re-harvest alone must not trip it.
  */
 export const RATCHET_HEADROOM = 0.1;
-/** A ceiling more than this fraction above its pool is stale and must come down. */
+/** A shard ceiling more than this fraction above its pool is stale and must come down. */
 export const RATCHET_SLACK = 0.2;
+/**
+ * The lane's band. The lane is a handful of files on two jobs, so one runner's speed moves the
+ * whole pool: three harvests of an unchanged lane read 307,115 to 418,492 ms (1.36 times). Its
+ * headroom covers that spread and the shard pool's 10 percent (1.36 times 1.1 is about 1.5), and
+ * its slack keeps the shard pool's ratio to the headroom (a stale lane ceiling means a real cut,
+ * not a fast runner).
+ */
+export const LANE_RATCHET_HEADROOM = 0.5;
+export const LANE_RATCHET_SLACK = 0.8;
 
 /**
  * The summed CI-time weight of the shard pool and of the lane, in whole ms.
@@ -244,11 +254,13 @@ export function ratchetProblems(pools, ceilings) {
   for (const name of /** @type {const} */ (['shard', 'lane'])) {
     const pool = pools[name];
     const ceiling = ceilings[name];
+    const headroom = name === 'lane' ? LANE_RATCHET_HEADROOM : RATCHET_HEADROOM;
+    const slack = name === 'lane' ? LANE_RATCHET_SLACK : RATCHET_SLACK;
     if (pool > ceiling) problems.push(`${name} pool ${pool} ms is over its ceiling ${ceiling} ms`);
-    else if (ceiling > pool * (1 + RATCHET_SLACK))
+    else if (ceiling > pool * (1 + slack))
       problems.push(
         `${name} ceiling ${ceiling} ms is stale over its pool ${pool} ms: lower it to about ` +
-          `${Math.ceil(pool * (1 + RATCHET_HEADROOM))} ms`,
+          `${Math.ceil(pool * (1 + headroom) - 1e-6)} ms`,
       );
   }
   return problems;

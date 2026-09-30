@@ -393,7 +393,8 @@ shard pool and of the lane under `SHARD_POOL_CEILING_MS` and `LANE_POOL_CEILING_
 (`poolWeights` and `ratchetProblems` beside the lane rule in `scripts/lib/ci_shard_plan.mjs`, the
 `tests/monolith_budget.test.ts` mold): a new file, a harvest or a carried row that grows a pool
 past its ceiling fails where it lands, and a ceiling more than `RATCHET_SLACK` above its pool
-fails as stale, so a cut of more than about 8 percent lowers it in the same change; raising one
+fails as stale, so a cut of more than about 8 percent lowers it in the same change (the lane, a
+small pool one runner's speed moves whole, has its own wider band); raising one
 (including laning a file, which moves its weight into the lane pool) is a maintainer decision,
 and a change of the CI worker count re-bases both. It also checks the admission rule: every
 `.test.ts` the table has not measured yet (no row, or a carried one) says in its leading comment
