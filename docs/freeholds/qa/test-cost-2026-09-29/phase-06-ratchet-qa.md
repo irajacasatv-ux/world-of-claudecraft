@@ -195,7 +195,7 @@ The maintainer delegated the decision; the evidence decided it.
   5,621,600) was over the old shard ceiling. Run 36648684156, behind the old ceilings, printed no
   calibration, so its move cannot be split into runner speed and growth. Across the five runs the
   shard ceiling sits 4.7 percent over the heaviest and the lightest 7.2 percent over the stale
-  point; the lane's are 10.1 and 2.5 percent, since the harvest drew the heaviest lane of the five.
+  point; the lane's are 10.0 and 2.5 percent, since the harvest drew the heaviest lane of the five.
   A lane read stale right after a re-harvest of an unchanged lane is the signal to revisit the band
   on more runs (the `RATCHET_SLACK` comment says so).
 
