@@ -486,6 +486,8 @@ describe('parties', () => {
     sim.acceptQuest('q_wolves', a);
     sim.acceptQuest('q_wolves', b);
     const wolf = nearestMob(sim, 'forest_wolf');
+    // The expected share below is worked from this wolf's level.
+    expect(wolf.level).toBe(2);
     wolf.hp = 1;
     teleport(sim, a, wolf.pos.x + 2, wolf.pos.z);
     teleport(sim, b, wolf.pos.x - 2, wolf.pos.z);
@@ -499,13 +501,34 @@ describe('parties', () => {
     expect(wolf.dead).toBe(true);
     const metaA = sim.meta(a)!;
     const metaB = sim.meta(b)!;
-    // both got xp (half of solo, with 1.166 duo bonus applied)
-    expect(metaA.xp).toBeGreaterThan(0);
-    expect(metaB.xp).toBeGreaterThan(0);
-    expect(metaA.xp).toBe(Math.round((50 * 1.166) / 2));
+    // A level-2 mob is worth 58 solo XP to a level-1 player (45 + 5 x 2 = 55,
+    // plus 5% for one level above, rounded). The classic group bonus starts at
+    // three members, so a duo splits 58 x 1.0 evenly: 29 each.
+    expect(metaA.xp).toBe(29);
+    expect(metaB.xp).toBe(29);
     // both got quest credit
     expect(metaA.questLog.get('q_wolves')?.counts[0]).toBe(1);
     expect(metaB.questLog.get('q_wolves')?.counts[0]).toBe(1);
+  });
+
+  it('a trio splits kill xp with the classic three-member 1.166 bonus', () => {
+    const { sim, a, b } = makeDuo(makeWolfWorld()); // kills a live camp wolf
+    const c = sim.addPlayer('rogue', 'Gimel');
+    sim.partyInvite(c, a);
+    sim.partyAccept(c);
+    expect(mustParty(sim, a).members).toHaveLength(3);
+    const wolf = nearestMob(sim, 'forest_wolf');
+    // Raised to level 4 so the bonus shows through the rounding: a level-4 mob
+    // is worth 75 solo XP to a level-1 player (45 + 5 x 4 = 65, plus 15% for
+    // three levels above, rounded), and 75 x 1.166 / 3 = 29.15 rounds to 29
+    // each, where no bonus reads 25 and a 1.2 bonus reads 30.
+    wolf.level = 4;
+    teleport(sim, a, wolf.pos.x + 2, wolf.pos.z);
+    teleport(sim, b, wolf.pos.x - 2, wolf.pos.z);
+    teleport(sim, c, wolf.pos.x, wolf.pos.z + 2);
+    sim.dealDamage(mustEntity(sim, a), wolf, wolf.hp + 100, false, 'physical', null, 'hit');
+    expect(wolf.dead).toBe(true);
+    expect([a, b, c].map((pid) => sim.meta(pid)?.xp)).toEqual([29, 29, 29]);
   });
 
   it("party members may loot each other's tapped kills and split copper", () => {
