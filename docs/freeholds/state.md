@@ -67,6 +67,17 @@ Only what the next session needs. Update at the end of every phase and QA.
 
 ## Current phase
 
+**PART 5 FOLLOW-UP, THE OWED DECISIONS, SETTLED 2026-09-30, PUSHED.** Fernando delegated them
+("do whats best for the project and feature"). The ratchet now harvests in runner-calibrated time
+(five calibrated runs: the shard pool's run-to-run spread 1.249 raw to 1.069, the lane's 1.384 to
+1.064), so the lane shares the shard band again and its raise is gone; the collider grid lever is
+a measured no-go; the RL env's unbounded per-seed caches (about 3 MB per episode seed) are released
+by the env; Fleetmend refuses at no cost with nothing to consume; Groveheart's capstones are pinned
+by mechanic (a test gap, not a bug); the browser jobs' font fallback no longer races a leftover
+package install. Detail: `qa/test-cost-2026-09-29/decisions-2026-09-30.md` and the ledger's
+PART 5, "THE OWED DECISIONS".
+
+(Superseded 2026-09-30 by the paragraph above: the owed decisions are settled.)
 **PART 5, TEST COST AND TEST VALUE, DONE 2026-09-29, PUSHED.** Every ruled target is met on green
 full-mode CI: the summed PR shard test step 115.73 min to 73.05 min (36.9 percent down; the bar
 was 25), the slowest shard job 24.0 min to 13.40 min (44.2 percent down; the bar was 30), and the

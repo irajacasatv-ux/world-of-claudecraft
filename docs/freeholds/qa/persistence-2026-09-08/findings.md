@@ -5333,3 +5333,27 @@ What changed, in order:
   balance lever.
 - Nightly 36654497639 at the same tip (the drill identity): green, 50.5 minutes end to end (the two
   halves 48.4 and 50.1 minutes of wall), against 3 h 28 min at the baseline.
+
+### THE OWED DECISIONS, DELEGATED AND SETTLED (2026-09-30)
+
+Fernando, verbatim: "For the decisions needed: do whats best for the project and feature." Each
+decision, its evidence and its outcome is in `docs/freeholds/qa/test-cost-2026-09-29/
+decisions-2026-09-30.md`. In short:
+- The ratchet: runner-speed calibration adopted after five calibrated CI runs (shard pool spread
+  1.249 raw to 1.069 calibrated, lane 1.384 to 1.064); the reference anchored at 178 ms; the lane
+  shares the shard band again, so the lane raise is gone; ceilings re-based in calibrated time.
+- Shard packing: a per-file import overhead (800 ms) in the packing cost; it gains nothing today
+  (the sequencer already evens file counts), and the spread's real cause is runner speed.
+- The collider grid lever: NO-GO after measuring (the grid is about 130 ms warm; most of a cold
+  build is terrain calm sizing; laziness caps near 37 percent with collision-order risk).
+- Found instead and fixed: the RL env's per-seed caches grew about 3 MB per episode seed without
+  bound; released precisely by the env on reset and close (heap flat over 50 new seeds).
+- Swiftmend (Fleetmend) refuses before any cost with nothing to consume; the dead stealth module
+  deleted (superseded by the v0.40 merge's design); two contradicting comments corrected.
+- Groveheart's capstones: a test gap, not a bug, now pinned by mechanic; Quickening gained unit
+  pins; the group floor kept (it measures a harness artifact). The demonology end-pool rule
+  measured and kept as a design constant.
+- Found on the way and fixed: the browser jobs' font fallback raced a leftover package install.
+- Kept as they are, with reasons: roof save heights, the two lane jobs, the release-gate bound,
+  and the sim readouts' dash characters (a separate copy pass).
+
