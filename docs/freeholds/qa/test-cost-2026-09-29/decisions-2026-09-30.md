@@ -179,6 +179,17 @@ whole world's water in its `beforeAll` (about 6 s alone on this host) under the 
 bound, and timed out once the machine was loaded. The hook now has an explicit 60 s bound
 (`5cb85475c7`), inside the file's default declared-timeout allowance.
 
+A third: the confirming CI run at the tip (36759354893) was cancelled in its browser job. Its
+checkout stalled 8.25 minutes, the suite then had a minute of the job's 10-minute bound, and a kill
+after a completed checkout is outside the stall-rerun workflow's safe predicate, so the required
+check stayed red. The same trap sits on every required job with real work after its checkout:
+lint came within seconds of its 15 (a 9.52 minute stall in a 14.90 minute wall) and PR checks
+already walled 10.73 of its 20 behind a 9.38 minute stall. Decision: the lanes' ruled stall floor
+(the worst observed stall, 16.45, plus setup, plus the worst healthy post-checkout work times the
+1.60 slow-runner ratio, times 1.37) now sizes these three too: browser 33, lint 36, PR checks 28
+(`a20813b5e9`; each old value killed as a mutant). All stay under pr-gate's 49, so the merge queue's
+critical path is unchanged; the release-only jobs keep theirs until a release push measures them.
+
 ## Kept as they are
 
 - The two lane jobs stay separate: they run beside the shards and finish in about four minutes
