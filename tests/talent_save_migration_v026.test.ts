@@ -336,6 +336,18 @@ describe('talent production save migrations', () => {
     expect(first.townFocus).toEqual({});
     expect(first.skin).toBe(3);
     expect(first.cooldowns).toEqual(fixture.state.cooldowns);
+    // The loaded bars prove the load arm ran the migration: repairTalentLoadouts
+    // only type-checks slots, so without the migration the saved Legacy Fury bar
+    // would load with its retired ids and doubled Bloodthirst intact. The
+    // talents and revision above cannot tell, since the load arm repairs the
+    // allocation and the save stamps the revision on their own.
+    const loadedBar = first.loadouts?.[0]?.bar ?? [];
+    expect(first.activeLoadout).toBe(0);
+    expect(loadedBar[0]).toBe('battle_shout');
+    expect(loadedBar).toContain('charge');
+    for (const retired of ['deleted_warrior_spell', 'enrage_passive', 'battle_stance'])
+      expect(loadedBar).not.toContain(retired);
+    expect(loadedBar.filter((id) => id === 'bloodthirst')).toHaveLength(1);
 
     const meta = sim.meta(pid);
     expect(meta).toBeDefined();
