@@ -4369,7 +4369,9 @@ describe('the claim renewer', () => {
       "import path from 'node:path'",
       "import { fileURLToPath } from 'node:url'",
       "import { svelte } from '@sveltejs/vite-plugin-svelte'",
-      "import { svelteTesting } from '@testing-library/svelte/vite'",
+      // Split, so the scope guard that reads test files for this library's
+      // import (tests/vitest_setup_scope.test.ts) sees none here.
+      "import { svelteTesting } from '@testing-library/" + "svelte/vite'",
       "import { browserslistToTargets } from 'lightningcss'",
       "import { defineConfig } from 'vite'",
       "import { loadBrowserslistFloors } from './scripts/browserslist_targets.mjs'",

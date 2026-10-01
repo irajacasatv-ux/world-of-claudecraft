@@ -190,18 +190,24 @@ describe('authored furnisher construction and world geometry', () => {
     expect(geometry()).toEqual(authored);
   });
 
-  it('records that the golden parity scenarios cover the default dark arm, with ONE lit build', () => {
+  it('records that the golden parity scenarios cover the default dark arm, with TWO lit builds', () => {
     const source = readFileSync(new URL('./parity/scenarios.ts', import.meta.url), 'utf8')
       .replace(/\/\*[\s\S]*?\*\//g, '')
       .replace(/(^|[^:])\/\/.*$/gm, '$1');
     expect(source.match(/new\s+Sim\s*\(/g)?.length).toBeGreaterThan(50);
-    // Every other scenario boots dark; freehold_claim is the ONE lit build, and its literal sits inside that scenario object.
-    const start = source.indexOf("name: 'freehold_claim'");
-    expect(start).toBeGreaterThanOrEqual(0);
-    const nextName = source.indexOf("name: '", start + 1);
-    const end = nextName === -1 ? source.length : nextName;
-    expect(source.slice(start, end).match(/\bfreeholdsEnabled: true\b/g)).toHaveLength(1);
-    expect(source.slice(0, start) + source.slice(end)).not.toMatch(/\bfreeholdsEnabled\b/);
+    // Every other scenario boots dark. The lit builds are freehold_claim and,
+    // since 07a, freehold_hearth_key (the Hearth Key's remote entry), each with
+    // its one literal inside its own scenario object.
+    let rest = source;
+    for (const name of ['freehold_claim', 'freehold_hearth_key']) {
+      const start = rest.indexOf(`name: '${name}'`);
+      expect(start, name).toBeGreaterThanOrEqual(0);
+      const nextName = rest.indexOf("name: '", start + 1);
+      const end = nextName === -1 ? rest.length : nextName;
+      expect(rest.slice(start, end).match(/\bfreeholdsEnabled: true\b/g), name).toHaveLength(1);
+      rest = rest.slice(0, start) + rest.slice(end);
+    }
+    expect(rest).not.toMatch(/\bfreeholdsEnabled\b/);
   });
 });
 
