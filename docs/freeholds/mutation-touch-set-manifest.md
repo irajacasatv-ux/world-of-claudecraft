@@ -435,18 +435,25 @@ undecided") once, where the deadline stops the pass. Three lines come from the p
 `claim_on_lost_threw`), and the closing-clock line ("clock gave no usable duration at its
 close; that pass is counted without one"); the flag clears in a `finally` of its own inside
 it, so a statement there that throws cannot leave the flag set. A clock port that throws at
-the pass's start, or whose start reading is not a finite number (minus infinity would trip
-the deadline's clock half at once and abandon every chunk of every pass, NaN or plus
-infinity would switch that half off), rejects the call before the flag is taken (the latter
-with a fixed dev-channel Error), so the periodic flush reports it and the next pass on a
-sane clock runs; the flag is re-checked after that read (a clock port that started a pass
-itself leaves the call a counted skip). The closing read, and the duration taken from it,
-run while the flag is still held (a clock that calls the renewer back there is skipped too)
-and under a catch of their own: a pass left without a usable duration (the read throws or
-gives a value no duration can be taken from, such as a BigInt; the duration is NaN or an
-infinity; or it would carry the running `claim_renew_pass` total past a finite number,
-which prom-client's `Counter.inc` refuses at scrape time) never has its outcome replaced: it
-is counted, adds nothing, and the closing-clock line says so. It stays OFF
+the pass's start rejects the call before the flag is taken; the flag is then re-checked
+straight after that read, BEFORE the reading is judged (a clock port that started a pass
+itself leaves the call a counted skip, whatever it read); and a start reading that is not a
+finite number (a non-number included: `Number.isFinite` coerces nothing) is refused like a
+throw, with a fixed dev-channel Error, since that one reading feeds both the deadline's
+clock half and every wanted test (the production predicate compares it with a claim's
+`acquiredAtMs`): minus infinity would trip that half at once and abandon every chunk of
+every pass, NaN or plus infinity would switch it off. Either way the periodic flush reports
+it and the next pass on a sane clock runs. A clock port that throws at a deadline check
+MID-PASS (each check reads it unguarded while the deadline signal has not fired) rejects
+the pass there, through the `finally` above. The closing read, and the duration taken from
+it, run while the flag is still held (a clock that calls the renewer back there is skipped
+too) and under a catch of their own, and only a reading that is a number is used (a
+subtraction would coerce null or a Date into a finite duration): a pass whose clock gave no
+usable duration (a throwing or non-number reading, a non-finite or negative duration, or
+one that would overflow the total) never has its outcome replaced: it is counted, adds
+nothing, and the closing-clock line says so. A negative duration is a wall clock stepped
+back mid-pass; an overflow would carry the running `claim_renew_pass` total past a finite
+number, which prom-client's `Counter.inc` refuses at scrape time. It stays OFF
 the background gate by decision (the
 autosave wave holds that gate exactly when the renewer runs, so a `tryAcquire` would let
 claims lapse): single-flight makes its peak one pool client per realm, pinned by a

@@ -2599,9 +2599,10 @@ describe('the housing authority families (07a)', () => {
       .find((line) => line.startsWith('# HELP woc_freehold_authority_ms_total '));
     expect(help).toContain('milliseconds');
     // The mean's one caveat: a renew pass the clock gave no duration for is
-    // counted on claim_renew_passes and adds nothing here.
+    // counted on claim_renew_passes and adds nothing here, with every kind of
+    // reading that gives none named (a backward step included).
     expect(help).toContain(
-      'a claim renew pass whose clock gave no usable duration counts but adds nothing',
+      'a claim renew pass whose clock gave no usable duration (a throwing or non-number reading, a non-finite or negative duration, or one that would overflow the total) counts but adds nothing',
     );
     expect(text).toContain('# TYPE woc_freehold_authority_ms_total counter');
   });

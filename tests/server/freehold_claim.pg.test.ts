@@ -1566,7 +1566,18 @@ d('the global plot claim against real PostgreSQL', () => {
       client.release(!rolledBack);
       // VACUUM takes the rolled-back rows' dead pages away (it truncates the
       // heap, which no ANALYZE does), and both ANALYZEs rewrite the in-place
-      // counts from what the tables now hold.
+      // counts from what the tables now hold. The truncation needs an ACCESS
+      // EXCLUSIVE lock on the table that PostgreSQL only polls for (it never
+      // queues behind a holder, and gives up after a few seconds, leaving the
+      // pages), so the page pin below holds only while NO transaction of this
+      // run is open on freehold_plot_claims at this point. None is: the cases
+      // run in sequence, every earlier one awaits each pass it starts and ends
+      // each transaction it opens (a hand-begun one by ROLLBACK in its finally
+      // before the client goes back; runFreeholdTransaction commits, rolls
+      // back or destroys its own), this case's acquire and fenced write ran
+      // in autocommit, and its one transaction was rolled back just above. (A
+      // client whose ROLLBACK failed is destroyed instead, but that case has
+      // already failed.)
       await poolA.query('VACUUM (ANALYZE) freehold_plot_claims');
       await poolA.query('ANALYZE account_freeholds');
     }
