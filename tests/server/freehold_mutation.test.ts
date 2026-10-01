@@ -14,7 +14,7 @@
 // tests/server/freehold_claim.pg.test.ts, which cannot drive these arms
 // deterministically (a lost COMMIT answer, a renewer chunk that throws).
 //
-// Cost: 0.4 s
+// Cost: 0.5 s
 import { spawnSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { describe, expect, it, vi } from 'vitest';
@@ -3798,36 +3798,40 @@ describe('the claim renewer', () => {
       expect(refsDelta(shape), shape).toEqual(neither);
     }
     // The alias escape is closed where it would be declared, by LITERAL pins
-    // over every file the toolchain resolves server code through:
-    // scripts/build_server.mjs, which bundles the server; every tracked vite
-    // and vitest config (vite.config.ts runs dev and vitest, the memory and
-    // browser configs are named by scripts, and vitest would prefer a new
-    // vitest.config, which changes the inventory); the root package.json and
-    // .npmrc; and every tracked tsconfig. Each config's `alias` tables are
-    // pinned as text (comments stripped, whitespace collapsed), beside every
-    // line naming `alias`, every import it makes, and its resolver hooks (an
-    // esbuild `onResolve`, a vite `resolveId`, `transform` or `load`, and
-    // `plugins`), which are counted in every local module vite.config.ts
-    // imports too. What the reviewed aliases resolve TO is pinned as well:
-    // the declarations of the variables they read, and every line naming one.
-    // Each esbuild.build call's option keys are pinned, so a `tsconfig`,
-    // `nodePaths`, `inject` or spread option is new; so are package.json's
-    // keys, its local-path dependency specs and every resolution flag its
-    // scripts pass; and the tracked inventory of package.json, jsconfig,
-    // tsconfig and vite config files, since esbuild, Node and vite read a
-    // NESTED package.json's `imports` or a jsconfig's `paths` too. So a new
-    // alias fails until reviewed: a quoted or bare key, a spread, a computed
-    // key, a variable value or a retargeted variable, a shorthand or quoted
-    // `alias` property, an array, a resolver plugin, a new build option,
-    // import, flag, package or config file. LIMITS, named so they are reviewed
-    // rather than assumed: a property name COMPUTED to `alias`
-    // (`['ali' + 'as']`); text the shared comment stripper misreads (a string
-    // holding a comment opener); the insides of the packages a config imports,
-    // and of anything a local import imports in turn (one level is read); a
-    // config path a script passes from its own code (scripts/*.mjs spawn
-    // vitest with `--config`) rather than from package.json; and the
-    // gitignored private clone, whose implementation behind `#bot-detector`
-    // no scan reads.
+    // over every file the toolchain resolves server code through, inside one
+    // stated boundary. THE SERVER BUNDLE is pinned whole: its build script's
+    // code (comments stripped, each line's whitespace collapsed), the package
+    // scripts and Dockerfile lines that run it or its output, and every tracked
+    // file naming the bundle it writes. EVERY OTHER TOOLCHAIN FILE is a program
+    // whose DECLARATIONS are pinned: every tracked vite, vitest and svelte
+    // config by inventory (vitest would prefer a new vitest.config), each one's
+    // import statements with their bindings, its resolver hooks (an esbuild
+    // `onResolve`; a vite `resolveId`, `transform`, `load`, `config` or
+    // `configResolved`; any `plugins`), and its `alias` lines and tables; the
+    // same hooks and `alias` lines in every local module vite.config.ts
+    // imports; what vite.config.ts's alias resolves TO (each variable's
+    // declaration and every line naming one) and every call it makes to the
+    // only writer and spawner it imports; the root package.json's keys, its
+    // dependency specs that are not version ranges, pnpm's keys and patched
+    // package names, and every resolution flag its scripts pass; .npmrc; the
+    // tracked package, jsconfig, tsconfig and private/ inventories and each
+    // tsconfig's `paths`; and that no tracked file outside server/ (docs and
+    // tests aside) names the registry, so no barrel elsewhere re-exports it.
+    // So a new alias fails until reviewed: a quoted or bare key, a spread, a
+    // computed key, a variable value or a retargeted variable, a shorthand or
+    // quoted `alias` property, an array, a resolver plugin, a new build call or
+    // option, import, flag, dependency spec, package or config file, or a
+    // force-added private implementation. LIMITS, the boundary named so it is
+    // reviewed rather than assumed: what those programs COMPUTE when they run
+    // (a property name computed to `alias`, a `define`, a path assembled from
+    // parts, a file written by code a local module runs); text the shared
+    // comment stripper misreads (a string holding a comment opener); an import
+    // the statement reader cannot see (a binding named by a string holding
+    // `;`); the insides of packages, of the patches and overrides pnpm applies
+    // to them, and of anything a local module imports in turn; a config path a
+    // script passes from its own code (scripts/*.mjs spawn vitest with
+    // `--config`) rather than from package.json; and the contents of the
+    // gitignored private clone.
     const flat = (text: string): string => text.replace(/\s+/g, ' ').trim();
     const tracked = (pattern: string): string[] =>
       spawnSync('git', ['ls-files', '--', pattern], { encoding: 'utf8' })
@@ -3870,45 +3874,168 @@ describe('the claim renewer', () => {
     const aliasLines = (text: string): string[] => linesNaming(text, /\balias\b/);
     const hooks = (text: string): Record<string, number> => {
       const code = stripComments(text);
-      return Object.fromEntries(
-        ['onResolve', 'resolveId', 'transform', 'load', 'plugins'].map((hook) => [
-          hook,
-          (code.match(new RegExp(`\\b${hook}\\b`, 'g')) ?? []).length,
-        ]),
-      );
+      const count = (pattern: RegExp): number => (code.match(pattern) ?? []).length;
+      return {
+        onResolve: count(/\bonResolve\b/g),
+        resolveId: count(/\bresolveId\b/g),
+        transform: count(/\btransform\b/g),
+        load: count(/\bload\b/g),
+        plugins: count(/\bplugins\b/g),
+        // A `config` or `configResolved` hook, as a method or a property.
+        config: count(/\bconfig(?:Resolved)?\s*[(:]/g),
+      };
     };
-    // Static specifiers in source order, plus dynamic imports and requires.
+    const noHooks = { onResolve: 0, resolveId: 0, transform: 0, load: 0, plugins: 0, config: 0 };
+    // Static import statements (their bindings too) in source order, plus
+    // dynamic imports and every other way to load a module.
     const importsOf = (text: string) => {
       const code = stripComments(text);
       return {
-        from: [
+        statements: [
           ...code.matchAll(
-            /^(?:import|export)\b[^;]*?\bfrom\s*['"]([^'"]+)['"]|^import\s*['"]([^'"]+)['"]/gm,
+            /^[ \t]*(?:import|export)\b[^;]*?\bfrom\s*['"][^'"]+['"]|^[ \t]*import\s*['"][^'"]+['"]/gm,
           ),
-        ].map((m) => m[1] ?? m[2]),
+        ].map((m) => flat(m[0])),
         dynamic: (code.match(/\bimport\s*\(/g) ?? []).length,
-        require: (code.match(/\b(?:require|createRequire)\b/g) ?? []).length,
+        require: (code.match(/\b(?:require|createRequire|getBuiltinModule)\b/g) ?? []).length,
       };
     };
-    const noHooks = { onResolve: 0, resolveId: 0, transform: 0, load: 0, plugins: 0 };
+    const codeLines = (text: string): string[] =>
+      stripComments(text)
+        .split('\n')
+        .map(flat)
+        .filter((line) => line !== '');
     const bundled = "alias: { '#bot-detector': usePrivate ? privateImpl : stubImpl }";
-    const viteImports = [
-      'node:child_process',
-      'node:fs',
-      'node:path',
-      'node:url',
-      '@sveltejs/vite-plugin-svelte',
-      '@testing-library/svelte/vite',
-      'lightningcss',
-      'vite',
-      './scripts/browserslist_targets.mjs',
-      './scripts/ci_balanced_sequencer.mjs',
-      './scripts/i18n_modulepreload.mjs',
-      './scripts/lib/diagnostics_capture_guard.mjs',
-      './scripts/lib/freehold_dev_authorization.mjs',
-      './scripts/lib/gate_host_workers.mjs',
-      './scripts/lib/lane_suite_scope.mjs',
-      './scripts/lib/vitest_fs_module_cache.mjs',
+
+    // THE SERVER BUNDLE, whole: every code line of its build script.
+    const build = (entry: string, external: string, outfile: string): string[] => [
+      'await esbuild.build({',
+      `entryPoints: ['${entry}'],`,
+      'bundle: true,',
+      "platform: 'node',",
+      "format: 'cjs',",
+      `external: [${external}],`,
+      `outfile: 'dist-server/${outfile}',`,
+      `${bundled},`,
+      '});',
+    ];
+    expect(codeLines(readFileSync('scripts/build_server.mjs', 'utf8'))).toEqual([
+      "import { existsSync } from 'node:fs';",
+      "import { fileURLToPath } from 'node:url';",
+      "import * as esbuild from 'esbuild';",
+      "const privateImpl = fileURLToPath(new URL('../private/bot_detector/src/index.ts', import.meta.url));",
+      "const stubImpl = fileURLToPath(new URL('../server/bot_detector/stub.ts', import.meta.url));",
+      'const usePrivate = existsSync(privateImpl);',
+      ...build('server/main.ts', "'pg-native', 'bufferutil', 'utf-8-validate'", 'server.cjs'),
+      ...build(
+        'scripts/migrate_old_cragmaw_pelt.ts',
+        "'pg-native'",
+        'migrate_old_cragmaw_pelt.cjs',
+      ),
+      ...build(
+        'scripts/migrate_rift_forge_rollback.ts',
+        "'pg-native'",
+        'migrate_rift_forge_rollback.cjs',
+      ),
+      ...build(
+        'scripts/migrate_mail_bot_welcome_purge.ts',
+        "'pg-native'",
+        'migrate_mail_bot_welcome_purge.cjs',
+      ),
+      ...build(
+        'scripts/migrate_mail_bot_welcome_purge.ts',
+        "'pg-native'",
+        'migrate_mail_bot_welcome_purge.cjs',
+      ),
+      // Split at the placeholder, so the literal is plain text.
+      'console.log(`[build:server] bot detector: $' +
+        "{usePrivate ? 'private' : 'stub (no-op)'}`);",
+    ]);
+    // The scripts that run it or its output (a `pre` or `post` script, or a
+    // retarget, joins or changes this list), and the Dockerfile's steps.
+    const pkgText = readFileSync('package.json', 'utf8');
+    const pkg = JSON.parse(pkgText) as {
+      imports?: unknown;
+      exports?: unknown;
+      scripts: Record<string, string>;
+      pnpm: { overrides: Record<string, string>; patchedDependencies: Record<string, string> };
+    } & Record<string, unknown>;
+    expect(
+      Object.entries(pkg.scripts).filter(([name, cmd]) =>
+        /build:server|dist-server\/|build_server/.test(`${name} ${cmd}`),
+      ),
+    ).toEqual([
+      ['build:server', 'node scripts/build_server.mjs'],
+      ['server', 'npm run build:server && node dist-server/server.cjs'],
+      ['realms', 'npm run build:server && node scripts/dev-realms.mjs'],
+    ]);
+    expect(linesNaming(readFileSync('Dockerfile', 'utf8'), /build:server|dist-server/)).toEqual([
+      'pnpm run build && cp -a dist/media ./media-build && rm -rf dist/media && pnpm run build:server && pnpm run build:bot',
+      'COPY --from=build /app/dist-server ./dist-server',
+      String.raw`CMD ["sh", "-c", "mkdir -p /app/dist/media && node -e \"require('fs').cpSync('/app/media-build', '/app/dist/media', { recursive: true, force: true })\" && node dist-server/server.cjs"]`,
+    ]);
+    // One read of the tracked tree (docs, tests and public aside): every file
+    // naming the bundle the build writes, and every file outside server/
+    // naming the registry.
+    const named: Record<string, string[]> = {};
+    for (const line of spawnSync(
+      'git',
+      [
+        'grep',
+        '-o',
+        '-I',
+        '-e',
+        'freehold_claim_registry',
+        '-e',
+        'dist-server/server.cjs',
+        '--',
+        '.',
+        ':!docs',
+        ':!tests',
+        ':!public',
+      ],
+      { encoding: 'utf8' },
+    ).stdout.split('\n')) {
+      const at = line.indexOf(':');
+      if (at === -1) continue;
+      const [file, name] = [line.slice(0, at), line.slice(at + 1)];
+      named[name] = [...new Set([...(named[name] ?? []), file])];
+    }
+    expect(named['dist-server/server.cjs']?.sort()).toEqual([
+      'Dockerfile',
+      'package.json',
+      'scripts/build_server.mjs',
+      'scripts/dev-realms.mjs',
+      'scripts/mob_stall_repro.mjs',
+      'scripts/prod_cpu_game_helper.mjs',
+      'scripts/prod_cpu_monitor_commands.mjs',
+      'scripts/profile_recent_finds_shot.mjs',
+      'server/main.ts',
+    ]);
+    expect(named.freehold_claim_registry?.filter((file) => !file.startsWith('server/'))).toEqual(
+      [],
+    );
+    // The read sees the registry where it is named today.
+    expect(named.freehold_claim_registry).toContain('server/game.ts');
+
+    // EVERY OTHER TOOLCHAIN FILE, by its declarations.
+    const viteStatements = [
+      "import { execSync } from 'node:child_process'",
+      "import { existsSync, readFileSync, writeFileSync } from 'node:fs'",
+      "import path from 'node:path'",
+      "import { fileURLToPath } from 'node:url'",
+      "import { svelte } from '@sveltejs/vite-plugin-svelte'",
+      "import { svelteTesting } from '@testing-library/svelte/vite'",
+      "import { browserslistToTargets } from 'lightningcss'",
+      "import { defineConfig } from 'vite'",
+      "import { loadBrowserslistFloors } from './scripts/browserslist_targets.mjs'",
+      "import { BalancedSequencer } from './scripts/ci_balanced_sequencer.mjs'",
+      "import { templateModulepreload } from './scripts/i18n_modulepreload.mjs'",
+      "import { diagnosticsCaptureAllowed, diagnosticsReadAllowed, } from './scripts/lib/diagnostics_capture_guard.mjs'",
+      "import { freeholdDevAuthorizationEnabled, freeholdDevAuthorizationPlugin, } from './scripts/lib/freehold_dev_authorization.mjs'",
+      "import { resolveHostGateWorkers } from './scripts/lib/gate_host_workers.mjs'",
+      "import { localLaneExclusions } from './scripts/lib/lane_suite_scope.mjs'",
+      "import { shouldDisableVitestFsModuleCache } from './scripts/lib/vitest_fs_module_cache.mjs'",
     ];
     // The screenshot runtime's config is copied beside a checkout's
     // vite.config.ts and spreads it, so its one import is that file.
@@ -3923,15 +4050,11 @@ describe('the claim renewer', () => {
         aliasBlocks: string[];
       }
     > = {
-      'scripts/build_server.mjs': {
-        imports: { from: ['node:fs', 'node:url', 'esbuild'], dynamic: 0, require: 0 },
-        hooks: noHooks,
-        aliasLines: Array.from({ length: 5 }, () => `${bundled},`),
-        aliasBlocks: Array.from({ length: 5 }, () => bundled),
-      },
       'vite.config.ts': {
-        imports: { from: viteImports, dynamic: 0, require: 0 },
-        hooks: { ...noHooks, plugins: 1 },
+        imports: { statements: viteStatements, dynamic: 0, require: 0 },
+        // The plugins list, and the one configResolved hook (the build's
+        // output directory, read for the static page plugin).
+        hooks: { ...noHooks, plugins: 1, config: 1 },
         aliasLines: [
           "return { name: 'woc-static-page-alias', configureServer: attach, configurePreviewServer: attach };",
           "resolve: { alias: { '#bot-detector': botDetectorImpl } },",
@@ -3939,19 +4062,36 @@ describe('the claim renewer', () => {
         aliasBlocks: ["alias: { '#bot-detector': botDetectorImpl }"],
       },
       'vitest.memory.config.ts': {
-        imports: { from: ['./vite.config'], dynamic: 0, require: 0 },
+        imports: { statements: ["import base from './vite.config'"], dynamic: 0, require: 0 },
         hooks: noHooks,
         aliasLines: [],
         aliasBlocks: [],
       },
       'vitest.browser.config.ts': {
-        imports: { from: ['@vitest/browser-playwright', 'vitest/config'], dynamic: 0, require: 0 },
+        imports: {
+          statements: [
+            "import { playwright } from '@vitest/browser-playwright'",
+            "import { defineConfig } from 'vitest/config'",
+          ],
+          dynamic: 0,
+          require: 0,
+        },
         hooks: noHooks,
         aliasLines: [],
         aliasBlocks: [],
       },
       [screenshotRuntime]: {
-        imports: { from: ['../vite.config.ts'], dynamic: 0, require: 0 },
+        imports: { statements: ["import config from '../vite.config.ts'"], dynamic: 0, require: 0 },
+        hooks: noHooks,
+        aliasLines: [],
+        aliasBlocks: [],
+      },
+      'svelte.config.js': {
+        imports: {
+          statements: ["import { vitePreprocess } from '@sveltejs/vite-plugin-svelte'"],
+          dynamic: 0,
+          require: 0,
+        },
         hooks: noHooks,
         aliasLines: [],
         aliasBlocks: [],
@@ -3963,6 +4103,7 @@ describe('the claim renewer', () => {
       'vitest.browser.config.ts',
       'vitest.memory.config.ts',
     ]);
+    expect(tracked('*svelte.config.*')).toEqual(['svelte.config.js']);
     for (const [file, pinned] of Object.entries(configs)) {
       const text = readFileSync(file, 'utf8');
       expect(
@@ -3980,56 +4121,51 @@ describe('the claim renewer', () => {
       bundle: aliasWords(readFileSync('scripts/build_server.mjs', 'utf8')),
     }).toEqual(VITE_AND_BUNDLE_ALIAS_WORDS);
     // A local module vite.config.ts imports can carry a plugin it registers
-    // (freeholdDevAuthorizationPlugin does): none of them holds a hook.
-    const localViteImports = viteImports.filter((spec) => spec.startsWith('./'));
+    // (freeholdDevAuthorizationPlugin does): none of them holds a hook or
+    // names `alias`.
+    const localViteImports = viteStatements.flatMap(
+      (statement) => statement.match(/from '(\.\/[^']+)'$/)?.slice(1) ?? [],
+    );
     expect(localViteImports).toHaveLength(8);
     for (const spec of localViteImports) {
-      expect(hooks(readFileSync(spec.slice(2), 'utf8')), spec).toEqual(noHooks);
+      const text = readFileSync(spec.slice(2), 'utf8');
+      expect({ hooks: hooks(text), aliasLines: aliasLines(text) }, spec).toEqual({
+        hooks: noHooks,
+        aliasLines: [],
+      });
     }
     // Each reader sees what it claims to.
     expect(
       hooks(
-        'plugins: [{ setup(b) { b.onResolve({ filter: /x/ }, f); } }, { resolveId() {}, transform() {}, load() {} }],',
+        'plugins: [{ setup(b) { b.onResolve({ filter: /x/ }, f); } }, { resolveId() {}, transform() {}, load() {}, config: () => ({}), configResolved(c) {} }], transformer, loadFloors, config.x',
       ),
-    ).toEqual({ onResolve: 1, resolveId: 1, transform: 1, load: 1, plugins: 1 });
+    ).toEqual({ onResolve: 1, resolveId: 1, transform: 1, load: 1, plugins: 1, config: 2 });
     expect(
       importsOf(
-        "import a from 'pkg';\nimport {\n  b,\n} from './local.mjs';\nimport './side.mjs';\nexport { c } from './re.mjs';\nconst s = \"import x from './str';\";\nconst d = await import('./dyn.mjs');\nconst r = createRequire(u)('./req.cjs');",
+        "import a from 'pkg';\nimport {\n  b,\n} from './local.mjs';\nimport './side.mjs';\nexport { c } from './re.mjs';\n  import d from './indented.mjs';\nconst s = \"import x from './str';\";\nconst e = await import('./dyn.mjs');\nconst r = createRequire(u)('./req.cjs');\nconst m = process.getBuiltinModule('node:module');",
       ),
-    ).toEqual({ from: ['pkg', './local.mjs', './side.mjs', './re.mjs'], dynamic: 1, require: 1 });
-    // What the reviewed aliases resolve TO: every line naming the variables
-    // their values read (or a bot_detector path), and each variable's whole
-    // declaration, so a retarget fails even through a line naming none of them.
+    ).toEqual({
+      statements: [
+        "import a from 'pkg'",
+        "import { b, } from './local.mjs'",
+        "import './side.mjs'",
+        "export { c } from './re.mjs'",
+        "import d from './indented.mjs'",
+      ],
+      dynamic: 1,
+      require: 2,
+    });
+    // What vite.config.ts's alias resolves TO: every line naming the
+    // variables its value reads (or a bot_detector path), and each variable's
+    // whole declaration, so a retarget fails even through a line naming none
+    // of them.
     const declarations = (text: string, name: string): string[] =>
       [
         ...stripComments(text).matchAll(
           new RegExp(`\\b(?:const|let|var)\\s+${name}\\b[^;]*;`, 'g'),
         ),
       ].map((m) => flat(m[0]));
-    const bundleSource = readFileSync('scripts/build_server.mjs', 'utf8');
     const viteSource = readFileSync('vite.config.ts', 'utf8');
-    expect(
-      linesNaming(bundleSource, /\b(?:bot_detector|privateImpl|stubImpl|usePrivate)\b/),
-    ).toEqual([
-      "const privateImpl = fileURLToPath(new URL('../private/bot_detector/src/index.ts', import.meta.url));",
-      "const stubImpl = fileURLToPath(new URL('../server/bot_detector/stub.ts', import.meta.url));",
-      'const usePrivate = existsSync(privateImpl);',
-      ...Array.from({ length: 5 }, () => `${bundled},`),
-      // Split at the placeholder, so the literal is plain text.
-      'console.log(`[build:server] bot detector: $' +
-        "{usePrivate ? 'private' : 'stub (no-op)'}`);",
-    ]);
-    expect(
-      ['privateImpl', 'stubImpl', 'usePrivate'].map((name) => declarations(bundleSource, name)),
-    ).toEqual([
-      [
-        "const privateImpl = fileURLToPath(new URL('../private/bot_detector/src/index.ts', import.meta.url));",
-      ],
-      [
-        "const stubImpl = fileURLToPath(new URL('../server/bot_detector/stub.ts', import.meta.url));",
-      ],
-      ['const usePrivate = existsSync(privateImpl);'],
-    ]);
     expect(
       linesNaming(viteSource, /\b(?:bot_detector|privateBotDetector|botDetectorImpl)\b/),
     ).toEqual([
@@ -4057,84 +4193,22 @@ describe('the claim renewer', () => {
         'botDetectorImpl',
       ),
     ).not.toEqual(declarations(viteSource, 'botDetectorImpl'));
-    // Each esbuild.build call's top-level option keys, read with strings
-    // skipped and brackets balanced, so a new option is seen however written;
-    // and the bundle's esbuild calls and spreads, exactly.
-    const buildOptionKeys = (text: string): string[][] => {
-      const code = stripComments(text);
-      return [...code.matchAll(/\besbuild\.build\s*\(\s*\{/g)].map((m) => {
-        const keys: string[] = [];
-        let segment = '';
-        const take = () => {
-          const key = segment
-            .trim()
-            .match(/^(?:\.\.\.\s*[\w$.]+|\[[^\]]*\]|'[^']*'|"[^"]*"|[\w$]+)/)?.[0];
-          if (key) keys.push(key);
-          segment = '';
-        };
-        let depth = 1;
-        for (let i = m.index + m[0].length; i < code.length; i++) {
-          const c = code[i];
-          if (c === "'" || c === '"' || c === '`') {
-            const end = code.indexOf(c, i + 1);
-            segment += code.slice(i, end + 1);
-            i = end;
-            continue;
-          }
-          if (c === ',' && depth === 1) {
-            take();
-            continue;
-          }
-          if ('{[('.includes(c)) depth++;
-          else if ('}])'.includes(c) && --depth === 0) {
-            take();
-            break;
-          }
-          segment += c;
-        }
-        return keys;
-      });
-    };
-    expect(buildOptionKeys(bundleSource)).toEqual(
-      Array.from({ length: 5 }, () => [
-        'entryPoints',
-        'bundle',
-        'platform',
-        'format',
-        'external',
-        'outfile',
-        'alias',
-      ]),
-    );
-    expect(stripComments(bundleSource).match(/\besbuild\.\w+/g)).toEqual(
-      Array.from({ length: 5 }, () => 'esbuild.build'),
-    );
-    expect(stripComments(bundleSource).match(/\.\.\./g)).toBeNull();
-    for (const [fixture, keys] of [
-      [
-        "await esbuild.build({ entryPoints: ['a'], tsconfig: './server/esbuild.paths.json', alias: { a: b } });",
-        [['entryPoints', 'tsconfig', 'alias']],
-      ],
-      [
-        "await esbuild.build({ ...serverOpts, outfile: 'x', alias });",
-        [['...serverOpts', 'outfile', 'alias']],
-      ],
-      [
-        "await esbuild.build({ entryPoints: ['a,b'], define: { 'x,y': '\"1\"' }, nodePaths: ['server'], });",
-        [['entryPoints', 'define', 'nodePaths']],
-      ],
-    ] as const) {
-      expect(buildOptionKeys(fixture), fixture).toEqual(keys);
-    }
+    // The only writer and spawner vite.config.ts imports (the statements
+    // above pin its bindings), each call whole to its end: a write of a
+    // resolution file, or a shell that writes one, changes this list.
+    const callsOf = (text: string, names: string): string[] =>
+      [...stripComments(text).matchAll(new RegExp(`\\b(?:${names})\\s*\\([^;]*;`, 'g'))].map((m) =>
+        flat(m[0]),
+      );
+    expect(callsOf(viteSource, 'writeFileSync|execSync')).toEqual([
+      "execSync('git rev-parse --short=12 HEAD', { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], }).trim();",
+      "writeFileSync( path.resolve(root, 'src/game/music_overrides.generated.ts'), lines.join('\\n'), );",
+    ]);
+
     // The root package.json: its keys (so no `imports`, `exports` or
-    // `browser` map), no local-path dependency spec, and every resolution
-    // flag its scripts pass, as text.
-    const pkgText = readFileSync('package.json', 'utf8');
-    const pkg = JSON.parse(pkgText) as {
-      imports?: unknown;
-      exports?: unknown;
-      scripts: Record<string, string>;
-    };
+    // `browser` map); every dependency or override spec that is not a version
+    // range, without its version; pnpm's keys and the packages it patches;
+    // and every resolution flag its scripts pass, as text.
     expect(Object.keys(pkg)).toEqual([
       'name',
       'version',
@@ -4155,13 +4229,40 @@ describe('the claim renewer', () => {
     ]);
     expect(pkg.imports).toBeUndefined();
     expect(pkg.exports).toBeUndefined();
-    const localSpecs = (text: string): number =>
-      (text.match(/"(?:link|file|portal|workspace):/g) ?? []).length;
-    expect(localSpecs(pkgText)).toBe(0);
-    expect(localSpecs('{ "dependencies": { "claims": "link:./server" } }')).toBe(1);
+    const nonRange = (spec: string): string | null =>
+      /^[\^~<>=*]|^\d/.test(spec) ? null : spec.replace(/@[^@/]*$/, '');
+    const specs = (table: unknown): string[] =>
+      Object.entries((table ?? {}) as Record<string, string>).flatMap(([name, spec]) => {
+        const kept = nonRange(spec);
+        return kept === null ? [] : [`${name}: ${kept}`];
+      });
+    expect(
+      [pkg.dependencies, pkg.devDependencies, pkg.optionalDependencies, pkg.pnpm.overrides].flatMap(
+        specs,
+      ),
+    ).toEqual(['@typescript/native: npm:typescript', 'typescript: npm:@typescript/typescript6']);
+    for (const [spec, kept] of [
+      ['^1.19.0', null],
+      ['1.2.3', null],
+      ['link:./server', 'link:./server'],
+      ['./server/claims', './server/claims'],
+      ['npm:typescript@^7.0.2', 'npm:typescript'],
+      ['npm:@typescript/typescript6@^6.0.2', 'npm:@typescript/typescript6'],
+    ] as const) {
+      expect(nonRange(spec), spec).toBe(kept);
+    }
+    expect(Object.keys(pkg.pnpm)).toEqual([
+      'overrides',
+      'auditConfig',
+      'onlyBuiltDependencies',
+      'patchedDependencies',
+    ]);
+    expect(
+      Object.keys(pkg.pnpm.patchedDependencies).map((key) => key.replace(/@[^@/]*$/, '')),
+    ).toEqual(['three', '@vitest/spy']);
     const resolutionFlags = (cmd: string): string[] =>
       cmd.match(
-        /(?:--(?:alias|tsconfig|config|inject|conditions|resolve-extensions|main-fields|import|loader|experimental-loader|require)\b|(?<=\s)-[cr](?=\s))(?:[=:\s]\s*[^\s&|;]+)?|\bNODE_(?:PATH|OPTIONS)=[^\s&|;]*/g,
+        /(?:--(?:alias|tsconfig|config|inject|conditions|resolve-extensions|main-fields|import|loader|experimental-loader|require|env-file|root)\b|(?<=\s)-[cCr](?=[\s=]))(?:[=:\s]\s*[^\s&|;]+)?|\bNODE_(?:PATH|OPTIONS)=[^\s&|;]*/g,
       ) ?? [];
     expect(
       Object.entries(pkg.scripts).flatMap(([name, cmd]) =>
@@ -4182,6 +4283,14 @@ describe('the claim renewer', () => {
         ['NODE_PATH=server', '--require ./hook.cjs'],
       ],
       ['vitest run -c tests/claims.config.ts --configLoader runner', ['-c tests/claims.config.ts']],
+      [
+        'vitest run -c=tests/claims.config.ts --root server',
+        ['-c=tests/claims.config.ts', '--root server'],
+      ],
+      [
+        'node -C claims --env-file=.env.claims dist-server/server.cjs',
+        ['-C claims', '--env-file=.env.claims'],
+      ],
     ] as const) {
       expect(resolutionFlags(cmd), cmd).toEqual(flags);
     }
@@ -4196,6 +4305,9 @@ describe('the claim renewer', () => {
     ).toEqual(['node-linker=hoisted', 'auto-install-peers=true', 'strict-peer-dependencies=false']);
     expect(tracked('*package.json')).toEqual(['package.json']);
     expect(tracked('*jsconfig*.json')).toEqual([]);
+    // The private clone stays untracked: a force-added implementation would
+    // become the `#bot-detector` target everywhere.
+    expect(tracked('private/*')).toEqual(['private/.dockerkeep']);
     // Every tracked tsconfig, by inventory, and each one's `paths` exactly.
     // The tracked inventory, from git, so a new tsconfig anywhere is seen.
     const tsconfigs = tracked('*tsconfig*.json');
