@@ -59,8 +59,9 @@
 // claim is younger than the login budget (a handshake between its first ask
 // and its join bind). A predicate that THROWS counts the claim as wanted (kept
 // and renewed, the safe side), counted, with one fixed warn per pass. No player
-// data reaches a log line here: counts, the configured deadline and the closing
-// line's fixed reason only (nothing identifying, a fixed vocabulary).
+// data reaches a log line here, nothing identifying: counts, the pass deadline
+// (a configured number of ms) and the closing line's reason (one of a fixed
+// vocabulary) only.
 import {
   type FreeholdClaimReleaseReading,
   freeholdClaimsStillHeldOnClient,
@@ -309,7 +310,9 @@ export interface FreeholdClaimRenewerDeps {
   /** Read at the pass's start (that one reading also feeds every wanted
    *  test), at every deadline check while the deadline signal has not fired,
    *  and at its close. A start reading that throws or is not a finite number
-   *  rejects the call before the pass starts; a throw at a deadline check
+   *  rejects the call before the pass starts (a clock port that started a
+   *  pass itself leaves the call a counted skip instead, whatever it read: the
+   *  flag is re-checked first); a throw at a deadline check
    *  rejects the pass there, mid-pass, while a reading there that is not a
    *  finite number leaves that check to the signal alone (and a finite one
    *  stepped back below the start trips nothing until the clock catches up);
@@ -407,8 +410,10 @@ function passDeadlineOf(deps: FreeholdClaimRenewerDeps): number {
  * - an injected passDeadlineMs that is not a whole number of ms from 1 to
  *   2^31 - 1, the range AbortSignal.timeout honours (suites only): a
  *   RangeError before anything runs;
- * - a nowMs start reading that throws or is not a finite number: before the
- *   flag is taken, so the next pass on a sane clock runs;
+ * - a nowMs start reading that throws, or that is not a finite number while
+ *   no pass runs (the flag is re-checked first, so a clock port that started
+ *   a pass itself leaves the call a counted skip): before the flag is taken,
+ *   so the next pass on a sane clock runs;
  * - a nowMs that throws at a deadline check mid-pass: the pass stops there
  *   with that error;
  * - an injected deadlineSignal factory that throws (suites only): after the
@@ -422,7 +427,7 @@ function passDeadlineOf(deps: FreeholdClaimRenewerDeps): number {
  * reading (a wall clock stepped back) is compared with the start like any
  * other and gives a negative difference, so it never trips the clock half
  * until the clock catches up; the signal still bounds the pass. A
- * passDeadlineMs outside that range never reaches the mint: the RangeError
+ * passDeadlineMs outside 1 to 2^31 - 1 never reaches the mint: the RangeError
  * refuses it first. A mid-pass rejection still runs the pass's finally: the
  * pass is counted, its race, hook and closing-clock lines are said when due,
  * and the flag clears.

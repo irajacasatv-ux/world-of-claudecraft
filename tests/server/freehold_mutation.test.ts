@@ -14,7 +14,7 @@
 // tests/server/freehold_claim.pg.test.ts, which cannot drive these arms
 // deterministically (a lost COMMIT answer, a renewer chunk that throws).
 //
-// Cost: 0.3 s
+// Cost: 0.4 s
 import { readFileSync } from 'node:fs';
 import { describe, expect, it, vi } from 'vitest';
 import { LEASE_TTL_SECONDS } from '../../server/character_lease_db';
@@ -1437,7 +1437,13 @@ describe('the claim renewer', () => {
     // delay past TIMEOUT_MAX is set to 1 ms, with only a TimeoutOverflowWarning
     // to say so. Timers fire in expiry order, so after a short real wait the
     // clamped signal has aborted and the capped one has not. The warning is
-    // caught on process for this case alone (it never fails the run).
+    // caught on process for this case alone (it never fails the run). The
+    // warning assertion stays strict on purpose: --no-warnings and
+    // --disable-warning=TimeoutOverflowWarning (in NODE_OPTIONS or on the
+    // command line) silence only Node's own stderr printer, never this event,
+    // since Node 26 (the CI's) checks the disabled set in its default handler
+    // and still emits; measured on Node 26.10 with both flags. A run that
+    // loses the event has a Node that changed what the cap's comments say.
     const warnings: string[] = [];
     const onWarning = (warning: Error) => {
       warnings.push(warning.name);
@@ -3129,6 +3135,9 @@ describe('the claim renewer', () => {
       ],
       ['a Date', new Date(10 ** 12), 'non-number'],
       ['+Infinity', Number.POSITIVE_INFINITY, 'not finite'],
+      // NaN proves only that the pass never rejects: every >= comparison with
+      // NaN is false, so a check that subtracted it unguarded would not trip
+      // either. It kills no mutant of the finite-number guard; the others do.
       ['NaN', Number.NaN, 'not finite'],
       ['null', null, 'non-number'],
     ];
@@ -3150,6 +3159,46 @@ describe('the claim renewer', () => {
     expect(registry.count()).toBe(FREEHOLD_CLAIM_RENEW_CHUNK + 1);
     expect(lines).toEqual([deadlineWarn(2, 1)]);
     expect(reads).toBe(3);
+  });
+
+  it('trips the clock half once the clock catches up after a backward mid-pass reading: a step back switches nothing off', async () => {
+    // Three renew chunks, a signal that never aborts and a 1 ms deadline. The
+    // start reads -10, the first chunk's check -20 (stepped back: a negative
+    // difference, no trip), the second chunk's check 0 (10 ms past the start:
+    // a trip). A clock half switched off for the rest of the pass by the
+    // backward reading would renew all three chunks, and one that lagged a
+    // check would renew two.
+    const registry = createFreeholdClaimRegistry();
+    for (let i = 0; i < 2 * FREEHOLD_CLAIM_RENEW_CHUNK + 1; i++) {
+      registry.record(claim(pad(i), i + 1));
+    }
+    const f = fakePool([renewAll]);
+    const readings = [-10, -20, 0];
+    let reads = 0;
+    const lines: string[] = [];
+    await renewFreeholdClaims({
+      ...renewDeps(registry, f.pool),
+      passDeadlineMs: 1,
+      // Past the scripted readings the clock stays at 0.
+      nowMs: () => readings[reads++] ?? 0,
+      warn: (line: string) => {
+        lines.push(line);
+      },
+      deadlineSignal: () => new AbortController().signal,
+    });
+    // It tripped at the third reading, the second chunk's check: one chunk
+    // renewed, the other two abandoned with their claims missed heartbeats.
+    expect(f.statements.filter((s) => s.text.includes('SET heartbeat_at'))).toHaveLength(1);
+    expect(registry.counters).toMatchObject({
+      renewed: FREEHOLD_CLAIM_RENEW_CHUNK,
+      renewChunksAbandoned: 2,
+      missedHeartbeats: FREEHOLD_CLAIM_RENEW_CHUNK + 1,
+      renewPasses: 1,
+      renewPassMsTotal: 10,
+    });
+    expect(lines).toEqual([deadlineWarn(2, 1)]);
+    // The start, the two checks and the close.
+    expect(reads).toBe(4);
   });
 
   it('skips a pass its own start clock starts: the flag is re-checked after the read', async () => {
@@ -3359,6 +3408,55 @@ describe('the claim renewer', () => {
     expect(bindsOnLost(bodyOf(mutant))).toBe(true);
   });
 
+  it('states the cases a pass rejects in word for word the same list in its JSDoc, the periodic flush member doc and the manifest', () => {
+    // Each copy runs from the first `:` after its one "exactly these cases"
+    // to the first `.` that ends a sentence (AbortSignal.timeout's does not),
+    // read with comment markers, markdown backticks and each item's leading
+    // bullet dropped and whitespace collapsed, item by item (split on `;`):
+    // the JSDoc's bullets, the member doc's run-on sentence and the
+    // manifest's paragraph then read alike, and any word that differs fails.
+    const anchor = 'exactly these cases';
+    const listOf = (text: string): string[] => {
+      const at = text.indexOf(anchor);
+      // One copy per file, or this could read the wrong one.
+      if (at < 0 || text.includes(anchor, at + 1)) return [];
+      const body = text
+        .slice(at + anchor.length)
+        .split('\n')
+        .map((line) => line.replace(/^\s*(?:\/\*\*|\*\/|\*|\/\/)?/, ''))
+        .join(' ')
+        .replaceAll('`', '');
+      const from = body.indexOf(':') + 1;
+      const end = body.slice(from).search(/\.(?:\s|$)/);
+      if (from === 0 || end < 0) return [];
+      return body
+        .slice(from, from + end)
+        .split(';')
+        .map((item) => item.replace(/\s+/g, ' ').trim().replace(/^- /, ''));
+    };
+    const registrySource = readFileSync('server/freehold_claim_registry.ts', 'utf8');
+    const jsdoc = listOf(registrySource);
+    const memberDoc = listOf(readFileSync('server/periodic_save_flush.ts', 'utf8'));
+    const manifest = listOf(readFileSync('docs/freeholds/mutation-touch-set-manifest.md', 'utf8'));
+    // Positive control: the whole list was found, from its first case to the
+    // end of its last, with no empty item.
+    expect(jsdoc[0]).toMatch(/^an injected passDeadlineMs that is not a whole number/);
+    expect(jsdoc.at(-1)).toMatch(/after the wanted tests and before any statement$/);
+    expect(jsdoc.every((item) => item.length > 0)).toBe(true);
+    expect(memberDoc).toEqual(jsdoc);
+    expect(manifest).toEqual(jsdoc);
+    // Negative control: one word changed in one copy fails the comparison
+    // through the same extractor, which still finds the whole list.
+    const changed = registrySource.replace(
+      /(exactly these cases[\s\S]*?)a sane clock/,
+      '$1a sound clock',
+    );
+    expect(changed).not.toBe(registrySource);
+    const changedList = listOf(changed);
+    expect(changedList).toHaveLength(jsdoc.length);
+    expect(changedList).not.toEqual(memberDoc);
+  });
+
   it('pins every mention of the renewer by name in server/ to its reviewed per-file count: a new call, alias, binding or re-export fails until reviewed', () => {
     // A second call site elsewhere could bind a hook the pin above never
     // reads, and no list of call shapes holds: an optional call, a
@@ -3485,15 +3583,25 @@ describe('the claim renewer', () => {
     // static `import * as`, or ANY call whose first argument is the path
     // literal: a dynamic import(), a require(), a require function minted by
     // createRequire(import.meta.url)) are pinned to their reviewed count
-    // across server/: none. A named or type import never puts the path after
-    // a `(` (it follows `from`), so the call arm cannot count one. Both read
-    // the decoded text raw AND comment-stripped, so neither a comment that
-    // hides a `;` nor a `//` in a string that hides the rest of a line gets one
-    // past. Its LIMITS: the call arm needs the whole path as one literal, so
-    // a computed path ('./freehold_claim_' + 'registry') and a template path
-    // with a `${}` in it get past it. They are pinned below as known escapes
-    // that move nothing, so a stricter matcher has to update them consciously.
-    const SPEC = String.raw`['"\x60][^'"\x60\n]*freehold_claim_registry(?:\.[cm]?[jt]s)?['"\x60]`;
+    // across server/: none. The PATH is a quoted string whose last path
+    // segment is freehold_claim_registry, with an optional extension (it
+    // follows the opening quote or a `/`): relative, absolute, a file: URL
+    // and bare all count, and a string that merely ends in the name (a log
+    // line's 'loaded freehold_claim_registry') does not. A string that holds
+    // the path itself as a call's first argument
+    // (`log('see ./freehold_claim_registry')`) still counts: an over-count on
+    // the safe side, pinned below. A named or type import never puts the path
+    // after a `(` (it follows `from`), so the call arm cannot count one. Both
+    // read the decoded text raw AND comment-stripped, so neither a comment
+    // that hides a `;` nor a `//` in a string that hides the rest of a line
+    // gets one past. Its LIMITS: the call arm sees only a path literal right
+    // after the call's `(`, so a path held in a variable (`import(p)`), a path
+    // that is not the call's first argument (`req.call(null, path)`), a
+    // computed path ('./freehold_claim_' + 'registry') and a template whose
+    // `${}` stands in for part of the name get past it. They are pinned below
+    // as known escapes that move nothing, so a stricter matcher has to update
+    // them consciously.
+    const SPEC = String.raw`['"\x60](?:[^'"\x60\n]*/)?freehold_claim_registry(?:\.[cm]?[jt]s)?['"\x60]`;
     const STAR = new RegExp(String.raw`\bexport\s*(?:type\s*)?\*[^;]*?\bfrom\s*${SPEC}`, 'g');
     const NAMESPACE = new RegExp(
       String.raw`\bimport\b[^;]*?\*\s*as\b[^;]*?\bfrom\s*${SPEC}|\(\s*${SPEC}`,
@@ -3549,6 +3657,23 @@ describe('the claim renewer', () => {
       ["import * as reg from './freehold_claim_\\u0072egistry';", namespace],
       ["const u = 'a//b'; const reg = await import('./freehold_claim_registry');", namespace],
       ["import /* ; */ * as reg from './freehold_claim_registry';", namespace],
+      // Every specifier that names the module counts, not only a relative
+      // one: an absolute path, a file: URL, a bare name, a template with a
+      // `${}` before the name's segment, a URL built by a call.
+      ["const reg = await import('/srv/app/server/freehold_claim_registry.js');", namespace],
+      ["const reg = await import('file:///srv/app/server/freehold_claim_registry.js');", namespace],
+      ["const reg = require('freehold_claim_registry');", namespace],
+      [`const reg = await import(\`\${dir}/freehold_claim_registry.js\`);`, namespace],
+      [
+        "const reg = await import(new URL('./freehold_claim_registry.js', import.meta.url).href);",
+        namespace,
+      ],
+      // The safe-side over-count: a call's first string that holds the path
+      // counts though nothing loads it.
+      ["log('see ./freehold_claim_registry');", namespace],
+      // A string that merely ENDS in the name is no path to the module.
+      ["log('loaded freehold_claim_registry');", neither],
+      ["const reg = req('./my_freehold_claim_registry');", neither],
       ["import { renewFreeholdClaims } from './freehold_claim_registry';", neither],
       ["import type { FreeholdClaimRegistry } from './freehold_claim_registry';", neither],
       [
@@ -3566,6 +3691,8 @@ describe('the claim renewer', () => {
     // The known escapes named above: each reaches the registry's namespace
     // object today and moves nothing.
     for (const shape of [
+      "const p = './freehold_claim_registry';\nconst reg = await import(p);",
+      "const reg = req.call(null, './freehold_claim_registry');",
       "const reg = await import('./freehold_claim_' + 'registry');",
       `const part = 'registry';\nconst reg = await import(\`./freehold_claim_\${part}\`);`,
     ]) {

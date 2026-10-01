@@ -425,9 +425,10 @@ abandoned pass skips its release chunks. THE PASS'S VOICE AND ITS CLOCK (revisio
 line a pass says is said while its single-flight flag is held (so a log sink that calls the
 renewer back is skipped), next to the counter it reports, through a guarded sink (a sink
 that throws never rejects the pass), and carries counts, the configured deadline and the
-closing line's fixed reason only (nothing identifying, a fixed vocabulary: the abandon line
-names the configured pass deadline in ms; the closing-clock line carries no number at all,
-only its fixed reason). The wanted-check line is said once, after the wanted tests and the
+closing line's fixed reason only, nothing identifying: the reasons are a fixed vocabulary, and
+the one number beside the counts is the pass deadline, a configured number of ms, which the
+abandon line names (the closing-clock line carries no number at all, only its fixed
+reason). The wanted-check line is said once, after the wanted tests and the
 pending sweep; the lost line once per renew chunk that lost claims to another holder; the
 abandon line ("hit its N ms deadline; M chunks wait for the next pass or were left
 undecided") once, where the deadline stops the pass. Three lines come from the pass's
@@ -435,7 +436,8 @@ undecided") once, where the deadline stops the pass. Three lines come from the p
 `onLost` hooks that threw (each throw swallowed and counted on the lasting
 `claim_on_lost_threw`), and the closing-clock line ("clock gave no usable duration at its
 close (REASON); that pass is counted without one", REASON one fixed reason, judged in this
-order and defined here once: `threw`, the closing read threw; `non-number`, it returned
+order and defined here (the `closingPassMs` JSDoc and the metrics help text agree): `threw`,
+the closing read threw; `non-number`, it returned
 something that is not a number (a BigInt, null, a Date, any object; NaN is a number and
 reports `not finite`); `not finite`, the duration is NaN or an infinity (a NaN or infinite
 reading, or two finite readings whose difference is not finite); `backward`, the duration is
@@ -447,8 +449,9 @@ it, so a statement there that throws cannot leave the flag set. A clock port tha
 the pass's start rejects the call before the flag is taken; the flag is then re-checked
 straight after that read, BEFORE the reading is judged (a clock port that started a pass
 itself leaves the call a counted skip, whatever it read); and a start reading that is not a
-finite number (a non-number included: `Number.isFinite` coerces nothing) is refused like a
-throw, with a fixed dev-channel Error, since that one reading feeds both the deadline's
+finite number (a BigInt, null or any object included: `Number.isFinite` coerces nothing) is
+refused like a throw, with a fixed dev-channel Error, since that one reading feeds both the
+deadline's
 clock half and every wanted test (the production predicate compares it with a claim's
 `acquiredAtMs`): minus infinity would trip that half at once and abandon every chunk of
 every pass, NaN or plus infinity would switch it off. Either way the periodic flush reports
@@ -465,12 +468,15 @@ pass rejects in exactly these cases, the list the renewer's JSDoc and the period
 member doc state word for word (production binds `Date.now` and no injected deadline, so it
 meets none of them): an injected `passDeadlineMs` that is not a whole number of ms from 1 to
 2^31 - 1, the range `AbortSignal.timeout` honours (suites only): a `RangeError` before
-anything runs; a `nowMs` start reading that throws or is not a finite number: before the
-flag is taken, so the next pass on a sane clock runs; a `nowMs` that throws at a deadline
+anything runs; a `nowMs` start reading that throws, or that is not a finite number while no
+pass runs (the flag is re-checked first, so a clock port that started a pass itself leaves
+the call a counted skip): before the flag is taken, so the next pass on a sane clock runs; a
+`nowMs` that throws at a deadline
 check mid-pass: the pass stops there with that error; an injected `deadlineSignal` factory
 that throws (suites only): after the wanted tests and before any statement. (Node clamps 0,
 and anything from 2^31 to 2^32 - 1, to 1 ms, which would abandon every chunk of every pass,
-so that range is refused rather than handed on.) The closing read, and the duration taken
+so those clamped values are refused, like every other value outside 1 to 2^31 - 1, rather
+than handed on.) The closing read, and the duration taken
 from it, run while the flag is still held (a clock that calls the renewer back there is
 skipped too) and under a catch of their own, and only a reading that is a number is used (a
 subtraction would coerce null or a Date into a finite duration): a pass whose clock gave no
