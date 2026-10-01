@@ -15249,7 +15249,12 @@ export const ko_KR: Partial<Record<TranslationKey, string>> = {
   'hudChrome.itemTooltip.lootedBy': '{date}에 {name}이(가) 획득',
   'hudChrome.itemTooltip.questRewardTo': '{date}에 {name}이(가) 퀘스트 보상으로 획득',
   'hudChrome.itemTooltip.obtainedBy': '{date}에 {name}이(가) 입수',
-  'hudChrome.itemTooltip.previousOwners': '이전 소유자: {count}',
+  'hudChrome.itemMenu.itemHistory': '아이템 이력',
+  'hudChrome.itemHistory.title': '{item}: 이력',
+  'hudChrome.itemHistory.passedTo': '{date}에 {name}에게 넘어감',
+  'hudChrome.itemHistory.noTransfers': '이 아이템은 주인이 바뀐 적이 없습니다.',
+  'hudChrome.itemHistory.earlierHidden': '이전 {count}건의 양도는 표시되지 않습니다.',
+  'hudChrome.itemHistory.close': '닫기',
   'devCommand.actions.kit.description':
     '특성에 맞는 성소 입장 전 20레벨 사전 설정 장비를 가방부터 착용합니다. 장비만 해당됩니다.',
   'devCommand.actions.kit.label': '20레벨 초기 장비 세트 착용',

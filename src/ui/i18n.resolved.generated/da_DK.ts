@@ -4438,8 +4438,6 @@ export const da_DK: EnTranslations = {
       "lootedBy": "Looted by {name} on {date}",
       "questRewardTo": "Quest reward to {name} on {date}",
       "obtainedBy": "Obtained by {name} on {date}",
-      "previousOwners": "Previous owners: {count}",
-      "itemGuid": "Item ID: {guid}",
       "materialSourceGatherer": "{count} × samlet af {name}",
       "materialSourceGathererSigned": "{count} × samlet af {name}, signeret af {signer}",
       "materialSourceUnrecorded": "{count} × ingen samler registreret",
@@ -5626,7 +5624,15 @@ export const da_DK: EnTranslations = {
       "viewSources": "Vis kilder",
       "separateByGatherer": "Adskil efter samler",
       "takeChosenQuantity": "Tag valgt antal ud",
-      "combine": "Saml materialebunker"
+      "combine": "Saml materialebunker",
+      "itemHistory": "Item history"
+    },
+    "itemHistory": {
+      "title": "{item}: history",
+      "passedTo": "Passed to {name} on {date}",
+      "noTransfers": "This item has never changed hands.",
+      "earlierHidden": "{count} earlier transfers are not shown.",
+      "close": "Close"
     },
     "enchanting": {
       "recipeNotLearned": "Lær formlen, før du anvender denne fortryllelse.",

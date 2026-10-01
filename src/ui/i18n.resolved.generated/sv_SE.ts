@@ -4438,8 +4438,6 @@ export const sv_SE: EnTranslations = {
       "lootedBy": "Looted by {name} on {date}",
       "questRewardTo": "Quest reward to {name} on {date}",
       "obtainedBy": "Obtained by {name} on {date}",
-      "previousOwners": "Previous owners: {count}",
-      "itemGuid": "Item ID: {guid}",
       "materialSourceGatherer": "{count} × samlad av {name}",
       "materialSourceGathererSigned": "{count} × samlad av {name}, signerad av {signer}",
       "materialSourceUnrecorded": "{count} × ingen samlare registrerad",
@@ -5626,7 +5624,15 @@ export const sv_SE: EnTranslations = {
       "viewSources": "Visa källor",
       "separateByGatherer": "Dela upp efter samlare",
       "takeChosenQuantity": "Ta ut valt antal",
-      "combine": "Slå ihop materialbuntar"
+      "combine": "Slå ihop materialbuntar",
+      "itemHistory": "Item history"
+    },
+    "itemHistory": {
+      "title": "{item}: history",
+      "passedTo": "Passed to {name} on {date}",
+      "noTransfers": "This item has never changed hands.",
+      "earlierHidden": "{count} earlier transfers are not shown.",
+      "close": "Close"
     },
     "enchanting": {
       "recipeNotLearned": "Lär dig formeln innan du använder förtrollningen.",

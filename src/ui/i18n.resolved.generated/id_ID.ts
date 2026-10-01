@@ -4438,8 +4438,6 @@ export const id_ID: EnTranslations = {
       "lootedBy": "Looted by {name} on {date}",
       "questRewardTo": "Quest reward to {name} on {date}",
       "obtainedBy": "Obtained by {name} on {date}",
-      "previousOwners": "Previous owners: {count}",
-      "itemGuid": "Item ID: {guid}",
       "materialSourceGatherer": "{count} × Dikumpulkan oleh {name}",
       "materialSourceGathererSigned": "{count} × Dikumpulkan oleh {name}, ditandatangani oleh {signer}",
       "materialSourceUnrecorded": "{count} × Tidak ada pengumpul yang tercatat",
@@ -5626,7 +5624,15 @@ export const id_ID: EnTranslations = {
       "viewSources": "Lihat sumber",
       "separateByGatherer": "Pisahkan berdasarkan pengumpul",
       "takeChosenQuantity": "Keluarkan jumlah yang dipilih",
-      "combine": "Gabungkan tumpukan material"
+      "combine": "Gabungkan tumpukan material",
+      "itemHistory": "Item history"
+    },
+    "itemHistory": {
+      "title": "{item}: history",
+      "passedTo": "Passed to {name} on {date}",
+      "noTransfers": "This item has never changed hands.",
+      "earlierHidden": "{count} earlier transfers are not shown.",
+      "close": "Close"
     },
     "enchanting": {
       "recipeNotLearned": "Pelajari formulanya sebelum menerapkan enchant ini.",

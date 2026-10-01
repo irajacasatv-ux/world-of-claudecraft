@@ -88,14 +88,17 @@ recent feed, `GET /admin/api/items/:guid` for one copy's history), gated on
 
 ## The player surface
 
-The item tooltip's provenance footer (`src/ui/item_provenance_view.ts`)
-renders, on the owner's own surfaces only: the origin line (looted by,
-quest reward to, or obtained by), the previous-owner count once above zero,
-and the item ID.
+The item ID is never shown to a player: it is a server and operator fact.
+Right-clicking a tracked copy in the bags offers "Item history"
+(`src/ui/bag_item_context_menu.ts`), which opens a read-only prompt
+(`src/ui/item_history_dialog.ts`, lines from `src/ui/item_history_view.ts`)
+showing the origin line (looted by, quest reward to, or obtained by), one
+row per later hand, and the count of earlier hands that rolled off the
+bounded chain. The tooltip itself carries no tracking lines.
 
 ## Pins
 
 `tests/item_provenance.test.ts` (the leaf), `tests/item_tracking.test.ts`
-(the hub, the boundaries, the transfers), `tests/item_provenance_view.test.ts`
-(the tooltip), `tests/server/item_ledger.test.ts` (the ledger and the event
+(the hub, the boundaries, the transfers), `tests/item_history_view.test.ts` and `tests/item_history_dialog_dom.test.ts`
+(the right-click history), `tests/server/item_ledger.test.ts` (the ledger and the event
 frame), and the admin route cases in `tests/server/admin.test.ts`.

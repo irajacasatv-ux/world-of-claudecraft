@@ -15288,7 +15288,12 @@ export const ja_JP: Partial<Record<TranslationKey, string>> = {
   'hudChrome.itemTooltip.lootedBy': '{date} に {name} が獲得',
   'hudChrome.itemTooltip.questRewardTo': '{date} に {name} がクエスト報酬として入手',
   'hudChrome.itemTooltip.obtainedBy': '{date} に {name} が入手',
-  'hudChrome.itemTooltip.previousOwners': '以前の所有者: {count}',
+  'hudChrome.itemMenu.itemHistory': 'アイテム履歴',
+  'hudChrome.itemHistory.title': '{item}：履歴',
+  'hudChrome.itemHistory.passedTo': '{date} に {name} へ譲渡',
+  'hudChrome.itemHistory.noTransfers': 'このアイテムは一度も持ち主が変わっていません。',
+  'hudChrome.itemHistory.earlierHidden': 'それ以前の {count} 件の譲渡は表示されません。',
+  'hudChrome.itemHistory.close': '閉じる',
   'devCommand.actions.kit.description':
     '指定したスペック向けのSanctum以前レベル20プリセットを装備します (バッグを先に)。装備品のみです。',
   'devCommand.actions.kit.label': '新規20キットを装備',

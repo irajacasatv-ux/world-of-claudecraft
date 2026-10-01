@@ -4438,8 +4438,6 @@ export const zh_CN: EnTranslations = {
       "lootedBy": "{name} 于 {date} 拾取",
       "questRewardTo": "{date} 任务奖励予 {name}",
       "obtainedBy": "{name} 于 {date} 获得",
-      "previousOwners": "曾经的持有者：{count}",
-      "itemGuid": "Item ID: {guid}",
       "materialSourceGatherer": "{count} × 由{name}采集",
       "materialSourceGathererSigned": "{count} × 由{name}采集，由{signer}签名",
       "materialSourceUnrecorded": "{count} × 未记录采集者",
@@ -5626,7 +5624,15 @@ export const zh_CN: EnTranslations = {
       "viewSources": "查看来源",
       "separateByGatherer": "按采集者拆分",
       "takeChosenQuantity": "取出指定数量",
-      "combine": "合并素材堆叠"
+      "combine": "合并素材堆叠",
+      "itemHistory": "物品历史"
+    },
+    "itemHistory": {
+      "title": "{item}：历史",
+      "passedTo": "{date} 转交给 {name}",
+      "noTransfers": "此物品从未易手。",
+      "earlierHidden": "更早的 {count} 次转手未显示。",
+      "close": "关闭"
     },
     "enchanting": {
       "recipeNotLearned": "施加此附魔前，请先学习配方。",

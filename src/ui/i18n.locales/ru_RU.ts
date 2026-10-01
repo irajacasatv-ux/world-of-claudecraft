@@ -15551,7 +15551,12 @@ export const ru_RU: Partial<Record<TranslationKey, string>> = {
   'hudChrome.itemTooltip.lootedBy': 'Добыто: {name}, {date}',
   'hudChrome.itemTooltip.questRewardTo': 'Награда за задание: {name}, {date}',
   'hudChrome.itemTooltip.obtainedBy': 'Получено: {name}, {date}',
-  'hudChrome.itemTooltip.previousOwners': 'Предыдущие владельцы: {count}',
+  'hudChrome.itemMenu.itemHistory': 'История предмета',
+  'hudChrome.itemHistory.title': '{item}: история',
+  'hudChrome.itemHistory.passedTo': 'Передано: {name}, {date}',
+  'hudChrome.itemHistory.noTransfers': 'Этот предмет никогда не менял владельца.',
+  'hudChrome.itemHistory.earlierHidden': 'Ещё {count} ранних передач не показаны.',
+  'hudChrome.itemHistory.close': 'Закрыть',
   'devCommand.actions.kit.description':
     'Надеть комплект уровня 20 (до Sanctum) для выбранной специализации, сначала сумки. Только снаряжение.',
   'devCommand.actions.kit.label': 'Экипировать комплект свежего 20 уровня',

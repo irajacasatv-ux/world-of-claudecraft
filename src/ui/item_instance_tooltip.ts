@@ -25,7 +25,6 @@ import { formatMoney, formatNumber, type TranslationKey, t } from './i18n';
 import { QUALITY_COLOR } from './icons';
 import { ITEM_QUALITY_LABEL_KEYS } from './item_kind_label';
 import { itemNameColor } from './item_name_color';
-import { itemProvenanceLines } from './item_provenance_view';
 import { lootQualityTooltipLine } from './loot_quality_view';
 import {
   boundedMaterialSourceRows,
@@ -442,18 +441,6 @@ export function materialSourceLines(sources?: MaterialComposition): string {
 }
 
 /** Complete material provenance block for the shared item-card painter. */
-/** The tooltip's provenance footer: the maker's mark lines (below) and,
- *  for a tracked epic or legendary copy, its origin, previous-owner count
- *  and item ID (item_provenance_view.ts). One composition site for every
- *  surface that renders the full owner payload. */
-export function itemFooterMarkLines(
-  item: ItemDef,
-  instance?: ItemInstancePayload,
-  materialSources?: MaterialComposition,
-): string {
-  return materialMakersMarkLines(item, instance, materialSources) + itemProvenanceLines(instance);
-}
-
 export function materialMakersMarkLines(
   item: ItemDef,
   instance?: ItemInstancePayload,

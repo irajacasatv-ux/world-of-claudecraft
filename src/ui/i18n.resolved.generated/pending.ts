@@ -10,124 +10,174 @@
 
 export const pending: Record<string, readonly string[]> = {
   "es": [
-    "hudChrome.itemTooltip.itemGuid",
+    "hudChrome.itemHistory.close",
+    "hudChrome.itemHistory.earlierHidden",
+    "hudChrome.itemHistory.noTransfers",
+    "hudChrome.itemHistory.passedTo",
+    "hudChrome.itemHistory.title",
+    "hudChrome.itemMenu.itemHistory",
     "hudChrome.itemTooltip.lootedBy",
     "hudChrome.itemTooltip.obtainedBy",
-    "hudChrome.itemTooltip.previousOwners",
     "hudChrome.itemTooltip.questRewardTo"
   ],
   "es_ES": [
-    "hudChrome.itemTooltip.itemGuid",
+    "hudChrome.itemHistory.close",
+    "hudChrome.itemHistory.earlierHidden",
+    "hudChrome.itemHistory.noTransfers",
+    "hudChrome.itemHistory.passedTo",
+    "hudChrome.itemHistory.title",
+    "hudChrome.itemMenu.itemHistory",
     "hudChrome.itemTooltip.lootedBy",
     "hudChrome.itemTooltip.obtainedBy",
-    "hudChrome.itemTooltip.previousOwners",
     "hudChrome.itemTooltip.questRewardTo"
   ],
   "fr_FR": [
-    "hudChrome.itemTooltip.itemGuid",
+    "hudChrome.itemHistory.close",
+    "hudChrome.itemHistory.earlierHidden",
+    "hudChrome.itemHistory.noTransfers",
+    "hudChrome.itemHistory.passedTo",
+    "hudChrome.itemHistory.title",
+    "hudChrome.itemMenu.itemHistory",
     "hudChrome.itemTooltip.lootedBy",
     "hudChrome.itemTooltip.obtainedBy",
-    "hudChrome.itemTooltip.previousOwners",
     "hudChrome.itemTooltip.questRewardTo"
   ],
   "fr_CA": [
-    "hudChrome.itemTooltip.itemGuid",
+    "hudChrome.itemHistory.close",
+    "hudChrome.itemHistory.earlierHidden",
+    "hudChrome.itemHistory.noTransfers",
+    "hudChrome.itemHistory.passedTo",
+    "hudChrome.itemHistory.title",
+    "hudChrome.itemMenu.itemHistory",
     "hudChrome.itemTooltip.lootedBy",
     "hudChrome.itemTooltip.obtainedBy",
-    "hudChrome.itemTooltip.previousOwners",
     "hudChrome.itemTooltip.questRewardTo"
   ],
   "en_CA": [],
   "it_IT": [
-    "hudChrome.itemTooltip.itemGuid",
+    "hudChrome.itemHistory.close",
+    "hudChrome.itemHistory.earlierHidden",
+    "hudChrome.itemHistory.noTransfers",
+    "hudChrome.itemHistory.passedTo",
+    "hudChrome.itemHistory.title",
+    "hudChrome.itemMenu.itemHistory",
     "hudChrome.itemTooltip.lootedBy",
     "hudChrome.itemTooltip.obtainedBy",
-    "hudChrome.itemTooltip.previousOwners",
     "hudChrome.itemTooltip.questRewardTo"
   ],
   "de_DE": [
-    "hudChrome.itemTooltip.itemGuid",
+    "hudChrome.itemHistory.close",
+    "hudChrome.itemHistory.earlierHidden",
+    "hudChrome.itemHistory.noTransfers",
+    "hudChrome.itemHistory.passedTo",
+    "hudChrome.itemHistory.title",
+    "hudChrome.itemMenu.itemHistory",
     "hudChrome.itemTooltip.lootedBy",
     "hudChrome.itemTooltip.obtainedBy",
-    "hudChrome.itemTooltip.previousOwners",
     "hudChrome.itemTooltip.questRewardTo"
   ],
-  "zh_CN": [
-    "hudChrome.itemTooltip.itemGuid"
-  ],
-  "zh_TW": [
-    "hudChrome.itemTooltip.itemGuid"
-  ],
-  "ko_KR": [
-    "hudChrome.itemTooltip.itemGuid"
-  ],
-  "ja_JP": [
-    "hudChrome.itemTooltip.itemGuid"
-  ],
+  "zh_CN": [],
+  "zh_TW": [],
+  "ko_KR": [],
+  "ja_JP": [],
   "pt_BR": [
-    "hudChrome.itemTooltip.itemGuid",
+    "hudChrome.itemHistory.close",
+    "hudChrome.itemHistory.earlierHidden",
+    "hudChrome.itemHistory.noTransfers",
+    "hudChrome.itemHistory.passedTo",
+    "hudChrome.itemHistory.title",
+    "hudChrome.itemMenu.itemHistory",
     "hudChrome.itemTooltip.lootedBy",
     "hudChrome.itemTooltip.obtainedBy",
-    "hudChrome.itemTooltip.previousOwners",
     "hudChrome.itemTooltip.questRewardTo"
   ],
-  "ru_RU": [
-    "hudChrome.itemTooltip.itemGuid"
-  ],
+  "ru_RU": [],
   "cs_CZ": [
-    "hudChrome.itemTooltip.itemGuid",
+    "hudChrome.itemHistory.close",
+    "hudChrome.itemHistory.earlierHidden",
+    "hudChrome.itemHistory.noTransfers",
+    "hudChrome.itemHistory.passedTo",
+    "hudChrome.itemHistory.title",
+    "hudChrome.itemMenu.itemHistory",
     "hudChrome.itemTooltip.lootedBy",
     "hudChrome.itemTooltip.obtainedBy",
-    "hudChrome.itemTooltip.previousOwners",
     "hudChrome.itemTooltip.questRewardTo"
   ],
   "nl_NL": [
-    "hudChrome.itemTooltip.itemGuid",
+    "hudChrome.itemHistory.close",
+    "hudChrome.itemHistory.earlierHidden",
+    "hudChrome.itemHistory.noTransfers",
+    "hudChrome.itemHistory.passedTo",
+    "hudChrome.itemHistory.title",
+    "hudChrome.itemMenu.itemHistory",
     "hudChrome.itemTooltip.lootedBy",
     "hudChrome.itemTooltip.obtainedBy",
-    "hudChrome.itemTooltip.previousOwners",
     "hudChrome.itemTooltip.questRewardTo"
   ],
   "pl_PL": [
-    "hudChrome.itemTooltip.itemGuid",
+    "hudChrome.itemHistory.close",
+    "hudChrome.itemHistory.earlierHidden",
+    "hudChrome.itemHistory.noTransfers",
+    "hudChrome.itemHistory.passedTo",
+    "hudChrome.itemHistory.title",
+    "hudChrome.itemMenu.itemHistory",
     "hudChrome.itemTooltip.lootedBy",
     "hudChrome.itemTooltip.obtainedBy",
-    "hudChrome.itemTooltip.previousOwners",
     "hudChrome.itemTooltip.questRewardTo"
   ],
   "id_ID": [
-    "hudChrome.itemTooltip.itemGuid",
+    "hudChrome.itemHistory.close",
+    "hudChrome.itemHistory.earlierHidden",
+    "hudChrome.itemHistory.noTransfers",
+    "hudChrome.itemHistory.passedTo",
+    "hudChrome.itemHistory.title",
+    "hudChrome.itemMenu.itemHistory",
     "hudChrome.itemTooltip.lootedBy",
     "hudChrome.itemTooltip.obtainedBy",
-    "hudChrome.itemTooltip.previousOwners",
     "hudChrome.itemTooltip.questRewardTo"
   ],
   "tr_TR": [
-    "hudChrome.itemTooltip.itemGuid",
+    "hudChrome.itemHistory.close",
+    "hudChrome.itemHistory.earlierHidden",
+    "hudChrome.itemHistory.noTransfers",
+    "hudChrome.itemHistory.passedTo",
+    "hudChrome.itemHistory.title",
+    "hudChrome.itemMenu.itemHistory",
     "hudChrome.itemTooltip.lootedBy",
     "hudChrome.itemTooltip.obtainedBy",
-    "hudChrome.itemTooltip.previousOwners",
     "hudChrome.itemTooltip.questRewardTo"
   ],
   "sv_SE": [
-    "hudChrome.itemTooltip.itemGuid",
+    "hudChrome.itemHistory.close",
+    "hudChrome.itemHistory.earlierHidden",
+    "hudChrome.itemHistory.noTransfers",
+    "hudChrome.itemHistory.passedTo",
+    "hudChrome.itemHistory.title",
+    "hudChrome.itemMenu.itemHistory",
     "hudChrome.itemTooltip.lootedBy",
     "hudChrome.itemTooltip.obtainedBy",
-    "hudChrome.itemTooltip.previousOwners",
     "hudChrome.itemTooltip.questRewardTo"
   ],
   "vi_VN": [
-    "hudChrome.itemTooltip.itemGuid",
+    "hudChrome.itemHistory.close",
+    "hudChrome.itemHistory.earlierHidden",
+    "hudChrome.itemHistory.noTransfers",
+    "hudChrome.itemHistory.passedTo",
+    "hudChrome.itemHistory.title",
+    "hudChrome.itemMenu.itemHistory",
     "hudChrome.itemTooltip.lootedBy",
     "hudChrome.itemTooltip.obtainedBy",
-    "hudChrome.itemTooltip.previousOwners",
     "hudChrome.itemTooltip.questRewardTo"
   ],
   "da_DK": [
-    "hudChrome.itemTooltip.itemGuid",
+    "hudChrome.itemHistory.close",
+    "hudChrome.itemHistory.earlierHidden",
+    "hudChrome.itemHistory.noTransfers",
+    "hudChrome.itemHistory.passedTo",
+    "hudChrome.itemHistory.title",
+    "hudChrome.itemMenu.itemHistory",
     "hudChrome.itemTooltip.lootedBy",
     "hudChrome.itemTooltip.obtainedBy",
-    "hudChrome.itemTooltip.previousOwners",
     "hudChrome.itemTooltip.questRewardTo"
   ]
 };

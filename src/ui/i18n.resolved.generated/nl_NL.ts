@@ -4438,8 +4438,6 @@ export const nl_NL: EnTranslations = {
       "lootedBy": "Looted by {name} on {date}",
       "questRewardTo": "Quest reward to {name} on {date}",
       "obtainedBy": "Obtained by {name} on {date}",
-      "previousOwners": "Previous owners: {count}",
-      "itemGuid": "Item ID: {guid}",
       "materialSourceGatherer": "{count} × Verzameld door {name}",
       "materialSourceGathererSigned": "{count} × Verzameld door {name}, gesigneerd door {signer}",
       "materialSourceUnrecorded": "{count} × Geen verzamelaar geregistreerd",
@@ -5626,7 +5624,15 @@ export const nl_NL: EnTranslations = {
       "viewSources": "Bronnen bekijken",
       "separateByGatherer": "Per verzamelaar scheiden",
       "takeChosenQuantity": "Gekozen aantal uitnemen",
-      "combine": "Materiaalstapels combineren"
+      "combine": "Materiaalstapels combineren",
+      "itemHistory": "Item history"
+    },
+    "itemHistory": {
+      "title": "{item}: history",
+      "passedTo": "Passed to {name} on {date}",
+      "noTransfers": "This item has never changed hands.",
+      "earlierHidden": "{count} earlier transfers are not shown.",
+      "close": "Close"
     },
     "enchanting": {
       "recipeNotLearned": "Leer de formule voordat je deze betovering toepast.",

@@ -4438,8 +4438,6 @@ export const fr_FR: EnTranslations = {
       "lootedBy": "Looted by {name} on {date}",
       "questRewardTo": "Quest reward to {name} on {date}",
       "obtainedBy": "Obtained by {name} on {date}",
-      "previousOwners": "Previous owners: {count}",
-      "itemGuid": "Item ID: {guid}",
       "materialSourceGatherer": "{count} × Récolté par {name}",
       "materialSourceGathererSigned": "{count} × Récolté par {name}, signé par {signer}",
       "materialSourceUnrecorded": "{count} × Récolteur non enregistré",
@@ -5626,7 +5624,15 @@ export const fr_FR: EnTranslations = {
       "viewSources": "Voir les sources",
       "separateByGatherer": "Séparer par récolteur",
       "takeChosenQuantity": "Retirer la quantité choisie",
-      "combine": "Combiner les piles de matériaux"
+      "combine": "Combiner les piles de matériaux",
+      "itemHistory": "Item history"
+    },
+    "itemHistory": {
+      "title": "{item}: history",
+      "passedTo": "Passed to {name} on {date}",
+      "noTransfers": "This item has never changed hands.",
+      "earlierHidden": "{count} earlier transfers are not shown.",
+      "close": "Close"
     },
     "enchanting": {
       "recipeNotLearned": "Apprenez la formule avant d’appliquer cet enchantement.",

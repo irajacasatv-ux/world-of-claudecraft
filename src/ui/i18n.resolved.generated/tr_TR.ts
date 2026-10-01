@@ -4438,8 +4438,6 @@ export const tr_TR: EnTranslations = {
       "lootedBy": "Looted by {name} on {date}",
       "questRewardTo": "Quest reward to {name} on {date}",
       "obtainedBy": "Obtained by {name} on {date}",
-      "previousOwners": "Previous owners: {count}",
-      "itemGuid": "Item ID: {guid}",
       "materialSourceGatherer": "{count} × {name} tarafından toplandı",
       "materialSourceGathererSigned": "{count} × {name} tarafından toplandı, {signer} imzalı",
       "materialSourceUnrecorded": "{count} × Toplayıcı kaydedilmedi",
@@ -5626,7 +5624,15 @@ export const tr_TR: EnTranslations = {
       "viewSources": "Kaynakları görüntüle",
       "separateByGatherer": "Toplayıcıya göre ayır",
       "takeChosenQuantity": "Seçilen miktarı çıkar",
-      "combine": "Malzeme yığınlarını birleştir"
+      "combine": "Malzeme yığınlarını birleştir",
+      "itemHistory": "Item history"
+    },
+    "itemHistory": {
+      "title": "{item}: history",
+      "passedTo": "Passed to {name} on {date}",
+      "noTransfers": "This item has never changed hands.",
+      "earlierHidden": "{count} earlier transfers are not shown.",
+      "close": "Close"
     },
     "enchanting": {
       "recipeNotLearned": "Bu büyüyü uygulamadan önce formülü öğren.",
