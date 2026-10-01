@@ -3865,8 +3865,8 @@ describe('the claim renewer', () => {
     // over every file the toolchain resolves server code through, inside one
     // stated boundary. THE SERVER BUNDLE is pinned whole: its build script's
     // code (comments stripped, each line's whitespace collapsed), the package
-    // scripts that run it or its output, the Dockerfile that does (whole, its
-    // comments aside), and every tracked file naming the bundle it writes.
+    // scripts that run it or its output, the Dockerfile that does (exactly,
+    // line for line), and every tracked file naming the bundle it writes.
     // EVERY OTHER TOOLCHAIN FILE is a program whose DECLARATIONS are pinned:
     // every tracked vite, vitest and svelte config by inventory (vitest would
     // prefer a new vitest.config), each one's import statements with their
@@ -3898,9 +3898,7 @@ describe('the claim renewer', () => {
     // escapes in a file the count does not read; a file git does not track
     // yet outside server/ (a local run passes until it is added; CI sees it);
     // the compose file's lines other than its NODE_ variables, bundle names
-    // and `command` and `entrypoint` key lines (a health check, for one); the
-    // Dockerfile's comment lines (Docker drops them, though inside a heredoc
-    // a `#` line is the body's own text);
+    // and `command` and `entrypoint` key lines (a health check, for one);
     // text the shared comment stripper misreads (a string holding a comment
     // opener); an import the statement reader cannot see (a binding named by
     // a string holding `;`);
@@ -4049,7 +4047,7 @@ describe('the claim renewer', () => {
         "{usePrivate ? 'private' : 'stub (no-op)'}`);",
     ]);
     // The scripts that run it or its output (a `pre` or `post` script, or a
-    // retarget, joins or changes this list), and the Dockerfile's steps.
+    // retarget, joins or changes this list), and the Dockerfile that runs it.
     const pkgText = readFileSync('package.json', 'utf8');
     const pkg = JSON.parse(pkgText) as {
       imports?: unknown;
@@ -4066,34 +4064,22 @@ describe('the claim renewer', () => {
       ['server', 'npm run build:server && node dist-server/server.cjs'],
       ['realms', 'npm run build:server && node scripts/dev-realms.mjs'],
     ]);
-    // THE DOCKERFILE, whole: it runs the bundle in production, so every line
-    // Docker reads is pinned as written (each line's whitespace collapsed),
-    // continuation and heredoc lines included. Only its comment lines are
-    // aside, which Docker drops; a parser directive changes how the rest is
-    // read, so it is kept.
-    const dockerLines = (text: string): string[] =>
-      text
-        .split('\n')
-        .filter((line) => !/^\s*#/.test(line) || /^#\s*(?:syntax|escape|check)\s*=/i.test(line))
-        .map(flat)
-        .filter((line) => line !== '');
-    expect(
-      dockerLines(
-        '# syntax=docker/dockerfile:1\n# a comment\nRUN a \\\n  # dropped by Docker\n  && npm i x\n\nRUN <<EOF\npnpm install --prod\nEOF\n',
-      ),
-    ).toEqual([
-      '# syntax=docker/dockerfile:1',
-      'RUN a \\',
-      '&& npm i x',
-      'RUN <<EOF',
-      'pnpm install --prod',
-      'EOF',
-    ]);
-    expect(dockerLines(readFileSync('Dockerfile', 'utf8'))).toEqual([
+    // THE DOCKERFILE, exactly: it runs the bundle in production, so every
+    // line is pinned as written, comments and blank lines included (only line
+    // endings are normalised, for a Windows checkout). Nothing in it is
+    // interpreted, so no shape Docker accepts can slip past a reader.
+    expect(readFileSync('Dockerfile', 'utf8').split(/\r?\n/)).toEqual([
+      '# World of Claudecraft game server: serves the built client, REST API and WebSocket',
+      '# world on one port. Pair with a postgres service (see docker-compose.yml).',
+      '',
       'FROM node:26-slim AS build',
       'WORKDIR /app',
+      '# Match package.json packageManager (Corepack not required; same as CONTRIBUTING).',
+      '# .npmrc carries node-linker=hoisted so the install layout matches local/CI.',
       'RUN npm install -g pnpm@10.34.5',
       'COPY package.json pnpm-lock.yaml .npmrc ./',
+      '# pnpm patchedDependencies: the lockfile pins patch file hashes, so a frozen',
+      '# install needs the patch files present or it fails with ENOENT.',
       'COPY patches ./patches',
       'RUN pnpm install --frozen-lockfile',
       'COPY .browserslistrc tsconfig.json vite.config.ts svelte.config.js index.html admin.html play.html guide.html editor.html wallet-handoff.html ./',
@@ -4103,17 +4089,27 @@ describe('the claim renewer', () => {
       'COPY headless ./headless',
       'COPY scripts ./scripts',
       'COPY public ./public',
+      '# Optional private extensions live under ./private. Public checkouts contain only',
+      '# a placeholder, so builds still fall back to public stubs; deploys can clone the',
+      '# private bot detector into private/bot_detector before this Docker build.',
       'COPY private ./private',
+      '# Public client config is inlined into the bundle at build time (Vite reads',
+      '# VITE_* from the environment). Empty defaults keep Turnstile and external',
+      '# wallet handoff off; injected wallet UI stays enabled unless explicitly disabled.',
+      '# Passed through from compose build args.',
       'ARG VITE_TURNSTILE_SITEKEY=""',
       'ARG VITE_REOWN_PROJECT_ID=""',
       'ARG VITE_WALLET_DISABLED=""',
       'RUN VITE_TURNSTILE_SITEKEY="$VITE_TURNSTILE_SITEKEY" \\',
-      'VITE_REOWN_PROJECT_ID="$VITE_REOWN_PROJECT_ID" \\',
-      'VITE_WALLET_DISABLED="$VITE_WALLET_DISABLED" \\',
-      'pnpm run build && cp -a dist/media ./media-build && rm -rf dist/media && pnpm run build:server && pnpm run build:bot',
+      '    VITE_REOWN_PROJECT_ID="$VITE_REOWN_PROJECT_ID" \\',
+      '    VITE_WALLET_DISABLED="$VITE_WALLET_DISABLED" \\',
+      '    pnpm run build && cp -a dist/media ./media-build && rm -rf dist/media && pnpm run build:server && pnpm run build:bot',
+      '',
       'FROM node:26-slim',
       'WORKDIR /app',
       'ENV NODE_ENV=production',
+      '# server/parse/build_version.ts reads the version from package.json in the',
+      '# working directory; without it every telemetry batch reports build unknown.',
       'COPY --from=build /app/package.json ./package.json',
       'COPY --from=build /app/dist ./dist',
       'COPY --from=build /app/media-build ./media-build',
@@ -4124,8 +4120,11 @@ describe('the claim renewer', () => {
       'RUN mkdir -p /app/dist/media && chown -R node:node /app/dist/media',
       'EXPOSE 8787',
       'USER node',
-      String.raw`CMD ["sh", "-c", "mkdir -p /app/dist/media && node -e \"require('fs').cpSync('/app/media-build', '/app/dist/media', { recursive: true, force: true })\" && node dist-server/server.cjs"]`,
+      'CMD ["sh", "-c", "mkdir -p /app/dist/media && node -e \\"require(\'fs\').cpSync(\'/app/media-build\', \'/app/dist/media\', { recursive: true, force: true })\\" && node dist-server/server.cjs"]',
+      '',
     ]);
+    // The one other tracked Dockerfile builds the player wiki, never the bundle.
+    expect(tracked(':(icase)*dockerfile*')).toEqual(['Dockerfile', 'mediawiki/Dockerfile']);
     // The compose file passes NODE_OPTIONS through to the container that runs
     // the bundle: its NODE_ variables, bundle names and `command` and
     // `entrypoint` key lines (block or flow style, the key quoted or not; a
