@@ -94,18 +94,26 @@ export interface FreeholdClaimLoginDeps {
   readonly budgetSignal?: () => AbortSignal;
 }
 
+/** The plot's in-flight mark, once the read takes it; let go by the caller. */
+interface InFlightHold {
+  letGo: (() => void) | null;
+}
+
 export async function readClaimedLoginDurables(
   deps: FreeholdClaimLoginDeps,
   accountId: number,
 ): Promise<{ row: FreeholdRowLoad; hearth: FreeholdHearthAnswer }> {
   const { registry } = deps;
   const startMs = deps.nowMs();
-  const holds: (() => void)[] = [];
+  // The ONE in-flight mark the read can take: the plot half reaches a plot
+  // at most once, since the clock-fault retry runs only after a first
+  // transaction whose clock threw before its plot half began.
+  const hold: InFlightHold = { letGo: null };
   try {
-    return await claimedLoginRead(deps, accountId, holds);
+    return await claimedLoginRead(deps, accountId, hold);
   } finally {
-    // After record() or the failure: every in-flight mark the read took.
-    for (const letGo of holds) letGo();
+    // After record() or the failure.
+    hold.letGo?.();
     registry.counters.loginReads++;
     registry.counters.loginReadMsTotal += Math.max(0, deps.nowMs() - startMs);
   }
@@ -114,7 +122,7 @@ export async function readClaimedLoginDurables(
 async function claimedLoginRead(
   deps: FreeholdClaimLoginDeps,
   accountId: number,
-  holds: (() => void)[],
+  hold: InFlightHold,
 ): Promise<{ row: FreeholdRowLoad; hearth: FreeholdHearthAnswer }> {
   const { registry } = deps;
   const budget = {
@@ -130,7 +138,7 @@ async function claimedLoginRead(
       // lets go): a renew pass re-checks this mark right before it sends a
       // release, so it never renames the row this acquire re-stamps at the
       // SAME generation (a same-holder re-acquire keeps it).
-      holds.push(registry.holdInFlight(plotId));
+      hold.letGo = registry.holdInFlight(plotId);
       let claim: Awaited<ReturnType<typeof acquireFreeholdClaim>>;
       try {
         claim = await acquireFreeholdClaim(db, {

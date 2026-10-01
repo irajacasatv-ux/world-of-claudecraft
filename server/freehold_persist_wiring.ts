@@ -207,6 +207,14 @@ export function renewGameFreeholdClaims(
         nowMs - claim.acquiredAtMs < FREEHOLD_PERSIST_LOGIN_BUDGET_MS
       );
     },
+    // NO onLost, by decision. A claim the pass drops (another holder took it,
+    // or our landed release raced a same-generation re-login) has already left
+    // the registry, and every write, trip and mutation reads its claim from
+    // there, so nothing more goes out for the plot: the owner's next write
+    // answers `fenced` with no statement, and the store quiesces the entry
+    // then, through the one quiesce path it owns (its counter and warn line).
+    // A hook would be a second way into the store's private state for no
+    // safety gain; until that write, the pass's own warn lines say it happened.
     nowMs: Date.now,
     warn: (message) => console.warn(message),
   });

@@ -272,6 +272,71 @@ describe('runFreeholdTransaction', () => {
     expect(control.texts()).not.toContain('COMMIT');
   });
 
+  it('bounds a parked checkout by BOTH signals when both are given, and a running transaction by `signal` only', async () => {
+    const drain = async () => {
+      for (let i = 0; i < 20; i++) await Promise.resolve();
+    };
+    // Parked: whichever aborts first ends the wait with its own reason; the
+    // second abort changes nothing, and the late client goes back once.
+    for (const first of ['signal', 'checkoutSignal'] as const) {
+      const base = fakePool();
+      let arrive = () => {};
+      const parked = {
+        connect: () =>
+          new Promise((resolve) => {
+            arrive = () => resolve(base.pool.connect());
+          }),
+      } as unknown as FreeholdTxPool;
+      const signal = new AbortController();
+      const checkoutSignal = new AbortController();
+      const reasons = { signal: new Error('signal'), checkoutSignal: new Error('checkout') };
+      const settled: unknown[] = [];
+      const waiting = runFreeholdTransaction(parked, BOUNDS, async () => 1, {
+        signal: signal.signal,
+        checkoutSignal: checkoutSignal.signal,
+      }).then(
+        (value) => settled.push(['resolved', value]),
+        (error: unknown) => settled.push(error),
+      );
+      const second = first === 'signal' ? 'checkoutSignal' : 'signal';
+      const controllers = { signal, checkoutSignal };
+      controllers[first].abort(reasons[first]);
+      await drain();
+      expect(settled, first).toEqual([reasons[first]]);
+      controllers[second].abort(reasons[second]);
+      arrive();
+      await waiting;
+      await drain();
+      expect(settled, first).toEqual([reasons[first]]);
+      expect(base.counts(), first).toEqual({ connects: 1, releases: 1 });
+      expect(base.statements, first).toEqual([]);
+    }
+    // Running: the checkoutSignal's abort is never handed to the transaction;
+    // the signal's cuts it.
+    for (const cut of ['checkoutSignal', 'signal'] as const) {
+      const f = fakePool();
+      const controllers = { signal: new AbortController(), checkoutSignal: new AbortController() };
+      const out = await runFreeholdTransaction(
+        f.pool,
+        BOUNDS,
+        async (tx) => {
+          controllers[cut].abort(new Error(cut));
+          await tx.query('SELECT 1');
+          return 'landed';
+        },
+        { signal: controllers.signal.signal, checkoutSignal: controllers.checkoutSignal.signal },
+      ).catch((error: unknown) => error);
+      if (cut === 'checkoutSignal') {
+        expect(out, cut).toBe('landed');
+        expect(f.texts().slice(1), cut).toEqual(['SELECT 1', 'COMMIT']);
+      } else {
+        expect(out, cut).toBeInstanceOf(DbTransactionAborted);
+        expect(f.texts(), cut).not.toContain('COMMIT');
+      }
+      expect(f.counts().connects, cut).toBe(1);
+    }
+  });
+
   it('sends no ROLLBACK after a COMMIT that answered ROLLBACK or lost its answer', async () => {
     // The ROLLBACK tag already ended the transaction, and a lost answer
     // destroys the socket: a ROLLBACK after either is a wasted round trip.
@@ -1137,7 +1202,9 @@ describe('the claim renewer', () => {
     expect(registry.count()).toBe(wantedCount + 1);
     expect(f.texts().some((t) => t.includes("'#released'"))).toBe(false);
     expect(warn).toHaveBeenCalledTimes(1);
-    expect(warn).toHaveBeenCalledWith(expect.stringContaining('deadline'));
+    // The number warned is the number counted: both renew chunks and the
+    // release chunk behind them.
+    expect(warn).toHaveBeenCalledWith(deadlineWarn(3));
     // The next pass STARTS at the first chunk the deadline abandoned.
     await renewFreeholdClaims(deps);
     expect(renews().slice(1).map(firstIdOf)).toEqual([pad(256), pad(512), pad(0)]);
@@ -1404,6 +1471,173 @@ describe('the claim renewer', () => {
     expect(renews.map(firstIdOf)).toEqual([pad(0), pad(256)]);
   });
 
+  it('cuts a renew chunk whose answer carries the clock past the deadline as it throws: abandoned, and the next pass starts there', async () => {
+    const registry = createFreeholdClaimRegistry();
+    for (let i = 0; i < FREEHOLD_CLAIM_RENEW_CHUNK + 1; i++) registry.record(claim(pad(i), i + 1));
+    let now = 0;
+    let renews = 0;
+    const f = fakePool([
+      {
+        match: (t) => t.includes('SET heartbeat_at'),
+        answer: (v) => {
+          renews++;
+          if (renews > 1) return renewAll.answer(v);
+          // The FIRST chunk's statement runs past the deadline and then fails:
+          // only the clock says so, the signal never aborts.
+          now += FREEHOLD_CLAIM_RENEW_PASS_DEADLINE_MS;
+          return sqlError('57014');
+        },
+      },
+    ]);
+    const warn = vi.fn();
+    const deps = {
+      ...renewDeps(registry, f.pool),
+      nowMs: () => now,
+      warn,
+      deadlineSignal: () => new AbortController().signal,
+    };
+    await renewFreeholdClaims(deps);
+    // The thrown chunk is abandoned WITH the rest, never a plain missed
+    // heartbeat that lets the next pass open one chunk later.
+    expect(registry.counters).toMatchObject({
+      renewed: 0,
+      missedHeartbeats: FREEHOLD_CLAIM_RENEW_CHUNK + 1,
+      renewChunksAbandoned: 2,
+    });
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(warn).toHaveBeenCalledWith(deadlineWarn(2));
+    expect(f.counts().connects).toBe(1);
+    await renewFreeholdClaims(deps);
+    const firsts = f.statements.filter((s) => s.text.includes('SET heartbeat_at')).map(firstIdOf);
+    expect(firsts).toEqual([pad(0), pad(0), pad(256)]);
+  });
+
+  it('cuts a renew STATEMENT in flight at the pass deadline at once: the transaction is aborted, the chunk abandoned, the next pass starts there', async () => {
+    const registry = createFreeholdClaimRegistry();
+    for (let i = 0; i < FREEHOLD_CLAIM_RENEW_CHUNK + 1; i++) registry.record(claim(pad(i), i + 1));
+    const deadline = new AbortController();
+    let asked = () => {};
+    const stalled = new Promise<void>((resolve) => {
+      asked = resolve;
+    });
+    const base = fakePool([renewAll]);
+    const destroyedWith: unknown[] = [];
+    let hang = true;
+    // The first renew statement never answers: only a cut of the running
+    // transaction (its client destroyed) can end it before its 5 s wall.
+    const pool = {
+      async connect() {
+        const client = await base.pool.connect();
+        let cut: ((error: Error) => void) | null = null;
+        const wrapped = {
+          query(text: string, values?: unknown[]) {
+            if (hang && text.includes('SET heartbeat_at')) {
+              hang = false;
+              asked();
+              return new Promise((_resolve, reject) => {
+                cut = reject;
+              });
+            }
+            return client.query(text, values);
+          },
+          release(error?: Error | boolean) {
+            if (error) {
+              destroyedWith.push(error);
+              cut?.(new Error('Connection terminated'));
+            }
+            client.release();
+          },
+          on: () => wrapped,
+          removeListener: () => wrapped,
+        };
+        return wrapped;
+      },
+    } as unknown as FreeholdTxPool;
+    const deps = { ...renewDeps(registry, pool), deadlineSignal: () => deadline.signal };
+    let done = false;
+    const pass = renewFreeholdClaims(deps).then(() => {
+      done = true;
+    });
+    await stalled;
+    deadline.abort();
+    // Every microtask runs before the next macrotask: no timer fired.
+    await new Promise((resolve) => setImmediate(resolve));
+    expect(done).toBe(true);
+    await pass;
+    expect(destroyedWith).toHaveLength(1);
+    expect(destroyedWith[0]).toBeInstanceOf(DbTransactionAborted);
+    expect(registry.counters).toMatchObject({
+      renewed: 0,
+      missedHeartbeats: FREEHOLD_CLAIM_RENEW_CHUNK + 1,
+      renewChunksAbandoned: 2,
+    });
+    expect(base.counts()).toEqual({ connects: 1, releases: 1 });
+    // The next pass opens at the cut chunk, not one later.
+    deps.deadlineSignal = () => new AbortController().signal;
+    await renewFreeholdClaims(deps);
+    const firsts = base.statements
+      .filter((s) => s.text.includes('SET heartbeat_at'))
+      .map(firstIdOf);
+    expect(firsts).toEqual([pad(0), pad(256)]);
+  });
+
+  it('goes on to the next release chunk when one fails before its statement inside the deadline: no re-read, its claims kept, nothing abandoned', async () => {
+    for (const arm of ['checkout', 'BEGIN'] as const) {
+      const registry = createFreeholdClaimRegistry();
+      for (let i = 0; i < FREEHOLD_CLAIM_RENEW_CHUNK + 1; i++) {
+        registry.record(claim(pad(i), i + 1));
+      }
+      const base = fakePool([
+        releaseRule((ids) => ids.map((plot_id) => ({ plot_id }))),
+        releaseReadRule(() => []),
+      ]);
+      let checkouts = 0;
+      const pool = {
+        async connect() {
+          checkouts++;
+          if (checkouts === 1 && arm === 'checkout') throw new Error('pool exhausted');
+          const client = await base.pool.connect();
+          if (checkouts !== 1) return client;
+          const failing = {
+            query(text: string, values?: unknown[]) {
+              if (text.startsWith('BEGIN')) return Promise.reject(sqlError('57P01'));
+              return client.query(text, values);
+            },
+            release: (error?: Error | boolean) => client.release(error),
+            on: () => failing,
+            removeListener: () => failing,
+          };
+          return failing;
+        },
+      } as unknown as FreeholdTxPool;
+      const warn = vi.fn();
+      await renewFreeholdClaims({
+        ...renewDeps(registry, pool),
+        wanted: () => false,
+        warn,
+        deadlineSignal: () => new AbortController().signal,
+      });
+      // Nothing went out for the first chunk, so nothing is asked about it:
+      // no re-read, not even an empty transaction for one.
+      expect(checkouts, arm).toBe(2);
+      expect(
+        base.texts().filter((t) => t.startsWith('BEGIN')),
+        arm,
+      ).toHaveLength(1);
+      expect(base.texts().some(isReleaseRead), arm).toBe(false);
+      const sent = base.statements.filter((s) => s.text.includes("holder || '#released'"));
+      expect(
+        sent.map((s) => (s.values ?? [])[1]),
+        arm,
+      ).toEqual([[pad(FREEHOLD_CLAIM_RENEW_CHUNK)]]);
+      expect(registry.count(), arm).toBe(FREEHOLD_CLAIM_RENEW_CHUNK);
+      expect(registry.forPlot(pad(0)), arm).toBeDefined();
+      expect(registry.forPlot(pad(FREEHOLD_CLAIM_RENEW_CHUNK)), arm).toBeUndefined();
+      expect(registry.counters, arm).toMatchObject({ released: 1, renewChunksAbandoned: 0 });
+      expect(warn, arm).not.toHaveBeenCalled();
+    }
+  });
+
   it('cuts a release chunk whose checkout is parked at the pass deadline: claims kept, no re-read, the late client back once', async () => {
     const registry = createFreeholdClaimRegistry();
     for (let i = 0; i < FREEHOLD_CLAIM_RENEW_CHUNK + 1; i++) registry.record(claim(pad(i), i + 1));
@@ -1537,16 +1771,21 @@ describe('the claim renewer', () => {
         return ids.map((plot_id) => ({ plot_id }));
       }),
     ]);
+    const warn = vi.fn();
     await renewFreeholdClaims({
       ...renewDeps(registry, f.pool),
       wanted: () => false,
       nowMs: () => now,
+      warn,
     });
     expect(f.texts().filter((t) => t.includes("'#released'"))).toHaveLength(1);
     expect(registry.counters).toMatchObject({
       released: FREEHOLD_CLAIM_RENEW_CHUNK,
       renewChunksAbandoned: 2,
     });
+    // The chunk-top stop warns once, with the number it counted.
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(warn).toHaveBeenCalledWith(deadlineWarn(2));
     expect(registry.forPlot(pad(0))).toBeUndefined();
     expect(registry.count()).toBe(FREEHOLD_CLAIM_RENEW_CHUNK + 1);
   });
@@ -1655,6 +1894,31 @@ describe('the claim renewer', () => {
         `${holder.length}:${ids.join(',')}`,
       ).rejects.toThrow(RangeError);
       expect(refused.seen).toEqual([]);
+    }
+    // The cap from below: the longest live holder, 119 characters, is read as
+    // asked, and its own released shape (128 characters) answers released.
+    const longest = 'h'.repeat(119);
+    for (const wait of [false, true]) {
+      const atCap = recordingTx(() => [
+        readRow('plot:a', longest, true),
+        readRow('plot:b', `${longest}#released`, false),
+      ]);
+      const readings = await readFreeholdClaimReleasesOnClient(
+        atCap.tx as FreeholdQueryable,
+        longest,
+        ['plot:a', 'plot:b'],
+        { wait },
+      );
+      expect([...readings], String(wait)).toEqual([
+        ['plot:a', 'held'],
+        ['plot:b', 'released'],
+      ]);
+      expect(atCap.seen, String(wait)).toEqual([
+        {
+          text: wait ? FREEHOLD_CLAIM_RELEASE_WAIT_SQL : FREEHOLD_CLAIM_RELEASE_READ_SQL,
+          values: [longest, ['plot:a', 'plot:b']],
+        },
+      ]);
     }
     const asked = ['plot:a', 'plot:b', 'plot:c', 'plot:d'];
     for (const wait of [false, true]) {
@@ -1944,6 +2208,9 @@ describe('the claim renewer', () => {
     }
   });
 
+  const raceWarn = (count: number) =>
+    `freehold claim releases raced a same-holder re-login: ${count}; those claims are dropped and their plots stop writing`;
+
   it('drops a newer claim at the SAME generation once our release landed: raced, counted, reported lost; a higher generation stays', async () => {
     // A re-login on this realm re-stamps this holder's own row and KEEPS the
     // generation; if its acquire ran in the database before our release
@@ -1973,10 +2240,12 @@ describe('the claim renewer', () => {
                 releaseReadRule(() => [readRow('plot:a', RELEASED, false)]),
               ];
         const onLost = vi.fn();
+        const warn = vi.fn();
         await renewFreeholdClaims({
           ...renewDeps(registry, fakePool(rules).pool),
           wanted: () => false,
           onLost,
+          warn,
         });
         if (generation === '1') {
           expect(registry.forPlot('plot:a'), label).toBeUndefined();
@@ -1984,12 +2253,61 @@ describe('the claim renewer', () => {
           expect(registry.counters, label).toMatchObject({ releaseRaced: 1, released: 0, lost: 0 });
           expect(onLost, label).toHaveBeenCalledTimes(1);
           expect(onLost, label).toHaveBeenCalledWith(newer);
+          // Production binds no onLost, so the drop is never silent: one
+          // fixed line, the count only.
+          expect(warn, label).toHaveBeenCalledTimes(1);
+          expect(warn, label).toHaveBeenCalledWith(raceWarn(1));
         } else {
           expect(registry.forPlot('plot:a'), label).toBe(newer);
           expect(registry.counters, label).toMatchObject({ releaseRaced: 0, released: 0 });
           expect(onLost, label).not.toHaveBeenCalled();
+          expect(warn, label).not.toHaveBeenCalled();
         }
       }
+    }
+  });
+
+  it('warns ONCE per pass for every race it booked, across chunks and when the pass then stops at its deadline', async () => {
+    for (const stop of [false, true]) {
+      const label = stop ? 'stopped' : 'whole';
+      // Three release chunks; one plot in each of the first two re-logs at the
+      // SAME generation while its chunk's release is out.
+      const registry = createFreeholdClaimRegistry();
+      for (let i = 0; i < 2 * FREEHOLD_CLAIM_RENEW_CHUNK + 1; i++) {
+        registry.record(claim(pad(i), i + 1));
+      }
+      const racing = [pad(0), pad(FREEHOLD_CLAIM_RENEW_CHUNK)];
+      let now = 0;
+      let releases = 0;
+      const f = fakePool([
+        releaseRule((ids) => {
+          releases++;
+          for (const plotId of racing) {
+            if (ids.includes(plotId)) {
+              const held = registry.forPlot(plotId);
+              if (held) registry.record({ ...held, acquiredAtMs: 5 });
+            }
+          }
+          // The second release takes the whole pass deadline: the third chunk
+          // is abandoned.
+          if (stop && releases === 2) now += FREEHOLD_CLAIM_RENEW_PASS_DEADLINE_MS;
+          return ids.map((plot_id) => ({ plot_id }));
+        }),
+      ]);
+      const warn = vi.fn();
+      await renewFreeholdClaims({
+        ...renewDeps(registry, f.pool),
+        wanted: () => false,
+        nowMs: () => now,
+        warn,
+      });
+      expect(registry.counters.releaseRaced, label).toBe(2);
+      expect(
+        warn.mock.calls.filter(([line]) => line === raceWarn(2)),
+        label,
+      ).toHaveLength(1);
+      expect(warn, label).toHaveBeenCalledTimes(stop ? 2 : 1);
+      if (stop) expect(warn, label).toHaveBeenCalledWith(deadlineWarn(1));
     }
   });
 
@@ -2055,6 +2373,36 @@ describe('the claim renewer', () => {
     }
   });
 
+  it('sends no release for a claim already in flight when the pass starts: a chunk all in flight takes no client, a mixed one sends only the free claim', async () => {
+    for (const arm of ['all in flight', 'mixed'] as const) {
+      const registry = createFreeholdClaimRegistry();
+      registry.record(claim('plot:a', 1));
+      if (arm === 'mixed') registry.record(claim('plot:b', 2));
+      // In flight BEFORE the pass snapshots: a trip, a recovery pass or a login.
+      const letGo = registry.holdInFlight('plot:a');
+      const f = fakePool([releaseRule((ids) => ids.map((plot_id) => ({ plot_id })))]);
+      await renewFreeholdClaims({ ...renewDeps(registry, f.pool), wanted: () => false });
+      const sent = f.statements.filter((s) => s.text.includes("holder || '#released'"));
+      if (arm === 'all in flight') {
+        expect(f.counts(), arm).toEqual({ connects: 0, releases: 0 });
+        expect(f.statements, arm).toEqual([]);
+      } else {
+        expect(
+          sent.map((s) => (s.values ?? [])[1]),
+          arm,
+        ).toEqual([['plot:b']]);
+        expect(registry.forPlot('plot:b'), arm).toBeUndefined();
+        expect(f.counts().connects, arm).toBe(1);
+      }
+      expect(registry.forPlot('plot:a'), arm).toEqual(claim('plot:a', 1));
+      expect(registry.counters, arm).toMatchObject({
+        released: arm === 'mixed' ? 1 : 0,
+        renewChunksAbandoned: 0,
+      });
+      letGo();
+    }
+  });
+
   it('never rejects on a throwing warn: the pass runs on and books its claims as before', async () => {
     const registry = createFreeholdClaimRegistry();
     registry.record(claim('plot:a', 1));
@@ -2084,6 +2432,55 @@ describe('the claim renewer', () => {
     expect(lost).toEqual(['plot:b']);
     await expect(renewFreeholdClaims(deps)).resolves.toBeUndefined();
     expect(registry.counters).toMatchObject({ renewPasses: 2, renewPassesSkipped: 0 });
+  });
+
+  it('never rejects on a throwing onLost, at the lost site or the raced one: every claim is still booked and warned', async () => {
+    // Two wanted claims nobody holds any more (lost), then two unwanted claims
+    // whose release races a same-generation re-login (raced). onLost throws on
+    // every call.
+    const registry = createFreeholdClaimRegistry();
+    for (const [i, plotId] of ['plot:a', 'plot:b', 'plot:c', 'plot:d'].entries()) {
+      registry.record(claim(plotId, i + 1));
+    }
+    const f = fakePool([
+      { match: (t) => t.includes('SET heartbeat_at'), answer: () => [] },
+      {
+        match: (t) => t === FREEHOLD_CLAIM_STILL_HELD_SQL,
+        answer: () => [],
+      },
+      releaseRule((ids) => {
+        for (const plotId of ids) {
+          const held = registry.forPlot(plotId);
+          if (held) registry.record({ ...held, acquiredAtMs: 5 });
+        }
+        return ids.map((plot_id) => ({ plot_id }));
+      }),
+    ]);
+    const onLost = vi.fn((_claim: { plotId: string }) => {
+      throw new Error('host hook down');
+    });
+    const warn = vi.fn();
+    await expect(
+      renewFreeholdClaims({
+        ...renewDeps(registry, f.pool),
+        wanted: (c) => c.plotId === 'plot:a' || c.plotId === 'plot:b',
+        onLost,
+        warn,
+      }),
+    ).resolves.toBeUndefined();
+    // Every claim was handed over once, the first throw stopping neither site.
+    expect(onLost.mock.calls.map(([c]) => c.plotId)).toEqual([
+      'plot:a',
+      'plot:b',
+      'plot:c',
+      'plot:d',
+    ]);
+    expect(registry.count()).toBe(0);
+    expect(registry.counters).toMatchObject({ lost: 2, releaseRaced: 2, renewPasses: 1 });
+    expect(warn.mock.calls).toEqual([
+      ['freehold claims lost to another holder: 2; their plots stop writing'],
+      [raceWarn(2)],
+    ]);
   });
 
   it('never rejects on a throwing warn at the pass deadline either: the abandoned tail is booked as before', async () => {

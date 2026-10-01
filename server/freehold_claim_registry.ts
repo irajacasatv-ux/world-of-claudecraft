@@ -40,7 +40,8 @@
 // every claim no longer the snapshotted object or now in flight (the login
 // read marks its plot across its acquire), so it never renames a row a
 // re-login just re-stamped at the same generation; the one ordering that
-// check cannot close is detected where the release lands (releaseRaced).
+// check cannot close is detected where the release lands (releaseRaced: the
+// claim is dropped at once, counted, and warned once per pass).
 //
 // THE SYNCHRONOUS PART, before the first await, is one copy of the claims held
 // (all() returns a fresh array), one sort, one wanted test per claim and the
@@ -142,7 +143,8 @@ export interface FreeholdClaimCounters {
   renewChunksAbandoned: number;
   /** Newer claims a landed release killed: a re-login on this realm re-stamped
    *  the row at the SAME generation just before our release renamed it. Each
-   *  is dropped and reported lost at once. */
+   *  is dropped at once (one warn per pass, the count only) and handed to
+   *  onLost when the host binds one. */
   releaseRaced: number;
   /** Wanted tests that threw: each claim kept as wanted. */
   wantedThrew: number;
@@ -291,7 +293,11 @@ export interface FreeholdClaimRenewerDeps {
   readonly ttlSeconds: number;
   /** Whether the host still needs this claim. */
   wanted(claim: FreeholdHeldClaim, nowMs: number): boolean;
-  /** Called once per claim another holder took, so the host quiesces it. */
+  /** Called once per claim the pass drops as lost (another holder took it, or
+   *  our landed release raced a same-generation re-login), so a host that
+   *  binds it can quiesce at once. A throw is swallowed. Production binds none
+   *  (server/freehold_persist_wiring.ts): the claim has left the registry, so
+   *  the owner's next write answers `fenced` and the store quiesces it then. */
   onLost?(claim: FreeholdHeldClaim): void;
   nowMs(): number;
   warn(message: string): void;
@@ -367,6 +373,12 @@ async function renewPass(
       deps.warn(message);
     } catch {}
   };
+  // Nor may a throwing host hook: the claim is already dropped and booked.
+  const reportLost = (claim: FreeholdHeldClaim): void => {
+    try {
+      deps.onLost?.(claim);
+    } catch {}
+  };
   let threw = 0;
   const wantedNow = (claim: FreeholdHeldClaim): boolean => {
     try {
@@ -424,13 +436,13 @@ async function renewPass(
   state.cursor = renewChunks.length > 1 ? renewChunks[1][0].plotId : null;
   // Stops the pass at this renew chunk (unstarted, or the deadline cut it):
   // the next pass starts here, and renewing outranks releasing (an unreleased
-  // claim expires on its own), so the release chunks wait too.
+  // claim expires on its own), so the release chunks wait too, counted and
+  // warned with the renew chunks.
   const stopRenewsAt = (index: number): void => {
     const left = renewChunks.slice(index);
     for (const rest of left) counters.missedHeartbeats += rest.length;
     state.cursor = left[0][0].plotId;
-    abandon(left.length);
-    counters.renewChunksAbandoned += Math.ceil(unwanted.length / FREEHOLD_CLAIM_RENEW_CHUNK);
+    abandon(left.length + Math.ceil(unwanted.length / FREEHOLD_CLAIM_RENEW_CHUNK));
   };
   for (const [index, chunk] of renewChunks.entries()) {
     if (expired()) {
@@ -481,7 +493,7 @@ async function renewPass(
       if (!dropHeld(claim)) continue;
       lost++;
       counters.lost++;
-      deps.onLost?.(claim);
+      reportLost(claim);
     }
     if (lost > 0) {
       warn(`freehold claims lost to another holder: ${lost}; their plots stop writing`);
@@ -518,15 +530,17 @@ async function renewPass(
   // Our release landed for this claim: the statement returned it, or a read
   // answered `released`. THE RESIDUAL WINDOW: a same-holder re-acquire keeps
   // the generation, and the in-flight re-check below closes every ordering
-  // but one, a login acquire that runs in the database (and commits) BEFORE a
-  // release statement that was sent first; the release then renames the row
-  // that login re-stamped. That login's newer claim, at the SAME generation as
-  // the snapshot, is dead: dropped, counted, and reported lost now rather than
-  // as a spurious "lost to another holder" next pass. A newer claim at a
-  // HIGHER generation is a takeover after our release and stays. (If our
-  // answer were handled before that login's record(), the next pass would book
-  // its claim lost instead; but that login's COMMIT answered before our
-  // statement even ran, and our answer still waits on our own COMMIT.)
+  // but one, a login acquire that COMMITS before a release statement that was
+  // sent first takes the row's lock; the release then renames the row that
+  // login re-stamped. That login's newer claim, at the SAME generation as the
+  // snapshot, is dead: dropped at once and counted (one warn per pass), and
+  // handed to onLost when the host binds one, rather than booked as a
+  // spurious "lost to another holder" next pass. A newer claim at a HIGHER
+  // generation is a takeover after our release and stays. (If our answer were
+  // handled before that login's record(), the next pass would book its claim
+  // lost instead; but that login's COMMIT answered before our statement even
+  // took its lock, and our answer still waits on our own COMMIT.)
+  let raced = 0;
   const bookRelease = (claim: FreeholdHeldClaim): void => {
     if (dropHeld(claim)) {
       counters.released++;
@@ -535,8 +549,9 @@ async function renewPass(
     const newer = deps.registry.forPlot(claim.plotId);
     if (newer === undefined || newer.generation !== claim.generation) return;
     deps.registry.drop(claim.plotId);
+    raced++;
     counters.releaseRaced++;
-    deps.onLost?.(newer);
+    reportLost(newer);
   };
   // Held stays for the next pass; our release landed leaves, counted; gone
   // (another holder's, an expired row of ours, no row) leaves uncounted.
@@ -565,7 +580,7 @@ async function renewPass(
     // next pass, which releases them then.
     if (expired()) {
       abandon(releaseChunks.length - index);
-      return;
+      break;
     }
     const candidates = chunk.filter(releasable);
     if (candidates.length === 0) continue;
@@ -580,9 +595,13 @@ async function renewPass(
           // SYNCHRONOUSLY, immediately before the statement goes out: a claim
           // a login replaced or put in flight since the snapshot is left out,
           // so this release never renames a row a re-login just re-stamped.
-          // A login that marks its plot after this point finds the statement
-          // already sent, holding its row locks: its acquire waits it out and
-          // takes over at the next generation, which is correct.
+          // A login that marks its plot after this point races the statement
+          // already sent. If the release locks the row first, the acquire
+          // waits it out and takes over at the next generation (correct); if
+          // the acquire holds the row first, SKIP LOCKED passes it over and
+          // the lock-free read below keeps the claim; only an acquire that
+          // COMMITS before the release locks the row is renamed by it, which
+          // bookRelease detects (releaseRaced, the manifest's R-9).
           sent = candidates.filter(releasable);
           return releaseFreeholdClaimRows(
             tx,
@@ -598,7 +617,7 @@ async function renewPass(
       if (sent.length === 0) {
         if (!expired()) continue;
         abandon(releaseChunks.length - index);
-        return;
+        break;
       }
       // A THROWN release may still be committing (a stalled COMMIT whose
       // answer was lost), so the read WAITS OUT each row it still locks (FOR
@@ -610,7 +629,7 @@ async function renewPass(
       const readings = await releaseReadingsOf(sent, true);
       if (readings === 'deadline') {
         abandon(releaseChunks.length - index);
-        return;
+        break;
       }
       if (readings !== 'kept') settle(sent, readings);
       continue;
@@ -628,9 +647,17 @@ async function renewPass(
     const readings = await releaseReadingsOf(notReleased, false);
     if (readings === 'deadline') {
       abandon(releaseChunks.length - index);
-      return;
+      break;
     }
     if (readings !== 'kept') settle(notReleased, readings);
+  }
+  // Once per pass, after every release chunk ran or the deadline stopped them:
+  // production binds no onLost, so this line is the only voice a raced drop
+  // has (counts only).
+  if (raced > 0) {
+    warn(
+      `freehold claim releases raced a same-holder re-login: ${raced}; those claims are dropped and their plots stop writing`,
+    );
   }
 }
 

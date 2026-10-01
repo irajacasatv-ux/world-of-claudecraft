@@ -850,9 +850,21 @@ d('the global plot claim against real PostgreSQL', () => {
       kind: 'acquired',
       generation: '1',
     });
+    // Accepted at every other site that takes a holder, too: the renew, both
+    // release reads and the shutdown release.
+    expect(
+      await claimDb.renewFreeholdClaimRows(poolA, longest, [plotId], LONG_TTL_SECONDS),
+    ).toEqual(new Set([plotId]));
+    expect(
+      await claimDb.readFreeholdClaimReleasesOnClient(poolA, longest, [plotId], { wait: false }),
+    ).toEqual(new Map([[plotId, 'held']]));
     expect(await claimDb.releaseFreeholdClaimRows(poolA, longest, [plotId])).toEqual(
       new Set([plotId]),
     );
+    expect(
+      await claimDb.readFreeholdClaimReleasesOnClient(poolA, longest, [plotId], { wait: true }),
+    ).toEqual(new Map([[plotId, 'released']]));
+    expect(await claimDb.releaseAllFreeholdClaimRows(poolA, longest)).toBe(0);
     const row = await claimRow(plotId);
     expect(row?.holder).toBe(`${longest}#released`);
     expect(row?.holder).toHaveLength(128);
@@ -870,6 +882,11 @@ d('the global plot claim against real PostgreSQL', () => {
       RangeError,
     );
     await expect(claimDb.releaseAllFreeholdClaimRows(capture.db, over)).rejects.toThrow(RangeError);
+    for (const wait of [false, true]) {
+      await expect(
+        claimDb.readFreeholdClaimReleasesOnClient(capture.db, over, [plotId], { wait }),
+      ).rejects.toThrow(RangeError);
+    }
     expect(capture.calls).toEqual([]);
     // Control: the column's own bound is 128, so one character past the
     // released shape fails the CHECK in the database.
