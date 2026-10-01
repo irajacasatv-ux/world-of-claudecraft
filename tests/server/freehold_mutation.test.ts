@@ -3892,7 +3892,8 @@ describe('the claim renewer', () => {
     // those programs COMPUTE when they run (a property name computed to
     // `alias`, a path assembled from parts, a file written by code a local
     // module runs); how a file already listed as naming the bundle runs it
-    // (the files are pinned, not their lines); a barrel under docs/ or tests/,
+    // (the files are pinned, not their lines; the build script and the
+    // Dockerfile, pinned whole, aside); a barrel under docs/ or tests/,
     // which name the registry by design (no server module reaches either,
     // pinned below, but a dev script under scripts/ may); a name spelled with
     // escapes in a file the count does not read; a file git does not track
@@ -4068,7 +4069,11 @@ describe('the claim renewer', () => {
     // line is pinned as written, comments and blank lines included (only line
     // endings are normalised, for a Windows checkout). Nothing in it is
     // interpreted, so no shape Docker accepts can slip past a reader.
-    expect(readFileSync('Dockerfile', 'utf8').split(/\r?\n/)).toEqual([
+    expect(
+      readFileSync('Dockerfile', 'utf8').split(/\r?\n/),
+      'the Dockerfile runs the server bundle, so this guard pins it exactly: check the edit ' +
+        'for a NODE_OPTIONS, loader or alias route, then copy the new lines in',
+    ).toEqual([
       '# World of Claudecraft game server: serves the built client, REST API and WebSocket',
       '# world on one port. Pair with a postgres service (see docker-compose.yml).',
       '',
@@ -4123,8 +4128,18 @@ describe('the claim renewer', () => {
       'CMD ["sh", "-c", "mkdir -p /app/dist/media && node -e \\"require(\'fs\').cpSync(\'/app/media-build\', \'/app/dist/media\', { recursive: true, force: true })\\" && node dist-server/server.cjs"]',
       '',
     ]);
-    // The one other tracked Dockerfile builds the player wiki, never the bundle.
-    expect(tracked(':(icase)*dockerfile*')).toEqual(['Dockerfile', 'mediawiki/Dockerfile']);
+    // Every tracked container build file (a Dockerfile, a Containerfile, a
+    // bake file), docs and tests aside: the one other builds the player wiki,
+    // never the bundle.
+    expect(
+      listed([
+        ':(icase)*dockerfile*',
+        ':(icase)*containerfile*',
+        ':(icase)*.hcl',
+        ':!docs',
+        ':!tests',
+      ]).sort(),
+    ).toEqual(['Dockerfile', 'mediawiki/Dockerfile']);
     // The compose file passes NODE_OPTIONS through to the container that runs
     // the bundle: its NODE_ variables, bundle names and `command` and
     // `entrypoint` key lines (block or flow style, the key quoted or not; a
