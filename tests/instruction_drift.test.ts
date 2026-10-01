@@ -28,20 +28,22 @@ import {
 } from '../scripts/lib/instruction_refs.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const read = (rel: string) => readFileSync(path.join(root, rel), 'utf8');
+// CRLF to LF, so a Windows checkout with autocrlf reads the same text the rules expect.
+const read = (rel: string) => readFileSync(path.join(root, rel), 'utf8').replaceAll('\r\n', '\n');
 const scriptsOf = (packageJson: string) => Object.keys(JSON.parse(read(packageJson)).scripts ?? {});
 
 /** Tracked files plus untracked ones that are not ignored, so a file created in the same
  *  change resolves before it is staged. */
 function repoFiles(): string[] {
-  const res = spawnSync('git', ['ls-files', '--cached', '--others', '--exclude-standard'], {
+  // -z: NUL-separated, so git never quotes a non-ASCII path into an unreadable name.
+  const res = spawnSync('git', ['ls-files', '--cached', '--others', '--exclude-standard', '-z'], {
     cwd: root,
     encoding: 'utf8',
     maxBuffer: 1 << 26,
     shell: false,
   });
   if (res.status !== 0) throw new Error(`git ls-files failed: ${res.stderr}`);
-  return [...new Set(res.stdout.split('\n').filter(Boolean))];
+  return [...new Set(res.stdout.split('\0').filter(Boolean))];
 }
 
 /** The subset of `paths` git ignores (generated or local-only output, never drift). */
@@ -240,7 +242,9 @@ describe('instruction files', () => {
     const files = repoFiles();
     const fileSet = new Set(files);
     const index = buildIndex(files);
-    scanned = files.filter(isInstructionFile);
+    // A listed file can be absent on disk (a sparse CI checkout, an unstaged delete): it is
+    // not part of the text agents read, so it is not scanned.
+    scanned = files.filter((f) => isInstructionFile(f) && existsSync(path.join(root, f)));
     const raw: Miss[] = scanned.flatMap((file) =>
       unresolvedRefs({
         file,

@@ -30,7 +30,7 @@ targeted test files to confirm they pass.
    **"Test-coverage audit - out of scope. No test or testable source change in this diff."**
    and STOP. That sentence IS a complete report; it is the only sanctioned short output.
 4. If the diff command returns NOTHING, you were dispatched over a range you cannot see (a
-   worktree, an uncommitted tree, a range given in your prompt). Do NOT early-exit as
+   worktree, another worktree's uncommitted changes, a range given in your prompt). Do NOT early-exit as
    out-of-scope: that reports "no test change" when the truth is "no diff resolved". Retry
    with any explicit file list, range, worktree path, or `GATE_SELECT_BASE` base given in your
    prompt. If all of them come back empty, say so as your report, naming each command you

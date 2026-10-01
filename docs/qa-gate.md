@@ -11,7 +11,7 @@ Codex have different entry points and share the same deterministic scripts and c
 | Instant copy gate | `.claude/hooks/qa-stop.sh` through each runtime's Stop hook | End of an agent turn | Yes, on a hard-invariant hit |
 | Deterministic floor | `.githooks/pre-push` | Before a push | Yes |
 | Day-loop fast path | `npm run gate:fast` through `scripts/gate_fast.mjs` | While iterating (agents and mid/low-tier machines) | No (local only; not merge) |
-| **Selective gate** | `node scripts/gate_select.mjs` | **Before implementation is called ready / pre-merge** (on a branch cleared for pushing, a watched-green CI run on the pushed tip meets the same bar; root `CLAUDE.md` "Deliverable") | **Yes (the merge bar)** |
+| **Selective gate** | `node scripts/gate_select.mjs` | **Before implementation is called ready / pre-merge** (on a branch cleared for pushing, a watched-green CI run on the pushed tip that ran the PR test tier meets the same bar; root `CLAUDE.md` "Deliverable") | **Yes (the merge bar)** |
 | Full local gate | `npm run gate` through `scripts/gate.mjs` | When you want the whole suite locally, or the planner falls back | Yes (deeper check) |
 | Selective PR-tier CI | ci.yml `pr-gate` shards through `scripts/ci_shard_test.mjs` (same selection semantics, sharded; full suite on any unprovable diff) | Every pull request | Yes (required checks) |
 | Merge queue | ci.yml on the `merge_group` event: the full PR tier over the exact merge result about to become the branch tip (see `docs/merge-queue.md`, including rollout status: `release/**` first, `main` at the next release-to-main merge) | Every queued merge into a queue-protected branch | Yes (required checks on the merge group) |
@@ -150,8 +150,10 @@ alone is never enough to claim done.
 
 ### Selective gate (`gate:select`)
 
-`node scripts/gate_select.mjs` is **the merge bar** (owner decision, 2026-08-05; recorded in
-`docs/local-gate-perf/state.md`). `npm run gate` remains the deeper check. The one-line
+`node scripts/gate_select.mjs` is **the merge bar**; on a branch cleared for pushing, a
+watched-green CI run on the pushed tip that ran the PR test tier (`code=true`) meets the same
+bar, while a docs-only change still gates locally (root `CLAUDE.md` "Deliverable"; the
+decision record is `docs/local-gate-perf/state.md`). `npm run gate` remains the deeper check. The one-line
 difference from the other paths:
 
 | | Non-test steps | Tests | Merge bar? |
@@ -694,7 +696,8 @@ prepare and when: prewarm homes and twins, compile and reveal gates, program-key
 post-boot lights, secondary GL contexts, the background queue and its admission budget, and
 the stand-in registry (the contract in `src/render/CLAUDE.md` "GPU work: every new producer is
 a client of the scheduler"), where frontend review keeps the presentation seams and tier
-fairness. Instruction-file review owns every `CLAUDE.md`, `AGENTS.md`, agent, and skill: claims
+fairness. Instruction-file review owns every instruction file (the set `docs/ai-architecture.md`
+defines): claims
 the code contradicts, files that disagree, history standing in for a rule, and prompting
 written for older models, against the standard in `docs/ai-architecture.md`;
 `tests/instruction_drift.test.ts` is its mechanical floor. Dispatch every role whose set of

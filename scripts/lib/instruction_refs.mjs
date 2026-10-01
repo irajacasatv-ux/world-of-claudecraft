@@ -23,6 +23,7 @@
 // (tracked plus untracked, not ignored) and the package scripts.
 
 import path from 'node:path';
+import { AGENT_ROUTING_DOCS } from './agent_surface_paths.mjs';
 
 const EXT =
   /\.(ts|tsx|mjs|cjs|js|json|md|py|sh|css|html|svelte|ya?ml|toml|glb|webp|png|jpg|mp3|sql|txt)$/;
@@ -31,14 +32,15 @@ const SPECIFIER_EXTS = ['.ts', '.tsx', '.mjs', '.cjs', '.js', '.test.ts'];
 const SKIP_CHARS = /[*<>{}$|=\\]|\.\./;
 const SKIP_PREFIX = /^(~|\/|@|-|origin\/|tmp\/|dist(-[\w-]+)?\/)/;
 
-/** The files the guard reads: instruction files plus the AI-architecture docs. */
+/** The instruction files (the set docs/ai-architecture.md defines), which the guard reads. The
+ *  routing docs are AGENT_ROUTING_DOCS, the same list CI and the malware scan use. */
 export function isInstructionFile(file) {
   return (
     /(^|\/)(CLAUDE|AGENTS)\.md$/.test(file) ||
     /^\.claude\/agents\/[^/]+\.md$/.test(file) ||
     /^\.claude\/skills\/[^/]+\/SKILL\.md$/.test(file) ||
     /^\.agents\/skills\/[^/]+\/SKILL\.md$/.test(file) ||
-    ['docs/qa-gate.md', 'docs/ai-architecture.md', 'docs/codex.md'].includes(file)
+    AGENT_ROUTING_DOCS.includes(file)
   );
 }
 

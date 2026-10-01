@@ -115,9 +115,10 @@ Deliverable: a PR based off the latest release branch, following
 `.github/PULL_REQUEST_TEMPLATE.md`, that is **fully mergeable and passes CI**. Gate it locally
 with `node scripts/gate_select.mjs` (above) before calling it done; `npm run gate` remains
 the deeper check when you want the whole suite locally. On a branch the maintainer has
-cleared for pushing, a green CI run on the pushed tip, watched to completion, meets the same
-bar, so you may push and watch CI instead of gating locally; an unpushed branch always gates
-locally.
+cleared for pushing, a green CI run on the pushed tip that ran the PR test tier (its
+`changes` job reported `code=true`), watched to completion, meets the same bar, so you may
+push and watch CI instead of gating locally. An unpushed branch, and a change CI classifies
+as docs-only, always gate locally.
 
 ## Architecture (the load-bearing ideas)
 - **One sim, three hosts.** The exact same `src/sim/` code runs the offline

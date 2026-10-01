@@ -298,8 +298,9 @@ whole-tree, and re-run the check, because a format pass is not a check pass).
 
 **The merge bar is CI green on the PR** (root `CLAUDE.md`, "Deliverable"). Once the
 branch is cleared for pushing, push and watch (`gh pr checks --watch` or a background
-watcher) to completion instead of running the full suite locally; the maintainer prefers
-CI here. Before the branch is cleared, gate locally with `node scripts/gate_select.mjs`.
+watcher) to completion instead of running the full suite locally, as long as CI ran the PR
+test tier (`code=true`); the maintainer prefers CI here. Before the branch is cleared, and
+for a docs-only phase, gate locally with `node scripts/gate_select.mjs`.
 Step lists and tiers live in `docs/qa-gate.md`; do not restate them in prompts.
 
 ### Code hygiene (include once in the plan's workflow section)

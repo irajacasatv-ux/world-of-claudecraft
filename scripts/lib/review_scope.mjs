@@ -28,6 +28,10 @@ const lines = (stdout) =>
     .map((l) => l.trim())
     .filter(Boolean);
 
+/** NUL-separated paths (`-z`): git quotes a non-ASCII path in line output, never here. */
+/** @param {string | undefined} stdout */
+const paths = (stdout) => (stdout ?? '').split('\0').filter(Boolean);
+
 /**
  * @param {{ env?: Record<string, string | undefined>, run: Run }} deps
  * @returns {{ base: string, mergeBase: string, files: string[] }}
@@ -44,15 +48,15 @@ export function resolveReviewScope({ env = {}, run }) {
     throw new Error(`review scope: no merge-base between HEAD and ${base}`);
   }
 
-  const diff = run('git', ['diff', '--name-only', '--no-renames', mergeBase]);
+  const diff = run('git', ['diff', '--name-only', '--no-renames', '-z', mergeBase]);
   if (diff.error !== undefined || diff.status !== 0) {
     throw new Error(`review scope: git diff against ${mergeBase} failed`);
   }
-  const untracked = run('git', ['ls-files', '--others', '--exclude-standard']);
+  const untracked = run('git', ['ls-files', '--others', '--exclude-standard', '-z']);
   if (untracked.error !== undefined || untracked.status !== 0) {
     throw new Error('review scope: git ls-files for untracked files failed');
   }
 
-  const files = [...new Set([...lines(diff.stdout), ...lines(untracked.stdout)])].sort();
+  const files = [...new Set([...paths(diff.stdout), ...paths(untracked.stdout)])].sort();
   return { base, mergeBase, files };
 }

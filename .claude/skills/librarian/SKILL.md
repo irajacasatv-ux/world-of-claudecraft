@@ -1,6 +1,6 @@
 ---
 name: librarian
-description: Sweep World of ClaudeCraft's instruction files (every CLAUDE.md, AGENTS.md, the .claude agents and skills) and the living docs they route through for drift, then fix it. Use after each release mint, after a large rename or refactor, when a session finds an instruction the code contradicts, or when asked to clean up, align, or audit the docs or the AI architecture.
+description: Sweep World of ClaudeCraft's instruction files (every CLAUDE.md and AGENTS.md, the agent and skill definitions, and the routing docs, as docs/ai-architecture.md defines them) for drift, then fix it. Use after each release mint, after a large rename or refactor, when a session finds an instruction the code contradicts, or when asked to clean up, align, or audit the docs or the AI architecture.
 user-invocable: true
 ---
 
@@ -32,7 +32,7 @@ Dispatch `docs-librarian` agents in parallel, one message, one batch each (sweep
 each its file list and a tool budget, and ask for the full report as its final reply):
 
 1. Root `CLAUDE.md`, `AGENTS.md`, `docs/qa-gate.md`, `docs/ai-architecture.md`, `docs/codex.md`,
-   and `.agents/skills/` (repository facts only).
+   `.agents/skills/`, and `.codex/agents/` (repository facts only).
 2. `.claude/agents/` and `.claude/skills/`.
 3. `src/CLAUDE.md`, `src/sim/**`, `src/world_api/`, `src/net/`, `src/admin/`, `src/guide/**`,
    `src/editor/`.

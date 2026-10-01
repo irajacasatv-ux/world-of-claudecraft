@@ -407,8 +407,9 @@ language-agnostic). The client localizes code-first: `userFacingApiError` (`src/
 maps a code verbatim to `apiError.<domain>.<reason>`, English source in
 `src/ui/i18n.catalog/api_error.ts`; `tests/api_error_code_parity.test.ts` fails a server code with no
 client key. Contributors add English only, same as the WS emits above. A new `apiError.*`
-English leaf that is wordy (any word of 4+ letters, i.e. most real prose) also needs its five
-non-Latin fills (`zh`, `zh_TW`, `ja`, `ko`, `ru`) in the same change, or M16
+English leaf that is wordy (a run of 4+ consecutive lowercase letters after stripping
+`{tokens}`, i.e. most real prose) also needs its five non-Latin fills
+(`zh_CN`/`zh_TW`/`ja_JP`/`ko_KR`/`ru_RU`) in the same change, or M16
 (`tests/i18n_completeness.test.ts`) reds; `npm run new:endpoint` prints this reminder for the
 leaf it appends.
 

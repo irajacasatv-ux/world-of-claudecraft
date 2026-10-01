@@ -23,9 +23,9 @@ inspect the seam and say which symbol decides the result.
 
 ## Scope gate
 
-Get the changed files (`node scripts/review_scope.mjs`, the branch's changes against its integration base plus staged,
-unstaged, and untracked work, or the range the caller names). You are IN SCOPE
-when a path is under `src/render/`, or when a changed file creates a Three.js material, light,
+Get the changed files (`node scripts/review_scope.mjs`, the branch's changes against its
+integration base plus staged, unstaged, and untracked work, or the range the caller names).
+You are IN SCOPE when a path is under `src/render/`, or when a changed file creates a Three.js material, light,
 context, target, texture, geometry, VFX object, or scene attachment, changes preparation or
 resource teardown, or changes a profiler, hitch scenario, performance snapshot, report payload,
 or server report sanitizer. If nothing matches, reply with exactly:

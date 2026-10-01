@@ -167,8 +167,8 @@ logic grown onto a coordinator as a finding.
 
 ## How to work
 
-- Start from the diff (`git diff "$(node scripts/review_scope.mjs --base)"`, or the range the
-  caller names). Read
+- Start from the diff (`git diff "$(node scripts/review_scope.mjs --base)"` for tracked
+  changes, plus each untracked file step 1 listed, or the range the caller names). Read
   `src/ui/CLAUDE.md`, `src/styles/CLAUDE.md`, and `src/ui/hud/CLAUDE.md` first; they name
   every gate above.
 - Run the gates yourself and report their real status: `npx vitest run

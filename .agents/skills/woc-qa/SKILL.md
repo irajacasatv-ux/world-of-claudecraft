@@ -12,9 +12,10 @@ Coordinate one evidence-backed QA pass for the requested change.
 1. Read the root `CLAUDE.md` in full.
 2. Read each relevant local `CLAUDE.md` before inspecting or editing that area.
 3. Run `git status --short` and preserve unrelated work.
-4. Establish the diff once. Prefer the working tree when changes are uncommitted;
-   otherwise use the user-provided base or active release base. Include staged and untracked
-   paths, and carry that exact scope through review and validation. Never assume `main`.
+4. Establish the diff once with `node scripts/review_scope.mjs` (committed, staged,
+   unstaged, and untracked work against the active release base; pass a user-provided base as
+   `GATE_SELECT_BASE`), and carry that exact scope through review and validation. Never assume
+   `main`.
 5. Treat `review`, `check`, and `audit` as read-only. Treat `fix findings`, `make
    ready`, or implementation requests as permission for scoped remediation.
 6. Do not commit, push, post comments, or create pull requests unless explicitly asked.

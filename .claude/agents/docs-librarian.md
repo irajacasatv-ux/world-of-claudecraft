@@ -2,8 +2,8 @@
 name: docs-librarian
 description: >
   Instruction-file and living-doc librarian for World of ClaudeCraft. Use on any diff that adds
-  or changes an instruction file (any `CLAUDE.md`, `AGENTS.md`, a `.claude/agents/` or
-  `.claude/skills/` definition, `docs/qa-gate.md`, `docs/ai-architecture.md`), and for each
+  or changes an instruction file (any `CLAUDE.md` or `AGENTS.md`, an agent or skill
+  definition, or a routing doc: the set `docs/ai-architecture.md` defines), and for each
   batch of the `/librarian` sweep. Finds drift: claims the code now contradicts, paths and
   symbols that no longer exist, two files ruling differently on one point, history standing in
   for a rule, and prompting written for older models, each with a concrete replacement.
@@ -30,8 +30,9 @@ orchestrator verifies and applies them.**
   with `GATE_SELECT_BASE=<ref>` when the caller names a base, or use the range the caller
   names). You are IN SCOPE if it touches an instruction file, the set `docs/ai-architecture.md`
   defines; in the Codex files (`AGENTS.md`, `.agents/`, `docs/codex.md`) check repository
-  facts only, since their Codex-specific guidance belongs to the `$woc-codex-audit` skill. Review each changed instruction file whole (a new sentence can
-  contradict an old one), plus any file it now contradicts. Also IN SCOPE: a code diff that
+  facts only, since their Codex-specific guidance belongs to the `$woc-codex-audit` skill.
+  Review each changed instruction file whole (a new sentence can contradict an old one), plus
+  any file it now contradicts. Also IN SCOPE: a code diff that
   renames or deletes a path, module, or symbol an instruction file names (grep the old name
   across the instruction files).
 - **Sweep mode** (the caller names a batch of files): review every file in the batch whole.
@@ -44,8 +45,8 @@ If nothing is in scope, output exactly this and STOP:
 ## What to look for
 
 1. **Stale facts.** A path, module, exported symbol, command, flag, test name, or count the
-   repository contradicts. Verify with grep and Read; never run a command a file names (the drift test below is the
-   one exception).
+   repository contradicts. Verify with grep and Read; never run a command a file names (the
+   scope command above and the drift test below are the exceptions).
    `npx vitest run tests/instruction_drift.test.ts` covers paths, modules, and npm scripts
    mechanically; you cover symbols, behavior claims ("X calls Y", "Z is test-only", "this
    runs in the gate"), and anything the test cannot parse. A claim the code contradicts is

@@ -34,8 +34,8 @@ const baseAnswers = (extra: Record<string, Result> = {}): Record<string, Result>
   [RELEASES]: { status: 0, stdout: 'origin/release/v0.45.0\norigin/release/v0.44.2\n' },
   'rev-parse --verify origin/release/v0.45.0^{commit}': { status: 0, stdout: 'abc\n' },
   'merge-base HEAD origin/release/v0.45.0': { status: 0, stdout: 'mb123\n' },
-  'diff --name-only --no-renames mb123': { status: 0, stdout: 'src/b.ts\nCLAUDE.md\n' },
-  'ls-files --others --exclude-standard': { status: 0, stdout: 'src/new.ts\nsrc/b.ts\n' },
+  'diff --name-only --no-renames -z mb123': { status: 0, stdout: 'src/b.ts\0CLAUDE.md\0' },
+  'ls-files --others --exclude-standard -z': { status: 0, stdout: 'src/new.ts\0src/b.ts\0' },
   ...extra,
 });
 
@@ -53,8 +53,8 @@ describe('resolveReviewScope', () => {
       ['git', ...RELEASES.split(' ')],
       ['git', 'rev-parse', '--verify', 'origin/release/v0.45.0^{commit}'],
       ['git', 'merge-base', 'HEAD', 'origin/release/v0.45.0'],
-      ['git', 'diff', '--name-only', '--no-renames', 'mb123'],
-      ['git', 'ls-files', '--others', '--exclude-standard'],
+      ['git', 'diff', '--name-only', '--no-renames', '-z', 'mb123'],
+      ['git', 'ls-files', '--others', '--exclude-standard', '-z'],
     ]);
   });
 
@@ -62,8 +62,8 @@ describe('resolveReviewScope', () => {
     const { run, calls } = fakeGit({
       'rev-parse --verify feature/base^{commit}': { status: 0, stdout: 'def\n' },
       'merge-base HEAD feature/base': { status: 0, stdout: 'mb456\n' },
-      'diff --name-only --no-renames mb456': { status: 0, stdout: 'server/x.ts\n' },
-      'ls-files --others --exclude-standard': { status: 0, stdout: '' },
+      'diff --name-only --no-renames -z mb456': { status: 0, stdout: 'server/x.ts\0' },
+      'ls-files --others --exclude-standard -z': { status: 0, stdout: '' },
     });
     expect(resolveReviewScope({ env: { GATE_SELECT_BASE: 'feature/base' }, run })).toEqual({
       base: 'feature/base',
@@ -73,8 +73,8 @@ describe('resolveReviewScope', () => {
     expect(calls).toEqual([
       ['git', 'rev-parse', '--verify', 'feature/base^{commit}'],
       ['git', 'merge-base', 'HEAD', 'feature/base'],
-      ['git', 'diff', '--name-only', '--no-renames', 'mb456'],
-      ['git', 'ls-files', '--others', '--exclude-standard'],
+      ['git', 'diff', '--name-only', '--no-renames', '-z', 'mb456'],
+      ['git', 'ls-files', '--others', '--exclude-standard', '-z'],
     ]);
   });
 
@@ -95,10 +95,10 @@ describe('resolveReviewScope', () => {
 
   it('fails loud when the diff or the untracked listing fails', () => {
     const noDiff = baseAnswers();
-    delete noDiff['diff --name-only --no-renames mb123'];
+    delete noDiff['diff --name-only --no-renames -z mb123'];
     expect(() => resolveReviewScope({ run: fakeGit(noDiff).run })).toThrow(/git diff/);
     const noUntracked = baseAnswers();
-    delete noUntracked['ls-files --others --exclude-standard'];
+    delete noUntracked['ls-files --others --exclude-standard -z'];
     expect(() => resolveReviewScope({ run: fakeGit(noUntracked).run })).toThrow(/untracked/);
   });
 });
@@ -110,7 +110,8 @@ describe('scripts/review_scope.mjs', () => {
     spawnSync(process.execPath, [path.join(root, 'scripts/review_scope.mjs'), ...args], {
       cwd: root,
       encoding: 'utf8',
-      env: { ...process.env, GATE_SELECT_BASE: base },
+      // No optional index refresh, so the test never contends for .git/index.lock.
+      env: { ...process.env, GATE_SELECT_BASE: base, GIT_OPTIONAL_LOCKS: '0' },
     });
 
   it('prints the merge-base commit with --base', () => {

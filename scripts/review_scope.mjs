@@ -23,16 +23,11 @@ function run(cmd, args) {
   return { status: res.status, stdout: res.stdout, error: res.error };
 }
 
-let scope;
 try {
-  scope = resolveReviewScope({ env: process.env, run });
+  const scope = resolveReviewScope({ env: process.env, run });
+  if (process.argv.includes('--base')) console.log(scope.mergeBase);
+  else for (const file of scope.files) console.log(file);
 } catch (err) {
   console.error(`[review_scope] ${err.message}`);
-  process.exit(1);
-}
-
-if (process.argv.includes('--base')) {
-  console.log(scope.mergeBase);
-} else {
-  for (const file of scope.files) console.log(file);
+  process.exitCode = 1;
 }

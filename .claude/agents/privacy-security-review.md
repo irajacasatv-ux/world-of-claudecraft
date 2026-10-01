@@ -29,7 +29,8 @@ any file:
    is a deploy/build/secret file (`Dockerfile*`, `docker-compose*`, `*.env*`, a CI yml,
    `DEPLOY.md`), or is under `src/sim/` (for the determinism-as-integrity check, rule 10).
 3. Whether or not step 2 matched, run ONE cheap cross-cutting scan over the ADDED lines of
-   the changed set (`git diff` then read the `+` lines) for the two concerns that can hide
+   the changed set (the `+` lines of `git diff "$(node scripts/review_scope.mjs --base)"`,
+   plus every untracked file in the scope, read whole) for the two concerns that can hide
    in any file: a hardcoded secret/credential/token/connection-string literal, and a new
    `Math.random` / `Date.now` / `performance.now` introduced into `src/sim/`.
 4. EARLY EXIT: if no path matched step 2 AND the step-3 scan found nothing, output exactly
