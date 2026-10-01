@@ -3616,10 +3616,11 @@ describe('the claim renewer', () => {
     } finally {
       rmSync(fixtureRoot, { recursive: true, force: true });
     }
-    // Both scans read that one walk: no string in this file names the
-    // `.ts`-only walker (an import, a dynamic import, a mock), so neither scan
-    // can be swapped back to it. A filter on a walk is an edit in plain sight;
-    // the renewer count's walk is also backed by the unread list below.
+    // Both scans read that one walk: no string in this file spells the
+    // `.ts`-only walker's path in path characters alone (an import, a dynamic
+    // import, a mock), so neither scan can be swapped back to it. A filter on
+    // a walk is an edit in plain sight; the renewer count's walk is also
+    // backed by the unread list below.
     const tsOnlyWalker = /['"`][./\w-]*helpers\/ts_files_under(?:\.[jt]s)?['"`]/;
     // Joined at run time, so this file's own text never holds the needle.
     for (const written of [
@@ -3629,7 +3630,8 @@ describe('the claim renewer', () => {
       ['const w = await import(`../helpers/', 'ts_files_under`);'],
       ["const w = await vi.importActual('../../tests/helpers/", "ts_files_under');"],
     ]) {
-      expect(written.join('')).toMatch(tsOnlyWalker);
+      // Through the same stripper the file's own text goes through.
+      expect(stripComments(written.join(''))).toMatch(tsOnlyWalker);
     }
     const ownText = stripComments(readFileSync(fileURLToPath(import.meta.url), 'utf8'));
     expect(ownText).not.toMatch(tsOnlyWalker);
@@ -3897,8 +3899,9 @@ describe('the claim renewer', () => {
     // yet outside server/ (a local run passes until it is added; CI sees it);
     // the compose file's lines other than its NODE_ variables, bundle names
     // and `command` and `entrypoint` key lines (a health check, for one); the
-    // Dockerfile's lines other than its bundle steps, NODE_ variables,
-    // installs and ENV, ENTRYPOINT and CMD instructions;
+    // Dockerfile's lines other than its RUN, ENV, ENTRYPOINT and CMD
+    // instructions and the lines naming the bundle, a NODE_ variable or a
+    // pnpmfile;
     // text the shared comment stripper misreads (a string holding a comment
     // opener); an import the statement reader cannot see (a binding named by
     // a string holding `;`);
@@ -3908,16 +3911,18 @@ describe('the claim renewer', () => {
     // `--config`) rather than from package.json; and the contents of the
     // gitignored private clone.
     const flat = (text: string): string => text.replace(/\s+/g, ' ').trim();
-    // Every git read here: a buffer far above the tree's listing (about
-    // 0.9 MB today, near Node's 1 MiB default) and a refusal of any failed
-    // run, so a truncated listing can never pass as a short one.
-    const git = (args: string[]): string => {
-      const run = spawnSync('git', args, { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
+    // Every git read here: a buffer far above the tree's listing (which is
+    // within reach of Node's 1 MiB default) and a refusal of any failed or
+    // cut-off run, so a truncated listing can never pass as a short one.
+    const git = (args: string[], maxBuffer = 64 * 1024 * 1024): string => {
+      const run = spawnSync('git', args, { encoding: 'utf8', maxBuffer });
       expect(run.error, args.join(' ')).toBeUndefined();
       expect(run.status, args.join(' ')).toBe(0);
       return run.stdout;
     };
-    expect(() => git(['ls-files', '--no-such-flag'])).toThrow();
+    expect(() => git(['ls-files', '--no-such-flag'])).toThrow(/ls-files --no-such-flag/);
+    // A listing larger than its buffer is refused, never returned short.
+    expect(() => git(['ls-files', '-z'], 1024)).toThrow(/ls-files -z/);
     // NUL-separated, so every path arrives as written, never quoted.
     const listed = (pathspec: string[]): string[] =>
       git(['ls-files', '-z', '--', ...pathspec])
@@ -4068,52 +4073,37 @@ describe('the claim renewer', () => {
         .split('\n')
         .filter((line) => !/^\s*#/.test(line) && keep(line))
         .map(flat);
-    // Docker reads instruction words in either case; names are matched as
-    // written, so `node_modules` is not a NODE_ variable.
+    // Every RUN, ENV, ENTRYPOINT and CMD instruction, whatever it runs (an
+    // install in any spelling, a build step, a hook), and any other line
+    // naming the bundle, a NODE_ variable or a pnpmfile. Docker reads
+    // instruction words in either case; names are matched as written, so
+    // `node_modules` is not a NODE_ variable.
     const dockerRuntime = (line: string): boolean =>
-      /build:server|dist-server|NODE_|pnpmfile/.test(line) ||
-      /\bpnpm\b.*\b(?:install|i|add)\b|\bnpm (?:ci|install)\b/.test(line) ||
-      /^\s*(?:ENV|ENTRYPOINT|CMD)\b/i.test(line);
+      /^\s*(?:RUN|ENV|ENTRYPOINT|CMD)\b/i.test(line) ||
+      /build:server|dist-server|NODE_|pnpmfile/.test(line);
     // One control per arm, each line matched by that arm alone.
     expect(
       [
-        'RUN pnpm run build:server',
+        'run npm i --omit=dev',
+        'env A=1',
+        'entrypoint ["node", "x.cjs"]',
+        'Cmd ["x"]',
+        'LABEL step=build:server',
         'COPY ./dist-server ./dist-server',
         'ARG NODE_OPTIONS=--require=./x.cjs',
-        'RUN pnpm i --prod',
-        'RUN pnpm -C /app install --prod',
-        'RUN pnpm add claims',
-        'RUN npm ci',
         'COPY .pnpmfile.cjs ./',
-        'entrypoint ["node", "x.cjs"]',
-        'env A=1',
-        'Cmd ["x"]',
         'COPY node_modules ./node_modules',
-        'RUN pnpm run build',
-        'RUN echo hi',
+        'COPY src ./src',
+        'WORKDIR /app',
       ].map(dockerRuntime),
-    ).toEqual([
-      true,
-      true,
-      true,
-      true,
-      true,
-      true,
-      true,
-      true,
-      true,
-      true,
-      true,
-      false,
-      false,
-      false,
-    ]);
+    ).toEqual([true, true, true, true, true, true, true, true, false, false, false]);
     expect(runtimeLines('Dockerfile', dockerRuntime)).toEqual([
       'RUN npm install -g pnpm@10.34.5',
       'RUN pnpm install --frozen-lockfile',
       'RUN VITE_TURNSTILE_SITEKEY="$VITE_TURNSTILE_SITEKEY" VITE_REOWN_PROJECT_ID="$VITE_REOWN_PROJECT_ID" VITE_WALLET_DISABLED="$VITE_WALLET_DISABLED" pnpm run build && cp -a dist/media ./media-build && rm -rf dist/media && pnpm run build:server && pnpm run build:bot',
       'ENV NODE_ENV=production',
       'COPY --from=build /app/dist-server ./dist-server',
+      'RUN mkdir -p /app/dist/media && chown -R node:node /app/dist/media',
       String.raw`CMD ["sh", "-c", "mkdir -p /app/dist/media && node -e \"require('fs').cpSync('/app/media-build', '/app/dist/media', { recursive: true, force: true })\" && node dist-server/server.cjs"]`,
     ]);
     // The compose file passes NODE_OPTIONS through to the container that runs
@@ -4122,8 +4112,7 @@ describe('the claim renewer', () => {
     // block value's own lines are not read), as text.
     expect(tracked('*compose*.y*ml')).toEqual(['docker-compose.yml']);
     const composeRuntime = (line: string): boolean =>
-      /NODE_|dist-server|build:server/.test(line) ||
-      /(?:^|[\s{,])['"]?(?:entrypoint|command)['"]?\s*:/.test(line);
+      /NODE_|dist-server|build:server/.test(line) || /\b(?:entrypoint|command)['"]?\s*:/.test(line);
     // One control per arm, each line matched by that arm alone.
     expect(
       [
@@ -4134,10 +4123,12 @@ describe('the claim renewer', () => {
         '  entrypoint: ["y"]',
         '  bot: { image: x, command: ["node", "y.cjs"] }',
         '    "command": ["x"]',
+        '  bot: [command: x]',
         '  volumes: ["./node_modules:/app/node_modules"]',
         '      test: ["CMD", "true"]',
+        '    subcommand: x',
       ].map(composeRuntime),
-    ).toEqual([true, true, true, true, true, true, true, false, false]);
+    ).toEqual([true, true, true, true, true, true, true, true, false, false, false]);
     expect(runtimeLines('docker-compose.yml', composeRuntime)).toEqual([
       // Split at the placeholder, so the literal is plain text.
       'NODE_OPTIONS: $' + '{NODE_OPTIONS:-}',
