@@ -111,7 +111,8 @@ export function isCodePath(path) {
  * instruction-file drift guard, tests/instruction_drift.test.ts, fails when an instruction file
  * names a path that no longer exists), so a docs-only rename can break the tree, and skipping
  * the PR tier for it is the fast false-green this module exists to prevent. Removals and
- * renames are rare, so the slow green is cheap.
+ * renames are rare, so the slow green is cheap. A copy removes nothing and stays docs-only. An
+ * entry with `previous_filename` but no `status` (never sent by the API) counts as a rename.
  *
  * Filenames are attacker-controlled (git allows newlines in paths), and the
  * reason string is echoed into the CI job log where line-leading `::` workflow
@@ -137,10 +138,14 @@ export function classifyPrFiles(files) {
         reason: `code path change detected (renamed from ${JSON.stringify(file.previous_filename)}): full PR tier`,
       };
     }
-    if (file.status === 'removed' || file.status === 'renamed' || file.previous_filename != null) {
+    const removed = file.status === 'removed';
+    const renamed =
+      file.status === 'renamed' || (file.status === undefined && file.previous_filename != null);
+    if (removed || renamed) {
+      const gone = file.previous_filename ?? file.filename;
       return {
         code: true,
-        reason: `path removed or renamed (${JSON.stringify(file.previous_filename ?? file.filename)}): full PR tier`,
+        reason: `path ${removed ? 'removed' : 'renamed'} (${JSON.stringify(gone)}): full PR tier`,
       };
     }
   }
@@ -173,7 +178,7 @@ export function classifyPrFiles(files) {
  *   cap?: number,
  *   timeoutMs?: number,
  * }} opts
- * @returns {Promise<Array<{ filename?: string, previous_filename?: string | null }>>}
+ * @returns {Promise<Array<{ filename?: string, previous_filename?: string | null, status?: string }>>}
  */
 export async function fetchPrFiles({
   repo,
@@ -185,7 +190,7 @@ export async function fetchPrFiles({
   cap = PR_FILES_CAP,
   timeoutMs = 30_000,
 }) {
-  /** @type {Array<{ filename?: string, previous_filename?: string | null }>} */
+  /** @type {Array<{ filename?: string, previous_filename?: string | null, status?: string }>} */
   const files = [];
   const signal = AbortSignal.timeout(timeoutMs);
   for (let page = 1; ; page++) {

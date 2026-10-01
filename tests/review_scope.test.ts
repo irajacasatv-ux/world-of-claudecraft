@@ -118,17 +118,30 @@ describe('resolveReviewScope', () => {
 
 describe('scripts/review_scope.mjs', () => {
   const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+  // Every git call here runs isolated. Inherited GIT_* variables are dropped: under a git hook,
+  // `rebase -x`, or `bisect run`, an inherited GIT_DIR or GIT_INDEX_FILE would aim a fixture
+  // commit at the real repo. Global and system config are off, so no hook, filter, or fsmonitor
+  // of the developer's runs. No optional index refresh, so nothing contends for .git/index.lock.
+  const cleanEnv = {
+    ...Object.fromEntries(Object.entries(process.env).filter(([key]) => !key.startsWith('GIT_'))),
+    GIT_CONFIG_GLOBAL: os.devNull,
+    GIT_CONFIG_NOSYSTEM: '1',
+    GIT_OPTIONAL_LOCKS: '0',
+  };
   // HEAD as the base works in any clone (no remote refs needed): the merge-base is HEAD.
   const cli = (args: string[], base: string) =>
     spawnSync(process.execPath, [path.join(root, 'scripts/review_scope.mjs'), ...args], {
       cwd: root,
       encoding: 'utf8',
-      // No optional index refresh, so the test never contends for .git/index.lock.
-      env: { ...process.env, GATE_SELECT_BASE: base, GIT_OPTIONAL_LOCKS: '0' },
+      env: { ...cleanEnv, GATE_SELECT_BASE: base },
     });
 
   it('prints the merge-base commit with --base', () => {
-    const head = spawnSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' });
+    const head = spawnSync('git', ['rev-parse', 'HEAD'], {
+      cwd: root,
+      encoding: 'utf8',
+      env: cleanEnv,
+    });
     const res = cli(['--base'], 'HEAD');
     expect(res.status).toBe(0);
     expect(res.stdout.trim()).toBe(head.stdout.trim());
@@ -138,13 +151,7 @@ describe('scripts/review_scope.mjs', () => {
     // A throwaway repo the CLI's git calls reach through GIT_DIR/GIT_WORK_TREE, so the case
     // runs real git end to end (the -z parsing included) without depending on this checkout.
     const repo = mkdtempSync(path.join(os.tmpdir(), 'woc-review-scope-'));
-    // Every inherited GIT_* variable dropped: under a git hook, `rebase -x`, or `bisect run`,
-    // an inherited GIT_DIR or GIT_INDEX_FILE would aim the fixture's commits at the real repo.
-    const cleanEnv = Object.fromEntries(
-      Object.entries(process.env).filter(([key]) => !key.startsWith('GIT_')),
-    );
-    // A fixed identity, no signing, and no hooks, so the developer's global git config cannot
-    // fail, prompt in, or run code against the throwaway repo.
+    // With no global config there is no identity, so the commits carry a fixed one.
     const isolated = [
       ['user.name', 't'],
       ['user.email', 't@t'],
@@ -181,7 +188,6 @@ describe('scripts/review_scope.mjs', () => {
           GIT_DIR: path.join(repo, '.git'),
           GIT_WORK_TREE: repo,
           GATE_SELECT_BASE: base,
-          GIT_OPTIONAL_LOCKS: '0',
         },
       });
       expect(res.status, res.stderr).toBe(0);

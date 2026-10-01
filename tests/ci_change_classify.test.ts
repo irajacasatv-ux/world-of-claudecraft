@@ -205,20 +205,44 @@ describe('classifyPrFiles', () => {
     ]);
     expect(docs).toEqual({
       code: true,
-      reason: 'path removed or renamed ("docs/prd/old-name.md"): full PR tier',
+      reason: 'path renamed ("docs/prd/old-name.md"): full PR tier',
     });
   });
 
   it('runs the PR tier for any removal or rename, and only those, among docs', () => {
     expect(classifyPrFiles([{ filename: 'docs/merge-queue.md', status: 'removed' }])).toEqual({
       code: true,
-      reason: 'path removed or renamed ("docs/merge-queue.md"): full PR tier',
+      reason: 'path removed ("docs/merge-queue.md"): full PR tier',
     });
-    // The API marks a rename by status too; either signal is enough.
-    expect(classifyPrFiles([{ filename: 'docs/b.md', status: 'renamed' }]).code).toBe(true);
-    for (const status of ['added', 'modified', 'changed', 'copied']) {
+    // The API marks a rename by status, with the old path in previous_filename.
+    expect(
+      classifyPrFiles([
+        { filename: 'docs/b.md', previous_filename: 'docs/a.md', status: 'renamed' },
+      ]),
+    ).toEqual({ code: true, reason: 'path renamed ("docs/a.md"): full PR tier' });
+    expect(classifyPrFiles([{ filename: 'docs/b.md', status: 'renamed' }])).toEqual({
+      code: true,
+      reason: 'path renamed ("docs/b.md"): full PR tier',
+    });
+    // A copy removes nothing, even with its source in previous_filename.
+    expect(
+      classifyPrFiles([{ filename: 'docs/b.md', previous_filename: 'docs/a.md', status: 'copied' }])
+        .code,
+    ).toBe(false);
+    for (const status of ['added', 'modified', 'changed', 'copied', 'unchanged']) {
       expect(classifyPrFiles([{ filename: 'docs/prd/spec.md', status }]).code, status).toBe(false);
     }
+  });
+
+  it('JSON-escapes a hostile path in the removed-or-renamed reason', () => {
+    // The reason is echoed into the job log, where a line-leading `::` is a workflow command.
+    expect(classifyPrFiles([{ filename: 'docs/a\n::error::forged', status: 'removed' }])).toEqual({
+      code: true,
+      reason: 'path removed ("docs/a\\n::error::forged"): full PR tier',
+    });
+    expect(
+      classifyPrFiles([{ filename: 'docs/b.md', previous_filename: 'docs/a\n::error::forged' }]),
+    ).toEqual({ code: true, reason: 'path renamed ("docs/a\\n::error::forged"): full PR tier' });
   });
 
   it('fails closed on an entry it cannot read', () => {
@@ -396,6 +420,16 @@ describe('detectCode (fail closed end to end)', () => {
     expect(result).toEqual({
       code: true,
       reason: 'code path change detected ("src/sim/sim.ts"): full PR tier',
+      files: listing,
+    });
+  });
+
+  it('reads the API status through the real fetch path, so a docs removal runs the PR tier', async () => {
+    const listing: Entry[] = [{ filename: 'docs/merge-queue.md', status: 'removed' }];
+    const { impl } = pagedFetch(listing);
+    expect(await detectCode({ ...BASE, reportedCount: 1, fetchImpl: impl })).toEqual({
+      code: true,
+      reason: 'path removed ("docs/merge-queue.md"): full PR tier',
       files: listing,
     });
   });
