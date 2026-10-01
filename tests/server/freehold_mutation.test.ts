@@ -3912,9 +3912,10 @@ describe('the claim renewer', () => {
     // applies to them, and of anything a local module imports in turn; a config
     // path a script passes from its own code (scripts/*.mjs spawn vitest with
     // `--config`) rather than from package.json; `.npmrc`'s settings, beyond
-    // the three names the tree read looks for (a test line that reads the file
-    // by name trips the malware scan's credential-file rule, which blocks the
-    // gate; the scan walks the file only with its generic line rules, none of
+    // the three names the tree read looks for (a file-read call that names it,
+    // `readFileSync` for one, trips the malware scan's credential-file rule,
+    // which blocks the gate, and a read that steps around that rule is not
+    // made; the scan walks the file only with its generic line rules, none of
     // which matches a registry, token or `node-options` line); and the contents
     // of the gitignored private clone.
     const flat = (text: string): string => text.replace(/\s+/g, ' ').trim();
@@ -4667,8 +4668,8 @@ describe('the claim renewer', () => {
       expect(resolutionFlags(cmd), cmd).toEqual(flags);
     }
     // Only the root .npmrc is tracked. Its settings are not pinned here
-    // (LIMITS above): a test line that reads the file by name trips the
-    // malware scan.
+    // (LIMITS above): a file-read call naming it trips the malware scan, and
+    // this test does not read it any way that steps around that rule.
     expect(tracked('*.npmrc')).toEqual(['.npmrc']);
     expect(tracked('*package.json')).toEqual(['package.json']);
     expect(tracked('*jsconfig*.json')).toEqual([]);
