@@ -309,12 +309,14 @@ export interface FreeholdClaimRenewerDeps {
    *  test), at every deadline check while the deadline signal has not fired,
    *  and at its close. A start reading that throws or is not a finite number
    *  rejects the call before the pass starts; a throw at a deadline check
-   *  rejects the pass there, mid-pass; the closing read is guarded (a throw,
-   *  or a reading that gives no usable duration, adds nothing). */
+   *  rejects the pass there, mid-pass, while a reading there that is not a
+   *  finite number leaves that check to the signal alone; the closing read is
+   *  guarded (a throw, or a reading that gives no usable duration, adds
+   *  nothing). */
   nowMs(): number;
   warn(message: string): void;
-  /** The pass deadline, a whole number of ms from 1 to 2^32 - 1, exactly what
-   *  AbortSignal.timeout takes (anything else rejects the pass with a
+  /** The pass deadline, a whole number of ms from 1 to 2^31 - 1, the range
+   *  AbortSignal.timeout honours (anything else rejects the pass with a
    *  RangeError before it starts); FREEHOLD_CLAIM_RENEW_PASS_DEADLINE_MS unless
    *  a suite narrows it. */
   readonly passDeadlineMs?: number;
@@ -347,13 +349,47 @@ function warnSafely(deps: FreeholdClaimRenewerDeps, message: string): void {
   } catch {}
 }
 
+/** Why a pass's closing read gave no usable duration, one fixed word for its
+ *  line, judged in this order. */
+type NoPassDuration = 'threw' | 'not a number' | 'not finite' | 'backward' | 'overflow';
+
+/** The pass's duration from its closing read, or why there is none. The read
+ *  runs under a catch of its own, so a clock that throws HERE never replaces
+ *  the pass's own outcome, and only a reading that IS a number is used
+ *  (subtraction would coerce null or a Date into a finite duration, and throw
+ *  on a BigInt). `backward` is a wall clock stepped back mid-pass; `overflow`
+ *  would carry the running total past a finite number, which prom-client's
+ *  Counter.inc refuses, failing the scrape. The total starts finite and only
+ *  ever takes a finite sum, so it stays finite. */
+function closingPassMs(
+  deps: FreeholdClaimRenewerDeps,
+  startMs: number,
+  counters: FreeholdClaimCounters,
+): number | NoPassDuration {
+  let endMs: unknown;
+  try {
+    endMs = deps.nowMs();
+  } catch {
+    return 'threw';
+  }
+  if (typeof endMs !== 'number') return 'not a number';
+  const passMs = endMs - startMs;
+  if (!Number.isFinite(passMs)) return 'not finite';
+  if (passMs < 0) return 'backward';
+  if (!Number.isFinite(counters.renewPassMsTotal + passMs)) return 'overflow';
+  return passMs;
+}
+
 function passDeadlineOf(deps: FreeholdClaimRenewerDeps): number {
   const ms = deps.passDeadlineMs ?? FREEHOLD_CLAIM_RENEW_PASS_DEADLINE_MS;
-  // Exactly what AbortSignal.timeout accepts, so the signal mint can never
-  // throw mid-pass, after the wanted tests ran.
-  if (!Number.isInteger(ms) || ms < 1 || ms > 0xffff_ffff) {
+  // A whole number of ms from 1 to 2^31 - 1, the range AbortSignal.timeout
+  // honours: it throws on a fraction or past 2^32 - 1 (mid-pass, after the
+  // wanted tests ran), and clamps 0, and anything from 2^31 to 2^32 - 1, to
+  // 1 ms (2^31 - 1 is Node's TIMEOUT_MAX; past it only a TimeoutOverflowWarning
+  // says so), a deadline that would abandon every chunk of every pass.
+  if (!Number.isInteger(ms) || ms < 1 || ms > 0x7fff_ffff) {
     throw new RangeError(
-      'freehold claim renew pass deadline must be a whole number of ms from 1 to 4294967295',
+      'freehold claim renew pass deadline must be a whole number of ms from 1 to 2^31 - 1, the range AbortSignal.timeout honours',
     );
   }
   return ms;
@@ -365,18 +401,22 @@ function passDeadlineOf(deps: FreeholdClaimRenewerDeps): number {
  * claims are kept for the next pass. It rejects on a broken clock or deadline
  * port, in exactly these cases (production binds Date.now and no injected
  * deadline, so it meets none of them):
- * - a passDeadlineMs that is not a whole number of ms from 1 to 2^32 - 1, a
- *   programming error: a RangeError before anything runs;
+ * - a passDeadlineMs that is not a whole number of ms from 1 to 2^31 - 1,
+ *   the range AbortSignal.timeout honours (suites only, a programming
+ *   error): a RangeError before anything runs;
  * - a nowMs start reading that throws or is not a finite number: before the
  *   flag is taken, so the next pass on a sane clock runs;
  * - a nowMs that THROWS MID-PASS: every deadline check reads it unguarded
  *   (unless the deadline signal has already fired), before each renew or
  *   release chunk and each release re-read starts and after one of those
- *   throws, so the pass stops there with that error;
+ *   throws, so the pass stops there with that error. A mid-pass READING that
+ *   is not a finite number (NaN, an infinity, a BigInt, null, any object)
+ *   never rejects: it leaves that check's clock half off and the signal
+ *   still bounds the pass, so a throw is the only mid-pass clock rejection;
  * - a deadline signal that cannot be minted (suites only): an injected
  *   deadlineSignal factory that throws, after the wanted tests and before any
- *   statement. (An injected passDeadlineMs AbortSignal.timeout would refuse
- *   is refused before the pass starts, with the RangeError above.)
+ *   statement. (A passDeadlineMs outside that range never reaches the mint:
+ *   the RangeError above refuses it before the pass starts.)
  * A mid-pass rejection still runs the pass's finally: the pass is counted, its
  * race, hook and closing-clock lines are said when due, and the flag clears.
  * SINGLE-FLIGHT per registry: a call while a pass runs returns at once,
@@ -441,29 +481,15 @@ export async function renewFreeholdClaims(deps: FreeholdClaimRenewerDeps): Promi
       }
       counters.onLostThrew += tally.lostHookThrew;
       counters.renewPasses++;
-      // The closing read runs under a catch of its own, so a clock that
-      // throws HERE never replaces the pass's own outcome, and only a reading
-      // that IS a number is used (subtraction would coerce null or a Date into
-      // a finite duration, and throw on a BigInt). A pass whose clock gave no
-      // usable duration (a throwing or non-number reading, a non-finite or
-      // negative duration, or one that would overflow the total) is counted,
-      // adds nothing, and one fixed line says so. A negative duration is a
-      // wall clock stepped back mid-pass; an overflow would carry the running
-      // total past a finite number, which prom-client's Counter.inc refuses,
-      // failing the scrape. The total starts finite and only ever takes a
-      // finite value, so a finite sum means a finite duration.
-      let passMs = Number.NaN;
-      try {
-        const endMs: unknown = deps.nowMs();
-        if (typeof endMs === 'number') passMs = endMs - startMs;
-      } catch {}
-      const totalMs = counters.renewPassMsTotal + passMs;
-      if (passMs >= 0 && Number.isFinite(totalMs)) {
-        counters.renewPassMsTotal = totalMs;
+      // A pass whose clock gave no usable duration is counted, adds nothing,
+      // and one fixed line says so, with the reason word and no number.
+      const passMs = closingPassMs(deps, startMs, counters);
+      if (typeof passMs === 'number') {
+        counters.renewPassMsTotal += passMs;
       } else {
         warnSafely(
           deps,
-          'freehold claim renew pass clock gave no usable duration at its close; that pass is counted without one',
+          `freehold claim renew pass clock gave no usable duration at its close (${passMs}); that pass is counted without one`,
         );
       }
     } finally {
@@ -525,7 +551,16 @@ async function renewPass(
   const deadline = deps.deadlineSignal?.() ?? AbortSignal.timeout(deadlineMs);
   // Checked before EVERY transaction starts: the signal, and its clock half
   // through the nowMs port. The signal alone bounds the checkouts themselves.
-  const expired = () => deadline.aborted || deps.nowMs() - nowMs >= deadlineMs;
+  // The clock half uses only a reading that is a finite number: anything else
+  // (NaN, an infinity, a BigInt, null, any object) leaves it off for that
+  // check, since a subtraction would throw on a BigInt or a throwing valueOf
+  // though the clock did not, and the signal still bounds the pass. So the
+  // only mid-pass clock rejection is a clock port that THROWS.
+  const expired = (): boolean => {
+    if (deadline.aborted) return true;
+    const readMs: unknown = deps.nowMs();
+    return typeof readMs === 'number' && Number.isFinite(readMs) && readMs - nowMs >= deadlineMs;
+  };
   // The pass hit its deadline: these chunks wait for the next pass, or were
   // left undecided (a release whose re-read it refused: none of a thrown
   // one's claims is booked, while a completed one's released ids already

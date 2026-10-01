@@ -75,9 +75,10 @@ export interface PeriodicSaveWrites {
    *  onError like any rejection: a start clock reading that throws or is not
    *  a finite number (before the pass runs), a clock that throws at a deadline
    *  check mid-pass (the pass stops there), or a suite's INJECTED deadline (a
-   *  pass deadline that is not a whole number of ms from 1 to 2^32 - 1, a
-   *  RangeError before the pass runs; a deadlineSignal factory that throws,
-   *  mid-pass). Production binds Date.now and no injected deadline. */
+   *  pass deadline that is not a whole number of ms from 1 to 2^31 - 1, the
+   *  range AbortSignal.timeout honours, a RangeError before the pass runs; a
+   *  deadlineSignal factory that throws, mid-pass). Production binds Date.now
+   *  and no injected deadline. */
   renewFreeholdClaims(): Promise<void>;
   /** Drop idle bank-vault ledger guard state. Synchronous, and not a write. */
   pruneIdleGuards(): void | number;

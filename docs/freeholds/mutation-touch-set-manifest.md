@@ -433,7 +433,9 @@ undecided") once, where the deadline stops the pass. Three lines come from the p
 `finally`, so every exit reaches them, a rejecting one included: the race line, the line for
 `onLost` hooks that threw (each throw swallowed and counted on the lasting
 `claim_on_lost_threw`), and the closing-clock line ("clock gave no usable duration at its
-close; that pass is counted without one"); the flag clears in a `finally` of its own inside
+close (REASON); that pass is counted without one", REASON one fixed word, judged in this
+order: `threw`, `not a number`, `not finite`, `backward`, `overflow`, so an operator tells a
+broken clock from one stepped back); the flag clears in a `finally` of its own inside
 it, so a statement there that throws cannot leave the flag set. A clock port that throws at
 the pass's start rejects the call before the flag is taken; the flag is then re-checked
 straight after that read, BEFORE the reading is judged (a clock port that started a pass
@@ -445,7 +447,19 @@ clock half and every wanted test (the production predicate compares it with a cl
 every pass, NaN or plus infinity would switch it off. Either way the periodic flush reports
 it and the next pass on a sane clock runs. A clock port that throws at a deadline check
 MID-PASS (each check reads it unguarded while the deadline signal has not fired) rejects
-the pass there, through the `finally` above. The closing read, and the duration taken from
+the pass there, through the `finally` above; a mid-pass READING that is not a finite number
+(NaN, an infinity, a BigInt, null, any object) never rejects: it leaves that check's clock
+half off (it is never subtracted, so a BigInt or a throwing `valueOf` cannot throw there
+though the clock did not) and the signal still bounds the pass, so a clock that THROWS is
+the only mid-pass clock rejection. So the pass rejects in exactly these cases, the list the
+renewer's JSDoc and the periodic flush's member doc state too (production binds `Date.now`
+and no injected deadline, so it meets none of them): an injected `passDeadlineMs` that is
+not a whole number of ms from 1 to 2^31 - 1, the range `AbortSignal.timeout` honours (suites
+only: a `RangeError` before anything runs; Node clamps 0, and anything from 2^31 to
+2^32 - 1, to 1 ms, which would abandon every chunk of every pass); a start reading that
+throws or is not a finite number (before the flag is taken); a clock that throws at a
+deadline check mid-pass; and an injected `deadlineSignal` factory that throws (suites only:
+after the wanted tests, before any statement). The closing read, and the duration taken from
 it, run while the flag is still held (a clock that calls the renewer back there is skipped
 too) and under a catch of their own, and only a reading that is a number is used (a
 subtraction would coerce null or a Date into a finite duration): a pass whose clock gave no
