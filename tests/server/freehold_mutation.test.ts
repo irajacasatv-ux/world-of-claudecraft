@@ -14,9 +14,11 @@
 // tests/server/freehold_claim.pg.test.ts, which cannot drive these arms
 // deterministically (a lost COMMIT answer, a renewer chunk that throws).
 //
-// Cost: 0.5 s
+// Cost: 0.6 s
 import { spawnSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
 import { LEASE_TTL_SECONDS } from '../../server/character_lease_db';
 import {
@@ -84,7 +86,6 @@ import {
 import { hearthKeyUseRefusal } from '../../server/freehold_wire';
 import { SOURCE_EXTENSIONS, sourceFilesUnder } from '../helpers/source_files_under';
 import { stripComments } from '../helpers/strip_comments';
-import { tsFilesUnder } from '../helpers/ts_files_under';
 
 // ---------------------------------------------------------------------------
 // A scripted pg client: answers by the first matching rule, records every
@@ -3572,14 +3573,33 @@ describe('the claim renewer', () => {
     // Every module under server/, in every spelling the toolchain resolves
     // (the shared source walker's policy), so a call site in a `.mjs` or
     // `.cjs` module is counted like one in a `.ts` file.
-    const files = sourceFilesUnder('server').map(({ file, full }) => {
+    const modulesUnder = (root: string) => sourceFilesUnder(root);
+    const files = modulesUnder('server').map(({ file, full }) => {
       const source = readFileSync(full, 'utf8');
       return { file: `server/${file}`, source, texts: textsOf(source) };
     });
-    expect(files.length).toBeGreaterThan(100);
+    // A walk that found little would pass the counts below vacuously.
+    expect(files.length).toBeGreaterThan(400);
+    expect(files.map(({ file }) => file)).toContain('server/freehold_claim_registry.ts');
     expect(SOURCE_EXTENSIONS).toEqual(
       expect.arrayContaining(['.ts', '.tsx', '.mts', '.cts', '.js', '.jsx', '.mjs', '.cjs']),
     );
+    // The same walk over a fixture: every module spelling, nested too, and
+    // nothing else.
+    const fixtureRoot = mkdtempSync(join(tmpdir(), 'renewer-walk-'));
+    try {
+      mkdirSync(join(fixtureRoot, 'nested'));
+      for (const name of ['a.mjs', 'b.ts', 'c.cjs', 'nested/d.js', 'e.md']) {
+        writeFileSync(join(fixtureRoot, name), '');
+      }
+      expect(
+        modulesUnder(fixtureRoot)
+          .map(({ file }) => file)
+          .sort(),
+      ).toEqual(['a.mjs', 'b.ts', 'c.cjs', 'nested/d.js']);
+    } finally {
+      rmSync(fixtureRoot, { recursive: true, force: true });
+    }
     const fileOf = (file: string) => {
       const found = files.find((f) => f.file === file);
       if (!found) throw new Error(`no ${file} under server/`);
@@ -3835,9 +3855,13 @@ describe('the claim renewer', () => {
     // those programs COMPUTE when they run (a property name computed to
     // `alias`, a path assembled from parts, a file written by code a local
     // module runs); how a file already listed as naming the bundle runs it
-    // (the files are pinned, not their lines); a barrel under docs/ or tests/
-    // (server code imports neither); a file git does not track yet (a local
-    // run passes until it is added; CI sees it); text the shared comment
+    // (the files are pinned, not their lines); a barrel under docs/ or tests/,
+    // which name the registry by design (no server module reaches either,
+    // pinned below, but a dev script under scripts/ may); a name spelled with
+    // escapes in a file the count does not read; a file git does not track
+    // yet outside server/ (a local run passes until it is added; CI sees it);
+    // the compose file's lines other than its runtime flags and commands;
+    // text the shared comment
     // stripper misreads (a string holding a comment opener); an import the
     // statement reader cannot see (a binding named by a string holding `;`);
     // the insides of packages, of the patches and overrides pnpm applies to
@@ -3987,26 +4011,61 @@ describe('the claim renewer', () => {
       ['server', 'npm run build:server && node dist-server/server.cjs'],
       ['realms', 'npm run build:server && node scripts/dev-realms.mjs'],
     ]);
-    // Its `#` comment lines aside, read as written.
-    expect(
-      readFileSync('Dockerfile', 'utf8')
+    // Read as written, its `#` comment lines aside, each instruction's
+    // continuation lines joined, its instruction words in either case.
+    const runtimeLines = (file: string, words: RegExp): string[] =>
+      readFileSync(file, 'utf8')
+        .replace(/\\\r?\n/g, ' ')
         .split('\n')
-        .filter(
-          (line) =>
-            !/^\s*#/.test(line) &&
-            /build:server|dist-server|NODE_|^\s*(?:ENV|ENTRYPOINT|CMD)\b/.test(line),
-        )
-        .map(flat),
+        .filter((line) => !/^\s*#/.test(line) && words.test(line))
+        .map(flat);
+    expect(
+      runtimeLines('Dockerfile', /build:server|dist-server|NODE_|^\s*(?:ENV|ENTRYPOINT|CMD)\b/i),
     ).toEqual([
-      'pnpm run build && cp -a dist/media ./media-build && rm -rf dist/media && pnpm run build:server && pnpm run build:bot',
+      'RUN VITE_TURNSTILE_SITEKEY="$VITE_TURNSTILE_SITEKEY" VITE_REOWN_PROJECT_ID="$VITE_REOWN_PROJECT_ID" VITE_WALLET_DISABLED="$VITE_WALLET_DISABLED" pnpm run build && cp -a dist/media ./media-build && rm -rf dist/media && pnpm run build:server && pnpm run build:bot',
       'ENV NODE_ENV=production',
       'COPY --from=build /app/dist-server ./dist-server',
       String.raw`CMD ["sh", "-c", "mkdir -p /app/dist/media && node -e \"require('fs').cpSync('/app/media-build', '/app/dist/media', { recursive: true, force: true })\" && node dist-server/server.cjs"]`,
+    ]);
+    // The compose file passes NODE_OPTIONS through to the container that runs
+    // the bundle: its runtime flags and commands, as text.
+    expect(tracked('*compose*.y*ml')).toEqual(['docker-compose.yml']);
+    expect(
+      runtimeLines('docker-compose.yml', /NODE_|dist-server|build:server|entrypoint|command/i),
+    ).toEqual([
+      // Split at the placeholder, so the literal is plain text.
+      'NODE_OPTIONS: $' + '{NODE_OPTIONS:-}',
+      'command: ["node", "dist-bot/bot.cjs"]',
     ]);
     // One read of the tracked tree (docs and tests aside, and binary media
     // skipped by extension, since images, models, audio and fonts hold no
     // code): every file naming the bundle the build writes, and every file
     // naming the registry or the renewer that the count above did not read.
+    const media = ['webp', 'png', 'jpg', 'glb', 'ktx2', 'hdr', 'mp3', 'ogg', 'wav', 'woff2'];
+    const treeRead = ['.', ':!docs', ':!tests', ...media.map((ext) => `:!*.${ext}`)];
+    // What that pathspec reads: a known text file in every code root and of
+    // every module kind, and nothing under docs/ or tests/ and no media.
+    const readable = new Set(
+      spawnSync('git', ['ls-files', '--', ...treeRead], { encoding: 'utf8' }).stdout.split('\n'),
+    );
+    expect(
+      [
+        'public/basis/basis_transcoder.js',
+        'src/world_api.ts',
+        'src/admin/App.svelte',
+        'headless/env_server.ts',
+        'bot/config.ts',
+        'electron/crash_guard.cjs',
+        'scripts/build_server.mjs',
+        'svelte.config.js',
+        'Dockerfile',
+      ].filter((file) => !readable.has(file)),
+    ).toEqual([]);
+    expect(
+      [...readable].filter(
+        (file) => /^(?:docs|tests)\//.test(file) || media.some((ext) => file.endsWith(`.${ext}`)),
+      ),
+    ).toEqual([]);
     const named: Record<string, string[]> = {};
     for (const line of spawnSync(
       'git',
@@ -4021,12 +4080,7 @@ describe('the claim renewer', () => {
         '-e',
         'dist-server/server.cjs',
         '--',
-        '.',
-        ':!docs',
-        ':!tests',
-        ...['webp', 'png', 'jpg', 'glb', 'ktx2', 'hdr', 'mp3', 'ogg', 'wav', 'woff2'].map(
-          (ext) => `:!*.${ext}`,
-        ),
+        ...treeRead,
       ],
       { encoding: 'utf8' },
     ).stdout.split('\n')) {
@@ -4049,16 +4103,23 @@ describe('the claim renewer', () => {
     const counted = new Set(files.map(({ file }) => file));
     const unread = (named: string[] | undefined): string[] =>
       (named ?? []).filter((file) => !counted.has(file));
+    // An approved file joins its list here, by name.
     expect({
       registry: unread(named.freehold_claim_registry),
       renewer: unread(named.renewFreeholdClaims),
     }).toEqual({ registry: [], renewer: [] });
+    // No server module reaches a barrel under docs/ or tests/.
+    expect(
+      files
+        .filter(({ texts }) => /['"`](?:\.\.\/)+(?:tests|docs)\//.test(texts.stripped))
+        .map(({ file }) => file),
+    ).toEqual([]);
     // The read sees both where they are named today, and a module the count
     // never read would be listed.
     expect(named.freehold_claim_registry).toContain('server/game.ts');
     expect(named.renewFreeholdClaims).toContain('server/game.ts');
-    expect(unread(['server/claims_flush.mjs', 'server/game.ts', 'src/claims.ts'])).toEqual([
-      'server/claims_flush.mjs',
+    expect(unread(['headless/claims.mjs', 'server/game.ts', 'src/claims.ts'])).toEqual([
+      'headless/claims.mjs',
       'src/claims.ts',
     ]);
 
@@ -4313,7 +4374,7 @@ describe('the claim renewer', () => {
     ).toEqual(['three', '@vitest/spy']);
     const resolutionFlags = (cmd: string): string[] =>
       cmd.match(
-        /(?:--(?:alias|tsconfig|config|inject|conditions|resolve-extensions|main-fields|import|loader|experimental-loader|require|env-file|root|preserve-symlinks|project|dir|mode)\b|(?<=\s)-[cCpr](?=[\s=]))(?:[=:\s]\s*[^\s&|;]+)?|\bNODE_(?:PATH|OPTIONS)=[^\s&|;]*/g,
+        /(?:--(?:alias|tsconfig|config|inject|conditions|resolve-extensions|main-fields|import|loader|experimental-loader|require|env-file|root|preserve-symlinks|project|dir|mode|pnpmfile|global-pnpmfile)\b|(?<=\s)-[cCpr](?=[\s=]))(?:[=:\s]\s*[^\s&|;]+)?|\bNODE_(?:PATH|OPTIONS)=[^\s&|;]*/g,
       ) ?? [];
     expect(
       Object.entries(pkg.scripts).flatMap(([name, cmd]) =>
@@ -4353,6 +4414,10 @@ describe('the claim renewer', () => {
         'tsc --project tsconfig.claims.json && vitest run --project server --dir server',
         ['--project tsconfig.claims.json', '--project server', '--dir server'],
       ],
+      [
+        'pnpm install --pnpmfile ./claims.cjs --global-pnpmfile=./g.cjs',
+        ['--pnpmfile ./claims.cjs', '--global-pnpmfile=./g.cjs'],
+      ],
     ] as const) {
       expect(resolutionFlags(cmd), cmd).toEqual(flags);
     }
@@ -4370,7 +4435,7 @@ describe('the claim renewer', () => {
     // pnpm reads settings, overrides and patches from a workspace file, and
     // hooks from a pnpmfile: neither is tracked.
     expect(tracked('*pnpm-workspace.yaml')).toEqual([]);
-    expect(tracked('*.pnpmfile.*')).toEqual([]);
+    expect(tracked('*pnpmfile*')).toEqual([]);
     // The private clone stays untracked: a force-added implementation would
     // become the `#bot-detector` target everywhere.
     expect(tracked('private/*')).toEqual(['private/.dockerkeep']);
@@ -5895,7 +5960,7 @@ describe('the Hearth use precheck the re-dispatch replays', () => {
 describe('the housing authority boundary', () => {
   // Through the shared walker (tests/CLAUDE.md): server/ has subdirectories.
   const serverSources = () => {
-    const files = tsFilesUnder('server').map((f) => ({
+    const files = sourceFilesUnder('server').map((f) => ({
       name: `server/${f.file}`,
       code: stripComments(readFileSync(f.full, 'utf8')),
     }));
