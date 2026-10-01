@@ -124,8 +124,9 @@ export class ItemHistoryDialog {
     actions.className = 'prompt-actions';
     const done = document.createElement('button');
     done.type = 'button';
+    // No data-close here: the prompt installer styles every [data-close] as
+    // the compact x button, and this one carries a text label.
     done.className = 'btn';
-    done.dataset.close = '';
     done.textContent = t('hudChrome.itemHistory.close');
     done.addEventListener('click', () => this.close());
     actions.appendChild(done);
