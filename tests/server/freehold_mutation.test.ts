@@ -3865,9 +3865,9 @@ describe('the claim renewer', () => {
     // over every file the toolchain resolves server code through, inside one
     // stated boundary. THE SERVER BUNDLE is pinned whole: its build script's
     // code (comments stripped, each line's whitespace collapsed), the package
-    // scripts that run it or its output, the Dockerfile that runs it and every
-    // other tracked Dockerfile (exactly, line for line), and every tracked file
-    // naming the bundle it writes. EVERY OTHER TOOLCHAIN FILE is a program
+    // scripts that run it or its output, the Dockerfile that runs it (exactly,
+    // line for line, as is every other tracked Dockerfile), and every tracked
+    // file naming the bundle it writes. EVERY OTHER TOOLCHAIN FILE is a program
     // whose DECLARATIONS are pinned: every tracked vite, vitest and svelte
     // config by inventory (vitest would prefer a new vitest.config), each one's
     // import statements with their bindings, its resolver hooks (an esbuild
@@ -3903,7 +3903,7 @@ describe('the claim renewer', () => {
     // (a Containerfile, a bake file, an Earthfile, a platform manifest), beyond
     // the three names the tree read looks for; how a file listed as naming the
     // bundle runs it (its name is pinned, not its lines, the build script and
-    // the Dockerfiles aside); the compose file's lines other than its NODE_
+    // the root Dockerfile aside); the compose file's lines other than its NODE_
     // variables, bundle names and `command` and `entrypoint` key lines (a
     // health check, for one); text the shared comment stripper misreads (a
     // string holding a comment opener); an import the statement reader cannot
@@ -4070,13 +4070,26 @@ describe('the claim renewer', () => {
       ['realms', 'npm run build:server && node scripts/dev-realms.mjs'],
     ]);
     // THE DOCKERFILES, exactly. Every tracked Dockerfile (docs and tests
-    // aside) is listed first, so an added, removed or renamed one meets this
-    // message before any read; then each is pinned as written, comments and
-    // blank lines included (only line endings are normalised, for a Windows
-    // checkout). The root one builds and runs the bundle; the other builds the
-    // player wiki. Nothing in either is interpreted.
+    // aside; a file named as Docker names one) is listed first, so an added,
+    // removed or renamed one meets this message before any read once git
+    // sees the change (the list reads the index); then each is pinned as
+    // written, comments and blank lines included (only line endings are
+    // normalised, for a Windows checkout). The root one builds and runs the
+    // bundle; the other builds the player wiki. Nothing in either is
+    // interpreted.
+    const dockerfileName = (file: string): boolean =>
+      /^(?:dockerfile(?:\..+)?|.+\.dockerfile)$/i.test(file.split('/').pop() ?? '');
     expect(
-      listed([':(icase)*dockerfile*', ':!docs', ':!tests']).sort(),
+      [
+        'Dockerfile',
+        'deploy/Dockerfile.realm',
+        'deploy/realm.dockerfile',
+        'scripts/lib/dockerfile_context.mjs',
+        'Dockerfile_notes.md',
+      ].map(dockerfileName),
+    ).toEqual([true, true, true, false, false]);
+    expect(
+      listed([':(icase)*dockerfile*', ':!docs', ':!tests']).filter(dockerfileName).sort(),
       'a Dockerfile added, removed or renamed: pin it exactly like these two, then update this list',
     ).toEqual(['Dockerfile', 'mediawiki/Dockerfile']);
     const linesOf = (file: string): string[] => readFileSync(file, 'utf8').split(/\r?\n/);
@@ -4246,12 +4259,19 @@ describe('the claim renewer', () => {
     expect(
       hitsOf('scripts/a:b.mjs\0renewFreeholdClaims\nserver/x.ts\0renewFreeholdClaims\n'),
     ).toEqual({ renewFreeholdClaims: ['scripts/a:b.mjs', 'server/x.ts'] });
+    // Read as text: git deems some real modules binary (a NUL byte), and
+    // they are read like any other. The control greps one of them through
+    // the same mode, so a read that skips binary files fails here.
+    const textMode = '--text';
+    const binaryModule = 'scripts/assets/boulder/build.mjs';
+    expect(git(['ls-files', '--eol', '--', binaryModule])).toMatch(/^i\/-text\b/);
+    expect(git(['grep', '-l', textMode, '-e', '', '--', binaryModule]).trim()).toBe(binaryModule);
     const named = hitsOf(
       git([
         'grep',
         '--null',
         '-o',
-        '--text',
+        textMode,
         '-e',
         'freehold_claim_registry',
         '-e',
