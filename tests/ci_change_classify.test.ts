@@ -14,7 +14,7 @@ import {
   PR_FILES_CAP,
 } from '../scripts/lib/ci_change_classify.mjs';
 
-type Entry = { filename?: string; previous_filename?: string | null };
+type Entry = { filename?: string; previous_filename?: string | null; status?: string };
 
 // Minimal fetch stub: serves `files` through the paginated PR files endpoint
 // shape (per_page/page query params), recording every call for order, header,
@@ -139,6 +139,11 @@ describe('isCodePath', () => {
     ).toBe(true);
   });
 
+  it('treats .gitignore as code, since tests read it', () => {
+    expect(isCodePath('.gitignore')).toBe(true);
+    expect(isCodePath('docs/.gitignore')).toBe(false);
+  });
+
   it('leaves documentation surfaces classifiable as non-code', () => {
     expect(isCodePath('README.md')).toBe(false);
     expect(isCodePath('docs/prd/some-spec.md')).toBe(false);
@@ -194,11 +199,26 @@ describe('classifyPrFiles', () => {
     expect(out.reason).toBe(
       'code path change detected (renamed from "src/sim/old.ts"): full PR tier',
     );
-    // A rename fully inside docs stays non-code.
+    // A rename fully inside docs is code too: an instruction file may name the old path.
     const docs = classifyPrFiles([
       { filename: 'docs/prd/new-name.md', previous_filename: 'docs/prd/old-name.md' },
     ]);
-    expect(docs.code).toBe(false);
+    expect(docs).toEqual({
+      code: true,
+      reason: 'path removed or renamed ("docs/prd/old-name.md"): full PR tier',
+    });
+  });
+
+  it('runs the PR tier for any removal or rename, and only those, among docs', () => {
+    expect(classifyPrFiles([{ filename: 'docs/merge-queue.md', status: 'removed' }])).toEqual({
+      code: true,
+      reason: 'path removed or renamed ("docs/merge-queue.md"): full PR tier',
+    });
+    // The API marks a rename by status too; either signal is enough.
+    expect(classifyPrFiles([{ filename: 'docs/b.md', status: 'renamed' }]).code).toBe(true);
+    for (const status of ['added', 'modified', 'changed', 'copied']) {
+      expect(classifyPrFiles([{ filename: 'docs/prd/spec.md', status }]).code, status).toBe(false);
+    }
   });
 
   it('fails closed on an entry it cannot read', () => {

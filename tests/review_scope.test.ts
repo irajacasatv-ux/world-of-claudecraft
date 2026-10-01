@@ -6,9 +6,9 @@
 // else, so no form of `@{upstream}` can creep back in); the union of committed, staged,
 // unstaged, and untracked files, sorted and deduplicated; fail-loud on an unresolvable base
 // or a failed git call; and the CLI's two outputs and its exit status, its list output checked
-// end to end against a throwaway repo (non-ASCII names and both ends of a rename included). The nearest suite,
-// tests/ci_changed_base.test.ts, pins the shared base resolver and the shell-free git
-// runner, not these.
+// end to end against a throwaway repo (non-ASCII names and both ends of a rename included). The
+// nearest suite, tests/ci_changed_base.test.ts, pins the shared base resolver and the
+// shell-free git runner, not these.
 // Cost: 300 ms
 import { spawnSync } from 'node:child_process';
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
@@ -143,9 +143,16 @@ describe('scripts/review_scope.mjs', () => {
     const cleanEnv = Object.fromEntries(
       Object.entries(process.env).filter(([key]) => !key.startsWith('GIT_')),
     );
+    // A fixed identity, no signing, and no hooks, so the developer's global git config cannot
+    // fail, prompt in, or run code against the throwaway repo.
+    const isolated = [
+      ['user.name', 't'],
+      ['user.email', 't@t'],
+      ['commit.gpgsign', 'false'],
+      ['core.hooksPath', '/dev/null'],
+    ].flatMap(([key, value]) => ['-c', `${key}=${value}`]);
     const git = (...args: string[]) => {
-      const identity = ['-c', 'user.name=t', '-c', 'user.email=t@t', '-c', 'commit.gpgsign=false'];
-      const res = spawnSync('git', [...identity, ...args], {
+      const res = spawnSync('git', [...isolated, ...args], {
         cwd: repo,
         encoding: 'utf8',
         env: cleanEnv,

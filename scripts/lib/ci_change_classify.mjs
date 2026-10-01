@@ -73,6 +73,9 @@ const CODE_PATH_EXACT = Object.freeze([
   '.npmrc',
   '.browserslistrc',
   '.dockerignore',
+  // Read by tests (tests/codex_setup.test.ts copies it; the drift guard asks git check-ignore),
+  // so a change to it alone can break the suite.
+  '.gitignore',
 ]);
 
 // The pull request files endpoint lists at most 3000 files; a listing that
@@ -104,11 +107,17 @@ export function isCodePath(path) {
  * rename out of the code path set still changes the code path set, so both
  * ends are checked. Do not "restore parity" by dropping the second arm.
  *
+ * A removal or rename of ANY path, docs included, is code too: tests read docs (the
+ * instruction-file drift guard, tests/instruction_drift.test.ts, fails when an instruction file
+ * names a path that no longer exists), so a docs-only rename can break the tree, and skipping
+ * the PR tier for it is the fast false-green this module exists to prevent. Removals and
+ * renames are rare, so the slow green is cheap.
+ *
  * Filenames are attacker-controlled (git allows newlines in paths), and the
  * reason string is echoed into the CI job log where line-leading `::` workflow
  * commands are parsed, so embedded filenames are JSON-escaped.
  *
- * @param {ReadonlyArray<{ filename?: string, previous_filename?: string | null }>} files
+ * @param {ReadonlyArray<{ filename?: string, previous_filename?: string | null, status?: string }>} files
  * @returns {{ code: boolean, reason: string }}
  */
 export function classifyPrFiles(files) {
@@ -126,6 +135,12 @@ export function classifyPrFiles(files) {
       return {
         code: true,
         reason: `code path change detected (renamed from ${JSON.stringify(file.previous_filename)}): full PR tier`,
+      };
+    }
+    if (file.status === 'removed' || file.status === 'renamed' || file.previous_filename != null) {
+      return {
+        code: true,
+        reason: `path removed or renamed (${JSON.stringify(file.previous_filename ?? file.filename)}): full PR tier`,
       };
     }
   }
