@@ -13,12 +13,13 @@
 //   the frame path does, save one: after a COMMITTED advance the key is
 //   already spent (R-2), so a vault-lock drop answers busy rather than
 //   nothing (a draining realm stays silent: it is going down), and every
-//   precheck is a realm drop the trip counts apart, since the sim never saw
-//   the use. Then it runs the item use through the sim while the ticket is
-//   set. It takes no heavy-self receipt mark: the use frame that started the
-//   trip already took one, and an admitted entry changes no heavy self field
-//   (it moves the player and claims a room, both outside the heavy block, and
-//   grants or spends nothing), pinned in tests/server/freehold_wire.test.ts.
+//   precheck (a session gone by then included) is a realm drop the trip
+//   counts apart, since the sim never saw the use. Then it runs the item use
+//   through the sim while the ticket is set. It takes no heavy-self receipt
+//   mark: the use frame that started the trip already took one, and an
+//   admitted entry changes no heavy self field (it moves the player and
+//   claims a room, both outside the heavy block, and grants or spends
+//   nothing), pinned in tests/server/freehold_wire.test.ts.
 import { HEARTH_KEY_COOLDOWN_MS, HEARTH_KEY_ITEM_ID } from '../src/sim/freehold/gate_rules';
 import { mergeFreeholdKeyReadyAt } from '../src/sim/freehold/hearth_key';
 import { freeholdOwnerKeyOfMeta } from '../src/sim/freehold/owner_key';
@@ -87,8 +88,11 @@ export function createGameFreeholdHearthTrips<S extends FreeholdHearthTripSessio
       }
     },
     redispatch: (session, advanced) => {
+      // run() checked the same session synchronously just before this call,
+      // so this cannot miss today; were it to, the sim never saw the use: a
+      // realm drop with nothing to answer, never the sim's refusal.
       const live = deps.sessionForPid(session.pid);
-      if (!live) return undefined;
+      if (!live) return 'dropped';
       const refusal = hearthKeyUseRefusal({
         draining: deps.draining(),
         vaultLocked: deps.vaultLocked(live.characterId),

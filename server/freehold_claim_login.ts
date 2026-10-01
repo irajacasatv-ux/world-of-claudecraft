@@ -17,7 +17,10 @@
 //    `claim_busy` at once, before the upsert (which would lock that holder's
 //    row even when it refused) and before the row read (a busy realm reads
 //    nothing it may not serve).
-// 4. The acquire upsert, then 07's row read, unchanged.
+// 4. The acquire upsert, then 07's row read, unchanged. The plot is IN FLIGHT
+//    in the registry from just before step 3 until the claim is recorded or
+//    the read fails, so a renew pass about to release an older claim of this
+//    holder's on the plot leaves it out (server/freehold_claim_registry.ts).
 // 5. COMMIT with its tag checked. Only a proved COMMIT records the claim; a
 //    lost answer leaves it unrecorded (it then expires after the TTL), and the
 //    read is answered as THROWN so the store holds the plot rather than serving
@@ -97,9 +100,12 @@ export async function readClaimedLoginDurables(
 ): Promise<{ row: FreeholdRowLoad; hearth: FreeholdHearthAnswer }> {
   const { registry } = deps;
   const startMs = deps.nowMs();
+  const holds: (() => void)[] = [];
   try {
-    return await claimedLoginRead(deps, accountId);
+    return await claimedLoginRead(deps, accountId, holds);
   } finally {
+    // After record() or the failure: every in-flight mark the read took.
+    for (const letGo of holds) letGo();
     registry.counters.loginReads++;
     registry.counters.loginReadMsTotal += Math.max(0, deps.nowMs() - startMs);
   }
@@ -108,6 +114,7 @@ export async function readClaimedLoginDurables(
 async function claimedLoginRead(
   deps: FreeholdClaimLoginDeps,
   accountId: number,
+  holds: (() => void)[],
 ): Promise<{ row: FreeholdRowLoad; hearth: FreeholdHearthAnswer }> {
   const { registry } = deps;
   const budget = {
@@ -119,6 +126,11 @@ async function claimedLoginRead(
   const plotHalf = async (db: FreeholdQueryable): Promise<FreeholdRowLoad> => {
     const plotId = await freeholdPrimaryPlotIdOnClient(db, accountId);
     if (plotId !== null) {
+      // IN FLIGHT from here until after record() or the failure (the caller
+      // lets go): a renew pass re-checks this mark right before it sends a
+      // release, so it never renames the row this acquire re-stamps at the
+      // SAME generation (a same-holder re-acquire keeps it).
+      holds.push(registry.holdInFlight(plotId));
       let claim: Awaited<ReturnType<typeof acquireFreeholdClaim>>;
       try {
         claim = await acquireFreeholdClaim(db, {

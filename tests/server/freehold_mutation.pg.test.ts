@@ -1524,6 +1524,31 @@ d('the housing mutation boundary (REAL Postgres)', () => {
   // F. D88: an open intent blocks deletion; receipts are kept, erased.
   // ---------------------------------------------------------------------------
   describe('F. the D88 parent-delete guard and the per-row-class outcomes', () => {
+    it('refuses an account delete through the ACCOUNT guard alone when the open intent names no character', async () => {
+      // No character in the intent and none on the account, so the characters
+      // cascade cannot raise for it: only the accounts BEFORE DELETE guard can
+      // answer 55006, and without it the RESTRICT key would answer 23503.
+      const acct = await makeAccount();
+      const open = intentOf(acct, null, null);
+      expect(await ops.prepareFreeholdOperation(pool, open)).toEqual({ kind: 'prepared' });
+      await expect(pool.query('DELETE FROM accounts WHERE id = $1', [acct])).rejects.toMatchObject({
+        code: '55006',
+        constraint: 'freehold_operations_open_delete_guard',
+        message: 'freehold_operation_open',
+      });
+      expect(await intentCount(open.operationId)).toBe(1);
+      // Control: once the intent closes, the same delete lands.
+      expect(
+        await ops.cancelFreeholdOperation(pool, {
+          operationId: open.operationId,
+          accountId: acct,
+          fingerprint: open.fingerprint,
+          outcome: 'cancelled',
+        }),
+      ).toBeNull();
+      expect((await pool.query('DELETE FROM accounts WHERE id = $1', [acct])).rowCount).toBe(1);
+    });
+
     it('refuses both deletes while an intent is open, then each row class lands as declared', async () => {
       const t = await transferFixture();
       // An applied tombstone first (the transfer, with a Hearth advance so the

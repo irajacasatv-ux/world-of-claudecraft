@@ -14,7 +14,7 @@
 // tests/server/freehold_claim.pg.test.ts, which cannot drive these arms
 // deterministically (a lost COMMIT answer, a renewer chunk that throws).
 //
-// Cost: 0.5 s
+// Cost: 0.2 s
 import { readFileSync } from 'node:fs';
 import { describe, expect, it, vi } from 'vitest';
 import { LEASE_TTL_SECONDS } from '../../server/character_lease_db';
@@ -36,6 +36,7 @@ import {
   FREEHOLD_CLAIM_RELEASE_WAIT_SQL,
   FREEHOLD_CLAIM_STILL_HELD_SQL,
   lockFreeholdClaimFenceOnClient,
+  readFreeholdClaimReleasesOnClient,
 } from '../../server/freehold_claim_db';
 import { readClaimedLoginDurables } from '../../server/freehold_claim_login';
 import {
@@ -205,6 +206,70 @@ describe('runFreeholdTransaction', () => {
       signal: new AbortController().signal,
     });
     expect(live.counts()).toEqual({ connects: 1, releases: 1 });
+  });
+
+  it('bounds only the CHECKOUT by a checkoutSignal: a parked one is cut and its late client handed back once, a running transaction never', async () => {
+    // Spent: refused before it asks the pool, like a spent signal.
+    const spentPool = fakePool();
+    const reason = new Error('pass deadline spent');
+    await expect(
+      runFreeholdTransaction(spentPool.pool, BOUNDS, async () => 1, {
+        checkoutSignal: AbortSignal.abort(reason),
+      }),
+    ).rejects.toBe(reason);
+    expect(spentPool.counts()).toEqual({ connects: 0, releases: 0 });
+    // Parked: the abort ends the wait, and the client that arrives later goes
+    // straight back, exactly once, carrying no statement.
+    const base = fakePool();
+    let arrive = () => {};
+    const parked = {
+      connect: () =>
+        new Promise((resolve) => {
+          arrive = () => resolve(base.pool.connect());
+        }),
+    } as unknown as FreeholdTxPool;
+    const cut = new AbortController();
+    const waiting = runFreeholdTransaction(parked, BOUNDS, async () => 1, {
+      checkoutSignal: cut.signal,
+    }).catch((error: unknown) => error);
+    cut.abort(reason);
+    expect(await waiting).toBe(reason);
+    arrive();
+    for (let i = 0; i < 20; i++) await Promise.resolve();
+    expect(base.counts()).toEqual({ connects: 1, releases: 1 });
+    expect(base.statements).toEqual([]);
+    // Running: an abort after the checkout is never handed to the transaction,
+    // so the statement answers and COMMIT lands.
+    const running = new AbortController();
+    const live = fakePool();
+    const out = await runFreeholdTransaction(
+      live.pool,
+      BOUNDS,
+      async (tx) => {
+        running.abort(reason);
+        await tx.query('SELECT 1');
+        return 'landed';
+      },
+      { checkoutSignal: running.signal },
+    );
+    expect(out).toBe('landed');
+    expect(live.texts().slice(1)).toEqual(['SELECT 1', 'COMMIT']);
+    expect(live.counts()).toEqual({ connects: 1, releases: 1 });
+    // Control: the same abort handed in as `signal` cuts the running statement.
+    const cutRun = new AbortController();
+    const control = fakePool();
+    const err = await runFreeholdTransaction(
+      control.pool,
+      BOUNDS,
+      async (tx) => {
+        cutRun.abort(reason);
+        await tx.query('SELECT 1');
+        return 'landed';
+      },
+      { signal: cutRun.signal },
+    ).catch((error: unknown) => error);
+    expect(err).toBeInstanceOf(DbTransactionAborted);
+    expect(control.texts()).not.toContain('COMMIT');
   });
 
   it('sends no ROLLBACK after a COMMIT that answered ROLLBACK or lost its answer', async () => {
@@ -380,6 +445,34 @@ describe('the housing hook', () => {
     expect(() => createFreeholdSaveHook({ ...REQUEST, accountIds: [8] })).toThrow(
       /declared account participant/,
     );
+  });
+
+  it('refuses each undeclared participant on its own: the Hearth alone, then a plot write alone', () => {
+    // Every other participant declared, so each refusal can only come from its
+    // own check.
+    expect(() =>
+      createFreeholdSaveHook({
+        ...REQUEST,
+        accountIds: [7],
+        hearth: { accountId: 8, cooldownMs: 60_000 },
+      }),
+    ).toThrow(/Hearth account must be a declared account participant/);
+    expect(() =>
+      createFreeholdSaveHook({
+        ...REQUEST,
+        accountIds: [7],
+        hearth: null,
+        plots: [{ ...REQUEST.plots[0], upsert: { ...REQUEST.plots[0].upsert, accountId: 8 } }],
+      }),
+    ).toThrow(/plot write account must be a declared account participant/);
+    // Control: the same request with everything declared builds.
+    expect(() =>
+      createFreeholdSaveHook({
+        ...REQUEST,
+        accountIds: [7, 8],
+        hearth: { accountId: 8, cooldownMs: 1 },
+      }),
+    ).not.toThrow();
   });
 
   it('refuses an operation whose account is not a declared participant, before any SQL', () => {
@@ -1052,6 +1145,35 @@ describe('the claim renewer', () => {
     expect(registry.forPlot('plot:zzzz')).toBeUndefined();
   });
 
+  it('starts the next pass at the abandoned chunk wherever the deadline fell, not one chunk later', async () => {
+    // The deadline lands after the SECOND chunk, so the chunk the next pass
+    // must open with is the third: one chunk later than the last pass would be
+    // the second, the plot the pass already renewed.
+    const registry = createFreeholdClaimRegistry();
+    for (let i = 0; i < 3 * FREEHOLD_CLAIM_RENEW_CHUNK + 1; i++) {
+      registry.record(claim(pad(i), i + 1));
+    }
+    let now = 1_000;
+    let renewCalls = 0;
+    const f = fakePool([
+      {
+        match: (t) => t.includes('SET heartbeat_at'),
+        answer: (v) => {
+          renewCalls++;
+          if (renewCalls === 2) now += FREEHOLD_CLAIM_RENEW_PASS_DEADLINE_MS;
+          return ((v ?? [])[2] as string[]).map((plot_id) => ({ plot_id }));
+        },
+      },
+    ]);
+    const deps = { ...renewDeps(registry, f.pool), nowMs: () => now };
+    const renews = () => f.statements.filter((s) => s.text.includes('SET heartbeat_at'));
+    await renewFreeholdClaims(deps);
+    expect(renews().map(firstIdOf)).toEqual([pad(0), pad(256)]);
+    expect(registry.counters.renewChunksAbandoned).toBe(2);
+    await renewFreeholdClaims(deps);
+    expect(renews().slice(2).map(firstIdOf)).toEqual([pad(512), pad(768), pad(0), pad(256)]);
+  });
+
   it('starts each full pass one chunk later than the last, so no chunk is always last', async () => {
     const registry = createFreeholdClaimRegistry();
     for (let i = 0; i < 2 * FREEHOLD_CLAIM_RENEW_CHUNK + 1; i++) {
@@ -1162,11 +1284,15 @@ describe('the claim renewer', () => {
       await renewFreeholdClaims(renewDeps(registry, f.pool));
       expect(timeout).toHaveBeenCalledTimes(1);
       expect(timeout).toHaveBeenCalledWith(FREEHOLD_CLAIM_RENEW_PASS_DEADLINE_MS);
+      // A supplied deadline is the one the signal is minted from.
+      await renewFreeholdClaims({ ...renewDeps(registry, f.pool), passDeadlineMs: 1_234 });
+      expect(timeout).toHaveBeenCalledTimes(2);
+      expect(timeout).toHaveBeenLastCalledWith(1_234);
       const seam = vi.fn(() => new AbortController().signal);
       await renewFreeholdClaims({ ...renewDeps(registry, f.pool), deadlineSignal: seam });
       expect(seam).toHaveBeenCalledTimes(1);
-      expect(timeout).toHaveBeenCalledTimes(1);
-      expect(registry.counters).toMatchObject({ renewPasses: 2, renewed: 2 });
+      expect(timeout).toHaveBeenCalledTimes(2);
+      expect(registry.counters).toMatchObject({ renewPasses: 3, renewed: 3 });
     } finally {
       timeout.mockRestore();
     }
@@ -1204,57 +1330,69 @@ describe('the claim renewer', () => {
     for (let i = 0; i < 20; i++) await Promise.resolve();
   };
 
-  it('cuts a chunk whose checkout hangs at the pass deadline, hands its late client back once, and frees the next pass', async () => {
-    const registry = createFreeholdClaimRegistry();
-    for (let i = 0; i < FREEHOLD_CLAIM_RENEW_CHUNK + 1; i++) registry.record(claim(pad(i), i + 1));
-    const f = fakePool([renewAll]);
+  /** `base`'s checkouts, except that checkout number `n` arrives only when the
+   *  suite calls arrive(); `parked` settles once it is asked for. No timer. */
+  const parkingPool = (base: FreeholdTxPool, n: number) => {
     let checkouts = 0;
     let asked = () => {};
     const parked = new Promise<void>((resolve) => {
       asked = resolve;
     });
     let arrive = () => {};
-    // The first checkout arrives only when the suite says so, and nowMs never
-    // moves: only the pass deadline's own signal, aborted by hand, can end that
-    // chunk or stop the next one starting.
     const pool = {
       connect() {
         checkouts++;
-        if (checkouts > 1) return f.pool.connect();
+        if (checkouts !== n) return base.connect();
         asked();
         return new Promise((resolve) => {
-          arrive = () => resolve(f.pool.connect());
+          arrive = () => resolve(base.connect());
         });
       },
     } as unknown as FreeholdTxPool;
+    return { pool, parked, arrive: () => arrive(), checkouts: () => checkouts };
+  };
+  const deadlineWarn = (chunks: number) =>
+    `freehold claim renew pass hit its ${FREEHOLD_CLAIM_RENEW_PASS_DEADLINE_MS} ms deadline; ${chunks} chunks wait for the next pass`;
+
+  it('cuts a chunk whose checkout hangs at the pass deadline, hands its late client back once, and frees the next pass', async () => {
+    const registry = createFreeholdClaimRegistry();
+    for (let i = 0; i < FREEHOLD_CLAIM_RENEW_CHUNK + 1; i++) registry.record(claim(pad(i), i + 1));
+    const f = fakePool([renewAll]);
+    // nowMs never moves: only the pass deadline's own signal, aborted by hand,
+    // can end the parked chunk or stop the next one starting.
+    const parking = parkingPool(f.pool, 1);
     const warn = vi.fn();
     const deadline = new AbortController();
-    const deps = { ...renewDeps(registry, pool), warn, deadlineSignal: () => deadline.signal };
+    const deps = {
+      ...renewDeps(registry, parking.pool),
+      warn,
+      deadlineSignal: () => deadline.signal,
+    };
     const pass = renewFreeholdClaims(deps);
-    await parked;
+    await parking.parked;
     deadline.abort();
     await pass;
-    expect(checkouts).toBe(1);
+    expect(parking.checkouts()).toBe(1);
     expect(registry.counters).toMatchObject({
       renewed: 0,
-      // The hung chunk, cut in flight, and the one the deadline left unstarted.
+      // The hung chunk, cut in flight, and the one the deadline left unstarted:
+      // both abandoned, the cut one included.
       missedHeartbeats: FREEHOLD_CLAIM_RENEW_CHUNK + 1,
-      renewChunksAbandoned: 1,
+      renewChunksAbandoned: 2,
       lost: 0,
       renewPasses: 1,
     });
     expect(registry.count()).toBe(FREEHOLD_CLAIM_RENEW_CHUNK + 1);
-    expect(warn).toHaveBeenCalledWith(
-      `freehold claim renew pass hit its ${FREEHOLD_CLAIM_RENEW_PASS_DEADLINE_MS} ms deadline; 1 chunks wait for the next pass`,
-    );
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(warn).toHaveBeenCalledWith(deadlineWarn(2));
     // The cut checkout's client, arriving late, goes straight back to the pool
     // exactly once and never carries a statement.
-    arrive();
+    parking.arrive();
     await drain();
     expect(f.counts()).toEqual({ connects: 1, releases: 1 });
     expect(f.statements).toEqual([]);
     // The single-flight flag is free again: the next trigger runs a whole pass
-    // (a fresh deadline, minted per pass).
+    // (a fresh deadline, minted per pass), STARTING at the cut chunk.
     deps.deadlineSignal = () => new AbortController().signal;
     await renewFreeholdClaims(deps);
     expect(registry.counters).toMatchObject({
@@ -1262,6 +1400,108 @@ describe('the claim renewer', () => {
       renewPassesSkipped: 0,
       renewed: FREEHOLD_CLAIM_RENEW_CHUNK + 1,
     });
+    const renews = f.statements.filter((s) => s.text.includes('SET heartbeat_at'));
+    expect(renews.map(firstIdOf)).toEqual([pad(0), pad(256)]);
+  });
+
+  it('cuts a release chunk whose checkout is parked at the pass deadline: claims kept, no re-read, the late client back once', async () => {
+    const registry = createFreeholdClaimRegistry();
+    for (let i = 0; i < FREEHOLD_CLAIM_RENEW_CHUNK + 1; i++) registry.record(claim(pad(i), i + 1));
+    const f = fakePool([releaseRule(() => new Error('never sent'))]);
+    const parking = parkingPool(f.pool, 1);
+    const warn = vi.fn();
+    const deadline = new AbortController();
+    const pass = renewFreeholdClaims({
+      ...renewDeps(registry, parking.pool),
+      wanted: () => false,
+      warn,
+      deadlineSignal: () => deadline.signal,
+    });
+    await parking.parked;
+    deadline.abort();
+    await expect(pass).resolves.toBeUndefined();
+    // No statement went out, so nothing can have landed: every claim stays,
+    // the re-read is never asked for, and the second chunk never starts.
+    expect(registry.count()).toBe(FREEHOLD_CLAIM_RENEW_CHUNK + 1);
+    expect(parking.checkouts()).toBe(1);
+    expect(registry.counters).toMatchObject({ released: 0, renewChunksAbandoned: 2 });
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(warn).toHaveBeenCalledWith(deadlineWarn(2));
+    parking.arrive();
+    await drain();
+    expect(f.counts()).toEqual({ connects: 1, releases: 1 });
+    expect(f.statements).toEqual([]);
+  });
+
+  it("cuts a thrown release's RE-READ whose checkout is parked at the pass deadline: claims kept, the late client back once", async () => {
+    const registry = createFreeholdClaimRegistry();
+    registry.record(claim('plot:a', 1));
+    registry.record(claim('plot:b', 2));
+    const f = fakePool([
+      releaseRule(() => new Error('Connection terminated unexpectedly')),
+      // Had the re-read run, it would have dropped both.
+      { match: (t) => t.startsWith('SELECT plot_id, holder'), answer: () => [] },
+    ]);
+    const parking = parkingPool(f.pool, 2);
+    const warn = vi.fn();
+    const deadline = new AbortController();
+    const pass = renewFreeholdClaims({
+      ...renewDeps(registry, parking.pool),
+      wanted: () => false,
+      warn,
+      deadlineSignal: () => deadline.signal,
+    });
+    await parking.parked;
+    deadline.abort();
+    await expect(pass).resolves.toBeUndefined();
+    expect(registry.all().map((c) => c.plotId)).toEqual(['plot:a', 'plot:b']);
+    expect(registry.counters).toMatchObject({ released: 0, renewChunksAbandoned: 1 });
+    expect(warn).toHaveBeenCalledWith(deadlineWarn(1));
+    // Only the release's own client so far; the parked one hands back once.
+    expect(f.counts()).toEqual({ connects: 1, releases: 1 });
+    const before = f.texts();
+    parking.arrive();
+    await drain();
+    expect(f.counts()).toEqual({ connects: 2, releases: 2 });
+    expect(f.texts()).toEqual(before);
+    expect(before.some((t) => t.startsWith('SELECT plot_id, holder'))).toBe(false);
+  });
+
+  it('refuses a re-read on the CLOCK alone: nowMs past the deadline inside the release answer, with a signal that never aborts', async () => {
+    for (const arm of ['completed', 'thrown'] as const) {
+      const registry = createFreeholdClaimRegistry();
+      registry.record(claim('plot:a', 1));
+      registry.record(claim('plot:b', 2));
+      let now = 0;
+      const f = fakePool([
+        releaseRule(() => {
+          now += FREEHOLD_CLAIM_RENEW_PASS_DEADLINE_MS;
+          return arm === 'thrown'
+            ? new Error('Connection terminated unexpectedly')
+            : [{ plot_id: 'plot:a' }];
+        }),
+        { match: (t) => t.startsWith('SELECT plot_id, holder'), answer: () => [] },
+      ]);
+      await renewFreeholdClaims({
+        ...renewDeps(registry, f.pool),
+        wanted: () => false,
+        nowMs: () => now,
+        deadlineSignal: () => new AbortController().signal,
+      });
+      expect(f.counts().connects, arm).toBe(1);
+      expect(
+        f.texts().some((t) => t.startsWith('SELECT plot_id, holder')),
+        arm,
+      ).toBe(false);
+      expect(
+        registry.all().map((c) => c.plotId),
+        arm,
+      ).toEqual(arm === 'thrown' ? ['plot:a', 'plot:b'] : ['plot:b']);
+      expect(registry.counters, arm).toMatchObject({
+        released: arm === 'thrown' ? 0 : 1,
+        renewChunksAbandoned: 1,
+      });
+    }
   });
 
   const releaseRule = (answer: (ids: string[]) => Row[] | Error): Rule => ({
@@ -1376,12 +1616,79 @@ describe('the claim renewer', () => {
  WHERE plot_id = ANY($2::text[])
    AND holder IN ($1::text, $1::text || '#released')
  ORDER BY plot_id`;
+    const wait = `${read}\n   FOR SHARE`;
     expect(FREEHOLD_CLAIM_RELEASE_READ_SQL).toBe(read);
-    expect(FREEHOLD_CLAIM_RELEASE_WAIT_SQL).toBe(`${read}\n   FOR SHARE`);
-    // Negative control: FOR KEY SHARE (which the release's NO KEY UPDATE never
-    // blocks, so the read would not wait) and the lock-free form are refused.
-    expect(FREEHOLD_CLAIM_RELEASE_WAIT_SQL).not.toBe(`${read}\n   FOR KEY SHARE`);
-    expect(FREEHOLD_CLAIM_RELEASE_WAIT_SQL).not.toBe(read);
+    expect(FREEHOLD_CLAIM_RELEASE_WAIT_SQL).toBe(wait);
+    // The mutants this pin exists for each really differ from the pinned
+    // text, so the toBe above refuses them: FOR KEY SHARE (which the release's
+    // NO KEY UPDATE never blocks, so the read would not wait) and the lock-free
+    // form.
+    for (const mutant of [wait.replace('FOR SHARE', 'FOR KEY SHARE'), wait.replace(/\n.*$/, '')]) {
+      expect(mutant).not.toBe(wait);
+    }
+  });
+
+  it('reads release rows for the asked ids only, from typed fields only, and sends nothing for none or a bad id', async () => {
+    const empty = recordingTx(() => []);
+    const none = await readFreeholdClaimReleasesOnClient(
+      empty.tx as FreeholdQueryable,
+      HOLDER,
+      [],
+      { wait: true },
+    );
+    expect(none).toEqual(new Map());
+    expect(empty.seen).toEqual([]);
+    // A bad holder (empty, or past the 119 characters that leave the release
+    // suffix room) or a bad plot id throws before any statement.
+    const bad: [string, string[]][] = [
+      ['', ['plot:a']],
+      ['h'.repeat(120), ['plot:a']],
+      [HOLDER, ['plot a']],
+      [HOLDER, ['plot:a', '']],
+    ];
+    for (const [holder, ids] of bad) {
+      const refused = recordingTx(() => []);
+      await expect(
+        readFreeholdClaimReleasesOnClient(refused.tx as FreeholdQueryable, holder, ids, {
+          wait: false,
+        }),
+        `${holder.length}:${ids.join(',')}`,
+      ).rejects.toThrow(RangeError);
+      expect(refused.seen).toEqual([]);
+    }
+    const asked = ['plot:a', 'plot:b', 'plot:c', 'plot:d'];
+    for (const wait of [false, true]) {
+      const { tx, seen } = recordingTx(() => [
+        // Never asked: absent from the answer.
+        readRow('plot:z', HOLDER, true),
+        // A non-string id: absent.
+        { plot_id: 42, holder: HOLDER, live: true },
+        readRow('plot:a', HOLDER, true),
+        // A non-string holder, or a liveness that is not a boolean, proves
+        // nothing: answered gone, never held.
+        { plot_id: 'plot:b', holder: 42, live: true },
+        { plot_id: 'plot:c', holder: HOLDER, live: 'true' },
+        readRow('plot:d', RELEASED, false),
+      ]);
+      const readings = await readFreeholdClaimReleasesOnClient(
+        tx as FreeholdQueryable,
+        HOLDER,
+        asked,
+        { wait },
+      );
+      expect([...readings], String(wait)).toEqual([
+        ['plot:a', 'held'],
+        ['plot:b', 'gone'],
+        ['plot:c', 'gone'],
+        ['plot:d', 'released'],
+      ]);
+      expect(seen, String(wait)).toEqual([
+        {
+          text: wait ? FREEHOLD_CLAIM_RELEASE_WAIT_SQL : FREEHOLD_CLAIM_RELEASE_READ_SQL,
+          values: [HOLDER, asked],
+        },
+      ]);
+    }
   });
 
   it('drops an EXPIRED unwanted claim of ours once, uncounted, instead of releasing it every pass', async () => {
@@ -1543,13 +1850,14 @@ describe('the claim renewer', () => {
       vi.useRealTimers();
     }
     // ONE checkout in the whole pass: the thrown release's re-read was refused
-    // at its checkout and the second chunk never started.
+    // at its checkout and the second chunk never started. Both are abandoned:
+    // the first left undecided by the refused re-read, the second unstarted.
     expect(seen.connects).toBe(1);
     expect(seen.releases).toBe(1);
     expect(seen.statements.filter((t) => t.includes("holder || '#released'"))).toHaveLength(1);
     expect(registry.counters).toMatchObject({
       released: 0,
-      renewChunksAbandoned: 1,
+      renewChunksAbandoned: 2,
       renewPasses: 1,
     });
     expect(registry.count()).toBe(FREEHOLD_CLAIM_RENEW_CHUNK + 1);
@@ -1633,6 +1941,117 @@ describe('the claim renewer', () => {
           expect(registry.forPlot('plot:a'), label).toBeUndefined();
         }
       }
+    }
+  });
+
+  it('drops a newer claim at the SAME generation once our release landed: raced, counted, reported lost; a higher generation stays', async () => {
+    // A re-login on this realm re-stamps this holder's own row and KEEPS the
+    // generation; if its acquire ran in the database before our release
+    // statement, the release renamed the row the login re-stamped, so the
+    // newer claim is dead. A takeover after our release carries a higher
+    // generation and is live.
+    for (const arm of ['completed', 'thrown'] as const) {
+      for (const generation of ['1', '2']) {
+        const label = `${arm}, generation ${generation}`;
+        const registry = createFreeholdClaimRegistry();
+        registry.record(claim('plot:a', 1));
+        const newer = { plotId: 'plot:a', accountId: 1, generation, acquiredAtMs: 5 };
+        const relogin = () => registry.record(newer);
+        const rules: Rule[] =
+          arm === 'completed'
+            ? [
+                releaseRule((ids) => {
+                  relogin();
+                  return ids.map((plot_id) => ({ plot_id }));
+                }),
+              ]
+            : [
+                releaseRule(() => {
+                  relogin();
+                  return new Error('Connection terminated unexpectedly');
+                }),
+                releaseReadRule(() => [readRow('plot:a', RELEASED, false)]),
+              ];
+        const onLost = vi.fn();
+        await renewFreeholdClaims({
+          ...renewDeps(registry, fakePool(rules).pool),
+          wanted: () => false,
+          onLost,
+        });
+        if (generation === '1') {
+          expect(registry.forPlot('plot:a'), label).toBeUndefined();
+          expect(registry.forAccount(1), label).toBeUndefined();
+          expect(registry.counters, label).toMatchObject({ releaseRaced: 1, released: 0, lost: 0 });
+          expect(onLost, label).toHaveBeenCalledTimes(1);
+          expect(onLost, label).toHaveBeenCalledWith(newer);
+        } else {
+          expect(registry.forPlot('plot:a'), label).toBe(newer);
+          expect(registry.counters, label).toMatchObject({ releaseRaced: 0, released: 0 });
+          expect(onLost, label).not.toHaveBeenCalled();
+        }
+      }
+    }
+  });
+
+  it('re-checks each release claim right before its statement: one in flight or replaced since the snapshot is left out', async () => {
+    for (const arm of ['completed', 'thrown', 'control'] as const) {
+      const registry = createFreeholdClaimRegistry();
+      for (const [i, plotId] of ['plot:a', 'plot:b', 'plot:c'].entries()) {
+        registry.record(claim(plotId, i + 1));
+      }
+      const newer = { plotId: 'plot:b', accountId: 2, generation: '1', acquiredAtMs: 5 };
+      const f = fakePool([
+        releaseRule((ids) =>
+          arm === 'thrown'
+            ? new Error('Connection terminated unexpectedly')
+            : ids.map((plot_id) => ({ plot_id })),
+        ),
+        releaseReadRule(() => [readRow('plot:c', RELEASED, false)]),
+      ]);
+      // AFTER the snapshot and the checkout, at the release's BEGIN: a login
+      // marks plot:a in flight and another records a newer claim for plot:b.
+      // Only a check made in the callback itself can see either.
+      let hooked = arm === 'control';
+      let letGo = () => {};
+      const pool = {
+        async connect() {
+          const client = await f.pool.connect();
+          const wrapped = {
+            query(text: string, values?: unknown[]) {
+              if (!hooked && text.startsWith('BEGIN')) {
+                hooked = true;
+                letGo = registry.holdInFlight('plot:a');
+                registry.record(newer);
+              }
+              return client.query(text, values);
+            },
+            release: (error?: Error | boolean) => client.release(error),
+            on: () => wrapped,
+            removeListener: () => wrapped,
+          };
+          return wrapped;
+        },
+      } as unknown as FreeholdTxPool;
+      await renewFreeholdClaims({ ...renewDeps(registry, pool), wanted: () => false });
+      const release = f.statements.find((s) => s.text.includes("holder || '#released'"));
+      const reads = f.statements.filter((s) => isReleaseRead(s.text));
+      if (arm === 'control') {
+        expect(release?.values?.[1], arm).toEqual(['plot:a', 'plot:b', 'plot:c']);
+        expect(registry.count(), arm).toBe(0);
+        continue;
+      }
+      expect(release?.values?.[1], arm).toEqual(['plot:c']);
+      // Only what went out is ever re-read.
+      expect(
+        reads.map((s) => s.values),
+        arm,
+      ).toEqual(arm === 'thrown' ? [[HOLDER, ['plot:c']]] : []);
+      expect(registry.forPlot('plot:a'), arm).toEqual(claim('plot:a', 1));
+      expect(registry.forPlot('plot:b'), arm).toBe(newer);
+      expect(registry.forPlot('plot:c'), arm).toBeUndefined();
+      expect(registry.counters, arm).toMatchObject({ released: 1, releaseRaced: 0, lost: 0 });
+      letGo();
+      expect(registry.inFlight('plot:a'), arm).toBe(false);
     }
   });
 
@@ -1870,6 +2289,56 @@ describe('the fenced plot writer', () => {
     expect(registry.forPlot('plot:new')?.generation).toBe('1');
   });
 
+  it('rolls the generation-1 claim back when the plot insert loses its race: nothing recorded', async () => {
+    const { write, registry, f } = writerOn([
+      {
+        match: (t) => t.includes('INSERT INTO freehold_plot_claims'),
+        answer: () => [{ plot_id: 'plot:new' }],
+      },
+      // The plot row was inserted first by someone else: no row comes back,
+      // and the diagnosis finds it at revision 5.
+      { match: (t) => t.startsWith('INSERT INTO account_freeholds'), answer: () => [] },
+      { match: (t) => t.startsWith('SELECT durable_rev'), answer: () => [{ durable_rev: '5' }] },
+    ]);
+    const result = await write({ ...UPSERT('plot:new'), expectedDurableRev: null });
+    expect(result).toEqual({ kind: 'stale', durableRev: '5' });
+    // The claim insert beside it rolled back, so no claim names a row this
+    // process did not write, and the registry never learned one.
+    expect(f.texts()).toContain('ROLLBACK');
+    expect(f.texts()).not.toContain('COMMIT');
+    expect(registry.forPlot('plot:new')).toBeUndefined();
+  });
+
+  it('refuses a first insert whose claim row carries ANOTHER token than its pending one: never adopted', async () => {
+    const { write, registry, f } = writerOn([
+      // The minted id is already claimed, so the arm asks the token.
+      { match: (t) => t.includes('INSERT INTO freehold_plot_claims'), answer: () => [] },
+      {
+        match: (t) => t.startsWith('SELECT write_token'),
+        answer: () => [{ write_token: 'b'.repeat(32) }],
+      },
+      { match: (t) => t.startsWith('SELECT durable_rev'), answer: () => [{ durable_rev: '1' }] },
+      {
+        match: (t) => t.startsWith('WITH fence'),
+        answer: () => [{ fenced: 1, durable_rev: '2', stamped: 1 }],
+      },
+    ]);
+    registry.notePending({
+      plotId: 'plot:new',
+      accountId: 7,
+      writeToken: 'a'.repeat(32),
+      notedAtMs: 0,
+    });
+    const result = await write({ ...UPSERT('plot:new'), expectedDurableRev: null });
+    expect(result).toEqual({
+      kind: 'conflict',
+      detail: 'the minted plot identity is already claimed',
+    });
+    expect(registry.counters.selfAdopted).toBe(0);
+    expect(f.texts().some((t) => t.startsWith('WITH fence'))).toBe(false);
+    expect(registry.forPlot('plot:new')).toBeUndefined();
+  });
+
   /** A first insert whose COMMIT answer is lost, a renew pass, then the
    *  store's retry of the same insert, which finds its own claim row. */
   async function ambiguousFirstInsert(ownerWanted: boolean) {
@@ -1961,18 +2430,16 @@ describe('the fenced plot writer', () => {
  WHERE plot_id = $1 AND holder = $2 AND generation = $3::bigint
    FOR NO KEY UPDATE`;
     expect(FREEHOLD_CLAIM_READ_FENCE_SQL).toBe(pinned);
-    // Negative control: each mutant this pin exists for is refused by it (the
-    // lock removed; weakened to KEY SHARE, which a takeover's NO KEY UPDATE
-    // never waits on; the generation dropped from the fence).
+    // The mutants this pin exists for each really differ from the pinned text,
+    // so the toBe above refuses them (the lock removed; weakened to KEY SHARE,
+    // which a takeover's NO KEY UPDATE never waits on; the generation dropped
+    // from the fence).
     const mutants = [
       pinned.replace('\n   FOR NO KEY UPDATE', ''),
       pinned.replace('FOR NO KEY UPDATE', 'FOR KEY SHARE'),
       pinned.replace(' AND generation = $3::bigint', ''),
     ];
-    for (const mutant of mutants) {
-      expect(mutant).not.toBe(pinned);
-      expect(FREEHOLD_CLAIM_READ_FENCE_SQL).not.toBe(mutant);
-    }
+    for (const mutant of mutants) expect(mutant).not.toBe(pinned);
     const { seen, tx } = recordingTx((text) =>
       text === FREEHOLD_CLAIM_READ_FENCE_SQL ? [{ plot_id: 'plot:a' }] : [],
     );
@@ -2151,6 +2618,92 @@ describe('the claimed login read', () => {
     pendingOn(busy.registry, 'plot:a');
     expect((await readClaimedLoginDurables(busy.d, 7)).row.kind).toBe('claim_busy');
     expect(busy.registry.pendingToken('plot:a')).toBe('a'.repeat(32));
+  });
+
+  it('holds the plot IN FLIGHT from just before its acquire until after it records, and lets go on every ending', async () => {
+    // A renew pass about to release this plot's older claim re-checks this
+    // mark right before its statement, so it never renames the row this
+    // acquire re-stamps.
+    let watched: ReturnType<typeof createFreeholdClaimRegistry> | undefined;
+    const marks: string[] = [];
+    const mark = (at: string) => marks.push(`${at} ${watched?.inFlight('plot:a')}`);
+    const t = deps([
+      {
+        match: (q) => q.startsWith('SELECT plot_id FROM account_freeholds'),
+        answer: () => {
+          mark('plot id');
+          return [{ plot_id: 'plot:a' }];
+        },
+      },
+      {
+        match: (q) => q.startsWith('SELECT 1 FROM freehold_plot_claims'),
+        answer: () => {
+          mark('busy check');
+          return [];
+        },
+      },
+      {
+        match: (q) => q.startsWith('WITH t AS'),
+        answer: () => {
+          mark('acquire');
+          return [{ generation: '1', inserted: false, fresh: false }];
+        },
+      },
+    ]);
+    watched = t.registry;
+    t.readRow.mockImplementation(async () => {
+      mark('row');
+      return { kind: 'absent' as const };
+    });
+    t.d.onClaimed.mockImplementation(() => mark('record'));
+    await readClaimedLoginDurables(t.d, 7);
+    expect(marks).toEqual([
+      'plot id false',
+      'busy check true',
+      'acquire true',
+      'row true',
+      'record true',
+    ]);
+    expect(t.registry.forPlot('plot:a')).toBeDefined();
+    expect(t.registry.inFlight('plot:a')).toBe(false);
+    // Every other ending lets go too: busy at the pre-check, contention on the
+    // acquire, a failed row read, an unproved COMMIT, the clock-fault retry.
+    const endings: { name: string; t: ReturnType<typeof deps> }[] = [
+      {
+        name: 'busy',
+        t: deps([
+          plotRow,
+          {
+            match: (q) => q.startsWith('SELECT 1 FROM freehold_plot_claims'),
+            answer: () => [{ x: 1 }],
+          },
+        ]),
+      },
+      {
+        name: 'contended',
+        t: deps([
+          plotRow,
+          { match: (q) => q.startsWith('WITH t AS'), answer: () => sqlError('55P03') },
+        ]),
+      },
+      { name: 'row read', t: deps([plotRow, acquireRule]) },
+      { name: 'unproved commit', t: deps([]) },
+      {
+        name: 'clock fault',
+        t: deps([plotRow, acquireRule], async () => {
+          throw sqlError('42P01');
+        }),
+      },
+    ];
+    endings[2].t.readRow.mockRejectedValueOnce(sqlError('XX000'));
+    endings[3].t.d.pool = fakePool([plotRow, acquireRule], { commitTag: 'ROLLBACK' }).pool;
+    for (const ending of endings) {
+      await readClaimedLoginDurables(ending.t.d, 7).catch(() => undefined);
+      expect(ending.t.registry.inFlight('plot:a'), ending.name).toBe(false);
+      expect(ending.t.registry.forPlot('plot:a') !== undefined, ending.name).toBe(
+        ending.name === 'clock fault',
+      );
+    }
   });
 
   /** Every statement answers at once, except that checkout number
@@ -2884,8 +3437,11 @@ describe('the Hearth use precheck the re-dispatch replays', () => {
    *  one keyed session, a loaded entry with no durable row, and a save that
    *  runs the housing hook (a committed advance) or never reaches it (a deny
    *  ticket). Each precheck is set on the live session once the trip is
-   *  running, as a jail, a spectate or a dark flip would land in its window. */
-  type HostGate = 'jailed' | 'dark' | 'spectating' | 'none';
+   *  running, as a jail, a spectate or a dark flip would land in its window.
+   *  'vanished' keeps the session for the trip's own same-session check (the
+   *  first lookup after the window) and loses it for the re-dispatch's (the
+   *  second). */
+  type HostGate = 'jailed' | 'dark' | 'spectating' | 'vanished' | 'none';
   type HostDeps = Parameters<typeof createGameFreeholdHearthTrips>[0];
   async function hostTrip(gate: HostGate, advance: boolean) {
     vi.stubEnv('FREEHOLDS_ENABLED', '1');
@@ -2905,6 +3461,8 @@ describe('the Hearth use precheck the re-dispatch replays', () => {
       const window = new Promise<void>((r) => {
         release = r;
       });
+      let released = false;
+      let lookupsAfterWindow = 0;
       const ctx = {
         freeholdsEnabled: true,
         freeholdKeyReadyAtMs: new Map<string, number>(),
@@ -2915,7 +3473,10 @@ describe('the Hearth use precheck the re-dispatch replays', () => {
           ctx: ctx as unknown as ReturnType<HostDeps['sim']>['ctx'],
           useItem: (itemId: string, pid: number) => used.push([itemId, pid]),
         }),
-        sessionForPid: (pid) => (pid === session.pid ? session : undefined),
+        sessionForPid: (pid) => {
+          if (released && gate === 'vanished' && ++lookupsAfterWindow > 1) return undefined;
+          return pid === session.pid ? session : undefined;
+        },
         store: {
           authority: () => ({ loaded: true, blocked: false, plotId: 'plot:a', durableRev: null }),
         },
@@ -2937,8 +3498,12 @@ describe('the Hearth use precheck the re-dispatch replays', () => {
       if (gate === 'jailed') session.jailed = { returnPos: { x: 0, z: 0 }, returnFacing: 0 };
       if (gate === 'spectating') session.spectating = { characterId: 11 };
       if (gate === 'dark') vi.stubEnv('FREEHOLDS_ENABLED', '0');
+      released = true;
       release();
-      await vi.waitFor(() => expect(trips.inFlight(7)).toBe(false));
+      // The fakes settle on microtasks alone, so a bounded drain replaces any
+      // real-time poll; the rest of the trip after its finally is synchronous.
+      for (let i = 0; i < 100 && trips.inFlight(7); i++) await Promise.resolve();
+      expect(trips.inFlight(7), 'the trip settled inside the microtask drain').toBe(false);
       return {
         counters: { ...trips.counters },
         denied,
@@ -2999,6 +3564,33 @@ describe('the Hearth use precheck the re-dispatch replays', () => {
     expect(r.warned).toEqual([
       'freehold hearth trip committed but the sim refused its re-dispatch',
     ]);
+  });
+
+  it('counts a session gone at the re-dispatch after a COMMITTED advance as a realm drop: nothing sent, no warn line', async () => {
+    // Unreachable through run() today (nothing asynchronous sits between its
+    // same-session check and this lookup), so the fake forces it: the sim
+    // never saw the use, so it can never be the sim's refusal.
+    const r = await hostTrip('vanished', true);
+    expect(r.counters).toMatchObject({
+      advanced: 1,
+      abandoned: 0,
+      droppedAfterCommit: 1,
+      refusedAfterCommit: 0,
+    });
+    expect(r.used).toEqual([]);
+    expect(r.denied).toEqual([]);
+    expect(r.warned).toEqual([]);
+    expect(r.readyAtMs).toBe(61_000);
+    // Under a deny ticket the same loss counts nothing.
+    const denied = await hostTrip('vanished', false);
+    expect(denied.counters).toMatchObject({
+      notRun: 1,
+      droppedAfterCommit: 0,
+      refusedAfterCommit: 0,
+    });
+    expect(denied.used).toEqual([]);
+    expect(denied.denied).toEqual([]);
+    expect(denied.warned).toEqual([]);
   });
 });
 
@@ -3206,6 +3798,9 @@ describe('the housing authority boundary', () => {
       "'alter table t add column b int'",
       "'drop trigger g on t'",
       "'CREATE OR REPLACE FUNCTION f() RETURNS trigger'",
+      // Each temporary modifier on its own, so neither spelling is dead.
+      "'CREATE TEMP TABLE t (a int)'",
+      "'create temporary table t (a int)'",
     ]) {
       expect(sqlLiterals(`const q = ${synthetic};`), synthetic).toEqual([synthetic]);
     }

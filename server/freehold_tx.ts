@@ -93,39 +93,51 @@ export function freeholdCommitMayHaveLanded(error: unknown): boolean {
   return !throwProvedRollback(error);
 }
 
-/** A checkout the caller's signal also bounds: an abort that wins the race
+const cancelledReason = (signal: AbortSignal): unknown =>
+  signal.reason ?? new Error('freehold transaction cancelled before its checkout');
+
+/** A checkout every given signal also bounds: an abort that wins the race
  *  releases the client when it eventually arrives, so nothing leaks. */
 async function connectWithin(
   pool: FreeholdTxPool,
-  signal: AbortSignal | undefined,
+  given: readonly (AbortSignal | undefined)[],
 ): Promise<DbTransactionDeadlineClient> {
+  const signals = given.filter((signal): signal is AbortSignal => signal !== undefined);
   // An already-spent signal refuses BEFORE asking the pool, so it never joins
   // the pool's waiter queue (a login whose budget is gone, a renew pass past
   // its deadline).
-  if (signal?.aborted) {
-    throw signal.reason ?? new Error('freehold transaction cancelled before its checkout');
-  }
+  const spent = signals.find((signal) => signal.aborted);
+  if (spent) throw cancelledReason(spent);
   const checkout = pool.connect();
-  if (!signal) return checkout;
+  if (signals.length === 0) return checkout;
   return new Promise<DbTransactionDeadlineClient>((resolve, reject) => {
-    const onAbort = () => {
-      checkout.then(
-        (client) => client.release(),
-        () => {},
-      );
-      reject(signal.reason ?? new Error('freehold transaction cancelled before its checkout'));
+    let settled = false;
+    const detach: (() => void)[] = [];
+    const settle = (): boolean => {
+      if (settled) return false;
+      settled = true;
+      for (const off of detach) off();
+      return true;
     };
-    signal.addEventListener('abort', onAbort, { once: true });
+    for (const signal of signals) {
+      const onAbort = () => {
+        if (!settle()) return;
+        checkout.then(
+          (client) => client.release(),
+          () => {},
+        );
+        reject(cancelledReason(signal));
+      };
+      signal.addEventListener('abort', onAbort, { once: true });
+      detach.push(() => signal.removeEventListener('abort', onAbort));
+    }
     checkout.then(
       (client) => {
-        signal.removeEventListener('abort', onAbort);
         // An abort that won already scheduled this client's release.
-        if (signal.aborted) return;
-        resolve(client);
+        if (settle()) resolve(client);
       },
       (error: unknown) => {
-        signal.removeEventListener('abort', onAbort);
-        reject(error);
+        if (settle()) reject(error);
       },
     );
   });
@@ -136,12 +148,19 @@ export async function runFreeholdTransaction<T>(
   bounds: FreeholdTxBounds,
   run: (tx: FreeholdTxQuery) => Promise<T>,
   opts: {
+    /** Bounds the checkout AND the transaction: an abort while it runs cuts it
+     *  (its socket destroyed; at COMMIT, FreeholdCommitAmbiguous). */
     readonly signal?: AbortSignal;
+    /** Bounds the CHECKOUT only, and is never handed to the transaction: a
+     *  transaction that has its client runs to its own bounds (the renewer's
+     *  release and its re-reads, where a cut COMMIT could hide a landed
+     *  release). */
+    readonly checkoutSignal?: AbortSignal;
     readonly cancelBackend?: (processId: number) => Promise<void>;
   } = {},
 ): Promise<T> {
   const begin = freeholdTxBeginSql(bounds);
-  const client = await connectWithin(pool, opts.signal);
+  const client = await connectWithin(pool, [opts.signal, opts.checkoutSignal]);
   const tx = createDbTransactionDeadline(client, {
     operation: bounds.operation,
     timeoutMs: bounds.wallMs,

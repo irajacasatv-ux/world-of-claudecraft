@@ -394,12 +394,26 @@ pass (one past it is refused before any SQL, so a cut can never strand a landed 
 so a pass ends by the deadline plus at most one 5 s transaction wall, 25 s, under the 30 s
 cadence; a release chunk that THROWS re-reads its ids `FOR SHARE` (the release's UPDATE
 takes FOR NO KEY UPDATE, which FOR SHARE waits out and FOR KEY SHARE would not, P9's
-ruling), waiting out a still-committing release under the chunk's 1 s lock bound (a lock
-timeout keeps the claims for the next pass), and a completed release reads the ids it did
-not return lock-free; both classify each row held (ours and live: kept), released (ours
-with the released suffix: dropped, counted) or gone (another holder, an expired row of
-ours, or no row: dropped, uncounted), and every drop is identity-checked, so a claim a
-login recorded while the pass ran is never dropped), the chunks it leaves unstarted are abandoned and counted and their wanted claims
+ruling), waiting out a still-committing release (the lock timeout applies to EACH lock
+wait, up to 1 s per contended row, capped by the 2 s statement bound and then the 5 s wall;
+a timeout keeps the claims for the next pass, and on a stalled WAL the read's own COMMIT
+most likely ends ambiguous, which keeps them too), and a completed release reads the ids
+it did not return lock-free; both classify each row held (ours and live: kept), released
+(ours with the released suffix: dropped, counted) or gone (another holder, an expired row
+of ours, or no row: dropped, uncounted), and every drop is identity-checked, so a claim a
+login recorded while the pass ran is never dropped. The bound is a CHECKOUT-ONLY signal
+(`checkoutSignal` on `runFreeholdTransaction`), never a cut of a running transaction, and
+a chunk whose checkout it cut counts as abandoned. THE SAME-HOLDER RE-LOGIN RACE (revision
+5, the fourth review of the built code): a login re-acquiring its own plot keeps the
+generation, so a release landing on its fresh claim would leave a dead claim in the
+registry. The login marks the plot IN FLIGHT from just before its acquire until it records
+(or fails), and the release re-checks each claim synchronously inside its transaction,
+immediately before the statement, leaving out any claim no longer the snapshotted one or in
+flight (a release already sent holds its row locks, so a later acquire waits and takes over
+at the next generation, which is correct); for the residual window (an acquire the database
+runs before a release sent first) a landed release on a plot whose registry claim is a
+NEWER object at the SAME generation drops that claim, counts `releaseRaced` and calls
+`onLost`, so the store quiesces at once (R-9); a newer claim at a higher generation stays), the chunks it leaves unstarted are abandoned and counted and their wanted claims
 are missed heartbeats, and the next pass starts where an abandoned one stopped (otherwise one chunk
 later), so a brownout never starves the same tail plots. Renewal outranks release: an
 abandoned pass skips its release chunks. It stays OFF the background gate by decision (the
@@ -913,6 +927,12 @@ merge in a `finally`; N4 the server default pin; N5 the log pin; N6 the 15 route
 - R-7 (revision 5): the verify can hold the background permit and that character's queue
   for its one checkout plus both transaction walls, 5 s + 2 x 30 s = 65 s, beside the save's
   own 65 s wall; it runs only after a lost COMMIT answer, and is counted.
+- R-9 (revision 5): a login acquire that the database executes BEFORE a release statement
+  sent first (the release passed its in-flight re-check, then lost the race on the wire)
+  leaves the re-logged owner's fresh claim released; detection drops it at once
+  (`claim_release_raced`) and the store quiesces that owner until the next login, the R-3
+  class. The window is the release statement's network transit against the login's four
+  round trips before its acquire.
 - R-8 (revision 5, the security review): the soft-delete receipt erase runs once at
   deactivation and has no automatic retry; receipts have no retention story; open intents
   of a deactivated account have no story. None is reachable here (no production kind), and

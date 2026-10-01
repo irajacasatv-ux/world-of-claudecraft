@@ -454,8 +454,14 @@ export const FREEHOLD_CLAIM_RELEASE_READ_SQL = `SELECT plot_id, holder, expires_
  *  the answer is that release's outcome, never the version before it. FOR
  *  SHARE, not FOR KEY SHARE: the release UPDATE holds FOR NO KEY UPDATE, which
  *  conflicts with FOR SHARE and NOT with FOR KEY SHARE (the P9 verify's ruling).
- *  Locked in plot id order, the global order, and bounded by the caller's lock
- *  timeout: a wait that runs it out answers 55P03. */
+ *  Locked in plot id order, the global order. The caller's lock_timeout bounds
+ *  EACH lock wait, not the read: a 256-row read may wait up to 1 s per
+ *  contended row (55P03 when one runs it out), capped by its 2 s statement
+ *  timeout and then the 5 s wall (FREEHOLD_CLAIM_RENEW_BOUNDS). Its own COMMIT
+ *  needs a WAL flush too (the row locks it takes write lock records), so in
+ *  the stalled-WAL case it exists for it most likely ends ambiguous, and the
+ *  renewer then keeps the chunk, which is safe: an unrenewed claim expires on
+ *  its own. */
 export const FREEHOLD_CLAIM_RELEASE_WAIT_SQL = `${FREEHOLD_CLAIM_RELEASE_READ_SQL}
    FOR SHARE`;
 

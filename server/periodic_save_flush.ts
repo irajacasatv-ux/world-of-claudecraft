@@ -70,7 +70,9 @@ export interface PeriodicSaveWrites {
   /** Renew this process's global plot claims the host still wants and release
    *  the rest (server/freehold_claim_registry.ts), on the lease heartbeat's own
    *  cadence and policy, so a crashed holder's claims expire and an idle loaded
-   *  plot's do not. Never rejects. */
+   *  plot's do not. Never rejects on a database or host fault; only an invalid
+   *  INJECTED pass deadline (a suite's) rejects, with a RangeError, before the
+   *  pass runs, and that reaches onError like any rejection. */
   renewFreeholdClaims(): Promise<void>;
   /** Drop idle bank-vault ledger guard state. Synchronous, and not a write. */
   pruneIdleGuards(): void | number;

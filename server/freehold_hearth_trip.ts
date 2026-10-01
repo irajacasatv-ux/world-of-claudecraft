@@ -60,8 +60,8 @@ export interface FreeholdHearthTripCounters {
   /** A committed advance whose re-dispatch the sim then refused (R-2). */
   refusedAfterCommit: number;
   /** A committed advance whose re-dispatch a server precheck took before the
-   *  sim saw it (draining, the vault fence, spectating, jailed, dark): the
-   *  same R-2 class, apart. */
+   *  sim saw it (draining, the vault fence, spectating, jailed, dark, or a
+   *  session gone by the re-dispatch): the same R-2 class, apart. */
   droppedAfterCommit: number;
   /** Denied before any queue or database work (no loaded entry, no claim). */
   refusedPreQueue: number;
@@ -75,9 +75,9 @@ export interface FreeholdHearthTripCounters {
 }
 
 /** What a re-dispatch met: 'dropped' when a server precheck took the use
- *  before the sim saw it (the draining or vault-loot drop always, and after a
- *  committed advance the spectating, jailed and dark gates too), undefined
- *  otherwise. */
+ *  before the sim saw it (a session gone by the re-dispatch, the draining or
+ *  vault-loot drop always, and after a committed advance the spectating,
+ *  jailed and dark gates too), undefined otherwise. */
 export type FreeholdHearthRedispatch = 'dropped' | undefined;
 
 export interface FreeholdHearthTripHost {

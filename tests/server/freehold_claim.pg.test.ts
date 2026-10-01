@@ -320,10 +320,12 @@ d('the global plot claim against real PostgreSQL', () => {
     };
   };
 
-  /** poolA's checkouts, every statement recorded; `fail` answers a statement
-   *  with an error instead of sending it (a release that THROWS). */
+  /** poolA's checkouts, every statement recorded, and the SQLSTATE of every
+   *  sent statement the database refused; `fail` answers a statement with an
+   *  error instead of sending it (a release that THROWS). */
   const wrappedPool = (fail: (text: string) => Error | null = () => null) => {
     const texts: string[] = [];
+    const refusals: { text: string; code: unknown }[] = [];
     const pool: import('../../server/freehold_tx').FreeholdTxPool = {
       async connect() {
         const client = await poolA.connect();
@@ -332,7 +334,11 @@ d('the global plot claim against real PostgreSQL', () => {
           query(text: string, values?: unknown[]) {
             texts.push(text);
             const error = fail(text);
-            return error ? Promise.reject(error) : client.query(text, values);
+            if (error) return Promise.reject(error);
+            return client.query(text, values).catch((refused: unknown) => {
+              refusals.push({ text, code: (refused as { code?: unknown } | null)?.code });
+              throw refused;
+            });
           },
           release: (error?: Error | boolean) => client.release(error),
           on: (event: 'error', listener: (error: Error) => void) => client.on(event, listener),
@@ -342,7 +348,7 @@ d('the global plot claim against real PostgreSQL', () => {
         return wrapped as import('../../server/db_transaction_deadline').DbTransactionDeadlineClient;
       },
     };
-    return { pool, texts };
+    return { pool, texts, refusals };
   };
 
   beforeAll(async () => {
@@ -1093,6 +1099,11 @@ d('the global plot claim against real PostgreSQL', () => {
     expect(thrown.texts.filter((t) => t === claimDb.FREEHOLD_CLAIM_RELEASE_WAIT_SQL)).toHaveLength(
       1,
     );
+    // The re-read's own rejection, not a window, says it was the lock bound:
+    // 55P03 (lock_not_available), never the statement bound's 57014.
+    expect(thrown.refusals).toEqual([
+      { text: claimDb.FREEHOLD_CLAIM_RELEASE_WAIT_SQL, code: '55P03' },
+    ]);
     expect(registry.all()).toEqual([held(plotId, 35)]);
     expect(registry.counters.released).toBe(0);
     expect(await claimRow(plotId)).toEqual(before);

@@ -29,6 +29,7 @@ const ZERO_CLAIMS: FreeholdClaimCounters = {
   renewPassMsTotal: 0,
   renewPassesSkipped: 0,
   renewChunksAbandoned: 0,
+  releaseRaced: 0,
   wantedThrew: 0,
   pendingSwept: 0,
   loginReads: 0,
