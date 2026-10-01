@@ -3616,23 +3616,25 @@ describe('the claim renewer', () => {
     } finally {
       rmSync(fixtureRoot, { recursive: true, force: true });
     }
-    // Both scans read that one walk: this file imports no `.ts`-only walker
-    // beside it, statically or dynamically, so neither scan can be swapped
-    // back to one (a filter on a walk is an edit in plain sight, and the
-    // renewer count's unread list below backs it too).
-    const tsOnlyWalker =
-      /(?:from\s*|import\s*\(\s*)['"][./]*helpers\/ts_files_under(?:\.[cm]?[jt]s)?['"]/;
+    // Both scans read that one walk: no string in this file names the
+    // `.ts`-only walker (an import, a dynamic import, a mock), so neither scan
+    // can be swapped back to it. A filter on a walk is an edit in plain sight;
+    // the renewer count's walk is also backed by the unread list below.
+    const tsOnlyWalker = /['"`][./\w-]*helpers\/ts_files_under(?:\.[jt]s)?['"`]/;
     // Joined at run time, so this file's own text never holds the needle.
     for (const written of [
       ["import { tsFilesUnder } from '../helpers/", "ts_files_under';"],
       ["import { tsFilesUnder } from '../helpers/", "ts_files_under.ts';"],
       ["const w = await import('../helpers/", "ts_files_under.js');"],
+      ['const w = await import(`../helpers/', 'ts_files_under`);'],
+      ["const w = await vi.importActual('../../tests/helpers/", "ts_files_under');"],
     ]) {
       expect(written.join('')).toMatch(tsOnlyWalker);
     }
-    expect(stripComments(readFileSync(fileURLToPath(import.meta.url), 'utf8'))).not.toMatch(
-      tsOnlyWalker,
-    );
+    const ownText = stripComments(readFileSync(fileURLToPath(import.meta.url), 'utf8'));
+    expect(ownText).not.toMatch(tsOnlyWalker);
+    // The text read still holds this file's real imports.
+    expect(ownText).toMatch(/from\s*['"][./]*helpers\/source_files_under['"]/);
     const fileOf = (file: string) => {
       const found = files.find((f) => f.file === file);
       if (!found) throw new Error(`no ${file} under server/`);
@@ -3894,7 +3896,9 @@ describe('the claim renewer', () => {
     // escapes in a file the count does not read; a file git does not track
     // yet outside server/ (a local run passes until it is added; CI sees it);
     // the compose file's lines other than its NODE_ variables, bundle names
-    // and `command` and `entrypoint` keys (a health check, for one);
+    // and `command` and `entrypoint` key lines (a health check, for one); the
+    // Dockerfile's lines other than its bundle steps, NODE_ variables,
+    // installs and ENV, ENTRYPOINT and CMD instructions;
     // text the shared comment stripper misreads (a string holding a comment
     // opener); an import the statement reader cannot see (a binding named by
     // a string holding `;`);
@@ -3904,14 +3908,22 @@ describe('the claim renewer', () => {
     // `--config`) rather than from package.json; and the contents of the
     // gitignored private clone.
     const flat = (text: string): string => text.replace(/\s+/g, ' ').trim();
-    // Paths as written: git quotes a non-ASCII path unless told not to.
-    const tracked = (pattern: string): string[] =>
-      spawnSync('git', ['-c', 'core.quotePath=false', 'ls-files', '--', pattern], {
-        encoding: 'utf8',
-      })
-        .stdout.split('\n')
-        .filter((f) => f !== '')
-        .sort();
+    // Every git read here: a buffer far above the tree's listing (about
+    // 0.9 MB today, near Node's 1 MiB default) and a refusal of any failed
+    // run, so a truncated listing can never pass as a short one.
+    const git = (args: string[]): string => {
+      const run = spawnSync('git', args, { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
+      expect(run.error, args.join(' ')).toBeUndefined();
+      expect(run.status, args.join(' ')).toBe(0);
+      return run.stdout;
+    };
+    expect(() => git(['ls-files', '--no-such-flag'])).toThrow();
+    // NUL-separated, so every path arrives as written, never quoted.
+    const listed = (pathspec: string[]): string[] =>
+      git(['ls-files', '-z', '--', ...pathspec])
+        .split('\0')
+        .filter((file) => file !== '');
+    const tracked = (pattern: string): string[] => listed([pattern]).sort();
     const blocksOf = (text: string, key: string): string[] => {
       const code = stripComments(text);
       const blocks: string[] = [];
@@ -4059,7 +4071,8 @@ describe('the claim renewer', () => {
     // Docker reads instruction words in either case; names are matched as
     // written, so `node_modules` is not a NODE_ variable.
     const dockerRuntime = (line: string): boolean =>
-      /build:server|dist-server|NODE_|pnpm (?:install|i)\b|pnpmfile/.test(line) ||
+      /build:server|dist-server|NODE_|pnpmfile/.test(line) ||
+      /\bpnpm\b.*\b(?:install|i|add)\b|\bnpm (?:ci|install)\b/.test(line) ||
       /^\s*(?:ENV|ENTRYPOINT|CMD)\b/i.test(line);
     // One control per arm, each line matched by that arm alone.
     expect(
@@ -4068,6 +4081,9 @@ describe('the claim renewer', () => {
         'COPY ./dist-server ./dist-server',
         'ARG NODE_OPTIONS=--require=./x.cjs',
         'RUN pnpm i --prod',
+        'RUN pnpm -C /app install --prod',
+        'RUN pnpm add claims',
+        'RUN npm ci',
         'COPY .pnpmfile.cjs ./',
         'entrypoint ["node", "x.cjs"]',
         'env A=1',
@@ -4076,8 +4092,24 @@ describe('the claim renewer', () => {
         'RUN pnpm run build',
         'RUN echo hi',
       ].map(dockerRuntime),
-    ).toEqual([true, true, true, true, true, true, true, true, false, false, false]);
+    ).toEqual([
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      false,
+      false,
+      false,
+    ]);
     expect(runtimeLines('Dockerfile', dockerRuntime)).toEqual([
+      'RUN npm install -g pnpm@10.34.5',
       'RUN pnpm install --frozen-lockfile',
       'RUN VITE_TURNSTILE_SITEKEY="$VITE_TURNSTILE_SITEKEY" VITE_REOWN_PROJECT_ID="$VITE_REOWN_PROJECT_ID" VITE_WALLET_DISABLED="$VITE_WALLET_DISABLED" pnpm run build && cp -a dist/media ./media-build && rm -rf dist/media && pnpm run build:server && pnpm run build:bot',
       'ENV NODE_ENV=production',
@@ -4086,10 +4118,12 @@ describe('the claim renewer', () => {
     ]);
     // The compose file passes NODE_OPTIONS through to the container that runs
     // the bundle: its NODE_ variables, bundle names and `command` and
-    // `entrypoint` keys (block or flow style), as text.
+    // `entrypoint` key lines (block or flow style, the key quoted or not; a
+    // block value's own lines are not read), as text.
     expect(tracked('*compose*.y*ml')).toEqual(['docker-compose.yml']);
     const composeRuntime = (line: string): boolean =>
-      /NODE_|dist-server|build:server/.test(line) || /\b(?:entrypoint|command)\s*:/.test(line);
+      /NODE_|dist-server|build:server/.test(line) ||
+      /(?:^|[\s{,])['"]?(?:entrypoint|command)['"]?\s*:/.test(line);
     // One control per arm, each line matched by that arm alone.
     expect(
       [
@@ -4099,10 +4133,11 @@ describe('the claim renewer', () => {
         '    command: ["x"]',
         '  entrypoint: ["y"]',
         '  bot: { image: x, command: ["node", "y.cjs"] }',
+        '    "command": ["x"]',
         '  volumes: ["./node_modules:/app/node_modules"]',
         '      test: ["CMD", "true"]',
       ].map(composeRuntime),
-    ).toEqual([true, true, true, true, true, true, false, false]);
+    ).toEqual([true, true, true, true, true, true, true, false, false]);
     expect(runtimeLines('docker-compose.yml', composeRuntime)).toEqual([
       // Split at the placeholder, so the literal is plain text.
       'NODE_OPTIONS: $' + '{NODE_OPTIONS:-}',
@@ -4117,12 +4152,6 @@ describe('the claim renewer', () => {
     // What that pathspec reads, completely: every tracked file outside docs/
     // and tests/ that is not of a media kind, so no root or kind is skipped
     // silently, and nothing else.
-    const listed = (pathspec: string[]): string[] =>
-      spawnSync('git', ['-c', 'core.quotePath=false', 'ls-files', '--', ...pathspec], {
-        encoding: 'utf8',
-      })
-        .stdout.split('\n')
-        .filter((file) => file !== '');
     const isMedia = (file: string): boolean => media.some((ext) => file.endsWith(`.${ext}`));
     const outsideDocsAndTests = listed(['.']).filter((file) => !/^(?:docs|tests)\//.test(file));
     const readable = new Set(listed(treeRead));
@@ -4136,9 +4165,16 @@ describe('the claim renewer', () => {
     // those kinds lives under an asset root (or is one of two named images at
     // the root), so a kind with any file elsewhere (a workflow, a manifest, a
     // script) fails here.
-    expect(
-      media.filter((ext) => (SOURCE_EXTENSIONS as readonly string[]).includes(`.${ext}`)),
-    ).toEqual([]);
+    const moduleKind = (ext: string): boolean =>
+      SOURCE_EXTENSIONS.some((suffix) => `.${ext}`.endsWith(suffix));
+    expect(media.filter(moduleKind)).toEqual([]);
+    expect(['spec.ts', 'd.mts', 'stories.tsx', 'webp', 'hdr'].map(moduleKind)).toEqual([
+      true,
+      true,
+      true,
+      false,
+      false,
+    ]);
     expect(
       outsideDocsAndTests
         .filter(isMedia)
@@ -4147,14 +4183,23 @@ describe('the claim renewer', () => {
             !/^(?:public|android|ios|skies_in|build|scripts\/assets|scripts\/sfx)\//.test(file),
         ),
     ).toEqual(['trading-spacing-after.png', 'woc_logo_square.webp']);
-    const named: Record<string, string[]> = {};
     // Each hit is its path, a NUL, and the name matched: a path holding a
     // colon cannot split wrong.
-    for (const line of spawnSync(
-      'git',
-      [
-        '-c',
-        'core.quotePath=false',
+    const hitsOf = (stdout: string): Record<string, string[]> => {
+      const hits: Record<string, string[]> = {};
+      for (const line of stdout.split('\n')) {
+        const at = line.indexOf('\0');
+        if (at === -1) continue;
+        const [file, name] = [line.slice(0, at), line.slice(at + 1)];
+        hits[name] = [...new Set([...(hits[name] ?? []), file])];
+      }
+      return hits;
+    };
+    expect(
+      hitsOf('scripts/a:b.mjs\0renewFreeholdClaims\nserver/x.ts\0renewFreeholdClaims\n'),
+    ).toEqual({ renewFreeholdClaims: ['scripts/a:b.mjs', 'server/x.ts'] });
+    const named = hitsOf(
+      git([
         'grep',
         '--null',
         '-o',
@@ -4167,14 +4212,8 @@ describe('the claim renewer', () => {
         'dist-server/server.cjs',
         '--',
         ...treeRead,
-      ],
-      { encoding: 'utf8' },
-    ).stdout.split('\n')) {
-      const at = line.indexOf('\0');
-      if (at === -1) continue;
-      const [file, name] = [line.slice(0, at), line.slice(at + 1)];
-      named[name] = [...new Set([...(named[name] ?? []), file])];
-    }
+      ]),
+    );
     expect(named['dist-server/server.cjs']?.sort()).toEqual([
       'Dockerfile',
       'package.json',
