@@ -3898,11 +3898,14 @@ describe('the claim renewer', () => {
     // pinned below, but a dev script under scripts/ may); a name spelled with
     // escapes in a file the count does not read; a container build file that
     // is not a Dockerfile (a Containerfile, a bake file in HCL or JSON, an
-    // Earthfile, a platform manifest) or that sits under docs/ or tests/, since
-    // a hook one sets must still name the registry or the renewer, which the
-    // tree read lists, or assemble its path, named above; a file git does not
-    // track yet outside server/ (a local run passes until it is added; CI
-    // sees it);
+    // Earthfile, a platform manifest), since outside docs/ and tests/ a hook
+    // it sets must still name the registry, the renewer or the bundle, which
+    // the tree read lists, unless it assembles that name from parts or
+    // matches it by a pattern (a prefix, a regex); a container build file or
+    // hook file under docs/ or tests/, which the tree read skips as it skips
+    // the barrels there (the production image copies neither: the Dockerfile,
+    // pinned exactly below, names what it copies); a file git does not track
+    // yet outside server/ (a local run passes until it is added; CI sees it);
     // the compose file's lines other than its NODE_ variables, bundle names
     // and `command` and `entrypoint` key lines (a health check, for one);
     // text the shared comment stripper misreads (a string holding a comment
@@ -4134,11 +4137,13 @@ describe('the claim renewer', () => {
       '',
     ]);
     // Every tracked Dockerfile, docs and tests aside: the one other builds the
-    // player wiki, never the bundle. Other container build kinds are named in
+    // player wiki (an image that ran the bundle would name it, which the
+    // bundle list below catches). Other container build kinds are named in
     // LIMITS above.
     expect(
       listed([':(icase)*dockerfile*', ':!docs', ':!tests']).sort(),
-      'a new Dockerfile: check how it runs the server bundle, then list it here',
+      'a Dockerfile added, removed or renamed: if it builds or runs the server bundle, ' +
+        'pin it whole like the root Dockerfile, then update this list',
     ).toEqual(['Dockerfile', 'mediawiki/Dockerfile']);
     // The compose file passes NODE_OPTIONS through to the container that runs
     // the bundle: its NODE_ variables, bundle names and `command` and
