@@ -3272,6 +3272,83 @@ function freeholdClaim(): Scenario {
   };
 }
 
+// The Hearth Key's remote entry and the last-session clock eviction (Freeholds
+// 07a), on the isolated-host defaults: an UNSTAMPED owner (the `entity:<pid>`
+// key every offline and headless player resolves), no admission override and
+// the default sim-time lockout clock, so this pins exactly what those hosts do.
+// The key is used outdoors (the owner claim plus the clock write), the owner
+// ticks inside and leaves through the door, a second use inside the cooldown is
+// refused on the LOCAL clock, and the owner's last session leaves through
+// removePlayer, which drops the clock and the record. Two things are left out
+// on purpose. The cooldown never elapses here: HEARTH_KEY_COOLDOWN_MS is one
+// hour of sim time (72000 ticks), and the admitted arm it would reach again is
+// the first use's. And the clock map itself is not a sampled field, so the
+// eviction is pinned through rec.notes (offline keys are per entity and never
+// recur, which is why the golden cannot see it): the golden pins that it moved
+// nothing else.
+function freeholdHearthKey(): Scenario {
+  return {
+    name: 'freehold_hearth_key',
+    coverage: [
+      'useItem hearth_key -> useHearthKey remote entry on the default admission (freehold/hearth_key.ts)',
+      'the remote entry claims the Inn Room slot and writes the owner clock, zero rng draws',
+      'freeholdLeave -> leaveFreehold -> leaveDungeon door drop after ticking inside',
+      'a second use inside HEARTH_KEY_COOLDOWN_MS -> freeholdDenied cooldown, nothing moved',
+      'removePlayer -> releaseFreeholdOnLeave last session: clock eviction + record evict',
+    ],
+    sampleEvery: 5,
+    // The freehold_claim world and seed: the remote entry rides DUNGEON_LIST,
+    // and sharing the seed means this scenario's shard builds no new colliders.
+    build: () =>
+      new Sim({
+        seed: 1032,
+        playerClass: 'warrior',
+        noPlayer: true,
+        freeholdsEnabled: true,
+        world: { ...BUILTIN_WORLD, camps: [], npcs: {}, groundObjects: [] },
+      }),
+    drive(rec: Recorder) {
+      const sim = rec.sim;
+      const pid = sim.addPlayer('warrior', 'Keyholder');
+      const owner = requireEntity(sim, pid, 'parity scenario hearth key owner');
+      const key = `entity:${pid}`;
+      sim.addItem('hearth_key', 1, pid);
+      rec.notes.slotOutdoors = sim.instanceSlotAt(owner.pos);
+      rec.snapshot('keyed');
+      rec.notes.useNowMs = Math.floor(sim.time * 1000);
+      sim.useItem('hearth_key', pid);
+      rec.notes.slotInside = sim.instanceSlotAt(owner.pos);
+      rec.notes.clockAfterUse = sim.freeholdKeyReadyAtMs.get(key) ?? null;
+      rec.notes.keysAfterUse = sim.countItem('hearth_key', pid);
+      const inst = requireValue(
+        sim.instances.find(
+          (i) => i.dungeonId === FREEHOLD_INN_ROOM_DUNGEON_ID && i.partyKey === key,
+        ),
+        'parity scenario hearth key claim',
+      );
+      if (inst.exitId != null) rec.track(inst.exitId);
+      rec.snapshot('entered');
+      rec.tick(40);
+      sim.freeholdLeave(pid);
+      rec.tick(1);
+      rec.notes.slotAfterLeave = sim.instanceSlotAt(owner.pos);
+      rec.snapshot('left');
+      sim.useItem('hearth_key', pid);
+      rec.notes.slotAfterDenial = sim.instanceSlotAt(owner.pos);
+      rec.notes.clockAfterDenial = sim.freeholdKeyReadyAtMs.get(key) ?? null;
+      rec.snapshot('denied');
+      rec.tick(20);
+      rec.notes.clocksBeforeRelease = sim.freeholdKeyReadyAtMs.size;
+      rec.notes.recordsBeforeRelease = sim.freeholds.size;
+      rec.snapshot('before_release');
+      sim.removePlayer(pid);
+      rec.notes.clocksAfterRelease = sim.freeholdKeyReadyAtMs.size;
+      rec.notes.recordsAfterRelease = sim.freeholds.size;
+      rec.snapshot('released');
+    },
+  };
+}
+
 // Dungeon raid lockout (I1): a five-strong attuned raid is blocked from re-entering
 // the Nythraxis arena by an active raid lockout. Exercises enterDungeon's raid gating
 // (convertPartyToRaid + canEnterNythraxisRaid attunement) and the isRaidLocked block
@@ -7996,4 +8073,7 @@ export const SCENARIOS: Scenario[] = [
   // Freeholds 05, appended on the same tiling rule: the owner-keyed claim,
   // the first scenario that boots a Sim with a housing flag set.
   freeholdClaim(),
+  // Freeholds 07a, appended on the same tiling rule: the Hearth Key's remote
+  // entry, its cooldown denial and the last-session clock eviction.
+  freeholdHearthKey(),
 ];

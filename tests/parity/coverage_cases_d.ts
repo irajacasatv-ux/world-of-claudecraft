@@ -18,6 +18,7 @@ import {
 import { FREEHOLD_INN_ROOM_DUNGEON_ID } from '../../src/sim/content/freehold';
 import { HEROIC_BOSS_LOOT } from '../../src/sim/content/heroic_loot';
 import { DUNGEONS, ITEMS, MOBS } from '../../src/sim/data';
+import { HEARTH_KEY_COOLDOWN_MS } from '../../src/sim/freehold/gate_rules';
 import { countRawInSlots, countUnlockedInSlots } from '../../src/sim/item_lock';
 import { RIFT_IMPAIRED_FUSE_CAP } from '../../src/sim/mob/rift_escape_window';
 import {
@@ -1438,6 +1439,48 @@ export function coverageCasesD(it: CoverageIt): void {
     ).toBe(true);
     expect(frame('entered').rng.draws - frame('seeded').rng.draws).toBe(0);
     expect(frame('shared').rng.draws - frame('entered').rng.draws).toBe(0);
+  });
+  it('freehold_hearth_key: the remote entry admits, the cooldown refuses, and the last leave drops the clock', () => {
+    const scenario = SCENARIOS.find((s) => s.name === 'freehold_hearth_key');
+    if (!scenario) throw new Error('no scenario freehold_hearth_key');
+    const { rec, trace } = record(scenario);
+    const inn = DUNGEONS[FREEHOLD_INN_ROOM_DUNGEON_ID];
+    const frame = (label: string) => {
+      const found = trace.frames.find((fr) => fr.label === label);
+      if (!found) throw new Error(`no frame ${label}`);
+      return found;
+    };
+    // Outdoors before the use, inside an Inn Room slot after it: the default
+    // admission let the remote entry through, and the key is permanent.
+    expect(rec.notes.slotOutdoors).toBeNull();
+    expect(typeof rec.notes.slotInside).toBe('number');
+    expect(rec.notes.keysAfterUse).toBe(1);
+    // The clock the use wrote: the sim-time lockout clock plus one hour exactly.
+    expect(rec.notes.clockAfterUse).toBe((rec.notes.useNowMs as number) + HEARTH_KEY_COOLDOWN_MS);
+    // One entry and one leave through the real door lines.
+    const logs = rec.allEvents.filter((ev) => ev.type === 'log');
+    expect(logs.filter((ev) => ev.text === inn.enterText)).toHaveLength(1);
+    expect(logs.filter((ev) => ev.text === inn.leaveText)).toHaveLength(1);
+    expect(rec.notes.slotAfterLeave).toBeNull();
+    // The second use is the one refusal, on the local clock, and it moved
+    // nothing: no travel, no clock write, no state, no draw.
+    expect(
+      rec.allEvents.filter((ev) => ev.type === 'freeholdDenied').map((ev) => ev.reason),
+    ).toEqual(['cooldown']);
+    expect(rec.notes.slotAfterDenial).toBeNull();
+    expect(rec.notes.clockAfterDenial).toBe(rec.notes.clockAfterUse);
+    expect(frame('denied').state).toBe(frame('left').state);
+    expect(frame('denied').rng).toEqual(frame('left').rng);
+    // The remote entry itself draws nothing (spawns: [] and no roll on the key).
+    expect(frame('entered').rng).toEqual(frame('keyed').rng);
+    // The owner's last session out drops BOTH the live clock (the 07a eviction)
+    // and the record, and the leave draws nothing.
+    expect(rec.notes.clocksBeforeRelease).toBe(1);
+    expect(rec.notes.recordsBeforeRelease).toBe(1);
+    expect(rec.notes.clocksAfterRelease).toBe(0);
+    expect(rec.notes.recordsAfterRelease).toBe(0);
+    expect(frame('released').players).toEqual([]);
+    expect(frame('released').rng).toEqual(frame('before_release').rng);
   });
 
   it('bop_party_trade_eligibility: a leaving drop-mate stays on the awarded copy', () => {
