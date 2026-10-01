@@ -4251,7 +4251,8 @@ export const ko_KR: EnTranslations = {
       "questOnly": "퀘스트: {quest}",
       "normalOnly": "일반 난이도 전용",
       "money": "주화",
-      "rangeTo": "~"
+      "rangeTo": "~",
+      "sharedRolls": "처치할 때마다 {count}번 굴림, 같은 아이템은 두 번 나오지 않음"
     },
     "playerTooltip": {
       "guild": "<{guild}>",

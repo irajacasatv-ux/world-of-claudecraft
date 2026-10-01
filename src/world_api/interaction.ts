@@ -35,6 +35,10 @@ export interface MobInspectInfo {
   readonly weaponMax: number;
   readonly attackSpeed: number;
   readonly armor: number;
+  // The EFFECTIVE immunities combat applies: the template flag OR the spawn's
+  // own flag (a promoted dungeon miniboss gains both at spawn).
+  readonly ccImmune: boolean;
+  readonly slowImmune: boolean;
 }
 
 /** A stable authored civic interaction point exposed to presentation without

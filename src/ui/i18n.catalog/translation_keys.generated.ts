@@ -11985,6 +11985,7 @@ export type TranslationKeyFlat =
   | 'hudChrome.mobInspect.rangeTo'
   | 'hudChrome.mobInspect.rare'
   | 'hudChrome.mobInspect.seconds'
+  | 'hudChrome.mobInspect.sharedRolls'
   | 'hudChrome.mobInspect.statsHeading'
   | 'hudChrome.mobInspect.statsPending'
   | 'hudChrome.mobInspect.statsUnavailable'

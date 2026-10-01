@@ -2025,6 +2025,7 @@ export const zh_CN: Partial<Record<TranslationKey, string>> = {
   'hudChrome.mobInspect.normalOnly': '仅限普通难度',
   'hudChrome.mobInspect.money': '钱币',
   'hudChrome.mobInspect.rangeTo': '至',
+  'hudChrome.mobInspect.sharedRolls': '每次击杀掷骰 {count} 次，同一物品不会掉落两次',
   'hudChrome.targetFrame.unlock': '移动目标框',
   'hudChrome.targetFrame.lock': '锁定目标框',
   'hudChrome.playerFrame.unlock': '移动玩家框',

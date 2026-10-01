@@ -19,6 +19,8 @@ const INFO: MobInspectInfo = {
   weaponMax: 13,
   attackSpeed: 2,
   armor: 75,
+  ccImmune: false,
+  slowImmune: false,
 };
 
 beforeEach(() => {
@@ -66,6 +68,14 @@ describe('decodeMobInspectInfoReply', () => {
       { t: 'mobInspectInfo', id: 7, rid: 2, info: { ...INFO, templateId: '<b>x</b>' } },
     ],
     ['an array body', { t: 'mobInspectInfo', id: 7, rid: 2, info: [] }],
+    [
+      'a non-boolean immunity flag',
+      { t: 'mobInspectInfo', id: 7, rid: 2, info: { ...INFO, ccImmune: 1 } },
+    ],
+    [
+      'a missing immunity flag',
+      { t: 'mobInspectInfo', id: 7, rid: 2, info: { ...INFO, slowImmune: undefined } },
+    ],
   ])('fails the whole frame closed on %s', (_label, raw) => {
     expect(decodeMobInspectInfoReply(raw)).toBeNull();
   });

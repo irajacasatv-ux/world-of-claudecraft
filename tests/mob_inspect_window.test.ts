@@ -31,6 +31,8 @@ function info(id: number, over: Partial<MobInspectInfo> = {}): MobInspectInfo {
     weaponMax: 12,
     attackSpeed: 2,
     armor: 100,
+    ccImmune: false,
+    slowImmune: false,
     ...over,
   };
 }

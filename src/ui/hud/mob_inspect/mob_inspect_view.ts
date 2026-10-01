@@ -7,7 +7,9 @@
 // The drop list mirrors the loot roller (src/sim/loot/loot_roll.ts rollLoot)
 // rather than re-rolling anything: each plain entry is one independent
 // chance roll; entries sharing a rollGroup are ONE draw partitioned by their
-// chances (so the group lists together and at most one row drops); a questId
+// chances, and groups that share items (one kill can award a second item from
+// the shared list, since a later roll skips an already-won one) are solved
+// together for exact per-kill odds (roll_group_odds_core.ts); a questId
 // row only drops while the looter is on that quest; a normalOnly row skips a
 // Heroic claim; coin rows roll 0.6x to 1.4x of the authored base. A mob that
 // can be killed on a Heroic claim (it spawns in a heroic-capable instance, or
@@ -37,6 +39,7 @@ import type { MobInspectInfo } from '../../../world_api';
 import { type TranslationKey, t } from '../../i18n';
 import { type TargetRank, targetRankView } from '../../target_rank_view';
 import { buildMobToDungeon } from '../loot_explorer/loot_explorer_view';
+import { rollGroupClusters } from './roll_group_odds_core';
 
 export type MobInspectStatsState = 'live' | 'pending' | 'unavailable';
 
@@ -67,10 +70,18 @@ export interface MobInspectCoinRow {
   readonly chance: number;
 }
 
-/** A run of rows the painter draws together: an exclusive roll group (one
- *  draw, at most one row drops) or the independent rows. */
+/** A run of rows the painter draws together: the independent rows, or one
+ *  cluster of exclusive roll groups (roll_group_odds_core.ts). A cluster of
+ *  `rolls` 1 is one draw, so at most one of its rows drops per kill; a
+ *  cluster of several rolls is pools that share items, rolled in turn with an
+ *  already-won item skipped, so up to `rolls` DIFFERENT rows drop. Either way
+ *  each row's chance is its exact per-kill odds. */
 export interface MobInspectDropGroup {
   readonly exclusive: boolean;
+  /** Draws behind the box: 0 for the independent rows. */
+  readonly rolls: number;
+  /** False when a cluster was too large to enumerate (summed chances shown). */
+  readonly exact: boolean;
   readonly rows: readonly MobInspectDropRow[];
 }
 
@@ -140,17 +151,25 @@ function dropRow(entry: LootEntry & { itemId: string }): MobInspectDropRow {
 
 /** One loot table as the roller reads it. `useHeroicCopper` swaps a row's coin
  *  base for its heroicCopper, as a heroic claim does. Independent rows sort by
- *  chance (highest first, ties keep authored order); each exclusive group
- *  keeps its authored row order and lists after the independent rows. */
+ *  chance (highest first, ties keep authored order) and list first; then each
+ *  cluster of roll groups (groups that share items solved together, in roll
+ *  order) lists its distinct items in first-appearance order. */
 export function mobLootTable(
   entries: readonly LootEntry[],
   useHeroicCopper = false,
 ): MobInspectLootTable {
   const coins: MobInspectCoinRow[] = [];
   const independent: MobInspectDropRow[] = [];
-  const groups = new Map<string, MobInspectDropRow[]>();
+  // Groups in ROLL order: the roller draws each on its first entry.
+  const groups = new Map<string, LootEntry[]>();
   for (const entry of entries) {
-    if (entry.copper && !entry.rollGroup) {
+    if (entry.rollGroup) {
+      const group = groups.get(entry.rollGroup);
+      if (group) group.push(entry);
+      else groups.set(entry.rollGroup, [entry]);
+      continue;
+    }
+    if (entry.copper) {
       const base =
         useHeroicCopper && entry.heroicCopper !== undefined ? entry.heroicCopper : entry.copper;
       coins.push({
@@ -159,30 +178,41 @@ export function mobLootTable(
         chance: entry.chance,
       });
     }
-    if (!entry.itemId) continue;
-    const row = dropRow(entry as LootEntry & { itemId: string });
-    if (entry.rollGroup) {
-      const group = groups.get(entry.rollGroup);
-      if (group) group.push(row);
-      else groups.set(entry.rollGroup, [row]);
-    } else {
-      independent.push(row);
-    }
+    if (entry.itemId) independent.push(dropRow(entry as LootEntry & { itemId: string }));
   }
   const sorted = independent
     .map((row, i) => ({ row, i }))
     .sort((a, b) => b.row.chance - a.row.chance || a.i - b.i)
     .map((x) => x.row);
   const out: MobInspectDropGroup[] = [];
-  if (sorted.length > 0) out.push({ exclusive: false, rows: sorted });
-  for (const rows of groups.values()) out.push({ exclusive: true, rows });
+  if (sorted.length > 0) out.push({ exclusive: false, rolls: 0, exact: true, rows: sorted });
+  for (const cluster of rollGroupClusters(groups)) {
+    const firstEntry = new Map<string, LootEntry>();
+    for (const name of cluster.groups) {
+      for (const entry of groups.get(name) ?? []) {
+        if (entry.itemId && !firstEntry.has(entry.itemId)) firstEntry.set(entry.itemId, entry);
+      }
+    }
+    const rows = cluster.itemIds.map((itemId) => {
+      const entry = firstEntry.get(itemId) as LootEntry & { itemId: string };
+      return { ...dropRow(entry), chance: cluster.odds.get(itemId) ?? 0 };
+    });
+    out.push({ exclusive: true, rolls: cluster.groups.length, exact: cluster.exact, rows });
+  }
   return { coins, groups: out };
 }
 
-export function mobInspectTraits(template: MobTemplate): MobInspectTrait[] {
+/** The mob's traits. Immunities come from the live read when there is one:
+ *  combat checks the template flag OR the spawn's own flag (a promoted dungeon
+ *  miniboss gains both at spawn), and only the authoritative sim knows the
+ *  latter. Before the read lands, the template's flags are the best guess. */
+export function mobInspectTraits(
+  template: MobTemplate,
+  info: Pick<MobInspectInfo, 'ccImmune' | 'slowImmune'> | null = null,
+): MobInspectTrait[] {
   const traits: MobInspectTrait[] = [];
-  if (template.ccImmune) traits.push('ccImmune');
-  if (template.slowImmune) traits.push('slowImmune');
+  if (info ? info.ccImmune : template.ccImmune) traits.push('ccImmune');
+  if (info ? info.slowImmune : template.slowImmune) traits.push('slowImmune');
   if (template.componentTags && template.componentTags.length > 0) traits.push('harvestable');
   return traits;
 }
@@ -224,7 +254,7 @@ export function buildMobInspectModel(input: MobInspectInput): MobInspectModel | 
     familyLabel: mobFamilyLabel(template.family),
     statsState,
     stats: info ? liveStats(info, input.viewerLevel) : null,
-    traits: mobInspectTraits(template),
+    traits: mobInspectTraits(template, info),
     loot: mobLootTable(template.loot),
     heroicLoot: heroicEntries ? mobLootTable(heroicEntries, true) : null,
   };

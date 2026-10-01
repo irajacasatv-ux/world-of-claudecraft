@@ -15,6 +15,7 @@
 // Date.now (enforced by tests/architecture.test.ts).
 
 import type { MobInspectInfo } from '../../world_api';
+import { MOBS } from '../data';
 import { sameHarvestScope } from '../professions/corpse_harvest_scope';
 import type { SimContext } from '../sim_context';
 import { dist2d, PLAYER_INTEREST_DROP_RADIUS } from '../types';
@@ -44,5 +45,10 @@ export function mobInspectInfo(
     weaponMax: mob.weapon.max,
     attackSpeed: mob.weapon.speed,
     armor: mob.stats.armor,
+    // The same template-OR-entity rule Sim.applyAura gates control and slow
+    // auras on: a promoted dungeon miniboss gains both flags at spawn
+    // (instances/dungeon_spawn_miniboss.ts) while its template has neither.
+    ccImmune: MOBS[mob.templateId]?.ccImmune === true || mob.ccImmune === true,
+    slowImmune: MOBS[mob.templateId]?.slowImmune === true || mob.slowImmune === true,
   };
 }

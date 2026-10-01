@@ -4251,7 +4251,8 @@ export const ru_RU: EnTranslations = {
       "questOnly": "Задание: {quest}",
       "normalOnly": "Только обычная сложность",
       "money": "Монеты",
-      "rangeTo": "до"
+      "rangeTo": "до",
+      "sharedRolls": "Бросков за убийство: {count}, один предмет не выпадает дважды"
     },
     "playerTooltip": {
       "guild": "<{guild}>",

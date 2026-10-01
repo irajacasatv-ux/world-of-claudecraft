@@ -4251,7 +4251,8 @@ export const zh_TW: EnTranslations = {
       "questOnly": "任務：{quest}",
       "normalOnly": "僅限普通難度",
       "money": "錢幣",
-      "rangeTo": "至"
+      "rangeTo": "至",
+      "sharedRolls": "每次擊殺擲骰 {count} 次，同一物品不會掉落兩次"
     },
     "playerTooltip": {
       "guild": "<{guild}>",

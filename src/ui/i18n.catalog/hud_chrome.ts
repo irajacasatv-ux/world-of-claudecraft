@@ -5646,6 +5646,10 @@ export const hudChromeStrings = {
     normalOnly: 'Normal difficulty only',
     money: 'Coins',
     rangeTo: 'to',
+    // Several exclusive rolls over one shared list (Nythraxis): each roll
+    // skips an item an earlier roll already won, so up to {count} different
+    // items drop. The chances shown are per kill.
+    sharedRolls: 'Rolled {count} times per kill, never the same item twice',
   },
   // The player mouseover tooltip (player_tooltip_view.ts): the classic
   // <Guild> line and the chosen specialization with its role, both slots

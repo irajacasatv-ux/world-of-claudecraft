@@ -4251,7 +4251,8 @@ export const ja_JP: EnTranslations = {
       "questOnly": "クエスト：{quest}",
       "normalOnly": "ノーマル難易度のみ",
       "money": "硬貨",
-      "rangeTo": "～"
+      "rangeTo": "～",
+      "sharedRolls": "1回の撃破で{count}回抽選、同じアイテムは2度出ない"
     },
     "playerTooltip": {
       "guild": "<{guild}>",

@@ -4251,7 +4251,8 @@ export const es: EnTranslations = {
       "questOnly": "Quest: {quest}",
       "normalOnly": "Normal difficulty only",
       "money": "Coins",
-      "rangeTo": "to"
+      "rangeTo": "to",
+      "sharedRolls": "Rolled {count} times per kill, never the same item twice"
     },
     "playerTooltip": {
       "guild": "<{guild}>",

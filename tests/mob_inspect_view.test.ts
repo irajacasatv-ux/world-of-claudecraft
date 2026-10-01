@@ -37,6 +37,8 @@ function info(over: Partial<MobInspectInfo> = {}): MobInspectInfo {
     weaponMax: 12,
     attackSpeed: 2,
     armor: 100,
+    ccImmune: false,
+    slowImmune: false,
     ...over,
   };
 }
@@ -175,14 +177,18 @@ describe('buildMobInspectModel', () => {
     });
     const heroic = m?.heroicLoot;
     if (!heroic) throw new Error('heroic table present');
-    const heroicItemIds = heroic.groups.flatMap((g) => g.rows.map((r) => r.itemId)).sort();
+    const heroicItemIds = [
+      ...new Set(heroic.groups.flatMap((g) => g.rows.map((r) => r.itemId))),
+    ].sort();
     // The roller's heroic path: base rows minus normalOnly, swapped to their
-    // Heroic variant, then the heroic-only append.
+    // Heroic variant, then the heroic-only append (a box lists an item once).
     const expected = [
-      ...boss.loot
-        .filter((e) => !e.normalOnly)
-        .flatMap((e) => (e.itemId ? [heroicLootItemId(e.itemId, true)] : [])),
-      ...HEROIC_BOSS_LOOT[bossId].flatMap((e) => (e.itemId ? [e.itemId] : [])),
+      ...new Set([
+        ...boss.loot
+          .filter((e) => !e.normalOnly)
+          .flatMap((e) => (e.itemId ? [heroicLootItemId(e.itemId, true)] : [])),
+        ...HEROIC_BOSS_LOOT[bossId].flatMap((e) => (e.itemId ? [e.itemId] : [])),
+      ]),
     ].sort();
     expect(heroicItemIds).toEqual(expected);
     expect(m?.rank).toBe(boss.boss ? 'boss' : boss.elite ? 'elite' : 'normal');
@@ -231,6 +237,25 @@ describe('mobInspectTraits', () => {
     expect(
       mobInspectTraits({ ...WOLF, ccImmune: false, slowImmune: false, componentTags: [] }),
     ).toEqual([]);
+  });
+
+  it('takes the immunities from the live read, which carries spawn-level flags', () => {
+    const bare = { ...WOLF, ccImmune: false, slowImmune: false, componentTags: [] };
+    // A promoted miniboss: the template has neither flag, the spawn has both.
+    expect(mobInspectTraits(bare, { ccImmune: true, slowImmune: true })).toEqual([
+      'ccImmune',
+      'slowImmune',
+    ]);
+    // Each flag stands alone.
+    expect(mobInspectTraits(bare, { ccImmune: false, slowImmune: true })).toEqual(['slowImmune']);
+    // And the live model uses them.
+    const m = buildMobInspectModel({
+      subject: SUBJECT,
+      viewerLevel: 6,
+      info: info({ ccImmune: true, slowImmune: true }),
+      pending: false,
+    });
+    expect(m?.traits).toEqual(expect.arrayContaining(['ccImmune', 'slowImmune']));
   });
 });
 

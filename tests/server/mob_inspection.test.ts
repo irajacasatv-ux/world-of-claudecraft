@@ -17,6 +17,8 @@ const SAMPLE: MobInspectInfo = {
   weaponMax: 13,
   attackSpeed: 2,
   armor: 75,
+  ccImmune: false,
+  slowImmune: false,
 };
 
 function fakeSim(info: MobInspectInfo | null, time = 10) {

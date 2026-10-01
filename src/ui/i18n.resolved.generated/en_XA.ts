@@ -4251,7 +4251,8 @@ export const en_XA: EnTranslations = {
       "questOnly": "[Ɋúéšţ: {quest}]",
       "normalOnly": "[Ñóŕɱáļ ðíƒƒíçúļţý óñļý]",
       "money": "[Çóíñš]",
-      "rangeTo": "[ţó]"
+      "rangeTo": "[ţó]",
+      "sharedRolls": "[Ŕóļļéð {count} ţíɱéš þéŕ ķíļļ, ñéʋéŕ ţĥé šáɱé íţéɱ ţŵíçé]"
     },
     "playerTooltip": {
       "guild": "[<{guild}>]",

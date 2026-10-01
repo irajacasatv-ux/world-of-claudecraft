@@ -4,8 +4,9 @@
 // REAL Sim on the empty test world like tests/corpse_harvest_inspection.test.ts.
 
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { MOBS, setActiveWorldContent } from '../src/sim/data';
+import { DUNGEONS, MOBS, setActiveWorldContent } from '../src/sim/data';
 import { createMob } from '../src/sim/entity';
+import { applyDungeonSpawnMinibossTuning } from '../src/sim/instances/dungeon_spawn_miniboss';
 import { mobCombatStats } from '../src/sim/mob/combat_stats';
 import { MOB_INSPECT_RANGE, mobInspectInfo } from '../src/sim/mob/inspection';
 import { Sim } from '../src/sim/sim';
@@ -115,7 +116,34 @@ describe('Sim.mobInspectInfo (the live read)', () => {
       weaponMax: mob.weapon.max,
       attackSpeed: mob.weapon.speed,
       armor: mob.stats.armor,
+      ccImmune: false,
+      slowImmune: false,
     });
+  });
+
+  it('reports a promoted dungeon miniboss as immune, from its SPAWN flags', () => {
+    const { sim, pid } = setup();
+    // The shipped Crucible Warden promotion (content/dungeons.ts): the template
+    // carries neither immunity, the spawn tuning grants both, and combat
+    // (Sim.applyAura) honours the template OR the entity flag.
+    const spawn = Object.values(DUNGEONS)
+      .flatMap((d) => d.spawns)
+      .find((s) => s.mobId === 'ignivar_crucible_warden' && s.miniboss?.ccImmune);
+    const tuning = expectDefined(spawn?.miniboss);
+    const template = MOBS.ignivar_crucible_warden;
+    expect(template.ccImmune === true).toBe(false);
+    expect(template.slowImmune === true).toBe(false);
+    const warden = createMob(9002, template, template.maxLevel, sim.groundPos(12, 0));
+    applyDungeonSpawnMinibossTuning(warden, tuning);
+    sim.entities.set(warden.id, warden);
+    const info = expectDefined(sim.mobInspectInfo(warden.id, pid));
+    expect(info.ccImmune).toBe(true);
+    expect(info.slowImmune).toBe(true);
+    // The same template unpromoted reads neither.
+    const plain = createMob(9003, template, template.maxLevel, sim.groundPos(14, 0));
+    sim.entities.set(plain.id, plain);
+    const plainInfo = expectDefined(sim.mobInspectInfo(plain.id, pid));
+    expect([plainInfo.ccImmune, plainInfo.slowImmune]).toEqual([false, false]);
   });
 
   it('reads the LIVE entity, not the template (instance tuning rewrites the spawn)', () => {

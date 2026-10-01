@@ -157,9 +157,17 @@ function lootTableHtml(table: MobInspectLootTable, deps: MobInspectWindowDeps): 
   let html = table.coins.map((row) => coinRowHtml(row, deps)).join('');
   for (const group of table.groups) {
     const rows = group.rows.map((row) => dropRowHtml(row, deps)).join('');
-    html += group.exclusive
-      ? `<div class="mob-inspect-group ui-well"><div class="mob-inspect-group-label ui-meta">${esc(t('hudChrome.mobInspect.exclusiveGroup'))}</div>${rows}</div>`
-      : rows;
+    if (!group.exclusive) {
+      html += rows;
+      continue;
+    }
+    // One draw: at most one row drops. Several draws over a shared list: up to
+    // that many DIFFERENT rows drop (a later roll skips an already-won item).
+    const label =
+      group.rolls > 1
+        ? t('hudChrome.mobInspect.sharedRolls', { count: formatNumber(group.rolls) })
+        : t('hudChrome.mobInspect.exclusiveGroup');
+    html += `<div class="mob-inspect-group ui-well"><div class="mob-inspect-group-label ui-meta">${esc(label)}</div>${rows}</div>`;
   }
   return html;
 }

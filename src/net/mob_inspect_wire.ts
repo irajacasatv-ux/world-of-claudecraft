@@ -38,6 +38,7 @@ function decodeMobInspectInfo(raw: unknown): MobInspectInfo | null {
   if (raw.weaponMax < raw.weaponMin) return null;
   if (!isNonNegativeFinite(raw.attackSpeed)) return null;
   if (!isNonNegativeFinite(raw.armor)) return null;
+  if (typeof raw.ccImmune !== 'boolean' || typeof raw.slowImmune !== 'boolean') return null;
   return {
     mobId: raw.mobId,
     templateId: raw.templateId,
@@ -47,6 +48,8 @@ function decodeMobInspectInfo(raw: unknown): MobInspectInfo | null {
     weaponMax: raw.weaponMax,
     attackSpeed: raw.attackSpeed,
     armor: raw.armor,
+    ccImmune: raw.ccImmune,
+    slowImmune: raw.slowImmune,
   };
 }
 

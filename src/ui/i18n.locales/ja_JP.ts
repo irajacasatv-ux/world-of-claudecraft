@@ -2098,6 +2098,7 @@ export const ja_JP: Partial<Record<TranslationKey, string>> = {
   'hudChrome.mobInspect.normalOnly': 'ノーマル難易度のみ',
   'hudChrome.mobInspect.money': '硬貨',
   'hudChrome.mobInspect.rangeTo': '～',
+  'hudChrome.mobInspect.sharedRolls': '1回の撃破で{count}回抽選、同じアイテムは2度出ない',
   'hudChrome.targetFrame.unlock': 'ターゲットフレームを移動',
   'hudChrome.targetFrame.lock': 'ターゲットフレームを固定',
   'hudChrome.playerFrame.unlock': 'プレイヤーフレームを移動',
