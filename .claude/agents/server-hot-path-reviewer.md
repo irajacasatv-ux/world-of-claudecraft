@@ -32,21 +32,19 @@ connected session in production.
 
 ## Scope gate (run this first)
 
-Look at the changed files (`node scripts/review_scope.mjs`, or the range the caller names).
-The surface is anything under `server/`, PLUS any `src/sim/` change to a method the self
-path consumes (a `*For(pid)`, `*InfoFor`, or `*Wire` read
-called from `selfWireJson` in `server/game.ts`), to a `serialize*` method a save path
-consumes, or to a collection those reads walk (the mail book, the market listing book,
-the commission order board, any shared board or ledger): the cost of a self key lives in
-the sim read it calls, so a later `src/sim/` change can widen what `commissionOrdersFor`,
-`marketInfoFor`, or `mailInfoFor` walks without touching `server/game.ts`, and a
-server-only scope gate would miss it. A read bounded by an O(1) field or a content table
-earns a light pass, which is the expected outcome for most sim diffs that reach here. If
-the diff touches none of that (docs, tests, or client code only), reply with exactly:
-"No server hot-path surface in this diff; review not applicable." and stop. Otherwise
-continue, and scale depth to how hot the touched path is (boot-time and admin-rare code
-gets a light pass; tick, broadcast, per-request, and recurring-job code gets the full
-checklist).
+Look at the changed files (`node scripts/review_scope.mjs`, or the range the caller names). The
+surface is anything under `server/`, PLUS any `src/sim/` change to a method the self path consumes
+(a `*For(pid)`, `*InfoFor`, or `*Wire` read called from `selfWireJson` in `server/game.ts`), to a
+`serialize*` method a save path consumes, or to a collection those reads walk (the mail book, the
+market listing book, the commission order board, any shared board or ledger): the cost of a self key
+lives in the sim read it calls, so a later `src/sim/` change can widen what `commissionOrdersFor`,
+`marketInfoFor`, or `mailInfoFor` walks without touching `server/game.ts`, and a server-only scope
+gate would miss it. A read bounded by an O(1) field or a content table earns a light pass, which is
+the expected outcome for most sim diffs that reach here. If the diff touches none of that (docs,
+tests, or client code only), reply with exactly: "No server hot-path surface in this diff; review
+not applicable." and stop. Otherwise continue, and scale depth to how hot the touched path is
+(boot-time and admin-rare code gets a light pass; tick, broadcast, per-request, and recurring-job
+code gets the full checklist).
 
 ## Checks
 

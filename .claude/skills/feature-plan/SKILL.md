@@ -296,11 +296,12 @@ error paths against your own `git diff <base> HEAD --name-only` before calling a
 "scope noise"; fix with a SCOPED `npx @biomejs/biome check --write <file>`, never
 whole-tree, and re-run the check, because a format pass is not a check pass).
 
-**The merge bar is root `CLAUDE.md` "Deliverable":** the PR passes CI and the selective gate is
-green. Once the branch is cleared for pushing, push and watch (`gh pr checks --watch` or a
-background watcher) to completion instead of gating locally, as long as CI's pr-gate test legs ran
-rather than skipped; the maintainer prefers CI here. Before the branch is cleared, and for a
-docs-only phase, gate locally with `node scripts/gate_select.mjs`. Step lists and tiers live in
+**The merge bar is root `CLAUDE.md` "Deliverable":** a fully mergeable PR that passes CI, gated
+locally with `node scripts/gate_select.mjs`. Once the branch is cleared for pushing, a
+watched-green CI run on the pushed tip whose pr-gate legs ran their test steps rather than
+skipping them meets the same bar, so push and watch (`gh pr checks --watch` or a background
+watcher) to completion instead of gating locally; the maintainer prefers CI here. Before the
+branch is cleared, and for a docs-only phase, gate locally. Step lists and tiers live in
 `docs/qa-gate.md`; do not restate them in prompts.
 
 ### Code hygiene (include once in the plan's workflow section)

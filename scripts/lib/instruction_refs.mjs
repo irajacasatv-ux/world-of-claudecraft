@@ -58,6 +58,18 @@ export function packageScriptsFor({ file, files, readScripts }) {
   return scripts;
 }
 
+/**
+ * The files references resolve against: tracked plus untracked-but-not-ignored (so a file
+ * created in the same change resolves before it is staged), minus files deleted from the working
+ * tree but not yet from the index (so an unstaged delete counts exactly like a staged one).
+ * @param {(args: string[]) => string[]} gitPaths runs `git <args> -z` and returns the paths
+ */
+export function listRepoFiles(gitPaths) {
+  const deleted = new Set(gitPaths(['ls-files', '--deleted']));
+  const listed = gitPaths(['ls-files', '--cached', '--others', '--exclude-standard']);
+  return [...new Set(listed)].filter((f) => !deleted.has(f));
+}
+
 /** @param {string[]} tracked repo-relative posix paths from `git ls-files` */
 export function buildIndex(tracked) {
   const files = new Set(tracked);

@@ -1125,10 +1125,12 @@ function main(argv, cwd) {
   );
   // M16 reminder: the appended apiError English leaf is terse but still wordy (any real
   // word of 4+ letters trips the gate), so if you reword it into a sentence, add its five
-  // non-Latin fills (zh_CN, zh_TW, ja_JP, ko_KR, ru_RU) in the same change, or i18n_completeness reds.
+  // non-Latin fills (zh_CN, zh_TW, ja_JP, ko_KR, ru_RU) in the same change, or
+  // i18n_completeness reds.
   process.stdout.write(
     `${SCRIPT_NAME}: note: if you reword the apiError.${plan.code} English value into wordy prose, ` +
-      'add its five non-Latin fills (zh_CN, zh_TW, ja_JP, ko_KR, ru_RU) in the same change (M16).\n',
+      'add its five non-Latin fills (zh_CN, zh_TW, ja_JP, ko_KR, ru_RU) ' +
+      'in the same change (M16).\n',
   );
   return 0;
 }

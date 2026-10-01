@@ -5,11 +5,14 @@
 // a merge-base, one rename-splitting working-tree diff, one untracked listing, and nothing
 // else, so no form of `@{upstream}` can creep back in); the union of committed, staged,
 // unstaged, and untracked files, sorted and deduplicated; fail-loud on an unresolvable base
-// or a failed git call; and the CLI's two outputs and its exit status. The nearest suite,
+// or a failed git call; and the CLI's two outputs (checked end to end against a real repo,
+// non-ASCII names and both ends of a rename included) and its exit status. The nearest suite,
 // tests/ci_changed_base.test.ts, pins the shared base resolver and the shell-free git
 // runner, not these.
 // Cost: 300 ms
 import { spawnSync } from 'node:child_process';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
@@ -93,6 +96,16 @@ describe('resolveReviewScope', () => {
     expect(() => resolveReviewScope({ run: fakeGit(empty).run })).toThrow(/no merge-base/);
   });
 
+  it('fails loud when git cannot even launch', () => {
+    const answers = baseAnswers({
+      'diff --name-only --no-renames -z mb123': {
+        status: null,
+        error: new Error('spawn git ENOENT'),
+      },
+    });
+    expect(() => resolveReviewScope({ run: fakeGit(answers).run })).toThrow(/git diff/);
+  });
+
   it('fails loud when the diff or the untracked listing fails', () => {
     const noDiff = baseAnswers();
     delete noDiff['diff --name-only --no-renames -z mb123'];
@@ -119,6 +132,56 @@ describe('scripts/review_scope.mjs', () => {
     const res = cli(['--base'], 'HEAD');
     expect(res.status).toBe(0);
     expect(res.stdout.trim()).toBe(head.stdout.trim());
+  });
+
+  it('lists committed, renamed, modified, and untracked files of a real repo, non-ASCII intact', () => {
+    // A throwaway repo the CLI's git calls reach through GIT_DIR/GIT_WORK_TREE, so the case
+    // runs real git end to end (the -z parsing included) without depending on this checkout.
+    const repo = mkdtempSync(path.join(os.tmpdir(), 'woc-review-scope-'));
+    const git = (...args: string[]) => {
+      const res = spawnSync('git', ['-c', 'user.name=t', '-c', 'user.email=t@t', ...args], {
+        cwd: repo,
+        encoding: 'utf8',
+      });
+      if (res.status !== 0) throw new Error(`git ${args.join(' ')}: ${res.stderr}`);
+      return res.stdout.trim();
+    };
+    try {
+      git('init', '-q');
+      writeFileSync(path.join(repo, 'a.md'), 'a\n');
+      writeFileSync(path.join(repo, 'r.md'), 'r\n');
+      git('add', '.');
+      git('commit', '-qm', 'base');
+      const base = git('rev-parse', 'HEAD');
+      writeFileSync(path.join(repo, 'c.md'), 'c\n');
+      git('add', 'c.md');
+      git('mv', 'r.md', 's.md');
+      git('commit', '-qm', 'change');
+      writeFileSync(path.join(repo, 'a.md'), 'a2\n');
+      writeFileSync(path.join(repo, 'café.md'), 'new\n');
+      const res = spawnSync(process.execPath, [path.join(root, 'scripts/review_scope.mjs')], {
+        cwd: root,
+        encoding: 'utf8',
+        env: {
+          ...process.env,
+          GIT_DIR: path.join(repo, '.git'),
+          GIT_WORK_TREE: repo,
+          GATE_SELECT_BASE: base,
+          GIT_OPTIONAL_LOCKS: '0',
+        },
+      });
+      expect(res.status, res.stderr).toBe(0);
+      // The rename shows both ends; the committed, unstaged, and untracked work all count.
+      expect(res.stdout.split('\n').filter(Boolean)).toEqual([
+        'a.md',
+        'c.md',
+        'café.md',
+        'r.md',
+        's.md',
+      ]);
+    } finally {
+      rmSync(repo, { recursive: true, force: true });
+    }
   });
 
   it('exits 1 with a named error when the base does not resolve', () => {

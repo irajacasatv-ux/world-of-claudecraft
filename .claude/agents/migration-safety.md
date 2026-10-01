@@ -85,9 +85,9 @@ that out wastes budget. Gate yourself before reading any file:
 Determine what to review using the following precedence:
 1. If a specific file/change was mentioned in the invocation, review that.
 2. The change itself: `git diff "$(node scripts/review_scope.mjs --base)"` (committed, staged,
-   and unstaged work against the integration base), plus each untracked file the scope lists,
-   read whole, filtered to `server/db.ts`,
-   `server/social_db.ts`, `server/*_db.ts`, and any serialize/deserialize of `characters.state`.
+   and unstaged work against the integration base) plus each untracked file the scope lists,
+   read whole; review every file in either set that matches the scope gate's step 2 (DDL
+   modules, `server/concurrent_indexes.ts`, and the JSONB serialize/deserialize paths).
 3. If nothing schema- or persistence-related is found, report that no schema/persistence
    changes were detected.
 

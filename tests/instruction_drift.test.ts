@@ -23,13 +23,18 @@ import {
   buildIndex,
   extractRefs,
   isInstructionFile,
+  listRepoFiles,
   packageScriptsFor,
   unresolvedRefs,
 } from '../scripts/lib/instruction_refs.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 // CRLF to LF, so a Windows checkout with autocrlf reads the same text the rules expect.
-const read = (rel: string) => readFileSync(path.join(root, rel), 'utf8').replaceAll('\r\n', '\n');
+const normalize = (text: string) => text.replaceAll('\r\n', '\n');
+const read = (rel: string) => normalize(readFileSync(path.join(root, rel), 'utf8'));
+/** The `name:` field of a file's leading frontmatter block. */
+const nameOf = (text: string) =>
+  text.match(/^---\n([\s\S]*?)\n---\n/)?.[1].match(/^name:\s*(\S+)\s*$/m)?.[1];
 const scriptsOf = (packageJson: string) => Object.keys(JSON.parse(read(packageJson)).scripts ?? {});
 
 /** A NUL-separated (`-z`) git listing, so git never quotes a non-ASCII path. */
@@ -44,15 +49,8 @@ function gitPaths(args: string[]): string[] {
   return res.stdout.split('\0').filter(Boolean);
 }
 
-/** Tracked files plus untracked ones that are not ignored, so a file created in the same
- *  change resolves before it is staged, minus files deleted from the working tree but not yet
- *  from the index, so an unstaged delete counts exactly like a staged one. */
-function repoFiles(): string[] {
-  const deleted = new Set(gitPaths(['ls-files', '--deleted']));
-  return [...new Set(gitPaths(['ls-files', '--cached', '--others', '--exclude-standard']))].filter(
-    (f) => !deleted.has(f),
-  );
-}
+/** The repo's files for resolution (see listRepoFiles). */
+const repoFiles = () => listRepoFiles(gitPaths);
 
 /** The subset of `paths` git ignores (generated or local-only output, never drift). */
 function ignored(paths: string[]): Set<string> {
@@ -227,6 +225,21 @@ describe('instruction_refs rules', () => {
     }
   });
 
+  it('lists tracked and untracked files, minus unstaged deletes, once each', () => {
+    const answers: Record<string, string[]> = {
+      'ls-files --deleted': ['b.ts'],
+      'ls-files --cached --others --exclude-standard': ['a.md', 'b.ts', 'new.ts', 'a.md'],
+    };
+    expect(listRepoFiles((args) => answers[args.join(' ')] ?? [])).toEqual(['a.md', 'new.ts']);
+  });
+
+  it('reads a CRLF checkout the same as LF', () => {
+    expect(nameOf(normalize('---\r\nname: qa-checklist\r\ntools: Read\r\n---\r\nbody'))).toBe(
+      'qa-checklist',
+    );
+    expect(nameOf('---\r\nname: qa-checklist\r\n---\r\nbody')).toBeUndefined();
+  });
+
   it('adds a top-level directory package.json to the root scripts', () => {
     const files = new Set(['package.json', 'bot/package.json']);
     const readScripts = (p: string) => (p === 'package.json' ? ['gate'] : ['start']);
@@ -315,10 +328,7 @@ describe('the agent and skill roster', () => {
     .filter((d) => d.isDirectory())
     .map((d) => d.name)
     .sort();
-  const frontmatterName = (rel: string) =>
-    read(rel)
-      .match(/^---\n([\s\S]*?)\n---\n/)?.[1]
-      .match(/^name:\s*(\S+)\s*$/m)?.[1];
+  const frontmatterName = (rel: string) => nameOf(read(rel));
   /** One `## heading` section of a doc, up to the next `## ` heading. */
   const section = (doc: string, heading: string) => {
     const start = doc.indexOf(`\n## ${heading}\n`);

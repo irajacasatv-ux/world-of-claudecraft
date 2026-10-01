@@ -48,6 +48,7 @@ End with a one-line verdict: READY or NOT READY, and the list of any VERIFY item
 still has to run by hand (for example `npm run perf:tour`, `npm run test:browser`, or the mobile E2E
 scripts). READY is advisory judgment; `node scripts/gate_select.mjs` is the deterministic pre-merge
 contract (same step list as `npm run gate` with a selective test substitution; release tier on
-`release/**`; see `docs/qa-gate.md`), so if neither it nor a watched-green CI run whose pr-gate test
-legs ran, on the pushed tip of a branch cleared for pushing, has passed this session, list it as the
-first VERIFY item. `npm run gate` remains the deeper full-suite check when you want it.
+`release/**`; see `docs/qa-gate.md`), so if neither it nor a watched-green CI run whose pr-gate legs
+ran their test steps, on the pushed tip of a branch cleared for pushing, has passed this session,
+list it as the first VERIFY item. `npm run gate` remains the deeper full-suite check when you want
+it.

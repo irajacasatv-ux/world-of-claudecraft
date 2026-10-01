@@ -22,3 +22,4 @@ export declare function packageScriptsFor(args: {
   files: Set<string>;
   readScripts: (packageJson: string) => string[];
 }): Set<string>;
+export declare function listRepoFiles(gitPaths: (args: string[]) => string[]): string[];

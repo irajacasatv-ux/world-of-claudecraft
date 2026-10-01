@@ -11,7 +11,7 @@ Codex have different entry points and share the same deterministic scripts and c
 | Instant copy gate | `.claude/hooks/qa-stop.sh` through each runtime's Stop hook | End of an agent turn | Yes, on a hard-invariant hit |
 | Deterministic floor | `.githooks/pre-push` | Before a push | Yes |
 | Day-loop fast path | `npm run gate:fast` through `scripts/gate_fast.mjs` | While iterating (agents and mid/low-tier machines) | No (local only; not merge) |
-| **Selective gate** | `node scripts/gate_select.mjs` | **Before implementation is called ready / pre-merge** (on a branch cleared for pushing, a watched-green CI run on the pushed tip whose pr-gate test legs ran (not skipped) meets the same bar; root `CLAUDE.md` "Deliverable") | **Yes (the merge bar)** |
+| **Selective gate** | `node scripts/gate_select.mjs` | **Before implementation is called ready / pre-merge** (on a branch cleared for pushing, a watched-green CI run on the pushed tip whose pr-gate legs ran their test steps meets the same bar; root `CLAUDE.md` "Deliverable") | **Yes (the merge bar)** |
 | Full local gate | `npm run gate` through `scripts/gate.mjs` | When you want the whole suite locally, or the planner falls back | Yes (deeper check) |
 | Selective PR-tier CI | ci.yml `pr-gate` shards through `scripts/ci_shard_test.mjs` (same selection semantics, sharded; full suite on any unprovable diff) | Every pull request | Yes (required checks) |
 | Merge queue | ci.yml on the `merge_group` event: the full PR tier over the exact merge result about to become the branch tip (see `docs/merge-queue.md`, including rollout status: `release/**` first, `main` at the next release-to-main merge) | Every queued merge into a queue-protected branch | Yes (required checks on the merge group) |
@@ -151,7 +151,7 @@ alone is never enough to claim done.
 ### Selective gate (`gate:select`)
 
 `node scripts/gate_select.mjs` is **the merge bar**; on a branch cleared for pushing, a
-watched-green CI run on the pushed tip whose pr-gate test legs ran (not skipped) meets the
+watched-green CI run on the pushed tip whose pr-gate legs ran their test steps meets the
 same bar, while a docs-only change still gates locally (root `CLAUDE.md` "Deliverable"; the
 merge-bar decision record is `docs/local-gate-perf/state.md`). `npm run gate` remains the
 deeper check. The one-line difference from the other paths:

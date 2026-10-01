@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  AGENT_ROUTING_DOCS,
   isAgentToolingPath,
   isCanonicalInstructionPath,
   isCodexExecutableInstructionPath,
@@ -14,6 +15,14 @@ describe('agent instruction path boundaries', () => {
       expect(isAgentToolingPath(file)).toBe(true);
     },
   );
+  it('shares exactly the three agent-routing docs, frozen against a consumer appending one', () => {
+    expect(AGENT_ROUTING_DOCS).toEqual([
+      'docs/codex.md',
+      'docs/qa-gate.md',
+      'docs/ai-architecture.md',
+    ]);
+    expect(Object.isFrozen(AGENT_ROUTING_DOCS)).toBe(true);
+  });
   it.each(['docs/codex.md', 'docs/qa-gate.md', 'docs/ai-architecture.md'])(
     'treats the agent-routing doc %s as tooling, so a change to it runs the gate',
     (file) => {
