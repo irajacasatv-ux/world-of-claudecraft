@@ -45,8 +45,10 @@ STEP 2 - AUDIT:
     before receipt, duplicate receipt, COMMIT failure and the distinct ambiguous COMMIT
     (destroy the client after COMMIT is sent, the
     tests/server/character_delete_verify.pg.test.ts shape): landed proves no second
-    apply, not-landed exactly one later apply, and the verify read is the locked FOR KEY
-    SHARE form named in 07a, never a plain SELECT. Reload from PG and prove each
+    apply, not-landed exactly one later apply, and the verify read is the locked form
+    named in 07a, never a plain SELECT (AS BUILT, a ruling: the wait is `FOR SHARE`, not
+    `FOR KEY SHARE`, which a non-key UPDATE does not block; see the manifest's P9 and
+    the pg suite's case proving the KEY SHARE form does not wait). Reload from PG and prove each
     exact copy is in exactly one legitimate custody location, never zero or two.
   - Recover intent after restart/service ambiguity with the same operation ID; replay
     after live-cache compaction refuses. No DB client spans external IO. Applied compact

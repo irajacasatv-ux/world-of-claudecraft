@@ -2483,6 +2483,14 @@ describe('the housing authority families (07a)', () => {
       released: 107,
       fencedWrites: 108,
       selfAdopted: 109,
+      renewPasses: 110,
+      renewPassMsTotal: 111,
+      renewPassesSkipped: 112,
+      renewChunksAbandoned: 113,
+      wantedThrew: 114,
+      pendingSwept: 115,
+      loginReads: 116,
+      loginReadMsTotal: 117,
     },
     trips: {
       started: 201,
@@ -2498,6 +2506,7 @@ describe('the housing authority families (07a)', () => {
       refusedPreQueue: 210,
       metered: 211,
       abandoned: 212,
+      tripMsTotal: 214,
     },
   };
   const measured = (text: string, measure: string): string | undefined =>
@@ -2521,6 +2530,14 @@ describe('the housing authority families (07a)', () => {
       claim_released: '107',
       claim_fenced_writes: '108',
       claim_self_adopted: '109',
+      claim_renew_passes: '110',
+      claim_renew_pass_ms_total: '111',
+      claim_renew_passes_skipped: '112',
+      claim_renew_chunks_abandoned: '113',
+      claim_wanted_threw: '114',
+      claim_pending_swept: '115',
+      claim_login_reads: '116',
+      claim_login_read_ms_total: '117',
       trip_started: '201',
       trip_advanced: '202',
       trip_cooldown: '203',
@@ -2534,6 +2551,7 @@ describe('the housing authority families (07a)', () => {
       trip_refused_pre_queue: '210',
       trip_metered: '211',
       trip_abandoned: '212',
+      trip_ms_total: '214',
     };
     for (const [measure, value] of Object.entries(expected)) {
       expect(measured(text, measure), measure).toBe(value);

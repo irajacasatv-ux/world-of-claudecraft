@@ -401,7 +401,46 @@ describe('freehold receipt growth monitor: lifecycle and admission', () => {
 
     await expect(monitor.refresh()).resolves.toBeUndefined();
     expect(read).not.toHaveBeenCalled();
-    expect(onError).toHaveBeenCalledWith(acquireError);
+    expect(onError).toHaveBeenCalledWith({
+      code: undefined,
+      constraint: undefined,
+      message: 'background gate unavailable',
+    });
+  });
+
+  it('hands the error sink only the bounded classification, never a pg error detail', async () => {
+    // A real DatabaseError carries row content in `detail` (a 23514's failing
+    // row, a 23505's key) and the statement in `where`; the log line gets the
+    // code, the constraint and the message only (server/freehold_bounded_error.ts).
+    const pgError = Object.assign(new Error('new row violates check constraint'), {
+      code: '23514',
+      constraint: 'freehold_operation_receipts_kind_shape',
+      detail: 'Failing row contains (fop:secret, 42, plot:home).',
+      where: 'SQL statement',
+      table: 'freehold_operation_receipts',
+    });
+    const onError = vi.fn();
+    const monitor = createFreeholdReceiptGrowthMonitor({
+      ...PORTS,
+      pool: availablePool(),
+      tryAcquireBackgroundPermit: () => ({ release() {} }),
+      read: async () => {
+        throw pgError;
+      },
+      onError,
+    });
+
+    await monitor.refresh();
+
+    expect(onError).toHaveBeenCalledTimes(1);
+    const logged = onError.mock.calls[0]?.[0];
+    expect(logged).toEqual({
+      code: '23514',
+      constraint: 'freehold_operation_receipts_kind_shape',
+      message: 'new row violates check constraint',
+    });
+    expect(logged).not.toBe(pgError);
+    expect(JSON.stringify(logged)).not.toContain('Failing row');
   });
 
   it('never queues on a saturated pool: it yields its permit silently, no checkout', async () => {

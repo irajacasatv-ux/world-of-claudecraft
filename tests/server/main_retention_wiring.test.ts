@@ -382,21 +382,30 @@ describe('retention sweep wiring in server/main.ts', () => {
     // Intents need no arm because they are bounded per account and deleted on
     // close. Same shape as the two housing pins above: the absence is PINNED.
     const tables = ['freehold_plot_claims', 'freehold_operations', 'freehold_operation_receipts'];
+    const sweepEntry = (table: string) => `name: '${table}'`;
     for (const table of tables) {
-      expect(MAIN).not.toContain(`name: '${table}'`);
+      expect(MAIN).not.toContain(sweepEntry(table));
       expect(MAIN).not.toContain(`DELETE FROM ${table}`);
     }
+    // Positive control: the same entry form DOES match real sweep arms in the
+    // scanned text, so the absences above are not vacuous.
+    expect(MAIN).toContain(sweepEntry('chat_logs'));
+    expect(MAIN).toContain(sweepEntry('client_perf_reports'));
     // The scraped sweep array itself names no housing table in any form (the
     // exact-order pin above is the second guard), and neither does the sweep
     // module, which takes its whole table list from main.ts.
     const start = MAIN.indexOf('tables: [');
     expect(start).toBeGreaterThan(-1);
     const block = MAIN.slice(start, MAIN.indexOf('onlineSamples:', start));
+    expect(block).toContain(sweepEntry('chat_logs'));
     expect(block).not.toMatch(/freehold/i);
     const SWEEP = readFileSync(join(__dirname, '..', '..', 'server', 'retention_sweep.ts'), 'utf8');
+    expect(SWEEP).toMatch(/pruneBatch/);
     expect(SWEEP).not.toMatch(/freehold/i);
     // (Narrowed past pruneBookedWocCustodyClaimsBatch, the market custody arm.)
-    expect(MAIN).not.toMatch(/prune\w*(PlotClaim|Operation|Receipt)/);
+    const pruneOf = (subjects: string) => new RegExp(`prune\\w*(${subjects})`);
+    expect(MAIN).toMatch(pruneOf('ChatLogs|ClientPerfReports'));
+    expect(MAIN).not.toMatch(pruneOf('PlotClaim|Operation|Receipt'));
     // The reason survives next to the list (RAW: the subject IS a comment).
     expect(MAIN_RAW).toContain(
       'freehold_plot_claims and freehold_operation_receipts are deliberately',
@@ -615,7 +624,7 @@ describe('retention sweep wiring in server/main.ts', () => {
       shutdown,
     );
     const release = MAIN.indexOf(
-      'await releaseAllFreeholdClaims({ pool, holder: PROCESS_LEASE_HOLDER });',
+      'await releaseAllFreeholdClaims({ pool, holder: PROCESS_LEASE_HOLDER, registry: heldClaims() });',
       shutdown,
     );
     const leases = MAIN.indexOf('await releaseAllCharacterLeases()', shutdown);

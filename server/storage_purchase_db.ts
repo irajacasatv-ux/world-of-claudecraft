@@ -284,6 +284,12 @@ export const STORAGE_PURCHASE_TX_IDLE_TIMEOUT_MS = 2_000;
 const STORAGE_PURCHASE_CLAIM_TOKEN_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
 
+/** The CONSTRAINT field guard_pending_storage_purchase_parent_delete raises
+ *  with its 55006, matched EXACTLY by the parent-delete consumers
+ *  (server/character_delete_db.ts parentDeleteGuardOf). The raise below is
+ *  built from this constant, so the two cannot drift. */
+export const STORAGE_PURCHASE_OPEN_CONSTRAINT = 'storage_purchases_open_delete_guard';
+
 // Idempotent; applied by ensureSchema (server/db.ts) under the boot advisory
 // lock. It also removes the feature branch's abandoned refusal history before
 // installing the closed status constraint. The full character and account
@@ -499,7 +505,7 @@ BEGIN
     RAISE EXCEPTION USING
       ERRCODE = '55006',
       MESSAGE = 'storage_purchase_open',
-      CONSTRAINT = 'storage_purchases_open_delete_guard';
+      CONSTRAINT = '${STORAGE_PURCHASE_OPEN_CONSTRAINT}';
   END IF;
   RETURN OLD;
 END;

@@ -485,6 +485,57 @@ describe('fenced character save ledger effects', () => {
     expect(book).toBeLessThan(indexOf(sql, /^COMMIT/));
   });
 
+  it('orders a hooked guild save: ledger receipts, then the guild replay, then the housing hook, then COMMIT', async () => {
+    const client = clientStub();
+    // The hooked COMMIT is tag-checked, so the stub answers it with its tag.
+    const answer = client.query.getMockImplementation();
+    client.query.mockImplementation(async (sql: string, values?: unknown[]) =>
+      /^COMMIT/.test(sql)
+        ? { rows: [], rowCount: 0, command: 'COMMIT' }
+        : (answer as NonNullable<typeof answer>)(sql, values),
+    );
+    h.pool.connect.mockResolvedValueOnce(client);
+    const guildSave = {
+      guildId: 19,
+      deltas: [{ ...GUILD_EFFECTS.batches[0].guildEffect?.deltas[0], instance: null }],
+    };
+    const events: string[] = [];
+    const hook = {
+      accountIds: [OWNER.accountId],
+      run: async (tx: { query(text: string): Promise<unknown> }) => {
+        await tx.query('SELECT 1 AS housing_hook_marker');
+      },
+      commitSent: () => events.push('commitSent'),
+      committed: () => events.push('committed'),
+    };
+
+    await expect(
+      saveCharacterAndGuildBankState(
+        OWNER.characterId,
+        7,
+        STATE,
+        [guildSave] as never,
+        'nonce-1',
+        undefined,
+        [],
+        GUILD_EFFECTS,
+        undefined,
+        hook,
+      ),
+    ).resolves.toBe(true);
+
+    const sql = sqlCalls(client);
+    const receipts = indexOf(sql, /WITH receipt_input AS/);
+    const replay = indexOf(sql, /INSERT INTO guild_banks/);
+    const housing = indexOf(sql, /housing_hook_marker/);
+    const commit = indexOf(sql, /^COMMIT/);
+    expect(receipts).toBeGreaterThan(indexOf(sql, /UPDATE characters/));
+    expect(replay).toBeGreaterThan(receipts);
+    expect(housing).toBeGreaterThan(replay);
+    expect(commit).toBeGreaterThan(housing);
+    expect(events).toEqual(['commitSent', 'committed']);
+  });
+
   it('uses all-existing receipts as committed results without any guild query', async () => {
     const client = clientStub({ claims: [false] });
     h.pool.connect.mockResolvedValueOnce(client);

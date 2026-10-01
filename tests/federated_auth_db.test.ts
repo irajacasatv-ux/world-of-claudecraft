@@ -1,8 +1,11 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it, vi } from 'vitest';
 import {
   deleteUnusedFederatedProvision,
   FederatedProvisionFreeholdOperationOpen,
 } from '../server/federated_auth_db';
+import { stripComments } from './helpers/strip_comments';
+import { tsFilesUnder } from './helpers/ts_files_under';
 
 // A pg DatabaseError's shape: the SQLSTATE and the CONSTRAINT field ride the
 // error object itself (both guard raises set CONSTRAINT; neither sets a DETAIL).
@@ -24,6 +27,40 @@ describe('deleteUnusedFederatedProvision', () => {
     expect(sql).not.toMatch(/NOT EXISTS \(SELECT 1 FROM characters/i);
     expect(sql).toMatch(/RETURNING a\.id/i);
     expect(params).toEqual([7]);
+  });
+
+  it('is handed only the loser its own request just provisioned, before any session (P11)', () => {
+    // The DELETE predicate names no housing table: it cannot itself exclude an
+    // account that owns a plot. What does is the call site. A plot is created
+    // only through a claimed login, which needs a session, and each caller
+    // passes the account it provisioned in the SAME request, before any
+    // session is issued for it. So the account cascade (plot rows before claim
+    // rows) can never meet a fenced write that locks the claim first.
+    const sources = tsFilesUnder('server').map((f) => ({
+      name: `server/${f.file}`,
+      code: stripComments(readFileSync(f.full, 'utf8')),
+    }));
+    expect(sources.length).toBeGreaterThan(400);
+    const callers = sources.filter(
+      (f) =>
+        f.name !== 'server/federated_auth_db.ts' &&
+        f.code.includes('deleteUnusedFederatedProvision('),
+    );
+    expect(callers.map((f) => f.name).sort()).toEqual([
+      'server/apple_auth.ts',
+      'server/discord.ts',
+    ]);
+    const sessionIssue = /issue(?:Apple|Discord)Session\(|newToken\(|INSERT INTO auth_tokens/;
+    for (const f of callers) {
+      expect(f.code.split('deleteUnusedFederatedProvision(').length - 1, f.name).toBe(1);
+      const at = f.code.indexOf('deleteUnusedFederatedProvision(pool, account.id)');
+      expect(at, f.name).toBeGreaterThan(-1);
+      const provisioned = f.code.lastIndexOf('const account = await provision', at);
+      expect(provisioned, f.name).toBeGreaterThan(-1);
+      expect(f.code.slice(provisioned, at), f.name).not.toMatch(sessionIssue);
+      // Positive control: the same matcher sees the session the file DOES issue.
+      expect(f.code, f.name).toMatch(sessionIssue);
+    }
   });
 
   it('reports false when a token, password, or federated link makes the account reachable', async () => {
@@ -65,8 +102,10 @@ describe('deleteUnusedFederatedProvision', () => {
       code: 'FEDERATED_PROVISION_FREEHOLD_OPERATION_OPEN',
       accountId: 7,
       message:
-        'federated provision cleanup refused: account 7 has an open housing operation awaiting its close',
+        'federated provision cleanup refused: the account has an open housing operation awaiting its close',
     });
+    // The id rides the typed field only, never the message a log line prints.
+    expect((failure as Error).message).not.toContain('7');
     expect((failure as Error).cause).toBe(raw);
     // Never the storage reading: an operator chasing a stuck purchase would
     // look in the wrong ledger.

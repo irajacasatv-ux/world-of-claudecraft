@@ -274,19 +274,29 @@ export function dispatchFreeholdCommand(
 }
 
 /** Why the server would refuse a Hearth Key `use` frame before the sim sees it,
- *  or null: the three gates the frame path runs for this frame (spectating
- *  drops it silently, a jailed session answers `busy`, a dark realm answers
- *  `no_freehold`), as ONE predicate the Hearth trip's server-side re-dispatch
- *  replays (server/freehold_hearth_trip.ts), since that re-dispatch never
- *  enters the frame path (it is not player input: no lane token, no detector
- *  observation). Its agreement with the frame path is pinned. */
+ *  or null: every gate the frame path runs for this frame, in its order (a
+ *  draining realm and a character whose vault loot is fenced drop it in
+ *  handleMessage, spectating drops it, all three silently; a jailed session
+ *  answers `busy`, a dark realm answers `no_freehold`), as ONE predicate the
+ *  Hearth trip's server-side re-dispatch replays (server/freehold_hearth_trip.ts),
+ *  since that re-dispatch never enters the frame path. The frame path's other
+ *  steps are not gates for it: the rate gate, the lanes and the detector
+ *  observation meter and watch player input, and the original frame paid them.
+ *  Its agreement with the frame path is pinned. */
 export function hearthKeyUseRefusal(
-  session: { readonly spectating?: unknown; readonly jailed?: unknown },
+  gates: {
+    readonly draining?: boolean;
+    readonly vaultLocked?: boolean;
+    readonly spectating?: unknown;
+    readonly jailed?: unknown;
+  },
   env?: NodeJS.ProcessEnv,
-): 'spectating' | 'jailed' | 'dark' | null {
+): 'draining' | 'vault_locked' | 'spectating' | 'jailed' | 'dark' | null {
   const frame = { cmd: 'use', item: HEARTH_KEY_ITEM_ID };
-  if (session.spectating) return 'spectating';
-  if (session.jailed && refusedJailedTravelCommand(frame)) return 'jailed';
+  if (gates.draining) return 'draining';
+  if (gates.vaultLocked) return 'vault_locked';
+  if (gates.spectating) return 'spectating';
+  if (gates.jailed && refusedJailedTravelCommand(frame)) return 'jailed';
   if (refusedFreeholdCommand(frame, env)) return 'dark';
   return null;
 }

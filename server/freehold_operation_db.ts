@@ -238,10 +238,14 @@ END;
 $freehold_operation_parent_delete$;
 
 -- The erase half of a TRUE account delete. The SET NULL action is an UPDATE
--- that row triggers see, so when the account reference goes from a value to
--- NULL the plot id (a public wire identity) and the fingerprint (a hash of the
--- request) go with it, and the tombstone keeps only what replay authority
--- needs: the operation id, kind, outcome, revision and time.
+-- that row triggers see, so when the account reference is NULL the plot id (a
+-- public wire identity) and the fingerprint (a hash of the request) go with
+-- it, and the tombstone keeps only what replay authority needs: the operation
+-- id, kind, outcome, revision and time. Keyed on the NEW row alone, never on
+-- the transition, so a later UPDATE of an already-erased tombstone cannot
+-- write either column back. Only the body changed when it stopped watching the
+-- transition: CREATE OR REPLACE keeps the function's oid, so the trigger probe
+-- below still passes and a steady-state boot repairs nothing.
 CREATE OR REPLACE FUNCTION erase_freehold_operation_receipt()
 RETURNS trigger
 LANGUAGE plpgsql
@@ -249,7 +253,7 @@ SECURITY INVOKER
 SET search_path = pg_catalog, "__woc_freehold_operation_schema__", pg_temp
 AS $freehold_operation_receipt_erase$
 BEGIN
-  IF OLD.account_id IS NOT NULL AND NEW.account_id IS NULL THEN
+  IF NEW.account_id IS NULL THEN
     NEW.plot_id := NULL;
     NEW.fingerprint := NULL;
   END IF;

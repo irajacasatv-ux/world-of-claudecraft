@@ -28,6 +28,7 @@ import type {
   CharacterSaveHousingHook,
   CharacterSaveHousingQueryable,
 } from './character_save_housing';
+import type { DbTransactionDeadlineClient } from './db_transaction_deadline';
 import {
   type FreeholdClaimFence,
   fenceFreeholdClaimOnClient,
@@ -51,8 +52,12 @@ import {
   runFreeholdTransaction,
 } from './freehold_tx';
 
-/** The hook's explicit statement bound (CHARACTER_SAVE_SIGNAL_STATEMENT_TIMEOUT_MS):
- *  the hook and COMMIT run under it whatever bound the save opened with. */
+/** The hook's explicit statement bound (CHARACTER_SAVE_SIGNAL_STATEMENT_TIMEOUT_MS)
+ *  for the HOOK'S STATEMENTS, whatever bound the save opened with. It does NOT
+ *  bound COMMIT: PostgreSQL 16 stops the statement timer before the deferred
+ *  triggers run at commit (the manifest's section 3, measured), so COMMIT is
+ *  bounded by the save's lock_timeout (2 s, the growth budget's lock wait) and
+ *  its 65 s wall with the backend cancel. */
 export const FREEHOLD_HOOK_STATEMENT_TIMEOUT_MS = 15_000;
 
 /** The verify's bounds: CHARACTER_DELETE_VERIFY_SQL's (statement 15 s, lock
@@ -318,10 +323,44 @@ export async function lockFreeholdClaimFenceOnClient(
   return (res.rows?.length ?? 0) === 1;
 }
 
+/** The verify's ONE checkout (P9) as a pool for runFreeholdTransaction: both
+ *  of its transactions run on the same client, so the reads never re-queue for
+ *  a second checkout in the brownout that made the commit ambiguous. A release
+ *  between them is a no-op; a release with an error (a transaction left the
+ *  client broken) refuses the next checkout, and the real client goes back
+ *  exactly once, from `finish`, with that error when there is one. */
+function verifyCheckout(client: DbTransactionDeadlineClient): {
+  readonly pool: FreeholdTxPool;
+  finish(): void;
+} {
+  let broken: Error | true | null = null;
+  const pool: FreeholdTxPool = {
+    async connect() {
+      if (broken !== null) throw new Error('freehold mutation verify client was left broken');
+      return {
+        query: client.query.bind(client),
+        release(error?: Error | boolean) {
+          if (error) broken = error;
+        },
+        on: (event, listener) => client.on(event, listener),
+        removeListener: (event, listener) => client.removeListener(event, listener),
+        get processID() {
+          return client.processID;
+        },
+      };
+    },
+  };
+  return { pool, finish: () => client.release(broken ?? undefined) };
+}
+
 /**
  * The verify (P9): wait out the hung transaction on the character row, then
  * read each participant's own evidence. Every reading must agree, because the
- * hung transaction committed all of them or none.
+ * hung transaction committed all of them or none. ONE checkout for both
+ * transactions, so the permit (and the character FIFO behind it) is held for at
+ * most one checkout wait (the pool's 5 s connect timeout) plus two
+ * FREEHOLD_VERIFY_BOUNDS walls (2 x 30 s), 65 s in all, where a second checkout
+ * would have made it 2 x (5 + 30) s.
  */
 export async function verifyFreeholdMutation(
   pool: FreeholdTxPool,
@@ -332,11 +371,14 @@ export async function verifyFreeholdMutation(
     readonly advanceToken: string | null;
   },
 ): Promise<'landed' | 'not_landed' | 'unresolved'> {
+  let checkout: ReturnType<typeof verifyCheckout> | null = null;
   try {
-    await runFreeholdTransaction(pool, FREEHOLD_VERIFY_BOUNDS, (tx) =>
+    checkout = verifyCheckout(await pool.connect());
+    const one = checkout.pool;
+    await runFreeholdTransaction(one, FREEHOLD_VERIFY_BOUNDS, (tx) =>
       tx.query(FREEHOLD_VERIFY_WAIT_SQL, [characterId]),
     );
-    const readings = await runFreeholdTransaction(pool, FREEHOLD_VERIFY_BOUNDS, async (tx) => {
+    const readings = await runFreeholdTransaction(one, FREEHOLD_VERIFY_BOUNDS, async (tx) => {
       const seen: boolean[] = [];
       if (evidence.request.hearth && evidence.advanceToken !== null) {
         seen.push(
@@ -365,6 +407,8 @@ export async function verifyFreeholdMutation(
     return 'unresolved';
   } catch {
     return 'unresolved';
+  } finally {
+    checkout?.finish();
   }
 }
 

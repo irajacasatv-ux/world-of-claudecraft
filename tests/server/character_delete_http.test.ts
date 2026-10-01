@@ -63,6 +63,10 @@ describe('characterDeleteHttpRefusal', () => {
       expect(JSON.stringify(refusal)).not.toContain('55006');
       expect(JSON.stringify(refusal)).not.toContain('freehold_operations_open_delete_guard');
       expect(characterDeleteClientGone(refusalError)).toBe(false);
+      // The id rides the typed field only, never the message a log line prints.
+      expect(refusalError.characterId).toBe(42);
+      expect(refusalError.message).toBe('the character has an open housing operation');
+      expect(refusalError.message).not.toContain('42');
     }
     // The storage contract stays its own body (negative control: the new
     // class did not capture the storage mapping, or the reverse).
@@ -170,5 +174,27 @@ describe('delete dispatch arm wiring (source pins)', () => {
     expect(arm).toMatch(
       /if \(characterDeleteClientGone\(error\)\) return;\s*const refusal = characterDeleteHttpRefusal\(error\);/,
     );
+  });
+});
+
+describe('the parent-delete guard identities', () => {
+  it('names the storage guard constraint ONCE, in the module whose trigger raises it', async () => {
+    const { readFileSync } = await import('node:fs');
+    const { STORAGE_PURCHASE_OPEN_CONSTRAINT, STORAGE_PURCHASE_SCHEMA } = await import(
+      '../../server/storage_purchase_db'
+    );
+    const literal = 'storage_purchases_open_delete_guard';
+    expect(STORAGE_PURCHASE_OPEN_CONSTRAINT).toBe(literal);
+    // The raise is built from the same constant, so the two cannot drift.
+    expect(STORAGE_PURCHASE_SCHEMA).toContain(`CONSTRAINT = '${literal}';`);
+    const storage = readFileSync('server/storage_purchase_db.ts', 'utf8');
+    expect(storage.split(`'${literal}'`).length - 1).toBe(1);
+    // Split so the SOURCE text is matched, never an interpolation of it.
+    expect(storage).toContain(`CONSTRAINT = '$${'{'}STORAGE_PURCHASE_OPEN_CONSTRAINT}';`);
+    // Every consumer imports it; none repeats the literal (a positive control:
+    // the same scan finds the one definition above).
+    for (const consumer of ['server/character_delete_db.ts', 'server/federated_auth_db.ts']) {
+      expect(readFileSync(consumer, 'utf8'), consumer).not.toContain(literal);
+    }
   });
 });

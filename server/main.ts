@@ -262,7 +262,7 @@ import {
 import { pruneDiscordOAuthStates, pruneDiscordPendingLogins } from './discord_db';
 import { emailAccountCreated } from './email';
 import { stopEpicMirror } from './epic/mirror';
-import { freeholdAuthorityStats } from './freehold_authority_registry';
+import { freeholdAuthorityStats, heldClaims } from './freehold_authority_registry';
 import { releaseAllFreeholdClaims } from './freehold_claim_registry';
 import { freeholdsEnabled } from './freehold_config';
 import { FREEHOLD_PERSIST_SHUTDOWN_DRAIN_MS } from './freehold_persist';
@@ -4438,7 +4438,7 @@ export async function startServer(): Promise<http.Server> {
     // Release this process's plot claims after the housing drain above, so a
     // replacement process can take the plots at once; a crash leaves them to
     // expire after LEASE_TTL_SECONDS. Never rejects.
-    await releaseAllFreeholdClaims({ pool, holder: PROCESS_LEASE_HOLDER });
+    await releaseAllFreeholdClaims({ pool, holder: PROCESS_LEASE_HOLDER, registry: heldClaims() });
     // Drop every character load lease this process holds so a clean restart can
     // reload its characters immediately instead of waiting out the lease TTL.
     // Runs before pool.end(); a failure here must not abort the shutdown, so log

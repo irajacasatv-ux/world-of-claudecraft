@@ -111,7 +111,9 @@ Deliverables (at most five):
    mapped in src/ui/api_error_i18n.ts, the S3 guard), and the account-side SQLSTATE
    55006 consumers (server/federated_auth_db.ts and the accepted hard-deletion path),
    which tell the housing trigger from the storage trigger by trigger name in the
-   error detail and map it to the same code. 15
+   error detail and map it to the same code (AS BUILT: by the error's CONSTRAINT field,
+   since PostgreSQL puts no trigger name on the error; the manifest's P11 records the
+   deviation). 15
    extends this row for service quote/receipt data, never a parallel receipt subsystem.
    No database lock/client spans service IO.
 4. Recovery is a bounded admitted producer using the same mutation writer: on restart,
@@ -121,6 +123,11 @@ Deliverables (at most five):
    ambiguousCommitLanded FOR KEY SHARE verify, CHARACTER_DELETE_VERIFY_SQL, and the
    server/guild_create_db.ts commit_ambiguous durability precedents), never a plain
    SELECT that races the hung COMMIT, and never re-apply before that verify resolves.
+   AS BUILT (the manifest's P9, a ruling, not drift): the housing verify WAITS with
+   `FOR SHARE`, not `FOR KEY SHARE`, because the hung save holds the character row FOR
+   NO KEY UPDATE, which does not conflict with FOR KEY SHARE, so a KEY SHARE wait would
+   return at once and read before the COMMIT resolved; tests/server/freehold_mutation.pg
+   .test.ts proves the KEY SHARE form does not wait. Do not "fix" it back.
    Pending is not success; never silently retry with a new ID.
    ACK and publish public/wire state only after commit; offline Sim executes the same
    pure mutation plan synchronously with deterministic exact-copy behavior. Failed fences

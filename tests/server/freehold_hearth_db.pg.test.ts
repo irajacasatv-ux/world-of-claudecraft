@@ -43,6 +43,8 @@ const CORRUPT_ACCOUNT = 12;
 const BOUNDARY_ACCOUNT = 13;
 const TOKEN_ACCOUNT = 14;
 const CLOCK_RACE_ACCOUNT = 15;
+const CACHED_READY_ACCOUNT = 16;
+const ACK_LOST_ACCOUNT = 17;
 
 /** A table that predates the advance token, in its own private schema, so the
  *  probe's ALTER arm runs for real without touching the suite's main table. */
@@ -140,7 +142,8 @@ d('account_freehold_hearth against real PostgreSQL', () => {
     );
     await pool.query(
       `INSERT INTO accounts (id)
-       VALUES (1), (2), (3), (4), (5), (6), (7), (8), (9), (10), (11), (12), (13), (14), (15)`,
+       VALUES (1), (2), (3), (4), (5), (6), (7), (8), (9), (10), (11), (12), (13), (14), (15),
+              (16), (17)`,
     );
     await pool.query('INSERT INTO characters (id, account_id) VALUES (1, $1), (2, $1)', [
       CHARACTER_ACCOUNT,
@@ -1002,6 +1005,70 @@ d('account_freehold_hearth against real PostgreSQL', () => {
     expect(await db.freeholdHearthAdvanceLandedOnClient(pool, TOKEN_ACCOUNT, OTHER_TOKEN)).toBe(
       true,
     );
+  });
+
+  it('a stale cached READY reading never admits: the locked durable read answers cooldown', async () => {
+    // The caller's view, read before another realm advanced the key: ready.
+    const cached = await db.loadFreeholdHearth(pool, CACHED_READY_ACCOUNT);
+    expect(cached).toEqual({ kind: 'absent' });
+    const other = await pool.connect();
+    try {
+      await other.query('BEGIN');
+      expect(
+        await db.advanceFreeholdHearthOnClient(other, CACHED_READY_ACCOUNT, COOLDOWN_MS, TOKEN),
+      ).toMatchObject({ kind: 'advanced', revision: '1' });
+      await other.query('COMMIT');
+    } finally {
+      other.release();
+    }
+    const durable = await readToken(CACHED_READY_ACCOUNT);
+    // The stale caller advances anyway: the participant re-reads under its own
+    // lock and answers from the row, so the cached reading decides nothing.
+    const stale = await pool.connect();
+    try {
+      await stale.query('BEGIN');
+      expect(
+        await db.advanceFreeholdHearthOnClient(
+          stale,
+          CACHED_READY_ACCOUNT,
+          COOLDOWN_MS,
+          OTHER_TOKEN,
+        ),
+      ).toMatchObject({ kind: 'cooldown', revision: '1' });
+      await stale.query('COMMIT');
+    } finally {
+      stale.release();
+    }
+    expect(await readToken(CACHED_READY_ACCOUNT)).toEqual(durable);
+    expect(durable).toEqual({ advance_token: TOKEN, revision: '1' });
+  });
+
+  it('a commit whose ACK was lost is proved landed by its token, and its retry never advances twice', async () => {
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+      await db.advanceFreeholdHearthOnClient(client, ACK_LOST_ACCOUNT, COOLDOWN_MS, TOKEN);
+      // COMMIT lands; the caller is treated as never having heard the answer.
+      await client.query('COMMIT');
+    } finally {
+      client.release();
+    }
+    // The verify decides from durable truth: this attempt's token is on the row.
+    expect(await db.freeholdHearthAdvanceLandedOnClient(pool, ACK_LOST_ACCOUNT, TOKEN)).toBe(true);
+    // A retry of the SAME attempt (the same token) is refused by the cooldown
+    // it set, writing nothing: one landed attempt, one advance.
+    const retry = await pool.connect();
+    try {
+      await retry.query('BEGIN');
+      expect(
+        await db.advanceFreeholdHearthOnClient(retry, ACK_LOST_ACCOUNT, COOLDOWN_MS, TOKEN),
+      ).toMatchObject({ kind: 'cooldown', revision: '1' });
+      await retry.query('COMMIT');
+    } finally {
+      retry.release();
+    }
+    expect(await readToken(ACK_LOST_ACCOUNT)).toEqual({ advance_token: TOKEN, revision: '1' });
+    expect(await db.freeholdHearthAdvanceLandedOnClient(pool, ACK_LOST_ACCOUNT, TOKEN)).toBe(true);
   });
 
   it('refuses a stored ready time past the clock plus a cooldown as corrupt, and writes nothing', async () => {

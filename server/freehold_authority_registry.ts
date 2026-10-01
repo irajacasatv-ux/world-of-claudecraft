@@ -25,6 +25,14 @@ const ZERO_CLAIMS: FreeholdClaimCounters = {
   released: 0,
   fencedWrites: 0,
   selfAdopted: 0,
+  renewPasses: 0,
+  renewPassMsTotal: 0,
+  renewPassesSkipped: 0,
+  renewChunksAbandoned: 0,
+  wantedThrew: 0,
+  pendingSwept: 0,
+  loginReads: 0,
+  loginReadMsTotal: 0,
 };
 
 const ZERO_TRIPS: FreeholdHearthTripCounters = {
@@ -41,6 +49,7 @@ const ZERO_TRIPS: FreeholdHearthTripCounters = {
   refusedPreQueue: 0,
   metered: 0,
   abandoned: 0,
+  tripMsTotal: 0,
 };
 
 let claims: FreeholdClaimRegistry | null = null;
@@ -55,6 +64,14 @@ export function registerFreeholdAuthority(
 ): void {
   claims = source?.claims ?? null;
   trips = source?.trips ?? null;
+}
+
+/** The LIVE registry, for the one caller that must act on it rather than read
+ *  it: the shutdown release (server/main.ts), so a release at exit leaves the
+ *  registry and books claim_released like any other. Undefined when none is
+ *  registered. */
+export function heldClaims(): FreeholdClaimRegistry | undefined {
+  return claims ?? undefined;
 }
 
 /** One scrape: COPIES, so a caller can never reach the live counters. */

@@ -73,8 +73,11 @@ CREATE TABLE IF NOT EXISTS "__woc_freehold_claim_schema__".freehold_plot_claims 
     CHECK (write_token IS NULL OR write_token ~ '^[0-9a-f]{32}$')
 ) WITH (fillfactor = 80);
 -- fillfactor 80: the renewer and every plot write rewrite each live row on the
--- autosave cadence, on columns no index covers, so page room keeps those
--- versions on the same page.
+-- autosave cadence, on columns no index covers (heartbeat_at, expires_at,
+-- write_token), so page room keeps those versions on the same page (HOT). A
+-- release and a takeover DO rewrite holder, which freehold_plot_claims_holder
+-- indexes, so those two are never HOT; they happen once per claim era, not per
+-- cadence.
 -- PROBED FIRST (07a): a no-op CREATE INDEX IF NOT EXISTS still takes the
 -- table's SHARE lock and holds it to the boot COMMIT, which would block every
 -- other realm's claim writes through this realm's whole boot.
@@ -364,10 +367,18 @@ export const FREEHOLD_CLAIM_RELEASE_SQL = `UPDATE freehold_plot_claims
       FOR NO KEY UPDATE SKIP LOCKED)
 RETURNING plot_id`;
 
+/** The shutdown release. The OUTER `holder = $1` is load-bearing, not a
+ *  repeat: this statement's lock set is every live claim of the holder (no
+ *  chunk bound), and on a grown table (201,000 rows, 5,000 of them the
+ *  holder's) the planner served a bare `plot_id IN (...)` with a hash semi join
+ *  over a SEQUENTIAL SCAN of the whole keep-forever table. The holder qual
+ *  gives the outer read the holder index, so its cost follows this process's
+ *  own claims, never the table's age (docs/freeholds/qa/mutation-2026-09-30/
+ *  workload-evidence.md). */
 export const FREEHOLD_CLAIM_RELEASE_ALL_SQL = `UPDATE freehold_plot_claims
    SET expires_at = clock_timestamp(),
        holder = holder || '${FREEHOLD_CLAIM_RELEASED_SUFFIX}'
- WHERE plot_id IN (
+ WHERE holder = $1 AND plot_id IN (
    SELECT plot_id FROM freehold_plot_claims
     WHERE holder = $1 AND expires_at > clock_timestamp()
     ORDER BY plot_id

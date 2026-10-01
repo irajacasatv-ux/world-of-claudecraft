@@ -13,8 +13,9 @@ export class FederatedProvisionFreeholdOperationOpen extends Error {
     readonly accountId: number,
     options?: ErrorOptions,
   ) {
+    // The id rides the typed field only: a message is what a log line prints.
     super(
-      `federated provision cleanup refused: account ${accountId} has an open housing operation awaiting its close`,
+      'federated provision cleanup refused: the account has an open housing operation awaiting its close',
       options,
     );
     this.name = 'FederatedProvisionFreeholdOperationOpen';

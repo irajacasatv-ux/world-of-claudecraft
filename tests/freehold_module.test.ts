@@ -434,6 +434,25 @@ describe('freehold/state.ts record lifecycle (the guild-bank idiom)', () => {
   });
 });
 
+/** Every reference to the Hearth clock Map in `text` that is not a read
+ *  (`.get(`, `.has(`, `.size`), a declaration, a forwarding getter, or the
+ *  file's own sanctioned verb. Anything else hands the Map somewhere a writer
+ *  could reach it, so it is an escape whatever it is spelled as. */
+function clockMapEscapes(text: string, mayWrite: boolean, mayEvict: boolean): string[] {
+  const escapes: string[] = [];
+  for (const match of text.matchAll(/freeholdKeyReadyAtMs/g)) {
+    const before = text.slice(Math.max(0, match.index - 16), match.index);
+    const after = text.slice(match.index + match[0].length, match.index + match[0].length + 24);
+    if (/^\.(?:get|has)\(|^\.size\b/.test(after)) continue;
+    if (/^\(\)|^:\s*Map<|^\s*=\s*new Map</.test(after)) continue;
+    if (/return\s+[\w$]+\.$/.test(before) && /^;/.test(after)) continue;
+    if (mayWrite && /^\.set\(/.test(after)) continue;
+    if (mayEvict && /^\.delete\(/.test(after)) continue;
+    escapes.push(`${before}${match[0]}${after}`);
+  }
+  return escapes;
+}
+
 describe('the hearth clock map has two setters and one evictor, all in src/sim/freehold/', () => {
   it('is written nowhere outside src/sim/freehold/', () => {
     // The forward-only rule ("a durable clock behind the live one is a stale
@@ -453,25 +472,10 @@ describe('the hearth clock map has two setters and one evictor, all in src/sim/f
     const evictor = join(__dirname, '..', 'src', 'sim', 'freehold', 'state.ts');
     const reached = new Set<string>();
     for (const root of roots) {
-      const dir = join(__dirname, '..', root);
-      const stack = [dir];
-      while (stack.length > 0) {
-        const at = stack.pop() as string;
-        for (const item of readdirSync(at, { withFileTypes: true })) {
-          const full = join(at, item.name);
-          if (item.isDirectory()) {
-            stack.push(full);
-            continue;
-          }
-          if (!item.name.endsWith('.ts')) continue;
-          const text = stripComments(readFileSync(full, 'utf8'));
-          if (full !== setter) expect(text, full).not.toMatch(/freeholdKeyReadyAtMs\s*\.set\(/);
-          if (full !== evictor) {
-            expect(text, full).not.toMatch(/freeholdKeyReadyAtMs\s*\.delete\(/);
-          }
-          expect(text, full).not.toMatch(/freeholdKeyReadyAtMs\s*\.clear\(/);
-          reached.add(full);
-        }
+      for (const { full } of tsFilesUnder(join(__dirname, '..', root))) {
+        const text = stripComments(readFileSync(full, 'utf8'));
+        expect(clockMapEscapes(text, full === setter, full === evictor), full).toEqual([]);
+        reached.add(full);
       }
     }
     // Both exempted files were reached, so neither exemption is a dead branch,
@@ -479,6 +483,33 @@ describe('the hearth clock map has two setters and one evictor, all in src/sim/f
     expect(reached.has(setter)).toBe(true);
     expect(reached.has(evictor)).toBe(true);
     expect(reached.size).toBeGreaterThan(100);
+  });
+
+  it('refuses every way around the verb rule, so the scan is not textual luck', () => {
+    // An alias, an optional chain, a bracket call and a bare hand-off each
+    // reach the Map without spelling `.set(` or `.delete(` after its name.
+    const escapes = [
+      'const m = ctx.freeholdKeyReadyAtMs; m.set(k, 1);',
+      'ctx.freeholdKeyReadyAtMs?.set(k, 1);',
+      "ctx.freeholdKeyReadyAtMs['delete'](k);",
+      'install(ctx.freeholdKeyReadyAtMs);',
+      'ctx.freeholdKeyReadyAtMs.clear();',
+      'ctx.freeholdKeyReadyAtMs . set(k, 1);',
+    ];
+    for (const text of escapes) expect(clockMapEscapes(text, false, false), text).not.toEqual([]);
+    // The sanctioned shapes pass: reads, the declarations and the forwarding getters.
+    const allowed = [
+      'const r = ctx.freeholdKeyReadyAtMs.get(k) ?? 0;',
+      'if (ctx.freeholdKeyReadyAtMs.has(k) || ctx.freeholdKeyReadyAtMs.size === 0) return;',
+      'readonly freeholdKeyReadyAtMs: Map<string, number>;',
+      'freeholdKeyReadyAtMs = new Map<string, number>();',
+      'get freeholdKeyReadyAtMs() { return host.freeholdKeyReadyAtMs; }',
+    ];
+    for (const text of allowed) expect(clockMapEscapes(text, false, false), text).toEqual([]);
+    expect(clockMapEscapes('ctx.freeholdKeyReadyAtMs.set(k, 1);', true, false)).toEqual([]);
+    expect(clockMapEscapes('ctx.freeholdKeyReadyAtMs.delete(k);', false, true)).toEqual([]);
+    expect(clockMapEscapes('ctx.freeholdKeyReadyAtMs.delete(k);', true, false)).not.toEqual([]);
+    expect(clockMapEscapes('ctx.freeholdKeyReadyAtMs.set(k, 1);', false, true)).not.toEqual([]);
   });
 
   it('names every sanctioned writer, so the claim is not vacuous', () => {

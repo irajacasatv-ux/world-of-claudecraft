@@ -1013,6 +1013,50 @@ For off-box safety, sync the directory to S3 occasionally:
   leaves the rows intact but unmaintained and unexported, so turn the flag OFF
   before rolling back: docs/freeholds/persistence-rollout-contract.md is the
   capability and quiescence contract.
+- The housing AUTHORITY tables (07a; docs/freeholds/mutation-touch-set-manifest.md
+  is the design of record) apply unconditionally at every boot too, in the late
+  schema block: `freehold_plot_claims` (`server/freehold_claim_db.ts`, the global
+  plot claim, KEEP-FOREVER and bounded by plots), `freehold_operations` (open
+  housing operation intents, bounded per account, no sweep) and
+  `freehold_operation_receipts` (`server/freehold_operation_db.ts`, terminal
+  tombstones, KEEP-FOREVER replay authority, observed instead of swept by
+  `woc_freehold_receipt_growth`). On a lit realm a login CLAIMS its account's plot
+  before reading it: a second realm of one account answers the repairable
+  `claim_busy` hold (the login proceeds, the house stays on the first realm) until
+  that realm releases it at its last leave or shutdown, or its claim expires after
+  the character lease's 90 s TTL. The renewer rides the autosave beside the lease
+  heartbeat, and a realm that lost a claim quiesces that plot's writes
+  (`fenced_writes` on `woc_freehold_persist_total`). Read
+  `woc_freehold_claims_held` and `woc_freehold_authority_total{measure}` (claim
+  acquires, takeovers, busy, renewals, missed heartbeats, losses, releases, and the
+  remote Hearth trip outcomes): counts only. An OPEN intent refuses a character
+  DELETE (409 `character.freehold_operation_open`) and an account delete (SQLSTATE
+  55006) until it closes; no production operation kind exists yet, so in this
+  release the intent table stays empty. The shutdown closure releases this
+  process's claims after the housing drain and before the character leases, with
+  its own 2 s bound. EVERY process on one `DATABASE_URL` must carry these modules
+  before housing is lit anywhere: a rolling deploy beside an older build is the
+  same hazard as a rollback (an unfenced plot write while another realm holds the
+  claim), and docs/freeholds/persistence-rollout-contract.md carries the rollback
+  conditions (zero open intents, never a DELETE of a claim or receipt). The
+  rollback target is the PRE-HOUSING release (no 07 build ever deployed), and the
+  open-operation delete guards and the receipts erase trigger stay installed after
+  it, which is harmless only while `freehold_operations` holds zero rows.
+- FIRST ROLLOUT OF THE HOUSING TABLES: the first boot that carries them creates the
+  foreign-key-bearing tables and the delete guards on `accounts` and `characters` in
+  the ONE boot schema transaction, holding SHARE ROW EXCLUSIVE on both parents until
+  its COMMIT with no lock timeout: it queues behind any in-flight character save, and
+  every later save and account write on every realm queues behind it. Roll it out in
+  a quiet window. A later boot is catalog-only and takes no relation lock; a boot that
+  REPAIRS a missing or disabled guard drops and recreates it under ACCESS EXCLUSIVE,
+  so treat a repair boot the same way.
+- A failed deactivation receipt erase logs `deactivation housing receipt erase
+  failed` with no account id. The erase is idempotent; find the accounts to re-run
+  with `SELECT DISTINCT r.account_id FROM freehold_operation_receipts r JOIN accounts
+  a ON a.id = r.account_id WHERE a.deactivated_at IS NOT NULL`, then run
+  `UPDATE freehold_operation_receipts SET account_id = NULL WHERE account_id = $1`
+  for each (the erase trigger nulls the plot id and fingerprint with it). No
+  production operation kind exists yet, so this release writes no receipts.
 - KEEP-FOREVER bounds the ROW COUNT, not the physical size. The plot save is a
   compare-and-swap UPDATE that rewrites both content columns every time, so each
   save writes a fresh TOAST chunk set and orphans the previous one until

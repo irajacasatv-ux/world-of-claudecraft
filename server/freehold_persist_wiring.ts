@@ -177,6 +177,16 @@ export function createGameFreeholdPersistStore(deps: {
  * live record, a mutation or recovery pass is in flight for the plot, or the
  * claim is younger than the login budget (a handshake between its first ask
  * and its join bind). Every other claim is released. Never rejects.
+ *
+ * ON THE RAW POOL, OUTSIDE backgroundDbGate, by decision: the autosave wave
+ * holds that gate at exactly the moment this pass starts (same 30 s flush), so
+ * a tryAcquire would skip renewals through every busy wave and let held claims
+ * lapse to another realm, and a queued acquire would park the heartbeat behind
+ * the saves it exists to protect. The sanctioned bound instead: the pass is
+ * single-flight and runs its chunks in sequence, so the renewer holds at most
+ * ONE pool client per realm, and its whole pass is capped by
+ * FREEHOLD_CLAIM_RENEW_PASS_DEADLINE_MS (pinned by the renewer's peak-1 case in
+ * tests/server/freehold_mutation.test.ts).
  */
 export function renewGameFreeholdClaims(
   sim: { readonly ctx: SimContext },

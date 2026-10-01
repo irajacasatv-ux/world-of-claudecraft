@@ -42,6 +42,7 @@
 
 import type { QueryResult, QueryResultRow } from 'pg';
 import type { BackgroundDbPermit } from './background_db_gate';
+import { boundedDatabaseError } from './freehold_bounded_error';
 
 export const FREEHOLD_RECEIPT_GROWTH_MONITOR_INTERVAL_MS = 60_000;
 export const FREEHOLD_RECEIPT_GROWTH_MONITOR_WALL_TIMEOUT_MS = 1_500;
@@ -423,7 +424,9 @@ export interface FreeholdReceiptGrowthMonitorDeps {
    * The timestamp is claimed BEFORE the read, so the readout's age describes
    * the snapshot. */
   readonly observe?: (rows: readonly FreeholdReceiptGrowthRow[], observedAtMs: number) => boolean;
-  readonly onError?: (error: unknown) => void;
+  /** Handed the BOUNDED classification (boundedDatabaseError), never the raw
+   *  error: a pg error's `detail` can carry row content into the log line. */
+  readonly onError?: (error: Readonly<Record<string, unknown>>) => void;
   readonly intervalMs?: number;
 }
 
@@ -458,7 +461,7 @@ export function createFreeholdReceiptGrowthMonitor(
     if (failureStreak || stopped) return;
     failureStreak = true;
     try {
-      deps.onError?.(error);
+      deps.onError?.(boundedDatabaseError(error));
     } catch {
       // A diagnostic sink cannot turn a voided interval into a rejection.
     }

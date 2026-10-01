@@ -1606,7 +1606,7 @@ export class GameServer {
             session.bankLedgerJournal.reserveVaultConsumption(takes, vaultUpgrades),
           );
         },
-        // 07a: the durable account cooldown (server/freehold_hearth_trip.ts).
+        // 07a trip admission; keep the `?.`: this Sim is built before that field.
         (ownerKey, pid) => this.freeholdHearthTrips?.admission(ownerKey, pid) ?? 'deny',
       ),
     );
@@ -1690,8 +1690,10 @@ export class GameServer {
     });
     registerFreeholdPersistStore(this.freeholdPersist);
     this.freeholdHearthTrips = createGameFreeholdHearthTrips({
-      sim: this.sim,
+      sim: () => this.sim,
       sessionForPid: (pid) => this.clients.get(pid),
+      draining: () => this.draining,
+      vaultLocked: (characterId) => this.vault.guard.isLocked(characterId),
       store: this.freeholdPersist,
       claims: this.freeholdClaims,
       pool,
@@ -3704,11 +3706,8 @@ export class GameServer {
       session.bankLedgerJournal.outbox.discard();
       if (stillMine) storageRecovery.offline(session.characterId);
       await flushFreeholdBinding(this.freeholdPersist, freeholdOwnerKey);
-      // The account's last session: its Hearth refusal memo goes with it.
-      const accountOnline = [...this.clients.values()].some(
-        (other) => other !== session && other.accountId === session.accountId,
-      );
-      if (!accountOnline) this.freeholdHearthTrips.onAccountLeft(session.accountId);
+      // Prune the expired Hearth refusals (an unexpired one outlives a relog).
+      this.freeholdHearthTrips.onSessionLeft();
       // Release the per-character load lease so a fresh login (here or on another
       // process) can reload the character without waiting out the TTL. Order
       // matters: only after the leave save has awaited above, so the lease
@@ -3918,6 +3917,7 @@ export class GameServer {
     } = {},
   ): Promise<boolean> {
     const housing = opts.housing;
+    if (housing && !opts.backgroundDbPermit) throw new Error('housing save without its permit');
     const waitSignal = opts.signal ?? housing?.waitSignal;
     if (!this.vault.guard.maySave(session.characterId, session.pid)) return false;
     // A quarantined session's live state was abandoned when its escrow was

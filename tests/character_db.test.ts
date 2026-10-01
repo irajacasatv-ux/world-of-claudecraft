@@ -317,7 +317,7 @@ describe('deleteCharacter', () => {
       name: 'CharacterFreeholdOperationOpen',
       code: 'CHARACTER_FREEHOLD_OPERATION_OPEN',
       characterId: 42,
-      message: 'character 42 has an open housing operation',
+      message: 'the character has an open housing operation',
     });
     const sql = client.query.mock.calls.map((call) => String(call[0]));
     expect(sql.some((statement) => /FROM storage_purchases/.test(statement))).toBe(false);

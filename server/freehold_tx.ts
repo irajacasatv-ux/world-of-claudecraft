@@ -99,15 +99,14 @@ async function connectWithin(
   pool: FreeholdTxPool,
   signal: AbortSignal | undefined,
 ): Promise<DbTransactionDeadlineClient> {
-  const checkout = pool.connect();
-  if (!signal) return checkout;
-  if (signal.aborted) {
-    checkout.then(
-      (client) => client.release(),
-      () => {},
-    );
+  // An already-spent signal refuses BEFORE asking the pool, so it never joins
+  // the pool's waiter queue (a login whose budget is gone, a renew pass past
+  // its deadline).
+  if (signal?.aborted) {
     throw signal.reason ?? new Error('freehold transaction cancelled before its checkout');
   }
+  const checkout = pool.connect();
+  if (!signal) return checkout;
   return new Promise<DbTransactionDeadlineClient>((resolve, reject) => {
     const onAbort = () => {
       checkout.then(

@@ -375,6 +375,9 @@ export interface SimContextPrimitives {
   // parity traces default off; the stock offline world and the headless env opt
   // in; the realm maps it from its env. Read-only, exactly the resolved Sim.cfg field.
   readonly freeholdsEnabled: boolean;
+  // Re-typed in place by 07a, the one deliberate exception to "members are added,
+  // never repurposed": the boolean became the three-valued answer, every host
+  // moved with it, and an untyped host still returning true now fails closed.
   readonly freeholdKeyAdmission: (ownerKey: string, pid: number) => FreeholdKeyAdmission;
   readonly freeholdKeyReadyAtMs: Map<string, number>;
   readonly instanceScanCounters: {

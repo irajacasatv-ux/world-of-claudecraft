@@ -12,6 +12,7 @@ import {
   DbTransactionDeadlineExceeded,
 } from './db_transaction_deadline';
 import { FREEHOLD_OPERATION_OPEN_CONSTRAINT } from './freehold_operation_db';
+import { STORAGE_PURCHASE_OPEN_CONSTRAINT } from './storage_purchase_db';
 
 // 65s wall over a 60s DELETE statement bound, the character-save shape: the
 // widened DELETE below is useless if this driver-side deadline destroys the
@@ -50,16 +51,11 @@ export class CharacterFreeholdOperationOpen extends Error {
     readonly characterId: number,
     options?: ErrorOptions,
   ) {
-    super(`character ${characterId} has an open housing operation`, options);
+    // The id rides the typed field only: a message is what a log line prints.
+    super('the character has an open housing operation', options);
     this.name = 'CharacterFreeholdOperationOpen';
   }
 }
-
-/** The storage guard's CONSTRAINT field, raised by
- * guard_pending_storage_purchase_parent_delete in server/storage_purchase_db.ts
- * (that module exports no constant for it; the storage pg suite pins the same
- * literal on a real trigger error). */
-export const STORAGE_PURCHASE_OPEN_CONSTRAINT = 'storage_purchases_open_delete_guard';
 
 /** The SQLSTATE both parent-delete guards raise (object_in_use). */
 export const PARENT_DELETE_GUARD_SQLSTATE = '55006';

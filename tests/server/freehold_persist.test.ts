@@ -7310,13 +7310,17 @@ describe('the composition root that binds the combined port (source pins)', () =
     // reads, and the clock-fault retry that carries the plot half ALONE.
     expect(policy.split('runFreeholdTransaction(').length - 1).toBe(2);
     const main = policy.indexOf(
-      'runFreeholdTransaction(deps.pool, FREEHOLD_CLAIM_LOGIN_BOUNDS, async (tx) => {',
+      'runFreeholdTransaction( deps.pool, FREEHOLD_CLAIM_LOGIN_BOUNDS, async (tx) => {',
     );
     expect(main).toBeGreaterThan(-1);
     const retry = policy.indexOf(
-      'runFreeholdTransaction(deps.pool, FREEHOLD_CLAIM_LOGIN_BOUNDS, plotHalf)',
+      'runFreeholdTransaction( deps.pool, FREEHOLD_CLAIM_LOGIN_BOUNDS, plotHalf, budget, )',
     );
     expect(retry).toBeGreaterThan(main);
+    // ONE budget for the whole read: minted once, and both transactions carry
+    // it, so the clock-fault retry and both checkouts spend the same clock.
+    expect(policy.split('AbortSignal.timeout(').length - 1).toBe(1);
+    expect(policy.indexOf('return plotHalf(tx); }, budget, );', main)).toBeGreaterThan(main);
     // CLOCK FIRST, inside the one transaction, then the plot half on the SAME
     // `tx`: a clock fault then aborts before any claim statement, so it can
     // never roll a claim back unseen.

@@ -775,7 +775,7 @@ export function registerGameStateMetrics(
 
   new Counter({
     name: WOC_FREEHOLD_AUTHORITY_TOTAL,
-    help: "Housing authority CUMULATIVE totals by fixed measure (07a). claim_*: global plot claims acquired, taken over from an expired holder, refused busy because another realm holds them, renewed, missed heartbeats (a renewal that threw or skipped a locked row, never a loss), lost to another holder, released, writes fenced, and this realm's own ambiguous writes adopted. trip_*: remote Hearth trips started, advanced, refused on the durable cooldown, refused on a corrupt or unsupported clock, refused by a participant, failed, never reaching the hook, left unresolved after a lost commit, committed but refused by the sim on re-dispatch, denied before any queue, metered by the per-account refusal memo, and abandoned because the session left. Counts only.",
+    help: "Housing authority CUMULATIVE totals by fixed measure (07a). claim_*: global plot claims acquired, taken over from an expired holder, refused busy because another realm holds them, renewed, missed heartbeats (a renewal that threw or skipped a locked row, never a loss), lost to another holder, released, writes fenced, and this realm's own ambiguous writes adopted; the renewer's passes, their summed milliseconds, the triggers skipped because a pass still ran, the chunks its deadline abandoned, the wanted tests that threw, and the stranded pending tokens it retired; the claimed login reads and their summed milliseconds. trip_*: remote Hearth trips started, advanced, refused on the durable cooldown, refused on a corrupt or unsupported clock, refused by a participant, failed, never reaching the hook, left unresolved after a lost commit, committed but refused by the sim on re-dispatch, denied before any queue, metered by the per-account refusal memo, abandoned because the session left, and their summed milliseconds. Counts and summed durations only.",
     labelNames: ['measure'],
     registers: [registry],
     collect() {
@@ -792,6 +792,14 @@ export function registerGameStateMetrics(
       this.inc({ measure: 'claim_released' }, c.released);
       this.inc({ measure: 'claim_fenced_writes' }, c.fencedWrites);
       this.inc({ measure: 'claim_self_adopted' }, c.selfAdopted);
+      this.inc({ measure: 'claim_renew_passes' }, c.renewPasses);
+      this.inc({ measure: 'claim_renew_pass_ms_total' }, c.renewPassMsTotal);
+      this.inc({ measure: 'claim_renew_passes_skipped' }, c.renewPassesSkipped);
+      this.inc({ measure: 'claim_renew_chunks_abandoned' }, c.renewChunksAbandoned);
+      this.inc({ measure: 'claim_wanted_threw' }, c.wantedThrew);
+      this.inc({ measure: 'claim_pending_swept' }, c.pendingSwept);
+      this.inc({ measure: 'claim_login_reads' }, c.loginReads);
+      this.inc({ measure: 'claim_login_read_ms_total' }, c.loginReadMsTotal);
       const t = stats.trips;
       this.inc({ measure: 'trip_started' }, t.started);
       this.inc({ measure: 'trip_advanced' }, t.advanced);
@@ -806,6 +814,7 @@ export function registerGameStateMetrics(
       this.inc({ measure: 'trip_refused_pre_queue' }, t.refusedPreQueue);
       this.inc({ measure: 'trip_metered' }, t.metered);
       this.inc({ measure: 'trip_abandoned' }, t.abandoned);
+      this.inc({ measure: 'trip_ms_total' }, t.tripMsTotal);
     },
   });
 

@@ -6,9 +6,9 @@
 //   'admit'   only through a one-shot TICKET this module minted from a PROVED
 //             commit of the cooldown advance, set immediately before its own
 //             re-dispatch and cleared in that call's finally;
-//   'pending' a trip has started (or is running) for the account: the use is
-//             silent now and the server re-dispatches it once the advance
-//             commits or refuses;
+//   'pending' a trip has started (or is running) for the account from this
+//             pid: the use is silent now and the server re-dispatches it once
+//             the advance commits or refuses;
 //   'deny'    the sim emits `busy`.
 //
 // The trip commits ONE character save carrying the housing hook (the account
@@ -16,7 +16,11 @@
 // realm holds one), on the character FIFO, through commitFreeholdMutation. The
 // hook's own outcome decides, never the save's boolean. Admission is per
 // ACCOUNT (one pending trip per account per process, whichever character
-// asked), every refusal is metered per account, and nothing here can be
+// asked; a use from ANOTHER pid of that account while it runs is denied, since
+// only the trip's own session is re-dispatched), a session with no lease nonce
+// never starts one (its save would carry no nonce fence), every refusal is
+// metered per account for its whole window (a relog does not reset it), and
+// nothing here can be
 // reached by a client frame: the ticket exists only inside one synchronous
 // server-side re-dispatch, and the re-dispatch is not player input (no lane
 // token, no detector observation), so it replays the frame path's prechecks
@@ -61,6 +65,9 @@ export interface FreeholdHearthTripCounters {
   metered: number;
   /** The session left, or changed, before the outcome was applied. */
   abandoned: number;
+  /** Every trip's wall time from its start to its outcome, summed (ms, through
+   *  the host clock): divided by `started` it is the mean trip latency. */
+  tripMsTotal: number;
 }
 
 export interface FreeholdHearthTripHost {
@@ -85,6 +92,10 @@ export interface FreeholdHearthTripHost {
   redispatch(session: FreeholdHearthTripSession): void;
   /** mergeFreeholdKeyReadyAt: forward only, a durable value may deny, never admit. */
   mergeReadyAt(ownerKey: string, readyAtMs: number): void;
+  /** Whether any live player still holds the owner key (the sim roster the
+   *  last-leave clock eviction reads): a merge for an owner with none would
+   *  install a clock nothing ever evicts. */
+  ownerOnline(ownerKey: string): boolean;
   /** The owner key's account id, or null when it is not an online account key. */
   accountOf(ownerKey: string): number | null;
   readonly cooldownMs: number;
@@ -101,10 +112,13 @@ interface Ticket {
 
 export function createFreeholdHearthTrips(host: FreeholdHearthTripHost): {
   admission(ownerKey: string, pid: number): FreeholdKeyAdmission;
-  /** The account's last session left: evict its memo (a relog re-asks). */
-  onAccountLeft(accountId: number): void;
+  /** A session left: prune the EXPIRED refusals. An unexpired one stays, so a
+   *  relog inside its window is still metered. */
+  onSessionLeft(): void;
   /** Whether a trip is in flight for the account (the claim stays wanted). */
   inFlight(accountId: number): boolean;
+  /** The refusal memo's live entry count (a test and gauge read). */
+  refusalMemoSize(): number;
   readonly counters: FreeholdHearthTripCounters;
 } {
   const counters: FreeholdHearthTripCounters = {
@@ -121,9 +135,23 @@ export function createFreeholdHearthTrips(host: FreeholdHearthTripHost): {
     refusedPreQueue: 0,
     metered: 0,
     abandoned: 0,
+    tripMsTotal: 0,
   };
-  const pending = new Map<number, number>();
+  // One entry per account with a trip in flight: the trip's identity and the
+  // pid it re-dispatches. Bounded by the trip's save, never by a leave: the
+  // save's WAITS (the character FIFO, the market writer, the background permit)
+  // take the trip's wait signal (FREEHOLD_HEARTH_TRIP_MEMO_MS), its transaction
+  // its own wall deadline and the verify FREEHOLD_VERIFY_BOUNDS, so the commit
+  // always settles and run()'s finally always clears its entry.
+  const pending = new Map<number, { readonly trip: number; readonly pid: number }>();
+  // Account id to the end of its refusal window. Bounded by the accounts with
+  // a refusal in the last window plus the expired entries since the last
+  // prune (every session leave and every new refusal prune).
   const memo = new Map<number, number>();
+  const pruneMemo = () => {
+    const now = host.nowMs();
+    for (const [accountId, until] of memo) if (now >= until) memo.delete(accountId);
+  };
   let ticket: Ticket | null = null;
   let nextTrip = 0;
 
@@ -157,6 +185,7 @@ export function createFreeholdHearthTrips(host: FreeholdHearthTripHost): {
     claim: FreeholdClaimFence | undefined,
     trip: number,
   ): Promise<void> {
+    const startedAtMs = host.nowMs();
     let outcome: FreeholdMutationOutcome;
     try {
       outcome = await host.commit(
@@ -174,7 +203,8 @@ export function createFreeholdHearthTrips(host: FreeholdHearthTripHost): {
       outcome = { kind: 'failed', error };
     } finally {
       // Compare-and-delete: only THIS trip may clear the account's flag.
-      if (pending.get(accountId) === trip) pending.delete(accountId);
+      if (pending.get(accountId)?.trip === trip) pending.delete(accountId);
+      counters.tripMsTotal += Math.max(0, host.nowMs() - startedAtMs);
     }
     let verdict: 'admit' | 'deny' = 'deny';
     let readyAtMs: number | null = null;
@@ -214,13 +244,17 @@ export function createFreeholdHearthTrips(host: FreeholdHearthTripHost): {
         outcome.refusal.result.kind === 'cooldown'
       )
     ) {
+      pruneMemo();
       memo.set(accountId, host.nowMs() + FREEHOLD_HEARTH_TRIP_MEMO_MS);
     }
     const live = host.sessionForPid(session.pid);
     if (!sameSession(session, live)) {
-      // Gone or changed: no re-dispatch and no merge into a record that may no
-      // longer be this session's (the login merge reinstalls the durable clock).
+      // Gone or changed: no re-dispatch. The clock is the ACCOUNT's, so a
+      // durable value still merges while any session of the owner is live (a
+      // sibling must not keep a stale clock), and never once none is: the last
+      // leave evicted it, and the login merge reinstalls it.
       counters.abandoned++;
+      if (readyAtMs !== null && host.ownerOnline(ownerKey)) host.mergeReadyAt(ownerKey, readyAtMs);
       return;
     }
     if (verdict === 'deny' && readyAtMs !== null) host.mergeReadyAt(ownerKey, readyAtMs);
@@ -245,7 +279,10 @@ export function createFreeholdHearthTrips(host: FreeholdHearthTripHost): {
       const session = host.sessionForPid(pid);
       if (accountId === null || !session || session.accountId !== accountId) return 'deny';
       if (session.left === true || session.escrowQuarantined === true) return 'deny';
-      if (pending.has(accountId)) return 'pending';
+      // Single flight: the trip's own pid waits silently for its re-dispatch;
+      // any other pid of the account is never re-dispatched, so it hears busy.
+      const inFlight = pending.get(accountId);
+      if (inFlight !== undefined) return inFlight.pid === pid ? 'pending' : 'deny';
       const until = memo.get(accountId);
       if (until !== undefined) {
         if (host.nowMs() < until) {
@@ -254,11 +291,14 @@ export function createFreeholdHearthTrips(host: FreeholdHearthTripHost): {
         }
         memo.delete(accountId);
       }
-      // BEFORE any queue: a held, quiesced or unloaded entry, or a durable row
-      // this process holds no claim for, never spends the shared cooldown.
+      // BEFORE any queue: a held, quiesced or unloaded entry, a durable row
+      // this process holds no claim for, or a session with no lease nonce (its
+      // save would carry no nonce fence; every handshake mints one) never
+      // spends the shared cooldown.
       const authority = host.authority(ownerKey);
       const claim = host.claimFor(accountId);
       if (
+        session.leaseNonce === undefined ||
         !authority ||
         !authority.loaded ||
         authority.blocked ||
@@ -268,7 +308,7 @@ export function createFreeholdHearthTrips(host: FreeholdHearthTripHost): {
         return 'deny';
       }
       const trip = ++nextTrip;
-      pending.set(accountId, trip);
+      pending.set(accountId, { trip, pid });
       counters.started++;
       void run(
         ownerKey,
@@ -279,11 +319,14 @@ export function createFreeholdHearthTrips(host: FreeholdHearthTripHost): {
       );
       return 'pending';
     },
-    onAccountLeft(accountId) {
-      memo.delete(accountId);
+    onSessionLeft() {
+      pruneMemo();
     },
     inFlight(accountId) {
       return pending.has(accountId);
+    },
+    refusalMemoSize() {
+      return memo.size;
     },
     counters,
   };

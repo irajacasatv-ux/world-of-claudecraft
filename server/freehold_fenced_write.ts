@@ -75,6 +75,15 @@ export function createFreeholdFencedWriter(
   deps: FreeholdFencedWriterDeps,
 ): (input: FreeholdUpsert) => Promise<FreeholdFencedUpsertResult> {
   const { registry } = deps;
+  // The owner rides beside the token so the renewer can retire a token whose
+  // plot has no claim (see the registry's unclaimedPending).
+  const notePending = (input: FreeholdUpsert, writeToken: string): void =>
+    registry.notePending({
+      plotId: input.plotId,
+      accountId: input.accountId,
+      writeToken,
+      notedAtMs: deps.nowMs(),
+    });
 
   async function insertFirst(input: FreeholdUpsert): Promise<FreeholdFencedUpsertResult> {
     const token = mintFreeholdWriteToken();
@@ -130,7 +139,9 @@ export function createFreeholdFencedWriter(
       return result;
     } catch (error) {
       if (error instanceof InsertNotLanded) return error.result;
-      if (error instanceof FreeholdCommitAmbiguous) registry.notePending(input.plotId, token);
+      // No claim is recorded on this arm: the renewer retires the token once
+      // nothing wants the owner, and a proved login read of the plot supersedes it.
+      if (error instanceof FreeholdCommitAmbiguous) notePending(input, token);
       throw error;
     }
   }
@@ -156,7 +167,7 @@ export function createFreeholdFencedWriter(
       } catch (error) {
         // One autocommit statement: once it was sent, only a proved rollback
         // says it did not land.
-        if (freeholdCommitMayHaveLanded(error)) registry.notePending(input.plotId, token);
+        if (freeholdCommitMayHaveLanded(error)) notePending(input, token);
         throw error;
       }
     } else {
@@ -184,7 +195,7 @@ export function createFreeholdFencedWriter(
       } catch (error) {
         // A NEW ambiguity replaces the old question; any other failure leaves
         // the old one open for the next attempt to ask again.
-        if (error instanceof FreeholdCommitAmbiguous) registry.notePending(input.plotId, token);
+        if (error instanceof FreeholdCommitAmbiguous) notePending(input, token);
         throw error;
       }
       registry.clearPending(input.plotId);

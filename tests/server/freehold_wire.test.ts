@@ -69,7 +69,13 @@ vi.mock('../../server/db', () => ({
 }));
 
 import type { BotDetector } from '../../server/bot_detector/contract';
+import type { CharacterSaveHousingHook } from '../../server/character_save_housing';
 import { freeholdsEnabled } from '../../server/freehold_config';
+import {
+  FREEHOLD_HEARTH_ACCOUNT_LOCK_SQL,
+  FREEHOLD_HEARTH_ADVANCE_SQL,
+  FREEHOLD_HEARTH_READ_FOR_UPDATE_SQL,
+} from '../../server/freehold_hearth_db';
 import type { createGameFreeholdHearthTrips } from '../../server/freehold_hearth_trip_host';
 import type { FreeholdPersistStore } from '../../server/freehold_persist';
 import {
@@ -94,6 +100,7 @@ import { resolveDirectPickEntityId } from '../../src/render/pick_resolution';
 import { bagCapacity } from '../../src/sim/bags';
 import { ITEMS } from '../../src/sim/data';
 import { EASTBROOK_LAYOUT } from '../../src/sim/eastbrook_layout';
+import { HEARTH_KEY_COOLDOWN_MS } from '../../src/sim/freehold/gate_rules';
 import { isInJailCage } from '../../src/sim/jail';
 import { Sim } from '../../src/sim/sim';
 import { inertVaultConsumptionAdmission } from '../../src/sim/sim_context';
@@ -177,6 +184,90 @@ function saveSurface(server: GameServer): {
     saveCharacter(session: unknown, opts?: unknown): Promise<boolean>;
   };
 }
+
+/** The vault-mail take guard handleMessage consults, private on GameServer. */
+function vaultGuardOf(server: GameServer): {
+  isLocked(characterId: number): boolean;
+  maySave(characterId: number, pid: number): boolean;
+} {
+  return (
+    server as unknown as {
+      vault: {
+        guard: {
+          isLocked(characterId: number): boolean;
+          maySave(characterId: number, pid: number): boolean;
+        };
+      };
+    }
+  ).vault.guard;
+}
+
+/** The trip's save, stubbed to run its housing hook against a scripted Hearth
+ *  row as the real save's transaction would (the account lock, the row read,
+ *  the advance), then to report COMMIT. A save with no hook answers true. */
+function hearthSaveAnswering(
+  server: GameServer,
+  row: { readyAtMs: string; nowMs: string },
+  gate: Promise<void> = Promise.resolve(),
+) {
+  const tx = {
+    async query(text: string) {
+      if (text === FREEHOLD_HEARTH_ACCOUNT_LOCK_SQL) return { rows: [{ id: 7201 }] };
+      if (text === FREEHOLD_HEARTH_READ_FOR_UPDATE_SQL) {
+        const clock = { now_ms: row.nowMs, clock_ms: row.nowMs };
+        return { rows: [{ ready_at_ms: row.readyAtMs, revision: '1', ...clock }] };
+      }
+      if (text === FREEHOLD_HEARTH_ADVANCE_SQL) {
+        const next = String(Number(row.nowMs) + HEARTH_KEY_COOLDOWN_MS);
+        return { rows: [{ ready_at_ms: next, revision: '2' }] };
+      }
+      return { rows: [] };
+    },
+  };
+  return releasedSpyOn(saveSurface(server), 'saveCharacter').mockImplementation(
+    async (_session, opts) => {
+      const housing = (opts as { housing?: CharacterSaveHousingHook } | undefined)?.housing;
+      if (!housing) return true;
+      await gate;
+      await housing.run(tx);
+      housing.commitSent();
+      housing.committed();
+      return true;
+    },
+  );
+}
+
+/** Every self key the heavy block emits (server/game.ts, the heavyDue arm). */
+const HEAVY_SELF_KEYS = [
+  'inv',
+  'bags',
+  'mntOwn',
+  'fplot',
+  'buyback',
+  'equip',
+  'einst',
+  'cosmetics',
+  'qlog',
+  'qdone',
+  'wqday',
+  'wqexp',
+  'wqlog',
+  'fac',
+  'facCur',
+  'cluh',
+  'tmap',
+  'wqrr',
+  'wqrep',
+  'wkq',
+  'wkexp',
+  'milestones',
+  'deeds',
+  'dstats',
+  'reliq',
+  'acct',
+  'tal',
+  'hbl',
+];
 
 /** A joined session on a fresh server; housing needs nothing else to probe. */
 function housingSession() {
@@ -1005,6 +1096,40 @@ describe('hearthKeyUseRefusal: the frame path prechecks the Hearth trip re-dispa
     expect(hearthKeyUseRefusal({})).toBe('dark');
   });
 
+  it('answers the two handleMessage drops first: a draining realm, then a fenced vault', () => {
+    const lit = { FREEHOLDS_ENABLED: '1' };
+    const dark = { FREEHOLDS_ENABLED: '0' };
+    const jailed = { returnPos: { x: 0, z: 0 }, returnFacing: 0 };
+    expect(hearthKeyUseRefusal({ draining: true }, lit)).toBe('draining');
+    expect(hearthKeyUseRefusal({ vaultLocked: true }, lit)).toBe('vault_locked');
+    expect(
+      hearthKeyUseRefusal({ draining: true, vaultLocked: true, spectating: true, jailed }, dark),
+    ).toBe('draining');
+    expect(hearthKeyUseRefusal({ vaultLocked: true, spectating: true, jailed }, dark)).toBe(
+      'vault_locked',
+    );
+    expect(hearthKeyUseRefusal({ draining: false, vaultLocked: false }, lit)).toBeNull();
+  });
+
+  it('agrees with the real frame path on its two silent drops: no sim call, nothing sent', () => {
+    vi.stubEnv('FREEHOLDS_ENABLED', '1');
+    const frame = JSON.stringify({ t: 'cmd', cmd: 'use', item: 'hearth_key', rid: 9 });
+    const drainingRealm = housingSession();
+    const drainingUse = releasedSpyOn(drainingRealm.server.sim, 'useItem');
+    (drainingRealm.server as unknown as { draining: boolean }).draining = true;
+    drainingRealm.fc.sent.length = 0;
+    drainingRealm.server.handleMessage(drainingRealm.session, frame);
+    expect(drainingUse).not.toHaveBeenCalled();
+    expect(drainingRealm.fc.sent).toEqual([]);
+    const vaultRealm = housingSession();
+    const vaultUse = releasedSpyOn(vaultRealm.server.sim, 'useItem');
+    releasedSpyOn(vaultGuardOf(vaultRealm.server), 'isLocked').mockReturnValue(true);
+    vaultRealm.fc.sent.length = 0;
+    vaultRealm.server.handleMessage(vaultRealm.session, frame);
+    expect(vaultUse).not.toHaveBeenCalled();
+    expect(vaultRealm.fc.sent).toEqual([]);
+  });
+
   it('agrees with the real frame path on its jailed and dark answers', () => {
     // Jailed answers busy and dark answers no_freehold: the re-dispatch host
     // maps each the same way, so the frame path's answer for each state is
@@ -1051,6 +1176,15 @@ describe('freeholds wire: the ops contract and the game.ts shape', () => {
     );
     const turbo = JSON.parse(repoFile('turbo.json')) as { globalPassThroughEnv: string[] };
     expect(turbo.globalPassThroughEnv).toContain('FREEHOLDS_ENABLED');
+  });
+
+  it('the Hearth trip host reads the realm Sim through a getter, as the vault services do', () => {
+    const src = codeOnly(repoFile('server/game.ts'));
+    const at = src.indexOf('createGameFreeholdHearthTrips({');
+    expect(at, 'the one trip host construction').toBeGreaterThanOrEqual(0);
+    const call = balancedCall(src, src.indexOf('(', at));
+    expect(call).toContain('sim: () => this.sim,');
+    expect(call).not.toMatch(/sim: this\.sim\b/);
   });
 
   it('every housing token has a case label, and the refusal sits above the heavy-self mark', () => {
@@ -1382,6 +1516,10 @@ describe('Freehold Gate and Hearth Key real server dispatch', () => {
     // under a one-shot deny ticket.
     vi.stubEnv('FREEHOLDS_ENABLED', '1');
     const { server, session, pid, fc } = housingSession();
+    // A production session always carries its lease nonce (server/ws_auth.ts
+    // mints one before every fresh join, and a resume keeps the original's);
+    // the bare test join has none, and a trip refuses a session without one.
+    session.leaseNonce = 'lease-7201';
     server.sim.addItem('hearth_key', 1, pid);
     server.sim.cfg.lockoutNowMs = () => 5000;
     releasedSpyOn(plotStoreOf(server), 'authority').mockReturnValue({
@@ -1409,7 +1547,7 @@ describe('Freehold Gate and Hearth Key real server dispatch', () => {
     server.handleMessage(session, JSON.stringify({ t: 'cmd', cmd: 'use', item: 'hearth_key' }));
     expect(server.sim.drainEvents().filter((event) => event.type === 'freeholdDenied')).toEqual([]);
     expect(trips.counters.started).toBe(1);
-    await vi.waitFor(() => expect(trips.counters.failed).toBe(1));
+    await vi.waitFor(() => expect(trips.counters.notRun).toBe(1));
     expect(trips.inFlight(7201)).toBe(false);
     expect(save).toHaveBeenCalledTimes(1);
     expect(save.mock.calls[0][0]).toBe(session);
@@ -1423,7 +1561,158 @@ describe('Freehold Gate and Hearth Key real server dispatch', () => {
     ]);
     expect(server.sim.entities.get(pid)!.pos).toEqual(before);
     expect(server.sim.freeholdKeyReadyAtMs.size).toBe(0);
-    expect(trips.counters).toMatchObject({ started: 1, failed: 1, advanced: 0, abandoned: 0 });
+    expect(trips.counters).toMatchObject({
+      started: 1,
+      notRun: 1,
+      failed: 0,
+      advanced: 0,
+      abandoned: 0,
+    });
+  });
+
+  /** A lit realm with one keyed session whose plot entry is loaded with no
+   *  durable row, so a use starts a real trip. */
+  function tripSession() {
+    vi.stubEnv('FREEHOLDS_ENABLED', '1');
+    const realm = housingSession();
+    realm.session.leaseNonce = 'lease-7201';
+    realm.server.sim.addItem('hearth_key', 1, realm.pid);
+    // The grant's own loot event is setup, not the trip's: drop it.
+    realm.server.sim.drainEvents();
+    realm.server.sim.cfg.lockoutNowMs = () => 5000;
+    releasedSpyOn(plotStoreOf(realm.server), 'authority').mockReturnValue({
+      loaded: true,
+      blocked: false,
+      plotId: 'plot-7201',
+      durableRev: null,
+    });
+    return { ...realm, trips: hearthTripsOf(realm.server) };
+  }
+
+  it('an admitted trip enters INSIDE its re-dispatch call and changes no heavy self field', async () => {
+    vi.stubEnv('SELF_SNAPSHOT_FULL', '0');
+    const { server, session, pid, fc, trips } = tripSession();
+    hearthSaveAnswering(server, { readyAtMs: '0', nowMs: '5000' });
+    const key = freeholdOwnerKeyForAccount(session.accountId);
+    // Where the player stands the moment each sim use RETURNS: Hearth Key use
+    // is instant (no cast), so the one-shot ticket set around the re-dispatch
+    // is still set when useHearthKey asks admission.
+    const useItem = server.sim.useItem.bind(server.sim);
+    const claimOnReturn: (number | null)[] = [];
+    releasedSpyOn(server.sim, 'useItem').mockImplementation((...args) => {
+      const result = useItem(...args);
+      claimOnReturn.push(server.sim.ctx.instanceClaimIdAt(server.sim.entities.get(pid)!.pos));
+      return result;
+    });
+    // Sync every heavy key once, then let the frame's receipt mark run out.
+    session.selfHeavyDirty = true;
+    broadcast(server);
+    expect(lastSnap(fc.sent).self.inv).toBeDefined();
+    server.handleMessage(session, JSON.stringify({ t: 'cmd', cmd: 'use', item: 'hearth_key' }));
+    expect(claimOnReturn).toEqual([null]);
+    broadcast(server);
+    expect(session.selfHeavyDirty).toBe(false);
+    const tick = server.sim.tickCount;
+    await vi.waitFor(() => expect(trips.counters.advanced).toBe(1));
+    expect(claimOnReturn).toHaveLength(2);
+    expect(claimOnReturn[1]).not.toBeNull();
+    expect(server.sim.tickCount).toBe(tick);
+    expect(trips.counters.refusedAfterCommit).toBe(0);
+    expect(server.sim.freeholdKeyReadyAtMs.get(key)).toBe(5000 + HEARTH_KEY_COOLDOWN_MS);
+    // The re-dispatch is not a frame, so it takes no receipt mark: the entry
+    // emits no heavy event, and a forced heavy pass finds every heavy key
+    // exactly as it was, so there is nothing a mark would have refreshed.
+    (
+      server as unknown as { routeEvents(events: ReturnType<Sim['drainEvents']>): void }
+    ).routeEvents(server.sim.drainEvents());
+    expect(session.selfHeavyDirty).toBe(false);
+    const heavyProjection = releasedSpyOn(server.sim, 'ownedMountsFor');
+    fc.sent.length = 0;
+    session.selfHeavyDirty = true;
+    broadcast(server);
+    expect(heavyProjection).toHaveBeenCalledWith(pid);
+    const self = lastSnap(fc.sent).self as Record<string, unknown>;
+    expect(Object.keys(self).filter((k) => HEAVY_SELF_KEYS.includes(k))).toEqual([]);
+  });
+
+  it('a re-dispatch on a realm that began draining reaches nothing, as a buffered frame would', async () => {
+    const { server, session, pid, fc, trips } = tripSession();
+    let release!: () => void;
+    hearthSaveAnswering(
+      server,
+      { readyAtMs: '0', nowMs: '5000' },
+      new Promise<void>((r) => {
+        release = r;
+      }),
+    );
+    server.handleMessage(session, JSON.stringify({ t: 'cmd', cmd: 'use', item: 'hearth_key' }));
+    expect(trips.counters.started).toBe(1);
+    const useItem = releasedSpyOn(server.sim, 'useItem');
+    const before = { ...server.sim.entities.get(pid)!.pos };
+    server.sim.drainEvents();
+    fc.sent.length = 0;
+    (server as unknown as { draining: boolean }).draining = true;
+    release();
+    await vi.waitFor(() => expect(trips.counters.advanced).toBe(1));
+    expect(useItem).not.toHaveBeenCalled();
+    expect(server.sim.drainEvents()).toEqual([]);
+    // No answer of any kind (a social push may land on its own clock).
+    expect(fc.sent.filter((m) => m.t === 'events' || m.t === 'commandOutcome')).toEqual([]);
+    expect(server.sim.entities.get(pid)!.pos).toEqual(before);
+    // The advance stays spent (R-2), counted like any other refused re-dispatch.
+    expect(trips.counters.refusedAfterCommit).toBe(1);
+  });
+
+  it.each([
+    ['another character of the account is still online', true],
+    ['the account has no live session left', false],
+  ])(
+    'an abandoned cooldown when %s merges the clock only for a live owner',
+    async (_label, sibling) => {
+      const { server, session, pid, trips } = tripSession();
+      const key = freeholdOwnerKeyForAccount(session.accountId);
+      let release!: () => void;
+      hearthSaveAnswering(
+        server,
+        { readyAtMs: '9000', nowMs: '5000' },
+        new Promise<void>((r) => {
+          release = r;
+        }),
+      );
+      if (sibling) {
+        const other = server.join(fakeWs().ws, 7201, 7202, 'Sibling', 'warrior', null, true);
+        if ('error' in other) throw new Error(other.error);
+      }
+      server.handleMessage(session, JSON.stringify({ t: 'cmd', cmd: 'use', item: 'hearth_key' }));
+      expect(trips.counters.started).toBe(1);
+      // The trip's session leaves while its transaction runs: the leave marks
+      // it, then the sim drops the player (the last-leave clock eviction).
+      session.left = true;
+      server.sim.removePlayer(pid);
+      release();
+      await vi.waitFor(() => expect(trips.counters.cooldown).toBe(1));
+      expect(trips.counters.abandoned).toBe(1);
+      expect(server.sim.freeholdKeyReadyAtMs.get(key)).toBe(sibling ? 9000 : undefined);
+    },
+  );
+
+  it('saveCharacter refuses a housing hook without the background permit, before any work', async () => {
+    const { server, session } = housingSession();
+    const maySave = releasedSpyOn(vaultGuardOf(server), 'maySave');
+    const housing = { accountIds: [7201] } as unknown as CharacterSaveHousingHook;
+    await expect(saveSurface(server).saveCharacter(session, { housing })).rejects.toThrow(
+      'housing save without its permit',
+    );
+    await expect(
+      saveSurface(server).saveCharacter(session, { housing, backgroundDbPermit: false }),
+    ).rejects.toThrow('housing save without its permit');
+    expect(maySave).not.toHaveBeenCalled();
+    // Control: the permit-holding shape passes the guard and reaches the save.
+    maySave.mockReturnValue(false);
+    await expect(
+      saveSurface(server).saveCharacter(session, { housing, backgroundDbPermit: true }),
+    ).resolves.toBe(false);
+    expect(maySave).toHaveBeenCalledTimes(1);
   });
 
   it.each([

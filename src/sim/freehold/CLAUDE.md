@@ -81,8 +81,10 @@ carries an opaque plot id only.
   because the durable clock is merged at install even for an account whose plot is
   held or absent). A host that reached into the Map itself would be a third writer,
   and the forward-only rule would then live in as many places as there are hosts,
-  so nothing outside this directory may write it (the source scan in
-  `tests/freehold_module.test.ts` forbids a `.delete(` outside it). It is outside the
+  so nothing outside this directory may write it: the source scan in
+  `tests/freehold_module.test.ts` lets only `hearth_key.ts` set it and only `state.ts`
+  delete it, and refuses any other reference that is not a read, a declaration or a
+  forwarding getter (an alias, an optional chain or a bracket call). It is outside the
   serialized plot, so changing tier cannot reset it; online the eviction is safe
   because the login merge reinstalls the durable clock, and offline and headless
   keys are per entity.
@@ -315,15 +317,15 @@ carries an opaque plot id only.
   TWO STATED EXCEPTIONS, so they read as decisions rather than as drift, and the
   list under each is EXHAUSTIVE: an importer added without a line here is drift
   by definition. FIRST, the SERVER's durable and gate consumers.
-  NINE server files reach these leaves by path, and they are ONE consumer split
-  across nine files as the store was extracted, not nine decisions:
+  The server files below reach these leaves by path, and they are ONE consumer
+  split across files as the store was extracted, not separate decisions:
   `server/freehold_persist.ts` (`persisted.ts`, `state.ts`, `load_report.ts`),
   `server/freehold_persist_wiring.ts`, the
   composition root beside it (`persisted.ts` and `FREEHOLD_VISIT_POLICIES`
   from `./types`), the module that came off the root:
   `server/freehold_liveness.ts` (`persisted.ts`, `state.ts`), which binds the
   store's four liveness reads to the live map for the root and the store's
-  suite alike, and the six modules that came off the store:
+  suite alike, and the modules that came off the store:
   `server/freehold_install.ts` (`hearth_key.ts`, `persisted.ts`,
   `state.ts`, `types.ts`), `server/freehold_write_seal.ts` (`persisted.ts`,
   `state.ts`), `server/freehold_load_outcome.ts` (`load_report.ts`,
@@ -332,7 +334,7 @@ carries an opaque plot id only.
   `server/freehold_persist_types.ts` (`persisted.ts`, type-only, for the ports
   and the entry record) and `server/freehold_wire.ts`
   (`gate_rules.ts`, `types.ts`).
-  The realm's remote Hearth trip (07a) adds TWO more, one consumer split
+  The realm's remote Hearth trip (07a) adds two more, one consumer split
   across its core and the binding to the game pieces:
   `server/freehold_hearth_trip.ts` (`hearth_key.ts`, type-only, for the
   three-valued admission answer) and `server/freehold_hearth_trip_host.ts`
@@ -347,7 +349,7 @@ carries an opaque plot id only.
   `FREEHOLD_VISIT_POLICIES` is deliberately off the barrel for that reason:
   putting a server-facing durable vocabulary on the surface every UI and sim
   caller reads, for one consumer, is the cost the rule above exists to avoid.
-  `server/game.ts` is the TWELFTH by-path importer and a different case: it
+  `server/game.ts` is a by-path importer of a different kind: it
   reaches `gate_rules.ts` only, as `server/freehold_wire.ts` does, for the one
   item id the dark-realm gate, the jail gate and the coordinator's dispatch key
   on, which the sim dispatches on by use type rather than by id.

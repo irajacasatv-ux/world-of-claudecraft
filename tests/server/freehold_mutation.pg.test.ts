@@ -697,6 +697,135 @@ d('the housing mutation boundary (REAL Postgres)', () => {
       });
       expect(await blobOf(p.ch)).toEqual({ level: 6, marker: 'live' });
     });
+
+    it('two hooked saves handed their participants in OPPOSITE order both finish, no deadlock', async () => {
+      const a = await player();
+      const b = await player();
+      const n = seq();
+      const pa = await makePlot(a.acct, `plot:fmorder${n}a`);
+      const pb = await makePlot(b.acct, `plot:fmorder${n}b`);
+      const write = (acct: number, plot: { plotId: string; fence: FreeholdClaimFence }) => ({
+        upsert: plotUpsert(acct, plot.plotId, 1, '1'),
+        fence: plot.fence,
+      });
+      const request = (accountIds: number[], plotWrites: ReturnType<typeof write>[]) => ({
+        accountIds,
+        claimProofs: [],
+        plots: plotWrites,
+        operations: [],
+        hearth: null,
+      });
+      // A blocker holds the LOWER plot's claim row, so each save parks on its
+      // first fence with whatever it locked before it still held.
+      const blocker = await pool.connect();
+      let one: Promise<unknown> | null = null;
+      let two: Promise<unknown> | null = null;
+      try {
+        await blocker.query('BEGIN');
+        await blocker.query(
+          'SELECT 1 FROM freehold_plot_claims WHERE plot_id = $1 FOR NO KEY UPDATE',
+          [pa.plotId],
+        );
+        one = mutation.commitFreeholdMutation(
+          depsFor({ characterId: a.ch, state: bagsState('order-a', 0), nonce: a.nonce }),
+          request([a.acct, b.acct], [write(a.acct, pa), write(b.acct, pb)]),
+        );
+        two = mutation.commitFreeholdMutation(
+          depsFor({ characterId: b.ch, state: bagsState('order-b', 0), nonce: b.nonce }),
+          request([b.acct, a.acct], [write(b.acct, pb), write(a.acct, pa)]),
+        );
+        await waitForLockWaiters('UPDATE freehold_plot_claims%SET write_token%', 2);
+        // Both wait on the lower plot and NEITHER holds the higher one: the save
+        // handed [pb, pa] sorted them, or this NOWAIT would raise 55P03.
+        const probe = await pool.connect();
+        try {
+          await probe.query('BEGIN');
+          const free = await probe.query(
+            'SELECT plot_id FROM freehold_plot_claims WHERE plot_id = $1 FOR NO KEY UPDATE NOWAIT',
+            [pb.plotId],
+          );
+          expect(free.rowCount).toBe(1);
+          await probe.query('ROLLBACK');
+        } finally {
+          probe.release();
+        }
+        await blocker.query('COMMIT');
+      } finally {
+        await blocker.query('ROLLBACK').catch(() => {});
+        blocker.release();
+      }
+      const outcomes = (await Promise.all([one, two])) as { kind: string }[];
+      // One commits; the other, serialized behind it, finds the lower plot moved
+      // and refuses with the bounded typed answer. Never a 40P01.
+      const byKind = [...outcomes].sort((x, y) => (x.kind < y.kind ? -1 : 1));
+      expect(byKind[0]).toMatchObject({ kind: 'committed', verified: false });
+      expect(byKind[1]).toEqual({
+        kind: 'refused',
+        refusal: { kind: 'plot', plotId: pa.plotId, result: 'stale' },
+      });
+      const revs = await pool.query(
+        `SELECT plot_id, durable_rev::text AS rev FROM account_freeholds
+          WHERE plot_id = ANY($1::text[]) ORDER BY plot_id`,
+        [[pa.plotId, pb.plotId]],
+      );
+      expect(revs.rows).toEqual([
+        { plot_id: pa.plotId, rev: '2' },
+        { plot_id: pb.plotId, rev: '2' },
+      ]);
+    });
+
+    it('a hook account the save did not lock at G1 is refused before the hook runs', async () => {
+      // Through the real save: an account gone before G1 comes back short from
+      // the ONE sorted KEY SHARE, and the save refuses before any housing write.
+      const p = await player();
+      const ghost = await makeAccount();
+      await pool.query('DELETE FROM accounts WHERE id = $1', [ghost]);
+      const outcome = await mutation.commitFreeholdMutation(
+        depsFor({ characterId: p.ch, state: bagsState('ghost', 0), nonce: p.nonce }),
+        { ...hearthRequest(p.acct), accountIds: [p.acct, ghost] },
+      );
+      expect(outcome.kind).toBe('failed');
+      expect(String((outcome as { error: unknown }).error)).toMatch(
+        /disappeared before parent lock/,
+      );
+      expect(await hearthOf(p.acct)).toBeNull();
+      expect(await blobOf(p.ch)).toEqual({ level: 5, marker: 'before' });
+      // And commitWithHousing's own check, on a real transaction: a hook naming
+      // an account outside the locked set never runs.
+      const { createDbTransactionDeadline } = await import('../../server/db_transaction_deadline');
+      const other = await makeAccount();
+      const client = await pool.connect();
+      const tx = createDbTransactionDeadline(client, {
+        operation: 'fm unlocked hook',
+        timeoutMs: 10_000,
+      });
+      let ran = false;
+      try {
+        await tx.query('BEGIN');
+        const locked = await housing.lockSaveAccountsWithHousing(tx, [], undefined, {
+          accountIds: [p.acct],
+          run: async () => {},
+          commitSent() {},
+          committed() {},
+        });
+        expect(locked).toEqual([p.acct]);
+        const hook: CharacterSaveHousingHook = {
+          accountIds: [p.acct, other],
+          run: async () => {
+            ran = true;
+          },
+          commitSent() {},
+          committed() {},
+        };
+        await expect(housing.commitWithHousing(tx, hook, locked)).rejects.toThrow(
+          'a housing account participant was not locked with the save accounts',
+        );
+        expect(ran).toBe(false);
+      } finally {
+        await tx.rollback();
+        tx.release();
+      }
+    });
   });
 
   // ---------------------------------------------------------------------------
@@ -853,6 +982,50 @@ d('the housing mutation boundary (REAL Postgres)', () => {
       ).toMatchObject({ kind: 'committed', verified: false });
       expect(await custody(t)).toEqual({ bags: 0, layout: 1 });
     });
+
+    it('a missing copy is refused with nothing written, and custody is never invented', async () => {
+      // The hook writes whatever the save hands it and never reads the bags, so
+      // the missing-copy refusal belongs to the KIND's plan. No production kind
+      // exists in 07a: this TEST kind's plan reads the source custody first and
+      // refuses before any transaction (the fixture's bags carry the chair as a
+      // stack, so the named copy is present iff a chair is in the bags).
+      const plan = async (t: Transfer) => {
+        const held = await custody(t);
+        return held.bags >= t.intent.copyRefs.length
+          ? ({ kind: 'planned', request: transferRequest(t) } as const)
+          : ({ kind: 'refused', reason: 'missing_copy' } as const);
+      };
+      const durableRev = async (plotId: string) =>
+        (
+          await pool.query(
+            'SELECT durable_rev::text AS v FROM account_freeholds WHERE plot_id = $1',
+            [plotId],
+          )
+        ).rows[0].v as string;
+      const p = await player(0);
+      const plot = await makePlot(p.acct);
+      const intent = intentOf(p.acct, p.ch, plot);
+      expect(await ops.prepareFreeholdOperation(pool, intent)).toEqual({ kind: 'prepared' });
+      const empty: Transfer = { ...p, ...plot, intent };
+      expect(await custody(empty)).toEqual({ bags: 0, layout: 0 });
+      expect(await plan(empty)).toEqual({ kind: 'refused', reason: 'missing_copy' });
+      // Nothing written anywhere, and the chair was not conjured into the layout.
+      expect(await custody(empty)).toEqual({ bags: 0, layout: 0 });
+      expect(await blobOf(p.ch)).toEqual({ level: 5, marker: 'before' });
+      expect(await intentCount(intent.operationId)).toBe(1);
+      expect(await receiptsOf(intent.operationId)).toEqual([]);
+      expect((await claimRow(plot.plotId))?.write_token).toBeNull();
+      expect(await durableRev(plot.plotId)).toBe('1');
+      // Control: the same plan over bags that hold the copy commits the move.
+      const t = await transferFixture();
+      const planned = await plan(t);
+      expect(planned.kind).toBe('planned');
+      if (planned.kind !== 'planned') throw new Error('unreachable');
+      expect(await mutation.commitFreeholdMutation(transferDeps(t), planned.request)).toMatchObject(
+        { kind: 'committed' },
+      );
+      expect(await custody(t)).toEqual({ bags: 0, layout: 1 });
+    });
   });
 
   // ---------------------------------------------------------------------------
@@ -910,8 +1083,18 @@ d('the housing mutation boundary (REAL Postgres)', () => {
       const t = await transferFixture();
       await pool.query('INSERT INTO account_freehold_hearth (account_id) VALUES ($1)', [t.acct]);
       const lost = armLostCommit(db);
+      // The verify's checkouts, counted: the wait and the reads share ONE.
+      let verifyCheckouts = 0;
       const pending = mutation.commitFreeholdMutation(
-        transferDeps(t),
+        {
+          ...transferDeps(t),
+          pool: {
+            connect: () => {
+              verifyCheckouts++;
+              return pool.connect();
+            },
+          },
+        },
         transferRequest(t, { hearth: true }),
       );
       const real = await lost;
@@ -923,6 +1106,7 @@ d('the housing mutation boundary (REAL Postgres)', () => {
       }
       const outcome = await pending;
       expect(outcome.kind).toBe('not_landed');
+      expect(verifyCheckouts).toBe(1);
       expect(await custody(t)).toEqual({ bags: 1, layout: 0 });
       expect((await hearthOf(t.acct))?.revision).toBe('0');
       expect(await intentCount(t.intent.operationId)).toBe(1);
@@ -1253,6 +1437,79 @@ d('the housing mutation boundary (REAL Postgres)', () => {
         },
       ]);
     });
+
+    it('after a restart, recovery reconciles the ORIGINAL id once and closes it with one receipt', async () => {
+      const t = await transferFixture();
+      // The restart: nothing in memory survives. A NEW pool and a NEW recovery
+      // registry; only the durable intent remains. The realm's reconciler map is
+      // empty in 07a, so a TEST kind's reconciler is injected through the deps.
+      const recovery = await import('../../server/freehold_operation_recovery');
+      expect(recovery.FREEHOLD_OPERATION_RECONCILERS.size).toBe(0);
+      const { Pool } = await import('pg');
+      const { materialSourceConnection } = await import('../../server/material_source_connection');
+      const fresh = new Pool({ ...materialSourceConnection(verifyUrl(ADMIN_URL)), max: 4 });
+      try {
+        const seen: string[] = [];
+        const registry = recovery.createFreeholdOperationRecovery({
+          reconcilers: new Map([
+            [
+              KIND,
+              {
+                reconcile: async (open) => {
+                  seen.push(open.operationId);
+                  const refused = await ops.cancelFreeholdOperation(fresh, {
+                    operationId: open.operationId,
+                    accountId: open.accountId,
+                    fingerprint: open.fingerprint,
+                    outcome: 'refused',
+                  });
+                  return refused === null ? 'closed' : 'held';
+                },
+              },
+            ],
+          ]),
+          discover: (accountId) => ops.openFreeholdOperationsForAccount(fresh, accountId),
+          tryAcquirePermit: () => ({ release() {} }),
+          holdInFlight: () => () => {},
+          warn: () => {},
+        });
+        // Two schedules while the first pass runs coalesce (single flight); a
+        // later pass finds nothing left to reconcile.
+        registry.schedule(t.acct);
+        registry.schedule(t.acct);
+        await registry.idle();
+        registry.schedule(t.acct);
+        await registry.idle();
+        expect(seen).toEqual([t.intent.operationId]);
+        expect(registry.counters).toMatchObject({
+          passes: 2,
+          discovered: 1,
+          closed: 1,
+          applied: 0,
+          threw: 0,
+          unknownKind: 0,
+        });
+      } finally {
+        await fresh.end();
+      }
+      expect(await intentCount(t.intent.operationId)).toBe(0);
+      expect(await receiptsOf(t.intent.operationId)).toEqual([
+        {
+          account_id: t.acct,
+          plot_id: t.plotId,
+          kind: KIND,
+          outcome: 'refused',
+          fingerprint: t.intent.fingerprint,
+          applied_durable_rev: null,
+        },
+      ]);
+      // Closed is terminal: the original id can never be prepared again.
+      expect(await ops.prepareFreeholdOperation(pool, t.intent)).toEqual({
+        kind: 'closed',
+        outcome: 'refused',
+      });
+      expect(await custody(t)).toEqual({ bags: 1, layout: 0 });
+    });
   });
 
   // ---------------------------------------------------------------------------
@@ -1302,6 +1559,8 @@ d('the housing mutation boundary (REAL Postgres)', () => {
           .rows[0].n,
       ).toBe(1);
       expect(await intentCount(open.operationId)).toBe(1);
+      // Every refused delete left the chair exactly where the transfer put it.
+      expect(await custody(t)).toEqual({ bags: 0, layout: 1 });
 
       expect(
         await ops.cancelFreeholdOperation(pool, {
@@ -1311,6 +1570,8 @@ d('the housing mutation boundary (REAL Postgres)', () => {
           outcome: 'cancelled',
         }),
       ).toBeNull();
+      // The cancel closed the intent and moved nothing.
+      expect(await custody(t)).toEqual({ bags: 0, layout: 1 });
       expect(
         await charDelete.deleteOwnedCharacterRow(
           { connect: () => pool.connect() },
@@ -1356,6 +1617,24 @@ d('the housing mutation boundary (REAL Postgres)', () => {
           outcome: 'cancelled',
           fingerprint: null,
           applied_durable_rev: null,
+        },
+      ]);
+      // An erased tombstone stays erased: a later UPDATE that writes the plot id
+      // or the fingerprint back is nulled by the same trigger, never raised.
+      const rewrite = await pool.query(
+        `UPDATE freehold_operation_receipts SET plot_id = $2, fingerprint = $3
+          WHERE operation_id = $1`,
+        [t.intent.operationId, t.plotId, t.intent.fingerprint],
+      );
+      expect(rewrite.rowCount).toBe(1);
+      expect(await receiptsOf(t.intent.operationId)).toEqual([
+        {
+          account_id: null,
+          plot_id: null,
+          kind: KIND,
+          outcome: 'applied',
+          fingerprint: null,
+          applied_durable_rev: '2',
         },
       ]);
     });

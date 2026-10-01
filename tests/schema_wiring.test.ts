@@ -676,6 +676,15 @@ describe('ensureSchema wires every schema module at boot', () => {
       1,
     );
     expect(count('CREATE OR REPLACE FUNCTION erase_freehold_operation_receipt()')).toBe(1);
+    // The erase keys on the NEW row alone: an erased tombstone stays erased under
+    // a later UPDATE. The transition form (OLD.account_id IS NOT NULL AND ...)
+    // let an UPDATE of plot_id re-identify one.
+    expect(
+      count(
+        '  IF NEW.account_id IS NULL THEN\n    NEW.plot_id := NULL;\n    NEW.fingerprint := NULL;',
+      ),
+    ).toBe(1);
+    expect(ddl).not.toContain('OLD.account_id');
     expect(ddl).toContain("ERRCODE = '55006'");
     expect(ddl).toContain("MESSAGE = 'freehold_operation_open'");
     expect(ddl).toContain("CONSTRAINT = 'freehold_operations_open_delete_guard'");

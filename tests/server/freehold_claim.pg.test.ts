@@ -809,6 +809,45 @@ d('the global plot claim against real PostgreSQL', () => {
     expect(await claimRow(plotId)).toMatchObject({ holder: HOLDER_A, generation: '2', live: true });
   });
 
+  it('caps a live holder at 119 characters, so its release suffix always fits the 128-character CHECK', async () => {
+    const plotId = plot('holder-cap');
+    const longest = `${REALM_A}#${'h'.repeat(119 - REALM_A.length - 1)}`;
+    expect(longest).toHaveLength(119);
+    expect(await acquire(poolA, longest, plotId, 32, LONG_TTL_SECONDS)).toMatchObject({
+      kind: 'acquired',
+      generation: '1',
+    });
+    expect(await claimDb.releaseFreeholdClaimRows(poolA, longest, [plotId])).toEqual(
+      new Set([plotId]),
+    );
+    const row = await claimRow(plotId);
+    expect(row?.holder).toBe(`${longest}#released`);
+    expect(row?.holder).toHaveLength(128);
+    // One character more is refused before any statement, at every claim site
+    // that takes a holder: its release could never fit the column.
+    const over = `${longest}x`;
+    const capture = recorder(poolA);
+    await expect(
+      acquire(capture.db, over, plot('holder-over'), 33, LONG_TTL_SECONDS),
+    ).rejects.toThrow(RangeError);
+    await expect(
+      claimDb.renewFreeholdClaimRows(capture.db, over, [plotId], LONG_TTL_SECONDS),
+    ).rejects.toThrow(RangeError);
+    await expect(claimDb.releaseFreeholdClaimRows(capture.db, over, [plotId])).rejects.toThrow(
+      RangeError,
+    );
+    await expect(claimDb.releaseAllFreeholdClaimRows(capture.db, over)).rejects.toThrow(RangeError);
+    expect(capture.calls).toEqual([]);
+    // Control: the column's own bound is 128, so one character past the
+    // released shape fails the CHECK in the database.
+    await expect(
+      probe.query(`UPDATE ${SCHEMA}.freehold_plot_claims SET holder = $2 WHERE plot_id = $1`, [
+        plotId,
+        `${longest}#released!`,
+      ]),
+    ).rejects.toMatchObject({ code: '23514' });
+  });
+
   it("releases exactly this holder's live claims at shutdown, skips a row an open transaction holds, and keeps every row", async () => {
     const mine = [plot('all-1'), plot('all-2'), plot('all-3')];
     const lapsed = plot('all-lapsed');
@@ -1095,11 +1134,54 @@ d('the global plot claim against real PostgreSQL', () => {
       expect(await claimRow(plotId)).toMatchObject({ holder: HOLDER_A, generation: '1' });
       // Not exercised here: a COMMIT whose answer cannot be proved (the claim
       // left unrecorded and the read thrown) needs the client destroyed after
-      // COMMIT is sent, which this suite cannot do cheaply.
+      // COMMIT is sent, which this suite cannot do cheaply; the fake-client
+      // suite pins it (freehold_mutation.test.ts, the budget cut at COMMIT).
+    });
+
+    it('refuses inside its budget on a pool with no free client, writes no claim, then serves once one frees', async () => {
+      const plotId = plot('login-starved');
+      await seedPlot(31, plotId);
+      const tight = newPool(`${SCHEMA}_tight_login`, 1);
+      const hog = await tight.connect();
+      const registry = reg.createFreeholdClaimRegistry();
+      const { deps, readRow, onClaimed } = loginDeps(31, registry);
+      const starved = { ...deps, pool: tight, budgetMs: 400 };
+      try {
+        const started = Date.now();
+        const err = await loginMod
+          .readClaimedLoginDurables(starved, 31)
+          .catch((error: unknown) => error);
+        const elapsed = Date.now() - started;
+        // THROWN, which the store answers with read_threw: a repairable hold
+        // (the next login asks again), never a loss and never claim_busy.
+        expect((err as Error).name).toBe('TimeoutError');
+        const { FREEHOLD_RETRYABLE_HOLD_KINDS } = await import(
+          '../../server/freehold_load_outcome'
+        );
+        expect(FREEHOLD_RETRYABLE_HOLD_KINDS.has('read_threw')).toBe(true);
+        expect(elapsed).toBeGreaterThanOrEqual(350);
+        expect(elapsed).toBeLessThan(1_500);
+        expect(readRow).not.toHaveBeenCalled();
+        expect(registry.all()).toEqual([]);
+        expect(onClaimed).not.toHaveBeenCalled();
+        expect(registry.counters).toMatchObject({ acquired: 0, busy: 0, loginReads: 1 });
+        expect(await claimRow(plotId)).toBeNull();
+      } finally {
+        hog.release();
+      }
+      // The abandoned checkout is handed back, not leaked.
+      await sleep(20);
+      expect(tight.waitingCount).toBe(0);
+      const answer = await loginMod.readClaimedLoginDurables(starved, 31);
+      expect(answer.row).toMatchObject({ kind: 'row', row: { plotId, durableRev: '1' } });
+      expect(registry.forPlot(plotId)).toMatchObject({ accountId: 31, generation: '1' });
+      expect(onClaimed).toHaveBeenCalledWith(31);
+      expect(await claimRow(plotId)).toMatchObject({ holder: HOLDER_A, live: true });
+      await tight.end();
     });
   });
 
-  it('reaches the primary keys for the acquire and the fenced CTE, never a sequential scan', async () => {
+  it('reaches the primary keys for the acquire and the fenced CTE, the holder index for the shutdown release, never a sequential scan', async () => {
     const plotId = plot('plans');
     await seedPlot(29, plotId);
     const acquireCapture = recorder(poolA);
@@ -1173,6 +1255,15 @@ d('the global plot claim against real PostgreSQL', () => {
       expect(scansReach(realmPlan, 'freehold_plot_claims', 'freehold_plot_claims_pkey')).toEqual([
         '"freehold_plot_claims" used Seq Scan instead of "freehold_plot_claims_pkey"',
       ]);
+
+      // The shutdown release has no chunk bound, so BOTH of its reads of the
+      // claims table must reach the holder index: the outer one too, which a
+      // bare `plot_id IN (...)` left to a sequential scan of the whole table
+      // once it grew (measured: workload-evidence.md).
+      const releaseAllPlan = await explain(claimDb.FREEHOLD_CLAIM_RELEASE_ALL_SQL, [HOLDER_A]);
+      expect(
+        scansReach(releaseAllPlan, 'freehold_plot_claims', 'freehold_plot_claims_holder'),
+      ).toEqual(['freehold_plot_claims_holder', 'freehold_plot_claims_holder']);
 
       // RECORDED, not pinned: the renew chunk's plan.
       const renewPlan = await explain(claimDb.FREEHOLD_CLAIM_RENEW_SQL, [

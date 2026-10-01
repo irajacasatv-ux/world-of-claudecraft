@@ -26,6 +26,16 @@
 // A lock or statement timeout on the acquire (55P03, 57014) is contention on
 // the claim row, not a fault in the plot: it answers `claim_busy`, the
 // repairable hold, rather than the generic read hold.
+//
+// ONE BUDGET FOR THE WHOLE READ: a single deadline signal, armed before the
+// first checkout, bounds both transactions, their checkout waits included, so
+// a full pool or the clock-fault retry can never stretch a login past it. On
+// expiry the transaction in flight is cut (its socket destroyed; the detached
+// backend still has its own statement and idle bounds): before COMMIT that is
+// a plain failure, at COMMIT it is FreeholdCommitAmbiguous, and either way the
+// read THROWS, the store's repairable `read_threw` hold, so no claim whose
+// COMMIT may have landed is ever recorded or answered as held. A claim that
+// did land unrecorded is this realm's own and expires after the TTL.
 import { acquireFreeholdClaim } from './freehold_claim_db';
 import type { FreeholdClaimRegistry } from './freehold_claim_registry';
 import type { FreeholdQueryable, FreeholdRowLoad } from './freehold_db';
@@ -72,6 +82,9 @@ export interface FreeholdClaimLoginDeps {
   /** This realm just became the plot's proved authority: the operation
    *  recovery pass for the account is scheduled here (fire and forget). */
   onClaimed?(accountId: number): void;
+  /** The whole read's budget; FREEHOLD_CLAIM_LOGIN_BOUNDS.wallMs (the store's
+   *  login budget) unless a suite narrows it. */
+  readonly budgetMs?: number;
 }
 
 export async function readClaimedLoginDurables(
@@ -79,6 +92,23 @@ export async function readClaimedLoginDurables(
   accountId: number,
 ): Promise<{ row: FreeholdRowLoad; hearth: FreeholdHearthAnswer }> {
   const { registry } = deps;
+  const startMs = deps.nowMs();
+  try {
+    return await claimedLoginRead(deps, accountId);
+  } finally {
+    registry.counters.loginReads++;
+    registry.counters.loginReadMsTotal += Math.max(0, deps.nowMs() - startMs);
+  }
+}
+
+async function claimedLoginRead(
+  deps: FreeholdClaimLoginDeps,
+  accountId: number,
+): Promise<{ row: FreeholdRowLoad; hearth: FreeholdHearthAnswer }> {
+  const { registry } = deps;
+  const budget = {
+    signal: AbortSignal.timeout(deps.budgetMs ?? FREEHOLD_CLAIM_LOGIN_BOUNDS.wallMs),
+  };
   let acquired: { plotId: string; generation: string; takeover: boolean } | null = null;
   const plotHalf = async (db: FreeholdQueryable): Promise<FreeholdRowLoad> => {
     const primary = await db.query(FREEHOLD_PRIMARY_PLOT_ID_SQL, [accountId]);
@@ -108,6 +138,13 @@ export async function readClaimedLoginDurables(
   };
   const record = () => {
     if (acquired === null) return;
+    // A pending token on this plot asked whether an earlier write of ours
+    // landed. The acquire above locked the claim row, which waited out any
+    // transaction still holding it, and the row read after it saw that
+    // outcome, so the store installs from the answer and the question is
+    // superseded. (A write needs a loaded entry and this read runs only for an
+    // entry that is not, so no write still in flight can be asking it.)
+    registry.clearPending(acquired.plotId);
     registry.record({
       plotId: acquired.plotId,
       accountId,
@@ -121,15 +158,20 @@ export async function readClaimedLoginDurables(
 
   let hearth: FreeholdHearthAnswer | undefined;
   try {
-    const row = await runFreeholdTransaction(deps.pool, FREEHOLD_CLAIM_LOGIN_BOUNDS, async (tx) => {
-      try {
-        hearth = await deps.readHearth(tx);
-      } catch (error) {
-        hearth = { kind: 'threw', error };
-        throw error;
-      }
-      return plotHalf(tx);
-    });
+    const row = await runFreeholdTransaction(
+      deps.pool,
+      FREEHOLD_CLAIM_LOGIN_BOUNDS,
+      async (tx) => {
+        try {
+          hearth = await deps.readHearth(tx);
+        } catch (error) {
+          hearth = { kind: 'threw', error };
+          throw error;
+        }
+        return plotHalf(tx);
+      },
+      budget,
+    );
     record();
     return { row, hearth: hearth as FreeholdHearthAnswer };
   } catch (error) {
@@ -140,7 +182,13 @@ export async function readClaimedLoginDurables(
     if (hearth !== undefined && hearth.kind === 'threw' && acquired === null) {
       const clock = hearth;
       try {
-        const row = await runFreeholdTransaction(deps.pool, FREEHOLD_CLAIM_LOGIN_BOUNDS, plotHalf);
+        // The SAME budget: an exhausted one refuses before any checkout.
+        const row = await runFreeholdTransaction(
+          deps.pool,
+          FREEHOLD_CLAIM_LOGIN_BOUNDS,
+          plotHalf,
+          budget,
+        );
         record();
         return { row, hearth: clock };
       } catch (retryError) {
