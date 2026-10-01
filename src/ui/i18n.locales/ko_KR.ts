@@ -2092,7 +2092,8 @@ export const ko_KR: Partial<Record<TranslationKey, string>> = {
   'hudChrome.mobInspect.normalOnly': '일반 난이도 전용',
   'hudChrome.mobInspect.money': '주화',
   'hudChrome.mobInspect.rangeTo': '~',
-  'hudChrome.mobInspect.sharedRolls': '처치할 때마다 {count}번 굴림, 같은 아이템은 두 번 나오지 않음',
+  'hudChrome.mobInspect.sharedRolls':
+    '처치할 때마다 {count}번 굴림, 같은 아이템은 두 번 나오지 않음',
   'hudChrome.targetFrame.unlock': '대상 프레임 이동',
   'hudChrome.targetFrame.lock': '대상 프레임 고정',
   'hudChrome.playerFrame.unlock': '플레이어 프레임 이동',

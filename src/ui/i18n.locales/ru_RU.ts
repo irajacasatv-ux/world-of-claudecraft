@@ -2118,7 +2118,8 @@ export const ru_RU: Partial<Record<TranslationKey, string>> = {
   'hudChrome.mobInspect.normalOnly': 'Только обычная сложность',
   'hudChrome.mobInspect.money': 'Монеты',
   'hudChrome.mobInspect.rangeTo': 'до',
-  'hudChrome.mobInspect.sharedRolls': 'Бросков за убийство: {count}, один предмет не выпадает дважды',
+  'hudChrome.mobInspect.sharedRolls':
+    'Бросков за убийство: {count}, один предмет не выпадает дважды',
   'hudChrome.targetFrame.unlock': 'Переместить рамку цели',
   'hudChrome.targetFrame.lock': 'Закрепить рамку цели',
   'hudChrome.playerFrame.unlock': 'Переместить рамку игрока',
