@@ -3896,8 +3896,13 @@ describe('the claim renewer', () => {
     // Dockerfile, pinned whole, aside); a barrel under docs/ or tests/,
     // which name the registry by design (no server module reaches either,
     // pinned below, but a dev script under scripts/ may); a name spelled with
-    // escapes in a file the count does not read; a file git does not track
-    // yet outside server/ (a local run passes until it is added; CI sees it);
+    // escapes in a file the count does not read; a container build file that
+    // is not a Dockerfile (a Containerfile, a bake file in HCL or JSON, an
+    // Earthfile, a platform manifest) or that sits under docs/ or tests/, since
+    // a hook one sets must still name the registry or the renewer, which the
+    // tree read lists, or assemble its path, named above; a file git does not
+    // track yet outside server/ (a local run passes until it is added; CI
+    // sees it);
     // the compose file's lines other than its NODE_ variables, bundle names
     // and `command` and `entrypoint` key lines (a health check, for one);
     // text the shared comment stripper misreads (a string holding a comment
@@ -4128,17 +4133,12 @@ describe('the claim renewer', () => {
       'CMD ["sh", "-c", "mkdir -p /app/dist/media && node -e \\"require(\'fs\').cpSync(\'/app/media-build\', \'/app/dist/media\', { recursive: true, force: true })\\" && node dist-server/server.cjs"]',
       '',
     ]);
-    // Every tracked container build file (a Dockerfile, a Containerfile, a
-    // bake file), docs and tests aside: the one other builds the player wiki,
-    // never the bundle.
+    // Every tracked Dockerfile, docs and tests aside: the one other builds the
+    // player wiki, never the bundle. Other container build kinds are named in
+    // LIMITS above.
     expect(
-      listed([
-        ':(icase)*dockerfile*',
-        ':(icase)*containerfile*',
-        ':(icase)*.hcl',
-        ':!docs',
-        ':!tests',
-      ]).sort(),
+      listed([':(icase)*dockerfile*', ':!docs', ':!tests']).sort(),
+      'a new Dockerfile: check how it runs the server bundle, then list it here',
     ).toEqual(['Dockerfile', 'mediawiki/Dockerfile']);
     // The compose file passes NODE_OPTIONS through to the container that runs
     // the bundle: its NODE_ variables, bundle names and `command` and
