@@ -37,8 +37,12 @@ export function characterSaveLanded(
   storageEffects: readonly StorageAppliedEffect[],
   ledger: BankLedgerSaveEffects | undefined,
   rowCount: number | null | undefined,
+  /** A housing hook rides this save (server/character_save_housing.ts): its
+   *  effects are a half like the storage and ledger ones, so the character row
+   *  must have landed whatever the fence shape. */
+  hooked = false,
 ): boolean {
-  if (leaseNonce === undefined && storageEffects.length === 0 && !ledger) return true;
+  if (leaseNonce === undefined && storageEffects.length === 0 && !ledger && !hooked) return true;
   return (rowCount ?? 0) > 0;
 }
 

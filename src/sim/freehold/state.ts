@@ -213,13 +213,23 @@ export function seedFreeholdOnJoin(
  *  for the persistence slice; that slice has landed and did not reshape either
  *  hook, so the walk stands and the index is unclaimed work. */
 export function releaseFreeholdOnLeave(ctx: SimContext, pid: number): void {
-  if (ctx.freeholds.size === 0) return;
+  if (ctx.freeholds.size === 0 && ctx.freeholdKeyReadyAtMs.size === 0) return;
   const meta = ctx.players.get(pid);
   if (!meta) return;
   const key = freeholdOwnerKeyOfMeta(meta);
-  if (!ctx.freeholds.has(key)) return;
+  // Nothing of THIS owner's to release: no roster walk (the per-leaver
+  // short-circuit the function has always kept, widened to the clock map).
+  if (!ctx.freeholds.has(key) && !ctx.freeholdKeyReadyAtMs.has(key)) return;
   for (const other of ctx.players.values()) {
     if (other.entityId !== pid && freeholdOwnerKeyOfMeta(other) === key) return;
   }
+  // The owner's LAST session is leaving. Its live Hearth clock goes too (07a),
+  // and checked here against the roster, NOT through the record: the durable
+  // clock is merged at install even when the plot is held or absent, so a
+  // record-gated eviction would keep those entries for the life of the Sim.
+  // Safe to drop: online the login merge reinstalls the durable clock, and
+  // offline and headless keys are per entity. The one delete of that map.
+  ctx.freeholdKeyReadyAtMs.delete(key);
+  if (!ctx.freeholds.has(key)) return;
   evictFreehold(ctx, key);
 }

@@ -6770,6 +6770,7 @@ export const zh_CN: EnTranslations = {
       "rename_not_permitted": "不允许为此角色改名。",
       "delete_confirm": "输入角色名称以确认删除。",
       "storage_purchase_open": "此储物空间购买必须完成或解决后，才能删除该角色。",
+      "freehold_operation_open": "此自由领地操作必须完成或解决后，才能删除该角色。",
       "delete_busy": "服务器繁忙，请稍后再尝试删除该角色。",
       "already_in_world": "角色已在世界中。",
       "taken_over": "你的角色已被另一个会话接管。",

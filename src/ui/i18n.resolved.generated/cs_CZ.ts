@@ -6770,6 +6770,7 @@ export const cs_CZ: EnTranslations = {
       "rename_not_permitted": "Přejmenování této postavy není povoleno.",
       "delete_confirm": "Pro potvrzení smazání napiš jméno postavy.",
       "storage_purchase_open": "Před smazáním této postavy musí být nákup úložiště dokončen nebo vyřešen.",
+      "freehold_operation_open": "A Freehold operation must finish or be resolved before this character can be deleted.",
       "delete_busy": "Říše je zaneprázdněná. Zkuste tuto postavu znovu smazat za chvíli.",
       "already_in_world": "Postava už je ve světě.",
       "taken_over": "Tvoje postava byla převzata jinou relací.",

@@ -161,7 +161,12 @@ import {
   runConcurrentIndexMigrations,
   saveMarketState,
 } from '../server/db';
+import { FREEHOLD_CLAIM_SCHEMA } from '../server/freehold_claim_db';
+import { FREEHOLD_SCHEMA } from '../server/freehold_db';
+import { FREEHOLD_HEARTH_SCHEMA } from '../server/freehold_hearth_db';
+import { FREEHOLD_OPERATION_SCHEMA } from '../server/freehold_operation_db';
 import { RATELIMIT_PRUNE_SQL } from '../server/ratelimit_db';
+import { STORAGE_PURCHASE_SCHEMA } from '../server/storage_purchase_db';
 import type { MarketSave } from '../src/sim/sim';
 
 const emptyMarket: MarketSave = { listings: [], collections: [], nextListingId: 1 };
@@ -518,6 +523,62 @@ describe('ensureSchema wires every schema module at boot', () => {
     expect(commitIndex).toBeGreaterThan(growthIndex);
   });
 
+  it('applies all four housing fragments in the LATE block: plot, Hearth, claim, operation, then storage', async () => {
+    // 07a moved the housing fragments late, for the storage reason: their
+    // foreign keys and the operation guard triggers take first-rollout locks on
+    // accounts and characters, held until COMMIT (the touch-set manifest's P12).
+    // So the four apply back to back, in exactly this order, IMMEDIATELY before
+    // STORAGE_PURCHASE_SCHEMA, after the mail backfill and after the core
+    // accounts and characters tables. Pinned by index, never containment.
+    await ensureSchema();
+    const findIndex = (needle: string): number => h.calls.findIndex((c) => c.includes(needle));
+    const storage = h.calls.indexOf(STORAGE_PURCHASE_SCHEMA);
+    const plot = h.calls.indexOf(FREEHOLD_SCHEMA);
+    const hearth = h.calls.indexOf(FREEHOLD_HEARTH_SCHEMA);
+    const claim = h.calls.indexOf(FREEHOLD_CLAIM_SCHEMA);
+    const operation = h.calls.indexOf(FREEHOLD_OPERATION_SCHEMA);
+    expect(storage).toBeGreaterThanOrEqual(0);
+    expect(plot).toBe(storage - 4);
+    expect(hearth).toBe(storage - 3);
+    expect(claim).toBe(storage - 2);
+    expect(operation).toBe(storage - 1);
+    // Each exactly once per boot.
+    for (const fragment of [
+      FREEHOLD_SCHEMA,
+      FREEHOLD_HEARTH_SCHEMA,
+      FREEHOLD_CLAIM_SCHEMA,
+      FREEHOLD_OPERATION_SCHEMA,
+    ]) {
+      expect(h.calls.filter((c) => c === fragment)).toHaveLength(1);
+    }
+    // The identity matches are the fragments they claim to be.
+    expect(h.calls[plot]).toContain('.account_freeholds (');
+    expect(h.calls[hearth]).toContain('.account_freehold_hearth (');
+    expect(h.calls[claim]).toContain('.freehold_plot_claims (');
+    expect(h.calls[operation]).toContain('CREATE TABLE IF NOT EXISTS freehold_operations (');
+    // After the core tables every one of them references.
+    const accountsIndex = findIndex('CREATE TABLE IF NOT EXISTS accounts');
+    const charactersIndex = findIndex('CREATE TABLE IF NOT EXISTS characters');
+    expect(accountsIndex).toBeGreaterThanOrEqual(0);
+    expect(charactersIndex).toBeGreaterThanOrEqual(0);
+    expect(plot).toBeGreaterThan(accountsIndex);
+    expect(plot).toBeGreaterThan(charactersIndex);
+    // After the mail backfill. Both backfills claim their legacy world_state
+    // row FOR UPDATE, the market's first and the mail's second, so the LAST
+    // such claim is the mail backfill's (two in all, pinned, so "last" cannot
+    // silently name the market's).
+    const legacyClaims = h.calls
+      .map((c, index) =>
+        c === 'SELECT data FROM world_state WHERE key = $1 FOR UPDATE' ? index : -1,
+      )
+      .filter((index) => index >= 0);
+    expect(legacyClaims).toHaveLength(2);
+    const mailBackfill = legacyClaims[1];
+    expect(plot).toBeGreaterThan(mailBackfill);
+    expect(claim).toBeGreaterThan(mailBackfill);
+    expect(operation).toBeGreaterThan(mailBackfill);
+  });
+
   it('applies the housing schemas idempotently, with guarded DDL only', async () => {
     // ensureSchema re-runs at EVERY boot, so a second boot must issue the same
     // guarded statements and nothing destructive. Both fragments are static
@@ -528,9 +589,12 @@ describe('ensureSchema wires every schema module at boot', () => {
     await ensureSchema();
     expect(h.calls).toEqual(firstBoot);
     const housing = h.calls.filter(
-      (c) => c.includes('.account_freeholds (') || c.includes('.account_freehold_hearth ('),
+      (c) =>
+        c.includes('.account_freeholds (') ||
+        c.includes('.account_freehold_hearth (') ||
+        c.includes('.freehold_plot_claims ('),
     );
-    expect(housing).toHaveLength(2);
+    expect(housing).toHaveLength(3);
     for (const raw of housing) {
       // SQL COMMENTS STRIPPED FIRST. The plot fragment's own comment names the
       // explicit `ALTER TABLE ... DROP CONSTRAINT` a wire-widening release would
@@ -562,6 +626,129 @@ describe('ensureSchema wires every schema module at boot', () => {
     const hearth = housing.find((c) => c.includes('.account_freehold_hearth (')) as string;
     expect(hearth).toContain(
       'account_id INT PRIMARY KEY REFERENCES accounts(id) ON DELETE CASCADE',
+    );
+    // The 07a Hearth column for an older table arrives through the probed
+    // ALTER, never a bare ADD COLUMN (the denylist above refuses that shape).
+    expect(hearth).toContain('ADD COLUMN IF NOT EXISTS advance_token TEXT');
+    const claim = housing.find((c) => c.includes('.freehold_plot_claims (')) as string;
+    expect(claim).toContain('CREATE TABLE IF NOT EXISTS "public".freehold_plot_claims (');
+    expect(claim).toContain('plot_id TEXT PRIMARY KEY');
+    expect(claim).toContain('account_id INT REFERENCES accounts(id) ON DELETE CASCADE');
+    expect(claim).toContain(') WITH (fillfactor = 80);');
+    expect(claim).toContain('CREATE INDEX IF NOT EXISTS freehold_plot_claims_holder');
+    expect(claim).toContain('CREATE INDEX IF NOT EXISTS freehold_plot_claims_account');
+  });
+
+  it('applies the housing operation schema in the storage pin shape', async () => {
+    // FREEHOLD_OPERATION_SCHEMA installs functions and triggers, so it follows
+    // the storage fragment's precedent rather than the housing denylist above:
+    // the ONE sanctioned destructive statement is DROP TRIGGER IF EXISTS, and
+    // it may appear only inside the trigger probe's repair arm.
+    await ensureSchema();
+    const firstBoot = [...h.calls];
+    const raw = h.calls.find((c) => c.includes('CREATE TABLE IF NOT EXISTS freehold_operations ('));
+    expect(raw).toBeDefined();
+    expect(raw).toBe(FREEHOLD_OPERATION_SCHEMA);
+    const ddl = (raw as string).replace(/--[^\n]*/g, '');
+    const count = (needle: string): number => ddl.split(needle).length - 1;
+
+    // Guarded tables only, both of them, and nothing else creates a table.
+    expect(count('CREATE TABLE IF NOT EXISTS freehold_operations (')).toBe(1);
+    expect(count('CREATE TABLE IF NOT EXISTS freehold_operation_receipts (')).toBe(1);
+    expect(count('CREATE TABLE')).toBe(2);
+    // The parents' delete actions, literally: RESTRICT on the open intents,
+    // SET NULL on the keep-forever receipts.
+    expect(ddl).toContain('account_id INT NOT NULL REFERENCES accounts(id) ON DELETE RESTRICT');
+    expect(ddl).toContain('character_id INT REFERENCES characters(id) ON DELETE RESTRICT');
+    expect(ddl).toContain('account_id INT REFERENCES accounts(id) ON DELETE SET NULL');
+    // Every index is probed before its guarded create.
+    for (const index of [
+      'freehold_operations_account',
+      'freehold_operations_character',
+      'freehold_operation_receipts_account',
+    ]) {
+      expect(count(`IF to_regclass('${index}') IS NULL THEN`), index).toBe(1);
+      expect(count(`CREATE INDEX IF NOT EXISTS ${index}\n`), index).toBe(1);
+    }
+
+    // The guard function, its error and its constraint name, literally.
+    expect(count('CREATE OR REPLACE FUNCTION guard_open_freehold_operation_parent_delete()')).toBe(
+      1,
+    );
+    expect(count('CREATE OR REPLACE FUNCTION erase_freehold_operation_receipt()')).toBe(1);
+    expect(ddl).toContain("ERRCODE = '55006'");
+    expect(ddl).toContain("MESSAGE = 'freehold_operation_open'");
+    expect(ddl).toContain("CONSTRAINT = 'freehold_operations_open_delete_guard'");
+    expect(count('SECURITY INVOKER')).toBe(2);
+
+    // The three triggers, each repaired only by the probe: DROP TRIGGER IF
+    // EXISTS sits inside the probe DO block, directly under its failed-probe
+    // arm, and directly above the CREATE TRIGGER it reconciles.
+    const blockStart = ddl.indexOf('DO $freehold_operation_trigger_guard$');
+    const blockEnd = ddl.indexOf('$freehold_operation_trigger_guard$;');
+    expect(blockStart).toBeGreaterThanOrEqual(0);
+    expect(blockEnd).toBeGreaterThan(blockStart);
+    const triggers = [
+      [
+        'DROP TRIGGER IF EXISTS freehold_operation_guard_character_delete ON characters;',
+        'CREATE TRIGGER freehold_operation_guard_character_delete\n    BEFORE DELETE ON characters\n    FOR EACH ROW\n    EXECUTE FUNCTION guard_open_freehold_operation_parent_delete();',
+      ],
+      [
+        'DROP TRIGGER IF EXISTS freehold_operation_guard_account_delete ON accounts;',
+        'CREATE TRIGGER freehold_operation_guard_account_delete\n    BEFORE DELETE ON accounts\n    FOR EACH ROW\n    EXECUTE FUNCTION guard_open_freehold_operation_parent_delete();',
+      ],
+      [
+        'DROP TRIGGER IF EXISTS freehold_operation_receipt_erase ON freehold_operation_receipts;',
+        'CREATE TRIGGER freehold_operation_receipt_erase\n    BEFORE UPDATE ON freehold_operation_receipts\n    FOR EACH ROW\n    EXECUTE FUNCTION erase_freehold_operation_receipt();',
+      ],
+    ] as const;
+    const repairArm = 'IF NOT COALESCE(trigger_ready, false) THEN';
+    expect(count(repairArm)).toBe(3);
+    let remainder = ddl;
+    for (const [drop, create] of triggers) {
+      expect(count(drop), drop).toBe(1);
+      expect(count(create), create).toBe(1);
+      const at = ddl.indexOf(drop);
+      expect(at, drop).toBeGreaterThan(blockStart);
+      expect(at, drop).toBeLessThan(blockEnd);
+      // Nothing but whitespace between the failed-probe arm and the drop, and
+      // between the drop and its create.
+      const arm = ddl.lastIndexOf(repairArm, at);
+      expect(arm, drop).toBeGreaterThan(blockStart);
+      expect(ddl.slice(arm + repairArm.length, at).trim(), drop).toBe('');
+      expect(ddl.slice(at + drop.length, ddl.indexOf(create)).trim(), drop).toBe('');
+      remainder = remainder.replace(drop, '');
+    }
+    // The probe's exact predicate, per trigger: tgtype 11 is BEFORE DELETE FOR
+    // EACH ROW (the two guards), 19 is BEFORE UPDATE FOR EACH ROW (the erase).
+    expect(count('AND t.tgtype = 11')).toBe(2);
+    expect(count('AND t.tgtype = 19')).toBe(1);
+    expect(count("AND t.tgenabled = 'O'")).toBe(3);
+    expect(count('AND NOT t.tgisinternal')).toBe(3);
+    expect(count('AND t.tgqual IS NULL')).toBe(3);
+    // Nothing destructive outside the allowance.
+    expect(remainder).not.toMatch(/\b(?:DROP|TRUNCATE|DELETE\s+FROM|ALTER\s+COLUMN)\b/i);
+    expect(remainder).not.toMatch(/\bALTER\s+TABLE\b/i);
+
+    // The caller's search_path is captured under the fragment's OWN key and
+    // restored at the end.
+    const capture =
+      "SELECT set_config(\n  'woc.freehold_operation_prior_search_path',\n  current_setting('search_path'),\n  true\n);";
+    const restore = "current_setting('woc.freehold_operation_prior_search_path', true)";
+    expect(count(capture)).toBe(1);
+    expect(count(restore)).toBe(1);
+    expect(count('woc.freehold_operation_prior_search_path')).toBe(2);
+    expect(ddl.indexOf(capture)).toBeLessThan(
+      ddl.indexOf('CREATE TABLE IF NOT EXISTS freehold_operations ('),
+    );
+    expect(ddl.indexOf(restore)).toBeGreaterThan(blockEnd);
+
+    // A second boot is byte-identical: the same text, at the same position.
+    h.calls.length = 0;
+    await ensureSchema();
+    expect(h.calls).toEqual(firstBoot);
+    expect(h.calls.indexOf(FREEHOLD_OPERATION_SCHEMA)).toBe(
+      firstBoot.indexOf(FREEHOLD_OPERATION_SCHEMA),
     );
   });
 

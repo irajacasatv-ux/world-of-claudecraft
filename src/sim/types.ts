@@ -9121,8 +9121,9 @@ export interface SimConfig {
   // keep a housing-free world unless a host opts in.
   freeholdsEnabled?: boolean;
   // Remote-key host input, separate from the housing feature flag. Isolated
-  // hosts admit locally; the realm refuses until durable account authority.
-  freeholdKeyAdmission?: (ownerKey: string, pid: number) => boolean;
+  // hosts admit locally; a realm answers from the durable account cooldown
+  // (src/sim/freehold/hearth_key.ts, FreeholdKeyAdmission).
+  freeholdKeyAdmission?: (ownerKey: string, pid: number) => FreeholdKeyAdmission;
   // The development grant permission (D81): together with devCommands it
   // authorizes `/dev freehold <tier>` (src/sim/freehold/dev_grant.ts). Never
   // persisted. The realm maps it from ALLOW_DEV_COMMANDS, the offline host from
@@ -10323,3 +10324,8 @@ export interface VehicleSession {
   origin: Vec3;
   encounter: CannonEncounterState;
 }
+
+/** A host's answer to a remote Hearth Key entry that passed every local check
+ *  (src/sim/freehold/hearth_key.ts): 'admit' runs it, 'pending' leaves it
+ *  silent for the host to re-dispatch, 'deny' answers `busy`. */
+export type FreeholdKeyAdmission = 'admit' | 'deny' | 'pending';

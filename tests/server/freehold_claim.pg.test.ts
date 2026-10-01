@@ -1,0 +1,1230 @@
+// The EXECUTED proof of the global plot claim against real PostgreSQL: the
+// lease and fencing generation of server/freehold_claim_db.ts, the renewer and
+// the shutdown release of server/freehold_claim_registry.ts, the login reader
+// of server/freehold_claim_login.ts and the fenced CTE of server/freehold_db.ts
+// (docs/freeholds/mutation-touch-set-manifest.md sections 2, 5 P2 to P6, 6 and
+// 10). A fake client cannot tell whether a lock wait re-checks the fence on the
+// latest row version, whether SKIP LOCKED really passes a held row over,
+// whether the claim row is locked before the plot row, or whether
+// clock_timestamp() really differs from now() inside an open transaction:
+// those are the claims this suite settles.
+//
+// Guards: the global plot claim protocol in real PG (acquire, renew, takeover, the fenced write,
+// release, the G4 before G7 lock order, the login reader, clock_timestamp and the plans); the
+// nearest suites that do not are tests/server/freehold_db.pg.test.ts (the plot table and its
+// unfenced CAS) and tests/server/freehold_hearth_db.pg.test.ts (the Hearth table).
+// Cost: 6.6 s
+//
+// Two pools stand in for two realm processes, each with its own holder string,
+// and the lease runs on a SHORT TTL passed through the ttlSeconds parameter.
+// That is the production policy's own parameter, not a second policy: the
+// first case pins (from the wiring source) that the realm binds every claim
+// ttlSeconds to LEASE_TTL_SECONDS. The FK parents are MINIMAL STAND-INS (an
+// id-only accounts table and an account-owned characters table), as in the
+// two neighbouring suites.
+import { randomUUID } from 'node:crypto';
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { FreeholdHeldClaim } from '../../server/freehold_claim_registry';
+import type {
+  FreeholdQueryable,
+  FreeholdUpsert,
+  FreeholdWriteFence,
+} from '../../server/freehold_db';
+import {
+  checkRelationUsesPartialIndex,
+  type ExplainPlanNode,
+  rootPlanFromExplainRow,
+} from '../helpers/pg_plan';
+import { stripComments } from '../helpers/strip_comments';
+
+const url = process.env.TEST_DATABASE_URL ?? '';
+const d = url === '' ? describe.skip : describe;
+
+/** Every `ttlSeconds:` binding in a source, in order. */
+const ttlBindings = (source: string): string[] =>
+  [...source.matchAll(/\bttlSeconds\s*:\s*([A-Za-z0-9_.]+)/g)].map((m) => m[1]);
+
+describe('the claim lease TTL the realm binds', () => {
+  it('binds every claim ttlSeconds in the wiring to LEASE_TTL_SECONDS', () => {
+    // A cheap source pin, comments stripped: the short TTL the real-PG cases
+    // pass is the ttlSeconds parameter of the one lease policy, so the realm
+    // must hand that parameter LEASE_TTL_SECONDS at all three claim sites (the
+    // fenced writer, the login read and the renewer), never a literal.
+    const source = stripComments(
+      readFileSync(
+        fileURLToPath(new URL('../../server/freehold_persist_wiring.ts', import.meta.url)),
+        'utf8',
+      ),
+    );
+    expect(source).toMatch(
+      /import\s*\{[^}]*\bLEASE_TTL_SECONDS\b[^}]*\}\s*from\s*'\.\/character_lease_db';/,
+    );
+    expect(source).toContain('ttlSeconds: LEASE_TTL_SECONDS');
+    expect(ttlBindings(source)).toEqual([
+      'LEASE_TTL_SECONDS',
+      'LEASE_TTL_SECONDS',
+      'LEASE_TTL_SECONDS',
+    ]);
+    // Negative control: the reader sees a site bound to anything else.
+    expect(ttlBindings(source.replace('ttlSeconds: LEASE_TTL_SECONDS', 'ttlSeconds: 1'))).toEqual([
+      '1',
+      'LEASE_TTL_SECONDS',
+      'LEASE_TTL_SECONDS',
+    ]);
+  });
+});
+
+// A PRIVATE schema, the repo idiom for every database-gated suite: this suite
+// DROPS its schema in beforeAll and afterAll and deletes rows between cases,
+// and the module functions it drives issue UNQUALIFIED SQL, so without an
+// isolated search_path a TEST_DATABASE_URL pointed at a database carrying the
+// game schema would destroy real claim, plot and Hearth rows.
+const SCHEMA = 'freehold_claim_pg_test';
+const APP_A = `${SCHEMA}_a`;
+const APP_B = `${SCHEMA}_b`;
+
+const REALM_A = 'realmA';
+const REALM_B = 'realmB';
+const HOLDER_A = `${REALM_A}#${randomUUID()}`;
+const HOLDER_B = `${REALM_B}#${randomUUID()}`;
+
+const SHORT_TTL_SECONDS = 1;
+const LONG_TTL_SECONDS = 30;
+const MAX_OWNED_BYTES = 64 * 1024;
+
+const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
+const plot = (name: string) => `plot:claim-${name}`;
+
+interface Captured {
+  text: string;
+  values: unknown[] | undefined;
+}
+
+/** Wraps a real queryable so a case can EXPLAIN exactly what the module sent. */
+function recorder(target: FreeholdQueryable) {
+  const calls: Captured[] = [];
+  return {
+    calls,
+    db: {
+      query: async (text: string, values?: unknown[]) => {
+        calls.push({ text, values });
+        return await target.query(text, values);
+      },
+    },
+  };
+}
+
+/** The plan nodes that READ `relation` (a ModifyTable names its target too,
+ *  but it is the write, not an access path). */
+function relationScans(root: ExplainPlanNode, relation: string): ExplainPlanNode[] {
+  const out: ExplainPlanNode[] = [];
+  const visit = (node: ExplainPlanNode) => {
+    if (node['Relation Name'] === relation && node['Node Type'] !== 'ModifyTable') out.push(node);
+    for (const child of node.Plans ?? []) visit(child);
+  };
+  visit(root);
+  return out;
+}
+
+/** Each read of `relation` reaches `index`, and there are exactly `count`. */
+function scansReach(root: ExplainPlanNode, relation: string, index: string): string[] {
+  return relationScans(root, relation).map((node) => {
+    const check = checkRelationUsesPartialIndex(node, relation, index);
+    return check.ok ? index : (check.reason ?? 'refused');
+  });
+}
+
+const planShape = (node: ExplainPlanNode): string => {
+  const rel = node['Relation Name']
+    ? `(${node['Relation Name']}${node['Index Name'] ? ` via ${node['Index Name']}` : ''})`
+    : '';
+  const kids = node.Plans?.length ? ` [${node.Plans.map(planShape).join(', ')}]` : '';
+  return `${node['Node Type']}${rel}${kids}`;
+};
+
+d('the global plot claim against real PostgreSQL', () => {
+  // Imported lazily so the suite skips clean with no pg import at all.
+  let Pool: typeof import('pg').Pool;
+  let poolA: import('pg').Pool;
+  let poolB: import('pg').Pool;
+  let side: import('pg').Pool;
+  let probe: import('pg').Pool;
+  let claimDb: typeof import('../../server/freehold_claim_db');
+  let plotDb: typeof import('../../server/freehold_db');
+  let hearthDb: typeof import('../../server/freehold_hearth_db');
+  let reg: typeof import('../../server/freehold_claim_registry');
+  let loginMod: typeof import('../../server/freehold_claim_login');
+
+  const newPool = (app: string, max: number) =>
+    new Pool({
+      connectionString: url,
+      max,
+      options: `-c search_path=${SCHEMA}`,
+      application_name: app,
+      statement_timeout: 15_000,
+    });
+
+  interface ClaimRow {
+    holder: string;
+    realm: string;
+    generation: string;
+    write_token: string | null;
+    acquired_us: string;
+    heartbeat_us: string;
+    expires_us: string;
+    live: boolean;
+    version: string;
+  }
+
+  /** The claim row, read lock-free on the probe pool. `version` is xmin, so an
+   *  unchanged version proves no new row version was written. */
+  const claimRow = async (plotId: string): Promise<ClaimRow | null> =>
+    (
+      await probe.query(
+        `SELECT holder, realm, generation::text AS generation, write_token,
+                (extract(epoch FROM acquired_at) * 1000000)::bigint::text AS acquired_us,
+                (extract(epoch FROM heartbeat_at) * 1000000)::bigint::text AS heartbeat_us,
+                (extract(epoch FROM expires_at) * 1000000)::bigint::text AS expires_us,
+                expires_at > clock_timestamp() AS live,
+                xmin::text AS version
+           FROM ${SCHEMA}.freehold_plot_claims WHERE plot_id = $1`,
+        [plotId],
+      )
+    ).rows[0] ?? null;
+
+  const plotRow = async (accountId: number) =>
+    (
+      await probe.query(
+        `SELECT durable_rev::text AS durable_rev, tier, condition, wire_rev::text AS wire_rev,
+                layout::text AS layout, xmin::text AS version
+           FROM ${SCHEMA}.account_freeholds WHERE account_id = $1 AND plot_index = 0`,
+        [accountId],
+      )
+    ).rows[0] ?? null;
+
+  const content = (
+    accountId: number,
+    plotId: string,
+    expectedDurableRev: string | null,
+    over: Partial<FreeholdUpsert> = {},
+  ): FreeholdUpsert => ({
+    accountId,
+    plotIndex: 0,
+    plotId,
+    tier: 'cottage',
+    layoutJson: '[]',
+    trophiesJson: '[]',
+    condition: 100,
+    visitPolicy: 'closed',
+    wireRev: 0,
+    schemaVersion: 1,
+    expectedDurableRev,
+    ...over,
+  });
+  const MANOR = { tier: 'manor', condition: 90, wireRev: 1 } as const;
+
+  const seedPlot = async (accountId: number, plotId: string) => {
+    expect(await plotDb.upsertFreehold(poolA, content(accountId, plotId, null))).toEqual({
+      kind: 'inserted',
+      durableRev: '1',
+    });
+  };
+
+  const acquire = (
+    db: FreeholdQueryable,
+    holder: string,
+    plotId: string,
+    accountId: number,
+    ttlSeconds: number,
+  ) =>
+    claimDb.acquireFreeholdClaim(db, {
+      plotId,
+      accountId,
+      realm: holder.split('#')[0],
+      holder,
+      ttlSeconds,
+    });
+
+  const fenceOf = (plotId: string, holder: string, generation: string): FreeholdWriteFence => ({
+    plotId,
+    holder,
+    generation,
+    writeToken: claimDb.mintFreeholdWriteToken(),
+  });
+
+  const held = (plotId: string, accountId: number, generation = '1'): FreeholdHeldClaim => ({
+    plotId,
+    accountId,
+    generation,
+    acquiredAtMs: 0,
+  });
+
+  /** Polls the database clock (not this process's) until the claim lapses. */
+  const waitUntilExpired = async (plotId: string): Promise<void> => {
+    const started = Date.now();
+    for (;;) {
+      const row = await claimRow(plotId);
+      if (row && !row.live) return;
+      if (Date.now() - started > 5_000) throw new Error('the claim never expired');
+      await sleep(25);
+    }
+  };
+
+  const backendPid = async (client: import('pg').PoolClient): Promise<number> =>
+    Number((await client.query('SELECT pg_backend_pid() AS pid')).rows[0].pid);
+
+  /** The statement of pool `app` that is parked on a lock `holderPid` holds.
+   *  Polled on the WAITER: a holder's own row shows its last statement. */
+  async function waitForBlock(holderPid: number, app: string, budgetMs = 5_000) {
+    const started = Date.now();
+    for (;;) {
+      const res = await probe.query(
+        `SELECT query, wait_event_type FROM pg_stat_activity
+          WHERE datname = current_database() AND application_name = $1
+            AND wait_event_type = 'Lock' AND $2::int = ANY(pg_blocking_pids(pid))
+          LIMIT 1`,
+        [app, holderPid],
+      );
+      if (res.rows[0]) {
+        return { query: String(res.rows[0].query), waitEventType: res.rows[0].wait_event_type };
+      }
+      if (Date.now() - started > budgetMs) return null;
+      await sleep(10);
+    }
+  }
+
+  const renewDeps = (
+    registry: import('../../server/freehold_claim_registry').FreeholdClaimRegistry,
+    ttlSeconds: number,
+  ) => {
+    const onLost = vi.fn();
+    const warn = vi.fn();
+    const wanted = vi.fn(() => true);
+    return {
+      onLost,
+      warn,
+      wanted,
+      deps: {
+        registry,
+        pool: poolA,
+        holder: HOLDER_A,
+        ttlSeconds,
+        wanted,
+        onLost,
+        nowMs: () => 0,
+        warn,
+      },
+    };
+  };
+
+  beforeAll(async () => {
+    ({ Pool } = await import('pg'));
+    claimDb = await import('../../server/freehold_claim_db');
+    plotDb = await import('../../server/freehold_db');
+    hearthDb = await import('../../server/freehold_hearth_db');
+    reg = await import('../../server/freehold_claim_registry');
+    loginMod = await import('../../server/freehold_claim_login');
+    const admin = new Pool({ connectionString: url, max: 1 });
+    await admin.query(`DROP SCHEMA IF EXISTS ${SCHEMA} CASCADE`);
+    await admin.query(`CREATE SCHEMA ${SCHEMA}`);
+    await admin.end();
+    poolA = newPool(APP_A, 4);
+    poolB = newPool(APP_B, 4);
+    side = newPool(`${SCHEMA}_side`, 4);
+    probe = newPool(`${SCHEMA}_probe`, 1);
+    await poolA.query('CREATE TABLE accounts (id SERIAL PRIMARY KEY)');
+    await poolA.query(
+      `CREATE TABLE characters (
+         id SERIAL PRIMARY KEY,
+         account_id INT REFERENCES accounts(id) ON DELETE CASCADE
+       )`,
+    );
+    await poolA.query('INSERT INTO accounts (id) SELECT generate_series(1, 40)');
+    // The three fragments in ensureSchema's order, each TWICE: idempotence is
+    // part of the contract (every boot re-applies every fragment).
+    for (const ddl of [
+      plotDb.freeholdSchema(SCHEMA),
+      hearthDb.freeholdHearthSchema(SCHEMA),
+      claimDb.freeholdClaimSchema(SCHEMA),
+    ]) {
+      await poolA.query(ddl);
+      await poolA.query(ddl);
+    }
+  }, 30_000);
+
+  afterAll(async () => {
+    if (!poolA) return;
+    await Promise.all([poolA.end(), poolB.end(), side.end(), probe.end()]);
+    const admin = new Pool({ connectionString: url, max: 1 });
+    await admin.query(`DROP SCHEMA IF EXISTS ${SCHEMA} CASCADE`);
+    await admin.end();
+  });
+
+  beforeEach(async () => {
+    // Qualified on purpose: cleanup must never depend on a search_path.
+    await probe.query(`DELETE FROM ${SCHEMA}.freehold_plot_claims`);
+    await probe.query(`DELETE FROM ${SCHEMA}.account_freeholds`);
+    await probe.query(`DELETE FROM ${SCHEMA}.account_freehold_hearth`);
+  });
+
+  it('runs inside its private schema', async () => {
+    const res = await poolA.query(
+      `SELECT current_schema() AS schema,
+              to_regclass('freehold_plot_claims')::text AS claims`,
+    );
+    expect(res.rows[0]).toEqual({ schema: SCHEMA, claims: 'freehold_plot_claims' });
+  });
+
+  it('inserts generation 1, keeps it for the same holder, refuses a live claim, then takes over an expired one', async () => {
+    const plotId = plot('acquire');
+    expect(await acquire(poolA, HOLDER_A, plotId, 1, SHORT_TTL_SECONDS)).toEqual({
+      kind: 'acquired',
+      generation: '1',
+      takeover: false,
+    });
+    const first = await claimRow(plotId);
+    expect(first).toMatchObject({ holder: HOLDER_A, realm: REALM_A, generation: '1', live: true });
+    // A fresh row stamps acquired_at and heartbeat_at from ONE clock reading.
+    expect(first?.acquired_us).toBe(first?.heartbeat_us);
+
+    // The same holder re-acquiring keeps its generation AND its acquired_at.
+    expect(await acquire(poolA, HOLDER_A, plotId, 1, SHORT_TTL_SECONDS)).toEqual({
+      kind: 'acquired',
+      generation: '1',
+      takeover: false,
+    });
+    const again = await claimRow(plotId);
+    expect(again?.acquired_us).toBe(first?.acquired_us);
+    expect(BigInt(again?.heartbeat_us ?? '0')).toBeGreaterThan(BigInt(first?.heartbeat_us ?? '0'));
+
+    // A different holder against the LIVE claim: busy, and no row version.
+    expect(await acquire(poolB, HOLDER_B, plotId, 1, SHORT_TTL_SECONDS)).toEqual({ kind: 'busy' });
+    expect(await claimRow(plotId)).toEqual(again);
+
+    // The refusal is LOCK-FREE: inside an open transaction the busy answer
+    // leaves the holder's row unlocked. Negative control: the upsert alone
+    // (no pre-check) refuses too, but its ON CONFLICT locks the row anyway.
+    const claimNowait = () =>
+      side.query(
+        'SELECT plot_id FROM freehold_plot_claims WHERE plot_id = $1 FOR NO KEY UPDATE NOWAIT',
+        [plotId],
+      );
+    const alt = await poolB.connect();
+    try {
+      await alt.query('BEGIN');
+      expect(await acquire(alt, HOLDER_B, plotId, 1, SHORT_TTL_SECONDS)).toEqual({ kind: 'busy' });
+      expect((await claimNowait()).rows).toEqual([{ plot_id: plotId }]);
+      const bare = await alt.query(claimDb.FREEHOLD_CLAIM_ACQUIRE_SQL, [
+        plotId,
+        1,
+        REALM_B,
+        HOLDER_B,
+        SHORT_TTL_SECONDS,
+      ]);
+      expect(bare.rowCount).toBe(0);
+      await expect(claimNowait()).rejects.toMatchObject({ code: '55P03' });
+    } finally {
+      await alt.query('ROLLBACK').catch(() => undefined);
+      alt.release();
+    }
+    expect(await claimRow(plotId)).toEqual(again);
+
+    // Past the TTL the other holder takes it and the fence advances.
+    await waitUntilExpired(plotId);
+    expect(await acquire(poolB, HOLDER_B, plotId, 1, SHORT_TTL_SECONDS)).toEqual({
+      kind: 'acquired',
+      generation: '2',
+      takeover: true,
+    });
+    expect(await claimRow(plotId)).toMatchObject({
+      holder: HOLDER_B,
+      realm: REALM_B,
+      generation: '2',
+      live: true,
+    });
+  });
+
+  it('keeps an idle claim alive past two TTLs through the renewer, then fences the late writer once renewal stops', async () => {
+    const plotId = plot('renewed');
+    await seedPlot(2, plotId);
+    expect(await acquire(poolA, HOLDER_A, plotId, 2, SHORT_TTL_SECONDS)).toEqual({
+      kind: 'acquired',
+      generation: '1',
+      takeover: false,
+    });
+    const registry = reg.createFreeholdClaimRegistry();
+    registry.record(held(plotId, 2));
+    const { deps, onLost, warn, wanted } = renewDeps(registry, SHORT_TTL_SECONDS);
+
+    // Six passes 400 ms apart, B probing at the OLDEST point of each cycle:
+    // 2.4 s of a 1 s lease, which without the renewer lapses before pass three.
+    const started = Date.now();
+    for (let pass = 0; pass < 6; pass++) {
+      await sleep(400);
+      expect(await acquire(poolB, HOLDER_B, plotId, 2, SHORT_TTL_SECONDS)).toEqual({
+        kind: 'busy',
+      });
+      expect(await claimRow(plotId)).toMatchObject({
+        holder: HOLDER_A,
+        generation: '1',
+        live: true,
+      });
+      await reg.renewFreeholdClaims(deps);
+    }
+    expect(Date.now() - started).toBeGreaterThan(2_000);
+    expect(wanted).toHaveBeenCalledTimes(6);
+    expect(registry.counters).toMatchObject({ renewed: 6, missedHeartbeats: 0, lost: 0 });
+
+    // Renewal stops: the lease lapses and B reclaims at the next generation.
+    await waitUntilExpired(plotId);
+    expect(await acquire(poolB, HOLDER_B, plotId, 2, SHORT_TTL_SECONDS)).toEqual({
+      kind: 'acquired',
+      generation: '2',
+      takeover: true,
+    });
+    // A's next renewer pass finds it gone: dropped and counted lost.
+    await reg.renewFreeholdClaims(deps);
+    expect(registry.counters).toMatchObject({ renewed: 6, lost: 1 });
+    expect(registry.all()).toEqual([]);
+    expect(onLost).toHaveBeenCalledWith(held(plotId, 2));
+    expect(warn).toHaveBeenCalledWith(
+      'freehold claims lost to another holder: 1; their plots stop writing',
+    );
+
+    // A's LATE write on its old fence is fenced and changes nothing.
+    const before = await plotRow(2);
+    expect(before).toMatchObject({ durable_rev: '1', tier: 'cottage' });
+    expect(
+      await plotDb.upsertFencedFreehold(
+        poolA,
+        content(2, plotId, '1', MANOR),
+        fenceOf(plotId, HOLDER_A, '1'),
+      ),
+    ).toEqual({ kind: 'fenced' });
+    expect(await plotRow(2)).toEqual(before);
+    expect((await claimRow(plotId))?.write_token).toBeNull();
+
+    // Negative control: the same document on B's new fence writes.
+    const fenceB = fenceOf(plotId, HOLDER_B, '2');
+    expect(
+      await plotDb.upsertFencedFreehold(poolB, content(2, plotId, '1', MANOR), fenceB),
+    ).toEqual({ kind: 'updated', durableRev: '2' });
+    expect(await plotRow(2)).toMatchObject({ durable_rev: '2', tier: 'manor', condition: 90 });
+    expect((await claimRow(plotId))?.write_token).toBe(fenceB.writeToken);
+  });
+
+  it('writes through a matching fence once, stamps no token on a stale write, and writes nothing through a wrong fence', async () => {
+    const plotId = plot('fenced');
+    await seedPlot(3, plotId);
+    expect(await acquire(poolA, HOLDER_A, plotId, 3, LONG_TTL_SECONDS)).toMatchObject({
+      generation: '1',
+    });
+
+    const good = fenceOf(plotId, HOLDER_A, '1');
+    expect(await plotDb.upsertFencedFreehold(poolA, content(3, plotId, '1', MANOR), good)).toEqual({
+      kind: 'updated',
+      durableRev: '2',
+    });
+    const written = await plotRow(3);
+    expect(written).toMatchObject({
+      durable_rev: '2',
+      tier: 'manor',
+      condition: 90,
+      wire_rev: '1',
+      layout: '[]',
+    });
+    expect(await claimRow(plotId)).toMatchObject({
+      holder: HOLDER_A,
+      generation: '1',
+      write_token: good.writeToken,
+    });
+
+    // Matching fence, STALE expected revision: stale, and the token is NOT
+    // re-stamped (a stale write must never look like the last landed one).
+    const stale = fenceOf(plotId, HOLDER_A, '1');
+    expect(
+      await plotDb.upsertFencedFreehold(poolA, content(3, plotId, '1', { tier: 'keep' }), stale),
+    ).toEqual({ kind: 'stale', durableRev: '2' });
+    expect((await claimRow(plotId))?.write_token).toBe(good.writeToken);
+    expect(await plotRow(3)).toEqual(written);
+
+    // Wrong generation, then wrong holder: fenced, nothing written either way.
+    for (const wrong of [fenceOf(plotId, HOLDER_A, '2'), fenceOf(plotId, HOLDER_B, '1')]) {
+      expect(
+        await plotDb.upsertFencedFreehold(poolA, content(3, plotId, '2', { tier: 'keep' }), wrong),
+      ).toEqual({ kind: 'fenced' });
+      expect((await claimRow(plotId))?.write_token).toBe(good.writeToken);
+      expect(await plotRow(3)).toEqual(written);
+    }
+
+    // Matching fence, no plot row under that account: missing, no token.
+    expect(
+      await plotDb.upsertFencedFreehold(
+        poolA,
+        content(4, plotId, '1'),
+        fenceOf(plotId, HOLDER_A, '1'),
+      ),
+    ).toEqual({ kind: 'missing' });
+    expect((await claimRow(plotId))?.write_token).toBe(good.writeToken);
+
+    // The refusals left the fence intact: the next correct write lands, +1.
+    const next = fenceOf(plotId, HOLDER_A, '1');
+    expect(
+      await plotDb.upsertFencedFreehold(poolA, content(3, plotId, '2', { tier: 'keep' }), next),
+    ).toEqual({ kind: 'updated', durableRev: '3' });
+    expect((await claimRow(plotId))?.write_token).toBe(next.writeToken);
+  });
+
+  it('locks the claim row before the plot row: a held claim parks the write while the plot row stays free', async () => {
+    const plotId = plot('order-a');
+    await seedPlot(5, plotId);
+    expect(await acquire(poolA, HOLDER_A, plotId, 5, LONG_TTL_SECONDS)).toMatchObject({
+      generation: '1',
+    });
+    const nowaitProbe = () =>
+      side.query(
+        `SELECT durable_rev::text AS durable_rev FROM account_freeholds
+          WHERE account_id = $1 AND plot_index = 0 FOR UPDATE NOWAIT`,
+        [5],
+      );
+    const fence = fenceOf(plotId, HOLDER_A, '1');
+    const x = await side.connect();
+    let write: Promise<unknown> | undefined;
+    try {
+      // Session X holds the claim row, as a Hearth trip's G4 read fence does.
+      await x.query('BEGIN');
+      await x.query(
+        'SELECT plot_id FROM freehold_plot_claims WHERE plot_id = $1 FOR NO KEY UPDATE',
+        [plotId],
+      );
+      const xPid = await backendPid(x);
+      write = plotDb.upsertFencedFreehold(poolA, content(5, plotId, '1', MANOR), fence);
+      const blocked = await waitForBlock(xPid, APP_A);
+      expect(blocked?.waitEventType).toBe('Lock');
+      expect(blocked?.query).toContain('WITH fence AS MATERIALIZED');
+      // While the write waits on G4 it holds NO plot row lock (G7 not taken).
+      expect((await nowaitProbe()).rows).toEqual([{ durable_rev: '1' }]);
+      await x.query('COMMIT');
+      expect(await write).toEqual({ kind: 'updated', durableRev: '2' });
+    } finally {
+      await x.query('ROLLBACK').catch(() => undefined);
+      x.release();
+      await write?.catch(() => undefined);
+    }
+    expect((await claimRow(plotId))?.write_token).toBe(fence.writeToken);
+
+    // Negative control: the NOWAIT probe DOES see a held plot row.
+    const y = await side.connect();
+    try {
+      await y.query('BEGIN');
+      await y.query(
+        'SELECT 1 FROM account_freeholds WHERE account_id = $1 AND plot_index = 0 FOR UPDATE',
+        [5],
+      );
+      await expect(nowaitProbe()).rejects.toMatchObject({ code: '55P03' });
+    } finally {
+      await y.query('ROLLBACK').catch(() => undefined);
+      y.release();
+    }
+  });
+
+  it('fences a write that was parked on the claim row when a takeover commits', async () => {
+    const plotId = plot('order-b');
+    await seedPlot(6, plotId);
+    expect(await acquire(poolA, HOLDER_A, plotId, 6, LONG_TTL_SECONDS)).toMatchObject({
+      generation: '1',
+    });
+    // Lapse A's lease without waiting it out (the acquire case proves the real
+    // expiry); the fence itself ignores expiry, so A may still write until a
+    // takeover lands.
+    await side.query(
+      `UPDATE freehold_plot_claims SET expires_at = clock_timestamp() - interval '1 second'
+        WHERE plot_id = $1`,
+      [plotId],
+    );
+    const before = await plotRow(6);
+    const x = await poolB.connect();
+    let write: Promise<unknown> | undefined;
+    try {
+      await x.query('BEGIN');
+      expect(await acquire(x, HOLDER_B, plotId, 6, LONG_TTL_SECONDS)).toEqual({
+        kind: 'acquired',
+        generation: '2',
+        takeover: true,
+      });
+      const xPid = await backendPid(x);
+      write = plotDb.upsertFencedFreehold(
+        poolA,
+        content(6, plotId, '1', MANOR),
+        fenceOf(plotId, HOLDER_A, '1'),
+      );
+      expect(await waitForBlock(xPid, APP_A)).not.toBeNull();
+      await x.query('COMMIT');
+      // The lock wait re-checked the fence on the committed takeover.
+      expect(await write).toEqual({ kind: 'fenced' });
+    } finally {
+      await x.query('ROLLBACK').catch(() => undefined);
+      x.release();
+      await write?.catch(() => undefined);
+    }
+    expect(await plotRow(6)).toEqual(before);
+    expect(await claimRow(plotId)).toMatchObject({
+      holder: HOLDER_B,
+      generation: '2',
+      write_token: null,
+    });
+  });
+
+  it('renews around a locked claim row without waiting, keeps it as a missed heartbeat, and drops a taken claim', async () => {
+    const ids = [plot('skip-1'), plot('skip-2'), plot('skip-3'), plot('skip-4')];
+    const registry = reg.createFreeholdClaimRegistry();
+    for (const [i, plotId] of ids.entries()) {
+      expect(await acquire(poolA, HOLDER_A, plotId, 7 + i, LONG_TTL_SECONDS)).toMatchObject({
+        generation: '1',
+      });
+      registry.record(held(plotId, 7 + i));
+    }
+    // Another holder took the fourth.
+    await side.query(
+      'UPDATE freehold_plot_claims SET holder = $2, generation = generation + 1 WHERE plot_id = $1',
+      [ids[3], HOLDER_B],
+    );
+    const before = await Promise.all(ids.map(claimRow));
+    const { deps, onLost, warn } = renewDeps(registry, LONG_TTL_SECONDS);
+    expect(reg.FREEHOLD_CLAIM_RENEW_BOUNDS.lockMs).toBe(1_000);
+
+    const x = await side.connect();
+    try {
+      await x.query('BEGIN');
+      await x.query(
+        'SELECT plot_id FROM freehold_plot_claims WHERE plot_id = $1 FOR NO KEY UPDATE',
+        [ids[1]],
+      );
+      const started = Date.now();
+      await reg.renewFreeholdClaims(deps);
+      // Completed while the lock is still held, inside the 1,000 ms lock bound:
+      // a pass that waited would have timed out and missed all three.
+      expect(Date.now() - started).toBeLessThan(1_000);
+      expect(registry.counters).toMatchObject({ renewed: 2, missedHeartbeats: 1, lost: 1 });
+      expect(registry.all().map((claim) => claim.plotId)).toEqual(ids.slice(0, 3));
+      expect(onLost).toHaveBeenCalledTimes(1);
+      expect(onLost).toHaveBeenCalledWith(held(ids[3], 10));
+      expect(warn).toHaveBeenCalledWith(
+        'freehold claims lost to another holder: 1; their plots stop writing',
+      );
+      const after = await Promise.all(ids.map(claimRow));
+      for (const i of [0, 2]) {
+        expect(BigInt(after[i]?.expires_us ?? '0')).toBeGreaterThan(
+          BigInt(before[i]?.expires_us ?? '0'),
+        );
+      }
+      expect(after[1]).toEqual(before[1]);
+      expect(after[3]).toEqual(before[3]);
+      expect(after[3]?.holder).toBe(HOLDER_B);
+    } finally {
+      await x.query('ROLLBACK').catch(() => undefined);
+      x.release();
+    }
+  });
+
+  it('releases only live rows, retires the releasing holder from renew and write, and frees the plot at once', async () => {
+    const live = plot('release-live');
+    const lapsed = plot('release-lapsed');
+    await seedPlot(11, live);
+    for (const [plotId, accountId] of [
+      [live, 11],
+      [lapsed, 12],
+    ] as const) {
+      expect(await acquire(poolA, HOLDER_A, plotId, accountId, LONG_TTL_SECONDS)).toMatchObject({
+        generation: '1',
+      });
+    }
+    await side.query(
+      `UPDATE freehold_plot_claims SET expires_at = clock_timestamp() - interval '5 seconds'
+        WHERE plot_id = $1`,
+      [lapsed],
+    );
+    const lapsedBefore = await claimRow(lapsed);
+    expect(lapsedBefore).toMatchObject({ holder: HOLDER_A, live: false });
+    // Control: before the release the holder's renew DOES return the plot.
+    expect(await claimDb.renewFreeholdClaimRows(poolA, HOLDER_A, [live], LONG_TTL_SECONDS)).toEqual(
+      new Set([live]),
+    );
+
+    expect(await claimDb.releaseFreeholdClaimRows(poolA, HOLDER_A, [lapsed, live])).toEqual(
+      new Set([live]),
+    );
+    // The lapsed row is not rewritten (same version, same expiry, same holder).
+    expect(await claimRow(lapsed)).toEqual(lapsedBefore);
+    const released = await claimRow(live);
+    expect(released).toMatchObject({
+      holder: `${HOLDER_A}#released`,
+      generation: '1',
+      live: false,
+    });
+    expect(claimDb.FREEHOLD_CLAIM_RELEASED_SUFFIX).toBe('#released');
+
+    // The releasing holder can no longer extend it, nor write through it.
+    expect(await claimDb.renewFreeholdClaimRows(poolA, HOLDER_A, [live], LONG_TTL_SECONDS)).toEqual(
+      new Set(),
+    );
+    expect(await claimRow(live)).toEqual(released);
+    const plotBefore = await plotRow(11);
+    expect(
+      await plotDb.upsertFencedFreehold(
+        poolA,
+        content(11, live, '1', MANOR),
+        fenceOf(live, HOLDER_A, '1'),
+      ),
+    ).toEqual({ kind: 'fenced' });
+    expect(await plotRow(11)).toEqual(plotBefore);
+
+    // Another holder acquires immediately, though the lease ran for 30 s.
+    const started = Date.now();
+    expect(await acquire(poolB, HOLDER_B, live, 11, LONG_TTL_SECONDS)).toEqual({
+      kind: 'acquired',
+      generation: '2',
+      takeover: true,
+    });
+    expect(Date.now() - started).toBeLessThan(1_000);
+  });
+
+  it('treats the same holder re-acquiring after its own release as a takeover', async () => {
+    const plotId = plot('release-self');
+    expect(await acquire(poolA, HOLDER_A, plotId, 13, LONG_TTL_SECONDS)).toEqual({
+      kind: 'acquired',
+      generation: '1',
+      takeover: false,
+    });
+    expect(await claimDb.releaseFreeholdClaimRows(poolA, HOLDER_A, [plotId])).toEqual(
+      new Set([plotId]),
+    );
+    expect(await acquire(poolA, HOLDER_A, plotId, 13, LONG_TTL_SECONDS)).toEqual({
+      kind: 'acquired',
+      generation: '2',
+      takeover: true,
+    });
+    expect(await claimRow(plotId)).toMatchObject({ holder: HOLDER_A, generation: '2', live: true });
+  });
+
+  it("releases exactly this holder's live claims at shutdown, skips a row an open transaction holds, and keeps every row", async () => {
+    const mine = [plot('all-1'), plot('all-2'), plot('all-3')];
+    const lapsed = plot('all-lapsed');
+    const theirs = plot('all-theirs');
+    const registry = reg.createFreeholdClaimRegistry();
+    for (const [i, plotId] of mine.entries()) {
+      await acquire(poolA, HOLDER_A, plotId, 14 + i, LONG_TTL_SECONDS);
+      registry.record(held(plotId, 14 + i));
+    }
+    await acquire(poolA, HOLDER_A, lapsed, 17, LONG_TTL_SECONDS);
+    await side.query(
+      `UPDATE freehold_plot_claims SET expires_at = clock_timestamp() - interval '5 seconds'
+        WHERE plot_id = $1`,
+      [lapsed],
+    );
+    expect(await acquire(poolB, HOLDER_B, theirs, 18, LONG_TTL_SECONDS)).toMatchObject({
+      generation: '1',
+    });
+    const before = new Map(
+      await Promise.all(
+        [...mine, lapsed, theirs].map(async (id) => [id, await claimRow(id)] as const),
+      ),
+    );
+    const warn = vi.fn();
+    const x = await side.connect();
+    try {
+      await x.query('BEGIN');
+      await x.query(
+        'SELECT plot_id FROM freehold_plot_claims WHERE plot_id = $1 FOR NO KEY UPDATE',
+        [mine[1]],
+      );
+      const started = Date.now();
+      expect(
+        await reg.releaseAllFreeholdClaims({ pool: poolA, holder: HOLDER_A, registry, warn }),
+      ).toBe(2);
+      expect(Date.now() - started).toBeLessThan(1_000);
+      for (const id of [mine[0], mine[2]]) {
+        expect(await claimRow(id)).toMatchObject({
+          holder: `${HOLDER_A}#released`,
+          generation: '1',
+          live: false,
+        });
+      }
+      // The held row was passed over, not waited for: still A's and live.
+      expect(await claimRow(mine[1])).toEqual(before.get(mine[1]));
+      expect(await claimRow(lapsed)).toEqual(before.get(lapsed));
+      expect(await claimRow(theirs)).toEqual(before.get(theirs));
+    } finally {
+      await x.query('ROLLBACK').catch(() => undefined);
+      x.release();
+    }
+    expect(warn).not.toHaveBeenCalled();
+    expect(registry.all()).toEqual([]);
+    expect(registry.counters.released).toBe(2);
+    // Release keeps the rows, so the generation survives into the next era.
+    expect(
+      Number(
+        (await probe.query(`SELECT count(*) AS n FROM ${SCHEMA}.freehold_plot_claims`)).rows[0].n,
+      ),
+    ).toBe(5);
+    expect(await acquire(poolB, HOLDER_B, mine[0], 14, LONG_TTL_SECONDS)).toEqual({
+      kind: 'acquired',
+      generation: '2',
+      takeover: true,
+    });
+  });
+
+  it('abandons the shutdown release inside its 2,000 ms deadline when the pool cannot hand out a client', async () => {
+    const plotId = plot('all-starved');
+    expect(await acquire(poolA, HOLDER_A, plotId, 19, LONG_TTL_SECONDS)).toMatchObject({
+      generation: '1',
+    });
+    const registry = reg.createFreeholdClaimRegistry();
+    registry.record(held(plotId, 19));
+    expect(reg.FREEHOLD_CLAIM_RELEASE_ALL_DEADLINE_MS).toBe(2_000);
+    const tight = newPool(`${SCHEMA}_tight`, 1);
+    const hog = await tight.connect();
+    const warn = vi.fn();
+    try {
+      const started = Date.now();
+      expect(
+        await reg.releaseAllFreeholdClaims({ pool: tight, holder: HOLDER_A, registry, warn }),
+      ).toBe(0);
+      const elapsed = Date.now() - started;
+      expect(elapsed).toBeGreaterThanOrEqual(1_950);
+      expect(elapsed).toBeLessThan(3_500);
+      expect(warn).toHaveBeenCalledTimes(1);
+      expect(warn).toHaveBeenCalledWith(
+        'freehold claims were not released at shutdown; they expire after the lease TTL',
+      );
+      expect(registry.all()).toEqual([held(plotId, 19)]);
+      expect(await claimRow(plotId)).toMatchObject({ holder: HOLDER_A, live: true });
+    } finally {
+      hog.release();
+    }
+    // The abandoned checkout is handed back, not leaked: the pool still serves.
+    await sleep(20);
+    expect(tight.waitingCount).toBe(0);
+    expect((await tight.query('SELECT 1 AS one')).rows).toEqual([{ one: 1 }]);
+    await tight.end();
+  });
+
+  it('lets exactly one of two processes win a first acquire of one plot', async () => {
+    // Forced interleave: B's upsert parks on A's uncommitted insert.
+    const raceOnce = async (plotId: string, accountId: number, aCommits: boolean) => {
+      const a = await poolA.connect();
+      const b = await poolB.connect();
+      let bAcquire: Promise<unknown> | undefined;
+      try {
+        await a.query('BEGIN');
+        await b.query('BEGIN');
+        expect(await acquire(a, HOLDER_A, plotId, accountId, LONG_TTL_SECONDS)).toEqual({
+          kind: 'acquired',
+          generation: '1',
+          takeover: false,
+        });
+        bAcquire = acquire(b, HOLDER_B, plotId, accountId, LONG_TTL_SECONDS);
+        expect(await waitForBlock(await backendPid(a), APP_B)).not.toBeNull();
+        await a.query(aCommits ? 'COMMIT' : 'ROLLBACK');
+        const answer = await bAcquire;
+        await b.query('COMMIT');
+        return answer;
+      } finally {
+        await a.query('ROLLBACK').catch(() => undefined);
+        await b.query('ROLLBACK').catch(() => undefined);
+        a.release();
+        b.release();
+        await bAcquire?.catch(() => undefined);
+      }
+    };
+    expect(await raceOnce(plot('race'), 20, true)).toEqual({ kind: 'busy' });
+    expect(await claimRow(plot('race'))).toMatchObject({ holder: HOLDER_A, generation: '1' });
+    // Negative control: when A's insert rolls back, B inserts generation 1.
+    expect(await raceOnce(plot('race-rolled'), 21, false)).toEqual({
+      kind: 'acquired',
+      generation: '1',
+      takeover: false,
+    });
+    expect(await claimRow(plot('race-rolled'))).toMatchObject({
+      holder: HOLDER_B,
+      generation: '1',
+    });
+
+    // And unordered: concurrent autocommit acquires, one winner each time.
+    for (const [i, plotId] of ['race-u1', 'race-u2', 'race-u3'].map(plot).entries()) {
+      const answers = await Promise.all([
+        acquire(poolA, HOLDER_A, plotId, 22 + i, LONG_TTL_SECONDS),
+        acquire(poolB, HOLDER_B, plotId, 22 + i, LONG_TTL_SECONDS),
+      ]);
+      expect(answers.map((answer) => answer.kind).sort()).toEqual(['acquired', 'busy']);
+      const winner = answers[0].kind === 'acquired' ? HOLDER_A : HOLDER_B;
+      expect(answers.find((answer) => answer.kind === 'acquired')).toEqual({
+        kind: 'acquired',
+        generation: '1',
+        takeover: false,
+      });
+      expect(await claimRow(plotId)).toMatchObject({ holder: winner, generation: '1' });
+    }
+  });
+
+  describe('the login reader', () => {
+    const loginDeps = (
+      accountId: number,
+      registry: import('../../server/freehold_claim_registry').FreeholdClaimRegistry,
+    ) => {
+      const readRow = vi.fn((db: FreeholdQueryable) =>
+        plotDb.freeholdForAccount(db, accountId, MAX_OWNED_BYTES),
+      );
+      const readHearth = vi.fn((db: FreeholdQueryable) =>
+        hearthDb.loadFreeholdHearth(db, accountId),
+      );
+      const onClaimed = vi.fn();
+      return {
+        readRow,
+        readHearth,
+        onClaimed,
+        deps: {
+          pool: poolA,
+          registry,
+          holder: HOLDER_A,
+          realm: REALM_A,
+          ttlSeconds: LONG_TTL_SECONDS,
+          readRow,
+          readHearth,
+          nowMs: () => 4_242,
+          onClaimed,
+        },
+      };
+    };
+
+    it('claims the plot and records it before it reads the row, and claims nothing with no row', async () => {
+      const plotId = plot('login');
+      await seedPlot(25, plotId);
+      const registry = reg.createFreeholdClaimRegistry();
+      const { deps, readRow, onClaimed } = loginDeps(25, registry);
+      const answer = await loginMod.readClaimedLoginDurables(deps, 25);
+      expect(answer.hearth).toEqual({ kind: 'absent' });
+      expect(answer.row).toMatchObject({
+        kind: 'row',
+        row: { accountId: 25, plotIndex: 0, plotId, durableRev: '1', tier: 'cottage' },
+      });
+      expect(readRow).toHaveBeenCalledTimes(1);
+      expect(registry.forPlot(plotId)).toEqual({
+        plotId,
+        accountId: 25,
+        generation: '1',
+        acquiredAtMs: 4_242,
+      });
+      expect(registry.counters).toMatchObject({ acquired: 1, takeovers: 0, busy: 0 });
+      expect(onClaimed).toHaveBeenCalledWith(25);
+      // Read on another pool: the claim COMMITTED.
+      expect(await claimRow(plotId)).toMatchObject({
+        holder: HOLDER_A,
+        realm: REALM_A,
+        generation: '1',
+        live: true,
+      });
+
+      // Negative control: no plot row, nothing to claim.
+      const empty = reg.createFreeholdClaimRegistry();
+      const none = loginDeps(26, empty);
+      expect(await loginMod.readClaimedLoginDurables(none.deps, 26)).toEqual({
+        row: { kind: 'absent' },
+        hearth: { kind: 'absent' },
+      });
+      expect(none.readRow).toHaveBeenCalledTimes(1);
+      expect(empty.all()).toEqual([]);
+      expect(none.onClaimed).not.toHaveBeenCalled();
+      expect(
+        (
+          await probe.query(
+            `SELECT count(*)::int AS n FROM ${SCHEMA}.freehold_plot_claims WHERE account_id = $1`,
+            [26],
+          )
+        ).rows[0].n,
+      ).toBe(0);
+    });
+
+    it('answers claim_busy against a foreign live claim and reads no row', async () => {
+      const plotId = plot('login-busy');
+      await seedPlot(27, plotId);
+      expect(await acquire(poolB, HOLDER_B, plotId, 27, LONG_TTL_SECONDS)).toMatchObject({
+        generation: '1',
+      });
+      const before = await claimRow(plotId);
+      const registry = reg.createFreeholdClaimRegistry();
+      const { deps, readRow, onClaimed } = loginDeps(27, registry);
+      expect(await loginMod.readClaimedLoginDurables(deps, 27)).toEqual({
+        row: { kind: 'claim_busy', plotIndex: 0, plotId },
+        hearth: { kind: 'absent' },
+      });
+      expect(readRow).not.toHaveBeenCalled();
+      expect(registry.all()).toEqual([]);
+      expect(registry.counters).toMatchObject({ busy: 1, acquired: 0 });
+      expect(onClaimed).not.toHaveBeenCalled();
+      expect(await claimRow(plotId)).toEqual(before);
+    });
+
+    it('still claims the plot when the Hearth read faults, and answers the clock as thrown', async () => {
+      const plotId = plot('login-fault');
+      await seedPlot(28, plotId);
+      const registry = reg.createFreeholdClaimRegistry();
+      const { deps, readRow, onClaimed } = loginDeps(28, registry);
+      // An SQL-level fault: the relation does not exist (42P01), which aborts
+      // the first transaction before the claim half ever runs.
+      const readHearth = vi.fn(async (db: FreeholdQueryable) => {
+        await db.query('SELECT ready_at_ms FROM freehold_claim_pg_missing_relation');
+        return { kind: 'absent' } as const;
+      });
+      const answer = await loginMod.readClaimedLoginDurables({ ...deps, readHearth }, 28);
+      expect(answer.row).toMatchObject({ kind: 'row', row: { plotId, durableRev: '1' } });
+      expect(answer.hearth.kind).toBe('threw');
+      expect((answer.hearth as { error: { code?: string } }).error.code).toBe('42P01');
+      expect(readHearth).toHaveBeenCalledTimes(1);
+      expect(readRow).toHaveBeenCalledTimes(1);
+      expect(registry.forPlot(plotId)).toEqual({
+        plotId,
+        accountId: 28,
+        generation: '1',
+        acquiredAtMs: 4_242,
+      });
+      expect(registry.counters).toMatchObject({ acquired: 1 });
+      expect(onClaimed).toHaveBeenCalledTimes(1);
+      expect(await claimRow(plotId)).toMatchObject({ holder: HOLDER_A, generation: '1' });
+      // Not exercised here: a COMMIT whose answer cannot be proved (the claim
+      // left unrecorded and the read thrown) needs the client destroyed after
+      // COMMIT is sent, which this suite cannot do cheaply.
+    });
+  });
+
+  it('reaches the primary keys for the acquire and the fenced CTE, never a sequential scan', async () => {
+    const plotId = plot('plans');
+    await seedPlot(29, plotId);
+    const acquireCapture = recorder(poolA);
+    expect(await acquire(acquireCapture.db, HOLDER_A, plotId, 29, LONG_TTL_SECONDS)).toMatchObject({
+      kind: 'acquired',
+    });
+    expect(acquireCapture.calls.map((call) => call.text)).toEqual([
+      claimDb.FREEHOLD_CLAIM_BUSY_SQL,
+      claimDb.FREEHOLD_CLAIM_ACQUIRE_SQL,
+    ]);
+    const writeCapture = recorder(poolA);
+    expect(
+      await plotDb.upsertFencedFreehold(
+        writeCapture.db,
+        content(29, plotId, '1', MANOR),
+        fenceOf(plotId, HOLDER_A, '1'),
+      ),
+    ).toEqual({ kind: 'updated', durableRev: '2' });
+    expect(writeCapture.calls[0].text).toBe(plotDb.FREEHOLD_FENCED_CAS_SQL);
+
+    const client = await poolA.connect();
+    try {
+      await client.query('BEGIN');
+      // A table of a handful of rows is cheaper to read whole, so the planner
+      // would rightly pick a Seq Scan and prove nothing; enable_seqscan = off
+      // (transaction-scoped, rolled back below) asks whether each predicate CAN
+      // reach an index, and which one.
+      await client.query('SET LOCAL enable_seqscan = off');
+      const explain = async (text: string, values?: unknown[]) =>
+        rootPlanFromExplainRow(
+          (await client.query(`EXPLAIN (FORMAT JSON) ${text}`, values)).rows[0],
+        );
+
+      const busyPlan = await explain(acquireCapture.calls[0].text, acquireCapture.calls[0].values);
+      expect(scansReach(busyPlan, 'freehold_plot_claims', 'freehold_plot_claims_pkey')).toEqual([
+        'freehold_plot_claims_pkey',
+      ]);
+      // The upsert reads no claims row at all: its conflict arbiter is the PK.
+      const upsertPlan = await explain(
+        acquireCapture.calls[1].text,
+        acquireCapture.calls[1].values,
+      );
+      expect(upsertPlan['Node Type']).toBe('ModifyTable');
+      expect(
+        (upsertPlan as unknown as Record<string, unknown>)['Conflict Arbiter Indexes'],
+      ).toEqual(['freehold_plot_claims_pkey']);
+      expect(relationScans(upsertPlan, 'freehold_plot_claims')).toEqual([]);
+
+      // The fenced CTE: the fence and the stamp on the claims PK, the CAS on
+      // the plot PK.
+      const fencedPlan = await explain(writeCapture.calls[0].text, writeCapture.calls[0].values);
+      expect(scansReach(fencedPlan, 'freehold_plot_claims', 'freehold_plot_claims_pkey')).toEqual([
+        'freehold_plot_claims_pkey',
+        'freehold_plot_claims_pkey',
+      ]);
+      expect(scansReach(fencedPlan, 'account_freeholds', 'account_freeholds_pkey')).toEqual([
+        'account_freeholds_pkey',
+      ]);
+
+      // The login's plot-id pre-read, on the plot PK.
+      const preReadPlan = await explain(loginMod.FREEHOLD_PRIMARY_PLOT_ID_SQL, [29]);
+      expect(scansReach(preReadPlan, 'account_freeholds', 'account_freeholds_pkey')).toEqual([
+        'account_freeholds_pkey',
+      ]);
+
+      // Negative control: a predicate no index serves still scans, and the
+      // reader refuses it.
+      const realmPlan = await explain('SELECT plot_id FROM freehold_plot_claims WHERE realm = $1', [
+        REALM_A,
+      ]);
+      expect(scansReach(realmPlan, 'freehold_plot_claims', 'freehold_plot_claims_pkey')).toEqual([
+        '"freehold_plot_claims" used Seq Scan instead of "freehold_plot_claims_pkey"',
+      ]);
+
+      // RECORDED, not pinned: the renew chunk's plan.
+      const renewPlan = await explain(claimDb.FREEHOLD_CLAIM_RENEW_SQL, [
+        HOLDER_A,
+        LONG_TTL_SECONDS,
+        [plotId],
+      ]);
+      expect(renewPlan['Node Type']).toBe('ModifyTable');
+      console.info(`freehold claim renew chunk plan (seqscan off): ${planShape(renewPlan)}`);
+      await client.query('ROLLBACK');
+    } finally {
+      client.release();
+    }
+  });
+
+  it('lets a login that began before a release committed take the released claim, where now() would refuse', async () => {
+    const plotId = plot('clock');
+    expect(await acquire(poolB, HOLDER_B, plotId, 30, LONG_TTL_SECONDS)).toMatchObject({
+      generation: '1',
+    });
+    const login = await poolA.connect();
+    try {
+      await login.query('BEGIN');
+      await login.query('SELECT now()');
+      // The release commits AFTER the login transaction began.
+      expect(await claimDb.releaseFreeholdClaimRows(poolB, HOLDER_B, [plotId])).toEqual(
+        new Set([plotId]),
+      );
+      // Mutant controls: on now() (the transaction START) the released row
+      // still reads as live, and the upsert's steal arm refuses it.
+      const nowBusy = claimDb.FREEHOLD_CLAIM_BUSY_SQL.replaceAll('clock_timestamp()', 'now()');
+      expect((await login.query(nowBusy, [plotId, HOLDER_A])).rowCount).toBe(1);
+      await login.query('SAVEPOINT mutant');
+      const nowAcquire = claimDb.FREEHOLD_CLAIM_ACQUIRE_SQL.replaceAll(
+        'clock_timestamp()',
+        'now()',
+      );
+      expect(
+        (await login.query(nowAcquire, [plotId, 30, REALM_A, HOLDER_A, LONG_TTL_SECONDS])).rowCount,
+      ).toBe(0);
+      await login.query('ROLLBACK TO SAVEPOINT mutant');
+      // The shipped statements read the clock now, so the login takes it.
+      expect(await acquire(login, HOLDER_A, plotId, 30, LONG_TTL_SECONDS)).toEqual({
+        kind: 'acquired',
+        generation: '2',
+        takeover: true,
+      });
+      await login.query('COMMIT');
+    } finally {
+      await login.query('ROLLBACK').catch(() => undefined);
+      login.release();
+    }
+    expect(await claimRow(plotId)).toMatchObject({ holder: HOLDER_A, generation: '2', live: true });
+  });
+});

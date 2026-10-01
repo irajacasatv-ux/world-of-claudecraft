@@ -225,8 +225,17 @@ CREATE TABLE IF NOT EXISTS "__woc_freehold_schema__".account_freeholds (
 );
 -- The opaque public identity is globally unique: a client echoes a plot id back
 -- on build-presence and visit frames, so two plots may never answer to one id.
+-- PROBED FIRST (07a): a no-op CREATE INDEX IF NOT EXISTS still takes the
+-- table's SHARE lock and holds it to the boot COMMIT, which would block every
+-- other realm's plot writes through this realm's whole boot.
+DO $account_freeholds_plot_id$
+BEGIN
+  IF to_regclass('"__woc_freehold_schema__".account_freeholds_plot_id') IS NULL THEN
 CREATE UNIQUE INDEX IF NOT EXISTS account_freeholds_plot_id
   ON "__woc_freehold_schema__".account_freeholds (plot_id);
+  END IF;
+END;
+$account_freeholds_plot_id$;
 -- NO separate account_id index, on purpose. PostgreSQL indexes no referencing
 -- side of a foreign key, but PRIMARY KEY (account_id, plot_index) builds a
 -- unique btree whose LEADING column is account_id, and the accounts ON DELETE
@@ -289,6 +298,14 @@ export type FreeholdRowLoad =
       readonly detoastRefused: boolean;
       /** The post-TOAST on-disk size of the two content columns. */
       readonly diskBytes: number;
+    }
+  /** 07a: another realm holds this plot's live claim, so this realm reads no
+   *  row and writes none until a later login finds the claim free. A CAPACITY
+   *  answer (repairable), never a data one: the row itself is fine. */
+  | {
+      readonly kind: 'claim_busy';
+      readonly plotIndex: number;
+      readonly plotId: string;
     }
   | {
       readonly kind: 'unadmitted';
@@ -717,6 +734,113 @@ export async function upsertFreehold(
   const current = await currentDurableRev(db, input);
   if (current === null) return { kind: 'missing' };
   return { kind: 'stale', durableRev: current };
+}
+
+/** The claim fence a plot write carries (server/freehold_claim_db.ts): the
+ *  holder and generation the write must still own, and this attempt's token. */
+export interface FreeholdWriteFence {
+  readonly plotId: string;
+  readonly holder: string;
+  readonly generation: string;
+  readonly writeToken: string;
+}
+
+export type FreeholdFencedUpsertResult = FreeholdUpsertResult | { readonly kind: 'fenced' };
+
+/** The fenced compare-and-swap (07a, the touch-set manifest's P2), ONE
+ *  statement, so a dirty plot pays exactly what 07's write paid. Three CTEs:
+ *  - `fence` LOCKS the claim row under the (holder, generation) fence and writes
+ *    nothing;
+ *  - `cas` is gated on it through an UNCORRELATED EXISTS, which the planner
+ *    evaluates once, before the CAS scans, so the claim row is locked first and
+ *    the plot row second (the manifest's G4 before G7), and the fence cannot go
+ *    stale because this statement holds the claim row until it commits;
+ *  - `stamp` writes this attempt's token ONLY IF the CAS wrote. A fence hit
+ *    whose CAS matched nothing (stale) commits no token, so a later verify can
+ *    never read a stale attempt's token as proof that its document landed.
+ *  The SET list is FREEHOLD_CAS_UPDATE_SQL's, byte for byte, so it still never
+ *  touches plot_id, created_at or the upkeep columns. */
+export const FREEHOLD_FENCED_CAS_SQL = `WITH fence AS MATERIALIZED (
+  SELECT plot_id FROM freehold_plot_claims
+   WHERE plot_id = $12 AND holder = $13 AND generation = $14::bigint
+     FOR NO KEY UPDATE
+), cas AS (
+  UPDATE account_freeholds
+     SET tier = $4,
+         layout = $5::jsonb,
+         trophies = $6::jsonb,
+         condition = $7,
+         visit_policy = $8,
+         wire_rev = $9::bigint,
+         schema_version = $10,
+         durable_rev = durable_rev + 1,
+         updated_at = now()
+   WHERE account_id = $1 AND plot_index = $2 AND durable_rev = $3::bigint
+     AND EXISTS (SELECT 1 FROM fence)
+  RETURNING durable_rev::text AS durable_rev
+), stamp AS (
+  UPDATE freehold_plot_claims
+     SET write_token = $11
+   WHERE plot_id = $12 AND EXISTS (SELECT 1 FROM cas)
+  RETURNING plot_id
+)
+SELECT (SELECT count(*) FROM fence)::int AS fenced,
+       (SELECT durable_rev FROM cas) AS durable_rev,
+       (SELECT count(*) FROM stamp)::int AS stamped`;
+
+/**
+ * The UPDATE arm of upsertFreehold behind the claim fence. Same refusal before
+ * any SQL, same diagnosis after a zero-row CAS; a fence the claim row no longer
+ * matches answers `fenced` (the claim was taken over) and writes nothing.
+ */
+export async function upsertFencedFreehold(
+  db: FreeholdQueryable,
+  input: FreeholdUpsert,
+  fence: FreeholdWriteFence,
+): Promise<FreeholdFencedUpsertResult> {
+  requireUpsertInput(input);
+  if (input.expectedDurableRev === null) {
+    throw new FreeholdUpsertRefused('a fenced write updates an existing row');
+  }
+  if (fence.plotId !== input.plotId) {
+    throw new FreeholdUpsertRefused('the write fence names another plot');
+  }
+  const res = await db.query(FREEHOLD_FENCED_CAS_SQL, [
+    input.accountId,
+    input.plotIndex,
+    input.expectedDurableRev,
+    input.tier,
+    input.layoutJson,
+    input.trophiesJson,
+    input.condition,
+    input.visitPolicy,
+    String(input.wireRev),
+    input.schemaVersion,
+    fence.writeToken,
+    fence.plotId,
+    fence.holder,
+    fence.generation,
+  ]);
+  const row = (res.rows ?? [])[0];
+  if (row === undefined || Number(row.fenced) !== 1) return { kind: 'fenced' };
+  if (row.durable_rev !== null && row.durable_rev !== undefined) {
+    return { kind: 'updated', durableRev: readBigintText(row.durable_rev, 'durable_rev') };
+  }
+  const current = await currentDurableRev(db, input);
+  if (current === null) return { kind: 'missing' };
+  return { kind: 'stale', durableRev: current };
+}
+
+/** The plot's current durable revision, for the ambiguous-retry adopt arm. */
+export async function freeholdDurableRevOnClient(
+  db: FreeholdQueryable,
+  accountId: number,
+  plotIndex: number,
+): Promise<string | null> {
+  const res = await db.query(FREEHOLD_CURRENT_REV_SQL, [accountId, plotIndex]);
+  const row = (res.rows ?? [])[0];
+  if (row === undefined) return null;
+  return readBigintText(row.durable_rev, 'durable_rev');
 }
 
 /** The insert, with the ONE constraint violation it can raise that is a

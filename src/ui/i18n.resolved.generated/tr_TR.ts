@@ -6770,6 +6770,7 @@ export const tr_TR: EnTranslations = {
       "rename_not_permitted": "Bu karakterin yeniden adlandırılmasına izin verilmiyor.",
       "delete_confirm": "Silmeyi onaylamak için karakter adını yazın.",
       "storage_purchase_open": "Bu karakter silinmeden önce depolama satın alımının tamamlanması veya çözümlenmesi gerekir.",
+      "freehold_operation_open": "A Freehold operation must finish or be resolved before this character can be deleted.",
       "delete_busy": "Diyar meşgul. Birazdan bu karakteri tekrar silmeyi deneyin.",
       "already_in_world": "Karakter zaten dünyada.",
       "taken_over": "Karakteriniz başka bir oturum tarafından devralındı.",

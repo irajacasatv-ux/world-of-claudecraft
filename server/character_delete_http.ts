@@ -2,6 +2,7 @@ import type * as http from 'node:http';
 import {
   CharacterDeleteClientGone,
   CharacterDeleteQueueSaturated,
+  CharacterFreeholdOperationOpen,
   CharacterStoragePurchaseOpen,
 } from './character_delete_db';
 
@@ -26,6 +27,13 @@ export const CHARACTER_STORAGE_PURCHASE_OPEN_BODY = {
   code: 'character.storage_purchase_open',
 } as const;
 
+/** Stable legacy-envelope refusal (D88) shared by both character DELETE
+ * dispatch arms: an open housing operation intent still binds the character. */
+export const CHARACTER_FREEHOLD_OPERATION_OPEN_BODY = {
+  error: 'A Freehold operation must finish or be resolved before this character can be deleted.',
+  code: 'character.freehold_operation_open',
+} as const;
+
 /** Retryable gate-saturation refusal: the delete never took a pool client. */
 export const CHARACTER_DELETE_BUSY_BODY = {
   error: 'The realm is busy. Try deleting this character again in a moment.',
@@ -34,7 +42,10 @@ export const CHARACTER_DELETE_BUSY_BODY = {
 
 export interface CharacterDeleteHttpRefusal {
   status: 409 | 503;
-  body: typeof CHARACTER_STORAGE_PURCHASE_OPEN_BODY | typeof CHARACTER_DELETE_BUSY_BODY;
+  body:
+    | typeof CHARACTER_STORAGE_PURCHASE_OPEN_BODY
+    | typeof CHARACTER_FREEHOLD_OPERATION_OPEN_BODY
+    | typeof CHARACTER_DELETE_BUSY_BODY;
 }
 
 /** True when the delete failed only because the requesting client vanished
@@ -45,8 +56,12 @@ export function characterDeleteClientGone(error: unknown): boolean {
   return error instanceof CharacterDeleteClientGone;
 }
 
-/** Translate only the known domain refusals, without exposing character id or status. */
+/** Translate only the known domain refusals, without exposing character id,
+ * status, or the guard error a refusal carries as its cause. */
 export function characterDeleteHttpRefusal(error: unknown): CharacterDeleteHttpRefusal | null {
+  if (error instanceof CharacterFreeholdOperationOpen) {
+    return { status: 409, body: CHARACTER_FREEHOLD_OPERATION_OPEN_BODY };
+  }
   if (error instanceof CharacterStoragePurchaseOpen) {
     return { status: 409, body: CHARACTER_STORAGE_PURCHASE_OPEN_BODY };
   }

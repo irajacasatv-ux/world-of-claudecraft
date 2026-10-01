@@ -52,6 +52,10 @@ export interface FreeholdPersistStats {
   readonly writes: number;
   readonly writeFailures: number;
   readonly staleWrites: number;
+  /** Writes refused because this realm no longer holds the plot's global claim
+   *  (07a): another realm took it over, so the owner is quiesced. Like
+   *  `staleWrites` it means a second writer exists, but one the fence named. */
+  readonly fencedWrites: number;
   readonly permitWaitMsTotal: number;
   readonly queueWaitMsTotal: number;
   readonly writeMsTotal: number;
@@ -121,6 +125,7 @@ export function createFreeholdPersistCounters() {
     writes: 0,
     writeFailures: 0,
     staleWrites: 0,
+    fencedWrites: 0,
     permitWaitMsTotal: 0,
     queueWaitMsTotal: 0,
     // The two durations the wait totals deliberately exclude: a durable write

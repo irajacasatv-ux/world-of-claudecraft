@@ -10,6 +10,7 @@
 
 export const pending: Record<string, readonly string[]> = {
   "es": [
+    "apiError.character.freehold_operation_open",
     "apiError.freehold.disabled",
     "apiError.freehold.invalid_input",
     "entities.dungeons.freehold_cottage.enterText",
@@ -97,6 +98,7 @@ export const pending: Record<string, readonly string[]> = {
     "worldContent.freeholdGateName"
   ],
   "es_ES": [
+    "apiError.character.freehold_operation_open",
     "apiError.freehold.disabled",
     "apiError.freehold.invalid_input",
     "entities.dungeons.freehold_cottage.enterText",
@@ -184,6 +186,7 @@ export const pending: Record<string, readonly string[]> = {
     "worldContent.freeholdGateName"
   ],
   "fr_FR": [
+    "apiError.character.freehold_operation_open",
     "apiError.freehold.disabled",
     "apiError.freehold.invalid_input",
     "entities.dungeons.freehold_cottage.enterText",
@@ -271,6 +274,7 @@ export const pending: Record<string, readonly string[]> = {
     "worldContent.freeholdGateName"
   ],
   "fr_CA": [
+    "apiError.character.freehold_operation_open",
     "apiError.freehold.disabled",
     "apiError.freehold.invalid_input",
     "entities.dungeons.freehold_cottage.enterText",
@@ -359,6 +363,7 @@ export const pending: Record<string, readonly string[]> = {
   ],
   "en_CA": [],
   "it_IT": [
+    "apiError.character.freehold_operation_open",
     "apiError.freehold.disabled",
     "apiError.freehold.invalid_input",
     "entities.dungeons.freehold_cottage.enterText",
@@ -446,6 +451,7 @@ export const pending: Record<string, readonly string[]> = {
     "worldContent.freeholdGateName"
   ],
   "de_DE": [
+    "apiError.character.freehold_operation_open",
     "apiError.freehold.disabled",
     "apiError.freehold.invalid_input",
     "entities.dungeons.freehold_cottage.enterText",
@@ -585,6 +591,7 @@ export const pending: Record<string, readonly string[]> = {
     "itemUi.market.filterTypeFurnishing"
   ],
   "pt_BR": [
+    "apiError.character.freehold_operation_open",
     "apiError.freehold.disabled",
     "apiError.freehold.invalid_input",
     "entities.dungeons.freehold_cottage.enterText",
@@ -685,6 +692,7 @@ export const pending: Record<string, readonly string[]> = {
     "itemUi.market.filterTypeFurnishing"
   ],
   "cs_CZ": [
+    "apiError.character.freehold_operation_open",
     "apiError.freehold.disabled",
     "apiError.freehold.invalid_input",
     "entities.dungeons.freehold_cottage.enterText",
@@ -772,6 +780,7 @@ export const pending: Record<string, readonly string[]> = {
     "worldContent.freeholdGateName"
   ],
   "nl_NL": [
+    "apiError.character.freehold_operation_open",
     "apiError.freehold.disabled",
     "apiError.freehold.invalid_input",
     "entities.dungeons.freehold_cottage.enterText",
@@ -859,6 +868,7 @@ export const pending: Record<string, readonly string[]> = {
     "worldContent.freeholdGateName"
   ],
   "pl_PL": [
+    "apiError.character.freehold_operation_open",
     "apiError.freehold.disabled",
     "apiError.freehold.invalid_input",
     "entities.dungeons.freehold_cottage.enterText",
@@ -946,6 +956,7 @@ export const pending: Record<string, readonly string[]> = {
     "worldContent.freeholdGateName"
   ],
   "id_ID": [
+    "apiError.character.freehold_operation_open",
     "apiError.freehold.disabled",
     "apiError.freehold.invalid_input",
     "entities.dungeons.freehold_cottage.enterText",
@@ -1033,6 +1044,7 @@ export const pending: Record<string, readonly string[]> = {
     "worldContent.freeholdGateName"
   ],
   "tr_TR": [
+    "apiError.character.freehold_operation_open",
     "apiError.freehold.disabled",
     "apiError.freehold.invalid_input",
     "entities.dungeons.freehold_cottage.enterText",
@@ -1120,6 +1132,7 @@ export const pending: Record<string, readonly string[]> = {
     "worldContent.freeholdGateName"
   ],
   "sv_SE": [
+    "apiError.character.freehold_operation_open",
     "apiError.freehold.disabled",
     "apiError.freehold.invalid_input",
     "entities.dungeons.freehold_cottage.enterText",
@@ -1207,6 +1220,7 @@ export const pending: Record<string, readonly string[]> = {
     "worldContent.freeholdGateName"
   ],
   "vi_VN": [
+    "apiError.character.freehold_operation_open",
     "apiError.freehold.disabled",
     "apiError.freehold.invalid_input",
     "entities.dungeons.freehold_cottage.enterText",
@@ -1294,6 +1308,7 @@ export const pending: Record<string, readonly string[]> = {
     "worldContent.freeholdGateName"
   ],
   "da_DK": [
+    "apiError.character.freehold_operation_open",
     "apiError.freehold.disabled",
     "apiError.freehold.invalid_input",
     "entities.dungeons.freehold_cottage.enterText",

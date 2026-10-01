@@ -1,4 +1,25 @@
 import type { Pool } from 'pg';
+import { parentDeleteGuardOf } from './character_delete_db';
+
+/** Typed refusal (D88): the provision loser still has an OPEN housing operation
+ * intent, so its account cannot be deleted until that intent applies or closes.
+ * There is no HTTP surface on this path (the federated login caller handles
+ * it); the character DELETE route's `character.freehold_operation_open` code is
+ * not this refusal's. */
+export class FederatedProvisionFreeholdOperationOpen extends Error {
+  readonly code = 'FEDERATED_PROVISION_FREEHOLD_OPERATION_OPEN' as const;
+
+  constructor(
+    readonly accountId: number,
+    options?: ErrorOptions,
+  ) {
+    super(
+      `federated provision cleanup refused: account ${accountId} has an open housing operation awaiting its close`,
+      options,
+    );
+    this.name = 'FederatedProvisionFreeholdOperationOpen';
+  }
+}
 
 // Delete an account provisioned by a federated-login race only while it remains
 // unreachable. Seeded characters intentionally do not block deletion: they were
@@ -20,12 +41,21 @@ export async function deleteUnusedFederatedProvision(
     );
     return (result.rowCount ?? 0) > 0;
   } catch (error) {
-    // 55006 is storage_purchase_guard_account_delete refusing while a possibly-debited purchase is open.
-    if ((error as { code?: string } | null | undefined)?.code === '55006') {
+    // A 55006 is one of the two parent-delete guards refusing, told apart by
+    // its CONSTRAINT field matched exactly (PostgreSQL puts no trigger name on
+    // the error): storage_purchase_guard_account_delete while a possibly-debited
+    // purchase is open, freehold_operation_guard_account_delete while a housing
+    // intent is open (directly, or through the characters cascade's own guard).
+    // Any other 55006 is not a guard this code knows, so it surfaces raw.
+    const guard = parentDeleteGuardOf(error);
+    if (guard === 'storage_purchase') {
       throw new Error(
         `federated provision cleanup refused: account ${accountId} has an open storage purchase awaiting reconciliation`,
         { cause: error },
       );
+    }
+    if (guard === 'freehold_operation') {
+      throw new FederatedProvisionFreeholdOperationOpen(accountId, { cause: error });
     }
     throw error;
   }

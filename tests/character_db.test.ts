@@ -21,11 +21,13 @@ vi.mock('../server/admin_guilds_read', () => ({
 }));
 
 import {
+  CHARACTER_DELETE_FREEHOLD_OPERATION_SQL,
   CHARACTER_DELETE_PERMIT_SUB_CAP,
   CHARACTER_DELETE_VERIFY_LOCK_TIMEOUT_MS,
   CHARACTER_DELETE_VERIFY_SQL,
   CharacterDeleteClientGone,
   CharacterDeleteQueueSaturated,
+  CharacterFreeholdOperationOpen,
   CharacterStoragePurchaseOpen,
   characterDeleteGateStats,
   configureCharacterDeleteBackgroundGate,
@@ -52,6 +54,7 @@ import {
   setAccountWeaponSkinLoadout,
   touchLogin,
 } from '../server/db';
+import { DbTransactionAborted } from '../server/db_transaction_deadline';
 import { drainLinkChanges } from '../server/discord_link_changes';
 import { REALM } from '../server/realm';
 
@@ -165,6 +168,7 @@ function deleteClient(
     account?: boolean;
     character?: boolean;
     openStatus?: 'pending' | 'unresolved';
+    openOperation?: boolean;
     deleted?: boolean;
     deleteError?: Error;
   } = {},
@@ -180,6 +184,11 @@ function deleteClient(
       return options.character === false
         ? { rows: [], rowCount: 0 }
         : { rows: [{ id: 42 }], rowCount: 1 };
+    }
+    if (/FROM freehold_operations/i.test(sql)) {
+      return options.openOperation
+        ? { rows: [{ operation_id: 'op-open-1' }], rowCount: 1 }
+        : { rows: [], rowCount: 0 };
     }
     if (/FROM storage_purchases/i.test(sql)) {
       return options.openStatus
@@ -233,16 +242,32 @@ describe('deleteCharacter', () => {
     const sql = client.query.mock.calls.map((call) => String(call[0]));
     const account = sql.findIndex((statement) => /FROM accounts/.test(statement));
     const character = sql.findIndex((statement) => /FROM characters/.test(statement));
+    const operation = sql.findIndex((statement) => /FROM freehold_operations/.test(statement));
     const purchase = sql.findIndex((statement) => /FROM storage_purchases/.test(statement));
     const deletion = sql.findIndex((statement) => /DELETE FROM characters/.test(statement));
-    expect(sql).toHaveLength(9);
+    // Ten statements: the housing pre-read joined the original nine.
+    expect(sql).toHaveLength(10);
     expect(sql[0]).toBe('BEGIN');
     expect(sql[1]).toContain('statement_timeout = 15000');
     expect(sql[1]).toContain("lock_timeout = '2s'");
     expect(sql[1]).toContain("idle_in_transaction_session_timeout = '2s'");
     expect(account).toBeLessThan(character);
-    expect(character).toBeLessThan(purchase);
+    // The pre-reads run in the guard triggers' firing order (name order:
+    // freehold_operation_guard_* before storage_purchase_guard_*), both after
+    // the character lock so each reads a snapshot taken after that wait.
+    expect(character).toBeLessThan(operation);
+    expect(operation).toBeLessThan(purchase);
     expect(purchase).toBeLessThan(deletion);
+    // Literal pins on the exported statement (never a self-comparison): the
+    // character predicate is what the freehold_operations_character partial
+    // index serves, and LIMIT 1 keeps the read to one index probe.
+    expect(CHARACTER_DELETE_FREEHOLD_OPERATION_SQL).toBe(
+      'SELECT operation_id FROM freehold_operations WHERE character_id = $1 LIMIT 1',
+    );
+    expect(client.query.mock.calls[operation]).toEqual([
+      'SELECT operation_id FROM freehold_operations WHERE character_id = $1 LIMIT 1',
+      [42],
+    ]);
     // The keep-forever bank_ledger / bank_ledger_batch_receipts cascade rides
     // ONLY the DELETE under the widened 60s bound (the shared character-save
     // allowance); the tighter 15s bound is restored immediately after so
@@ -276,6 +301,187 @@ describe('deleteCharacter', () => {
       expect(dbMock.bustGuildList).not.toHaveBeenCalled();
     },
   );
+
+  it('refuses while a housing operation intent is open, ahead of the storage pre-read', async () => {
+    // Both rails bind the character: the housing refusal wins, exactly as the
+    // freehold guard trigger fires first on a real DELETE (name order), and
+    // the storage pre-read never runs.
+    const client = deleteClient({ openOperation: true, openStatus: 'pending' });
+    dbMock.connect.mockResolvedValueOnce(client);
+
+    const failure = await deleteCharacter(7, 42).catch((error: unknown) => error);
+
+    expect(failure).toBeInstanceOf(CharacterFreeholdOperationOpen);
+    expect(failure).not.toBeInstanceOf(CharacterStoragePurchaseOpen);
+    expect(failure).toMatchObject({
+      name: 'CharacterFreeholdOperationOpen',
+      code: 'CHARACTER_FREEHOLD_OPERATION_OPEN',
+      characterId: 42,
+      message: 'character 42 has an open housing operation',
+    });
+    const sql = client.query.mock.calls.map((call) => String(call[0]));
+    expect(sql.some((statement) => /FROM storage_purchases/.test(statement))).toBe(false);
+    expect(sql.some((statement) => /DELETE FROM characters/.test(statement))).toBe(false);
+    expect(sql).toContain('ROLLBACK');
+    expect(sql).not.toContain('COMMIT');
+    expect(dbMock.bustGuildList).not.toHaveBeenCalled();
+    expect(drainLinkChanges()).toHaveLength(0);
+    // A proved refusal never spends the ambiguity verify's checkout.
+    expect(dbMock.connect).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps the storage-only refusal unchanged when no housing intent exists', async () => {
+    // Negative control for the housing pre-read: it RAN (first) and found
+    // nothing, so the storage pre-read decides exactly as before.
+    const client = deleteClient({ openOperation: false, openStatus: 'unresolved' });
+    dbMock.connect.mockResolvedValueOnce(client);
+
+    const failure = await deleteCharacter(7, 42).catch((error: unknown) => error);
+
+    expect(failure).toBeInstanceOf(CharacterStoragePurchaseOpen);
+    expect(failure).not.toBeInstanceOf(CharacterFreeholdOperationOpen);
+    expect(failure).toMatchObject({
+      code: 'CHARACTER_STORAGE_PURCHASE_OPEN',
+      characterId: 42,
+      status: 'unresolved',
+    });
+    const sql = client.query.mock.calls.map((call) => String(call[0]));
+    const operation = sql.findIndex((statement) => /FROM freehold_operations/.test(statement));
+    const purchase = sql.findIndex((statement) => /FROM storage_purchases/.test(statement));
+    expect(operation).toBeGreaterThan(-1);
+    expect(purchase).toBeGreaterThan(operation);
+    expect(sql.some((statement) => /DELETE FROM characters/.test(statement))).toBe(false);
+  });
+
+  // A pg DatabaseError's shape: node-postgres puts the SQLSTATE and the
+  // CONSTRAINT field on the error object itself.
+  const FREEHOLD_GUARD = 'freehold_operations_open_delete_guard';
+  const STORAGE_GUARD = 'storage_purchases_open_delete_guard';
+  function guardError(code: string, constraint: string | undefined, message: string): Error {
+    return Object.assign(new Error(message), { code, constraint, severity: 'ERROR' });
+  }
+
+  it('maps a housing guard 55006 raised by the DELETE trigger to CharacterFreeholdOperationOpen', async () => {
+    const raw = guardError('55006', FREEHOLD_GUARD, 'freehold_operation_open');
+    const client = deleteClient({ deleteError: raw });
+    dbMock.connect.mockResolvedValueOnce(client);
+
+    const failure = await deleteCharacter(7, 42).catch((error: unknown) => error);
+
+    expect(failure).toBeInstanceOf(CharacterFreeholdOperationOpen);
+    expect(failure).toMatchObject({ code: 'CHARACTER_FREEHOLD_OPERATION_OPEN', characterId: 42 });
+    expect((failure as Error).cause).toBe(raw);
+    expect(client.query.mock.calls.map((call) => call[0])).toContain('ROLLBACK');
+    expect(dbMock.connect).toHaveBeenCalledTimes(1);
+    expect(dbMock.bustGuildList).not.toHaveBeenCalled();
+  });
+
+  it('maps a storage guard 55006 raised by the DELETE trigger to a pending storage refusal', async () => {
+    // A deliberate behavior change: this trigger refusal used to surface raw
+    // (a 500 on both DELETE arms); it now reaches the same stable 409 as the
+    // pre-read. The storage trigger carries no status, so it reads 'pending'.
+    const raw = guardError('55006', STORAGE_GUARD, 'storage_purchase_open');
+    const client = deleteClient({ deleteError: raw });
+    dbMock.connect.mockResolvedValueOnce(client);
+
+    const failure = await deleteCharacter(7, 42).catch((error: unknown) => error);
+
+    expect(failure).toBeInstanceOf(CharacterStoragePurchaseOpen);
+    expect(failure).not.toBeInstanceOf(CharacterFreeholdOperationOpen);
+    expect(failure).toMatchObject({
+      code: 'CHARACTER_STORAGE_PURCHASE_OPEN',
+      characterId: 42,
+      status: 'pending',
+    });
+    expect((failure as Error).cause).toBe(raw);
+    expect(dbMock.connect).toHaveBeenCalledTimes(1);
+    expect(dbMock.bustGuildList).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ['a 55006 naming another constraint', () => guardError('55006', 'some_other_guard', 'in use')],
+    [
+      'a 55006 with a near-miss housing constraint',
+      () => guardError('55006', `${FREEHOLD_GUARD}_v2`, 'freehold_operation_open'),
+    ],
+    [
+      'a 55006 with a near-miss storage constraint',
+      () => guardError('55006', STORAGE_GUARD.toUpperCase(), 'storage_purchase_open'),
+    ],
+    ['a constraint-less 55006', () => guardError('55006', undefined, 'freehold_operation_open')],
+    ['a 23503 carrying the housing constraint', () => guardError('23503', FREEHOLD_GUARD, 'fk')],
+    ['a 23503 carrying the storage constraint', () => guardError('23503', STORAGE_GUARD, 'fk')],
+    [
+      'a wrapped 55006 naming another constraint',
+      () => new Error('wrapped', { cause: guardError('55006', 'some_other_guard', 'in use') }),
+    ],
+    [
+      // The error's OWN SQLSTATE decides first: an unknown own 55006 is not
+      // rescued by a guard-shaped cause.
+      'an unknown own 55006 over a housing-guard cause',
+      () =>
+        Object.assign(guardError('55006', 'some_other_guard', 'in use'), {
+          cause: guardError('55006', FREEHOLD_GUARD, 'freehold_operation_open'),
+        }),
+    ],
+  ])('rethrows %s raw', async (_label, makeError) => {
+    const raw = makeError();
+    const client = deleteClient({ deleteError: raw });
+    dbMock.connect.mockResolvedValueOnce(client);
+
+    await expect(deleteCharacter(7, 42)).rejects.toBe(raw);
+    expect(dbMock.connect).toHaveBeenCalledTimes(1);
+    expect(dbMock.bustGuildList).not.toHaveBeenCalled();
+  });
+
+  it('reads a guard 55006 one level down as the standard cause', async () => {
+    const raw = guardError('55006', FREEHOLD_GUARD, 'freehold_operation_open');
+    const wrapped = new Error('statement failed', { cause: raw });
+    const client = deleteClient({ deleteError: wrapped });
+    dbMock.connect.mockResolvedValueOnce(client);
+
+    const failure = await deleteCharacter(7, 42).catch((error: unknown) => error);
+
+    expect(failure).toBeInstanceOf(CharacterFreeholdOperationOpen);
+    expect((failure as Error).cause).toBe(wrapped);
+  });
+
+  it('maps the guard BEFORE the ambiguity verify: a proved rollback takes no verify checkout', async () => {
+    // An ambiguity carrier wrapping a guard 55006 makes the arm order
+    // observable. The 55006 proves the server answered and rolled back, so it
+    // maps at once; were the verify first, its read (row gone, below) would
+    // report this refused delete as LANDED and run the success side.
+    const raw = guardError('55006', FREEHOLD_GUARD, 'freehold_operation_open');
+    const carrier = Object.assign(new DbTransactionAborted('character delete', true), {
+      cause: raw,
+    });
+    const client = deleteClient({ deleteError: carrier });
+    const verifyClient = clientStub();
+    dbMock.connect.mockResolvedValueOnce(client).mockResolvedValueOnce(verifyClient);
+
+    const failure = await deleteCharacter(7, 42).catch((error: unknown) => error);
+
+    expect(failure).toBeInstanceOf(CharacterFreeholdOperationOpen);
+    expect((failure as Error).cause).toBe(carrier);
+    expect(dbMock.connect).toHaveBeenCalledTimes(1);
+    expect(verifyClient.query).not.toHaveBeenCalled();
+    expect(dbMock.bustGuildList).not.toHaveBeenCalled();
+    expect(drainLinkChanges()).toHaveLength(0);
+  });
+
+  it('negative control: the same ambiguity carrier with no guard cause still runs the verify', async () => {
+    const carrier = new DbTransactionAborted('character delete', true);
+    const client = deleteClient({ deleteError: carrier });
+    // The stub verify read answers zero rows: the delete landed.
+    const verifyClient = clientStub();
+    dbMock.connect.mockResolvedValueOnce(client).mockResolvedValueOnce(verifyClient);
+
+    await expect(deleteCharacter(7, 42)).resolves.toBe(true);
+    expect(dbMock.connect).toHaveBeenCalledTimes(2);
+    expect(verifyClient.query.mock.calls.map((call) => String(call[0]))).toContain(
+      CHARACTER_DELETE_VERIFY_SQL,
+    );
+  });
 
   it('does not invalidate the guild directory when the delete fails', async () => {
     const error = Object.assign(new Error('delete failed'), { code: 'XX000' });

@@ -11,21 +11,27 @@ import { FREEHOLD_TIER_IDS } from '../src/sim/content/freehold';
 import { normalizeFreehold } from '../src/sim/freehold/persisted';
 import { FREEHOLD_VISIT_POLICIES } from '../src/sim/freehold/types';
 import type { SimContext } from '../src/sim/sim_context';
+import { LEASE_TTL_SECONDS, PROCESS_LEASE_HOLDER } from './character_lease_db';
 import { pool, runWithStatementTimeout } from './db';
-import {
-  type FreeholdQueryable,
-  freeholdForAccount,
-  mintFreeholdPlotId,
-  upsertFreehold,
-} from './freehold_db';
+import { readClaimedLoginDurables } from './freehold_claim_login';
+import { type FreeholdClaimRegistry, renewFreeholdClaims } from './freehold_claim_registry';
+import { freeholdForAccount, mintFreeholdPlotId } from './freehold_db';
+import { createFreeholdFencedWriter } from './freehold_fenced_write';
 import { loadFreeholdHearth } from './freehold_hearth_db';
-import { readLoginDurables } from './freehold_hearth_load';
 import { freeholdLivenessPorts } from './freehold_liveness';
+import { openFreeholdOperationsForAccount } from './freehold_operation_db';
+import {
+  createFreeholdOperationRecovery,
+  FREEHOLD_OPERATION_RECONCILERS,
+} from './freehold_operation_recovery';
 import {
   createFreeholdPersistStore,
+  FREEHOLD_PERSIST_LOGIN_BUDGET_MS,
   FREEHOLD_PERSIST_LOGIN_STATEMENT_TIMEOUT_MS,
   type FreeholdPersistStore,
 } from './freehold_persist';
+import { freeholdOwnerKeyForAccount } from './freehold_wire';
+import { REALM } from './realm';
 import { createKeyedSerialWriter } from './serial_writer';
 
 /**
@@ -49,10 +55,31 @@ export function createGameFreeholdPersistStore(deps: {
   readonly sim: { readonly ctx: SimContext };
   readonly backgroundDbGate?: {
     acquire(signal?: AbortSignal): Promise<{ release(): void } | null>;
+    tryAcquire?(): { release(): void } | null;
   };
+  /** 07a: this process's held plot claims. REQUIRED: the realm store reads and
+   *  writes only behind the global claim, so there is no unfenced shape. */
+  readonly claims: FreeholdClaimRegistry;
 }): FreeholdPersistStore {
   const writer = createKeyedSerialWriter<string>();
   const gate = deps.backgroundDbGate;
+  // 07a: the operation recovery pass, scheduled when this realm claims a plot.
+  // Its reconciler map is EMPTY in this release, so a pass issues nothing.
+  const recovery = createFreeholdOperationRecovery({
+    reconcilers: FREEHOLD_OPERATION_RECONCILERS,
+    discover: (accountId) => openFreeholdOperationsForAccount(pool, accountId),
+    tryAcquirePermit: () => gate?.tryAcquire?.() ?? null,
+    holdInFlight: (plotId) => deps.claims.holdInFlight(plotId),
+    warn: (message) => console.warn(message),
+  });
+  const fencedWrite = createFreeholdFencedWriter({
+    pool,
+    registry: deps.claims,
+    holder: PROCESS_LEASE_HOLDER,
+    realm: REALM,
+    ttlSeconds: LEASE_TTL_SECONDS,
+    nowMs: Date.now,
+  });
   return createFreeholdPersistStore({
     // The two-port fallback: unused on THIS host, because readDurables below is
     // bound and the store prefers it, but still BOUNDED. Extracting this file
@@ -97,16 +124,31 @@ export function createGameFreeholdPersistStore(deps: {
     // which port a host binds must not decide it. So the row is captured as it
     // is read, and any later rejection with a row in hand is answered as a
     // thrown CLOCK rather than a failed row.
+    //
+    // 07a: the transaction also takes the plot's GLOBAL CLAIM before it reads
+    // the row (server/freehold_claim_login.ts, the touch-set manifest's P4), so
+    // a realm proves it may serve the plot before it reads what it will serve,
+    // and another realm's live claim answers the repairable `claim_busy` hold
+    // instead of a silently write-blocked plot. The clock is read FIRST so a
+    // clock fault can never roll the claim back unseen; the asymmetry above is
+    // kept (the clock fails open, the plot fails closed).
     readDurables: (accountId, maxOwnedBytes) =>
-      readLoginDurables<FreeholdQueryable>(
-        (run) =>
-          runWithStatementTimeout(FREEHOLD_PERSIST_LOGIN_STATEMENT_TIMEOUT_MS, (query) =>
-            run({ query }),
-          ),
-        (db) => freeholdForAccount(db, accountId, maxOwnedBytes),
-        (db) => loadFreeholdHearth(db, accountId),
+      readClaimedLoginDurables(
+        {
+          pool,
+          registry: deps.claims,
+          holder: PROCESS_LEASE_HOLDER,
+          realm: REALM,
+          ttlSeconds: LEASE_TTL_SECONDS,
+          readRow: (db) => freeholdForAccount(db, accountId, maxOwnedBytes),
+          readHearth: (db) => loadFreeholdHearth(db, accountId),
+          nowMs: Date.now,
+          onClaimed: (claimed) => recovery.schedule(claimed),
+        },
+        accountId,
       ),
-    writeRow: (input) => upsertFreehold(pool, input),
+    // 07a: every write behind the plot's claim (server/freehold_fenced_write.ts).
+    writeRow: fencedWrite,
     // ONE declaration of the realm's identity sets, consumed by BOTH sides.
     // Declaring them twice is how a load that refuses a tier and a save that
     // accepts it come to disagree.
@@ -125,5 +167,37 @@ export function createGameFreeholdPersistStore(deps: {
     nowMs: Date.now,
     warn: (message) => console.warn(message),
     error: (message, err) => console.error(message, ...(err === undefined ? [] : [err])),
+  });
+}
+
+/**
+ * One pass of the claim renewer for the realm's store (the periodic flush's
+ * `renewFreeholdClaims`). A claim is WANTED while the store still needs the
+ * owner (a session reference or owed work), the sim still holds the owner's
+ * live record, a mutation or recovery pass is in flight for the plot, or the
+ * claim is younger than the login budget (a handshake between its first ask
+ * and its join bind). Every other claim is released. Never rejects.
+ */
+export function renewGameFreeholdClaims(
+  sim: { readonly ctx: SimContext },
+  store: Pick<FreeholdPersistStore, 'wantsClaim'>,
+  claims: FreeholdClaimRegistry,
+): Promise<void> {
+  return renewFreeholdClaims({
+    registry: claims,
+    pool,
+    holder: PROCESS_LEASE_HOLDER,
+    ttlSeconds: LEASE_TTL_SECONDS,
+    wanted: (claim, nowMs) => {
+      const ownerKey = freeholdOwnerKeyForAccount(claim.accountId);
+      return (
+        store.wantsClaim(ownerKey) ||
+        sim.ctx.freeholds.has(ownerKey) ||
+        claims.inFlight(claim.plotId) ||
+        nowMs - claim.acquiredAtMs < FREEHOLD_PERSIST_LOGIN_BUDGET_MS
+      );
+    },
+    nowMs: Date.now,
+    warn: (message) => console.warn(message),
   });
 }

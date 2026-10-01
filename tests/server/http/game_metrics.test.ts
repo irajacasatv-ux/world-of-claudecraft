@@ -23,6 +23,10 @@ import {
 import { FREEHOLD_LOAD_FAILURE_KINDS } from '../../../server/freehold_persist';
 import { freeholdPersistStats } from '../../../server/freehold_persist_registry';
 import {
+  FREEHOLD_RECEIPT_GROWTH_TABLES,
+  observeFreeholdReceiptGrowth,
+} from '../../../server/freehold_receipt_growth_monitor';
+import {
   type GameStateSource,
   registerGameStateMetrics,
   type TickPhaseMillis,
@@ -57,9 +61,12 @@ import {
   WOC_FISHING_EMPTY_HOOKS_TOTAL,
   WOC_FISHING_GOT_AWAYS_TOTAL,
   WOC_FISHING_KOI_TOTAL,
+  WOC_FREEHOLD_AUTHORITY_TOTAL,
+  WOC_FREEHOLD_CLAIMS_HELD,
   WOC_FREEHOLD_LOAD_FAILURES_TOTAL,
   WOC_FREEHOLD_PERSIST,
   WOC_FREEHOLD_PERSIST_TOTAL,
+  WOC_FREEHOLD_RECEIPT_GROWTH,
   WOC_FREEHOLD_REFUSED_TOTAL,
   WOC_GATHER_HARVESTS_TOTAL,
   WOC_GENERAL_CHAT_QUOTA_CACHE_ACCOUNTS,
@@ -843,6 +850,199 @@ describe('registerGameStateMetrics: gauges read the source at scrape time', () =
     expect(
       sampleValue(after, /^woc_bank_ledger_growth_budget\{measure="limit_warning"\} (\d+)$/m),
     ).toBe('0');
+  });
+});
+
+/** Every woc_freehold_receipt_growth sample, keyed `table/measure`, whatever
+ *  order prom-client renders the two labels in. */
+function receiptGrowthSamples(text: string): Record<string, string> {
+  const samples: Record<string, string> = {};
+  for (const line of text.split('\n')) {
+    if (!line.startsWith(`${WOC_FREEHOLD_RECEIPT_GROWTH}{`)) continue;
+    const table = line.match(/table="([^"]*)"/)?.[1];
+    const measure = line.match(/measure="([^"]*)"/)?.[1];
+    const value = line.match(/\} (\S+)$/)?.[1];
+    if (table !== undefined && measure !== undefined && value !== undefined) {
+      samples[`${table}/${measure}`] = value;
+    }
+  }
+  return samples;
+}
+
+// The readout is module-global, so these cases run in order: the cold scrape
+// first, before anything in this file observes a pass.
+describe('registerGameStateMetrics: woc_freehold_receipt_growth', () => {
+  it('exports the family with no series before the monitor has observed a pass', async () => {
+    expect(WOC_FREEHOLD_RECEIPT_GROWTH).toBe('woc_freehold_receipt_growth');
+    const registry = new Registry();
+    registerGameStateMetrics(registry, stubSource());
+    const text = await registry.metrics();
+
+    expect(text).toContain('# TYPE woc_freehold_receipt_growth gauge');
+    expect(receiptGrowthSamples(text)).toEqual({});
+  });
+
+  it('exports rows_estimate and bytes per fixed table, read at scrape time', async () => {
+    expect(
+      observeFreeholdReceiptGrowth(
+        [
+          {
+            table: 'freehold_operation_receipts',
+            present: true,
+            reltuples: 1234,
+            totalBytes: '57344',
+          },
+        ],
+        Date.now(),
+      ),
+    ).toBe(true);
+    const registry = new Registry();
+    registerGameStateMetrics(registry, stubSource());
+    const text = await registry.metrics();
+
+    expect(receiptGrowthSamples(text)).toEqual({
+      'freehold_operation_receipts/rows_estimate': '1234',
+      'freehold_operation_receipts/bytes': '57344',
+      'freehold_operation_receipts/observation_age_seconds': expect.any(String),
+    });
+    // The bounded label set: the fixed table list and the three measures, and
+    // nothing else ever becomes a label on this family.
+    expect(labelValues(text, 'table', WOC_FREEHOLD_RECEIPT_GROWTH)).toEqual(
+      new Set(FREEHOLD_RECEIPT_GROWTH_TABLES),
+    );
+    expect(labelValues(text, 'measure', WOC_FREEHOLD_RECEIPT_GROWTH)).toEqual(
+      new Set(['rows_estimate', 'bytes', 'observation_age_seconds']),
+    );
+    const familyLines = text
+      .split('\n')
+      .filter((line) => line.startsWith(`${WOC_FREEHOLD_RECEIPT_GROWTH}{`));
+    for (const line of familyLines) {
+      expect([...line.matchAll(/([a-z_]+)="/g)].map((m) => m[1]).sort()).toEqual([
+        'measure',
+        'table',
+      ]);
+    }
+
+    // A later pass moves the SAME registry's series: the gauge reads the
+    // readout at scrape time, never a value pushed at registration.
+    expect(
+      observeFreeholdReceiptGrowth(
+        [
+          {
+            table: 'freehold_operation_receipts',
+            present: true,
+            reltuples: 2000,
+            totalBytes: '65536',
+          },
+        ],
+        Date.now(),
+      ),
+    ).toBe(true);
+    expect(receiptGrowthSamples(await registry.metrics())).toEqual({
+      'freehold_operation_receipts/rows_estimate': '2000',
+      'freehold_operation_receipts/bytes': '65536',
+      'freehold_operation_receipts/observation_age_seconds': expect.any(String),
+    });
+  });
+
+  it('exports the last pass age and recomputes it on every scrape, so a stall is visible', async () => {
+    expect(
+      observeFreeholdReceiptGrowth(
+        [{ table: 'freehold_operation_receipts', present: true, reltuples: 7, totalBytes: '8' }],
+        1_000,
+      ),
+    ).toBe(true);
+    const registry = new Registry();
+    registerGameStateMetrics(registry, stubSource());
+    const now = vi.spyOn(Date, 'now').mockReturnValue(3_500);
+    try {
+      expect(receiptGrowthSamples(await registry.metrics())).toHaveProperty(
+        'freehold_operation_receipts/observation_age_seconds',
+        '2.5',
+      );
+      // No new pass landed: the values stay, and only the age grows.
+      now.mockReturnValue(61_000);
+      expect(receiptGrowthSamples(await registry.metrics())).toEqual({
+        'freehold_operation_receipts/rows_estimate': '7',
+        'freehold_operation_receipts/bytes': '8',
+        'freehold_operation_receipts/observation_age_seconds': '60',
+      });
+      // A pass stamped in the future (clock skew) clamps to zero, never negative.
+      expect(
+        observeFreeholdReceiptGrowth(
+          [{ table: 'freehold_operation_receipts', present: true, reltuples: 7, totalBytes: '8' }],
+          90_000,
+        ),
+      ).toBe(true);
+      expect(receiptGrowthSamples(await registry.metrics())).toHaveProperty(
+        'freehold_operation_receipts/observation_age_seconds',
+        '0',
+      );
+    } finally {
+      now.mockRestore();
+    }
+  });
+
+  it('omits rows_estimate while PostgreSQL does not know it (reltuples -1)', async () => {
+    const registry = new Registry();
+    registerGameStateMetrics(registry, stubSource());
+    // Seen first with a known estimate, so the omission below proves the
+    // series is dropped, not merely never set.
+    expect(
+      observeFreeholdReceiptGrowth(
+        [{ table: 'freehold_operation_receipts', present: true, reltuples: 10, totalBytes: '1' }],
+        Date.now(),
+      ),
+    ).toBe(true);
+    expect(receiptGrowthSamples(await registry.metrics())).toHaveProperty(
+      'freehold_operation_receipts/rows_estimate',
+      '10',
+    );
+
+    expect(
+      observeFreeholdReceiptGrowth(
+        [
+          {
+            table: 'freehold_operation_receipts',
+            present: true,
+            reltuples: -1,
+            totalBytes: '16384',
+          },
+        ],
+        Date.now(),
+      ),
+    ).toBe(true);
+    // Never a zero row count, which would read as an empty table; the byte
+    // measure is known and stays.
+    expect(receiptGrowthSamples(await registry.metrics())).toEqual({
+      'freehold_operation_receipts/bytes': '16384',
+      'freehold_operation_receipts/observation_age_seconds': expect.any(String),
+    });
+  });
+
+  it('omits every size series of a table this database has not applied', async () => {
+    const registry = new Registry();
+    registerGameStateMetrics(registry, stubSource());
+    expect(
+      observeFreeholdReceiptGrowth(
+        [
+          {
+            table: 'freehold_operation_receipts',
+            present: false,
+            reltuples: null,
+            totalBytes: null,
+          },
+        ],
+        Date.now(),
+      ),
+    ).toBe(true);
+    const text = await registry.metrics();
+
+    expect(text).toContain('# TYPE woc_freehold_receipt_growth gauge');
+    // Only the pass age: the absence was observed, so it is fresh, not stale.
+    expect(receiptGrowthSamples(text)).toEqual({
+      'freehold_operation_receipts/observation_age_seconds': expect.any(String),
+    });
   });
 });
 
@@ -2053,6 +2253,7 @@ describe('the housing persistence families', () => {
     writes: 23,
     writeFailures: 24,
     staleWrites: 25,
+    fencedWrites: 28,
     permitWaitMsTotal: 31,
     queueWaitMsTotal: 32,
     writeMsTotal: 33,
@@ -2123,6 +2324,8 @@ describe('the housing persistence families', () => {
     expect(labelled(text, WOC_FREEHOLD_PERSIST_TOTAL, 'writes')).toBe('23');
     expect(labelled(text, WOC_FREEHOLD_PERSIST_TOTAL, 'write_failures')).toBe('24');
     expect(labelled(text, WOC_FREEHOLD_PERSIST_TOTAL, 'stale_writes')).toBe('25');
+    // 07a: the fence named the other writer.
+    expect(labelled(text, WOC_FREEHOLD_PERSIST_TOTAL, 'fenced_writes')).toBe('28');
     expect(labelled(text, WOC_FREEHOLD_PERSIST_TOTAL, 'permit_wait_ms')).toBe('31');
     expect(labelled(text, WOC_FREEHOLD_PERSIST_TOTAL, 'queue_wait_ms')).toBe('32');
     // The statement durations the two wait totals deliberately exclude.
@@ -2263,5 +2466,94 @@ describe('the housing persistence families', () => {
       expect(line).not.toContain('account:');
       expect(line).not.toContain('plot:');
     }
+  });
+});
+
+describe('the housing authority families (07a)', () => {
+  // Every counter a distinct value, so a swapped label pair fails.
+  const stats = {
+    claimsHeld: 3,
+    claims: {
+      acquired: 101,
+      takeovers: 102,
+      busy: 103,
+      renewed: 104,
+      missedHeartbeats: 105,
+      lost: 106,
+      released: 107,
+      fencedWrites: 108,
+      selfAdopted: 109,
+    },
+    trips: {
+      started: 201,
+      advanced: 202,
+      cooldown: 203,
+      corrupt: 204,
+      unsupported: 205,
+      refused: 206,
+      failed: 207,
+      notRun: 213,
+      unresolved: 208,
+      refusedAfterCommit: 209,
+      refusedPreQueue: 210,
+      metered: 211,
+      abandoned: 212,
+    },
+  };
+  const measured = (text: string, measure: string): string | undefined =>
+    sampleValue(
+      text,
+      new RegExp(`^${WOC_FREEHOLD_AUTHORITY_TOTAL}\\{measure="${measure}"\\} (\\d+)$`, 'm'),
+    );
+
+  it('publishes the held claims and every claim and trip counter by fixed measure', async () => {
+    const registry = new Registry();
+    registerGameStateMetrics(registry, stubSource({ freeholdAuthority: () => stats }));
+    const text = await registry.metrics();
+    expect(sampleValue(text, new RegExp(`^${WOC_FREEHOLD_CLAIMS_HELD} (\\d+)$`, 'm'))).toBe('3');
+    const expected: Record<string, string> = {
+      claim_acquired: '101',
+      claim_takeovers: '102',
+      claim_busy: '103',
+      claim_renewed: '104',
+      claim_missed_heartbeats: '105',
+      claim_lost: '106',
+      claim_released: '107',
+      claim_fenced_writes: '108',
+      claim_self_adopted: '109',
+      trip_started: '201',
+      trip_advanced: '202',
+      trip_cooldown: '203',
+      trip_corrupt: '204',
+      trip_unsupported: '205',
+      trip_refused: '206',
+      trip_failed: '207',
+      trip_not_run: '213',
+      trip_unresolved: '208',
+      trip_refused_after_commit: '209',
+      trip_refused_pre_queue: '210',
+      trip_metered: '211',
+      trip_abandoned: '212',
+    };
+    for (const [measure, value] of Object.entries(expected)) {
+      expect(measured(text, measure), measure).toBe(value);
+    }
+    // The label set is exactly that, so a stray identity label cannot ride it.
+    const series = text
+      .split('\n')
+      .filter((line) => line.startsWith(`${WOC_FREEHOLD_AUTHORITY_TOTAL}{`));
+    expect(series).toHaveLength(Object.keys(expected).length);
+    for (const line of series)
+      expect(line).toMatch(/^woc_freehold_authority_total\{measure="[a-z_]+"\} \d+$/);
+  });
+
+  it('scrapes zeros and no authority series when the host registers no source', async () => {
+    const registry = new Registry();
+    registerGameStateMetrics(registry, stubSource({}));
+    const text = await registry.metrics();
+    expect(sampleValue(text, new RegExp(`^${WOC_FREEHOLD_CLAIMS_HELD} (\\d+)$`, 'm'))).toBe('0');
+    expect(
+      text.split('\n').some((line) => line.startsWith(`${WOC_FREEHOLD_AUTHORITY_TOTAL}{`)),
+    ).toBe(false);
   });
 });

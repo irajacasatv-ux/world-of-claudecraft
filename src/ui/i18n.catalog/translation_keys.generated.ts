@@ -153,6 +153,7 @@ export type TranslationKeyFlat =
   | 'apiError.character.already_in_world'
   | 'apiError.character.delete_busy'
   | 'apiError.character.delete_confirm'
+  | 'apiError.character.freehold_operation_open'
   | 'apiError.character.invalid_appearance'
   | 'apiError.character.invalid_class'
   | 'apiError.character.limit_reached'

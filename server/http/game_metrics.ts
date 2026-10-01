@@ -20,7 +20,9 @@
 // SYNCED from the GameStateSource at scrape time; see their registration below.
 // The offline-writer fence refusals sync the same way but read their emitting
 // module DIRECTLY (server/offline_fence_refusals.ts), like the bank-ledger
-// growth budget and the auth-guard cache stats already do: the counters are
+// growth budget, the keep-forever housing growth readout
+// (server/freehold_receipt_growth_monitor.ts) and the auth-guard cache stats
+// already do: the counters are
 // process-local and monotonic there, and routing them through
 // GameStateSource would only add a hop GameServer has no part in.
 //
@@ -30,7 +32,8 @@
 // causes (WS_DROP_CAUSES), the fixed guild-bank incident kinds
 // (GUILD_BANK_INCIDENTS), the fixed vault-ledger incident kinds
 // (VAULT_LEDGER_INCIDENTS), the fixed offline-writer families
-// (OFFLINE_FENCE_WRITERS), and the content-derived economy and fishing
+// (OFFLINE_FENCE_WRITERS), the fixed keep-forever housing tables
+// (FREEHOLD_RECEIPT_GROWTH_TABLES), and the content-derived economy and fishing
 // vocabularies (COPPER_FLOW_SOURCES, HARVEST_BANDS, NODE_TIERS, FISHING_BANDS,
 // ROD_FEE_RECIPE_IDS). Nothing per-player and nothing per-guild (account id,
 // character id, guild id, name, ip) is ever a label. The tick-phase series count is fixed at
@@ -77,9 +80,14 @@ import {
   ROD_FEE_RECIPE_IDS,
   rodFeeForRecipe,
 } from '../fishing_telemetry';
+import type { FreeholdAuthorityStats } from '../freehold_authority_registry';
 import { FREEHOLD_JOIN_VERDICTS } from '../freehold_join_answer';
 import type { FreeholdPersistStats } from '../freehold_persist';
 import { FREEHOLD_LOAD_FAILURE_KINDS } from '../freehold_persist';
+import {
+  FREEHOLD_RECEIPT_GROWTH_TABLES,
+  freeholdReceiptGrowthReadout,
+} from '../freehold_receipt_growth_monitor';
 import { OFFLINE_FENCE_WRITERS, offlineFenceRefusals } from '../offline_fence_refusals';
 import { wocAuthGuardCacheStats } from '../woc_auth_guard_cache';
 import {
@@ -137,6 +145,17 @@ export const WOC_FREEHOLD_PERSIST_TOTAL = 'woc_freehold_persist_total';
  *  an unreadable row, a full local admission cap, a missing background permit
  *  and a thrown read need four different operator responses. */
 export const WOC_FREEHOLD_LOAD_FAILURES_TOTAL = 'woc_freehold_load_failures_total';
+
+/** Growth of the KEEP-FOREVER housing tables (today the operation receipts,
+ *  permanent replay authority that no sweep may delete), by fixed table and
+ *  measure, from the process-local readout of
+ *  server/freehold_receipt_growth_monitor.ts: observed, because it is never
+ *  swept. */
+export const WOC_FREEHOLD_RECEIPT_GROWTH = 'woc_freehold_receipt_growth';
+/** 07a: global plot claims this process holds right now. */
+export const WOC_FREEHOLD_CLAIMS_HELD = 'woc_freehold_claims_held';
+/** 07a: the housing authority's cumulative counters (claims and Hearth trips). */
+export const WOC_FREEHOLD_AUTHORITY_TOTAL = 'woc_freehold_authority_total';
 
 /** Achieved sim ticks per wall-clock second (target is 20 Hz). */
 export const WOC_SIM_TICK_HZ = 'woc_sim_tick_hz';
@@ -448,6 +467,9 @@ export interface GameStateSource {
   /** Live in-memory owner records, read without querying storage. */
   freeholdRecords(): number;
   freeholdPersist(): FreeholdPersistStats;
+  /** 07a: the claim and Hearth trip counters (server/freehold_authority_registry.ts).
+   *  Optional so a host without housing authority scrapes zeros. */
+  freeholdAuthority?(): FreeholdAuthorityStats;
   /** Achieved sim Hz, or null while the rate meter is still warming up. */
   simTickHz(): number | null;
   /** Character-save FIFO keys with a queued or running write. */
@@ -742,6 +764,51 @@ export function registerGameStateMetrics(
     },
   });
 
+  new Gauge({
+    name: WOC_FREEHOLD_CLAIMS_HELD,
+    help: 'Global plot claims (07a) this realm process holds right now: the plots it is the one authority for. A count only, never a plot or account identity.',
+    registers: [registry],
+    collect() {
+      this.set(source.freeholdAuthority?.().claimsHeld ?? 0);
+    },
+  });
+
+  new Counter({
+    name: WOC_FREEHOLD_AUTHORITY_TOTAL,
+    help: "Housing authority CUMULATIVE totals by fixed measure (07a). claim_*: global plot claims acquired, taken over from an expired holder, refused busy because another realm holds them, renewed, missed heartbeats (a renewal that threw or skipped a locked row, never a loss), lost to another holder, released, writes fenced, and this realm's own ambiguous writes adopted. trip_*: remote Hearth trips started, advanced, refused on the durable cooldown, refused on a corrupt or unsupported clock, refused by a participant, failed, never reaching the hook, left unresolved after a lost commit, committed but refused by the sim on re-dispatch, denied before any queue, metered by the per-account refusal memo, and abandoned because the session left. Counts only.",
+    labelNames: ['measure'],
+    registers: [registry],
+    collect() {
+      this.reset();
+      const stats = source.freeholdAuthority?.();
+      if (!stats) return;
+      const c = stats.claims;
+      this.inc({ measure: 'claim_acquired' }, c.acquired);
+      this.inc({ measure: 'claim_takeovers' }, c.takeovers);
+      this.inc({ measure: 'claim_busy' }, c.busy);
+      this.inc({ measure: 'claim_renewed' }, c.renewed);
+      this.inc({ measure: 'claim_missed_heartbeats' }, c.missedHeartbeats);
+      this.inc({ measure: 'claim_lost' }, c.lost);
+      this.inc({ measure: 'claim_released' }, c.released);
+      this.inc({ measure: 'claim_fenced_writes' }, c.fencedWrites);
+      this.inc({ measure: 'claim_self_adopted' }, c.selfAdopted);
+      const t = stats.trips;
+      this.inc({ measure: 'trip_started' }, t.started);
+      this.inc({ measure: 'trip_advanced' }, t.advanced);
+      this.inc({ measure: 'trip_cooldown' }, t.cooldown);
+      this.inc({ measure: 'trip_corrupt' }, t.corrupt);
+      this.inc({ measure: 'trip_unsupported' }, t.unsupported);
+      this.inc({ measure: 'trip_refused' }, t.refused);
+      this.inc({ measure: 'trip_failed' }, t.failed);
+      this.inc({ measure: 'trip_not_run' }, t.notRun);
+      this.inc({ measure: 'trip_unresolved' }, t.unresolved);
+      this.inc({ measure: 'trip_refused_after_commit' }, t.refusedAfterCommit);
+      this.inc({ measure: 'trip_refused_pre_queue' }, t.refusedPreQueue);
+      this.inc({ measure: 'trip_metered' }, t.metered);
+      this.inc({ measure: 'trip_abandoned' }, t.abandoned);
+    },
+  });
+
   new Counter({
     name: WOC_FREEHOLD_PERSIST_TOTAL,
     help: 'Housing persistence store CUMULATIVE totals by fixed measure: loads, writes, failures, stale compare-and-swap refusals, the admission and queue waits, the statement durations those waits deliberately exclude, total bytes written, the reads and time of the handshake re-ask, and one measure per join install verdict. A Counter rather than a Gauge so rate() and increase() get counter-reset handling across a realm restart.',
@@ -755,6 +822,8 @@ export function registerGameStateMetrics(
       this.inc({ measure: 'writes' }, state.writes);
       this.inc({ measure: 'write_failures' }, state.writeFailures);
       this.inc({ measure: 'stale_writes' }, state.staleWrites);
+      // 07a: writes refused because another realm now holds the plot's claim.
+      this.inc({ measure: 'fenced_writes' }, state.fencedWrites);
       this.inc({ measure: 'permit_wait_ms' }, state.permitWaitMsTotal);
       this.inc({ measure: 'queue_wait_ms' }, state.queueWaitMsTotal);
       // The statement itself, which the two wait totals exclude: a durable
@@ -811,6 +880,35 @@ export function registerGameStateMetrics(
       // instead of being absent.
       const byKind = housingStats(source).loadFailuresByKind;
       for (const kind of FREEHOLD_LOAD_FAILURE_KINDS) this.inc({ kind }, byKind[kind] ?? 0);
+    },
+  });
+
+  new Gauge({
+    name: WOC_FREEHOLD_RECEIPT_GROWTH,
+    help: 'Keep-forever housing tables (the operation receipts: permanent replay authority, never swept) by fixed table and measure, refreshed once per minute by one O(1) catalog read and served from the process-local readout, never queried at scrape time. rows_estimate is pg_class.reltuples, the planner estimate vacuum and analyze maintain, and has no series while PostgreSQL does not know it (before the first vacuum or analyze); bytes is pg_total_relation_size (heap, indexes and TOAST). A table this database has not applied has neither. observation_age_seconds is the age of the last accepted pass, for every watched table once one has landed, so a monitor that keeps skipping (a busy gate or pool) or failing is visible instead of serving frozen values.',
+    labelNames: ['table', 'measure'],
+    registers: [registry],
+    collect() {
+      // Rebuilt every scrape, so an unknown value is OMITTED rather than left at
+      // its last reading (the business-metrics setIfPresent convention). The
+      // fixed list is walked, never the readout's own entries, so the table
+      // label vocabulary is a property of this file.
+      this.reset();
+      const readout = freeholdReceiptGrowthReadout();
+      for (const table of FREEHOLD_RECEIPT_GROWTH_TABLES) {
+        if (readout.observedAtMs !== null) {
+          this.set(
+            { table, measure: 'observation_age_seconds' },
+            Math.max(0, (Date.now() - readout.observedAtMs) / 1000),
+          );
+        }
+        const reading = readout.tables.find((candidate) => candidate.table === table);
+        if (!reading?.present) continue;
+        if (reading.rowsEstimate !== null) {
+          this.set({ table, measure: 'rows_estimate' }, reading.rowsEstimate);
+        }
+        if (reading.bytes !== null) this.set({ table, measure: 'bytes' }, reading.bytes);
+      }
     },
   });
 

@@ -6770,6 +6770,7 @@ export const nl_NL: EnTranslations = {
       "rename_not_permitted": "Dit personage hernoemen is niet toegestaan.",
       "delete_confirm": "Typ de personagenaam om de verwijdering te bevestigen.",
       "storage_purchase_open": "Een opslag-aankoop moet voltooid of opgelost zijn voordat dit personage kan worden verwijderd.",
+      "freehold_operation_open": "A Freehold operation must finish or be resolved before this character can be deleted.",
       "delete_busy": "De wereld is bezet. Probeer dit personage zo meteen opnieuw te verwijderen.",
       "already_in_world": "Personage is al in de wereld.",
       "taken_over": "Je personage is overgenomen door een andere sessie.",

@@ -2227,7 +2227,7 @@ export class Sim {
       riftPortals: cfg.riftPortals ?? false,
       compulsoryTutorial: cfg.compulsoryTutorial ?? false,
       freeholdsEnabled: cfg.freeholdsEnabled ?? false,
-      freeholdKeyAdmission: cfg.freeholdKeyAdmission ?? (() => true),
+      freeholdKeyAdmission: cfg.freeholdKeyAdmission ?? (() => 'admit' as const),
       freeholdDevGrantEnabled: cfg.freeholdDevGrantEnabled ?? false,
       lockoutNowMs: cfg.lockoutNowMs ?? (() => Math.floor(this.time * 1000)),
       raidResetMs: cfg.raidResetMs ?? ((nowMs: number) => nowMs + DEFAULT_RAID_LOCKOUT_MS),

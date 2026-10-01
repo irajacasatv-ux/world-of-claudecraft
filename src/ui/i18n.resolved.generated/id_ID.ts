@@ -6770,6 +6770,7 @@ export const id_ID: EnTranslations = {
       "rename_not_permitted": "Mengganti nama karakter ini tidak diperbolehkan.",
       "delete_confirm": "Ketik nama karakter untuk mengonfirmasi penghapusan.",
       "storage_purchase_open": "Pembelian penyimpanan harus selesai atau diselesaikan sebelum karakter ini dapat dihapus.",
+      "freehold_operation_open": "A Freehold operation must finish or be resolved before this character can be deleted.",
       "delete_busy": "Realm sedang sibuk. Coba hapus karakter ini lagi sebentar nanti.",
       "already_in_world": "Karakter sudah berada di dalam dunia.",
       "taken_over": "Karakter Anda telah diambil alih oleh sesi lain.",

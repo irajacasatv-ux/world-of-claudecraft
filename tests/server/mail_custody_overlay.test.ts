@@ -706,14 +706,26 @@ describe('bake and merge wiring order', () => {
     const firstAwaitAt = body.indexOf('await ');
     const deleteAt = body.indexOf('deleteBakedCustodyRefsIn(');
     const advanceAt = body.indexOf('advanceCustodyWatermarkIn(');
-    // transaction.commit(), not a raw client.query('COMMIT'): the fenced save
-    // rides the deadline wrapper that owns the statement/lock timeouts and the
-    // abort-driven pg_cancel_backend, so the commit goes through it too.
-    const commitAt = body.indexOf('await transaction.commit()');
+    // Through the deadline wrapper, not a raw client.query('COMMIT'): the fenced
+    // save rides the wrapper that owns the statement/lock timeouts and the
+    // abort-driven pg_cancel_backend, so the commit goes through it too. Since
+    // 07a the save commits via commitWithHousing (server/character_save_housing.ts),
+    // handed that SAME transaction: it commits it directly when no housing hook
+    // rides, and runs the hook then commitChecked() when one does.
+    const commitAt = body.indexOf('await commitWithHousing(transaction, housing, locked)');
     const confirmAt = body.indexOf('confirmBakedCustodyRefs(');
     for (const at of [snapshotAt, firstAwaitAt, deleteAt, commitAt, confirmAt]) {
       expect(at).toBeGreaterThan(-1);
     }
+    expect(body.split('commitWithHousing(')).toHaveLength(2);
+    expect(body).not.toContain("query('COMMIT')");
+    const housingSrc = stripComments(
+      readFileSync(path.resolve(process.cwd(), 'server/character_save_housing.ts'), 'utf8'),
+    );
+    const commitBody = boundedBody(housingSrc, 'export async function commitWithHousing', '\n}\n');
+    expect(commitBody).toContain('await transaction.commit();');
+    expect(commitBody).toContain('await transaction.commitChecked();');
+    expect(commitBody).not.toContain("query('COMMIT')");
     // Snapshot at entry, before the first await; the DELETE is inside the
     // transaction, and confirm is on the committed arm only, so
     // neither the fence-refused false arm nor a rollback can forget a

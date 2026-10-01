@@ -19,13 +19,14 @@ import {
   FREEHOLD_GATE_TEMPLATE_ID,
   HEARTH_KEY_COOLDOWN_MS,
 } from '../src/sim/freehold/gate_rules';
+import { mergeFreeholdKeyReadyAt, useHearthKey } from '../src/sim/freehold/hearth_key';
 import { enterFreehold } from '../src/sim/freehold/instance';
 import { evictFreehold, serializeFreehold, setFreeholdTier } from '../src/sim/freehold/state';
 import { JAIL_VISITOR_POS } from '../src/sim/jail';
 import { riftInstanceAtPos } from '../src/sim/rift/runs';
 import { Sim } from '../src/sim/sim';
 import { bgCarryingFlag, startBgMatch } from '../src/sim/social/battleground';
-import { FISHING_CAST_ID, type SimConfig } from '../src/sim/types';
+import { FISHING_CAST_ID, type FreeholdKeyAdmission, type SimConfig } from '../src/sim/types';
 
 function setup(extra: Partial<SimConfig> = {}) {
   let now = 1000;
@@ -222,7 +223,7 @@ describe('Freehold Gate authoritative confirmation', () => {
     expect(dungeonAt(sim.player.pos.x)?.id).toBe('freehold_inn_room');
   });
   it('physical entry ignores the remote cooldown and unavailable key participant', () => {
-    const { sim, pid, near } = setup({ freeholdKeyAdmission: () => false });
+    const { sim, pid, near } = setup({ freeholdKeyAdmission: () => 'deny' });
     sim.freeholdKeyReadyAtMs.set(`entity:${pid}`, 9999999);
     near();
     sim.freeholdEnter();
@@ -327,7 +328,7 @@ describe('Hearth Key isolated account travel', () => {
     expect(setup().sim.freeholdKeyReadyAtMs.size).toBe(0);
   });
   it('already selected home is a silent no-op before remote authority or clock reads', () => {
-    const admission = vi.fn(() => false);
+    const admission = vi.fn((): FreeholdKeyAdmission => 'deny');
     const clock = vi.fn(() => 50);
     const { sim, pid } = setup({ freeholdKeyAdmission: admission, lockoutNowMs: clock });
     key(sim);
@@ -342,7 +343,7 @@ describe('Hearth Key isolated account travel', () => {
     expect(clock).not.toHaveBeenCalled();
   });
   it('refuses a foreign owner claim of the selected tier before the current-home no-op', () => {
-    const admission = vi.fn(() => true);
+    const admission = vi.fn((): FreeholdKeyAdmission => 'admit');
     const clock = vi.fn(() => 1000);
     const { sim } = setup({ freeholdKeyAdmission: admission, lockoutNowMs: clock });
     key(sim);
@@ -361,7 +362,7 @@ describe('Hearth Key isolated account travel', () => {
     expect(clock).not.toHaveBeenCalled();
   });
   it('rejects a forged key use without possession before any housing action', () => {
-    const admission = vi.fn(() => true);
+    const admission = vi.fn((): FreeholdKeyAdmission => 'admit');
     const { sim } = setup({ freeholdKeyAdmission: admission });
     expect(sim.countItem('hearth_key')).toBe(0);
     const before = travelState(sim);
@@ -376,7 +377,7 @@ describe('Hearth Key isolated account travel', () => {
     expect(draws).not.toHaveBeenCalled();
   });
   it('uses a non-key item through its own effect without any housing transition', () => {
-    const admission = vi.fn(() => true);
+    const admission = vi.fn((): FreeholdKeyAdmission => 'admit');
     const { sim } = setup({ freeholdKeyAdmission: admission });
     sim.addItem('minor_healing_potion', 1);
     sim.player.hp = sim.player.maxHp - 50;
@@ -395,7 +396,7 @@ describe('Hearth Key isolated account travel', () => {
     expect(admission).not.toHaveBeenCalled();
   });
   it('another owned tier is still instanced and an unavailable participant cannot authorize', () => {
-    const { sim, pid } = setup({ freeholdKeyAdmission: () => false });
+    const { sim, pid } = setup({ freeholdKeyAdmission: () => 'deny' });
     key(sim);
     enterFreehold(sim.ctx, pid);
     setFreeholdTier(sim.ctx, `entity:${pid}`, 'cottage');
@@ -407,6 +408,115 @@ describe('Hearth Key isolated account travel', () => {
     sim.useItem('hearth_key');
     expect(reasons(sim)).toEqual(['busy']);
     expect(sim.freeholdKeyReadyAtMs.size).toBe(0);
+  });
+  it('reads the local clock BEFORE admission: an unready key never consults the host', () => {
+    const admission = vi.fn((): FreeholdKeyAdmission => 'admit');
+    const { sim, pid, advance } = setup({ freeholdKeyAdmission: admission });
+    key(sim);
+    sim.freeholdKeyReadyAtMs.set(`entity:${pid}`, 1001);
+    // A key spammed through its cooldown is refused locally, at no host cost.
+    for (let i = 0; i < 3; i++) refusal(sim, () => sim.useItem('hearth_key'), 'cooldown');
+    expect(admission).not.toHaveBeenCalled();
+    // Positive control: at the exact boundary (now 1001, ready at 1001) the
+    // same spy IS consulted, once, with the owner key and the pid.
+    advance(1);
+    sim.useItem('hearth_key');
+    expect(admission).toHaveBeenCalledTimes(1);
+    expect(admission).toHaveBeenCalledWith(`entity:${pid}`, pid);
+    expect(dungeonAt(sim.player.pos.x)?.id).toBe('freehold_inn_room');
+    expect(sim.freeholdKeyReadyAtMs.get(`entity:${pid}`)).toBe(3601001);
+    // The order decides the REASON too: a host that would deny is never asked
+    // while the clock is unready, so the player reads cooldown, not busy.
+    const denying = vi.fn((): FreeholdKeyAdmission => 'deny');
+    const realm = setup({ freeholdKeyAdmission: denying });
+    key(realm.sim);
+    realm.sim.freeholdKeyReadyAtMs.set(`entity:${realm.pid}`, 1001);
+    refusal(realm.sim, () => realm.sim.useItem('hearth_key'), 'cooldown');
+    expect(denying).not.toHaveBeenCalled();
+  });
+  it('a pending admission is silent: no denial, nothing moved, nothing spent, no draw', () => {
+    const admission = vi.fn((): FreeholdKeyAdmission => 'pending');
+    const { sim, pid } = setup({ freeholdKeyAdmission: admission });
+    key(sim);
+    const before = travelState(sim);
+    const draws = vi.fn();
+    sim.rng.setObserver(draws);
+    expect(useHearthKey(sim.ctx, pid)).toBe(false);
+    sim.useItem('hearth_key');
+    expect(sim.drainEvents()).toEqual([]);
+    expect(travelState(sim)).toEqual(before);
+    expect(sim.countItem('hearth_key')).toBe(1);
+    expect(dungeonAt(sim.player.pos.x)).toBeNull();
+    expect(sim.freeholdKeyReadyAtMs.has(`entity:${pid}`)).toBe(false);
+    // It WAS asked both times: the silence is the pending answer, not a skip.
+    expect(admission).toHaveBeenCalledTimes(2);
+    expect(admission).toHaveBeenNthCalledWith(1, `entity:${pid}`, pid);
+    expect(admission).toHaveBeenNthCalledWith(2, `entity:${pid}`, pid);
+    expect(draws).not.toHaveBeenCalled();
+    sim.rng.setObserver(null);
+  });
+  it('only an exact admit runs the trip: deny and any other answer refuse busy', () => {
+    // Fail closed: a legacy boolean, a wrong case or no answer at all is not
+    // 'admit', so none of them can buy a trip.
+    for (const answer of ['deny', true, 'ADMIT', undefined]) {
+      const { sim } = setup({
+        freeholdKeyAdmission: () => answer as unknown as FreeholdKeyAdmission,
+      });
+      key(sim);
+      refusal(sim, () => sim.useItem('hearth_key'), 'busy');
+    }
+    // The contrast arm: the exact 'admit' enters and spends the clock.
+    const { sim, pid } = setup({ freeholdKeyAdmission: () => 'admit' });
+    key(sim);
+    expect(useHearthKey(sim.ctx, pid)).toBe(true);
+    expect(dungeonAt(sim.player.pos.x)?.id).toBe('freehold_inn_room');
+    expect(sim.freeholdKeyReadyAtMs.get(`entity:${pid}`)).toBe(3601000);
+  });
+  it("evicts an owner's live clock at its LAST session's leave, with or without a record", () => {
+    const { sim } = setup();
+    const a = sim.addPlayer('warrior', 'ClockA', { freeholdOwnerKey: 'account:31' });
+    const b = sim.addPlayer('mage', 'ClockB', { freeholdOwnerKey: 'account:31' });
+    const c = sim.addPlayer('rogue', 'ClockC', { freeholdOwnerKey: 'account:32' });
+    const d = sim.addPlayer('priest', 'ClockD', { freeholdOwnerKey: 'account:33' });
+    // account:31 holds NO record (a held or absent plot joins without one): the
+    // case a record-gated eviction would keep for the life of the Sim.
+    evictFreehold(sim.ctx, 'account:31');
+    expect(sim.freeholds.has('account:31')).toBe(false);
+    expect(sim.freeholds.has('account:32')).toBe(true);
+    mergeFreeholdKeyReadyAt(sim.ctx, 'account:31', 5000);
+    mergeFreeholdKeyReadyAt(sim.ctx, 'account:32', 6000);
+    mergeFreeholdKeyReadyAt(sim.ctx, 'account:33', 7000);
+    expect([...sim.freeholdKeyReadyAtMs]).toEqual([
+      ['account:31', 5000],
+      ['account:32', 6000],
+      ['account:33', 7000],
+    ]);
+    // A second live session of the same owner keeps the clock.
+    sim.removePlayer(a);
+    expect(sim.freeholdKeyReadyAtMs.get('account:31')).toBe(5000);
+    // The last one takes it, and seeds no record on the way out.
+    sim.removePlayer(b);
+    expect(sim.freeholdKeyReadyAtMs.has('account:31')).toBe(false);
+    expect(sim.freeholds.has('account:31')).toBe(false);
+    // With a record, the last leave takes the clock and the record together.
+    sim.removePlayer(c);
+    expect(sim.freeholdKeyReadyAtMs.has('account:32')).toBe(false);
+    expect(sim.freeholds.has('account:32')).toBe(false);
+    // The owner still online keeps both, untouched.
+    expect(sim.freeholdKeyReadyAtMs.get('account:33')).toBe(7000);
+    expect(sim.freeholds.has('account:33')).toBe(true);
+    expect(sim.players.has(d)).toBe(true);
+
+    // And with NO record anywhere in the Sim, the clock alone still goes.
+    const bare = setup();
+    const e = bare.sim.addPlayer('warrior', 'ClockE', { freeholdOwnerKey: 'account:34' });
+    for (const owner of [...bare.sim.freeholds.keys()]) evictFreehold(bare.sim.ctx, owner);
+    expect(bare.sim.freeholds.size).toBe(0);
+    mergeFreeholdKeyReadyAt(bare.sim.ctx, 'account:34', 8000);
+    expect(bare.sim.freeholdKeyReadyAtMs.get('account:34')).toBe(8000);
+    bare.sim.removePlayer(e);
+    expect(bare.sim.freeholdKeyReadyAtMs.size).toBe(0);
+    expect(bare.sim.freeholds.size).toBe(0);
   });
   it.each([
     [
@@ -580,13 +690,19 @@ describe('Public gate and key transition evidence', () => {
   it.each(['unavailable authority', 'invalid clock', 'cooldown'])(
     'key %s refusal preserves all travel state',
     (context) => {
+      const admission = vi.fn(
+        (): FreeholdKeyAdmission => (context === 'unavailable authority' ? 'deny' : 'admit'),
+      );
       const { sim } = setup({
-        freeholdKeyAdmission: () => context !== 'unavailable authority',
+        freeholdKeyAdmission: admission,
         ...(context === 'invalid clock' ? { lockoutNowMs: () => NaN } : {}),
       });
       key(sim);
       if (context === 'cooldown') sim.freeholdKeyReadyAtMs.set(`entity:${sim.primaryId}`, 1001);
       refusal(sim, () => sim.useItem('hearth_key'), context === 'cooldown' ? 'cooldown' : 'busy');
+      // The local clock is read BEFORE the host: an unreadable or unready clock
+      // refuses without consulting admission, and only a ready one reaches it.
+      expect(admission).toHaveBeenCalledTimes(context === 'unavailable authority' ? 1 : 0);
     },
   );
   it.each(['x', 'y', 'z'] as const)('rejects nonfinite %s positions on both surfaces', (axis) => {

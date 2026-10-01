@@ -64,7 +64,11 @@ import { isBlocked } from '../src/sim/colliders';
 import { DUNGEONS, instanceOrigin } from '../src/sim/data';
 import { setFreeholdTier } from '../src/sim/freehold/state';
 import type { InstanceSlot } from '../src/sim/sim';
-import { INSTANCE_EMPTY_TIMEOUT, type PlayerClass } from '../src/sim/types';
+import {
+  type FreeholdKeyAdmission,
+  INSTANCE_EMPTY_TIMEOUT,
+  type PlayerClass,
+} from '../src/sim/types';
 import { type FakeClient, fakeWs } from './helpers/bare_client';
 
 // The two owner-claimed rooms sit in the dungeon overflow band at 600 yd
@@ -694,8 +698,9 @@ describe.each(['inn_room', 'cottage'] as const)('online %s occupied arrival', (t
     (surface) => {
       function replay() {
         const server = litServer();
-        // This dependency proves dispatch behavior only, never durable authority.
-        server.sim.cfg.freeholdKeyAdmission = () => true;
+        // This dependency proves dispatch behavior only, never durable authority:
+        // it answers the sim's 'admit' so the arrival, not the trip, is pinned.
+        server.sim.cfg.freeholdKeyAdmission = (): FreeholdKeyAdmission => 'admit';
         server.sim.cfg.lockoutNowMs = () => 9000;
         const a = joinAs(server, fakeWs(), 4811, 481101, 'First', { isGm: true });
         const b = joinAs(server, fakeWs(), 4811, 481102, 'Second', { isGm: true });
@@ -737,7 +742,15 @@ describe.each(['inn_room', 'cottage'] as const)('online %s occupied arrival', (t
     '%s dispatch refuses a saturated owned room without moving occupants or spending the key clock',
     (surface) => {
       const server = litServer();
-      server.sim.cfg.freeholdKeyAdmission = () => true;
+      // 'admit', never a non-admit answer: a 'deny' would also emit busy, so only
+      // an admitting participant, recorded as consulted below, makes the busy
+      // the saturated room's. A plain closure, not a vi.fn, so no call record
+      // keeps the realm config alive past the case.
+      const asked: [string, number][] = [];
+      server.sim.cfg.freeholdKeyAdmission = (ownerKey, pid): FreeholdKeyAdmission => {
+        asked.push([ownerKey, pid]);
+        return 'admit';
+      };
       server.sim.cfg.lockoutNowMs = () => 9000;
       const a = joinAs(server, fakeWs(), 4812, 481201, 'First', { isGm: true });
       const b = joinAs(server, fakeWs(), 4812, 481202, 'Second', { isGm: true });
@@ -778,6 +791,10 @@ describe.each(['inn_room', 'cottage'] as const)('online %s occupied arrival', (t
       expect(server.sim.drainEvents()).toEqual([
         { type: 'freeholdDenied', pid: b.pid, reason: 'busy' },
       ]);
+      // The key asked the host exactly once (its clock was ready at 8999 against
+      // 9000) and was ADMITTED, so its busy is the saturated room's; the gate
+      // never consults the key admission at all.
+      expect(asked).toEqual(surface === 'key' ? [['account:4812', b.pid]] : []);
       expect(state()).toEqual(before);
       expect(draws).not.toHaveBeenCalled();
     },
@@ -788,7 +805,7 @@ describe('remote-key shared-account clock through real server dispatch', () => {
   it('shares physical claim and isolated key deadline across alts while another account stays independent', () => {
     const server = litServer();
     // Explicit test participant, never claimed as durable production authority.
-    const participant = vi.fn(() => true);
+    const participant = vi.fn((_ownerKey: string, _pid: number): FreeholdKeyAdmission => 'admit');
     server.sim.cfg.freeholdKeyAdmission = participant;
     server.sim.cfg.lockoutNowMs = () => 9000;
     const a = joinAs(server, fakeWs(), 4801, 480101, 'SharedA', { isGm: true });
@@ -817,6 +834,10 @@ describe('remote-key shared-account clock through real server dispatch', () => {
     expect(server.sim.drainEvents()).toEqual([
       { type: 'freeholdDenied', pid: b.pid, reason: 'cooldown' },
     ]);
+    // The LOCAL clock answers before admission (07a): the alt's use through the
+    // shared cooldown never reaches the host, so a key spammed through its
+    // cooldown costs a lit realm no trip. Only a's earlier use asked.
+    expect(participant.mock.calls).toEqual([['account:4801', a.pid]]);
     expect(entityOf(server, b.pid).pos).toEqual(secondPosition);
     expect([...server.sim.freeholdKeyReadyAtMs]).toEqual(before);
     expect(draws).not.toHaveBeenCalled();
@@ -829,9 +850,10 @@ describe('remote-key shared-account clock through real server dispatch', () => {
       ['account:4801', 3609000],
       ['account:4802', 3609000],
     ]);
+    // Two consultations, both with the local clock ready: the cooldown denial
+    // above asked nothing.
     expect(participant.mock.calls).toEqual([
       ['account:4801', a.pid],
-      ['account:4801', b.pid],
       ['account:4802', c.pid],
     ]);
   });

@@ -67,6 +67,11 @@ export interface PeriodicSaveWrites {
   saveFreeholds(): Promise<void>;
   /** Heartbeat this process's character load leases so none lapses under a peer. */
   heartbeatLeases(): Promise<void>;
+  /** Renew this process's global plot claims the host still wants and release
+   *  the rest (server/freehold_claim_registry.ts), on the lease heartbeat's own
+   *  cadence and policy, so a crashed holder's claims expire and an idle loaded
+   *  plot's do not. Never rejects. */
+  renewFreeholdClaims(): Promise<void>;
   /** Drop idle bank-vault ledger guard state. Synchronous, and not a write. */
   pruneIdleGuards(): void | number;
 }
@@ -86,6 +91,7 @@ export const PERIODIC_SAVE_WRITE_NAMES = [
   'saveFreeholds',
   'pruneIdleGuards',
   'heartbeatLeases',
+  'renewFreeholdClaims',
 ] as const satisfies readonly (keyof PeriodicSaveWrites)[];
 
 // Compile-time completeness: every member of the interface is named above.

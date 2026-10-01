@@ -15,14 +15,19 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { afterAll, afterEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
 import { createBackgroundDbGate } from '../../server/background_db_gate';
+import {
+  FREEHOLD_CLAIM_LOGIN_BOUNDS,
+  readClaimedLoginDurables,
+} from '../../server/freehold_claim_login';
+import { createFreeholdClaimRegistry } from '../../server/freehold_claim_registry';
 import type {
+  FreeholdFencedUpsertResult,
   FreeholdRow,
   FreeholdRowLoad,
   FreeholdUpsert,
   FreeholdUpsertResult,
 } from '../../server/freehold_db';
 import type { FreeholdHearthLoad } from '../../server/freehold_hearth_db';
-import { readLoginDurables } from '../../server/freehold_hearth_load';
 import { installLoadedFreehold } from '../../server/freehold_install';
 import { freeholdLivenessPorts } from '../../server/freehold_liveness';
 import { FREEHOLD_LOAD_FAILURE_KINDS } from '../../server/freehold_load_outcome';
@@ -54,6 +59,7 @@ import {
   registerFreeholdPersistStore,
 } from '../../server/freehold_persist_registry';
 import { bindFreeholdOnJoin, flushFreeholdBinding } from '../../server/freehold_session_binding';
+import { freeholdTxBeginSql } from '../../server/freehold_tx';
 import { FREEHOLD_PERSIST_RETRY_WRITE_CAP } from '../../server/freehold_write_retry';
 import { seedWouldLandOnRealRow } from '../../server/freehold_write_seal';
 import { createKeyedSerialWriter } from '../../server/serial_writer';
@@ -191,7 +197,9 @@ interface HarnessOptions {
    *  normalizer reads the row's own document, so a document can never disagree
    *  with the row it came from. */
   normalized?: FreeholdLoadResult;
-  writeRow?: (input: FreeholdUpsert) => Promise<FreeholdUpsertResult>;
+  /** The fenced writer's whole vocabulary (07a), so a case can answer
+   *  `fenced` exactly as server/freehold_fenced_write.ts does. */
+  writeRow?: (input: FreeholdUpsert) => Promise<FreeholdFencedUpsertResult>;
   /** A DARK realm. One flag on the one context, exactly as the composition root
    *  binds it: the store's `enabled` port reads it and the sim's record
    *  inserters honour it, so a dark harness can hold no live record either. */
@@ -308,7 +316,7 @@ function harness(options: HarnessOptions = {}) {
     (async (): Promise<FreeholdHearthLoad> => options.hearthLoad ?? { kind: 'absent' });
   const writeRow =
     options.writeRow ??
-    (async (): Promise<FreeholdUpsertResult> => ({ kind: 'inserted', durableRev: '1' }));
+    (async (): Promise<FreeholdFencedUpsertResult> => ({ kind: 'inserted', durableRev: '1' }));
 
   /** THE AUDIT, run at every liveness read the store makes. It asks all four
    *  PORTS (not the map behind them), so a port that stopped reading the map is
@@ -356,7 +364,7 @@ function harness(options: HarnessOptions = {}) {
           },
         }
       : {}),
-    async writeRow(input: FreeholdUpsert): Promise<FreeholdUpsertResult> {
+    async writeRow(input: FreeholdUpsert): Promise<FreeholdFencedUpsertResult> {
       calls.push('writeRow');
       writes.push(input);
       return await writeRow(input);
@@ -2172,6 +2180,62 @@ describe('the stale compare-and-swap quiesce', () => {
     // Never a blind retry with the re-read revision, and never a second warn.
     expect(h.writeCount()).toBe(1);
     expect(h.warnings.filter((line) => line.includes('quiesced'))).toHaveLength(1);
+  });
+
+  it('quiesces on a FENCED write (07a): counted on its own, warned once, nothing more goes out', async () => {
+    // Another realm took the plot's claim, so the fenced writer refused before
+    // the compare-and-swap. Nothing this realm could send would land.
+    const h = await loadedStore({
+      rowLoad: { kind: 'row', row: rowFixture() },
+      writeRow: async () => ({ kind: 'fenced' }),
+    });
+    expect(h.store.authority(OWNER_KEY)).toMatchObject({ blocked: false });
+    h.edit(OWNER_KEY);
+    h.store.markDirty(OWNER_KEY);
+    h.store.save(OWNER_KEY);
+    await tick(30);
+    expect(h.writeCount()).toBe(1);
+    // The fence names the writer, so it is NOT a stale CAS and NOT a refusal.
+    expect(h.store.stats()).toMatchObject({
+      fencedWrites: 1,
+      staleWrites: 0,
+      writeFailures: 0,
+      writes: 0,
+      quiesced: 1,
+      held: 0,
+    });
+    // The owner is now blocked: no trip may ride an entry that lost its claim.
+    expect(h.store.authority(OWNER_KEY)).toMatchObject({ loaded: true, blocked: true });
+    for (let i = 0; i < 5; i++) {
+      h.edit(OWNER_KEY);
+      h.store.markDirty(OWNER_KEY);
+      h.store.save(OWNER_KEY);
+      h.store.saveAllDirty();
+    }
+    await h.store.flushAndRelease(OWNER_KEY);
+    await tick(30);
+    expect(h.writeCount()).toBe(1);
+    expect(h.store.stats().fencedWrites).toBe(1);
+    const fencedLines = h.warnings.filter((line) =>
+      line.includes("no longer holds the plot's claim"),
+    );
+    expect(fencedLines).toEqual([
+      "freehold plot index 0 quiesced: this realm no longer holds the plot's claim, so no further writes go out for this owner",
+    ]);
+    expect(h.errors).toEqual([]);
+  });
+
+  it('counts a committed write as a write, never as fenced (the control)', async () => {
+    const h = await loadedStore({
+      rowLoad: { kind: 'row', row: rowFixture() },
+      writeRow: async () => ({ kind: 'updated', durableRev: '8' }),
+    });
+    h.edit(OWNER_KEY);
+    h.store.markDirty(OWNER_KEY);
+    h.store.save(OWNER_KEY);
+    await tick(30);
+    expect(h.store.stats()).toMatchObject({ fencedWrites: 0, writes: 1, quiesced: 0 });
+    expect(h.store.authority(OWNER_KEY)).toMatchObject({ blocked: false, durableRev: '8' });
   });
 
   const refusals: ReadonlyArray<{ readonly result: FreeholdUpsertResult; readonly name: string }> =
@@ -6338,6 +6402,11 @@ describe('stats', () => {
       if (measure === 'loadFailuresByKind' || measure === 'joinVerdicts') continue;
       expect(typeof value).toBe('number');
     }
+    // 07a's counter rides the same scrape as a COUNT, read by name so the loop
+    // above cannot pass over its absence: a write the claim fence refused names
+    // no owner, only that one happened.
+    expect(Object.keys(stats)).toContain('fencedWrites');
+    expect(stats.fencedWrites).toBe(0);
     // The second record measure: its keys are the fixed verdict vocabulary and
     // its values are counts.
     expect(Object.keys(stats.joinVerdicts).sort()).toEqual(
@@ -6359,6 +6428,7 @@ describe('stats', () => {
       'cap_full',
       'no_permit',
       'no_budget',
+      'claim_busy',
       'unnamed_record',
     ];
     expect([...FREEHOLD_LOAD_FAILURE_KINDS].sort()).toEqual([...kinds].sort());
@@ -7099,6 +7169,59 @@ describe('the combined login port, which is what the server actually binds', () 
     expect(h.writes).toEqual([]);
   });
 
+  it('answers claim_busy with a REPAIRABLE hold that installs nothing and writes nothing (07a)', async () => {
+    // Another realm holds the plot's live claim, so the login read never read
+    // the row. Capacity, not data: the entry must stay UNLOADED (so the re-ask
+    // reads again), held, and write-blocked, and the join must install nothing.
+    let busy = true;
+    const h = harness({
+      readDurables: async () => ({
+        row: busy
+          ? { kind: 'claim_busy' as const, plotIndex: 0, plotId: ROW_PLOT_ID }
+          : { kind: 'row' as const, row: rowFixture({ durableRev: '7' }) },
+        hearth: { kind: 'absent' as const },
+      }),
+    });
+    const loaded = await h.store.preload(ACCOUNT_ID);
+    expect(loaded.hold?.kind).toBe('claim_busy');
+    expect(loaded.state).toBeNull();
+    expect(loaded.durableRev).toBeNull();
+    expect(h.store.stats()).toMatchObject({
+      loaded: 0,
+      held: 1,
+      loadFailuresByKind: { claim_busy: 1 },
+    });
+    // The store remembers nothing it may serve.
+    expect(h.store.authority(OWNER_KEY)).toEqual({
+      loaded: false,
+      blocked: true,
+      plotId: '',
+      durableRev: null,
+    });
+    // INSTALLS NOTHING: the join seats the sim's own default, never the row.
+    h.join(loaded);
+    expect(h.record()?.plotId).toBe(PENDING_FREEHOLD_PLOT_ID);
+    expect(h.record()?.layout).toEqual([]);
+    // WRITES NOTHING, however the save is asked for, while the claim is busy.
+    h.calls.length = 0;
+    h.edit(OWNER_KEY);
+    h.store.markDirty(OWNER_KEY);
+    h.store.save(OWNER_KEY);
+    h.store.saveAllDirty();
+    await tick(30);
+    expect(h.writes).toEqual([]);
+    expect(h.writeCount()).toBe(0);
+    // REPAIRABLE: once the claim frees, a later login reads again and the row
+    // lands, rather than the refusal replaying for the life of the entry.
+    await h.leave();
+    busy = false;
+    h.calls.length = 0;
+    const again = await h.store.preload(ACCOUNT_ID);
+    expect(h.calls).toContain('readDurables');
+    expect(again.hold).toBeNull();
+    expect(again.durableRev).toBe('7');
+  });
+
   it('resolves a malformed clock payload the SAME WAY on both port shapes', async () => {
     // THE DIVERGENCE THIS CASE EXISTS FOR. readLoginPair used to normalize the
     // combined arm's clock outside the `try` the fallback arm had, so a payload
@@ -7153,23 +7276,82 @@ describe('the composition root that binds the combined port (source pins)', () =
 
   it('binds BOTH login statements to ONE bounded transaction, through the policy', () => {
     const durables = binding('readDurables', 'writeRow').replace(/\s+/g, ' ');
-    // ONE wrapper for the pair, not one per read: two wrappers is the defect
-    // this replaced, and it costs four times the round trips on the login path.
-    expect(durables.split('runWithStatementTimeout(').length - 1).toBe(1);
-    expect(durables).toContain('FREEHOLD_PERSIST_LOGIN_STATEMENT_TIMEOUT_MS');
-    // THROUGH THE POLICY MODULE, which is what makes the fail-open/fail-closed
-    // rule executable at all: the closures in this file bind the real pool at
-    // module scope, so nothing imports them and a mutant that deleted the clock
-    // swallow left the whole suite green. The behaviour cases below drive
-    // readLoginDurables directly; this pin is only that the binding uses it.
-    expect(durables).toContain('readLoginDurables<FreeholdQueryable>(');
-    // BOTH on the transaction's own `query`, never on the pool: a statement sent
-    // to `pool` runs on a different client and escapes the bound entirely.
-    expect(durables).toContain('run({ query })');
-    expect(durables).toContain('freeholdForAccount(db,');
-    expect(durables).toContain('loadFreeholdHearth(db,');
+    // THROUGH THE CLAIMED POLICY MODULE (07a): the realm binds the login read
+    // that takes the plot's global claim, server/freehold_claim_login.ts, and
+    // nothing else. The closures in this file bind the real pool at module
+    // scope, so nothing imports them; this pin is that the binding uses the
+    // policy, and the cases below pin and drive the policy itself.
+    expect(durables.split('readClaimedLoginDurables(').length - 1).toBe(1);
+    expect(durables).toContain('registry: deps.claims,');
+    expect(durables).toContain('holder: PROCESS_LEASE_HOLDER,');
+    expect(durables).toContain('ttlSeconds: LEASE_TTL_SECONDS,');
+    // The unclaimed 07 policy is gone from the binding, and so is the outer
+    // statement wrapper: the ONE bounded transaction is the policy's own, and
+    // a second wrapper here would be the two-transaction defect again.
+    expect(durables).not.toContain('readLoginDurables');
+    expect(durables).not.toContain('runWithStatementTimeout(');
+    // BOTH reads on the transaction's own client, never on the pool: a
+    // statement sent to `pool` runs on a different client and escapes the
+    // bound and the claim entirely.
+    expect(durables).toContain(
+      'readRow: (db) => freeholdForAccount(db, accountId, maxOwnedBytes),',
+    );
+    expect(durables).toContain('readHearth: (db) => loadFreeholdHearth(db, accountId),');
     expect(durables).not.toContain('freeholdForAccount(pool');
     expect(durables).not.toContain('loadFreeholdHearth(pool');
+  });
+
+  it('runs the claimed login as ONE bounded transaction: the clock first, the claim before the row', () => {
+    const policy = stripComments(readFileSync('server/freehold_claim_login.ts', 'utf8')).replace(
+      /\s+/g,
+      ' ',
+    );
+    // TWO transactions in the source and no more: the one that carries both
+    // reads, and the clock-fault retry that carries the plot half ALONE.
+    expect(policy.split('runFreeholdTransaction(').length - 1).toBe(2);
+    const main = policy.indexOf(
+      'runFreeholdTransaction(deps.pool, FREEHOLD_CLAIM_LOGIN_BOUNDS, async (tx) => {',
+    );
+    expect(main).toBeGreaterThan(-1);
+    const retry = policy.indexOf(
+      'runFreeholdTransaction(deps.pool, FREEHOLD_CLAIM_LOGIN_BOUNDS, plotHalf)',
+    );
+    expect(retry).toBeGreaterThan(main);
+    // CLOCK FIRST, inside the one transaction, then the plot half on the SAME
+    // `tx`: a clock fault then aborts before any claim statement, so it can
+    // never roll a claim back unseen.
+    const clock = policy.indexOf('hearth = await deps.readHearth(tx);', main);
+    const plot = policy.indexOf('return plotHalf(tx);', main);
+    expect(clock).toBeGreaterThan(main);
+    expect(plot).toBeGreaterThan(clock);
+    expect(plot).toBeLessThan(retry);
+    // CLAIM BEFORE THE ROW, inside the plot half: the unlocked plot id read,
+    // then the acquire (busy pre-check and upsert), then 07's row read.
+    const half = policy.indexOf('const plotHalf = async (db: FreeholdQueryable)');
+    const plotId = policy.indexOf('db.query(FREEHOLD_PRIMARY_PLOT_ID_SQL, [accountId])', half);
+    const acquire = policy.indexOf('acquireFreeholdClaim(db, {', half);
+    const row = policy.indexOf('return deps.readRow(db);', half);
+    expect(half).toBeGreaterThan(-1);
+    expect(plotId).toBeGreaterThan(half);
+    expect(acquire).toBeGreaterThan(plotId);
+    expect(row).toBeGreaterThan(acquire);
+    expect(policy.split('deps.readRow(').length - 1).toBe(1);
+    expect(policy.split('deps.readHearth(').length - 1).toBe(1);
+    // The claim is RECORDED only after the transaction answered, never inside it.
+    expect(policy.indexOf('record();', main)).toBeGreaterThan(plot);
+    // THE BOUNDS, literally: 07's login statement bound, a lock bound under it,
+    // an idle bound and the wall, sent as the one opening round trip.
+    expect(FREEHOLD_CLAIM_LOGIN_BOUNDS).toEqual({
+      operation: 'freehold login read',
+      statementMs: 2_000,
+      lockMs: 1_000,
+      idleMs: 2_000,
+      wallMs: 10_000,
+    });
+    expect(FREEHOLD_PERSIST_LOGIN_STATEMENT_TIMEOUT_MS).toBe(2_000);
+    expect(freeholdTxBeginSql(FREEHOLD_CLAIM_LOGIN_BOUNDS)).toBe(
+      'BEGIN; SET LOCAL statement_timeout = 2000; SET LOCAL lock_timeout = 1000; SET LOCAL idle_in_transaction_session_timeout = 2000',
+    );
   });
 
   it('binds all four LIVE-RECORD reads through the function this suite drives', () => {
@@ -7217,116 +7399,6 @@ describe('the composition root that binds the combined port (source pins)', () =
     }
   });
 
-  it('EXECUTES the login policy: both reads answer, the clock lands with the row', async () => {
-    // The first case that runs this code at all. Every earlier pin over the
-    // combined port was source text, because the composition root binds the
-    // real pool at module scope and nothing imports it.
-    const seen: string[] = [];
-    const got = await readLoginDurables<'db'>(
-      async (run) => await run('db'),
-      async (db) => {
-        seen.push(`row:${db}`);
-        return { kind: 'row', row: rowFixture() };
-      },
-      async (db) => {
-        seen.push(`hearth:${db}`);
-        return { kind: 'state', state: { readyAtMs: '90000', revision: '4' } };
-      },
-    );
-    expect(seen).toEqual(['row:db', 'hearth:db']);
-    expect(got.row.kind).toBe('row');
-    expect(got.hearth).toEqual({ kind: 'state', state: { readyAtMs: '90000', revision: '4' } });
-  });
-
-  it('EXECUTES the login policy: the CLOCK fails open WITHOUT aborting the transaction', async () => {
-    // A SURVIVING MUTANT closed. The first version of this case asserted only the
-    // answer, and the answer is the same either way: with the inner catch
-    // removed the clock's throw propagates out of the callback, the outer guard
-    // sees a captured row and rebuilds the identical `threw` value. What DOES
-    // differ is the transaction: without the catch the helper rolls it back and
-    // rethrows for a fault in a read that fails OPEN by design, which is the
-    // asymmetry this module exists to keep. So the case asserts the callback
-    // RESOLVED, which is the property the catch actually buys.
-    const boom = new Error('hearth read failed');
-    let callbackSettled: 'resolved' | 'rejected' | 'pending' = 'pending';
-    const got = await readLoginDurables<'db'>(
-      async (run) => {
-        try {
-          const answer = await run('db');
-          callbackSettled = 'resolved';
-          return answer;
-        } catch (err) {
-          callbackSettled = 'rejected';
-          throw err;
-        }
-      },
-      async () => ({ kind: 'row', row: rowFixture() }),
-      async () => {
-        throw boom;
-      },
-    );
-    expect(callbackSettled).toBe('resolved');
-    expect(got.row.kind).toBe('row');
-    expect(got.hearth).toEqual({ kind: 'threw', error: boom });
-  });
-
-  it('EXECUTES the login policy: a COMMIT fault keeps the clock it already read', async () => {
-    // THE REGRESSION THIS CASE EXISTS FOR. The guard used to capture the ROW
-    // alone, so a transaction that rejected AFTER both statements had answered
-    // rebuilt the clock half from the outer error and reported `threw`, which
-    // the store normalizes to the COLD clock, which reads as READY. The store
-    // then remembers that zero on the entry and replays it to every later
-    // character of the account for the rest of the session without reading
-    // again. A clock that was READ is not an unreadable clock.
-    const commitFault = new Error('connection terminated');
-    const got = await readLoginDurables<'db'>(
-      async (run) => {
-        const answered = await run('db');
-        void answered;
-        throw commitFault;
-      },
-      async () => ({ kind: 'row', row: rowFixture() }),
-      async () => ({
-        kind: 'state',
-        state: { readyAtMs: '90000', revision: '4' },
-      }),
-    );
-    expect(got.row.kind).toBe('row');
-    // The clock it read, NOT { kind: 'threw' }.
-    expect(got.hearth).toEqual({ kind: 'state', state: { readyAtMs: '90000', revision: '4' } });
-  });
-
-  it('EXECUTES the login policy: the PLOT fails closed when no row was captured', async () => {
-    // The other half of the asymmetry, and the one line that decides it. With
-    // no row in hand the rejection is rethrown, so loadOnce turns it into a
-    // HOLD and nothing is written over a row this host could not read.
-    const rowFault = new Error('row read failed');
-    await expect(
-      readLoginDurables<'db'>(
-        async (run) => await run('db'),
-        async () => {
-          throw rowFault;
-        },
-        async () => ({ kind: 'absent' }),
-      ),
-    ).rejects.toBe(rowFault);
-  });
-
-  it('EXECUTES the login policy: a transaction that fails BEFORE the row rethrows', async () => {
-    // BEGIN, SET LOCAL or the pool checkout itself. No statement ran, so there
-    // is no row and no clock, and the plot must still fail closed.
-    const connectFault = new Error('pool checkout timed out');
-    await expect(
-      readLoginDurables<'db'>(
-        async () => {
-          throw connectFault;
-        },
-        async () => ({ kind: 'row', row: rowFixture() }),
-        async () => ({ kind: 'absent' }),
-      ),
-    ).rejects.toBe(connectFault);
-  });
-
   it('keeps the two-port fallback BOUNDED beside it, on the same constant', () => {
     // The pair every behaviour case in this file drives, and the store's declared
     // surface for a host with no transaction seam. Extracting the composition
@@ -7346,6 +7418,208 @@ describe('the composition root that binds the combined port (source pins)', () =
   });
 });
 
+describe('the claimed login read the realm binds, executed on a recording client (07a)', () => {
+  // The source pins above say WHAT the realm binds; these drive it. A fake pool
+  // whose clients record every statement in issue order, so ONE transaction is
+  // a fact (one checkout, one opening round trip, one COMMIT) rather than a
+  // reading of the source, and the clock-first and claim-before-row orders are
+  // the order the statements actually went out in.
+  const BEGIN_LINE =
+    'BEGIN; SET LOCAL statement_timeout = 2000; SET LOCAL lock_timeout = 1000; SET LOCAL idle_in_transaction_session_timeout = 2000';
+
+  /** Every statement as a short label, per checkout. Unrecognized text is kept
+   *  verbatim so a statement this map does not know still shows up. */
+  const label = (text: string): string => {
+    if (text === BEGIN_LINE) return 'begin';
+    if (text === 'COMMIT' || text === 'ROLLBACK') return text.toLowerCase();
+    if (text.includes('FROM account_freeholds WHERE account_id = $1 AND plot_index = 0')) {
+      return 'plot_id';
+    }
+    if (text.includes('holder <> $2 AND expires_at > clock_timestamp()')) return 'busy_check';
+    if (text.includes('INSERT INTO freehold_plot_claims AS c')) return 'acquire';
+    return text;
+  };
+
+  function recordingPool(script: {
+    readonly busy?: boolean;
+    readonly acquireError?: { readonly code: string };
+    readonly commitTag?: string;
+  }) {
+    const checkouts: string[][] = [];
+    const pool = {
+      async connect() {
+        const statements: string[] = [];
+        checkouts.push(statements);
+        return {
+          async query(text: string) {
+            statements.push(label(text));
+            if (text === BEGIN_LINE) return { command: 'SET', rows: [], rowCount: null };
+            if (text === 'COMMIT') {
+              return { command: script.commitTag ?? 'COMMIT', rows: [], rowCount: null };
+            }
+            if (text === 'ROLLBACK') return { command: 'ROLLBACK', rows: [], rowCount: null };
+            const which = label(text);
+            if (which === 'plot_id') {
+              return { command: 'SELECT', rows: [{ plot_id: ROW_PLOT_ID }], rowCount: 1 };
+            }
+            if (which === 'busy_check') {
+              return script.busy
+                ? { command: 'SELECT', rows: [{ one: 1 }], rowCount: 1 }
+                : { command: 'SELECT', rows: [], rowCount: 0 };
+            }
+            if (which === 'acquire') {
+              if (script.acquireError) {
+                throw Object.assign(new Error('claim row contended'), script.acquireError);
+              }
+              return {
+                command: 'INSERT',
+                rows: [{ generation: '3', inserted: false, fresh: false }],
+                rowCount: 1,
+              };
+            }
+            return { command: 'SELECT', rows: [], rowCount: 0 };
+          },
+          release(): void {},
+          on(): void {},
+          removeListener(): void {},
+        };
+      },
+    };
+    return { pool: pool as never, checkouts };
+  }
+
+  function claimedLogin(
+    script: Parameters<typeof recordingPool>[0],
+    hearth: (db: { query(text: string): Promise<unknown> }) => Promise<FreeholdHearthLoad> = async (
+      db,
+    ) => {
+      await db.query('SELECT hearth probe');
+      return { kind: 'state', state: { readyAtMs: '90000', revision: '4' } };
+    },
+  ) {
+    const { pool, checkouts } = recordingPool(script);
+    const registry = createFreeholdClaimRegistry();
+    const claimed: number[] = [];
+    const run = () =>
+      readClaimedLoginDurables(
+        {
+          pool,
+          registry,
+          holder: 'realm-a#holder-1',
+          realm: 'realm-a',
+          ttlSeconds: 30,
+          readRow: async (db) => {
+            await db.query('SELECT row probe');
+            return { kind: 'row', row: rowFixture() };
+          },
+          readHearth: hearth,
+          nowMs: () => 55_000,
+          onClaimed: (accountId) => claimed.push(accountId),
+        },
+        ACCOUNT_ID,
+      );
+    return { run, checkouts, registry, claimed };
+  }
+
+  it('reads the clock, then the plot id, then the claim, then the row, on ONE checkout', async () => {
+    const login = claimedLogin({});
+    const got = await login.run();
+    expect(got.row.kind).toBe('row');
+    expect(got.hearth).toEqual({ kind: 'state', state: { readyAtMs: '90000', revision: '4' } });
+    // ONE checkout, ONE opening round trip, BOTH reads on it, ONE COMMIT.
+    expect(login.checkouts).toEqual([
+      [
+        'begin',
+        'SELECT hearth probe',
+        'plot_id',
+        'busy_check',
+        'acquire',
+        'SELECT row probe',
+        'commit',
+      ],
+    ]);
+    // Recorded only after the tag-checked COMMIT, and the recovery hook told.
+    expect(login.registry.forAccount(ACCOUNT_ID)).toEqual({
+      plotId: ROW_PLOT_ID,
+      accountId: ACCOUNT_ID,
+      generation: '3',
+      acquiredAtMs: 55_000,
+    });
+    expect(login.registry.counters.acquired).toBe(1);
+    expect(login.claimed).toEqual([ACCOUNT_ID]);
+  });
+
+  it('records NO claim when COMMIT answers a ROLLBACK tag, and fails the plot closed', async () => {
+    // The negative control for the line above: the same statements, but the
+    // transaction proved nothing, so believing the claim would serve a plot
+    // whose claim rolled back.
+    const login = claimedLogin({ commitTag: 'ROLLBACK' });
+    await expect(login.run()).rejects.toThrow('COMMIT answered ROLLBACK');
+    expect(login.checkouts[0]).toContain('acquire');
+    expect(login.registry.forAccount(ACCOUNT_ID)).toBeUndefined();
+    expect(login.registry.counters.acquired).toBe(0);
+    expect(login.claimed).toEqual([]);
+  });
+
+  it('a CLOCK fault aborts before any claim statement, and the plot half runs alone', async () => {
+    const boom = new Error('hearth read exploded');
+    let clockReads = 0;
+    const login = claimedLogin({}, async () => {
+      clockReads += 1;
+      throw boom;
+    });
+    const got = await login.run();
+    // The clock fails OPEN, carried as a value; the plot still lands.
+    expect(got.hearth).toEqual({ kind: 'threw', error: boom });
+    expect(got.row.kind).toBe('row');
+    expect(clockReads).toBe(1);
+    // The first transaction issued no claim statement before it rolled back,
+    // and the second is the plot half alone, with no second clock read.
+    expect(login.checkouts).toEqual([
+      ['begin', 'rollback'],
+      ['begin', 'plot_id', 'busy_check', 'acquire', 'SELECT row probe', 'commit'],
+    ]);
+    expect(login.registry.forAccount(ACCOUNT_ID)?.generation).toBe('3');
+  });
+
+  it("another realm's LIVE claim answers claim_busy and the row is never read", async () => {
+    const login = claimedLogin({ busy: true });
+    const got = await login.run();
+    expect(got.row).toEqual({ kind: 'claim_busy', plotIndex: 0, plotId: ROW_PLOT_ID });
+    // The clock it already read still rides out.
+    expect(got.hearth).toEqual({ kind: 'state', state: { readyAtMs: '90000', revision: '4' } });
+    expect(login.checkouts).toHaveLength(1);
+    expect(login.checkouts[0].slice(0, 4)).toEqual([
+      'begin',
+      'SELECT hearth probe',
+      'plot_id',
+      'busy_check',
+    ]);
+    expect(login.checkouts[0]).not.toContain('acquire');
+    expect(login.checkouts[0]).not.toContain('SELECT row probe');
+    expect(login.registry.forAccount(ACCOUNT_ID)).toBeUndefined();
+    expect(login.registry.counters.busy).toBe(1);
+    expect(login.claimed).toEqual([]);
+  });
+
+  for (const code of ['55P03', '57014']) {
+    it(`a ${code} on the acquire is contention: claim_busy, never the read hold`, async () => {
+      const login = claimedLogin({ acquireError: { code } });
+      const got = await login.run();
+      expect(got.row).toEqual({ kind: 'claim_busy', plotIndex: 0, plotId: ROW_PLOT_ID });
+      expect(login.checkouts[0]).not.toContain('SELECT row probe');
+      expect(login.registry.forAccount(ACCOUNT_ID)).toBeUndefined();
+    });
+  }
+
+  it('any OTHER acquire fault fails the plot closed (the contention control)', async () => {
+    const login = claimedLogin({ acquireError: { code: '23505' } });
+    await expect(login.run()).rejects.toThrow('claim row contended');
+    expect(login.registry.forAccount(ACCOUNT_ID)).toBeUndefined();
+    expect(login.registry.counters.busy).toBe(0);
+  });
+});
+
 describe('the gaps a mutation pass over the store found', () => {
   it('an ADMISSION hold is repairable: not loaded, still write-blocked, and re-read', async () => {
     // RULING 2. `entry.loaded` is what preload's replay arms and retain's
@@ -7361,13 +7635,19 @@ describe('the gaps a mutation pass over the store found', () => {
     // read_threw from it green. Each is produced by a different port fault.
     expect([...FREEHOLD_RETRYABLE_HOLD_KINDS].sort()).toEqual([
       'cap_full',
+      'claim_busy',
       'no_budget',
       'no_permit',
       'read_threw',
     ]);
-    for (const kind of ['cap_full', 'no_permit', 'read_threw'] as const) {
+    // claim_busy (07a) is produced by the READ answering it: another realm
+    // holds the plot's live claim, which is capacity, never data.
+    for (const kind of ['cap_full', 'no_permit', 'read_threw', 'claim_busy'] as const) {
       const faulted = harness({
-        rowLoad: { kind: 'row', row: rowFixture() },
+        rowLoad:
+          kind === 'claim_busy'
+            ? { kind: 'claim_busy', plotIndex: 0, plotId: ROW_PLOT_ID }
+            : { kind: 'row', row: rowFixture() },
         acquirePermit:
           kind === 'no_permit'
             ? async () => null
@@ -8611,5 +8891,289 @@ describe('a run of thrown writes keeps its edits and retries them once per windo
     database.recover();
     expect(await h.store.idle(FREEHOLD_PERSIST_SHUTDOWN_DRAIN_MS)).toBe(true);
     expect(await database.wireRev()).toBe('8');
+  });
+});
+
+describe("the store's claim seam the 07a renewer, trip and mutation read", () => {
+  it('wantsClaim: true with a session reference or owed work, false otherwise', async () => {
+    const gate = deferred<FreeholdFencedUpsertResult>();
+    let gated = false;
+    const h = harness({
+      rowLoad: { kind: 'row', row: rowFixture() },
+      writeRow: async () => (gated ? await gate.promise : { kind: 'updated', durableRev: '8' }),
+    });
+    // No entry at all.
+    expect(h.store.wantsClaim(OWNER_KEY)).toBe(false);
+    // An entry with no session and nothing owed: a handshake that never joined.
+    await h.store.preload(ACCOUNT_ID);
+    expect(h.store.authority(OWNER_KEY)).not.toBeNull();
+    expect(h.store.wantsClaim(OWNER_KEY)).toBe(false);
+    // A SESSION REFERENCE.
+    await h.joinAfterReask();
+    expect(h.store.wantsClaim(OWNER_KEY)).toBe(true);
+    // Per owner: another account's key is not wanted on this one's reference.
+    expect(
+      h.store.wantsClaim(OWNER_KEY.replace(String(ACCOUNT_ID), String(OTHER_ACCOUNT_ID))),
+    ).toBe(false);
+    // OWED WORK with no reference: a dirty leaver whose write is still running
+    // after its leave flush stopped waiting (the leave deadline fired), so the
+    // reference is gone and only the running write keeps the entry.
+    gated = true;
+    h.edit(OWNER_KEY);
+    h.store.markDirty(OWNER_KEY);
+    const leaving = h.leave();
+    await tick(30);
+    expect(h.calls).toContain('writeRow');
+    expect(h.fireDeadline()).toBe(true);
+    await leaving;
+    expect(h.record()).toBeUndefined();
+    expect(h.store.stats()).toMatchObject({ running: 1, entries: 1 });
+    expect(h.store.wantsClaim(OWNER_KEY)).toBe(true);
+    // The write lands, the entry owes nothing and holds no reference: let go.
+    gate.resolve({ kind: 'updated', durableRev: '8' });
+    await tick(30);
+    expect(h.store.stats().running).toBe(0);
+    expect(h.store.wantsClaim(OWNER_KEY)).toBe(false);
+  });
+
+  it('wantsClaim: a held entry with no session owes nothing, so its claim is not wanted', async () => {
+    const h = harness({
+      rowLoad: { kind: 'row', row: rowFixture() },
+      acquirePermit: async () => null,
+    });
+    expect((await h.store.preload(ACCOUNT_ID)).hold?.kind).toBe('no_permit');
+    expect(h.store.wantsClaim(OWNER_KEY)).toBe(false);
+  });
+
+  it('authority: null without an entry, else loaded, blocked, plot id and revision', async () => {
+    const h = harness({ rowLoad: { kind: 'row', row: rowFixture() } });
+    expect(h.store.authority(OWNER_KEY)).toBeNull();
+    await h.store.preload(ACCOUNT_ID);
+    expect(h.store.authority(OWNER_KEY)).toEqual({
+      loaded: true,
+      blocked: false,
+      plotId: ROW_PLOT_ID,
+      durableRev: '7',
+    });
+    // Another owner still has no entry: the answer is per owner.
+    expect(h.store.authority(OTHER_OWNER_KEY)).toBeNull();
+
+    // A fresh account: loaded and unblocked, its minted name, no durable row.
+    const fresh = harness();
+    await fresh.store.preload(ACCOUNT_ID);
+    expect(fresh.store.authority(OWNER_KEY)).toEqual({
+      loaded: true,
+      blocked: false,
+      plotId: MINTED_PLOT_ID,
+      durableRev: null,
+    });
+
+    // A repairable hold: not loaded, so blocked.
+    const refused = harness({
+      rowLoad: { kind: 'row', row: rowFixture() },
+      acquirePermit: async () => null,
+    });
+    await refused.store.preload(ACCOUNT_ID);
+    expect(refused.store.authority(OWNER_KEY)).toEqual({
+      loaded: false,
+      blocked: true,
+      plotId: '',
+      durableRev: null,
+    });
+
+    // A TERMINAL data hold: loaded (a re-read cannot change it) yet blocked,
+    // which is the pair the trip's authority rule exists to tell apart.
+    const terminal = harness({
+      rowLoad: {
+        kind: 'oversize',
+        plotIndex: 0,
+        plotId: ROW_PLOT_ID,
+        durableRev: '4',
+        bytes: 200_000,
+        limit: 100_000,
+        detoastRefused: false,
+        diskBytes: 200_000,
+      },
+    });
+    await terminal.store.preload(ACCOUNT_ID);
+    expect(terminal.store.authority(OWNER_KEY)).toMatchObject({ loaded: true, blocked: true });
+  });
+
+  it('runExclusive: a job waits for the running write of its owner, and a write for the job', async () => {
+    const log: string[] = [];
+    const writeGate = deferred<void>();
+    let gateWrites = true;
+    const h = await loadedStore({
+      rowLoad: { kind: 'row', row: rowFixture() },
+      writeRow: async (input) => {
+        log.push(`write:start:${input.accountId}`);
+        if (gateWrites && input.accountId === ACCOUNT_ID) await writeGate.promise;
+        log.push(`write:end:${input.accountId}`);
+        return { kind: 'updated', durableRev: String(Number(input.expectedDurableRev) + 1) };
+      },
+    });
+    // A write is RUNNING for the owner.
+    h.edit(OWNER_KEY);
+    h.store.markDirty(OWNER_KEY);
+    h.store.save(OWNER_KEY);
+    await tick(30);
+    expect(log).toEqual([`write:start:${ACCOUNT_ID}`]);
+    h.calls.length = 0;
+    const job = h.store.runExclusive(OWNER_KEY, new AbortController().signal, async () => {
+      log.push('job:run');
+      return 'job answer';
+    });
+    await tick(30);
+    // The job rides the store's own FIFO port, and it has NOT run.
+    expect(h.calls).toEqual(['enqueue']);
+    expect(log).toEqual([`write:start:${ACCOUNT_ID}`]);
+    writeGate.resolve();
+    expect(await job).toBe('job answer');
+    expect(log).toEqual([`write:start:${ACCOUNT_ID}`, `write:end:${ACCOUNT_ID}`, 'job:run']);
+
+    // AND THE OTHER WAY: a write armed while a job runs waits for the job.
+    gateWrites = false;
+    log.length = 0;
+    const jobGate = deferred<void>();
+    const running = h.store.runExclusive(OWNER_KEY, new AbortController().signal, async () => {
+      log.push('job:start');
+      await jobGate.promise;
+      log.push('job:end');
+    });
+    await tick(30);
+    h.edit(OWNER_KEY);
+    h.store.markDirty(OWNER_KEY);
+    h.store.save(OWNER_KEY);
+    await tick(30);
+    expect(log).toEqual(['job:start']);
+    jobGate.resolve();
+    await running;
+    await tick(30);
+    expect(log).toEqual([
+      'job:start',
+      'job:end',
+      `write:start:${ACCOUNT_ID}`,
+      `write:end:${ACCOUNT_ID}`,
+    ]);
+  });
+
+  it('runExclusive: per OWNER, not global, and cancellable until the job starts', async () => {
+    const log: string[] = [];
+    const h = harness({
+      writeRow: async (input) => {
+        log.push(`write:${input.accountId}`);
+        return { kind: 'inserted', durableRev: '1' };
+      },
+    });
+    await h.login(ACCOUNT_ID);
+    await h.login(OTHER_ACCOUNT_ID);
+    const jobGate = deferred<void>();
+    const held = h.store.runExclusive(OWNER_KEY, new AbortController().signal, async () => {
+      await jobGate.promise;
+    });
+    await tick(30);
+    // ANOTHER owner's write is not held behind this owner's job.
+    h.edit(OTHER_OWNER_KEY);
+    h.store.markDirty(OTHER_OWNER_KEY);
+    h.store.save(OTHER_OWNER_KEY);
+    await tick(30);
+    expect(log).toEqual([`write:${OTHER_ACCOUNT_ID}`]);
+    // A second job queued behind the first is cancelled before it starts.
+    const controller = new AbortController();
+    let cancelledRan = false;
+    const cancelled = h.store.runExclusive(OWNER_KEY, controller.signal, async () => {
+      cancelledRan = true;
+    });
+    controller.abort();
+    await expect(cancelled).rejects.toThrow('keyed serial write aborted before starting');
+    jobGate.resolve();
+    await held;
+    await tick(30);
+    expect(cancelledRan).toBe(false);
+  });
+
+  it('adoptCommittedRevision: the next write CASes on the adopted revision', async () => {
+    const h = await loadedStore({
+      rowLoad: { kind: 'row', row: rowFixture({ durableRev: '7' }) },
+      writeRow: async (input) => ({
+        kind: 'updated',
+        durableRev: String(Number(input.expectedDurableRev) + 1),
+      }),
+    });
+    h.store.adoptCommittedRevision(OWNER_KEY, '9');
+    expect(h.store.authority(OWNER_KEY)?.durableRev).toBe('9');
+    h.edit(OWNER_KEY);
+    h.store.markDirty(OWNER_KEY);
+    h.store.save(OWNER_KEY);
+    await tick(30);
+    expect(h.writes.map((write) => write.expectedDurableRev)).toEqual(['9']);
+    expect(h.store.authority(OWNER_KEY)?.durableRev).toBe('10');
+  });
+
+  it('adoptCommittedRevision: forward only, and a malformed revision is ignored', async () => {
+    const h = await loadedStore({
+      rowLoad: { kind: 'row', row: rowFixture({ durableRev: '7' }) },
+      writeRow: async (input) => ({
+        kind: 'updated',
+        durableRev: String(Number(input.expectedDurableRev) + 1),
+      }),
+    });
+    for (const backwards of ['6', '7', '1', '0', '07', '-8', '8.5', '', 'eight']) {
+      h.store.adoptCommittedRevision(OWNER_KEY, backwards);
+      expect(h.store.authority(OWNER_KEY)?.durableRev, backwards).toBe('7');
+    }
+    h.edit(OWNER_KEY);
+    h.store.markDirty(OWNER_KEY);
+    h.store.save(OWNER_KEY);
+    await tick(30);
+    expect(h.writes.map((write) => write.expectedDurableRev)).toEqual(['7']);
+    // Past 2^53 the comparison is exact. The two values below are ONE double,
+    // so a Number comparison would refuse the second, forward, adoption.
+    expect(Number('9007199254740993')).toBe(Number('9007199254740992'));
+    h.store.adoptCommittedRevision(OWNER_KEY, '9007199254740992');
+    expect(h.store.authority(OWNER_KEY)?.durableRev).toBe('9007199254740992');
+    h.store.adoptCommittedRevision(OWNER_KEY, '9007199254740993');
+    expect(h.store.authority(OWNER_KEY)?.durableRev).toBe('9007199254740993');
+    h.store.adoptCommittedRevision(OWNER_KEY, '9007199254740992');
+    expect(h.store.authority(OWNER_KEY)?.durableRev).toBe('9007199254740993');
+  });
+
+  it('adoptCommittedRevision: a fresh account adopts forward from no row at all', async () => {
+    const h = await loadedStore();
+    expect(h.store.authority(OWNER_KEY)?.durableRev).toBeNull();
+    h.store.adoptCommittedRevision(OWNER_KEY, '1');
+    expect(h.store.authority(OWNER_KEY)?.durableRev).toBe('1');
+  });
+
+  it('adoptCommittedRevision: ignored for a blocked owner and for an unknown one', async () => {
+    // QUIESCED: a stale answer blocked the owner, and nothing may move it.
+    const stale = await loadedStore({
+      rowLoad: { kind: 'row', row: rowFixture({ durableRev: '7' }) },
+      writeRow: async () => ({ kind: 'stale', durableRev: '12' }),
+    });
+    stale.edit(OWNER_KEY);
+    stale.store.markDirty(OWNER_KEY);
+    stale.store.save(OWNER_KEY);
+    await tick(30);
+    expect(stale.store.authority(OWNER_KEY)).toMatchObject({ blocked: true, durableRev: '7' });
+    stale.store.adoptCommittedRevision(OWNER_KEY, '13');
+    expect(stale.store.authority(OWNER_KEY)?.durableRev).toBe('7');
+
+    // HELD before it ever loaded.
+    const held = harness({
+      rowLoad: { kind: 'row', row: rowFixture() },
+      acquirePermit: async () => null,
+    });
+    await held.store.preload(ACCOUNT_ID);
+    held.store.adoptCommittedRevision(OWNER_KEY, '13');
+    expect(held.store.authority(OWNER_KEY)).toMatchObject({ blocked: true, durableRev: null });
+
+    // UNKNOWN: no entry is created to hold the revision.
+    const empty = harness();
+    const entriesBefore = empty.store.stats().entries;
+    empty.store.adoptCommittedRevision(OWNER_KEY, '13');
+    expect(empty.store.authority(OWNER_KEY)).toBeNull();
+    expect(empty.store.stats().entries).toBe(entriesBefore);
+    expect(entriesBefore).toBe(0);
   });
 });

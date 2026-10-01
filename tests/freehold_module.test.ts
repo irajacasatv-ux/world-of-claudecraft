@@ -434,19 +434,24 @@ describe('freehold/state.ts record lifecycle (the guild-bank idiom)', () => {
   });
 });
 
-describe('the hearth clock map has exactly two writers, both in the sim', () => {
+describe('the hearth clock map has two setters and one evictor, all in src/sim/freehold/', () => {
   it('is written nowhere outside src/sim/freehold/', () => {
     // The forward-only rule ("a durable clock behind the live one is a stale
     // read, and moving the cooldown backwards hands out a free travel") is one
     // rule, and a host that reaches into the Map itself would be a second place
     // it has to be implemented and kept correct. The server installs its
     // durable clock through mergeFreeholdKeyReadyAt instead.
-    // src/sim IS scanned, with hearth_key.ts itself exempted. Leaving the sim
-    // out was the gap: the claim is "exactly two writers, both in the sim", and
-    // a third writer added in sim.ts or another freehold leaf would have passed
-    // both arms of this describe.
+    // src/sim IS scanned, with each sanctioned writer exempted for its OWN verb
+    // only. Leaving the sim out was the gap: a third writer added in sim.ts or
+    // another freehold leaf would have passed both arms of this describe.
+    // THE SETTERS live in hearth_key.ts (useHearthKey, mergeFreeholdKeyReadyAt);
+    // THE ONE EVICTOR is releaseFreeholdOnLeave in state.ts (07a: the owner's
+    // last session out drops its live clock beside the record eviction). So
+    // hearth_key.ts may not delete, state.ts may not set, and nothing clears.
     const roots = ['server', 'src/sim', 'src/net', 'src/game', 'src/ui', 'src/render', 'headless'];
-    const exempt = join(__dirname, '..', 'src', 'sim', 'freehold', 'hearth_key.ts');
+    const setter = join(__dirname, '..', 'src', 'sim', 'freehold', 'hearth_key.ts');
+    const evictor = join(__dirname, '..', 'src', 'sim', 'freehold', 'state.ts');
+    const reached = new Set<string>();
     for (const root of roots) {
       const dir = join(__dirname, '..', root);
       const stack = [dir];
@@ -459,22 +464,40 @@ describe('the hearth clock map has exactly two writers, both in the sim', () => 
             continue;
           }
           if (!item.name.endsWith('.ts')) continue;
-          if (full === exempt) continue;
           const text = stripComments(readFileSync(full, 'utf8'));
-          expect(text, full).not.toMatch(/freeholdKeyReadyAtMs\s*\.set\(/);
-          expect(text, full).not.toMatch(/freeholdKeyReadyAtMs\s*\.delete\(/);
+          if (full !== setter) expect(text, full).not.toMatch(/freeholdKeyReadyAtMs\s*\.set\(/);
+          if (full !== evictor) {
+            expect(text, full).not.toMatch(/freeholdKeyReadyAtMs\s*\.delete\(/);
+          }
+          expect(text, full).not.toMatch(/freeholdKeyReadyAtMs\s*\.clear\(/);
+          reached.add(full);
         }
       }
     }
+    // Both exempted files were reached, so neither exemption is a dead branch,
+    // and the walk is the whole tree, not one stray directory.
+    expect(reached.has(setter)).toBe(true);
+    expect(reached.has(evictor)).toBe(true);
+    expect(reached.size).toBeGreaterThan(100);
   });
 
-  it('names both sanctioned writers, so the claim is not vacuous', () => {
+  it('names every sanctioned writer, so the claim is not vacuous', () => {
     const src = stripComments(
       readFileSync(join(__dirname, '..', 'src', 'sim', 'freehold', 'hearth_key.ts'), 'utf8'),
     );
     expect(src.match(/freeholdKeyReadyAtMs\.set\(/g) ?? []).toHaveLength(2);
     expect(src).toContain('export function useHearthKey');
     expect(src).toContain('export function mergeFreeholdKeyReadyAt');
+    // THE EVICTOR, exactly one delete, and inside the leave hook's own body.
+    const state = stripComments(
+      readFileSync(join(__dirname, '..', 'src', 'sim', 'freehold', 'state.ts'), 'utf8'),
+    );
+    expect(state.match(/freeholdKeyReadyAtMs\s*\.delete\(/g) ?? []).toHaveLength(1);
+    const start = state.indexOf('export function releaseFreeholdOnLeave(');
+    expect(start).toBeGreaterThan(-1);
+    const next = state.indexOf('\nexport ', start + 1);
+    const body = state.slice(start, next < 0 ? state.length : next);
+    expect(body.split('ctx.freeholdKeyReadyAtMs.delete(key);').length - 1).toBe(1);
   });
 });
 

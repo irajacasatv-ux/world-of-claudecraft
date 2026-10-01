@@ -391,7 +391,7 @@ function makeFakeHost() {
     devCommands: false,
     compulsoryTutorial: false,
     freeholdsEnabled: false,
-    freeholdKeyAdmission: () => true,
+    freeholdKeyAdmission: () => 'admit' as const,
     freeholdKeyReadyAtMs: new Map(),
     instanceScanCounters: { claimedSlotVisits: 0, ownerRosterVisits: 0, ownerClaimTests: 0 },
     freeholdDevGrantEnabled: false,
@@ -706,7 +706,10 @@ describe('createSimContext (isolated, fake host)', () => {
     host.instanceScanCounters.claimedSlotVisits++;
     expect(ctx.freeholdKeyReadyAtMs.get('account:7')).toBe(1234);
     expect(ctx.instanceScanCounters.claimedSlotVisits).toBe(1);
-    expect(ctx.freeholdKeyAdmission('account:7', 1)).toBe(true);
+    // The host's own admission, read live: the same function, answering the
+    // three-valued seam's 'admit' (never a boolean).
+    expect(ctx.freeholdKeyAdmission).toBe(host.freeholdKeyAdmission);
+    expect(ctx.freeholdKeyAdmission('account:7', 1)).toBe('admit');
   });
 
   it('exposes freeholds as a live shared view (the guildBanks idiom)', () => {

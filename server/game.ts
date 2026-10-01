@@ -147,6 +147,7 @@ import { characterBlobBytesP99 } from './character_blob_size';
 import { RESTORE_ITEM_MAX_COUNT } from './character_professions';
 import { acknowledgeSessionSaveEffects } from './character_save_acknowledge';
 import { applyCharacterSaveFixups } from './character_save_fixups';
+import { type CharacterSaveHousingHook, housingPersist } from './character_save_housing';
 import { chatChannelHint } from './chat_channel_hint';
 import { ChatFilter } from './chat_filter';
 import {
@@ -250,9 +251,12 @@ import { assembleEventsFrame, filterRoutableEvents, serializeEventFragments } fr
 import { buildEventPidIndex, forEachSelectedEventIndex } from './event_pid_index';
 import { appendFarmPlotsWire, dispatchFarmingCommand } from './farming_commands';
 import { fishingBandLabel, isKoi, isRodFeeRecipe } from './fishing_telemetry';
+import { registerFreeholdAuthority } from './freehold_authority_registry';
+import { createFreeholdClaimRegistry } from './freehold_claim_registry';
+import { createGameFreeholdHearthTrips } from './freehold_hearth_trip_host';
 import type { FreeholdPersistStore, LoadedFreehold } from './freehold_persist';
 import { registerFreeholdPersistStore } from './freehold_persist_registry';
-import { createGameFreeholdPersistStore } from './freehold_persist_wiring';
+import { createGameFreeholdPersistStore, renewGameFreeholdClaims } from './freehold_persist_wiring';
 import {
   bindFreeholdOnJoin,
   flushFreeholdBinding,
@@ -478,11 +482,11 @@ import {
   round2,
   SIM_MOB_ZONE_PHASES,
 } from './tick_perf_log';
+import { mobZonePhase, SELF_WIRE_PHASES, SIM_LAP_PHASES } from './tick_phase_names';
 import { createTickSaveObserver, TickProfiler, type TickProfilerSample } from './tick_profiler';
 import { hrtimeToMs, TickRateMeter } from './tick_rate_meter';
 import { applyTownFocusCommand } from './town_focus_command';
 import { ferryDeckWire, transportHeadJson } from './transport_head';
-import { mobZonePhase, SELF_WIRE_PHASES, SIM_LAP_PHASES } from './tick_phase_names';
 import { maybeTrackDay7Retained, trackLevelMilestoneCapi } from './ua_capi';
 import { recordUnstuckEvent } from './unstuck_records';
 import { buildVarkhulPortalReplayBatch, varkhulPortalReplayFrame } from './varkhul_portal_replay';
@@ -1347,6 +1351,8 @@ export class GameServer {
   private readonly paidGuildCreation: PaidGuildCreationCoordinator;
   private readonly guildBankLazyLoader: GuildBankLazyLoader;
   private readonly freeholdPersist: FreeholdPersistStore;
+  private readonly freeholdClaims = createFreeholdClaimRegistry();
+  private readonly freeholdHearthTrips: ReturnType<typeof createGameFreeholdHearthTrips>;
   // Guilds whose bank is CLOSED because a guild-delete is in flight (the
   // window from the empty-bank guard passing through the guilds DELETE
   // cascade and its post-commit hooks): bank ops for these guilds are refused
@@ -1600,6 +1606,8 @@ export class GameServer {
             session.bankLedgerJournal.reserveVaultConsumption(takes, vaultUpgrades),
           );
         },
+        // 07a: the durable account cooldown (server/freehold_hearth_trip.ts).
+        (ownerKey, pid) => this.freeholdHearthTrips?.admission(ownerKey, pid) ?? 'deny',
       ),
     );
     this.vault = new VaultGameServices({
@@ -1675,8 +1683,28 @@ export class GameServer {
       error: (message, error) => console.error(message, ...(error === undefined ? [] : [error])),
       nowMs: Date.now,
     });
-    this.freeholdPersist = createGameFreeholdPersistStore({ sim: this.sim, backgroundDbGate });
+    this.freeholdPersist = createGameFreeholdPersistStore({
+      sim: this.sim,
+      backgroundDbGate,
+      claims: this.freeholdClaims,
+    });
     registerFreeholdPersistStore(this.freeholdPersist);
+    this.freeholdHearthTrips = createGameFreeholdHearthTrips({
+      sim: this.sim,
+      sessionForPid: (pid) => this.clients.get(pid),
+      store: this.freeholdPersist,
+      claims: this.freeholdClaims,
+      pool,
+      save: (session, housing) =>
+        this.saveCharacter(session, { housing, backgroundDbPermit: true }),
+      nowMs: Date.now,
+      sendDenied: (session, reason) =>
+        this.send(session, {
+          t: 'events',
+          list: [{ type: 'freeholdDenied', pid: session.pid, reason }],
+        }),
+    });
+    registerFreeholdAuthority({ claims: this.freeholdClaims, trips: this.freeholdHearthTrips });
     this.moderation = new ModerationService(this.moderationHost(), {
       recordAction: (input) => recordInGameAction(input),
       mute: (input) => muteAccountChat(input),
@@ -2507,6 +2535,8 @@ export class GameServer {
       saveFreeholds: () => this.saveFreeholds(sample),
       pruneIdleGuards: () => this.bankVaultLedgerGuardCoordinator.pruneIdle(),
       heartbeatLeases: () => heartbeatCharacterLeases(),
+      renewFreeholdClaims: () =>
+        renewGameFreeholdClaims(this.sim, this.freeholdPersist, this.freeholdClaims),
     });
   }
 
@@ -3674,6 +3704,11 @@ export class GameServer {
       session.bankLedgerJournal.outbox.discard();
       if (stillMine) storageRecovery.offline(session.characterId);
       await flushFreeholdBinding(this.freeholdPersist, freeholdOwnerKey);
+      // The account's last session: its Hearth refusal memo goes with it.
+      const accountOnline = [...this.clients.values()].some(
+        (other) => other !== session && other.accountId === session.accountId,
+      );
+      if (!accountOnline) this.freeholdHearthTrips.onAccountLeft(session.accountId);
       // Release the per-character load lease so a fresh login (here or on another
       // process) can reload the character without waiting out the TTL. Order
       // matters: only after the leave save has awaited above, so the lease
@@ -3877,8 +3912,13 @@ export class GameServer {
       /** Join the character/market FIFOs first, then acquire the shared
        * background-DB permit immediately around the database transaction. */
       backgroundDbPermit?: boolean;
+      /** 07a: a housing mutation riding THIS save (server/character_save_housing.ts):
+       *  its waits take housing.waitSignal, its transaction never does. */
+      housing?: CharacterSaveHousingHook;
     } = {},
   ): Promise<boolean> {
+    const housing = opts.housing;
+    const waitSignal = opts.signal ?? housing?.waitSignal;
     if (!this.vault.guard.maySave(session.characterId, session.pid)) return false;
     // A quarantined session's live state was abandoned when its escrow was
     // rolled back: its character half is the half that would carry the value
@@ -4022,6 +4062,7 @@ export class GameServer {
                     bankLedgerSaveEffects(carriedLedgerSnapshot),
                     opts.signal,
                     vaultMail?.custodyRefs ?? [],
+                    housing,
                   )
                 : saveCharacterAndGuildBankState(
                     session.characterId,
@@ -4033,10 +4074,10 @@ export class GameServer {
                     carriedStorageEffects,
                     bankLedgerSaveEffects(carriedLedgerSnapshot),
                     opts.signal,
+                    housing,
                   );
-            return opts.backgroundDbPermit
-              ? this.withBackgroundDbPermit(persist, opts.signal)
-              : persist();
+            const run = housingPersist(housing, persist);
+            return opts.backgroundDbPermit ? this.withBackgroundDbPermit(run, waitSignal) : run();
           };
           // The leave flush (opts.withMarket) still needs the shared writer's
           // commit-order guarantee: it writes the whole-blob market and mail
@@ -4051,7 +4092,7 @@ export class GameServer {
             // A vault-held mail save writes whole-blob mail state too, so it
             // keeps the shared writer's commit order like the leave flush.
             saved = withMail
-              ? await this.enqueueMarketWriteForSave(opts.signal, writeThunk)
+              ? await this.enqueueMarketWriteForSave(waitSignal, writeThunk)
               : await writeThunk();
           } catch (err) {
             rearmMailPartitionsOnFailure(this.sim, mailPartitionsForRearm); // mail half of the rollback
@@ -4099,7 +4140,7 @@ export class GameServer {
           }
         } else {
           try {
-            const persist = () =>
+            const persist = housingPersist(housing, () =>
               saveCharacterState(
                 session.characterId,
                 state.level,
@@ -4108,9 +4149,11 @@ export class GameServer {
                 carriedStorageEffects,
                 bankLedgerSaveEffects(carriedLedgerSnapshot),
                 opts.signal,
-              );
+                housing,
+              ),
+            );
             saved = await (opts.backgroundDbPermit
-              ? this.withBackgroundDbPermit(persist, opts.signal)
+              ? this.withBackgroundDbPermit(persist, waitSignal)
               : persist());
           } catch (err) {
             this.acknowledgeDurableLedgerPrefixAfterError(session, carriedLedgerSnapshot, err);
@@ -4264,9 +4307,12 @@ export class GameServer {
       }
       return true;
     };
-    return opts.signal
-      ? this.characterSaveQueues.enqueueCancellable(session.characterId, opts.signal, write)
-      : this.characterSaveQueues.enqueue(session.characterId, write);
+    const job = housing?.wrap
+      ? () => (housing.wrap as NonNullable<typeof housing.wrap>)(write)
+      : write;
+    return waitSignal
+      ? this.characterSaveQueues.enqueueCancellable(session.characterId, waitSignal, job)
+      : this.characterSaveQueues.enqueue(session.characterId, job);
   }
 
   private enqueueMarketWriteForSave<T>(

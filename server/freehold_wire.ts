@@ -272,3 +272,21 @@ export function dispatchFreeholdCommand(
       return false;
   }
 }
+
+/** Why the server would refuse a Hearth Key `use` frame before the sim sees it,
+ *  or null: the three gates the frame path runs for this frame (spectating
+ *  drops it silently, a jailed session answers `busy`, a dark realm answers
+ *  `no_freehold`), as ONE predicate the Hearth trip's server-side re-dispatch
+ *  replays (server/freehold_hearth_trip.ts), since that re-dispatch never
+ *  enters the frame path (it is not player input: no lane token, no detector
+ *  observation). Its agreement with the frame path is pinned. */
+export function hearthKeyUseRefusal(
+  session: { readonly spectating?: unknown; readonly jailed?: unknown },
+  env?: NodeJS.ProcessEnv,
+): 'spectating' | 'jailed' | 'dark' | null {
+  const frame = { cmd: 'use', item: HEARTH_KEY_ITEM_ID };
+  if (session.spectating) return 'spectating';
+  if (session.jailed && refusedJailedTravelCommand(frame)) return 'jailed';
+  if (refusedFreeholdCommand(frame, env)) return 'dark';
+  return null;
+}

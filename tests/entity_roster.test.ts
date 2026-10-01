@@ -300,7 +300,7 @@ function makeCtx() {
     devCommands: false,
     compulsoryTutorial: false,
     freeholdsEnabled: false,
-    freeholdKeyAdmission: () => true,
+    freeholdKeyAdmission: () => 'admit' as const,
     freeholdKeyReadyAtMs: new Map(),
     instanceScanCounters: { claimedSlotVisits: 0, ownerRosterVisits: 0, ownerClaimTests: 0 },
     freeholdDevGrantEnabled: false,

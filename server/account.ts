@@ -69,6 +69,8 @@ import {
   makeEmailToken,
   passwordResetUrl,
 } from './email';
+import { boundedDatabaseError } from './freehold_bounded_error';
+import { eraseFreeholdOperationReceiptsForAccount } from './freehold_operation_db';
 import { ctxAccountId } from './http/context';
 import type { Ctx, Middleware, RouteDef } from './http/types';
 import { json, moderationErrorBody, readBody } from './http_util';
@@ -406,6 +408,24 @@ export async function handleAccountDeactivate(
   await deleteAccountAttribution(pool, accountId);
   await revokeTokensExcept(accountId, null);
   hooks.disconnectAccount(accountId, 'This account has been deactivated.');
+  // The same soft-delete gap for the housing tombstones: no cascade fires, so
+  // null their account reference here (the receipts erase trigger nulls the
+  // plot id and the fingerprint with it, leaving only replay authority). It
+  // runs AFTER the token revoke and the disconnect and never rethrows: these
+  // steps share no transaction, and a receipts UPDATE that hits a statement
+  // or lock bound must not leave a deactivated account with live credentials
+  // or sessions. The erase is idempotent (a re-run nulls nothing new), so an
+  // operator re-runs it from the one bounded line below (no account id, no
+  // row data), finding the account among deactivated accounts that still
+  // hold receipts.
+  try {
+    await eraseFreeholdOperationReceiptsForAccount(pool, accountId);
+  } catch (error) {
+    console.warn(
+      '[account] deactivation housing receipt erase failed; it is idempotent, re-run it for deactivated accounts that still hold receipts:',
+      boundedDatabaseError(error),
+    );
+  }
   emailAccountDeleted(acct);
   return json(res, 200, { ok: true });
 }

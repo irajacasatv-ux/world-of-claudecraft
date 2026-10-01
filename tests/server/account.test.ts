@@ -39,11 +39,13 @@ import {
   accountById,
   type CompanionTokenRow,
   listCharacters,
+  pool,
   revokeTokensExcept,
   setAccountDeactivated,
   updatePasswordHash,
 } from '../../server/db';
 import { emailAccountDeleted } from '../../server/email';
+import { eraseFreeholdOperationReceiptsForAccount } from '../../server/freehold_operation_db';
 import { compose } from '../../server/http/compose';
 import { withErrors } from '../../server/http/middleware/with_errors';
 import { apiRegistry } from '../../server/http/registry';
@@ -78,6 +80,13 @@ vi.mock('../../server/auth', async (importActual) => {
 vi.mock('../../server/attribution_db', async (importActual) => {
   const actual = await importActual<typeof import('../../server/attribution_db')>();
   return { ...actual, deleteAccountAttribution: vi.fn(async () => {}) };
+});
+// The housing tombstone erase is stubbed at the FUNCTION, never a query fake:
+// it runs its own pooled transaction (server/freehold_operation_db.ts), whose
+// SQL its own suites own.
+vi.mock('../../server/freehold_operation_db', async (importActual) => {
+  const actual = await importActual<typeof import('../../server/freehold_operation_db')>();
+  return { ...actual, eraseFreeholdOperationReceiptsForAccount: vi.fn(async () => 0) };
 });
 vi.mock('../../server/email', async (importActual) => {
   const actual = await importActual<typeof import('../../server/email')>();
@@ -609,6 +618,75 @@ describe('deactivate route: injected hooks + runtime wiring', () => {
     // Privacy erasure: the attribution row is deleted explicitly (the soft
     // delete never fires the FK CASCADE).
     expect(vi.mocked(deleteAccountAttribution)).toHaveBeenCalledWith(expect.anything(), 7);
+  });
+
+  it('erases the housing tombstones AFTER the token revoke and the disconnect', async () => {
+    vi.mocked(accountById).mockResolvedValue(acctRow);
+    vi.mocked(verifyPassword).mockResolvedValue(true);
+    vi.mocked(listCharacters).mockResolvedValue(charRows);
+    vi.mocked(setAccountDeactivated).mockResolvedValue(undefined);
+    vi.mocked(revokeTokensExcept).mockResolvedValue(undefined);
+    const disconnectAccount = vi.fn();
+    installRuntime({ anyCharacterOnline: () => false, disconnectAccount });
+
+    const r = await callHandler('POST', '/api/account/deactivate', { account, body: goodBody });
+
+    expect(r.status).toBe(200);
+    expect(r.body).toEqual({ ok: true });
+    const erase = vi.mocked(eraseFreeholdOperationReceiptsForAccount);
+    // The real pool (it runs its own short transaction off a checkout), for
+    // exactly this account, exactly once.
+    expect(erase).toHaveBeenCalledTimes(1);
+    expect(erase).toHaveBeenCalledWith(pool, 7);
+    const eraseAt = erase.mock.invocationCallOrder[0];
+    expect(eraseAt).toBeGreaterThan(vi.mocked(setAccountDeactivated).mock.invocationCallOrder[0]);
+    expect(eraseAt).toBeGreaterThan(vi.mocked(revokeTokensExcept).mock.invocationCallOrder[0]);
+    expect(eraseAt).toBeGreaterThan(disconnectAccount.mock.invocationCallOrder[0]);
+    // Negative control for the order pins: the attribution erase still runs
+    // BEFORE the revoke, so the comparison above is not vacuously true for
+    // every mocked step.
+    expect(vi.mocked(deleteAccountAttribution).mock.invocationCallOrder[0]).toBeLessThan(
+      vi.mocked(revokeTokensExcept).mock.invocationCallOrder[0],
+    );
+  });
+
+  it('a throwing tombstone erase leaves revoke, disconnect and the 200 untouched, logging one bounded line', async () => {
+    vi.mocked(accountById).mockResolvedValue(acctRow);
+    vi.mocked(verifyPassword).mockResolvedValue(true);
+    vi.mocked(listCharacters).mockResolvedValue(charRows);
+    vi.mocked(setAccountDeactivated).mockResolvedValue(undefined);
+    vi.mocked(revokeTokensExcept).mockResolvedValue(undefined);
+    // A lock-bound expiry with the row-revealing fields a pg error carries:
+    // the log line must keep only the bounded shape.
+    const failure = Object.assign(new Error('canceling statement due to lock timeout'), {
+      code: '55P03',
+      detail: 'Failing row contains (hero, plot_hero_1)',
+      where: 'account id 7',
+    });
+    vi.mocked(eraseFreeholdOperationReceiptsForAccount).mockRejectedValueOnce(failure);
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const disconnectAccount = vi.fn();
+    installRuntime({ anyCharacterOnline: () => false, disconnectAccount });
+
+    const r = await callHandler('POST', '/api/account/deactivate', { account, body: goodBody });
+
+    expect(r.status).toBe(200);
+    expect(r.body).toEqual({ ok: true });
+    expect(vi.mocked(revokeTokensExcept)).toHaveBeenCalledWith(7, null);
+    expect(disconnectAccount).toHaveBeenCalledWith(7, 'This account has been deactivated.');
+    expect(vi.mocked(emailAccountDeleted)).toHaveBeenCalledWith(acctRow);
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(warn.mock.calls[0]).toEqual([
+      '[account] deactivation housing receipt erase failed; it is idempotent, re-run it for deactivated accounts that still hold receipts:',
+      {
+        code: '55P03',
+        constraint: undefined,
+        message: 'canceling statement due to lock timeout',
+      },
+    ]);
+    const logged = JSON.stringify(warn.mock.calls);
+    expect(logged).not.toContain('hero');
+    expect(logged).not.toContain('account id 7');
   });
 
   it('409s and does NOT disconnect when anyCharacterOnline reports a live session', async () => {

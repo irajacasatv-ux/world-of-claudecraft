@@ -7,6 +7,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { buildRealmSimConfig } from '../../server/sim_boot_config';
 import { inertVaultConsumptionAdmission } from '../../src/sim/sim_context';
+import type { FreeholdKeyAdmission } from '../../src/sim/types';
 
 const ORIGINAL = process.env.ALLOW_DEV_COMMANDS;
 
@@ -18,7 +19,14 @@ afterEach(() => {
 function boot(value: string | undefined) {
   if (value === undefined) delete process.env.ALLOW_DEV_COMMANDS;
   else process.env.ALLOW_DEV_COMMANDS = value;
-  return buildRealmSimConfig(undefined, inertVaultConsumptionAdmission);
+  // The key admission is REQUIRED on this seam (07a). This suite never uses a
+  // key, so it passes the realm's own fail-closed answer, never the Sim's
+  // offline 'admit'.
+  return buildRealmSimConfig(
+    undefined,
+    inertVaultConsumptionAdmission,
+    (): FreeholdKeyAdmission => 'deny',
+  );
 }
 
 describe('the realm boot config maps ALLOW_DEV_COMMANDS to freeholdDevGrantEnabled (D81)', () => {

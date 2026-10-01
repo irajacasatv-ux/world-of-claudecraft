@@ -114,6 +114,9 @@ export const apiErrorStrings = {
     delete_confirm: 'Type the character name to confirm deletion.',
     storage_purchase_open:
       'A storage purchase must finish or be resolved before this character can be deleted.',
+    // the D88 refusal: an open housing operation intent still binds the character
+    freehold_operation_open:
+      'A Freehold operation must finish or be resolved before this character can be deleted.',
     // the background-gate saturation refusal on the delete cascade (retryable)
     delete_busy: 'The realm is busy. Try deleting this character again in a moment.',
     // reuses errors.api.alreadyInWorld

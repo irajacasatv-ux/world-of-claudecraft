@@ -1129,13 +1129,45 @@ describe('no consolidated tunable literal is duplicated at a call site', () => {
     // commented-out loader leaves its own text sitting in the comment, so the
     // pin stays green while the owner's only readback of their house is dead.
     const exportBody = stripComments(bodyOf(dbSrc, 'export async function exportAccountData'));
-    expect(exportBody).toContain('freeholdsForExport(pool, accountId)');
-    expect(exportBody).toContain('freeholdHearthForExport(pool, accountId)');
-    expect(exportBody).toContain('freeholds,');
-    expect(exportBody).toContain('freeholdHearth,');
-    // The loaders own their SQL; db.ts must not grow a second copy of it.
-    expect(exportBody).not.toContain('FROM account_freeholds');
-    expect(exportBody).not.toContain('FROM account_freehold_hearth');
+    // Since 07a every housing table reaches the export through ONE delegated
+    // loader (server/freehold_account_export.ts), spread into the result, so
+    // db.ts carries one line for the whole housing section.
+    expect(exportBody.split('freeholdAccountExport(pool, accountId)').length - 1).toBe(1);
+    expect(exportBody).toContain('const housing = await freeholdAccountExport(pool, accountId);');
+    expect(exportBody).toContain('...housing,');
+    // ...and that loader still calls each table's own loader and keeps 07's two
+    // keys beside the three 07a added.
+    const housingExport = stripComments(read('server/freehold_account_export.ts'));
+    const loaderBody = bodyOf(housingExport, 'export async function freeholdAccountExport');
+    for (const call of [
+      'freeholdsForExport(pool, accountId)',
+      'freeholdHearthForExport(pool, accountId)',
+      'freeholdClaimsForExport(pool, accountId)',
+      'freeholdOperationsForExport(pool, accountId)',
+    ]) {
+      expect(loaderBody, call).toContain(call);
+    }
+    for (const key of [
+      'freeholds,',
+      'freeholdHearth,',
+      'freeholdClaims,',
+      'freeholdOperations: operations.intents,',
+      'freeholdOperationReceipts: operations.receipts,',
+    ]) {
+      expect(loaderBody, key).toContain(key);
+    }
+    // The loaders own their SQL; neither db.ts nor the section loader may grow a
+    // second copy of it.
+    for (const table of [
+      'FROM account_freeholds',
+      'FROM account_freehold_hearth',
+      'FROM freehold_plot_claims',
+      'FROM freehold_operations',
+      'FROM freehold_operation_receipts',
+    ]) {
+      expect(exportBody, table).not.toContain(table);
+      expect(loaderBody, table).not.toContain(table);
+    }
     // The retention prunes are deliberately NOT heavy call sites anymore: each call
     // is one bounded DELETE batch on the default allowance, and the sweep drives
     // iteration. Batching is what makes the default safe; re-wrapping would be a

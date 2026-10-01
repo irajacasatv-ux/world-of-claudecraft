@@ -4,8 +4,18 @@ import { HEARTH_KEY_COOLDOWN_MS } from './gate_rules';
 import { enterFreehold, freeholdDefForTier } from './instance';
 import { freeholdKeyFor } from './owner_key';
 
-/** Isolated-host travel clock. The realm participant refuses until durable
- * account authority lands in 07a; this Map never substitutes for that fact. */
+/** The host's answer to a remote entry that passed every local check. Offline
+ *  and headless hosts answer 'admit' (their isolated clock is the authority).
+ *  A lit realm answers from the DURABLE account cooldown: 'pending' while its
+ *  transaction runs (the use is silent and the host re-dispatches it once the
+ *  outcome is known), 'admit' only for that committed re-dispatch, and 'deny'
+ *  (`busy`) for anything else. */
+export type { FreeholdKeyAdmission } from '../types';
+
+/** Isolated-host travel clock, and online a forward-only MIRROR of the durable
+ * account clock: it may deny a use locally, and it never admits one, because
+ * admission is the host's (above). It is checked BEFORE admission, so a key
+ * used through its cooldown costs the host nothing. */
 export function useHearthKey(ctx: SimContext, pid: number): boolean {
   const r = ctx.resolve(pid);
   if (!r) return false;
@@ -25,11 +35,13 @@ export function useHearthKey(ctx: SimContext, pid: number): boolean {
   const reason = freeholdEntryContextReason(ctx, pid, false, alreadyHome);
   if (reason) return denyFreehold(ctx, pid, reason);
   if (alreadyHome) return false;
-  if (!ctx.freeholdKeyAdmission(ownerKey, pid)) return denyFreehold(ctx, pid, 'busy');
   const now = ctx.lockoutNowMs();
   if (!Number.isFinite(now)) return denyFreehold(ctx, pid, 'busy');
   const readyAt = ctx.freeholdKeyReadyAtMs.get(ownerKey) ?? 0;
   if (now < readyAt) return denyFreehold(ctx, pid, 'cooldown');
+  const admission = ctx.freeholdKeyAdmission(ownerKey, pid);
+  if (admission === 'pending') return false;
+  if (admission !== 'admit') return denyFreehold(ctx, pid, 'busy');
   if (!enterFreehold(ctx, pid)) return false;
   ctx.freeholdKeyReadyAtMs.set(ownerKey, Math.max(readyAt, now + HEARTH_KEY_COOLDOWN_MS));
   return true;

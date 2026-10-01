@@ -7,9 +7,10 @@
 //
 // The FK parents are MINIMAL STAND-INS (id-only accounts, plus a characters
 // table that exists only so the character-deletion arm has something real to
-// delete): this suite proves the account_freehold_hearth DDL and its four
-// statements, not the core schema, and the production parents exist long
-// before ensureSchema reaches this module.
+// delete): this suite proves the account_freehold_hearth DDL (with the 07a
+// advance token column and its catalog-probed ALTER), the four statements of
+// an entry and the verify read, not the core schema, and the production
+// parents exist long before ensureSchema reaches this module.
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 const url = process.env.TEST_DATABASE_URL ?? '';
@@ -38,6 +39,17 @@ const FIRST_USE_RACE_ACCOUNT = 8;
 const CHECK_ACCOUNT = 9;
 const ROW_LOCK_RACE_ACCOUNT = 10;
 const NUMERIC_PARSER_ACCOUNT = 11;
+const CORRUPT_ACCOUNT = 12;
+const BOUNDARY_ACCOUNT = 13;
+const TOKEN_ACCOUNT = 14;
+const CLOCK_RACE_ACCOUNT = 15;
+
+/** A table that predates the advance token, in its own private schema, so the
+ *  probe's ALTER arm runs for real without touching the suite's main table. */
+const LEGACY_SCHEMA = 'freehold_hearth_pg_test_legacy';
+
+const TOKEN = '0123456789abcdef0123456789abcdef';
+const OTHER_TOKEN = 'fedcba9876543210fedcba9876543210';
 
 d('account_freehold_hearth against real PostgreSQL', () => {
   // Imported lazily so the suite skips clean without pg installed state.
@@ -107,8 +119,10 @@ d('account_freehold_hearth against real PostgreSQL', () => {
       statement_timeout: 15_000,
     });
     const admin = new Pool({ connectionString: url, max: 1 });
+    await admin.query(`DROP SCHEMA IF EXISTS ${LEGACY_SCHEMA} CASCADE`);
     await admin.query(`DROP SCHEMA IF EXISTS ${SCHEMA} CASCADE`);
     await admin.query(`CREATE SCHEMA ${SCHEMA}`);
+    await admin.query(`CREATE SCHEMA ${LEGACY_SCHEMA}`);
     await admin.end();
     probe = new Pool({
       connectionString: url,
@@ -126,7 +140,7 @@ d('account_freehold_hearth against real PostgreSQL', () => {
     );
     await pool.query(
       `INSERT INTO accounts (id)
-       VALUES (1), (2), (3), (4), (5), (6), (7), (8), (9), (10), (11)`,
+       VALUES (1), (2), (3), (4), (5), (6), (7), (8), (9), (10), (11), (12), (13), (14), (15)`,
     );
     await pool.query('INSERT INTO characters (id, account_id) VALUES (1, $1), (2, $1)', [
       CHARACTER_ACCOUNT,
@@ -147,6 +161,7 @@ d('account_freehold_hearth against real PostgreSQL', () => {
     // and could take the real table with it.
     const { Pool } = await import('pg');
     const admin = new Pool({ connectionString: url, max: 1 });
+    await admin.query(`DROP SCHEMA IF EXISTS ${LEGACY_SCHEMA} CASCADE`);
     await admin.query(`DROP SCHEMA IF EXISTS ${SCHEMA} CASCADE`);
     await admin.end();
   });
@@ -199,6 +214,145 @@ d('account_freehold_hearth against real PostgreSQL', () => {
       [`${SCHEMA}.account_freehold_hearth`],
     );
     expect(key.rows.map((r: { attname: string }) => r.attname)).toEqual(['account_id']);
+  });
+
+  /** The advance token column and every constraint on the table that names it. */
+  const tokenShape = async (schema: string) => {
+    const column = await pool.query(
+      `SELECT data_type, is_nullable, column_default
+         FROM information_schema.columns
+        WHERE table_schema = $1 AND table_name = 'account_freehold_hearth'
+          AND column_name = 'advance_token'`,
+      [schema],
+    );
+    const constraints = await pool.query(
+      `SELECT conname, pg_get_constraintdef(oid) AS def
+         FROM pg_constraint
+        WHERE conrelid = $1::regclass AND pg_get_constraintdef(oid) LIKE '%advance_token%'
+        ORDER BY conname`,
+      [`${schema}.account_freehold_hearth`],
+    );
+    return { column: column.rows, constraints: constraints.rows };
+  };
+
+  it('carries the advance token column and its ONE named constraint after three applications', async () => {
+    // The probe text is present (the positive pin the catalog check relies on):
+    // without it the fragment could never reach an older table at all.
+    expect(hearthSchema).toContain('ADD COLUMN IF NOT EXISTS advance_token');
+    // beforeAll applied the fragment twice and the case above a third time.
+    expect(await tokenShape(SCHEMA)).toEqual({
+      column: [{ data_type: 'text', is_nullable: 'YES', column_default: null }],
+      constraints: [
+        {
+          conname: 'account_freehold_hearth_advance_token_shape',
+          def: "CHECK (((advance_token IS NULL) OR (advance_token ~ '^[0-9a-f]{32}$'::text)))",
+        },
+      ],
+    });
+  });
+
+  it('refuses a malformed advance token by its named constraint, and accepts the shape', async () => {
+    await expect(
+      pool.query(
+        `INSERT INTO account_freehold_hearth (account_id, advance_token) VALUES ($1, $2)`,
+        [CHECK_ACCOUNT, '0123456789ABCDEF0123456789ABCDEF'],
+      ),
+    ).rejects.toMatchObject({
+      code: '23514',
+      constraint: 'account_freehold_hearth_advance_token_shape',
+    });
+    expect(await readRow(CHECK_ACCOUNT)).toBeNull();
+    // The contrast arm: the exact shape the advance stamps is accepted.
+    await pool.query(
+      `INSERT INTO account_freehold_hearth (account_id, advance_token) VALUES ($1, $2)`,
+      [CHECK_ACCOUNT, TOKEN],
+    );
+    expect(await readRow(CHECK_ACCOUNT)).toEqual({ ready_at_ms: '0', revision: '0' });
+    await pool.query('DELETE FROM account_freehold_hearth WHERE account_id = $1', [CHECK_ACCOUNT]);
+  });
+
+  /** Applies `fragment` while another transaction holds ACCESS SHARE on
+   *  `table`, under a short lock_timeout: an ALTER TABLE in the fragment must
+   *  wait for ACCESS EXCLUSIVE and so times out (55P03); a fragment that only
+   *  reads the catalog completes. */
+  const applyBesideAReader = async (fragment: string, table: string) => {
+    const reader = await pool.connect();
+    const applier = await pool.connect();
+    try {
+      await reader.query('BEGIN');
+      await reader.query(`LOCK TABLE ${table} IN ACCESS SHARE MODE`);
+      await applier.query('BEGIN');
+      await applier.query("SET LOCAL lock_timeout = '500ms'");
+      try {
+        await applier.query(fragment);
+        return { ok: true as const };
+      } catch (err) {
+        return { ok: false as const, code: (err as { code?: string }).code };
+      } finally {
+        await applier.query('ROLLBACK');
+      }
+    } finally {
+      await reader.query('ROLLBACK');
+      reader.release();
+      applier.release();
+    }
+  };
+
+  it('a reapplication issues NO ALTER: it completes beside a live reader of the table', async () => {
+    // A boot that reached the ALTER would queue for ACCESS EXCLUSIVE behind
+    // every other realm's open Hearth read. The probe is what lets it pass.
+    expect(await applyBesideAReader(hearthSchema, `${SCHEMA}.account_freehold_hearth`)).toEqual({
+      ok: true,
+    });
+  });
+
+  it('adds the column to a table that predates it, once, and then stops issuing the ALTER', async () => {
+    // The 07 shape exactly: no advance_token column.
+    await pool.query(
+      `CREATE TABLE ${LEGACY_SCHEMA}.account_freehold_hearth (
+         account_id INT PRIMARY KEY REFERENCES accounts(id) ON DELETE CASCADE,
+         ready_at_ms BIGINT NOT NULL DEFAULT 0,
+         revision BIGINT NOT NULL DEFAULT 0,
+         updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+         CONSTRAINT account_freehold_hearth_ready_nonnegative CHECK (ready_at_ms >= 0),
+         CONSTRAINT account_freehold_hearth_revision_nonnegative CHECK (revision >= 0)
+       )`,
+    );
+    await pool.query(
+      `INSERT INTO ${LEGACY_SCHEMA}.account_freehold_hearth (account_id, ready_at_ms, revision)
+       VALUES ($1, 777, 3)`,
+      [READY_ACCOUNT],
+    );
+    expect(await tokenShape(LEGACY_SCHEMA)).toEqual({ column: [], constraints: [] });
+    const legacy = db.freeholdHearthSchema(LEGACY_SCHEMA);
+    const legacyTable = `${LEGACY_SCHEMA}.account_freehold_hearth`;
+    // THE CONTROL for the no-ALTER case above: with the column absent, the
+    // fragment DOES reach the ALTER, which cannot pass the live reader.
+    expect(await applyBesideAReader(legacy, legacyTable)).toEqual({ ok: false, code: '55P03' });
+    expect(await tokenShape(LEGACY_SCHEMA)).toEqual({ column: [], constraints: [] });
+
+    await pool.query(legacy);
+    expect(await tokenShape(LEGACY_SCHEMA)).toEqual({
+      column: [{ data_type: 'text', is_nullable: 'YES', column_default: null }],
+      constraints: [
+        {
+          conname: 'account_freehold_hearth_advance_token_shape',
+          def: "CHECK (((advance_token IS NULL) OR (advance_token ~ '^[0-9a-f]{32}$'::text)))",
+        },
+      ],
+    });
+    // The existing row survived with its counters and a NULL token.
+    const kept = await pool.query(
+      `SELECT ready_at_ms::text AS ready_at_ms, revision::text AS revision, advance_token
+         FROM ${legacyTable} WHERE account_id = $1`,
+      [READY_ACCOUNT],
+    );
+    expect(kept.rows).toEqual([{ ready_at_ms: '777', revision: '3', advance_token: null }]);
+    // Upgraded once, the next two boots are catalog reads: no ALTER beside a
+    // reader, and still exactly one constraint.
+    expect(await applyBesideAReader(legacy, legacyTable)).toEqual({ ok: true });
+    await pool.query(legacy);
+    expect((await tokenShape(LEGACY_SCHEMA)).constraints).toHaveLength(1);
   });
 
   it("restores the caller's in-flight search_path after the fragment", async () => {
@@ -582,7 +736,12 @@ d('account_freehold_hearth against real PostgreSQL', () => {
     // eligibility guard could never hand it: a stale caller replaying an epoch
     // from long before the current ready_at_ms. GREATEST is what makes that
     // harmless, and this is the only way to observe its left arm winning.
-    const replayed = await pool.query(db.FREEHOLD_HEARTH_ADVANCE_SQL, [STALE_ACCOUNT, '1', '0']);
+    const replayed = await pool.query(db.FREEHOLD_HEARTH_ADVANCE_SQL, [
+      STALE_ACCOUNT,
+      '1',
+      '0',
+      null,
+    ]);
     expect(replayed.rows[0].ready_at_ms).toBe(before?.ready_at_ms);
     // Never lowered, and the revision still only counts up.
     expect(replayed.rows[0].revision).toBe('2');
@@ -591,7 +750,12 @@ d('account_freehold_hearth against real PostgreSQL', () => {
     // The other arm of GREATEST, for real: a now_ms far in the FUTURE does move
     // the value forward, so the clamp is not simply ignoring its input.
     const future = String(BigInt(before?.ready_at_ms ?? '0') + 10_000n);
-    const forward = await pool.query(db.FREEHOLD_HEARTH_ADVANCE_SQL, [STALE_ACCOUNT, future, '5']);
+    const forward = await pool.query(db.FREEHOLD_HEARTH_ADVANCE_SQL, [
+      STALE_ACCOUNT,
+      future,
+      '5',
+      null,
+    ]);
     expect(forward.rows[0].ready_at_ms).toBe(String(BigInt(future) + 5n));
     expect(forward.rows[0].revision).toBe('3');
   });
@@ -613,18 +777,25 @@ d('account_freehold_hearth against real PostgreSQL', () => {
     expect(String(Number(huge))).toBe('9007199254740992');
 
     // And the key is not ready: a Number comparison would have granted it.
+    // Since 07a a stored time this far past the clock plus a cooldown is
+    // refused as CORRUPT (no advance writes it; only a bad row or a backward
+    // clock step can), which is still a refusal that writes nothing and still
+    // carries both counters back exactly. The cooldown arm past 2^53 is the
+    // fake-client twin's to drive, since no real clock reaches 2^53 ms.
     const client = await pool.connect();
     try {
       await client.query('BEGIN');
       const refused = await db.advanceFreeholdHearthOnClient(client, CASCADE_ACCOUNT, COOLDOWN_MS);
-      expect(refused.kind).toBe('cooldown');
-      if (refused.kind !== 'cooldown') throw new Error('unreachable');
+      expect(refused.kind).toBe('corrupt');
+      if (refused.kind !== 'corrupt') throw new Error('unreachable');
       expect(refused.readyAtMs).toBe(huge);
+      expect(refused.revision).toBe(huge);
       expect(BigInt(refused.nowMs)).toBeLessThan(BigInt(huge));
       await client.query('COMMIT');
     } finally {
       client.release();
     }
+    expect(await readRow(CASCADE_ACCOUNT)).toEqual({ ready_at_ms: huge, revision: huge });
   });
 
   it('renders both counters as text in the DATABASE, not by driver luck', async () => {
@@ -677,8 +848,10 @@ d('account_freehold_hearth against real PostgreSQL', () => {
           NUMERIC_PARSER_ACCOUNT,
           COOLDOWN_MS,
         );
-        expect(refused.kind).toBe('cooldown');
-        if (refused.kind !== 'cooldown') throw new Error('unreachable');
+        // Refused as corrupt (2^53 ms is far past the clock plus a cooldown);
+        // the refusal arm's counters must survive the parser all the same.
+        expect(refused.kind).toBe('corrupt');
+        if (refused.kind !== 'corrupt') throw new Error('unreachable');
         expect(refused.readyAtMs).toBe(huge);
         expect(refused.revision).toBe(huge);
         // And the ADVANCE arm: with the key made ready, the RETURNING clause
@@ -750,4 +923,184 @@ d('account_freehold_hearth against real PostgreSQL', () => {
     expect(typeof exported?.ready_at_ms).toBe('string');
     expect(exported?.updated_at).toBeInstanceOf(Date);
   });
+
+  const readToken = async (accountId: number) =>
+    (
+      await pool.query(
+        'SELECT advance_token, revision::text AS revision FROM account_freehold_hearth WHERE account_id = $1',
+        [accountId],
+      )
+    ).rows[0] ?? null;
+
+  it('stamps the attempt token with the advance, and the verify reads it back only after COMMIT', async () => {
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+      const advanced = await db.advanceFreeholdHearthOnClient(
+        client,
+        TOKEN_ACCOUNT,
+        COOLDOWN_MS,
+        TOKEN,
+      );
+      expect(advanced).toMatchObject({ kind: 'advanced', revision: '1' });
+      // Uncommitted first advance: the verify on another connection sees no
+      // row, so it cannot claim an attempt landed that may still roll back.
+      expect(await db.freeholdHearthAdvanceLandedOnClient(pool, TOKEN_ACCOUNT, TOKEN)).toBe(false);
+      await client.query('COMMIT');
+    } finally {
+      client.release();
+    }
+    expect(await readToken(TOKEN_ACCOUNT)).toEqual({
+      advance_token: '0123456789abcdef0123456789abcdef',
+      revision: '1',
+    });
+    expect(await db.freeholdHearthAdvanceLandedOnClient(pool, TOKEN_ACCOUNT, TOKEN)).toBe(true);
+    expect(await db.freeholdHearthAdvanceLandedOnClient(pool, TOKEN_ACCOUNT, OTHER_TOKEN)).toBe(
+      false,
+    );
+
+    // A refused attempt writes nothing, its token included.
+    const refusedClient = await pool.connect();
+    try {
+      await refusedClient.query('BEGIN');
+      expect(
+        await db.advanceFreeholdHearthOnClient(
+          refusedClient,
+          TOKEN_ACCOUNT,
+          COOLDOWN_MS,
+          OTHER_TOKEN,
+        ),
+      ).toMatchObject({ kind: 'cooldown' });
+      await refusedClient.query('COMMIT');
+    } finally {
+      refusedClient.release();
+    }
+    expect(await readToken(TOKEN_ACCOUNT)).toEqual({
+      advance_token: '0123456789abcdef0123456789abcdef',
+      revision: '1',
+    });
+
+    // The next accepted advance replaces it: the token names ONE attempt.
+    await pool.query('UPDATE account_freehold_hearth SET ready_at_ms = 0 WHERE account_id = $1', [
+      TOKEN_ACCOUNT,
+    ]);
+    const next = await pool.connect();
+    try {
+      await next.query('BEGIN');
+      expect(
+        await db.advanceFreeholdHearthOnClient(next, TOKEN_ACCOUNT, COOLDOWN_MS, OTHER_TOKEN),
+      ).toMatchObject({ kind: 'advanced', revision: '2' });
+      await next.query('COMMIT');
+    } finally {
+      next.release();
+    }
+    expect(await readToken(TOKEN_ACCOUNT)).toEqual({
+      advance_token: 'fedcba9876543210fedcba9876543210',
+      revision: '2',
+    });
+    expect(await db.freeholdHearthAdvanceLandedOnClient(pool, TOKEN_ACCOUNT, TOKEN)).toBe(false);
+    expect(await db.freeholdHearthAdvanceLandedOnClient(pool, TOKEN_ACCOUNT, OTHER_TOKEN)).toBe(
+      true,
+    );
+  });
+
+  it('refuses a stored ready time past the clock plus a cooldown as corrupt, and writes nothing', async () => {
+    // One minute past anything an advance can write, set by the DATABASE clock.
+    await pool.query(
+      `INSERT INTO account_freehold_hearth (account_id, ready_at_ms, revision, advance_token)
+       VALUES ($1, (EXTRACT(EPOCH FROM clock_timestamp()) * 1000)::bigint + $2::bigint, 6, $3)`,
+      [CORRUPT_ACCOUNT, String(COOLDOWN_MS + 60_000), TOKEN],
+    );
+    const before = await readRow(CORRUPT_ACCOUNT);
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+      const refused = await db.advanceFreeholdHearthOnClient(
+        client,
+        CORRUPT_ACCOUNT,
+        COOLDOWN_MS,
+        OTHER_TOKEN,
+      );
+      expect(refused.kind).toBe('corrupt');
+      if (refused.kind !== 'corrupt') throw new Error('unreachable');
+      expect(refused.readyAtMs).toBe(before?.ready_at_ms);
+      expect(refused.revision).toBe('6');
+      await client.query('COMMIT');
+    } finally {
+      client.release();
+    }
+    // Never trusted, never repaired: both counters and the token unchanged.
+    expect(await readRow(CORRUPT_ACCOUNT)).toEqual(before);
+    expect((await readToken(CORRUPT_ACCOUNT))?.advance_token).toBe(TOKEN);
+  });
+
+  it('answers cooldown, not corrupt, for a ready time written AT the clock plus the cooldown', async () => {
+    // The control: exactly what an advance writes. The read's clock is later
+    // than the insert's, so the distance is at most the cooldown.
+    await pool.query(
+      `INSERT INTO account_freehold_hearth (account_id, ready_at_ms, revision)
+       VALUES ($1, (EXTRACT(EPOCH FROM clock_timestamp()) * 1000)::bigint + $2::bigint, 6)`,
+      [BOUNDARY_ACCOUNT, String(COOLDOWN_MS)],
+    );
+    const before = await readRow(BOUNDARY_ACCOUNT);
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+      const refused = await db.advanceFreeholdHearthOnClient(client, BOUNDARY_ACCOUNT, COOLDOWN_MS);
+      expect(refused).toMatchObject({
+        kind: 'cooldown',
+        readyAtMs: before?.ready_at_ms,
+        revision: '6',
+      });
+      await client.query('COMMIT');
+    } finally {
+      client.release();
+    }
+    expect(await readRow(BOUNDARY_ACCOUNT)).toEqual(before);
+  });
+
+  it('judges corrupt on the clock AFTER the lock wait: a later-started advance is a cooldown', async () => {
+    // The race clock_ms exists for: the loser's transaction STARTS first, the
+    // winner starts later and advances, the loser queues behind it. The ready
+    // time the loser then reads is more than a cooldown past its own now(),
+    // and must still read as an ordinary cooldown.
+    const loser = await pool.connect();
+    const winner = await pool.connect();
+    try {
+      await loser.query('BEGIN');
+      await loser.query('SELECT 1');
+      await new Promise<void>((resolve) => setTimeout(resolve, 60));
+      await winner.query('BEGIN');
+      const winnerPid = await backendPid(winner);
+      const loserPid = await backendPid(loser);
+      const winnerResult = await db.advanceFreeholdHearthOnClient(
+        winner,
+        CLOCK_RACE_ACCOUNT,
+        COOLDOWN_MS,
+      );
+      expect(winnerResult.kind).toBe('advanced');
+      if (winnerResult.kind !== 'advanced') throw new Error('unreachable');
+      const loserPromise = db.advanceFreeholdHearthOnClient(loser, CLOCK_RACE_ACCOUNT, COOLDOWN_MS);
+      const blocked = await waitForBlock(winnerPid);
+      expect(blocked?.pid).toBe(loserPid);
+      await winner.query('COMMIT');
+      const loserResult = await loserPromise;
+      expect(loserResult.kind).toBe('cooldown');
+      if (loserResult.kind !== 'cooldown') throw new Error('unreachable');
+      expect(loserResult.readyAtMs).toBe(winnerResult.readyAtMs);
+      // ANTI-VACUITY: the premise held. The loser started first, and against
+      // its now() the stored time IS past a whole cooldown, so a corrupt test
+      // judged on now_ms would have refused this ordinary race as corrupt.
+      expect(BigInt(winnerResult.nowMs)).toBeGreaterThan(BigInt(loserResult.nowMs));
+      expect(BigInt(loserResult.readyAtMs) - BigInt(loserResult.nowMs)).toBeGreaterThan(
+        BigInt(COOLDOWN_MS),
+      );
+      await loser.query('COMMIT');
+    } finally {
+      await winner.query('ROLLBACK').catch(() => {});
+      await loser.query('ROLLBACK').catch(() => {});
+      winner.release();
+      loser.release();
+    }
+  }, 30_000);
 });

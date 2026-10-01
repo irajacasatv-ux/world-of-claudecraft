@@ -48,7 +48,7 @@ import {
 import { PENDING_FREEHOLD_PLOT_ID } from '../src/sim/freehold/state';
 import { boundedDatabaseError } from './freehold_bounded_error';
 import { createFreeholdCapacityWarn } from './freehold_capacity_warn';
-import { FREEHOLD_PRIMARY_PLOT_INDEX, type FreeholdUpsertResult } from './freehold_db';
+import { FREEHOLD_PRIMARY_PLOT_INDEX, type FreeholdFencedUpsertResult } from './freehold_db';
 import { ABSENT_HEARTH_REVISION, COLD_HEARTH, readFreeholdLoginPair } from './freehold_hearth_load';
 import { freeholdJoinAnswer } from './freehold_join_answer';
 import {
@@ -571,6 +571,22 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
       );
     }
 
+    if (rowLoad.kind === 'claim_busy') {
+      // 07a: another realm holds this plot's live claim, so the row was never
+      // read and nothing installs or writes. REPAIRABLE: the next login asks
+      // again, and the claim frees when that realm lets go or expires.
+      return holdResult(
+        entry,
+        {
+          kind: 'claim_busy',
+          detail: 'another realm holds this plot',
+          plotIndex: rowLoad.plotIndex,
+          durableRev: FREEHOLD_ABSENT_DURABLE_REV,
+        },
+        hearth,
+      );
+    }
+
     if (rowLoad.kind === 'unadmitted') {
       return holdResult(
         entry,
@@ -880,7 +896,7 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
 
   function applyWriteResult(
     entry: FreeholdPersistEntry,
-    result: FreeholdUpsertResult,
+    result: FreeholdFencedUpsertResult,
     generation: number,
     snapshotAtMs: number,
     written: PersistedFreehold,
@@ -924,6 +940,20 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
       // so the snapshot instant is the exact lower bound on their age.
       entry.dirtySinceMs = isDirty(entry) ? snapshotAtMs : 0;
       return true;
+    }
+    if (result.kind === 'fenced') {
+      // 07a: another realm holds this plot's claim now, so this realm is no
+      // longer its authority. Quiesced like a stale CAS (nothing it could send
+      // would land), with its own counter because the fence NAMED the writer.
+      counters.fencedWrites++;
+      entry.quiesced = true;
+      if (!entry.quiesceWarned) {
+        entry.quiesceWarned = true;
+        ports.warn(
+          `freehold plot index ${entry.plotIndex} quiesced: this realm no longer holds the plot's claim, so no further writes go out for this owner`,
+        );
+      }
+      return false;
     }
     if (result.kind === 'stale') {
       counters.staleWrites++;
@@ -1720,6 +1750,38 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
         }
         drainCheck();
       });
+    },
+
+    wantsClaim(ownerKey: string): boolean {
+      const entry = entries.get(ownerKey);
+      return entry !== undefined && (entry.refs > 0 || owesWork(entry));
+    },
+
+    authority(ownerKey: string) {
+      const entry = entries.get(ownerKey);
+      if (!entry) return null;
+      return {
+        loaded: entry.loaded,
+        blocked: blocked(entry),
+        plotId: entry.plotId,
+        durableRev: entry.durableRev,
+      };
+    },
+
+    // The owner's OWN write FIFO, the one runWrite rides, so a mutation that
+    // writes the plot row can never interleave with this store's write of it
+    // (the touch-set manifest's Q3). The mutation applies its plan to the live
+    // record and adopts its committed revision before its job resolves, so the
+    // next write here serializes a document that already carries the effect.
+    runExclusive<T>(ownerKey: string, signal: AbortSignal, job: () => Promise<T>): Promise<T> {
+      return ports.enqueue(ownerKey, signal, job);
+    },
+
+    adoptCommittedRevision(ownerKey: string, durableRev: string): void {
+      const entry = entries.get(ownerKey);
+      if (!entry || blocked(entry) || !/^[1-9][0-9]*$/.test(durableRev)) return;
+      if (entry.durableRev !== null && BigInt(durableRev) <= BigInt(entry.durableRev)) return;
+      entry.durableRev = durableRev;
     },
 
     stats(): FreeholdPersistStats {

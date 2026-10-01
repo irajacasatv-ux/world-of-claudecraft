@@ -10,7 +10,7 @@ import type {
   FreeholdWriteRefusalOptions,
   PersistedFreehold,
 } from '../src/sim/freehold/persisted';
-import type { FreeholdRowLoad, FreeholdUpsert, FreeholdUpsertResult } from './freehold_db';
+import type { FreeholdFencedUpsertResult, FreeholdRowLoad, FreeholdUpsert } from './freehold_db';
 import type { FreeholdHearthLoad } from './freehold_hearth_db';
 import type { FreeholdRecoveryHold, LoadedFreehold } from './freehold_load_outcome';
 import type { FreeholdPreloadOptions } from './freehold_login_bounds';
@@ -56,7 +56,10 @@ export interface FreeholdPersistPorts {
      *  gate, not something a round-trip saving may quietly change. */
     hearth: FreeholdHearthAnswer;
   }>;
-  writeRow(input: FreeholdUpsert): Promise<FreeholdUpsertResult>;
+  /** The fenced write (server/freehold_fenced_write.ts since 07a): every answer
+   *  07's upsert gave, plus `fenced` when this realm no longer holds the plot's
+   *  global claim. */
+  writeRow(input: FreeholdUpsert): Promise<FreeholdFencedUpsertResult>;
   /** normalizeFreehold bound to the realm's live tier and visit-policy sets. */
   normalize(raw: unknown): FreeholdLoadResult;
   /** THE SAME two sets that `normalize` is bound to, exposed so the save path
@@ -130,6 +133,28 @@ export interface FreeholdPersistStore {
    *  deadline. Does NOT close intake, and does not cancel a leave-flush deadline
    *  already armed: those are bounded at two seconds and cancel themselves. */
   stop(): void;
+  /** 07a: whether this store still needs the owner's global plot claim, which
+   *  is what the claim renewer asks: an entry with a session reference or with
+   *  work it still owes. SYNCHRONOUS and allocation-free. */
+  wantsClaim(ownerKey: string): boolean;
+  /** 07a: the owner's entry as the Hearth trip's authority rule reads it, or
+   *  null when the store holds no entry. `blocked` is the write block (not yet
+   *  loaded, held, or quiesced): a blocked entry never authorizes a trip. */
+  authority(ownerKey: string): {
+    readonly loaded: boolean;
+    readonly blocked: boolean;
+    readonly plotId: string;
+    readonly durableRev: string | null;
+  } | null;
+  /** 07a: run `job` inside THIS owner's write FIFO (the manifest's Q3), so a
+   *  mutation that writes the plot row is serialized with the store's own
+   *  writes. Cancellable until the job starts. */
+  runExclusive<T>(ownerKey: string, signal: AbortSignal, job: () => Promise<T>): Promise<T>;
+  /** 07a: adopt a revision a mutation committed for this owner's row, from
+   *  inside runExclusive right after the COMMIT, so the store's next CAS expects
+   *  it instead of answering stale. Forward only; a no-op for an unknown or
+   *  blocked owner. */
+  adoptCommittedRevision(ownerKey: string, durableRev: string): void;
 }
 
 export interface FreeholdPersistEntry {

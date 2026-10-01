@@ -6770,6 +6770,7 @@ export const it_IT: EnTranslations = {
       "rename_not_permitted": "Non è consentito rinominare questo personaggio.",
       "delete_confirm": "Digita il nome del personaggio per confermare l'eliminazione.",
       "storage_purchase_open": "Un acquisto di spazio deve terminare o essere risolto prima di poter eliminare questo personaggio.",
+      "freehold_operation_open": "A Freehold operation must finish or be resolved before this character can be deleted.",
       "delete_busy": "Il reame è occupato. Riprova a eliminare questo personaggio tra poco.",
       "already_in_world": "Il personaggio è già nel mondo.",
       "taken_over": "Il tuo personaggio è stato preso in controllo da un'altra sessione.",

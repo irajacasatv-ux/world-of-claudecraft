@@ -3,10 +3,12 @@ import { describe, expect, it } from 'vitest';
 import {
   CharacterDeleteClientGone,
   CharacterDeleteQueueSaturated,
+  CharacterFreeholdOperationOpen,
   CharacterStoragePurchaseOpen,
 } from '../../server/character_delete_db';
 import {
   CHARACTER_DELETE_BUSY_BODY,
+  CHARACTER_FREEHOLD_OPERATION_OPEN_BODY,
   CHARACTER_STORAGE_PURCHASE_OPEN_BODY,
   characterDeleteClientGone,
   characterDeleteHttpRefusal,
@@ -33,6 +35,51 @@ describe('characterDeleteHttpRefusal', () => {
       expect(JSON.stringify(refusal)).not.toContain(status);
     },
   );
+
+  it('maps an open housing operation to its own non-sensitive 409 contract', () => {
+    const raw = Object.assign(new Error('freehold_operation_open'), {
+      code: '55006',
+      constraint: 'freehold_operations_open_delete_guard',
+    });
+    // Both construction arms: the pre-read refusal and the trigger backstop
+    // that carries the guard error as its cause. Neither id nor cause leaks.
+    for (const refusalError of [
+      new CharacterFreeholdOperationOpen(42),
+      new CharacterFreeholdOperationOpen(42, { cause: raw }),
+    ]) {
+      const refusal = characterDeleteHttpRefusal(refusalError);
+
+      expect(refusal).toEqual({
+        status: 409,
+        body: {
+          error:
+            'A Freehold operation must finish or be resolved before this character can be deleted.',
+          code: 'character.freehold_operation_open',
+        },
+      });
+      expect(refusal?.body).toBe(CHARACTER_FREEHOLD_OPERATION_OPEN_BODY);
+      expect(refusal?.body).not.toBe(CHARACTER_STORAGE_PURCHASE_OPEN_BODY);
+      expect(JSON.stringify(refusal)).not.toContain('42');
+      expect(JSON.stringify(refusal)).not.toContain('55006');
+      expect(JSON.stringify(refusal)).not.toContain('freehold_operations_open_delete_guard');
+      expect(characterDeleteClientGone(refusalError)).toBe(false);
+    }
+    // The storage contract stays its own body (negative control: the new
+    // class did not capture the storage mapping, or the reverse).
+    expect(characterDeleteHttpRefusal(new CharacterStoragePurchaseOpen(42, 'pending'))?.body).toBe(
+      CHARACTER_STORAGE_PURCHASE_OPEN_BODY,
+    );
+  });
+
+  it('never maps a raw guard 55006 itself: only the domain classes are refusals', () => {
+    // deleteOwnedCharacterRow is the one place that turns a guard 55006 into a
+    // class; a raw one reaching the mapper is an unknown failure and surfaces.
+    const raw = Object.assign(new Error('freehold_operation_open'), {
+      code: '55006',
+      constraint: 'freehold_operations_open_delete_guard',
+    });
+    expect(characterDeleteHttpRefusal(raw)).toBeNull();
+  });
 
   it('maps gate saturation to a retryable non-sensitive 503', () => {
     const refusal = characterDeleteHttpRefusal(new CharacterDeleteQueueSaturated(42));

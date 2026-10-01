@@ -6770,6 +6770,7 @@ export const da_DK: EnTranslations = {
       "rename_not_permitted": "Det er ikke tilladt at omdøbe denne karakter.",
       "delete_confirm": "Skriv karakterens navn for at bekræfte sletning.",
       "storage_purchase_open": "Et lagerkøb skal afsluttes eller løses, før figuren kan slettes.",
+      "freehold_operation_open": "A Freehold operation must finish or be resolved before this character can be deleted.",
       "delete_busy": "Riget er optaget. Prøv at slette denne figur igen om et øjeblik.",
       "already_in_world": "Karakteren er allerede i verdenen.",
       "taken_over": "Din karakter blev overtaget af en anden session.",

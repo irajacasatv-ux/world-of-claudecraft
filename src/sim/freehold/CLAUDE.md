@@ -74,24 +74,27 @@ carries an opaque plot id only.
   The selected live owner claim is a silent no-op before clock/admission.
   The isolated clock is a Sim-owned `freeholdKeyReadyAtMs` account map, read
   against `lockoutNowMs` only on commands. It has exactly TWO writers, both in
-  this directory: `useHearthKey` after a successful remote entry, and
-  `mergeFreeholdKeyReadyAt`, which installs a durable clock FORWARD ONLY. A
-  host that reached into the Map itself would be a third writer, and the
-  forward-only rule would then live in as many places as there are hosts, so
-  nothing outside this directory may write it. It is outside the serialized
-  plot and retained until that isolated Sim is discarded, so leaving or
-  changing tier cannot reset it. KNOWN GAP, named so 07a inherits it rather
-  than discovering it: the map has no eviction path, so a long-lived realm
-  accumulates one entry per account that has actually USED a Hearth Key since
-  boot (not one per login: the durable merge returns early on a zero clock, so
-  a login alone never creates an entry). Harmless while
-  the clock is inert (nothing writes the durable row in this release), but the
-  release that lights the realm participant owes the eviction, and the source
-  scan in `tests/freehold_module.test.ts` forbids a `.delete(` outside this
-  directory, so the fix belongs
-  here beside the two writers.
-  The realm's `freeholdKeyAdmission` participant refuses until 07a supplies
-  durable account authority; an isolated ready value never authorizes it.
+  `hearth_key.ts`: `useHearthKey` after a successful remote entry, and
+  `mergeFreeholdKeyReadyAt`, which installs a durable clock FORWARD ONLY; and ONE
+  delete, `releaseFreeholdOnLeave` in `state.ts`, when the owner's LAST session
+  leaves (checked against the roster before that function's record-gated return,
+  because the durable clock is merged at install even for an account whose plot is
+  held or absent). A host that reached into the Map itself would be a third writer,
+  and the forward-only rule would then live in as many places as there are hosts,
+  so nothing outside this directory may write it (the source scan in
+  `tests/freehold_module.test.ts` forbids a `.delete(` outside it). It is outside the
+  serialized plot, so changing tier cannot reset it; online the eviction is safe
+  because the login merge reinstalls the durable clock, and offline and headless
+  keys are per entity.
+  `useHearthKey` checks this LOCAL clock BEFORE the host's admission, so a key used
+  through its cooldown costs the host nothing; the local clock may deny a use, never
+  admit one. The host's `freeholdKeyAdmission` answers `'admit' | 'deny' | 'pending'`
+  (`FreeholdKeyAdmission`, `../types.ts`): offline and headless default `'admit'`;
+  a lit realm answers from the DURABLE account cooldown through
+  `server/freehold_hearth_trip.ts` (07a): `'pending'` (silent, the server
+  re-dispatches the use once the advance commits or refuses), `'admit'` only for that
+  committed re-dispatch, `'deny'` (`busy`) for anything else. An isolated ready value
+  never authorizes a realm trip.
   This participant is not another feature flag and does not block physical
   entry on an explicitly enabled realm.
 - The online entity's `dungeonEntrySeq` must mirror the accepted self-wire entry
@@ -329,6 +332,12 @@ carries an opaque plot id only.
   `server/freehold_persist_types.ts` (`persisted.ts`, type-only, for the ports
   and the entry record) and `server/freehold_wire.ts`
   (`gate_rules.ts`, `types.ts`).
+  The realm's remote Hearth trip (07a) adds TWO more, one consumer split
+  across its core and the binding to the game pieces:
+  `server/freehold_hearth_trip.ts` (`hearth_key.ts`, type-only, for the
+  three-valued admission answer) and `server/freehold_hearth_trip_host.ts`
+  (`gate_rules.ts`, `hearth_key.ts`), which merges the durable clock forward
+  through `mergeFreeholdKeyReadyAt` and re-dispatches the use by item id.
   An extraction inherits the exception rather than creating one, which is why
   they are listed together; `server/freehold_revision_probe.ts` deliberately
   imports NOTHING from the sim, which is what makes it three integers and a
@@ -338,7 +347,7 @@ carries an opaque plot id only.
   `FREEHOLD_VISIT_POLICIES` is deliberately off the barrel for that reason:
   putting a server-facing durable vocabulary on the surface every UI and sim
   caller reads, for one consumer, is the cost the rule above exists to avoid.
-  `server/game.ts` is the TENTH by-path importer and a different case: it
+  `server/game.ts` is the TWELFTH by-path importer and a different case: it
   reaches `gate_rules.ts` only, as `server/freehold_wire.ts` does, for the one
   item id the dark-realm gate, the jail gate and the coordinator's dispatch key
   on, which the sim dispatches on by use type rather than by id.

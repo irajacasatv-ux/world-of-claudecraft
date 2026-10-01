@@ -1991,4 +1991,345 @@ d('storage_purchases against real PostgreSQL', () => {
       ),
     ).rejects.toThrow(/storage_purchases_status_allowed/);
   });
+
+  // D88 against real PostgreSQL: the housing parent-delete guard beside the
+  // storage one, its fragment applied verbatim (twice, the boot contract) to
+  // this suite's schema. The stand-in parents gain the three columns the
+  // housing reads and the character delete need (accounts.deactivated_at,
+  // characters.account_id and realm), all nullable, so every earlier case's
+  // id-only inserts are untouched. LAST in the file on purpose: the guard
+  // triggers it installs fire on every later parent delete. Ids 40 to 49 are
+  // this block's own.
+  describe('the housing operation parent-delete guard (07a D88)', () => {
+    let ops: typeof import('../../server/freehold_operation_db');
+    let del: typeof import('../../server/character_delete_db');
+    const REALM = 'pgtest';
+    const FP_A = 'a'.repeat(64);
+    const FP_B = 'b'.repeat(64);
+
+    beforeAll(async () => {
+      ops = await import('../../server/freehold_operation_db');
+      del = await import('../../server/character_delete_db');
+      await pool.query('ALTER TABLE accounts ADD COLUMN IF NOT EXISTS deactivated_at TIMESTAMPTZ');
+      await pool.query(`ALTER TABLE characters
+        ADD COLUMN IF NOT EXISTS account_id INT,
+        ADD COLUMN IF NOT EXISTS realm TEXT`);
+      const fragment = ops.freeholdOperationSchema(SCHEMA);
+      await pool.query(fragment);
+      await pool.query(fragment);
+    });
+
+    async function seed(id: number): Promise<void> {
+      await pool.query('INSERT INTO accounts (id) VALUES ($1)', [id]);
+      await pool.query('INSERT INTO characters (id, account_id, realm) VALUES ($1, $1, $2)', [
+        id,
+        REALM,
+      ]);
+    }
+
+    /** A plot-scoped intent (plot id plus its fence, the pair CHECK), so the
+     *  receipt it closes into carries a plot id the erase must remove. */
+    function intent(id: number, operationId: string, fingerprint = FP_A) {
+      return {
+        operationId,
+        accountId: id,
+        characterId: id,
+        plotId: `pg_plot_${id}`,
+        kind: 'pg_test_kind',
+        fingerprint,
+        copyRefs: [] as string[],
+        expectedDurableRev: null,
+        fenceGeneration: '1',
+      };
+    }
+
+    const deletePool = { connect: () => pool.connect() };
+
+    /** A checkout whose matching pre-read answers empty WITHOUT reaching the
+     *  server, so the real DELETE meets the real BEFORE trigger and the catch
+     *  arm maps an error PostgreSQL itself raised. Restored on release (the
+     *  client goes back to this suite's pool). */
+    function skippingPreRead(pattern: RegExp) {
+      return {
+        async connect() {
+          const client = await pool.connect();
+          const realQuery = client.query;
+          const realRelease = client.release;
+          const skipping = (text: unknown, values?: unknown) =>
+            typeof text === 'string' && pattern.test(text)
+              ? Promise.resolve({ rows: [], rowCount: 0 })
+              : (realQuery as (t: unknown, v?: unknown) => Promise<unknown>).call(
+                  client,
+                  text,
+                  values,
+                );
+          client.query = skipping as typeof client.query;
+          client.release = ((error?: Error | boolean) => {
+            client.query = realQuery;
+            client.release = realRelease;
+            return realRelease.call(client, error);
+          }) as typeof client.release;
+          return client;
+        },
+      };
+    }
+
+    it('installs both guards so the housing one fires first (trigger name order)', async () => {
+      const triggers = await pool.query(
+        `SELECT tgname FROM pg_trigger
+          WHERE tgrelid = 'characters'::regclass AND NOT tgisinternal
+            AND tgname IN ('freehold_operation_guard_character_delete',
+                           'storage_purchase_guard_character_delete')
+          ORDER BY tgname`,
+      );
+      expect(triggers.rows.map((row: { tgname: string }) => row.tgname)).toEqual([
+        'freehold_operation_guard_character_delete',
+        'storage_purchase_guard_character_delete',
+      ]);
+    });
+
+    it('refuses a character and an account delete while an intent is open, then lets both go', async () => {
+      await seed(40);
+      expect(await ops.prepareFreeholdOperation(pool, intent(40, 'pg-op-guard-40'))).toEqual({
+        kind: 'prepared',
+      });
+      await expect(pool.query('DELETE FROM characters WHERE id = 40')).rejects.toMatchObject({
+        code: '55006',
+        constraint: 'freehold_operations_open_delete_guard',
+        message: 'freehold_operation_open',
+      });
+      await expect(pool.query('DELETE FROM accounts WHERE id = 40')).rejects.toMatchObject({
+        code: '55006',
+        constraint: 'freehold_operations_open_delete_guard',
+        message: 'freehold_operation_open',
+      });
+      // The character delete path refuses at its pre-read, the exported
+      // statement executed for real.
+      const failure = await del
+        .deleteOwnedCharacterRow(deletePool, 40, 40, REALM)
+        .catch((error: unknown) => error);
+      expect(failure).toBeInstanceOf(del.CharacterFreeholdOperationOpen);
+      expect(failure).toMatchObject({ code: 'CHARACTER_FREEHOLD_OPERATION_OPEN', characterId: 40 });
+      const preRead = await pool.query(del.CHARACTER_DELETE_FREEHOLD_OPERATION_SQL, [40]);
+      expect(preRead.rows).toEqual([{ operation_id: 'pg-op-guard-40' }]);
+
+      // The intent closes: with no intent left both deletes succeed.
+      expect(
+        await ops.cancelFreeholdOperation(pool, {
+          operationId: 'pg-op-guard-40',
+          accountId: 40,
+          fingerprint: FP_A,
+          outcome: 'cancelled',
+        }),
+      ).toBeNull();
+      await expect(del.deleteOwnedCharacterRow(deletePool, 40, 40, REALM)).resolves.toBe(true);
+      expect((await pool.query('SELECT 1 FROM characters WHERE id = 40')).rowCount).toBe(0);
+      const beforeErase = await pool.query(
+        `SELECT account_id, plot_id, fingerprint, kind, outcome
+           FROM freehold_operation_receipts WHERE operation_id = 'pg-op-guard-40'`,
+      );
+      expect(beforeErase.rows).toEqual([
+        {
+          account_id: 40,
+          plot_id: 'pg_plot_40',
+          fingerprint: FP_A,
+          kind: 'pg_test_kind',
+          outcome: 'cancelled',
+        },
+      ]);
+      const accountDelete = await pool.query('DELETE FROM accounts WHERE id = 40');
+      expect(accountDelete.rowCount).toBe(1);
+      // ON DELETE SET NULL is an UPDATE the erase trigger sees: the tombstone
+      // keeps only replay authority.
+      const afterErase = await pool.query(
+        `SELECT account_id, plot_id, fingerprint, kind, outcome
+           FROM freehold_operation_receipts WHERE operation_id = 'pg-op-guard-40'`,
+      );
+      expect(afterErase.rows).toEqual([
+        {
+          account_id: null,
+          plot_id: null,
+          fingerprint: null,
+          kind: 'pg_test_kind',
+          outcome: 'cancelled',
+        },
+      ]);
+    });
+
+    it('fires the housing guard before the storage guard when both rails bind a character', async () => {
+      await seed(41);
+      const purchase = {
+        ...ROW,
+        accountId: 41,
+        characterId: 41,
+        idempotencyKey: 'pg-both-rails-41',
+        claimToken: '00000000-0000-4000-8000-000000000041',
+      };
+      await db.beginStoragePurchase(pool, purchase);
+      expect(await ops.prepareFreeholdOperation(pool, intent(41, 'pg-op-both-41'))).toEqual({
+        kind: 'prepared',
+      });
+      // Name order: the housing trigger raises, so the storage one never runs.
+      await expect(pool.query('DELETE FROM characters WHERE id = 41')).rejects.toMatchObject({
+        code: '55006',
+        constraint: 'freehold_operations_open_delete_guard',
+      });
+      // The pre-reads mirror that order.
+      await expect(del.deleteOwnedCharacterRow(deletePool, 41, 41, REALM)).rejects.toBeInstanceOf(
+        del.CharacterFreeholdOperationOpen,
+      );
+      // The CATCH ARM against a real trigger error: with BOTH pre-reads
+      // skipped, the DELETE meets the triggers themselves, the housing one
+      // fires first, and its 55006 maps to the housing refusal.
+      const housingCatch = await del
+        .deleteOwnedCharacterRow(
+          skippingPreRead(/FROM (freehold_operations|storage_purchases)/),
+          41,
+          41,
+          REALM,
+        )
+        .catch((error: unknown) => error);
+      expect(housingCatch).toBeInstanceOf(del.CharacterFreeholdOperationOpen);
+      expect((housingCatch as Error).cause).toMatchObject({
+        code: '55006',
+        constraint: 'freehold_operations_open_delete_guard',
+      });
+
+      // Negative control: with the intent closed only storage binds, and both
+      // the trigger and the pre-read answer storage.
+      expect(
+        await ops.cancelFreeholdOperation(pool, {
+          operationId: 'pg-op-both-41',
+          accountId: 41,
+          fingerprint: FP_A,
+          outcome: 'cancelled',
+        }),
+      ).toBeNull();
+      await expect(pool.query('DELETE FROM characters WHERE id = 41')).rejects.toMatchObject({
+        code: '55006',
+        constraint: 'storage_purchases_open_delete_guard',
+      });
+      const storagePreRead = await del
+        .deleteOwnedCharacterRow(deletePool, 41, 41, REALM)
+        .catch((error: unknown) => error);
+      expect(storagePreRead).toBeInstanceOf(del.CharacterStoragePurchaseOpen);
+      expect(storagePreRead).toMatchObject({ status: 'pending' });
+      // The storage trigger refusal used to surface raw; it now maps (status
+      // 'pending', the trigger carries none) with the real error as its cause.
+      const storageCatch = await del
+        .deleteOwnedCharacterRow(skippingPreRead(/FROM storage_purchases/), 41, 41, REALM)
+        .catch((error: unknown) => error);
+      expect(storageCatch).toBeInstanceOf(del.CharacterStoragePurchaseOpen);
+      expect(storageCatch).toMatchObject({
+        code: 'CHARACTER_STORAGE_PURCHASE_OPEN',
+        status: 'pending',
+      });
+      expect((storageCatch as Error).cause).toMatchObject({
+        code: '55006',
+        constraint: 'storage_purchases_open_delete_guard',
+      });
+
+      await db.settleStoragePurchase(pool, purchase.idempotencyKey, 'applied', purchase.claimToken);
+      await expect(del.deleteOwnedCharacterRow(deletePool, 41, 41, REALM)).resolves.toBe(true);
+    });
+
+    it('the soft-delete erase nulls plot id and fingerprint, idempotently, and an erased id answers conflict', async () => {
+      await seed(42);
+      await seed(43);
+      await seed(44);
+      for (const [id, operationId] of [
+        [42, 'pg-op-erase-42'],
+        [43, 'pg-op-keep-43'],
+      ] as const) {
+        expect(await ops.prepareFreeholdOperation(pool, intent(id, operationId))).toEqual({
+          kind: 'prepared',
+        });
+        expect(
+          await ops.cancelFreeholdOperation(pool, {
+            operationId,
+            accountId: id,
+            fingerprint: FP_A,
+            outcome: 'cancelled',
+          }),
+        ).toBeNull();
+      }
+      // The soft delete: deactivated, never deleted, so no cascade fires and
+      // the erase does the SET NULL's work itself.
+      await pool.query('UPDATE accounts SET deactivated_at = now() WHERE id = 42');
+      expect(await ops.eraseFreeholdOperationReceiptsForAccount(pool, 42)).toBe(1);
+      const receipts = async () =>
+        (
+          await pool.query(
+            `SELECT operation_id, account_id, plot_id, fingerprint, outcome
+               FROM freehold_operation_receipts
+              WHERE operation_id IN ('pg-op-erase-42', 'pg-op-keep-43')
+              ORDER BY operation_id`,
+          )
+        ).rows;
+      const erased = [
+        {
+          operation_id: 'pg-op-erase-42',
+          account_id: null,
+          plot_id: null,
+          fingerprint: null,
+          outcome: 'cancelled',
+        },
+        {
+          operation_id: 'pg-op-keep-43',
+          account_id: 43,
+          plot_id: 'pg_plot_43',
+          fingerprint: FP_A,
+          outcome: 'cancelled',
+        },
+      ];
+      expect(await receipts()).toEqual(erased);
+      // Idempotent: a re-run nulls nothing new and leaves both rows as they are.
+      expect(await ops.eraseFreeholdOperationReceiptsForAccount(pool, 42)).toBe(0);
+      expect(await receipts()).toEqual(erased);
+
+      // A deactivated account can prepare nothing.
+      expect(await ops.prepareFreeholdOperation(pool, intent(42, 'pg-op-after-42'))).toEqual({
+        kind: 'parent_missing',
+      });
+      // An erased tombstone keeps its id's replay authority but answers no
+      // outcome to anyone: even the original fingerprint is a conflict.
+      expect(await ops.prepareFreeholdOperation(pool, intent(44, 'pg-op-erase-42'))).toEqual({
+        kind: 'conflict',
+      });
+      // Negative control: an un-erased tombstone still answers its own
+      // fingerprint with its outcome, and a different one with conflict.
+      expect(await ops.prepareFreeholdOperation(pool, intent(43, 'pg-op-keep-43'))).toEqual({
+        kind: 'closed',
+        outcome: 'cancelled',
+      });
+      expect(await ops.prepareFreeholdOperation(pool, intent(43, 'pg-op-keep-43', FP_B))).toEqual({
+        kind: 'conflict',
+      });
+    });
+
+    it('writes a receipt for an already deactivated account already erased', async () => {
+      await seed(45);
+      expect(await ops.prepareFreeholdOperation(pool, intent(45, 'pg-op-late-45'))).toEqual({
+        kind: 'prepared',
+      });
+      await pool.query('UPDATE accounts SET deactivated_at = now() WHERE id = 45');
+      expect(
+        await ops.cancelFreeholdOperation(pool, {
+          operationId: 'pg-op-late-45',
+          accountId: 45,
+          fingerprint: FP_A,
+          outcome: 'cancelled',
+        }),
+      ).toBeNull();
+      const receipt = await pool.query(
+        `SELECT account_id, plot_id, fingerprint, outcome
+           FROM freehold_operation_receipts WHERE operation_id = 'pg-op-late-45'`,
+      );
+      expect(receipt.rows).toEqual([
+        { account_id: null, plot_id: null, fingerprint: null, outcome: 'cancelled' },
+      ]);
+      // And the erase has nothing left to do for it.
+      expect(await ops.eraseFreeholdOperationReceiptsForAccount(pool, 45)).toBe(0);
+    });
+  });
 });

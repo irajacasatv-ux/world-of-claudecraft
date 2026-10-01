@@ -61,6 +61,7 @@ const KNOWN_CODES = [
   'character.delete_busy',
   'character.delete_confirm',
   'character.storage_purchase_open',
+  'character.freehold_operation_open',
   'character.invalid_appearance',
   'character.invalid_class',
   'character.limit_reached',

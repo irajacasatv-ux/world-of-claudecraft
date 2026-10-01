@@ -15,7 +15,10 @@
 //    housing commands remain outside the heavy-self set. Malformed fields
 //    refuse before invocation. The real gate/item dispatch tests below prove
 //    accepted own entry and isolated test-participant remote travel separately
-//    from the stock realm's unavailable remote-key authority;
+//    from the stock realm's durable Hearth trip admission (07a): the local
+//    clock answers before the trip is consulted, an unloaded, blocked or
+//    unclaimed plot entry denies before any queue, and a started trip is
+//    silent until its outcome re-dispatches the use;
 //  - the owner key: `account:<id>` is minted server-side from the session's
 //    account id at the ONE addPlayer call in game.ts (a source pin), refuses a
 //    malformed id, and is never shaped by a client frame;
@@ -24,7 +27,9 @@
 //    behaviorally on a lit realm;
 //  - the realm Sim boot config maps the flag to SimConfig.freeholdsEnabled
 //    (D85) while the offline stock world and the headless host construct
-//    their Sim lit (D3), each from exactly one `new Sim(` site;
+//    their Sim lit (D3), each from exactly one `new Sim(` site, and binds the
+//    REQUIRED key admission (game.ts passes the trip's, failing closed to
+//    'deny'); hearthKeyUseRefusal replays the frame path's prechecks;
 //  - the ops surfaces (.env.example, DEPLOY.md, turbo.json) and the game.ts
 //    shape (every token has a case label; the refusal sits above the
 //    heavy-self mark) stay pinned.
@@ -65,10 +70,13 @@ vi.mock('../../server/db', () => ({
 
 import type { BotDetector } from '../../server/bot_detector/contract';
 import { freeholdsEnabled } from '../../server/freehold_config';
+import type { createGameFreeholdHearthTrips } from '../../server/freehold_hearth_trip_host';
+import type { FreeholdPersistStore } from '../../server/freehold_persist';
 import {
   dispatchFreeholdCommand,
   FREEHOLD_WIRE_COMMANDS,
   freeholdOwnerKeyForAccount,
+  hearthKeyUseRefusal,
   refusedFreeholdCommand,
 } from '../../server/freehold_wire';
 import { GameServer, wireEntity } from '../../server/game';
@@ -89,6 +97,7 @@ import { EASTBROOK_LAYOUT } from '../../src/sim/eastbrook_layout';
 import { isInJailCage } from '../../src/sim/jail';
 import { Sim } from '../../src/sim/sim';
 import { inertVaultConsumptionAdmission } from '../../src/sim/sim_context';
+import type { FreeholdKeyAdmission } from '../../src/sim/types';
 import { FreeholdGatePrompt } from '../../src/ui/hud/housing/gate_prompt_controller';
 import { COMMAND_FACETS, type CommandName } from '../../src/world_api';
 import { bareClient, broadcast, fakeWs, joinServer, lastSnap } from '../helpers/bare_client';
@@ -140,6 +149,33 @@ function recordingRefusalSink(): { count: () => number } {
  *  (the tests/event_frame_serialize.test.ts idiom). */
 function botDetectorOf(server: GameServer): BotDetector {
   return (server as unknown as { botDetector: BotDetector }).botDetector;
+}
+
+/** The realm's own fail-closed key answer, for the boot-config cases that build
+ *  a realm Sim and never use a key: the admission is a REQUIRED parameter of
+ *  buildRealmSimConfig (07a), so a boot cannot fall back to the Sim's offline
+ *  'admit'. */
+const REALM_KEY_DENY = (): FreeholdKeyAdmission => 'deny';
+
+type GameHearthTrips = ReturnType<typeof createGameFreeholdHearthTrips>;
+
+/** The realm's Hearth trips (07a), private on GameServer, reached structurally. */
+function hearthTripsOf(server: GameServer): GameHearthTrips {
+  return (server as unknown as { freeholdHearthTrips: GameHearthTrips }).freeholdHearthTrips;
+}
+
+/** The realm's plot store, private on GameServer, reached structurally. */
+function plotStoreOf(server: GameServer): FreeholdPersistStore {
+  return (server as unknown as { freeholdPersist: FreeholdPersistStore }).freeholdPersist;
+}
+
+/** The character save the trip commits through, private on GameServer. */
+function saveSurface(server: GameServer): {
+  saveCharacter(session: unknown, opts?: unknown): Promise<boolean>;
+} {
+  return server as unknown as {
+    saveCharacter(session: unknown, opts?: unknown): Promise<boolean>;
+  };
 }
 
 /** A joined session on a fresh server; housing needs nothing else to probe. */
@@ -709,7 +745,9 @@ describe('the realm Sim boot config maps FREEHOLDS_ENABLED to SimConfig.freehold
     'boot flag %s controls actual gate spawn, public entry and key grant',
     (flag) => {
       vi.stubEnv('FREEHOLDS_ENABLED', flag);
-      const sim = new Sim(buildRealmSimConfig(undefined, inertVaultConsumptionAdmission));
+      const sim = new Sim(
+        buildRealmSimConfig(undefined, inertVaultConsumptionAdmission, REALM_KEY_DENY),
+      );
       const pid = sim.addPlayer('warrior', 'BootOwner', { freeholdOwnerKey: 'account:9901' });
       const gate = [...sim.entities.values()].find((e) => e.templateId === 'freehold_gate');
       expect(Boolean(gate)).toBe(flag === '1');
@@ -746,9 +784,13 @@ describe('the realm Sim boot config maps FREEHOLDS_ENABLED to SimConfig.freehold
       'freehold_open_bookshelf',
     ];
     vi.stubEnv('FREEHOLDS_ENABLED', undefined);
-    const dark = new Sim(buildRealmSimConfig(undefined, inertVaultConsumptionAdmission));
+    const dark = new Sim(
+      buildRealmSimConfig(undefined, inertVaultConsumptionAdmission, REALM_KEY_DENY),
+    );
     vi.stubEnv('FREEHOLDS_ENABLED', '1');
-    const lit = new Sim(buildRealmSimConfig(undefined, inertVaultConsumptionAdmission));
+    const lit = new Sim(
+      buildRealmSimConfig(undefined, inertVaultConsumptionAdmission, REALM_KEY_DENY),
+    );
     const vendors = (sim: Sim) =>
       [...sim.entities.values()].filter((e) => e.templateId === 'freehold_furnisher');
     expect(dark.cfg.freeholdsEnabled).toBe(false);
@@ -774,8 +816,62 @@ describe('the realm Sim boot config maps FREEHOLDS_ENABLED to SimConfig.freehold
     ['true', false],
   ] as const)('FREEHOLDS_ENABLED=%s boots freeholdsEnabled %s', (value, expected) => {
     vi.stubEnv('FREEHOLDS_ENABLED', value);
-    const cfg = buildRealmSimConfig(undefined, inertVaultConsumptionAdmission);
+    const cfg = buildRealmSimConfig(undefined, inertVaultConsumptionAdmission, REALM_KEY_DENY);
     expect(cfg.freeholdsEnabled).toBe(expected);
+  });
+
+  it('binds the REQUIRED key admission by identity, so a lit realm Sim never falls back to admit', () => {
+    vi.stubEnv('FREEHOLDS_ENABLED', '1');
+    // A plain recording closure, not a vi.fn, so no call record keeps the Sim alive.
+    const asked: [string, number][] = [];
+    const admission = (ownerKey: string, pid: number): FreeholdKeyAdmission => {
+      asked.push([ownerKey, pid]);
+      return 'deny';
+    };
+    const cfg = buildRealmSimConfig(undefined, inertVaultConsumptionAdmission, admission);
+    expect(cfg.freeholdKeyAdmission).toBe(admission);
+    const keyUse = (sim: Sim) => {
+      const pid = sim.addPlayer('warrior', 'BootTraveller', { freeholdOwnerKey: 'account:9902' });
+      sim.addItem('hearth_key', 1, pid);
+      sim.drainEvents();
+      sim.useItem('hearth_key', pid);
+      return {
+        pid,
+        denials: sim.drainEvents().filter((event) => event.type === 'freeholdDenied'),
+        claimed: sim.ctx.instanceClaimIdAt(sim.entities.get(pid)!.pos),
+      };
+    };
+    const realm = new Sim(cfg);
+    expect(realm.cfg.freeholdKeyAdmission).toBe(admission);
+    const refused = keyUse(realm);
+    expect(asked).toEqual([['account:9902', refused.pid]]);
+    expect(refused.denials).toEqual([{ type: 'freeholdDenied', pid: refused.pid, reason: 'busy' }]);
+    expect(refused.claimed).toBeNull();
+    expect(realm.freeholdKeyReadyAtMs.size).toBe(0);
+    // The contrast: the SAME boot config without the admission takes the Sim's
+    // offline default, which admits and enters. That is the fallback the
+    // required parameter keeps every realm boot away from.
+    const offline = keyUse(new Sim({ ...cfg, freeholdKeyAdmission: undefined }));
+    expect(offline.denials).toEqual([]);
+    expect(offline.claimed).not.toBeNull();
+    expect(asked).toHaveLength(1);
+  });
+
+  it('game.ts passes the Hearth trip admission as the third boot argument, failing closed to deny', () => {
+    const src = codeOnly(repoFile('server/game.ts'));
+    const sites = [...src.matchAll(/buildRealmSimConfig\(/g)].map((m) => m.index);
+    expect(sites, 'exactly one realm boot config').toHaveLength(1);
+    const call = balancedCall(src, src.indexOf('(', sites[0])).replace(/\s+/g, ' ');
+    // The LAST argument (the seam takes three, and tsc holds the arity), and its
+    // absent-trips answer is 'deny', never the Sim's offline 'admit'.
+    expect(
+      call.endsWith(
+        "(ownerKey, pid) => this.freeholdHearthTrips?.admission(ownerKey, pid) ?? 'deny', )",
+      ),
+    ).toBe(true);
+    expect(src.split('.admission(').length - 1, 'one admission call site').toBe(1);
+    // No second route to the seam: game.ts never assigns the config field.
+    expect(src).not.toContain('freeholdKeyAdmission');
   });
 
   it('the offline stock world and the headless host construct their Sim lit (D3), from exactly one site each', () => {
@@ -882,6 +978,59 @@ describe('freeholds wire: a jailed session cannot step through its own door', ()
     expect(leave).toHaveBeenCalledTimes(1);
     expect(leave).toHaveBeenCalledWith(pid);
     expect(fc.sent.filter((m) => m.t === 'commandOutcome' && m.rid === 72)).toEqual([]);
+  });
+});
+
+describe('hearthKeyUseRefusal: the frame path prechecks the Hearth trip re-dispatch replays', () => {
+  it('answers in the frame path order: spectating, then jailed, then dark, else null', () => {
+    const lit = { FREEHOLDS_ENABLED: '1' };
+    const dark = { FREEHOLDS_ENABLED: '0' };
+    const jailed = { returnPos: { x: 0, z: 0 }, returnFacing: 0 };
+    expect(hearthKeyUseRefusal({}, lit)).toBeNull();
+    expect(hearthKeyUseRefusal({ spectating: true }, lit)).toBe('spectating');
+    expect(hearthKeyUseRefusal({ jailed }, lit)).toBe('jailed');
+    expect(hearthKeyUseRefusal({}, dark)).toBe('dark');
+    // Jailed on a DARK realm is the jail arm, the frame path's own order (the
+    // dark-realm jailed case above books no housing refusal for that reason).
+    expect(hearthKeyUseRefusal({ jailed }, dark)).toBe('jailed');
+    expect(hearthKeyUseRefusal({ spectating: true, jailed }, dark)).toBe('spectating');
+    // A null jail record is not jailed: the session field is null when free.
+    expect(hearthKeyUseRefusal({ jailed: null, spectating: null }, lit)).toBeNull();
+  });
+
+  it('reads the live process env when none is passed, as the frame path does', () => {
+    vi.stubEnv('FREEHOLDS_ENABLED', '1');
+    expect(hearthKeyUseRefusal({})).toBeNull();
+    vi.stubEnv('FREEHOLDS_ENABLED', '0');
+    expect(hearthKeyUseRefusal({})).toBe('dark');
+  });
+
+  it('agrees with the real frame path on its jailed and dark answers', () => {
+    // Jailed answers busy and dark answers no_freehold: the re-dispatch host
+    // maps each the same way, so the frame path's answer for each state is
+    // pinned here beside the predicate's (the spectating drop and the gate
+    // order are pinned in tests/server/freehold_mutation.test.ts).
+    const frame = JSON.stringify({ t: 'cmd', cmd: 'use', item: 'hearth_key' });
+    vi.stubEnv('FREEHOLDS_ENABLED', '1');
+    const jailedRealm = housingSession();
+    jailedRealm.session.jailed = { returnPos: { x: 0, z: 0 }, returnFacing: 0 };
+    expect(hearthKeyUseRefusal(jailedRealm.session)).toBe('jailed');
+    jailedRealm.fc.sent.length = 0;
+    jailedRealm.server.handleMessage(jailedRealm.session, frame);
+    expect(jailedRealm.fc.sent).toEqual([
+      { t: 'events', list: [{ type: 'freeholdDenied', pid: jailedRealm.pid, reason: 'busy' }] },
+    ]);
+    const darkRealm = housingSession();
+    vi.stubEnv('FREEHOLDS_ENABLED', '0');
+    expect(hearthKeyUseRefusal(darkRealm.session)).toBe('dark');
+    darkRealm.fc.sent.length = 0;
+    darkRealm.server.handleMessage(darkRealm.session, frame);
+    expect(darkRealm.fc.sent).toEqual([
+      {
+        t: 'events',
+        list: [{ type: 'freeholdDenied', pid: darkRealm.pid, reason: 'no_freehold' }],
+      },
+    ]);
   });
 });
 
@@ -1145,6 +1294,14 @@ describe('Freehold Gate and Hearth Key real server dispatch', () => {
     server.handleMessage(session, JSON.stringify({ t: 'cmd', cmd: 'freehold_leave' }));
     server.sim.drainEvents();
     const before = { ...player.pos };
+    // The STOCK realm's admission is the durable Hearth trip (07a), and this
+    // session's plot entry was never loaded (the join installed the stand-in),
+    // so the trip refuses BEFORE any queue or database work: 'deny', busy, no
+    // save, no clock.
+    const trips = hearthTripsOf(server);
+    const admission = releasedSpyOn(trips, 'admission');
+    const save = releasedSpyOn(saveSurface(server), 'saveCharacter');
+    expect(plotStoreOf(server).authority('account:7201')).toMatchObject({ loaded: false });
     server.handleMessage(session, JSON.stringify({ t: 'cmd', cmd: 'use', item: 'hearth_key' }));
     expect(player.pos).toEqual(before);
     expect(server.sim.drainEvents()).toContainEqual({
@@ -1152,32 +1309,168 @@ describe('Freehold Gate and Hearth Key real server dispatch', () => {
       pid,
       reason: 'busy',
     });
+    expect(admission.mock.calls).toEqual([['account:7201', pid]]);
+    expect(admission.mock.results).toEqual([{ type: 'return', value: 'deny' }]);
+    expect(trips.counters).toMatchObject({ refusedPreQueue: 1, started: 0, metered: 0 });
+    expect(trips.inFlight(7201)).toBe(false);
+    expect(save).not.toHaveBeenCalled();
     expect(server.sim.freeholdKeyReadyAtMs.size).toBe(0);
   });
-  it('an explicitly injected test participant reaches remote entry through real use dispatch', () => {
+
+  it('on a lit realm the local clock answers cooldown BEFORE the trip is consulted', () => {
     vi.stubEnv('FREEHOLDS_ENABLED', '1');
     const { server, session, pid } = housingSession();
-    const admission = vi.fn(() => true);
-    server.sim.cfg.freeholdKeyAdmission = admission;
-    server.sim.cfg.lockoutNowMs = () => 5000;
     server.sim.addItem('hearth_key', 1, pid);
+    server.sim.cfg.lockoutNowMs = () => 5000;
+    server.sim.freeholdKeyReadyAtMs.set('account:7201', 5001);
+    const trips = hearthTripsOf(server);
+    const admission = releasedSpyOn(trips, 'admission');
+    const before = { ...server.sim.entities.get(pid)!.pos };
     server.sim.drainEvents();
+    server.handleMessage(session, JSON.stringify({ t: 'cmd', cmd: 'use', item: 'hearth_key' }));
+    expect(server.sim.drainEvents().filter((event) => event.type === 'freeholdDenied')).toEqual([
+      { type: 'freeholdDenied', pid, reason: 'cooldown' },
+    ]);
+    // A key spammed through its cooldown costs the realm nothing: no admission
+    // call, no pre-queue refusal, no trip.
+    expect(admission).not.toHaveBeenCalled();
+    expect(trips.counters).toMatchObject({ refusedPreQueue: 0, started: 0, metered: 0 });
+    expect(server.sim.entities.get(pid)!.pos).toEqual(before);
+    expect([...server.sim.freeholdKeyReadyAtMs]).toEqual([['account:7201', 5001]]);
+    // The contrast at the exact boundary: ready at 5000 against 5000, the
+    // realm DOES consult the trip (and, unloaded, it denies).
+    server.sim.freeholdKeyReadyAtMs.set('account:7201', 5000);
+    server.handleMessage(session, JSON.stringify({ t: 'cmd', cmd: 'use', item: 'hearth_key' }));
+    expect(admission.mock.calls).toEqual([['account:7201', pid]]);
+    expect(server.sim.drainEvents().filter((event) => event.type === 'freeholdDenied')).toEqual([
+      { type: 'freeholdDenied', pid, reason: 'busy' },
+    ]);
+  });
+
+  it.each([
+    ['a blocked entry', { loaded: true, blocked: true, plotId: 'plot-7201', durableRev: '3' }],
+    [
+      'a durable row this process holds no claim for',
+      { loaded: true, blocked: false, plotId: 'plot-7201', durableRev: '3' },
+    ],
+  ] as const)('on a lit realm %s answers deny before any queue', (_label, authority) => {
+    vi.stubEnv('FREEHOLDS_ENABLED', '1');
+    const { server, session, pid } = housingSession();
+    server.sim.addItem('hearth_key', 1, pid);
+    server.sim.cfg.lockoutNowMs = () => 5000;
+    releasedSpyOn(plotStoreOf(server), 'authority').mockReturnValue(authority);
+    const trips = hearthTripsOf(server);
+    const save = releasedSpyOn(saveSurface(server), 'saveCharacter');
+    const before = { ...server.sim.entities.get(pid)!.pos };
+    server.sim.drainEvents();
+    server.handleMessage(session, JSON.stringify({ t: 'cmd', cmd: 'use', item: 'hearth_key' }));
+    expect(server.sim.drainEvents().filter((event) => event.type === 'freeholdDenied')).toEqual([
+      { type: 'freeholdDenied', pid, reason: 'busy' },
+    ]);
+    expect(trips.counters).toMatchObject({ refusedPreQueue: 1, started: 0 });
+    expect(trips.inFlight(7201)).toBe(false);
+    expect(save).not.toHaveBeenCalled();
+    expect(server.sim.entities.get(pid)!.pos).toEqual(before);
+    expect(server.sim.freeholdKeyReadyAtMs.size).toBe(0);
+  });
+
+  it('on a lit realm a loaded entry with no durable row starts ONE trip: silent while pending, busy when it never ran', async () => {
+    // The positive control for the pre-queue refusals above: the same realm,
+    // the entry loaded and unblocked with no row to claim, really starts the
+    // trip. The save is stubbed to answer without running the housing hook,
+    // so the trip's outcome is not_run and the server re-dispatches the use
+    // under a one-shot deny ticket.
+    vi.stubEnv('FREEHOLDS_ENABLED', '1');
+    const { server, session, pid, fc } = housingSession();
+    server.sim.addItem('hearth_key', 1, pid);
+    server.sim.cfg.lockoutNowMs = () => 5000;
+    releasedSpyOn(plotStoreOf(server), 'authority').mockReturnValue({
+      loaded: true,
+      blocked: false,
+      plotId: 'plot-7201',
+      durableRev: null,
+    });
+    const save = releasedSpyOn(saveSurface(server), 'saveCharacter').mockResolvedValue(true);
+    const trips = hearthTripsOf(server);
+    const before = { ...server.sim.entities.get(pid)!.pos };
+    server.sim.drainEvents();
+    fc.sent.length = 0;
     server.handleMessage(
       session,
-      JSON.stringify({ t: 'cmd', cmd: 'use', item: 'hearth_key', accountId: 1 }),
+      JSON.stringify({ t: 'cmd', cmd: 'use', item: 'hearth_key', rid: 703 }),
     );
-    expect(admission).toHaveBeenCalledExactlyOnceWith(
-      freeholdOwnerKeyForAccount(session.accountId),
-      pid,
-    );
-    expect(server.sim.ctx.instanceClaimIdAt(server.sim.entities.get(pid)!.pos)).not.toBeNull();
-    expect(server.sim.freeholdKeyReadyAtMs.get(freeholdOwnerKeyForAccount(session.accountId))).toBe(
-      3605000,
-    );
-    expect(server.sim.countItem('hearth_key', pid)).toBe(1);
-    // This participant is deliberately test-only. The stock realm case above
-    // remains refused until durable remote-key account authority lands in 07a.
+    // PENDING is silent: no denial, no movement, no clock, nothing sent.
+    expect(server.sim.drainEvents().filter((event) => event.type === 'freeholdDenied')).toEqual([]);
+    expect(server.sim.entities.get(pid)!.pos).toEqual(before);
+    expect(server.sim.freeholdKeyReadyAtMs.size).toBe(0);
+    expect(trips.inFlight(7201)).toBe(true);
+    expect(trips.counters).toMatchObject({ started: 1, refusedPreQueue: 0 });
+    // A second use while it runs joins the same trip: still silent, no second save.
+    server.handleMessage(session, JSON.stringify({ t: 'cmd', cmd: 'use', item: 'hearth_key' }));
+    expect(server.sim.drainEvents().filter((event) => event.type === 'freeholdDenied')).toEqual([]);
+    expect(trips.counters.started).toBe(1);
+    await vi.waitFor(() => expect(trips.counters.failed).toBe(1));
+    expect(trips.inFlight(7201)).toBe(false);
+    expect(save).toHaveBeenCalledTimes(1);
+    expect(save.mock.calls[0][0]).toBe(session);
+    expect(save.mock.calls[0][1]).toMatchObject({
+      backgroundDbPermit: true,
+      housing: { accountIds: [7201] },
+    });
+    // The re-dispatch ran the use again under the deny ticket: busy, nothing moved.
+    expect(server.sim.drainEvents().filter((event) => event.type === 'freeholdDenied')).toEqual([
+      { type: 'freeholdDenied', pid, reason: 'busy' },
+    ]);
+    expect(server.sim.entities.get(pid)!.pos).toEqual(before);
+    expect(server.sim.freeholdKeyReadyAtMs.size).toBe(0);
+    expect(trips.counters).toMatchObject({ started: 1, failed: 1, advanced: 0, abandoned: 0 });
   });
+
+  it.each([
+    ['admit', true],
+    ['deny', false],
+    ['pending', false],
+  ] as const)(
+    'an injected test participant answering %s drives real use dispatch',
+    (answer, enters) => {
+      vi.stubEnv('FREEHOLDS_ENABLED', '1');
+      const { server, session, pid } = housingSession();
+      const admission = vi.fn((): FreeholdKeyAdmission => answer);
+      server.sim.cfg.freeholdKeyAdmission = admission;
+      server.sim.cfg.lockoutNowMs = () => 5000;
+      server.sim.addItem('hearth_key', 1, pid);
+      const before = { ...server.sim.entities.get(pid)!.pos };
+      server.sim.drainEvents();
+      server.handleMessage(
+        session,
+        JSON.stringify({ t: 'cmd', cmd: 'use', item: 'hearth_key', accountId: 1 }),
+      );
+      expect(admission).toHaveBeenCalledExactlyOnceWith(
+        freeholdOwnerKeyForAccount(session.accountId),
+        pid,
+      );
+      const denials = server.sim.drainEvents().filter((event) => event.type === 'freeholdDenied');
+      const claimed = server.sim.ctx.instanceClaimIdAt(server.sim.entities.get(pid)!.pos);
+      if (enters) {
+        expect(claimed).not.toBeNull();
+        expect(
+          server.sim.freeholdKeyReadyAtMs.get(freeholdOwnerKeyForAccount(session.accountId)),
+        ).toBe(3605000);
+        expect(denials).toEqual([]);
+      } else {
+        expect(claimed).toBeNull();
+        expect(server.sim.entities.get(pid)!.pos).toEqual(before);
+        expect(server.sim.freeholdKeyReadyAtMs.size).toBe(0);
+        // 'deny' answers busy; 'pending' is SILENT, the host re-dispatches later.
+        expect(denials).toEqual(
+          answer === 'deny' ? [{ type: 'freeholdDenied', pid, reason: 'busy' }] : [],
+        );
+      }
+      expect(server.sim.countItem('hearth_key', pid)).toBe(1);
+      // This participant is deliberately test-only. The stock realm answers
+      // from the durable Hearth trip (the cases above).
+    },
+  );
   it.each([{ cmd: 'freehold_enter' }, { cmd: 'use', item: 'hearth_key' }])(
     'jailed $cmd returns only the personal busy denial and changes no travel state',
     (frame) => {
@@ -1199,7 +1492,7 @@ describe('Freehold Gate and Hearth Key real server dispatch', () => {
       server.sim.addItem('hearth_key', 1, pid);
       const ownerKey = freeholdOwnerKeyForAccount(session.accountId);
       server.sim.freeholdKeyReadyAtMs.set(ownerKey, 9999999);
-      const admission = vi.fn(() => true);
+      const admission = vi.fn((): FreeholdKeyAdmission => 'admit');
       server.sim.cfg.freeholdKeyAdmission = admission;
       const use = releasedSpyOn(server.sim, 'useItem');
       const enter = releasedSpyOn(server.sim, 'freeholdEnter');
@@ -1258,7 +1551,7 @@ describe('Freehold Gate and Hearth Key real server dispatch', () => {
         claims: server.sim.instances,
         plots: [...server.sim.ctx.freeholds],
       });
-      const admission = vi.fn(() => true);
+      const admission = vi.fn((): FreeholdKeyAdmission => 'admit');
       server.sim.cfg.freeholdKeyAdmission = admission;
       const use = releasedSpyOn(server.sim, 'useItem');
       const refusals = recordingRefusalSink();
@@ -1308,7 +1601,7 @@ describe('Freehold Gate and Hearth Key real server dispatch', () => {
         inventory === 'wrong selected item'
           ? meta.inventory.findIndex((item) => item.itemId === 'minor_healing_potion')
           : undefined;
-      const admission = vi.fn(() => true);
+      const admission = vi.fn((): FreeholdKeyAdmission => 'admit');
       server.sim.cfg.freeholdKeyAdmission = admission;
       const player = server.sim.entities.get(pid)!;
       const state = () => ({

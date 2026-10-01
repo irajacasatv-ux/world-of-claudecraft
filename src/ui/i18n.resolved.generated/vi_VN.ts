@@ -6770,6 +6770,7 @@ export const vi_VN: EnTranslations = {
       "rename_not_permitted": "Không được phép đổi tên nhân vật này.",
       "delete_confirm": "Nhập tên nhân vật để xác nhận xóa.",
       "storage_purchase_open": "Phải hoàn tất hoặc xử lý giao dịch mua kho trước khi xóa nhân vật này.",
+      "freehold_operation_open": "A Freehold operation must finish or be resolved before this character can be deleted.",
       "delete_busy": "Vương quốc đang bận. Hãy thử xóa nhân vật này lại sau một lát.",
       "already_in_world": "Nhân vật đã ở trong thế giới.",
       "taken_over": "Nhân vật của bạn đã bị một phiên khác chiếm quyền.",

@@ -838,6 +838,110 @@ describe('fenced character save ledger effects', () => {
     ).rejects.toThrow(/does not match save effects/);
   });
 
+  // The housing hook's account participants (07a, server/character_save_housing.ts)
+  // join the save's ONE sorted KEY SHARE, so no accounts lock is ever first
+  // taken after the character row (docs/freeholds/mutation-touch-set-manifest.md G1).
+  const accountLockCalls = (client: ReturnType<typeof clientStub>) =>
+    client.query.mock.calls.filter((call) => /SELECT id FROM accounts/.test(String(call[0])));
+
+  it('joins housing account ids into the ONE sorted KEY SHARE and answers the locked ids', async () => {
+    const prepared = prepareBankLedgerSaveEffects(OWNER.characterId, [], ADMIN_PURGE_EFFECTS, [19]);
+    const client = clientStub();
+
+    // Unsorted, and overlapping the ledger's own owner (7): the set dedupes it
+    // and the one statement carries every id ascending.
+    const locked = await lockCharacterSaveEffectAccountsOnClient(
+      client,
+      [],
+      prepared,
+      undefined,
+      [300, 3, 7],
+    );
+
+    const calls = accountLockCalls(client);
+    expect(calls).toHaveLength(1);
+    expect(String(calls[0][0])).toContain('WHERE id = ANY($1::int[])');
+    expect(String(calls[0][0])).toContain('ORDER BY id');
+    expect(String(calls[0][0])).toContain('FOR KEY SHARE');
+    expect(calls[0][1]).toEqual([[3, 7, 99, 300]]);
+    expect(locked).toEqual([3, 7, 99, 300]);
+    // Nothing else ran: the lock is the whole of this call.
+    expect(client.query).toHaveBeenCalledTimes(1);
+
+    // Housing ids alone are enough to take the lock.
+    const housingOnly = clientStub();
+    expect(
+      await lockCharacterSaveEffectAccountsOnClient(housingOnly, [], undefined, undefined, [12, 5]),
+    ).toEqual([5, 12]);
+    expect(accountLockCalls(housingOnly).map((call) => call[1])).toEqual([[[5, 12]]]);
+  });
+
+  it('answers the locked ascending ids without housing, and the proof account on the proof path', async () => {
+    const prepared = prepareBankLedgerSaveEffects(OWNER.characterId, [], ADMIN_PURGE_EFFECTS, [19]);
+    const client = clientStub();
+    expect(await lockCharacterSaveEffectAccountsOnClient(client, [], prepared)).toEqual([
+      OWNER.accountId,
+      99,
+    ]);
+
+    const proofClient = clientStub();
+    const proof = await lockCharacterSaveAccountParentOnClient(
+      proofClient as never,
+      OWNER.accountId,
+    );
+    proofClient.query.mockClear();
+    expect(await lockCharacterSaveEffectAccountsOnClient(proofClient, [], EFFECTS, proof)).toEqual([
+      OWNER.accountId,
+    ]);
+    // The proof already holds the lock: no second statement.
+    expect(proofClient.query).not.toHaveBeenCalled();
+  });
+
+  it('issues no statement and answers [] when nothing needs a parent lock', async () => {
+    const client = clientStub();
+    expect(await lockCharacterSaveEffectAccountsOnClient(client, [], undefined)).toEqual([]);
+    expect(
+      await lockCharacterSaveEffectAccountsOnClient(client, [], undefined, undefined, []),
+    ).toEqual([]);
+    expect(client.query).not.toHaveBeenCalled();
+  });
+
+  it('refuses housing ids on the proof path before any statement, without consuming the proof', async () => {
+    const client = clientStub();
+    const proof = await lockCharacterSaveAccountParentOnClient(client as never, OWNER.accountId);
+    client.query.mockClear();
+
+    await expect(
+      lockCharacterSaveEffectAccountsOnClient(client, [], EFFECTS, proof, [OWNER.accountId]),
+    ).rejects.toThrow('a character save account lock proof cannot carry housing participants');
+    expect(client.query).not.toHaveBeenCalled();
+    // The refusal left the proof unspent: the same proof without housing ids
+    // still serves its save exactly once.
+    expect(await lockCharacterSaveEffectAccountsOnClient(client, [], EFFECTS, proof)).toEqual([
+      OWNER.accountId,
+    ]);
+    await expect(
+      lockCharacterSaveEffectAccountsOnClient(client, [], EFFECTS, proof),
+    ).rejects.toThrow('invalid or consumed character save account lock proof');
+  });
+
+  it('refuses a malformed housing account id, and a housing account that vanished', async () => {
+    const client = clientStub();
+    await expect(
+      lockCharacterSaveEffectAccountsOnClient(client, [], undefined, undefined, [0]),
+    ).rejects.toThrow(RangeError);
+    expect(client.query).not.toHaveBeenCalled();
+
+    // One housing account gone before the lock: the locked set comes back short.
+    const shortClient = {
+      query: vi.fn(async () => ({ rows: [{ id: 5 }], rowCount: 1 })),
+    };
+    await expect(
+      lockCharacterSaveEffectAccountsOnClient(shortClient, [], undefined, undefined, [5, 12]),
+    ).rejects.toThrow('character save account disappeared before parent lock');
+    expect(shortClient.query).toHaveBeenCalledTimes(1);
+  });
+
   it('rejects oversized no-ledger storage effects before every save family touches SQL', async () => {
     const overflow = [
       STORAGE_EFFECT,

@@ -97,6 +97,19 @@ export class DbTransactionAborted extends Error {
   }
 }
 
+/** COMMIT answered with a ROLLBACK tag: an earlier statement had already
+ * aborted the transaction (an error a caller caught and carried on past), so
+ * PostgreSQL rolled everything back without raising. A PROVED rollback, never
+ * an ambiguous commit. Raised only by commitChecked(). */
+export class DbTransactionRolledBack extends Error {
+  readonly code = 'DB_TRANSACTION_ROLLED_BACK' as const;
+
+  constructor(operation: string, tag: string | null) {
+    super(`${operation} COMMIT answered ${tag ?? 'no command tag'}, so nothing was committed`);
+    this.name = 'DbTransactionRolledBack';
+  }
+}
+
 const pgErrorCode = (error: unknown): string | undefined =>
   (error as { code?: string } | null | undefined)?.code;
 
@@ -175,6 +188,25 @@ export class DbTransactionDeadline {
     this.completion = 'committed';
     this.clearDeadlineTimer();
     this.detachAbortListener();
+  }
+
+  /** COMMIT and PROVE it committed. An aborted transaction answers COMMIT with
+   * a ROLLBACK command tag and no error, which commit() above cannot tell from
+   * a success; a caller whose writes must have landed (a claim it will then
+   * act on, a fenced write it will then acknowledge) reads the tag through
+   * this and gets DbTransactionRolledBack instead of a silent loss. */
+  async commitChecked(): Promise<void> {
+    if (this.completion !== null) {
+      throw new Error(`${this.operation} transaction is already complete`);
+    }
+    const response = await this.executeQuery('commit', 'COMMIT');
+    this.clearDeadlineTimer();
+    this.detachAbortListener();
+    if (response.command !== 'COMMIT') {
+      this.completion = 'rolled_back';
+      throw new DbTransactionRolledBack(this.operation, response.command ?? null);
+    }
+    this.completion = 'committed';
   }
 
   /** Best-effort cleanup that never replaces the transaction's primary error. */

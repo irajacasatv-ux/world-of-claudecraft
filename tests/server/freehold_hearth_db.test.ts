@@ -20,6 +20,8 @@ import {
   FREEHOLD_HEARTH_INIT_SQL,
   FREEHOLD_HEARTH_READ_FOR_UPDATE_SQL,
   FREEHOLD_HEARTH_SCHEMA,
+  FREEHOLD_HEARTH_VERIFY_SQL,
+  freeholdHearthAdvanceLandedOnClient,
   freeholdHearthForExport,
   freeholdHearthSchema,
   loadFreeholdHearth,
@@ -65,7 +67,10 @@ const codeOnly = (sql: string): string =>
 const ACCOUNT_ID = 7;
 const COOLDOWN_MS = 900_000;
 const OK_ROW = { ready_at_ms: '1000', revision: '4' };
-const READY_READ = { ready_at_ms: '1000', revision: '4', now_ms: '5000' };
+const READY_READ = { ready_at_ms: '1000', revision: '4', now_ms: '5000', clock_ms: '5000' };
+/** One attempt's token, the shape the advance stamps (16 bytes as hex). */
+const TOKEN = '0123456789abcdef0123456789abcdef';
+const OTHER_TOKEN = 'fedcba9876543210fedcba9876543210';
 
 /** The four replies of an accepted entry: participant lock, conflict-safe
  *  insert, locking read, monotone update. */
@@ -119,6 +124,59 @@ describe('the DDL', () => {
     expect(count(code, 'CREATE UNIQUE INDEX')).toBe(0);
   });
 
+  it('declares the advance token column with its one named shape check, in the table', () => {
+    const code = codeOnly(FREEHOLD_HEARTH_SCHEMA);
+    const table = code.slice(
+      code.indexOf('CREATE TABLE IF NOT EXISTS "public".account_freehold_hearth'),
+      code.indexOf('DO $freehold_hearth_advance_token$'),
+    );
+    // A fresh database gets the column from the CREATE TABLE itself, nullable
+    // (no NOT NULL, no DEFAULT): a row never advanced carries no token.
+    expect(
+      count(
+        table,
+        'advance_token TEXT\n    CONSTRAINT account_freehold_hearth_advance_token_shape',
+      ),
+    ).toBe(1);
+    expect(count(table, "CHECK (advance_token IS NULL OR advance_token ~ '^[0-9a-f]{32}$')")).toBe(
+      1,
+    );
+    expect(table).not.toContain('advance_token TEXT NOT NULL');
+    // The constraint is NAMED, exactly twice in the whole fragment (the table and
+    // the probe's ALTER), never a third anonymous copy.
+    expect(count(code, 'CONSTRAINT account_freehold_hearth_advance_token_shape')).toBe(2);
+    expect(count(code, "CHECK (advance_token IS NULL OR advance_token ~ '^[0-9a-f]{32}$')")).toBe(
+      2,
+    );
+  });
+
+  it('adds the column to an older table only behind a catalog probe, so a reboot issues no ALTER', () => {
+    const code = codeOnly(FREEHOLD_HEARTH_SCHEMA);
+    // The positive pin the probe exists for: the ALTER is present, and it is
+    // the only one.
+    expect(count(code, 'ADD COLUMN IF NOT EXISTS advance_token TEXT')).toBe(1);
+    expect(count(code, 'ALTER TABLE')).toBe(1);
+    expect(count(code, 'DO $freehold_hearth_advance_token$')).toBe(1);
+    expect(count(code, '$freehold_hearth_advance_token$;')).toBe(1);
+    // The probe reads pg_attribute for THIS table's live column, by the
+    // schema-qualified name the placeholder became.
+    const probe =
+      "IF NOT EXISTS (\n    SELECT 1 FROM pg_catalog.pg_attribute\n     WHERE attrelid = to_regclass('\"public\".account_freehold_hearth')\n       AND attname = 'advance_token'\n       AND NOT attisdropped\n  ) THEN";
+    expect(count(code, probe)).toBe(1);
+    // ORDER: the probe, then the ALTER, then END IF. An ALTER outside the IF
+    // would take ACCESS EXCLUSIVE at every boot, probe or no probe.
+    const probeAt = code.indexOf(probe);
+    const alterAt = code.indexOf('ALTER TABLE "public".account_freehold_hearth');
+    const endIfAt = code.indexOf('END IF;');
+    expect(probeAt).toBeGreaterThan(code.indexOf('DO $freehold_hearth_advance_token$'));
+    expect(alterAt).toBeGreaterThan(probeAt);
+    expect(endIfAt).toBeGreaterThan(alterAt);
+    // And the CREATE TABLE comes first, so a fresh database never needs the ALTER.
+    expect(
+      code.indexOf('CREATE TABLE IF NOT EXISTS "public".account_freehold_hearth'),
+    ).toBeLessThan(probeAt);
+  });
+
   it('documents the keep-forever retention exemption and WHY, at the table', () => {
     // The comment is the record of a DELIBERATE retention decision, so it is
     // pinned on the RAW fragment (codeOnly strips exactly this text).
@@ -159,6 +217,12 @@ describe('the DDL', () => {
     expect(isolated).toContain(
       'CREATE TABLE IF NOT EXISTS "freehold_hearth_pg_test".account_freehold_hearth',
     );
+    // The probe and its ALTER follow the same substitution: a probe left on
+    // "public" would read the wrong table and ALTER the private one every boot.
+    expect(isolated).toContain(
+      'to_regclass(\'"freehold_hearth_pg_test".account_freehold_hearth\')',
+    );
+    expect(isolated).toContain('ALTER TABLE "freehold_hearth_pg_test".account_freehold_hearth');
     expect(isolated).not.toContain('__woc_freehold_hearth_schema__');
     expect(isolated).not.toContain('"public"');
     expect(FREEHOLD_HEARTH_SCHEMA).toContain(
@@ -206,11 +270,29 @@ describe('the pinned statements', () => {
     expect(count(FREEHOLD_HEARTH_READ_FOR_UPDATE_SQL, 'EXTRACT(EPOCH FROM now())')).toBe(1);
   });
 
+  it('also reads the wall clock AT the read, the epoch the corrupt test is judged against', () => {
+    // clock_timestamp(), never a second now(): now() is the transaction START,
+    // and a concurrent advance that committed while this read waited for the
+    // row lock legitimately wrote past now() plus the cooldown.
+    expect(FREEHOLD_HEARTH_READ_FOR_UPDATE_SQL).toContain(
+      '(EXTRACT(EPOCH FROM clock_timestamp()) * 1000)::bigint::text AS clock_ms',
+    );
+    expect(count(FREEHOLD_HEARTH_READ_FOR_UPDATE_SQL, 'clock_timestamp()')).toBe(1);
+    expect(count(FREEHOLD_HEARTH_READ_FOR_UPDATE_SQL, 'now()')).toBe(1);
+    // Both epochs ride the SAME locked statement, so clock_ms is read after the wait.
+    expect(FREEHOLD_HEARTH_READ_FOR_UPDATE_SQL.indexOf('AS clock_ms')).toBeLessThan(
+      FREEHOLD_HEARTH_READ_FOR_UPDATE_SQL.indexOf('FOR UPDATE'),
+    );
+  });
+
   it('advances monotonically: GREATEST forward, revision by a bare increment', () => {
     expect(FREEHOLD_HEARTH_ADVANCE_SQL).toContain(
       'SET ready_at_ms = GREATEST(ready_at_ms, $2::bigint + $3::bigint)',
     );
     expect(FREEHOLD_HEARTH_ADVANCE_SQL).toContain('revision = revision + 1');
+    // The attempt's token is stamped by the SAME statement that writes the
+    // effect, so a verify can never see the token without the advance.
+    expect(FREEHOLD_HEARTH_ADVANCE_SQL).toContain('advance_token = $4,');
     expect(FREEHOLD_HEARTH_ADVANCE_SQL).toContain('updated_at = now()');
     expect(FREEHOLD_HEARTH_ADVANCE_SQL).toContain('WHERE account_id = $1');
     expect(FREEHOLD_HEARTH_ADVANCE_SQL).toContain(
@@ -232,7 +314,7 @@ describe('the pinned statements', () => {
     const assigned = [...setClause.matchAll(/(\w+)\s*=/g)]
       .map((match) => match[1])
       .filter((name) => name !== 'GREATEST');
-    expect(assigned).toEqual(['ready_at_ms', 'revision', 'updated_at']);
+    expect(assigned).toEqual(['ready_at_ms', 'revision', 'advance_token', 'updated_at']);
   });
 });
 
@@ -343,9 +425,62 @@ describe('advanceFreeholdHearthOnClient', () => {
     expect(calls[2].values).toEqual([ACCOUNT_ID]);
     // $2 is the database's own epoch, echoed back as text; $3 is the cooldown
     // as text. Neither is a locally computed sum, so GREATEST sees the exact
-    // arms the reviewed statement promises.
-    expect(calls[3].values).toEqual([ACCOUNT_ID, '5000', '900000']);
+    // arms the reviewed statement promises. $4 is the attempt's token, null
+    // when the caller passed none.
+    expect(calls[3].values).toEqual([ACCOUNT_ID, '5000', '900000', null]);
   });
+
+  it("stamps the caller's token as $4 of the advance, verbatim", async () => {
+    const { calls, client } = makeClient(acceptedReplies());
+    expect(await advanceFreeholdHearthOnClient(client, ACCOUNT_ID, COOLDOWN_MS, TOKEN)).toEqual({
+      kind: 'advanced',
+      readyAtMs: '905000',
+      revision: '5',
+      nowMs: '5000',
+    });
+    expect(calls).toHaveLength(4);
+    expect(calls[3].text).toBe(FREEHOLD_HEARTH_ADVANCE_SQL);
+    expect(calls[3].values).toEqual([
+      ACCOUNT_ID,
+      '5000',
+      '900000',
+      '0123456789abcdef0123456789abcdef',
+    ]);
+    // The three statements before the advance never carry the token.
+    for (const call of calls.slice(0, 3)) expect(call.values).toEqual([ACCOUNT_ID]);
+  });
+
+  it('never sends the token when the entry refuses', async () => {
+    const { calls, client } = makeClient([
+      { rows: [{ id: ACCOUNT_ID }] },
+      { rows: [] },
+      { rows: [{ ready_at_ms: '9000', revision: '4', now_ms: '5000', clock_ms: '5000' }] },
+    ]);
+    expect(
+      await advanceFreeholdHearthOnClient(client, ACCOUNT_ID, COOLDOWN_MS, TOKEN),
+    ).toMatchObject({ kind: 'cooldown' });
+    expect(calls).toHaveLength(3);
+    expect(calls.some((call) => (call.values ?? []).includes(TOKEN))).toBe(false);
+  });
+
+  const badTokens: readonly [string, string][] = [
+    ['uppercase hex', '0123456789ABCDEF0123456789ABCDEF'],
+    ['31 characters', '0123456789abcdef0123456789abcde'],
+    ['33 characters', '0123456789abcdef0123456789abcdef0'],
+    ['a non-hex character', '0123456789abcdef0123456789abcdeg'],
+    ['the empty string', ''],
+  ];
+  for (const [label, token] of badTokens) {
+    it(`refuses a token that is ${label} before issuing any statement`, async () => {
+      const { calls, client } = makeClient(acceptedReplies());
+      await expect(
+        advanceFreeholdHearthOnClient(client, ACCOUNT_ID, COOLDOWN_MS, token),
+      ).rejects.toThrow('hearth advance token must be 32 lowercase hex characters');
+      // Refused locally: a value the column CHECK would reject must never abort
+      // the caller's transaction with a 23514.
+      expect(calls).toEqual([]);
+    });
+  }
 
   it('reports the value the database RETURNED, never a locally recomputed sum', async () => {
     // GREATEST's left arm winning is what a lagging clock looks like from the
@@ -354,7 +489,7 @@ describe('advanceFreeholdHearthOnClient', () => {
     // can decide is that the module never substitutes its own arithmetic.
     const { client } = makeClient(
       acceptedReplies(
-        { ready_at_ms: '4000000', revision: '9', now_ms: '4000000' },
+        { ready_at_ms: '4000000', revision: '9', now_ms: '4000000', clock_ms: '4000000' },
         {
           ready_at_ms: '9000000',
           revision: '10',
@@ -377,7 +512,7 @@ describe('advanceFreeholdHearthOnClient', () => {
     const { calls, client } = makeClient([
       { rows: [{ id: ACCOUNT_ID }] },
       { rows: [] },
-      { rows: [{ ready_at_ms: '9000', revision: '4', now_ms: '5000' }] },
+      { rows: [{ ready_at_ms: '9000', revision: '4', now_ms: '5000', clock_ms: '5000' }] },
     ]);
     const result = await advanceFreeholdHearthOnClient(client, ACCOUNT_ID, COOLDOWN_MS);
     expect(result).toEqual({
@@ -400,7 +535,7 @@ describe('advanceFreeholdHearthOnClient', () => {
     const regressed = makeClient([
       { rows: [{ id: ACCOUNT_ID }] },
       { rows: [] },
-      { rows: [{ ready_at_ms: '5000', revision: '4', now_ms: '4999' }] },
+      { rows: [{ ready_at_ms: '5000', revision: '4', now_ms: '4999', clock_ms: '4999' }] },
     ]);
     expect(
       await advanceFreeholdHearthOnClient(regressed.client, ACCOUNT_ID, COOLDOWN_MS),
@@ -410,7 +545,7 @@ describe('advanceFreeholdHearthOnClient', () => {
     // now_ms EXACTLY at ready_at_ms is ready: the refusal is strictly less-than.
     const boundary = makeClient(
       acceptedReplies(
-        { ready_at_ms: '5000', revision: '4', now_ms: '5000' },
+        { ready_at_ms: '5000', revision: '4', now_ms: '5000', clock_ms: '5000' },
         {
           ready_at_ms: '905000',
           revision: '5',
@@ -431,7 +566,16 @@ describe('advanceFreeholdHearthOnClient', () => {
     const { calls, client } = makeClient([
       { rows: [{ id: ACCOUNT_ID }] },
       { rows: [] },
-      { rows: [{ ready_at_ms: '9007199254740993', revision: '4', now_ms: '9007199254740992' }] },
+      {
+        rows: [
+          {
+            ready_at_ms: '9007199254740993',
+            revision: '4',
+            now_ms: '9007199254740992',
+            clock_ms: '9007199254740992',
+          },
+        ],
+      },
     ]);
     expect(await advanceFreeholdHearthOnClient(client, ACCOUNT_ID, COOLDOWN_MS)).toEqual({
       kind: 'cooldown',
@@ -442,10 +586,140 @@ describe('advanceFreeholdHearthOnClient', () => {
     expect(at(calls, 'UPDATE account_freehold_hearth')).toBe(-1);
   });
 
+  /** The three statements of a refused entry, the read carrying `read`. */
+  const refusedReplies = (read: Record<string, unknown>): Reply[] => [
+    { rows: [{ id: ACCOUNT_ID }] },
+    { rows: [] },
+    { rows: [read] },
+  ];
+
+  it('answers corrupt for a ready time one millisecond past the clock plus the cooldown', async () => {
+    const { calls, client } = makeClient(
+      refusedReplies({ ready_at_ms: '905001', revision: '4', now_ms: '5000', clock_ms: '5000' }),
+    );
+    expect(await advanceFreeholdHearthOnClient(client, ACCOUNT_ID, COOLDOWN_MS, TOKEN)).toEqual({
+      kind: 'corrupt',
+      readyAtMs: '905001',
+      revision: '4',
+      nowMs: '5000',
+    });
+    // Refused, never trusted and never repaired: three statements, no write,
+    // and the attempt's token is never sent.
+    expect(calls).toHaveLength(3);
+    expect(at(calls, 'UPDATE account_freehold_hearth')).toBe(-1);
+    expect(calls.some((call) => (call.values ?? []).includes(TOKEN))).toBe(false);
+  });
+
+  it('answers cooldown, not corrupt, exactly AT the clock plus the cooldown (the control)', async () => {
+    // A ready time an accepted advance writes is now plus the cooldown, so the
+    // boundary itself is legitimate: the corrupt test is strictly greater-than.
+    const { calls, client } = makeClient(
+      refusedReplies({ ready_at_ms: '905000', revision: '4', now_ms: '5000', clock_ms: '5000' }),
+    );
+    expect(await advanceFreeholdHearthOnClient(client, ACCOUNT_ID, COOLDOWN_MS)).toEqual({
+      kind: 'cooldown',
+      readyAtMs: '905000',
+      revision: '4',
+      nowMs: '5000',
+    });
+    expect(calls).toHaveLength(3);
+    expect(at(calls, 'UPDATE account_freehold_hearth')).toBe(-1);
+  });
+
+  it("judges corrupt against the CALLER's cooldown, not a constant", async () => {
+    // cooldown 1000: 1001 past the clock is corrupt, 1000 past it is not. A
+    // guard hard-coded to the shipped 900000 ms would call both cooldown.
+    const over = makeClient(
+      refusedReplies({ ready_at_ms: '6001', revision: '4', now_ms: '5000', clock_ms: '5000' }),
+    );
+    expect(await advanceFreeholdHearthOnClient(over.client, ACCOUNT_ID, 1000)).toMatchObject({
+      kind: 'corrupt',
+      readyAtMs: '6001',
+    });
+    const at1000 = makeClient(
+      refusedReplies({ ready_at_ms: '6000', revision: '4', now_ms: '5000', clock_ms: '5000' }),
+    );
+    expect(await advanceFreeholdHearthOnClient(at1000.client, ACCOUNT_ID, 1000)).toMatchObject({
+      kind: 'cooldown',
+      readyAtMs: '6000',
+    });
+  });
+
+  it('judges corrupt against clock_ms, not now_ms: a lock wait behind a later advance is cooldown', async () => {
+    // The ordinary race: this transaction started at 5000, waited for the row
+    // lock, and a concurrent advance that started at 5500 wrote 905500. Against
+    // now_ms that is 900500 past (would read corrupt); against the clock after
+    // the wait (6000) it is 899500 past, an ordinary cooldown.
+    const { client } = makeClient(
+      refusedReplies({ ready_at_ms: '905500', revision: '5', now_ms: '5000', clock_ms: '6000' }),
+    );
+    expect(await advanceFreeholdHearthOnClient(client, ACCOUNT_ID, COOLDOWN_MS)).toEqual({
+      kind: 'cooldown',
+      readyAtMs: '905500',
+      revision: '5',
+      nowMs: '5000',
+    });
+  });
+
+  it('judges corrupt against clock_ms, not now_ms: a backward clock step is corrupt', async () => {
+    // The converse operand check: the wall clock stepped back to 4000 after the
+    // transaction started at 5000. 904500 is 899500 past now_ms (would read
+    // cooldown) but 900500 past the clock, beyond anything an advance writes.
+    const { calls, client } = makeClient(
+      refusedReplies({ ready_at_ms: '904500', revision: '4', now_ms: '5000', clock_ms: '4000' }),
+    );
+    expect(await advanceFreeholdHearthOnClient(client, ACCOUNT_ID, COOLDOWN_MS)).toEqual({
+      kind: 'corrupt',
+      readyAtMs: '904500',
+      revision: '4',
+      nowMs: '5000',
+    });
+    expect(at(calls, 'UPDATE account_freehold_hearth')).toBe(-1);
+  });
+
+  it('subtracts with BigInt: Number arithmetic would call this corrupt row a cooldown', async () => {
+    // 9007199255640993 - 9007199254740992 is 900001, one past the cooldown, but
+    // the first operand rounds to 9007199255640992 as a double, so Number
+    // subtraction answers exactly 900000 and the guard would pass it.
+    expect(Number('9007199255640993') - Number('9007199254740992')).toBe(900000);
+    expect(BigInt('9007199255640993') - BigInt('9007199254740992')).toBe(900001n);
+    const { client } = makeClient(
+      refusedReplies({
+        ready_at_ms: '9007199255640993',
+        revision: '4',
+        now_ms: '9007199254740992',
+        clock_ms: '9007199254740992',
+      }),
+    );
+    expect(await advanceFreeholdHearthOnClient(client, ACCOUNT_ID, COOLDOWN_MS)).toEqual({
+      kind: 'corrupt',
+      readyAtMs: '9007199255640993',
+      revision: '4',
+      nowMs: '9007199254740992',
+    });
+  });
+
+  it('never judges a READY row corrupt: the corrupt test runs only on the refusal arm', async () => {
+    // clock_ms far below ready_at_ms would read corrupt if the check ran first,
+    // but now_ms says the key is ready, so the entry advances.
+    const { calls, client } = makeClient(
+      acceptedReplies({ ready_at_ms: '5000', revision: '4', now_ms: '5000', clock_ms: '0' }),
+    );
+    expect(await advanceFreeholdHearthOnClient(client, ACCOUNT_ID, 1)).toMatchObject({
+      kind: 'advanced',
+    });
+    expect(at(calls, 'UPDATE account_freehold_hearth')).toBe(3);
+  });
+
   it('carries an advanced counter past 2^53 back as exact text', async () => {
     const { client } = makeClient(
       acceptedReplies(
-        { ready_at_ms: '9007199254740000', revision: '4', now_ms: '9007199254740993' },
+        {
+          ready_at_ms: '9007199254740000',
+          revision: '4',
+          now_ms: '9007199254740993',
+          clock_ms: '9007199254740993',
+        },
         { ready_at_ms: '9007199254741993', revision: '9007199254740995' },
       ),
     );
@@ -479,7 +753,7 @@ describe('advanceFreeholdHearthOnClient', () => {
     expect(await advanceFreeholdHearthOnClient(client, ACCOUNT_ID, 0)).toMatchObject({
       kind: 'advanced',
     });
-    expect(calls[3].values).toEqual([ACCOUNT_ID, '5000', '0']);
+    expect(calls[3].values).toEqual([ACCOUNT_ID, '5000', '0', null]);
   });
 
   it('refuses an absent account after the lock, and writes nothing', async () => {
@@ -503,11 +777,16 @@ describe('advanceFreeholdHearthOnClient', () => {
     expect(at(calls, 'UPDATE account_freehold_hearth')).toBe(-1);
   });
 
-  // Exactly one of the three read fields corrupted per case.
+  // Exactly one of the four read fields corrupted per case.
   const badReads: readonly [string, Record<string, unknown>][] = [
-    ['ready_at_ms', { ready_at_ms: '-1', revision: '4', now_ms: '5000' }],
-    ['revision', { ready_at_ms: '1000', revision: 'four', now_ms: '5000' }],
-    ['now_ms', { ready_at_ms: '1000', revision: '4', now_ms: null }],
+    ['ready_at_ms', { ready_at_ms: '-1', revision: '4', now_ms: '5000', clock_ms: '5000' }],
+    ['revision', { ready_at_ms: '1000', revision: 'four', now_ms: '5000', clock_ms: '5000' }],
+    ['now_ms', { ready_at_ms: '1000', revision: '4', now_ms: null, clock_ms: '5000' }],
+    ['clock_ms', { ready_at_ms: '1000', revision: '4', now_ms: '5000', clock_ms: null }],
+    [
+      'clock_ms as a float',
+      { ready_at_ms: '1000', revision: '4', now_ms: '5000', clock_ms: '5000.5' },
+    ],
   ];
   for (const [field, row] of badReads) {
     it(`refuses and writes nothing when ${field} is not bigint text`, async () => {
@@ -548,6 +827,49 @@ describe('advanceFreeholdHearthOnClient', () => {
       expect(result.kind).toBe('unsupported');
     });
   }
+});
+
+describe('the ambiguous-COMMIT verify read', () => {
+  it('is a plain read of the token and revision, by account, with no lock', () => {
+    expect(FREEHOLD_HEARTH_VERIFY_SQL).toBe(
+      'SELECT advance_token, revision::text AS revision\n  FROM account_freehold_hearth WHERE account_id = $1',
+    );
+    // A locked read could not wait for an uncommitted first-advance INSERT; the
+    // verify waits on the character row first and then reads plainly.
+    expect(FREEHOLD_HEARTH_VERIFY_SQL).not.toContain('FOR UPDATE');
+    expect(FREEHOLD_HEARTH_VERIFY_SQL).not.toContain('FOR SHARE');
+  });
+
+  it('answers true only when the row carries THIS attempt token', async () => {
+    const landed = makeClient([{ rows: [{ advance_token: TOKEN, revision: '5' }] }]);
+    expect(await freeholdHearthAdvanceLandedOnClient(landed.client, ACCOUNT_ID, TOKEN)).toBe(true);
+    expect(landed.calls).toEqual([{ text: FREEHOLD_HEARTH_VERIFY_SQL, values: [ACCOUNT_ID] }]);
+
+    // Another attempt's token on the row: this attempt did not land.
+    const other = makeClient([{ rows: [{ advance_token: OTHER_TOKEN, revision: '5' }] }]);
+    expect(await freeholdHearthAdvanceLandedOnClient(other.client, ACCOUNT_ID, TOKEN)).toBe(false);
+  });
+
+  it('answers false for a NULL token and for an absent row', async () => {
+    const nullToken = makeClient([{ rows: [{ advance_token: null, revision: '5' }] }]);
+    expect(await freeholdHearthAdvanceLandedOnClient(nullToken.client, ACCOUNT_ID, TOKEN)).toBe(
+      false,
+    );
+    // An account's first advance rolled back leaves no row at all.
+    const absent = makeClient([{ rows: [] }]);
+    expect(await freeholdHearthAdvanceLandedOnClient(absent.client, ACCOUNT_ID, TOKEN)).toBe(false);
+    expect(absent.calls).toHaveLength(1);
+  });
+
+  it('refuses a malformed account id before a byte reaches the database', async () => {
+    for (const bad of [0, -1, 1.5]) {
+      const { calls, client } = makeClient([]);
+      await expect(freeholdHearthAdvanceLandedOnClient(client, bad, TOKEN)).rejects.toThrow(
+        /positive safe integer/,
+      );
+      expect(calls).toEqual([]);
+    }
+  });
 });
 
 describe('freeholdHearthForExport', () => {

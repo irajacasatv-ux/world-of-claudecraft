@@ -1,0 +1,168 @@
+// THE BOUNDED TRANSACTION every housing transaction the mutation boundary owns
+// runs through (docs/freeholds/mutation-touch-set-manifest.md section 5): the
+// claim writes, the fenced plot write, the login read, the renewer, the
+// operation prepare and close, and the ambiguous-COMMIT verify. One shape so
+// the four bounds are never forgotten on one path:
+//
+// - BEGIN and every SET LOCAL travel as ONE simple-protocol round trip;
+// - statement_timeout, lock_timeout and idle_in_transaction_session_timeout are
+//   each set, so a lock wait answers 55P03 inside its own bound instead of
+//   eating the statement's, and a stalled client cannot hold a row lock;
+// - the wall deadline is DbTransactionDeadline's, which destroys the socket
+//   and cancels the detached backend when it fires;
+// - COMMIT's command TAG is checked (commitChecked): a transaction an earlier
+//   statement aborted answers COMMIT with a ROLLBACK tag and no error, and on
+//   the login read that would have meant believing a claim that rolled back.
+//
+// A failure after COMMIT was sent that nothing proves rolled back is rethrown
+// as FreeholdCommitAmbiguous, so a caller can never mistake "the answer was
+// lost" for "it did not happen": the manifest's P9 verify, or a P2/P3 retry,
+// is the only thing that may decide it.
+//
+// No SQL of its own beyond the bounds line, and no db.ts import: the pool is
+// injected, so a Vitest drives every arm with a fake client.
+import {
+  createDbTransactionDeadline,
+  DbTransactionAborted,
+  type DbTransactionDeadline,
+  type DbTransactionDeadlineClient,
+  DbTransactionDeadlineExceeded,
+  DbTransactionRolledBack,
+} from './db_transaction_deadline';
+import { throwProvedRollback } from './pg_rollback_proof';
+
+/** The narrow pool surface: one checkout. node-postgres's Pool satisfies it. */
+export interface FreeholdTxPool {
+  connect(): Promise<DbTransactionDeadlineClient>;
+}
+
+/** The statements a housing transaction issues. DbTransactionDeadline is it. */
+export type FreeholdTxQuery = Pick<DbTransactionDeadline, 'query'>;
+
+export interface FreeholdTxBounds {
+  /** Names the transaction in deadline and abort errors. Never player data. */
+  readonly operation: string;
+  readonly statementMs: number;
+  readonly lockMs: number;
+  readonly idleMs: number;
+  /** The whole transaction's wall, including COMMIT. */
+  readonly wallMs: number;
+}
+
+/** COMMIT was sent and nothing proves it did not land. */
+export class FreeholdCommitAmbiguous extends Error {
+  readonly code = 'FREEHOLD_COMMIT_AMBIGUOUS' as const;
+
+  constructor(operation: string, cause: unknown) {
+    super(`${operation} lost its COMMIT answer; durable truth decides`, { cause });
+    this.name = 'FreeholdCommitAmbiguous';
+  }
+}
+
+function requireBound(name: string, ms: number): number {
+  if (!Number.isSafeInteger(ms) || ms <= 0) {
+    throw new RangeError(`freehold transaction ${name} must be a positive integer of ms`);
+  }
+  return ms;
+}
+
+/** The one round trip that opens a bounded housing transaction. Exported so
+ *  the suites pin the exact bounds each path runs under. */
+export function freeholdTxBeginSql(bounds: FreeholdTxBounds): string {
+  const statement = requireBound('statementMs', bounds.statementMs);
+  const lock = requireBound('lockMs', bounds.lockMs);
+  const idle = requireBound('idleMs', bounds.idleMs);
+  requireBound('wallMs', bounds.wallMs);
+  return (
+    'BEGIN; ' +
+    `SET LOCAL statement_timeout = ${statement}; ` +
+    `SET LOCAL lock_timeout = ${lock}; ` +
+    `SET LOCAL idle_in_transaction_session_timeout = ${idle}`
+  );
+}
+
+/** Whether a failure that reached past COMMIT may still have committed. A
+ *  ROLLBACK tag, a statement-level SQLSTATE from a class that aborts before
+ *  COMMIT (server/pg_rollback_proof.ts) and the typed deadline arms that say so
+ *  are the only proofs that it did not. */
+export function freeholdCommitMayHaveLanded(error: unknown): boolean {
+  if (error instanceof DbTransactionRolledBack) return false;
+  if (error instanceof DbTransactionDeadlineExceeded || error instanceof DbTransactionAborted) {
+    return error.commitMayHaveSucceeded;
+  }
+  return !throwProvedRollback(error);
+}
+
+/** A checkout the caller's signal also bounds: an abort that wins the race
+ *  releases the client when it eventually arrives, so nothing leaks. */
+async function connectWithin(
+  pool: FreeholdTxPool,
+  signal: AbortSignal | undefined,
+): Promise<DbTransactionDeadlineClient> {
+  const checkout = pool.connect();
+  if (!signal) return checkout;
+  if (signal.aborted) {
+    checkout.then(
+      (client) => client.release(),
+      () => {},
+    );
+    throw signal.reason ?? new Error('freehold transaction cancelled before its checkout');
+  }
+  return new Promise<DbTransactionDeadlineClient>((resolve, reject) => {
+    const onAbort = () => {
+      checkout.then(
+        (client) => client.release(),
+        () => {},
+      );
+      reject(signal.reason ?? new Error('freehold transaction cancelled before its checkout'));
+    };
+    signal.addEventListener('abort', onAbort, { once: true });
+    checkout.then(
+      (client) => {
+        signal.removeEventListener('abort', onAbort);
+        // An abort that won already scheduled this client's release.
+        if (signal.aborted) return;
+        resolve(client);
+      },
+      (error: unknown) => {
+        signal.removeEventListener('abort', onAbort);
+        reject(error);
+      },
+    );
+  });
+}
+
+export async function runFreeholdTransaction<T>(
+  pool: FreeholdTxPool,
+  bounds: FreeholdTxBounds,
+  run: (tx: FreeholdTxQuery) => Promise<T>,
+  opts: {
+    readonly signal?: AbortSignal;
+    readonly cancelBackend?: (processId: number) => Promise<void>;
+  } = {},
+): Promise<T> {
+  const begin = freeholdTxBeginSql(bounds);
+  const client = await connectWithin(pool, opts.signal);
+  const tx = createDbTransactionDeadline(client, {
+    operation: bounds.operation,
+    timeoutMs: bounds.wallMs,
+    signal: opts.signal,
+    cancelBackend: opts.cancelBackend,
+  });
+  let commitSent = false;
+  try {
+    await tx.query(begin);
+    const result = await run(tx);
+    commitSent = true;
+    await tx.commitChecked();
+    return result;
+  } catch (error) {
+    await tx.rollback();
+    if (commitSent && freeholdCommitMayHaveLanded(error)) {
+      throw new FreeholdCommitAmbiguous(bounds.operation, error);
+    }
+    throw error;
+  } finally {
+    tx.release();
+  }
+}

@@ -6,6 +6,9 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { FREEHOLD_CLAIM_SCHEMA } from '../../server/freehold_claim_db';
+import { FREEHOLD_OPERATION_SCHEMA } from '../../server/freehold_operation_db';
+import { FREEHOLD_RECEIPT_GROWTH_TABLES } from '../../server/freehold_receipt_growth_monitor';
 import { stripComments } from '../helpers/strip_comments';
 
 // Comment-stripped so a commented-out call can never satisfy an order pin.
@@ -17,6 +20,22 @@ const MAIN = stripComments(readFileSync(MAIN_PATH, 'utf8'));
 // else keeps MAIN, so a commented-out call still cannot satisfy an order pin.
 const MAIN_RAW = readFileSync(MAIN_PATH, 'utf8');
 const count = (haystack: string, needle: string): number => haystack.split(needle).length - 1;
+
+/** The contiguous `--` comment block directly above one CREATE TABLE in a DDL
+ *  fragment, folded to one line: the decision recorded AT the table, never a
+ *  comment elsewhere in the fragment. */
+function ddlCommentAbove(ddl: string, createTable: string): string {
+  const at = ddl.indexOf(createTable);
+  expect(at).toBeGreaterThan(-1);
+  expect(count(ddl, createTable)).toBe(1);
+  const lines = ddl.slice(0, at).split('\n');
+  lines.pop();
+  const comment: string[] = [];
+  while (lines.length > 0 && (lines[lines.length - 1] ?? '').trimStart().startsWith('--')) {
+    comment.unshift((lines.pop() ?? '').replace(/^\s*--\s?/, ''));
+  }
+  return comment.join(' ').replace(/\s+/g, ' ');
+}
 
 describe('retention sweep wiring in server/main.ts', () => {
   it('keeps orphan-session cleanup a boot precondition, ahead of listen', () => {
@@ -355,6 +374,67 @@ describe('retention sweep wiring in server/main.ts', () => {
     );
   });
 
+  it('no 07a housing table (claims, intents, receipts) is placed on the retention sweep', () => {
+    // Claims and receipts are KEEP FOREVER by decision: a claim row carries the
+    // fencing generation that must never restart (a fresh generation-1 row
+    // would re-admit a late write from an earlier era), and a receipt is
+    // permanent replay authority (deleting one re-enables its operation).
+    // Intents need no arm because they are bounded per account and deleted on
+    // close. Same shape as the two housing pins above: the absence is PINNED.
+    const tables = ['freehold_plot_claims', 'freehold_operations', 'freehold_operation_receipts'];
+    for (const table of tables) {
+      expect(MAIN).not.toContain(`name: '${table}'`);
+      expect(MAIN).not.toContain(`DELETE FROM ${table}`);
+    }
+    // The scraped sweep array itself names no housing table in any form (the
+    // exact-order pin above is the second guard), and neither does the sweep
+    // module, which takes its whole table list from main.ts.
+    const start = MAIN.indexOf('tables: [');
+    expect(start).toBeGreaterThan(-1);
+    const block = MAIN.slice(start, MAIN.indexOf('onlineSamples:', start));
+    expect(block).not.toMatch(/freehold/i);
+    const SWEEP = readFileSync(join(__dirname, '..', '..', 'server', 'retention_sweep.ts'), 'utf8');
+    expect(SWEEP).not.toMatch(/freehold/i);
+    // (Narrowed past pruneBookedWocCustodyClaimsBatch, the market custody arm.)
+    expect(MAIN).not.toMatch(/prune\w*(PlotClaim|Operation|Receipt)/);
+    // The reason survives next to the list (RAW: the subject IS a comment).
+    expect(MAIN_RAW).toContain(
+      'freehold_plot_claims and freehold_operation_receipts are deliberately',
+    );
+    // And the receipts are OBSERVED instead of swept: they are on the growth
+    // monitor's watched list.
+    expect(FREEHOLD_RECEIPT_GROWTH_TABLES).toContain('freehold_operation_receipts');
+  });
+
+  it('records the keep-forever and bounded decisions at each 07a DDL', () => {
+    // The retention rule (server/CLAUDE.md "Hot paths"): a table that grows
+    // without a prune carries its keep-forever comment AT the DDL. Read from the
+    // exact fragments ensureSchema applies, directly above each CREATE TABLE.
+    const claims = ddlCommentAbove(
+      FREEHOLD_CLAIM_SCHEMA,
+      'CREATE TABLE IF NOT EXISTS "public".freehold_plot_claims (',
+    );
+    expect(claims).toContain('KEEP FOREVER');
+    expect(claims).toContain('exempt from the retention sweep');
+
+    const receipts = ddlCommentAbove(
+      FREEHOLD_OPERATION_SCHEMA,
+      'CREATE TABLE IF NOT EXISTS freehold_operation_receipts (',
+    );
+    expect(receipts).toContain('KEEP FOREVER');
+    expect(receipts).toContain('exempt from the retention sweep');
+    expect(receipts).toContain('server/freehold_receipt_growth_monitor.ts');
+
+    // The intents are NOT keep-forever: bounded per account instead.
+    const intents = ddlCommentAbove(
+      FREEHOLD_OPERATION_SCHEMA,
+      'CREATE TABLE IF NOT EXISTS freehold_operations (',
+    );
+    expect(intents).toContain('Bounded per account');
+    expect(intents).toContain('needs no retention sweep');
+    expect(intents).not.toContain('KEEP FOREVER');
+  });
+
   it('the login recovery kick is armed BEFORE the socket can deliver a command', () => {
     // server/ws_auth.ts arms the provisional gold-rail hold synchronously on a
     // fresh join, and the whole point is that it happens before the message
@@ -502,5 +582,50 @@ describe('retention sweep wiring in server/main.ts', () => {
     expect(stop).toBeLessThan(closePool);
     expect(count(MAIN, 'bankLedgerGrowthMonitor.start()')).toBe(1);
     expect(count(MAIN, 'await bankLedgerGrowthMonitor.stop();')).toBe(1);
+  });
+
+  it('starts the receipt-growth monitor after listen and drains it before pool close', () => {
+    const listen = MAIN.indexOf('server.listen(');
+    const start = MAIN.indexOf('freeholdReceiptGrowthMonitor.start()');
+    const shutdown = MAIN.indexOf('const shutdown = async () => {');
+    const stop = MAIN.indexOf('await freeholdReceiptGrowthMonitor.stop();', shutdown);
+    const closePool = MAIN.indexOf('await pool.end();', shutdown);
+    expect(listen).toBeGreaterThan(-1);
+    expect(start).toBeGreaterThan(listen);
+    expect(stop).toBeGreaterThan(shutdown);
+    expect(stop).toBeLessThan(closePool);
+    expect(count(MAIN, 'createFreeholdReceiptGrowthMonitor(')).toBe(1);
+    expect(count(MAIN, 'freeholdReceiptGrowthMonitor.start()')).toBe(1);
+    expect(count(MAIN, 'await freeholdReceiptGrowthMonitor.stop();')).toBe(1);
+    // Yield-first admission on the SHARED gate, never a queued acquire.
+    const create = MAIN.indexOf('createFreeholdReceiptGrowthMonitor(');
+    const args = MAIN.slice(create, MAIN.indexOf('});', create));
+    expect(args).toContain('tryAcquireBackgroundPermit: () => majorBackgroundDbGate.tryAcquire()');
+    expect(args).not.toContain('.acquire(');
+  });
+
+  it('releases the plot claims after the housing drain and before the character leases drop', () => {
+    // Manifest P6: once the housing drain has run, a replacement process may
+    // take the plots at once instead of waiting out the TTL; the character
+    // leases drop after it, and the pool closes last. The holder is the
+    // process lease holder the claims were acquired under.
+    const shutdown = MAIN.indexOf('const shutdown = async () => {');
+    const drain = MAIN.indexOf(
+      'await freeholdPersistIdle(FREEHOLD_PERSIST_SHUTDOWN_DRAIN_MS)',
+      shutdown,
+    );
+    const release = MAIN.indexOf(
+      'await releaseAllFreeholdClaims({ pool, holder: PROCESS_LEASE_HOLDER });',
+      shutdown,
+    );
+    const leases = MAIN.indexOf('await releaseAllCharacterLeases()', shutdown);
+    const closePool = MAIN.indexOf('await pool.end();', shutdown);
+    expect(shutdown).toBeGreaterThan(-1);
+    expect(drain).toBeGreaterThan(shutdown);
+    expect(release).toBeGreaterThan(drain);
+    expect(release).toBeLessThan(leases);
+    expect(leases).toBeLessThan(closePool);
+    expect(count(MAIN, 'releaseAllFreeholdClaims(')).toBe(1);
+    expect(count(MAIN, 'await freeholdPersistIdle(FREEHOLD_PERSIST_SHUTDOWN_DRAIN_MS)')).toBe(1);
   });
 });

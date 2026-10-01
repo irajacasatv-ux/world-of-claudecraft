@@ -44,6 +44,10 @@ export const FREEHOLD_LOAD_FAILURE_KINDS = [
   // of them did not, so an operator seeing this is seeing a login that ran past
   // FREEHOLD_PERSIST_LOGIN_BUDGET_MS rather than any one step timing out.
   'no_budget',
+  // The GLOBAL CLAIM cause (07a): another realm holds this plot's live claim,
+  // so the row was never read. Capacity, not data: the next login can answer
+  // differently once that realm lets the plot go or its claim expires.
+  'claim_busy',
   // The ORDERING cause, and the only kind that is neither data nor capacity: the
   // sim already holds a record for this owner and it carries the STAND-IN, which
   // means it was seeded WITHOUT an install, which means nothing can ever teach it

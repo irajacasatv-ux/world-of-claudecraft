@@ -64,54 +64,6 @@ export function normalizeHearthLoad(
   return COLD_HEARTH;
 }
 
-/**
- * BOTH LOGIN READS INSIDE ONE TRANSACTION, as a function a Vitest can drive.
- *
- * It lives here rather than inside the composition root because the composition
- * root binds the real pool at module scope, so nothing imports it and nothing
- * executes its closures: a mutant that deleted the clock swallow, which is the
- * one property that makes a shared transaction safe, left the whole suite green
- * and `tsc` silent. The BINDING stays there; the POLICY is here, where a case
- * can reject the transaction and read what comes back.
- *
- * THE POLICY, and it is the asymmetry this module exists to keep in one place.
- * The plot fails CLOSED: a rejection with NO row in hand is rethrown, so the
- * caller holds the account rather than handing it a default over a row this
- * host could not read. The clock fails OPEN: any clock fault answers a cold
- * clock and the login proceeds.
- *
- * BOTH HALVES ARE CAPTURED AS THEY ARE READ. The guard has to be around the
- * WHOLE transaction, because an inner catch on the clock's own promise cannot
- * see the COMMIT the transaction helper issues afterwards, and a clock fault
- * that KILLS the connection makes that COMMIT reject. Capturing only the row
- * then threw away a clock both statements had already answered and substituted
- * the cold one, which reads as READY: the store remembers that zero on the
- * entry and replays it to every later character of the account for the rest of
- * the session without reading again. An UNREADABLE clock starts cold; a clock
- * that was read does not.
- */
-export async function readLoginDurables<Q>(
-  inTransaction: <T>(run: (query: Q) => Promise<T>) => Promise<T>,
-  readRow: (query: Q) => Promise<FreeholdRowLoad>,
-  readHearth: (query: Q) => Promise<FreeholdHearthLoad>,
-): Promise<{ row: FreeholdRowLoad; hearth: FreeholdHearthAnswer }> {
-  let row: FreeholdRowLoad | undefined;
-  let hearth: FreeholdHearthAnswer | undefined;
-  try {
-    return await inTransaction(async (query) => {
-      row = await readRow(query);
-      hearth = await readHearth(query).catch((error: unknown) => ({
-        kind: 'threw' as const,
-        error,
-      }));
-      return { row, hearth };
-    });
-  } catch (error) {
-    if (row === undefined) throw error;
-    return { row, hearth: hearth ?? { kind: 'threw' as const, error } };
-  }
-}
-
 /** The two login reads, on one client when the host offers one. The row half
  *  is allowed to throw, because the store's loadOnce turns that into a HOLD; the
  *  clock half is not, because a clock the store cannot read starts COLD rather

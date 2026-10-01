@@ -66,6 +66,7 @@ import type {
   EquipSlot,
   ErrorReason,
   EscortRunState,
+  FreeholdKeyAdmission,
   GatherNodeDef,
   InventoryUnit,
   ItemInstancePayload,
@@ -374,7 +375,7 @@ export interface SimContextPrimitives {
   // parity traces default off; the stock offline world and the headless env opt
   // in; the realm maps it from its env. Read-only, exactly the resolved Sim.cfg field.
   readonly freeholdsEnabled: boolean;
-  readonly freeholdKeyAdmission: (ownerKey: string, pid: number) => boolean;
+  readonly freeholdKeyAdmission: (ownerKey: string, pid: number) => FreeholdKeyAdmission;
   readonly freeholdKeyReadyAtMs: Map<string, number>;
   readonly instanceScanCounters: {
     claimedSlotVisits: number;

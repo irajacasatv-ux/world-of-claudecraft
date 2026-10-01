@@ -6770,6 +6770,7 @@ export const ja_JP: EnTranslations = {
       "rename_not_permitted": "このキャラクターの名前変更は許可されていません。",
       "delete_confirm": "削除を確認するにはキャラクター名を入力してください。",
       "storage_purchase_open": "このキャラクターを削除するには、保管庫の購入を完了または解決する必要があります。",
+      "freehold_operation_open": "このキャラクターを削除するには、フリーホールドの操作を完了または解決する必要があります。",
       "delete_busy": "サーバーが混み合っています。しばらくしてからこのキャラクターの削除をお試しください。",
       "already_in_world": "キャラクターは既に世界にいます。",
       "taken_over": "あなたのキャラクターは別のセッションに引き継がれました。",

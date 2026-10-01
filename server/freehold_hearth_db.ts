@@ -14,18 +14,15 @@
 // under the account participant lock, so a cached or forged client value cannot
 // buy a trip.
 //
-// STATED AS THE RULE, NOT AS SHIPPED BEHAVIOR, because it is not performed yet.
-// `advanceFreeholdHearthOnClient` below has ZERO production callers in this
-// release: the realm admission participant that would call it is the 07a work,
-// and until then `freeholdKeyAdmission` refuses outright rather than consulting
-// this row. So nothing writes account_freehold_hearth in a shipped realm,
-// `loadFreeholdHearth` answers `absent` for every account, and the isolated
-// per-Sim clock in src/sim/freehold/hearth_key.ts is the only cooldown a player
-// meets. The advance is written, proved against real PostgreSQL and reachable
-// by nothing. It is here rather than in 07a because the capability the rollout
-// contract names is the whole PAIR: a release that reads the clock but cannot
-// advance it is not capable, and enabling housing on one would hand out a free
-// travel at every relogin.
+// PERFORMED SINCE 07a, on a LIT realm only: the remote Hearth trip
+// (server/freehold_hearth_trip.ts) commits `advanceFreeholdHearthOnClient` in
+// the same transaction as the character save that carries the trip, through
+// the housing hook (server/freehold_mutation.ts), and a dark realm still never
+// reaches it, so nothing writes account_freehold_hearth in a shipped realm
+// while FREEHOLDS_ENABLED is off. The isolated per-Sim clock in
+// src/sim/freehold/hearth_key.ts stays the offline and headless cooldown, and
+// online it is a forward-only mirror the trip merges this row's value into: it
+// may deny a use locally, it never admits one.
 //
 // TWO INVARIANTS a future reader must not break WHEN THAT CALLER LANDS:
 //   1. ONE clock reading per accepted entry, taken from the DATABASE, after
@@ -105,9 +102,35 @@ CREATE TABLE IF NOT EXISTS "__woc_freehold_hearth_schema__".account_freehold_hea
   ready_at_ms BIGINT NOT NULL DEFAULT 0,
   revision BIGINT NOT NULL DEFAULT 0,
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  -- The per-advance token the ambiguous-COMMIT verify reads (07a): 16 random
+  -- bytes as hex, written by the advance itself, so a verify that waited out a
+  -- hung transaction can tell THAT attempt's advance from any other.
+  advance_token TEXT
+    CONSTRAINT account_freehold_hearth_advance_token_shape
+    CHECK (advance_token IS NULL OR advance_token ~ '^[0-9a-f]{32}$'),
   CONSTRAINT account_freehold_hearth_ready_nonnegative CHECK (ready_at_ms >= 0),
   CONSTRAINT account_freehold_hearth_revision_nonnegative CHECK (revision >= 0)
 );
+
+-- The same column for a database whose table predates it. PROBED FIRST: an
+-- ALTER TABLE takes ACCESS EXCLUSIVE before it ever checks IF NOT EXISTS, and
+-- held through the rest of the boot transaction that lock would block every
+-- other realm's Hearth reads, so an ordinary boot only reads the catalog.
+DO $freehold_hearth_advance_token$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_catalog.pg_attribute
+     WHERE attrelid = to_regclass('"__woc_freehold_hearth_schema__".account_freehold_hearth')
+       AND attname = 'advance_token'
+       AND NOT attisdropped
+  ) THEN
+    ALTER TABLE "__woc_freehold_hearth_schema__".account_freehold_hearth
+      ADD COLUMN IF NOT EXISTS advance_token TEXT
+      CONSTRAINT account_freehold_hearth_advance_token_shape
+      CHECK (advance_token IS NULL OR advance_token ~ '^[0-9a-f]{32}$');
+  END IF;
+END;
+$freehold_hearth_advance_token$;
 
 `.replaceAll('"__woc_freehold_hearth_schema__"', schema);
 }
@@ -204,6 +227,17 @@ export type FreeholdHearthAdvance =
       readonly revision: string;
       readonly nowMs: string;
     }
+  /** A stored ready time past `now + cooldown`: no accepted advance can write
+   *  that, so only a backward database clock step or a bad row produced it.
+   *  Refused and written nothing, never trusted as authoritative (the rollout
+   *  contract's owed fail-closed rule): honoring it would lock the key for as
+   *  long as the bad value says, possibly for life. */
+  | {
+      readonly kind: 'corrupt';
+      readonly readyAtMs: string;
+      readonly revision: string;
+      readonly nowMs: string;
+    }
   | { readonly kind: 'unsupported'; readonly detail: string };
 
 /** Step 1. The account participant, taken FIRST so the epoch in step 3 is read
@@ -238,7 +272,8 @@ export const FREEHOLD_HEARTH_INIT_SQL =
  *  entries on this account. now() is the transaction clock deliberately. */
 export const FREEHOLD_HEARTH_READ_FOR_UPDATE_SQL = `SELECT ready_at_ms::text AS ready_at_ms,
        revision::text AS revision,
-       (EXTRACT(EPOCH FROM now()) * 1000)::bigint::text AS now_ms
+       (EXTRACT(EPOCH FROM now()) * 1000)::bigint::text AS now_ms,
+       (EXTRACT(EPOCH FROM clock_timestamp()) * 1000)::bigint::text AS clock_ms
   FROM account_freehold_hearth
  WHERE account_id = $1
    FOR UPDATE`;
@@ -251,9 +286,30 @@ export const FREEHOLD_HEARTH_READ_FOR_UPDATE_SQL = `SELECT ready_at_ms::text AS 
 export const FREEHOLD_HEARTH_ADVANCE_SQL = `UPDATE account_freehold_hearth
    SET ready_at_ms = GREATEST(ready_at_ms, $2::bigint + $3::bigint),
        revision = revision + 1,
+       advance_token = $4,
        updated_at = now()
  WHERE account_id = $1
  RETURNING ready_at_ms::text AS ready_at_ms, revision::text AS revision`;
+
+/** The ambiguous-COMMIT verify's read (07a, the touch-set manifest's P9). Plain
+ *  on purpose: the verify first waits on the character row the hung
+ *  transaction locked, so by the time this runs, as its own statement with a
+ *  fresh snapshot, that transaction has resolved and a row it INSERTED (an
+ *  account's first advance) is visible. A locked read of this row alone could
+ *  not wait for an uncommitted insert. */
+export const FREEHOLD_HEARTH_VERIFY_SQL = `SELECT advance_token, revision::text AS revision
+  FROM account_freehold_hearth WHERE account_id = $1`;
+
+/** Whether this attempt's advance is the one on the row, after the wait. */
+export async function freeholdHearthAdvanceLandedOnClient(
+  client: FreeholdQueryable,
+  accountId: number,
+  advanceToken: string,
+): Promise<boolean> {
+  requireHearthAccountId(accountId);
+  const res = await client.query(FREEHOLD_HEARTH_VERIFY_SQL, [accountId]);
+  return res.rows?.[0]?.advance_token === advanceToken;
+}
 
 /**
  * Check and advance the account's Hearth cooldown INSIDE the caller's already
@@ -270,8 +326,14 @@ export async function advanceFreeholdHearthOnClient(
   client: FreeholdQueryable,
   accountId: number,
   cooldownMs: number,
+  /** This attempt's token (16 random bytes as hex), stamped by the advance so
+   *  an ambiguous COMMIT can be verified; null leaves the row's token NULL. */
+  advanceToken: string | null = null,
 ): Promise<FreeholdHearthAdvance> {
   requireHearthAccountId(accountId);
+  if (advanceToken !== null && !/^[0-9a-f]{32}$/.test(advanceToken)) {
+    throw new RangeError('hearth advance token must be 32 lowercase hex characters');
+  }
   if (!Number.isSafeInteger(cooldownMs) || cooldownMs < 0) {
     return {
       kind: 'unsupported',
@@ -291,7 +353,14 @@ export async function advanceFreeholdHearthOnClient(
   const readyAtMs = bigintText(row.ready_at_ms);
   const revision = bigintText(row.revision);
   const nowMs = bigintText(row.now_ms);
-  if (readyAtMs === null || revision === null || nowMs === null) {
+  // The CORRUPT test reads the wall clock at the read, never now(): now() is
+  // this transaction's START, and a concurrent advance that began after it and
+  // committed while this one waited for the row lock legitimately wrote a ready
+  // time up to its own later start plus the cooldown. Against now() that
+  // ordinary race would read as corrupt; against the clock after the wait it
+  // cannot, while a backward clock step still does.
+  const clockMs = bigintText(row.clock_ms);
+  if (readyAtMs === null || revision === null || nowMs === null || clockMs === null) {
     return {
       kind: 'unsupported',
       detail: 'the hearth read is not non-negative bigint text',
@@ -300,12 +369,17 @@ export async function advanceFreeholdHearthOnClient(
   // BigInt, never Number: the comparison that decides a trip must not depend
   // on a float that happens to be exact today.
   if (BigInt(nowMs) < BigInt(readyAtMs)) {
+    // Past the clock plus a whole cooldown is beyond anything an advance writes.
+    if (BigInt(readyAtMs) - BigInt(clockMs) > BigInt(cooldownMs)) {
+      return { kind: 'corrupt', readyAtMs, revision, nowMs };
+    }
     return { kind: 'cooldown', readyAtMs, revision, nowMs };
   }
   const advanced = await client.query(FREEHOLD_HEARTH_ADVANCE_SQL, [
     accountId,
     nowMs,
     String(cooldownMs),
+    advanceToken,
   ]);
   const updated = advanced.rows?.[0];
   const nextReadyAtMs = bigintText(updated?.ready_at_ms);

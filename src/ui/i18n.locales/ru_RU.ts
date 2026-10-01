@@ -11609,6 +11609,8 @@ export const ru_RU: Partial<Record<TranslationKey, string>> = {
   'apiError.character.delete_confirm': 'Введите имя персонажа, чтобы подтвердить удаление.',
   'apiError.character.storage_purchase_open':
     'Перед удалением этого персонажа покупка хранилища должна быть завершена или урегулирована.',
+  'apiError.character.freehold_operation_open':
+    'Перед удалением этого персонажа операция с Фригольдом должна быть завершена или урегулирована.',
   'apiError.character.delete_busy':
     'Сервер перегружен. Повторите попытку удаления этого персонажа чуть позже.',
   'apiError.character.already_in_world': 'Персонаж уже находится в мире.',

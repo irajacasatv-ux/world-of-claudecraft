@@ -24,6 +24,7 @@ import { STORAGE_PRICES } from './storage_prices';
 export function buildRealmSimConfig(
   perfLap: SimConfig['perfLap'],
   vaultConsumptionAdmission: VaultConsumptionAdmission,
+  freeholdKeyAdmission: NonNullable<SimConfig['freeholdKeyAdmission']>,
 ): SimConfig {
   return {
     seed: WORLD_SEED,
@@ -50,9 +51,11 @@ export function buildRealmSimConfig(
     // a restart to pick up a flag change. The wire verdict and the status
     // route re-read the env per call; only the Sim half freezes.
     freeholdsEnabled: freeholdsEnabled(process.env),
-    // 07a must supply durable account cooldown authority before remote travel.
-    // A process-local ready timestamp never authorizes a production key.
-    freeholdKeyAdmission: () => false,
+    // The durable account cooldown decides remote travel (07a,
+    // server/freehold_hearth_trip.ts), REQUIRED like the vault admission above
+    // so a realm can never fall back to the offline default 'admit'. A
+    // process-local ready timestamp never authorizes a production key.
+    freeholdKeyAdmission,
     // Distance-cull idle-mob AI (issue #2703): shouldSkipIdleMobTick skips a
     // wild, unbuffed, out-of-combat mob's per-tick aggro scan and wander
     // movement while it sits farther than this from EVERY connected player,

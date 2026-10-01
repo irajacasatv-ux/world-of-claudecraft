@@ -49,6 +49,11 @@ import {
   configureLifetimeXpRankCache,
   readLifetimeXpRankForCharacter,
 } from './character_rank_cache';
+import {
+  type CharacterSaveHousingHook,
+  commitWithHousing,
+  lockSaveAccountsWithHousing,
+} from './character_save_housing';
 import { characterSaveFailure, characterSaveLanded } from './character_save_result';
 import {
   type CharacterSaveFence,
@@ -82,8 +87,11 @@ import { DEEDS_SCHEMA } from './deeds_db';
 import { DISCORD_SCHEMA } from './discord_db';
 import { enqueueLinkChange } from './discord_link_changes';
 import { bustDiscordStatus } from './discord_status_cache';
-import { FREEHOLD_SCHEMA, freeholdsForExport } from './freehold_db';
-import { FREEHOLD_HEARTH_SCHEMA, freeholdHearthForExport } from './freehold_hearth_db';
+import { freeholdAccountExport } from './freehold_account_export';
+import { FREEHOLD_CLAIM_SCHEMA } from './freehold_claim_db';
+import { FREEHOLD_SCHEMA } from './freehold_db';
+import { FREEHOLD_HEARTH_SCHEMA } from './freehold_hearth_db';
+import { FREEHOLD_OPERATION_SCHEMA } from './freehold_operation_db';
 import { GENERAL_CHAT_QUOTA_SCHEMA } from './general_chat_quota_schema';
 import { GITHUB_SCHEMA } from './github_db';
 import {
@@ -1362,14 +1370,6 @@ export async function ensureSchema(): Promise<void> {
     // block, unblock). FK-references accounts(id), so it runs after SCHEMA.
     // Applied unconditionally (idempotent), like the other schema modules.
     await client.query(CONTENT_MODERATION_SCHEMA);
-    // Player housing: the durable plot rows under their stable
-    // (account_id, plot_index) identity, then the per-account Hearth travel
-    // authority. Both FK-reference accounts(id), so they run after SCHEMA, and
-    // both are applied UNCONDITIONALLY (idempotent), never behind
-    // FREEHOLDS_ENABLED: the tables exist before the feature is enabled, like
-    // every other schema module here.
-    await client.query(FREEHOLD_SCHEMA);
-    await client.query(FREEHOLD_HEARTH_SCHEMA);
     // After SCHEMA: every marketplace table FKs accounts(id), and the custody
     // model rides characters + world_state (the escrow combined save).
     await client.query(WOC_MARKET_SCHEMA);
@@ -1422,6 +1422,19 @@ export async function ensureSchema(): Promise<void> {
     // characters), late for the storage-purchase reason below (ADD COLUMN locks
     // the highest-insert-rate table until COMMIT). Ordering pinned in tests.
     await client.query(CLIENT_PERF_REPORTS_SCHEMA);
+    // Player housing: the durable plot rows under their stable
+    // (account_id, plot_index) identity, the per-account Hearth travel
+    // authority, the global plot claims, then the operation intents and
+    // receipts with their parent-delete guards. All FK-reference accounts (the
+    // operations characters too), and all apply UNCONDITIONALLY (idempotent),
+    // never behind FREEHOLDS_ENABLED: the tables exist before the feature is
+    // enabled. LATE, for the storage reason: their foreign keys and the guard
+    // triggers take first-rollout locks on accounts and characters until COMMIT
+    // (the touch-set manifest's P12).
+    await client.query(FREEHOLD_SCHEMA);
+    await client.query(FREEHOLD_HEARTH_SCHEMA);
+    await client.query(FREEHOLD_CLAIM_SCHEMA);
+    await client.query(FREEHOLD_OPERATION_SCHEMA);
     // Storage purchase parent triggers land late so their first-rollout table
     // locks are held only briefly before COMMIT.
     await client.query(STORAGE_PURCHASE_SCHEMA);
@@ -2345,10 +2358,8 @@ export async function exportAccountData(
   );
   // Housing is account-linked personal data in its OWN normalized tables, which
   // projectAccountExportState (a characters.state projector) structurally
-  // cannot reach, so each table exports through its own loader. Both are
-  // keep-forever, so this export is the only readback an owner has.
-  const freeholds = await freeholdsForExport(pool, accountId);
-  const freeholdHearth = await freeholdHearthForExport(pool, accountId);
+  // cannot reach: one loader, column allowlists, keep-forever rows bounded.
+  const housing = await freeholdAccountExport(pool, accountId);
   // The raw `roll` is deliberately NOT exported: the world rng is mulberry32
   // (src/sim/rng.ts), whose 32-bit state is recoverable from one exact
   // output, so handing a player their own draws at full precision would be
@@ -2391,8 +2402,7 @@ export async function exportAccountData(
     playtimeTotals: playtimeTotals.rows,
     ipAssociations: ipAssociations.rows,
     seekerEntitlements: seekerEntitlements.rows,
-    freeholds,
-    freeholdHearth,
+    ...housing,
   };
 }
 
@@ -3229,6 +3239,7 @@ export async function saveCharacterState(
   storageEffects: readonly StorageAppliedEffect[] = [],
   ledgerEffects?: BankLedgerSaveEffects,
   signal?: AbortSignal,
+  housing?: CharacterSaveHousingHook,
 ): Promise<boolean> {
   const ledger = prepareCharacterSaveEffects(characterId, storageEffects, ledgerEffects);
   const cleanState = sanitizeRemovedZone1Content(state).state;
@@ -3239,7 +3250,7 @@ export async function saveCharacterState(
   const transaction = await beginSaveTx(client, 'character save', signal);
   let ledgerWrite: BankLedgerBatchWriteResult | undefined;
   try {
-    await lockSaveEffectAccounts(transaction, storageEffects, ledger);
+    const locked = await lockSaveAccountsWithHousing(transaction, storageEffects, ledger, housing);
     const { result: res, before } = await runFencedCharacterSave(
       transaction,
       characterId,
@@ -3247,14 +3258,14 @@ export async function saveCharacterState(
       stateJson,
       liveSaveFence(leaseNonce, PROCESS_LEASE_HOLDER),
     );
-    if (!characterSaveLanded(leaseNonce, storageEffects, ledger, res.rowCount)) {
+    if (!characterSaveLanded(leaseNonce, storageEffects, ledger, res.rowCount, !!housing)) {
       await transaction.rollback();
       return false;
     }
     await journalCharacterSaveSources(transaction, characterId, before, res, cleanState);
     ledgerWrite = await writeBankLedgerSaveEffectsOnClient(transaction, ledger);
     await writeStorageAppliedEffectsOnClient(transaction, storageEffects);
-    await transaction.commit();
+    await commitWithHousing(transaction, housing, locked);
     return true;
   } catch (err) {
     await transaction.rollback();
@@ -3306,6 +3317,7 @@ export async function saveCharacterAndMarketState(
   ledgerEffects?: BankLedgerSaveEffects,
   signal?: AbortSignal,
   capturedCustodyRefs?: readonly string[],
+  housing?: CharacterSaveHousingHook,
 ): Promise<boolean> {
   // Only the recipient partitions carried by this save may bake their refs.
   // A fence refusal or rollback keeps those refs pending for a later write.
@@ -3328,7 +3340,7 @@ export async function saveCharacterAndMarketState(
   const transaction = await beginSaveTx(client, 'character and market save', signal);
   let ledgerWrite: BankLedgerBatchWriteResult | undefined;
   try {
-    await lockSaveEffectAccounts(transaction, storageEffects, ledger);
+    const locked = await lockSaveAccountsWithHousing(transaction, storageEffects, ledger, housing);
     // Fence the bag half first; a miss rolls back before shared escrow writes.
     const { result: charRes, before } = await runFencedCharacterSave(
       transaction,
@@ -3337,7 +3349,7 @@ export async function saveCharacterAndMarketState(
       JSON.stringify(cleanState),
       liveSaveFence(leaseNonce, PROCESS_LEASE_HOLDER),
     );
-    if (!characterSaveLanded(leaseNonce, storageEffects, ledger, charRes.rowCount)) {
+    if (!characterSaveLanded(leaseNonce, storageEffects, ledger, charRes.rowCount, !!housing)) {
       await transaction.rollback();
       return false;
     }
@@ -3370,7 +3382,7 @@ export async function saveCharacterAndMarketState(
     // A partial mailbox write cannot advance the realm-wide watermark: an
     // older parcel for another recipient may not be durable yet.
     if (wroteMailPartitions) await deleteBakedCustodyRefsIn(inTx, bakedCustodyRefs);
-    await transaction.commit();
+    await commitWithHousing(transaction, housing, locked);
     if (wroteMailPartitions) confirmBakedCustodyRefs(bakedCustodyRefs);
     return true;
   } catch (err) {
@@ -3408,6 +3420,7 @@ export async function saveCharacterAndGuildBankState(
   storageEffects: readonly StorageAppliedEffect[] = [],
   ledgerEffects?: BankLedgerSaveEffects,
   signal?: AbortSignal,
+  housing?: CharacterSaveHousingHook,
 ): Promise<boolean> {
   const ledger = prepareCharacterSaveEffects(
     characterId,
@@ -3421,7 +3434,7 @@ export async function saveCharacterAndGuildBankState(
   const transaction = await beginSaveTx(client, 'character and guild bank save', signal);
   let ledgerWrite: BankLedgerBatchWriteResult | undefined;
   try {
-    await lockSaveEffectAccounts(transaction, storageEffects, ledger);
+    const locked = await lockSaveAccountsWithHousing(transaction, storageEffects, ledger, housing);
     const { result: charRes, before } = await runFencedCharacterSave(
       transaction,
       characterId,
@@ -3429,7 +3442,7 @@ export async function saveCharacterAndGuildBankState(
       JSON.stringify(cleanState),
       liveSaveFence(leaseNonce, PROCESS_LEASE_HOLDER),
     );
-    if (!characterSaveLanded(leaseNonce, storageEffects, ledger, charRes.rowCount)) {
+    if (!characterSaveLanded(leaseNonce, storageEffects, ledger, charRes.rowCount, !!housing)) {
       await transaction.rollback();
       return false;
     }
@@ -3437,7 +3450,7 @@ export async function saveCharacterAndGuildBankState(
     ledgerWrite = await writeBankLedgerSaveEffectsOnClient(transaction, ledger);
     await writeClaimedGuildBankEffectsOnClient(transaction, guildReplay, ledgerWrite, results);
     await writeStorageAppliedEffectsOnClient(transaction, storageEffects);
-    await transaction.commit();
+    await commitWithHousing(transaction, housing, locked);
     return true;
   } catch (err) {
     await transaction.rollback();

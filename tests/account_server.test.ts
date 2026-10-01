@@ -16,6 +16,13 @@ vi.mock('pg', () => ({
     return { query: dbMock.query, connect: async () => ({ query: dbMock.query, release() {} }) };
   }),
 }));
+// The deactivation's housing tombstone erase runs its own deadline-wrapped
+// transaction, which this bare client stub cannot host: stub it at the
+// function (its SQL is server/freehold_operation_db.ts's suites' to pin).
+vi.mock('../server/freehold_operation_db', async (importActual) => {
+  const actual = await importActual<typeof import('../server/freehold_operation_db')>();
+  return { ...actual, eraseFreeholdOperationReceiptsForAccount: vi.fn(async () => 0) };
+});
 
 import {
   type AccountGameHooks,
@@ -35,6 +42,7 @@ import {
 import { hashPassword } from '../server/auth';
 import { moderationStatusForAccount } from '../server/db';
 import { makeEmailToken } from '../server/email';
+import { eraseFreeholdOperationReceiptsForAccount } from '../server/freehold_operation_db';
 
 // ── http fakes ──────────────────────────────────────────────────────────────
 // `ip` lets a test drive the per-IP rate limiter from a fresh, untrusted address
@@ -446,6 +454,12 @@ describe('handleAccountDeactivate', () => {
     const revoke = writes.find((w) => w.sql.includes('DELETE FROM auth_tokens'));
     expect(revoke!.sql).not.toContain('token <>'); // revoke-all variant
     expect(disconnectAccount).toHaveBeenCalledWith(1, expect.any(String));
+    // The housing tombstone erase runs for this account (its order and its
+    // failure posture are pinned in tests/server/account.test.ts).
+    expect(vi.mocked(eraseFreeholdOperationReceiptsForAccount)).toHaveBeenCalledWith(
+      expect.anything(),
+      1,
+    );
   });
 });
 

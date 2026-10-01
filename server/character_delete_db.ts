@@ -11,6 +11,7 @@ import {
   type DbTransactionDeadlineClient,
   DbTransactionDeadlineExceeded,
 } from './db_transaction_deadline';
+import { FREEHOLD_OPERATION_OPEN_CONSTRAINT } from './freehold_operation_db';
 
 // 65s wall over a 60s DELETE statement bound, the character-save shape: the
 // widened DELETE below is useless if this driver-side deadline destroys the
@@ -32,11 +33,74 @@ export class CharacterStoragePurchaseOpen extends Error {
   constructor(
     readonly characterId: number,
     readonly status: OpenStoragePurchaseStatus,
+    options?: ErrorOptions,
   ) {
-    super(`character ${characterId} has an open ${status} storage purchase`);
+    super(`character ${characterId} has an open ${status} storage purchase`, options);
     this.name = 'CharacterStoragePurchaseOpen';
   }
 }
+
+/** Stable domain refusal (D88) for a character that an OPEN housing operation
+ * intent still binds: the intent must apply or close before the character can
+ * go, or its custody would lose the character it names. */
+export class CharacterFreeholdOperationOpen extends Error {
+  readonly code = 'CHARACTER_FREEHOLD_OPERATION_OPEN' as const;
+
+  constructor(
+    readonly characterId: number,
+    options?: ErrorOptions,
+  ) {
+    super(`character ${characterId} has an open housing operation`, options);
+    this.name = 'CharacterFreeholdOperationOpen';
+  }
+}
+
+/** The storage guard's CONSTRAINT field, raised by
+ * guard_pending_storage_purchase_parent_delete in server/storage_purchase_db.ts
+ * (that module exports no constant for it; the storage pg suite pins the same
+ * literal on a real trigger error). */
+export const STORAGE_PURCHASE_OPEN_CONSTRAINT = 'storage_purchases_open_delete_guard';
+
+/** The SQLSTATE both parent-delete guards raise (object_in_use). */
+export const PARENT_DELETE_GUARD_SQLSTATE = '55006';
+
+export type ParentDeleteGuard = 'freehold_operation' | 'storage_purchase';
+
+const guardFieldsOf = (value: unknown): { code: unknown; constraint: unknown } | null =>
+  typeof value === 'object' && value !== null
+    ? {
+        code: (value as { code?: unknown }).code,
+        constraint: (value as { constraint?: unknown }).constraint,
+      }
+    : null;
+
+/**
+ * Which D88 parent-delete guard refused a character or account DELETE, read
+ * from a 55006 by its CONSTRAINT field matched EXACTLY (never a prefix or a
+ * MESSAGE match); null for anything else, which the caller rethrows raw: a
+ * 55006 naming another constraint, a constraint-less 55006, or another
+ * SQLSTATE carrying a guard's constraint name. node-postgres puts `code` and
+ * `constraint` on the DatabaseError itself, and neither consumer's path wraps
+ * it (the transaction deadline wrapper rethrows the driver's error as is);
+ * a wrapper that keeps it one level down as the standard `cause` is read too,
+ * so a later wrap cannot silently turn a proved refusal into a raw 500.
+ */
+export function parentDeleteGuardOf(error: unknown): ParentDeleteGuard | null {
+  const own = guardFieldsOf(error);
+  const fields =
+    own?.code === PARENT_DELETE_GUARD_SQLSTATE
+      ? own
+      : guardFieldsOf((error as { cause?: unknown } | null | undefined)?.cause);
+  if (fields?.code !== PARENT_DELETE_GUARD_SQLSTATE) return null;
+  if (fields.constraint === FREEHOLD_OPERATION_OPEN_CONSTRAINT) return 'freehold_operation';
+  if (fields.constraint === STORAGE_PURCHASE_OPEN_CONSTRAINT) return 'storage_purchase';
+  return null;
+}
+
+/** The housing pre-read, through the freehold_operations_character partial
+ * index. Exported so the pg suite drives this exact statement. */
+export const CHARACTER_DELETE_FREEHOLD_OPERATION_SQL =
+  'SELECT operation_id FROM freehold_operations WHERE character_id = $1 LIMIT 1';
 
 /** Retryable refusal: the realm's background-DB gate had no permit inside the
  * bounded wait, so the delete never took a pool client. */
@@ -198,7 +262,9 @@ async function acquireCharacterDeletePermit(
 }
 
 /**
- * Delete one owned character after serializing with storage purchase starts.
+ * Delete one owned character after serializing with storage purchase starts
+ * and housing operation prepares, refusing while either holds an open row on
+ * it (CharacterFreeholdOperationOpen, then CharacterStoragePurchaseOpen).
  * Account parent locks always precede the character lifecycle lock. The
  * caller's signal bounds ONLY the permit wait: once BEGIN has run, a client
  * disconnect must not tear the transaction, because an abort landing during
@@ -256,9 +322,22 @@ export async function deleteOwnedCharacterRow(
       return false;
     }
 
-    // READ COMMITTED takes a fresh snapshot after the character lock wait. A
-    // purchase start takes the same character lock before INSERT, so either its
-    // open row is visible here or it cannot start until this delete finishes.
+    // The pre-reads run in the guard triggers' own firing order: PostgreSQL
+    // fires same-event row triggers in name order, so
+    // freehold_operation_guard_character_delete before
+    // storage_purchase_guard_character_delete, and a character both rails bind
+    // gets the same refusal from a pre-read as from a trigger. READ COMMITTED
+    // takes a fresh snapshot after the character lock wait, and a housing
+    // prepare takes KEY SHARE on this character before its INSERT, so either
+    // its intent is visible here or it cannot insert until this delete ends.
+    const openOperation = await transaction.query(CHARACTER_DELETE_FREEHOLD_OPERATION_SQL, [
+      characterId,
+    ]);
+    if (openOperation.rows[0]) throw new CharacterFreeholdOperationOpen(characterId);
+
+    // The same fresh snapshot for storage: a purchase start takes the same
+    // character lock before INSERT, so either its open row is visible here or
+    // it cannot start until this delete finishes.
     const openPurchase = await transaction.query(
       `SELECT status FROM storage_purchases
         WHERE character_id = $1 AND status IN ('pending', 'unresolved')
@@ -292,6 +371,21 @@ export async function deleteOwnedCharacterRow(
     return (deleted.rowCount ?? 0) > 0;
   } catch (error) {
     await transaction.rollback();
+    // A parent-delete guard's 55006 is raised by the DELETE's own BEFORE
+    // trigger, so the server answered and the transaction PROVABLY rolled
+    // back: never an ambiguous commit, so it maps BEFORE the verify below
+    // (which would otherwise spend a second checkout on it). The pre-reads
+    // above normally refuse first; this arm is the backstop that keeps a
+    // trigger refusal the same stable 409 instead of a raw 500. The storage
+    // trigger carries no status, and 'pending' is the honest reading of an
+    // open row the trigger does not describe.
+    const guard = parentDeleteGuardOf(error);
+    if (guard === 'freehold_operation') {
+      throw new CharacterFreeholdOperationOpen(characterId, { cause: error });
+    }
+    if (guard === 'storage_purchase') {
+      throw new CharacterStoragePurchaseOpen(characterId, 'pending', { cause: error });
+    }
     // The 65s wall can expire DURING COMMIT. Verify before propagating: a
     // propagated ambiguity would skip the caller's success side (link change,
     // admin busts, the HTTP arms' world-state purge) for a delete that

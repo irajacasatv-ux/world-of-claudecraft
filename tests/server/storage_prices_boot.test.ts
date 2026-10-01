@@ -10,6 +10,7 @@
 // pins the dual-validation contract: a boot-ACCEPTED dimension can never
 // quietly fall back in-sim, and a boot-REJECTED one can never apply.
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import type { FreeholdKeyAdmission } from '../../src/sim/types';
 
 const SOCKET_DEFAULTS = [1000000, 2000000, 3500000, 5000000];
 
@@ -84,11 +85,16 @@ describe('the STORAGE_PRICES boot chain, executed end to end', () => {
     muted();
     const { buildRealmSimConfig } = await import('../../server/sim_boot_config');
     const mod = await import('../../server/storage_prices');
-    // The admission parameter is REQUIRED on this seam (a realm boot that
-    // dropped the journal wiring must not compile); this test has no journal,
-    // so it says so with the exported inert constant.
+    // Both admission parameters are REQUIRED on this seam (a realm boot that
+    // dropped the journal or the Hearth trip wiring must not compile); this
+    // test has no journal, so it says so with the exported inert constant, and
+    // no trip, so it passes the realm's own fail-closed key answer.
     const { inertVaultConsumptionAdmission } = await import('../../src/sim/sim_context');
-    const cfg = buildRealmSimConfig(undefined, inertVaultConsumptionAdmission);
+    const cfg = buildRealmSimConfig(
+      undefined,
+      inertVaultConsumptionAdmission,
+      (): FreeholdKeyAdmission => 'deny',
+    );
     expect(cfg.storagePrices).toStrictEqual({
       vaultUpgrades: [333, 50000, 100000, 200000, 400000],
     });

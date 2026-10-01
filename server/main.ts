@@ -200,6 +200,7 @@ import {
   loadWorldState,
   moderationRowForAccount,
   moderationStatusForAccount,
+  PROCESS_LEASE_HOLDER,
   pool,
   primarySlugForAccount,
   pruneChatLogsBatch,
@@ -261,6 +262,8 @@ import {
 import { pruneDiscordOAuthStates, pruneDiscordPendingLogins } from './discord_db';
 import { emailAccountCreated } from './email';
 import { stopEpicMirror } from './epic/mirror';
+import { freeholdAuthorityStats } from './freehold_authority_registry';
+import { releaseAllFreeholdClaims } from './freehold_claim_registry';
 import { freeholdsEnabled } from './freehold_config';
 import { FREEHOLD_PERSIST_SHUTDOWN_DRAIN_MS } from './freehold_persist';
 import {
@@ -269,6 +272,7 @@ import {
   freeholdPreloadForAccount,
   freeholdPreloadUnavailable,
 } from './freehold_persist_registry';
+import { createFreeholdReceiptGrowthMonitor } from './freehold_receipt_growth_monitor';
 import { GameServer } from './game';
 import {
   closeGeneralChatQuotaPool,
@@ -3653,6 +3657,25 @@ export async function startServer(): Promise<http.Server> {
     tryAcquireBackgroundPermit: () => majorBackgroundDbGate.tryAcquire(),
     onError: (error) => console.error('bank ledger growth monitor failed:', error),
   });
+  // The keep-forever housing tables are observed, never swept: one O(1)
+  // catalog read per minute under the same yield-first admission.
+  const freeholdReceiptGrowthMonitor = createFreeholdReceiptGrowthMonitor({
+    pool,
+    tryAcquireBackgroundPermit: () => majorBackgroundDbGate.tryAcquire(),
+    onError: (error) => console.error('freehold receipt growth monitor failed:', error),
+    // Its clock and timers are ports bound here, so the module names none.
+    nowMs: Date.now,
+    scheduleDeadline: (callback, ms) => {
+      const timer = setTimeout(callback, ms);
+      timer.unref();
+      return () => clearTimeout(timer);
+    },
+    scheduleRepeating: (callback, ms) => {
+      const timer = setInterval(callback, ms);
+      timer.unref();
+      return () => clearInterval(timer);
+    },
+  });
   const generalChatQuotaListener = createGeneralChatQuotaListener({
     activeAccountIds: () => [...game.liveAccountIds()],
     onResync: (accountIds, policies) => {
@@ -3888,6 +3911,7 @@ export async function startServer(): Promise<http.Server> {
     simEntities: () => game.sim.entities.size,
     freeholdRecords: () => game.sim.ctx.freeholds.size,
     freeholdPersist: () => freeholdPersistStats(),
+    freeholdAuthority: () => freeholdAuthorityStats(),
     simTickHz: () => game.simTickHz(),
     savePendingKeys: () => game.characterSaveQueues.pendingKeys(),
     escrowGateInFlight: () => wocEscrowGate.stats().inFlight,
@@ -3962,6 +3986,7 @@ export async function startServer(): Promise<http.Server> {
     console.log(`  WS:   /ws, then first message {t:"${ONLINE_WORLD_AUTH_TYPE}",token,character}`);
   });
   bankLedgerGrowthMonitor.start();
+  freeholdReceiptGrowthMonitor.start();
 
   // The CONCURRENTLY index builds run AFTER listen, deliberately. They
   // serialize across every realm process on the schema advisory lock, and a
@@ -4053,6 +4078,12 @@ export async function startServer(): Promise<http.Server> {
     // ready_at_ms and a monotonic revision. It is the Hearth Key cooldown
     // AUTHORITY, so pruning a row would hand every character on that account a
     // free ready key; its export loader is freeholdHearthForExport.
+    // freehold_plot_claims and freehold_operation_receipts are deliberately
+    // ABSENT too, KEEP FOREVER at their DDL: a claim row carries the fencing
+    // generation that must never restart, and a receipt is permanent replay
+    // authority whose growth server/freehold_receipt_growth_monitor.ts observes
+    // instead. freehold_operations needs no arm: it holds only OPEN intents,
+    // bounded per account and deleted when each one closes.
     tables: [
       { name: 'chat_logs', pruneBatch: (n) => pruneChatLogsBatch(config.chatLogRetentionDays, n) },
       marketSoldVolumeRetentionTable(pool),
@@ -4290,6 +4321,7 @@ export async function startServer(): Promise<http.Server> {
     // fire before pool.end()).
     await businessMetrics.stop();
     await bankLedgerGrowthMonitor.stop();
+    await freeholdReceiptGrowthMonitor.stop();
     game.beginShutdown();
     await stopStoragePurchaseRecovery();
     // Same rationale for the retention sweep: an in-flight prune batch must not
@@ -4403,6 +4435,10 @@ export async function startServer(): Promise<http.Server> {
     // wall-clock budget, so a wedged Steam upstream cannot delay the Epic
     // drain (or double the shutdown window) by serializing behind it.
     await Promise.all([stopSteamMirror(5000), stopEpicMirror(5000)]);
+    // Release this process's plot claims after the housing drain above, so a
+    // replacement process can take the plots at once; a crash leaves them to
+    // expire after LEASE_TTL_SECONDS. Never rejects.
+    await releaseAllFreeholdClaims({ pool, holder: PROCESS_LEASE_HOLDER });
     // Drop every character load lease this process holds so a clean restart can
     // reload its characters immediately instead of waiting out the lease TTL.
     // Runs before pool.end(); a failure here must not abort the shutdown, so log

@@ -37,6 +37,7 @@ function fakeWrites(over: Partial<PeriodicSaveWrites> = {}) {
     saveRifts: vi.fn(track('saveRifts')),
     saveFreeholds: vi.fn(track('saveFreeholds')),
     heartbeatLeases: vi.fn(track('heartbeatLeases')),
+    renewFreeholdClaims: vi.fn(track('renewFreeholdClaims')),
     pruneIdleGuards: vi.fn(() => {
       calls.push('pruneIdleGuards');
     }),
@@ -73,11 +74,42 @@ describe('runPeriodicSaveFlush', () => {
     expect([...PERIODIC_SAVE_WRITE_NAMES].sort()).toEqual([
       'heartbeatLeases',
       'pruneIdleGuards',
+      'renewFreeholdClaims',
       'saveCharacters',
       'saveFreeholds',
       'saveMail',
       'saveMarket',
       'saveRifts',
+    ]);
+  });
+
+  it('issues the plot-claim renewal LAST, right behind the lease heartbeat', async () => {
+    // The issue order is data too. The claim renewal rides the lease
+    // heartbeat's cadence and policy (server/freehold_claim_registry.ts), so it
+    // is launched after it, and after every save that can still mark an owner
+    // wanted this autosave.
+    expect([...PERIODIC_SAVE_WRITE_NAMES]).toEqual([
+      'saveCharacters',
+      'saveMarket',
+      'saveMail',
+      'saveRifts',
+      'saveFreeholds',
+      'pruneIdleGuards',
+      'heartbeatLeases',
+      'renewFreeholdClaims',
+    ]);
+    const { writes, calls } = fakeWrites();
+    runPeriodicSaveFlush(writes);
+    await Promise.resolve();
+    expect(calls).toEqual([
+      'saveCharacters',
+      'saveMarket',
+      'saveMail',
+      'saveRifts',
+      'saveFreeholds',
+      'pruneIdleGuards',
+      'heartbeatLeases',
+      'renewFreeholdClaims',
     ]);
   });
 
@@ -92,10 +124,12 @@ describe('runPeriodicSaveFlush', () => {
       saveRifts: vi.fn(never),
       saveFreeholds: vi.fn(never),
       heartbeatLeases: vi.fn(never),
+      renewFreeholdClaims: vi.fn(never),
     });
     // Returns void, synchronously, with every write still pending.
     expect(runPeriodicSaveFlush(writes)).toBeUndefined();
     expect(writes.saveMarket).toHaveBeenCalledTimes(1);
+    expect(writes.renewFreeholdClaims).toHaveBeenCalledTimes(1);
   });
 
   it('accepts synchronous prune return values without reporting an error', async () => {
@@ -112,6 +146,7 @@ describe('runPeriodicSaveFlush', () => {
     await Promise.resolve();
     expect(errors).toEqual([]);
     expect(calls).toContain('heartbeatLeases');
+    expect(calls).toContain('renewFreeholdClaims');
   });
 
   it('isolates a rejected write: the others still run and nothing escapes', async () => {
@@ -134,6 +169,7 @@ describe('runPeriodicSaveFlush', () => {
     }
     expect(calls).toContain('saveMail');
     expect(calls).toContain('saveRifts');
+    expect(calls).toContain('renewFreeholdClaims');
   });
 
   it('survives a synchronous throw from a write the same way', async () => {
@@ -170,9 +206,17 @@ describe('the coordinator does not regrow its own calls beside the runner', () =
       'this.saveMail(',
       'this.saveRifts(',
       'this.saveFreeholds(',
+      // The plot-claim renewal (07a) is a module function, not a method, so it
+      // is counted by its own name: a second call typed beside the runner
+      // would renew every claim twice per autosave.
+      'renewGameFreeholdClaims(',
     ]) {
       expect(body.split(call).length - 1, `${call} in flushPeriodicSaves`).toBe(1);
     }
+    // And it is handed this realm's sim, store and claim registry.
+    expect(body).toContain(
+      'renewGameFreeholdClaims(this.sim, this.freeholdPersist, this.freeholdClaims)',
+    );
   });
 
   it('still hands the profiler sample to all three shared-blob writers', () => {

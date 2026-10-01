@@ -1,7 +1,11 @@
 // Real node-postgres lifecycle proof for the minute bank-ledger growth read.
 // Unit tests pin the protocol and failure branches; this suite proves pg-pool
 // actually destroys an active client on release(error), never queues behind a
-// saturated pool, and lets monitor.stop drain before pool.end.
+// saturated pool, and lets monitor.stop drain before pool.end. Its sibling, the
+// keep-forever housing growth read (server/freehold_receipt_growth_monitor.ts),
+// rides the same disposable database for one case: the catalog statement runs
+// against a real freehold_operation_receipts table and answers the estimate
+// and the bytes without scanning it.
 
 import { performance } from 'node:perf_hooks';
 import { Pool } from 'pg';
@@ -12,6 +16,13 @@ import {
   createBankLedgerGrowthMonitor,
   readBankLedgerGrowthBudget,
 } from '../../server/bank_ledger_growth_monitor';
+import { freeholdOperationSchema } from '../../server/freehold_operation_db';
+import {
+  createFreeholdReceiptGrowthMonitor,
+  FREEHOLD_RECEIPT_GROWTH_SQL,
+  freeholdReceiptGrowthReadout,
+  readFreeholdReceiptGrowth,
+} from '../../server/freehold_receipt_growth_monitor';
 
 const ADMIN_URL = process.env.TEST_DATABASE_URL;
 const VERIFY_DB = 'wocc_bank_growth_monitor_verify';
@@ -259,5 +270,111 @@ describeDb('bank-ledger growth monitor against real PostgreSQL', () => {
     const endStartedAt = performance.now();
     await closePool(pool);
     expect(performance.now() - endStartedAt).toBeLessThan(1_000);
+  });
+
+  it('reads a real receipts table through one catalog statement: absent, unknown, then estimated', async () => {
+    const pool = trackedPool('freehold-receipt-growth');
+    // The monitor names no clock or timer; real ones are bound here, as
+    // server/main.ts binds them.
+    const scheduleDeadline = (callback: () => void, ms: number) => {
+      const timer = setTimeout(callback, ms);
+      return () => clearTimeout(timer);
+    };
+
+    // Not applied yet: to_regclass resolves nothing, and the pass is a healthy
+    // absent reading rather than an undefined-table error.
+    expect(await readFreeholdReceiptGrowth(pool, scheduleDeadline)).toEqual([
+      { table: 'freehold_operation_receipts', present: false, reltuples: null, totalBytes: null },
+    ]);
+
+    // The real DDL, applied the way ensureSchema applies it (one transaction,
+    // because the fragment uses SET LOCAL), after accounts and characters
+    // stand-ins its foreign keys and guard triggers need.
+    await pool.query('CREATE TABLE public.accounts (id SERIAL PRIMARY KEY)');
+    await pool.query('CREATE TABLE public.characters (id SERIAL PRIMARY KEY, account_id INT)');
+    const setup = await pool.connect();
+    try {
+      await setup.query('BEGIN');
+      await setup.query(freeholdOperationSchema('public'));
+      await setup.query('COMMIT');
+    } finally {
+      setup.release();
+    }
+
+    // Never vacuumed or analyzed: PostgreSQL reports reltuples -1, which the
+    // monitor renders as UNKNOWN (never zero rows), while the bytes are real.
+    const permitRelease = vi.fn();
+    const onError = vi.fn();
+    const monitor = createFreeholdReceiptGrowthMonitor({
+      pool,
+      tryAcquireBackgroundPermit: () => ({ release: permitRelease }),
+      onError,
+      nowMs: () => Date.now(),
+      scheduleDeadline,
+      scheduleRepeating: () => () => {},
+    });
+    const fresh = await readFreeholdReceiptGrowth(pool, scheduleDeadline);
+    expect(fresh).toHaveLength(1);
+    expect(fresh[0]).toMatchObject({ table: 'freehold_operation_receipts', present: true });
+    expect(Number(fresh[0]?.reltuples)).toBe(-1);
+    await monitor.refresh();
+    const sizeOf = async () =>
+      Number(
+        (
+          await pool.query(
+            `SELECT pg_catalog.pg_total_relation_size('public.freehold_operation_receipts'::pg_catalog.regclass) AS size`,
+          )
+        ).rows[0].size,
+      );
+    const freshBytes = await sizeOf();
+    expect(freshBytes).toBeGreaterThan(0);
+    expect(freeholdReceiptGrowthReadout().tables).toEqual([
+      {
+        table: 'freehold_operation_receipts',
+        present: true,
+        rowsEstimate: null,
+        bytes: freshBytes,
+      },
+    ]);
+
+    // Grown and analyzed: the estimate is the planner's figure and the bytes
+    // equal pg_total_relation_size exactly, through the same one statement.
+    await pool.query(
+      `INSERT INTO public.freehold_operation_receipts (operation_id, kind, outcome)
+       SELECT 'fop:' || g, 'test_kind', 'cancelled' FROM pg_catalog.generate_series(1, 300) AS g`,
+    );
+    await pool.query('ANALYZE public.freehold_operation_receipts');
+    await monitor.refresh();
+    const grownBytes = await sizeOf();
+    expect(grownBytes).toBeGreaterThan(freshBytes);
+    expect(freeholdReceiptGrowthReadout().tables).toEqual([
+      {
+        table: 'freehold_operation_receipts',
+        present: true,
+        rowsEstimate: 300,
+        bytes: grownBytes,
+      },
+    ]);
+    expect(onError).not.toHaveBeenCalled();
+    expect(permitRelease).toHaveBeenCalledTimes(2);
+
+    // O(1): the plan touches the catalog only. No plan node scans the receipts
+    // table itself, however large it grows.
+    const plan = await pool.query(`EXPLAIN (FORMAT JSON) ${FREEHOLD_RECEIPT_GROWTH_SQL}`);
+    const relations: string[] = [];
+    const walk = (node: Record<string, unknown>) => {
+      if (typeof node['Relation Name'] === 'string') relations.push(node['Relation Name']);
+      for (const child of (node.Plans as Record<string, unknown>[] | undefined) ?? []) walk(child);
+    };
+    walk((plan.rows[0]['QUERY PLAN'] as Array<{ Plan: Record<string, unknown> }>)[0].Plan);
+    expect(relations).toContain('pg_class');
+    expect(relations).not.toContain('freehold_operation_receipts');
+    expect(relations.every((name) => name === 'pg_class')).toBe(true);
+
+    await monitor.stop();
+    await pool.query(
+      'DROP TABLE public.freehold_operation_receipts, public.freehold_operations, public.characters, public.accounts CASCADE',
+    );
+    await closePool(pool);
   });
 });

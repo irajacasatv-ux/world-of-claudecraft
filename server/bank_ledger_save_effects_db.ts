@@ -99,8 +99,16 @@ function assertPositiveAccountId(accountId: number): void {
 function characterSaveEffectAccountIds(
   storageEffects: readonly StorageAppliedEffect[],
   ledgerEffects: BankLedgerSaveEffects | undefined,
+  housingAccountIds: readonly number[] = [],
 ): number[] {
   const accountIds = new Set(storageEffects.map((effect) => effect.accountId));
+  // The housing hook's account participants (server/character_save_housing.ts)
+  // join the SAME sorted KEY SHARE, so no accounts lock is ever first taken
+  // after the character row (docs/freeholds/mutation-touch-set-manifest.md G1).
+  for (const accountId of housingAccountIds) {
+    assertPositiveAccountId(accountId);
+    accountIds.add(accountId);
+  }
   if (ledgerEffects) {
     accountIds.add(ledgerEffects.owner.accountId);
     for (const batch of ledgerEffects.batches) {
@@ -242,14 +250,22 @@ export function prepareBankLedgerSaveEffects(
   return batches.length > 0 ? ledgerEffects : undefined;
 }
 
-/** Lock account parents in lifecycle order before the character UPDATE. */
+/** Lock account parents in lifecycle order before the character UPDATE, and
+ *  answer the ascending ids this call holds KEY SHARE on (empty when it locked
+ *  nothing), so a later participant can prove its accounts were locked here. */
 export async function lockCharacterSaveEffectAccountsOnClient(
   db: Queryable,
   storageEffects: readonly StorageAppliedEffect[],
   ledgerEffects: BankLedgerSaveEffects | undefined,
   existingLock?: CharacterSaveAccountLockProof,
-): Promise<void> {
+  housingAccountIds: readonly number[] = [],
+): Promise<readonly number[]> {
   if (existingLock) {
+    // The proof path serves only saveCharacterStateOnClient, which never
+    // carries a housing hook (its callers take legacy participants after it).
+    if (housingAccountIds.length > 0) {
+      throw new Error('a character save account lock proof cannot carry housing participants');
+    }
     const state = accountLockProofs.get(existingLock);
     if (!state || state.db !== db || state.consumed) {
       throw new Error('invalid or consumed character save account lock proof');
@@ -257,15 +273,19 @@ export async function lockCharacterSaveEffectAccountsOnClient(
     const effectAccountIds = characterSaveEffectAccountIds(storageEffects, ledgerEffects);
     // A save without external effects needs no parent lock. Do not consume a
     // proof the helper did not rely on, although the WOC caller keeps it local.
-    if (effectAccountIds.length === 0) return;
+    if (effectAccountIds.length === 0) return [];
     if (effectAccountIds.length !== 1 || effectAccountIds[0] !== state.accountId) {
       throw new Error('character save account lock proof does not match save effects');
     }
     state.consumed = true;
-    return;
+    return [state.accountId];
   }
-  const orderedAccountIds = characterSaveEffectAccountIds(storageEffects, ledgerEffects);
-  if (orderedAccountIds.length === 0) return;
+  const orderedAccountIds = characterSaveEffectAccountIds(
+    storageEffects,
+    ledgerEffects,
+    housingAccountIds,
+  );
+  if (orderedAccountIds.length === 0) return [];
   const locked = await db.query(
     `SELECT id FROM accounts
       WHERE id = ANY($1::int[])
@@ -280,6 +300,7 @@ export async function lockCharacterSaveEffectAccountsOnClient(
   ) {
     throw new Error('character save account disappeared before parent lock');
   }
+  return orderedAccountIds;
 }
 
 /** Persist the already-validated exact prefix inside the caller's transaction. */

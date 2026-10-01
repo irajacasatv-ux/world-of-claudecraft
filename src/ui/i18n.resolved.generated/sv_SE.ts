@@ -6770,6 +6770,7 @@ export const sv_SE: EnTranslations = {
       "rename_not_permitted": "Det är inte tillåtet att byta namn på denna karaktär.",
       "delete_confirm": "Skriv karaktärens namn för att bekräfta raderingen.",
       "storage_purchase_open": "Ett förrådsköp måste slutföras eller lösas innan den här karaktären kan tas bort.",
+      "freehold_operation_open": "A Freehold operation must finish or be resolved before this character can be deleted.",
       "delete_busy": "Världen är upptagen. Försök ta bort den här karaktären igen om en stund.",
       "already_in_world": "Karaktären är redan i världen.",
       "taken_over": "Din karaktär togs över av en annan session.",

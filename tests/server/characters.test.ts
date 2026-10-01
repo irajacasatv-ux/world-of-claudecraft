@@ -23,6 +23,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   CharacterDeleteClientGone,
   CharacterDeleteQueueSaturated,
+  CharacterFreeholdOperationOpen,
   CharacterStoragePurchaseOpen,
 } from '../../server/character_delete_db';
 import {
@@ -1914,6 +1915,48 @@ describe('delete handler', () => {
         error:
           'A storage purchase must finish or be resolved before this character can be deleted.',
         code: 'character.storage_purchase_open',
+      });
+      expect(spies.purgeMarketSeller).not.toHaveBeenCalled();
+      expect(spies.purgeMailOwner).not.toHaveBeenCalled();
+      expect(spies.saveMarket).not.toHaveBeenCalled();
+      expect(spies.saveMail).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each([
+    ['the pre-read refusal', () => new CharacterFreeholdOperationOpen(9)],
+    [
+      'the trigger backstop refusal',
+      () =>
+        new CharacterFreeholdOperationOpen(9, {
+          cause: Object.assign(new Error('freehold_operation_open'), {
+            code: '55006',
+            constraint: 'freehold_operations_open_delete_guard',
+          }),
+        }),
+    ],
+  ])(
+    '409s without purging when an open housing operation binds the character (%s)',
+    async (_label, makeRefusal) => {
+      const spies = purgeSpies();
+      setCharactersDbForTests({
+        deleteCharacter: async () => {
+          throw makeRefusal();
+        },
+      });
+      installRuntime({ isCharacterOnline: () => false, ...spies });
+
+      const res = await callHandler('DELETE', '/api/characters/:id', {
+        account: { accountId: 7, scope: 'full' },
+        state: stateWith(charRow({ id: 9, name: 'Deleteme' })),
+        body: { name: 'Deleteme' },
+      });
+
+      expect(res.status).toBe(409);
+      expect(res.body).toEqual({
+        error:
+          'A Freehold operation must finish or be resolved before this character can be deleted.',
+        code: 'character.freehold_operation_open',
       });
       expect(spies.purgeMarketSeller).not.toHaveBeenCalled();
       expect(spies.purgeMailOwner).not.toHaveBeenCalled();

@@ -321,7 +321,7 @@ describe('removePlayer', () => {
     expect(dark.players.has(a)).toBe(false);
   });
 
-  it('walks the roster only when the leaver holds a record: never on a dark host', () => {
+  it('walks the roster only when the leaver holds a record or a key clock: never on a dark host', () => {
     // A roster whose iteration is counted: `values()` is the only walk the
     // hook can make, so its call count is the pin. Lookups (`get`) stay free.
     const players = new Map<number, { entityId: number; freeholdOwnerKey?: string }>([
@@ -337,8 +337,9 @@ describe('removePlayer', () => {
       },
     });
     const freeholds = new Map<string, FreeholdState>();
-    const ctx = { players: roster, freeholds } as unknown as SimContext;
-    // Dark host: no record anywhere. Returns before the roster.
+    const freeholdKeyReadyAtMs = new Map<string, number>();
+    const ctx = { players: roster, freeholds, freeholdKeyReadyAtMs } as unknown as SimContext;
+    // Dark host: no record AND no key clock anywhere. Returns before the roster.
     releaseFreeholdOnLeave(ctx, 1);
     expect(walks).toBe(0);
     // A record exists, but not under the leaver's key. Still no walk.
@@ -353,5 +354,23 @@ describe('removePlayer', () => {
     expect(walks).toBe(1);
     expect(freeholds.has('entity:1')).toBe(false);
     expect(freeholds.has('account:other')).toBe(true);
+
+    // THE SECOND TRIGGER (07a): a key clock alone earns the walk, with NO
+    // record anywhere in the map. One under ANOTHER key does not: the clock
+    // check is keyed on the leaver, like the record check before it.
+    freeholds.clear();
+    freeholdKeyReadyAtMs.set('account:other', 7000);
+    walks = 0;
+    releaseFreeholdOnLeave(ctx, 1);
+    expect(walks).toBe(0);
+    expect([...freeholdKeyReadyAtMs]).toEqual([['account:other', 7000]]);
+    // The leaver's own clock: walked once, the clock evicted, the other kept,
+    // and no record created on the way out.
+    freeholdKeyReadyAtMs.set('entity:1', 5000);
+    releaseFreeholdOnLeave(ctx, 1);
+    expect(walks).toBe(1);
+    expect(freeholdKeyReadyAtMs.has('entity:1')).toBe(false);
+    expect([...freeholdKeyReadyAtMs]).toEqual([['account:other', 7000]]);
+    expect(freeholds.size).toBe(0);
   });
 });
