@@ -4,13 +4,16 @@
 // all agree on what "the change" is.
 //
 // The base is resolveSelectBase's (scripts/lib/gate_discovery.mjs): the GATE_SELECT_BASE
-// override, then the newest `origin/release/*` by version sort, then `origin/main`. Never
+// override, then the newest `origin/release/*` by version sort, then `origin/main`, then
+// `origin/HEAD`. Never
 // `@{upstream}`: a pushed branch tracks its own remote copy, so a scope taken against the
 // upstream is empty the moment the branch is pushed, and an empty scope makes every
 // reviewer exit "out of scope" on a change it never read.
 //
-// `git diff --name-only <merge-base>` compares the working tree with the merge-base, so it
-// covers committed, staged, and unstaged changes in one call; untracked files come from
+// `git diff --name-only --no-renames <merge-base>` compares the working tree with the
+// merge-base, so it covers committed, staged, and unstaged changes in one call, and lists a
+// rename by both ends (git's default rename detection would hide the old path, which is the
+// one a reviewer greps the instruction files for); untracked files come from
 // `git ls-files --others --exclude-standard`. Pure: takes an injected `run` (the
 // resolveSelectBase shape) so a unit test never shells out.
 
@@ -41,7 +44,7 @@ export function resolveReviewScope({ env = {}, run }) {
     throw new Error(`review scope: no merge-base between HEAD and ${base}`);
   }
 
-  const diff = run('git', ['diff', '--name-only', mergeBase]);
+  const diff = run('git', ['diff', '--name-only', '--no-renames', mergeBase]);
   if (diff.error !== undefined || diff.status !== 0) {
     throw new Error(`review scope: git diff against ${mergeBase} failed`);
   }

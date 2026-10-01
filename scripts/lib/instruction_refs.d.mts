@@ -17,3 +17,8 @@ export declare function unresolvedRefs(args: {
   index: InstructionIndex;
   scripts: Set<string>;
 }): InstructionRef[];
+export declare function packageScriptsFor(args: {
+  file: string;
+  files: Set<string>;
+  readScripts: (packageJson: string) => string[];
+}): Set<string>;

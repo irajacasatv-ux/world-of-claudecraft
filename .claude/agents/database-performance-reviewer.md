@@ -32,7 +32,8 @@ stuck clients is a full outage, not a degradation. The schema is inline DDL appl
   before implementation. Establish workload assumptions, concrete bounds, and the evidence
   the implementation must produce, even when no diff exists yet. An empty diff is not a
   reason to exit this mode.
-- Finished-diff review: scope the diff, then trace every changed database call site even
+- Finished-diff review: scope the diff (`node scripts/review_scope.mjs`, or the range the caller names), then
+  trace every changed database call site even
   when the SQL text itself is unchanged (a new caller, loop, or retry changes the workload).
 
 Exit early ONLY when neither the proposal nor the diff can affect query shape, query

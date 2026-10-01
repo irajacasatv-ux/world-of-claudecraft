@@ -14,10 +14,10 @@ English-only PR correct and safe, so that is the contract.
 
 | Role | Does | Does NOT |
 |---|---|---|
-| **Contributor** (incl. small-plan Claude Code agents) | Add the key to `en` (a `src/ui/i18n.catalog/<domain>.ts` module, or `src/admin/i18n.en.ts` for the admin app); render it via `t()`. For text emitted from `src/sim/` or `server/`, register the matcher RULE in `src/ui/sim_i18n.ts` / `src/ui/server_i18n.ts` in the same change. Regenerate and commit the generated artifacts. | Touch the 21 `i18n.locales/<lang>.ts` overlays. Write any non-English translation. Put English copy, a placeholder, or `// TODO` into an overlay as a stand-in translation. Hand-edit `*.resolved.generated*` or `i18n.status.json`. |
+| **Contributor** (incl. small-plan Claude Code agents) | Add the key to `en` (a `src/ui/i18n.catalog/<domain>.ts` module, or `src/admin/i18n.en.ts` for the admin app); render it via `t()`. For text emitted from `src/sim/` or `server/`, register the matcher RULE in `src/ui/sim_i18n.ts` / `src/ui/server_i18n.ts` in the same change. Regenerate and commit the generated artifacts. | Touch the `i18n.locales/<lang>.ts` overlays or write any non-English translation, except the five M16 fills (below) a new wordy English value owes. Put English copy, a placeholder, or `// TODO` into an overlay as a stand-in translation. Hand-edit `*.resolved.generated*` or `i18n.status.json`. |
 | **Maintainer** (Fernando) | Fill all non-English overlays before release via `npm run i18n:worklist`; regenerate; ship from a `release/**` branch. | n/a |
 
-Translating your own locale is **permitted but never required** of a contributor.
+Beyond the M16 fills, translating your own locale is **permitted but never required** of a contributor.
 
 ## Adding a player-visible string (by origin)
 
@@ -80,9 +80,9 @@ exception: a NEW *wordy* English value (a run of 4+ consecutive lowercase letter
 stripping `{tokens}`, i.e. most real prose) also needs its five non-Latin fills
 (`zh_CN`/`zh_TW`/`ja_JP`/`ko_KR`/`ru_RU`) in the same change, or `tests/i18n_completeness.test.ts`
 (the always-on M16 check) reds even at PR tier. The contributor adds those five real
-translations to the five overlay files in the same change, and only brand/URL leaves may stay
-byte-identical. `tsc` and the `t()` untracked-key
-throw still guarantee English completeness.
+translations to the five overlay files in the same change. Only brand/URL leaves and the few
+release-pending keys `tests/i18n_completeness.test.ts` declares by name may stay
+byte-identical. `tsc` and the `t()` untracked-key throw still guarantee English completeness.
 
 ## REST API errors (localize by code, not by English)
 

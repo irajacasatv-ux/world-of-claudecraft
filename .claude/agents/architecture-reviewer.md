@@ -102,8 +102,9 @@ a real determinism regression is far worse than a low-confidence false alarm.
    actually extracted).
 
 ## How to work
-- Start from the diff: `git diff` (or the range the caller names; if they give a base, use
-  `git diff <base>...HEAD`). Read `src/sim/CLAUDE.md` and the `sim_context.ts` callback registry
+- Start from the diff: `git diff "$(node scripts/review_scope.mjs --base)"` (the branch's
+  changes against its integration base, including uncommitted work), or the range the caller
+  names. Read `src/sim/CLAUDE.md` and the `sim_context.ts` callback registry
   for the current seam shape.
 - Run the gates yourself and report their real status: `npx vitest run tests/parity`,
   `npx vitest run tests/architecture.test.ts`, `npx tsc --noEmit`.

@@ -207,10 +207,11 @@ locally.
   Branches: `feature/<slug>`, `fix/<slug>`.
 - **Docs follow the anchor rule:** cite stable paths, exported symbols, and pinned tests;
   never literal counts or line numbers that rot (see `docs/qa-gate.md`). Instruction files
-  (every `CLAUDE.md`, `AGENTS.md`, `.claude/agents/`, `.claude/skills/`) also follow the
-  writing standard in `docs/ai-architecture.md`: current rules with their reasons, no
-  history standing in for a rule, no model names. `tests/instruction_drift.test.ts` fails
-  on a named path, module, or npm script that no longer resolves.
+  (every `CLAUDE.md`, `AGENTS.md`, agent, and skill; the exact set is defined in
+  `docs/ai-architecture.md`) also follow that doc's writing standard: current rules with
+  their reasons, no history standing in for a rule, no model names.
+  `tests/instruction_drift.test.ts` fails on a named path, module, or npm script that no
+  longer resolves.
 
 ## Modularity: module-first is the default for ALL new code
 The default, stated explicitly: **every piece of new logic lands as its own small, reusable,

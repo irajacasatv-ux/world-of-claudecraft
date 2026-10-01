@@ -26,10 +26,11 @@ orchestrator verifies and applies them.**
 
 ## Scope
 
-- **Diff mode** (the default): `node scripts/review_scope.mjs` lists the change. You are IN
-  SCOPE if it touches an instruction file: any `CLAUDE.md` or `AGENTS.md`, a
-  `.claude/agents/*.md` or `.claude/skills/*/SKILL.md`, `docs/qa-gate.md`, or
-  `docs/ai-architecture.md`. Review each changed instruction file whole (a new sentence can
+- **Diff mode** (the default): `node scripts/review_scope.mjs` lists the change (prefix it
+  with `GATE_SELECT_BASE=<ref>` when the caller names a base, or use the range the caller
+  names). You are IN SCOPE if it touches an instruction file, the set `docs/ai-architecture.md`
+  defines; in the Codex files (`AGENTS.md`, `.agents/`, `docs/codex.md`) check repository
+  facts only, since their Codex-specific guidance belongs to the `$woc-codex-audit` skill. Review each changed instruction file whole (a new sentence can
   contradict an old one), plus any file it now contradicts. Also IN SCOPE: a code diff that
   renames or deletes a path, module, or symbol an instruction file names (grep the old name
   across the instruction files).
@@ -43,7 +44,8 @@ If nothing is in scope, output exactly this and STOP:
 ## What to look for
 
 1. **Stale facts.** A path, module, exported symbol, command, flag, test name, or count the
-   repository contradicts. Verify with grep and Read; never run a command a file names.
+   repository contradicts. Verify with grep and Read; never run a command a file names (the drift test below is the
+   one exception).
    `npx vitest run tests/instruction_drift.test.ts` covers paths, modules, and npm scripts
    mechanically; you cover symbols, behavior claims ("X calls Y", "Z is test-only", "this
    runs in the gate"), and anything the test cannot parse. A claim the code contradicts is
@@ -65,9 +67,9 @@ If nothing is in scope, output exactly this and STOP:
 6. **Living docs versus records.** `docs/CLAUDE.md` separates living docs from historical
    records. Never propose rewriting a record; flag an instruction file that cites a record as
    current truth.
-7. **Sweep mode only: dead evidence.** A `docs/screenshots/` directory that nothing in tests,
-   `README.md`, `CREDITS.md`, docs, PR templates, or asset fingerprints references is a
-   removal candidate; list it with the grep that proves nothing points at it.
+7. **Sweep mode only: dead evidence.** A `docs/screenshots/` directory that is dead by the
+   definition in `docs/CLAUDE.md` ("screenshots/") is a removal candidate; list it with the
+   grep that proves nothing points at it.
 
 ## What to keep
 

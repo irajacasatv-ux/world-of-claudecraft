@@ -7,13 +7,18 @@ export function isCanonicalInstructionPath(file) {
   return /(^|\/)(?:AGENTS(?:\.override)?|CLAUDE)\.md$/.test(normalized(file));
 }
 
+// The docs that route agent instructions: the Codex guide, the reviewer-coverage table, and
+// the AI-architecture guide whose catalog tests/instruction_drift.test.ts pins. A change to
+// one of them must run the gate like any other instruction file.
+const AGENT_ROUTING_DOCS = ['docs/codex.md', 'docs/qa-gate.md', 'docs/ai-architecture.md'];
+
 /** @param {string} file */
 export function isAgentToolingPath(file) {
   const path = normalized(file);
   return (
     isCanonicalInstructionPath(path) ||
     /(^|\/)\.(?:codex|agents|claude|githooks)\//.test(path) ||
-    path === 'docs/codex.md'
+    AGENT_ROUTING_DOCS.includes(path)
   );
 }
 

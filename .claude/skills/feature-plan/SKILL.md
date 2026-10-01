@@ -239,7 +239,8 @@ completable in a single focused session without exhausting the context window:
    written: docs, copy, or isolated UI polish that touches no `src/sim/`, wire, persistence,
    security, money, or test-infrastructure surface. A low-risk phase closes on its
    in-session `/qa` run instead, and its row in `progress.md` says so. When in doubt, it
-   gets the paired QA phase.
+   gets the paired QA phase, and the packet's last phase always does, because the final QA
+   phase closes the packet.
 3. Sim behavior lands server-side and mirrors into `ClientWorld` as you go, not at the
    end.
 4. Then server persistence (additive DDL, save/load round-trip, JSONB back-compat), then
@@ -273,8 +274,8 @@ trigger: which diff surfaces spawn which agent. Generate it from these heuristic
   creates GPU work (a material, a light, a GL context, a scene attach, VFX lifetime, a
   performance probe); `content-obligations-reviewer` for any `src/sim/content/` record
   change (the same-change obligations); `gate-integrity-reviewer` for gate/CI pipeline
-  files; `docs-librarian` for any instruction file the phase adds or changes (a
-  `CLAUDE.md`, `AGENTS.md`, or a `.claude/agents/` or `.claude/skills/` definition);
+  files; `docs-librarian` for any instruction file the phase adds or changes (the set
+  `docs/ai-architecture.md` defines);
   `test-coverage-auditor` when a phase's test additions are the deliverable;
   `qa-checklist` when a phase or deliverable set is COMPLETE (the `/qa` skill runs it
   with the fan-out it names).

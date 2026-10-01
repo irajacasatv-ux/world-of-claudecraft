@@ -37,6 +37,7 @@ mobile portrait *and* landscape before calling UI work done.
     `node scripts/mobile_input_zoom_check.mjs` (needs `npm run dev`).
   - Every tappable target stays **>=40x40px** on mobile touch (the preferred floor); 24x24px
     (WCAG 2.2 SC 2.5.8) is the absolute minimum, used only where 40x40 is genuinely infeasible.
+    Never lower the 40x40 floor itself to 24px.
   - Narrow headers collapse to a hamburger drawer rather than wrapping/overflowing.
 - **Accessibility (WCAG 2.2 AA):** correct semantics / ARIA, high-contrast `:focus-visible` on
   every custom interactive element, honor `prefers-reduced-motion` (drop cross-fades, content
@@ -466,7 +467,8 @@ per-surface behavior lives in `tests/language_fanout_relocalize.test.ts`.
      build English-fills the omission, and untranslated English left byte-identical in a
      non-Latin locale is exactly the leak it catches. The contributor supplies those five
      real translations in the five overlay files, in the same change, so the PR is mergeable
-     as delivered; brand/URL leaves are the only ones that may stay identical.
+     as delivered; brand/URL leaves (`BRAND_ALLOW`) and the few release-pending keys the test
+     declares by name are the only ones that may stay identical.
 
 **Catalog-domain gotcha (where to put a new client key).** Most catalog domains carry
 per-locale data that `tsc` ENFORCES (locale blocks typed against the `en` shape, e.g.

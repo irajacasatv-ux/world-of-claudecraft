@@ -14,10 +14,19 @@ describe('agent instruction path boundaries', () => {
       expect(isAgentToolingPath(file)).toBe(true);
     },
   );
+  it.each(['docs/codex.md', 'docs/qa-gate.md', 'docs/ai-architecture.md'])(
+    'treats the agent-routing doc %s as tooling, so a change to it runs the gate',
+    (file) => {
+      expect(isCanonicalInstructionPath(file)).toBe(false);
+      expect(isAgentToolingPath(file)).toBe(true);
+    },
+  );
   it.each([
     'MY_AGENTS.md',
     'AGENTS.md.bak',
     'docs/notes.md',
+    'docs/qa-gate.md.bak',
+    'nested/docs/qa-gate.md',
     'codex/game.ts',
     '.codex-backup/config.toml',
   ])('does not mistake ordinary or similarly named paths for active tooling: %s', (file) => {

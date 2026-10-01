@@ -11,8 +11,11 @@ called done.
    integration base (the newest `origin/release/*`, which work is based off; `main` trails it),
    plus staged, unstaged, and untracked work. `--base` prints the merge-base for a full
    `git diff`. Never scope against `@{upstream}`: a pushed branch tracks its own remote copy,
-   so that scope is empty. If the user passed an argument (a feature name, phase, or file
-   list), use it to focus the scope.
+   so that scope is empty. On a branch stacked on another feature branch, the base is the
+   parent: run `GATE_SELECT_BASE=<parent> node scripts/review_scope.mjs`, and put the same
+   base in every reviewer's brief (a subagent does not inherit your shell's environment). If
+   the user passed an argument (a feature name, phase, or file list), use it to focus the
+   scope.
 
 2. Dispatch the `qa-checklist` agent over that scope. It is the read-only gate: it scales its
    own depth to the size of the change, checks every repo invariant in play, and ends with an

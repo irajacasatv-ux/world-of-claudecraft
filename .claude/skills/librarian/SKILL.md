@@ -31,9 +31,9 @@ names a non-file (an output, an example, an external repository), with the reaso
 Dispatch `docs-librarian` agents in parallel, one message, one batch each (sweep mode; give
 each its file list and a tool budget, and ask for the full report as its final reply):
 
-1. Root `CLAUDE.md`, `AGENTS.md`, `.claude/agents/`, `docs/qa-gate.md`, `docs/ai-architecture.md`,
-   `docs/codex.md`.
-2. `.claude/skills/` (every `SKILL.md`).
+1. Root `CLAUDE.md`, `AGENTS.md`, `docs/qa-gate.md`, `docs/ai-architecture.md`, `docs/codex.md`,
+   and `.agents/skills/` (repository facts only).
+2. `.claude/agents/` and `.claude/skills/`.
 3. `src/CLAUDE.md`, `src/sim/**`, `src/world_api/`, `src/net/`, `src/admin/`, `src/guide/**`,
    `src/editor/`.
 4. `src/render/**`, `src/ui/**`, `src/styles/`, `src/game/`.
@@ -41,9 +41,9 @@ each its file list and a tool budget, and ask for the full report as its final r
 6. `scripts/**`, `public/**`, `docs/CLAUDE.md` (including its dead-evidence check), `headless/`,
    `python/`, `electron/**`.
 
-With `changed`, dispatch one `docs-librarian` in diff mode instead. The Codex runtime files
-(`.codex/`, `.agents/`) are in scope for stale repository facts only; their Codex-specific
-guidance belongs to the `$woc-codex-audit` skill.
+With `changed`, dispatch one `docs-librarian` in diff mode instead. The Codex files are in
+scope for stale repository facts only; their Codex-specific guidance belongs to the
+`$woc-codex-audit` skill.
 
 ## 4. Confirm, then apply
 

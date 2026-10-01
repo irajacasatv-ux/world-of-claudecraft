@@ -222,7 +222,8 @@ The S3 guard mechanism and its blind spots are documented in `src/sim/CLAUDE.md`
   guard can't see them and they currently ship English; treat that as a known
   English backstop, not a wired translation.
 - **English only here**, per the root i18n rule (never edit the
-  `src/ui/i18n.locales/<lang>.ts` overlays). Numbers baked into `description` copy
+  `src/ui/i18n.locales/<lang>.ts` overlays, except the M16 fills a new wordy name owes,
+  below). Numbers baked into `description` copy
   (e.g. "15% harder") are part of the copy; don't hand-build money/number strings as
   gameplay data: the engine formats those for display.
 

@@ -11,7 +11,7 @@ Codex have different entry points and share the same deterministic scripts and c
 | Instant copy gate | `.claude/hooks/qa-stop.sh` through each runtime's Stop hook | End of an agent turn | Yes, on a hard-invariant hit |
 | Deterministic floor | `.githooks/pre-push` | Before a push | Yes |
 | Day-loop fast path | `npm run gate:fast` through `scripts/gate_fast.mjs` | While iterating (agents and mid/low-tier machines) | No (local only; not merge) |
-| **Selective gate** | `node scripts/gate_select.mjs` | **Before implementation is called ready / pre-merge** | **Yes (the merge bar)** |
+| **Selective gate** | `node scripts/gate_select.mjs` | **Before implementation is called ready / pre-merge** (on a branch cleared for pushing, a watched-green CI run on the pushed tip meets the same bar; root `CLAUDE.md` "Deliverable") | **Yes (the merge bar)** |
 | Full local gate | `npm run gate` through `scripts/gate.mjs` | When you want the whole suite locally, or the planner falls back | Yes (deeper check) |
 | Selective PR-tier CI | ci.yml `pr-gate` shards through `scripts/ci_shard_test.mjs` (same selection semantics, sharded; full suite on any unprovable diff) | Every pull request | Yes (required checks) |
 | Merge queue | ci.yml on the `merge_group` event: the full PR tier over the exact merge result about to become the branch tip (see `docs/merge-queue.md`, including rollout status: `release/**` first, `main` at the next release-to-main merge) | Every queued merge into a queue-protected branch | Yes (required checks on the merge group) |
@@ -701,14 +701,14 @@ written for older models, against the standard in `docs/ai-architecture.md`;
 risk applies.
 
 Decisive-tests review has one dispatch trap worth stating, because its failure mode is
-silent: it resolves the diff itself, so dispatching it where `git diff` comes back empty (a
-worktree it was not pointed at, an already-committed range, a tree whose changes are staged
-elsewhere) used to return an out-of-scope sentence that reads exactly like a clean audit.
-Give it the range or the file list explicitly whenever the change is not plain unstaged
-working-tree edits, and treat a report with an empty per-behavior verdict list as a failed
-dispatch to re-run, never as coverage. Its charter now refuses both shapes: an empty diff is
-reported as an unresolved diff naming the commands tried, and an in-scope audit must emit a
-non-empty claim list with a verdict per claim as its final message.
+silent: it resolves the diff itself through `node scripts/review_scope.mjs`, which sees only
+the worktree it runs in and measures against the newest release branch. Point it at the
+worktree, and give it the range, the file list, or the parent branch as `GATE_SELECT_BASE`
+whenever the change lives elsewhere or is stacked on another feature branch. Treat a report
+with an empty per-behavior verdict list as a failed dispatch to re-run, never as coverage. Its
+charter refuses both shapes: an empty diff is reported as an unresolved diff naming the
+commands tried, and an in-scope audit must emit a non-empty claim list with a verdict per
+claim as its final message.
 
 ## Keep the gate current
 

@@ -303,7 +303,7 @@ or pure leaves, never a `Sim` import, randomness only via `ctx.rng` (guarded by
   retune land gathering. `fishing.ts` re-exports the old names and consumes
   the leaf; "thin consumer" is about the SEAM, not about size, and the
   module header records the measurement rather than implying one. The band
-  type is the ONE type every `0 | 1 | 2` site now
+  type is the ONE type every `0 | 1 | 2` site
   writes: the four fishing SimEvent variants, `effectiveFishingBand`,
   `fishingRodBandFor`, and `server/fishing_telemetry.ts`'s label function, so
   widening the ladder again is one edit rather than seven.

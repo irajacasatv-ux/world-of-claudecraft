@@ -25,14 +25,14 @@ the relevant sub-directory files), before the change is called done.
 
 ## Scope gate (scale the review to the change)
 
-Determine the diff first: `node scripts/review_scope.mjs` (the branch's changes against its integration base,
-plus staged, unstaged, and untracked work). Then scale:
+Determine the diff first: `node scripts/review_scope.mjs` (the branch's changes against its
+integration base, plus staged, unstaged, and untracked work), or the range or base the caller
+names. Then scale:
 - **Docs / comments only, no source or test change** -> if any changed doc is an instruction
-  file (a `CLAUDE.md`, `AGENTS.md`, or a `.claude/agents/` or `.claude/skills/`
-  definition), name `docs-librarian` (table below) first; then output
+  file (the `docs-librarian` row of the table below), name `docs-librarian` first; then output
   **"QA gate: out of scope (docs/comments only); no implementation surface to QA."**
   and STOP.
-- **Tests only, no source change** -> run category 9 alone, mark the rest `[N/A]`, and name
+- **Tests only, no source change** -> run categories 9 and 10 alone, mark the rest `[N/A]`, and name
   `test-coverage-auditor` (table below).
 - **Single-surface small change** -> run only the categories whose surface the diff touches,
   mark the rest `[N/A]`, and name the one domain reviewer that fits (table below).
@@ -49,8 +49,7 @@ Use this priority order:
    and `git log --grep=...` to find the commits and changed files. If no doc is found, fall
    back to git history for scope rather than reporting a missing-doc failure.
 2. **File list provided:** read those files directly.
-3. **Nothing provided:** fall back to `git diff --name-only` (working tree) or the merge-base
-   range above.
+3. **Nothing provided:** use `node scripts/review_scope.mjs` (the scope gate above).
 
 Read all in-scope files. Also read the CLAUDE.md files that govern each domain in scope:
 - `CLAUDE.md` (repo root, always)
@@ -321,7 +320,7 @@ headline rules here:
 | new or rewritten tests, or acceptance criteria that claim coverage | test-coverage-auditor |
 | `src/sim/content/` record added or changed (items, mobs, quests, zones, dungeons, abilities, recipes, deeds, reliquary) | content-obligations-reviewer (balance numbers additionally get maintainer eyes against `docs/design/`) |
 | `scripts/gate*.mjs`, `scripts/lib/gate_*.mjs` / `ci_*.mjs`, `scripts/lib/test_visibility.mjs`, `scripts/ci_shard_test.mjs`, `.github/workflows/`, or their pin tests (`tests/ci_workflow.test.ts`, `tests/ci_shard_plan.test.ts`, `tests/gate_select_plan.test.ts`, `tests/ci_test_select.test.ts`, `tests/nightly_plan.test.ts`) | gate-integrity-reviewer |
-| an instruction file: any `CLAUDE.md`, `AGENTS.md`, a `.claude/agents/` or `.claude/skills/` definition, `docs/qa-gate.md`, or `docs/ai-architecture.md` | docs-librarian |
+| an instruction file (the set `docs/ai-architecture.md` defines: every `CLAUDE.md` and `AGENTS.md`, a `.claude/agents/`, `.claude/skills/`, or `.agents/skills/` definition, `docs/qa-gate.md`, `docs/ai-architecture.md`, `docs/codex.md`) | docs-librarian |
 | any completed deliverable set | this gate is the default |
 
 Consuming an already-landed `IWorld` member does not change it; do not dispatch

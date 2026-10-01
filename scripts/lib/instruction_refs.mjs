@@ -19,7 +19,7 @@
 //   basename of some tracked file.
 // Placeholders (`<name>`, `{x}`, `*`, `$VAR`, `a..d` ranges), URLs and schemes, home,
 // absolute and parent-relative paths, flags, remote refs (`origin/...`), and scratch or
-// build output (`tmp/`, `dist*`) are skipped. Pure: callers pass the repo's file list
+// build output (`tmp/`, `dist/`, `dist-<name>/`) are skipped. Pure: callers pass the repo's file list
 // (tracked plus untracked, not ignored) and the package scripts.
 
 import path from 'node:path';
@@ -29,7 +29,7 @@ const EXT =
 const MODULE = /^[A-Za-z0-9][A-Za-z0-9_.-]*\.(ts|tsx|mjs|cjs|js|svelte)$/;
 const SPECIFIER_EXTS = ['.ts', '.tsx', '.mjs', '.cjs', '.js', '.test.ts'];
 const SKIP_CHARS = /[*<>{}$|=\\]|\.\./;
-const SKIP_PREFIX = /^(~|\/|@|-|origin\/|tmp\/|dist)/;
+const SKIP_PREFIX = /^(~|\/|@|-|origin\/|tmp\/|dist(-[\w-]+)?\/)/;
 
 /** The files the guard reads: instruction files plus the AI-architecture docs. */
 export function isInstructionFile(file) {
@@ -40,6 +40,20 @@ export function isInstructionFile(file) {
     /^\.agents\/skills\/[^/]+\/SKILL\.md$/.test(file) ||
     ['docs/qa-gate.md', 'docs/ai-architecture.md', 'docs/codex.md'].includes(file)
   );
+}
+
+/**
+ * The npm scripts an instruction file may name: the root package.json's, plus those of the
+ * package.json in the file's own top-level directory (for example bot/ or electron/).
+ * @param {{ file: string, files: Set<string>, readScripts: (packageJson: string) => string[] }} args
+ */
+export function packageScriptsFor({ file, files, readScripts }) {
+  const scripts = new Set(readScripts('package.json'));
+  const top = file.split('/')[0];
+  if (file.includes('/') && files.has(`${top}/package.json`)) {
+    for (const s of readScripts(`${top}/package.json`)) scripts.add(s);
+  }
+  return scripts;
 }
 
 /** @param {string[]} tracked repo-relative posix paths from `git ls-files` */

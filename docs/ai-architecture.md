@@ -19,6 +19,12 @@ this guide owns the layer that delivers them.
 | Hooks | `.claude/hooks/`, `.githooks/pre-push` | Automatically: the cheap invariant floor (`.claude/hooks/README.md`). |
 | Codex | `AGENTS.md`, `.codex/`, `.agents/` | Codex sessions; `docs/codex.md` owns that side, and root `CLAUDE.md` stays canonical for both. |
 
+**Instruction files** are every `CLAUDE.md` and `AGENTS.md`, the `.claude/agents/`,
+`.claude/skills/`, and `.agents/skills/` definitions, and the three docs that route them:
+`docs/qa-gate.md`, this guide, and `docs/codex.md` (`isInstructionFile` in
+`scripts/lib/instruction_refs.mjs` is the same set). Every reference to "an instruction file"
+in the other files means this set.
+
 A rule lives in the narrowest file that covers everything it governs: an invariant of the whole
 repository in root `CLAUDE.md`, an area's conventions in that area's `CLAUDE.md`, a procedure in
 the skill that runs it, a review heuristic in the reviewer that applies it.
@@ -46,9 +52,12 @@ concern each owns, and its Codex counterpart, is the "Reviewer coverage" table i
 | `release-malware-audit` | Deliberately planted malicious code, at release. |
 | `docs-librarian` | Instruction-file drift: stale facts, conflicts, history, dated prompting. |
 
-Every reviewer scopes from `node scripts/review_scope.mjs`, the same integration base the
-selective gate uses, and reports every finding with a confidence; the orchestrator confirms
-findings against the code and filters in a separate pass.
+Every diff reviewer (all but the whole-tree `release-malware-audit`) scopes from
+`node scripts/review_scope.mjs`, the same integration base the selective gate uses, and
+reports every finding with a confidence; the orchestrator confirms findings against the code
+and filters in a separate pass. On a branch stacked on another feature branch, that base is
+the parent branch: brief each reviewer to run `GATE_SELECT_BASE=<parent> node
+scripts/review_scope.mjs`, because a subagent does not inherit your shell's environment.
 
 ## Skills
 
@@ -71,8 +80,8 @@ findings against the code and filters in a separate pass.
 | `hunt-live-programs` | Find and gate shader programs that link during play. |
 | `librarian` | Sweep the instruction files for drift and fix it. |
 
-`tests/instruction_drift.test.ts` fails when an agent or skill is missing from these tables,
-so the catalog cannot fall behind the directories.
+`tests/instruction_drift.test.ts` fails when an agent or skill has no row in these tables, so
+the catalog cannot fall behind the directories.
 
 ## Writing instruction files
 
@@ -94,7 +103,10 @@ reviews against it.
   history, releases, credentials, destructive steps), where the exact command is the point.
 - **Keep model and harness details out.** No model names, effort levels, or harness internals
   (tool parameter names, reply size limits): they change with every release. The root
-  "Working style by model capability" block owns how much to take on per capability tier.
+  "Working style by model capability" block is the one place that speaks to capability tiers
+  (and to effort, for runtimes that let the agent set it). Agent frontmatter (`model`,
+  `tools`, `maxTurns`) and the "Delivering your report" block every agent shares are harness
+  configuration, not rules: keep them identical across agents and change them together.
 - **Leave review and delegation to the gates.** `/qa` already dispatches fresh reviewers; a
   file adds an instruction to verify or delegate only for a need the gates do not cover.
   Review prompts ask for every finding with a confidence and leave filtering to the
@@ -116,7 +128,6 @@ reviews against it.
 
 ## Operator setup
 
-The model and effort level are operator settings, never instruction-file content. The
-maintainer runs Claude Code on Claude Opus 5.5 at `xhigh` effort for long-horizon work.
-Contributors on other models follow the root "Working style by model capability" tiers,
-which select by what a model can do rather than by its name.
+The model and effort level are operator settings, never instruction-file content. Every
+contributor follows the root "Working style by model capability" tiers, which select by what a
+model can do rather than by its name.

@@ -6,7 +6,8 @@ user-invocable: true
 
 # i18n locale fill (release time)
 
-Contributors add ENGLISH only; the maintainer fills every locale at release. This skill is
+Contributors add ENGLISH only, plus the five M16 non-Latin fills a new wordy value owes; the
+maintainer fills every remaining locale at release. This skill is
 that fill workflow. The release-tier gate (`I18N_RELEASE_TIER=1`, automatic on `release/**`
 branches) hard-fails on any `pending` registry row, so a release is not shippable until the
 fill lands.

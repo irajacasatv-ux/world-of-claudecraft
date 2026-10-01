@@ -6,25 +6,30 @@
 // docs-librarian agent's job, and this file is the mechanical floor under it.
 //
 // Guards: every path, source-module name, and npm script an instruction file names in
-// backticks resolves in the tree (rules in scripts/lib/instruction_refs.mjs); every
-// exemption below still matches a real reference; every agent and skill is named after its
-// file and cataloged in docs/ai-architecture.md; every reviewer the docs/qa-gate.md
-// coverage table names exists.
-// Cost: 400 ms
+// backticks resolves in the tree (each rule of scripts/lib/instruction_refs.mjs has a
+// positive and a negative unit case, because the whole-tree case can only see a rule that
+// rejects too much); every instruction-file class is scanned; every exemption below still
+// matches a real reference; the agent and skill catalogs in docs/ai-architecture.md match
+// the directories exactly; every role the docs/qa-gate.md coverage table names exists. The
+// nearest suite, tests/codex_setup.test.ts, pins the Codex configuration's content, not
+// these.
+// Cost: 500 ms
 import { spawnSync } from 'node:child_process';
-import { readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 import {
   buildIndex,
   extractRefs,
   isInstructionFile,
+  packageScriptsFor,
   unresolvedRefs,
 } from '../scripts/lib/instruction_refs.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const read = (rel: string) => readFileSync(path.join(root, rel), 'utf8');
+const scriptsOf = (packageJson: string) => Object.keys(JSON.parse(read(packageJson)).scripts ?? {});
 
 /** Tracked files plus untracked ones that are not ignored, so a file created in the same
  *  change resolves before it is staged. */
@@ -102,16 +107,23 @@ describe('instruction_refs rules', () => {
   const check = (file: string, text: string) =>
     unresolvedRefs({ file, refs: extractRefs(text), index, scripts }).map((r) => r.token);
 
-  it('checks repo-rooted paths strictly and never by suffix', () => {
+  it('checks a repo-rooted path strictly, from the root or the file directory, never by suffix', () => {
     expect(check('CLAUDE.md', '`src/sim/sim.ts` `src/sim/gone.ts`')).toEqual(['src/sim/gone.ts']);
-    // `sim/sim.ts` is not rooted (no top-level `sim/`), so a suffix match is enough.
-    expect(check('CLAUDE.md', '`sim/sim.ts`')).toEqual([]);
+    // `server/` is a top-level dir, so this is rooted: the suffix match in tests/ must not count.
+    expect(check('CLAUDE.md', '`server/perf_gate.test.ts`')).toEqual(['server/perf_gate.test.ts']);
+    expect(check('tests/CLAUDE.md', '`server/perf_gate.test.ts`')).toEqual([]);
+    expect(check('tests/CLAUDE.md', '`src/sim/sim.ts`')).toEqual([]);
   });
 
-  it('resolves a path from the instruction file own directory, and module specifiers', () => {
-    expect(check('server/parse/CLAUDE.md', '`contract.ts`')).toEqual([]);
+  it('resolves an extensionless module specifier from the root or the file directory', () => {
+    expect(check('tests/CLAUDE.md', '`src/render/nameplate_combo`')).toEqual([]);
     expect(check('tests/CLAUDE.md', '`server/perf_gate`')).toEqual([]);
-    expect(check('CLAUDE.md', '`src/render/nameplate_combo`')).toEqual([]);
+    expect(check('CLAUDE.md', '`src/render/gone_module`')).toEqual(['src/render/gone_module']);
+  });
+
+  it('resolves a non-rooted path by a whole-segment suffix only', () => {
+    expect(check('CLAUDE.md', '`sim/sim.ts`')).toEqual([]);
+    expect(check('CLAUDE.md', '`im/sim.ts` `sim/gone.ts`')).toEqual(['im/sim.ts', 'sim/gone.ts']);
   });
 
   it('checks bare source-module names against every basename', () => {
@@ -120,45 +132,147 @@ describe('instruction_refs rules', () => {
     ]);
   });
 
-  it('checks npm scripts, reading a trailing colon as a glob', () => {
-    expect(check('CLAUDE.md', '`npm run gate` `npm run native:*` `npm run gone`')).toEqual([
+  it('checks npm and pnpm scripts exactly, reading only a trailing colon as a glob', () => {
+    expect(check('CLAUDE.md', '`npm run gate` `npm run native:*`')).toEqual([]);
+    expect(check('CLAUDE.md', '`npm run gat` `npm run native` `pnpm run gone`')).toEqual([
+      'gat',
+      'native',
       'gone',
     ]);
   });
 
-  it('skips placeholders, ranges, URLs, flags, remote refs, and scratch output', () => {
+  it('skips placeholders, ranges, URLs, flags, remote refs, home, absolute, and scratch paths', () => {
+    const skipped = [
+      'src/<x>.ts',
+      '{a}/b.ts',
+      'parity_a..g.test.ts',
+      '../a.ts',
+      'https://x.y/a.ts',
+      '--out/x.ts',
+      'origin/release/',
+      '~/x/a.ts',
+      '/abs/a.ts',
+      '$HOME/a.ts',
+      '@scope/a.ts',
+      'a|b/c.ts',
+      'a=b/c.ts',
+      'src/x/*.ts',
+      'tmp/a.ts',
+      'dist/a.js',
+      'dist-env/a.cjs',
+    ];
+    expect(check('CLAUDE.md', skipped.map((t) => `\`${t}\``).join(' '))).toEqual([]);
+  });
+
+  it('skips only the dist output directories, not every name that starts with "dist"', () => {
+    expect(check('CLAUDE.md', '`district/a.ts` `distance_gone.ts`')).toEqual([
+      'district/a.ts',
+      'distance_gone.ts',
+    ]);
+  });
+
+  it('normalizes anchors, line suffixes, wrapping punctuation, and a leading ./', () => {
     expect(
       check(
         'CLAUDE.md',
-        '`src/<x>.ts` `{a}/b.ts` `parity_a..g.test.ts` `https://x.y/a.ts` `--out/x.ts` `origin/release/` `tmp/a.ts` `dist/a.js`',
+        '`src/sim/sim.ts#L1` `src/sim/sim.ts:12` `(src/sim/sim.ts),` `./src/sim/sim.ts`',
       ),
     ).toEqual([]);
+    expect(check('CLAUDE.md', '`src/sim/gone.ts:12-20`')).toEqual(['src/sim/gone.ts']);
+  });
+
+  it('reports the line and kind of each reference', () => {
+    expect(extractRefs('intro\nrun `npm run gate` on `src/a.ts` and `b.mjs`')).toEqual([
+      { line: 2, kind: 'script', token: 'gate' },
+      { line: 2, kind: 'path', token: 'src/a.ts' },
+      { line: 2, kind: 'module', token: 'b.mjs' },
+    ]);
+  });
+
+  it('recognizes every instruction-file class and nothing near it', () => {
+    for (const file of [
+      'CLAUDE.md',
+      'src/ui/CLAUDE.md',
+      'AGENTS.md',
+      'deep/AGENTS.md',
+      '.claude/agents/qa-checklist.md',
+      '.claude/skills/qa/SKILL.md',
+      '.agents/skills/woc-qa/SKILL.md',
+      'docs/qa-gate.md',
+      'docs/ai-architecture.md',
+      'docs/codex.md',
+    ]) {
+      expect(isInstructionFile(file), file).toBe(true);
+    }
+    for (const file of [
+      'MY_CLAUDE.md',
+      'CLAUDE.md.bak',
+      '.claude/agents/sub/x.md',
+      '.claude/skills/qa/README.md',
+      '.agents/skills/woc-qa/references/x.md',
+      'docs/other.md',
+      'nested/docs/qa-gate.md',
+    ]) {
+      expect(isInstructionFile(file), file).toBe(false);
+    }
+  });
+
+  it('adds a top-level directory package.json to the root scripts', () => {
+    const files = new Set(['package.json', 'bot/package.json']);
+    const readScripts = (p: string) => (p === 'package.json' ? ['gate'] : ['start']);
+    expect([...packageScriptsFor({ file: 'bot/CLAUDE.md', files, readScripts })]).toEqual([
+      'gate',
+      'start',
+    ]);
+    expect([...packageScriptsFor({ file: 'src/CLAUDE.md', files, readScripts })]).toEqual(['gate']);
+    expect([...packageScriptsFor({ file: 'CLAUDE.md', files, readScripts })]).toEqual(['gate']);
   });
 });
 
 describe('instruction files', () => {
-  const files = repoFiles();
-  const index = buildIndex(files);
-  const rootScripts = Object.keys(JSON.parse(read('package.json')).scripts ?? {});
-  const fileSet = new Set(files);
+  type Miss = { file: string; line: number; kind: string; token: string };
+  let scanned: string[] = [];
+  let unexcused: Miss[] = [];
 
-  const raw = files.filter(isInstructionFile).flatMap((file) => {
-    const scripts = new Set(rootScripts);
-    const top = file.split('/')[0];
-    if (file.includes('/') && fileSet.has(`${top}/package.json`)) {
-      for (const s of Object.keys(JSON.parse(read(`${top}/package.json`)).scripts ?? {})) {
-        scripts.add(s);
-      }
-    }
-    return unresolvedRefs({ file, refs: extractRefs(read(file)), index, scripts }).map((r) => ({
-      file,
-      ...r,
-    }));
+  // Built here rather than at collection, so a git failure fails these cases only and the
+  // unit rules above still report.
+  beforeAll(() => {
+    const files = repoFiles();
+    const fileSet = new Set(files);
+    const index = buildIndex(files);
+    scanned = files.filter(isInstructionFile);
+    const raw: Miss[] = scanned.flatMap((file) =>
+      unresolvedRefs({
+        file,
+        refs: extractRefs(read(file)),
+        index,
+        scripts: packageScriptsFor({ file, files: fileSet, readScripts: scriptsOf }),
+      }).map((r) => ({ file, ...r })),
+    );
+    // Only a path can be generated or local-only output; a script or module name never is.
+    const local = (r: Miss) => path.posix.join(path.posix.dirname(r.file), r.token);
+    const paths = raw.filter((r) => r.kind === 'path');
+    const gitIgnored = ignored(paths.flatMap((r) => [r.token, local(r)]));
+    unexcused = raw.filter(
+      (r) => r.kind !== 'path' || (!gitIgnored.has(r.token) && !gitIgnored.has(local(r))),
+    );
   });
-  const local = (r: { file: string; token: string }) =>
-    path.posix.join(path.posix.dirname(r.file), r.token);
-  const gitIgnored = ignored(raw.flatMap((r) => [r.token, local(r)]));
-  const unexcused = raw.filter((r) => !gitIgnored.has(r.token) && !gitIgnored.has(local(r)));
+
+  it('scan every instruction-file class', () => {
+    for (const probe of [
+      'CLAUDE.md',
+      'AGENTS.md',
+      '.claude/agents/qa-checklist.md',
+      '.claude/skills/qa/SKILL.md',
+      '.agents/skills/woc-qa/SKILL.md',
+      'docs/qa-gate.md',
+      'docs/ai-architecture.md',
+      'docs/codex.md',
+      'src/sim/CLAUDE.md',
+    ]) {
+      expect(scanned, probe).toContain(probe);
+    }
+  });
 
   it('name only paths, modules, and npm scripts that exist', () => {
     const drift = unexcused
@@ -191,31 +305,49 @@ describe('the agent and skill roster', () => {
     .map((d) => d.name)
     .sort();
   const frontmatterName = (rel: string) =>
-    read(rel).match(/^---\n[\s\S]*?^name:\s*(\S+)\s*$/m)?.[1];
+    read(rel)
+      .match(/^---\n([\s\S]*?)\n---\n/)?.[1]
+      .match(/^name:\s*(\S+)\s*$/m)?.[1];
+  /** One `## heading` section of a doc, up to the next `## ` heading. */
+  const section = (doc: string, heading: string) => {
+    const start = doc.indexOf(`\n## ${heading}\n`);
+    expect(start, `the "${heading}" section moved`).toBeGreaterThan(-1);
+    const end = doc.indexOf('\n## ', start + 1);
+    return doc.slice(start, end === -1 ? undefined : end);
+  };
+  /** The backticked names in one column of a section's table body rows (header skipped). */
+  const column = (text: string, index: number) =>
+    text
+      .split('\n')
+      .filter((l) => l.startsWith('| ') && !/^\|[-|\s]+\|$/.test(l))
+      .slice(1)
+      .flatMap((row) => [...(row.split('|')[index] ?? '').matchAll(/`([^`]+)`/g)].map((m) => m[1]));
 
   it('names every agent and skill after its file', () => {
+    expect(agents.length).toBeGreaterThan(0);
+    expect(skills.length).toBeGreaterThan(0);
     for (const a of agents) expect(frontmatterName(`.claude/agents/${a}.md`), a).toBe(a);
     for (const s of skills) expect(frontmatterName(`.claude/skills/${s}/SKILL.md`), s).toBe(s);
   });
 
-  it('catalogs every agent and skill in docs/ai-architecture.md', () => {
-    const catalog = read('docs/ai-architecture.md');
-    const missing = [...agents, ...skills].filter((n) => !catalog.includes(`\`${n}\``));
-    expect(missing, 'Add a catalog row for each new agent or skill').toEqual([]);
+  it('catalogs exactly the agents and skills that exist, in docs/ai-architecture.md', () => {
+    const doc = read('docs/ai-architecture.md');
+    expect([...column(section(doc, 'Reviewers'), 1)].sort()).toEqual(agents);
+    expect([...column(section(doc, 'Skills'), 1)].sort()).toEqual(skills);
   });
 
-  it('routes only to reviewers that exist (docs/qa-gate.md "Reviewer coverage")', () => {
-    const doc = read('docs/qa-gate.md');
-    const start = doc.indexOf('## Reviewer coverage');
-    expect(start, 'the Reviewer coverage section moved').toBeGreaterThan(-1);
-    const rows = doc
-      .slice(start)
-      .split('\n')
-      .filter((l) => l.startsWith('| ') && !l.startsWith('| Concern') && !l.startsWith('|---'));
-    const named = rows.flatMap((row) =>
-      [...(row.split('|')[2] ?? '').matchAll(/`([^`]+)`/g)].map((m) => m[1]),
+  it('routes only to roles that exist (docs/qa-gate.md "Reviewer coverage")', () => {
+    const table = section(read('docs/qa-gate.md'), 'Reviewer coverage');
+    const claude = column(table, 2);
+    expect(claude.length).toBeGreaterThan(0);
+    expect(claude.filter((n) => !agents.includes(n))).toEqual([]);
+    const codex = column(table, 3);
+    expect(codex.length).toBeGreaterThan(0);
+    const missing = codex.filter((n) =>
+      n.startsWith('$')
+        ? !existsSync(path.join(root, '.agents/skills', n.slice(1), 'SKILL.md'))
+        : !existsSync(path.join(root, '.codex/agents', `${n}.toml`)),
     );
-    expect(named.length).toBeGreaterThan(0);
-    expect(named.filter((n) => !agents.includes(n))).toEqual([]);
+    expect(missing).toEqual([]);
   });
 });

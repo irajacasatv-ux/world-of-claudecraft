@@ -32,7 +32,7 @@ targeted test files to confirm they pass.
 4. If the diff command returns NOTHING, you were dispatched over a range you cannot see (a
    worktree, an uncommitted tree, a range given in your prompt). Do NOT early-exit as
    out-of-scope: that reports "no test change" when the truth is "no diff resolved". Retry
-   with the other two forms in step 1, then with any explicit file list or range in your
+   with any explicit file list, range, worktree path, or `GATE_SELECT_BASE` base given in your
    prompt. If all of them come back empty, say so as your report, naming each command you
    ran and its empty output, and stop.
 

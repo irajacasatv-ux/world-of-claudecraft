@@ -210,5 +210,5 @@ their domains.
 | `src/render/**` | reads not mutates; own module; per-frame cost |
 | `src/ui/**` + `index.html` | IWorld seam; own module; two-entry safety (CSS in `src/styles/`, `?.` on index-only DOM); a11y/mobile; i18n |
 | `server/**` routes/db | token-scoped auth; parameterized SQL; additive idempotent DDL; no oversharing; tests |
-| i18n strings | English `t()` in catalog only; other locales are release-time work, do not flag (M16 wordy-name exception aside); line-item slice conflict = regen |
+| i18n strings | English `t()` in catalog only; other locales are release-time work, do not flag (M16 wordy-value exception aside); line-item slice conflict = regen |
 | `src/sim/content/**` | same-change obligations: deeds, reliquary, wiki regen + `guide.*` keys, WebP item art, M16 fills, entity names |
