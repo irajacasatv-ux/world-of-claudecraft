@@ -3803,9 +3803,18 @@ describe('the claim renewer', () => {
     // every tracked tsconfig, the `alias` objects of vite.config.ts, which runs
     // dev and vitest, and of scripts/build_server.mjs, which bundles the
     // server) has its alias tables pinned as text, comments stripped and
-    // whitespace collapsed, beside its count of the word `alias`. So a new
-    // alias fails until reviewed in ANY form: a quoted or bare key, a spread, a
-    // computed key, a variable value, a shorthand `alias` property, an array.
+    // whitespace collapsed, beside every line that names `alias` and the
+    // count of resolver hooks (an esbuild `onResolve`, a vite `resolveId`, the
+    // bundle's `plugins`); and the tracked inventory of package.json,
+    // jsconfig and tsconfig files is pinned, since esbuild, Node and vite read
+    // a NESTED package.json's `imports` or a jsconfig's `paths` too. So a new
+    // alias fails until reviewed: a quoted or bare key, a spread, a computed
+    // key, a variable value, a shorthand or quoted `alias` property, an array,
+    // a resolver plugin, a new package or config file. LIMITS, named so they
+    // are reviewed rather than assumed: a property name COMPUTED to `alias`
+    // (`['ali' + 'as']`), text the shared comment stripper misreads (a string
+    // holding a comment opener), and config fragments vite.config.ts imports
+    // from scripts/ (dev and vitest only, never the server bundle).
     const flat = (text: string): string => text.replace(/\s+/g, ' ').trim();
     const aliasBlocks = (text: string): string[] => {
       const code = stripComments(text);
@@ -3843,19 +3852,65 @@ describe('the claim renewer', () => {
       vite: aliasWords(readFileSync('vite.config.ts', 'utf8')),
       bundle: aliasWords(readFileSync('scripts/build_server.mjs', 'utf8')),
     }).toEqual(VITE_AND_BUNDLE_ALIAS_WORDS);
+    // Every line that names `alias`, as text: a swap (a word removed in one
+    // place and a quoted `'alias':` property added in another) keeps the count
+    // and changes this list.
+    const aliasLines = (text: string): string[] =>
+      stripComments(text)
+        .split('\n')
+        .filter((line) => /\balias\b/.test(line))
+        .map(flat);
+    expect(aliasLines(readFileSync('vite.config.ts', 'utf8'))).toEqual([
+      "return { name: 'woc-static-page-alias', configureServer: attach, configurePreviewServer: attach };",
+      "resolve: { alias: { '#bot-detector': botDetectorImpl } },",
+    ]);
+    expect(aliasLines(readFileSync('scripts/build_server.mjs', 'utf8'))).toEqual(
+      Array.from({ length: 5 }, () => `${bundled},`),
+    );
+    // Resolver hooks: none in either file today, so a resolver plugin is new.
+    const hooks = (text: string): Record<string, number> => {
+      const code = stripComments(text);
+      return Object.fromEntries(
+        ['onResolve', 'resolveId', 'plugins'].map((hook) => [
+          hook,
+          (code.match(new RegExp(`\\b${hook}\\b`, 'g')) ?? []).length,
+        ]),
+      );
+    };
+    expect(hooks(readFileSync('scripts/build_server.mjs', 'utf8'))).toEqual({
+      onResolve: 0,
+      resolveId: 0,
+      plugins: 0,
+    });
+    expect(hooks(readFileSync('vite.config.ts', 'utf8'))).toMatchObject({
+      onResolve: 0,
+      resolveId: 0,
+    });
+    expect(hooks('plugins: [{ setup(b) { b.onResolve({ filter: /x/ }, f); } }],')).toEqual({
+      onResolve: 1,
+      resolveId: 0,
+      plugins: 1,
+    });
     // The root package.json: no `imports` table, no `--alias` in any script.
     const pkg = JSON.parse(readFileSync('package.json', 'utf8')) as {
       imports?: unknown;
       scripts: Record<string, string>;
     };
     expect(pkg.imports).toBeUndefined();
-    expect(Object.values(pkg.scripts).filter((cmd) => /--alias\b/.test(cmd))).toEqual([]);
+    expect((pkg as { exports?: unknown }).exports).toBeUndefined();
+    const usesAliasFlag = (cmd: string): boolean => /--alias\b/.test(cmd);
+    expect(Object.values(pkg.scripts).filter(usesAliasFlag)).toEqual([]);
+    expect(usesAliasFlag('esbuild headless/env_server.ts --alias:#claims=./x')).toBe(true);
+    const tracked = (pattern: string): string[] =>
+      spawnSync('git', ['ls-files', '--', pattern], { encoding: 'utf8' })
+        .stdout.split('\n')
+        .filter((f) => f !== '')
+        .sort();
+    expect(tracked('*package.json')).toEqual(['package.json']);
+    expect(tracked('*jsconfig*.json')).toEqual([]);
     // Every tracked tsconfig, by inventory, and each one's `paths` exactly.
     // The tracked inventory, from git, so a new tsconfig anywhere is seen.
-    const tsconfigs = spawnSync('git', ['ls-files', '--', '*tsconfig*.json'], { encoding: 'utf8' })
-      .stdout.split('\n')
-      .filter((f) => f !== '')
-      .sort();
+    const tsconfigs = tracked('*tsconfig*.json');
     expect(tsconfigs).toEqual(['tsconfig.admin.json', 'tsconfig.bot.json', 'tsconfig.json']);
     const pathsOf = (file: string): unknown =>
       (JSON.parse(readFileSync(file, 'utf8')) as { compilerOptions?: { paths?: unknown } })
@@ -3868,18 +3923,26 @@ describe('the claim renewer', () => {
     // Fixtures through the same readers: each new alias form changes a block's
     // text or the word count, so it fails the pins above.
     const reviewedVite = "  resolve: { alias: { '#bot-detector': botDetectorImpl } },";
-    const baseBlocks = aliasBlocks(reviewedVite);
+    // Against the reviewed literal, never the reader's own output.
+    const baseBlocks = ["alias: { '#bot-detector': botDetectorImpl }"];
+    expect(aliasBlocks(reviewedVite)).toEqual(baseBlocks);
     for (const fixture of [
       "  resolve: { alias: { '#bot-detector': botDetectorImpl, claims: claimsImpl } },",
       "  resolve: { alias: { '#bot-detector': botDetectorImpl, ...extraAliases } },",
       "  resolve: { alias: { '#bot-detector': botDetectorImpl, [CLAIMS]: claimsImpl } },",
       "  resolve: { alias: [{ find: '#claims', replacement: claimsImpl }] },",
       '  resolve: { alias: extraAliases },',
-      // A brace inside a trailing comment cannot cut the block short.
-      "  resolve: { alias: {\n    '#bot-detector': botDetectorImpl, // was { stub }\n    '#claims': c,\n  } },",
     ]) {
       expect(aliasBlocks(fixture), fixture).not.toEqual(baseBlocks);
     }
+    // An UNBALANCED brace inside a trailing comment cannot cut the block short:
+    // the comment is stripped before the braces are counted, so the key after
+    // it is read, exactly.
+    expect(
+      aliasBlocks(
+        "  resolve: { alias: {\n    '#bot-detector': botDetectorImpl, // was }\n    '#claims': c,\n  } },",
+      ),
+    ).toEqual(["alias: { '#bot-detector': botDetectorImpl, '#claims': c, }"]);
     // A shorthand `alias` property carries no `alias:` text: the word count
     // is what moves.
     const shorthand = `${reviewedVite}\nconst alias = { '#claims': c };\nawait esbuild.build({ alias });`;
