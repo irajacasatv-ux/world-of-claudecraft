@@ -82,6 +82,7 @@ import {
   runFreeholdTransaction,
 } from '../../server/freehold_tx';
 import { hearthKeyUseRefusal } from '../../server/freehold_wire';
+import { SOURCE_EXTENSIONS, sourceFilesUnder } from '../helpers/source_files_under';
 import { stripComments } from '../helpers/strip_comments';
 import { tsFilesUnder } from '../helpers/ts_files_under';
 
@@ -3568,11 +3569,17 @@ describe('the claim renewer', () => {
       tokens: stripped.match(NAME)?.length ?? 0,
       strings: stripped.match(QUOTED)?.length ?? 0,
     });
-    const files = tsFilesUnder('server').map(({ file, full }) => {
+    // Every module under server/, in every spelling the toolchain resolves
+    // (the shared source walker's policy), so a call site in a `.mjs` or
+    // `.cjs` module is counted like one in a `.ts` file.
+    const files = sourceFilesUnder('server').map(({ file, full }) => {
       const source = readFileSync(full, 'utf8');
       return { file: `server/${file}`, source, texts: textsOf(source) };
     });
     expect(files.length).toBeGreaterThan(100);
+    expect(SOURCE_EXTENSIONS).toEqual(
+      expect.arrayContaining(['.ts', '.tsx', '.mts', '.cts', '.js', '.jsx', '.mjs', '.cjs']),
+    );
     const fileOf = (file: string) => {
       const found = files.find((f) => f.file === file);
       if (!found) throw new Error(`no ${file} under server/`);
@@ -3801,34 +3808,40 @@ describe('the claim renewer', () => {
     // over every file the toolchain resolves server code through, inside one
     // stated boundary. THE SERVER BUNDLE is pinned whole: its build script's
     // code (comments stripped, each line's whitespace collapsed), the package
-    // scripts and Dockerfile lines that run it or its output, and every tracked
-    // file naming the bundle it writes. EVERY OTHER TOOLCHAIN FILE is a program
-    // whose DECLARATIONS are pinned: every tracked vite, vitest and svelte
-    // config by inventory (vitest would prefer a new vitest.config), each one's
-    // import statements with their bindings, its resolver hooks (an esbuild
-    // `onResolve`; a vite `resolveId`, `transform`, `load`, `config` or
-    // `configResolved`; any `plugins`), and its `alias` lines and tables; the
-    // same hooks and `alias` lines in every local module vite.config.ts
-    // imports; what vite.config.ts's alias resolves TO (each variable's
-    // declaration and every line naming one) and every call it makes to the
-    // only writer and spawner it imports; the root package.json's keys, its
-    // dependency specs that are not version ranges, pnpm's keys and patched
-    // package names, and every resolution flag its scripts pass; .npmrc; the
-    // tracked package, jsconfig, tsconfig and private/ inventories and each
-    // tsconfig's `paths`; and that no tracked file outside server/ (docs and
-    // tests aside) names the registry, so no barrel elsewhere re-exports it.
-    // So a new alias fails until reviewed: a quoted or bare key, a spread, a
-    // computed key, a variable value or a retargeted variable, a shorthand or
-    // quoted `alias` property, an array, a resolver plugin, a new build call or
-    // option, import, flag, dependency spec, package or config file, or a
-    // force-added private implementation. LIMITS, the boundary named so it is
-    // reviewed rather than assumed: what those programs COMPUTE when they run
-    // (a property name computed to `alias`, a `define`, a path assembled from
-    // parts, a file written by code a local module runs); text the shared
-    // comment stripper misreads (a string holding a comment opener); an import
-    // the statement reader cannot see (a binding named by a string holding
-    // `;`); the insides of packages, of the patches and overrides pnpm applies
-    // to them, and of anything a local module imports in turn; a config path a
+    // scripts that run it or its output, the Dockerfile lines that do or that
+    // set the environment, and every tracked file naming the bundle it writes.
+    // EVERY OTHER TOOLCHAIN FILE is a program whose DECLARATIONS are pinned:
+    // every tracked vite, vitest and svelte config by inventory (vitest would
+    // prefer a new vitest.config), each one's import statements with their
+    // bindings, its resolver hooks (an esbuild `onResolve`; a vite
+    // `resolveId`, `transform`, `load`, `config` or `configResolved`; any
+    // `plugins`), and its `alias` lines and tables; the same hooks and `alias`
+    // lines in every local module vite.config.ts imports; what
+    // vite.config.ts's alias resolves TO (each variable's declaration and
+    // every line naming one), its `define` table, and every call it makes to
+    // the only writer and spawner it imports; the root package.json's keys,
+    // its dependency specs that are not version ranges, pnpm's keys and
+    // patched package names, and every resolution flag its scripts pass;
+    // .npmrc; the tracked package, jsconfig, tsconfig, pnpm workspace,
+    // pnpmfile and private/ inventories and each tsconfig's `paths`. And no
+    // tracked file the count above did not read (docs and tests aside) names
+    // the registry or the renewer: a barrel, a hook file or a config naming
+    // either fails, wherever it lives. So a new alias fails until reviewed: a
+    // quoted or bare key, a spread, a computed key, a variable value or a
+    // retargeted variable, a shorthand or quoted `alias` property, an array, a
+    // resolver plugin, a new build call or option, import, flag, dependency
+    // spec, package or config file, or a force-added private implementation.
+    // LIMITS, the boundary named so it is reviewed rather than assumed: what
+    // those programs COMPUTE when they run (a property name computed to
+    // `alias`, a path assembled from parts, a file written by code a local
+    // module runs); how a file already listed as naming the bundle runs it
+    // (the files are pinned, not their lines); a barrel under docs/ or tests/
+    // (server code imports neither); a file git does not track yet (a local
+    // run passes until it is added; CI sees it); text the shared comment
+    // stripper misreads (a string holding a comment opener); an import the
+    // statement reader cannot see (a binding named by a string holding `;`);
+    // the insides of packages, of the patches and overrides pnpm applies to
+    // them, and of anything a local module imports in turn; a config path a
     // script passes from its own code (scripts/*.mjs spawn vitest with
     // `--config`) rather than from package.json; and the contents of the
     // gitignored private clone.
@@ -3838,10 +3851,10 @@ describe('the claim renewer', () => {
         .stdout.split('\n')
         .filter((f) => f !== '')
         .sort();
-    const aliasBlocks = (text: string): string[] => {
+    const blocksOf = (text: string, key: string): string[] => {
       const code = stripComments(text);
       const blocks: string[] = [];
-      for (const m of code.matchAll(/\balias\s*:\s*/g)) {
+      for (const m of code.matchAll(new RegExp(`\\b${key}\\s*:\\s*`, 'g'))) {
         let i = m.index + m[0].length;
         const open = code[i];
         if (open !== '{' && open !== '[') {
@@ -3861,6 +3874,7 @@ describe('the claim renewer', () => {
       }
       return blocks;
     };
+    const aliasBlocks = (text: string): string[] => blocksOf(text, 'alias');
     const aliasWords = (text: string): number =>
       (stripComments(text).match(/\balias\b/g) ?? []).length;
     const linesNaming = (text: string, word: RegExp): string[] =>
@@ -3881,8 +3895,9 @@ describe('the claim renewer', () => {
         transform: count(/\btransform\b/g),
         load: count(/\bload\b/g),
         plugins: count(/\bplugins\b/g),
-        // A `config` or `configResolved` hook, as a method or a property.
-        config: count(/\bconfig(?:Resolved)?\s*[(:]/g),
+        // A `config` or `configResolved` hook, as a method or a property,
+        // its key quoted or not.
+        config: count(/['"]?\bconfig(?:Resolved)?['"]?\s*[(:]/g),
       };
     };
     const noHooks = { onResolve: 0, resolveId: 0, transform: 0, load: 0, plugins: 0, config: 0 };
@@ -3891,11 +3906,12 @@ describe('the claim renewer', () => {
     const importsOf = (text: string) => {
       const code = stripComments(text);
       return {
+        // At a line's start or after a `;` on it.
         statements: [
           ...code.matchAll(
-            /^[ \t]*(?:import|export)\b[^;]*?\bfrom\s*['"][^'"]+['"]|^[ \t]*import\s*['"][^'"]+['"]/gm,
+            /(?:^|;)[ \t]*((?:import|export)\b[^;]*?\bfrom\s*['"][^'"]+['"]|import\s*['"][^'"]+['"])/gm,
           ),
-        ].map((m) => flat(m[0])),
+        ].map((m) => flat(m[1])),
         dynamic: (code.match(/\bimport\s*\(/g) ?? []).length,
         require: (code.match(/\b(?:require|createRequire|getBuiltinModule)\b/g) ?? []).length,
       };
@@ -3942,6 +3958,8 @@ describe('the claim renewer', () => {
         "'pg-native'",
         'migrate_mail_bot_welcome_purge.cjs',
       ),
+      // The script builds the mail purge twice, to one outfile: pinned as it
+      // is, not changed here.
       ...build(
         'scripts/migrate_mail_bot_welcome_purge.ts',
         "'pg-native'",
@@ -3969,14 +3987,26 @@ describe('the claim renewer', () => {
       ['server', 'npm run build:server && node dist-server/server.cjs'],
       ['realms', 'npm run build:server && node scripts/dev-realms.mjs'],
     ]);
-    expect(linesNaming(readFileSync('Dockerfile', 'utf8'), /build:server|dist-server/)).toEqual([
+    // Its `#` comment lines aside, read as written.
+    expect(
+      readFileSync('Dockerfile', 'utf8')
+        .split('\n')
+        .filter(
+          (line) =>
+            !/^\s*#/.test(line) &&
+            /build:server|dist-server|NODE_|^\s*(?:ENV|ENTRYPOINT|CMD)\b/.test(line),
+        )
+        .map(flat),
+    ).toEqual([
       'pnpm run build && cp -a dist/media ./media-build && rm -rf dist/media && pnpm run build:server && pnpm run build:bot',
+      'ENV NODE_ENV=production',
       'COPY --from=build /app/dist-server ./dist-server',
       String.raw`CMD ["sh", "-c", "mkdir -p /app/dist/media && node -e \"require('fs').cpSync('/app/media-build', '/app/dist/media', { recursive: true, force: true })\" && node dist-server/server.cjs"]`,
     ]);
-    // One read of the tracked tree (docs, tests and public aside): every file
-    // naming the bundle the build writes, and every file outside server/
-    // naming the registry.
+    // One read of the tracked tree (docs and tests aside, and binary media
+    // skipped by extension, since images, models, audio and fonts hold no
+    // code): every file naming the bundle the build writes, and every file
+    // naming the registry or the renewer that the count above did not read.
     const named: Record<string, string[]> = {};
     for (const line of spawnSync(
       'git',
@@ -3987,12 +4017,16 @@ describe('the claim renewer', () => {
         '-e',
         'freehold_claim_registry',
         '-e',
+        'renewFreeholdClaims',
+        '-e',
         'dist-server/server.cjs',
         '--',
         '.',
         ':!docs',
         ':!tests',
-        ':!public',
+        ...['webp', 'png', 'jpg', 'glb', 'ktx2', 'hdr', 'mp3', 'ogg', 'wav', 'woff2'].map(
+          (ext) => `:!*.${ext}`,
+        ),
       ],
       { encoding: 'utf8' },
     ).stdout.split('\n')) {
@@ -4012,11 +4046,21 @@ describe('the claim renewer', () => {
       'scripts/profile_recent_finds_shot.mjs',
       'server/main.ts',
     ]);
-    expect(named.freehold_claim_registry?.filter((file) => !file.startsWith('server/'))).toEqual(
-      [],
-    );
-    // The read sees the registry where it is named today.
+    const counted = new Set(files.map(({ file }) => file));
+    const unread = (named: string[] | undefined): string[] =>
+      (named ?? []).filter((file) => !counted.has(file));
+    expect({
+      registry: unread(named.freehold_claim_registry),
+      renewer: unread(named.renewFreeholdClaims),
+    }).toEqual({ registry: [], renewer: [] });
+    // The read sees both where they are named today, and a module the count
+    // never read would be listed.
     expect(named.freehold_claim_registry).toContain('server/game.ts');
+    expect(named.renewFreeholdClaims).toContain('server/game.ts');
+    expect(unread(['server/claims_flush.mjs', 'server/game.ts', 'src/claims.ts'])).toEqual([
+      'server/claims_flush.mjs',
+      'src/claims.ts',
+    ]);
 
     // EVERY OTHER TOOLCHAIN FILE, by its declarations.
     const viteStatements = [
@@ -4137,12 +4181,12 @@ describe('the claim renewer', () => {
     // Each reader sees what it claims to.
     expect(
       hooks(
-        'plugins: [{ setup(b) { b.onResolve({ filter: /x/ }, f); } }, { resolveId() {}, transform() {}, load() {}, config: () => ({}), configResolved(c) {} }], transformer, loadFloors, config.x',
+        'plugins: [{ setup(b) { b.onResolve({ filter: /x/ }, f); } }, { resolveId() {}, transform() {}, load() {}, config: () => ({}), configResolved(c) {} }, { \'config\': () => ({}), "configResolved"(c) {} }], transformer, loadFloors, config.x',
       ),
-    ).toEqual({ onResolve: 1, resolveId: 1, transform: 1, load: 1, plugins: 1, config: 2 });
+    ).toEqual({ onResolve: 1, resolveId: 1, transform: 1, load: 1, plugins: 1, config: 4 });
     expect(
       importsOf(
-        "import a from 'pkg';\nimport {\n  b,\n} from './local.mjs';\nimport './side.mjs';\nexport { c } from './re.mjs';\n  import d from './indented.mjs';\nconst s = \"import x from './str';\";\nconst e = await import('./dyn.mjs');\nconst r = createRequire(u)('./req.cjs');\nconst m = process.getBuiltinModule('node:module');",
+        "import a from 'pkg';\nimport {\n  b,\n} from './local.mjs';\nimport './side.mjs';\nexport { c } from './re.mjs';\n  import d from './indented.mjs';\nconst z = 1; import f from './same-line.mjs';\nconst s = \"import x from './str';\";\nconst e = await import('./dyn.mjs');\nconst r = createRequire(u)('./req.cjs');\nconst m = process.getBuiltinModule('node:module');",
       ),
     ).toEqual({
       statements: [
@@ -4151,6 +4195,7 @@ describe('the claim renewer', () => {
         "import './side.mjs'",
         "export { c } from './re.mjs'",
         "import d from './indented.mjs'",
+        "import f from './same-line.mjs'",
       ],
       dynamic: 1,
       require: 2,
@@ -4192,7 +4237,13 @@ describe('the claim renewer', () => {
         "const botDetectorImpl = existsSync(privateBotDetector)\n  ? privateBotDetector\n  : '/server/freehold_claim_registry.ts' ? '/server/freehold_claim_registry.ts'\n  : fileURLToPath(new URL('server/bot_detector/stub.ts', import.meta.url));",
         'botDetectorImpl',
       ),
-    ).not.toEqual(declarations(viteSource, 'botDetectorImpl'));
+    ).toEqual([
+      "const botDetectorImpl = existsSync(privateBotDetector) ? privateBotDetector : '/server/freehold_claim_registry.ts' ? '/server/freehold_claim_registry.ts' : fileURLToPath(new URL('server/bot_detector/stub.ts', import.meta.url));",
+    ]);
+    // Its `define` table, as text.
+    expect(blocksOf(viteSource, 'define')).toEqual([
+      'define: { __APP_VERSION__: JSON.stringify(appVersion), __APP_BUILD_ID__: JSON.stringify(appBuildId.slice(0, 12)), __APP_BUILD_DATE__: JSON.stringify(appBuildDate), }',
+    ]);
     // The only writer and spawner vite.config.ts imports (the statements
     // above pin its bindings), each call whole to its end: a write of a
     // resolution file, or a shell that writes one, changes this list.
@@ -4262,7 +4313,7 @@ describe('the claim renewer', () => {
     ).toEqual(['three', '@vitest/spy']);
     const resolutionFlags = (cmd: string): string[] =>
       cmd.match(
-        /(?:--(?:alias|tsconfig|config|inject|conditions|resolve-extensions|main-fields|import|loader|experimental-loader|require|env-file|root)\b|(?<=\s)-[cCr](?=[\s=]))(?:[=:\s]\s*[^\s&|;]+)?|\bNODE_(?:PATH|OPTIONS)=[^\s&|;]*/g,
+        /(?:--(?:alias|tsconfig|config|inject|conditions|resolve-extensions|main-fields|import|loader|experimental-loader|require|env-file|root|preserve-symlinks|project|dir|mode)\b|(?<=\s)-[cCpr](?=[\s=]))(?:[=:\s]\s*[^\s&|;]+)?|\bNODE_(?:PATH|OPTIONS)=[^\s&|;]*/g,
       ) ?? [];
     expect(
       Object.entries(pkg.scripts).flatMap(([name, cmd]) =>
@@ -4270,6 +4321,7 @@ describe('the claim renewer', () => {
       ),
     ).toEqual([
       'check:admin: --tsconfig ./tsconfig.admin.json',
+      'check:ts:bot: -p tsconfig.bot.json',
       'test:browser: --config vitest.browser.config.ts',
     ]);
     for (const [cmd, flags] of [
@@ -4291,6 +4343,16 @@ describe('the claim renewer', () => {
         'node -C claims --env-file=.env.claims dist-server/server.cjs',
         ['-C claims', '--env-file=.env.claims'],
       ],
+      // A flag keeps the token after it, a boolean flag's next argument
+      // included: more text pinned, never less.
+      [
+        'node --preserve-symlinks x.cjs && tsc -p tsconfig.claims.json && vite build --mode claims',
+        ['--preserve-symlinks x.cjs', '-p tsconfig.claims.json', '--mode claims'],
+      ],
+      [
+        'tsc --project tsconfig.claims.json && vitest run --project server --dir server',
+        ['--project tsconfig.claims.json', '--project server', '--dir server'],
+      ],
     ] as const) {
       expect(resolutionFlags(cmd), cmd).toEqual(flags);
     }
@@ -4305,6 +4367,10 @@ describe('the claim renewer', () => {
     ).toEqual(['node-linker=hoisted', 'auto-install-peers=true', 'strict-peer-dependencies=false']);
     expect(tracked('*package.json')).toEqual(['package.json']);
     expect(tracked('*jsconfig*.json')).toEqual([]);
+    // pnpm reads settings, overrides and patches from a workspace file, and
+    // hooks from a pnpmfile: neither is tracked.
+    expect(tracked('*pnpm-workspace.yaml')).toEqual([]);
+    expect(tracked('*.pnpmfile.*')).toEqual([]);
     // The private clone stays untracked: a force-added implementation would
     // become the `#bot-detector` target everywhere.
     expect(tracked('private/*')).toEqual(['private/.dockerkeep']);
@@ -4326,14 +4392,26 @@ describe('the claim renewer', () => {
     // Against the reviewed literal, never the reader's own output.
     const baseBlocks = ["alias: { '#bot-detector': botDetectorImpl }"];
     expect(aliasBlocks(reviewedVite)).toEqual(baseBlocks);
-    for (const fixture of [
-      "  resolve: { alias: { '#bot-detector': botDetectorImpl, claims: claimsImpl } },",
-      "  resolve: { alias: { '#bot-detector': botDetectorImpl, ...extraAliases } },",
-      "  resolve: { alias: { '#bot-detector': botDetectorImpl, [CLAIMS]: claimsImpl } },",
-      "  resolve: { alias: [{ find: '#claims', replacement: claimsImpl }] },",
-      '  resolve: { alias: extraAliases },',
-    ]) {
-      expect(aliasBlocks(fixture), fixture).not.toEqual(baseBlocks);
+    for (const [fixture, block] of [
+      [
+        "  resolve: { alias: { '#bot-detector': botDetectorImpl, claims: claimsImpl } },",
+        "alias: { '#bot-detector': botDetectorImpl, claims: claimsImpl }",
+      ],
+      [
+        "  resolve: { alias: { '#bot-detector': botDetectorImpl, ...extraAliases } },",
+        "alias: { '#bot-detector': botDetectorImpl, ...extraAliases }",
+      ],
+      [
+        "  resolve: { alias: { '#bot-detector': botDetectorImpl, [CLAIMS]: claimsImpl } },",
+        "alias: { '#bot-detector': botDetectorImpl, [CLAIMS]: claimsImpl }",
+      ],
+      [
+        "  resolve: { alias: [{ find: '#claims', replacement: claimsImpl }] },",
+        "alias: [{ find: '#claims', replacement: claimsImpl }]",
+      ],
+      ['  resolve: { alias: extraAliases },', 'alias: extraAliases'],
+    ] as const) {
+      expect(aliasBlocks(fixture), fixture).toEqual([block]);
     }
     // An UNBALANCED brace inside a trailing comment cannot cut the block short:
     // the comment is stripped before the braces are counted, so the key after
