@@ -312,20 +312,22 @@ carries an opaque plot id only.
   TWO STATED EXCEPTIONS, so they read as decisions rather than as drift, and the
   list under each is EXHAUSTIVE: an importer added without a line here is drift
   by definition. FIRST, the SERVER's durable and gate consumers.
-  EIGHT server files reach these leaves by path, and they are ONE consumer split
-  across eight files as the store was extracted, not eight decisions:
+  NINE server files reach these leaves by path, and they are ONE consumer split
+  across nine files as the store was extracted, not nine decisions:
   `server/freehold_persist.ts` (`persisted.ts`, `state.ts`, `load_report.ts`),
   `server/freehold_persist_wiring.ts`, the
   composition root beside it (`persisted.ts` and `FREEHOLD_VISIT_POLICIES`
   from `./types`), the module that came off the root:
   `server/freehold_liveness.ts` (`persisted.ts`, `state.ts`), which binds the
   store's four liveness reads to the live map for the root and the store's
-  suite alike, and the five modules that came off the store:
+  suite alike, and the six modules that came off the store:
   `server/freehold_install.ts` (`hearth_key.ts`, `persisted.ts`,
   `state.ts`, `types.ts`), `server/freehold_write_seal.ts` (`persisted.ts`,
   `state.ts`), `server/freehold_load_outcome.ts` (`load_report.ts`,
   `persisted.ts`), `server/freehold_hearth_load.ts` (`persisted.ts`, for the
-  stored byte bound its login-pair read passes) and `server/freehold_wire.ts`
+  stored byte bound its login-pair read passes),
+  `server/freehold_persist_types.ts` (`persisted.ts`, type-only, for the ports
+  and the entry record) and `server/freehold_wire.ts`
   (`gate_rules.ts`, `types.ts`).
   An extraction inherits the exception rather than creating one, which is why
   they are listed together; `server/freehold_revision_probe.ts` deliberately
@@ -336,7 +338,7 @@ carries an opaque plot id only.
   `FREEHOLD_VISIT_POLICIES` is deliberately off the barrel for that reason:
   putting a server-facing durable vocabulary on the surface every UI and sim
   caller reads, for one consumer, is the cost the rule above exists to avoid.
-  `server/game.ts` is the NINTH by-path importer and a different case: it
+  `server/game.ts` is the TENTH by-path importer and a different case: it
   reaches `gate_rules.ts` only, as `server/freehold_wire.ts` does, for the one
   item id the dark-realm gate, the jail gate and the coordinator's dispatch key
   on, which the sim dispatches on by use type rather than by id.

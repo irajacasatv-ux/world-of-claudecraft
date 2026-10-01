@@ -1920,7 +1920,13 @@ const MONOLITHS: MonolithRow[] = [
     // RE-PINNED at the Freeholds sync of release/v0.45.0 at ac9ed4db24: wc -l on the
     // merged tree measures 9707 (this branch 9694, the release 9840). Exact merged
     // count, zero slack.
-    ceiling: 9707,
+    // LOWERED 9707 -> 9680 for 07a: the tick profiler name tables (the
+    // mob.update family buckets, the sim lap list, the bcastSelf key-group list
+    // and the mob zone resolver) moved whole to server/tick_phase_names.ts,
+    // re-exported so no importer re-points (9604 after the move), and that
+    // room pays the claim, trip and housing-hook wiring that follows. The row is
+    // re-pinned exact at the 07a close.
+    ceiling: 9680,
     seam: 'a sibling server module; see the hot-path seams in server/CLAUDE.md',
   },
   {
@@ -2013,8 +2019,14 @@ const MONOLITHS: MonolithRow[] = [
     // cap, the separate deferred-retries measure, the settle re-arm through the
     // sub-cap and a guarded drain, paid for by moving the login-pair read
     // (server/freehold_hearth_load.ts) out whole. Exact count, zero slack.
+    // LOWERED 1988 -> 1870 for 07a: the store's type surface (the ports, the
+    // store face, the hearth answer and the entry record) moved whole to
+    // server/freehold_persist_types.ts, type-only and re-exported, so no
+    // importer re-points (1792 after the move), and that room pays the claim
+    // seams that follow (the claim-busy hold, the fenced answer, wantsClaim,
+    // authority, runExclusive). The row is re-pinned exact at the 07a close.
     file: 'server/freehold_persist.ts',
-    ceiling: 1988,
+    ceiling: 1870,
     seam: 'a sibling server module behind the store ports; see server/CLAUDE.md',
   },
   {
@@ -2418,7 +2430,13 @@ const MONOLITHS: MonolithRow[] = [
     // pins: Freeholds 4513, the release 4641 over a 4512-line file (+17, the
     // craft_roll_events export read). wc -l on the merged tree measures 4530,
     // under the release's own pin. Exact merged count, zero slack.
-    ceiling: 4530,
+    // LOWERED 4530 -> 4475 for 07a: runConcurrentIndexMigrations moved whole
+    // to server/concurrent_index_runner.ts, re-exported so server/main.ts and
+    // the pg suites keep importing it from './db' (4448 after the move), and that
+    // room pays the housing hook in the three hooked saves, the two new schema
+    // fragments and the one export loader that follow. The row is re-pinned
+    // exact at the 07a close.
+    ceiling: 4475,
     seam: 'a domain <domain>_db.ts module with its own *_SCHEMA (server/CLAUDE.md)',
   },
   {
