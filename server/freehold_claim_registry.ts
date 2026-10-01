@@ -148,6 +148,8 @@ export interface FreeholdClaimCounters {
   releaseRaced: number;
   /** Wanted tests that threw: each claim kept as wanted. */
   wantedThrew: number;
+  /** onLost host hooks that threw, each swallowed (the claim stays dropped). */
+  onLostThrew: number;
   /** Pending tokens on unclaimed plots retired because nothing wants the owner. */
   pendingSwept: number;
   /** Claimed login reads that ran, and their summed wall time. */
@@ -195,6 +197,7 @@ export function createFreeholdClaimCounters(): FreeholdClaimCounters {
     renewChunksAbandoned: 0,
     releaseRaced: 0,
     wantedThrew: 0,
+    onLostThrew: 0,
     pendingSwept: 0,
     loginReads: 0,
     loginReadMsTotal: 0,
@@ -364,17 +367,20 @@ export async function renewFreeholdClaims(deps: FreeholdClaimRenewerDeps): Promi
     deps.registry.counters.renewPassesSkipped++;
     return;
   }
-  state.running = true;
   const { counters } = deps.registry;
+  // Read BEFORE the flag is taken: a clock port that throws here rejects this
+  // call with nothing claimed, never a flag left set that skips every later
+  // pass while the claims lapse.
   const startMs = deps.nowMs();
+  state.running = true;
   const tally: PassTally = { raced: 0, lostHookThrew: 0 };
   try {
     await renewPass(deps, state, startMs, deadlineMs, tally);
   } finally {
-    state.running = false;
     // Once per pass, from here so that EVERY exit says it (a deadline stop
     // anywhere, or a clock port that throws mid-pass): production binds no
-    // onLost, so the race line is the only voice a raced drop has.
+    // onLost, so the race line is the only voice a raced drop has. Said while
+    // the flag is still held, so a log sink that calls back in is skipped.
     if (tally.raced > 0) {
       warnSafely(
         deps,
@@ -387,8 +393,16 @@ export async function renewFreeholdClaims(deps: FreeholdClaimRenewerDeps): Promi
         `freehold claim onLost hook threw: ${tally.lostHookThrew}; those claims are dropped and booked all the same`,
       );
     }
+    counters.onLostThrew += tally.lostHookThrew;
+    state.running = false;
     counters.renewPasses++;
-    counters.renewPassMsTotal += Math.max(0, deps.nowMs() - startMs);
+    // A clock that throws HERE must not replace the pass's own outcome: the
+    // pass is counted, its duration is not.
+    let endMs: number | null = null;
+    try {
+      endMs = deps.nowMs();
+    } catch {}
+    if (endMs !== null) counters.renewPassMsTotal += Math.max(0, endMs - startMs);
   }
 }
 
@@ -440,7 +454,7 @@ async function renewPass(
   }
   if (threw > 0) {
     counters.wantedThrew += threw;
-    warn('freehold claim wanted check threw; those claims are kept and renewed');
+    warn(`freehold claim wanted check threw: ${threw}; those claims are kept and renewed`);
   }
   const deadline = deps.deadlineSignal?.() ?? AbortSignal.timeout(deadlineMs);
   // Checked before EVERY transaction starts: the signal, and its clock half

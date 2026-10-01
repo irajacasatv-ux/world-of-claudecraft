@@ -778,7 +778,7 @@ export function registerGameStateMetrics(
 
   new Counter({
     name: WOC_FREEHOLD_AUTHORITY_TOTAL,
-    help: "Housing authority CUMULATIVE counts by fixed measure (07a). claim_*: global plot claims acquired, taken over from an expired holder, refused busy because another realm holds them, renewed, missed heartbeats (a renewal that threw or skipped a locked row, never a loss), lost to another holder, released, writes fenced, and this realm's own ambiguous writes adopted; the renewer's passes, the triggers skipped because a pass still ran, the chunks its deadline abandoned, the newer claims a landed release killed (a same-generation re-login it raced), the wanted tests that threw, and the stranded pending tokens it retired; the claimed login reads. trip_*: remote Hearth trips started, advanced, refused on the durable cooldown, refused on a corrupt or unsupported clock, refused by a participant, failed, never reaching the hook, left unresolved after a lost commit, committed but refused by the sim on re-dispatch, committed but dropped on re-dispatch by a draining realm or a fenced vault, denied before any queue, metered by the per-account refusal memo, and abandoned because the session left. Counts only: their durations are woc_freehold_authority_ms_total.",
+    help: "Housing authority CUMULATIVE counts by fixed measure (07a). claim_*: global plot claims acquired, taken over from an expired holder, refused busy because another realm holds them, renewed, missed heartbeats (a renewal that threw or skipped a locked row, never a loss), lost to another holder, released, writes fenced, and this realm's own ambiguous writes adopted; the renewer's passes, the triggers skipped because a pass still ran, the chunks its deadline abandoned, the newer claims a landed release killed (a same-generation re-login it raced), the wanted tests that threw, the onLost host hooks that threw, and the stranded pending tokens it retired; the claimed login reads. trip_*: remote Hearth trips started, advanced, refused on the durable cooldown, refused on a corrupt or unsupported clock, refused by a participant, failed, never reaching the hook, left unresolved after a lost commit, committed but refused by the sim on re-dispatch, committed but dropped on re-dispatch by a draining realm or a fenced vault, denied before any queue, metered by the per-account refusal memo, and abandoned because the session left. Counts only: their durations are woc_freehold_authority_ms_total.",
     labelNames: ['measure'],
     registers: [registry],
     collect() {
@@ -800,6 +800,7 @@ export function registerGameStateMetrics(
       this.inc({ measure: 'claim_renew_chunks_abandoned' }, c.renewChunksAbandoned);
       this.inc({ measure: 'claim_release_raced' }, c.releaseRaced);
       this.inc({ measure: 'claim_wanted_threw' }, c.wantedThrew);
+      this.inc({ measure: 'claim_on_lost_threw' }, c.onLostThrew);
       this.inc({ measure: 'claim_pending_swept' }, c.pendingSwept);
       this.inc({ measure: 'claim_login_reads' }, c.loginReads);
       const t = stats.trips;

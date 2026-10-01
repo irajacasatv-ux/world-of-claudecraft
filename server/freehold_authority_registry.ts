@@ -31,6 +31,7 @@ const ZERO_CLAIMS: FreeholdClaimCounters = {
   renewChunksAbandoned: 0,
   releaseRaced: 0,
   wantedThrew: 0,
+  onLostThrew: 0,
   pendingSwept: 0,
   loginReads: 0,
   loginReadMsTotal: 0,

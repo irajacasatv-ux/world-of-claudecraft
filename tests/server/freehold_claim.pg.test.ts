@@ -1447,6 +1447,23 @@ d('the global plot claim against real PostgreSQL', () => {
     const client = await poolA.connect();
     try {
       await client.query('BEGIN');
+      // A PRODUCTION-SHAPED claims table, inside this transaction only: one
+      // realm's holder holds many claims, so `holder = $n` is far less
+      // selective than the unique plot key, and fresh statistics say so. A
+      // suite table of a handful of rows left the planner's pick between the
+      // two usable indexes (the plot key and the holder index both serve the
+      // fence) to whether autovacuum had analyzed it yet, so this pin flipped
+      // under load. ANALYZE counts this transaction's own rows, and the
+      // ROLLBACK below takes the rows and the statistics away again.
+      await client.query(
+        `INSERT INTO freehold_plot_claims
+           (plot_id, account_id, realm, holder, generation, acquired_at, heartbeat_at, expires_at)
+         SELECT 'plot:plansbulk' || g, 29, 'test', $1, 1, now(), now(), now() + interval '1 hour'
+           FROM generate_series(1, 500) AS g`,
+        [HOLDER_A],
+      );
+      await client.query('ANALYZE freehold_plot_claims');
+      await client.query('ANALYZE account_freeholds');
       // A table of a handful of rows is cheaper to read whole, so the planner
       // would rightly pick a Seq Scan and prove nothing; enable_seqscan = off
       // (transaction-scoped, rolled back below) asks whether each predicate CAN

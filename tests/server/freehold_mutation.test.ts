@@ -1276,7 +1276,7 @@ describe('the claim renewer', () => {
     expect(registry.counters).toMatchObject({ wantedThrew: 2, renewed: 2, released: 0 });
     expect(warn).toHaveBeenCalledTimes(1);
     expect(warn).toHaveBeenCalledWith(
-      'freehold claim wanted check threw; those claims are kept and renewed',
+      'freehold claim wanted check threw: 2; those claims are kept and renewed',
     );
     expect(registry.forPlot('plot:a')).toBeDefined();
     expect(registry.forPlot('plot:b')).toBeDefined();
@@ -2542,13 +2542,119 @@ describe('the claim renewer', () => {
       'plot:d',
     ]);
     expect(registry.count()).toBe(0);
-    expect(registry.counters).toMatchObject({ lost: 2, releaseRaced: 2, renewPasses: 1 });
+    expect(registry.counters).toMatchObject({
+      lost: 2,
+      releaseRaced: 2,
+      renewPasses: 1,
+      onLostThrew: 4,
+    });
     expect(warn.mock.calls).toEqual([
       ['freehold claims lost to another holder: 2; their plots stop writing'],
       [raceWarn(2)],
       // The swallowed throws leave a trace: one line, the count only.
       [lostHookWarn(4)],
     ]);
+  });
+
+  it('keeps every per-pass warn safe from a throwing log sink: the pass resolves and is counted', async () => {
+    // The same lost, raced and throwing-hook pass, with a log sink that
+    // throws on every line: the finally's warns may not reject the pass or
+    // skip its counters.
+    const registry = createFreeholdClaimRegistry();
+    for (const [i, plotId] of ['plot:a', 'plot:b', 'plot:c', 'plot:d'].entries()) {
+      registry.record(claim(plotId, i + 1));
+    }
+    const f = fakePool([
+      { match: (t) => t.includes('SET heartbeat_at'), answer: () => [] },
+      { match: (t) => t === FREEHOLD_CLAIM_STILL_HELD_SQL, answer: () => [] },
+      releaseRule((ids) => {
+        for (const plotId of ids) {
+          const held = registry.forPlot(plotId);
+          if (held) registry.record({ ...held, acquiredAtMs: 5 });
+        }
+        return ids.map((plot_id) => ({ plot_id }));
+      }),
+    ]);
+    const warn = vi.fn((_line: string) => {
+      throw new Error('log sink down');
+    });
+    await expect(
+      renewFreeholdClaims({
+        ...renewDeps(registry, f.pool),
+        wanted: (c) => c.plotId === 'plot:a' || c.plotId === 'plot:b',
+        onLost: () => {
+          throw new Error('host hook down');
+        },
+        warn,
+      }),
+    ).resolves.toBeUndefined();
+    expect(warn).toHaveBeenCalledTimes(3);
+    expect(registry.counters).toMatchObject({ renewPasses: 1, onLostThrew: 4, releaseRaced: 2 });
+  });
+
+  it('counts a throwing onLost per pass: a second pass on one registry warns its own count', async () => {
+    const registry = createFreeholdClaimRegistry();
+    const warn = vi.fn();
+    const onLost = () => {
+      throw new Error('host hook down');
+    };
+    for (const pass of [1, 2]) {
+      registry.record(claim(`plot:p${pass}`, pass));
+      const f = fakePool([
+        { match: (t) => t.includes('SET heartbeat_at'), answer: () => [] },
+        { match: (t) => t === FREEHOLD_CLAIM_STILL_HELD_SQL, answer: () => [] },
+      ]);
+      await renewFreeholdClaims({ ...renewDeps(registry, f.pool), onLost, warn });
+    }
+    expect(warn.mock.calls.filter(([line]) => String(line).includes('onLost hook'))).toEqual([
+      [lostHookWarn(1)],
+      [lostHookWarn(1)],
+    ]);
+    // The lasting counter is the running total the warn deliberately is not.
+    expect(registry.counters.onLostThrew).toBe(2);
+  });
+
+  it('skips a pass a log sink starts from inside the per-pass warns: the flag is held while they speak', async () => {
+    const registry = createFreeholdClaimRegistry();
+    registry.record(claim('plot:a', 1));
+    const f = fakePool([
+      { match: (t) => t.includes('SET heartbeat_at'), answer: () => [] },
+      { match: (t) => t === FREEHOLD_CLAIM_STILL_HELD_SQL, answer: () => [] },
+    ]);
+    const inner: Promise<void>[] = [];
+    const deps = {
+      ...renewDeps(registry, f.pool),
+      onLost: () => {
+        throw new Error('host hook down');
+      },
+      // A sink that calls the renewer back, on the finally's own warn line.
+      warn: (line: string) => {
+        if (line.includes('onLost hook')) inner.push(renewFreeholdClaims(deps));
+      },
+    };
+    await renewFreeholdClaims(deps);
+    await Promise.all(inner);
+    expect(inner).toHaveLength(1);
+    expect(registry.counters).toMatchObject({ renewPassesSkipped: 1, renewPasses: 1 });
+  });
+
+  it('rejects a pass whose clock throws at its start with NO flag left set: the next pass runs', async () => {
+    const registry = createFreeholdClaimRegistry();
+    registry.record(claim('plot:a', 1));
+    const f = fakePool([renewAll]);
+    let clockDown = true;
+    const deps = {
+      ...renewDeps(registry, f.pool),
+      nowMs: () => {
+        if (clockDown) throw new Error('clock port down');
+        return 0;
+      },
+    };
+    await expect(renewFreeholdClaims(deps)).rejects.toThrow('clock port down');
+    expect(f.statements).toEqual([]);
+    clockDown = false;
+    await renewFreeholdClaims(deps);
+    expect(registry.counters).toMatchObject({ renewPassesSkipped: 0, renewPasses: 1, renewed: 1 });
   });
 
   const lostHookWarn = (count: number) =>
@@ -2605,6 +2711,7 @@ describe('the claim renewer', () => {
     const registry = createFreeholdClaimRegistry();
     for (let i = 0; i < FREEHOLD_CLAIM_RENEW_CHUNK + 1; i++) registry.record(claim(pad(i), i + 1));
     let clockDown = false;
+    let clockThrows = 0;
     let releases = 0;
     const f = fakePool([
       releaseRule((ids) => {
@@ -2622,22 +2729,32 @@ describe('the claim renewer', () => {
       ...renewDeps(registry, f.pool),
       wanted: () => false,
       nowMs: () => {
-        if (clockDown) throw new Error('clock port down');
+        if (clockDown) {
+          // The pass's closing read throws its OWN error, which must not
+          // replace the one that stopped the pass.
+          clockThrows++;
+          throw new Error(clockThrows === 1 ? 'clock port down' : 'clock port still down');
+        }
         return 0;
       },
       warn,
       deadlineSignal: () => new AbortController().signal,
     };
-    await expect(renewFreeholdClaims(deps)).rejects.toThrow('clock port down');
+    await expect(renewFreeholdClaims(deps)).rejects.toThrow(/^clock port down$/);
+    expect(clockThrows).toBe(2);
     expect(registry.counters).toMatchObject({
       releaseRaced: 1,
       released: FREEHOLD_CLAIM_RENEW_CHUNK - 1,
+      // The pass is counted; a duration the dead clock cannot close is not.
+      renewPasses: 1,
+      renewPassMsTotal: 0,
     });
     expect(warn.mock.calls).toEqual([[raceWarn(1)]]);
     expect(f.texts().filter((t) => t.includes("holder || '#released'"))).toHaveLength(1);
     // The single-flight flag is free: with the clock back, the next pass runs
     // and releases the chunk the throw left behind.
     clockDown = false;
+    clockThrows = 0;
     await renewFreeholdClaims(deps);
     expect(registry.counters).toMatchObject({ renewPassesSkipped: 0, releaseRaced: 1 });
     expect(registry.count()).toBe(0);
@@ -2779,6 +2896,16 @@ describe('the claim renewer', () => {
         );
     expect(mutant).not.toBe(source);
     expect(bindsOnLost(bodyOf(mutant))).toBe(true);
+    // And that call is the ONLY production one: a second call site elsewhere
+    // could bind a hook this pin never reads. A call is the name followed by
+    // its argument object; the interface member (`renewFreeholdClaims():`)
+    // and the definition are not calls.
+    const callSites = tsFilesUnder('server').flatMap(({ full }) => {
+      const text = stripComments(readFileSync(full, 'utf8'));
+      return (text.match(/\brenewFreeholdClaims\(\{/g) ?? []).map(() => full);
+    });
+    expect(callSites).toHaveLength(1);
+    expect(callSites[0]).toMatch(/server[\\/]freehold_persist_wiring\.ts$/);
   });
 });
 
