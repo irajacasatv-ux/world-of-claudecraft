@@ -137,7 +137,10 @@ async function claimedLoginRead(
       // IN FLIGHT from here until after record() or the failure (the caller
       // lets go): a renew pass re-checks this mark right before it sends a
       // release, so it never renames the row this acquire re-stamps at the
-      // SAME generation (a same-holder re-acquire keeps it).
+      // SAME generation (a same-holder re-acquire keeps it). Any earlier mark
+      // is let go first: the plot half runs once per read today, so this is a
+      // guard, but a second run must never leak the first run's mark.
+      hold.letGo?.();
       hold.letGo = registry.holdInFlight(plotId);
       let claim: Awaited<ReturnType<typeof acquireFreeholdClaim>>;
       try {

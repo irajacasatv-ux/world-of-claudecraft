@@ -864,10 +864,19 @@ d('the global plot claim against real PostgreSQL', () => {
     expect(
       await claimDb.readFreeholdClaimReleasesOnClient(poolA, longest, [plotId], { wait: true }),
     ).toEqual(new Map([[plotId, 'released']]));
-    expect(await claimDb.releaseAllFreeholdClaimRows(poolA, longest)).toBe(0);
-    const row = await claimRow(plotId);
-    expect(row?.holder).toBe(`${longest}#released`);
-    expect(row?.holder).toHaveLength(128);
+    // The shutdown release renames a LIVE row of that holder to the same
+    // 128-character shape, and leaves the already released one alone.
+    const second = plot('holder-cap-all');
+    expect(await acquire(poolA, longest, second, 39, LONG_TTL_SECONDS)).toMatchObject({
+      kind: 'acquired',
+      generation: '1',
+    });
+    expect(await claimDb.releaseAllFreeholdClaimRows(poolA, longest)).toBe(1);
+    for (const released of [plotId, second]) {
+      const row = await claimRow(released);
+      expect(row?.holder, released).toBe(`${longest}#released`);
+      expect(row?.holder, released).toHaveLength(128);
+    }
     // One character more is refused before any statement, at every claim site
     // that takes a holder: its release could never fit the column.
     const over = `${longest}x`;

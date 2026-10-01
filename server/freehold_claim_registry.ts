@@ -295,7 +295,8 @@ export interface FreeholdClaimRenewerDeps {
   wanted(claim: FreeholdHeldClaim, nowMs: number): boolean;
   /** Called once per claim the pass drops as lost (another holder took it, or
    *  our landed release raced a same-generation re-login), so a host that
-   *  binds it can quiesce at once. A throw is swallowed. Production binds none
+   *  binds it can quiesce at once. A throw is swallowed, and counted for one
+   *  warn per pass (the count only). Production binds none
    *  (server/freehold_persist_wiring.ts): the claim has left the registry, so
    *  the owner's next write answers `fenced` and the store quiesces it then. */
   onLost?(claim: FreeholdHeldClaim): void;
@@ -317,7 +318,22 @@ interface RenewerState {
   cursor: string | null;
 }
 
+/** What ONE pass warns once, at its end, on every exit (counts only). */
+interface PassTally {
+  /** Newer claims this pass's landed releases killed (its releaseRaced). */
+  raced: number;
+  /** onLost calls that threw, each swallowed. */
+  lostHookThrew: number;
+}
+
 const renewers = new WeakMap<FreeholdClaimRegistry, RenewerState>();
+
+// A throwing log sink must not turn a pass into a rejection.
+function warnSafely(deps: FreeholdClaimRenewerDeps, message: string): void {
+  try {
+    deps.warn(message);
+  } catch {}
+}
 
 function passDeadlineOf(deps: FreeholdClaimRenewerDeps): number {
   const ms = deps.passDeadlineMs ?? FREEHOLD_CLAIM_RENEW_PASS_DEADLINE_MS;
@@ -351,10 +367,26 @@ export async function renewFreeholdClaims(deps: FreeholdClaimRenewerDeps): Promi
   state.running = true;
   const { counters } = deps.registry;
   const startMs = deps.nowMs();
+  const tally: PassTally = { raced: 0, lostHookThrew: 0 };
   try {
-    await renewPass(deps, state, startMs, deadlineMs);
+    await renewPass(deps, state, startMs, deadlineMs, tally);
   } finally {
     state.running = false;
+    // Once per pass, from here so that EVERY exit says it (a deadline stop
+    // anywhere, or a clock port that throws mid-pass): production binds no
+    // onLost, so the race line is the only voice a raced drop has.
+    if (tally.raced > 0) {
+      warnSafely(
+        deps,
+        `freehold claim releases raced a same-holder re-login: ${tally.raced}; those claims are dropped and their plots stop writing`,
+      );
+    }
+    if (tally.lostHookThrew > 0) {
+      warnSafely(
+        deps,
+        `freehold claim onLost hook threw: ${tally.lostHookThrew}; those claims are dropped and booked all the same`,
+      );
+    }
     counters.renewPasses++;
     counters.renewPassMsTotal += Math.max(0, deps.nowMs() - startMs);
   }
@@ -365,19 +397,18 @@ async function renewPass(
   state: RenewerState,
   nowMs: number,
   deadlineMs: number,
+  tally: PassTally,
 ): Promise<void> {
   const { counters } = deps.registry;
-  // A throwing log sink must not turn a pass into a rejection.
-  const warn = (message: string): void => {
-    try {
-      deps.warn(message);
-    } catch {}
-  };
-  // Nor may a throwing host hook: the claim is already dropped and booked.
+  const warn = (message: string): void => warnSafely(deps, message);
+  // A throwing host hook must not reject the pass either (the claim is
+  // already dropped and booked); each throw is counted for the pass's one line.
   const reportLost = (claim: FreeholdHeldClaim): void => {
     try {
       deps.onLost?.(claim);
-    } catch {}
+    } catch {
+      tally.lostHookThrew++;
+    }
   };
   let threw = 0;
   const wantedNow = (claim: FreeholdHeldClaim): boolean => {
@@ -415,12 +446,15 @@ async function renewPass(
   // Checked before EVERY transaction starts: the signal, and its clock half
   // through the nowMs port. The signal alone bounds the checkouts themselves.
   const expired = () => deadline.aborted || deps.nowMs() - nowMs >= deadlineMs;
-  // The pass hit its deadline: these chunks wait for the next pass. One warn,
-  // once per pass, since only one arm ever stops a pass.
+  // The pass hit its deadline: these chunks wait for the next pass, or were
+  // left undecided (a release whose re-read it refused: none of a thrown
+  // one's claims is booked, while a completed one's released ids already
+  // are), their claims kept for the next pass either way. One warn, once per
+  // pass, since only one arm ever stops a pass.
   const abandon = (left: number): void => {
     counters.renewChunksAbandoned += left;
     warn(
-      `freehold claim renew pass hit its ${deadlineMs} ms deadline; ${left} chunks wait for the next pass`,
+      `freehold claim renew pass hit its ${deadlineMs} ms deadline; ${left} chunks wait for the next pass or were left undecided`,
     );
   };
   // Drops the claim only while the registry still holds the very object this
@@ -540,7 +574,6 @@ async function renewPass(
   // handled before that login's record(), the next pass would book its claim
   // lost instead; but that login's COMMIT answered before our statement even
   // took its lock, and our answer still waits on our own COMMIT.)
-  let raced = 0;
   const bookRelease = (claim: FreeholdHeldClaim): void => {
     if (dropHeld(claim)) {
       counters.released++;
@@ -549,7 +582,7 @@ async function renewPass(
     const newer = deps.registry.forPlot(claim.plotId);
     if (newer === undefined || newer.generation !== claim.generation) return;
     deps.registry.drop(claim.plotId);
-    raced++;
+    tally.raced++;
     counters.releaseRaced++;
     reportLost(newer);
   };
@@ -650,14 +683,6 @@ async function renewPass(
       break;
     }
     if (readings !== 'kept') settle(notReleased, readings);
-  }
-  // Once per pass, after every release chunk ran or the deadline stopped them:
-  // production binds no onLost, so this line is the only voice a raced drop
-  // has (counts only).
-  if (raced > 0) {
-    warn(
-      `freehold claim releases raced a same-holder re-login: ${raced}; those claims are dropped and their plots stop writing`,
-    );
   }
 }
 
