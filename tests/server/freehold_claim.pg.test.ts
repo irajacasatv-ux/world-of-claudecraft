@@ -22,7 +22,7 @@
 // ttlSeconds to LEASE_TTL_SECONDS. The FK parents are MINIMAL STAND-INS (an
 // id-only accounts table and an account-owned characters table), as in the
 // two neighbouring suites.
-import { randomUUID } from 'node:crypto';
+import { randomBytes, randomUUID } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -81,11 +81,14 @@ describe('the claim lease TTL the realm binds', () => {
 // and the module functions it drives issue UNQUALIFIED SQL, so without an
 // isolated search_path a TEST_DATABASE_URL pointed at a database carrying the
 // game schema would destroy real claim, plot and Hearth rows. Suffixed with
-// this process's pid, so two runs of this file on one database (two
-// worktrees, or a gate beside a hand run) never drop each other's schema
-// mid-run; the pool application names derive from it too, so a lock-wait
-// probe never sees the other run's backends.
-const SCHEMA = `freehold_claim_pg_test_${process.pid}`;
+// this process's pid and six random hex characters, so two runs of this file
+// on one database (two worktrees, a gate beside a hand run, or two containers
+// whose processes carry the same pid) never drop each other's schema mid-run;
+// the pool application names derive from it too, so a lock-wait probe never
+// sees the other run's backends. Lowercase letters, digits and underscores
+// only, well under the 63-byte identifier limit, so it is a valid unquoted
+// identifier.
+const SCHEMA = `freehold_claim_pg_test_${process.pid}_${randomBytes(3).toString('hex')}`;
 const APP_A = `${SCHEMA}_a`;
 const APP_B = `${SCHEMA}_b`;
 
@@ -1448,9 +1451,20 @@ d('the global plot claim against real PostgreSQL', () => {
     ).toEqual({ kind: 'updated', durableRev: '2' });
     expect(writeCapture.calls[0].text).toBe(plotDb.FREEHOLD_FENCED_CAS_SQL);
 
+    // The claims heap's size in pages, read off disk (not pg_class).
+    const heapPages = async (db: Pick<import('pg').Pool, 'query'>): Promise<number> =>
+      (
+        await db.query(
+          `SELECT (pg_relation_size('${SCHEMA}.freehold_plot_claims')
+                   / current_setting('block_size')::int)::int AS pages`,
+        )
+      ).rows[0].pages;
+    let pagesBefore = 0;
+    let pagesWithBulk = 0;
     const client = await poolA.connect();
     try {
       await client.query('BEGIN');
+      pagesBefore = await heapPages(client);
       // A PRODUCTION-SHAPED claims table, inside this transaction only: one
       // realm's holder holds many claims, so `holder = $n` is far less
       // selective than the unique plot key, and fresh statistics say so. A
@@ -1469,6 +1483,7 @@ d('the global plot claim against real PostgreSQL', () => {
            FROM generate_series(1, 500) AS g`,
         [HOLDER_A],
       );
+      pagesWithBulk = await heapPages(client);
       await client.query('ANALYZE freehold_plot_claims');
       await client.query('ANALYZE account_freeholds');
       // A table of a handful of rows is cheaper to read whole, so the planner
@@ -1549,20 +1564,33 @@ d('the global plot claim against real PostgreSQL', () => {
         () => false,
       );
       client.release(!rolledBack);
-      // VACUUM takes the rolled-back rows' dead pages away, and both ANALYZEs
-      // rewrite the in-place counts from what the tables now hold.
+      // VACUUM takes the rolled-back rows' dead pages away (it truncates the
+      // heap, which no ANALYZE does), and both ANALYZEs rewrite the in-place
+      // counts from what the tables now hold.
       await poolA.query('VACUUM (ANALYZE) freehold_plot_claims');
       await poolA.query('ANALYZE account_freeholds');
     }
     // The reset left true counts behind: the planner's row count for the
     // claims table is the rows it holds, not this case's 500 rolled back.
     const counts = await probe.query(
-      `SELECT c.reltuples::int AS reltuples,
+      `SELECT c.reltuples::int AS reltuples, c.relpages::int AS relpages,
               (SELECT count(*)::int FROM ${SCHEMA}.freehold_plot_claims) AS live
          FROM pg_class c WHERE c.oid = '${SCHEMA}.freehold_plot_claims'::regclass`,
     );
     expect(counts.rows[0].live).toBe(1);
     expect(counts.rows[0].reltuples).toBe(counts.rows[0].live);
+    // And its page count is the heap's, with the rolled-back rows' pages gone.
+    // A bare ANALYZE also sets reltuples to 1, but it truncates nothing: it
+    // would leave relpages at the size the bulk insert grew the heap to. Only
+    // the VACUUM brings the heap back to at most its size before that insert:
+    // every page the insert ADDED held its aborted rows alone (nothing else
+    // writes this schema meanwhile), and an aborted row is removable whatever
+    // any other backend's snapshot holds. The insert did grow it, so this is
+    // not vacuous.
+    expect(pagesWithBulk).toBeGreaterThan(pagesBefore);
+    const pagesAfter = await heapPages(probe);
+    expect(pagesAfter).toBeLessThanOrEqual(pagesBefore);
+    expect(counts.rows[0].relpages).toBe(pagesAfter);
   });
 
   it('lets a login that began before a release committed take the released claim, where now() would refuse', async () => {

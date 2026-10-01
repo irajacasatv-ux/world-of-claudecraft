@@ -2681,7 +2681,7 @@ describe('the claim renewer', () => {
   const lostHookWarn = (count: number) =>
     `freehold claim onLost hook threw: ${count}; those claims are dropped and booked all the same`;
   const clockCloseWarn =
-    'freehold claim renew pass clock threw at its close; that pass is counted without its duration';
+    'freehold claim renew pass clock gave no usable duration at its close; that pass is counted without one';
 
   it('warns a throwing onLost once per pass, the count only, even when the pass then stops at its deadline', async () => {
     // Two renew chunks: the first finds its first plot taken by another
@@ -2807,9 +2807,11 @@ describe('the claim renewer', () => {
   it('resolves a pass whose clock dies only at its close: counted, no duration, one fixed line said under the flag', async () => {
     // The clock answers through the whole pass (rising, non-zero) and throws
     // only on the closing read, which comes after the one renew chunk
-    // answers. Three sinks: one that records, one that throws, and one that
-    // calls the renewer back on the closing line.
-    for (const sink of ['records', 'throws', 'calls back'] as const) {
+    // answers. Four modes: a sink that records, one that throws, one that
+    // calls the renewer back on the closing line, and a CLOCK that calls the
+    // renewer back (once) on the closing read itself, before it throws.
+    const modes = ['records', 'throws', 'calls back', 'clock calls back'] as const;
+    for (const mode of modes) {
       const registry = createFreeholdClaimRegistry();
       registry.record(claim('plot:a', 1));
       let clockDown = false;
@@ -2825,39 +2827,52 @@ describe('the claim renewer', () => {
       ]);
       const inner: Promise<void>[] = [];
       const lines: string[] = [];
+      let clockCalledBack = false;
       const deps = {
         ...renewDeps(registry, f.pool),
         nowMs: () => {
-          if (clockDown) throw new Error('clock port down');
+          if (clockDown) {
+            if (mode === 'clock calls back' && !clockCalledBack) {
+              clockCalledBack = true;
+              inner.push(renewFreeholdClaims(deps));
+            }
+            throw new Error('clock port down');
+          }
           reading += 10;
           return reading;
         },
         warn: (line: string) => {
           lines.push(line);
-          if (sink === 'throws') throw new Error('log sink down');
-          if (sink === 'calls back') inner.push(renewFreeholdClaims(deps));
+          if (mode === 'throws') throw new Error('log sink down');
+          if (mode === 'calls back') inner.push(renewFreeholdClaims(deps));
         },
       };
-      await expect(renewFreeholdClaims(deps), sink).resolves.toBeUndefined();
-      await Promise.allSettled(inner);
-      expect(lines, sink).toEqual([clockCloseWarn]);
-      expect(registry.counters, sink).toMatchObject({
+      const callsBack = mode === 'calls back' || mode === 'clock calls back';
+      await expect(renewFreeholdClaims(deps), mode).resolves.toBeUndefined();
+      // Every call back was a counted skip that resolved, never a pass.
+      expect(await Promise.allSettled(inner), mode).toEqual(
+        callsBack ? [{ status: 'fulfilled', value: undefined }] : [],
+      );
+      expect(lines, mode).toEqual([clockCloseWarn]);
+      expect(registry.counters, mode).toMatchObject({
         renewed: 1,
         renewPasses: 1,
         renewPassMsTotal: 0,
-        // The closing line is said while the flag is still held.
-        renewPassesSkipped: sink === 'calls back' ? 1 : 0,
+        // The closing read and its line are both taken while the flag is
+        // still held.
+        renewPassesSkipped: callsBack ? 1 : 0,
       });
-      expect(inner, sink).toHaveLength(sink === 'calls back' ? 1 : 0);
+      expect(f.counts().connects, mode).toBe(1);
     }
   });
 
-  it('adds a pass duration only when the clock reads one finite: a NaN or infinite reading never poisons the total', async () => {
+  // One claim, renewed by one chunk. The clock reads `startAt` until that
+  // chunk answers and `closeAt` after it, so `closeAt` is the closing read.
+  const closingReadRig = () => {
     const registry = createFreeholdClaimRegistry();
     registry.record(claim('plot:a', 1));
-    // The clock reads `start` until the one renew chunk answers, `close` after.
-    let reading = 0;
-    let close = 0;
+    let reading: unknown = 0;
+    let close: unknown = 0;
     const f = fakePool([
       {
         ...renewAll,
@@ -2867,20 +2882,103 @@ describe('the claim renewer', () => {
         },
       },
     ]);
-    const deps = { ...renewDeps(registry, f.pool), nowMs: () => reading };
-    const pass = async (startAt: number, closeAt: number) => {
+    const lines: string[] = [];
+    const deps = {
+      ...renewDeps(registry, f.pool),
+      nowMs: () => reading as number,
+      warn: (line: string) => {
+        lines.push(line);
+      },
+    };
+    // Resolves with the lines this one pass said.
+    const pass = async (startAt: number, closeAt: unknown): Promise<string[]> => {
       reading = startAt;
       close = closeAt;
+      lines.length = 0;
       await renewFreeholdClaims(deps);
+      return [...lines];
     };
-    await pass(Number.NaN, Number.NaN);
-    await pass(0, Number.POSITIVE_INFINITY);
-    await pass(Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY);
-    await pass(Number.NEGATIVE_INFINITY, 0);
-    expect(registry.counters).toMatchObject({ renewPasses: 4, renewed: 4, renewPassMsTotal: 0 });
-    // Control: a finite pass still books its duration, and nothing poisoned.
-    await pass(100, 130);
-    expect(registry.counters).toMatchObject({ renewPasses: 5, renewPassMsTotal: 30 });
+    return { registry, pass };
+  };
+
+  it('adds a pass duration only when the closing read gives a finite one: any other pass is counted, adds nothing and says the closing line', async () => {
+    const { registry, pass } = closingReadRig();
+    // A NaN or infinite reading (minus infinity included, which a clamp at
+    // zero would book silently as a zero duration), and readings no duration
+    // can be taken from at all: a BigInt, and an object whose valueOf throws.
+    const unusable: [string, unknown][] = [
+      ['NaN', Number.NaN],
+      ['+Infinity', Number.POSITIVE_INFINITY],
+      ['-Infinity', Number.NEGATIVE_INFINITY],
+      ['a BigInt', 1_000n],
+      [
+        'a throwing valueOf',
+        {
+          valueOf() {
+            throw new Error('clock reading broken');
+          },
+        },
+      ],
+    ];
+    for (const [name, closeAt] of unusable) {
+      expect(await pass(0, closeAt), name).toEqual([clockCloseWarn]);
+    }
+    expect(registry.counters).toMatchObject({ renewPasses: 5, renewed: 5, renewPassMsTotal: 0 });
+    // Control: a finite pass books its duration, silently, and nothing
+    // poisoned the total.
+    expect(await pass(100, 130)).toEqual([]);
+    expect(registry.counters).toMatchObject({ renewPasses: 6, renewPassMsTotal: 30 });
+  });
+
+  it('adds a pass duration only while the running total stays finite: prom-client refuses a non-finite inc, failing the scrape', async () => {
+    const { registry, pass } = closingReadRig();
+    // Each pass reads Number.MAX_VALUE ms, finite on its own; the second
+    // would carry the total to Infinity, so it adds nothing, and says so.
+    expect(await pass(0, Number.MAX_VALUE)).toEqual([]);
+    expect(registry.counters.renewPassMsTotal).toBe(Number.MAX_VALUE);
+    expect(await pass(0, Number.MAX_VALUE)).toEqual([clockCloseWarn]);
+    expect(registry.counters).toMatchObject({
+      renewPasses: 2,
+      renewed: 2,
+      renewPassMsTotal: Number.MAX_VALUE,
+    });
+  });
+
+  const startClockRefusal = 'freehold claim renew pass start clock reading is not a finite number';
+
+  it('rejects a pass whose start clock reads no finite number, like one that throws: no flag left set, no statement, and the next pass runs', async () => {
+    // Minus infinity would make the deadline's clock half true at once (every
+    // chunk abandoned, every pass, while the claims lapse); NaN or plus
+    // infinity would switch it off.
+    const registry = createFreeholdClaimRegistry();
+    registry.record(claim('plot:a', 1));
+    const f = fakePool([renewAll]);
+    let start = 0;
+    const lines: string[] = [];
+    const deps = {
+      ...renewDeps(registry, f.pool),
+      nowMs: () => start,
+      warn: (line: string) => {
+        lines.push(line);
+      },
+    };
+    for (const bad of [Number.NEGATIVE_INFINITY, Number.NaN, Number.POSITIVE_INFINITY]) {
+      start = bad;
+      await expect(renewFreeholdClaims(deps), String(bad)).rejects.toThrow(
+        new Error(startClockRefusal),
+      );
+    }
+    expect(f.statements).toEqual([]);
+    expect(lines).toEqual([]);
+    expect(registry.counters).toMatchObject({
+      renewPasses: 0,
+      renewPassesSkipped: 0,
+      renewChunksAbandoned: 0,
+      missedHeartbeats: 0,
+    });
+    start = 0;
+    await renewFreeholdClaims(deps);
+    expect(registry.counters).toMatchObject({ renewPassesSkipped: 0, renewPasses: 1, renewed: 1 });
   });
 
   it('skips a pass its own start clock starts: the flag is re-checked after the read', async () => {
@@ -3064,95 +3162,84 @@ describe('the claim renewer', () => {
     expect(bindsOnLost(bodyOf(mutant))).toBe(true);
   });
 
-  it('pins that call as the ONLY production one: no other call, no aliased import, no re-export', () => {
+  it('pins every mention of the renewer by name in server/ to its reviewed per-file count: a new call, alias, binding or re-export fails until reviewed', () => {
     // A second call site elsewhere could bind a hook the pin above never
-    // reads. Comment-stripped server sources. A call is the name and an open
-    // parenthesis, whatever the argument (an object literal, a deps variable)
-    // and whatever space or line break sits between, a namespace call
-    // (`reg.renewFreeholdClaims(`) included. The two texts that match and are
-    // not calls are excluded by their exact text, each in its own file only.
-    const NAME = 'renewFreeholdClaims';
-    const REGISTRY = 'server/freehold_claim_registry.ts';
-    const WIRING = 'server/freehold_persist_wiring.ts';
-    const NOT_CALLS: Record<string, string> = {
-      [REGISTRY]: `export async function ${NAME}(`,
-      'server/periodic_save_flush.ts': `${NAME}():`,
-    };
-    const callsIn = (file: string, text: string) => {
-      const exempt = NOT_CALLS[file];
-      let calls = 0;
-      let excluded = 0;
-      for (const m of text.matchAll(/\brenewFreeholdClaims\s*\(/g)) {
-        if (exempt !== undefined && text.startsWith(exempt, m.index - exempt.indexOf(NAME))) {
-          excluded++;
-        } else {
-          calls++;
-        }
-      }
-      return { calls, excluded };
-    };
-    // Every specifier naming it in an import or a named re-export, as written.
-    const bindingsIn = (text: string): string[] =>
-      [...text.matchAll(/\b(?:import|export)\s*(?:type\s+)?\{([^}]*)\}\s*from\b/g)]
-        .flatMap((m) => m[1].split(','))
-        .map((spec) => spec.trim().replace(/^type\s+/, ''))
-        .filter((spec) => new RegExp(`\\b${NAME}\\b`).test(spec));
-    // A star re-export of the registry carries the name without writing it.
-    const starReExportsRegistry = (text: string): boolean =>
-      /\bexport\s*\*[^;]*?from\s*['"][^'"]*freehold_claim_registry(?:\.ts)?['"]/.test(text);
-
+    // reads, and no list of call shapes holds: an optional call, a
+    // parenthesized callee, `.call`, `.bind` (the zero-argument shape the
+    // periodic flush takes, a hook bound in its arguments), an alias, a
+    // destructure, a string key, a re-export with no `from` all get past one.
+    // So this counts WHOLE TOKENS, whatever surrounds them, in the
+    // comment-stripped server sources: per file, every mention of the name,
+    // and how many of those are the name as a quoted string, read off the
+    // reviewed tree. Any new mention anywhere changes a count.
+    const NAME = /\brenewFreeholdClaims\b/g;
+    const QUOTED = /(['"`])renewFreeholdClaims\1/g;
+    const mentionsIn = (text: string) => ({
+      tokens: text.match(NAME)?.length ?? 0,
+      strings: text.match(QUOTED)?.length ?? 0,
+    });
     const files = tsFilesUnder('server').map(({ file, full }) => ({
       file: `server/${file}`,
       text: stripComments(readFileSync(full, 'utf8')),
     }));
     expect(files.length).toBeGreaterThan(100);
-    const calls = files.flatMap(({ file, text }) => Array(callsIn(file, text).calls).fill(file));
-    expect(calls).toEqual([WIRING]);
-    // Each exclusion matched its one text and nothing else.
-    expect(
+    const textOf = (file: string): string => files.find((f) => f.file === file)?.text ?? '';
+    const mentioned = Object.fromEntries(
       files
-        .filter(({ file }) => file in NOT_CALLS)
-        .map(({ file, text }) => [file, callsIn(file, text).excluded]),
-    ).toEqual([
-      ['server/freehold_claim_registry.ts', 1],
-      ['server/periodic_save_flush.ts', 1],
-    ]);
-    const bindings = files.flatMap(({ file, text }) =>
-      bindingsIn(text).map((spec) => ({ file, spec })),
+        .map(({ file, text }) => [file, mentionsIn(text)] as const)
+        .filter(([, counts]) => counts.tokens > 0),
     );
-    // Unaliased wherever it is bound, and bound only by the wiring (and, if
-    // it ever re-exports itself, the registry's own module).
-    expect(bindings.filter(({ spec }) => spec !== NAME)).toEqual([]);
-    expect(bindings.filter(({ file }) => file !== REGISTRY)).toEqual([
-      { file: WIRING, spec: NAME },
-    ]);
-    const starred = files.filter(({ text }) => starReExportsRegistry(text));
-    expect(starred.map(({ file }) => file)).toEqual([]);
-
-    // Negative controls, through the same matchers: the call shapes the
-    // earlier `renewFreeholdClaims({` form missed, an excluded text outside
-    // its own file, an aliased import across lines, and a star re-export.
-    for (const shape of [
-      'void renewFreeholdClaims(deps);',
-      'void renewFreeholdClaims( { ...deps } );',
-      'void renewFreeholdClaims\n  (\n    deps,\n  );',
-      'void reg.renewFreeholdClaims(deps);',
-    ]) {
-      expect(callsIn('server/game.ts', shape), shape).toEqual({ calls: 1, excluded: 0 });
-    }
-    expect(callsIn('server/game.ts', 'x ? renewFreeholdClaims(): y')).toEqual({
-      calls: 1,
-      excluded: 0,
+    expect(mentioned).toEqual({
+      // The definition.
+      'server/freehold_claim_registry.ts': { tokens: 1, strings: 0 },
+      // Its import and its one call (the case above: that call binds no onLost).
+      'server/freehold_persist_wiring.ts': { tokens: 2, strings: 0 },
+      // The flush member's key, bound to the wiring's renewGameFreeholdClaims.
+      'server/game.ts': { tokens: 1, strings: 0 },
+      // The flush member in the interface, and its name in the write list.
+      'server/periodic_save_flush.ts': { tokens: 2, strings: 1 },
     });
+    // The wiring's two are exactly its unaliased import and the call the
+    // case above reads.
     expect(
-      bindingsIn(
-        "import {\n  type FreeholdClaimRegistry,\n  renewFreeholdClaims as renew,\n} from './freehold_claim_registry';",
-      ),
-    ).toEqual(['renewFreeholdClaims as renew']);
-    const reExport = "export { renewFreeholdClaims } from './freehold_claim_registry';";
-    expect(bindingsIn(reExport)).toEqual([NAME]);
-    for (const star of ['export *', 'export * as claims']) {
-      expect(starReExportsRegistry(`${star} from './freehold_claim_registry';`), star).toBe(true);
+      textOf('server/freehold_persist_wiring.ts')
+        .split('\n')
+        .filter((line) => /\brenewFreeholdClaims\b/.test(line))
+        .map((line) => line.trim()),
+    ).toEqual([
+      "import { type FreeholdClaimRegistry, renewFreeholdClaims } from './freehold_claim_registry';",
+      'return renewFreeholdClaims({',
+    ]);
+
+    // Negative controls, each put through the same counter on top of a real
+    // file: every shape a list of matchers let past moves the token count
+    // (and the quoted ones the string count too); a mention in a comment, and
+    // a longer name that only contains this one, move nothing.
+    const base = textOf('server/game.ts');
+    const delta = (added: string) => {
+      const before = mentionsIn(base);
+      const after = mentionsIn(stripComments(`${base}\n${added}\n`));
+      return { tokens: after.tokens - before.tokens, strings: after.strings - before.strings };
+    };
+    const one = { tokens: 1, strings: 0 };
+    const quoted = { tokens: 1, strings: 1 };
+    for (const [shape, moved] of [
+      ['void renewFreeholdClaims?.(d);', one],
+      ['void (renewFreeholdClaims)(d);', one],
+      ['void renewFreeholdClaims.call(null, d);', one],
+      ['const flush = renewFreeholdClaims.bind(null, { ...d, onLost: () => {} });', one],
+      ['const r = renewFreeholdClaims;', one],
+      ['const { renewFreeholdClaims: r } = reg;', one],
+      ["void reg['renewFreeholdClaims'](d);", quoted],
+      ['void reg["renewFreeholdClaims"](d);', quoted],
+      ['void reg[`renewFreeholdClaims`](d);', quoted],
+      ["const { renewFreeholdClaims: r } = await import('./freehold_claim_registry');", one],
+      ['export { renewFreeholdClaims as renew };', one],
+      ["import Def, { renewFreeholdClaims as r } from './freehold_claim_registry';", one],
+      ['// renewFreeholdClaims(d);', { tokens: 0, strings: 0 }],
+      ['void renewGameFreeholdClaims(sim, store, claims);', { tokens: 0, strings: 0 }],
+    ] as const) {
+      expect(delta(shape), shape).toEqual(moved);
     }
   });
 });

@@ -823,7 +823,7 @@ export function registerGameStateMetrics(
 
   new Counter({
     name: WOC_FREEHOLD_AUTHORITY_MS_TOTAL,
-    help: 'Housing authority CUMULATIVE summed wall time in milliseconds by fixed measure (07a): claim_renew_pass the claim renewer passes, claim_login_read the claimed login reads, trip the remote Hearth trips from start to outcome. Divided by its count on woc_freehold_authority_total (claim_renew_passes, claim_login_reads, trip_started) it is the mean. Milliseconds only, never summed with a count.',
+    help: 'Housing authority CUMULATIVE summed wall time in milliseconds by fixed measure (07a): claim_renew_pass the claim renewer passes, claim_login_read the claimed login reads, trip the remote Hearth trips from start to outcome. Divided by its count on woc_freehold_authority_total (claim_renew_passes, claim_login_reads, trip_started) it is the mean, except that a claim renew pass whose clock gave no usable duration counts but adds nothing. Milliseconds only, never summed with a count.',
     labelNames: ['measure'],
     registers: [registry],
     collect() {

@@ -2598,6 +2598,11 @@ describe('the housing authority families (07a)', () => {
       .split('\n')
       .find((line) => line.startsWith('# HELP woc_freehold_authority_ms_total '));
     expect(help).toContain('milliseconds');
+    // The mean's one caveat: a renew pass the clock gave no duration for is
+    // counted on claim_renew_passes and adds nothing here.
+    expect(help).toContain(
+      'a claim renew pass whose clock gave no usable duration counts but adds nothing',
+    );
     expect(text).toContain('# TYPE woc_freehold_authority_ms_total counter');
   });
 

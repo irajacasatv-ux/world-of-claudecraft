@@ -424,19 +424,29 @@ later), so a brownout never starves the same tail plots. Renewal outranks releas
 abandoned pass skips its release chunks. THE PASS'S VOICE AND ITS CLOCK (revision 5): every
 line a pass says is said while its single-flight flag is held (so a log sink that calls the
 renewer back is skipped), next to the counter it reports, through a guarded sink (a sink
-that throws never rejects the pass), and carries counts only (the closing-clock line below
-carries no number at all). The wanted-check line is said once, after the wanted tests and
-the pending sweep; the lost line once per renew chunk that lost claims to another holder;
-the abandon line ("N chunks wait for the next pass or were left undecided") once, where the
-deadline stops the pass. Only the race line and the line for `onLost` hooks that threw
-(each throw swallowed and counted on the lasting `claim_on_lost_threw`) come from the
-pass's `finally`, so every exit says them, a rejecting one included; the flag clears in a
-`finally` of its own inside it, so a statement there that throws cannot leave the flag set.
-A clock port that throws at the pass's start rejects it before the flag is taken, and the
-flag is re-checked after that read (a clock port that started a pass itself leaves the call
-a counted skip). The closing read is taken while the flag is still held; one that throws
-never replaces the pass's own outcome (the pass is counted, its duration is not, and one
-fixed line says so), and a reading that is not a finite duration adds nothing. It stays OFF
+that throws never rejects the pass), and carries counts and the configured deadline only
+(the abandon line names the configured pass deadline in ms; the closing-clock line carries
+no number at all). The wanted-check line is said once, after the wanted tests and the
+pending sweep; the lost line once per renew chunk that lost claims to another holder; the
+abandon line ("hit its N ms deadline; M chunks wait for the next pass or were left
+undecided") once, where the deadline stops the pass. Three lines come from the pass's
+`finally`, so every exit reaches them, a rejecting one included: the race line, the line for
+`onLost` hooks that threw (each throw swallowed and counted on the lasting
+`claim_on_lost_threw`), and the closing-clock line ("clock gave no usable duration at its
+close; that pass is counted without one"); the flag clears in a `finally` of its own inside
+it, so a statement there that throws cannot leave the flag set. A clock port that throws at
+the pass's start, or whose start reading is not a finite number (minus infinity would trip
+the deadline's clock half at once and abandon every chunk of every pass, NaN or plus
+infinity would switch that half off), rejects the call before the flag is taken (the latter
+with a fixed dev-channel Error), so the periodic flush reports it and the next pass on a
+sane clock runs; the flag is re-checked after that read (a clock port that started a pass
+itself leaves the call a counted skip). The closing read, and the duration taken from it,
+run while the flag is still held (a clock that calls the renewer back there is skipped too)
+and under a catch of their own: a pass left without a usable duration (the read throws or
+gives a value no duration can be taken from, such as a BigInt; the duration is NaN or an
+infinity; or it would carry the running `claim_renew_pass` total past a finite number,
+which prom-client's `Counter.inc` refuses at scrape time) never has its outcome replaced: it
+is counted, adds nothing, and the closing-clock line says so. It stays OFF
 the background gate by decision (the
 autosave wave holds that gate exactly when the renewer runs, so a `tryAcquire` would let
 claims lapse): single-flight makes its peak one pool client per realm, pinned by a
