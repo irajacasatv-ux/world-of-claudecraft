@@ -3865,8 +3865,8 @@ describe('the claim renewer', () => {
     // over every file the toolchain resolves server code through, inside one
     // stated boundary. THE SERVER BUNDLE is pinned whole: its build script's
     // code (comments stripped, each line's whitespace collapsed), the package
-    // scripts that run it or its output, the Dockerfile lines that do or that
-    // set the environment, and every tracked file naming the bundle it writes.
+    // scripts that run it or its output, the Dockerfile that does (whole, its
+    // comments aside), and every tracked file naming the bundle it writes.
     // EVERY OTHER TOOLCHAIN FILE is a program whose DECLARATIONS are pinned:
     // every tracked vite, vitest and svelte config by inventory (vitest would
     // prefer a new vitest.config), each one's import statements with their
@@ -3899,9 +3899,8 @@ describe('the claim renewer', () => {
     // yet outside server/ (a local run passes until it is added; CI sees it);
     // the compose file's lines other than its NODE_ variables, bundle names
     // and `command` and `entrypoint` key lines (a health check, for one); the
-    // Dockerfile's lines other than its RUN, ENV, ENTRYPOINT and CMD
-    // instructions and the lines naming the bundle, a NODE_ variable or a
-    // pnpmfile;
+    // Dockerfile's comment lines (Docker drops them, though inside a heredoc
+    // a `#` line is the body's own text);
     // text the shared comment stripper misreads (a string holding a comment
     // opener); an import the statement reader cannot see (a binding named by
     // a string holding `;`);
@@ -3913,7 +3912,9 @@ describe('the claim renewer', () => {
     const flat = (text: string): string => text.replace(/\s+/g, ' ').trim();
     // Every git read here: a buffer far above the tree's listing (which is
     // within reach of Node's 1 MiB default) and a refusal of any failed or
-    // cut-off run, so a truncated listing can never pass as a short one.
+    // cut-off run, so a truncated listing can never pass as a short one (Node
+    // reports a cut-off run as an error and a null status, so either check
+    // refuses it).
     const git = (args: string[], maxBuffer = 64 * 1024 * 1024): string => {
       const run = spawnSync('git', args, { encoding: 'utf8', maxBuffer });
       expect(run.error, args.join(' ')).toBeUndefined();
@@ -4065,51 +4066,71 @@ describe('the claim renewer', () => {
       ['server', 'npm run build:server && node dist-server/server.cjs'],
       ['realms', 'npm run build:server && node scripts/dev-realms.mjs'],
     ]);
-    // Read as written, its `#` comment lines aside, each instruction's
-    // continuation lines joined.
-    const runtimeLines = (file: string, keep: (line: string) => boolean): string[] =>
-      readFileSync(file, 'utf8')
-        .replace(/\\\r?\n/g, ' ')
+    // THE DOCKERFILE, whole: it runs the bundle in production, so every line
+    // Docker reads is pinned as written (each line's whitespace collapsed),
+    // continuation and heredoc lines included. Only its comment lines are
+    // aside, which Docker drops; a parser directive changes how the rest is
+    // read, so it is kept.
+    const dockerLines = (text: string): string[] =>
+      text
         .split('\n')
-        .filter((line) => !/^\s*#/.test(line) && keep(line))
-        .map(flat);
-    // Every RUN, ENV, ENTRYPOINT and CMD instruction, whatever it runs (an
-    // install in any spelling, a build step, a hook), and any other line
-    // naming the bundle, a NODE_ variable or a pnpmfile. Docker reads
-    // instruction words in either case; names are matched as written, so
-    // `node_modules` is not a NODE_ variable.
-    const dockerRuntime = (line: string): boolean =>
-      /^\s*(?:RUN|ENV|ENTRYPOINT|CMD)\b/i.test(line) ||
-      /build:server|dist-server|NODE_|pnpmfile/.test(line);
-    // One control per arm, each line matched by that arm alone.
+        .filter((line) => !/^\s*#/.test(line) || /^#\s*(?:syntax|escape|check)\s*=/i.test(line))
+        .map(flat)
+        .filter((line) => line !== '');
     expect(
-      [
-        'run npm i --omit=dev',
-        'env A=1',
-        'entrypoint ["node", "x.cjs"]',
-        'Cmd ["x"]',
-        'LABEL step=build:server',
-        'COPY ./dist-server ./dist-server',
-        'ARG NODE_OPTIONS=--require=./x.cjs',
-        'COPY .pnpmfile.cjs ./',
-        'COPY node_modules ./node_modules',
-        'COPY src ./src',
-        'WORKDIR /app',
-      ].map(dockerRuntime),
-    ).toEqual([true, true, true, true, true, true, true, true, false, false, false]);
-    expect(runtimeLines('Dockerfile', dockerRuntime)).toEqual([
+      dockerLines(
+        '# syntax=docker/dockerfile:1\n# a comment\nRUN a \\\n  # dropped by Docker\n  && npm i x\n\nRUN <<EOF\npnpm install --prod\nEOF\n',
+      ),
+    ).toEqual([
+      '# syntax=docker/dockerfile:1',
+      'RUN a \\',
+      '&& npm i x',
+      'RUN <<EOF',
+      'pnpm install --prod',
+      'EOF',
+    ]);
+    expect(dockerLines(readFileSync('Dockerfile', 'utf8'))).toEqual([
+      'FROM node:26-slim AS build',
+      'WORKDIR /app',
       'RUN npm install -g pnpm@10.34.5',
+      'COPY package.json pnpm-lock.yaml .npmrc ./',
+      'COPY patches ./patches',
       'RUN pnpm install --frozen-lockfile',
-      'RUN VITE_TURNSTILE_SITEKEY="$VITE_TURNSTILE_SITEKEY" VITE_REOWN_PROJECT_ID="$VITE_REOWN_PROJECT_ID" VITE_WALLET_DISABLED="$VITE_WALLET_DISABLED" pnpm run build && cp -a dist/media ./media-build && rm -rf dist/media && pnpm run build:server && pnpm run build:bot',
+      'COPY .browserslistrc tsconfig.json vite.config.ts svelte.config.js index.html admin.html play.html guide.html editor.html wallet-handoff.html ./',
+      'COPY src ./src',
+      'COPY server ./server',
+      'COPY bot ./bot',
+      'COPY headless ./headless',
+      'COPY scripts ./scripts',
+      'COPY public ./public',
+      'COPY private ./private',
+      'ARG VITE_TURNSTILE_SITEKEY=""',
+      'ARG VITE_REOWN_PROJECT_ID=""',
+      'ARG VITE_WALLET_DISABLED=""',
+      'RUN VITE_TURNSTILE_SITEKEY="$VITE_TURNSTILE_SITEKEY" \\',
+      'VITE_REOWN_PROJECT_ID="$VITE_REOWN_PROJECT_ID" \\',
+      'VITE_WALLET_DISABLED="$VITE_WALLET_DISABLED" \\',
+      'pnpm run build && cp -a dist/media ./media-build && rm -rf dist/media && pnpm run build:server && pnpm run build:bot',
+      'FROM node:26-slim',
+      'WORKDIR /app',
       'ENV NODE_ENV=production',
+      'COPY --from=build /app/package.json ./package.json',
+      'COPY --from=build /app/dist ./dist',
+      'COPY --from=build /app/media-build ./media-build',
       'COPY --from=build /app/dist-server ./dist-server',
+      'COPY --from=build /app/dist-bot ./dist-bot',
+      'COPY --from=build /app/scripts/prod_cpu_game_helper.mjs /app/ops/',
+      'COPY --from=build /app/scripts/prod_cpu_profile_client.mjs /app/ops/',
       'RUN mkdir -p /app/dist/media && chown -R node:node /app/dist/media',
+      'EXPOSE 8787',
+      'USER node',
       String.raw`CMD ["sh", "-c", "mkdir -p /app/dist/media && node -e \"require('fs').cpSync('/app/media-build', '/app/dist/media', { recursive: true, force: true })\" && node dist-server/server.cjs"]`,
     ]);
     // The compose file passes NODE_OPTIONS through to the container that runs
     // the bundle: its NODE_ variables, bundle names and `command` and
     // `entrypoint` key lines (block or flow style, the key quoted or not; a
-    // block value's own lines are not read), as text.
+    // block value's own lines are not read), as text, its `#` comment lines
+    // aside.
     expect(tracked('*compose*.y*ml')).toEqual(['docker-compose.yml']);
     const composeRuntime = (line: string): boolean =>
       /NODE_|dist-server|build:server/.test(line) || /\b(?:entrypoint|command)['"]?\s*:/.test(line);
@@ -4124,12 +4145,18 @@ describe('the claim renewer', () => {
         '  bot: { image: x, command: ["node", "y.cjs"] }',
         '    "command": ["x"]',
         '  bot: [command: x]',
+        '    command : ["x"]',
         '  volumes: ["./node_modules:/app/node_modules"]',
         '      test: ["CMD", "true"]',
         '    subcommand: x',
       ].map(composeRuntime),
-    ).toEqual([true, true, true, true, true, true, true, true, false, false, false]);
-    expect(runtimeLines('docker-compose.yml', composeRuntime)).toEqual([
+    ).toEqual([true, true, true, true, true, true, true, true, true, false, false, false]);
+    expect(
+      readFileSync('docker-compose.yml', 'utf8')
+        .split('\n')
+        .filter((line) => !/^\s*#/.test(line) && composeRuntime(line))
+        .map(flat),
+    ).toEqual([
       // Split at the placeholder, so the literal is plain text.
       'NODE_OPTIONS: $' + '{NODE_OPTIONS:-}',
       'command: ["node", "dist-bot/bot.cjs"]',
