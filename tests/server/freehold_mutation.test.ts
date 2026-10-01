@@ -3865,57 +3865,53 @@ describe('the claim renewer', () => {
     // over every file the toolchain resolves server code through, inside one
     // stated boundary. THE SERVER BUNDLE is pinned whole: its build script's
     // code (comments stripped, each line's whitespace collapsed), the package
-    // scripts that run it or its output, the Dockerfile that does (exactly,
-    // line for line), and every tracked file naming the bundle it writes.
-    // EVERY OTHER TOOLCHAIN FILE is a program whose DECLARATIONS are pinned:
-    // every tracked vite, vitest and svelte config by inventory (vitest would
-    // prefer a new vitest.config), each one's import statements with their
-    // bindings, its resolver hooks (an esbuild `onResolve`; a vite
-    // `resolveId`, `transform`, `load`, `config` or `configResolved`; any
-    // `plugins`), and its `alias` lines and tables; the same hooks and `alias`
-    // lines in every local module vite.config.ts imports; what
-    // vite.config.ts's alias resolves TO (each variable's declaration and
-    // every line naming one), its `define` table, and every call it makes to
-    // the only writer and spawner it imports; the root package.json's keys,
-    // its dependency specs that are not version ranges, pnpm's keys and
-    // patched package names, and every resolution flag its scripts pass;
-    // .npmrc; the tracked package, jsconfig, tsconfig, pnpm workspace,
-    // pnpmfile and private/ inventories and each tsconfig's `paths`. And no
-    // tracked file the count above did not read (docs and tests aside) names
-    // the registry or the renewer: a barrel, a hook file or a config naming
-    // either fails, wherever it lives. So a new alias fails until reviewed: a
+    // scripts that run it or its output, the Dockerfile that runs it and every
+    // other tracked Dockerfile (exactly, line for line), and every tracked file
+    // naming the bundle it writes. EVERY OTHER TOOLCHAIN FILE is a program
+    // whose DECLARATIONS are pinned: every tracked vite, vitest and svelte
+    // config by inventory (vitest would prefer a new vitest.config), each one's
+    // import statements with their bindings, its resolver hooks (an esbuild
+    // `onResolve`; a vite `resolveId`, `transform`, `load`, `config` or
+    // `configResolved`; any `plugins`), and its `alias` lines and tables; the
+    // same hooks and `alias` lines in every local module vite.config.ts
+    // imports; what vite.config.ts's alias resolves TO (each variable's
+    // declaration and every line naming one), its `define` table, and every
+    // call it makes to the only writer and spawner it imports; the root
+    // package.json's keys, its dependency specs that are not version ranges,
+    // pnpm's keys and patched package names, and every resolution flag its
+    // scripts pass; .npmrc; the tracked package, jsconfig, tsconfig, pnpm
+    // workspace, pnpmfile and private/ inventories and each tsconfig's
+    // `paths`. And every tracked file the count above did not read, outside
+    // docs/, tests/ and the binary media kinds, is read as text: none may name
+    // the registry or the renewer. So a new alias fails until reviewed: a
     // quoted or bare key, a spread, a computed key, a variable value or a
     // retargeted variable, a shorthand or quoted `alias` property, an array, a
     // resolver plugin, a new build call or option, import, flag, dependency
     // spec, package or config file, or a force-added private implementation.
-    // LIMITS, the boundary named so it is reviewed rather than assumed: what
-    // those programs COMPUTE when they run (a property name computed to
-    // `alias`, a path assembled from parts, a file written by code a local
-    // module runs); how a file already listed as naming the bundle runs it
-    // (the files are pinned, not their lines; the build script and the
-    // Dockerfile, pinned whole, aside); a barrel under docs/ or tests/,
-    // which name the registry by design (no server module reaches either,
-    // pinned below, but a dev script under scripts/ may); a name spelled with
-    // escapes in a file the count does not read; a container build file that
-    // is not a Dockerfile (a Containerfile, a bake file in HCL or JSON, an
-    // Earthfile, a platform manifest), since outside docs/ and tests/ a hook
-    // it sets must still name the registry, the renewer or the bundle, which
-    // the tree read lists, unless it assembles that name from parts or
-    // matches it by a pattern (a prefix, a regex); a container build file or
-    // hook file under docs/ or tests/, which the tree read skips as it skips
-    // the barrels there (the production image copies neither: the Dockerfile,
-    // pinned exactly below, names what it copies); a file git does not track
-    // yet outside server/ (a local run passes until it is added; CI sees it);
-    // the compose file's lines other than its NODE_ variables, bundle names
-    // and `command` and `entrypoint` key lines (a health check, for one);
-    // text the shared comment stripper misreads (a string holding a comment
-    // opener); an import the statement reader cannot see (a binding named by
-    // a string holding `;`);
-    // the insides of packages, of the patches and overrides pnpm applies to
-    // them, and of anything a local module imports in turn; a config path a
-    // script passes from its own code (scripts/*.mjs spawn vitest with
-    // `--config`) rather than from package.json; and the contents of the
-    // gitignored private clone.
+    // LIMITS, the boundary named so it is reviewed rather than assumed. NOT
+    // READ: what those programs compute when they run (a property name
+    // computed to `alias`, a name assembled from parts or matched by a
+    // pattern, a file written by code a local module runs); anything fetched
+    // at build or run time rather than tracked; a file git does not track yet
+    // outside server/ (a local run passes until it is added; CI sees it); every
+    // file under docs/ or tests/ (tests import the registry and docs describe
+    // it, by design; no server module reaches either, pinned below; the
+    // production image copies neither, as the Dockerfile pin shows; a dev
+    // script under scripts/ may import tests/ helpers); a file of a binary
+    // media kind, skipped by extension; a name spelled with escapes in a file
+    // the count does not read; a container build file that is not a Dockerfile
+    // (a Containerfile, a bake file, an Earthfile, a platform manifest), beyond
+    // the three names the tree read looks for; how a file listed as naming the
+    // bundle runs it (its name is pinned, not its lines, the build script and
+    // the Dockerfiles aside); the compose file's lines other than its NODE_
+    // variables, bundle names and `command` and `entrypoint` key lines (a
+    // health check, for one); text the shared comment stripper misreads (a
+    // string holding a comment opener); an import the statement reader cannot
+    // see (a binding named by a string holding `;`); the insides of packages,
+    // of the patches and overrides pnpm applies to them, and of anything a
+    // local module imports in turn; a config path a script passes from its own
+    // code (scripts/*.mjs spawn vitest with `--config`) rather than from
+    // package.json; and the contents of the gitignored private clone.
     const flat = (text: string): string => text.replace(/\s+/g, ' ').trim();
     // Every git read here: a buffer far above the tree's listing (which is
     // within reach of Node's 1 MiB default) and a refusal of any failed or
@@ -4073,15 +4069,21 @@ describe('the claim renewer', () => {
       ['server', 'npm run build:server && node dist-server/server.cjs'],
       ['realms', 'npm run build:server && node scripts/dev-realms.mjs'],
     ]);
-    // THE DOCKERFILE, exactly: it runs the bundle in production, so every
-    // line is pinned as written, comments and blank lines included (only line
-    // endings are normalised, for a Windows checkout). Nothing in it is
-    // interpreted, so no shape Docker accepts can slip past a reader.
+    // THE DOCKERFILES, exactly. Every tracked Dockerfile (docs and tests
+    // aside) is listed first, so an added, removed or renamed one meets this
+    // message before any read; then each is pinned as written, comments and
+    // blank lines included (only line endings are normalised, for a Windows
+    // checkout). The root one builds and runs the bundle; the other builds the
+    // player wiki. Nothing in either is interpreted.
     expect(
-      readFileSync('Dockerfile', 'utf8').split(/\r?\n/),
-      'the Dockerfile runs the server bundle, so this guard pins it exactly: check the edit ' +
-        'for a NODE_OPTIONS, loader or alias route, then copy the new lines in',
-    ).toEqual([
+      listed([':(icase)*dockerfile*', ':!docs', ':!tests']).sort(),
+      'a Dockerfile added, removed or renamed: pin it exactly like these two, then update this list',
+    ).toEqual(['Dockerfile', 'mediawiki/Dockerfile']);
+    const linesOf = (file: string): string[] => readFileSync(file, 'utf8').split(/\r?\n/);
+    const dockerfileEdit =
+      'a Dockerfile edit: this guard pins it exactly; check the edit for a NODE_OPTIONS, ' +
+      'loader or alias route, then copy the new lines in';
+    expect(linesOf('Dockerfile'), dockerfileEdit).toEqual([
       '# World of Claudecraft game server: serves the built client, REST API and WebSocket',
       '# world on one port. Pair with a postgres service (see docker-compose.yml).',
       '',
@@ -4136,15 +4138,24 @@ describe('the claim renewer', () => {
       'CMD ["sh", "-c", "mkdir -p /app/dist/media && node -e \\"require(\'fs\').cpSync(\'/app/media-build\', \'/app/dist/media\', { recursive: true, force: true })\\" && node dist-server/server.cjs"]',
       '',
     ]);
-    // Every tracked Dockerfile, docs and tests aside: the one other builds the
-    // player wiki (an image that ran the bundle would name it, which the
-    // bundle list below catches). Other container build kinds are named in
-    // LIMITS above.
-    expect(
-      listed([':(icase)*dockerfile*', ':!docs', ':!tests']).sort(),
-      'a Dockerfile added, removed or renamed: if it builds or runs the server bundle, ' +
-        'pin it whole like the root Dockerfile, then update this list',
-    ).toEqual(['Dockerfile', 'mediawiki/Dockerfile']);
+    expect(linesOf('mediawiki/Dockerfile'), dockerfileEdit).toEqual([
+      'FROM mediawiki:1.43',
+      '',
+      'COPY mediawiki/apache-wiki.conf /etc/apache2/conf-enabled/wiki-path.conf',
+      'COPY mediawiki/entrypoint.sh /usr/local/bin/woc-mediawiki-entrypoint',
+      'COPY mediawiki/LocalSettings.php /opt/woc/LocalSettings.php',
+      'COPY mediawiki/seed/pages.xml /opt/woc/seed/pages.xml',
+      'COPY mediawiki/theme/Common.css /var/www/html/resources/assets/woc-mediawiki.css',
+      'COPY public/loading-screen.jpg /var/www/html/resources/assets/woc-loading-screen.jpg',
+      'COPY public/woc_logo_square.webp /var/www/html/resources/assets/woc-logo-square.webp',
+      'COPY public/worldofclaudecraft-logo.png /var/www/html/resources/assets/worldofclaudecraft-logo.png',
+      '',
+      'RUN chmod +x /usr/local/bin/woc-mediawiki-entrypoint',
+      '',
+      'ENTRYPOINT ["woc-mediawiki-entrypoint"]',
+      'CMD ["apache2-foreground"]',
+      '',
+    ]);
     // The compose file passes NODE_OPTIONS through to the container that runs
     // the bundle: its NODE_ variables, bundle names and `command` and
     // `entrypoint` key lines (block or flow style, the key quoted or not; a
@@ -4180,10 +4191,10 @@ describe('the claim renewer', () => {
       'NODE_OPTIONS: $' + '{NODE_OPTIONS:-}',
       'command: ["node", "dist-bot/bot.cjs"]',
     ]);
-    // One read of the tracked tree (docs and tests aside, and binary media
-    // skipped by extension, since images, models, audio and fonts hold no
-    // code): every file naming the bundle the build writes, and every file
-    // naming the registry or the renewer that the count above did not read.
+    // One read of the tracked tree as text (docs and tests aside, and the
+    // binary media kinds skipped by extension): every file naming the bundle
+    // the build writes, and every file naming the registry or the renewer that
+    // the count above did not read.
     const media = ['webp', 'png', 'jpg', 'glb', 'ktx2', 'hdr', 'mp3', 'ogg', 'wav', 'woff2'];
     const treeRead = ['.', ':!docs', ':!tests', ...media.map((ext) => `:!*.${ext}`)];
     // What that pathspec reads, completely: every tracked file outside docs/
@@ -4240,7 +4251,7 @@ describe('the claim renewer', () => {
         'grep',
         '--null',
         '-o',
-        '-I',
+        '--text',
         '-e',
         'freehold_claim_registry',
         '-e',
