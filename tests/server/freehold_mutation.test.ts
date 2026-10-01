@@ -3902,8 +3902,9 @@ describe('the claim renewer', () => {
     // the count does not read; a container build file that is not a Dockerfile
     // (a Containerfile, a bake file, an Earthfile, a platform manifest), beyond
     // the three names the tree read looks for; how a file listed as naming the
-    // bundle runs it (its name is pinned, not its lines, the build script and
-    // the root Dockerfile aside); the compose file's lines other than its NODE_
+    // bundle runs it (its name is pinned, not its lines, the build script, the
+    // root Dockerfile and package.json's scripts that run it aside); the
+    // compose file's lines other than its NODE_
     // variables, bundle names and `command` and `entrypoint` key lines (a
     // health check, for one); text the shared comment stripper misreads (a
     // string holding a comment opener); an import the statement reader cannot
@@ -4069,28 +4070,19 @@ describe('the claim renewer', () => {
       ['server', 'npm run build:server && node dist-server/server.cjs'],
       ['realms', 'npm run build:server && node scripts/dev-realms.mjs'],
     ]);
-    // THE DOCKERFILES, exactly. Every tracked Dockerfile (docs and tests
-    // aside; a file named as Docker names one) is listed first, so an added,
-    // removed or renamed one meets this message before any read once git
-    // sees the change (the list reads the index); then each is pinned as
-    // written, comments and blank lines included (only line endings are
-    // normalised, for a Windows checkout). The root one builds and runs the
-    // bundle; the other builds the player wiki. Nothing in either is
-    // interpreted.
-    const dockerfileName = (file: string): boolean =>
-      /^(?:dockerfile(?:\..+)?|.+\.dockerfile)$/i.test(file.split('/').pop() ?? '');
+    // THE DOCKERFILES, exactly. Every tracked path naming a Dockerfile in
+    // any case (docs and tests aside) is listed first, so an added, removed or
+    // renamed one meets this message before any read once git sees the change
+    // (the list reads the index); the list fails closed, so a path that only
+    // looks like one (a script named after Docker) fails loudly and is
+    // reviewed. Then each is pinned as written, comments and blank lines
+    // included (only line endings are normalised, for a Windows checkout).
+    // The root one builds and runs the bundle; the other builds the player
+    // wiki. Nothing in either is interpreted.
     expect(
-      [
-        'Dockerfile',
-        'deploy/Dockerfile.realm',
-        'deploy/realm.dockerfile',
-        'scripts/lib/dockerfile_context.mjs',
-        'Dockerfile_notes.md',
-      ].map(dockerfileName),
-    ).toEqual([true, true, true, false, false]);
-    expect(
-      listed([':(icase)*dockerfile*', ':!docs', ':!tests']).filter(dockerfileName).sort(),
-      'a Dockerfile added, removed or renamed: pin it exactly like these two, then update this list',
+      listed([':(icase)*dockerfile*', ':!docs', ':!tests']).sort(),
+      'a path naming a Dockerfile added, removed or renamed: if it is one, pin it exactly ' +
+        'like these two; then update this list',
     ).toEqual(['Dockerfile', 'mediawiki/Dockerfile']);
     const linesOf = (file: string): string[] => readFileSync(file, 'utf8').split(/\r?\n/);
     const dockerfileEdit =
@@ -4259,28 +4251,32 @@ describe('the claim renewer', () => {
     expect(
       hitsOf('scripts/a:b.mjs\0renewFreeholdClaims\nserver/x.ts\0renewFreeholdClaims\n'),
     ).toEqual({ renewFreeholdClaims: ['scripts/a:b.mjs', 'server/x.ts'] });
-    // Read as text: git deems some real modules binary (a NUL byte), and
-    // they are read like any other. The control greps one of them through
-    // the same mode, so a read that skips binary files fails here.
-    const textMode = '--text';
+    // The one grep both the read and its control run, as text: git deems
+    // some real modules binary (a NUL byte early on), and a read that skips
+    // them, or reports them only as a binary match, would not see a name in
+    // one. The control runs a binary module through this same grep.
+    const treeGrep = (names: string[], paths: string[]): Record<string, string[]> =>
+      hitsOf(
+        git([
+          'grep',
+          '--null',
+          '-o',
+          '--text',
+          ...names.flatMap((name) => ['-e', name]),
+          '--',
+          ...paths,
+        ]),
+      );
     const binaryModule = 'scripts/assets/boulder/build.mjs';
-    expect(git(['ls-files', '--eol', '--', binaryModule])).toMatch(/^i\/-text\b/);
-    expect(git(['grep', '-l', textMode, '-e', '', '--', binaryModule]).trim()).toBe(binaryModule);
-    const named = hitsOf(
-      git([
-        'grep',
-        '--null',
-        '-o',
-        textMode,
-        '-e',
-        'freehold_claim_registry',
-        '-e',
-        'renewFreeholdClaims',
-        '-e',
-        'dist-server/server.cjs',
-        '--',
-        ...treeRead,
-      ]),
+    // Binary to git's own grep (no match without --text), then read whole.
+    expect(
+      spawnSync('git', ['grep', '-I', '-l', '-e', '', '--', binaryModule], { encoding: 'utf8' })
+        .status,
+    ).toBe(1);
+    expect(treeGrep(['import'], [binaryModule])).toEqual({ import: [binaryModule] });
+    const named = treeGrep(
+      ['freehold_claim_registry', 'renewFreeholdClaims', 'dist-server/server.cjs'],
+      treeRead,
     );
     expect(named['dist-server/server.cjs']?.sort()).toEqual([
       'Dockerfile',
