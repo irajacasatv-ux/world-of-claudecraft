@@ -113,7 +113,7 @@ export function isCodePath(path) {
  * the PR tier for it is the fast false-green this module exists to prevent. Removals and
  * renames are rare, so the slow green is cheap. A copy removes nothing and stays docs-only; any
  * other entry that carries a `previous_filename` counts as a rename, whatever its `status`, so an
- * entry this module cannot interpret fails closed.
+ * old path is never skipped because of an unexpected status.
  *
  * Filenames are attacker-controlled (git allows newlines in paths), and the
  * reason string is echoed into the CI job log where line-leading `::` workflow
