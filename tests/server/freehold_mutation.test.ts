@@ -3934,10 +3934,17 @@ describe('the claim renewer', () => {
         .split('\0')
         .filter((file) => file !== '');
     const tracked = (pattern: string): string[] => listed([pattern]).sort();
-    // The whole tracked listing, taken once with no pathspec to narrow, read
-    // by the Dockerfile inventory and the tree read's controls below; the
+    // The whole tracked listing, taken once with no pathspec, read by the
+    // Dockerfile inventory and the tree read's controls below. It must hold as
+    // many paths as a raw read of git's own listing taken beside the helper
+    // (any exclusion, in the call or the helper, changes the count), and the
     // floor sits near the real count.
     const allTracked = listed([]);
+    expect(allTracked.length).toBe(
+      git(['ls-files', '-z'])
+        .split('\0')
+        .filter((file) => file !== '').length,
+    );
     expect(allTracked.length).toBeGreaterThan(21000);
     const blocksOf = (text: string, key: string): string[] => {
       const code = stripComments(text);
@@ -4076,11 +4083,11 @@ describe('the claim renewer', () => {
       ['realms', 'npm run build:server && node scripts/dev-realms.mjs'],
     ]);
     // THE DOCKERFILES, exactly. Every tracked path that holds "dockerfile"
-    // in any case (docs and tests aside) is listed first, so an
-    // added, removed or renamed one meets this message before any read once
-    // git sees the change (the list reads the index); the list fails closed,
-    // so a path that only names one (say, a script called
-    // dockerfile_context.mjs) fails loudly and is reviewed. Then each is
+    // in any case (docs and tests aside) is listed first, so an added,
+    // removed or renamed one meets this message before any read once git
+    // sees the change (the list reads the index); the list fails closed, so a
+    // path that only names one (say, a script called dockerfile_context.mjs)
+    // fails loudly and is reviewed. Then each is
     // pinned as written, comments and blank lines included (only line endings
     // are normalised, for a Windows checkout). The root one builds and runs
     // the bundle; the other builds the player wiki. Nothing in either is
@@ -4232,8 +4239,7 @@ describe('the claim renewer', () => {
     const outsideDocsAndTests = allTracked.filter((file) => !/^(?:docs|tests)\//.test(file));
     const readable = new Set(listed(treeRead));
     expect(outsideDocsAndTests.length).toBeGreaterThan(10000);
-    // And the whole listing holds everything the tree read reads, so neither
-    // listing can be narrowed alone.
+    // And the whole listing holds everything the tree read reads.
     const allTrackedSet = new Set(allTracked);
     expect([...readable].filter((file) => !allTrackedSet.has(file))).toEqual([]);
     expect(outsideDocsAndTests.filter((file) => !isMedia(file) && !readable.has(file))).toEqual([]);
