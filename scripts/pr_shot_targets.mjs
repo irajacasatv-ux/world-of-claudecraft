@@ -1224,6 +1224,70 @@ async function stageWheelBinds(page) {
 
 export const TARGETS = [
   ...hoardTideReviewTargets(),
+  // The mob inspect window, through the real gesture: target the nearest live
+  // unowned mob with a loot table, right-click the target frame, then press the
+  // menu's Inspect row. The offline Sim answers the live stat read at once, so
+  // the clip shows the full card (stats, traits, drops).
+  {
+    key: 'mob-inspect-window',
+    label: 'The mob inspect window opened from the target frame menu',
+    when: ['ui/hud/mob_inspect/', 'sim/mob/inspection', 'net/mob_inspect'],
+    variants: [
+      { key: 'desktop', beforeLoad: seedLowGraphicsPreset },
+      { key: 'mobile', mobile: true, beforeLoad: seedLowGraphicsPreset },
+    ],
+    async capture(page) {
+      await awaitWorldPainted(page);
+      await dismissArrivalGreeting(page);
+      await sweepOverlays(page, 4);
+      const picked = await page.evaluate(() => {
+        const game = window.__game;
+        const sim = game?.sim;
+        const player = sim?.player;
+        if (!game || !sim || !player) return { ok: false, reason: 'offline world is unavailable' };
+        let best = null;
+        let bestDist = 90;
+        for (const e of sim.entities.values()) {
+          const template = game.MOBS[e.templateId];
+          if (e.kind !== 'mob' || e.ownerId !== null || e.dead || !template) continue;
+          if (!template.loot.some((entry) => entry.itemId)) continue;
+          const d = Math.hypot(e.pos.x - player.pos.x, e.pos.z - player.pos.z);
+          if (d < bestDist) {
+            best = e;
+            bestDist = d;
+          }
+        }
+        if (!best) return { ok: false, reason: 'no mob with a loot table in view' };
+        sim.targetEntity(best.id, player.id);
+        return { ok: true };
+      });
+      if (!picked.ok) throw new Error(picked.reason);
+      await wait(500);
+      const opened = await page.evaluate(() => {
+        const frame = document.querySelector('#target-frame');
+        if (!frame) return false;
+        const r = frame.getBoundingClientRect();
+        frame.dispatchEvent(
+          new MouseEvent('contextmenu', {
+            bubbles: true,
+            cancelable: true,
+            clientX: r.left + 20,
+            clientY: r.top + 20,
+          }),
+        );
+        const inspect = document.querySelector('#ctx-menu [data-act="inspect"]');
+        if (!inspect) return false;
+        inspect.click();
+        return true;
+      });
+      if (!opened) throw new Error('the target frame menu offered no Inspect row');
+      if (!(await pollForSize(page, '#mob-inspect-window'))) {
+        throw new Error('the mob inspect window did not open');
+      }
+      await wait(400);
+      return { clip: '#mob-inspect-window' };
+    },
+  },
   // World quests round 2: the forge workshop panel moved off the bottom-pinned
   // vehicle-bar family into the centred window family, so it no longer covers
   // the unit frames and the action bar. /dev forge arms the quest beside Smith
