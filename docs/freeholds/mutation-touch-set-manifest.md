@@ -424,18 +424,25 @@ later), so a brownout never starves the same tail plots. Renewal outranks releas
 abandoned pass skips its release chunks. THE PASS'S VOICE AND ITS CLOCK (revision 5): every
 line a pass says is said while its single-flight flag is held (so a log sink that calls the
 renewer back is skipped), next to the counter it reports, through a guarded sink (a sink
-that throws never rejects the pass), and carries counts and the configured deadline only
-(the abandon line names the configured pass deadline in ms; the closing-clock line carries
-no number at all). The wanted-check line is said once, after the wanted tests and the
+that throws never rejects the pass), and carries counts, the configured deadline and the
+closing line's fixed reason only (nothing identifying, a fixed vocabulary: the abandon line
+names the configured pass deadline in ms; the closing-clock line carries no number at all,
+only its fixed reason). The wanted-check line is said once, after the wanted tests and the
 pending sweep; the lost line once per renew chunk that lost claims to another holder; the
 abandon line ("hit its N ms deadline; M chunks wait for the next pass or were left
 undecided") once, where the deadline stops the pass. Three lines come from the pass's
 `finally`, so every exit reaches them, a rejecting one included: the race line, the line for
 `onLost` hooks that threw (each throw swallowed and counted on the lasting
 `claim_on_lost_threw`), and the closing-clock line ("clock gave no usable duration at its
-close (REASON); that pass is counted without one", REASON one fixed word, judged in this
-order: `threw`, `not a number`, `not finite`, `backward`, `overflow`, so an operator tells a
-broken clock from one stepped back); the flag clears in a `finally` of its own inside
+close (REASON); that pass is counted without one", REASON one fixed reason, judged in this
+order and defined here once: `threw`, the closing read threw; `non-number`, it returned
+something that is not a number (a BigInt, null, a Date, any object; NaN is a number and
+reports `not finite`); `not finite`, the duration is NaN or an infinity (a NaN or infinite
+reading, or two finite readings whose difference is not finite); `backward`, the duration is
+negative, a wall clock stepped back mid-pass; `overflow`, the duration would carry the
+running `claim_renew_pass` total past a finite number, which prom-client's `Counter.inc`
+refuses at scrape time; so an operator tells a broken clock from one stepped back); the flag
+clears in a `finally` of its own inside
 it, so a statement there that throws cannot leave the flag set. A clock port that throws at
 the pass's start rejects the call before the flag is taken; the flag is then re-checked
 straight after that read, BEFORE the reading is judged (a clock port that started a pass
@@ -451,23 +458,24 @@ the pass there, through the `finally` above; a mid-pass READING that is not a fi
 (NaN, an infinity, a BigInt, null, any object) never rejects: it leaves that check's clock
 half off (it is never subtracted, so a BigInt or a throwing `valueOf` cannot throw there
 though the clock did not) and the signal still bounds the pass, so a clock that THROWS is
-the only mid-pass clock rejection. So the pass rejects in exactly these cases, the list the
-renewer's JSDoc and the periodic flush's member doc state too (production binds `Date.now`
-and no injected deadline, so it meets none of them): an injected `passDeadlineMs` that is
-not a whole number of ms from 1 to 2^31 - 1, the range `AbortSignal.timeout` honours (suites
-only: a `RangeError` before anything runs; Node clamps 0, and anything from 2^31 to
-2^32 - 1, to 1 ms, which would abandon every chunk of every pass); a start reading that
-throws or is not a finite number (before the flag is taken); a clock that throws at a
-deadline check mid-pass; and an injected `deadlineSignal` factory that throws (suites only:
-after the wanted tests, before any statement). The closing read, and the duration taken from
-it, run while the flag is still held (a clock that calls the renewer back there is skipped
-too) and under a catch of their own, and only a reading that is a number is used (a
+the only mid-pass clock rejection. A finite BACKWARD mid-pass reading (a wall clock stepped
+back) is compared with the start like any other and gives a negative difference, so it never
+trips the clock half until the clock catches up; the signal still bounds the pass. So the
+pass rejects in exactly these cases, the list the renewer's JSDoc and the periodic flush's
+member doc state word for word (production binds `Date.now` and no injected deadline, so it
+meets none of them): an injected `passDeadlineMs` that is not a whole number of ms from 1 to
+2^31 - 1, the range `AbortSignal.timeout` honours (suites only): a `RangeError` before
+anything runs; a `nowMs` start reading that throws or is not a finite number: before the
+flag is taken, so the next pass on a sane clock runs; a `nowMs` that throws at a deadline
+check mid-pass: the pass stops there with that error; an injected `deadlineSignal` factory
+that throws (suites only): after the wanted tests and before any statement. (Node clamps 0,
+and anything from 2^31 to 2^32 - 1, to 1 ms, which would abandon every chunk of every pass,
+so that range is refused rather than handed on.) The closing read, and the duration taken
+from it, run while the flag is still held (a clock that calls the renewer back there is
+skipped too) and under a catch of their own, and only a reading that is a number is used (a
 subtraction would coerce null or a Date into a finite duration): a pass whose clock gave no
-usable duration (a throwing or non-number reading, a non-finite or negative duration, or
-one that would overflow the total) never has its outcome replaced: it is counted, adds
-nothing, and the closing-clock line says so. A negative duration is a wall clock stepped
-back mid-pass; an overflow would carry the running `claim_renew_pass` total past a finite
-number, which prom-client's `Counter.inc` refuses at scrape time. It stays OFF
+usable duration (any of the five reasons above) never has its outcome replaced: it is
+counted, adds nothing, and the closing-clock line says so. It stays OFF
 the background gate by decision (the
 autosave wave holds that gate exactly when the renewer runs, so a `tryAcquire` would let
 claims lapse): single-flight makes its peak one pool client per realm, pinned by a

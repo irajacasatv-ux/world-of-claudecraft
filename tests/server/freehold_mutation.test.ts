@@ -1390,10 +1390,11 @@ describe('the claim renewer', () => {
     const f = fakePool([renewAll]);
     const never = () => new AbortController().signal;
     // A whole number of ms from 1 to 2^31 - 1, the range AbortSignal.timeout
-    // honours. It throws on a fraction and past 2^32 - 1 (mid-pass, after the
-    // wanted tests), and clamps 0 and anything from 2^31 to 2^32 - 1 to 1 ms
-    // (past 2^31 - 1 only a TimeoutOverflowWarning says so), which would
-    // abandon every chunk of every pass. 1.5 is the whole-number arm on its
+    // honours. It throws on a fraction, a negative, NaN, an infinity and
+    // anything past 2^32 - 1 (mid-pass, after the wanted tests), and clamps 0
+    // and anything from 2^31 to 2^32 - 1 to 1 ms (past 2^31 - 1 only a
+    // TimeoutOverflowWarning says so), which would abandon every chunk of
+    // every pass. 1.5 is the whole-number arm on its
     // own (the lower bound refuses 0.5 as well); 2^31 is the cap on its own.
     for (const passDeadlineMs of [
       0,
@@ -1431,6 +1432,29 @@ describe('the claim renewer', () => {
     expect(registry.counters).toMatchObject({ renewPasses: 2, renewPassesSkipped: 0, renewed: 2 });
   });
 
+  it('rests on the Node behaviour behind the cap: AbortSignal.timeout(2^31) is clamped to 1 ms, AbortSignal.timeout(2^31 - 1) is not', async () => {
+    // The premise of the 2^31 - 1 cap above, read off the running Node: a
+    // delay past TIMEOUT_MAX is set to 1 ms, with only a TimeoutOverflowWarning
+    // to say so. Timers fire in expiry order, so after a short real wait the
+    // clamped signal has aborted and the capped one has not. The warning is
+    // caught on process for this case alone (it never fails the run).
+    const warnings: string[] = [];
+    const onWarning = (warning: Error) => {
+      warnings.push(warning.name);
+    };
+    process.on('warning', onWarning);
+    try {
+      const clamped = AbortSignal.timeout(2 ** 31);
+      const capped = AbortSignal.timeout(2 ** 31 - 1);
+      await new Promise((resolve) => setTimeout(resolve, 20));
+      expect(clamped.aborted).toBe(true);
+      expect(capped.aborted).toBe(false);
+      expect(warnings.filter((name) => name === 'TimeoutOverflowWarning')).toHaveLength(1);
+    } finally {
+      process.off('warning', onWarning);
+    }
+  });
+
   /** Lets every settled promise run its callbacks: no timer. */
   const drain = async () => {
     for (let i = 0; i < 20; i++) await Promise.resolve();
@@ -1457,8 +1481,8 @@ describe('the claim renewer', () => {
     } as unknown as FreeholdTxPool;
     return { pool, parked, arrive: () => arrive(), checkouts: () => checkouts };
   };
-  const deadlineWarn = (chunks: number) =>
-    `freehold claim renew pass hit its ${FREEHOLD_CLAIM_RENEW_PASS_DEADLINE_MS} ms deadline; ${chunks} chunks wait for the next pass or were left undecided`;
+  const deadlineWarn = (chunks: number, deadlineMs = FREEHOLD_CLAIM_RENEW_PASS_DEADLINE_MS) =>
+    `freehold claim renew pass hit its ${deadlineMs} ms deadline; ${chunks} chunks wait for the next pass or were left undecided`;
 
   it('cuts a chunk whose checkout hangs at the pass deadline, hands its late client back once, and frees the next pass', async () => {
     const registry = createFreeholdClaimRegistry();
@@ -2700,11 +2724,10 @@ describe('the claim renewer', () => {
 
   const lostHookWarn = (count: number) =>
     `freehold claim onLost hook threw: ${count}; those claims are dropped and booked all the same`;
-  // One fixed reason word, in the order the closing read is judged, so an
-  // operator can tell a broken clock from a wall clock stepped back; never a
-  // number.
+  // One fixed reason, in the order the closing read is judged, so an operator
+  // can tell a broken clock from a wall clock stepped back; never a number.
   const clockCloseWarn = (
-    reason: 'threw' | 'not a number' | 'not finite' | 'backward' | 'overflow',
+    reason: 'threw' | 'non-number' | 'not finite' | 'backward' | 'overflow',
   ) =>
     `freehold claim renew pass clock gave no usable duration at its close (${reason}); that pass is counted without one`;
 
@@ -2937,7 +2960,7 @@ describe('the claim renewer', () => {
       ['NaN', Number.NaN, 'not finite'],
       ['+Infinity', Number.POSITIVE_INFINITY, 'not finite'],
       ['-Infinity', Number.NEGATIVE_INFINITY, 'not finite'],
-      ['a BigInt', 1_000n, 'not a number'],
+      ['a BigInt', 1_000n, 'non-number'],
       [
         'a throwing valueOf',
         {
@@ -2945,10 +2968,10 @@ describe('the claim renewer', () => {
             throw new Error('clock reading broken');
           },
         },
-        'not a number',
+        'non-number',
       ],
-      ['null', null, 'not a number'],
-      ['a Date', new Date(5), 'not a number'],
+      ['null', null, 'non-number'],
+      ['a Date', new Date(5), 'non-number'],
     ];
     for (const [name, closeAt, reason] of unusable) {
       expect(await pass(0, closeAt), name).toEqual([clockCloseWarn(reason)]);
@@ -3034,27 +3057,17 @@ describe('the claim renewer', () => {
   it('never rejects on a mid-pass clock reading that is no finite number: that check leaves the clock half off, and the signal still bounds the pass', async () => {
     // Only a clock that THROWS rejects a pass mid-pass. A BigInt or an object
     // whose valueOf throws would throw in a subtraction though the clock did
-    // not, and +Infinity would trip the deadline at once; each, like NaN and
-    // null, leaves that check to the signal alone. Two release chunks (a
-    // release statement is never cut by the signal): the first chunk's check
-    // reads the bad value, its release aborts the signal, and the second
-    // chunk is abandoned on the signal, its clock never read.
-    const readings: [string, unknown, Parameters<typeof clockCloseWarn>[0]][] = [
-      ['a BigInt', 1_000n, 'not a number'],
-      [
-        'a throwing valueOf',
-        {
-          valueOf() {
-            throw new Error('clock reading broken');
-          },
-        },
-        'not a number',
-      ],
-      ['+Infinity', Number.POSITIVE_INFINITY, 'not finite'],
-      ['NaN', Number.NaN, 'not finite'],
-      ['null', null, 'not a number'],
-    ];
-    for (const [name, bad, reason] of readings) {
+    // not, and +Infinity would trip the deadline at once; each, like NaN,
+    // null and a Date, leaves that check to the signal alone. Two release
+    // chunks (a release statement is never cut by the signal): the first
+    // chunk's check reads the bad value, its release aborts the signal, and
+    // the second chunk is abandoned on the signal, its clock never read. The
+    // deadline is 1 ms and the start reads -10 (the signal is injected, so
+    // the deadline drives the clock half alone): a check that coerced the
+    // reading (1000n to 1000, null to 0, a Date to its epoch ms) would see
+    // 10 ms or more pass and trip at the first chunk, as the finite control
+    // below does.
+    const passOn = async (name: string, bad: unknown) => {
       const registry = createFreeholdClaimRegistry();
       for (let i = 0; i < FREEHOLD_CLAIM_RENEW_CHUNK + 1; i++) {
         registry.record(claim(pad(i), i + 1));
@@ -3071,16 +3084,25 @@ describe('the claim renewer', () => {
       const deps = {
         ...renewDeps(registry, f.pool),
         wanted: () => false,
-        // The start reads 0; every later read is the bad value.
-        nowMs: () => (reads++ === 0 ? 0 : (bad as number)),
+        passDeadlineMs: 1,
+        // The start reads -10; every later read is the bad value.
+        nowMs: () => (reads++ === 0 ? -10 : (bad as number)),
         warn: (line: string) => {
           lines.push(line);
         },
         deadlineSignal: () => deadline.signal,
       };
       await expect(renewFreeholdClaims(deps), name).resolves.toBeUndefined();
-      // The first chunk ran (its check did not trip), the second waited on
-      // the signal with its claim kept, and the close read the bad value too.
+      return { registry, lines, reads };
+    };
+    // The first chunk ran (its check did not trip), the second waited on the
+    // signal with its claim kept, and the close read the bad value too.
+    const expectSignalBound = async (
+      name: string,
+      bad: unknown,
+      reason: Parameters<typeof clockCloseWarn>[0],
+    ) => {
+      const { registry, lines, reads } = await passOn(name, bad);
       expect(registry.counters, name).toMatchObject({
         released: FREEHOLD_CLAIM_RENEW_CHUNK,
         renewChunksAbandoned: 1,
@@ -3091,9 +3113,43 @@ describe('the claim renewer', () => {
         registry.all().map((c) => c.plotId),
         name,
       ).toEqual([pad(FREEHOLD_CLAIM_RENEW_CHUNK)]);
-      expect(lines, name).toEqual([deadlineWarn(1), clockCloseWarn(reason)]);
+      expect(lines, name).toEqual([deadlineWarn(1, 1), clockCloseWarn(reason)]);
       expect(reads, name).toBe(3);
-    }
+    };
+    const readings: [string, unknown, Parameters<typeof clockCloseWarn>[0]][] = [
+      ['a BigInt', 1_000n, 'non-number'],
+      [
+        'a throwing valueOf',
+        {
+          valueOf() {
+            throw new Error('clock reading broken');
+          },
+        },
+        'non-number',
+      ],
+      ['a Date', new Date(10 ** 12), 'non-number'],
+      ['+Infinity', Number.POSITIVE_INFINITY, 'not finite'],
+      ['NaN', Number.NaN, 'not finite'],
+      ['null', null, 'non-number'],
+    ];
+    for (const [name, bad, reason] of readings) await expectSignalBound(name, bad, reason);
+    // A finite BACKWARD reading is compared with the start like any other: its
+    // negative difference never trips the clock half, so the signal bounds the
+    // pass here too, and the close calls it backward.
+    await expectSignalBound('a reading stepped back', -20, 'backward');
+    // Control: a finite reading 10 ms past the start (what a coercing check
+    // would make of null) trips the clock half at the first chunk: no release
+    // ran, both chunks wait, and the 10 ms pass books its duration.
+    const { registry, lines, reads } = await passOn('10 ms on', 0);
+    expect(registry.counters).toMatchObject({
+      released: 0,
+      renewChunksAbandoned: 2,
+      renewPasses: 1,
+      renewPassMsTotal: 10,
+    });
+    expect(registry.count()).toBe(FREEHOLD_CLAIM_RENEW_CHUNK + 1);
+    expect(lines).toEqual([deadlineWarn(2, 1)]);
+    expect(reads).toBe(3);
   });
 
   it('skips a pass its own start clock starts: the flag is re-checked after the read', async () => {
@@ -3426,20 +3482,21 @@ describe('the claim renewer', () => {
     // one, and a namespace object reaches the renewer by a computed key
     // (`reg['renew' + 'FreeholdClaims'](d)`) that no count above sees. So no
     // server file star-re-exports the registry, and its namespace forms (a
-    // static `import * as`, a dynamic import(), a require()) are pinned to
-    // their reviewed count across server/: none. Both read the decoded text
-    // raw AND comment-stripped, so neither a comment that hides a `;` nor a
-    // `//` in a string that hides the rest of a line gets one past. Its
-    // LIMITS: the NAMESPACE matcher needs `import` or `require` directly
-    // before the `(` and the whole path as one literal, so a require function
-    // minted by createRequire(import.meta.url), a computed path
-    // ('./freehold_claim_' + 'registry') and a template path with a `${}` in
-    // it all get past it. They are pinned below as known escapes that move
-    // nothing, so a stricter matcher has to update them consciously.
+    // static `import * as`, or ANY call whose first argument is the path
+    // literal: a dynamic import(), a require(), a require function minted by
+    // createRequire(import.meta.url)) are pinned to their reviewed count
+    // across server/: none. A named or type import never puts the path after
+    // a `(` (it follows `from`), so the call arm cannot count one. Both read
+    // the decoded text raw AND comment-stripped, so neither a comment that
+    // hides a `;` nor a `//` in a string that hides the rest of a line gets one
+    // past. Its LIMITS: the call arm needs the whole path as one literal, so
+    // a computed path ('./freehold_claim_' + 'registry') and a template path
+    // with a `${}` in it get past it. They are pinned below as known escapes
+    // that move nothing, so a stricter matcher has to update them consciously.
     const SPEC = String.raw`['"\x60][^'"\x60\n]*freehold_claim_registry(?:\.[cm]?[jt]s)?['"\x60]`;
     const STAR = new RegExp(String.raw`\bexport\s*(?:type\s*)?\*[^;]*?\bfrom\s*${SPEC}`, 'g');
     const NAMESPACE = new RegExp(
-      String.raw`\bimport\b[^;]*?\*\s*as\b[^;]*?\bfrom\s*${SPEC}|\b(?:import|require)\s*\(\s*${SPEC}`,
+      String.raw`\bimport\b[^;]*?\*\s*as\b[^;]*?\bfrom\s*${SPEC}|\(\s*${SPEC}`,
       'g',
     );
     const registryRefsIn = ({ raw, stripped }: Texts) => {
@@ -3484,11 +3541,22 @@ describe('the claim renewer', () => {
       ['const reg = await import(`./freehold_claim_registry.js`);', namespace],
       ["const reg = require('./freehold_claim_registry');", namespace],
       ["import reg = require('./freehold_claim_registry');", namespace],
+      [
+        "const req = createRequire(import.meta.url);\nconst reg = req('./freehold_claim_registry');",
+        namespace,
+      ],
+      ['const reg = req( `../server/freehold_claim_registry.ts` );', namespace],
       ["import * as reg from './freehold_claim_\\u0072egistry';", namespace],
       ["const u = 'a//b'; const reg = await import('./freehold_claim_registry');", namespace],
       ["import /* ; */ * as reg from './freehold_claim_registry';", namespace],
       ["import { renewFreeholdClaims } from './freehold_claim_registry';", neither],
       ["import type { FreeholdClaimRegistry } from './freehold_claim_registry';", neither],
+      [
+        "import {\n  type FreeholdClaimRegistry,\n  renewFreeholdClaims,\n} from './freehold_claim_registry';",
+        neither,
+      ],
+      ["export { releaseAllFreeholdClaims } from './freehold_claim_registry';", neither],
+      ["const reg = req('./freehold_claim_db');", neither],
       ["import * as db from './freehold_claim_db';", neither],
       ["export * from './freehold_claim_db';", neither],
       ["import * as reg from './freehold_claim_registry_v2';", neither],
@@ -3498,7 +3566,6 @@ describe('the claim renewer', () => {
     // The known escapes named above: each reaches the registry's namespace
     // object today and moves nothing.
     for (const shape of [
-      "const req = createRequire(import.meta.url);\nconst reg = req('./freehold_claim_registry');",
       "const reg = await import('./freehold_claim_' + 'registry');",
       `const part = 'registry';\nconst reg = await import(\`./freehold_claim_\${part}\`);`,
     ]) {
