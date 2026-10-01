@@ -371,138 +371,131 @@ an EXPIRED claim on such a handshake is harmless (its holder was dead).
 **P5. The renewer** (`renewFreeholdClaims`, a `PeriodicSaveWrites` member registered in
 `PERIODIC_SAVE_WRITE_NAMES` beside `heartbeatLeases`, the same 30 s autosave cadence): the
 wanted plot ids, sorted, in CHUNKS of at most `FREEHOLD_CLAIM_RENEW_CHUNK` (256), each chunk
-ONE statement in its own short transaction (B with statement 2 s, lock 1 s · the statement
-· C), so no transaction ever holds rows from two statements (revision 2's
-renew-then-release pair locked two ascending runs that together were not ascending, a
-cycle against an 08 multi-plot mutation) and one blocked row fails only its own chunk:
-`UPDATE freehold_plot_claims SET heartbeat_at = clock_timestamp(), expires_at =
-clock_timestamp() + make_interval(secs => $2) WHERE plot_id IN (SELECT plot_id FROM
-freehold_plot_claims WHERE holder = $1 AND plot_id = ANY($3::text[]) ORDER BY plot_id FOR
-NO KEY UPDATE SKIP LOCKED) RETURNING plot_id`. SKIP LOCKED: a row a trip or a write holds
-right now (a trip may legitimately hold it past the 1 s lock bound) is passed over, never
-waited for, so one contended plot cannot fail its whole chunk or hold its neighbours'
-locks; a lock-free `SELECT plot_id ... WHERE holder = $1 AND plot_id = ANY($2)` then tells
-a skipped row still ours (one missed heartbeat, counted per plot, kept) from one another
-holder took (dropped). The unwanted ids go out the same way, chunked, as RELEASES (P6's
-shape). SINGLE-FLIGHT, BOUNDED, ROTATED (revision 5, the database reviewer's blocker on the
-built code): the flush starts a pass unawaited, so a pass is single-flight per registry (a
-trigger while one runs is skipped and counted), the whole pass carries
-`FREEHOLD_CLAIM_RENEW_PASS_DEADLINE_MS` (20,000 ms, under the 30 s cadence and far under
-the 90 s TTL; each RENEW chunk's transaction carries the same deadline as its signal,
-while a RELEASE chunk and its re-reads are never cut by it; it bounds every CHECKOUT of the
-pass (one past it is refused before any SQL, so a cut can never strand a landed release),
-so a pass ends by the deadline plus at most one 5 s transaction wall, 25 s, under the 30 s
-cadence; a release chunk that THROWS re-reads its ids `FOR SHARE` (the release's UPDATE
-takes FOR NO KEY UPDATE, which FOR SHARE waits out and FOR KEY SHARE would not, P9's
-ruling), waiting out a still-committing release (the lock timeout applies to EACH lock
-wait, up to 1 s per contended row, capped by the 2 s statement bound and then the 5 s wall;
-a timeout keeps the claims for the next pass, and on a stalled WAL the read's own COMMIT
-most likely ends ambiguous, which keeps them too), and a completed release reads the ids
-it did not return lock-free; both classify each row held (ours and live: kept), released
-(ours with the released suffix: dropped, counted) or gone (another holder, an expired row
-of ours, or no row: dropped, uncounted), and every drop is identity-checked, so a claim a
-login recorded while the pass ran is never dropped. The bound is a CHECKOUT-ONLY signal
-(`checkoutSignal` on `runFreeholdTransaction`), never a cut of a running transaction, and
-a chunk whose checkout it cut counts as abandoned. THE SAME-HOLDER RE-LOGIN RACE (revision
-5, the fourth review of the built code): a login re-acquiring its own plot keeps the
-generation, so a release landing on its fresh claim would leave a dead claim in the
-registry. The login marks the plot IN FLIGHT from just before its acquire until it records
-(or fails), and the release re-checks each claim synchronously inside its transaction,
-immediately before the statement, leaving out any claim no longer the snapshotted one or in
-flight (a login that marks its plot after that races the statement already sent: if the
-release locks the row first, the acquire waits it out and takes over at the next generation,
-which is correct; if the acquire holds the row first, SKIP LOCKED passes it over and the
-lock-free read keeps the claim); for the residual window (a login that COMMITS its acquire
-before a release sent first locks the row) a landed release on a plot whose registry claim is
-a NEWER object at the SAME generation drops that claim from the registry at once, counts
-`releaseRaced`, warns once per pass (the count only) and hands it to `onLost` when the host
-binds one; production binds none, so the store quiesces that owner at its next write, which
-answers `fenced` (R-9); a newer claim at a higher generation stays), the chunks it leaves
-unstarted are abandoned and counted and their wanted claims
-are missed heartbeats, and the next pass starts where an abandoned one stopped (otherwise one chunk
-later), so a brownout never starves the same tail plots. Renewal outranks release: an
+ONE statement in its own short transaction (B with statement 2 s, lock 1 s · the statement ·
+C), so no transaction ever holds rows from two statements (revision 2's renew-then-release
+pair locked two ascending runs that together were not ascending, a cycle against an 08
+multi-plot mutation) and one blocked row fails only its own chunk: `UPDATE
+freehold_plot_claims SET heartbeat_at = clock_timestamp(), expires_at = clock_timestamp() +
+make_interval(secs => $2) WHERE plot_id IN (SELECT plot_id FROM freehold_plot_claims WHERE
+holder = $1 AND plot_id = ANY($3::text[]) ORDER BY plot_id FOR NO KEY UPDATE SKIP LOCKED)
+RETURNING plot_id`. SKIP LOCKED: a row a trip or a write holds right now (a trip may
+legitimately hold it past the 1 s lock bound) is passed over, never waited for, so one
+contended plot cannot fail its whole chunk or hold its neighbours' locks; a lock-free
+`SELECT plot_id ... WHERE holder = $1 AND plot_id = ANY($2)` then tells a skipped row still
+ours (one missed heartbeat, counted per plot, kept) from one another holder took (dropped).
+The unwanted ids go out the same way, chunked, as RELEASES (P6's shape). SINGLE-FLIGHT,
+BOUNDED, ROTATED (revision 5, the database reviewer's blocker on the built code): the flush
+starts a pass unawaited, so a pass is single-flight per registry (a trigger while one runs
+is skipped and counted), the whole pass carries `FREEHOLD_CLAIM_RENEW_PASS_DEADLINE_MS`
+(20,000 ms, under the 30 s cadence and far under the 90 s TTL; each RENEW chunk's
+transaction carries the same deadline as its signal, while a RELEASE chunk and its re-reads
+are never cut by it; it bounds every CHECKOUT of the pass (one past it is refused before any
+SQL, so a cut can never strand a landed release), so a pass ends by the deadline plus at
+most one 5 s transaction wall, 25 s, under the 30 s cadence; a release chunk that THROWS
+re-reads its ids `FOR SHARE` (the release's UPDATE takes FOR NO KEY UPDATE, which FOR SHARE
+waits out and FOR KEY SHARE would not, P9's ruling), waiting out a still-committing release
+(the lock timeout applies to EACH lock wait, up to 1 s per contended row, capped by the 2 s
+statement bound and then the 5 s wall; a timeout keeps the claims for the next pass, and on
+a stalled WAL the read's own COMMIT most likely ends ambiguous, which keeps them too), and a
+completed release reads the ids it did not return lock-free; both classify each row held
+(ours and live: kept), released (ours with the released suffix: dropped, counted) or gone
+(another holder, an expired row of ours, or no row: dropped, uncounted), and every drop is
+identity-checked, so a claim a login recorded while the pass ran is never dropped. The bound
+is a CHECKOUT-ONLY signal (`checkoutSignal` on `runFreeholdTransaction`), never a cut of a
+running transaction, and a chunk whose checkout it cut counts as abandoned. THE SAME-HOLDER
+RE-LOGIN RACE (revision 5, the fourth review of the built code): a login re-acquiring its
+own plot keeps the generation, so a release landing on its fresh claim would leave a dead
+claim in the registry. The login marks the plot IN FLIGHT from just before its acquire until
+it records (or fails), and the release re-checks each claim synchronously inside its
+transaction, immediately before the statement, leaving out any claim no longer the
+snapshotted one or in flight (a login that marks its plot after that races the statement
+already sent: if the release locks the row first, the acquire waits it out and takes over at
+the next generation, which is correct; if the acquire holds the row first, SKIP LOCKED
+passes it over and the lock-free read keeps the claim); for the residual window (a login
+that COMMITS its acquire before a release sent first locks the row) a landed release on a
+plot whose registry claim is a NEWER object at the SAME generation drops that claim from the
+registry at once, counts `releaseRaced`, warns once per pass (the count only) and hands it
+to `onLost` when the host binds one; production binds none, so the store quiesces that owner
+at its next write, which answers `fenced` (R-9); a newer claim at a higher generation
+stays), the chunks it leaves unstarted are abandoned and counted and their wanted claims are
+missed heartbeats, and the next pass starts where an abandoned one stopped (otherwise one
+chunk later), so a brownout never starves the same tail plots. Renewal outranks release: an
 abandoned pass skips its release chunks. THE PASS'S VOICE AND ITS CLOCK (revision 5): every
 line a pass says is said while its single-flight flag is held (so a log sink that calls the
 renewer back is skipped), next to the counter it reports, through a guarded sink (a sink
 that throws never rejects the pass), and carries counts, the configured deadline and the
-closing line's fixed reason only, nothing identifying: the reasons are a fixed vocabulary, and
-the one number beside the counts is the pass deadline, a configured number of ms, which the
-abandon line names (the closing-clock line carries no number at all, only its fixed
-reason). The wanted-check line is said once, after the wanted tests and the
-pending sweep; the lost line once per renew chunk that lost claims to another holder; the
-abandon line ("hit its N ms deadline; M chunks wait for the next pass or were left
-undecided") once, where the deadline stops the pass. Three lines come from the pass's
-`finally`, so every exit reaches them, a rejecting one included: the race line, the line for
-`onLost` hooks that threw (each throw swallowed and counted on the lasting
-`claim_on_lost_threw`), and the closing-clock line ("clock gave no usable duration at its
-close (REASON); that pass is counted without one", REASON one fixed reason, judged in this
-order and defined here (the `closingPassMs` JSDoc and the metrics help text are consistent
-with it): `threw`,
-the closing read threw; `non-number`, it returned
-something that is not a number (a BigInt, null, a Date, any object; NaN is a number and
-reports `not finite`); `not finite`, the duration is NaN or an infinity (a NaN or infinite
-reading, or two finite readings whose difference is not finite); `backward`, the duration is
-negative, a wall clock stepped back mid-pass; `overflow`, the duration would carry the
-running `claim_renew_pass` total past a finite number, which prom-client's `Counter.inc`
-refuses at scrape time; so an operator tells a broken clock from one stepped back); the flag
-clears in a `finally` of its own inside
-it, so a statement there that throws cannot leave the flag set. A clock port that throws at
-the pass's start rejects the call before that call takes the flag, even one that started a
-pass itself first (that pass runs on and clears the flag at its own end); otherwise the flag
-is re-checked straight after that read, BEFORE the reading is judged (a clock port that
-started a pass itself leaves the call a counted skip, whatever it read); and a start reading
-that is not a
-finite number (a BigInt, null or any object included: `Number.isFinite` coerces nothing) is
-refused like a throw, with a fixed dev-channel Error, since that one reading feeds both the
-deadline's
-clock half and every wanted test (the production predicate compares it with a claim's
-`acquiredAtMs`): minus infinity would trip that half at once and abandon every chunk of
-every pass, NaN or plus infinity would switch it off. Either way the periodic flush reports
-it and the next pass on a sane clock runs. A clock port that throws at a deadline check
-MID-PASS (each check reads it unguarded while the deadline signal has not fired) rejects
-the pass there, through the `finally` above; a mid-pass READING that is not a finite number
-(NaN, an infinity, a BigInt, null, any object) never rejects: it leaves that check's clock
-half off (it is never subtracted, so a BigInt or a throwing `valueOf` cannot throw there
-though the clock did not) and the signal still bounds the pass, so a clock that THROWS is
-the only mid-pass clock rejection. A finite BACKWARD mid-pass reading (a wall clock stepped
-back) is compared with the start like any other and gives a negative difference, so it never
-trips the clock half until the clock catches up; the signal still bounds the pass. So the
-pass rejects in exactly these cases, the list the renewer's JSDoc and the periodic flush's
-member doc state word for word (production binds `Date.now` and no injected deadline, so it
-meets none of them): an injected `passDeadlineMs` that is not a whole number of ms from 1 to
-2^31 - 1, the range `AbortSignal.timeout` honours (suites only): a `RangeError` before
-anything runs; a `nowMs` start reading that throws (even from a clock port that started a
-pass itself first: that pass runs on): before this call takes the flag, so the next pass on
-a sane clock runs; a `nowMs` start reading that is not a finite number while no pass runs
+closing line's fixed reason only, nothing identifying: the reasons are a fixed vocabulary,
+and the one number beside the counts is the pass deadline, a configured number of ms, which
+the abandon line names (the closing-clock line carries no number at all, only its fixed
+reason). The wanted-check line is said once, after the wanted tests and the pending sweep;
+the lost line once per renew chunk that lost claims to another holder; the abandon line
+("hit its N ms deadline; M chunks wait for the next pass or were left undecided") once,
+where the deadline stops the pass. Three lines come from the pass's `finally`, so every exit
+reaches them, a rejecting one included: the race line, the line for `onLost` hooks that
+threw (each throw swallowed and counted on the lasting `claim_on_lost_threw`), and the
+closing-clock line ("clock gave no usable duration at its close (REASON); that pass is
+counted without one", REASON one fixed reason, judged in this order and defined here (the
+`closingPassMs` JSDoc and the metrics help text are consistent with it): `threw`, the
+closing read threw; `non-number`, it returned something that is not a number (a BigInt,
+null, a Date, any object; NaN is a number and reports `not finite`); `not finite`, the
+duration is NaN or an infinity (a NaN or infinite reading, or two finite readings whose
+difference is not finite); `backward`, the duration is negative, a wall clock stepped back
+mid-pass; `overflow`, the duration would carry the running `claim_renew_pass` total past a
+finite number, which prom-client's `Counter.inc` refuses at scrape time; so an operator
+tells a broken clock from one stepped back); the flag clears in a `finally` of its own
+inside it, so a statement there that throws cannot leave the flag set. A clock port that
+throws at the pass's start rejects the call before that call takes the flag, even one that
+started a pass itself first (that pass runs on and clears the flag at its own end);
+otherwise the flag is re-checked straight after that read, BEFORE the reading is judged (a
+clock port that started a pass itself leaves the call a counted skip, whatever it read); and
+a start reading that is not a finite number (a BigInt, null or any object included:
+`Number.isFinite` coerces nothing) is refused like a throw, with a fixed dev-channel Error,
+since that one reading feeds both the deadline's clock half and every wanted test (the
+production predicate compares it with a claim's `acquiredAtMs`): minus infinity would trip
+that half at once and abandon every chunk of every pass, NaN or plus infinity would switch
+it off. Either way the periodic flush reports it and the next pass on a sane clock runs. A
+clock port that throws at a deadline check MID-PASS (each check reads it unguarded while the
+deadline signal has not fired) rejects the pass there, through the `finally` above; a
+mid-pass READING that is not a finite number (NaN, an infinity, a BigInt, null, any object)
+never rejects: it leaves that check's clock half off (it is never subtracted, so a BigInt or
+a throwing `valueOf` cannot throw there though the clock did not) and the signal still
+bounds the pass, so a clock that THROWS is the only mid-pass clock rejection. A finite
+BACKWARD mid-pass reading (a wall clock stepped back) is compared with the start like any
+other and gives a negative difference, so it never trips the clock half until the clock
+catches up; the signal still bounds the pass. So the pass rejects in exactly these cases,
+the list the renewer's JSDoc and the periodic flush's member doc state word for word
+(production binds `Date.now` and no injected deadline, so it meets none of them): an
+injected `passDeadlineMs` that is not a whole number of ms from 1 to 2^31 - 1, the range
+`AbortSignal.timeout` honours (suites only): a `RangeError` before anything runs; a `nowMs`
+start reading that throws (even from a clock port that started a pass itself first: that
+pass runs on): before this call takes the flag, so a later call on a sane clock runs once
+the flag is free; a `nowMs` start reading that is not a finite number while no pass runs
 (the flag is re-checked first, so a clock port that started a pass itself leaves this call a
-counted skip instead): before this call takes the flag, so the next pass on a sane clock
-runs; a `nowMs` that throws at a deadline
-check mid-pass: the pass stops there with that error; an injected `deadlineSignal` factory
-that throws (suites only): after the wanted tests and before any statement. (Node clamps 0,
-and anything from 2^31 to 2^32 - 1, to 1 ms, which would abandon every chunk of every pass,
-so those clamped values are refused, like every other value outside 1 to 2^31 - 1, rather
-than handed on.) The closing read, and the duration taken
-from it, run while the flag is still held (a clock that calls the renewer back there is
-skipped too) and under a catch of their own, and only a reading that is a number is used (a
-subtraction would coerce null or a Date into a finite duration): a pass whose clock gave no
-usable duration (any of the five reasons above) never has its outcome replaced: it is
-counted, adds nothing, and the closing-clock line says so. It stays OFF
-the background gate by decision (the
-autosave wave holds that gate exactly when the renewer runs, so a `tryAcquire` would let
-claims lapse): single-flight makes its peak one pool client per realm, pinned by a
-fake-pool test. A wanted predicate that throws keeps the claim (counted), and a pending
-write token on a plot with no claim whose owner nothing wants is retired (counted).
-Measured on a 201,000-row claims table across 61 holders: 138 ms per pass at 5,000 wanted
-claims, 1.4 ms of it synchronous (workload evidence). WANTED means any of: the store holds
-the owner's entry with a session reference or owed work, the Sim holds its live record, a
-mutation or recovery pass is in flight for it, or the claim was acquired less than
-`FREEHOLD_PERSIST_LOGIN_BUDGET_MS` ago (a handshake between its first ask and its join
-bind). Nothing else renews; 18's visitor reference joins this predicate later and must
+counted skip instead): before this call takes the flag, so a later call on a sane clock runs
+once the flag is free; a `nowMs` that throws at a deadline check mid-pass: the pass stops
+there with that error; an injected `deadlineSignal` factory that throws (suites only): after
+the wanted tests and before any statement. (Node clamps 0, and anything from 2^31 to 2^32 -
+1, to 1 ms, which would abandon every chunk of every pass, so those clamped values are
+refused, like every other value outside 1 to 2^31 - 1, rather than handed on.) The closing
+read, and the duration taken from it, run while the flag is still held (a clock that calls
+the renewer back there is skipped too) and under a catch of their own, and only a reading
+that is a number is used (a subtraction would coerce null or a Date into a finite duration):
+a pass whose clock gave no usable duration (any of the five reasons above) never has its
+outcome replaced: it is counted, adds nothing, and the closing-clock line says so. It stays
+OFF the background gate by decision (the autosave wave holds that gate exactly when the
+renewer runs, so a `tryAcquire` would let claims lapse): single-flight makes its peak one
+pool client per realm, pinned by a fake-pool test. A wanted predicate that throws keeps the
+claim (counted), and a pending write token on a plot with no claim whose owner nothing wants
+is retired (counted). Measured on a 201,000-row claims table across 61 holders: 138 ms per
+pass at 5,000 wanted claims, 1.4 ms of it synchronous (workload evidence). WANTED means any
+of: the store holds the owner's entry with a session reference or owed work, the Sim holds
+its live record, a mutation or recovery pass is in flight for it, or the claim was acquired
+less than `FREEHOLD_PERSIST_LOGIN_BUDGET_MS` ago (a handshake between its first ask and its
+join bind). Nothing else renews; 18's visitor reference joins this predicate later and must
 never outrank the owner's own authenticated entry on another realm. A completed renew that
-did not return a wanted plot means a takeover: the claim leaves the registry and the
-store's next write answers `fenced` and quiesces. A THROWN or timed-out renew is a missed
-heartbeat (counted, retried next pass, TTL 90 s leaves two), never a loss and never a
-takeover.
+did not return a wanted plot means a takeover: the claim leaves the registry and the store's
+next write answers `fenced` and quiesces. A THROWN or timed-out renew is a missed heartbeat
+(counted, retried next pass, TTL 90 s leaves two), never a loss and never a takeover.
 
 **P6. Release** (the renewer's unwanted ids, and every live claim at shutdown): `UPDATE
 freehold_plot_claims SET expires_at = clock_timestamp(), holder = holder || '#released'

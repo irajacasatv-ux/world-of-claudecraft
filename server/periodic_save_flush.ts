@@ -77,15 +77,15 @@ export interface PeriodicSaveWrites {
    *  range AbortSignal.timeout honours (suites only): a RangeError before
    *  anything runs; a nowMs start reading that throws (even from a clock port
    *  that started a pass itself first: that pass runs on): before this call
-   *  takes the flag, so the next pass on a sane clock runs; a nowMs start
-   *  reading that is not a finite number while no pass runs (the flag is
-   *  re-checked first, so a clock port that started a pass itself leaves this
-   *  call a counted skip instead): before this call takes the flag, so the
-   *  next pass on a sane clock runs; a nowMs that throws at a deadline check
-   *  mid-pass: the pass stops there with that error; an injected
-   *  deadlineSignal factory that throws (suites only): after the wanted tests
-   *  and before any statement. Production binds Date.now and no injected
-   *  deadline, so it meets none of them. */
+   *  takes the flag, so a later call on a sane clock runs once the flag is
+   *  free; a nowMs start reading that is not a finite number while no pass runs
+   *  (the flag is re-checked first, so a clock port that started a pass itself
+   *  leaves this call a counted skip instead): before this call takes the flag,
+   *  so a later call on a sane clock runs once the flag is free; a nowMs that
+   *  throws at a deadline check mid-pass: the pass stops there with that error;
+   *  an injected deadlineSignal factory that throws (suites only): after the
+   *  wanted tests and before any statement. Production binds Date.now and no
+   *  injected deadline, so it meets none of them. */
   renewFreeholdClaims(): Promise<void>;
   /** Drop idle bank-vault ledger guard state. Synchronous, and not a write. */
   pruneIdleGuards(): void | number;

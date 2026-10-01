@@ -3163,20 +3163,22 @@ describe('the claim renewer', () => {
 
   it('trips the clock half once the clock catches up after a backward mid-pass reading, measured from the START: a step back switches nothing off', async () => {
     // Four renew chunks, a signal that never aborts and a 15 ms deadline. The
-    // start reads -10, the first chunk's check -20 (stepped back: a negative
-    // difference, no trip), the second chunk's check 0 (10 ms past the start:
-    // under the deadline, no trip), the third chunk's check 5 (15 ms past the
-    // start: a trip, at the >= boundary). So two chunks renew. A check that
-    // re-anchored on the lowest reading, or measured from the previous one,
-    // would see 20 ms at the reading of 0 and renew one; a clock half the step
-    // back switched off, or a strict >, would renew all four; one that lagged
-    // a check would renew three.
+    // start reads -10, the first chunk's check -30 (stepped back 20 ms, MORE
+    // than the deadline: a negative difference, no trip), the second chunk's
+    // check 0 (10 ms past the start: under the deadline, no trip), the third
+    // chunk's check 5 (15 ms past the start: a trip, at the >= boundary). So
+    // two chunks renew. A check that measured the step's SIZE (Math.abs) would
+    // trip at the first check and renew none; one that re-anchored on the
+    // lowest reading, or measured from the previous one, would see 30 ms at
+    // the reading of 0 and renew one; a clock half the step back switched off,
+    // or a strict >, would renew all four; one that lagged a check would renew
+    // three.
     const registry = createFreeholdClaimRegistry();
     for (let i = 0; i < 3 * FREEHOLD_CLAIM_RENEW_CHUNK + 1; i++) {
       registry.record(claim(pad(i), i + 1));
     }
     const f = fakePool([renewAll]);
-    const readings = [-10, -20, 0, 5];
+    const readings = [-10, -30, 0, 5];
     let reads = 0;
     const lines: string[] = [];
     await renewFreeholdClaims({
@@ -3762,6 +3764,8 @@ describe('the claim renewer', () => {
       ["import * as db from './freehold_claim_db';", neither],
       ["export * from './freehold_claim_db';", neither],
       ["import * as reg from './freehold_claim_registry_v2';", neither],
+      // The suffix only counts after a `?` or `#`: a longer name is another module.
+      ["const reg = req('./freehold_claim_registry_v2');", neither],
     ] as const) {
       expect(refsDelta(shape), shape).toEqual(moved);
     }
@@ -3773,9 +3777,26 @@ describe('the claim renewer', () => {
       "const reg = await import('./freehold_claim_' + 'registry');",
       `const part = 'registry';\nconst reg = await import(\`./freehold_claim_\${part}\`);`,
       "const reg = await import('#claims');",
+      // The call arm takes ONE dotted word before the path, so two get past.
+      "const reg = await import(void typeof './freehold_claim_registry');",
     ]) {
       expect(refsDelta(shape), shape).toEqual(neither);
     }
+    // The alias escape is closed where it would be declared: no package.json
+    // `imports` entry and no tsconfig `paths` entry names the registry. Both
+    // tables are read whole (the tsconfig with its comments allowed), and the
+    // control proves the reader sees an alias that IS declared today.
+    const aliasTargets = (): string[] => {
+      const pkg = JSON.parse(readFileSync('package.json', 'utf8')) as {
+        imports?: Record<string, unknown>;
+      };
+      const tsconfig = readFileSync('tsconfig.json', 'utf8');
+      const paths = tsconfig.match(/"paths"\s*:\s*\{[\s\S]*?\n\s*\}/)?.[0] ?? '';
+      return [JSON.stringify(pkg.imports ?? {}), paths];
+    };
+    const [importsTable, pathsTable] = aliasTargets();
+    expect(pathsTable).toContain('#bot-detector');
+    expect(`${importsTable}\n${pathsTable}`).not.toMatch(/freehold_claim_registry/);
     // The computed key the namespace control calls through is the shape the
     // name counts cannot see: it moves none of them.
     expect(delta("void reg['renew' + 'FreeholdClaims'](d);")).toEqual(none);

@@ -307,7 +307,7 @@ export interface FreeholdClaimRenewerDeps {
    *  (server/freehold_persist_wiring.ts): the claim has left the registry, so
    *  the owner's next write answers `fenced` and the store quiesces it then. */
   onLost?(claim: FreeholdHeldClaim): void;
-  /** Read at the pass's start (that one reading also feeds every wanted
+  /** Read at the call's start (that one reading also feeds every wanted
    *  test), at every deadline check while the deadline signal has not fired,
    *  and at its close. A start read that throws rejects the call before it
    *  takes the flag, even when the port started a pass itself first (that
@@ -413,11 +413,11 @@ function passDeadlineOf(deps: FreeholdClaimRenewerDeps): number {
  *   RangeError before anything runs;
  * - a nowMs start reading that throws (even from a clock port that started a
  *   pass itself first: that pass runs on): before this call takes the flag,
- *   so the next pass on a sane clock runs;
+ *   so a later call on a sane clock runs once the flag is free;
  * - a nowMs start reading that is not a finite number while no pass runs
  *   (the flag is re-checked first, so a clock port that started a pass itself
  *   leaves this call a counted skip instead): before this call takes the
- *   flag, so the next pass on a sane clock runs;
+ *   flag, so a later call on a sane clock runs once the flag is free;
  * - a nowMs that throws at a deadline check mid-pass: the pass stops there
  *   with that error;
  * - an injected deadlineSignal factory that throws (suites only): after the
