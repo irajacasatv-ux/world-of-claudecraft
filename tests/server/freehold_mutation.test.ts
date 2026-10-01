@@ -3889,30 +3889,30 @@ describe('the claim renewer', () => {
     // resolver plugin, a new build call or option, import, flag, dependency
     // spec, package or config file, or a force-added private implementation.
     // LIMITS, the boundary named so it is reviewed rather than assumed. NOT
-    // READ: what those programs compute when they run (a property name
-    // computed to `alias`, a name assembled from parts or matched by a
-    // pattern, a file written by code a local module runs); anything fetched
-    // at build or run time rather than tracked; a file git does not track yet
-    // outside server/ (a local run passes until it is added; CI sees it); every
-    // file under docs/ or tests/ (tests import the registry and docs describe
-    // it, by design; no server module reaches either, pinned below; the
-    // production image copies neither, as the Dockerfile pin shows; a dev
-    // script under scripts/ may import tests/ helpers); a file of a binary
-    // media kind, skipped by extension; a name spelled with escapes in a file
-    // the count does not read; a container build file that is not a Dockerfile
-    // (a Containerfile, a bake file, an Earthfile, a platform manifest), beyond
+    // READ: what those programs compute when they run (a property name computed
+    // to `alias`, a name assembled from parts or matched by a pattern, a file
+    // written by code a local module runs); anything fetched at build or run
+    // time rather than tracked; a file git does not track yet outside server/
+    // (a local run passes until it is added; CI sees it); every file under
+    // docs/ or tests/ (tests import the registry and docs describe it, by
+    // design; no server module reaches either, pinned below; the production
+    // image copies neither, as the Dockerfile pin shows; a dev script under
+    // scripts/ may import tests/ helpers); a file of a binary media kind,
+    // skipped by extension; a name spelled with escapes in a file the count
+    // does not read; a container build file that is not a Dockerfile (a
+    // Containerfile, a bake file, an Earthfile, a platform manifest), beyond
     // the three names the tree read looks for; how a file listed as naming the
     // bundle runs it (its name is pinned, not its lines, the build script, the
     // root Dockerfile and package.json's scripts that run it aside); the
-    // compose file's lines other than its NODE_
-    // variables, bundle names and `command` and `entrypoint` key lines (a
-    // health check, for one); text the shared comment stripper misreads (a
-    // string holding a comment opener); an import the statement reader cannot
-    // see (a binding named by a string holding `;`); the insides of packages,
-    // of the patches and overrides pnpm applies to them, and of anything a
-    // local module imports in turn; a config path a script passes from its own
-    // code (scripts/*.mjs spawn vitest with `--config`) rather than from
-    // package.json; and the contents of the gitignored private clone.
+    // compose file's lines other than its NODE_ variables, bundle names and
+    // `command` and `entrypoint` key lines (a health check, for one); text the
+    // shared comment stripper misreads (a string holding a comment opener); an
+    // import the statement reader cannot see (a binding named by a string
+    // holding `;`); the insides of packages, of the patches and overrides pnpm
+    // applies to them, and of anything a local module imports in turn; a config
+    // path a script passes from its own code (scripts/*.mjs spawn vitest with
+    // `--config`) rather than from package.json; and the contents of the
+    // gitignored private clone.
     const flat = (text: string): string => text.replace(/\s+/g, ' ').trim();
     // Every git read here: a buffer far above the tree's listing (which is
     // within reach of Node's 1 MiB default) and a refusal of any failed or
@@ -4070,17 +4070,32 @@ describe('the claim renewer', () => {
       ['server', 'npm run build:server && node dist-server/server.cjs'],
       ['realms', 'npm run build:server && node scripts/dev-realms.mjs'],
     ]);
-    // THE DOCKERFILES, exactly. Every tracked path naming a Dockerfile in
-    // any case (docs and tests aside) is listed first, so an added, removed or
-    // renamed one meets this message before any read once git sees the change
-    // (the list reads the index); the list fails closed, so a path that only
-    // looks like one (a script named after Docker) fails loudly and is
-    // reviewed. Then each is pinned as written, comments and blank lines
-    // included (only line endings are normalised, for a Windows checkout).
-    // The root one builds and runs the bundle; the other builds the player
-    // wiki. Nothing in either is interpreted.
+    // THE DOCKERFILES, exactly. Every tracked path whose text holds
+    // "dockerfile" in any case (docs and tests aside) is listed first, so an
+    // added, removed or renamed one meets this message before any read once
+    // git sees the change (the list reads the index); the list fails closed,
+    // so a path that only names one (say, a script called
+    // dockerfile_context.mjs) fails loudly and is reviewed. Then each is
+    // pinned as written, comments and blank lines included (only line endings
+    // are normalised, for a Windows checkout). The root one builds and runs
+    // the bundle; the other builds the player wiki. Nothing in either is
+    // interpreted.
+    const inventoried = (file: string): boolean =>
+      !/^(?:docs|tests)\//.test(file) && /dockerfile/i.test(file);
     expect(
-      listed([':(icase)*dockerfile*', ':!docs', ':!tests']).sort(),
+      [
+        'deploy/Dockerfile-realm',
+        'Dockerfile_prod',
+        'deploy/realm.dockerfile',
+        'deploy/Dockerfile.realm',
+        'scripts/lib/dockerfile_context.mjs',
+        'docs/Dockerfile',
+        'tests/fixtures/Dockerfile',
+        'scripts/lib/dockerignore_context.mjs',
+      ].map(inventoried),
+    ).toEqual([true, true, true, true, true, false, false, false]);
+    expect(
+      listed(['.']).filter(inventoried).sort(),
       'a path naming a Dockerfile added, removed or renamed: if it is one, pin it exactly ' +
         'like these two; then update this list',
     ).toEqual(['Dockerfile', 'mediawiki/Dockerfile']);
@@ -4268,12 +4283,17 @@ describe('the claim renewer', () => {
         ]),
       );
     const binaryModule = 'scripts/assets/boulder/build.mjs';
-    // Binary to git's own grep (no match without --text), then read whole.
+    // Tracked, binary to git's own grep (no match under -I), then read
+    // whole: `import` sits before its NUL bytes and `console` after the last.
+    expect(listed([binaryModule])).toEqual([binaryModule]);
     expect(
       spawnSync('git', ['grep', '-I', '-l', '-e', '', '--', binaryModule], { encoding: 'utf8' })
         .status,
     ).toBe(1);
-    expect(treeGrep(['import'], [binaryModule])).toEqual({ import: [binaryModule] });
+    expect(treeGrep(['import', 'console'], [binaryModule])).toEqual({
+      import: [binaryModule],
+      console: [binaryModule],
+    });
     const named = treeGrep(
       ['freehold_claim_registry', 'renewFreeholdClaims', 'dist-server/server.cjs'],
       treeRead,
