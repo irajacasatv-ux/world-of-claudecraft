@@ -229,6 +229,15 @@ describe('classifyPrFiles', () => {
       classifyPrFiles([{ filename: 'docs/b.md', previous_filename: 'docs/a.md', status: 'copied' }])
         .code,
     ).toBe(false);
+    // Any other entry with an old path is a rename, so input the API never sends fails closed.
+    for (const status of [null, '', 'moved', 'modified']) {
+      expect(
+        classifyPrFiles([
+          { filename: 'docs/b.md', previous_filename: 'docs/a.md', status: status as string },
+        ]),
+        String(status),
+      ).toEqual({ code: true, reason: 'path renamed ("docs/a.md"): full PR tier' });
+    }
     for (const status of ['added', 'modified', 'changed', 'copied', 'unchanged']) {
       expect(classifyPrFiles([{ filename: 'docs/prd/spec.md', status }]).code, status).toBe(false);
     }

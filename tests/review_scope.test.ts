@@ -11,7 +11,7 @@
 // shell-free git runner, not these.
 // Cost: 300 ms
 import { spawnSync } from 'node:child_process';
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -122,12 +122,45 @@ describe('scripts/review_scope.mjs', () => {
   // `rebase -x`, or `bisect run`, an inherited GIT_DIR or GIT_INDEX_FILE would aim a fixture
   // commit at the real repo. Global and system config are off, so no hook, filter, or fsmonitor
   // of the developer's runs. No optional index refresh, so nothing contends for .git/index.lock.
+  // safe.directory comes back as command-line config, so a checkout owned by another user (a
+  // container bind mount) still works without the global config that usually trusts it.
+  const inherited = Object.fromEntries(
+    Object.entries(process.env).filter(([key]) => !key.startsWith('GIT_')),
+  );
   const cleanEnv = {
-    ...Object.fromEntries(Object.entries(process.env).filter(([key]) => !key.startsWith('GIT_'))),
+    ...inherited,
     GIT_CONFIG_GLOBAL: os.devNull,
     GIT_CONFIG_NOSYSTEM: '1',
     GIT_OPTIONAL_LOCKS: '0',
+    GIT_CONFIG_COUNT: '1',
+    GIT_CONFIG_KEY_0: 'safe.directory',
+    GIT_CONFIG_VALUE_0: '*',
   };
+  /** The one way this suite runs git: isolated by cleanEnv (plus any overrides). */
+  const runGit = (cwd: string, args: string[], extraEnv: Record<string, string> = {}) =>
+    spawnSync('git', args, { cwd, encoding: 'utf8', env: { ...cleanEnv, ...extraEnv } });
+
+  it('runs git with no global or system config of the developer', () => {
+    const dir = mkdtempSync(path.join(os.tmpdir(), 'woc-git-isolation-'));
+    try {
+      mkdirSync(path.join(dir, 'git'));
+      writeFileSync(path.join(dir, 'git', 'config'), '[woc]\n\tprobe = global\n');
+      writeFileSync(path.join(dir, '.gitconfig'), '[woc]\n\tprobe = global\n');
+      const home = { HOME: dir, XDG_CONFIG_HOME: dir };
+      const scopes = (env: Record<string, string>) =>
+        spawnSync('git', ['config', '--list', '--show-scope'], { cwd: dir, encoding: 'utf8', env })
+          .stdout;
+      // Control: without the isolation, git reads the probe as global config.
+      expect(scopes({ ...(inherited as Record<string, string>), ...home })).toContain(
+        'global\twoc.probe=global',
+      );
+      const isolated = runGit(dir, ['config', '--list', '--show-scope'], home).stdout;
+      expect(isolated).not.toContain('woc.probe');
+      expect(isolated.split('\n').filter((l) => /^(global|system)\t/.test(l))).toEqual([]);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
   // HEAD as the base works in any clone (no remote refs needed): the merge-base is HEAD.
   const cli = (args: string[], base: string) =>
     spawnSync(process.execPath, [path.join(root, 'scripts/review_scope.mjs'), ...args], {
@@ -137,11 +170,7 @@ describe('scripts/review_scope.mjs', () => {
     });
 
   it('prints the merge-base commit with --base', () => {
-    const head = spawnSync('git', ['rev-parse', 'HEAD'], {
-      cwd: root,
-      encoding: 'utf8',
-      env: cleanEnv,
-    });
+    const head = runGit(root, ['rev-parse', 'HEAD']);
     const res = cli(['--base'], 'HEAD');
     expect(res.status).toBe(0);
     expect(res.stdout.trim()).toBe(head.stdout.trim());
@@ -159,11 +188,7 @@ describe('scripts/review_scope.mjs', () => {
       ['core.hooksPath', '/dev/null'],
     ].flatMap(([key, value]) => ['-c', `${key}=${value}`]);
     const git = (...args: string[]) => {
-      const res = spawnSync('git', [...isolated, ...args], {
-        cwd: repo,
-        encoding: 'utf8',
-        env: cleanEnv,
-      });
+      const res = runGit(repo, [...isolated, ...args]);
       if (res.status !== 0) throw new Error(`git ${args.join(' ')}: ${res.stderr}`);
       return res.stdout.trim();
     };

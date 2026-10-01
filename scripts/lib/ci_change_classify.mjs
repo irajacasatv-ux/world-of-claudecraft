@@ -111,8 +111,9 @@ export function isCodePath(path) {
  * instruction-file drift guard, tests/instruction_drift.test.ts, fails when an instruction file
  * names a path that no longer exists), so a docs-only rename can break the tree, and skipping
  * the PR tier for it is the fast false-green this module exists to prevent. Removals and
- * renames are rare, so the slow green is cheap. A copy removes nothing and stays docs-only. An
- * entry with `previous_filename` but no `status` (never sent by the API) counts as a rename.
+ * renames are rare, so the slow green is cheap. A copy removes nothing and stays docs-only; any
+ * other entry that carries a `previous_filename` counts as a rename, whatever its `status`, so an
+ * entry this module cannot interpret fails closed.
  *
  * Filenames are attacker-controlled (git allows newlines in paths), and the
  * reason string is echoed into the CI job log where line-leading `::` workflow
@@ -140,7 +141,7 @@ export function classifyPrFiles(files) {
     }
     const removed = file.status === 'removed';
     const renamed =
-      file.status === 'renamed' || (file.status === undefined && file.previous_filename != null);
+      file.status === 'renamed' || (file.previous_filename != null && file.status !== 'copied');
     if (removed || renamed) {
       const gone = file.previous_filename ?? file.filename;
       return {

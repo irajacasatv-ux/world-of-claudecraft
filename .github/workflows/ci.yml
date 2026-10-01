@@ -127,9 +127,9 @@ env:
 # start and skip at STEP level so all eight suffixed required check runs
 # still report (see the pr-gate job comment for why that difference is
 # load-bearing). Any touch of the code path set, and any removed or renamed path
-# (docs included), forces the full PR tier. push
-# to main/dev-*, workflow_dispatch, and merge_group queue runs always report
-# code=true (full PR tier when unsure).
+# (docs included), forces the full PR tier. push to main/dev-*,
+# workflow_dispatch, and merge_group queue runs always report code=true (full
+# PR tier when unsure).
 # Release/** pushes and release-to-main PRs never consult the filter:
 # release-gate, release-checks, and release-version-gate stay always-full
 # (no path skip on those jobs).
