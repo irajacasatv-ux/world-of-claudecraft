@@ -3514,13 +3514,18 @@ describe('the claim renewer', () => {
     // Negative control: one word changed in one copy fails the comparison
     // through the same extractor, which still finds the whole list.
     const changed = registrySource.replace(
-      /(exactly these cases[\s\S]*?)a sane clock/,
+      /(exactly\s+(?:\*\s+)?these\s+(?:\*\s+)?cases[\s\S]*?)a sane clock/,
       '$1a sound clock',
     );
     expect(changed).not.toBe(registrySource);
     const changedList = listOf(changed);
     expect(changedList).toHaveLength(jsdoc.length);
     expect(changedList).not.toEqual(memberDoc);
+    // And an anchor broken across comment lines reads the same list, so the
+    // flatten-first read is pinned whatever any copy's wrap is today.
+    const split = registrySource.replace(/exactly these cases/, 'exactly\n * these\n * cases');
+    expect(split).not.toBe(registrySource);
+    expect(listOf(split)).toEqual(jsdoc);
   });
 
   it('pins every mention of the renewer by name in server/ to its reviewed per-file count: a new call, alias, binding or re-export fails until reviewed', () => {
@@ -3787,62 +3792,69 @@ describe('the claim renewer', () => {
     }
     // The alias escape is closed where it would be declared: every alias table
     // the toolchain reads (package.json `imports`, the `paths` of each
-    // tsconfig, the vite and server-bundle `alias` objects) is read whole by
-    // one pure reader, which refuses a table naming the registry, or a
-    // wildcard inside a freehold_claim_ name (`"#fc_*": [".../freehold_claim_*"]`
-    // would reach it under any suffix). Fixtures run through the same reader.
-    const aliasTable = (file: string, text: string): string => {
+    // tsconfig, the vite and server-bundle `alias` objects) has its KEYS pinned
+    // to a reviewed list, so a new alias fails until reviewed whatever its
+    // value is (a literal path, a variable, a wildcard), and the count of alias
+    // blocks per file is pinned too, so a second block or another form (the
+    // vite array form) fails. Fixtures run through the same reader.
+    const aliasKeys = (file: string, text: string): string[][] => {
       if (file === 'package.json') {
         const pkg = JSON.parse(text) as { imports?: Record<string, unknown> };
-        return JSON.stringify(pkg.imports ?? {});
+        return pkg.imports === undefined ? [] : [Object.keys(pkg.imports)];
       }
-      if (file.endsWith('.json')) return text.match(/"paths"\s*:\s*\{[\s\S]*?\n\s*\}/)?.[0] ?? '';
-      return (text.match(/\balias\s*:\s*\{[^}]*\}/g) ?? []).join('\n');
+      const blocks = file.endsWith('.json')
+        ? (text.match(/"paths"\s*:\s*\{[\s\S]*?\}/g) ?? [])
+        : (text.match(/\balias\s*:\s*[{[][\s\S]*?[}\]]\s*,?\s*$/gm) ?? []);
+      return blocks.map((block) =>
+        [...block.slice(block.search(/[{[]/) + 1).matchAll(/(['"])([^'"]+)\1\s*:/g)].map(
+          (m) => m[2],
+        ),
+      );
     };
-    const reachesRegistry = (table: string): boolean =>
-      /freehold_claim_registry/.test(table) || /freehold_claim_[^'"\s,\]]*\*/.test(table);
-    const aliasFiles = [
-      'package.json',
-      'tsconfig.json',
-      'tsconfig.admin.json',
-      'tsconfig.bot.json',
-      'vite.config.ts',
-      'scripts/build_server.mjs',
-    ];
-    const tables = aliasFiles.map((file) => ({
-      file,
-      table: aliasTable(file, readFileSync(file, 'utf8')),
-    }));
-    // Controls: the reader sees the alias each real table declares today.
-    for (const file of ['tsconfig.json', 'vite.config.ts', 'scripts/build_server.mjs']) {
-      expect(tables.find((t) => t.file === file)?.table, file).toContain('#bot-detector');
+    const blockCount = (file: string, text: string): number =>
+      file.endsWith('.json')
+        ? (text.match(/"(?:paths|imports)"\s*:/g) ?? []).length
+        : (text.match(/\balias\s*:/g) ?? []).length;
+    const reviewed: Record<string, string[][]> = {
+      'package.json': [],
+      'tsconfig.json': [['#bot-detector']],
+      'tsconfig.admin.json': [],
+      'tsconfig.bot.json': [],
+      'vite.config.ts': [['#bot-detector']],
+      'scripts/build_server.mjs': Array.from({ length: 5 }, () => ['#bot-detector']),
+    };
+    for (const [file, keys] of Object.entries(reviewed)) {
+      const text = readFileSync(file, 'utf8');
+      expect(aliasKeys(file, text), file).toEqual(keys);
+      // Every block the file declares was read (none silently skipped).
+      expect(blockCount(file, text), file).toBe(keys.length);
     }
-    expect(tables.filter((t) => reachesRegistry(t.table)).map((t) => t.file)).toEqual([]);
-    // Fixtures through the same reader: each would reach the registry.
-    for (const [file, text] of [
-      ['package.json', '{"imports":{"#claims":"./server/freehold_claim_registry.ts"}}'],
+    // Fixtures through the same reader: a new alias in each table, a
+    // variable value included, changes the keys.
+    for (const [file, text, keys] of [
       [
-        'tsconfig.json',
-        '{\n  "compilerOptions": {\n    "paths": {\n      "#claims": ["./server/freehold_claim_registry.ts"]\n    }\n  }\n}',
+        'package.json',
+        '{"imports":{"#claims":"./server/freehold_claim_registry.ts"}}',
+        [['#claims']],
       ],
       [
         'tsconfig.json',
         '{\n  "compilerOptions": {\n    "paths": {\n      "#fc_*": ["./server/freehold_claim_*.ts"]\n    }\n  }\n}',
+        [['#fc_*']],
       ],
       [
         'vite.config.ts',
-        "resolve: { alias: { '#claims': './server/freehold_claim_registry.ts' } },",
+        "  resolve: { alias: { '#bot-detector': botDetectorImpl, '#claims': claimsImpl } },",
+        [['#bot-detector', '#claims']],
       ],
-      ['scripts/build_server.mjs', "alias: { '#fc': './server/freehold_claim_registry' },"],
+      [
+        'scripts/build_server.mjs',
+        "  alias: { '#bot-detector': stubImpl, '#r/*': rImpl },",
+        [['#bot-detector', '#r/*']],
+      ],
     ] as const) {
-      expect(reachesRegistry(aliasTable(file, text)), `${file}: ${text}`).toBe(true);
+      expect(aliasKeys(file, text), `${file}: ${text}`).toEqual(keys);
     }
-    // And a table naming only another module is no reach.
-    expect(
-      reachesRegistry(
-        aliasTable('package.json', '{"imports":{"#db":"./server/freehold_claim_db.ts"}}'),
-      ),
-    ).toBe(false);
     // The computed key the namespace control calls through is the shape the
     // name counts cannot see: it moves none of them.
     expect(delta("void reg['renew' + 'FreeholdClaims'](d);")).toEqual(none);
