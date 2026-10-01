@@ -375,9 +375,15 @@ Validation gates run automatically per lane (`lib/validate.mjs`): budget caps, g
 y=0 base, required clips, in-place clips. Hard errors block; warnings ship but are reported.
 
 ## After integrating
-- Regenerate the media manifest: `node scripts/build_media_manifest.mjs generate` (automatic
-  in `npm run build`; dev serves raw `public/` paths, so previewing in `npm run dev` needs no
-  regen). Never hand-edit `src/render/assets/manifest.generated.ts` (root invariant).
+- Compress the embedded textures to KTX2, then regenerate the media manifest:
+  `node scripts/assets/compress_glb_textures.mjs && node scripts/build_media_manifest.mjs generate`.
+  The pipeline embeds WebP, and every GLB under `public/models/` must ship KTX2
+  (`tests/glb_texture_compression.test.ts` walks them all; Tripo baseColor textures route
+  to UASTC automatically, and files already in KTX2 are skipped). It needs the `ktx` tool
+  (KTX-Software 4.3+) on PATH; detail in `public/models/CLAUDE.md`. The manifest regen also
+  runs in `npm run build`, and dev serves raw `public/` paths, so previewing in
+  `npm run dev` needs neither. Never hand-edit `src/render/assets/manifest.generated.ts`
+  (root invariant).
 - CREDITS.md attribution is auto-appended by `--apply` (idempotent).
 - `npm run asset:budget` is the advisory whole-tree size check; keep it in mind.
 
@@ -408,6 +414,8 @@ Textures: 512 px category norm, 1024 px hard cap, WebP re-encode on statics.
   entries (English only at PR tier, per the root i18n rules).
 - Wiki regen for player-facing content: `npm run wiki:content` (+ `npm run wiki:stills` for
   new bestiary models).
-- New player cosmetic BODIES: `SkinCatalog` (`src/sim/types.ts`) is a closed sim/wire union;
-  do not extend it. Use the skin lane for class variants, or the creature lane for mobs/NPCs.
+- New player cosmetic BODIES: `SkinCatalog` (`src/sim/types.ts`) is a closed sim/wire union,
+  and asset work never extends it. A new player body is its own sim/wire change with its own
+  plan and review, following the Combat Mech precedent (the `'mech'` member). Inside this
+  pipeline, use the skin lane for class variants and the creature lane for mobs/NPCs.
 - In-game verification: screenshot the asset in a running `npm run dev` client.

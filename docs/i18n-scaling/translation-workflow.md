@@ -23,8 +23,8 @@ Translating your own locale is **permitted but never required** of a contributor
 
 Pick the recipe for where the string is emitted. In all four, add ENGLISH only,
 then `npm run i18n:gen` (= `i18n:build` + `i18n:admin` + `i18n:scan`) and commit.
-Never edit the `i18n.locales/<lang>.ts` overlays and never fake a translation in
-one.
+Never edit the `i18n.locales/<lang>.ts` overlays (the one exception is the M16 fills
+below) and never fake a translation in one.
 
 1. **Client UI (`src/ui`, `src/render`, `src/game`, `index.html`).** Add the key
    to `en` and render via `t()` (numbers/dates via the formatters, below).
@@ -79,8 +79,9 @@ The PR is green at the PR-tier gate (no translations required), with one always-
 exception: a NEW *wordy* English value (a run of 4+ consecutive lowercase letters after
 stripping `{tokens}`, i.e. most real prose) also needs its five non-Latin fills
 (`zh_CN`/`zh_TW`/`ja_JP`/`ko_KR`/`ru_RU`) in the same change, or `tests/i18n_completeness.test.ts`
-(the always-on M16 check) reds even at PR tier; the maintainer normally adds those five at
-merge, and only brand/URL leaves may stay byte-identical. `tsc` and the `t()` untracked-key
+(the always-on M16 check) reds even at PR tier. The contributor adds those five real
+translations to the five overlay files in the same change, and only brand/URL leaves may stay
+byte-identical. `tsc` and the `t()` untracked-key
 throw still guarantee English completeness.
 
 ## REST API errors (localize by code, not by English)

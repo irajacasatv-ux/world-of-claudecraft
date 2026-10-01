@@ -388,8 +388,9 @@ translation key, while feature contributors normally add only the English source
   English-only is exactly right for a feature PR: the maintainer fills the other
   locales at release, so you do not edit the `src/ui/i18n.locales/` overlays and you
   never leave an English placeholder or a `// TODO` in one. The M16 exception is a new
-  wordy English value, which also needs the five non-Latin fills described in
-  [`src/ui/CLAUDE.md`](src/ui/CLAUDE.md).
+  wordy English value: it needs real translations in the five non-Latin overlays in the
+  same PR (the always-on `tests/i18n_completeness.test.ts` fails without them), as
+  described in [`src/ui/CLAUDE.md`](src/ui/CLAUDE.md).
 - Numbers, money, dates, units, and percentages go through the formatters
   (`formatNumber`, `formatMoney`, `formatDateTime`, `Intl`) rather than manual
   string building.

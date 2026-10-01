@@ -22,6 +22,10 @@ Do not edit or replace the Claude setup unless the user explicitly asks for that
 Never revert, discard, stage, commit, push, file an issue, post a review, or mutate a
 remote system unless the user authorized that action. If a commit is requested, stage
 only this task's files and follow the scoped Conventional Commit rule in `CLAUDE.md`.
+The `CLAUDE.md` deliverable contract (a PR that passes CI) describes what finished work
+looks like; it is not a standing authorization. A request to deliver or ship the PR
+authorizes its commits, the push of the task branch, and opening the PR, and nothing
+beyond them (no merge, force push, or other remote change).
 
 ## Authority and follow-through
 

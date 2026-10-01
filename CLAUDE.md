@@ -114,7 +114,10 @@ Implementation requirements:
 Deliverable: a PR based off the latest release branch, following
 `.github/PULL_REQUEST_TEMPLATE.md`, that is **fully mergeable and passes CI**. Gate it locally
 with `node scripts/gate_select.mjs` (above) before calling it done; `npm run gate` remains
-the deeper check when you want the whole suite locally.
+the deeper check when you want the whole suite locally. On a branch the maintainer has
+cleared for pushing, a green CI run on the pushed tip, watched to completion, meets the same
+bar, so you may push and watch CI instead of gating locally; an unpushed branch always gates
+locally.
 
 ## Architecture (the load-bearing ideas)
 - **One sim, three hosts.** The exact same `src/sim/` code runs the offline
@@ -166,10 +169,11 @@ the deeper check when you want the whole suite locally.
   string feeds both a log and the UI, split it. Numbers, money, dates, percents go through
   `formatNumber`/`formatMoney`/`formatDateTime`/`Intl`.
   - **Contributors add ENGLISH only** to the matching `src/ui/i18n.catalog/<domain>.ts` module;
-    the maintainer fills every locale at release. Never edit the `src/ui/i18n.locales/` overlays.
-    The PR-tier gate permits English-only (one exception, M16: a new wordy English value also
-    needs its non-Latin fills in the same change); the release-tier gate (`I18N_RELEASE_TIER=1`)
-    hard-fails on any `pending` row.
+    the maintainer fills every locale at release. Never edit the `src/ui/i18n.locales/` overlays,
+    with one exception (M16): a new wordy English value needs real translations in the five
+    non-Latin overlays in the same change, or `tests/i18n_completeness.test.ts` fails at PR tier
+    (model in `src/ui/CLAUDE.md`). Everything else stays English-only at PR tier; the
+    release-tier gate (`I18N_RELEASE_TIER=1`) hard-fails on any `pending` row.
   - **`src/sim/` and `server/` stay language-agnostic** (no `t()`, no DOM) but their player text
     is in scope: emit a stable key plus values, or English re-localized via the client matcher,
     in the SAME change. The S3 guard (`tests/localization_fixes.test.ts`) enforces it.
@@ -344,10 +348,10 @@ unsure, or on a smaller or unfamiliar model, use the baseline.
   and the acceptance check in one turn rather than revealing them piecemeal. Use parallel
   subagents for genuinely independent, sizeable tracks (unrelated subsystems, a wide
   multi-file investigation); do work you can finish in a handful of tool calls yourself.
-  Before declaring done, run `/qa` over your diff (Testing & verification below): its
-  reviewers report for COVERAGE (every correctness or requirement gap with confidence and
-  severity), and its confirm step does the filtering. The operator can push further with
-  ultracode.
+  Before declaring done, run `/qa` over your diff (Testing & verification below): it
+  dispatches fresh reviewers (never the implementer) that report for COVERAGE (every
+  correctness or requirement gap with confidence and severity), and its confirm step does
+  the filtering. The operator can push further with ultracode.
 - **Use the repo's reviewers, not ad-hoc subagents.** Purpose-built read-only reviewers
   live in `.claude/agents/` and dispatch via `/qa`; the canonical concern-to-reviewer
   table is in `docs/qa-gate.md`. Highlights: `qa-checklist` (the end-of-contribution

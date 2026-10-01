@@ -83,8 +83,12 @@ Rerun with `--apply` (still `--job <id>` so nothing regenerates). Then:
 - weapon: `npx vitest run tests/held_weapon_models.test.ts`
 - skin: `npx vitest run tests/skin_event.test.ts`
 - creature/prop: place the printed snippet (step 5), then `npx tsc --noEmit`
-- All lanes: `node scripts/build_media_manifest.mjs generate` (auto in `npm run build`; dev
-  needs no regen). Never hand-edit `src/render/assets/manifest.generated.ts`.
+- All lanes: `node scripts/assets/compress_glb_textures.mjs && node scripts/build_media_manifest.mjs generate`.
+  The pipeline embeds WebP, but every shipped GLB texture must be KTX2
+  (`tests/glb_texture_compression.test.ts`); the compress step skips files already in KTX2
+  and needs the `ktx` tool (KTX-Software 4.3+) on PATH. The manifest regen is also
+  automatic in `npm run build`; dev needs neither. Never hand-edit
+  `src/render/assets/manifest.generated.ts`.
 - CREDITS.md was auto-appended by `--apply`; `npm run asset:budget` is advisory.
 
 ## 5. Manual follow-ups per lane (the pipeline will not do these)
@@ -100,8 +104,10 @@ Rerun with `--apply` (still `--job <id>` so nothing regenerates). Then:
   owes committed WebP art (`tests/item_art_consistency.test.ts`) in the same change, and a
   wordy English name owes its M16 non-Latin fills too (root `CLAUDE.md` i18n bullet);
   "English only at PR tier" does not cover those two.
-- Never extend `SkinCatalog` (`src/sim/types.ts`): it is a closed sim/wire union. Class
-  variants go through the skin lane; new bodies are mobs/NPCs.
+- Never extend `SkinCatalog` (`src/sim/types.ts`) as part of asset work: it is a closed
+  sim/wire union. Class variants go through the skin lane; new bodies are mobs/NPCs. A new
+  player body is its own sim/wire change following the Combat Mech precedent, outside this
+  skill.
 - Verify in game: `npm run dev`, screenshot the asset in place.
 
 ## 6. Commit

@@ -445,9 +445,10 @@ per-surface behavior lives in `tests/language_fanout_relocalize.test.ts`.
 
 **Contributor workflow (add a player-visible string): add ENGLISH ONLY.**
 1. Add the key to `en` (the matching `i18n.catalog/<domain>.ts` module) and render it through
-   `t()`. **Never edit the `i18n.locales/<lang>.ts` overlays, and never put English / a
-   `// TODO` / a placeholder into one.** Leave the key omitted; the build English-fills it and
-   marks it `pending` (the maintainer batch-fills every locale at release).
+   `t()`. **Never edit the `i18n.locales/<lang>.ts` overlays (the one exception is the M16
+   fills in step 3), and never put English / a `// TODO` / a placeholder into one.** Leave the
+   key omitted; the build English-fills it and marks it `pending` (the maintainer batch-fills
+   every locale at release).
 2. If the string originates in `src/sim/` or `server/` (which stay language-agnostic), register
    a matcher RULE in the table matching the emit's ORIGIN (`sim_i18n.ts` for a `src/sim/` emit,
    `server_i18n.ts` for a `server/` emit) in the SAME change. The S3 guard
@@ -455,16 +456,17 @@ per-surface behavior lives in `tests/language_fanout_relocalize.test.ts`.
    Add the English to `baseEnTable` ONLY and never copy it into a locale block of
    `sim_i18n.ts`: the status registry reads each locale's own blocks, so a copied English
    row reads `translated` and ships English (`docs/i18n-scaling/translation-workflow.md`).
-3. Run `npm run i18n:scan` / `i18n:build` and commit the regenerated files. The PR is green
-   at the PR-tier gate; the release-tier gate (`I18N_RELEASE_TIER=1`) hard-fails on any
-   `pending` row.
+3. Run `npm run i18n:scan` / `i18n:build` and commit the regenerated files. With the M16
+   fills below in place, the PR is green at the PR-tier gate; the release-tier gate
+   (`I18N_RELEASE_TIER=1`) hard-fails on any `pending` row.
    - **The one PR-tier i18n exception (M16).** A new English value that is *wordy* (a run of
      4+ consecutive lowercase letters after stripping `{tokens}`, i.e. most real prose) also
      needs its five non-Latin fills (`zh_CN`/`zh_TW`/`ja_JP`/`ko_KR`/`ru_RU`) in the SAME
      change, or the always-on `tests/i18n_completeness.test.ts` reds even at PR tier: the
      build English-fills the omission, and untranslated English left byte-identical in a
-     non-Latin locale is exactly the leak it catches. The maintainer normally supplies those
-     five at merge; brand/URL leaves are the only ones that may stay identical.
+     non-Latin locale is exactly the leak it catches. The contributor supplies those five
+     real translations in the five overlay files, in the same change, so the PR is mergeable
+     as delivered; brand/URL leaves are the only ones that may stay identical.
 
 **Catalog-domain gotcha (where to put a new client key).** Most catalog domains carry
 per-locale data that `tsc` ENFORCES (locale blocks typed against the `en` shape, e.g.

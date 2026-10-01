@@ -35,10 +35,11 @@ file rather than restating it. Two planning-specific consequences:
 - **The contributor i18n policy is stated ONCE, here, and referenced everywhere else in
   the generated packet.** Every new player-visible string is a `t()` key added in ENGLISH
   to the matching `src/ui/i18n.catalog/<domain>.ts` module and rendered via `t()`; never
-  edit the `src/ui/i18n.locales/` overlays (release-time maintainer work; the one
-  exception, M16: a wordy new English value also needs its non-Latin fills in the same
-  change). Never fan out translations per phase; English rows ride the sanctioned pending
-  mechanism and the maintainer fills locales at release. Sim/server stay
+  edit the `src/ui/i18n.locales/` overlays (release-time maintainer work), with one
+  exception, M16: a wordy new English value needs real translations in the five non-Latin
+  overlays in the same phase, or the always-on completeness test fails. Never fan out the
+  other locales per phase; English rows ride the sanctioned pending mechanism and the
+  maintainer fills them at release. Sim/server stay
   language-agnostic but their player text needs a matcher rule in `src/ui/sim_i18n.ts` /
   `src/ui/server_i18n.ts` in the SAME change; the S3 guard
   (`tests/localization_fixes.test.ts`) enforces it. Full model: root `CLAUDE.md` and
@@ -85,7 +86,7 @@ explicitly and name the split**; do not assume the runner infers it.)
 |------|-------------|----------------|
 | **Explore subagent** (`subagent_type: "Explore"`) | Mapping the codebase, locating files/patterns, "where is X used" | Raw reads stay in the subagent; only the summary returns. Default for all recon. |
 | **Parallel Agent fan-out** (multiple `Agent` calls in one message) | Independent vertical slices (sim + server + ui + tests); parallel reviews | Each agent's work stays in its own context. Cap at ~5 manual agents. |
-| **Agent teams** (`name:` + `SendMessage`) | Multi-round collaboration where an agent needs its prior context | Reuses a warm agent. Never `mode: "plan"` on teammates (they stall). |
+| **Continue a warm agent** (`SendMessage` to an agent that already ran) | Multi-round collaboration where an agent needs its prior context | Reuses its context instead of re-briefing a fresh one. |
 | **Workflow** (the `Workflow` tool) | Batch-heavy phases needing scale + verification: mass edits, content sweeps, exhaustive audits | Intermediate results live in script variables, not your context. Opt-in: only when the running prompt includes `ultracode` (or the user asked). |
 | **ToolSearch / deferred tools** | A phase needs a tool not loaded by default | Keeps unused schemas out of context. |
 
@@ -94,14 +95,14 @@ Hard rules:
   cheaper tier.
 - **Manual parallel fan-out caps at ~5 agents.** Past that, use a Workflow; for
   batch-heavy phases the starter prompt should TELL the runner to add `ultracode`.
-- **Agent replies truncate at roughly 3,000 characters.** Every agent whose report can run
-  longer than a screen writes the FULL report to a file (the packet directory for
-  durable findings, the session scratchpad for throwaway recon) and replies with the
-  path plus a ten-line summary. A truncated reply is a lost report; do not rely on
-  "ask for the rest".
-- **Shared working tree.** A concurrent session may share the checkout. Commit
-  sequentially with EXPLICIT paths, never `git add -A` (memory:
-  shared-worktree-commit-care).
+- **Every agent delivers its full report.** Ask for the complete report as the agent's
+  final reply. Durable findings the next session needs (a QA verdict, a review ledger) go
+  into the packet directory, written by the orchestrator from that reply; reply size
+  limits and whether a subagent may write files depend on the harness version, so never
+  rely on either.
+- **Shared working tree.** A concurrent session may share the checkout, so another
+  session's work can sit in the same index. Commit sequentially with EXPLICIT paths,
+  never `git add -A`.
 
 ## Prompting discipline (apply to EVERY prompt this skill emits)
 
@@ -114,10 +115,10 @@ Hard rules:
 3. **For review/QA agents, the finding stage is COVERAGE, not filtering.** Always prompt:
    "report every issue including low-severity and uncertain ones; ranking happens in a
    later step."
-4. **Reports go to files** (the hard rule above). If an agent still truncates, resume it
-   with: *"Stop reading more files. Write the full report to <path> now based on what
-   you've already seen. No more tool calls. Format: BLOCKING / SHOULD-FIX /
-   NICE-TO-HAVE / VERDICT."*
+4. **Full reports, bounded work** (the rule above). Give each reviewer a tool budget and
+   ask for the report by a set call count. If one stops without a report, resume it with:
+   *"Stop reading more files. Reply with the full report now based on what you've already
+   seen. No more tool calls. Format: BLOCKING / SHOULD-FIX / NICE-TO-HAVE / VERDICT."*
 5. **Demand structured handoffs.** A phase ends by writing its state to `progress.md` /
    `state.md` and (for big packets) a per-phase resume file; that IS the cross-session
    memory. The next session reads the summary, not the transcript.
@@ -233,8 +234,12 @@ completable in a single focused session without exhausting the context window:
    establish the pattern later phases follow.
 2. Every implementation phase gets a QA phase immediately after it (Phase 1, Phase 1 QA,
    Phase 2, ...), each a separate session, in strict order: phase, its QA, the next
-   phase. The in-phase `qa-checklist` run is a completion self-review, never a substitute
-   for the dedicated QA phase.
+   phase. The in-phase `/qa` run is a completion self-review, never a substitute for the
+   dedicated QA phase. The one exception is a phase the plan marks LOW-RISK when it is
+   written: docs, copy, or isolated UI polish that touches no `src/sim/`, wire, persistence,
+   security, money, or test-infrastructure surface. A low-risk phase closes on its
+   in-session `/qa` run instead, and its row in `progress.md` says so. When in doubt, it
+   gets the paired QA phase.
 3. Sim behavior lands server-side and mirrors into `ClientWorld` as you go, not at the
    end.
 4. Then server persistence (additive DDL, save/load round-trip, JSONB back-compat), then
@@ -271,10 +276,10 @@ trigger: which diff surfaces spawn which agent. Generate it from these heuristic
   files; `test-coverage-auditor` when a phase's test additions are the deliverable;
   `qa-checklist` when a phase or deliverable set is COMPLETE (the `/qa` skill runs it
   with the fan-out it names).
-- Most phases trigger one or two agents. If no surface matches (docs-only, test-only),
-  spawn NONE; do not default to running a security review anyway.
-- Prompt every spawned reviewer for COVERAGE, not filtering, have each write its report
-  to a file, and do not commit until each reports no BLOCKING issues.
+- Most phases trigger one or two agents. If no surface matches (docs or comments that are
+  not instruction files), spawn NONE; do not default to running a security review anyway.
+- Prompt every spawned reviewer for COVERAGE, not filtering, ask for its full report as
+  its final reply, and do not commit until each reports no BLOCKING issues.
 
 ### Validation (referenced by every phase; the matrix lives in `state.md`)
 
@@ -288,11 +293,11 @@ error paths against your own `git diff <base> HEAD --name-only` before calling a
 "scope noise"; fix with a SCOPED `npx @biomejs/biome check --write <file>`, never
 whole-tree, and re-run the check, because a format pass is not a check pass).
 
-**The merge bar is CI green on the PR.** Once the branch is sanctioned for pushing,
-push and watch (`gh pr checks --watch` or a background watcher) instead of running the
-full suite locally; the maintainer prefers CI to a local `node scripts/gate_select.mjs`
-run, which stays available for a change CI cannot see. Step lists and tiers live in
-`docs/qa-gate.md`; do not restate them in prompts.
+**The merge bar is CI green on the PR** (root `CLAUDE.md`, "Deliverable"). Once the
+branch is cleared for pushing, push and watch (`gh pr checks --watch` or a background
+watcher) to completion instead of running the full suite locally; the maintainer prefers
+CI here. Before the branch is cleared, gate locally with `node scripts/gate_select.mjs`.
+Step lists and tiers live in `docs/qa-gate.md`; do not restate them in prompts.
 
 ### Code hygiene (include once in the plan's workflow section)
 
@@ -341,10 +346,9 @@ web-research agent; unverifiable facts are OPEN, never guessed.}
 STEP 2 - CHOOSE ORCHESTRATION + EXECUTE:
 Pick the lightest tool that fits (Explore for recon, parallel Agent fan-out for
 independent slices, Workflow for batch/scale). Request fan-out EXPLICITLY and name
-the split. Give each agent ONLY the Explore summary. Never `mode: "plan"` on
-teammates. Use `isolation: "worktree"` only if agents edit overlapping files.
-Every agent writes any report longer than a screen to a file and replies with the
-path plus a short summary.
+the split. Give each agent ONLY the Explore summary. Use `isolation: "worktree"` only
+if agents edit overlapping files. Every agent replies with its full report; write
+durable findings into the packet directory yourself.
 
 {Agent A} deliverables:
 - {bullet}
@@ -371,8 +375,8 @@ STEP 3 - VALIDATION + REVIEW DISPATCH:
   docs/{feature-name}/implementation-plan.md (the one canonical copy): check
   `git diff --name-only` against the phase-start commit, spawn ONLY matching agents
   (often one or two; none if no surface matches), prompt each for COVERAGE not
-  filtering, have each write its report to a file. Do not commit until no BLOCKING
-  issues remain.
+  filtering, and ask for its full report as its final reply. Do not commit until no
+  BLOCKING issues remain.
 
 STEP 4 - COMMIT CADENCE:
 {2-5} commits, Conventional Commits with scope and a body, EXPLICIT paths, never
@@ -391,7 +395,8 @@ STEP 6 - DOC UPDATES + MEMORY:
 STEP 7 - FINAL RESPONSE FORMAT:
 End with: phase status, files touched, validation results, review verdicts, deferred
 items, and the FULL PATH of the next file to run (the paired QA file after an
-implementation phase; the next implementation file after a QA phase).
+implementation phase, or the next implementation file after a LOW-RISK phase or a QA
+phase).
 
 STOPPING RULES:
 - {explicit stop conditions, e.g. "stop if determinism cannot be preserved"}
