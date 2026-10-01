@@ -19,6 +19,7 @@ import { spawnSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it, vi } from 'vitest';
 import { LEASE_TTL_SECONDS } from '../../server/character_lease_db';
 import {
@@ -3583,7 +3584,7 @@ describe('the claim renewer', () => {
       return { file: `server/${file}`, source, texts: textsOf(source) };
     });
     // A walk that found little would pass the counts below vacuously.
-    expect(files.length).toBeGreaterThan(400);
+    expect(files.length).toBeGreaterThan(500);
     expect(files.map(({ file }) => file)).toContain('server/freehold_claim_registry.ts');
     expect(SOURCE_EXTENSIONS).toEqual(
       expect.arrayContaining(['.ts', '.tsx', '.mts', '.cts', '.js', '.jsx', '.mjs', '.cjs']),
@@ -3593,17 +3594,38 @@ describe('the claim renewer', () => {
     const fixtureRoot = mkdtempSync(join(tmpdir(), 'renewer-walk-'));
     try {
       mkdirSync(join(fixtureRoot, 'nested'));
-      for (const name of ['a.mjs', 'b.ts', 'c.cjs', 'nested/d.js', 'e.md']) {
+      for (const name of [
+        'a.mjs',
+        'b.ts',
+        'c.cjs',
+        'nested/d.js',
+        'e.mts',
+        'f.cts',
+        'g.tsx',
+        'h.jsx',
+        'i.d.ts',
+        'j.md',
+      ]) {
         writeFileSync(join(fixtureRoot, name), '');
       }
       expect(
         modulesUnder(fixtureRoot)
           .map(({ file }) => file)
           .sort(),
-      ).toEqual(['a.mjs', 'b.ts', 'c.cjs', 'nested/d.js']);
+      ).toEqual(['a.mjs', 'b.ts', 'c.cjs', 'e.mts', 'f.cts', 'g.tsx', 'h.jsx', 'nested/d.js']);
     } finally {
       rmSync(fixtureRoot, { recursive: true, force: true });
     }
+    // Both scans read that one walk: this file imports no `.ts`-only walker
+    // beside it, so neither can be narrowed back to one.
+    const tsOnlyWalker = /from\s*['"][./]*helpers\/ts_files_under['"]/;
+    // Joined at run time, so this file's own text never holds the needle.
+    expect(["import { tsFilesUnder } from '../helpers/", "ts_files_under';"].join('')).toMatch(
+      tsOnlyWalker,
+    );
+    expect(stripComments(readFileSync(fileURLToPath(import.meta.url), 'utf8'))).not.toMatch(
+      tsOnlyWalker,
+    );
     const fileOf = (file: string) => {
       const found = files.find((f) => f.file === file);
       if (!found) throw new Error(`no ${file} under server/`);
@@ -3865,9 +3887,9 @@ describe('the claim renewer', () => {
     // escapes in a file the count does not read; a file git does not track
     // yet outside server/ (a local run passes until it is added; CI sees it);
     // the compose file's lines other than its runtime flags and commands;
-    // text the shared comment
-    // stripper misreads (a string holding a comment opener); an import the
-    // statement reader cannot see (a binding named by a string holding `;`);
+    // text the shared comment stripper misreads (a string holding a comment
+    // opener); an import the statement reader cannot see (a binding named by
+    // a string holding `;`);
     // the insides of packages, of the patches and overrides pnpm applies to
     // them, and of anything a local module imports in turn; a config path a
     // script passes from its own code (scripts/*.mjs spawn vitest with
@@ -4016,16 +4038,29 @@ describe('the claim renewer', () => {
       ['realms', 'npm run build:server && node scripts/dev-realms.mjs'],
     ]);
     // Read as written, its `#` comment lines aside, each instruction's
-    // continuation lines joined, its instruction words in either case.
-    const runtimeLines = (file: string, words: RegExp): string[] =>
+    // continuation lines joined.
+    const runtimeLines = (file: string, keep: (line: string) => boolean): string[] =>
       readFileSync(file, 'utf8')
         .replace(/\\\r?\n/g, ' ')
         .split('\n')
-        .filter((line) => !/^\s*#/.test(line) && words.test(line))
+        .filter((line) => !/^\s*#/.test(line) && keep(line))
         .map(flat);
+    // Docker reads instruction words in either case; names are matched as
+    // written, so `node_modules` is not a NODE_ variable.
+    const dockerRuntime = (line: string): boolean =>
+      /build:server|dist-server|NODE_|pnpm install|pnpmfile/.test(line) ||
+      /^\s*(?:ENV|ENTRYPOINT|CMD)\b/i.test(line);
     expect(
-      runtimeLines('Dockerfile', /build:server|dist-server|NODE_|^\s*(?:ENV|ENTRYPOINT|CMD)\b/i),
-    ).toEqual([
+      [
+        'entrypoint ["node", "x.cjs"]',
+        'env A=1',
+        'Cmd ["x"]',
+        'COPY node_modules ./node_modules',
+        'RUN echo hi',
+      ].map(dockerRuntime),
+    ).toEqual([true, true, true, false, false]);
+    expect(runtimeLines('Dockerfile', dockerRuntime)).toEqual([
+      'RUN pnpm install --frozen-lockfile',
       'RUN VITE_TURNSTILE_SITEKEY="$VITE_TURNSTILE_SITEKEY" VITE_REOWN_PROJECT_ID="$VITE_REOWN_PROJECT_ID" VITE_WALLET_DISABLED="$VITE_WALLET_DISABLED" pnpm run build && cp -a dist/media ./media-build && rm -rf dist/media && pnpm run build:server && pnpm run build:bot',
       'ENV NODE_ENV=production',
       'COPY --from=build /app/dist-server ./dist-server',
@@ -4034,9 +4069,16 @@ describe('the claim renewer', () => {
     // The compose file passes NODE_OPTIONS through to the container that runs
     // the bundle: its runtime flags and commands, as text.
     expect(tracked('*compose*.y*ml')).toEqual(['docker-compose.yml']);
+    const composeRuntime = (line: string): boolean =>
+      /NODE_|dist-server|build:server/.test(line) || /^\s*(?:entrypoint|command)\s*:/.test(line);
     expect(
-      runtimeLines('docker-compose.yml', /NODE_|dist-server|build:server|entrypoint|command/i),
-    ).toEqual([
+      [
+        '    command: ["x"]',
+        '  entrypoint: ["y"]',
+        '  volumes: ["./node_modules:/app/node_modules"]',
+      ].map(composeRuntime),
+    ).toEqual([true, true, false]);
+    expect(runtimeLines('docker-compose.yml', composeRuntime)).toEqual([
       // Split at the placeholder, so the literal is plain text.
       'NODE_OPTIONS: $' + '{NODE_OPTIONS:-}',
       'command: ["node", "dist-bot/bot.cjs"]',
@@ -4047,29 +4089,33 @@ describe('the claim renewer', () => {
     // naming the registry or the renewer that the count above did not read.
     const media = ['webp', 'png', 'jpg', 'glb', 'ktx2', 'hdr', 'mp3', 'ogg', 'wav', 'woff2'];
     const treeRead = ['.', ':!docs', ':!tests', ...media.map((ext) => `:!*.${ext}`)];
-    // What that pathspec reads: a known text file in every code root and of
-    // every module kind, and nothing under docs/ or tests/ and no media.
-    const readable = new Set(
-      spawnSync('git', ['ls-files', '--', ...treeRead], { encoding: 'utf8' }).stdout.split('\n'),
+    // What that pathspec reads, completely: every tracked file outside docs/
+    // and tests/ that is not of a media kind, so no root or kind is skipped
+    // silently, and nothing else.
+    const listed = (pathspec: string[]): string[] =>
+      spawnSync('git', ['ls-files', '--', ...pathspec], { encoding: 'utf8' })
+        .stdout.split('\n')
+        .filter((file) => file !== '');
+    const isMedia = (file: string): boolean => media.some((ext) => file.endsWith(`.${ext}`));
+    const outsideDocsAndTests = listed(['.']).filter((file) => !/^(?:docs|tests)\//.test(file));
+    const readable = new Set(listed(treeRead));
+    expect(outsideDocsAndTests.length).toBeGreaterThan(10000);
+    expect(outsideDocsAndTests.filter((file) => !isMedia(file) && !readable.has(file))).toEqual([]);
+    expect([...readable].filter((file) => /^(?:docs|tests)\//.test(file) || isMedia(file))).toEqual(
+      [],
     );
+    // And the media kinds are media: outside docs/ and tests/, every file of
+    // those kinds lives under an asset root (or is one of two named images
+    // at the root), so a code or config kind put on the list, which would hide
+    // a module, a workflow or a manifest, fails here.
     expect(
-      [
-        'public/basis/basis_transcoder.js',
-        'src/world_api.ts',
-        'src/admin/App.svelte',
-        'headless/env_server.ts',
-        'bot/config.ts',
-        'electron/crash_guard.cjs',
-        'scripts/build_server.mjs',
-        'svelte.config.js',
-        'Dockerfile',
-      ].filter((file) => !readable.has(file)),
-    ).toEqual([]);
-    expect(
-      [...readable].filter(
-        (file) => /^(?:docs|tests)\//.test(file) || media.some((ext) => file.endsWith(`.${ext}`)),
-      ),
-    ).toEqual([]);
+      outsideDocsAndTests
+        .filter(isMedia)
+        .filter(
+          (file) =>
+            !/^(?:public|android|ios|skies_in|build|scripts\/assets|scripts\/sfx)\//.test(file),
+        ),
+    ).toEqual(['trading-spacing-after.png', 'woc_logo_square.webp']);
     const named: Record<string, string[]> = {};
     for (const line of spawnSync(
       'git',
@@ -4113,19 +4159,28 @@ describe('the claim renewer', () => {
       renewer: unread(named.renewFreeholdClaims),
     }).toEqual({ registry: [], renewer: [] });
     // No server module reaches a barrel under docs/ or tests/.
+    const reachesDocsOrTests = /['"`](?:\.\.?\/)+(?:tests|docs)\//;
     expect(
-      files
-        .filter(({ texts }) => /['"`](?:\.\.\/)+(?:tests|docs)\//.test(texts.stripped))
-        .map(({ file }) => file),
+      files.filter(({ texts }) => reachesDocsOrTests.test(texts.stripped)).map(({ file }) => file),
     ).toEqual([]);
-    // The read sees both where they are named today, and a module the count
-    // never read would be listed.
+    expect(
+      [
+        '"../tests/x"',
+        "'../../docs/y'",
+        "'./../tests/z'",
+        "'./tests_x'",
+        "'../server/x'",
+        "'../src/tests/x'",
+      ].map((text) => reachesDocsOrTests.test(text)),
+    ).toEqual([true, true, true, false, false, false]);
+    // The read sees both where they are named today, and a file the count
+    // never read would be listed: a declaration under server/ (the walk
+    // skips `.d.ts`) or any file elsewhere.
     expect(named.freehold_claim_registry).toContain('server/game.ts');
     expect(named.renewFreeholdClaims).toContain('server/game.ts');
-    expect(unread(['headless/claims.mjs', 'server/game.ts', 'src/claims.ts'])).toEqual([
-      'headless/claims.mjs',
-      'src/claims.ts',
-    ]);
+    expect(
+      unread(['server/claims.d.ts', 'headless/claims.mjs', 'server/game.ts', 'src/claims.ts']),
+    ).toEqual(['server/claims.d.ts', 'headless/claims.mjs', 'src/claims.ts']);
 
     // EVERY OTHER TOOLCHAIN FILE, by its declarations.
     const viteStatements = [
@@ -5969,7 +6024,7 @@ describe('the housing authority boundary', () => {
       code: stripComments(readFileSync(f.full, 'utf8')),
     }));
     // A walker that found nothing would pass every scan below vacuously.
-    expect(files.length).toBeGreaterThan(400);
+    expect(files.length).toBeGreaterThan(500);
     expect(files.map((f) => f.name)).toContain('server/http/game_metrics.ts');
     return files;
   };
