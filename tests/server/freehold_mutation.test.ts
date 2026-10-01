@@ -3934,6 +3934,11 @@ describe('the claim renewer', () => {
         .split('\0')
         .filter((file) => file !== '');
     const tracked = (pattern: string): string[] => listed([pattern]).sort();
+    // The whole tracked listing, taken once with no pathspec to narrow, read
+    // by the Dockerfile inventory and the tree read's controls below; the
+    // floor sits near the real count.
+    const allTracked = listed([]);
+    expect(allTracked.length).toBeGreaterThan(21000);
     const blocksOf = (text: string, key: string): string[] => {
       const code = stripComments(text);
       const blocks: string[] = [];
@@ -4070,8 +4075,8 @@ describe('the claim renewer', () => {
       ['server', 'npm run build:server && node dist-server/server.cjs'],
       ['realms', 'npm run build:server && node scripts/dev-realms.mjs'],
     ]);
-    // THE DOCKERFILES, exactly. Every tracked path whose text holds
-    // "dockerfile" in any case (docs and tests aside) is listed first, so an
+    // THE DOCKERFILES, exactly. Every tracked path that holds "dockerfile"
+    // in any case (docs and tests aside) is listed first, so an
     // added, removed or renamed one meets this message before any read once
     // git sees the change (the list reads the index); the list fails closed,
     // so a path that only names one (say, a script called
@@ -4089,13 +4094,16 @@ describe('the claim renewer', () => {
         'deploy/realm.dockerfile',
         'deploy/Dockerfile.realm',
         'scripts/lib/dockerfile_context.mjs',
+        'deploy/dockerfiles/realm',
+        'docsite/Dockerfile',
+        'server/tests/Dockerfile',
         'docs/Dockerfile',
         'tests/fixtures/Dockerfile',
         'scripts/lib/dockerignore_context.mjs',
       ].map(inventoried),
-    ).toEqual([true, true, true, true, true, false, false, false]);
+    ).toEqual([true, true, true, true, true, true, true, true, false, false, false]);
     expect(
-      listed(['.']).filter(inventoried).sort(),
+      allTracked.filter(inventoried).sort(),
       'a path naming a Dockerfile added, removed or renamed: if it is one, pin it exactly ' +
         'like these two; then update this list',
     ).toEqual(['Dockerfile', 'mediawiki/Dockerfile']);
@@ -4221,9 +4229,13 @@ describe('the claim renewer', () => {
     // and tests/ that is not of a media kind, so no root or kind is skipped
     // silently, and nothing else.
     const isMedia = (file: string): boolean => media.some((ext) => file.endsWith(`.${ext}`));
-    const outsideDocsAndTests = listed(['.']).filter((file) => !/^(?:docs|tests)\//.test(file));
+    const outsideDocsAndTests = allTracked.filter((file) => !/^(?:docs|tests)\//.test(file));
     const readable = new Set(listed(treeRead));
     expect(outsideDocsAndTests.length).toBeGreaterThan(10000);
+    // And the whole listing holds everything the tree read reads, so neither
+    // listing can be narrowed alone.
+    const allTrackedSet = new Set(allTracked);
+    expect([...readable].filter((file) => !allTrackedSet.has(file))).toEqual([]);
     expect(outsideDocsAndTests.filter((file) => !isMedia(file) && !readable.has(file))).toEqual([]);
     expect([...readable].filter((file) => /^(?:docs|tests)\//.test(file) || isMedia(file))).toEqual(
       [],
