@@ -1,0 +1,853 @@
+# Housing mutation touch-set manifest (07a)
+
+The producing artifact the 07a packet requires BEFORE code: the exact queue, admission,
+client and table-lock order of every path that touches a housing row, the new schema, its
+per-row-class deletion policy, and what each added statement costs. It is a LIVING
+manifest: 08 (placement), 13/13a (the calendar head), 15 (paid effects), 28/29 (Hall Fund)
+and the wards extend THIS document and never fork a second order.
+
+Status: revision 4 (2026-09-30). Revisions 1, 2 and 3 each drew ACCEPT-WITH-CHANGES from
+all three acceptance readers (database performance, migration safety, privacy and
+security); every finding of all three rounds is applied below and in the code, and section
+11 maps each one to its home. Revision 4 also records what the implementation refined
+(section 14). The real-PG suites prove the manifest (section 10).
+
+Scope ruled at the 07a Step 0 (Fernando, 2026-09-30): the remote Hearth Key is LIT on a lit
+realm through this boundary (production stays dark behind `FREEHOLDS_ENABLED`); the
+operation machinery ships with NO production kind (tests reach it; 08 registers the first,
+the 07 `advanceFreeholdHearthOnClient` precedent).
+
+## 1. Participants
+
+Legacy participants, unchanged and never reordered: the account parents (sorted KEY
+SHARE), the character row (FOR NO KEY UPDATE pre-lock, then the nonce-fenced UPDATE through
+`runFencedCharacterSave`), the character material-source journal, the bank-ledger receipt
+classifier and ledger rows (ONE statement), the market row, the mail partitions, the guild
+books (ascending guild id, FOR UPDATE, seed then relock), the storage purchase keys (sorted
+advisory locks, receipt, audit row, pending close), the mail custody tail, and the deferred
+bank-ledger growth budget singleton at COMMIT.
+
+New participants: `freehold_plot_claims` (the global claim and fence, one row per plot
+id), `freehold_operations` (open intents) and `freehold_operation_receipts` (terminal
+tombstones), 07's `account_freeholds` through its existing compare-and-swap, and 07's
+`account_freehold_hearth` through `advanceFreeholdHearthOnClient`.
+
+## 2. The global lock order
+
+Every transaction takes its locks as a SUBSEQUENCE of this order. A path may skip a class;
+no path takes an earlier class after a later one.
+
+| # | Class | Mode | Sort |
+|---|---|---|---|
+| G1 | `accounts` parents | FOR KEY SHARE | ascending id, ONE statement |
+| G2 | `characters` row | FOR NO KEY UPDATE (save) / FOR KEY SHARE (FK-only paths) | one row |
+| G3 | legacy save participants | as today | as today |
+| G4 | `freehold_plot_claims` rows | FOR NO KEY UPDATE | ascending `plot_id` (an `ORDER BY plot_id FOR NO KEY UPDATE` subselect whenever a statement can touch more than one) |
+| G5a | the per-account housing advisory lock | `pg_advisory_xact_lock(FREEHOLD_ADVISORY_ACCOUNT_CLASS, account_id)` | ascending account id |
+| G5b | the per-operation advisory lock | `pg_advisory_xact_lock(FREEHOLD_ADVISORY_OPERATION_CLASS, hashtext(operation_id))` | ascending operation id (every path sorts by the same key, so two of them acquire any shared pair in one order) |
+| G6 | `freehold_operations` rows, then the `freehold_operation_receipts` insert | FOR UPDATE / unique insert | ascending operation id |
+| G7 | `account_freeholds` rows | the CAS UPDATE (row lock) | ascending `plot_id` |
+| G8 | `account_freehold_hearth` rows | FOR UPDATE (inside `advanceFreeholdHearthOnClient`) | ascending account id |
+| G9 | the bank-ledger growth budget singleton | the deferred trigger's UPDATE at COMMIT | one row, last, in every audit-writing transaction (unchanged; listed so no housing class is ever placed after it) |
+
+The housing advisory locks use the TWO-int4 form with fixed housing class ids ("FHA\x01"
+and "FHO\x01"). The single-int8 space (storage's `hashtextextended(idempotency_key, 0)`,
+the schema and sweep keys) is disjoint from it, and the two-int4 space's one other user,
+the general chat quota (`GENERAL_CHAT_QUOTA_ADVISORY_NAMESPACE`, `(1_195_594_577,
+account_id)`) and the WoC market sweep (`0x574f4303`), use different class ids; a test
+scans every advisory call site and pins the class ids distinct.
+
+THE HOUSING ACCOUNT PARTICIPANTS JOIN G1. The Hearth's account and an operation's account
+are added to the save's sorted KEY SHARE through `characterSaveEffectAccountIds` (a new
+optional argument of `lockCharacterSaveEffectAccountsOnClient`), so no `accounts` lock is
+first acquired after G2. This rule is load-bearing (an `accounts` lock after G2 deadlocks
+against an account delete's FOR UPDATE then cascade), so the hook asserts it in code: it
+refuses to run unless every account it touches was in the G1 set, and a test pins the
+refusal. `advanceFreeholdHearthOnClient` re-issues KEY SHARE on a row this transaction
+already holds, which acquires nothing.
+
+## 3. Queue, admission and client order (JavaScript)
+
+| # | Resource | Taken by |
+|---|---|---|
+| Q1 | the character FIFO (`characterSaveQueues`, per character id) | every live-session character write, including the Hearth trip and its verify |
+| Q3 | the plot store's owner FIFO (per owner key) | the store's own writes; a mutation that WRITES a plot row (08 onward), through the store's `runExclusive(ownerKey, ...)` |
+| Q2 | the market serial writer | only a save that writes market or mail rows (including any save while the vault guard holds the character) |
+| Q4 | the shared background DB permit | the save, the store write, the Hearth trip |
+| Q5 | one pool client (`pool.connect()` inside the save function) | the transaction |
+
+Q3 is taken BEFORE Q2 (revision 1 had them the other way round): entering a per-owner FIFO
+from inside the realm-global market thunk would head-of-line block every market and mail
+write behind one owner's queued write, against the server rule "never enqueue from inside
+a market thunk". A job never waits on an earlier row of this table while holding a later
+one, and no queue wait holds a client (Q5 is last, inside the save function).
+
+A plot-writing mutation applies its plan to the live Sim INSIDE Q3, synchronously after
+COMMIT, so the store's next write for that owner serializes a live document that already
+carries the committed effect; a stale store write can never land over an acknowledged
+mutation. The Hearth trip writes no plot row and never enters Q3.
+
+Admission and deadlines of the Hearth trip, as TWO separate bounds (revision 2 used one
+signal for both, which would also have aborted a transaction already running and so
+manufactured an ambiguous commit exactly under load):
+- THE ADMISSION BOUND, `AbortSignal.timeout(FREEHOLD_PERSIST_LOAD_PERMIT_WAIT_MS)` (the
+  existing 5,000 ms player-waiting bound, reused, not a new guess), carried on the housing
+  hook and used ONLY for the waits: the Q1 wait (`enqueueCancellable`, cancellable until
+  the job starts), the Q2 wait when the save carries mail, and the Q4 wait
+  (`backgroundDbGate.acquire(signal)`, a FIFO wait, never `tryAcquire`, which would refuse
+  whenever any autosave waits). A cancelled wait answers `busy` with nothing written.
+- THE TRANSACTION receives no admission signal. Its own bounds hold (lock 2 s, idle 10 s,
+  the 65 s wall), and the hook's first statement is `SET LOCAL statement_timeout =
+  CHARACTER_SAVE_SIGNAL_STATEMENT_TIMEOUT_MS` (15 s), an explicit choice for the HOOK'S
+  STATEMENTS rather than one inferred from a signal's presence. It does NOT bound COMMIT:
+  PostgreSQL 16 stops the statement timer before the deferred triggers run at commit
+  (measured on the scratch server), so COMMIT is bounded by `lock_timeout` (2 s, for the
+  growth budget's lock wait) and the 65 s wall with its backend cancel; a WAL-flush stall
+  has no server-side bound, and the verify's answer for a stall inside COMMIT is expected
+  to be `ambiguous_unresolved`.
+- The remaining waits, stated: the pool checkout inside the save function (up to the
+  pool's 5,000 ms connect timeout after admission), and a trip in flight at SIGTERM, which
+  runs to its 65 s wall ahead of that character's shutdown save.
+
+## 4. The Hearth trip contract (server authority)
+
+The sim's admission seam becomes three-valued: `freeholdKeyAdmission(ownerKey, pid)` answers
+`'admit' | 'deny' | 'pending'` (offline and headless default `'admit'`, so both run
+`useHearthKey` exactly as today). `useHearthKey` checks its LOCAL clock BEFORE admission:
+`now < readyAt` denies `cooldown` with no host call, so a key spammed through its cooldown
+costs nothing, and every durable `ready_at_ms` the server learns (at login, after a trip,
+on a `cooldown` answer) merges forward through `mergeFreeholdKeyReadyAt` (a durable value
+may deny, never admit). `'pending'` returns silently (no denial); `'deny'` emits `busy`.
+
+On a lit realm the server's admission (`server/freehold_hearth_trip.ts`):
+1. A one-shot TICKET answers first. A ticket is minted only by the server, bound to
+   `(ownerKey, pid, characterId, leaseNonce)` captured from the session when the trip
+   STARTED; before setting it the re-dispatch checks that the live session for that pid
+   still has that character and nonce and is neither leaving nor quarantined. It is set
+   IMMEDIATELY before the server's own re-dispatch and cleared in that call's `finally`.
+   No await sits between set and consume, so no client frame can ever reach it, and it
+   cannot survive a tick, a leave, a takeover, a quarantine or a relog (a new pid never
+   matches). The ticket setter is private to `server/freehold_hearth_trip.ts` with exactly
+   one call site (pinned).
+2. Otherwise, a trip already PENDING for the account answers `'pending'` (single flight:
+   one pending trip per account per process, whichever character asked).
+3. Otherwise, a per-ACCOUNT refusal memo answers `'deny'` without any database work for
+   5,000 ms after EVERY outcome except `advanced` and `cooldown` (busy, fenced, refused,
+   failed, corrupt, unsupported, ambiguous unresolved). It is keyed by account id and lives
+   on the account's presence (cleared at its last session leave), so it is bounded by the
+   online accounts and has NO global overflow arm: no account is ever denied for another
+   account's failures.
+4. Otherwise, BEFORE any queue: the owner's store entry must be LOADED and UNBLOCKED
+   (never held or quiesced: a realm that answered `claim_busy` or failed its read joins on
+   the sim's default record and must not spend the account's shared cooldown on it), and,
+   when that entry has a durable row, the registry must hold its claim. A miss answers
+   `'deny'` at no database cost. Otherwise the trip STARTS and admission answers
+   `'pending'`; inside the transaction the claim is re-proved under G4 (holder and
+   generation compared under the held lock).
+
+The trip commits ONE character save (`saveCharacter` with the housing hook, on Q1) whose
+hook carries G4 (when a claim applies) and G8. The hook's own result decides, never
+`saveCharacter`'s boolean (its `true` means "did not fence out", and its no-state arm
+answers `true` without writing); a hook that never ran (the quarantine, the vault guard,
+the no-state arm, a fence miss, a guild-book refusal) answers `'deny'`:
+- `advanced` (COMMIT resolved, or the verify answered landed): a ticket `'admit'` is minted
+  and the server re-dispatches the use (below); the durable `ready_at_ms` is merged in a
+  `finally`, so it lands even if the re-dispatch throws.
+- `cooldown`: the durable `ready_at_ms` is merged forward and a ticket `'deny'` is minted
+  (NEVER `'admit'`: the database judged the cooldown at its transaction start, the sim
+  re-checks on the realm clock, and the gap between the two, plus any realm clock running
+  ahead of the database, would otherwise admit a trip the durable clock refused and leave
+  every other realm seeing a ready key). The re-dispatch's local clock check, which now
+  runs first, denies `cooldown` in the normal case and the ticket denies `busy` in the
+  race. Nothing was written.
+- `corrupt` (a stored `ready_at_ms` past `now_ms + HEARTH_KEY_COOLDOWN_MS`, which only a
+  backward clock step or a bad row can produce) and `unsupported` (absent account, vanished
+  row, unreadable counters): refused, nothing written, an operator line and a counter
+  (contract 8a's two owed fail-closed rules).
+- fenced (the nonce fence missed, so the hook never ran), refused (claim lost, entry
+  blocked), cancelled, failed, or ambiguous unresolved: a ticket `'deny'` and the
+  re-dispatch emits `busy`.
+
+THE RE-DISPATCH runs the server prechecks the original frame passed (the jailed-travel
+gate, answering `freeholdDenied busy`; the dark-realm gate, answering `no_freehold`), then
+`sim.useItem(HEARTH_KEY_ITEM_ID, pid)` while the ticket is set. If the sim then refuses
+(the player died, entered combat or was jailed in the commit window), the advance stays
+spent: named residual R-2, counted `refused_after_commit` and logged with no token or
+holder.
+
+`pending` is cleared when its trip ends, on EVERY exit (commit, rollback, throw, fence miss,
+cancel, verify resolution), by a `finally` that compares the trip identity before it
+deletes (a stale trip can never clear a newer one's flag), and is bounded by the admission
+bound, the transaction's wall and the verify's own bounds, so a hung save can never strand
+an account's key. It is deliberately NOT cleared at session leave: a relog while the first
+trip's transaction still runs answers `'pending'` instead of starting a second trip on
+another character's FIFO; the first trip's outcome finds its session gone and is
+abandoned (no re-dispatch, no merge). A relog does clear the refusal memo, on purpose (a
+login costs more database work than the memo saves).
+
+EVICTION (the sim-side gap `src/sim/freehold/CLAUDE.md` named for this release): the
+Sim's `freeholdKeyReadyAtMs` entry for an owner is removed when the owner's LAST session
+leaves, in `releaseFreeholdOnLeave` (`src/sim/freehold/state.ts`), checked against the
+roster BEFORE that function's record-gated early return, because the durable clock is
+merged at install even for an account whose plot is held or absent. Online that is safe
+because the login merge reinstalls the durable clock; offline and headless keys are
+per-entity. The server's refusal memo is evicted at the account's last session leave.
+
+THE SERVER DEFAULT: a lit realm always wires the three-valued admission, and any failure
+inside it answers `'deny'`, never the sim's offline default `'admit'` (pinned).
+
+## 5. Paths, statement by statement
+
+`B` is BEGIN plus the SET LOCAL line sent as ONE round trip (simple protocol, two
+statements) wherever this manifest owns the transaction; `C` is COMMIT, and on every
+transaction this manifest owns the COMMIT command tag must read `COMMIT` (a `ROLLBACK` tag
+from an aborted transaction is a failure, never a success).
+
+**P1. Character save carrying a housing hook** (`saveCharacterState`,
+`saveCharacterAndMarketState`, `saveCharacterAndGuildBankState`; NEVER
+`saveCharacterStateOnClient`, whose callers acquire legacy participants after it returns):
+the save's own B (statement 60 s without a signal, lock 2 s, idle 10 s, 65 s wall) · G1
+(now including the hook's account ids) · G2 pre-lock and fenced UPDATE · the fence-miss
+exit (rolls back; the hook never runs) · G3 exactly as today · THE HOOK, the last thing
+before COMMIT (`commitWithHousing` in `server/character_save_housing.ts`, after the custody
+tail on the market variant), opening with `SET LOCAL statement_timeout = 15000` · C with
+G9, its tag checked. The Hearth hook: G4 when a claim applies, as a READ fence that writes
+no row version: `SELECT plot_id FROM freehold_plot_claims WHERE plot_id = $1 AND holder =
+$2 AND generation = $3 FOR NO KEY UPDATE` · G8 (`advanceFreeholdHearthOnClient`: the KEY
+SHARE re-lock, the lazy INSERT, the locked epoch read, and on an advance the UPDATE, which
+now also sets `advance_token = $4`) = 5 to 6 round trips added on an advance, 4 to 5 on a
+cooldown or refusal. Every writer of `account_freeholds` (P2, P3, an 08 mutation) stamps a
+FRESH claim `write_token` in the same transaction; a read fence never does. A hook refusal
+throws, so every half rolls back.
+
+**P2. The store's fenced plot write** (the autosave; replaces 07's autocommit
+`upsertFreehold` UPDATE arm) is ONE autocommit statement on the pool, exactly 07's cost
+(revision 2's four-round-trip transaction projected the 10 s shutdown drain to 14 to 20 s
+at 5,000 owners):
+```sql
+WITH fence AS MATERIALIZED (
+  SELECT plot_id FROM freehold_plot_claims
+   WHERE plot_id = $12 AND holder = $13 AND generation = $14::bigint
+     FOR NO KEY UPDATE
+), cas AS (
+  UPDATE account_freeholds
+     SET tier = $4, layout = $5::jsonb, ... , durable_rev = durable_rev + 1, updated_at = now()
+   WHERE account_id = $1 AND plot_index = $2 AND durable_rev = $3::bigint
+     AND EXISTS (SELECT 1 FROM fence)
+  RETURNING durable_rev::text AS durable_rev
+), stamp AS (
+  UPDATE freehold_plot_claims SET write_token = $11
+   WHERE plot_id = $12 AND EXISTS (SELECT 1 FROM cas)
+  RETURNING plot_id
+)
+SELECT (SELECT count(*) FROM fence)::int AS fenced,
+       (SELECT durable_rev FROM cas) AS durable_rev,
+       (SELECT count(*) FROM stamp)::int AS stamped
+```
+The `EXISTS (SELECT 1 FROM fence)` is uncorrelated, so the planner evaluates it once as an
+InitPlan BEFORE `cas` scans: the claim row is locked (G4) before the plot row (G7), and the
+fence decision cannot go stale because this statement holds the claim row's lock until it
+commits. `fenced = 0` answers `fenced`; `fenced = 1` with no `durable_rev` falls to 07's
+diagnosis read (`stale` or `missing`). Its bounds are 07's: the pool's 15 s statement
+default, no lock bound (a claim row is held only by short transactions; a wait is bounded by
+the statement default). The real-PG suite proves the G4-before-G7 order against an opposing
+transaction. When the previous attempt for this plot ended AMBIGUOUS (a thrown answer
+`throwProvedRollback` does not prove rolled back), the retry is instead a short transaction
+(B with lock 2 s): `SELECT write_token FROM freehold_plot_claims WHERE plot_id = $1 AND
+holder = $2 AND generation = $3 FOR NO KEY UPDATE`, which waits for that attempt to resolve,
+then the same CTE. A token equal to the pending one proves the earlier write LANDED, so the
+expected revision adopts the row's current `durable_rev` and the new document goes out on
+top of it: this is what tells this realm's own ambiguous commit from another realm's (R2's
+self-fence), and it is safe only because every `account_freeholds` writer stamps a fresh
+token.
+
+**P3. The first insert of an absent plot** (rare: once per account): B (lock 2 s) · G4 `INSERT INTO freehold_plot_claims ...
+VALUES (... generation 1, write_token $t ...) ON CONFLICT (plot_id) DO NOTHING RETURNING
+plot_id` (the id is freshly minted, so a conflict is a refusal) · G7 07's `INSERT ... ON
+CONFLICT (account_id, plot_index) DO NOTHING` (plus its diagnosis) · C. A lost insert race
+rolls back BOTH rows, so a claim never names a plot row that does not exist. Its ambiguity
+needs no separate verify: the retry's claim INSERT conflicts on the unique index, which
+WAITS for an in-flight inserter, and then the token decides (P2's adopt arm). The
+account-level race of two realms each minting a first plot is arbitrated by the primary
+key, as in 07 (named residual R-1).
+
+**P4. Claim acquisition at login.** The login transaction moves to its own runner in
+`server/freehold_claim_login.ts` (07's `readLoginDurables` policy kept: the plot fails
+closed, the clock fails open): B (statement 2 s, lock 1 s, idle 2 s) · the Hearth read
+FIRST (if it throws, the transaction is rolled back and a second B starts for the plot
+half, with a cold clock, so a clock fault can never silently roll back the claim) · the
+plot-id pre-read `SELECT plot_id FROM account_freeholds WHERE account_id = $1 AND
+plot_index = 0` (no lock; no row means absent, and the claim waits for P3) · a LOCK-FREE
+busy pre-check, `SELECT 1 FROM freehold_plot_claims WHERE plot_id = $1 AND holder <> $2
+AND expires_at > clock_timestamp()` (a live foreign claim answers `claim_busy` and the
+transaction ends at once, rolled back since only reads ran, so a refused alt never holds
+the holder's row) · G4 the
+acquire upsert · 07's plot read, unchanged · C (tag checked: anything but `COMMIT` means
+the claim is NOT held). The acquire:
+```sql
+INSERT INTO freehold_plot_claims AS c
+       (plot_id, account_id, realm, holder, generation, acquired_at, heartbeat_at, expires_at)
+VALUES ($1, $2, $3, $4, 1, clock_timestamp(), clock_timestamp(),
+        clock_timestamp() + make_interval(secs => $5))
+ON CONFLICT (plot_id) DO UPDATE
+   SET realm = EXCLUDED.realm,
+       holder = EXCLUDED.holder,
+       generation = CASE WHEN c.holder = EXCLUDED.holder THEN c.generation
+                         ELSE c.generation + 1 END,
+       acquired_at = CASE WHEN c.holder = EXCLUDED.holder THEN c.acquired_at
+                          ELSE EXCLUDED.acquired_at END,
+       heartbeat_at = EXCLUDED.heartbeat_at,
+       expires_at = EXCLUDED.expires_at
+ WHERE c.expires_at <= clock_timestamp() OR c.holder = EXCLUDED.holder
+RETURNING generation::text AS generation
+```
+`clock_timestamp()`, never `now()` (the transaction START time: a login that began before a
+concurrent release committed would otherwise read the released row as live and refuse).
+`$5` is `LEASE_TTL_SECONDS`, the character lease policy reused. The same holder keeps its
+generation (re-synced from `RETURNING`, never trusted from memory), so a relog never fences
+its own in-flight write; a different holder advances it, fencing every write of the previous
+holder from that statement on. No same-account steal arm. 55P03 and 57014 on the acquire
+answer `claim_busy` (repairable), never the generic read hold. +3 statements on a lit
+login with a plot row; the contract's 104,000 ms floor and the store's dirty-owner ceiling
+are re-derived on these counts (section 10).
+
+THE CLAIM IS TAKEN BEFORE THE CHARACTER LEASE (the first ask runs before
+`acquireCharacterLease` in `server/ws_auth.ts`). Moving it after the lease would read the
+row before holding the fence, which is the stale-read this whole design closes. A handshake
+refused after the first ask (already in world, a failed reload) therefore holds a claim on
+its own account's plot that nothing wants: the renewer releases it at its first pass after
+`FREEHOLD_PERSIST_LOGIN_BUDGET_MS`, so it is bounded by that budget plus one autosave
+interval, and it can only block the same account's own plot on another realm. Taking over
+an EXPIRED claim on such a handshake is harmless (its holder was dead).
+
+**P5. The renewer** (`renewFreeholdClaims`, a `PeriodicSaveWrites` member registered in
+`PERIODIC_SAVE_WRITE_NAMES` beside `heartbeatLeases`, the same 30 s autosave cadence): the
+wanted plot ids, sorted, in CHUNKS of at most `FREEHOLD_CLAIM_RENEW_CHUNK` (256), each chunk
+ONE statement in its own short transaction (B with statement 2 s, lock 1 s · the statement
+· C), so no transaction ever holds rows from two statements (revision 2's
+renew-then-release pair locked two ascending runs that together were not ascending, a
+cycle against an 08 multi-plot mutation) and one blocked row fails only its own chunk:
+`UPDATE freehold_plot_claims SET heartbeat_at = clock_timestamp(), expires_at =
+clock_timestamp() + make_interval(secs => $2) WHERE plot_id IN (SELECT plot_id FROM
+freehold_plot_claims WHERE holder = $1 AND plot_id = ANY($3::text[]) ORDER BY plot_id FOR
+NO KEY UPDATE SKIP LOCKED) RETURNING plot_id`. SKIP LOCKED: a row a trip or a write holds
+right now (a trip may legitimately hold it past the 1 s lock bound) is passed over, never
+waited for, so one contended plot cannot fail its whole chunk or hold its neighbours'
+locks; a lock-free `SELECT plot_id ... WHERE holder = $1 AND plot_id = ANY($2)` then tells
+a skipped row still ours (one missed heartbeat, counted per plot, kept) from one another
+holder took (dropped). The unwanted ids go out the same way, chunked, as RELEASES (P6's
+shape). WANTED means any of: the store holds
+the owner's entry with a session reference or owed work, the Sim holds its live record, a
+mutation or recovery pass is in flight for it, or the claim was acquired less than
+`FREEHOLD_PERSIST_LOGIN_BUDGET_MS` ago (a handshake between its first ask and its join
+bind). Nothing else renews; 18's visitor reference joins this predicate later and must
+never outrank the owner's own authenticated entry on another realm. A completed renew that
+did not return a wanted plot means a takeover: the claim leaves the registry and the
+store's next write answers `fenced` and quiesces. A THROWN or timed-out renew is a missed
+heartbeat (counted, retried next pass, TTL 90 s leaves two), never a loss and never a
+takeover.
+
+**P6. Release** (the renewer's unwanted ids, and every live claim at shutdown): `UPDATE
+freehold_plot_claims SET expires_at = clock_timestamp(), holder = holder || '#released'
+WHERE plot_id IN (SELECT plot_id FROM freehold_plot_claims WHERE holder = $1 AND
+expires_at > clock_timestamp() ORDER BY plot_id FOR NO KEY UPDATE SKIP LOCKED)`. RENAMED,
+not only expired, so a release is FINAL: the renewer and the write fence both match the
+live holder exactly, so a renewal already in flight when the release commits cannot revive
+the claim and a late write of the releasing process is fenced; the next acquire (another
+holder, or this one again) is a takeover and advances the generation. SKIP LOCKED: a row a
+write abandoned at the drain deadline still holds is left to expire on its own instead of
+failing the whole release. The shutdown release runs in `server/main.ts` AFTER
+`freeholdPersistIdle` and BEFORE `releaseAllCharacterLeases` (the contract section 8 drain
+slot), bounded by `FREEHOLD_CLAIM_RELEASE_ALL_DEADLINE_MS` (2,000 ms) INCLUDING its pool
+checkout, never rejects and warns once on failure. A crash or an abandoned release leaves
+the claims to expire after `LEASE_TTL_SECONDS`.
+
+**P7. Operation prepare** (its own short transaction, committed BEFORE any external spend;
+no client spans service IO): B (statement 2 s, lock 2 s, idle 2 s) · G1 `accounts` KEY
+SHARE · G2 `characters` KEY SHARE (when the intent names a character) · G5a the account
+lock · G5b the operation lock · the receipt read · the open-intent count for the account
+(`FREEHOLD_OPERATION_OPEN_PER_ACCOUNT`, 8, which is also the recovery pass's read limit, so
+one pass resolves every intent an account can hold; exact under G5a) · G6 `INSERT ... ON
+CONFLICT (operation_id) DO NOTHING RETURNING` · C. Answers `prepared`, `duplicate` (same
+id and fingerprint, still open), `closed` (a receipt holds the id with the SAME
+fingerprint, with its outcome), `conflict` (same id, different fingerprint, open or
+closed: a closed id never reports "applied" for a different request) or `capacity`.
+
+**P8. Operation apply** (a hook participant inside P1; the intent's account is a declared
+account participant, so it was locked at G1): G5b · G6 `SELECT ... FROM
+freehold_operations WHERE operation_id = $1 FOR UPDATE` (absent, another account's, or a
+fingerprint, fence generation or expected-revision mismatch, refuses) · `INSERT INTO freehold_operation_receipts
+(..., outcome) VALUES (..., 'applied') ON CONFLICT (operation_id) DO NOTHING RETURNING` (zero
+rows refuses `already_closed`: THE UNIQUE CONSTRAINT IS THE GUARD, never a
+SELECT-then-INSERT) · `DELETE FROM freehold_operations WHERE operation_id = $1`.
+
+**P8c. Operation close without apply** (`cancelFreeholdOperation`, its own transaction:
+G1 `accounts` KEY SHARE on the intent's account FIRST, as P7 does (the receipt insert's
+foreign-key check would otherwise take G1 after G5 and G6, a cycle against an account
+delete if the guard were ever missing), then G5a, G5b, the intent FOR UPDATE with a
+fingerprint check, the receipt insert with outcome `cancelled` or `refused`, the intent
+delete): the terminal state for an intent that will
+never apply, so no intent blocks deletion or holds a cap slot forever. Who drives it: the
+kind's reconciler (recovery, P9's unresolved arm, a refused apply), and an operator for a
+kind with external spend (15 names its horizon). A closed id can never be re-prepared or
+applied, because its receipt answers `closed`.
+
+**P9. The ambiguous-COMMIT verify** for a P1 transaction (the Hearth trip; 08's
+mutations) runs as the CONTINUATION of the same Q1 job, INSIDE the background permit the
+save already held: the hook's persist wrapper (`wrapPersist`, `housingPersist` in
+`server/character_save_housing.ts`) wraps the save function itself, so the verify runs
+after the save function released its client and before the permit's `finally`. One fresh
+pool client, no second permit, so ambiguity clustering in a brownout cannot take clients
+outside the gate. Two steps:
+1. THE WAIT, a short transaction with `CHARACTER_DELETE_VERIFY_SQL`'s bounds (statement
+   15 s, lock 10 s, idle 2 s): `SELECT 1 FROM characters WHERE id = $1 FOR SHARE`, then
+   COMMIT at once. The hung transaction holds that row FOR NO KEY UPDATE (G2), which FOR
+   SHARE conflicts with, so this returns only once the hung transaction committed or rolled
+   back (an idle-in-transaction one is ended by its 10 s bound). Committing straight away
+   holds the character row for one round trip, not for the reads (a held FOR SHARE would
+   block every NO KEY UPDATE of that character, the measured delete-verify hazard).
+2. THE READS, each its own statement (in one READ COMMITTED transaction, so each takes a
+   fresh snapshot), so a row the hung transaction INSERTED is visible once it committed. The evidence is PER KIND: a Hearth
+   trip reads only its `advance_token` (landed iff it is this attempt's; the trip's claim
+   fence writes no token); an 08 mutation reads its claim `write_token` (landed iff this
+   attempt's) and its intent and receipt (landed iff the intent is gone and a receipt holds
+   the id), and the readings must agree (they are one atomic commit; disagreement answers
+   unresolved).
+Revision 1's per-row FOR SHARE was unsound for rows the hung transaction inserted (an
+account's first Hearth row, a first claim): an invisible tuple is never waited for. Nothing
+re-applies until the verify answers. A wait that runs out its 10 s lock bound while the
+hung statement still runs (its own bound is 15 s) answers `ambiguous_unresolved`, counted
+apart, which the trip refuses and recovery re-verifies. P2 and P3 resolve their own
+ambiguity on the retry (above), inside Q3.
+
+**P10. Character delete** (`deleteOwnedCharacterRow`): unchanged order (accounts KEY SHARE,
+characters FOR UPDATE) then the pre-reads in the triggers' own firing order (PostgreSQL
+fires same-event row triggers in name order, so `freehold_operation_guard_*` before
+`storage_purchase_guard_*`): `SELECT operation_id FROM freehold_operations WHERE
+character_id = $1 LIMIT 1`, throwing the new `CharacterFreeholdOperationOpen`, then the
+existing storage pre-read. A NEW catch arm, ahead of `ambiguousCommitLanded` (a 55006 is a
+proved rollback, not an ambiguous commit), maps a 55006 by its CONSTRAINT field, matched
+exactly: `freehold_operations_open_delete_guard` to `CharacterFreeholdOperationOpen`,
+`storage_purchases_open_delete_guard` to `CharacterStoragePurchaseOpen`, anything else
+rethrown raw.
+
+**P11. Account hard delete** (the one production path,
+`server/federated_auth_db.ts::deleteUnusedFederatedProvision`, a password-less,
+token-less provisioning loser that can own no plot): the cascade order is PostgreSQL's
+(accounts FOR UPDATE, then each child in constraint order), which would take G7 before G4
+against a concurrent store write of the same account; the DELETE's own predicate makes that
+impossible (no token, so never a session, a plot or a store entry). Its 55006 handler
+switches on the CONSTRAINT field exactly (the two guard names; anything else rethrown raw)
+and throws a typed refusal class per guard (there is no HTTP surface on this path; the
+`character.freehold_operation_open` code is the character DELETE route's). DEVIATION from
+the packet text, deliberate: "trigger name in the error detail"; PostgreSQL does not put a
+trigger name on the error and the storage raise carries no DETAIL, while CONSTRAINT is a
+first-class field both raises set.
+
+**P12. `ensureSchema`**: `FREEHOLD_CLAIM_SCHEMA` then `FREEHOLD_OPERATION_SCHEMA` in the
+LATE block, immediately before `STORAGE_PURCHASE_SCHEMA` (still after `FREEHOLD_SCHEMA` and
+`FREEHOLD_HEARTH_SCHEMA`, after `accounts` and `characters`, and never between storage and
+the material-source guard pinned at storage+1 and +2). Late on purpose, the storage
+precedent: on a first rollout or a repair boot the new foreign keys and trigger DDL take
+SHARE ROW EXCLUSIVE (and the repair's DROP TRIGGER takes ACCESS EXCLUSIVE) on `accounts`
+and `characters`, held until the boot COMMIT, so they must not sit in front of the chat
+filter seed and the market and mail backfills. Trigger creation is the operation
+fragment's last statement. A steady-state boot is catalog-only: the triggers through the
+storage probe, and EVERY housing index (07's plot-id index included) through a
+`to_regclass` probe in a DO block, because a no-op `CREATE INDEX IF NOT EXISTS` still
+takes the table's SHARE lock and holds it to the boot COMMIT (measured), which would block
+every other realm's claim and plot writes through this realm's whole boot.
+
+## 6. Pairwise deadlock review
+
+- P1 against P2 (a trip and a store write of one plot): both take G4 first on the one claim
+  row; the second waits under its lock timeout (P2 retries as a thrown blip, P1 answers a
+  refused trip). No cycle.
+- P1 against P4 (a trip and a takeover): the takeover's upsert waits on the trip's G4 lock;
+  when the trip commits, the upsert re-evaluates its WHERE on the latest version and, if
+  the old claim is still expired, advances the generation. The trip is ordered BEFORE the
+  takeover, and the new holder's plot read (after its acquire, same transaction) sees it.
+- P4 refused (a live foreign claim): answered by the lock-free pre-check; in the race where
+  the claim turns live between the pre-check and the upsert, the upsert's false WHERE
+  still locks the row, and the transaction ends immediately (rolled back), so the hold is
+  one round trip.
+- P1 against P7: P7 takes G1 and G2 in KEY SHARE (compatible with the save's KEY SHARE and
+  NO KEY UPDATE) BEFORE G5; the order is a subsequence.
+- P1 against P1 on two realms (two alts racing the Hearth): G8 FOR UPDATE serializes them;
+  the second reads the first's `ready_at_ms` and answers `cooldown` with no write.
+- P10/P11 against P7: the delete's FOR UPDATE on the parent conflicts with P7's FK KEY
+  SHARE, so either the delete waits and then its pre-read (or the trigger's fresh READ
+  COMMITTED snapshot) sees the committed intent and refuses, or P7's FK check fails on the
+  missing parent.
+- Multi-claim statements (P5, P6, 08's multi-plot mutations): every one locks claim rows
+  through the `ORDER BY plot_id FOR NO KEY UPDATE` subselect, and no transaction holds the
+  rows of two such statements (P5 and P6 commit per statement), so two of them cannot
+  cycle.
+- P2's single statement against P1: the fence CTE's lock is the InitPlan the CAS waits
+  on, so G4 is taken before G7, as in every other writer.
+- P11's cascade (G7 then G4): guarded by its precondition, above.
+- Guild books (G3) against housing: no housing path takes a guild book; G3 precedes G4.
+- G9 (the growth singleton) is taken at COMMIT, last, by every audit-writing transaction;
+  a housing hook adds its G4/G8 hold time in front of it, priced into the P4 lock bound.
+
+## 7. Schema (every fragment re-applied at boot, guarded and idempotent)
+
+The two new fragments: `FREEHOLD_CLAIM_SCHEMA` is tables and indexes only, so it follows
+the 07 plot and Hearth fragments' no-ceremony rule (no `search_path` change).
+`FREEHOLD_OPERATION_SCHEMA` defines functions and triggers, so it follows the storage
+precedent: a capture and restore of the caller's in-flight `search_path` under its OWN
+setting key (`woc.freehold_operation_prior_search_path`), schema-qualified names in every
+function body, and `SET search_path = pg_catalog, <schema>, pg_temp` plus an explicit
+`SECURITY INVOKER` on each function. The Hearth column addition is a DO block, which needs
+no ceremony either (its names are placeholder-qualified). Every CHECK is SHAPE-only and
+named; policy counts (the copy-ref count, the open-intent cap) are enforced in TypeScript,
+because the DDL pins forbid relaxing a constraint later.
+
+```sql
+-- KEEP FOREVER, bounded: one row per plot id ever claimed, cascading with the account.
+-- The generation must never restart, so a release keeps the row. account_id is nullable
+-- on purpose (a guild-owned plot arrives in 28 with its own owner column and a
+-- num_nonnulls CHECK added NOT VALID); every 07a writer sets it, pinned by a test.
+CREATE TABLE IF NOT EXISTS freehold_plot_claims (
+  plot_id TEXT PRIMARY KEY,
+  account_id INT REFERENCES accounts(id) ON DELETE CASCADE,
+  realm TEXT NOT NULL,
+  holder TEXT NOT NULL,
+  generation BIGINT NOT NULL,
+  write_token TEXT,
+  acquired_at TIMESTAMPTZ NOT NULL,
+  heartbeat_at TIMESTAMPTZ NOT NULL,
+  expires_at TIMESTAMPTZ NOT NULL,
+  CONSTRAINT freehold_plot_claims_plot_id_charset CHECK (plot_id ~ '^[A-Za-z0-9_:-]{1,64}$'),
+  CONSTRAINT freehold_plot_claims_generation_positive CHECK (generation >= 1),
+  CONSTRAINT freehold_plot_claims_realm_shape CHECK (realm <> '' AND length(realm) <= 64),
+  -- holder is `${REALM}#${randomUUID()}`: at most 64 + 1 + 36 = 101 characters.
+  CONSTRAINT freehold_plot_claims_holder_shape CHECK (holder <> '' AND length(holder) <= 128),
+  CONSTRAINT freehold_plot_claims_token_shape
+    CHECK (write_token IS NULL OR write_token ~ '^[0-9a-f]{32}$')
+);
+-- ) WITH (fillfactor = 80): the renewer and every write rewrite each live row on the
+-- autosave cadence on columns no index covers, so page room keeps those versions local.
+-- Indexes, each inside a to_regclass-probed DO block (P12):
+CREATE INDEX IF NOT EXISTS freehold_plot_claims_holder ON freehold_plot_claims (holder);
+CREATE INDEX IF NOT EXISTS freehold_plot_claims_account ON freehold_plot_claims (account_id);
+
+-- OPEN intents only: a row exists while its operation is open; apply and close delete it.
+-- Bounded by FREEHOLD_OPERATION_OPEN_PER_ACCOUNT per account, so it needs no sweep. Its
+-- parents are RESTRICT, not CASCADE: every row is open by definition, so there is never a
+-- row a cascade should remove, and if the guard trigger is ever missing the foreign key
+-- still fails closed (23503).
+CREATE TABLE IF NOT EXISTS freehold_operations (
+  operation_id TEXT PRIMARY KEY,
+  account_id INT NOT NULL REFERENCES accounts(id) ON DELETE RESTRICT,
+  character_id INT REFERENCES characters(id) ON DELETE RESTRICT,
+  plot_id TEXT,
+  kind TEXT NOT NULL,
+  fingerprint TEXT NOT NULL,
+  copy_refs JSONB NOT NULL DEFAULT '[]'::jsonb,
+  expected_durable_rev BIGINT,
+  fence_generation BIGINT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  -- shape CHECKs: operation id '^[A-Za-z0-9_:.-]{1,96}$', plot id charset when present,
+  -- kind '^[a-z][a-z0-9_]{0,47}$', fingerprint '^[0-9a-f]{64}$', copy_refs an array,
+  -- expected_durable_rev and fence_generation NULL or >= 1, and
+  -- num_nonnulls(plot_id, fence_generation) <> 1: a plot-scoped intent carries its fence,
+  -- a plot-less one carries neither (P8 compares the pair NULL-explicitly).
+);
+CREATE INDEX IF NOT EXISTS freehold_operations_account
+  ON freehold_operations (account_id, created_at);
+CREATE INDEX IF NOT EXISTS freehold_operations_character
+  ON freehold_operations (character_id) WHERE character_id IS NOT NULL;
+
+-- KEEP FOREVER: a closed id is permanent replay authority (no signed replay-horizon
+-- evidence exists), observed by the receipts growth gauge.
+CREATE TABLE IF NOT EXISTS freehold_operation_receipts (
+  operation_id TEXT PRIMARY KEY,
+  account_id INT REFERENCES accounts(id) ON DELETE SET NULL,
+  plot_id TEXT,
+  kind TEXT NOT NULL,
+  outcome TEXT NOT NULL,
+  fingerprint TEXT,
+  applied_durable_rev BIGINT,
+  closed_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  -- shape CHECKs as the intent's, plus outcome '^[a-z][a-z_]{0,31}$' and
+  -- applied_durable_rev NULL unless outcome = 'applied'
+);
+-- Leads with account_id, so it serves the SET NULL cascade; its order serves the
+-- export's newest-first LIMIT without reading an account's whole history.
+CREATE INDEX IF NOT EXISTS freehold_operation_receipts_account
+  ON freehold_operation_receipts (account_id, closed_at DESC, operation_id DESC)
+  WHERE account_id IS NOT NULL;
+-- BEFORE UPDATE row trigger freehold_operation_receipt_erase: when account_id goes from a
+-- value to NULL (the SET NULL action, an UPDATE that row triggers see), plot_id and
+-- fingerprint go NULL in the same row. The plot id is a public wire identity and the
+-- fingerprint a hash of the request, so after erasure the tombstone keeps only what
+-- replay authority needs: operation id, kind, outcome, revision, time.
+
+-- The D88 guard, the storage shape in all four parts: one function
+-- guard_open_freehold_operation_parent_delete() raising
+--   RAISE EXCEPTION USING ERRCODE = '55006', MESSAGE = 'freehold_operation_open',
+--     CONSTRAINT = 'freehold_operations_open_delete_guard';
+-- and two BEFORE DELETE row triggers, freehold_operation_guard_character_delete on
+-- characters and freehold_operation_guard_account_delete on accounts. These AND the erase
+-- trigger are each REPAIRED by the storage probe's exact predicate (missing, internal,
+-- disabled, wrong function, arguments, type 11 or 19, a column list or a WHEN clause:
+-- DROP TRIGGER IF EXISTS then CREATE), the one sanctioned reconcile statement, so a
+-- disabled erase trigger cannot silently keep an erased account's plot id.
+
+-- 07's Hearth row gains the per-advance token the verify reads, inside
+-- FREEHOLD_HEARTH_SCHEMA: in the CREATE TABLE for a fresh database, and for an existing
+-- one a DO block that probes pg_attribute first, so an ordinary boot reads the catalog and
+-- never takes ALTER TABLE's ACCESS EXCLUSIVE lock (which would block every other realm's
+-- Hearth reads through the boot's backfills):
+--   ALTER TABLE ... ADD COLUMN IF NOT EXISTS advance_token TEXT
+--     CONSTRAINT account_freehold_hearth_advance_token_shape
+--     CHECK (advance_token IS NULL OR advance_token ~ '^[0-9a-f]{32}$')
+```
+
+Both tokens are `randomBytes(16)` as hex, one per attempt, set in the same statement that
+writes the effect (the claim's fenced UPDATE; `FREEHOLD_HEARTH_ADVANCE_SQL`, extended with
+`advance_token = $4`).
+
+The fingerprint is SHA-256 over the canonical request (kind, plot id, copy refs, expected
+revision, fence generation, the kind's payload digest). It binds no account or character id
+(the intent's columns bind those), and a copy ref is an opaque item-copy identity, never an
+account or character id. After erasure it is NULL anyway (above).
+
+Rollback to a pre-07a binary is acceptable ONLY while production is dark AND
+`freehold_operations` holds zero rows, verified with the fleet stopped by `SELECT count(*)
+FROM freehold_operations` (must be 0); a non-zero count is closed intent by intent through
+`cancelFreeholdOperation`, NEVER a DELETE, and claims and receipts are never deleted either.
+The guard functions and triggers stay installed and the old binary cannot read them (its
+character delete has no 55006 arm, so a refusal is a 500; its federated cleanup reports
+every 55006 as a storage purchase), which zero rows make unreachable. The old store writes
+`account_freeholds` without the claim fence; the CAS still stops a stale overwrite, leaving
+the harm contract 8a already records, which is acceptable only while dark. A ROLLING DEPLOY
+(a 07 realm beside a 07a realm on one database) is the same hazard as a rollback, an
+unfenced plot write while another realm holds the claim, so every process on the
+`DATABASE_URL` must be 07a before housing is lit anywhere. Claim rows are kept, so
+generations survive a roll back and forward. The RESTRICT backstop surfaces raw (a 23503,
+a 500 on the character DELETE route) only if a guard is ever missing.
+
+## 8. Per-row-class deletion (D88)
+
+| Row class | Character delete | Account delete |
+|---|---|---|
+| open intent (`freehold_operations`) | REFUSED (`CharacterFreeholdOperationOpen`, 409 `character.freehold_operation_open`; the RESTRICT key is the backstop) | REFUSED (55006 from the account guard, or from the character guard through the characters cascade) |
+| tombstone (`freehold_operation_receipts`) | kept (no character column) | kept, `account_id`, `plot_id` and `fingerprint` NULL |
+| claim (`freehold_plot_claims`) | untouched | cascades (its plot row cascades too, and a plot id is never reused) |
+| plot, Hearth (07) | untouched | cascade (07) |
+
+Tombstones are otherwise keep-forever: a scheduled cascade needs the unsigned "Counsel,
+Terms and storefront model" retention schedule, the named release gate. THE SOFT DELETE:
+the player-facing account deletion is a soft delete (`handleAccountDeactivate`), which
+fires no cascade, so it ERASES the account's tombstones itself, the
+`deleteAccountAttribution` precedent beside it: `UPDATE freehold_operation_receipts SET
+account_id = NULL WHERE account_id = $1`, which fires the same erase trigger, so a
+deactivated account's tombstones keep only replay authority. Open intents at
+deactivation are 15's question (no production kind exists in this release); the plot,
+Hearth and claim rows of a soft-deleted account stay under contract 8a's existing
+soft-delete gate.
+
+## 9. Growth, bytes, export, metrics and the privacy boundary
+
+- Claims: one row per plot (about 150 bytes). Intents: at most 8 per account, deleted on
+  close. Receipts: one per closed operation, forever, about 250 to 300 bytes with indexes;
+  every kind-registering item (08, 15) states its expected rate and the gauge alert it
+  sets. The growth gauge (`server/freehold_receipt_growth_monitor.ts`, the
+  `server/bank_ledger_growth_monitor.ts` shape: 60 s, `tryAcquire` on the background gate,
+  started after listen, stopped before `pool.end()`) reads `pg_class.reltuples` (rendered
+  unknown while it is -1, before the first vacuum) and `pg_total_relation_size`, O(1),
+  never a COUNT, and takes 07b's history table in the same list.
+- No boot sweep and no whole-table scan: recovery reads ONE account's open intents through
+  the account index, at most the cap, when this realm claims that account's plot.
+- Export (`exportAccountData`) through ONE loader, `freeholdAccountExport`, keeping 07's
+  `freeholds` and `freeholdHearth` keys and adding `freeholdClaims`, `freeholdOperations`
+  and `freeholdOperationReceipts`, each an explicit column ALLOWLIST: claims export
+  `plot_id`, `realm`, `acquired_at`, `heartbeat_at`, `expires_at`; intents export
+  `operation_id`, `kind`, `character_id`, `plot_id`, `copy_refs`, `expected_durable_rev`,
+  `created_at`; receipts export `operation_id`, `kind`, `outcome`, `plot_id`,
+  `applied_durable_rev`, `closed_at`, newest first through the receipts account index,
+  capped at `FREEHOLD_OPERATION_EXPORT_RECEIPT_LIMIT` (read as limit plus one, so the 07
+  `{ truncated: true, limit }` marker is exact). NEVER exported: the holder, the
+  generation, either token, the fingerprint, the fence generation. The owner's OWN data
+  export is the one sanctioned REST body that carries operation ids (they are the
+  owner's records); every other surface is bound by the rule below.
+- Metrics (no player data, no token, no holder in any label or log line): claim acquires,
+  takeovers, busy refusals, renewals, missed heartbeats, losses, releases, fenced writes,
+  self-adopted ambiguous writes; mutation outcomes (committed, refused by reason, fenced,
+  ambiguous landed / not landed / unresolved); Hearth trips (advanced, cooldown, corrupt,
+  unsupported, refused after commit, metered).
+- THE D9/D81 BOUNDARY, pinned on the SERVER side (the sim-side dev modules cannot import
+  `server/` at all, so a scan there would prove nothing): no operation kind is registered
+  outside tests; `advanceFreeholdHearthOnClient` has an allowlisted caller set (the housing
+  hook and the PG suites); the trip's ticket setter has exactly one call site; no
+  server-side `/dev` handler reaches the trip, mutation or operation modules; a
+  dev-granted tier change rides the ordinary store write and never mints an intent, a
+  receipt or a Hearth advance. The holder, the generation, both tokens, operation ids
+  (outside the owner's export), fingerprints and fence generations never reach a snapshot,
+  event, REST body, error body or metric label (a wire-shape test), nor a log line (a
+  recording-logger assertion over the trip, claim and operation paths, plus a metric label
+  allowlist; the R-2 line carries no account id, owner key or plot id, the `load_report.ts`
+  convention). 15's operation route must use crypto-random ids behind `require_owned`
+  with ownerScope `'account'` and a 404 denial.
+
+## 10. Plan inventory and the evidence the PG suites must produce
+
+| Statement | Index / plan | Rows | Round trips | Frequency |
+|---|---|---|---|---|
+| P4 plot-id pre-read | `account_freeholds` PK `(account_id, plot_index)` | 0 to 1 | 1 | per lit login |
+| P4 busy pre-check | `freehold_plot_claims` PK | 0 to 1 | 1 | per lit login with a plot |
+| P4 acquire upsert | `freehold_plot_claims` PK | 1 | 1 | per lit login with a plot |
+| P1 hook bound | none | 0 | 1 | per hooked save |
+| P1 Hearth G4 read fence | `freehold_plot_claims` PK | 1 | 1 | per trip with a claim |
+| P2 fenced CTE | claims PK, then `account_freeholds` PK | 1 + 1 | 1 (+1 diagnosis) | per dirty plot write |
+| P5 renew / release | a sequential scan of the claims table under the ordered subselect at today's sizes (measured; the plan is recorded, not pinned, and re-measured on a grown table before the claim count reaches the hundred thousands) | at most 256 per statement | 3 per chunk (4 when a row was skipped) | per realm per 30 s |
+| P6 release all | as P5 (measured 58 ms at 5,000 claims) | the process's live claims | 3 | per shutdown |
+| P7 receipt read, cap count, intent insert | receipts PK; `freehold_operations_account`; operations PK | 0 to 1; at most 8; 1 | 3 | per prepare |
+| P8 intent lock, receipt insert, intent delete | operations PK; receipts PK | 1 each | 3 | per apply |
+| P9 character lock, participant reads | `characters` PK; each participant's PK | 1 each | 2 to 4 | per ambiguous commit |
+| P10 housing pre-read | `freehold_operations_character` (partial) | 0 to 1 | 1 | per character delete |
+| guard triggers | the same two indexes | 0 to 1 | 0 | per character / account delete |
+| SET NULL cascade + erase trigger | `freehold_operation_receipts_account` (partial) | the account's receipts | 0 | per true account delete |
+| export loader | claims account index; operations account index; receipts account index (ordered) | bounded by the limits | 3 (plus 07's 2) | per export |
+
+Required runtime proof, on the disposable PG only: an EXPLAIN pin per new statement (the
+woc market recipe: a recording pool plus `enable_seqscan = off`); the verify against a
+first-advance Hearth row and a first claim with the client destroyed after COMMIT is sent;
+the login transaction with an injected clock-read fault (the claim is held and the clock is
+cold); a release committing during an in-flight login, both as a race and with the acquire
+blocked on the release's lock; a refused acquire against the holder's store write; the
+ordered renewer against a two-claim transaction; racing prepares at the cap; the 5,000-owner
+drain on the fenced P2; and lock-wait, 55P03 and 57014 counts per path while two admitted
+processes race; the renewer at 5,000 wanted plots beside the dirty-plot autosave; the P9
+hold against a concurrent `characters` UPDATE; the receipts export EXPLAIN on one account
+holding 10,000 receipts; the first-rollout boot against a populated database with a second
+realm serving; and the shutdown drain at 5,000 owners on the P2 statement, PASS when it
+drains inside `FREEHOLD_PERSIST_SHUTDOWN_DRAIN_MS` (10,000 ms) on this host. The contract's
+104,000 ms login floor (now with P4's statements and the fault arm's fresh checkout) and the
+store's dirty-owner ceiling are re-derived on the measured counts.
+
+## 11. Where each acceptance finding landed
+
+Database performance: B1 (verify on inserted rows) P9; B2 (login COMMIT tag) P4 and the
+section 5 tag rule; S1 `clock_timestamp()` P4 to P6; S2 lock-free pre-check P4; S3 login
+bounds P4; S4 store-write bounds and drain P2, section 10; S5 renewer P5; S6 live-only
+release P5, P6; S7 the growth singleton G9; S8 Q3 before Q2, section 3; S9 trip admission
+section 3; S10 cap and lifecycle P7, P8c; S11 verify on Q1 P9; S12 export bound section 9;
+S13 receipt rate section 9; S14 plan inventory section 10; N1 folded fence, one-trip B; N2
+two-int4 keyspace G5; N3 kept nullable (migration N5 ruled the forward-compatible choice);
+N5 the gauge's -1; N6 the DO-probed column; N7 `created_at` kept (recovery orders by it).
+
+Migration safety: B1 P9; B2 receipt `outcome`, P8c; B3 the storage probe and RESTRICT keys,
+section 7; S1 the DO-probed, named, in-fragment column; S2 the token writers, section 7; S3
+the DDL and order pins plus the `search_path` handling, section 7 and P12; S4 shape-only
+CHECKs and nullable columns, section 7; S5 the erase trigger and the soft-delete gate,
+sections 7 and 8; S6 Hearth fail-closed rules, section 4; S7 and S11 the re-derivations and
+R2, P2 and section 10; S8 the rollback conditions, section 7; S9 the new 55006 arms, P10
+and P11; S10 the export keys, section 9; S12 the retention-absence pins, section 9 and the
+tests; N1 live-only release; N2 the keyspace; N3 the trigger firing order, P10; N4 the
+EXPLAIN pins; N5 every writer sets `account_id`; N6 the holder bound, section 7.
+
+Privacy and security: B1 the ticket and pending contract, section 4; B2 the local clock
+first, single flight, the refusal memo and the deadlines, sections 3 and 4; S1 the trip's
+authority rule, section 4; S2 the claim before the lease, P4; S3 the per-account lock, P7;
+S4 the terminal close, P8c; S5 the tombstone erase, section 7; S6 the export allowlist,
+section 9; S7 exact constraint matching, P10 and P11; S8 the D9/D81 boundary, section 9; S9
+the function hardening, section 7; S10 the visitor reference, P5; S11 the in-statement
+fence, P2; N1 the fingerprint's inputs; N2 the tokens; N3 the R-2 log line; N4 the
+federated refusal test, section 10 and the tests; N5 the `RETURNING` re-sync, P4.
+
+Round two (revision 2's fresh reads). Database performance: F1 the split admission and
+transaction bounds, section 3; F2 the chunked single-statement renewer, P5 and section 6;
+F3 the wait-then-commit verify on Q1, P9; F4 the advisory class census, G5; F5 the ordered
+receipts index, section 7; F6 the one-statement P2 and the drain PASS rule, P2 and section
+10; F7 the per-kind evidence and the fresh-token rule, P1 and P9; F8 the read fence, P1;
+F9 the fault arm's fresh checkout, section 10; F10 the erase trigger probe, section 7, and
+the boot locks, P12; F11 the unresolved count, P9. Migration safety: S-A the late boot
+slot, P12; S-B G1 first in P8c; S-C the erase trigger probe, section 7; S-D the corrupt
+test against `clock_timestamp()` (`advanceFreeholdHearthOnClient`'s new `corrupt` arm);
+S-E the rollback verification and the rolling-deploy rule, section 7; S-F the
+`num_nonnulls` CHECK, section 7; S-G the contract edit list, section 13; N-1 the
+placeholder-qualified probe and one CHECK constant; N-2 a positive pin on the probe text;
+N-3 the fragment names and keys, section 7; N-4 the raw 23503 and the storage 55006 arm,
+sections 7 and P10; N-5 `conflict` for a closed id with another fingerprint, P7; N-6 the
+revision CHECK, section 7. Privacy and security: B1 `cooldown` mints `'deny'`, section 4;
+S1 the per-account memo, section 4; S2 the memo's outcome set and the pre-queue check,
+section 4; S3 the corrupt test; S4 the soft-delete erase, section 8; S5 the export
+exception, section 9; S6 the server-side pins, section 9; S7 the eviction, section 4;
+N1 the never-ran hook, section 4; N2 the binding captured at start, section 4; N3 the
+merge in a `finally`; N4 the server default pin; N5 the log pin; N6 the 15 route.
+
+## 12. Named residuals
+
+- R-1: the first insert of an absent plot racing on two realms is arbitrated by the primary
+  key; the loser quiesces with nothing durable lost (07 behavior, unchanged).
+- R-2: a committed Hearth advance whose re-dispatch the Sim then refuses (death, combat or
+  jail inside the commit window, one save round trip) spends the cooldown without a trip.
+  Counted and logged.
+- R-3: a realm that lost its claim keeps showing its live view until relog; every write is
+  fenced, so durable truth is never overwritten.
+- R-4: a handshake refused after its first ask holds its own account's claim until the
+  renewer's first pass after the login budget (P4).
+
+## 13. The persistence-rollout contract edits this work owes
+
+`docs/freeholds/persistence-rollout-contract.md` carries each of these before 07a is
+called built (its own rule: none is reported done until the file carries the line):
+1. Section 2: the Hearth advance has a production caller; the capable set adds the claim
+   acquire, renew and release, the fenced P2 write, the 55006 arms and the verify; a 07
+   binary is incapable for a lit fleet; the new fragments, their order and the
+   `advance_token` column; the export keys.
+2. Section 3: what a 07 binary does against 07a rows (unfenced writes, a 55006 as a 500 or
+   a misreported refusal, claims ignored).
+3. Section 6: close the owed D88 item (the class, the 409 code, both guards, the RESTRICT
+   backstop) and add lifecycle rows for the three tables; keep-forever for claims and
+   receipts with their absence pins in `tests/server/main_retention_wiring.test.ts`, and
+   the intents' bound.
+4. Section 7: the re-derived 104,000 ms floor and dirty-owner ceiling, and the new
+   constants (the open-intent cap, the TTL reuse, the export limit, the renew chunk).
+5. Section 8: the enable order (every process 07a before lighting); the P6 drain slot; R2
+   closed through the claim and P2's adopt arm; the rolling-back leftovers (three tables,
+   the guard and erase functions and triggers, `advance_token`); the data-rollback count
+   query and the cancel remedy with the owning fragment names.
+6. Section 8a: close the two-realm gate (the claim), the forward-clock gate (`corrupt`),
+   the cold-clock and fail-open gates (the in-transaction G8 authority; the login read may
+   stay fail-open because it only feeds a forward-only local mirror that can deny, never
+   admit), and the granted-but-refused gate (the lit trip); extend the soft-delete gate to
+   receipts; carry R-1 to R-4.
+7. Section 9: link this manifest, and a DEPLOY.md bullet for the new tables and metrics.
+
+## 14. What the implementation refined (revision 4)
+
+Round three's findings and the code that answers them, beyond the sections above:
+- The fenced CAS (P2) is `fence` (a MATERIALIZED `SELECT ... FOR NO KEY UPDATE`, no
+  write), then `cas`, then `stamp` (the token, written only when `cas` returned a row), so
+  a stale attempt commits no token and a later verify can never read it as proof (database
+  round three F1, migration round three's blocker). The rule reads: every writer THAT
+  LANDS stamps a fresh token.
+- The verify runs inside the save's own background permit (`wrapPersist`), not outside
+  the gate (database F4).
+- The renewer and the release use SKIP LOCKED (database F5); the release renames the
+  holder so it is final, and the shutdown release has its own 2,000 ms bound including the
+  checkout (the gauge reviewer's three shutdown findings).
+- Housing indexes are probe-guarded and the claims table has fillfactor 80 (database F3,
+  F8).
+- The soft-delete erase runs in its own transaction with the account row FOR UPDATE first,
+  after the deactivation's token revoke and disconnect, never failing the deactivation
+  (migration round three, security round three S3); a deactivated account prepares
+  nothing, and a receipt written for one is written already erased.
+- `cooldown` mints `'deny'` (security round two B1); a refused prepare for an erased
+  tombstone answers `conflict` (security round three S4).
+- The Hearth re-dispatch replays the frame path's three prechecks through ONE predicate,
+  `hearthKeyUseRefusal` (`server/freehold_wire.ts`), pinned against the frame path's
+  order (security round three S5); every sim refusal after a committed advance counts
+  `refused_after_commit` (S6); the merge after an advance sits in a `finally`.
+- The admission seam is wired on every server realm (a REQUIRED `buildRealmSimConfig`
+  argument whose closure answers `'deny'` when the trip machinery is absent), never the
+  sim's offline default (security round three N1).
+- Metrics: `woc_freehold_claims_held`, `woc_freehold_authority_total{measure}` (claim and
+  trip counters), `fenced_writes` on `woc_freehold_persist_total`, and
+  `woc_freehold_receipt_growth{table, measure}`.
+- Operation recovery (`server/freehold_operation_recovery.ts`) is scheduled when a login
+  proves a claim; with no registered kind it returns before any statement.
