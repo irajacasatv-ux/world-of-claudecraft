@@ -308,7 +308,9 @@ export interface FreeholdClaimRenewerDeps {
    *  the owner's next write answers `fenced` and the store quiesces it then. */
   onLost?(claim: FreeholdHeldClaim): void;
   /** Read at the call's start (that one reading also feeds every wanted
-   *  test), at every deadline check while the deadline signal has not fired,
+   *  test; a call refused for its injected deadline, or one that finds a pass
+   *  already holding the flag, returns before reading it), at every deadline
+   *  check while the deadline signal has not fired,
    *  and at its close. A start read that throws rejects the call before it
    *  takes the flag, even when the port started a pass itself first (that
    *  pass runs on); a start reading that is not a finite number rejects it

@@ -444,7 +444,7 @@ mid-pass; `overflow`, the duration would carry the running `claim_renew_pass` to
 finite number, which prom-client's `Counter.inc` refuses at scrape time; so an operator
 tells a broken clock from one stepped back); the flag clears in a `finally` of its own
 inside it, so a statement there that throws cannot leave the flag set. A clock port that
-throws at the pass's start rejects the call before that call takes the flag, even one that
+throws at the call's start rejects the call before that call takes the flag, even one that
 started a pass itself first (that pass runs on and clears the flag at its own end);
 otherwise the flag is re-checked straight after that read, BEFORE the reading is judged (a
 clock port that started a pass itself leaves the call a counted skip, whatever it read); and
@@ -453,18 +453,18 @@ a start reading that is not a finite number (a BigInt, null or any object includ
 since that one reading feeds both the deadline's clock half and every wanted test (the
 production predicate compares it with a claim's `acquiredAtMs`): minus infinity would trip
 that half at once and abandon every chunk of every pass, NaN or plus infinity would switch
-it off. Either way the periodic flush reports it and the next pass on a sane clock runs. A
-clock port that throws at a deadline check MID-PASS (each check reads it unguarded while the
-deadline signal has not fired) rejects the pass there, through the `finally` above; a
-mid-pass READING that is not a finite number (NaN, an infinity, a BigInt, null, any object)
-never rejects: it leaves that check's clock half off (it is never subtracted, so a BigInt or
-a throwing `valueOf` cannot throw there though the clock did not) and the signal still
-bounds the pass, so a clock that THROWS is the only mid-pass clock rejection. A finite
-BACKWARD mid-pass reading (a wall clock stepped back) is compared with the start like any
-other and gives a negative difference, so it never trips the clock half until the clock
-catches up; the signal still bounds the pass. So the pass rejects in exactly these cases,
-the list the renewer's JSDoc and the periodic flush's member doc state word for word
-(production binds `Date.now` and no injected deadline, so it meets none of them): an
+it off. Either way the periodic flush reports it and a later call on a sane clock runs once
+the flag is free. A clock port that throws at a deadline check MID-PASS (each check reads it
+unguarded while the deadline signal has not fired) rejects the pass there, through the
+`finally` above; a mid-pass READING that is not a finite number (NaN, an infinity, a BigInt,
+null, any object) never rejects: it leaves that check's clock half off (it is never
+subtracted, so a BigInt or a throwing `valueOf` cannot throw there though the clock did not)
+and the signal still bounds the pass, so a clock that THROWS is the only mid-pass clock
+rejection. A finite BACKWARD mid-pass reading (a wall clock stepped back) is compared with
+the start like any other and gives a negative difference, so it never trips the clock half
+until the clock catches up; the signal still bounds the pass. So the pass rejects in exactly
+these cases, the list the renewer's JSDoc and the periodic flush's member doc state word for
+word (production binds `Date.now` and no injected deadline, so it meets none of them): an
 injected `passDeadlineMs` that is not a whole number of ms from 1 to 2^31 - 1, the range
 `AbortSignal.timeout` honours (suites only): a `RangeError` before anything runs; a `nowMs`
 start reading that throws (even from a clock port that started a pass itself first: that

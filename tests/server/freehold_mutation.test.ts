@@ -3477,15 +3477,17 @@ describe('the claim renewer', () => {
     // copy, and none of what follows it, which each copy words its own way.
     const anchor = 'exactly these cases';
     const listOf = (text: string): string[] => {
-      const at = text.indexOf(anchor);
-      // One copy per file, or this could read the wrong one.
-      if (at < 0 || text.includes(anchor, at + 1)) return [];
-      const body = text
-        .slice(at + anchor.length)
+      // Comment markers stripped and whitespace collapsed FIRST, so a reflow
+      // that breaks the anchor or a case across lines changes nothing.
+      const flat = text
         .split('\n')
         .map((line) => line.replace(/^\s*(?:\/\*\*|\*\/|\*|\/\/)?/, ''))
         .join(' ')
-        .replaceAll('`', '');
+        .replace(/\s+/g, ' ');
+      const at = flat.indexOf(anchor);
+      // One copy per file, or this could read the wrong one.
+      if (at < 0 || flat.includes(anchor, at + 1)) return [];
+      const body = flat.slice(at + anchor.length).replaceAll('`', '');
       const from = body.indexOf(':') + 1;
       const end = body.slice(from).search(/\.(?:\s|$)/);
       if (from === 0 || end < 0) return [];
@@ -3777,26 +3779,70 @@ describe('the claim renewer', () => {
       "const reg = await import('./freehold_claim_' + 'registry');",
       `const part = 'registry';\nconst reg = await import(\`./freehold_claim_\${part}\`);`,
       "const reg = await import('#claims');",
-      // The call arm takes ONE dotted word before the path, so two get past.
-      "const reg = await import(void typeof './freehold_claim_registry');",
+      // The call arm takes ONE dotted word before the path, so two get past
+      // (this one really loads the module).
+      "const reg = await import(await await './freehold_claim_registry');",
     ]) {
       expect(refsDelta(shape), shape).toEqual(neither);
     }
-    // The alias escape is closed where it would be declared: no package.json
-    // `imports` entry and no tsconfig `paths` entry names the registry. Both
-    // tables are read whole (the tsconfig with its comments allowed), and the
-    // control proves the reader sees an alias that IS declared today.
-    const aliasTargets = (): string[] => {
-      const pkg = JSON.parse(readFileSync('package.json', 'utf8')) as {
-        imports?: Record<string, unknown>;
-      };
-      const tsconfig = readFileSync('tsconfig.json', 'utf8');
-      const paths = tsconfig.match(/"paths"\s*:\s*\{[\s\S]*?\n\s*\}/)?.[0] ?? '';
-      return [JSON.stringify(pkg.imports ?? {}), paths];
+    // The alias escape is closed where it would be declared: every alias table
+    // the toolchain reads (package.json `imports`, the `paths` of each
+    // tsconfig, the vite and server-bundle `alias` objects) is read whole by
+    // one pure reader, which refuses a table naming the registry, or a
+    // wildcard inside a freehold_claim_ name (`"#fc_*": [".../freehold_claim_*"]`
+    // would reach it under any suffix). Fixtures run through the same reader.
+    const aliasTable = (file: string, text: string): string => {
+      if (file === 'package.json') {
+        const pkg = JSON.parse(text) as { imports?: Record<string, unknown> };
+        return JSON.stringify(pkg.imports ?? {});
+      }
+      if (file.endsWith('.json')) return text.match(/"paths"\s*:\s*\{[\s\S]*?\n\s*\}/)?.[0] ?? '';
+      return (text.match(/\balias\s*:\s*\{[^}]*\}/g) ?? []).join('\n');
     };
-    const [importsTable, pathsTable] = aliasTargets();
-    expect(pathsTable).toContain('#bot-detector');
-    expect(`${importsTable}\n${pathsTable}`).not.toMatch(/freehold_claim_registry/);
+    const reachesRegistry = (table: string): boolean =>
+      /freehold_claim_registry/.test(table) || /freehold_claim_[^'"\s,\]]*\*/.test(table);
+    const aliasFiles = [
+      'package.json',
+      'tsconfig.json',
+      'tsconfig.admin.json',
+      'tsconfig.bot.json',
+      'vite.config.ts',
+      'scripts/build_server.mjs',
+    ];
+    const tables = aliasFiles.map((file) => ({
+      file,
+      table: aliasTable(file, readFileSync(file, 'utf8')),
+    }));
+    // Controls: the reader sees the alias each real table declares today.
+    for (const file of ['tsconfig.json', 'vite.config.ts', 'scripts/build_server.mjs']) {
+      expect(tables.find((t) => t.file === file)?.table, file).toContain('#bot-detector');
+    }
+    expect(tables.filter((t) => reachesRegistry(t.table)).map((t) => t.file)).toEqual([]);
+    // Fixtures through the same reader: each would reach the registry.
+    for (const [file, text] of [
+      ['package.json', '{"imports":{"#claims":"./server/freehold_claim_registry.ts"}}'],
+      [
+        'tsconfig.json',
+        '{\n  "compilerOptions": {\n    "paths": {\n      "#claims": ["./server/freehold_claim_registry.ts"]\n    }\n  }\n}',
+      ],
+      [
+        'tsconfig.json',
+        '{\n  "compilerOptions": {\n    "paths": {\n      "#fc_*": ["./server/freehold_claim_*.ts"]\n    }\n  }\n}',
+      ],
+      [
+        'vite.config.ts',
+        "resolve: { alias: { '#claims': './server/freehold_claim_registry.ts' } },",
+      ],
+      ['scripts/build_server.mjs', "alias: { '#fc': './server/freehold_claim_registry' },"],
+    ] as const) {
+      expect(reachesRegistry(aliasTable(file, text)), `${file}: ${text}`).toBe(true);
+    }
+    // And a table naming only another module is no reach.
+    expect(
+      reachesRegistry(
+        aliasTable('package.json', '{"imports":{"#db":"./server/freehold_claim_db.ts"}}'),
+      ),
+    ).toBe(false);
     // The computed key the namespace control calls through is the shape the
     // name counts cannot see: it moves none of them.
     expect(delta("void reg['renew' + 'FreeholdClaims'](d);")).toEqual(none);
