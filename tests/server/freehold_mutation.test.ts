@@ -3936,9 +3936,10 @@ describe('the claim renewer', () => {
     const tracked = (pattern: string): string[] => listed([pattern]).sort();
     // The whole tracked listing, taken once with no pathspec, read by the
     // Dockerfile inventory and the tree read's controls below. It must hold as
-    // many paths as a raw read of git's own listing taken beside the helper
-    // (any exclusion, in the call or the helper, changes the count), and the
-    // floor sits near the real count.
+    // many paths as a raw read of git's own listing taken beside `listed` (an
+    // exclusion in this call or in `listed` changes the count, since an
+    // exclusion can only drop paths; both reads share the `git` wrapper), and
+    // the floor sits near the real count.
     const allTracked = listed([]);
     expect(allTracked.length).toBe(
       git(['ls-files', '-z'])
@@ -4087,11 +4088,10 @@ describe('the claim renewer', () => {
     // removed or renamed one meets this message before any read once git
     // sees the change (the list reads the index); the list fails closed, so a
     // path that only names one (say, a script called dockerfile_context.mjs)
-    // fails loudly and is reviewed. Then each is
-    // pinned as written, comments and blank lines included (only line endings
-    // are normalised, for a Windows checkout). The root one builds and runs
-    // the bundle; the other builds the player wiki. Nothing in either is
-    // interpreted.
+    // fails loudly and is reviewed. Then each is pinned as written, comments
+    // and blank lines included (only line endings are normalised, for a
+    // Windows checkout). The root one builds and runs the bundle; the other
+    // builds the player wiki. Nothing in either is interpreted.
     const inventoried = (file: string): boolean =>
       !/^(?:docs|tests)\//.test(file) && /dockerfile/i.test(file);
     expect(
