@@ -1924,9 +1924,9 @@ const MONOLITHS: MonolithRow[] = [
     // mob.update family buckets, the sim lap list, the bcastSelf key-group list
     // and the mob zone resolver) moved whole to server/tick_phase_names.ts,
     // re-exported so no importer re-points (9604 after the move), and that
-    // room pays the claim, trip and housing-hook wiring that follows. RE-PINNED
-    // 9680 -> 9650 at the 07a close: wc -l on the built and reviewed tree. Exact
-    // count, zero slack.
+    // room pays the claim, trip and housing-hook wiring that follows.
+    // RE-PINNED 9680 -> 9650 at the 07a close: wc -l on the built and reviewed
+    // tree. Exact count, zero slack.
     ceiling: 9650,
     seam: 'a sibling server module; see the hot-path seams in server/CLAUDE.md',
   },
@@ -2025,8 +2025,9 @@ const MONOLITHS: MonolithRow[] = [
     // server/freehold_persist_types.ts, type-only and re-exported, so no
     // importer re-points (1792 after the move), and that room pays the claim
     // seams that follow (the claim-busy hold, the fenced answer, wantsClaim,
-    // authority, runExclusive). RE-PINNED 1870 -> 1854 at the 07a close: wc -l
-    // on the built and reviewed tree. Exact count, zero slack.
+    // authority, runExclusive).
+    // RE-PINNED 1870 -> 1854 at the 07a close: wc -l on the built and reviewed
+    // tree. Exact count, zero slack.
     file: 'server/freehold_persist.ts',
     ceiling: 1854,
     seam: 'a sibling server module behind the store ports; see server/CLAUDE.md',
@@ -2436,8 +2437,9 @@ const MONOLITHS: MonolithRow[] = [
     // to server/concurrent_index_runner.ts, re-exported so server/main.ts and
     // the pg suites keep importing it from './db' (4448 after the move), and that
     // room pays the housing hook in the three hooked saves, the two new schema
-    // fragments and the one export loader that follow. RE-PINNED 4475 -> 4461 at
-    // the 07a close: wc -l on the built and reviewed tree. Exact count, zero slack.
+    // fragments and the one export loader that follow.
+    // RE-PINNED 4475 -> 4461 at the 07a close: wc -l on the built and reviewed
+    // tree. Exact count, zero slack.
     ceiling: 4461,
     seam: 'a domain <domain>_db.ts module with its own *_SCHEMA (server/CLAUDE.md)',
   },

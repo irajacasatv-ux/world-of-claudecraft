@@ -309,15 +309,16 @@ export interface FreeholdClaimRenewerDeps {
   onLost?(claim: FreeholdHeldClaim): void;
   /** Read at the pass's start (that one reading also feeds every wanted
    *  test), at every deadline check while the deadline signal has not fired,
-   *  and at its close. A start reading that throws or is not a finite number
-   *  rejects the call before the pass starts (a clock port that started a
-   *  pass itself leaves the call a counted skip instead, whatever it read: the
-   *  flag is re-checked first); a throw at a deadline check
-   *  rejects the pass there, mid-pass, while a reading there that is not a
-   *  finite number leaves that check to the signal alone (and a finite one
-   *  stepped back below the start trips nothing until the clock catches up);
-   *  the closing read is guarded (a throw, or a reading that gives no usable
-   *  duration, adds nothing). */
+   *  and at its close. A start read that throws rejects the call before it
+   *  takes the flag, even when the port started a pass itself first (that
+   *  pass runs on); a start reading that is not a finite number rejects it
+   *  there too, unless the port started a pass itself (the flag is re-checked
+   *  first, so the call is a counted skip instead, whatever it read); a throw
+   *  at a deadline check rejects the pass there, mid-pass, while a reading
+   *  there that is not a finite number leaves that check to the signal alone
+   *  (and a finite one stepped back below the start trips nothing until the
+   *  clock catches up); the closing read is guarded (a throw, or a reading
+   *  that gives no usable duration, adds nothing). */
   nowMs(): number;
   warn(message: string): void;
   /** The pass deadline, a whole number of ms from 1 to 2^31 - 1, the range
@@ -410,10 +411,13 @@ function passDeadlineOf(deps: FreeholdClaimRenewerDeps): number {
  * - an injected passDeadlineMs that is not a whole number of ms from 1 to
  *   2^31 - 1, the range AbortSignal.timeout honours (suites only): a
  *   RangeError before anything runs;
- * - a nowMs start reading that throws, or that is not a finite number while
- *   no pass runs (the flag is re-checked first, so a clock port that started
- *   a pass itself leaves the call a counted skip): before the flag is taken,
+ * - a nowMs start reading that throws (even from a clock port that started a
+ *   pass itself first: that pass runs on): before this call takes the flag,
  *   so the next pass on a sane clock runs;
+ * - a nowMs start reading that is not a finite number while no pass runs
+ *   (the flag is re-checked first, so a clock port that started a pass itself
+ *   leaves this call a counted skip instead): before this call takes the
+ *   flag, so the next pass on a sane clock runs;
  * - a nowMs that throws at a deadline check mid-pass: the pass stops there
  *   with that error;
  * - an injected deadlineSignal factory that throws (suites only): after the

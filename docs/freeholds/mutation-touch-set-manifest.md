@@ -436,7 +436,8 @@ undecided") once, where the deadline stops the pass. Three lines come from the p
 `onLost` hooks that threw (each throw swallowed and counted on the lasting
 `claim_on_lost_threw`), and the closing-clock line ("clock gave no usable duration at its
 close (REASON); that pass is counted without one", REASON one fixed reason, judged in this
-order and defined here (the `closingPassMs` JSDoc and the metrics help text agree): `threw`,
+order and defined here (the `closingPassMs` JSDoc and the metrics help text are consistent
+with it): `threw`,
 the closing read threw; `non-number`, it returned
 something that is not a number (a BigInt, null, a Date, any object; NaN is a number and
 reports `not finite`); `not finite`, the duration is NaN or an infinity (a NaN or infinite
@@ -446,9 +447,11 @@ running `claim_renew_pass` total past a finite number, which prom-client's `Coun
 refuses at scrape time; so an operator tells a broken clock from one stepped back); the flag
 clears in a `finally` of its own inside
 it, so a statement there that throws cannot leave the flag set. A clock port that throws at
-the pass's start rejects the call before the flag is taken; the flag is then re-checked
-straight after that read, BEFORE the reading is judged (a clock port that started a pass
-itself leaves the call a counted skip, whatever it read); and a start reading that is not a
+the pass's start rejects the call before that call takes the flag, even one that started a
+pass itself first (that pass runs on and clears the flag at its own end); otherwise the flag
+is re-checked straight after that read, BEFORE the reading is judged (a clock port that
+started a pass itself leaves the call a counted skip, whatever it read); and a start reading
+that is not a
 finite number (a BigInt, null or any object included: `Number.isFinite` coerces nothing) is
 refused like a throw, with a fixed dev-channel Error, since that one reading feeds both the
 deadline's
@@ -468,10 +471,12 @@ pass rejects in exactly these cases, the list the renewer's JSDoc and the period
 member doc state word for word (production binds `Date.now` and no injected deadline, so it
 meets none of them): an injected `passDeadlineMs` that is not a whole number of ms from 1 to
 2^31 - 1, the range `AbortSignal.timeout` honours (suites only): a `RangeError` before
-anything runs; a `nowMs` start reading that throws, or that is not a finite number while no
-pass runs (the flag is re-checked first, so a clock port that started a pass itself leaves
-the call a counted skip): before the flag is taken, so the next pass on a sane clock runs; a
-`nowMs` that throws at a deadline
+anything runs; a `nowMs` start reading that throws (even from a clock port that started a
+pass itself first: that pass runs on): before this call takes the flag, so the next pass on
+a sane clock runs; a `nowMs` start reading that is not a finite number while no pass runs
+(the flag is re-checked first, so a clock port that started a pass itself leaves this call a
+counted skip instead): before this call takes the flag, so the next pass on a sane clock
+runs; a `nowMs` that throws at a deadline
 check mid-pass: the pass stops there with that error; an injected `deadlineSignal` factory
 that throws (suites only): after the wanted tests and before any statement. (Node clamps 0,
 and anything from 2^31 to 2^32 - 1, to 1 ms, which would abandon every chunk of every pass,
