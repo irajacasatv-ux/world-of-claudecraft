@@ -23,7 +23,7 @@ feature spec), or its program's dir; the top level is only for a living runbook.
 | `merge-queue.md` | The merge queue + required-check contract on `main` and `release/**` (the ruleset settings are not in git; this is their written contract, and the operator note for queue rejections). Living. |
 | `image-to-glb-asset-workflow.md` | Living runbook for reference-image intake, procedural Three.js authoring, optimized GLB export, renderer integration, performance gates, and in-game visual proof. |
 | `desktop-release.md`, `desktop-ship-notes.md`, `mobile-store-release.md` | Release runbooks (Electron/Steam; iOS/Android). Living. |
-| `sfx-studio-tutorial.md`, `codex.md` | Operator guides: the SFX Studio; the Codex support layer. Living. |
+| `sfx-studio-tutorial.md`, `codex.md`, `ai-architecture.md` | Operator guides: the SFX Studio; the Codex support layer; the AI collaboration layer (what loads when, the instruction-file writing standard, the agent and skill catalog, the librarian loop). Living. |
 | `security/` | `malware-scan-catalog.md`: the path-aware triage priors behind `scripts/malware_scan.mjs --gate`. `dependency-audit-catalog.md`: the `pnpm audit` gate model plus the accepted-advisory register `tests/dependency_audit_gate.test.ts` requires an entry in. Both living. |
 | `i18n/` | Localized contributor docs: per-locale translations of the root `README.md` and `CONTRIBUTING.md` (see i18n note below). |
 | `i18n-scaling/` | i18n architecture + workflow docs. `translation-workflow.md` is the canonical contributor/maintainer roles reference (root and `src/ui/CLAUDE.md` point here); `lazy-locales-and-contributor-workflow.md` is the lazy-locale/hygiene design package. |
@@ -74,10 +74,11 @@ Replacing a README hero: keep the same filename so README links do not break. Vi
 still commit before/after screenshots here and reference them from the PR body; generate
 them with `scripts/pr_screenshots.mjs` (root workflow rule and the `pr-screenshots` skill).
 
-Merged PR evidence is not load-bearing forever. Periodically purge dead before/after
-directories that nothing in tests, README, CREDITS, or asset fingerprints still needs.
-Do not delete `eastbrook-vale-rebuild/`, `eastbrook-grand-armoury/`, README heroes, or
-other paths pinned by tests or provenance.
+Merged PR evidence is not load-bearing forever. The `/librarian` sweep lists dead
+before/after directories (nothing in tests, README, CREDITS, docs, or asset fingerprints
+references them) for removal in its own reviewed change; never delete them in passing.
+Keep `eastbrook-vale-rebuild/`, `eastbrook-grand-armoury/`, README heroes, and other paths
+pinned by tests or provenance.
 
 ## i18n note (the only player/contributor-facing strings under `docs/`)
 The doc *prose* here is dev/design reference, English-only. The exception is `i18n/`:

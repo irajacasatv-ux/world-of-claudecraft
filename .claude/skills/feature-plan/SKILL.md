@@ -273,7 +273,9 @@ trigger: which diff surfaces spawn which agent. Generate it from these heuristic
   creates GPU work (a material, a light, a GL context, a scene attach, VFX lifetime, a
   performance probe); `content-obligations-reviewer` for any `src/sim/content/` record
   change (the same-change obligations); `gate-integrity-reviewer` for gate/CI pipeline
-  files; `test-coverage-auditor` when a phase's test additions are the deliverable;
+  files; `docs-librarian` for any instruction file the phase adds or changes (a
+  `CLAUDE.md`, `AGENTS.md`, or a `.claude/agents/` or `.claude/skills/` definition);
+  `test-coverage-auditor` when a phase's test additions are the deliverable;
   `qa-checklist` when a phase or deliverable set is COMPLETE (the `/qa` skill runs it
   with the fan-out it names).
 - Most phases trigger one or two agents. If no surface matches (docs or comments that are

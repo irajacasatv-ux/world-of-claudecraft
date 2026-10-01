@@ -40,9 +40,8 @@ Parity drift can only come from a change to a parity surface. If the diff touche
 them, there is nothing to audit and a full parity walk wastes a large token budget. Gate
 yourself before reading any file:
 
-1. Get the changed files only (cheap):
-   `git diff --name-only "$(git merge-base HEAD "$(git rev-parse --abbrev-ref '@{upstream}' 2>/dev/null || echo origin/main)")"..HEAD` (or `git diff --cached
-   --name-only` for staged work / `HEAD~N` skipping merge commits).
+1. Get the changed files only (cheap): `node scripts/review_scope.mjs` (the branch's changes against its
+   integration base, plus staged, unstaged, and untracked work), or the range the caller names.
 2. You are IN SCOPE if any changed path is one of: `src/world_api.ts` or `src/world_api/**`
    (the IWorld facets), anything
    under `src/sim/` (sim behavior / obs / `SimEvent` / types), `src/net/online.ts`
@@ -67,9 +66,8 @@ yourself before reading any file:
 
 - **Specific domain** ("audit the new pet feature"): focus on that domain across IWorld,
   Sim, ClientWorld, the wire fields, SimEvents, and i18n.
-- **Recent changes** ("check recent drift"): diff against an appropriate base, e.g.
-  `git diff --name-only "$(git merge-base HEAD "$(git rev-parse --abbrev-ref '@{upstream}' 2>/dev/null || echo origin/main)")"..HEAD` (or `HEAD~N` skipping merge
-  commits). Do not blindly use a fixed `HEAD~5`; merge commits inflate the range. Then audit
+- **Recent changes** ("check recent drift"): `node scripts/review_scope.mjs` lists the branch's changes against
+  its integration base. Do not blindly use a fixed `HEAD~5`; merge commits inflate the range. Then audit
   the corresponding parity points.
 - **Full scan**: walk every row of the parity map below.
 

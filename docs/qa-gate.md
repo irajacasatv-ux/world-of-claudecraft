@@ -671,6 +671,7 @@ before reporting readiness.
 | Release malware | `release-malware-audit` | `woc_release_malware` |
 | Content same-change obligations | `content-obligations-reviewer` | (not yet mirrored) |
 | Gate/CI selection integrity | `gate-integrity-reviewer` | (not yet mirrored) |
+| Instruction-file drift | `docs-librarian` | (not yet mirrored; `$woc-codex-audit` covers the Codex files) |
 
 These roles encode non-obvious review heuristics. Canonical architecture stays in root
 and local `CLAUDE.md` files. Content-obligations review owns the same-change authoring
@@ -693,7 +694,11 @@ prepare and when: prewarm homes and twins, compile and reveal gates, program-key
 post-boot lights, secondary GL contexts, the background queue and its admission budget, and
 the stand-in registry (the contract in `src/render/CLAUDE.md` "GPU work: every new producer is
 a client of the scheduler"), where frontend review keeps the presentation seams and tier
-fairness. Dispatch every role whose set of risk applies.
+fairness. Instruction-file review owns every `CLAUDE.md`, `AGENTS.md`, agent, and skill: claims
+the code contradicts, files that disagree, history standing in for a rule, and prompting
+written for older models, against the standard in `docs/ai-architecture.md`;
+`tests/instruction_drift.test.ts` is its mechanical floor. Dispatch every role whose set of
+risk applies.
 
 Decisive-tests review has one dispatch trap worth stating, because its failure mode is
 silent: it resolves the diff itself, so dispatching it where `git diff` comes back empty (a

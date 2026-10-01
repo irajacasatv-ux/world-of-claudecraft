@@ -206,7 +206,11 @@ locally.
   why (the intent or finding behind it, not a file list), wrapped near 72 columns.
   Branches: `feature/<slug>`, `fix/<slug>`.
 - **Docs follow the anchor rule:** cite stable paths, exported symbols, and pinned tests;
-  never literal counts or line numbers that rot (see `docs/qa-gate.md`).
+  never literal counts or line numbers that rot (see `docs/qa-gate.md`). Instruction files
+  (every `CLAUDE.md`, `AGENTS.md`, `.claude/agents/`, `.claude/skills/`) also follow the
+  writing standard in `docs/ai-architecture.md`: current rules with their reasons, no
+  history standing in for a rule, no model names. `tests/instruction_drift.test.ts` fails
+  on a named path, module, or npm script that no longer resolves.
 
 ## Modularity: module-first is the default for ALL new code
 The default, stated explicitly: **every piece of new logic lands as its own small, reusable,
@@ -357,11 +361,13 @@ unsure, or on a smaller or unfamiliar model, use the baseline.
   table is in `docs/qa-gate.md`. Highlights: `qa-checklist` (the end-of-contribution
   gate), `content-obligations-reviewer` (any game-content diff), `gate-integrity-reviewer`
   (any change to the gate/CI selection pipeline), `render-performance-reviewer` (any diff
-  that produces GPU work: a material, a light, a GL context, a scene attach), plus the
-  domain reviewers for sim, parity, database, security, frontend, and tests. Skills cover the repeated workflows:
+  that produces GPU work: a material, a light, a GL context, a scene attach),
+  `docs-librarian` (any diff to an instruction file), plus the domain reviewers for sim,
+  parity, database, security, frontend, and tests. Skills cover the repeated workflows:
   `extract-and-test`, `review-pr`, `release-merge-audit`, `i18n-locale-fill`,
-  `pr-screenshots`, `ci-triage`, `image-to-glb`, `asset-pipeline`, plus the user-invoked
-  `/feature-plan` (not model-invocable).
+  `pr-screenshots`, `ci-triage`, `image-to-glb`, `asset-pipeline`, `librarian` (the
+  instruction-file and living-doc sweep), plus the user-invoked `/feature-plan` (not
+  model-invocable). `docs/ai-architecture.md` catalogs every agent and skill.
 - **State rule scope literally.** Models follow instructions literally and will not
   generalize a rule across cases unless told. When an invariant covers every case (every
   player string is a `t()` key; all sim randomness goes through `Rng`), say "every" or
@@ -377,4 +383,6 @@ unsure, or on a smaller or unfamiliar model, use the baseline.
 design-language standard; interface changes land through its rollout phases) ·
 `DEPLOY.md` (production) · `CREDITS.md` (asset licenses) · `docs/design/` (design docs) ·
 `docs/prd/` (feature specs) · `docs/qa-gate.md` (the layered QA gate) ·
-`docs/merge-queue.md` (the merge queue + required-check contract on protected branches).
+`docs/merge-queue.md` (the merge queue + required-check contract on protected branches) ·
+`docs/ai-architecture.md` (the AI collaboration layer: what loads when, the instruction-file
+writing standard, and how the librarian keeps it aligned).

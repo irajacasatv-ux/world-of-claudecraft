@@ -23,8 +23,8 @@ This agent is expensive. Most diffs do not touch a security surface, and a full 
 walk that ends in "all passed" wastes a large token budget. Gate yourself before reading
 any file:
 
-1. Get the changed files only (cheap): `git diff --cached --name-only`, or if nothing is
-   staged, `git diff --name-only "$(git merge-base HEAD "$(git rev-parse --abbrev-ref '@{upstream}' 2>/dev/null || echo origin/main)")"..HEAD`.
+1. Get the changed files only (cheap): `node scripts/review_scope.mjs` (the branch's changes against its
+   integration base, plus staged, unstaged, and untracked work).
 2. You are IN SCOPE if any changed path is under `server/`, `src/admin/`, or `src/net/`,
    is a deploy/build/secret file (`Dockerfile*`, `docker-compose*`, `*.env*`, a CI yml,
    `DEPLOY.md`), or is under `src/sim/` (for the determinism-as-integrity check, rule 10).
@@ -42,9 +42,9 @@ any file:
 5. Otherwise proceed to the full checklist below, focusing your reading on the matched
    files (plus anything they directly touch). Do not read the whole codebase.
 
-Once in scope, review the full diff over the range the scope gate used (`git diff --cached`
-for staged work, else the merge-base range from step 1). Then systematically check every
-rule below. Do NOT
+Once in scope, review the full diff: `git diff "$(node scripts/review_scope.mjs --base)"`
+(committed, staged, and unstaged work against the integration base; read new untracked files
+directly). Then systematically check every rule below. Do NOT
 work from a memorized file inventory (it rots as `server/` grows): `ls server/` and read what
 the diff actually touches, plus anything those files directly call. The security-relevant
 surfaces cluster into: core authority and persistence (`game.ts`, `db.ts`, `auth.ts`); the

@@ -22,9 +22,8 @@ targeted test files to confirm they pass.
 
 ## Scope gate - run this FIRST
 
-1. Get the changed files: `git diff --name-only` (working tree), else
-   `git diff --name-only "$(git merge-base HEAD "$(git rev-parse --abbrev-ref '@{upstream}' 2>/dev/null || echo origin/main)")"..HEAD`, or the commit range you were
-   given.
+1. Get the changed files: `node scripts/review_scope.mjs` (the branch's changes against its integration base,
+   plus staged, unstaged, and untracked work), or the commit range you were given.
 2. You are IN SCOPE if the change touches any `tests/**` file OR any `src/`/`server/`/
    `headless/` source file whose behavior tests should pin.
 3. EARLY EXIT: for a docs/assets-only change, output exactly

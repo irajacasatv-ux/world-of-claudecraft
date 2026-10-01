@@ -139,8 +139,8 @@ localization; the significant-contributor name glow lives there too. The
 per-tier cadence lever (`ui_tier_knobs.nameplateIntervalSec`) is applied by
 `renderer.ts`, which gates how often the painter runs; the painter has no
 cadence logic of its own. Narrow helpers:
-`nameplate_combo/threat/projection/declutter.ts` plus `entity_labels.ts`
-(shared localized display names). Drive changes from `tests/nameplate_*.test.ts`.
+`nameplate_combo.ts`, `nameplate_threat.ts`, `nameplate_projection.ts`, and
+`nameplate_declutter.ts`, plus `entity_labels.ts` (shared localized display names). Drive changes from `tests/nameplate_*.test.ts`.
 
 ## gfx.ts: the shared core (read this before touching any subsystem)
 - **`GFX` quality tiers** (the `GfxTier` ladder; ranks are monotone, so gate a

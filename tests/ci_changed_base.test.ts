@@ -19,6 +19,7 @@ const GIT_RUNNERS = [
   { file: 'ci_changed.mjs', anchor: 'function run(cmd, args) {', end: '\n}' },
   { file: 'gate_select.mjs', anchor: 'const git = (cmd, args) => {', end: '\n};' },
   { file: 'gate_shadow.mjs', anchor: 'const git = (cmd, args) => {', end: '\n};' },
+  { file: 'review_scope.mjs', anchor: 'function run(cmd, args) {', end: '\n}' },
 ] as const;
 
 // import.meta.url, not process.cwd(): the scan must find the sources whatever

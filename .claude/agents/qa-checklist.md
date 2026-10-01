@@ -25,9 +25,11 @@ the relevant sub-directory files), before the change is called done.
 
 ## Scope gate (scale the review to the change)
 
-Determine the diff first: `git diff --name-only` (working tree), else
-`git diff --name-only "$(git merge-base HEAD "$(git rev-parse --abbrev-ref '@{upstream}' 2>/dev/null || echo origin/main)")"..HEAD`. Then scale:
-- **Docs / comments only, no source or test change** -> output
+Determine the diff first: `node scripts/review_scope.mjs` (the branch's changes against its integration base,
+plus staged, unstaged, and untracked work). Then scale:
+- **Docs / comments only, no source or test change** -> if any changed doc is an instruction
+  file (a `CLAUDE.md`, `AGENTS.md`, or a `.claude/agents/` or `.claude/skills/`
+  definition), name `docs-librarian` (table below) first; then output
   **"QA gate: out of scope (docs/comments only); no implementation surface to QA."**
   and STOP.
 - **Tests only, no source change** -> run category 9 alone, mark the rest `[N/A]`, and name
@@ -319,6 +321,7 @@ headline rules here:
 | new or rewritten tests, or acceptance criteria that claim coverage | test-coverage-auditor |
 | `src/sim/content/` record added or changed (items, mobs, quests, zones, dungeons, abilities, recipes, deeds, reliquary) | content-obligations-reviewer (balance numbers additionally get maintainer eyes against `docs/design/`) |
 | `scripts/gate*.mjs`, `scripts/lib/gate_*.mjs` / `ci_*.mjs`, `scripts/lib/test_visibility.mjs`, `scripts/ci_shard_test.mjs`, `.github/workflows/`, or their pin tests (`tests/ci_workflow.test.ts`, `tests/ci_shard_plan.test.ts`, `tests/gate_select_plan.test.ts`, `tests/ci_test_select.test.ts`, `tests/nightly_plan.test.ts`) | gate-integrity-reviewer |
+| an instruction file: any `CLAUDE.md`, `AGENTS.md`, a `.claude/agents/` or `.claude/skills/` definition, `docs/qa-gate.md`, or `docs/ai-architecture.md` | docs-librarian |
 | any completed deliverable set | this gate is the default |
 
 Consuming an already-landed `IWorld` member does not change it; do not dispatch

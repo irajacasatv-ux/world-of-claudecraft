@@ -7,21 +7,12 @@ user-invocable: true
 You are running the project's end-of-contribution QA gate. Do this now, before the change is
 called done.
 
-1. Scope the review from the diff: `git diff --name-only` for uncommitted work. For committed
-   work, merge-base against the branch's own base, never `main` (work is based off the latest
-   release branch and `main` trails it, so a merge-base against `main` sweeps the whole release
-   into scope). Fallback chain: the upstream, else the newest `origin/release/*` branch, else
-   `origin/main`:
-
-   ```sh
-   base=$(git rev-parse --abbrev-ref '@{upstream}' 2>/dev/null) ||
-     base=$(git for-each-ref --sort=-creatordate --format='%(refname:short)' \
-       'refs/remotes/origin/release/*' | head -1)
-   git diff --name-only "$(git merge-base HEAD "${base:-origin/main}")"..HEAD
-   ```
-
-   If the user passed an argument (a feature name, phase, or file list), use it to focus the
-   scope.
+1. Scope the review with `node scripts/review_scope.mjs`: the branch's changes against its
+   integration base (the newest `origin/release/*`, which work is based off; `main` trails it),
+   plus staged, unstaged, and untracked work. `--base` prints the merge-base for a full
+   `git diff`. Never scope against `@{upstream}`: a pushed branch tracks its own remote copy,
+   so that scope is empty. If the user passed an argument (a feature name, phase, or file
+   list), use it to focus the scope.
 
 2. Dispatch the `qa-checklist` agent over that scope. It is the read-only gate: it scales its
    own depth to the size of the change, checks every repo invariant in play, and ends with an
@@ -43,10 +34,12 @@ called done.
    reasoning: `npm run ci:changed` (Biome on the changed files), `npx tsc --noEmit`, and
    `npx vitest run tests/architecture.test.ts tests/localization_fixes.test.ts`. Report any red.
 
-6. Adversarially confirm each consequential finding before acting on it (about half of raw
-   findings do not survive a second look). Then fix every BLOCKING and SHOULD-FIX finding, in
-   focused commits. Report what you fixed and what remains as VERIFY (needs a run or E2E) or
-   NICE-TO-HAVE.
+6. Confirm each consequential finding against the code before acting on it; this is the
+   filtering pass the reviewers leave to you. Then fix every BLOCKING and SHOULD-FIX finding, in
+   focused commits. Fix commits are unreviewed code: send each fix round back to fresh
+   reviewers (the ones whose surface it touches) until a round returns no SHOULD-FIX, and give
+   each reader a tool budget so it reports instead of running out of turns. Report what you
+   fixed and what remains as VERIFY (needs a run or E2E) or NICE-TO-HAVE.
 
 End with a one-line verdict: READY or NOT READY, and the list of any VERIFY items the maintainer
 still has to run by hand (for example `npm run perf:tour`, `npm run test:browser`, or the mobile
