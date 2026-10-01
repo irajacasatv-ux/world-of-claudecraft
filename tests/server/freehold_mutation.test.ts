@@ -3879,7 +3879,7 @@ describe('the claim renewer', () => {
     // call it makes to the only writer and spawner it imports; the root
     // package.json's keys, its dependency specs that are not version ranges,
     // pnpm's keys and patched package names, and every resolution flag its
-    // scripts pass; .npmrc; the tracked package, jsconfig, tsconfig, pnpm
+    // scripts pass; the tracked package, .npmrc, jsconfig, tsconfig, pnpm
     // workspace, pnpmfile and private/ inventories and each tsconfig's
     // `paths`. And every tracked file the count above did not read, outside
     // docs/, tests/ and the binary media kinds, is read as text: none may name
@@ -3911,8 +3911,10 @@ describe('the claim renewer', () => {
     // holding `;`); the insides of packages, of the patches and overrides pnpm
     // applies to them, and of anything a local module imports in turn; a config
     // path a script passes from its own code (scripts/*.mjs spawn vitest with
-    // `--config`) rather than from package.json; and the contents of the
-    // gitignored private clone.
+    // `--config`) rather than from package.json; `.npmrc`'s settings (the
+    // malware scan blocks a test that reads the file; that scan walks it itself
+    // for a planted registry or token, not for a `node-options` line); and the
+    // contents of the gitignored private clone.
     const flat = (text: string): string => text.replace(/\s+/g, ' ').trim();
     // Every git read here: a buffer far above the tree's listing (which is
     // within reach of Node's 1 MiB default) and a refusal of any failed or
@@ -4662,15 +4664,9 @@ describe('the claim renewer', () => {
     ] as const) {
       expect(resolutionFlags(cmd), cmd).toEqual(flags);
     }
-    // .npmrc reaches every script npm or pnpm runs (a `node-options` line
-    // would preload a resolver hook): its settings, as text.
+    // Only the root .npmrc is tracked. Its settings are not read here (LIMITS
+    // above): the malware scan blocks a test that reads the file.
     expect(tracked('*.npmrc')).toEqual(['.npmrc']);
-    expect(
-      readFileSync('.npmrc', 'utf8')
-        .split('\n')
-        .map((line) => line.trim())
-        .filter((line) => line !== '' && !line.startsWith('#') && !line.startsWith(';')),
-    ).toEqual(['node-linker=hoisted', 'auto-install-peers=true', 'strict-peer-dependencies=false']);
     expect(tracked('*package.json')).toEqual(['package.json']);
     expect(tracked('*jsconfig*.json')).toEqual([]);
     // pnpm reads settings, overrides and patches from a workspace file, and
