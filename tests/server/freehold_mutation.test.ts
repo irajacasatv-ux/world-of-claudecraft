@@ -951,6 +951,11 @@ describe('commitFreeholdMutation', () => {
  *  (`woc-static-page-alias`); the bundle's are its five builds' `alias`. */
 const VITE_AND_BUNDLE_ALIAS_WORDS = { vite: 2, bundle: 5 };
 
+/** Every module under a root, in every spelling the toolchain resolves (the
+ *  shared source walker's policy): the one walk both server/ scans in this
+ *  file read, driven over a fixture in the renewer's mention count. */
+const modulesUnder = (root: string) => sourceFilesUnder(root);
+
 describe('the claim renewer', () => {
   const claim = (plotId: string, accountId: number) => ({
     plotId,
@@ -3573,7 +3578,6 @@ describe('the claim renewer', () => {
     // Every module under server/, in every spelling the toolchain resolves
     // (the shared source walker's policy), so a call site in a `.mjs` or
     // `.cjs` module is counted like one in a `.ts` file.
-    const modulesUnder = (root: string) => sourceFilesUnder(root);
     const files = modulesUnder('server').map(({ file, full }) => {
       const source = readFileSync(full, 'utf8');
       return { file: `server/${file}`, source, texts: textsOf(source) };
@@ -3584,8 +3588,8 @@ describe('the claim renewer', () => {
     expect(SOURCE_EXTENSIONS).toEqual(
       expect.arrayContaining(['.ts', '.tsx', '.mts', '.cts', '.js', '.jsx', '.mjs', '.cjs']),
     );
-    // The same walk over a fixture: every module spelling, nested too, and
-    // nothing else.
+    // The same walk over a fixture (the authority boundary below reads it
+    // too): every module spelling, nested too, and nothing else.
     const fixtureRoot = mkdtempSync(join(tmpdir(), 'renewer-walk-'));
     try {
       mkdirSync(join(fixtureRoot, 'nested'));
@@ -5960,7 +5964,7 @@ describe('the Hearth use precheck the re-dispatch replays', () => {
 describe('the housing authority boundary', () => {
   // Through the shared walker (tests/CLAUDE.md): server/ has subdirectories.
   const serverSources = () => {
-    const files = sourceFilesUnder('server').map((f) => ({
+    const files = modulesUnder('server').map((f) => ({
       name: `server/${f.file}`,
       code: stripComments(readFileSync(f.full, 'utf8')),
     }));
