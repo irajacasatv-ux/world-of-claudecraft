@@ -3797,25 +3797,43 @@ describe('the claim renewer', () => {
     ]) {
       expect(refsDelta(shape), shape).toEqual(neither);
     }
-    // The alias escape is closed where it would be declared, by LITERAL pins:
-    // every file the toolchain resolves server code through (the root
-    // package.json's `imports` and its esbuild `--alias` flags, the `paths` of
-    // every tracked tsconfig, the `alias` objects of vite.config.ts, which runs
-    // dev and vitest, and of scripts/build_server.mjs, which bundles the
-    // server) has its alias tables pinned as text, comments stripped and
-    // whitespace collapsed, beside every line that names `alias` and the
-    // count of resolver hooks (an esbuild `onResolve`, a vite `resolveId`, the
-    // bundle's `plugins`); and the tracked inventory of package.json,
-    // jsconfig and tsconfig files is pinned, since esbuild, Node and vite read
-    // a NESTED package.json's `imports` or a jsconfig's `paths` too. So a new
+    // The alias escape is closed where it would be declared, by LITERAL pins
+    // over every file the toolchain resolves server code through:
+    // scripts/build_server.mjs, which bundles the server; every tracked vite
+    // and vitest config (vite.config.ts runs dev and vitest, the memory and
+    // browser configs are named by scripts, and vitest would prefer a new
+    // vitest.config, which changes the inventory); the root package.json and
+    // .npmrc; and every tracked tsconfig. Each config's `alias` tables are
+    // pinned as text (comments stripped, whitespace collapsed), beside every
+    // line naming `alias`, every import it makes, and its resolver hooks (an
+    // esbuild `onResolve`, a vite `resolveId`, `transform` or `load`, and
+    // `plugins`), which are counted in every local module vite.config.ts
+    // imports too. What the reviewed aliases resolve TO is pinned as well:
+    // the declarations of the variables they read, and every line naming one.
+    // Each esbuild.build call's option keys are pinned, so a `tsconfig`,
+    // `nodePaths`, `inject` or spread option is new; so are package.json's
+    // keys, its local-path dependency specs and every resolution flag its
+    // scripts pass; and the tracked inventory of package.json, jsconfig,
+    // tsconfig and vite config files, since esbuild, Node and vite read a
+    // NESTED package.json's `imports` or a jsconfig's `paths` too. So a new
     // alias fails until reviewed: a quoted or bare key, a spread, a computed
-    // key, a variable value, a shorthand or quoted `alias` property, an array,
-    // a resolver plugin, a new package or config file. LIMITS, named so they
-    // are reviewed rather than assumed: a property name COMPUTED to `alias`
-    // (`['ali' + 'as']`), text the shared comment stripper misreads (a string
-    // holding a comment opener), and config fragments vite.config.ts imports
-    // from scripts/ (dev and vitest only, never the server bundle).
+    // key, a variable value or a retargeted variable, a shorthand or quoted
+    // `alias` property, an array, a resolver plugin, a new build option,
+    // import, flag, package or config file. LIMITS, named so they are reviewed
+    // rather than assumed: a property name COMPUTED to `alias`
+    // (`['ali' + 'as']`); text the shared comment stripper misreads (a string
+    // holding a comment opener); the insides of the packages a config imports,
+    // and of anything a local import imports in turn (one level is read); a
+    // config path a script passes from its own code (scripts/*.mjs spawn
+    // vitest with `--config`) rather than from package.json; and the
+    // gitignored private clone, whose implementation behind `#bot-detector`
+    // no scan reads.
     const flat = (text: string): string => text.replace(/\s+/g, ' ').trim();
+    const tracked = (pattern: string): string[] =>
+      spawnSync('git', ['ls-files', '--', pattern], { encoding: 'utf8' })
+        .stdout.split('\n')
+        .filter((f) => f !== '')
+        .sort();
     const aliasBlocks = (text: string): string[] => {
       const code = stripComments(text);
       const blocks: string[] = [];
@@ -3841,71 +3859,341 @@ describe('the claim renewer', () => {
     };
     const aliasWords = (text: string): number =>
       (stripComments(text).match(/\balias\b/g) ?? []).length;
-    const bundled = "alias: { '#bot-detector': usePrivate ? privateImpl : stubImpl }";
-    expect(aliasBlocks(readFileSync('vite.config.ts', 'utf8'))).toEqual([
-      "alias: { '#bot-detector': botDetectorImpl }",
-    ]);
-    expect(aliasBlocks(readFileSync('scripts/build_server.mjs', 'utf8'))).toEqual(
-      Array.from({ length: 5 }, () => bundled),
-    );
-    expect({
-      vite: aliasWords(readFileSync('vite.config.ts', 'utf8')),
-      bundle: aliasWords(readFileSync('scripts/build_server.mjs', 'utf8')),
-    }).toEqual(VITE_AND_BUNDLE_ALIAS_WORDS);
+    const linesNaming = (text: string, word: RegExp): string[] =>
+      stripComments(text)
+        .split('\n')
+        .filter((line) => word.test(line))
+        .map(flat);
     // Every line that names `alias`, as text: a swap (a word removed in one
     // place and a quoted `'alias':` property added in another) keeps the count
     // and changes this list.
-    const aliasLines = (text: string): string[] =>
-      stripComments(text)
-        .split('\n')
-        .filter((line) => /\balias\b/.test(line))
-        .map(flat);
-    expect(aliasLines(readFileSync('vite.config.ts', 'utf8'))).toEqual([
-      "return { name: 'woc-static-page-alias', configureServer: attach, configurePreviewServer: attach };",
-      "resolve: { alias: { '#bot-detector': botDetectorImpl } },",
-    ]);
-    expect(aliasLines(readFileSync('scripts/build_server.mjs', 'utf8'))).toEqual(
-      Array.from({ length: 5 }, () => `${bundled},`),
-    );
-    // Resolver hooks: none in either file today, so a resolver plugin is new.
+    const aliasLines = (text: string): string[] => linesNaming(text, /\balias\b/);
     const hooks = (text: string): Record<string, number> => {
       const code = stripComments(text);
       return Object.fromEntries(
-        ['onResolve', 'resolveId', 'plugins'].map((hook) => [
+        ['onResolve', 'resolveId', 'transform', 'load', 'plugins'].map((hook) => [
           hook,
           (code.match(new RegExp(`\\b${hook}\\b`, 'g')) ?? []).length,
         ]),
       );
     };
-    expect(hooks(readFileSync('scripts/build_server.mjs', 'utf8'))).toEqual({
-      onResolve: 0,
-      resolveId: 0,
-      plugins: 0,
-    });
-    expect(hooks(readFileSync('vite.config.ts', 'utf8'))).toMatchObject({
-      onResolve: 0,
-      resolveId: 0,
-    });
-    expect(hooks('plugins: [{ setup(b) { b.onResolve({ filter: /x/ }, f); } }],')).toEqual({
-      onResolve: 1,
-      resolveId: 0,
-      plugins: 1,
-    });
-    // The root package.json: no `imports` table, no `--alias` in any script.
-    const pkg = JSON.parse(readFileSync('package.json', 'utf8')) as {
+    // Static specifiers in source order, plus dynamic imports and requires.
+    const importsOf = (text: string) => {
+      const code = stripComments(text);
+      return {
+        from: [
+          ...code.matchAll(
+            /^(?:import|export)\b[^;]*?\bfrom\s*['"]([^'"]+)['"]|^import\s*['"]([^'"]+)['"]/gm,
+          ),
+        ].map((m) => m[1] ?? m[2]),
+        dynamic: (code.match(/\bimport\s*\(/g) ?? []).length,
+        require: (code.match(/\b(?:require|createRequire)\b/g) ?? []).length,
+      };
+    };
+    const noHooks = { onResolve: 0, resolveId: 0, transform: 0, load: 0, plugins: 0 };
+    const bundled = "alias: { '#bot-detector': usePrivate ? privateImpl : stubImpl }";
+    const viteImports = [
+      'node:child_process',
+      'node:fs',
+      'node:path',
+      'node:url',
+      '@sveltejs/vite-plugin-svelte',
+      '@testing-library/svelte/vite',
+      'lightningcss',
+      'vite',
+      './scripts/browserslist_targets.mjs',
+      './scripts/ci_balanced_sequencer.mjs',
+      './scripts/i18n_modulepreload.mjs',
+      './scripts/lib/diagnostics_capture_guard.mjs',
+      './scripts/lib/freehold_dev_authorization.mjs',
+      './scripts/lib/gate_host_workers.mjs',
+      './scripts/lib/lane_suite_scope.mjs',
+      './scripts/lib/vitest_fs_module_cache.mjs',
+    ];
+    // The screenshot runtime's config is copied beside a checkout's
+    // vite.config.ts and spreads it, so its one import is that file.
+    const screenshotRuntime =
+      'docs/screenshots/freehold-crafted-content-2026-09-07/runtime/vite.config.mjs';
+    const configs: Record<
+      string,
+      {
+        imports: ReturnType<typeof importsOf>;
+        hooks: Record<string, number>;
+        aliasLines: string[];
+        aliasBlocks: string[];
+      }
+    > = {
+      'scripts/build_server.mjs': {
+        imports: { from: ['node:fs', 'node:url', 'esbuild'], dynamic: 0, require: 0 },
+        hooks: noHooks,
+        aliasLines: Array.from({ length: 5 }, () => `${bundled},`),
+        aliasBlocks: Array.from({ length: 5 }, () => bundled),
+      },
+      'vite.config.ts': {
+        imports: { from: viteImports, dynamic: 0, require: 0 },
+        hooks: { ...noHooks, plugins: 1 },
+        aliasLines: [
+          "return { name: 'woc-static-page-alias', configureServer: attach, configurePreviewServer: attach };",
+          "resolve: { alias: { '#bot-detector': botDetectorImpl } },",
+        ],
+        aliasBlocks: ["alias: { '#bot-detector': botDetectorImpl }"],
+      },
+      'vitest.memory.config.ts': {
+        imports: { from: ['./vite.config'], dynamic: 0, require: 0 },
+        hooks: noHooks,
+        aliasLines: [],
+        aliasBlocks: [],
+      },
+      'vitest.browser.config.ts': {
+        imports: { from: ['@vitest/browser-playwright', 'vitest/config'], dynamic: 0, require: 0 },
+        hooks: noHooks,
+        aliasLines: [],
+        aliasBlocks: [],
+      },
+      [screenshotRuntime]: {
+        imports: { from: ['../vite.config.ts'], dynamic: 0, require: 0 },
+        hooks: noHooks,
+        aliasLines: [],
+        aliasBlocks: [],
+      },
+    };
+    expect(tracked('*vite*.config.*')).toEqual([
+      screenshotRuntime,
+      'vite.config.ts',
+      'vitest.browser.config.ts',
+      'vitest.memory.config.ts',
+    ]);
+    for (const [file, pinned] of Object.entries(configs)) {
+      const text = readFileSync(file, 'utf8');
+      expect(
+        {
+          imports: importsOf(text),
+          hooks: hooks(text),
+          aliasLines: aliasLines(text),
+          aliasBlocks: aliasBlocks(text),
+        },
+        file,
+      ).toEqual(pinned);
+    }
+    expect({
+      vite: aliasWords(readFileSync('vite.config.ts', 'utf8')),
+      bundle: aliasWords(readFileSync('scripts/build_server.mjs', 'utf8')),
+    }).toEqual(VITE_AND_BUNDLE_ALIAS_WORDS);
+    // A local module vite.config.ts imports can carry a plugin it registers
+    // (freeholdDevAuthorizationPlugin does): none of them holds a hook.
+    const localViteImports = viteImports.filter((spec) => spec.startsWith('./'));
+    expect(localViteImports).toHaveLength(8);
+    for (const spec of localViteImports) {
+      expect(hooks(readFileSync(spec.slice(2), 'utf8')), spec).toEqual(noHooks);
+    }
+    // Each reader sees what it claims to.
+    expect(
+      hooks(
+        'plugins: [{ setup(b) { b.onResolve({ filter: /x/ }, f); } }, { resolveId() {}, transform() {}, load() {} }],',
+      ),
+    ).toEqual({ onResolve: 1, resolveId: 1, transform: 1, load: 1, plugins: 1 });
+    expect(
+      importsOf(
+        "import a from 'pkg';\nimport {\n  b,\n} from './local.mjs';\nimport './side.mjs';\nexport { c } from './re.mjs';\nconst s = \"import x from './str';\";\nconst d = await import('./dyn.mjs');\nconst r = createRequire(u)('./req.cjs');",
+      ),
+    ).toEqual({ from: ['pkg', './local.mjs', './side.mjs', './re.mjs'], dynamic: 1, require: 1 });
+    // What the reviewed aliases resolve TO: every line naming the variables
+    // their values read (or a bot_detector path), and each variable's whole
+    // declaration, so a retarget fails even through a line naming none of them.
+    const declarations = (text: string, name: string): string[] =>
+      [
+        ...stripComments(text).matchAll(
+          new RegExp(`\\b(?:const|let|var)\\s+${name}\\b[^;]*;`, 'g'),
+        ),
+      ].map((m) => flat(m[0]));
+    const bundleSource = readFileSync('scripts/build_server.mjs', 'utf8');
+    const viteSource = readFileSync('vite.config.ts', 'utf8');
+    expect(
+      linesNaming(bundleSource, /\b(?:bot_detector|privateImpl|stubImpl|usePrivate)\b/),
+    ).toEqual([
+      "const privateImpl = fileURLToPath(new URL('../private/bot_detector/src/index.ts', import.meta.url));",
+      "const stubImpl = fileURLToPath(new URL('../server/bot_detector/stub.ts', import.meta.url));",
+      'const usePrivate = existsSync(privateImpl);',
+      ...Array.from({ length: 5 }, () => `${bundled},`),
+      // Split at the placeholder, so the literal is plain text.
+      'console.log(`[build:server] bot detector: $' +
+        "{usePrivate ? 'private' : 'stub (no-op)'}`);",
+    ]);
+    expect(
+      ['privateImpl', 'stubImpl', 'usePrivate'].map((name) => declarations(bundleSource, name)),
+    ).toEqual([
+      [
+        "const privateImpl = fileURLToPath(new URL('../private/bot_detector/src/index.ts', import.meta.url));",
+      ],
+      [
+        "const stubImpl = fileURLToPath(new URL('../server/bot_detector/stub.ts', import.meta.url));",
+      ],
+      ['const usePrivate = existsSync(privateImpl);'],
+    ]);
+    expect(
+      linesNaming(viteSource, /\b(?:bot_detector|privateBotDetector|botDetectorImpl)\b/),
+    ).toEqual([
+      'const privateBotDetector = fileURLToPath(',
+      "new URL('private/bot_detector/src/index.ts', import.meta.url),",
+      'const botDetectorImpl = existsSync(privateBotDetector)',
+      '? privateBotDetector',
+      ": fileURLToPath(new URL('server/bot_detector/stub.ts', import.meta.url));",
+      "resolve: { alias: { '#bot-detector': botDetectorImpl } },",
+    ]);
+    expect(
+      ['privateBotDetector', 'botDetectorImpl'].map((name) => declarations(viteSource, name)),
+    ).toEqual([
+      [
+        "const privateBotDetector = fileURLToPath( new URL('private/bot_detector/src/index.ts', import.meta.url), );",
+      ],
+      [
+        "const botDetectorImpl = existsSync(privateBotDetector) ? privateBotDetector : fileURLToPath(new URL('server/bot_detector/stub.ts', import.meta.url));",
+      ],
+    ]);
+    // An inserted line that names no variable still moves the declaration.
+    expect(
+      declarations(
+        "const botDetectorImpl = existsSync(privateBotDetector)\n  ? privateBotDetector\n  : '/server/freehold_claim_registry.ts' ? '/server/freehold_claim_registry.ts'\n  : fileURLToPath(new URL('server/bot_detector/stub.ts', import.meta.url));",
+        'botDetectorImpl',
+      ),
+    ).not.toEqual(declarations(viteSource, 'botDetectorImpl'));
+    // Each esbuild.build call's top-level option keys, read with strings
+    // skipped and brackets balanced, so a new option is seen however written;
+    // and the bundle's esbuild calls and spreads, exactly.
+    const buildOptionKeys = (text: string): string[][] => {
+      const code = stripComments(text);
+      return [...code.matchAll(/\besbuild\.build\s*\(\s*\{/g)].map((m) => {
+        const keys: string[] = [];
+        let segment = '';
+        const take = () => {
+          const key = segment
+            .trim()
+            .match(/^(?:\.\.\.\s*[\w$.]+|\[[^\]]*\]|'[^']*'|"[^"]*"|[\w$]+)/)?.[0];
+          if (key) keys.push(key);
+          segment = '';
+        };
+        let depth = 1;
+        for (let i = m.index + m[0].length; i < code.length; i++) {
+          const c = code[i];
+          if (c === "'" || c === '"' || c === '`') {
+            const end = code.indexOf(c, i + 1);
+            segment += code.slice(i, end + 1);
+            i = end;
+            continue;
+          }
+          if (c === ',' && depth === 1) {
+            take();
+            continue;
+          }
+          if ('{[('.includes(c)) depth++;
+          else if ('}])'.includes(c) && --depth === 0) {
+            take();
+            break;
+          }
+          segment += c;
+        }
+        return keys;
+      });
+    };
+    expect(buildOptionKeys(bundleSource)).toEqual(
+      Array.from({ length: 5 }, () => [
+        'entryPoints',
+        'bundle',
+        'platform',
+        'format',
+        'external',
+        'outfile',
+        'alias',
+      ]),
+    );
+    expect(stripComments(bundleSource).match(/\besbuild\.\w+/g)).toEqual(
+      Array.from({ length: 5 }, () => 'esbuild.build'),
+    );
+    expect(stripComments(bundleSource).match(/\.\.\./g)).toBeNull();
+    for (const [fixture, keys] of [
+      [
+        "await esbuild.build({ entryPoints: ['a'], tsconfig: './server/esbuild.paths.json', alias: { a: b } });",
+        [['entryPoints', 'tsconfig', 'alias']],
+      ],
+      [
+        "await esbuild.build({ ...serverOpts, outfile: 'x', alias });",
+        [['...serverOpts', 'outfile', 'alias']],
+      ],
+      [
+        "await esbuild.build({ entryPoints: ['a,b'], define: { 'x,y': '\"1\"' }, nodePaths: ['server'], });",
+        [['entryPoints', 'define', 'nodePaths']],
+      ],
+    ] as const) {
+      expect(buildOptionKeys(fixture), fixture).toEqual(keys);
+    }
+    // The root package.json: its keys (so no `imports`, `exports` or
+    // `browser` map), no local-path dependency spec, and every resolution
+    // flag its scripts pass, as text.
+    const pkgText = readFileSync('package.json', 'utf8');
+    const pkg = JSON.parse(pkgText) as {
       imports?: unknown;
+      exports?: unknown;
       scripts: Record<string, string>;
     };
+    expect(Object.keys(pkg)).toEqual([
+      'name',
+      'version',
+      'private',
+      'license',
+      'author',
+      'type',
+      'main',
+      'description',
+      'scripts',
+      'dependencies',
+      'devDependencies',
+      'optionalDependencies',
+      'build',
+      'allowScripts',
+      'packageManager',
+      'pnpm',
+    ]);
     expect(pkg.imports).toBeUndefined();
-    expect((pkg as { exports?: unknown }).exports).toBeUndefined();
-    const usesAliasFlag = (cmd: string): boolean => /--alias\b/.test(cmd);
-    expect(Object.values(pkg.scripts).filter(usesAliasFlag)).toEqual([]);
-    expect(usesAliasFlag('esbuild headless/env_server.ts --alias:#claims=./x')).toBe(true);
-    const tracked = (pattern: string): string[] =>
-      spawnSync('git', ['ls-files', '--', pattern], { encoding: 'utf8' })
-        .stdout.split('\n')
-        .filter((f) => f !== '')
-        .sort();
+    expect(pkg.exports).toBeUndefined();
+    const localSpecs = (text: string): number =>
+      (text.match(/"(?:link|file|portal|workspace):/g) ?? []).length;
+    expect(localSpecs(pkgText)).toBe(0);
+    expect(localSpecs('{ "dependencies": { "claims": "link:./server" } }')).toBe(1);
+    const resolutionFlags = (cmd: string): string[] =>
+      cmd.match(
+        /(?:--(?:alias|tsconfig|config|inject|conditions|resolve-extensions|main-fields|import|loader|experimental-loader|require)\b|(?<=\s)-[cr](?=\s))(?:[=:\s]\s*[^\s&|;]+)?|\bNODE_(?:PATH|OPTIONS)=[^\s&|;]*/g,
+      ) ?? [];
+    expect(
+      Object.entries(pkg.scripts).flatMap(([name, cmd]) =>
+        resolutionFlags(cmd).map((flag) => `${name}: ${flag}`),
+      ),
+    ).toEqual([
+      'check:admin: --tsconfig ./tsconfig.admin.json',
+      'test:browser: --config vitest.browser.config.ts',
+    ]);
+    for (const [cmd, flags] of [
+      ['esbuild headless/env_server.ts --alias:#claims=./x', ['--alias:#claims=./x']],
+      [
+        'esbuild x --tsconfig=./server/esbuild.paths.json --inject:./y.js',
+        ['--tsconfig=./server/esbuild.paths.json', '--inject:./y.js'],
+      ],
+      [
+        'NODE_PATH=server node --require ./hook.cjs dist-server/server.cjs',
+        ['NODE_PATH=server', '--require ./hook.cjs'],
+      ],
+      ['vitest run -c tests/claims.config.ts --configLoader runner', ['-c tests/claims.config.ts']],
+    ] as const) {
+      expect(resolutionFlags(cmd), cmd).toEqual(flags);
+    }
+    // .npmrc reaches every script npm or pnpm runs (a `node-options` line
+    // would preload a resolver hook): its settings, as text.
+    expect(tracked('*.npmrc')).toEqual(['.npmrc']);
+    expect(
+      readFileSync('.npmrc', 'utf8')
+        .split('\n')
+        .map((line) => line.trim())
+        .filter((line) => line !== '' && !line.startsWith('#') && !line.startsWith(';')),
+    ).toEqual(['node-linker=hoisted', 'auto-install-peers=true', 'strict-peer-dependencies=false']);
     expect(tracked('*package.json')).toEqual(['package.json']);
     expect(tracked('*jsconfig*.json')).toEqual([]);
     // Every tracked tsconfig, by inventory, and each one's `paths` exactly.
