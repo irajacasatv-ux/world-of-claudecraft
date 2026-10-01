@@ -83,8 +83,7 @@ checklist).
    phase: the `saves` phase counts ONLY the market (market + mail books) and rift
    writers through the serial writers' `onWrite` observer, so a new shared-blob writer wires
    that observer and any other job registers a phase of its own; a job that reports
-   into no phase shows up as `lateness` with nothing to attribute it to, the blind spot
-   PR #3576 closed for the autosave.
+   into no phase shows up as `lateness` with nothing to attribute it to.
 7. **No O(realm-collection) read on the per-tick self path.** Every `maybe(...)` key in
    `selfWireJson` is rebuilt per session per pass (the delta cache suppresses the send,
    never the rebuild). A new or changed read there whose cost scales with a collection
@@ -113,18 +112,15 @@ checklist).
    event-driven durability write.** For any change to the autosave
    (`flushPeriodicSaves`), the account-wealth sweep (`account_wealth.ts`), the retention
    sweep, a new self-clocked loop, or a handler that persists a shared book to make one
-   mutation durable (PR #3663 retired the `persistMailBlob` per-parcel whole-book
-   write; a write whose cost scales with the book rather than with the mutation it
-   persists is the same finding, whatever clock triggers it): the per-pass cost must
-   scale with what changed since the last pass or with a bounded result set, never with
-   the total
-   size of a stored blob (issue #3561: the whole 89 MB mail book stringified every 30 s,
-   `saves` max 64 ms against a 134k-letter book in PR #3576's measurement; the v0.40.1
-   hotfix pair PR #3661 and PR #3663 are the exemplars of the fix: aggregate inside
-   Postgres, persist per row or overlay). A NEW realm collection persisted as one
-   whole-book `world_state` blob rewritten on the autosave cadence is blocking; the
-   market and rift blobs are the legacy shape, not the template, and the mail book was
-   the third until PR #3613 partitioned it per dirty recipient. A quiet interval must
+   mutation durable (a per-parcel whole-book write is this finding; a write whose cost
+   scales with the book rather than with the mutation it persists is the same finding,
+   whatever clock triggers it): the per-pass cost must scale with what changed since the
+   last pass or with a bounded result set, never with the total size of a stored blob
+   (re-stringifying the production mail book cost about 250 ms per pass). The fix shapes:
+   aggregate inside Postgres, or persist per row or overlay (`saveMailPartitions` in
+   `server/db.ts` writes only the dirty recipients). A NEW realm collection persisted as
+   one whole-book `world_state` blob rewritten on the autosave cadence is blocking; the
+   market and rift blobs are the legacy shape, not the template. A quiet interval must
    write nothing or a trivially small row.
 10. **Grown-collection evidence, not fresh-world evidence.** Fresh characters carry empty
     books, boards, and inboxes, so a fresh-bot load test or a dev-world timing proves

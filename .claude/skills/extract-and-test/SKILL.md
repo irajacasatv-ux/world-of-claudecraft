@@ -127,10 +127,8 @@ it points at. This skill adds only the detail that list omits:
    the implementation.
 3. **Generalize the assertion, not the fix.** Add a couple of nearby cases (boundary,
    empty, the mirror host) so the test pins the behavior, not one example.
-4. For a high-risk or subtle fix, isolate the grader from the implementer: have one
-   subagent write the reproducing test, a second implement the fix, and a fresh
-   subagent review the diff for coverage (every correctness and requirement gap),
-   so the fix is not validated by the same reasoning that produced it.
+4. For a high-risk or subtle fix, the `/qa` gate's fresh reviewers are the independent
+   check, so the fix is not validated only by the reasoning that produced it.
 
 ## Verify, and keep the diff honest
 
@@ -163,12 +161,10 @@ When you extract, the diff should read as move plus import, not rewrite. If you
 follow-up so the extraction stays reviewable. Delete the code you replaced; leave no
 dead duplicate, commented-out block, or unused import behind.
 
-The doctrine here is identical at every capability tier; only the effort scales (the
-root `CLAUDE.md` "Working style" block owns that mapping). On a frontier-tier model,
-after the extraction fan out a fresh subagent (or the `architecture-reviewer` for a
-`src/sim/` move) to review your move-diff for COVERAGE, every parity and correctness gap,
-before calling it done. On the baseline tier, take small verifiable steps and lean on
-one investigator.
+The doctrine here is identical at every capability tier (the root `CLAUDE.md` "Working
+style" block owns the tier mapping). For a `src/sim/` move, dispatch `architecture-reviewer`
+on the move-diff before calling it done (it checks move-not-rewrite and parity); other
+extractions close on the `/qa` gate.
 
 ## Repo anti-patterns to avoid
 

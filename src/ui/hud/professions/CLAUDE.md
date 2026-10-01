@@ -3,9 +3,8 @@
 The merged professions UI family: crafting, commissions, enchanting, the
 profession identity and tutorial surfaces, gathering's professions-window
 surface, and farming's windows (plant sheet, harvest journal, farm event
-feedback, feast/food tooltips). Minted by the Masterwrought Phase 14
-migration (ruling ip-14-UI): the two independently designed families now
-live behind one barrel and share one visual language per DESIGN.md.
+feedback, feast/food tooltips). The family lives behind one barrel and
+shares one visual language per DESIGN.md.
 `src/ui/CLAUDE.md` and `src/ui/hud/CLAUDE.md` stay canonical for the
 painter, a11y, i18n, and performance contracts.
 
@@ -55,7 +54,7 @@ painter, a11y, i18n, and performance contracts.
   the repaint target (never inside an `innerHTML`-rewritten subtree), fed a
   FRESH child span per announcement (harvest journal shape).
 
-## Boundary (recorded at the ip-14-UI migration, 2026-08-28)
+## Boundary
 Kept at `src/ui/` root on purpose; do not pull them in without a reason:
 - `worn_item_cell_view.ts`, `item_compare_view.ts`, `item_compare.ts`,
   `item_instance_tooltip.ts`, `bag_instance_glyph_view.ts`: the item-cell

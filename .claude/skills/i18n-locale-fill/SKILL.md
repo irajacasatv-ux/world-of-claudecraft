@@ -24,8 +24,7 @@ npm run i18n:worklist   # writes one batch per language under docs/i18n-scaling/
 - `main`-scope keys are filled in the matching `src/ui/i18n.locales/<lang>.ts` overlay.
 - `sim` / `server` / `admin` scope keys are filled in their matcher DICTs (the worklist
   header in `scripts/i18n_fill_worklist.mjs` names the exact files).
-- **Sim-scope keys DO reach the worklist** (since Masterwrought Phase 19F, ruling
-  qr-19-sim-scope-pending-is-unreachable): the registry reads each locale's OWN source
+- **Sim-scope keys reach the worklist**: the registry reads each locale's OWN source
   blocks through `simDictProvidedKeys` in `src/ui/sim_i18n.ts`, never the assembled `DICT`
   (which is dense by construction, `baseEnTable` spread under every locale), so a sim row
   with no fill in a locale's block is `pending` and lands in that locale's batch. Fill a

@@ -111,7 +111,7 @@ plausibly covers means the table needs a new row in the same change.
 | `inventory_receipt.ts` | `emitInventoryReceipt`: the ONE "You receive" loot event both `addItem` and `addItemInstance` emit (silent/callerLogs flags conditional, the exact granted copy attached so the client can link it) |
 | `loot_quality/` (`index.ts` barrel) | permanent per-copy loot quality: the descriptor shape + validator/clone (`types.ts`), tier draw and budget math (`core.ts`), the Riftbound band ladder (`rift.ts`, resolved per call, deliberately unmemoized), `lootQualityBonuses`/`lootQualityWeapon` the stat merge and tooltips share; see its `CLAUDE.md` |
 | `wellfed.ts` | the ONE Well Fed mint (`applyWellFedOnMealComplete` over the carried `Consuming.wellFed` payload, `WELL_FED_AURA_ID`), called from the updateRegen completion site after the slot clears; the pure meal builder is the `consuming.ts` leaf (Masterwrought 11c) |
-| `mech_chroma_ownership.ts` | mech-chroma cosmetic ownership: the worn-chroma readers plus the mutation verbs `unlockMechChromaFromItem`/`unequipWornMechChroma`, extracted from `sim.ts` behind the bespoke structural `MechChromaOwnershipHost` interface (the `player_motion.ts` `PlayerMotionDeps` seam shape, not `SimContext`: the module names only the host members it touches and `sim.ts` forwards the live `Sim` as the host). `ItemUseResult` no longer lives here: it is `useItem`'s result shape, not a chroma one, so masterwrought Phase 18 moved it to `types.ts` with the other shared item types (`sim.ts` keeps the public re-export, so no call site moved) |
+| `mech_chroma_ownership.ts` | mech-chroma cosmetic ownership: the worn-chroma readers plus the mutation verbs `unlockMechChromaFromItem`/`unequipWornMechChroma`, extracted from `sim.ts` behind the bespoke structural `MechChromaOwnershipHost` interface (the `player_motion.ts` `PlayerMotionDeps` seam shape, not `SimContext`: the module names only the host members it touches and `sim.ts` forwards the live `Sim` as the host). |
 | `item_instance_transfer.ts` | shared instanced-transfer rules for the anonymous exchange pipes (market listings + mail parcels, issue 1165): the transfer-lock predicate (its body is the dependency-free `transfer_lock.ts` leaf, re-exported here; `exchange_eligibility.ts` imports the leaf directly), the public display trim, payload-matching escrow removal, escrow-slot sanitizing; consumed by `market.ts`, `mail/post_office.ts`, and the ui staging gates (the `removePreferFungible` cross-import precedent) |
 | `broker_custody.ts` | the broker-side custody moves for the server's marketplace, both kept as thin `Sim` delegates the server resolves on the facade: `extractTradableCopyImpl` (one exact copy into escrow through the `inventory_extract.ts` leaf, plus the dismount when a seller escrows the mount they are riding) and `grantTradableCopyImpl` (the copy back into the bags through the shared `canGrantCopies` / `grantCopies` pair, in one call); draws NO rng |
 | `interaction.ts` | `lootCorpse`/`pickUpObject`/`interact` + corpse harvest and party auto-loot (W3); `corpse_interaction.ts` is its shared availability predicate (`corpseInteractionAvailability`: loot rights vs harvestability on a dead lootable mob) |
@@ -210,8 +210,7 @@ those rather than a roster here. The ones whose CONTRACT you cannot infer from t
   `readyArenaFighter`'s `clearPrep` arm and by a Fiesta down, and reached from every
   `readyArenaFighter(..., { clearPrep: true })` site and every call of its
   `resetForArena` wrapper, so every instanced match's seat and end wipes: arena,
-  Fiesta, Protect Yumi, Thornhollow Fields (the Vale Cup's seat and teardown were
-  the fifth until it retired with release/v0.41.0); the three caller sets are
+  Fiesta, Protect Yumi, Thornhollow Fields; the three caller sets are
   pinned in `tests/resurrection.test.ts`).
 - `ride_height.ts`: the waterline ride height slope gating reads for wading and
   swimming bodies (gating on the RAW lakebed height reads an uneven bed as a wall of
@@ -303,16 +302,10 @@ foreign hot paths, reachable via `SimContext`):
 
 If you ever find a `SimContext` member with zero consumers, that is dead scaffolding:
 remove the declaration AND its binding in the same change, then re-run the parity gate.
-Standing exception, the housing persistence scaffolding until 07: two
-`src/sim/freehold/state.ts` helpers, `loadFreehold` (the ONE load path) and
-`serializeFreehold` (the persistence snapshot), are called by tests only today, and so
-is `src/sim/freehold/instance.ts`'s `freeholdDescriptorFor` (the value-copy read the
-descriptor emit of a later slice carries over the wire; it is an exported function, not
-a seam member, listed here so the same rule is not misapplied to it). The
-rest of that file is live: the join seed and the leave evict drive `ctx.freeholds`
-from `addPlayer`/`removePlayer`, the claim reads it, and the dev grant writes the
-tier. Persistence (07) is built on the two remaining helpers; deleting either under
-the rule above would remove the load path it is built on.
+Standing exception: `src/sim/freehold/instance.ts`'s `freeholdDescriptorFor` (the
+value-copy read the descriptor emit of a later slice carries over the wire) is called
+by tests only today; it is an exported function, not a seam member, listed here so the
+same rule is not misapplied to it.
 
 ## Determinism as it bites here
 - Randomness: `this.rng` only; `time`/`tickCount` are sim-clock fields advanced by `tick()`, use them, not wall-clock. The banned-API list is enforced mechanically by `tests/architecture.test.ts`.

@@ -31,11 +31,10 @@ includes `DOM` for the game client. Nothing in `bot/` may depend on a browser gl
   (`nicknameNeedsWrite`, `memberMetaChanged`/`changedMemberMeta`, `isSelfNickEcho`), which
   are pinned in `tests/discord_bot_diffs.test.ts` beside the write paths they serve.
 - `gateway.ts`: ws Gateway (v10) IO shell (HELLO/heartbeat, IDENTIFY, RESUME). A FATAL
-  close code (`isFatalCloseCode` in `logic.ts`) now EXITS the process with 1 rather than
-  parking a live process that syncs nothing: every one of those codes needs a human (a
-  rotated token, an intent switched off in the developer portal), so the restart policy
-  is what should decide, and the visible crash loop is the intended outcome (R13; no
-  retry limiter, no backoff, no supervisor here). `process.exit` is the third injected
+  close code (`isFatalCloseCode` in `logic.ts`) EXITS the process with 1: every one of
+  those codes needs a human (a rotated token, an intent switched off in the developer
+  portal), so the restart policy decides, and the visible crash loop is the intended
+  outcome (no retry limiter, no backoff, no supervisor here). `process.exit` is the third injected
   trailing seam, after the socket factory and the timers.
   Tested in `tests/discord_bot_gateway.test.ts`.
 - `rate_governor.ts`: **pure, IO-free** Discord rate-limit governor. Owns ALL REST

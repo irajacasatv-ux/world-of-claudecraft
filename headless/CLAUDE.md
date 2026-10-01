@@ -25,11 +25,9 @@ seed, which is the whole point of using it for RL. The Python half is `python/`.
 ## Scope: what the env covers, and the recorded farming CUT
 The action space is combat, movement, targeting, `interact`, `stop`, and
 `eat_drink` (`ACTIONS` in `src/sim/obs.ts`); professions are OUT of the RL
-action space. In particular the Masterwrought packet's farming system (five
-wire commands and an eight-member `IWorldFarming` facet) is an explicit CUT
-for that packet, recorded 2026-08-29 (Phase 16; rows ip-16-SURFACES c and
-the packet's in-or-CUT contract), not an oversight. Two reasons, one of
-them structural:
+action space. In particular the farming system (five wire commands and an
+eight-member `IWorldFarming` facet) is deliberately outside it, not an
+oversight. Two reasons, one of them structural:
 - **Growth resolves against `ctx.lockoutNowMs()`** (absolute
   `readyAtMs` timestamps written at plant time). On this host that clock is
   the UNINJECTED fallback, sim-clock ms from zero, so a tier-1 crop
@@ -46,8 +44,7 @@ them structural:
 The one-sim-three-hosts claim is intact: the sim CODE is identical here;
 what this host does not do is expose those commands as actions.
 
-The housing system (Freeholds) is the same kind of CUT, recorded 2026-09-06
-with the packet's foundation change: the RL action space carries no housing
+The housing system (Freeholds) is excluded the same way: the RL action space carries no housing
 verb (none of the ten wire tokens `freehold_enter`, `freehold_leave`,
 `place_furnishing`, `move_furnishing`, `remove_furnishing`,
 `undo_placement`, `redo_placement`, `pay_ledger`, `set_visit_policy`,

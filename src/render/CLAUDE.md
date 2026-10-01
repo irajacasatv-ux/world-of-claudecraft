@@ -156,9 +156,11 @@ cadence logic of its own. Narrow helpers:
   (wind, water, grain); `sync()` ticks it once/frame. `SUN_ANCHOR`/`SUN_DIR` are
   the one sun every consumer (key light, shadows, sky glow, water glints) reads.
 
-## Textures and VFX procedural, models GLB-first
-- **Textures:** `textures.ts` builds canvas textures at runtime (no image
-  files). Add an `export function xTexture()` using the `makeCanvas` helper; its
+## Textures, VFX, and models (GLB-first)
+- **Textures:** shipped image maps live under `public/textures/` and load through
+  `assets/loader.ts` (below). `textures.ts` is the procedural home: it builds canvas
+  textures at runtime (no image files). Add an `export function xTexture()` using the
+  `makeCanvas` helper; its
   module-local `rnd()` keeps generation deterministic: don't use `Math.random`.
 - **VFX:** add an effect to `vfx.ts` (emit into the pooled particle cloud; HDR
   colour multipliers via `hdr()` so it blooms on composer tiers). Sprite atlas
@@ -362,12 +364,12 @@ NEW subsystem's warm-up must land as a manifest entry, in the right lane:
   into the reveal pipeline at once on the Eastbrook ride and the iGPU could
   not settle them inside the watchdog, so they hid 10 s and drew cold anyway;
   the near-flip hold is what covers a building's unique kit materials.
-  The two consults that used to SKIP the gate (a prop band already inside half
-  the fog, a camera already inside a town's cull radius: the teleport-arrival
-  shape) are IMMINENT HOLDS now, because the premise that such an arrival rides
-  a cover whose zone prepare compiled the scene is false wherever the boot
-  manifest dropped that content, and revealing on the jump frame linked the
-  whole town kit in live frames. They consult and hold like any other reveal;
+  Two consults never skip the gate (a prop band already inside half the fog, a
+  camera already inside a town's cull radius: the teleport-arrival shape); they
+  are IMMINENT HOLDS, because the premise that such an arrival rides a cover
+  whose zone prepare compiled the scene is false wherever the boot manifest
+  dropped that content, and revealing on the jump frame links the whole town
+  kit in live frames. They consult and hold like any other reveal;
   what imminence buys is ORDER, never an early draw. There is NO wall-clock
   reveal bound anywhere: the cores take no clock, a held root shows when its own
   compile lands, and the only other ends of a hold are the
@@ -536,11 +538,10 @@ NEW subsystem's warm-up must land as a manifest entry, in the right lane:
   Pinned by `tests/instanced_dither_fade.test.ts`.
 - **The Proving Shore coach's guidance is prewarmed AND gated.** The golden
   ribbon, target ring, body aura, objective beam and camp ring
-  (`coach_trail.ts`) used to mint their materials and canvas textures on the
-  frame the coach's route or target first changed, by bare `scene.add`, and
-  to dispose the ribbon material on every station change: the island's first
-  accepted quest linked three programs inside a live frame. The materials are
-  now the page-wide set in `coach_trail_materials.ts`, staged by the boot
+  (`coach_trail.ts`) never mint a material or canvas texture when the coach's
+  route or target changes, and never dispose one on a station change (either
+  links programs inside a live frame on the island's first accepted quest).
+  The materials are the page-wide set in `coach_trail_materials.ts`, staged by the boot
   manifest on the ability-material lane (`ABILITY_MATERIAL_SOURCES`, the
   lazy-cache sweep enforces the registration), and every guidance object is
   built at construction under one root the trail attaches through
@@ -933,8 +934,8 @@ keeps only `tEntity` for its remaining label writes. Keep it keyed:
 
 ## Terrain height = sim height (hard invariant)
 Render samples `terrainHeight` / `groundHeight` from `src/sim/world.ts` (DOM-free,
-deterministic) to place terrain, props, foliage, water-shore depth. **YOU MUST
-sample those functions, never re-derive height here.** `groundHeight` is the
+deterministic) to place terrain, props, foliage, water-shore depth. **Sample
+those functions; never re-derive height here.** `groundHeight` is the
 dungeon-aware wrapper (flat floor past `DUNGEON_X_THRESHOLD`); plain
 `terrainHeight` is the open-world surface. If they drift, visuals desync from
 collision/movement.

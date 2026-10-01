@@ -27,9 +27,11 @@ the relevant sub-directory files), before the change is called done.
 
 Determine the diff first: `git diff --name-only` (working tree), else
 `git diff --name-only "$(git merge-base HEAD "$(git rev-parse --abbrev-ref '@{upstream}' 2>/dev/null || echo origin/main)")"..HEAD`. Then scale:
-- **Docs / tests / comments only, no source change** -> output
-  **"QA gate: out of scope (docs/tests/comments only); no implementation surface to QA."**
+- **Docs / comments only, no source or test change** -> output
+  **"QA gate: out of scope (docs/comments only); no implementation surface to QA."**
   and STOP.
+- **Tests only, no source change** -> run category 9 alone, mark the rest `[N/A]`, and name
+  `test-coverage-auditor` (table below).
 - **Single-surface small change** -> run only the categories whose surface the diff touches,
   mark the rest `[N/A]`, and name the one domain reviewer that fits (table below).
 - **Completed deliverable set / multi-surface change** -> run the full matrix.
@@ -80,7 +82,7 @@ Skip if no `src/sim/` files are in scope.
   `Math.random` for jitter; the FCT core may not).
 - Time-based logic scales by `DT` (1/20) and advances on `tick()`; no wall-clock reads.
 - `src/sim/` imports nothing from `render/`, `ui/`, `game/`, `net/`, and has no DOM/Three.js
-  imports (it must run unchanged in Node). Game-system logic now lives in `src/sim/<system>/`
+  imports (it must run unchanged in Node). Game-system logic lives in `src/sim/<system>/`
   modules behind the `SimContext` seam (`src/sim/sim_context.ts`); `Sim` is a thin coordinator.
 - `npx vitest run tests/architecture.test.ts` passes. Its arms: the sim
   import / DOM / nondeterminism scan AND the UI / render pure-core split (it enforces that every
@@ -320,9 +322,8 @@ headline rules here:
 | any completed deliverable set | this gate is the default |
 
 Consuming an already-landed `IWorld` member does not change it; do not dispatch
-`cross-platform-sync` for that. If no row matches (docs/test-only), dispatch none. When more than
-one row matches, dispatch the named reviewers in PARALLEL (one message, several subagents), not
-one at a time.
+`cross-platform-sync` for that. If no row matches (docs or comments only), name none. When more
+than one row matches, name every matching reviewer; the orchestrator runs them together.
 
 ## Adversarial close (always do this last)
 
@@ -330,9 +331,9 @@ After the matrix, do one fresh "what is missing" pass over the change: an untest
 unhandled `SimEvent`, an online-only field assumed offline, a string that escaped `t()`, an
 invented constant, a dropped safe-area inset, a per-frame DOM write that skipped the host, a
 block of new logic bolted onto a monolith (`hud.ts`/`sim.ts`/`main.ts`/`renderer.ts`) that
-should have been an extracted, tested sibling module. Then
-re-verify each consequential finding before you report it: in practice about half of raw
-findings are non-issues on a second look, so confirm from the code before you flag.
+should have been an extracted, tested sibling module. Report every finding from this pass
+with a confidence: one you could not confirm from the code is low confidence or `[VERIFY]`,
+never dropped. The orchestrator's confirm pass decides what to act on.
 
 ## Output format
 
@@ -364,7 +365,7 @@ READY or NOT READY
 ```
 
 If there are any FAIL items, follow the summary with a consolidated action list (`file:line` +
-what to fix). Be thorough, cross-reference every rule, and do not guess: if you cannot verify
+what to fix). Cross-reference every rule in scope, and do not guess: if you cannot verify
 something from code alone, mark it `[VERIFY]`, not `[PASS]`. If you run long and risk truncation,
 stop reading files and emit the full report now in this format.
 

@@ -42,8 +42,9 @@ any file:
 5. Otherwise proceed to the full checklist below, focusing your reading on the matched
    files (plus anything they directly touch). Do not read the whole codebase.
 
-Once in scope, review the staged or recent changes by running `git diff --cached` (or
-`git diff HEAD~1` if already committed). Then systematically check every rule below. Do NOT
+Once in scope, review the full diff over the range the scope gate used (`git diff --cached`
+for staged work, else the merge-base range from step 1). Then systematically check every
+rule below. Do NOT
 work from a memorized file inventory (it rots as `server/` grows): `ls server/` and read what
 the diff actually touches, plus anything those files directly call. The security-relevant
 surfaces cluster into: core authority and persistence (`game.ts`, `db.ts`, `auth.ts`); the

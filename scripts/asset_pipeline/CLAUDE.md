@@ -7,9 +7,10 @@
 
 Agent-drivable asset creation: generate game-ready weapons, props, rigged creatures, and
 player-class skins via the Tripo API (v3, https://openapi.tripo3d.ai/v3), with an optional
-gpt-image-2 concept-image stage. Output matches the shipped asset conventions exactly (grip
-origins, y=0 bases, in-place clips, WebP 512 textures, meshopt), so a generated asset sits next
-to the existing KayKit/Quaternius-style set without looking imported.
+gpt-image-2 concept-image stage. Output matches the shipped asset conventions (grip origins,
+y=0 bases, in-place clips, 512 px textures, meshopt), so a generated asset sits next to the
+existing KayKit/Quaternius-style set without looking imported. The pipeline embeds WebP
+textures; shipped GLBs carry KTX2 (see `public/models/CLAUDE.md`, "Compression truth").
 
 Run: `node scripts/asset_pipeline/pipeline.mjs <command> [options]` (`--help` prints usage).
 Commands: `weapon`, `prop`, `creature`, `skin`, `skinset`, `skinmodel`, `rig-manual`, `library`,

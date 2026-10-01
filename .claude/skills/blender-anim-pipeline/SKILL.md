@@ -22,8 +22,10 @@ already has a donor clip library baked in.
 Issue #2889 proposed a Blender MCP server driving new clip authoring at scale (1000+ clips).
 Investigation found:
 
-- No `blender-mcp` server is connected to this project, and no script in this repo invokes a
-  `blender` binary. Blender-driven authoring is genuinely new tooling, not a wired-up path.
+- Blender-driven authoring has one shipped precedent: `scripts/build_swim_anims.mjs`
+  retargets clips authored in Blender onto the shipped KayKit rig (its header documents the
+  authoring round-trip and the `--verify` check). No committed script invokes a `blender`
+  binary; the Blender side stays authoring-time only.
 - `scripts/build_bow_anims.mjs` (merged, live in production, powers the hunter's bow-draw
   clip) is an existing, dependency-free precedent for authoring brand new clips WITHOUT
   Blender: it samples poses already baked into a rig's OWN clip library at chosen timestamps,
@@ -129,8 +131,8 @@ Wire the clip into `src/render/characters/manifest.ts`:
 ## Technique 2: headless Blender (escalation only)
 
 Use this ONLY when step 2 above finds no donor clip in the rig's shipped library that gets
-close to the needed pose. This tooling does not exist in this repo yet; the first PR that
-actually needs it also adds the script this section describes.
+close to the needed pose. `scripts/build_swim_anims.mjs` is the one shipped Blender-authored
+path; read its header before adding the script this section describes.
 
 - **Inputs:** the target rig's GLB (for bone names/rest pose) plus a written pose spec
   (per-bone rotation/position targets, or a small set of named key poses): no reference

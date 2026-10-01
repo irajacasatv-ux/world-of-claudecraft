@@ -69,9 +69,7 @@ or pure leaves, never a `Sim` import, randomness only via `ctx.rng` (guarded by
   resurrection), the `/follow` zone-line crossing, the dev teleports (the sim's
   `/dev` commands and the server's `dev_teleport` message), and the server's
   own moderation moves (spectate enter and exit, jail and moderation
-  teleports). The Vale Cup's pitch eject and kickoff placements were sites too,
-  until it retired with release/v0.41.0. Gated on `isNonSpellCast`, delegates
-  to `ctx.cancelCast`.
+  teleports). Gated on `isNonSpellCast`, delegates to `ctx.cancelCast`.
 - `wheel.ts`: flat per-craft skills (`CraftSkills`, `gainCraftSkill`,
   `tierForSkill`/`tierCapability`, the four-state `tierProgressMultiplier`
   curve, perk-eligibility reads).
@@ -100,10 +98,11 @@ or pure leaves, never a `Sim` import, randomness only via `ctx.rng` (guarded by
   is `craftBonusStatsFor` in `crafting.ts`, the ONE exported helper feeding
   both the admission capacity model and the resolve effect gate (never call
   raw `masterworkBonusStats` from production code; the draw itself stays
-  unconditional so draw order never moves). Phase 12 replaces this
-  suppression with the Perfecting head start AT the effect gate, where the
-  proc outcome is actually known. `masterwork.ts` itself is locked by R1's
-  own text and is never edited for this.
+  unconditional so draw order never moves). The bake stays null for every
+  apex def; the Perfecting head start is granted AT the effect gate instead
+  (`perfectingHeadStart` in `resolveCraftForRecipe`), where the proc outcome
+  is actually known. `masterwork.ts` itself is locked by R1's own text and is
+  never edited for this.
 - `archetype.ts`: the active-archetype state machine (`ArchetypeState`,
   `archetypeCeilingFor`/`craftCeiling`, `getHobbyCraft`, amends-gated
   switching via `requiredAmendsProgress`). The sim-side ceiling arm is
@@ -303,9 +302,8 @@ or pure leaves, never a `Sim` import, randomness only via `ctx.rng` (guarded by
   the display band), so carrying fishing's six bands on it would silently
   retune land gathering. `fishing.ts` re-exports the old names and consumes
   the leaf; "thin consumer" is about the SEAM, not about size, and the
-  module header records the measurement rather than implying one (fishing.ts
-  went 675 to 746 lines, all 71 of them comment, and its non-comment count is
-  287 on both sides, exactly flat). The band type is the ONE type every `0 | 1 | 2` site now
+  module header records the measurement rather than implying one. The band
+  type is the ONE type every `0 | 1 | 2` site now
   writes: the four fishing SimEvent variants, `effectiveFishingBand`,
   `fishingRodBandFor`, and `server/fishing_telemetry.ts`'s label function, so
   widening the ladder again is one edit rather than seven.

@@ -113,7 +113,7 @@ you cannot infer from the file alone.
   WorldContent supplies the list so spawn, collision, and interaction share one
   authority), `card_master.ts` (the Card Duel NPC gate constants).
 
-## Classic-era fidelity (YOU MUST)
+## Classic-era fidelity
 Abilities gain ranks at **classic-era learn levels** with era-accurate values. The
 canonical table for levels 1 to 20, all 9 classes, is `docs/design/spell-ranks.md`:
 cross-reference it; do not invent costs/levels/damage.
@@ -346,7 +346,5 @@ contract is `docs/design/reliquary.md`.
   cadence below). `tests/shipped_item_ids.test.ts` pins every shipped id against
   `ITEMS` (append-only golden; re-mint PER CONTENT CHANGE, in the same commit
   that mints the id, with `UPDATE_SHIPPED_ITEMS=1`, and review the diff as
-  additions-only). AMENDED 2026-09-01 by masterwrought ruling
-  qr-19-shipped-id-golden-remint-cadence: this used to read "after a release",
-  which is not what any content change here has ever done, and the check is a
-  subset filter so nothing ever red-flagged the drift.
+  additions-only). The check is a subset filter, so a skipped re-mint never
+  fails CI; the same-commit re-mint is what keeps the golden complete.

@@ -1,5 +1,5 @@
 <!-- src/ui/: classic HUD, i18n, procedural icons. Local detail only; the
-     IWorld seam, dependency rules, and "files-can-be-huge" convention are in
+     IWorld seam, dependency rules, and module-first doctrine are in
      root + src/ CLAUDE.md, don't repeat them here. -->
 
 # src/ui/: classic HUD, i18n, procedural icons
@@ -37,7 +37,6 @@ mobile portrait *and* landscape before calling UI work done.
     `node scripts/mobile_input_zoom_check.mjs` (needs `npm run dev`).
   - Every tappable target stays **>=40x40px** on mobile touch (the preferred floor); 24x24px
     (WCAG 2.2 SC 2.5.8) is the absolute minimum, used only where 40x40 is genuinely infeasible.
-    Do NOT weaken the 40x40 floor to 24px.
   - Narrow headers collapse to a hamburger drawer rather than wrapping/overflowing.
 - **Accessibility (WCAG 2.2 AA):** correct semantics / ARIA, high-contrast `:focus-visible` on
   every custom interactive element, honor `prefers-reduced-motion` (drop cross-fades, content
@@ -125,7 +124,7 @@ Per-frame HUD code (anything reached from `Hud.update()`) holds these:
   destroyed node. A module that grows a genuinely per-frame write path routes it through the
   facet and moves into `HOT_PAINTERS`.
   A module that arms its own repeating driver owes the same care INSIDE the
-  callback, and since #2518 that is a scanned contract too: granting a driver in
+  callback, and that is a scanned contract too: granting a driver in
   `tests/hud_perf_budget.test.ts` costs a `drivers` entry per call site recording the
   cadence (pinned against the literal in the source), why the driver exists, and the EXACT
   count of raw writes, element re-queries and IDL-property writes one tick performs. The unit
@@ -151,9 +150,9 @@ Per-frame HUD code (anything reached from `Hud.update()`) holds these:
   whose denominator is the frame count and jitters run-to-run), that the tour rendered at
   least `tourMinFrames` real frames while keeping the long-frame count `frameLong50` at or
   under its committed anchor (both same-machine captures; override the long-frame anchor on
-  other hardware via `HUD_PERF_BUDGET_TOUR_LONG50_BASELINE`; the old `frameP95` gate was
-  RETIRED as mathematically unfailable, its threshold equaled the sample clamp, and frameP95
-  is console context only now), plus the FCT pool stays at/under `FCT_POOL_CAP` under the
+  other hardware via `HUD_PERF_BUDGET_TOUR_LONG50_BASELINE`; `frameP95` is console context
+  only, never a gate, because a threshold at the sample clamp cannot fail), plus the FCT pool
+  stays at/under `FCT_POOL_CAP` under the
   scripted AoE burst.
   The committed baseline (`tests/hud_perf_budget.baseline.md`) is READ for the anchors (it
   throws if absent, never defaults); each green-gate commit is TAGGED so a cumulative
@@ -297,12 +296,10 @@ follow the root `extract-and-test` skill for the move-not-rewrite mechanics. The
   `getComputedStyle` are; a new one would have to be added), and a BARE-named per-frame module
   (`dungeon_finder_proposal_popup.ts`) still escapes it entirely, held only
   by the module sweep in `tests/architecture.test.ts`. A bare name is the WHOLE of that
-  escape, which is why a modal painter takes an adapter name too: the two bare-named modal
-  modules the Masterwrought phase 14 shipped (`input_dialog.ts`, `legendary_naming_dialog.ts`)
-  sat outside the sweep until 2026-08-31, when they were renamed `input_controller.ts` and
-  `hud/professions/legendary_naming_controller.ts` and joined the cold contract at zero
-  allowances (keeping their `UI_DOM_MODULES` rows, the deliberate double coverage). Name a new
-  dialog `*_controller.ts` from the start.
+  escape, which is why a modal painter takes an adapter name too: name a new dialog
+  `*_controller.ts` from the start. `input_controller.ts` and
+  `hud/professions/legendary_naming_controller.ts` are the exemplars (cold contract, zero
+  allowances, and their `UI_DOM_MODULES` rows kept as deliberate double coverage).
 - **Neither of the two?** A **painter-side helper**, and it is a LAST RESORT: if the DOM touch can
   live in the painter, it must. A helper is for logic a painter needs that cannot be a pure core
   (it has to touch the DOM) and is not itself a painter. Register it in `UI_PAINTER_HELPERS`
@@ -389,7 +386,7 @@ The locale data is split; touch the right file (full model + locked-terms glossa
   `i18n.status.summary.json` are both gitignored: the audit trail is the CI step in both jobs
   that posts the coverage counts to the GitHub job summary via
   `scripts/i18n_coverage_summary.mjs`). A PR that carries a routine regeneration (these
-  slices, the admin twins, or `translation_keys.generated.ts`) no longer forces the full
+  slices, the admin twins, or `translation_keys.generated.ts`) does not force the full
   PR-tier test suite: the selective gate classifies the artifacts into their own bucket,
   feeds them to `vitest related` as graph nodes (their consumers hang off the artifact side
   of the import graph), and relies on the always-run pr-checks freshness diff for integrity;
@@ -406,7 +403,7 @@ The locale data is split; touch the right file (full model + locked-terms glossa
 hand-resolved**: take either side, run `npm run i18n:gen`, and `git add` the result. The
 committed slices are line-item (sorted, one item per line, no counts, hashes, or timestamps),
 so the full-universe locale slices auto-merge byte-perfectly; the global aggregates
-(`i18n.status.summary.json`, `i18n.resolved.sha256`) are no longer committed. One slice can
+(`i18n.status.summary.json`, `i18n.resolved.sha256`) are not committed. One slice can
 still conflict: `pending.ts` is a small sorted per-locale list, so two concurrent new-key PRs
 often insert at the same tail line. That conflict is expected, resolves with the exact recipe
 above (take either side, regen, add), and a durable fix (the same-as-English
@@ -714,10 +711,6 @@ same file), and each module's header carries its own contract.
   The link's href comes from `terms_link.ts` (same-origin on the site, the canonical
   page from the packaged desktop and Capacitor shells, where a bare '/terms' was a
   dead link or an in-app navigation); the DOM host passes the origin in.
-  CAVEAT the code cannot show: the deployed `public/terms.html` does not yet carry
-  its Marketplace section (the draft lives at the repo root), so the link points at
-  a page missing the terms being accepted until the pre-enable Terms publication
-  lands (owned by the packet's close-out audit; the market ships config-off).
 - **woc_store_view.ts** (+ **char_skin_window.ts**, **armory_inspect.ts**,
   **armory_labels.ts**, **store_promo_card.ts**, **preview_prewarm_core.ts**): the WOC Store
   and Season 1 Armory. The pure projection reads the skin catalog

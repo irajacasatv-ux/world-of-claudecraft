@@ -70,7 +70,7 @@ Guide strings are `guide.*` `t()` keys; the English source lives in
 English-only. Class/ability/spec NAMES stay English on purpose (proper nouns from the
 sim).
 
-## Keep the wiki in sync (YOU MUST, when you add wiki-worthy content)
+## Keep the wiki in sync (when you add wiki-worthy content)
 The guide is the game's public reference, so new player-facing content reaches it in
 the SAME change that adds it:
 - **Content the generator already covers**: run `npm run wiki:content` and commit the

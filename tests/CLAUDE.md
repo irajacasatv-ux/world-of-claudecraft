@@ -5,8 +5,8 @@
 
 Tests import `src/sim/` and `server/` modules **directly** and exercise them
 **deterministically** in plain Node: no live server, browser, or Postgres for unit
-tests. Browser/E2E + screenshot tests live in `scripts/*.mjs` (need `npm run
-dev`/`server`), NOT here.
+tests. The puppeteer E2E + screenshot scripts live in `scripts/*.mjs` (need `npm run
+dev`/`server`); the opt-in Playwright real-browser suite is `tests/browser/` (Map below).
 
 ## Where a new test lands
 A NEW module (sim system, pure-core view, painter, RouteDef) gets its OWN paired

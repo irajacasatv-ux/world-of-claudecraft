@@ -16,9 +16,9 @@ end and posts the result. They are different jobs.
 
 ## What a good review looks like (the voice)
 
-- Short, calm, plain GitHub style. Write like a person, not an AI: no preamble, no
-  summary-of-a-summary, no "Great work!" throat-clearing, no bulleted restatement of the
-  diff, no hedging boilerplate. If a sentence sounds like a model wrote it, cut it.
+- Short, calm, plain GitHub style in the maintainer's own voice, because reviews post as
+  the maintainer: open on the substance, say each point once, and spend the words on what
+  the diff gets right or wrong, not on restating what it contains.
 - **No em dashes or en dashes, and no emojis.** Use commas, colons, parentheses, or "to"
   for ranges. (You are reviewing a repo that bans them; do not introduce them yourself.)
 - Lead with what is genuinely good when it is good, then the issues. Do not flatter.
@@ -84,8 +84,8 @@ new-content bullet); a content add missing one is a finding:
 **Wire / parity (`server/game.ts`, `src/net/online.ts`, `types.ts`, `entity.ts`).**
 - A new `Entity` field either round-trips BOTH ways (encoded in `wireEntity` /
   `dynamicFields`, decoded in `applyWire`) OR is deliberately server-local. If
-  server-local, it must still be added to `blankEntity` in `online.ts` so the offline
-  `Sim` and the `ClientWorld` mirror keep identical entity shapes (precedent:
+  server-local, it must still be added to `blankEntity` (`src/net/blank_entity.ts`) so
+  the offline `Sim` and the `ClientWorld` mirror keep identical entity shapes (precedent:
   `chargePath`, `petPath`). Drift (one host has it, the other does not) is a bug.
 - Server authority: movement, combat, loot, economy resolve server-side. The client is
   a renderer. A client-side movement/combat decision is a finding, not a feature.
@@ -101,9 +101,10 @@ new-content bullet); a content add missing one is a finding:
 - `IWorld` only; never reach into a concrete world. A new window/panel is its own module
   the HUD composes (`chat_window.ts` pattern), not a new banner section in `hud.ts`.
   Pure clamping/geometry/formatting extracted and tested.
-- **play.html CSS parity:** `play.html` is a separate build entry that carries the same
-  chrome DOM. CSS added to `index.html` for shared chrome must be mirrored into
-  `play.html` or it breaks on `/play`. Check this explicitly (a recurring miss).
+- **Two game entries:** `index.html` and `play.html` both load `src/main.ts` and share
+  the `src/styles/` CSS (their inline `<style>` blocks are intentionally empty). New CSS
+  in an inline block, or an index-only DOM lookup without `?.` (it throws on `/play`), is
+  a finding (`src/CLAUDE.md` "Entries", `src/styles/CLAUDE.md`).
 - Persistence (window pos, settings) restores clamped to the current viewport; drag /
   resize no-op on mobile; check keyboard operability + aria on new controls.
 
@@ -207,7 +208,7 @@ their domains.
 | `src/sim/**` | Rng-only, no wall-clock, total-order sorts, no DOM/Three import |
 | `server/game.ts` + `online.ts` + `types.ts` | wire round-trip or server-local + `blankEntity` parity; server authority |
 | `src/render/**` | reads not mutates; own module; per-frame cost |
-| `src/ui/**` + `index.html` | IWorld seam; own module; play.html CSS parity; a11y/mobile; i18n |
+| `src/ui/**` + `index.html` | IWorld seam; own module; two-entry safety (CSS in `src/styles/`, `?.` on index-only DOM); a11y/mobile; i18n |
 | `server/**` routes/db | token-scoped auth; parameterized SQL; additive idempotent DDL; no oversharing; tests |
 | i18n strings | English `t()` in catalog only; other locales are release-time work, do not flag (M16 wordy-name exception aside); line-item slice conflict = regen |
 | `src/sim/content/**` | same-change obligations: deeds, reliquary, wiki regen + `guide.*` keys, WebP item art, M16 fills, entity names |

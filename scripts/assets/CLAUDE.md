@@ -65,9 +65,9 @@ For reference-image reconstruction and procedural GLB authoring, read the living
   regenerating the media manifest, and re-pinning its fingerprint literals in the same change
   (tests never pin a shipped GLB's sha256; the manifest freshness check and the binary diff
   cover the bytes). The
-  lockfile and `package.json` are NOT inputs (`tests/asset_fingerprint_inputs.test.ts`):
-  they once were, and every dependency bump was answered by swapping the new hash into
-  the shipped GLBs in place, a stamp that attested no rebuild; that tool is retired.
+  lockfile and `package.json` are NOT inputs (`tests/asset_fingerprint_inputs.test.ts`),
+  and a fingerprint changes only through a real re-export, never by swapping a new hash
+  into a shipped GLB in place.
 - **`compress_standalone_textures.mjs`** (+ `lib/standalone_texture_compression_core.mjs`)
   is the KTX2/Basis step for textures that ship OUTSIDE a GLB (default sweep: the player
   skin/cosmetic atlases under `public/textures/skins/`, plus the terrain splat and

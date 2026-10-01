@@ -157,9 +157,10 @@ For every new or changed member of the `SimEvent` union (`src/sim/types.ts`):
   (it scans every `src/sim/` file for the forbidden imports and for
   `Math.random`/`Date.now`/`performance.now`). For any IWorld surface change, also run
   `npx vitest run tests/world_api_parity.test.ts` (the `IWORLD_MEMBERS` pin) and report it.
-- Note: game-system logic may now live in `src/sim/<system>/` modules behind the `SimContext`
-  seam (`src/sim/sim_context.ts`), but `Sim` still satisfies `IWorld` from `src/sim/sim.ts`, so
-  the parity surface is unchanged. The move-not-rewrite / draw-order audit of those modules is
+- Note: game-system logic lives in `src/sim/<system>/` modules behind the `SimContext` seam
+  (`src/sim/sim_context.ts`), and `Sim` satisfies `IWorld` from `src/sim/sim.ts`, so moving
+  logic into a module does not change the parity surface. The move-not-rewrite / draw-order
+  audit of those modules is
   the separate `architecture-reviewer` agent; this agent stays on cross-host parity.
 
 ### Check 7 (WARNING) - RL Env / Python Binding Surface

@@ -102,10 +102,8 @@ targeted suites plus `npx tsc --noEmit` (or `npm run gate` if the merge was larg
 
 Two recurring traps to check in the same pass:
 
-- **i18n merge mechanics.** The aggregate baseline and status summary are no longer
-  committed, so a merge where both sides changed catalog keys only needs `npm run i18n:gen`
-  to reconcile the committed line-item slices. Never re-baseline by hand; that historical
-  trap applies only to branches predating the baseline's removal.
+- **i18n merge mechanics.** A merge where both sides changed catalog keys only needs
+  `npm run i18n:gen` to reconcile the committed line-item slices; never hand-edit them.
 - **Stale db-mock export lists.** A release-authored test that drives GameServer can mock
   `../server/db` with the RELEASE tree's export list, so a db function the BRANCH added
   throws "No X export is defined on the mock" only on the merged tree; neither parent

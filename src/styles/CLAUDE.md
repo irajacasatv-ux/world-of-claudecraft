@@ -162,10 +162,11 @@ the throw (#2499, #2502).
   drop (the `-webkit-` twin must survive next to the standard property) is guarded by
   `tests/backdrop_filter_survival.test.ts` + `scripts/check_backdrop_survival.mjs`
   (run by `npm run build` over the emitted CSS).
-- **Browser suite (landed, opt-in, chromium-only):** `npm run test:browser` runs
-  `tests/browser/` (a11y, focus indicator, keyboard nav, target size, delve map) via
-  `vitest.browser.config.ts`. The cross-engine Firefox/WebKit + mobile-WebKit matrix stays
-  an OPTIONAL standalone re-land.
+- **Browser suite (chromium-only, part of the gate):** `npm run test:browser` runs
+  `tests/browser/` via `vitest.browser.config.ts` (a bare `vitest run` excludes it);
+  `npm run gate` runs it as its `browser regressions` step and CI as the `browser-gate`
+  job. The cross-engine Firefox/WebKit + mobile-WebKit matrix stays an OPTIONAL
+  standalone re-land.
 
 ## Dead ends (measured or landed, then removed)
 - **Bundle budget + lazy windows (MEASURED then DECLINED):** a JS bundle-budget CI gate and

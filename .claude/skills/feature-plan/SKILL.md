@@ -11,8 +11,8 @@ Break a large feature into a phased implementation plan designed for multiple Cl
 sessions. Every phase runs as its own fresh session. The whole point is to **save context
 per phase**: the orchestrator delegates reading and fan-out to subagents and keeps only
 conclusions, so each session stays sharp. Effort levels, fan-out expectations, and
-per-model behavior are NOT this skill's business: the root `CLAUDE.md` "Working style and
-effort by model" block owns them, and every prompt this skill emits references that block
+per-model behavior are NOT this skill's business: the root `CLAUDE.md` "Working style by
+model capability" block owns them, and every prompt this skill emits references that block
 instead of naming a model.
 
 The user provides a feature description inline (`/feature-plan add a guild bank`) or you
@@ -309,7 +309,7 @@ no em dashes, en dashes, or emojis anywhere; the word "phase" never leaves the p
 ```
 This is Phase N {(QA)} of the {Feature Name} feature: {Phase Title}.
 
-Harness: Claude Code. Follow the root CLAUDE.md "Working style and effort by model"
+Harness: Claude Code. Follow the root CLAUDE.md "Working style by model capability"
 block for effort and fan-out; this prompt names no model.
 ULTRACODE: add the keyword `ultracode` to this prompt if this phase is batch-heavy
 (content sweeps, bulk catalog additions, exhaustive audit) so orchestration runs
@@ -329,11 +329,11 @@ STEP 0 - PRE-FLIGHT:
 - Memory scan: check MEMORY.md and entries relevant to this phase's domain
   (suggested topics: {phase-specific}).
 
-STEP 1 - LOAD CONTEXT (do NOT read planning docs directly; save your context):
-Spawn an Explore agent to read and summarize:
-- docs/{feature-name}/state.md, progress.md, and this phase's file
+STEP 1 - LOAD CONTEXT:
+Read docs/{feature-name}/state.md, progress.md, and this phase's file yourself; they are
+written for this session. Spawn an Explore agent to survey and summarize:
 - {relevant source files, listed individually}
-- Root CLAUDE.md + the relevant sub-CLAUDE.md files
+- the relevant sub-CLAUDE.md files
 The agent returns: {specific info this phase needs}.
 {If a third-party API or exact classic-era formula is involved: also spawn a
 web-research agent; unverifiable facts are OPEN, never guessed.}
@@ -403,12 +403,11 @@ STOPPING RULES:
 - Goal becomes: audit the paired implementation phase for correctness, missing tests,
   dead code, determinism, three-host parity, and i18n completeness; the Explore agent
   also loads the implementation phase's prompt (what was promised) and the phase diff.
-- STEP 2 spawns audit agents instead of implementers: a correctness agent (every
-  deliverable and acceptance criterion actually met; edge cases; offline/online parity),
-  a test-coverage agent (untested paths, determinism assertions, orphaned tests,
-  assertions that mean something), and a dead-code/cleanup agent (unused
-  imports/types, import invariant, leftover TODOs); plus the dispatch-rule reviewers and
-  `qa-checklist` (this is the phase-completion gate).
+- STEP 2 spawns audit agents instead of implementers: `qa-checklist` (the
+  phase-completion gate; brief it with every deliverable and acceptance criterion, edge
+  cases, offline/online parity, and dead code the phase left), `test-coverage-auditor`
+  (untested paths, determinism assertions, orphaned tests, assertions that mean
+  something), and the dispatch-rule reviewers.
 - STEP 4 becomes FIX: apply all BLOCKING and SHOULD-FIX items, re-run the validation
   matrix, commit fixes separately from the verdicts, and review the fix commits too
   (fixes are unreviewed code until someone reads them).

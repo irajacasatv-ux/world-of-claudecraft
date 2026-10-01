@@ -19,8 +19,8 @@ dependency set. The one sanctioned exception is the standalone admin dashboard
 |---|---|
 | `src/sim/` | **Deterministic game core, the source of truth.** No DOM/Three deps; runs in browser, server, and headless. |
 | `src/sim/content/` | Data-as-code: classes, abilities, talents, zones, dungeons, items, professions, mounts, deeds, Reliquary pages. |
-| `src/render/` | Three.js renderer (procedural geometry/textures/VFX + curated GLBs). Reads the world; never mutates it. |
-| `src/game/` | Local input, camera, keybinds, gamepad, mobile controls, sampled WebAudio SFX, and procedural music. |
+| `src/render/` | Three.js renderer (procedural geometry and VFX, procedural and shipped image textures, curated GLBs). Reads the world; never mutates it. |
+| `src/game/` | Local input, camera, keybinds, gamepad, mobile controls, sampled WebAudio SFX, and the streamed soundtrack (remastered renders of the procedural compositions). |
 | `src/ui/` | Classic HUD (frames, windows, tooltips, map, FCT), procedural icons, i18n. |
 | `src/styles/` | Extracted HUD CSS under one `@layer` order, imported once via `src/main.ts`. See `src/styles/CLAUDE.md`. |
 | `src/net/` | Online client: REST auth + WebSocket world mirror (`ClientWorld`), reconnect, native-app glue, wallet glue. |
@@ -135,7 +135,7 @@ the deeper check when you want the whole suite locally.
   REST requests run through the in-house pipeline seam (`server/http/`): a new endpoint is a
   `RouteDef` module behind the registry, never an inline route in `main.ts` (see `server/http/CLAUDE.md`).
 
-## Invariants, YOU MUST keep these
+## Invariants
 - **`src/sim/` has zero DOM/browser/Three.js imports** and never imports from
   `render/`, `ui/`, `game/`, or `net/`. It must run unchanged in Node and the
   browser. (Guarded by `tests/architecture.test.ts`, which scans every sim file.)
@@ -212,13 +212,12 @@ mutable state** (the live `Sim` loop, the `Hud` DOM and per-frame buffers, the r
 scene graph)? If no, it is a sibling module, every time. If only partly, extract the pure
 part (math, formatting, id/state resolution) into a host-agnostic module a Vitest imports
 directly and leave the coordinator a thin consumer.
-- **The monolith ratchet.** The known-large logic files (the four sanctioned coordinators
-  `src/ui/hud.ts`, `src/sim/sim.ts`, `src/main.ts`, `src/render/renderer.ts`, plus the
-  monoliths that formed since: `server/game.ts`, `src/sim/world.ts`, `src/net/online.ts`,
-  `src/game/music.ts`, `src/render/foliage.ts`, `src/sim/colliders.ts`, `server/db.ts`,
-  `server/freehold_persist.ts`)
-  are ACTIVE extraction targets: never GROW one, and do not split one just to hit a line
-  count. `tests/monolith_budget.test.ts` pins a line-count ceiling per file and fails any
+- **The monolith ratchet.** The known-large logic files are the rows of
+  `tests/monolith_budget.test.ts`: the four sanctioned coordinators `src/ui/hud.ts`,
+  `src/sim/sim.ts`, `src/main.ts`, `src/render/renderer.ts`, plus every monolith that formed
+  since (`server/game.ts`, `src/sim/world.ts`, `server/db.ts`, and the rest the test names).
+  They are ACTIVE extraction targets: never GROW one, and do not split one just to hit a line
+  count. The test pins a line-count ceiling per file and fails any
   change that grows one past it; the fix is extraction behind the file's seam, and after
   extracting you LOWER the ceiling. Raising a ceiling is a maintainer decision.
 - **`src/main.ts` is a firewall, not a home.** Client-bootstrap helpers (mobile, fullscreen,
@@ -338,18 +337,17 @@ unsure, or on a smaller or unfamiliar model, use the baseline.
   with the user before large multi-file changes; use one investigation subagent for a
   broad search rather than fanning out widely. If your runtime has a reasoning-effort
   knob: medium by default, low for latency-sensitive trivia, high for hard reasoning.
-- **Frontier (the Claude 5 family, Opus 4.8 and newer, and comparable models):** work
+- **Frontier (any model that passes the capability test above):** work
   autonomously. Plan multi-step work end to end and carry long-horizon tasks (migrations,
   multi-file refactors) to completion without pausing after each step, as long as the
   build and tests stay green. Front-load the spec: state the task, intent, constraints,
-  and the acceptance check in one turn rather than revealing them piecemeal. Fan out
-  parallel subagents across independent files, subsystems, or batch items (these models
-  under-spawn by default); do not spawn for work doable in one response. Before declaring
-  done, have a FRESH subagent review your diff: its job is COVERAGE (report every
-  correctness or requirement gap with confidence and severity), not filtering, which
-  happens in a later pass. Effort knob, where available: high or above for coding and
-  agentic work; reserve the top tier for genuinely frontier problems and measure, since
-  it overthinks structured tasks. The operator can push further with ultracode.
+  and the acceptance check in one turn rather than revealing them piecemeal. Use parallel
+  subagents for genuinely independent, sizeable tracks (unrelated subsystems, a wide
+  multi-file investigation); do work you can finish in a handful of tool calls yourself.
+  Before declaring done, run `/qa` over your diff (Testing & verification below): its
+  reviewers report for COVERAGE (every correctness or requirement gap with confidence and
+  severity), and its confirm step does the filtering. The operator can push further with
+  ultracode.
 - **Use the repo's reviewers, not ad-hoc subagents.** Purpose-built read-only reviewers
   live in `.claude/agents/` and dispatch via `/qa`; the canonical concern-to-reviewer
   table is in `docs/qa-gate.md`. Highlights: `qa-checklist` (the end-of-contribution
@@ -357,8 +355,9 @@ unsure, or on a smaller or unfamiliar model, use the baseline.
   (any change to the gate/CI selection pipeline), `render-performance-reviewer` (any diff
   that produces GPU work: a material, a light, a GL context, a scene attach), plus the
   domain reviewers for sim, parity, database, security, frontend, and tests. Skills cover the repeated workflows:
-  `extract-and-test`, `feature-plan`, `review-pr`, `release-merge-audit`,
-  `i18n-locale-fill`, `pr-screenshots`, `ci-triage`, `image-to-glb`, `asset-pipeline`.
+  `extract-and-test`, `review-pr`, `release-merge-audit`, `i18n-locale-fill`,
+  `pr-screenshots`, `ci-triage`, `image-to-glb`, `asset-pipeline`, plus the user-invoked
+  `/feature-plan` (not model-invocable).
 - **State rule scope literally.** Models follow instructions literally and will not
   generalize a rule across cases unless told. When an invariant covers every case (every
   player string is a `t()` key; all sim randomness goes through `Rng`), say "every" or

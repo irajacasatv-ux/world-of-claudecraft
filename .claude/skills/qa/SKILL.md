@@ -1,6 +1,6 @@
 ---
 name: qa
-description: Run the full end-of-contribution QA review over the current change (the qa-checklist gate plus a coverage fan-out and the domain reviewers it names).
+description: Run the full end-of-contribution QA review over the current change (the qa-checklist gate, the test-coverage auditor, and the domain reviewers it names).
 user-invocable: true
 ---
 
@@ -27,9 +27,10 @@ called done.
    own depth to the size of the change, checks every repo invariant in play, and ends with an
    adversarial "what is missing" pass. Let it run; do not duplicate its work inline.
 
-3. If the change is more than a trivial single-surface edit, also fan out a small coverage
-   pass in parallel: one agent for correctness, one for test coverage, one for dead code, each
-   prompted for COVERAGE (report every gap with confidence and severity), not filtering.
+3. If the change is more than a trivial single-surface edit, also dispatch
+   `test-coverage-auditor` in parallel with `qa-checklist`, and brief `qa-checklist` to
+   cover plain correctness bugs and dead code the change left behind. Prompt every reviewer
+   for COVERAGE (report every gap with confidence and severity), not filtering.
 
 4. Dispatch the domain reviewer agents that `qa-checklist` names for the surfaces this diff
    touches (for example `privacy-security-review`, `migration-safety`,

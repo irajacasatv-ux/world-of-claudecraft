@@ -36,8 +36,10 @@ analyze code but never modify files.
   `server/db.ts` / `server/game.ts`, not by DDL.
 - `characters.state` is not the only persisted JSONB shape. `world_state.data` is a key/value
   store of JSONB rows: the World Market (via `saveMarketState` / `loadMarketState` /
-  `MarketSave` in `server/db.ts`) and the mail system (via `saveMailState` / `loadMailState` /
-  `MailSave`, saved in one transaction with the market); `accounts.cosmetics` is JSONB too. The
+  `MarketSave` in `server/db.ts`) and the mail system (one `world_state` row per recipient,
+  `mail:<realm>:r:<key>`, written by `saveMailPartitions` and read back by `loadMailState`;
+  the legacy whole-book `mail:<realm>` row is a back-compat read only, and `saveMailState`
+  has no production caller); `accounts.cosmetics` is JSONB too. The
   same back-compat rules (default new fields on load, keep reading old keys, write on every
   save) apply to all of them.
 - Saves happen on a ~30s cadence (accumulated inside the sim loop via `AUTOSAVE_SECONDS`, not
@@ -84,7 +86,7 @@ Determine what to review using the following precedence:
 1. If a specific file/change was mentioned in the invocation, review that.
 2. Staged changes: `git diff --cached` filtered to `server/db.ts`, `server/social_db.ts`,
    `server/*_db.ts`, and any serialize/deserialize of `characters.state`.
-3. Recently committed: `git diff HEAD~1` over the same files.
+3. Committed changes: the merge-base range from the scope gate, over the same files.
 4. If nothing schema- or persistence-related is found, report that no schema/persistence
    changes were detected.
 

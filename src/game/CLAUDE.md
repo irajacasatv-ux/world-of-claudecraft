@@ -151,7 +151,7 @@ pattern), plus a thin DOM/side-effect consumer if it needs one (`gamepad.ts` ove
   editing the generated manifest or baking those values into the asset.
 - **A new music cue/zone:** add a `MusicZone`, compose its theme (a `composeX()`
   registered in `buildMusicThemes()`; the composition itself lands in a sibling
-  theme module, the `music_themes_proving_shore.ts` pattern, because music.ts is
+  theme module, the `raid_music_themes.ts` pattern, because music.ts is
   a monolith ratchet target) so the editor and render
   pipeline know it, render and remaster it to `public/audio/music/<zone>.mp3`,
   map it in `ZONE_STREAM_URLS` (music_tracks.ts, pinned by

@@ -93,10 +93,9 @@ ratings.
   both characters' rename-proof identities over a rolling
   `WORLD_PVP_DR_WINDOW_SECONDS` window that opens at the first kill of that
   victim: a relog cannot reset them (the identity survives it) and a realm
-  restart does, which is the owner's hour-window tuning. The persisted UTC-day
-  counter is GONE (`honor.ts` no longer carries `worldKillRepeats` /
-  `noteWorldKill` / `HonorArenaDailyState.worldKillsByVictim`); do not
-  reintroduce a calendar-day window here. Every player notice is sim English
+  restart does, which is the owner's hour-window tuning. The window is rolling
+  and session-only; never key it to a persisted calendar day. Every player
+  notice is sim English
   with a matcher row in `src/ui/sim_i18n.ts` (the `worldPvp.*` block; the
   placeholder-free lines register in the auto-built EXACT map, the parametrized
   ones need a RULE). Numbers and rules: `docs/design/warfare.md`, "World PvP
@@ -106,7 +105,7 @@ ratings.
 - `warfare_quartermaster.ts` spawns Warmarshal Draven Kole, the Highwatch
   WARFARE honor vendor, under his RESERVED entity id
   (`WARFARE_QUARTERMASTER_ENTITY_ID`, `1_000_000_002`, the singleton band
-  beside `VALE_CUP_BRAM_ID` and `FURY_ENTITY_ID`). His `NpcDef` lives in
+  beside `FURY_ENTITY_ID`). His `NpcDef` lives in
   `content/zone3.ts` with `dynamic: true` so the generic world-init NPC loop
   skips him: creating him in table order would shift the entity id of every
   NPC, camp mob, and ground object created after him and red the parity
