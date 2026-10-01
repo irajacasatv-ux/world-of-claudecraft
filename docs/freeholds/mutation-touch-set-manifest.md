@@ -421,15 +421,23 @@ answers `fenced` (R-9); a newer claim at a higher generation stays), the chunks 
 unstarted are abandoned and counted and their wanted claims
 are missed heartbeats, and the next pass starts where an abandoned one stopped (otherwise one chunk
 later), so a brownout never starves the same tail plots. Renewal outranks release: an
-abandoned pass skips its release chunks. THE PASS'S VOICE AND ITS CLOCK (revision 5): a
-pass speaks once, from its `finally`, while its single-flight flag is still held (so a log
-sink that calls the renewer back is skipped): the race line, the line for `onLost` hooks
-that threw (each throw swallowed and counted on the lasting `claim_on_lost_threw`), the
-wanted-check line, the lost line and the abandon line ("N chunks wait for the next pass or
-were left undecided"), every one through a guarded sink and carrying counts only. A clock
-port that throws at the pass's start rejects it before the flag is taken, and a closing
-clock read that throws never replaces the pass's own outcome (the pass is counted, its
-duration is not). It stays OFF the background gate by decision (the
+abandoned pass skips its release chunks. THE PASS'S VOICE AND ITS CLOCK (revision 5): every
+line a pass says is said while its single-flight flag is held (so a log sink that calls the
+renewer back is skipped), next to the counter it reports, through a guarded sink (a sink
+that throws never rejects the pass), and carries counts only (the closing-clock line below
+carries no number at all). The wanted-check line is said once, after the wanted tests and
+the pending sweep; the lost line once per renew chunk that lost claims to another holder;
+the abandon line ("N chunks wait for the next pass or were left undecided") once, where the
+deadline stops the pass. Only the race line and the line for `onLost` hooks that threw
+(each throw swallowed and counted on the lasting `claim_on_lost_threw`) come from the
+pass's `finally`, so every exit says them, a rejecting one included; the flag clears in a
+`finally` of its own inside it, so a statement there that throws cannot leave the flag set.
+A clock port that throws at the pass's start rejects it before the flag is taken, and the
+flag is re-checked after that read (a clock port that started a pass itself leaves the call
+a counted skip). The closing read is taken while the flag is still held; one that throws
+never replaces the pass's own outcome (the pass is counted, its duration is not, and one
+fixed line says so), and a reading that is not a finite duration adds nothing. It stays OFF
+the background gate by decision (the
 autosave wave holds that gate exactly when the renewer runs, so a `tryAcquire` would let
 claims lapse): single-flight makes its peak one pool client per realm, pinned by a
 fake-pool test. A wanted predicate that throws keeps the claim (counted), and a pending

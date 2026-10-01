@@ -2575,6 +2575,8 @@ describe('the housing authority families (07a)', () => {
       .find((line) => line.startsWith('# HELP woc_freehold_authority_total '));
     expect(help).toContain('Counts only');
     expect(help).toContain('woc_freehold_authority_ms_total');
+    // claim_on_lost_threw is named in the help, beside its renewer siblings.
+    expect(help).toContain('the wanted tests that threw, the onLost host hooks that threw,');
     expect(help).not.toMatch(/summed/i);
   });
 

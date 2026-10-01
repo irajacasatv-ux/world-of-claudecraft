@@ -133,7 +133,8 @@ export interface FreeholdClaimCounters {
   selfAdopted: number;
   /** Renew passes that ran (a skipped trigger is not one). */
   renewPasses: number;
-  /** Their summed wall time, from the renewer's nowMs port. */
+  /** Their summed wall time, from the renewer's nowMs port (a pass whose
+   *  closing read throws, or reads no finite duration, adds none). */
   renewPassMsTotal: number;
   /** Triggers that found a pass still running and did nothing. */
   renewPassesSkipped: number;
@@ -372,37 +373,56 @@ export async function renewFreeholdClaims(deps: FreeholdClaimRenewerDeps): Promi
   // call with nothing claimed, never a flag left set that skips every later
   // pass while the claims lapse.
   const startMs = deps.nowMs();
+  // And re-checked after it: a clock port that started a pass itself (it may
+  // call anything) leaves this call a counted skip, never a second pass.
+  if (state.running) {
+    counters.renewPassesSkipped++;
+    return;
+  }
   state.running = true;
   const tally: PassTally = { raced: 0, lostHookThrew: 0 };
   try {
     await renewPass(deps, state, startMs, deadlineMs, tally);
   } finally {
-    // Once per pass, from here so that EVERY exit says it (a deadline stop
-    // anywhere, or a clock port that throws mid-pass): production binds no
-    // onLost, so the race line is the only voice a raced drop has. Said while
-    // the flag is still held, so a log sink that calls back in is skipped.
-    if (tally.raced > 0) {
-      warnSafely(
-        deps,
-        `freehold claim releases raced a same-holder re-login: ${tally.raced}; those claims are dropped and their plots stop writing`,
-      );
-    }
-    if (tally.lostHookThrew > 0) {
-      warnSafely(
-        deps,
-        `freehold claim onLost hook threw: ${tally.lostHookThrew}; those claims are dropped and booked all the same`,
-      );
-    }
-    counters.onLostThrew += tally.lostHookThrew;
-    state.running = false;
-    counters.renewPasses++;
-    // A clock that throws HERE must not replace the pass's own outcome: the
-    // pass is counted, its duration is not.
-    let endMs: number | null = null;
+    // Everything here runs while the flag is still held, so a log sink or a
+    // clock that calls back in is skipped, and the flag clears in a finally
+    // of its own, so a statement that throws here cannot leave it set.
     try {
-      endMs = deps.nowMs();
-    } catch {}
-    if (endMs !== null) counters.renewPassMsTotal += Math.max(0, endMs - startMs);
+      // Once per pass, from here so that EVERY exit says it (a deadline stop
+      // anywhere, or a clock port that throws mid-pass): production binds no
+      // onLost, so the race line is the only voice a raced drop has.
+      if (tally.raced > 0) {
+        warnSafely(
+          deps,
+          `freehold claim releases raced a same-holder re-login: ${tally.raced}; those claims are dropped and their plots stop writing`,
+        );
+      }
+      if (tally.lostHookThrew > 0) {
+        warnSafely(
+          deps,
+          `freehold claim onLost hook threw: ${tally.lostHookThrew}; those claims are dropped and booked all the same`,
+        );
+      }
+      counters.onLostThrew += tally.lostHookThrew;
+      counters.renewPasses++;
+      // A clock that throws HERE must not replace the pass's own outcome: the
+      // pass is counted, its duration is not, and one fixed line says so. A
+      // reading that is not a finite duration (NaN, an infinity) adds nothing,
+      // so it can never poison the running total.
+      let endMs = Number.NaN;
+      try {
+        endMs = deps.nowMs();
+      } catch {
+        warnSafely(
+          deps,
+          'freehold claim renew pass clock threw at its close; that pass is counted without its duration',
+        );
+      }
+      const passMs = endMs - startMs;
+      if (Number.isFinite(passMs)) counters.renewPassMsTotal += Math.max(0, passMs);
+    } finally {
+      state.running = false;
+    }
   }
 }
 

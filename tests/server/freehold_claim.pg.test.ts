@@ -80,8 +80,12 @@ describe('the claim lease TTL the realm binds', () => {
 // DROPS its schema in beforeAll and afterAll and deletes rows between cases,
 // and the module functions it drives issue UNQUALIFIED SQL, so without an
 // isolated search_path a TEST_DATABASE_URL pointed at a database carrying the
-// game schema would destroy real claim, plot and Hearth rows.
-const SCHEMA = 'freehold_claim_pg_test';
+// game schema would destroy real claim, plot and Hearth rows. Suffixed with
+// this process's pid, so two runs of this file on one database (two
+// worktrees, or a gate beside a hand run) never drop each other's schema
+// mid-run; the pool application names derive from it too, so a lock-wait
+// probe never sees the other run's backends.
+const SCHEMA = `freehold_claim_pg_test_${process.pid}`;
 const APP_A = `${SCHEMA}_a`;
 const APP_B = `${SCHEMA}_b`;
 
@@ -1453,8 +1457,11 @@ d('the global plot claim against real PostgreSQL', () => {
       // suite table of a handful of rows left the planner's pick between the
       // two usable indexes (the plot key and the holder index both serve the
       // fence) to whether autovacuum had analyzed it yet, so this pin flipped
-      // under load. ANALYZE counts this transaction's own rows, and the
-      // ROLLBACK below takes the rows and the statistics away again.
+      // under load. ANALYZE counts this transaction's own rows. The ROLLBACK
+      // below takes the rows (their heap pages stay, dead) and the column
+      // statistics away again, but NOT the page and row counts: ANALYZE
+      // writes pg_class relpages and reltuples in place, outside any
+      // transaction. So the finally resets them for every later case.
       await client.query(
         `INSERT INTO freehold_plot_claims
            (plot_id, account_id, realm, holder, generation, acquired_at, heartbeat_at, expires_at)
@@ -1532,10 +1539,30 @@ d('the global plot claim against real PostgreSQL', () => {
       ]);
       expect(renewPlan['Node Type']).toBe('ModifyTable');
       console.info(`freehold claim renew chunk plan (seqscan off): ${planShape(renewPlan)}`);
-      await client.query('ROLLBACK');
     } finally {
-      client.release();
+      // On EVERY exit, a failing expect included: a client handed back with
+      // this transaction open would carry its 500 uncommitted rows, its SET
+      // LOCAL and its locks into later cases. One whose ROLLBACK fails goes
+      // back as broken, so the pool destroys it.
+      const rolledBack = await client.query('ROLLBACK').then(
+        () => true,
+        () => false,
+      );
+      client.release(!rolledBack);
+      // VACUUM takes the rolled-back rows' dead pages away, and both ANALYZEs
+      // rewrite the in-place counts from what the tables now hold.
+      await poolA.query('VACUUM (ANALYZE) freehold_plot_claims');
+      await poolA.query('ANALYZE account_freeholds');
     }
+    // The reset left true counts behind: the planner's row count for the
+    // claims table is the rows it holds, not this case's 500 rolled back.
+    const counts = await probe.query(
+      `SELECT c.reltuples::int AS reltuples,
+              (SELECT count(*)::int FROM ${SCHEMA}.freehold_plot_claims) AS live
+         FROM pg_class c WHERE c.oid = '${SCHEMA}.freehold_plot_claims'::regclass`,
+    );
+    expect(counts.rows[0].live).toBe(1);
+    expect(counts.rows[0].reltuples).toBe(counts.rows[0].live);
   });
 
   it('lets a login that began before a release committed take the released claim, where now() would refuse', async () => {
