@@ -1,0 +1,2310 @@
+[
+ {
+  "id": "renew-single-flight-dropped",
+  "file": "server/freehold_claim_registry.ts",
+  "find": "  state.running = true;\n",
+  "replace": "",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "runs one pass at a time",
+  "guard": "renewer single-flight: a pass never marks itself running, so overlapping triggers each take a client; killed by \"runs one pass at a time\" (peak 1, renewPassesSkipped 2)"
+ },
+ {
+  "id": "renew-deadline-abandon-falls-through",
+  "file": "server/freehold_claim_registry.ts",
+  "find": "    if (expired()) {\n      stopRenewsAt(index);\n      return;\n    }\n    let renewed: Set<string>;",
+  "replace": "    if (expired()) {\n      stopRenewsAt(index);\n    }\n    let renewed: Set<string>;",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "guard": "pass deadline abandon: the deadline arm counts the abandon but no longer stops the pass, so the unstarted chunks still renew past the deadline; killed by \"abandons the chunks its deadline leaves unstarted\" (exactly one renew statement, renewChunksAbandoned 3)"
+ },
+ {
+  "id": "renew-rotation-dropped",
+  "file": "server/freehold_claim_registry.ts",
+  "find": "  state.cursor = renewChunks.length > 1 ? renewChunks[1][0].plotId : null;",
+  "replace": "  state.cursor = null;",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "starts each full pass one chunk later than the last",
+  "guard": "chunk rotation: every full pass starts at chunk 0, so the tail chunk is always last; killed by \"starts each full pass one chunk later than the last\""
+ },
+ {
+  "id": "renew-abandon-cursor-dropped",
+  "file": "server/freehold_claim_registry.ts",
+  "find": "    state.cursor = left[0][0].plotId;\n",
+  "replace": "",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "guard": "chunk rotation after an abandon: the next pass should start at the first abandoned chunk; the only case abandons at index 1, where the pre-set cursor (renewChunks[1][0]) is the same id, so this is predicted to SURVIVE"
+ },
+ {
+  "id": "renew-wanted-throw-unwanted",
+  "file": "server/freehold_claim_registry.ts",
+  "find": "      threw++;\n      return true;",
+  "replace": "      threw++;\n      return false;",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "keeps and renews a claim whose wanted test throws",
+  "guard": "thrown wanted kept: a throwing wanted test releases the claim instead of keeping it; killed by \"keeps and renews a claim whose wanted test throws\" (renewed 2, released 0)"
+ },
+ {
+  "id": "renew-pending-sweep-inverted",
+  "file": "server/freehold_claim_registry.ts",
+  "find": "    if (wantedNow(asClaim)) continue;",
+  "replace": "    if (!wantedNow(asClaim)) continue;",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "retires a pending token on an unclaimed plot once nothing wants its owner",
+  "guard": "pending sweep only when unwanted: the sweep retires the WANTED owner tokens and keeps the stranded one; killed by \"retires a pending token on an unclaimed plot once nothing wants its owner, and only then\""
+ },
+ {
+  "id": "release-drops-unreleased",
+  "file": "server/freehold_claim_registry.ts",
+  "find": "      if (reading === 'held') continue;",
+  "replace": "      if (reading === 'held') {\n        dropHeld(claim);\n        continue;\n      }",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "drops only the claims a release actually released",
+  "guard": "release keeps a held claim: the classification drops a held (SKIP LOCKED live) row; killed by drops only the claims a release actually released"
+ },
+ {
+  "id": "renew-skipped-held-read-dropped",
+  "file": "server/freehold_claim_registry.ts",
+  "find": "            stillHeld: await freeholdClaimsStillHeldOnClient(tx, deps.holder, skipped),",
+  "replace": "            stillHeld: new Set<string>(),",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "renews the wanted, keeps a skipped-but-held one, drops a taken one",
+  "guard": "skipped-but-held is a missed heartbeat, not a loss: without the lock-free follow-up every SKIP LOCKED row reads as lost and is dropped; killed by \"renews the wanted, keeps a skipped-but-held one, drops a taken one, releases the rest\""
+ },
+ {
+  "id": "release-all-outer-holder-dropped",
+  "file": "server/freehold_claim_db.ts",
+  "find": " WHERE holder = $1 AND plot_id IN (",
+  "replace": " WHERE plot_id IN (",
+  "tests": [
+   "tests/server/freehold_claim.pg.test.ts"
+  ],
+  "filter": "the holder index for the shutdown release",
+  "pg": true,
+  "guard": "release-all outer holder = $1 (plan pin): the outer read loses the holder index; killed by the plans case, which requires BOTH claims reads of FREEHOLD_CLAIM_RELEASE_ALL_SQL to reach freehold_plot_claims_holder"
+ },
+ {
+  "id": "release-rename-dropped",
+  "file": "server/freehold_claim_db.ts",
+  "find": "       holder = holder || '${FREEHOLD_CLAIM_RELEASED_SUFFIX}'\n WHERE plot_id IN (",
+  "replace": "       holder = holder\n WHERE plot_id IN (",
+  "tests": [
+   "tests/server/freehold_claim.pg.test.ts"
+  ],
+  "filter": "releases only live rows, retires the releasing holder from renew and write",
+  "pg": true,
+  "guard": "the '#released' rename on the chunk release: a released row keeps the live holder, so the holder's renew revives it; killed by \"releases only live rows, retires the releasing holder from renew and write, and frees the plot at once\""
+ },
+ {
+  "id": "acquire-same-holder-bumps-generation",
+  "file": "server/freehold_claim_db.ts",
+  "find": "       generation = CASE WHEN c.holder = EXCLUDED.holder THEN c.generation\n",
+  "replace": "       generation = CASE WHEN c.holder = EXCLUDED.holder THEN c.generation + 1\n",
+  "tests": [
+   "tests/server/freehold_claim.pg.test.ts"
+  ],
+  "filter": "inserts generation 1, keeps it for the same holder",
+  "pg": true,
+  "guard": "same holder keeps its generation: a re-acquire by the holder advances the fence; killed by \"inserts generation 1, keeps it for the same holder, refuses a live claim, then takes over an expired one\" (second acquire expects generation 1)"
+ },
+ {
+  "id": "acquire-expiry-arm-dropped",
+  "file": "server/freehold_claim_db.ts",
+  "find": " WHERE c.expires_at <= clock_timestamp() OR c.holder = EXCLUDED.holder\n",
+  "replace": " WHERE c.holder = EXCLUDED.holder\n",
+  "tests": [
+   "tests/server/freehold_claim.pg.test.ts"
+  ],
+  "filter": "inserts generation 1, keeps it for the same holder",
+  "pg": true,
+  "guard": "the acquire's expiry-or-same-holder WHERE, expiry arm: an expired foreign claim can never be taken over; killed by the same case's takeover (expects acquired, generation 2, takeover true)"
+ },
+ {
+  "id": "acquire-where-dropped",
+  "file": "server/freehold_claim_db.ts",
+  "find": " WHERE c.expires_at <= clock_timestamp() OR c.holder = EXCLUDED.holder\n",
+  "replace": "",
+  "tests": [
+   "tests/server/freehold_claim.pg.test.ts"
+  ],
+  "filter": "inserts generation 1, keeps it for the same holder",
+  "pg": true,
+  "guard": "the acquire's expiry-or-same-holder WHERE, whole clause: the bare upsert steals a LIVE foreign claim when the busy pre-check is raced; killed by the same case's bare-upsert control (expects rowCount 0)"
+ },
+ {
+  "id": "live-holder-max-uncapped",
+  "file": "server/freehold_claim_db.ts",
+  "find": "const FREEHOLD_LIVE_HOLDER_MAX = 128 - FREEHOLD_CLAIM_RELEASED_SUFFIX.length;",
+  "replace": "const FREEHOLD_LIVE_HOLDER_MAX = 128;",
+  "tests": [
+   "tests/server/freehold_claim.pg.test.ts"
+  ],
+  "filter": "caps a live holder at 119 characters",
+  "pg": true,
+  "guard": "FREEHOLD_LIVE_HOLDER_MAX: a 120-character holder is accepted, so its release could never fit the 128 CHECK; killed by \"caps a live holder at 119 characters\" (expects RangeError at all four sites with no statement)"
+ },
+ {
+  "id": "login-record-before-commit",
+  "file": "server/freehold_claim_login.ts",
+  "find": "        return plotHalf(tx);",
+  "replace": "        return plotHalf(tx).then((r) => (record(), r));",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "when its COMMIT cannot be proved, and records no claim",
+  "guard": "record only after the tag-checked commit: the claim is recorded inside the transaction, before COMMIT; killed by \"holds the plot (rethrows) when its COMMIT cannot be proved, and records no claim\" (registry must stay empty)"
+ },
+ {
+  "id": "login-clear-pending-dropped",
+  "file": "server/freehold_claim_login.ts",
+  "find": "    registry.clearPending(acquired.plotId);\n",
+  "replace": "",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "supersedes a pending token on the plot it records",
+  "guard": "clearPending on record: a recorded claim keeps the stale pending token; killed by \"supersedes a pending token on the plot it records, and only on a recorded claim\""
+ },
+ {
+  "id": "login-retry-own-budget",
+  "file": "server/freehold_claim_login.ts",
+  "find": "          budget,\n",
+  "replace": "          {},\n",
+  "tests": [
+   "tests/server/freehold_persist.test.ts"
+  ],
+  "filter": "runs the claimed login as ONE bounded transaction",
+  "guard": "both transactions take the one budget: the clock-fault retry runs unbounded; killed by the source pin \"runs the claimed login as ONE bounded transaction: the clock first, the claim before the row\" (retry text plotHalf, budget); the behavioural twin is freehold_mutation.test.ts \"bounds the whole read\""
+ },
+ {
+  "id": "login-contention-55p03-dropped",
+  "file": "server/freehold_claim_login.ts",
+  "find": "  return code === '55P03' || code === '57014';",
+  "replace": "  return code === '57014';",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "answers claim_busy for lock contention on the acquire",
+  "guard": "contention codes answer claim_busy: a 55P03 on the acquire becomes a thrown read; killed by \"answers claim_busy for lock contention on the acquire\""
+ },
+ {
+  "id": "tx-commit-unchecked",
+  "file": "server/freehold_tx.ts",
+  "find": "    await tx.commitChecked();",
+  "replace": "    await tx.commit();",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "treats a ROLLBACK command tag as a proved rollback",
+  "guard": "commitChecked on COMMIT: a ROLLBACK tag reads as success; killed by \"treats a ROLLBACK command tag as a proved rollback, never a success\""
+ },
+ {
+  "id": "tx-late-checkout-leaked",
+  "file": "server/freehold_tx.ts",
+  "find": "        (client) => client.release(),",
+  "replace": "        () => {},",
+  "tests": [
+   "tests/server/freehold_claim.pg.test.ts"
+  ],
+  "filter": "abandons the shutdown release inside its 2,000 ms deadline",
+  "pg": true,
+  "guard": "the single release on the late-checkout race: a checkout that arrives after the abort is never handed back; killed by \"abandons the shutdown release inside its 2,000 ms deadline when the pool cannot hand out a client\" (the max-1 pool must still serve after)"
+ },
+ {
+  "id": "fenced-no-claim-guesses-generation",
+  "file": "server/freehold_fenced_write.ts",
+  "find": "    const claim = registry.forPlot(input.plotId);",
+  "replace": "    const claim = registry.forPlot(input.plotId) ?? { plotId: input.plotId, accountId: input.accountId, generation: '1', acquiredAtMs: 0 };",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "answers fenced with NO statement when this process holds no claim",
+  "guard": "no claim answers fenced: an unclaimed plot is written on a guessed generation-1 fence; killed by \"answers fenced with NO statement when this process holds no claim for the plot\""
+ },
+ {
+  "id": "fenced-update-adopt-any-token",
+  "file": "server/freehold_fenced_write.ts",
+  "find": "            if (locked.writeToken === pending) {",
+  "replace": "            if (locked.writeToken !== null) {",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "ADOPTS the row revision when the locked token proves its earlier write landed",
+  "guard": "adopt only on an EQUAL pending token (update arm): another attempt's token is adopted; killed by the \"ADOPTS the row revision\" case's control (token b keeps expected revision, durableRev 5)"
+ },
+ {
+  "id": "fenced-insert-adopt-any-token",
+  "file": "server/freehold_fenced_write.ts",
+  "find": "            if (!locked || locked.writeToken !== pending) {",
+  "replace": "            if (!locked) {",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "guard": "adopt only on an EQUAL pending token (first-insert arm): a conflicting claim with ANOTHER token is adopted as ours; no case drives a non-null pending against a different token (the retire case has pending null), so this is predicted to SURVIVE"
+ },
+ {
+  "id": "fenced-insert-race-commits-claim",
+  "file": "server/freehold_fenced_write.ts",
+  "find": "          if (inserted.kind !== 'inserted') throw new InsertNotLanded(inserted);",
+  "replace": "          if (inserted.kind !== 'inserted') return inserted;",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "guard": "a lost insert race rolls the claim back: a non-inserted plot answer commits the generation-1 claim and records it; no case makes upsertFreehold answer anything but inserted inside insertFirst, so this is predicted to SURVIVE"
+ },
+ {
+  "id": "cas-fence-gate-dropped",
+  "file": "server/freehold_db.ts",
+  "find": "\n     AND EXISTS (SELECT 1 FROM fence)\n  RETURNING durable_rev::text AS durable_rev",
+  "replace": "\n  RETURNING durable_rev::text AS durable_rev",
+  "tests": [
+   "tests/server/freehold_claim.pg.test.ts"
+  ],
+  "filter": "writes through a matching fence once, stamps no token on a stale write",
+  "pg": true,
+  "guard": "the cas gated on EXISTS(fence): a wrong-generation or wrong-holder write still updates the plot row (answered fenced); killed by \"writes through a matching fence once, stamps no token on a stale write, and writes nothing through a wrong fence\" (plotRow unchanged)"
+ },
+ {
+  "id": "cas-stamp-on-fence",
+  "file": "server/freehold_db.ts",
+  "find": "   WHERE plot_id = $12 AND EXISTS (SELECT 1 FROM cas)",
+  "replace": "   WHERE plot_id = $12 AND EXISTS (SELECT 1 FROM fence)",
+  "tests": [
+   "tests/server/freehold_claim.pg.test.ts"
+  ],
+  "filter": "writes through a matching fence once, stamps no token on a stale write",
+  "pg": true,
+  "guard": "the stamp only when the cas wrote: a STALE write re-stamps the claim token; killed by the same case (write_token stays the good one after the stale write)"
+ },
+ {
+  "id": "cas-fence-key-share",
+  "file": "server/freehold_db.ts",
+  "find": "     FOR NO KEY UPDATE\n), cas AS (",
+  "replace": "     FOR KEY SHARE\n), cas AS (",
+  "tests": [
+   "tests/server/freehold_claim.pg.test.ts"
+  ],
+  "filter": "locks the claim row before the plot row",
+  "pg": true,
+  "guard": "FOR NO KEY UPDATE in the fence: KEY SHARE does not wait on a held claim row, so G7 is taken before G4; killed by \"locks the claim row before the plot row\" (the plot row must stay NOWAIT-free while the write waits)"
+ },
+ {
+  "id": "verify-wait-key-share",
+  "file": "server/freehold_mutation_db.ts",
+  "find": "export const FREEHOLD_VERIFY_WAIT_SQL = 'SELECT 1 FROM characters WHERE id = $1 FOR SHARE';",
+  "replace": "export const FREEHOLD_VERIFY_WAIT_SQL = 'SELECT 1 FROM characters WHERE id = $1 FOR KEY SHARE';",
+  "tests": [
+   "tests/server/freehold_mutation.pg.test.ts"
+  ],
+  "filter": "first use: the verify waits on the character row",
+  "pg": true,
+  "guard": "the verify wait is FOR SHARE: KEY SHARE never waits for the hung save, so the verify reads before the COMMIT; killed by \"first use: the verify waits on the character row, then sees the Hearth row the hung transaction inserted\" (no lock waiter, verified false)"
+ },
+ {
+  "id": "verify-second-checkout",
+  "file": "server/freehold_mutation.ts",
+  "find": "    const one = checkout.pool;",
+  "replace": "    const one = pool;",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "runs the wait and the reads on ONE checkout",
+  "guard": "the verify's one checkout: each verify transaction takes its own pool checkout; killed by \"runs the wait and the reads on ONE checkout, released once and healthy\" (connects 1, peak 1)"
+ },
+ {
+  "id": "hook-g4-proofs-first",
+  "file": "server/freehold_mutation.ts",
+  "find": "      (entry) => entry.fence.plotId,\n",
+  "replace": "      (entry) => (entry.token === null ? '0' : entry.fence.plotId),\n",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "runs its participants in the manifest order",
+  "guard": "the hook's participant order: G4 sorts read proofs before write fences instead of by plot id; killed by \"runs its participants in the manifest order\" (plot:a write before plot:b read)"
+ },
+ {
+  "id": "not-run-reads-committed",
+  "file": "server/freehold_mutation.ts",
+  "find": "  return built.state.ran ? { kind: 'failed', error: null } : { kind: 'not_run' };",
+  "replace": "  return built.state.ran ? { kind: 'failed', error: null } : committedOutcome(false);",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "answers not_run when the save never reached the hook",
+  "guard": "not_run is never committed: a save that never ran the hook answers committed; killed by \"answers not_run when the save never reached the hook, whatever its boolean\""
+ },
+ {
+  "id": "op-account-undeclared",
+  "file": "server/freehold_mutation.ts",
+  "find": "    if (!accounts.has(op.accountId)) {\n      throw new Error('an operation account must be a declared account participant');\n    }\n",
+  "replace": "",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "refuses an operation whose account is not a declared participant",
+  "guard": "accountId must be declared (operation): an operation of an undeclared account passes assertRequest; killed by \"refuses an operation whose account is not a declared participant, before any SQL\""
+ },
+ {
+  "id": "hearth-account-undeclared",
+  "file": "server/freehold_mutation.ts",
+  "find": "  if (request.hearth && !accounts.has(request.hearth.accountId)) {\n    throw new Error('the Hearth account must be a declared account participant');\n  }\n",
+  "replace": "",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "guard": "accountId must be declared (Hearth): the only case declares [8] against a REQUEST whose plot is also account 7, so the plot check throws the same /declared account participant/ message; predicted to SURVIVE"
+ },
+ {
+  "id": "plot-account-undeclared",
+  "file": "server/freehold_mutation.ts",
+  "find": "    if (!accounts.has(plot.upsert.accountId)) {\n      throw new Error('a plot write account must be a declared account participant');\n    }\n",
+  "replace": "",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "guard": "accountId must be declared (plot write): the Hearth check runs first in the same case and throws the matching message; predicted to SURVIVE"
+ },
+ {
+  "id": "housing-unlocked-account-allowed",
+  "file": "server/character_save_housing.ts",
+  "find": "      throw new Error('a housing account participant was not locked with the save accounts');",
+  "replace": "      continue;",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "refuses a hook whose account was not locked at G1",
+  "guard": "an unlocked hook account refused: commitWithHousing runs a hook whose account G1 never locked; killed by \"refuses a hook whose account was not locked at G1, before running it\""
+ },
+ {
+  "id": "proof-path-housing-ids-allowed",
+  "file": "server/bank_ledger_save_effects_db.ts",
+  "find": "    if (housingAccountIds.length > 0) {",
+  "replace": "    if (housingAccountIds.length > 1) {",
+  "tests": [
+   "tests/server/bank_ledger_save_effects_db.test.ts"
+  ],
+  "filter": "refuses housing ids on the proof path",
+  "guard": "the proof path refuses housing ids: one housing id rides the lock proof; killed by \"refuses housing ids on the proof path before any statement, without consuming the proof\""
+ },
+ {
+  "id": "hook-before-guild-replay",
+  "file": "server/db.ts",
+  "find": "    await writeClaimedGuildBankEffectsOnClient(transaction, guildReplay, ledgerWrite, results);\n    await writeStorageAppliedEffectsOnClient(transaction, storageEffects);\n    await commitWithHousing(transaction, housing, locked);",
+  "replace": "    await commitWithHousing(transaction, housing, locked);\n    await writeClaimedGuildBankEffectsOnClient(transaction, guildReplay, ledgerWrite, results);\n    await writeStorageAppliedEffectsOnClient(transaction, storageEffects);",
+  "tests": [
+   "tests/server/bank_ledger_save_effects_db.test.ts"
+  ],
+  "filter": "orders a hooked guild save",
+  "guard": "the hook runs after the legacy effects (saveCharacterAndGuildBankState): the hook and COMMIT run before the guild replay and storage effects; killed by \"orders a hooked guild save: ledger receipts, then the guild replay, then the housing hook, then COMMIT\""
+ },
+ {
+  "id": "trip-cooldown-admits",
+  "file": "server/freehold_hearth_trip.ts",
+  "find": "        readyAtMs = Number(result.readyAtMs);",
+  "replace": "        readyAtMs = Number(result.readyAtMs);\n        verdict = 'admit';",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "NEVER admits on a cooldown",
+  "guard": "cooldown never mints admit: a durable cooldown refusal re-dispatches with an admit ticket; killed by \"NEVER admits on a cooldown: merges first, then the ticket denies\""
+ },
+ {
+  "id": "trip-failure-not-memoized",
+  "file": "server/freehold_hearth_trip.ts",
+  "find": "      memo.set(accountId, host.nowMs() + FREEHOLD_HEARTH_TRIP_MEMO_MS);",
+  "replace": "      memo.delete(accountId);",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "meters every other outcome for its OWN account only",
+  "guard": "the memo on failure outcomes: a failed trip arms no refusal window; killed by \"meters every other outcome for its OWN account only\" (next use deny, metered 1)"
+ },
+ {
+  "id": "trip-other-pid-pending",
+  "file": "server/freehold_hearth_trip.ts",
+  "find": "      if (inFlight !== undefined) return inFlight.pid === pid ? 'pending' : 'deny';",
+  "replace": "      if (inFlight !== undefined) return 'pending';",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "answers a DIFFERENT pid of the pending account deny",
+  "guard": "the different-pid deny: a sibling pid of the pending account is answered pending (and never re-dispatched); killed by \"answers a DIFFERENT pid of the pending account deny, and the same pid silence\""
+ },
+ {
+  "id": "trip-no-nonce-admitted",
+  "file": "server/freehold_hearth_trip.ts",
+  "find": "        session.leaseNonce === undefined ||",
+  "replace": "        false ||",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "refuses before any queue a session that carries no lease nonce",
+  "guard": "the lease nonce pre-queue refusal: a nonce-less session starts a trip; killed by \"refuses before any queue a session that carries no lease nonce\""
+ },
+ {
+  "id": "trip-prune-unexpired",
+  "file": "server/freehold_hearth_trip.ts",
+  "find": "    for (const [accountId, until] of memo) if (now >= until) memo.delete(accountId);",
+  "replace": "    for (const [accountId, until] of memo) if (now <= until) memo.delete(accountId);",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "prunes a refusal set after the last leave once it expires, never before",
+  "guard": "prune by expiry only: the prune removes unexpired refusals and keeps expired ones; killed by \"prunes a refusal set after the last leave once it expires, never before\" (size 1 at 4999 ms)"
+ },
+ {
+  "id": "trip-abandoned-merge-offline",
+  "file": "server/freehold_hearth_trip.ts",
+  "find": "      if (readyAtMs !== null && host.ownerOnline(ownerKey)) host.mergeReadyAt(ownerKey, readyAtMs);",
+  "replace": "      if (readyAtMs !== null) host.mergeReadyAt(ownerKey, readyAtMs);",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "merges an abandoned cooldown while the owner is online",
+  "guard": "the abandoned merge only while the owner is online: an abandoned trip installs a clock for an owner nothing will evict; killed by \"merges an abandoned cooldown while the owner is online, and installs nothing once it is not\" (gone.merges [])"
+ },
+ {
+  "id": "trip-pending-never-cleared",
+  "file": "server/freehold_hearth_trip.ts",
+  "find": "      if (pending.get(accountId)?.trip === trip) pending.delete(accountId);",
+  "replace": "      if (pending.get(accountId)?.trip !== trip) pending.delete(accountId);",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "clears pending when the save REJECTS",
+  "guard": "compare-and-delete of pending (the delete): a finished trip never clears its own flag, so the account stays in flight forever; killed by \"clears pending when the save REJECTS, and denies the re-dispatch\" (inFlight false)"
+ },
+ {
+  "id": "trip-pending-unconditional-delete",
+  "file": "server/freehold_hearth_trip.ts",
+  "find": "      if (pending.get(accountId)?.trip === trip) pending.delete(accountId);",
+  "replace": "      pending.delete(accountId);",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "guard": "compare-and-delete of pending (the compare): single flight means no second trip of the account can be pending while one runs, so the compare is unobservable; predicted to SURVIVE as an equivalent mutant"
+ },
+ {
+  "id": "trip-claim-plot-mismatch-allowed",
+  "file": "server/freehold_hearth_trip.ts",
+  "find": "        (authority.durableRev !== null && (!claim || claim.plotId !== authority.plotId))",
+  "replace": "        (authority.durableRev !== null && !claim)",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "denies before any queue for a blocked entry, an unloaded one, or a durable row without a claim",
+  "guard": "the pre-queue authority check: a claim for ANOTHER plot admits a durable row; killed by the noClaim arm of \"denies before any queue for a blocked entry, an unloaded one, or a durable row without a claim\""
+ },
+ {
+  "id": "use-refusal-draining-dropped",
+  "file": "server/freehold_wire.ts",
+  "find": "  if (gates.draining) return 'draining';\n",
+  "replace": "",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "agrees with the frame path: draining, vault lock, spectating",
+  "guard": "hearthKeyUseRefusal gate 1 (draining): dropped; killed by the frame-path matrix case (draining+vault+spectating answers 'draining')"
+ },
+ {
+  "id": "use-refusal-vault-dropped",
+  "file": "server/freehold_wire.ts",
+  "find": "  if (gates.vaultLocked) return 'vault_locked';\n",
+  "replace": "",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "agrees with the frame path: draining, vault lock, spectating",
+  "guard": "hearthKeyUseRefusal gate 2 (vault lock): dropped; killed by the matrix case (vault+spectating answers 'vault_locked')"
+ },
+ {
+  "id": "use-refusal-spectating-dropped",
+  "file": "server/freehold_wire.ts",
+  "find": "  if (gates.spectating) return 'spectating';\n",
+  "replace": "",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "agrees with the frame path: draining, vault lock, spectating",
+  "guard": "hearthKeyUseRefusal gate 3 (spectating): dropped; killed by the matrix case (spectating on a lit realm answers 'spectating')"
+ },
+ {
+  "id": "use-refusal-jailed-dropped",
+  "file": "server/freehold_wire.ts",
+  "find": "  if (gates.jailed && refusedJailedTravelCommand(frame)) return 'jailed';\n",
+  "replace": "",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "agrees with the frame path: draining, vault lock, spectating",
+  "guard": "hearthKeyUseRefusal gate 4 (jailed): dropped; killed by the matrix case (jailed on a lit realm answers 'jailed')"
+ },
+ {
+  "id": "use-refusal-dark-dropped",
+  "file": "server/freehold_wire.ts",
+  "find": "  if (refusedFreeholdCommand(frame, env)) return 'dark';\n",
+  "replace": "",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "agrees with the frame path: draining, vault lock, spectating",
+  "guard": "hearthKeyUseRefusal gate 5 (dark realm): dropped; killed by the matrix case ({} on a dark env answers 'dark')"
+ },
+ {
+  "id": "use-refusal-jailed-before-spectating",
+  "file": "server/freehold_wire.ts",
+  "find": "  if (gates.spectating) return 'spectating';\n  if (gates.jailed && refusedJailedTravelCommand(frame)) return 'jailed';",
+  "replace": "  if (gates.jailed && refusedJailedTravelCommand(frame)) return 'jailed';\n  if (gates.spectating) return 'spectating';",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "agrees with the frame path: draining, vault lock, spectating",
+  "guard": "hearthKeyUseRefusal order: jailed answered before spectating; killed by the matrix case (spectating+jailed answers 'spectating')"
+ },
+ {
+  "id": "game-housing-false-permit-allowed",
+  "file": "server/game.ts",
+  "find": "    if (housing && !opts.backgroundDbPermit) throw new Error('housing save without its permit');",
+  "replace": "    if (housing && opts.backgroundDbPermit === undefined) throw new Error('housing save without its permit');",
+  "tests": [
+   "tests/server/freehold_wire.test.ts"
+  ],
+  "filter": "saveCharacter refuses a housing hook without the background permit",
+  "guard": "the housing-without-permit throw: an explicit backgroundDbPermit false is let through (only an absent one throws); killed by the second arm of \"saveCharacter refuses a housing hook without the background permit, before any work\""
+ },
+ {
+  "id": "game-admission-fallback-admit",
+  "file": "server/game.ts",
+  "find": "        (ownerKey, pid) => this.freeholdHearthTrips?.admission(ownerKey, pid) ?? 'deny',",
+  "replace": "        (ownerKey, pid) => this.freeholdHearthTrips?.admission(ownerKey, pid) ?? 'admit',",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "wires the realm admission to the trip, never to the offline default",
+  "guard": "the admission fallback 'deny': a realm Sim asked before the trips field exists admits; killed by the source pin \"wires the realm admission to the trip, never to the offline default\" (the twin pin is freehold_wire.test.ts \"failing closed to deny\")"
+ },
+ {
+  "id": "key-admission-before-clock",
+  "file": "src/sim/freehold/hearth_key.ts",
+  "find": "  const now = ctx.lockoutNowMs();\n  if (!Number.isFinite(now)) return denyFreehold(ctx, pid, 'busy');\n  const readyAt = ctx.freeholdKeyReadyAtMs.get(ownerKey) ?? 0;\n  if (now < readyAt) return denyFreehold(ctx, pid, 'cooldown');\n  const admission = ctx.freeholdKeyAdmission(ownerKey, pid);",
+  "replace": "  const admission = ctx.freeholdKeyAdmission(ownerKey, pid);\n  const now = ctx.lockoutNowMs();\n  if (!Number.isFinite(now)) return denyFreehold(ctx, pid, 'busy');\n  const readyAt = ctx.freeholdKeyReadyAtMs.get(ownerKey) ?? 0;\n  if (now < readyAt) return denyFreehold(ctx, pid, 'cooldown');",
+  "tests": [
+   "tests/freehold_gate_and_key.test.ts"
+  ],
+  "filter": "reads the local clock BEFORE admission",
+  "guard": "local clock before admission: the host is asked (a realm would start a trip) before the local cooldown refuses; killed by \"reads the local clock BEFORE admission: an unready key never consults the host\""
+ },
+ {
+  "id": "key-pending-busy",
+  "file": "src/sim/freehold/hearth_key.ts",
+  "find": "  if (admission === 'pending') return false;\n",
+  "replace": "",
+  "tests": [
+   "tests/freehold_gate_and_key.test.ts"
+  ],
+  "filter": "a pending admission is silent",
+  "guard": "pending silent: a pending admission falls through to the busy denial; killed by \"a pending admission is silent: no denial, nothing moved, nothing spent, no draw\""
+ },
+ {
+  "id": "key-non-admit-fail-open",
+  "file": "src/sim/freehold/hearth_key.ts",
+  "find": "  if (admission !== 'admit') return denyFreehold(ctx, pid, 'busy');",
+  "replace": "  if (admission === 'deny') return denyFreehold(ctx, pid, 'busy');",
+  "tests": [
+   "tests/freehold_gate_and_key.test.ts"
+  ],
+  "filter": "only an exact admit runs the trip",
+  "guard": "non-admit busy: a legacy true, a wrong-case 'ADMIT' or undefined enters; killed by \"only an exact admit runs the trip: deny and any other answer refuse busy\""
+ },
+ {
+  "id": "leave-clock-delete-dropped",
+  "file": "src/sim/freehold/state.ts",
+  "find": "  ctx.freeholdKeyReadyAtMs.delete(key);\n",
+  "replace": "",
+  "tests": [
+   "tests/freehold_gate_and_key.test.ts"
+  ],
+  "filter": "evicts an owner's live clock at its LAST session's leave",
+  "guard": "the last-session clock delete: the owner's live Hearth clock outlives its last session; killed by \"evicts an owner's live clock at its LAST session's leave, with or without a record\" (the writer-scan twin also sees the delete count drop)"
+ },
+ {
+  "id": "clock-alias-escape",
+  "file": "src/sim/freehold/state.ts",
+  "find": "  if (!ctx.freeholds.has(key) && !ctx.freeholdKeyReadyAtMs.has(key)) return;",
+  "replace": "  const clocks = ctx.freeholdKeyReadyAtMs;\n  if (!ctx.freeholds.has(key) && !clocks.has(key)) return;",
+  "tests": [
+   "tests/freehold_module.test.ts"
+  ],
+  "filter": "is written nowhere outside src/sim/freehold/",
+  "guard": "alias escape: an aliasing const hands the Hearth clock Map to a local a writer could reach, behaviour unchanged and the sanctioned .delete( count unchanged; only the writer scan can refuse it, in \"is written nowhere outside src/sim/freehold/\""
+ },
+ {
+  "id": "erase-trigger-transition-form",
+  "file": "server/freehold_operation_db.ts",
+  "find": "  IF NEW.account_id IS NULL THEN\n",
+  "replace": "  IF NEW.account_id IS NULL AND OLD.account_id IS NOT NULL THEN\n",
+  "tests": [
+   "tests/server/freehold_mutation.pg.test.ts"
+  ],
+  "filter": "refuses both deletes while an intent is open",
+  "pg": true,
+  "guard": "the erase trigger's IF NEW.account_id IS NULL: the transition form lets a later UPDATE write the plot id and fingerprint back onto an erased tombstone; killed by \"refuses both deletes while an intent is open, then each row class lands as declared\" (the rewrite stays nulled); the schema_wiring source pin is a second killer"
+ },
+ {
+  "id": "delete-guard-account-arm-blind",
+  "file": "server/freehold_operation_db.ts",
+  "find": "     WHERE account_id = OLD.id\n",
+  "replace": "     WHERE account_id = -OLD.id\n",
+  "tests": [
+   "tests/server/freehold_mutation.pg.test.ts"
+  ],
+  "filter": "refuses both deletes while an intent is open",
+  "pg": true,
+  "guard": "the delete guards (account arm): the accounts BEFORE DELETE guard never matches an intent. The only account DELETE against an open intent is an intent that ALSO names a character, so the characters cascade fires that guard and raises the same 55006 and constraint: predicted to SURVIVE (uncertain: it is killed only if the RESTRICT 23503 on freehold_operations.account_id fires before the characters cascade)"
+ },
+ {
+  "id": "delete-guard-character-arm-blind",
+  "file": "server/freehold_operation_db.ts",
+  "find": "     WHERE character_id = OLD.id\n",
+  "replace": "     WHERE character_id = -OLD.id\n",
+  "tests": [
+   "tests/server/freehold_mutation.pg.test.ts"
+  ],
+  "filter": "refuses both deletes while an intent is open",
+  "pg": true,
+  "guard": "the delete guards (character arm): the characters BEFORE DELETE guard never matches an intent, so the RESTRICT FK answers 23503 instead of 55006; killed by \"refuses both deletes while an intent is open, then each row class lands as declared\" (character DELETE expects 55006, freehold_operation_open)"
+ },
+ {
+  "id": "op-cap-off-by-one",
+  "file": "server/freehold_operation_db.ts",
+  "find": "      Number((count.rows[0] as { open?: unknown })?.open) >= FREEHOLD_OPERATION_OPEN_PER_ACCOUNT",
+  "replace": "      Number((count.rows[0] as { open?: unknown })?.open) > FREEHOLD_OPERATION_OPEN_PER_ACCOUNT",
+  "tests": [
+   "tests/server/freehold_mutation.pg.test.ts"
+  ],
+  "filter": "a racing pair at the per-account cap",
+  "pg": true,
+  "guard": "the open-intent cap: a ninth intent is prepared; killed by \"a racing pair at the per-account cap: exactly the cap prepared, the rest capacity\""
+ },
+ {
+  "id": "op-prepare-deactivated-allowed",
+  "file": "server/freehold_operation_db.ts",
+  "find": "      'SELECT id FROM accounts WHERE id = $1 AND deactivated_at IS NULL FOR KEY SHARE',",
+  "replace": "      'SELECT id FROM accounts WHERE id = $1 FOR KEY SHARE',",
+  "tests": [
+   "tests/server/freehold_mutation.pg.test.ts"
+  ],
+  "filter": "a deactivated account is parent_missing",
+  "pg": true,
+  "guard": "the deactivated-account prepare refusal: a soft-deleted account prepares a new intent; killed by \"cancel closes into a cancelled receipt; a deactivated account is parent_missing and its receipt pre-erased\""
+ },
+ {
+  "id": "op-close-account-check-dropped",
+  "file": "server/freehold_operation_db.ts",
+  "find": "  if (Number(intent.account_id) !== close.accountId) return 'account';\n",
+  "replace": "",
+  "tests": [
+   "tests/server/freehold_mutation.pg.test.ts"
+  ],
+  "filter": "cancel closes into a cancelled receipt",
+  "pg": true,
+  "guard": "the cancel account check: a stranger account's cancel closes another account's intent; killed by the stranger arm of \"cancel closes into a cancelled receipt\" (expects 'account', intent kept); the hook twin is freehold_mutation.test.ts \"refuses to close an intent of ANOTHER account\""
+ },
+ {
+  "id": "op-export-fingerprint",
+  "file": "server/freehold_operation_db.ts",
+  "find": "export const FREEHOLD_OPERATION_EXPORT_INTENTS_SQL = `SELECT operation_id, kind, character_id, plot_id,",
+  "replace": "export const FREEHOLD_OPERATION_EXPORT_INTENTS_SQL = `SELECT operation_id, kind, character_id, plot_id, fingerprint,",
+  "tests": [
+   "tests/server/freehold_mutation.pg.test.ts"
+  ],
+  "filter": "exports claims, intents and receipts by allowlist",
+  "pg": true,
+  "guard": "the export allowlist (no fingerprint): the intent export carries the request fingerprint; killed by \"exports claims, intents and receipts by allowlist, and marks receipts past the limit\" (exact key list, no \"fingerprint\" key, no fingerprint value)"
+ },
+ {
+  "id": "delete-guard-label-swapped",
+  "file": "server/character_delete_db.ts",
+  "find": "  if (fields.constraint === FREEHOLD_OPERATION_OPEN_CONSTRAINT) return 'freehold_operation';",
+  "replace": "  if (fields.constraint === FREEHOLD_OPERATION_OPEN_CONSTRAINT) return 'storage_purchase';",
+  "tests": [
+   "tests/character_db.test.ts"
+  ],
+  "filter": "maps a housing guard 55006 raised by the DELETE trigger to CharacterFreeholdOperationOpen",
+  "guard": "D88 constraint mapping (label): the housing guard reads as a storage purchase; killed by \"maps a housing guard 55006 raised by the DELETE trigger to CharacterFreeholdOperationOpen\""
+ },
+ {
+  "id": "delete-guard-prefix-match",
+  "file": "server/character_delete_db.ts",
+  "find": "  if (fields.constraint === FREEHOLD_OPERATION_OPEN_CONSTRAINT) return 'freehold_operation';",
+  "replace": "  if (String(fields.constraint).startsWith(FREEHOLD_OPERATION_OPEN_CONSTRAINT)) return 'freehold_operation';",
+  "tests": [
+   "tests/character_db.test.ts"
+  ],
+  "filter": "near-miss housing constraint",
+  "guard": "D88 constraint mapping (exact match): a near-miss constraint name with the guard as its prefix is mapped instead of rethrown raw; killed by \"rethrows a 55006 with a near-miss housing constraint raw\""
+ },
+ {
+  "id": "federated-housing-reads-as-storage",
+  "file": "server/federated_auth_db.ts",
+  "find": "    if (guard === 'storage_purchase') {",
+  "replace": "    if ((error as { code?: string } | null | undefined)?.code === '55006') {",
+  "tests": [
+   "tests/federated_auth_db.test.ts"
+  ],
+  "filter": "throws the typed housing refusal for the freehold operation guard",
+  "guard": "federated_auth_db housing-vs-storage mapping: the pre-07a condition, every 55006 reads as a storage purchase, so the housing guard gets the storage message; killed by \"throws the typed housing refusal for the freehold operation guard\""
+ },
+ {
+  "id": "growth-monitor-raw-error",
+  "file": "server/freehold_receipt_growth_monitor.ts",
+  "find": "      deps.onError?.(boundedDatabaseError(error));",
+  "replace": "      deps.onError?.(error as Readonly<Record<string, unknown>>);",
+  "tests": [
+   "tests/server/freehold_receipt_growth_monitor.test.ts"
+  ],
+  "filter": "hands the error sink only the bounded classification",
+  "guard": "the growth monitor bounded error: the raw pg error (with its row-content detail) reaches the sink; killed by \"hands the error sink only the bounded classification, never a pg error detail\""
+ },
+ {
+  "id": "metrics-trip-failed-not-run-swapped",
+  "file": "server/http/game_metrics.ts",
+  "find": "      this.inc({ measure: 'trip_failed' }, t.failed);\n      this.inc({ measure: 'trip_not_run' }, t.notRun);",
+  "replace": "      this.inc({ measure: 'trip_failed' }, t.notRun);\n      this.inc({ measure: 'trip_not_run' }, t.failed);",
+  "tests": [
+   "tests/server/http/game_metrics.test.ts"
+  ],
+  "filter": "publishes the held claims and every claim and trip",
+  "guard": "game_metrics swapped label pair: trip_failed and trip_not_run exchange their sources; killed by \"publishes the held claims and every claim and trip counter by fixed measure\" (distinct values 207 and 213)"
+ },
+ {
+  "id": "release-wait-key-share",
+  "file": "server/freehold_claim_db.ts",
+  "find": "${FREEHOLD_CLAIM_RELEASE_READ_SQL}\n   FOR SHARE`;",
+  "replace": "${FREEHOLD_CLAIM_RELEASE_READ_SQL}\n   FOR KEY SHARE`;",
+  "tests": [
+   "tests/server/freehold_claim.pg.test.ts"
+  ],
+  "filter": "waits out an UNCOMMITTED release",
+  "pg": true,
+  "guard": "the thrown re-read waits out an uncommitted release (FOR SHARE, not FOR KEY SHARE)"
+ },
+ {
+  "id": "release-wait-lock-free",
+  "file": "server/freehold_claim_db.ts",
+  "find": "${FREEHOLD_CLAIM_RELEASE_READ_SQL}\n   FOR SHARE`;",
+  "replace": "${FREEHOLD_CLAIM_RELEASE_READ_SQL}`;",
+  "tests": [
+   "tests/server/freehold_claim.pg.test.ts"
+  ],
+  "filter": "waits out an UNCOMMITTED release",
+  "pg": true,
+  "guard": "the thrown re-read locks at all"
+ },
+ {
+  "id": "drop-identity-unchecked",
+  "file": "server/freehold_claim_registry.ts",
+  "find": "    if (deps.registry.forPlot(claim.plotId) !== claim) return false;",
+  "replace": "    if (deps.registry.forPlot(claim.plotId) === undefined) return false;",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "drops only the very claim the pass snapshotted",
+  "guard": "identity-checked drops"
+ },
+ {
+  "id": "rr-incallback-recheck-dropped",
+  "file": "server/freehold_claim_registry.ts",
+  "find": "          sent = candidates.filter(releasable);",
+  "replace": "          sent = candidates;",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "guard": "the in-callback re-check right before the release statement"
+ },
+ {
+  "id": "rr-raced-detection-dropped",
+  "file": "server/freehold_claim_registry.ts",
+  "find": "    if (newer === undefined || newer.generation !== claim.generation) return;",
+  "replace": "    return;",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "guard": "a same-generation newer claim a landed release killed is dropped and counted"
+ },
+ {
+  "id": "rr-raced-ignores-generation",
+  "file": "server/freehold_claim_registry.ts",
+  "find": "    if (newer === undefined || newer.generation !== claim.generation) return;",
+  "replace": "    if (newer === undefined) return;",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "guard": "a higher-generation newer claim (a takeover) stays"
+ },
+ {
+  "id": "rr-login-mark-dropped",
+  "file": "server/freehold_claim_login.ts",
+  "find": "      hold.letGo = registry.holdInFlight(plotId);",
+  "replace": "",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "guard": "the login marks its plot in flight across the acquire"
+ },
+ {
+  "id": "rr-releasable-ignores-inflight",
+  "file": "server/freehold_claim_registry.ts",
+  "find": "    deps.registry.forPlot(claim.plotId) === claim && !deps.registry.inFlight(claim.plotId);",
+  "replace": "    deps.registry.forPlot(claim.plotId) === claim;",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "guard": "a plot in flight is left out of the release"
+ },
+ {
+  "id": "tx-checkout-signal-ignored",
+  "file": "server/freehold_tx.ts",
+  "find": "  const client = await connectWithin(pool, [opts.signal, opts.checkoutSignal]);",
+  "replace": "  const client = await connectWithin(pool, [opts.signal]);",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "guard": "the checkout-only signal bounds the checkout"
+ },
+ {
+  "id": "tx-spent-check-dropped",
+  "file": "server/freehold_tx.ts",
+  "find": "  if (spent) throw cancelledReason(spent);",
+  "replace": "",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "guard": "a spent signal refuses before asking the pool"
+ },
+ {
+  "id": "trip-vanished-not-dropped",
+  "file": "server/freehold_hearth_trip_host.ts",
+  "find": "      if (!live) return 'dropped';",
+  "replace": "      if (!live) return undefined;",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "guard": "a vanished session after a committed advance is a realm drop"
+ },
+ {
+  "id": "rr-abandon-uncounted",
+  "file": "server/freehold_claim_registry.ts",
+  "find": "    counters.renewChunksAbandoned += left;",
+  "replace": "",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "guard": "abandoned chunks are counted"
+ },
+ {
+  "id": "reread-clock-gate-dropped",
+  "file": "server/freehold_claim_registry.ts",
+  "find": "    if (expired()) return 'deadline';\n",
+  "replace": "",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "guard": "a re-read past the deadline (clock half) is refused before its checkout"
+ },
+ {
+  "id": "reread-checkout-unbounded",
+  "file": "server/freehold_claim_registry.ts",
+  "find": "            { wait },\n          ),\n        { checkoutSignal: deadline },",
+  "replace": "            { wait },\n          ),\n        {},",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "guard": "a re-read checkout is bounded by the deadline signal"
+ },
+ {
+  "id": "release-checkout-unbounded",
+  "file": "server/freehold_claim_registry.ts",
+  "find": "            sent.map((claim) => claim.plotId),\n          );\n        },\n        { checkoutSignal: deadline },",
+  "replace": "            sent.map((claim) => claim.plotId),\n          );\n        },\n        {},",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "guard": "a release checkout is bounded by the deadline signal"
+ },
+ {
+  "id": "r5-login-mark-never-released",
+  "file": "server/freehold_claim_login.ts",
+  "find": "    // After record() or the failure.\n    hold.letGo?.();",
+  "replace": "    // After record() or the failure.",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "guard": "the login lets its in-flight mark go on every ending"
+ },
+ {
+  "id": "r5-raced-warn-dropped",
+  "file": "server/freehold_claim_registry.ts",
+  "find": "    if (tally.raced > 0) {",
+  "replace": "    if (tally.raced < 0) {",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "guard": "a raced release warns once per pass"
+ },
+ {
+  "id": "r5-onlost-unguarded",
+  "file": "server/freehold_claim_registry.ts",
+  "find": "    try {\n      deps.onLost?.(claim);\n    } catch {\n      tally.lostHookThrew++;\n    }",
+  "replace": "    deps.onLost?.(claim);",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "guard": "a throwing onLost never rejects the pass"
+ },
+ {
+  "id": "r5-holder-cap-lowered",
+  "file": "server/freehold_claim_db.ts",
+  "find": "const FREEHOLD_LIVE_HOLDER_MAX = 128 - FREEHOLD_CLAIM_RELEASED_SUFFIX.length;",
+  "replace": "const FREEHOLD_LIVE_HOLDER_MAX = 127 - FREEHOLD_CLAIM_RELEASED_SUFFIX.length;",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts",
+   "tests/server/freehold_claim.pg.test.ts"
+  ],
+  "guard": "a 119-character live holder is accepted",
+  "pg": true
+ },
+ {
+  "id": "r6-lost-hook-warn-dropped",
+  "file": "server/freehold_claim_registry.ts",
+  "find": "    if (tally.lostHookThrew > 0) {",
+  "replace": "    if (tally.lostHookThrew < 0) {",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "guard": "a throwing onLost hook warns once per pass"
+ },
+ {
+  "id": "r6-lost-hook-uncounted",
+  "file": "server/freehold_claim_registry.ts",
+  "find": "    } catch {\n      tally.lostHookThrew++;\n    }",
+  "replace": "    } catch {}",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "guard": "a swallowed onLost throw is counted"
+ },
+ {
+  "id": "r6-race-warn-running-total",
+  "file": "server/freehold_claim_registry.ts",
+  "find": "re-login: ${tally.raced}; those",
+  "replace": "re-login: ${counters.releaseRaced}; those",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "guard": "the race warn reports the per-pass count"
+ },
+ {
+  "id": "r6-second-hold-leaks",
+  "file": "server/freehold_claim_login.ts",
+  "find": "      hold.letGo?.();\n      hold.letGo = registry.holdInFlight(plotId);",
+  "replace": "      hold.letGo = registry.holdInFlight(plotId);",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "guard": "a second in-flight mark lets the first go"
+ },
+ {
+  "id": "r7-start-clock-after-flag",
+  "file": "server/freehold_claim_registry.ts",
+  "find": "  const startMs = deps.nowMs();\n  // The flag is re-checked FIRST",
+  "replace": "  state.running = true;\n  const startMs = deps.nowMs();\n  state.running = false;\n  // The flag is re-checked FIRST",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "guard": "a throwing start clock leaves no flag set"
+ },
+ {
+  "id": "r7-end-clock-unguarded",
+  "file": "server/freehold_claim_registry.ts",
+  "find": "  try {\n    endMs = deps.nowMs();\n  } catch {\n    return 'threw';\n  }",
+  "replace": "  endMs = deps.nowMs();",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "guard": "a throwing closing clock never replaces the pass's outcome"
+ },
+ {
+  "id": "r7-flag-cleared-before-warns",
+  "file": "server/freehold_claim_registry.ts",
+  "find": "    try {\n      // Once per pass",
+  "replace": "    state.running = false;\n    try {\n      // Once per pass",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "guard": "the pass speaks while its flag is held"
+ },
+ {
+  "id": "r7-onlost-counter-dropped",
+  "file": "server/freehold_claim_registry.ts",
+  "find": "    counters.onLostThrew += tally.lostHookThrew;\n",
+  "replace": "",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "guard": "a throwing onLost has a lasting counter"
+ },
+ {
+  "id": "r8-recheck-dropped",
+  "file": "server/freehold_claim_registry.ts",
+  "find": "  if (state.running) {\n    counters.renewPassesSkipped++;\n    return;\n  }\n  // A reading that",
+  "replace": "  // A reading that",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "guard": "a pass started during the start clock read leaves this call a skip"
+ },
+ {
+  "id": "r8-inner-finally-dropped",
+  "file": "server/freehold_claim_registry.ts",
+  "find": "    } finally {\n      state.running = false;\n    }",
+  "replace": "      state.running = false;\n    } finally {\n    }",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "guard": "the flag clears even if the finally's work throws"
+ },
+ {
+  "id": "r8-finite-check-weakened",
+  "file": "server/freehold_claim_registry.ts",
+  "find": "  if (!Number.isFinite(passMs)) return 'not finite';",
+  "replace": "  if (Number.isNaN(passMs)) return 'not finite';",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "guard": "a non-finite duration is never added"
+ },
+ {
+  "id": "r8-close-warn-dropped",
+  "file": "server/freehold_claim_registry.ts",
+  "find": "      } else {\n        warnSafely(\n          deps,\n          `freehold claim renew pass clock gave no usable duration at its close (${passMs}); that pass is counted without one`,\n        );\n      }",
+  "replace": "      }",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "guard": "a throwing closing clock read warns"
+ },
+ {
+  "id": "r9-start-finite-check-dropped",
+  "file": "server/freehold_claim_registry.ts",
+  "find": "  if (!Number.isFinite(startMs)) {\n    throw new Error('freehold claim renew pass start clock reading is not a finite number');\n  }\n",
+  "replace": "",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "guard": "a non-finite start reading refuses the pass"
+ },
+ {
+  "id": "r9-total-overflow-unchecked",
+  "file": "server/freehold_claim_registry.ts",
+  "find": "  if (!Number.isFinite(counters.renewPassMsTotal + passMs)) return 'overflow';\n",
+  "replace": "",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "guard": "the running total never overflows to Infinity"
+ },
+ {
+  "id": "r10-typeof-dropped",
+  "file": "server/freehold_claim_registry.ts",
+  "find": "  if (typeof endMs !== 'number') return 'non-number';\n  const passMs = endMs - startMs;",
+  "replace": "  const passMs = (endMs as number) - startMs;",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "guard": "only a number closing reading gives a duration"
+ },
+ {
+  "id": "r10-deadline-validation-weakened",
+  "file": "server/freehold_claim_registry.ts",
+  "find": "  if (!Number.isInteger(ms) || ms < 1 || ms > 0x7fff_ffff) {",
+  "replace": "  if (!Number.isFinite(ms) || ms <= 0) {",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "guard": "the pass deadline is what AbortSignal.timeout takes"
+ },
+ {
+  "id": "r11-cap-old",
+  "file": "server/freehold_claim_registry.ts",
+  "find": "  if (!Number.isInteger(ms) || ms < 1 || ms > 0x7fff_ffff) {",
+  "replace": "  if (!Number.isInteger(ms) || ms < 1 || ms > 0xffff_ffff) {",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "guard": "the deadline stops at 2^31 - 1"
+ },
+ {
+  "id": "r11-backward-accepted",
+  "file": "server/freehold_claim_registry.ts",
+  "find": "  if (passMs < 0) return 'backward';\n",
+  "replace": "",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "guard": "a backward step is no usable duration"
+ },
+ {
+  "id": "r11-midpass-finite-dropped",
+  "file": "server/freehold_claim_registry.ts",
+  "find": "    return typeof readMs === 'number' && Number.isFinite(readMs) && readMs - nowMs >= deadlineMs;",
+  "replace": "    return (readMs as number) - nowMs >= deadlineMs;",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "guard": "a non-number mid-pass reading leaves the check to the signal"
+ },
+ {
+  "id": "r11-reason-dropped",
+  "file": "server/freehold_claim_registry.ts",
+  "find": "at its close (${passMs}); that pass",
+  "replace": "at its close; that pass",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "guard": "the closing line names its reason"
+ },
+ {
+  "id": "monolith-game-grows",
+  "file": "server/game.ts",
+  "find": "export class GameServer {",
+  "replace": "// one line of growth\nexport class GameServer {",
+  "tests": [
+   "tests/monolith_budget.test.ts"
+  ],
+  "guard": "the game.ts row is exact: one line of growth fails"
+ },
+ {
+  "id": "monolith-db-grows",
+  "file": "server/db.ts",
+  "find": "export async function ensureSchema(",
+  "replace": "// one line of growth\nexport async function ensureSchema(",
+  "tests": [
+   "tests/monolith_budget.test.ts"
+  ],
+  "guard": "the db.ts row is exact"
+ },
+ {
+  "id": "monolith-persist-grows",
+  "file": "server/freehold_persist.ts",
+  "find": "export function createFreeholdPersistStore(",
+  "replace": "// one line of growth\nexport function createFreeholdPersistStore(",
+  "tests": [
+   "tests/monolith_budget.test.ts"
+  ],
+  "guard": "the store row is exact"
+ },
+ {
+  "id": "r20-bundle-tsconfig-option",
+  "file": "scripts/build_server.mjs",
+  "find": "  outfile: 'dist-server/server.cjs',\n",
+  "replace": "  outfile: 'dist-server/server.cjs',\n  tsconfig: './server/esbuild.paths.json',\n",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "a tsconfig option on the server build points esbuild at an uninventoried paths file: the build option key pin"
+ },
+ {
+  "id": "r20-bundle-spread-option",
+  "file": "scripts/build_server.mjs",
+  "find": "  outfile: 'dist-server/server.cjs',\n",
+  "replace": "  outfile: 'dist-server/server.cjs',\n  ...serverOpts,\n",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "a spread option after the reviewed keys can override alias: the build option key pin and the spread count"
+ },
+ {
+  "id": "r20-bundle-fragment-import",
+  "file": "scripts/build_server.mjs",
+  "find": "import * as esbuild from 'esbuild';",
+  "replace": "import * as esbuild from 'esbuild';\nimport { serverOpts } from './lib/esbuild_server_opts.mjs';",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "an imported options fragment: the bundle import list"
+ },
+ {
+  "id": "r20-bundle-nodepaths",
+  "file": "scripts/build_server.mjs",
+  "find": "  outfile: 'dist-server/migrate_old_cragmaw_pelt.cjs',\n",
+  "replace": "  outfile: 'dist-server/migrate_old_cragmaw_pelt.cjs',\n  nodePaths: ['server'],\n",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "nodePaths on one build: the build option key pin"
+ },
+ {
+  "id": "r20-bundle-stub-retarget",
+  "file": "scripts/build_server.mjs",
+  "find": "'../server/bot_detector/stub.ts'",
+  "replace": "'../server/freehold_claim_registry.ts'",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "the reviewed alias variable retargeted at the registry: the declaration and named-line pins"
+ },
+ {
+  "id": "r20-bundle-esbuild-context",
+  "file": "scripts/build_server.mjs",
+  "find": "console.log(`[build:server]",
+  "replace": "await esbuild.context({ entryPoints: ['server/main.ts'] });\nconsole.log(`[build:server]",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "a second esbuild entry point beside build: the esbuild member list"
+ },
+ {
+  "id": "r20-vite-stub-retarget",
+  "file": "vite.config.ts",
+  "find": "new URL('server/bot_detector/stub.ts', import.meta.url)",
+  "replace": "new URL('server/freehold_claim_registry.ts', import.meta.url)",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "vite alias variable retargeted at the registry: the declaration and named-line pins"
+ },
+ {
+  "id": "r20-vite-ternary-insert",
+  "file": "vite.config.ts",
+  "find": "  ? privateBotDetector\n",
+  "replace": "  ? privateBotDetector\n  : '/server/freehold_claim_registry.ts' ? '/server/freehold_claim_registry.ts'\n",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "a retarget through an inserted line naming no watched word: only the declaration pin"
+ },
+ {
+  "id": "r20-vite-local-plugin-import",
+  "file": "vite.config.ts",
+  "find": "import { localLaneExclusions } from './scripts/lib/lane_suite_scope.mjs';",
+  "replace": "import { localLaneExclusions } from './scripts/lib/lane_suite_scope.mjs';\nimport { claimsResolver } from './server/dev/claims_resolver';",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "a resolver plugin imported from outside scripts/: the vite import list"
+ },
+ {
+  "id": "r20-vite-inline-transform",
+  "file": "vite.config.ts",
+  "find": "  plugins: [\n",
+  "replace": "  plugins: [\n    { name: 'claims', transform: (code) => code },\n",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "an inline plugin transform rewriting a specifier: the transform hook count"
+ },
+ {
+  "id": "r20-vite-inline-load",
+  "file": "vite.config.ts",
+  "find": "  plugins: [\n",
+  "replace": "  plugins: [\n    { name: 'claims', load: () => null },\n",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "an inline plugin load hook: the load hook count"
+ },
+ {
+  "id": "r20-memory-config-alias",
+  "file": "vitest.memory.config.ts",
+  "find": "    isolate: true,\n",
+  "replace": "    isolate: true,\n    alias: { '#claims': './server/freehold_claim_registry.ts' },\n",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "an alias in the memory config: its alias line and block pins"
+ },
+ {
+  "id": "r20-browser-config-alias",
+  "file": "vitest.browser.config.ts",
+  "find": "  optimizeDeps: {\n",
+  "replace": "  resolve: { alias: { '#claims': '/server/freehold_claim_registry.ts' } },\n  optimizeDeps: {\n",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "an alias in the browser config: its alias line and block pins"
+ },
+ {
+  "id": "r20-helper-resolveid",
+  "file": "scripts/lib/freehold_dev_authorization.mjs",
+  "find": "    name: 'woc-freehold-dev-authorization',\n",
+  "replace": "    name: 'woc-freehold-dev-authorization',\n    resolveId: () => null,\n",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "a resolveId hook in a local module vite.config.ts imports: the one-level hook scan"
+ },
+ {
+  "id": "r20-pkg-browser-key",
+  "file": "package.json",
+  "find": "  \"main\": \"electron/main.cjs\",\n",
+  "replace": "  \"main\": \"electron/main.cjs\",\n  \"browser\": { \"./server/bot_detector/stub.ts\": \"./server/freehold_claim_registry.ts\" },\n",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "a browser field map in package.json: the key list"
+ },
+ {
+  "id": "r20-pkg-script-tsconfig",
+  "file": "package.json",
+  "find": "esbuild headless/env_server.ts --bundle",
+  "replace": "esbuild headless/env_server.ts --tsconfig=./server/esbuild.paths.json --bundle",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "a --tsconfig flag on a script: the resolution flag list"
+ },
+ {
+  "id": "r20-pkg-link-dep",
+  "file": "package.json",
+  "find": "  \"dependencies\": {\n",
+  "replace": "  \"dependencies\": {\n    \"claims\": \"link:./server\",\n",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "a local-path dependency spec: the link/file count"
+ },
+ {
+  "id": "r21-bundle-destructured-build",
+  "file": "scripts/build_server.mjs",
+  "find": "console.log(`[build:server]",
+  "replace": "const { build } = esbuild;\nawait build({ entryPoints: ['server/main.ts'], outfile: 'dist-server/server.cjs', tsconfig: './server/bundle_paths.json' });\nconsole.log(`[build:server]",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "a sixth build through a destructured binding with a tsconfig option: the whole-file bundle pin"
+ },
+ {
+  "id": "r21-bundle-bracket-build",
+  "file": "scripts/build_server.mjs",
+  "find": "console.log(`[build:server]",
+  "replace": "await esbuild['build']({ entryPoints: ['server/main.ts'], outfile: 'dist-server/server.cjs', tsconfig: './server/bundle_paths.json' });\nconsole.log(`[build:server]",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "a sixth build through a bracket member: the whole-file bundle pin"
+ },
+ {
+  "id": "r21-bundle-escaped-quote-option",
+  "file": "scripts/build_server.mjs",
+  "find": "  outfile: 'dist-server/server.cjs',\n",
+  "replace": "  outfile: 'dist-server/server.cjs',\n  banner: { js: 'it\\'s' }, tsconfig: './server/x.json',\n",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "an option after an escaped quote: the whole-file bundle pin"
+ },
+ {
+  "id": "r21-bundle-writes-tsconfig",
+  "file": "scripts/build_server.mjs",
+  "find": "import { existsSync } from 'node:fs';",
+  "replace": "import { existsSync, writeFileSync } from 'node:fs';",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "a writer binding in the build script: the whole-file bundle pin"
+ },
+ {
+  "id": "r21-vite-writes-package",
+  "file": "vite.config.ts",
+  "find": "function env(names: string[]): string | undefined {",
+  "replace": "if (process.env.WOC_NEVER_SET_MUTANT) writeFileSync(new URL('server/package.json', import.meta.url), '{}');\nfunction env(names: string[]): string | undefined {",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "vite.config.ts writing an untracked resolution file at load: the writer call list"
+ },
+ {
+  "id": "r21-vite-writer-retarget",
+  "file": "vite.config.ts",
+  "find": "path.resolve(root, 'src/game/music_overrides.generated.ts'),",
+  "replace": "path.resolve(root, 'server/package.json'),",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "the reviewed write retargeted at a resolution file: the writer call list"
+ },
+ {
+  "id": "r21-vite-dynamic-import",
+  "file": "vite.config.ts",
+  "find": "function env(names: string[]): string | undefined {",
+  "replace": "const claims = await import('./scripts/lib/gate_host_workers.mjs');\nfunction env(names: string[]): string | undefined {",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "a dynamic import in vite.config.ts: the dynamic import count"
+ },
+ {
+  "id": "r21-script-retarget",
+  "file": "package.json",
+  "find": "\"build:server\": \"node scripts/build_server.mjs\",",
+  "replace": "\"build:server\": \"node scripts/build_bot.mjs\",",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "build:server retargeted at another script: the script list"
+ },
+ {
+  "id": "r21-script-post",
+  "file": "package.json",
+  "find": "\"build:server\": \"node scripts/build_server.mjs\",",
+  "replace": "\"build:server\": \"node scripts/build_server.mjs\",\n    \"postbuild:server\": \"node scripts/bundle_paths.mjs\",",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "a post script after build:server: the script list"
+ },
+ {
+  "id": "r21-script-root-flag",
+  "file": "package.json",
+  "find": "\"test:browser\": \"vitest run --config vitest.browser.config.ts\",",
+  "replace": "\"test:browser\": \"vitest run --root server --config vitest.browser.config.ts\",",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "a --root flag: the resolution flag list"
+ },
+ {
+  "id": "r21-dep-relative-spec",
+  "file": "package.json",
+  "find": "  \"dependencies\": {\n",
+  "replace": "  \"dependencies\": {\n    \"claims\": \"./server/claims\",\n",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "a bare relative dependency spec: the non-range spec list"
+ },
+ {
+  "id": "r21-patched-new",
+  "file": "package.json",
+  "find": "    \"patchedDependencies\": {\n",
+  "replace": "    \"patchedDependencies\": {\n      \"esbuild@0.25.0\": \"patches/esbuild@0.25.0.patch\",\n",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "a new patched package: the patched names"
+ },
+ {
+  "id": "r21-bot-writes-bundle",
+  "file": "scripts/build_bot.mjs",
+  "find": "outfile: 'dist-bot/bot.cjs',",
+  "replace": "outfile: 'dist-server/server.cjs',",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "another build script writing the server bundle: the files naming the bundle"
+ },
+ {
+  "id": "r21-dockerfile-step",
+  "file": "Dockerfile",
+  "find": "pnpm run build:server && pnpm run build:bot",
+  "replace": "pnpm run build:server && pnpm run build:bot && node scripts/bundle_paths.mjs",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "a Dockerfile step after the bundle build: the Dockerfile lines"
+ },
+ {
+  "id": "r21-barrel-outside-server",
+  "file": "scripts/mob_stall_repro.mjs",
+  "find": "#!/usr/bin/env node\n",
+  "replace": "#!/usr/bin/env node\nexport * from '../server/freehold_claim_registry.ts';\n",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "a file outside server/ naming the registry: the registry-naming read"
+ },
+ {
+  "id": "r21-helper-config-hook",
+  "file": "scripts/lib/freehold_dev_authorization.mjs",
+  "find": "    name: 'woc-freehold-dev-authorization',\n",
+  "replace": "    name: 'woc-freehold-dev-authorization',\n    config: () => ({ resolve: { conditions: ['claims'] } }),\n",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "a config hook in a local module vite.config.ts imports: its hook count"
+ },
+ {
+  "id": "r21-helper-alias-line",
+  "file": "scripts/lib/gate_host_workers.mjs",
+  "find": "export function resolveHostGateWorkers(opts = {}) {",
+  "replace": "export const viteAlias = { '#claims': './server/freehold_claim_registry.ts' }; // alias\nexport const alias = viteAlias;\nexport function resolveHostGateWorkers(opts = {}) {",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "a local module naming alias: its alias lines"
+ },
+ {
+  "id": "r21-svelte-alias",
+  "file": "svelte.config.js",
+  "find": "  preprocess: vitePreprocess(),\n",
+  "replace": "  preprocess: vitePreprocess(),\n  kit: { alias: { '#claims': './server/freehold_claim_registry.ts' } },\n",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "an alias in svelte.config.js: its alias lines and blocks"
+ },
+ {
+  "id": "r22-public-names-registry",
+  "file": "public/8229a69237564e43bae74c07bff2ac88.txt",
+  "find": "8229a69237564e43bae74c07bff2ac88\n",
+  "replace": "8229a69237564e43bae74c07bff2ac88\n\nfreehold_claim_registry\n",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "a text file under public/ naming the registry: the tree read no longer skips public/"
+ },
+ {
+  "id": "r22-renewer-outside-server",
+  "file": "scripts/mob_stall_repro.mjs",
+  "find": "#!/usr/bin/env node\n",
+  "replace": "#!/usr/bin/env node\n// renewFreeholdClaims\n",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "a file outside server/ naming the renewer: the unread renewer list"
+ },
+ {
+  "id": "r22-quoted-config-hook",
+  "file": "scripts/lib/freehold_dev_authorization.mjs",
+  "find": "    name: 'woc-freehold-dev-authorization',\n",
+  "replace": "    name: 'woc-freehold-dev-authorization',\n    'config': () => ({}),\n",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "a quoted config hook key in a local module: the hook count"
+ },
+ {
+  "id": "r22-same-line-import",
+  "file": "vite.config.ts",
+  "find": "const disableVitestFsModuleCache = shouldDisableVitestFsModuleCache(root);",
+  "replace": "const zz0 = 1; import { localLaneExclusions as zz1 } from './scripts/lib/lane_suite_scope.mjs';\nconst disableVitestFsModuleCache = shouldDisableVitestFsModuleCache(root);",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "an import after a `;` on a line: the statement list"
+ },
+ {
+  "id": "r22-define-entry",
+  "file": "vite.config.ts",
+  "find": "    __APP_VERSION__: JSON.stringify(appVersion),\n",
+  "replace": "    __APP_VERSION__: JSON.stringify(appVersion),\n    __CLAIMS_PATH__: JSON.stringify('./server/claims.ts'),\n",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "a new define entry: the define table"
+ },
+ {
+  "id": "r22-dockerfile-env",
+  "file": "Dockerfile",
+  "find": "ENV NODE_ENV=production\n",
+  "replace": "ENV NODE_ENV=production\nENV NODE_OPTIONS=--import=./hook.mjs\n",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "a Dockerfile environment line: the Dockerfile lines"
+ },
+ {
+  "id": "r22-flag-project",
+  "file": "package.json",
+  "find": "\"test:browser\": \"vitest run --config vitest.browser.config.ts\",",
+  "replace": "\"test:browser\": \"vitest run --project server --config vitest.browser.config.ts\",",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "a --project flag: the resolution flag list"
+ },
+ {
+  "id": "r23-test-tree-read-skips-public",
+  "file": "tests/server/freehold_mutation.test.ts",
+  "find": "const treeRead = ['.', ':!docs', ':!tests', ...media",
+  "replace": "const treeRead = ['.', ':!docs', ':!tests', ':!public', ...media",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "the tree read narrowed to skip public/: the readable positive control"
+ },
+ {
+  "id": "r23-test-tree-read-skips-src",
+  "file": "tests/server/freehold_mutation.test.ts",
+  "find": "const treeRead = ['.', ':!docs', ':!tests', ...media",
+  "replace": "const treeRead = ['.', ':!docs', ':!tests', ':!src', ...media",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "the tree read narrowed to skip src/: the readable positive control"
+ },
+ {
+  "id": "r23-test-media-skips-code",
+  "file": "tests/server/freehold_mutation.test.ts",
+  "find": "const media = ['webp',",
+  "replace": "const media = ['js', 'webp',",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "a code extension in the media list: the readable positive control"
+ },
+ {
+  "id": "r23-test-walk-ts-only",
+  "file": "tests/server/freehold_mutation.test.ts",
+  "find": "const modulesUnder = (root: string) => sourceFilesUnder(root);",
+  "replace": "const modulesUnder = (root: string) => sourceFilesUnder(root).filter(({ file }) => file.endsWith('.ts'));",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "the shared walk narrowed to .ts: the walk fixture"
+ },
+ {
+  "id": "r23-dockerfile-lowercase-entrypoint",
+  "file": "Dockerfile",
+  "find": "ENV NODE_ENV=production\n",
+  "replace": "ENV NODE_ENV=production\nentrypoint [\"node\", \"--import=./hook.mjs\"]\n",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "a lower-case instruction: the case-insensitive instruction arm"
+ },
+ {
+  "id": "r23-dockerfile-continuation",
+  "file": "Dockerfile",
+  "find": "    VITE_WALLET_DISABLED=\"$VITE_WALLET_DISABLED\" \\\n",
+  "replace": "    VITE_WALLET_DISABLED=\"$VITE_WALLET_DISABLED\" CLAIMS_HOOK=1 \\\n",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "a change on a continuation line naming no token: the joined instruction"
+ },
+ {
+  "id": "r23-compose-node-options",
+  "file": "docker-compose.yml",
+  "find": "NODE_OPTIONS: ${NODE_OPTIONS:-}",
+  "replace": "NODE_OPTIONS: ${NODE_OPTIONS:---import=./hook.mjs}",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "a compose default for NODE_OPTIONS: the compose runtime lines"
+ },
+ {
+  "id": "r23-compose-command",
+  "file": "docker-compose.yml",
+  "find": "command: [\"node\", \"dist-bot/bot.cjs\"]",
+  "replace": "command: [\"node\", \"--import=./hook.mjs\", \"dist-bot/bot.cjs\"]",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "a compose command flag: the compose runtime lines"
+ },
+ {
+  "id": "r23-server-reaches-tests",
+  "file": "server/bot_detector/stub.ts",
+  "find": "import type { BotDetector, BotTrackingContext } from './contract';\n",
+  "replace": "import type { BotDetector, BotTrackingContext } from './contract';\nexport const helpersPath = '../../tests/helpers/claims';\n",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "a server module naming a path into tests/: the docs/tests reach pin"
+ },
+ {
+  "id": "r23-pnpmfile-flag",
+  "file": "package.json",
+  "find": "\"check:admin\": \"svelte-check --tsconfig ./tsconfig.admin.json\",",
+  "replace": "\"check:admin\": \"svelte-check --tsconfig ./tsconfig.admin.json --pnpmfile ./claims.cjs\",",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "a --pnpmfile flag: the resolution flag list"
+ },
+ {
+  "id": "r24-test-media-adds-mts",
+  "file": "tests/server/freehold_mutation.test.ts",
+  "find": "const media = ['webp',",
+  "replace": "const media = ['mts', 'webp',",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "a module kind put on the media skip list: the asset-root check"
+ },
+ {
+  "id": "r24-test-media-adds-yml",
+  "file": "tests/server/freehold_mutation.test.ts",
+  "find": "const media = ['webp',",
+  "replace": "const media = ['yml', 'webp',",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "a config kind put on the media skip list: the asset-root check"
+ },
+ {
+  "id": "r24-test-tree-skips-github",
+  "file": "tests/server/freehold_mutation.test.ts",
+  "find": "const treeRead = ['.', ':!docs', ':!tests', ...media",
+  "replace": "const treeRead = ['.', ':!docs', ':!tests', ':!.github', ...media",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "the tree read narrowed to skip .github/: the complete readability control"
+ },
+ {
+  "id": "r24-test-tree-skips-mts",
+  "file": "tests/server/freehold_mutation.test.ts",
+  "find": "const treeRead = ['.', ':!docs', ':!tests', ...media",
+  "replace": "const treeRead = ['.', ':!docs', ':!tests', ':!*.mts', ...media",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "the tree read narrowed to skip a module kind: the complete readability control"
+ },
+ {
+  "id": "r24-test-compose-names-any-case",
+  "file": "tests/server/freehold_mutation.test.ts",
+  "find": "/NODE_|dist-server|build:server/.test(line) ||",
+  "replace": "/NODE_|dist-server|build:server/i.test(line) ||",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "the compose names read in any case (node_modules as NODE_): the predicate control"
+ },
+ {
+  "id": "r24-dockerfile-pnpmfile",
+  "file": "Dockerfile",
+  "find": "RUN pnpm install --frozen-lockfile",
+  "replace": "RUN pnpm install --frozen-lockfile --pnpmfile ./claims.cjs",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "a pnpmfile on the deploy install: the Dockerfile lines"
+ },
+ {
+  "id": "r24-test-reach-regex-broken",
+  "file": "tests/server/freehold_mutation.test.ts",
+  "find": "(?:tests|docs)(?:\\/|",
+  "replace": "(?:testz|docs)(?:\\/|",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "the docs/tests reach regex mistyped: its controls"
+ },
+ {
+  "id": "r24-test-unread-skips-server",
+  "file": "tests/server/freehold_mutation.test.ts",
+  "find": "(named ?? []).filter((file) => !counted.has(file));",
+  "replace": "(named ?? []).filter((file) => !counted.has(file) && !file.startsWith('server/'));",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "the unread filter skipping every server/ path: the declaration fixture"
+ },
+ {
+  "id": "r24-test-walk-drops-mts",
+  "file": "tests/server/freehold_mutation.test.ts",
+  "find": "const modulesUnder = (root: string) => sourceFilesUnder(root);",
+  "replace": "const modulesUnder = (root: string) =>\n  sourceFilesUnder(root).filter(({ file }) => !file.endsWith('.mts'));",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "the shared walk dropping a module kind: the walk fixture"
+ },
+ {
+  "id": "r24-test-ts-only-walker-imported",
+  "file": "tests/server/freehold_mutation.test.ts",
+  "find": "import { tmpdir } from 'node:os';",
+  "replace": "import { tmpdir } from 'node:os';\nimport { tsFilesUnder } from '../helpers/ts_files_under';",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "a .ts-only walker imported beside the shared walk: the self-scan"
+ },
+ {
+  "id": "r25-test-compose-drops-dist",
+  "file": "tests/server/freehold_mutation.test.ts",
+  "find": "/NODE_|dist-server|build:server/.test(line) ||",
+  "replace": "/NODE_|build:server/.test(line) ||",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "the compose dist-server arm dropped: its control"
+ },
+ {
+  "id": "r25-test-media-adds-tsx",
+  "file": "tests/server/freehold_mutation.test.ts",
+  "find": "const media = ['webp',",
+  "replace": "const media = ['tsx', 'webp',",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "a module kind with no file today put on the media list: the module-kind check"
+ },
+ {
+  "id": "r25-test-grep-splits-at-colon",
+  "file": "tests/server/freehold_mutation.test.ts",
+  "find": "const at = line.indexOf('\\0');",
+  "replace": "const at = line.indexOf(':');",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "the grep read split at a colon under --null: every list it feeds"
+ },
+ {
+  "id": "r25-test-reach-drops-bare-dir",
+  "file": "tests/server/freehold_mutation.test.ts",
+  "find": "(?:tests|docs)(?:\\/|['\"`])/;",
+  "replace": "(?:tests|docs)\\//;",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "the reach regex losing the bare directory form: its controls"
+ },
+ {
+  "id": "r25-test-walker-needle-drops-dynamic",
+  "file": "tests/server/freehold_mutation.test.ts",
+  "find": "const tsOnlyWalker = /['\"`][./\\w-]*helpers",
+  "replace": "const tsOnlyWalker = /from\\s*['\"`][./\\w-]*helpers",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "the walker needle losing the dynamic import form: its controls"
+ },
+ {
+  "id": "r26-test-git-no-status-check",
+  "file": "tests/server/freehold_mutation.test.ts",
+  "find": "      expect(run.status, args.join(' ')).toBe(0);\n",
+  "replace": "",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "the git runner accepting a failed run: the failed-run control"
+ },
+ {
+  "id": "r26-test-git-small-buffer",
+  "file": "tests/server/freehold_mutation.test.ts",
+  "find": "maxBuffer = 64 * 1024 * 1024",
+  "replace": "maxBuffer = 512 * 1024",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "the git runner on a buffer below the tree listing: the error refusal"
+ },
+ {
+  "id": "r26-test-module-kind-whole",
+  "file": "tests/server/freehold_mutation.test.ts",
+  "find": "SOURCE_EXTENSIONS.some((suffix) => `.${ext}`.endsWith(suffix));",
+  "replace": "(SOURCE_EXTENSIONS as readonly string[]).includes(`.${ext}`);",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "the module-kind check by whole extension only: its suffix controls"
+ },
+ {
+  "id": "r26-test-needle-drops-backtick",
+  "file": "tests/server/freehold_mutation.test.ts",
+  "find": "const tsOnlyWalker = /['\"`][./\\w-]*helpers\\/ts_files_under(?:\\.[jt]s)?['\"`]/;",
+  "replace": "const tsOnlyWalker = /['\"][./\\w-]*helpers\\/ts_files_under(?:\\.[jt]s)?['\"]/;",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "the walker needle losing the template form: its controls"
+ },
+ {
+  "id": "r26-test-needle-drops-deep",
+  "file": "tests/server/freehold_mutation.test.ts",
+  "find": "const tsOnlyWalker = /['\"`][./\\w-]*helpers",
+  "replace": "const tsOnlyWalker = /['\"`][./]*helpers",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "the walker needle losing a deeper path: the importActual control"
+ },
+ {
+  "id": "r26-test-compose-drops-quoted",
+  "file": "tests/server/freehold_mutation.test.ts",
+  "find": "/\\b(?:entrypoint|command)['\"]?\\s*:/",
+  "replace": "/\\b(?:entrypoint|command)\\s*:/",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "the compose key arm losing quoted keys: its control"
+ },
+ {
+  "id": "r26-test-own-text-blanked",
+  "file": "tests/server/freehold_mutation.test.ts",
+  "find": "const ownText = stripComments(readFileSync(fileURLToPath(import.meta.url), 'utf8'));",
+  "replace": "const ownText = stripComments('');",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "the self-scan reading no text: the positive on its real import"
+ },
+ {
+  "id": "r27-test-compose-drops-boundary",
+  "file": "tests/server/freehold_mutation.test.ts",
+  "find": "/\\b(?:entrypoint|command)['\"]?\\s*:/",
+  "replace": "/(?:entrypoint|command)['\"]?\\s*:/",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "the compose key arm losing its word boundary: the subcommand control"
+ },
+ {
+  "id": "r27-test-git-ignores-buffer",
+  "file": "tests/server/freehold_mutation.test.ts",
+  "find": "spawnSync('git', args, { encoding: 'utf8', maxBuffer });",
+  "replace": "spawnSync('git', args, { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "the git runner ignoring its buffer: the overflow control"
+ },
+ {
+  "id": "r27-dockerfile-run-change",
+  "file": "Dockerfile",
+  "find": "RUN mkdir -p /app/dist/media && chown -R node:node /app/dist/media",
+  "replace": "RUN mkdir -p /app/dist/media && chown -R node:node /app/dist/media && npm i -g claims",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "a changed RUN step with no named token: the Dockerfile lines"
+ },
+ {
+  "id": "r28-dockerfile-heredoc",
+  "file": "Dockerfile",
+  "find": "RUN mkdir -p /app/dist/media && chown -R node:node /app/dist/media",
+  "replace": "RUN <<EOF\nmkdir -p /app/dist/media && chown -R node:node /app/dist/media\nnpm i -g claims\nEOF",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "a heredoc RUN step: the whole Dockerfile pin"
+ },
+ {
+  "id": "r28-dockerfile-comment-in-continuation",
+  "file": "Dockerfile",
+  "find": "    VITE_WALLET_DISABLED=\"$VITE_WALLET_DISABLED\" \\\n",
+  "replace": "    VITE_WALLET_DISABLED=\"$VITE_WALLET_DISABLED\" \\\n    # then the claims hook\n    CLAIMS_HOOK=1 \\\n",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "a comment inside a continued step, then a new line: the whole Dockerfile pin"
+ },
+ {
+  "id": "r28-dockerfile-arg",
+  "file": "Dockerfile",
+  "find": "ARG VITE_WALLET_DISABLED=\"\"\n",
+  "replace": "ARG VITE_WALLET_DISABLED=\"\"\nARG INSTALL_FLAGS=\"--pnpmfile=./claims.cjs\"\n",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "a new build argument: the whole Dockerfile pin"
+ },
+ {
+  "id": "r28-test-compose-colon-space",
+  "file": "tests/server/freehold_mutation.test.ts",
+  "find": "/\\b(?:entrypoint|command)['\"]?\\s*:/",
+  "replace": "/\\b(?:entrypoint|command)['\"]?:/",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "the compose key arm refusing a space before the colon: its control"
+ },
+ {
+  "id": "r29-dockerfile-comment-edit",
+  "file": "Dockerfile",
+  "find": "# World of Claudecraft game server: serves the built client, REST API and WebSocket\n",
+  "replace": "# World of Claudecraft game server: serves the built client, REST API and WebSocket (claims)\n",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "a comment-only Dockerfile edit: the exact pin"
+ },
+ {
+  "id": "r29-dockerfile-bom-directive",
+  "file": "Dockerfile",
+  "find": "# World of Claudecraft game server: serves the built client, REST API and WebSocket\n",
+  "replace": "﻿# syntax=claims/frontend:1\n# World of Claudecraft game server: serves the built client, REST API and WebSocket\n",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "a byte order mark and a parser directive: the exact pin"
+ },
+ {
+  "id": "r29-dockerfile-dedent",
+  "file": "Dockerfile",
+  "find": "    VITE_REOWN_PROJECT_ID=\"$VITE_REOWN_PROJECT_ID\" \\\n",
+  "replace": "VITE_REOWN_PROJECT_ID=\"$VITE_REOWN_PROJECT_ID\" \\\n",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "a dedented continuation line: the exact pin"
+ },
+ {
+  "id": "r33-wiki-dockerfile-runs-server",
+  "file": "mediawiki/Dockerfile",
+  "find": "CMD [\"apache2-foreground\"]",
+  "replace": "CMD [\"npm\", \"run\", \"server\"]",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "the wiki image running the server through a script: the wiki Dockerfile pin"
+ },
+ {
+  "id": "r33-hook-with-nul",
+  "file": "scripts/mob_stall_repro.mjs",
+  "find": "#!/usr/bin/env node\n",
+  "replace": "#!/usr/bin/env node\n// \u0000 renewFreeholdClaims\n",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "a file git deems binary naming the renewer: the tree read as text"
+ },
+ {
+  "id": "r35-test-tree-grep-default-mode",
+  "file": "tests/server/freehold_mutation.test.ts",
+  "find": "          '-o',\n          '--text',\n",
+  "replace": "          '-o',\n",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "the shared grep in git default mode (binary hits reported without a name): the binary-module control"
+ },
+ {
+  "id": "r35-test-tree-grep-skips-binary",
+  "file": "tests/server/freehold_mutation.test.ts",
+  "find": "          '-o',\n          '--text',\n",
+  "replace": "          '-o',\n          '-I',\n",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "the shared grep skipping binary files: the binary-module control"
+ },
+ {
+  "id": "r36-test-inventory-narrowed",
+  "file": "tests/server/freehold_mutation.test.ts",
+  "find": "&& /dockerfile/i.test(file);",
+  "replace": "&& /dockerfile$/i.test(file);",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "the Dockerfile inventory narrowed to exact endings: the look-alike controls"
+ },
+ {
+  "id": "r36-test-inventory-reads-docs",
+  "file": "tests/server/freehold_mutation.test.ts",
+  "find": "!/^(?:docs|tests)\\//.test(file) && /dockerfile/i.test(file);",
+  "replace": "/dockerfile/i.test(file);",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "the Dockerfile inventory reading docs and tests: the excluded-root controls"
+ },
+ {
+  "id": "r36-test-tree-grep-first-line-only",
+  "file": "tests/server/freehold_mutation.test.ts",
+  "find": "          '-o',\n          '--text',\n",
+  "replace": "          '-o',\n          '--text',\n          '-m',\n          '1',\n",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "the shared grep stopping at a file first matching line: the after-NUL word in the binary control"
+ },
+ {
+  "id": "r37-test-listing-narrowed",
+  "file": "tests/server/freehold_mutation.test.ts",
+  "find": "const allTracked = listed([]);",
+  "replace": "const allTracked = listed(['.', ':!scripts']);",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "the whole listing narrowed: the check that it holds everything the tree read reads"
+ },
+ {
+  "id": "r37-test-inventory-basename-only",
+  "file": "tests/server/freehold_mutation.test.ts",
+  "find": "&& /dockerfile/i.test(file);",
+  "replace": "&& /dockerfile/i.test(file.split('/').pop() ?? '');",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "the inventory reading basenames only: the directory-name control"
+ },
+ {
+  "id": "r37-test-exclusion-unanchored",
+  "file": "tests/server/freehold_mutation.test.ts",
+  "find": "!/^(?:docs|tests)\\//.test(file) && /dockerfile/i.test(file);",
+  "replace": "!/(?:docs|tests)\\//.test(file) && /dockerfile/i.test(file);",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "the inventory exclusion matching at any depth: the anchoring controls"
+ },
+ {
+  "id": "r38-test-listing-excludes-media",
+  "file": "tests/server/freehold_mutation.test.ts",
+  "find": "const allTracked = listed([]);",
+  "replace": "const allTracked = listed([':!*.hdr']);",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "the whole listing narrowed by a media kind: the raw count"
+ },
+ {
+  "id": "r38-test-helper-excludes",
+  "file": "tests/server/freehold_mutation.test.ts",
+  "find": "git(['ls-files', '-z', '--', ...pathspec])",
+  "replace": "git(['ls-files', '-z', '--', ...pathspec, ':!deploy'])",
+  "tests": [
+   "tests/server/freehold_mutation.test.ts"
+  ],
+  "filter": "pins every mention of the renewer by name",
+  "guard": "an exclusion inside the shared listing helper: the raw count"
+ },
+ {
+  "id": "r40-hearth-key-scenario-dark",
+  "file": "tests/parity/scenarios.ts",
+  "find": "    // and sharing the seed means this scenario's shard builds no new colliders.\n    build: () =>\n      new Sim({\n        seed: 1032,\n        playerClass: 'warrior',\n        noPlayer: true,\n        freeholdsEnabled: true,\n",
+  "replace": "    // and sharing the seed means this scenario's shard builds no new colliders.\n    build: () =>\n      new Sim({\n        seed: 1032,\n        playerClass: 'warrior',\n        noPlayer: true,\n",
+  "tests": [
+   "tests/freehold_npc_spawn.test.ts"
+  ],
+  "filter": "records that the golden parity scenarios cover the default dark arm",
+  "guard": "the Hearth Key scenario booting dark: the named lit build loses its one literal"
+ },
+ {
+  "id": "r40-third-lit-scenario",
+  "file": "tests/parity/scenarios.ts",
+  "find": "    build: () => new Sim({ seed: 1001, playerClass: 'warrior', autoEquip: true }),",
+  "replace": "    build: () => new Sim({ seed: 1001, playerClass: 'warrior', autoEquip: true, freeholdsEnabled: true }),",
+  "tests": [
+   "tests/freehold_npc_spawn.test.ts"
+  ],
+  "filter": "records that the golden parity scenarios cover the default dark arm",
+  "guard": "a third scenario booting lit: the dark-arm record"
+ },
+ {
+  "id": "r40-svelte-literal-joined",
+  "file": "tests/server/freehold_mutation.test.ts",
+  "find": "\"import { svelteTesting } from '@testing-library/\" + \"svelte/vite'\",",
+  "replace": "\"import { svelteTesting } from '@testing-library/svelte/vite'\",",
+  "tests": [
+   "tests/vitest_setup_scope.test.ts"
+  ],
+  "filter": "every test file that imports the Svelte testing library imports the admin setup",
+  "guard": "the pinned vite import string joined again: the setup-scope guard reads it as an import"
+ }
+]

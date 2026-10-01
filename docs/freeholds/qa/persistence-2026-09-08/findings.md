@@ -5360,3 +5360,196 @@ decisions-2026-09-30.md`. In short:
   full mode there (summed shard test step 85.07 min on a slow runner draw, the calibrated pool
   beside the harvest's; one checkout stalled 9.47 minutes); nightly 36752778164 green, 52.9 min.
 
+## 07a, TRANSACTIONAL MUTATIONS AND GLOBAL CLAIM FENCING, BUILT 2026-09-30 TO 10-01
+
+### THE STEP 0 RULINGS (Fernando, 2026-09-30), RECORDED VERBATIM
+
+Asked at the session's start, with recommendations, both answered as recommended:
+- "Should 07a light the remote Hearth Key on a lit realm through the new transaction boundary,
+  or keep its admission fail-closed until 08a lands the private cooldown mirror?" answered
+  "Light it (Recommended)".
+- "Does the push go still stand for this work?" answered "Push after the gate
+  (Recommended)": push to origin only once the armed gate is green on the exact tip; no PR.
+
+### THE SYNC
+
+Merge `0008427d14` takes `origin/release/v0.45.0` at `55de7ffe92` (still the version-newest
+release branch; three commits past the Part 4 sync at `ac9ed4db24`): the host-diag manifest's
+`-text` attribute in `.gitattributes` and its pin in `tests/host_diag_bundle.test.ts`. No
+conflict, and no branch-owned file, patch or lockfile touched; the release-merge audit found no
+overlap, divergence, new route, re-bound helper or moved premise.
+
+### THE DESIGN, BEFORE CODE
+
+`docs/freeholds/mutation-touch-set-manifest.md` is the producing artifact the packet requires
+before code: the queue order (Q1 character FIFO, Q3 store owner FIFO, Q2 market writer, Q4
+background permit, Q5 pool client), the global lock order (G1 accounts KEY SHARE through G9 the
+growth budget at COMMIT), the Hearth trip contract, every path statement by statement, the
+pairwise deadlock review, the schema, the D88 per-row-class deletion policy, growth, export and
+privacy, the plan inventory and the named residuals (R-1 to R-9). Revisions 1, 2 and 3 each
+drew ACCEPT-WITH-CHANGES from all three acceptance readers (database performance, migration
+safety, privacy and security), every finding mapped in its section 11; revision 4 recorded what
+the implementation refined, revision 5 (section 15) what the domain review of the built code
+refined. G14 (the `aaff789813` sync's census: the Weekly Vault opening's durability barrier as a
+new Q1 caller, `world_quest_scores` and `glider_course_bests` as new reverse foreign keys) is
+folded into sections 3 and 8.
+
+### THE BUILD
+
+`295395ba5f` (a behaviour-preserving extraction: the tick profiler name tables, the concurrent
+index runner and the store's type surface moved whole, paying the monolith ratchet), the
+manifest `f18188610b`, the feature `3387ccf3e8`, and the parity golden `1343b080bd`:
+- THE GLOBAL PLOT CLAIM (`freehold_plot_claims`): a lease plus a monotonic fencing generation
+  per plot id, checked in the statement; expiry governs only takeover; a release renames the
+  holder `<holder>#released`, so it is final; rows are kept, so generations survive.
+- THE FENCED WRITE: an existing row is one autocommit statement (fence, CAS, stamp), so a dirty
+  plot pays what 07's write paid; a first insert is a short transaction beside its generation-1
+  claim; an ambiguous earlier write adopts its own landed revision only on an equal token.
+- THE CLAIMED LOGIN READ: the claim is taken before the character lease, and the row is read in
+  the same bounded transaction under one budget; a foreign live claim answers the repairable
+  `claim_busy` hold.
+- THE RENEWER on the autosave cadence: sorted chunks of 256, one statement per transaction,
+  single-flight with a pass deadline (a pass ends by the deadline plus one transaction wall,
+  25 s, under the 30 s cadence), rotation, identity-checked drops, a FOR SHARE re-read of a
+  release that threw, and the same-holder re-login race closed by an in-flight mark with the
+  residual window detected (R-9).
+- THE MUTATION HOOK on the three hooked character saves, after every legacy effect and before
+  the tag-checked COMMIT; an ambiguous COMMIT is verified inside the permit on one checkout (a
+  FOR SHARE wait, then per-kind evidence).
+- THE HEARTH TRIP: the sim's admission seam is three-valued; a lit realm answers `pending`,
+  advances the durable account cooldown through the hook, then re-dispatches the use under a
+  one-shot server ticket, replaying the frame path's prechecks.
+- OPERATIONS: open intents (capped at 8 per account) and terminal receipts (keep-forever,
+  watched by a growth gauge); no production kind is registered (08 registers the first).
+- D88: an open intent refuses a character delete (409 `character.freehold_operation_open`) and
+  an account delete (55006 on the guard constraint); the soft delete erases its receipts.
+
+### THE DOMAIN REVIEW AND THE FIX ROUNDS
+
+Seven domain reviewers read the built diff: database performance, migration safety, server hot
+path, architecture, test coverage, cross-platform sync, privacy and security; then the
+qa-checklist. Their one code blocker (a renewer whose passes could stack in a brownout), one stale
+test assertion and the qa-checklist's blocker (SQL in two logic modules) were fixed with every
+other finding in `d4ebae4e33` and `663d507845`. The parity golden was minted on the commit before
+07a and passes byte-identical (`qa/mutation-2026-09-30/parity-golden-provenance.md`).
+
+Then fresh readers read every fix round, product code and tests separately, until one came back
+without a should-fix. Each round found what the previous one introduced or left, and the findings
+narrowed from defects to wording, then to the reach of one guard:
+- Rounds 1 and 2 (`d4ebae4e33`, `663d507845`): the verify's one-checkout shim disabled its own
+  wall; a committed advance dropped by a realm precheck spent the cooldown silently; the
+  release path lost every time bound; the lock-free re-read could not see a still-committing
+  release; drops did not check identity.
+- Rounds 3 to 5 (`5e470b7973`, `5c76efb37a`, `0d5cdf8a8b`): the same-holder re-login race; the
+  checkout bound folded into one transaction-runner option; the renewer's remaining branches
+  pinned.
+- Rounds 6 to 11 (`c35cb4b628` to `5ae0b7177b`): the renewer's voice and its clock made robust
+  to odd hosts (a throwing, non-finite, backward or overflowing clock; a deadline Node's timer
+  would clamp), each change pinned by the mutant it kills.
+- Rounds 12 to 16 (`ded6b5c1ff` to `2da6e55292`): text the code did not match, tests that could
+  not tell two mutants apart, the monolith rows re-pinned to their exact sizes (`df8a30a984`),
+  and the guards that keep the renewer's call sites and rejection lists reviewed.
+- Rounds 17 to 39 (`6e867c25e2` to `573db94f1b`), tests only, all in one case: the guard that
+  pins every mention of the renewer by name, grown to close the alias escape where an alias would
+  be declared. Rounds 17 to 20 enumerated alias forms, and each fresh read found another that
+  slipped past (a build option, an imported fragment, a retargeted stub path, a new vitest config,
+  a destructured build call). Round 21 changed the shape instead, the Part 5 lesson that a strict
+  field with a stated boundary converges where a parser under adversarial review does not: the
+  server bundle's build script is pinned whole, every other toolchain file is a program pinned by
+  its declarations (imports with bindings, resolver hooks, alias lines and targets, writes,
+  inventories, package keys, specs and flags), and a LIMITS paragraph names what is not read.
+  Rounds 22 to 38 closed what each read found in that boundary's own edges, and the same lesson
+  came back three more times, each time settled by a whole pin rather than a better reader:
+  - the count read only `.ts` files under server/; it now walks every module there with the
+    shared source walker, and one read of the tracked tree, as text, lists any other file naming
+    the registry, the renewer or the bundle;
+  - pattern readers of the Dockerfile kept missing shapes Docker accepts (an install spelling, a
+    comment inside a continued step, a heredoc, a parser directive, a byte order mark); both
+    Dockerfiles are now pinned exactly, line for line, behind a fail-closed inventory;
+  - prose that argued why an unread file was safe kept proving incomplete; LIMITS is now a bare
+    list of what is not read, each item a checked fact;
+  - pin quality: every reader arm has a control matched by it alone, the tree read has a complete
+    readability control and a binary-module control through the one grep it uses, the whole
+    tracked listing is counted against a raw read of git's, and the listing sat at 87 percent of
+    Node's default spawn buffer with no failure check (now a 64 MiB buffer that refuses a
+    cut-off run).
+  The case sits in the selective gate's always-run floor (it reads files off disk), so a change to
+  any file it pins runs it.
+- The fresh reads of rounds 25, 29 and 38 came back without a should-fix. The standing rule
+  applied their suggestions too; the first two applications each drew a new should-fix (the
+  reason the loop ran on), so the third was applied in the reader's own wording and read once
+  more, narrowly. That read (round 39) came back without a should-fix; its two optional
+  tightenings of an accurate comment are recorded under OWED rather than applied.
+- The armed full suite on `573db94f1b` then found two failures that every affected-suite run had
+  missed, because each sits in a file no changed module imports: the dark-arm record in
+  `tests/freehold_npc_spawn.test.ts` said the parity goldens hold ONE lit build, but the Hearth Key
+  golden this work added (`1343b080bd`) boots lit too; and a pinned vite import string in the
+  renewer guard read as a Svelte testing import to `tests/vitest_setup_scope.test.ts`. Round 40
+  (`3c35dbada0`) names both lit builds and splits the string; its fresh read came back without a
+  should-fix, and its two optional hardenings are recorded under OWED.
+- The armed gate on `3c35dbada0` then stopped at its malware scan: the round-20 read of
+  `.npmrc`'s settings matched the scan's credential-file rule. Round 41 (`d38be09a9a`) drops that
+  read, keeps the inventory of tracked `.npmrc` files, and names the settings in LIMITS. The
+  next two fresh reads each caught that LIMITS item overstating the scan (it looks for no planted
+  registry or token; only a file-read call naming the file trips it), and rounds 42 and 43
+  (`d58dd6c0f2`, `4fddff13f0`) narrowed the wording to what the scan does; the settings stay
+  unread rather than read in a way that steps around the rule. The fresh read of round 43 came
+  back without a should-fix; its two optional tightenings are recorded under OWED.
+
+### THE MUTATION PASS
+
+`qa/mutation-2026-09-30/mutation-pass.md` and `mutants.json`. 212 mutants over the new guards,
+run in a separate worktree on a second scratch database so the main tree was never mutated while
+a reader read it, by the standing rule's harness (must-pass controls, file equal to HEAD before
+each mutant, `git checkout` restore verified, a HUNG verdict, a clean tree after). The first
+run's seven survivors (six weak tests, one equivalent) each gained the case that kills them; from
+then the whole list re-ran on each commit the record's table names, and every round of the
+toolchain guard re-ran every toolchain mutant on its own commit. Rounds 20 to 38 added those
+mutants (each a route its round closed; those of a reader a later round deleted retired with it),
+all killed, plus six probes the harness cannot express (an intent-to-add vitest config, workspace
+file, Containerfile, `Dockerfile-realm` and private implementation, and an untracked `.mjs` call
+site under server/), each refused; round 40 added three for its two fixes, all killed. On the
+final code (`3c35dbada0`): 212 killed, and one survivor, the equivalent
+`trip-pending-unconditional-delete`. That pass ran in two parts: the host's disk filled during the
+first (another process on the machine), the harness stopped at a restore it could not verify (the
+file was equal to HEAD), and the rest ran on the same commit behind a new low-disk stop; the
+record says so. Round 41 then dropped one read and the one mutant that guarded it; every
+toolchain mutant (99) re-ran on the final commit, `4fddff13f0`, all killed, and the rest of the list targets code that
+commit did not touch.
+
+### THE GATE
+
+The armed gate (`node scripts/gate_select.mjs`, PostgreSQL armed through the session's scratch
+server) is green on all 12 steps at `4fddff13f0`, its planner in full mode on this branch's diff:
+74,463 tests passed (2 expected fail, 30 skipped) in 5,080 files, the browser suite 550 in 67,
+the malware scan 0 high, every build and the typecheck green. On the way there, the armed full
+suite on `573db94f1b` found the two failures round 40 fixed, the armed full suite on
+`3c35dbada0` passed (74,463 tests), and the armed gate on `3c35dbada0` stopped at the malware
+scan, which rounds 41 to 43 settled.
+
+### OWED, NOT CLAIMED
+
+- The paired QA, `phase-07a-qa.md`, in a fresh session.
+- The round-39 read's two optional comment tightenings, recorded rather than applied (the
+  comment is accurate as written): say "an exclusion that drops any path" above the whole-listing
+  count, and say that an exclusion inside the shared `git` wrapper moves both counts and is left
+  to the floor.
+- The round-40 read's two optional hardenings of the dark-arm record, recorded rather than
+  applied: count every `freeholdsEnabled` token inside each lit scenario's slice (not only the
+  `: true` form), and check that both lit scenarios are registered in `SCENARIOS`.
+- The round-43 read's two optional wording tightenings, recorded rather than applied: say the
+  scan's trigger is a file-read call naming `.npmrc` on one line, and say beside the inventory
+  that the tree read's three-name search does read the file's bytes.
+- `.npmrc`'s settings are pinned by no test since round 41 (a `node-options` or registry line
+  passes both the renewer guard and the malware scan); closing that is a maintainer decision: a
+  content rule in the malware scan, pinned in `tests/malware_scan.test.ts`, or a reviewed
+  exemption for a test that reads the file.
+- R-1 to R-9 (manifest section 12) are accepted residuals, each with its bound.
+- What lands with the first registered operation kind (pinned as a tripwire): an automatic
+  idempotent erase retry for deactivated accounts holding receipts, a receipts retention story,
+  a deactivation story for open intents, and a plan that refuses a missing copy.
+- The first production rollout of the housing tables in a quiet window (DEPLOY.md).
+- A local gotcha, not a defect: the pg suites `freehold_mutation.pg` and the bank-ledger growth
+  monitor use a fixed verify-database name, so two runs against ONE server collide (CI runs each
+  once per service); run them against separate servers.
+- Production stays disabled behind `FREEHOLDS_ENABLED`; every release gate stays unsigned.
