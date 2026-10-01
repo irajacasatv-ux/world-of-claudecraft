@@ -59,10 +59,11 @@ function pct(fraction: number): string {
 }
 
 function statRow(label: string, value: string, sub?: string): string {
-  const note = sub ? `<span class="mob-inspect-stat-sub ui-muted">${esc(sub)}</span>` : '';
+  // The note is its own line under the row: .ui-stat-row has a fixed height.
+  const note = sub ? `<div class="mob-inspect-stat-sub ui-muted">${esc(sub)}</div>` : '';
   return (
     `<div class="mob-inspect-stat ui-stat-row"><span class="mob-inspect-stat-label">${esc(label)}</span>` +
-    `<span class="mob-inspect-stat-value ui-num">${esc(value)}</span>${note}</div>`
+    `<span class="mob-inspect-stat-value ui-num">${esc(value)}</span></div>${note}`
   );
 }
 

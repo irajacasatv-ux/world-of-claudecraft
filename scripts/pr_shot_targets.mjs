@@ -1245,24 +1245,35 @@ export const TARGETS = [
         const sim = game?.sim;
         const player = sim?.player;
         if (!game || !sim || !player) return { ok: false, reason: 'offline world is unavailable' };
+        // The nearest live unowned mob with an item loot table, anywhere in the
+        // offline world (the entry spot may have none in view), prefering one
+        // with several drops so the card shows a real table.
         let best = null;
-        let bestDist = 90;
+        let bestScore = Infinity;
         for (const e of sim.entities.values()) {
           const template = game.MOBS[e.templateId];
           if (e.kind !== 'mob' || e.ownerId !== null || e.dead || !template) continue;
-          if (!template.loot.some((entry) => entry.itemId)) continue;
-          const d = Math.hypot(e.pos.x - player.pos.x, e.pos.z - player.pos.z);
-          if (d < bestDist) {
+          if (template.dummy || template.ambient) continue;
+          const drops = template.loot.filter((entry) => entry.itemId).length;
+          if (drops < 2) continue;
+          const score = Math.hypot(e.pos.x - player.pos.x, e.pos.z - player.pos.z);
+          if (score < bestScore) {
             best = e;
-            bestDist = d;
+            bestScore = score;
           }
         }
-        if (!best) return { ok: false, reason: 'no mob with a loot table in view' };
+        if (!best) return { ok: false, reason: 'no mob with a loot table in the world' };
+        // Stand a step outside its aggro reach so it stays in interest range
+        // (the clip is the window alone, so the camera angle does not matter).
+        player.pos = sim.groundPos(best.pos.x + 14, best.pos.z);
+        player.prevPos = { ...player.pos };
         sim.targetEntity(best.id, player.id);
         return { ok: true };
       });
       if (!picked.ok) throw new Error(picked.reason);
-      await wait(500);
+      await wait(1500);
+      await awaitVeilSettled(page);
+      await sweepOverlays(page, 4);
       const opened = await page.evaluate(() => {
         const frame = document.querySelector('#target-frame');
         if (!frame) return false;

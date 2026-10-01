@@ -26496,13 +26496,9 @@
     font-size: 14px;
   }
   .mob-inspect-stat {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
     column-gap: var(--spacing-sm);
   }
   .mob-inspect-stat-sub {
-    flex-basis: 100%;
     font-size: 12px;
   }
   .mob-inspect-stats-note,
