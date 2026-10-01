@@ -33,7 +33,8 @@ connected session in production.
 ## Scope gate (run this first)
 
 Look at the changed files (`node scripts/review_scope.mjs`, or the range the caller names).
-The surface is anything under `server/`, PLUS any `src/sim/` change to a method the self path consumes (a `*For(pid)`, `*InfoFor`, or `*Wire` read
+The surface is anything under `server/`, PLUS any `src/sim/` change to a method the self
+path consumes (a `*For(pid)`, `*InfoFor`, or `*Wire` read
 called from `selfWireJson` in `server/game.ts`), to a `serialize*` method a save path
 consumes, or to a collection those reads walk (the mail book, the market listing book,
 the commission order board, any shared board or ledger): the cost of a self key lives in

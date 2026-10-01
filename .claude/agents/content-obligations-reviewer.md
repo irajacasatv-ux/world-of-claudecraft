@@ -23,8 +23,8 @@ content diff owes and verify each one landed.
 
 ## Scope gate - run this FIRST
 
-1. Get the changed files (cheap): `node scripts/review_scope.mjs` (the branch's changes against its integration
-   base, plus staged, unstaged, and untracked work).
+1. Get the changed files (cheap): `node scripts/review_scope.mjs` (the branch's changes against its
+   integration base, plus staged, unstaged, and untracked work).
 2. You are IN SCOPE if any changed path is under `src/sim/content/`, or the diff adds/changes a
    content record consumed through `src/sim/data.ts` (an item, mob, NPC, quest, zone, dungeon,
    delve, ability, recipe, deed, or reliquary page).

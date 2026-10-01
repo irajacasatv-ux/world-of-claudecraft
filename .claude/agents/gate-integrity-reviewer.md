@@ -23,8 +23,8 @@ skip one is the defect class you exist to catch.
 
 ## Scope gate - run this FIRST
 
-1. Get the changed files (cheap): `node scripts/review_scope.mjs` (the branch's changes against its integration
-   base, plus staged, unstaged, and untracked work).
+1. Get the changed files (cheap): `node scripts/review_scope.mjs` (the branch's changes against its
+   integration base, plus staged, unstaged, and untracked work).
 2. You are IN SCOPE if any changed path matches `scripts/gate*.mjs`, `scripts/lib/gate_*.mjs`,
    `scripts/lib/ci_*.mjs`, `scripts/lib/test_visibility.mjs`, `scripts/ci_shard_test.mjs`,
    anything under `.github/workflows/`, or the pin tests (`tests/ci_workflow.test.ts`,

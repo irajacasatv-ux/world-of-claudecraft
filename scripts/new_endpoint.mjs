@@ -271,7 +271,7 @@ function spineSpecifiers(fromFileAbs, repo) {
  * = fewer maintainer fills). It cannot dodge the M16 wordy-leaf gate (any real word of
  * 4+ letters trips /[a-z]{4,}/), so a real-tree run also prints the M16 reminder and
  * server/CLAUDE.md documents it: a wordy English apiError leaf needs its five non-Latin
- * fills (zh, zh_TW, ja, ko, ru) in the same change.
+ * fills (zh_CN, zh_TW, ja_JP, ko_KR, ru_RU) in the same change.
  */
 export function englishFor(reason) {
   if (reason === OWNER_REASON) return 'Not found.';
@@ -1125,10 +1125,10 @@ function main(argv, cwd) {
   );
   // M16 reminder: the appended apiError English leaf is terse but still wordy (any real
   // word of 4+ letters trips the gate), so if you reword it into a sentence, add its five
-  // non-Latin fills (zh, zh_TW, ja, ko, ru) in the same change, or i18n_completeness reds.
+  // non-Latin fills (zh_CN, zh_TW, ja_JP, ko_KR, ru_RU) in the same change, or i18n_completeness reds.
   process.stdout.write(
     `${SCRIPT_NAME}: note: if you reword the apiError.${plan.code} English value into wordy prose, ` +
-      'add its five non-Latin fills (zh, zh_TW, ja, ko, ru) in the same change (M16).\n',
+      'add its five non-Latin fills (zh_CN, zh_TW, ja_JP, ko_KR, ru_RU) in the same change (M16).\n',
   );
   return 0;
 }

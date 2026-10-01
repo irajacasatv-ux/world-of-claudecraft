@@ -32,18 +32,26 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const read = (rel: string) => readFileSync(path.join(root, rel), 'utf8').replaceAll('\r\n', '\n');
 const scriptsOf = (packageJson: string) => Object.keys(JSON.parse(read(packageJson)).scripts ?? {});
 
-/** Tracked files plus untracked ones that are not ignored, so a file created in the same
- *  change resolves before it is staged. */
-function repoFiles(): string[] {
-  // -z: NUL-separated, so git never quotes a non-ASCII path into an unreadable name.
-  const res = spawnSync('git', ['ls-files', '--cached', '--others', '--exclude-standard', '-z'], {
+/** A NUL-separated (`-z`) git listing, so git never quotes a non-ASCII path. */
+function gitPaths(args: string[]): string[] {
+  const res = spawnSync('git', [...args, '-z'], {
     cwd: root,
     encoding: 'utf8',
     maxBuffer: 1 << 26,
     shell: false,
   });
-  if (res.status !== 0) throw new Error(`git ls-files failed: ${res.stderr}`);
-  return [...new Set(res.stdout.split('\0').filter(Boolean))];
+  if (res.status !== 0) throw new Error(`git ${args.join(' ')} failed: ${res.stderr}`);
+  return res.stdout.split('\0').filter(Boolean);
+}
+
+/** Tracked files plus untracked ones that are not ignored, so a file created in the same
+ *  change resolves before it is staged, minus files deleted from the working tree but not yet
+ *  from the index, so an unstaged delete counts exactly like a staged one. */
+function repoFiles(): string[] {
+  const deleted = new Set(gitPaths(['ls-files', '--deleted']));
+  return [...new Set(gitPaths(['ls-files', '--cached', '--others', '--exclude-standard']))].filter(
+    (f) => !deleted.has(f),
+  );
 }
 
 /** The subset of `paths` git ignores (generated or local-only output, never drift). */
@@ -242,9 +250,8 @@ describe('instruction files', () => {
     const files = repoFiles();
     const fileSet = new Set(files);
     const index = buildIndex(files);
-    // A listed file can be absent on disk (a sparse CI checkout, an unstaged delete): it is
-    // not part of the text agents read, so it is not scanned.
-    scanned = files.filter((f) => isInstructionFile(f) && existsSync(path.join(root, f)));
+    // Any other listed file missing from disk fails loud in read(): never a silent skip.
+    scanned = files.filter(isInstructionFile);
     const raw: Miss[] = scanned.flatMap((file) =>
       unresolvedRefs({
         file,

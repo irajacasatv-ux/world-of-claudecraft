@@ -62,8 +62,8 @@ The DDL and save/load paths live in a few specific files. If the diff touches no
 there is no schema or persistence change to review, and reading the full `SCHEMA` to find
 that out wastes budget. Gate yourself before reading any file:
 
-1. Get the changed files only (cheap): `node scripts/review_scope.mjs` (the branch's changes against its
-   integration base, plus staged, unstaged, and untracked work).
+1. Get the changed files only (cheap): `node scripts/review_scope.mjs` (the branch's changes against
+   its integration base, plus staged, unstaged, and untracked work).
 2. You are IN SCOPE if any changed path is `server/db.ts`, any other `server/*_db.ts` (for
    example `social_db.ts`, `oauth_db.ts`, `chat_filter_db.ts`), a dedicated schema module
    such as `server/daily_rewards_schema.ts` (any file exporting DDL that `ensureSchema()`
@@ -85,7 +85,8 @@ that out wastes budget. Gate yourself before reading any file:
 Determine what to review using the following precedence:
 1. If a specific file/change was mentioned in the invocation, review that.
 2. The change itself: `git diff "$(node scripts/review_scope.mjs --base)"` (committed, staged,
-   and unstaged work against the integration base) filtered to `server/db.ts`,
+   and unstaged work against the integration base), plus each untracked file the scope lists,
+   read whole, filtered to `server/db.ts`,
    `server/social_db.ts`, `server/*_db.ts`, and any serialize/deserialize of `characters.state`.
 3. If nothing schema- or persistence-related is found, report that no schema/persistence
    changes were detected.

@@ -85,8 +85,8 @@ the catalog cannot fall behind the directories.
 
 ## Writing instruction files
 
-Every `CLAUDE.md`, `AGENTS.md`, agent, and skill is written to this standard; `docs-librarian`
-reviews against it.
+Every instruction file (the set defined under "What loads when") is written to this standard;
+`docs-librarian` reviews against it.
 
 - **State the current rule and its reason.** Never let history stand in for the rule: no PR or
   issue numbers, phase or ruling ids, or dates as its authority, and no "now", "no longer", or

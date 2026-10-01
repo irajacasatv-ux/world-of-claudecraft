@@ -29,8 +29,8 @@ Do not suppress a finding because you are unsure - lower its confidence instead.
 
 ## Scope gate - run this FIRST
 
-1. Get the changed files (cheap): `node scripts/review_scope.mjs` (the branch's changes against its integration
-   base, plus staged, unstaged, and untracked work), or the range the caller names.
+1. Get the changed files (cheap): `node scripts/review_scope.mjs` (the branch's changes against its
+   integration base, plus staged, unstaged, and untracked work), or the range the caller names.
 2. You are IN SCOPE if any changed path is under `src/ui/` or `src/styles/`, is a
    presentation file under `src/render/` (a painter, a `*_view.ts` core, nameplates, VFX,
    the render budget), or is `src/game/ui_tier_knobs.ts` / `src/game/ui_effects_profile.ts`.

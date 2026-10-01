@@ -1,6 +1,6 @@
 // Reference extraction and resolution for the instruction-file drift guard
-// (tests/instruction_drift.test.ts). Instruction files (every CLAUDE.md, AGENTS.md, the
-// .claude agents and skills, the .agents skills, and the docs they route through) are read
+// (tests/instruction_drift.test.ts). Instruction files (the set docs/ai-architecture.md
+// defines: isInstructionFile below, with AGENT_ROUTING_DOCS for the routing docs) are read
 // by every AI session that touches their area, so a path, module, or npm script they name
 // that no longer exists misleads every later contributor. This module finds those names
 // mechanically; judgment-level drift (a claim the code contradicts, two files disagreeing)

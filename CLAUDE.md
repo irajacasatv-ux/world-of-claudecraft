@@ -115,8 +115,8 @@ Deliverable: a PR based off the latest release branch, following
 `.github/PULL_REQUEST_TEMPLATE.md`, that is **fully mergeable and passes CI**. Gate it locally
 with `node scripts/gate_select.mjs` (above) before calling it done; `npm run gate` remains
 the deeper check when you want the whole suite locally. On a branch the maintainer has
-cleared for pushing, a green CI run on the pushed tip that ran the PR test tier (its
-`changes` job reported `code=true`), watched to completion, meets the same bar, so you may
+cleared for pushing, a green CI run on the pushed tip whose pr-gate test legs ran rather than
+skipped, watched to completion, meets the same bar, so you may
 push and watch CI instead of gating locally. An unpushed branch, and a change CI classifies
 as docs-only, always gate locally.
 
@@ -208,8 +208,8 @@ as docs-only, always gate locally.
   Branches: `feature/<slug>`, `fix/<slug>`.
 - **Docs follow the anchor rule:** cite stable paths, exported symbols, and pinned tests;
   never literal counts or line numbers that rot (see `docs/qa-gate.md`). Instruction files
-  (every `CLAUDE.md`, `AGENTS.md`, agent, and skill; the exact set is defined in
-  `docs/ai-architecture.md`) also follow that doc's writing standard: current rules with
+  (the set `docs/ai-architecture.md` defines: every `CLAUDE.md` and `AGENTS.md`, the agent
+  and skill definitions, and the routing docs) also follow that doc's writing standard: current rules with
   their reasons, no history standing in for a rule, no model names.
   `tests/instruction_drift.test.ts` fails on a named path, module, or npm script that no
   longer resolves.

@@ -23,8 +23,8 @@ This agent is expensive. Most diffs do not touch a security surface, and a full 
 walk that ends in "all passed" wastes a large token budget. Gate yourself before reading
 any file:
 
-1. Get the changed files only (cheap): `node scripts/review_scope.mjs` (the branch's changes against its
-   integration base, plus staged, unstaged, and untracked work).
+1. Get the changed files only (cheap): `node scripts/review_scope.mjs` (the branch's changes against
+   its integration base, plus staged, unstaged, and untracked work).
 2. You are IN SCOPE if any changed path is under `server/`, `src/admin/`, or `src/net/`,
    is a deploy/build/secret file (`Dockerfile*`, `docker-compose*`, `*.env*`, a CI yml,
    `DEPLOY.md`), or is under `src/sim/` (for the determinism-as-integrity check, rule 10).

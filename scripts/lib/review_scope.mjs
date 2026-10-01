@@ -10,11 +10,11 @@
 // upstream is empty the moment the branch is pushed, and an empty scope makes every
 // reviewer exit "out of scope" on a change it never read.
 //
-// `git diff --name-only --no-renames <merge-base>` compares the working tree with the
+// `git diff --name-only --no-renames -z <merge-base>` compares the working tree with the
 // merge-base, so it covers committed, staged, and unstaged changes in one call, and lists a
 // rename by both ends (git's default rename detection would hide the old path, which is the
 // one a reviewer greps the instruction files for); untracked files come from
-// `git ls-files --others --exclude-standard`. Pure: takes an injected `run` (the
+// `git ls-files --others --exclude-standard -z`. Pure: takes an injected `run` (the
 // resolveSelectBase shape) so a unit test never shells out.
 
 import { resolveSelectBase } from './gate_discovery.mjs';
@@ -28,8 +28,10 @@ const lines = (stdout) =>
     .map((l) => l.trim())
     .filter(Boolean);
 
-/** NUL-separated paths (`-z`): git quotes a non-ASCII path in line output, never here. */
-/** @param {string | undefined} stdout */
+/**
+ * NUL-separated paths (`-z`): git quotes a non-ASCII path in line output, never here.
+ * @param {string | undefined} stdout
+ */
 const paths = (stdout) => (stdout ?? '').split('\0').filter(Boolean);
 
 /**

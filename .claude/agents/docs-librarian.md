@@ -26,15 +26,14 @@ orchestrator verifies and applies them.**
 
 ## Scope
 
-- **Diff mode** (the default): `node scripts/review_scope.mjs` lists the change (prefix it
-  with `GATE_SELECT_BASE=<ref>` when the caller names a base, or use the range the caller
-  names). You are IN SCOPE if it touches an instruction file, the set `docs/ai-architecture.md`
-  defines; in the Codex files (`AGENTS.md`, `.agents/`, `docs/codex.md`) check repository
-  facts only, since their Codex-specific guidance belongs to the `$woc-codex-audit` skill.
-  Review each changed instruction file whole (a new sentence can contradict an old one), plus
-  any file it now contradicts. Also IN SCOPE: a code diff that
-  renames or deletes a path, module, or symbol an instruction file names (grep the old name
-  across the instruction files).
+- **Diff mode** (the default): `node scripts/review_scope.mjs` lists the change (prefix it with
+  `GATE_SELECT_BASE=<ref>` when the caller names a base, or use the range the caller names). You are
+  IN SCOPE if it touches an instruction file, the set `docs/ai-architecture.md` defines; in the
+  Codex files (`AGENTS.md`, `.agents/`, `.codex/`, `docs/codex.md`) check repository facts only,
+  since their Codex-specific guidance belongs to the `$woc-codex-audit` skill. Review each changed
+  instruction file whole (a new sentence can contradict an old one), plus any file it now
+  contradicts. Also IN SCOPE: a code diff that renames or deletes a path, module, or symbol an
+  instruction file names (grep the old name across the instruction files).
 - **Sweep mode** (the caller names a batch of files): review every file in the batch whole.
 
 If nothing is in scope, output exactly this and STOP:
