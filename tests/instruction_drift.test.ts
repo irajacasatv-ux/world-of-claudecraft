@@ -13,9 +13,10 @@
 // the directories exactly; every role the docs/qa-gate.md coverage table names exists. The
 // nearest suite, tests/codex_setup.test.ts, pins the Codex configuration's content, not
 // these.
-// Cost: 500 ms
+// Cost: 300 ms
 import { spawnSync } from 'node:child_process';
-import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { beforeAll, describe, expect, it } from 'vitest';
@@ -31,7 +32,8 @@ import {
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 // CRLF to LF, so a Windows checkout with autocrlf reads the same text the rules expect.
 const normalize = (text: string) => text.replaceAll('\r\n', '\n');
-const read = (rel: string) => normalize(readFileSync(path.join(root, rel), 'utf8'));
+const readAbs = (abs: string) => normalize(readFileSync(abs, 'utf8'));
+const read = (rel: string) => readAbs(path.join(root, rel));
 /** The `name:` field of a file's leading frontmatter block. */
 const nameOf = (text: string) =>
   text.match(/^---\n([\s\S]*?)\n---\n/)?.[1].match(/^name:\s*(\S+)\s*$/m)?.[1];
@@ -234,10 +236,16 @@ describe('instruction_refs rules', () => {
   });
 
   it('reads a CRLF checkout the same as LF', () => {
-    expect(nameOf(normalize('---\r\nname: qa-checklist\r\ntools: Read\r\n---\r\nbody'))).toBe(
-      'qa-checklist',
-    );
-    expect(nameOf('---\r\nname: qa-checklist\r\n---\r\nbody')).toBeUndefined();
+    // Through the suite's own file reader, so a reader that stops normalizing fails here.
+    const dir = mkdtempSync(path.join(os.tmpdir(), 'woc-instruction-crlf-'));
+    try {
+      const file = path.join(dir, 'agent.md');
+      writeFileSync(file, '---\r\nname: qa-checklist\r\ntools: Read\r\n---\r\nbody\r\n');
+      expect(nameOf(readAbs(file))).toBe('qa-checklist');
+      expect(nameOf(readFileSync(file, 'utf8'))).toBeUndefined();
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 
   it('adds a top-level directory package.json to the root scripts', () => {

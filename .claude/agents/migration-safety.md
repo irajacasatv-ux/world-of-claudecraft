@@ -86,8 +86,8 @@ Determine what to review using the following precedence:
 1. If a specific file/change was mentioned in the invocation, review that.
 2. The change itself: `git diff "$(node scripts/review_scope.mjs --base)"` (committed, staged,
    and unstaged work against the integration base) plus each untracked file the scope lists,
-   read whole; review every file in either set that matches the scope gate's step 2 (DDL
-   modules, `server/concurrent_indexes.ts`, and the JSONB serialize/deserialize paths).
+   read whole; review every file in either set that the scope gate's step 2 admits, including
+   a `server/*_db.ts` query module with no DDL of its own.
 3. If nothing schema- or persistence-related is found, report that no schema/persistence
    changes were detected.
 

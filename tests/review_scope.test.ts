@@ -5,8 +5,8 @@
 // a merge-base, one rename-splitting working-tree diff, one untracked listing, and nothing
 // else, so no form of `@{upstream}` can creep back in); the union of committed, staged,
 // unstaged, and untracked files, sorted and deduplicated; fail-loud on an unresolvable base
-// or a failed git call; and the CLI's two outputs (checked end to end against a real repo,
-// non-ASCII names and both ends of a rename included) and its exit status. The nearest suite,
+// or a failed git call; and the CLI's two outputs and its exit status, its list output checked
+// end to end against a throwaway repo (non-ASCII names and both ends of a rename included). The nearest suite,
 // tests/ci_changed_base.test.ts, pins the shared base resolver and the shell-free git
 // runner, not these.
 // Cost: 300 ms
@@ -138,10 +138,17 @@ describe('scripts/review_scope.mjs', () => {
     // A throwaway repo the CLI's git calls reach through GIT_DIR/GIT_WORK_TREE, so the case
     // runs real git end to end (the -z parsing included) without depending on this checkout.
     const repo = mkdtempSync(path.join(os.tmpdir(), 'woc-review-scope-'));
+    // Every inherited GIT_* variable dropped: under a git hook, `rebase -x`, or `bisect run`,
+    // an inherited GIT_DIR or GIT_INDEX_FILE would aim the fixture's commits at the real repo.
+    const cleanEnv = Object.fromEntries(
+      Object.entries(process.env).filter(([key]) => !key.startsWith('GIT_')),
+    );
     const git = (...args: string[]) => {
-      const res = spawnSync('git', ['-c', 'user.name=t', '-c', 'user.email=t@t', ...args], {
+      const identity = ['-c', 'user.name=t', '-c', 'user.email=t@t', '-c', 'commit.gpgsign=false'];
+      const res = spawnSync('git', [...identity, ...args], {
         cwd: repo,
         encoding: 'utf8',
+        env: cleanEnv,
       });
       if (res.status !== 0) throw new Error(`git ${args.join(' ')}: ${res.stderr}`);
       return res.stdout.trim();
@@ -163,7 +170,7 @@ describe('scripts/review_scope.mjs', () => {
         cwd: root,
         encoding: 'utf8',
         env: {
-          ...process.env,
+          ...cleanEnv,
           GIT_DIR: path.join(repo, '.git'),
           GIT_WORK_TREE: repo,
           GATE_SELECT_BASE: base,

@@ -21,9 +21,9 @@ this guide owns the layer that delivers them.
 
 **Instruction files** are every `CLAUDE.md` and `AGENTS.md`, the `.claude/agents/`,
 `.claude/skills/`, and `.agents/skills/` definitions, and the docs that route them
-(`AGENT_ROUTING_DOCS`): `docs/qa-gate.md`, this guide, and `docs/codex.md` (`isInstructionFile` in
-`scripts/lib/instruction_refs.mjs` is the same set). Every reference to "an instruction file" in the
-other files means this set.
+(`AGENT_ROUTING_DOCS` in `scripts/lib/agent_surface_paths.mjs`): `docs/qa-gate.md`, this guide, and
+`docs/codex.md` (`isInstructionFile` in `scripts/lib/instruction_refs.mjs` is the same set). Every
+reference to "an instruction file" in the other files means this set.
 
 A rule lives in the narrowest file that covers everything it governs: an invariant of the whole
 repository in root `CLAUDE.md`, an area's conventions in that area's `CLAUDE.md`, a procedure in
