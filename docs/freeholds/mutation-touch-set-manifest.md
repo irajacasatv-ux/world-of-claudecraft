@@ -202,7 +202,11 @@ admitted entry changes no heavy self field, so the re-dispatch needs no heavy-se
 its own (the `use` frame took its receipt mark; pinned in `tests/server/freehold_wire.test.ts`). If the sim then refuses
 (the player died, entered combat or was jailed in the commit window), the advance stays
 spent: named residual R-2, counted `refused_after_commit` and logged with no token or
-holder.
+holder. A precheck DROP after a committed advance (the realm began draining, or the vault
+guard locked the character in the trip's seconds) is the same residual class: the vault
+drop answers `freeholdDenied busy` so the player is told, the draining drop stays silent
+(the realm is going down), and both count `dropped_after_commit` with no warn line; under
+a deny ticket both drops stay silent and uncounted, exactly as the frame path's.
 
 `pending` is cleared when its trip ends, on EVERY exit (commit, rollback, throw, fence miss,
 cancel, verify resolution), by a `finally` that compares the trip identity before it
@@ -228,8 +232,9 @@ THE SERVER DEFAULT: a lit realm always wires the three-valued admission, and any
 inside it answers `'deny'`, never the sim's offline default `'admit'` (pinned). A housing
 save must hold the background permit: `GameServer.saveCharacter` throws before any work on
 `housing` without `backgroundDbPermit` (revision 5), so the verify can never run outside
-the gate. Each trip's duration is summed (`tripMsTotal`, `trip_ms_total` on
-`woc_freehold_authority_total`).
+the gate. Each trip's duration is summed (`tripMsTotal`, measure `trip` on its own
+milliseconds family `woc_freehold_authority_ms_total`, beside `claim_renew_pass` and
+`claim_login_read`, so the counts family `woc_freehold_authority_total` stays counts only).
 
 ## 5. Paths, statement by statement
 
@@ -381,9 +386,12 @@ shape). SINGLE-FLIGHT, BOUNDED, ROTATED (revision 5, the database reviewer's blo
 built code): the flush starts a pass unawaited, so a pass is single-flight per registry (a
 trigger while one runs is skipped and counted), the whole pass carries
 `FREEHOLD_CLAIM_RENEW_PASS_DEADLINE_MS` (20,000 ms, under the 30 s cadence and far under
-the 90 s TTL; each chunk's transaction carries the same deadline as its signal), the chunks
-it leaves unstarted are abandoned and counted and their wanted claims are missed
-heartbeats, and the next pass starts where an abandoned one stopped (otherwise one chunk
+the 90 s TTL; each RENEW chunk's transaction carries the same deadline as its signal,
+while a RELEASE chunk is gated by it only for starting and is never cut, and a release
+chunk that throws re-reads its ids lock-free in the same pass, dropping the ones no longer
+held and keeping the rest, so a release cut at COMMIT never leaves a landed release in the
+registry), the chunks it leaves unstarted are abandoned and counted and their wanted claims
+are missed heartbeats, and the next pass starts where an abandoned one stopped (otherwise one chunk
 later), so a brownout never starves the same tail plots. Renewal outranks release: an
 abandoned pass skips its release chunks. It stays OFF the background gate by decision (the
 autosave wave holds that gate exactly when the renewer runs, so a `tryAcquire` would let
@@ -876,7 +884,8 @@ merge in a `finally`; N4 the server default pin; N5 the log pin; N6 the 15 route
   key; the loser quiesces with nothing durable lost (07 behavior, unchanged).
 - R-2: a committed Hearth advance whose re-dispatch the Sim then refuses (death, combat or
   jail inside the commit window, one save round trip) spends the cooldown without a trip.
-  Counted and logged.
+  Counted and logged. A precheck drop in that window (draining, the vault lock) is the
+  same class, counted `dropped_after_commit`; the vault drop answers `busy`.
 - R-3: a realm that lost its claim keeps showing its live view until relog; every write is
   fenced, so durable truth is never overwritten.
 - R-4: a handshake refused after its first ask holds its own account's claim until the
@@ -974,8 +983,9 @@ other finding is applied or recorded here.
   reaches the live registry (P6); the fillfactor note names the two non-HOT updates; a
   housing save must hold the background permit (section 4); counters for renew passes,
   their milliseconds, skipped triggers, abandoned chunks, thrown wanted tests, swept pending
-  tokens, login reads and their milliseconds, and trip milliseconds join
-  `woc_freehold_authority_total`. The account cascade's plot-before-claim order stays
+  tokens and login reads join `woc_freehold_authority_total`, and the summed milliseconds
+  (renew passes, login reads, trips) ride their own family,
+  `woc_freehold_authority_ms_total`. The account cascade's plot-before-claim order stays
   unreachable because the federated cleanup deletes only the account its own request just
   provisioned (P11), now pinned by source.
 - Migration safety: the rollback text targets the pre-housing release (section 7); the

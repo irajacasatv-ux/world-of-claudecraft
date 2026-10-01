@@ -46,6 +46,7 @@ const ZERO_TRIPS: FreeholdHearthTripCounters = {
   notRun: 0,
   unresolved: 0,
   refusedAfterCommit: 0,
+  droppedAfterCommit: 0,
   refusedPreQueue: 0,
   metered: 0,
   abandoned: 0,

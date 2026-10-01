@@ -843,6 +843,23 @@ export async function freeholdDurableRevOnClient(
   return readBigintText(row.durable_rev, 'durable_rev');
 }
 
+/** The claimed login's plot-id pre-read (server/freehold_claim_login.ts),
+ *  WITHOUT a lock: the claim decides who may serve the plot, not this read.
+ *  Exported so the claim suite pins its plan on the plot PK. */
+export const FREEHOLD_PRIMARY_PLOT_ID_SQL =
+  'SELECT plot_id FROM account_freeholds WHERE account_id = $1 AND plot_index = 0';
+
+/** The primary plot's public id, or null when the account has no row at the
+ *  primary slot yet (nothing to claim: the first insert claims it). */
+export async function freeholdPrimaryPlotIdOnClient(
+  db: FreeholdQueryable,
+  accountId: number,
+): Promise<string | null> {
+  const res = await db.query(FREEHOLD_PRIMARY_PLOT_ID_SQL, [accountId]);
+  const plotId = (res.rows ?? [])[0]?.plot_id;
+  return typeof plotId === 'string' ? plotId : null;
+}
+
 /** The insert, with the ONE constraint violation it can raise that is a
  *  diagnosis rather than a fault turned into a null. Every other error
  *  propagates: a fault must not be reported as a conflict. */

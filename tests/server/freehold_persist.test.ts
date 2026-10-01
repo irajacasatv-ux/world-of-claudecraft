@@ -7329,10 +7329,12 @@ describe('the composition root that binds the combined port (source pins)', () =
     expect(clock).toBeGreaterThan(main);
     expect(plot).toBeGreaterThan(clock);
     expect(plot).toBeLessThan(retry);
-    // CLAIM BEFORE THE ROW, inside the plot half: the unlocked plot id read,
-    // then the acquire (busy pre-check and upsert), then 07's row read.
+    // CLAIM BEFORE THE ROW, inside the plot half: the unlocked plot id read
+    // (server/freehold_db.ts owns its SQL; this module carries none), then the
+    // acquire (busy pre-check and upsert), then 07's row read.
+    expect(policy).not.toMatch(/\b(SELECT|INSERT|UPDATE|DELETE)\b|\.query\(/);
     const half = policy.indexOf('const plotHalf = async (db: FreeholdQueryable)');
-    const plotId = policy.indexOf('db.query(FREEHOLD_PRIMARY_PLOT_ID_SQL, [accountId])', half);
+    const plotId = policy.indexOf('await freeholdPrimaryPlotIdOnClient(db, accountId);', half);
     const acquire = policy.indexOf('acquireFreeholdClaim(db, {', half);
     const row = policy.indexOf('return deps.readRow(db);', half);
     expect(half).toBeGreaterThan(-1);

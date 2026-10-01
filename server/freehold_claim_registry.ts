@@ -72,8 +72,10 @@ export const FREEHOLD_CLAIM_RENEW_BOUNDS = Object.freeze({
  *  a pass, so a pass that runs to it has ended before the next trigger, and far
  *  under LEASE_TTL_SECONDS (90 s), so an abandoned tail is renewed first by the
  *  next pass, well inside its TTL. Checked before every chunk, and also handed
- *  to each chunk's transaction, so a checkout or statement still in flight at
- *  the deadline is cut there rather than at its own 5 s wall. */
+ *  to each RENEW chunk's transaction, so a renew checkout or statement still in
+ *  flight at the deadline is cut there rather than at its own 5 s wall. A
+ *  release chunk is never handed it (only its start is gated): a release cut
+ *  at COMMIT may have landed with nothing to say so. */
 export const FREEHOLD_CLAIM_RENEW_PASS_DEADLINE_MS = 20_000;
 
 export interface FreeholdHeldClaim {
@@ -262,6 +264,9 @@ export interface FreeholdClaimRenewerDeps {
   onLost?(claim: FreeholdHeldClaim): void;
   nowMs(): number;
   warn(message: string): void;
+  /** The pass deadline; FREEHOLD_CLAIM_RENEW_PASS_DEADLINE_MS unless a suite
+   *  shortens it to drive the real signal. */
+  readonly passDeadlineMs?: number;
 }
 
 /** Per registry: whether a pass is running, and where the next one starts. */
@@ -306,6 +311,12 @@ async function renewPass(
   nowMs: number,
 ): Promise<void> {
   const { counters } = deps.registry;
+  // A throwing log sink must not turn a pass into a rejection.
+  const warn = (message: string): void => {
+    try {
+      deps.warn(message);
+    } catch {}
+  };
   let threw = 0;
   const wantedNow = (claim: FreeholdHeldClaim): boolean => {
     try {
@@ -336,11 +347,11 @@ async function renewPass(
   }
   if (threw > 0) {
     counters.wantedThrew += threw;
-    deps.warn('freehold claim wanted check threw; those claims are kept and renewed');
+    warn('freehold claim wanted check threw; those claims are kept and renewed');
   }
-  const deadline = AbortSignal.timeout(FREEHOLD_CLAIM_RENEW_PASS_DEADLINE_MS);
-  const expired = () =>
-    deadline.aborted || deps.nowMs() - nowMs >= FREEHOLD_CLAIM_RENEW_PASS_DEADLINE_MS;
+  const deadlineMs = deps.passDeadlineMs ?? FREEHOLD_CLAIM_RENEW_PASS_DEADLINE_MS;
+  const deadline = AbortSignal.timeout(deadlineMs);
+  const expired = () => deadline.aborted || deps.nowMs() - nowMs >= deadlineMs;
   const renewChunks = rotated(chunks(wanted, FREEHOLD_CLAIM_RENEW_CHUNK), state.cursor);
   // The next pass starts one chunk later, unless this one stops early.
   state.cursor = renewChunks.length > 1 ? renewChunks[1][0].plotId : null;
@@ -350,8 +361,8 @@ async function renewPass(
       counters.renewChunksAbandoned += left.length;
       for (const rest of left) counters.missedHeartbeats += rest.length;
       state.cursor = chunk[0].plotId;
-      deps.warn(
-        `freehold claim renew pass hit its ${FREEHOLD_CLAIM_RENEW_PASS_DEADLINE_MS} ms deadline; ${left.length} chunks wait for the next pass`,
+      warn(
+        `freehold claim renew pass hit its ${deadlineMs} ms deadline; ${left.length} chunks wait for the next pass`,
       );
       // Renewing outranks releasing: an unreleased claim expires on its own.
       counters.renewChunksAbandoned += Math.ceil(unwanted.length / FREEHOLD_CLAIM_RENEW_CHUNK);
@@ -398,11 +409,30 @@ async function renewPass(
       deps.onLost?.(claim);
     }
     if (lost > 0) {
-      deps.warn(`freehold claims lost to another holder: ${lost}; their plots stop writing`);
+      warn(`freehold claims lost to another holder: ${lost}; their plots stop writing`);
     }
   }
+  // The ids of these that are still live under this holder, by the lock-free
+  // read; null when it throws. Like the releases, never handed the deadline:
+  // a cut read would keep a claim whose row is no longer ours.
+  const stillHeldOf = async (claims: FreeholdHeldClaim[]): Promise<Set<string> | null> => {
+    try {
+      return await runFreeholdTransaction(deps.pool, FREEHOLD_CLAIM_RENEW_BOUNDS, (tx) =>
+        freeholdClaimsStillHeldOnClient(
+          tx,
+          deps.holder,
+          claims.map((claim) => claim.plotId),
+        ),
+      );
+    } catch {
+      return null;
+    }
+  };
   const releaseChunks = chunks(unwanted, FREEHOLD_CLAIM_RENEW_CHUNK);
   for (const [index, chunk] of releaseChunks.entries()) {
+    // The deadline gates only STARTING a release, and is never handed to one:
+    // a release cut at COMMIT may have landed with nothing to say so, which
+    // would leave a claim in the registry whose row is already released.
     if (expired()) {
       // Kept: still unwanted at the next pass, which releases them then.
       counters.renewChunksAbandoned += releaseChunks.length - index;
@@ -410,20 +440,26 @@ async function renewPass(
     }
     let released: Set<string>;
     try {
-      released = await runFreeholdTransaction(
-        deps.pool,
-        FREEHOLD_CLAIM_RENEW_BOUNDS,
-        (tx) =>
-          releaseFreeholdClaimRows(
-            tx,
-            deps.holder,
-            chunk.map((claim) => claim.plotId),
-          ),
-        { signal: deadline },
+      released = await runFreeholdTransaction(deps.pool, FREEHOLD_CLAIM_RENEW_BOUNDS, (tx) =>
+        releaseFreeholdClaimRows(
+          tx,
+          deps.holder,
+          chunk.map((claim) => claim.plotId),
+        ),
       );
     } catch {
-      // Kept: still unwanted at the next pass, so the release is retried then,
-      // and a claim nobody renews expires on its own after the TTL anyway.
+      // A THROWN release may still have committed (a lost COMMIT answer), so
+      // the read decides it in this pass: a row no longer live under this
+      // holder was released (it leaves, counted), one still held was not (kept
+      // for the next pass). A read that throws too keeps the whole chunk, and
+      // a claim nobody renews expires on its own after the TTL anyway.
+      const stillHeld = await stillHeldOf(chunk);
+      if (stillHeld === null) continue;
+      for (const claim of chunk) {
+        if (stillHeld.has(claim.plotId)) continue;
+        counters.released++;
+        deps.registry.drop(claim.plotId);
+      }
       continue;
     }
     for (const claim of chunk) {
@@ -436,26 +472,12 @@ async function renewPass(
         deps.registry.drop(claim.plotId);
       }
     }
-    // The ids the statement did not return: a lock-free read keeps those still
-    // live under this holder and drops the rest.
+    // The ids the statement did not return: the read keeps those still live
+    // under this holder and drops the rest.
     const notReleased = chunk.filter((claim) => !released.has(claim.plotId));
     if (notReleased.length === 0) continue;
-    let stillHeld: Set<string>;
-    try {
-      stillHeld = await runFreeholdTransaction(
-        deps.pool,
-        FREEHOLD_CLAIM_RENEW_BOUNDS,
-        (tx) =>
-          freeholdClaimsStillHeldOnClient(
-            tx,
-            deps.holder,
-            notReleased.map((claim) => claim.plotId),
-          ),
-        { signal: deadline },
-      );
-    } catch {
-      continue;
-    }
+    const stillHeld = await stillHeldOf(notReleased);
+    if (stillHeld === null) continue;
     for (const claim of notReleased) {
       if (!stillHeld.has(claim.plotId)) deps.registry.drop(claim.plotId);
     }

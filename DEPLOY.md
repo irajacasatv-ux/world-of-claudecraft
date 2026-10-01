@@ -1029,7 +1029,9 @@ For off-box safety, sync the directory to S3 occasionally:
   (`fenced_writes` on `woc_freehold_persist_total`). Read
   `woc_freehold_claims_held` and `woc_freehold_authority_total{measure}` (claim
   acquires, takeovers, busy, renewals, missed heartbeats, losses, releases, and the
-  remote Hearth trip outcomes): counts only. An OPEN intent refuses a character
+  remote Hearth trip outcomes): counts only; the summed milliseconds of the renew
+  passes, the claimed login reads and the trips are `woc_freehold_authority_ms_total{measure}`
+  (divide by the matching count for a mean). An OPEN intent refuses a character
   DELETE (409 `character.freehold_operation_open`) and an account delete (SQLSTATE
   55006) until it closes; no production operation kind exists yet, so in this
   release the intent table stays empty. The shutdown closure releases this

@@ -1464,7 +1464,9 @@ closed; each is accepted with its bound, and none is a signature.
 - R-2: a committed Hearth advance whose re-dispatch the sim then refuses (death,
   combat or jail inside the commit window, one save round trip) spends the cooldown
   without a trip. Counted as `trip_refused_after_commit` and logged with no account id,
-  owner key, plot id, token or holder.
+  owner key, plot id, token or holder. A precheck drop in that window (draining, the vault
+  lock) is the same class, counted `trip_dropped_after_commit`; the vault drop answers
+  `busy`.
 - R-3: a realm that lost its claim keeps showing its live view until relog; every write
   is fenced, so durable truth is never overwritten.
 - R-4: a handshake refused after its first ask (the claim is taken BEFORE the character

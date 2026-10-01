@@ -442,10 +442,16 @@ function clockMapEscapes(text: string, mayWrite: boolean, mayEvict: boolean): st
   const escapes: string[] = [];
   for (const match of text.matchAll(/freeholdKeyReadyAtMs/g)) {
     const before = text.slice(Math.max(0, match.index - 16), match.index);
+    const getter = text.slice(Math.max(0, match.index - 80), match.index);
     const after = text.slice(match.index + match[0].length, match.index + match[0].length + 24);
     if (/^\.(?:get|has)\(|^\.size\b/.test(after)) continue;
     if (/^\(\)|^:\s*Map<|^\s*=\s*new Map</.test(after)) continue;
-    if (/return\s+[\w$]+\.$/.test(before) && /^;/.test(after)) continue;
+    // A `return` hand-off is the forwarding getter ONLY: its own body, nothing else.
+    if (
+      /get\s+freeholdKeyReadyAtMs\s*\(\)\s*\{\s*return\s+[\w$]+\.$/.test(getter) &&
+      /^;/.test(after)
+    )
+      continue;
     if (mayWrite && /^\.set\(/.test(after)) continue;
     if (mayEvict && /^\.delete\(/.test(after)) continue;
     escapes.push(`${before}${match[0]}${after}`);
@@ -495,6 +501,8 @@ describe('the hearth clock map has two setters and one evictor, all in src/sim/f
       'install(ctx.freeholdKeyReadyAtMs);',
       'ctx.freeholdKeyReadyAtMs.clear();',
       'ctx.freeholdKeyReadyAtMs . set(k, 1);',
+      'const leak = () => { return ctx.freeholdKeyReadyAtMs; };',
+      'function leak() { return host.freeholdKeyReadyAtMs; }',
     ];
     for (const text of escapes) expect(clockMapEscapes(text, false, false), text).not.toEqual([]);
     // The sanctioned shapes pass: reads, the declarations and the forwarding getters.

@@ -14,17 +14,25 @@
 // tests/server/freehold_claim.pg.test.ts, which cannot drive these arms
 // deterministically (a lost COMMIT answer, a renewer chunk that throws).
 //
-// Cost: 87 ms
+// Cost: 0.4 s
 import { readFileSync } from 'node:fs';
 import { describe, expect, it, vi } from 'vitest';
+import { LEASE_TTL_SECONDS } from '../../server/character_lease_db';
 import {
   type CharacterSaveHousingHook,
   commitWithHousing,
   housingPersist,
 } from '../../server/character_save_housing';
-import { DbTransactionRolledBack } from '../../server/db_transaction_deadline';
+import {
+  DbTransactionAborted,
+  DbTransactionDeadlineExceeded,
+  DbTransactionRolledBack,
+} from '../../server/db_transaction_deadline';
 import { heldClaims, registerFreeholdAuthority } from '../../server/freehold_authority_registry';
-import { FREEHOLD_CLAIM_FENCE_SQL } from '../../server/freehold_claim_db';
+import {
+  FREEHOLD_CLAIM_FENCE_SQL,
+  FREEHOLD_CLAIM_READ_FENCE_SQL,
+} from '../../server/freehold_claim_db';
 import { readClaimedLoginDurables } from '../../server/freehold_claim_login';
 import {
   createFreeholdClaimRegistry,
@@ -43,13 +51,16 @@ import { createFreeholdHearthTrips } from '../../server/freehold_hearth_trip';
 import {
   commitFreeholdMutation,
   createFreeholdSaveHook,
-  FREEHOLD_CLAIM_READ_FENCE_SQL,
   FREEHOLD_HOOK_STATEMENT_TIMEOUT_MS,
-  FREEHOLD_VERIFY_WAIT_SQL,
+  FREEHOLD_VERIFY_BOUNDS,
   type FreeholdMutationOutcome,
   FreeholdMutationRefused,
   type FreeholdMutationRequest,
 } from '../../server/freehold_mutation';
+import {
+  boundFreeholdHookStatementsOnClient,
+  FREEHOLD_VERIFY_WAIT_SQL,
+} from '../../server/freehold_mutation_db';
 import type { OpenFreeholdOperation } from '../../server/freehold_operation_db';
 import {
   createFreeholdOperationRecovery,
@@ -332,6 +343,19 @@ describe('the housing hook', () => {
     expect(g7).toBeGreaterThan(g5);
     expect(g8).toBeGreaterThan(g7);
     expect(order.slice(g8).every((k) => k === 'G8')).toBe(true);
+  });
+
+  it('interpolates the hook bound only as a positive safe integer, refused before any SQL', async () => {
+    const { tx, seen } = recordingTx(happy);
+    for (const bad of [0, -1, 1.5, Number.NaN, Number.MAX_SAFE_INTEGER + 1]) {
+      await expect(boundFreeholdHookStatementsOnClient(tx, bad), String(bad)).rejects.toThrow(
+        RangeError,
+      );
+    }
+    expect(seen).toEqual([]);
+    // Control: the production bound issues the one literal statement.
+    await boundFreeholdHookStatementsOnClient(tx, FREEHOLD_HOOK_STATEMENT_TIMEOUT_MS);
+    expect(seen.map((s) => s.text)).toEqual(['SET LOCAL statement_timeout = 15000']);
   });
 
   it('declares its accounts ascending and deduplicated, for the save G1 set', () => {
@@ -666,6 +690,65 @@ describe('commitFreeholdMutation', () => {
     expect(counted.seen.connects).toBe(1);
     expect(counted.seen.releases).toHaveLength(1);
     expect(counted.seen.releases[0]).toBe(broken);
+  });
+
+  it('ends a HUNG verify wait at its wall: the deadline destroys the real client at once, released once', async () => {
+    // node-postgres rejects a pending query only once release(error) destroys
+    // the socket, so the fake's wait never settles until then. A shim that only
+    // RECORDED the deadline's release would leave the wait (and the permit and
+    // character FIFO behind it) hanging until the driver's query_timeout.
+    const seen = { connects: 0, releases: [] as unknown[], texts: [] as string[] };
+    let destroy: ((error: Error) => void) | null = null;
+    const client = {
+      query(text: string) {
+        seen.texts.push(text);
+        if (text.startsWith('BEGIN')) return Promise.resolve({ rows: [], command: 'BEGIN' });
+        return new Promise((_resolve, reject) => {
+          destroy = reject;
+        });
+      },
+      release(error?: Error | boolean) {
+        seen.releases.push(error);
+        if (error) destroy?.(new Error('Connection terminated'));
+      },
+      on: () => client,
+      removeListener: () => client,
+    };
+    const pool = {
+      async connect() {
+        seen.connects++;
+        return client;
+      },
+    } as unknown as FreeholdTxPool;
+    const flush = async () => {
+      for (let i = 0; i < 50; i++) await Promise.resolve();
+    };
+    vi.useFakeTimers();
+    try {
+      let out: FreeholdMutationOutcome | null = null;
+      void commitFreeholdMutation(
+        { save: saveThatRuns({ loseCommit: true }), pool, characterId: 9 },
+        HEARTH_ONLY,
+      ).then((outcome) => {
+        out = outcome;
+      });
+      await flush();
+      expect(seen.texts.at(-1)).toBe(FREEHOLD_VERIFY_WAIT_SQL);
+      await vi.advanceTimersByTimeAsync(FREEHOLD_VERIFY_BOUNDS.wallMs - 1);
+      await flush();
+      expect(out).toBeNull();
+      expect(seen.releases).toEqual([]);
+      await vi.advanceTimersByTimeAsync(1);
+      await flush();
+      expect((out as FreeholdMutationOutcome | null)?.kind).toBe('unresolved');
+      expect(seen.connects).toBe(1);
+      expect(seen.releases).toHaveLength(1);
+      expect(seen.releases[0]).toBeInstanceOf(DbTransactionDeadlineExceeded);
+      // The broken client is never handed to the read transaction.
+      expect(seen.texts.filter((t) => t.startsWith('BEGIN'))).toHaveLength(1);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('runs the live apply INSIDE serialize, after the commit and only for a commit', async () => {
@@ -1025,6 +1108,195 @@ describe('the claim renewer', () => {
     // The host's own question, aged from when the token was noted.
     expect(asked).toContainEqual({ plotId: 'plot:gone', accountId: 2, acquiredAtMs: 6 });
     expect(asked.filter((q) => q.plotId === 'plot:held')).toHaveLength(1);
+  });
+
+  it('pins the pass deadline under the autosave cadence that starts a pass and under the lease TTL', () => {
+    expect(FREEHOLD_CLAIM_RENEW_PASS_DEADLINE_MS).toBe(20_000);
+    // AUTOSAVE_SECONDS is module-private in server/game.ts: scraped (comments
+    // stripped), so a re-tuned cadence moves the relation with it.
+    const autosave = stripComments(readFileSync('server/game.ts', 'utf8')).match(
+      /^const AUTOSAVE_SECONDS = (\d+);$/m,
+    );
+    const autosaveMs = Number(autosave?.[1]) * 1000;
+    expect(autosaveMs).toBeGreaterThan(0);
+    expect(FREEHOLD_CLAIM_RENEW_PASS_DEADLINE_MS).toBeLessThan(autosaveMs);
+    expect(FREEHOLD_CLAIM_RENEW_PASS_DEADLINE_MS).toBeLessThan(LEASE_TTL_SECONDS * 1000);
+  });
+
+  it('cuts a chunk whose checkout hangs at the REAL pass deadline, abandons the rest, and frees the next pass', async () => {
+    const registry = createFreeholdClaimRegistry();
+    for (let i = 0; i < FREEHOLD_CLAIM_RENEW_CHUNK + 1; i++) registry.record(claim(pad(i), i + 1));
+    const f = fakePool([renewAll]);
+    let checkouts = 0;
+    // The first checkout never arrives, and nowMs never moves: only the pass
+    // deadline's own signal can end that chunk or stop the next one starting.
+    const pool = {
+      connect() {
+        checkouts++;
+        return checkouts === 1 ? new Promise(() => {}) : f.pool.connect();
+      },
+    } as unknown as FreeholdTxPool;
+    const warn = vi.fn();
+    const deps = { ...renewDeps(registry, pool), warn, passDeadlineMs: 10 };
+    await renewFreeholdClaims(deps);
+    expect(checkouts).toBe(1);
+    expect(registry.counters).toMatchObject({
+      renewed: 0,
+      // The hung chunk, cut in flight, and the one the deadline left unstarted.
+      missedHeartbeats: FREEHOLD_CLAIM_RENEW_CHUNK + 1,
+      renewChunksAbandoned: 1,
+      lost: 0,
+      renewPasses: 1,
+    });
+    expect(registry.count()).toBe(FREEHOLD_CLAIM_RENEW_CHUNK + 1);
+    expect(warn).toHaveBeenCalledWith(
+      'freehold claim renew pass hit its 10 ms deadline; 1 chunks wait for the next pass',
+    );
+    // The single-flight flag is free again: the next trigger runs a whole pass.
+    await renewFreeholdClaims(deps);
+    expect(registry.counters).toMatchObject({
+      renewPasses: 2,
+      renewPassesSkipped: 0,
+      renewed: FREEHOLD_CLAIM_RENEW_CHUNK + 1,
+    });
+  });
+
+  const releaseRule = (answer: (ids: string[]) => Row[] | Error): Rule => ({
+    match: (t) => t.includes("holder || '#released'"),
+    answer: (v) => answer((v ?? [])[1] as string[]),
+  });
+  const stillHeldRule = (answer: () => Row[] | Error): Rule => ({
+    match: (t) => t.startsWith('SELECT plot_id FROM freehold_plot_claims'),
+    answer,
+  });
+
+  it('abandons the release chunks a deadline reached BETWEEN them leaves unstarted, and keeps their claims', async () => {
+    const registry = createFreeholdClaimRegistry();
+    for (let i = 0; i < 2 * FREEHOLD_CLAIM_RENEW_CHUNK + 1; i++) {
+      registry.record(claim(pad(i), i + 1));
+    }
+    let now = 0;
+    const f = fakePool([
+      releaseRule((ids) => {
+        // The first release chunk takes the whole pass deadline.
+        now += FREEHOLD_CLAIM_RENEW_PASS_DEADLINE_MS;
+        return ids.map((plot_id) => ({ plot_id }));
+      }),
+    ]);
+    await renewFreeholdClaims({
+      ...renewDeps(registry, f.pool),
+      wanted: () => false,
+      nowMs: () => now,
+    });
+    expect(f.texts().filter((t) => t.includes("'#released'"))).toHaveLength(1);
+    expect(registry.counters).toMatchObject({
+      released: FREEHOLD_CLAIM_RENEW_CHUNK,
+      renewChunksAbandoned: 2,
+    });
+    expect(registry.forPlot(pad(0))).toBeUndefined();
+    expect(registry.count()).toBe(FREEHOLD_CLAIM_RENEW_CHUNK + 1);
+  });
+
+  it('re-reads a THROWN release chunk: a release that landed leaves, counted; one that did not stays', async () => {
+    const registry = createFreeholdClaimRegistry();
+    registry.record(claim('plot:a', 1));
+    registry.record(claim('plot:b', 2));
+    const f = fakePool([
+      // The answer was lost: plot:a's release landed, plot:b's did not.
+      releaseRule(() => new Error('Connection terminated unexpectedly')),
+      stillHeldRule(() => [{ plot_id: 'plot:b' }]),
+    ]);
+    await renewFreeholdClaims({ ...renewDeps(registry, f.pool), wanted: () => false });
+    expect(registry.forPlot('plot:a')).toBeUndefined();
+    expect(registry.forPlot('plot:b')).toBeDefined();
+    expect(registry.counters.released).toBe(1);
+    const read = f.statements.filter((s) => s.text.startsWith('SELECT plot_id FROM'));
+    expect(read.map((s) => s.values?.[1])).toEqual([['plot:a', 'plot:b']]);
+  });
+
+  it('keeps a thrown release chunk for the next pass when its re-read throws too', async () => {
+    const registry = createFreeholdClaimRegistry();
+    registry.record(claim('plot:a', 1));
+    registry.record(claim('plot:b', 2));
+    let down = true;
+    const f = fakePool([
+      releaseRule((ids) => (down ? sqlError('57P01') : ids.map((plot_id) => ({ plot_id })))),
+      stillHeldRule(() => sqlError('57P01')),
+    ]);
+    const deps = { ...renewDeps(registry, f.pool), wanted: () => false };
+    await renewFreeholdClaims(deps);
+    expect(registry.count()).toBe(2);
+    expect(registry.counters.released).toBe(0);
+    // The next pass releases them.
+    down = false;
+    await renewFreeholdClaims(deps);
+    expect(registry.count()).toBe(0);
+    expect(registry.counters.released).toBe(2);
+  });
+
+  it('never hands a release chunk the pass deadline: one in flight when it fires still lands, counted', async () => {
+    const registry = createFreeholdClaimRegistry();
+    registry.record(claim('plot:a', 1));
+    const f = fakePool([
+      releaseRule((ids) => ids.map((plot_id) => ({ plot_id }))),
+      // Had the deadline cut the release, this re-read would keep the claim.
+      stillHeldRule(() => [{ plot_id: 'plot:a' }]),
+    ]);
+    // The release answers only after the 10 ms pass deadline has fired.
+    const pool = {
+      async connect() {
+        const client = await f.pool.connect();
+        const leased = {
+          async query(text: string, values?: unknown[]) {
+            if (text.includes("'#released'")) await new Promise((r) => setTimeout(r, 30));
+            return client.query(text, values);
+          },
+          release: (error?: Error) => client.release(error),
+          on: () => leased,
+          removeListener: () => leased,
+        };
+        return leased;
+      },
+    } as unknown as FreeholdTxPool;
+    await renewFreeholdClaims({
+      ...renewDeps(registry, pool),
+      wanted: () => false,
+      passDeadlineMs: 10,
+    });
+    expect(registry.counters.released).toBe(1);
+    expect(registry.forPlot('plot:a')).toBeUndefined();
+    expect(f.texts().some((t) => t.startsWith('SELECT plot_id FROM'))).toBe(false);
+  });
+
+  it('never rejects on a throwing warn: the pass runs on and books its claims as before', async () => {
+    const registry = createFreeholdClaimRegistry();
+    registry.record(claim('plot:a', 1));
+    registry.record(claim('plot:b', 2));
+    // plot:a renews; plot:b is neither renewed nor still held: taken.
+    const f = fakePool([
+      { match: (t) => t.includes('SET heartbeat_at'), answer: () => [{ plot_id: 'plot:a' }] },
+    ]);
+    const warn = vi.fn(() => {
+      throw new Error('log sink down');
+    });
+    const lost: string[] = [];
+    const deps = {
+      ...renewDeps(registry, f.pool),
+      // plot:a's wanted test throws: the pass's first warn, before any chunk.
+      wanted: (c: { plotId: string }) => {
+        if (c.plotId === 'plot:a') throw new Error('no owner key');
+        return true;
+      },
+      onLost: (c: { plotId: string }) => lost.push(c.plotId),
+      warn,
+    };
+    await expect(renewFreeholdClaims(deps)).resolves.toBeUndefined();
+    // Both warns were attempted: the wanted one and the lost one after it.
+    expect(warn).toHaveBeenCalledTimes(2);
+    expect(registry.counters).toMatchObject({ wantedThrew: 1, renewed: 1, lost: 1 });
+    expect(lost).toEqual(['plot:b']);
+    await expect(renewFreeholdClaims(deps)).resolves.toBeUndefined();
+    expect(registry.counters).toMatchObject({ renewPasses: 2, renewPassesSkipped: 0 });
   });
 
   it('hands the renewer a fresh array of the claims held, never its own storage', () => {
@@ -1443,10 +1715,20 @@ describe('the claimed login read', () => {
     expect(busy.registry.pendingToken('plot:a')).toBe('a'.repeat(32));
   });
 
-  /** Every checkout and every statement takes `stepMs`, and a statement still
-   *  running when its client is destroyed rejects, as a dropped socket does. */
-  function slowPool(stepMs: number, rules: Rule[], opts: { hangCommit?: boolean } = {}) {
+  /** Every statement answers at once, except that checkout number
+   *  `hang.checkout` never arrives and a statement `hang.statement` matches
+   *  never answers: only the budget's abort can end either. A statement still
+   *  out when its client is destroyed rejects, as a dropped socket does.
+   *  `stalled` settles once the read is parked on the hang. */
+  function hangingPool(
+    rules: Rule[],
+    hang: { checkout?: number; statement?: (text: string) => boolean },
+  ) {
     const seen = { connects: 0, statements: [] as string[] };
+    let onStall = () => {};
+    const stalled = new Promise<void>((resolve) => {
+      onStall = resolve;
+    });
     const answerFor = (text: string, values?: unknown[]) => {
       if (text === 'COMMIT') return { rows: [], rowCount: 0, command: 'COMMIT' };
       if (text === 'ROLLBACK' || text.startsWith('BEGIN')) {
@@ -1457,53 +1739,55 @@ describe('the claimed login read', () => {
       return { rows: answer, rowCount: answer.length, command: 'SELECT' };
     };
     const pool = {
-      async connect() {
+      connect() {
         seen.connects++;
-        await new Promise((resolve) => setTimeout(resolve, stepMs));
-        const running = new Set<(error: Error) => void>();
+        if (seen.connects === hang.checkout) {
+          onStall();
+          return new Promise(() => {});
+        }
         let dead: Error | null = null;
+        let parked: ((error: Error) => void) | null = null;
         const client = {
           query(text: string, values?: unknown[]) {
             seen.statements.push(text);
-            return new Promise((resolve, reject) => {
-              if (dead) return reject(dead);
-              running.add(reject);
-              if (text === 'COMMIT' && opts.hangCommit) return;
-              setTimeout(() => {
-                if (!running.delete(reject)) return;
-                try {
-                  resolve(answerFor(text, values));
-                } catch (error) {
-                  reject(error);
-                }
-              }, stepMs);
-            });
+            if (dead) return Promise.reject(dead);
+            if (hang.statement?.(text)) {
+              onStall();
+              return new Promise((_resolve, reject) => {
+                parked = reject;
+              });
+            }
+            try {
+              return Promise.resolve(answerFor(text, values));
+            } catch (error) {
+              return Promise.reject(error);
+            }
           },
           release(error?: unknown) {
             if (!error) return;
             dead = new Error('Connection terminated');
-            for (const reject of running) reject(dead);
-            running.clear();
+            parked?.(dead);
+            parked = null;
           },
           on: () => client,
           removeListener: () => client,
         };
-        return client;
+        return Promise.resolve(client);
       },
     } as unknown as FreeholdTxPool;
-    return { pool, seen };
+    return { pool, seen, stalled };
   }
 
-  it('bounds the whole read, the clock-fault retry and both checkouts included, by ONE budget', async () => {
-    // 50 ms per step: the clock faults at 150 ms, its ROLLBACK is still out
-    // when the 175 ms budget fires, and the retry is refused before it asks
-    // the pool. Without the shared budget the retry ran a full second
-    // transaction past it and the read succeeded at about 400 ms.
-    const { pool, seen } = slowPool(50, [plotRow, acquireRule]);
+  /** One read on `pool` whose budget the suite aborts by hand: no timer, no
+   *  wall clock. The clock read always faults, so a read that gets that far
+   *  runs the plot half again in a second transaction. */
+  function budgetedRead(pool: FreeholdTxPool, opts: { abortInClock?: boolean } = {}) {
     const registry = createFreeholdClaimRegistry();
     const onClaimed = vi.fn();
-    const started = Date.now();
-    const err = await readClaimedLoginDurables(
+    const budget = new AbortController();
+    const reason = new Error('login budget spent');
+    const budgetSignal = vi.fn(() => budget.signal);
+    const read = readClaimedLoginDurables(
       {
         pool,
         registry,
@@ -1513,31 +1797,70 @@ describe('the claimed login read', () => {
         readRow: async () => ({ kind: 'absent' as const }),
         readHearth: async (db) => {
           await db.query('SELECT hearth');
+          if (opts.abortInClock) budget.abort(reason);
           throw sqlError('42P01');
         },
-        nowMs: () => Date.now(),
+        nowMs: () => 0,
         onClaimed,
-        budgetMs: 175,
+        budgetSignal,
       },
       7,
     ).catch((error: unknown) => error);
-    const elapsed = Date.now() - started;
-    expect((err as Error).name).toBe('TimeoutError');
-    expect(elapsed).toBeLessThan(175 + 150);
-    expect(seen.connects).toBe(1);
-    expect(seen.statements.filter((q) => q.startsWith('BEGIN'))).toHaveLength(1);
-    expect(registry.all()).toEqual([]);
-    expect(onClaimed).not.toHaveBeenCalled();
-    expect(registry.counters.loginReads).toBe(1);
-    expect(registry.counters.loginReadMsTotal).toBeGreaterThanOrEqual(150);
+    return { registry, onClaimed, budgetSignal, read, reason, abort: () => budget.abort(reason) };
+  }
+
+  it('bounds the whole read, the clock-fault retry and both checkouts included, by ONE budget', async () => {
+    const settle = async (r: ReturnType<typeof budgetedRead>) => {
+      const err = await r.read;
+      // ONE budget, minted once for the whole read, never one per transaction.
+      expect(r.budgetSignal).toHaveBeenCalledTimes(1);
+      expect(r.registry.all()).toEqual([]);
+      expect(r.registry.counters).toMatchObject({ acquired: 0, loginReads: 1 });
+      expect(r.onClaimed).not.toHaveBeenCalled();
+      return err;
+    };
+    // The FIRST checkout never arrives: the budget ends it.
+    const first = hangingPool([plotRow, acquireRule], { checkout: 1 });
+    const a = budgetedRead(first.pool);
+    await first.stalled;
+    a.abort();
+    expect(await settle(a)).toBe(a.reason);
+    expect(first.seen.connects).toBe(1);
+    // The clock faults and the RETRY's checkout never arrives: the SAME budget
+    // ends it.
+    const second = hangingPool([plotRow, acquireRule], { checkout: 2 });
+    const b = budgetedRead(second.pool);
+    await second.stalled;
+    b.abort();
+    expect(await settle(b)).toBe(b.reason);
+    expect(second.seen.connects).toBe(2);
+    // The retry's own statement never answers: the SAME budget cuts it.
+    const stuck = hangingPool([plotRow, acquireRule], {
+      statement: (q) => q.startsWith('SELECT plot_id FROM account_freeholds'),
+    });
+    const c = budgetedRead(stuck.pool);
+    await stuck.stalled;
+    c.abort();
+    expect(await settle(c)).toBeInstanceOf(DbTransactionAborted);
+    expect(stuck.seen.connects).toBe(2);
+    expect(stuck.seen.statements.some((q) => q.startsWith('WITH t AS'))).toBe(false);
+    // Spent during the FIRST transaction: the retry is refused before it asks
+    // the pool for a client at all.
+    const spent = hangingPool([plotRow, acquireRule], {});
+    const d = budgetedRead(spent.pool, { abortInClock: true });
+    expect(await settle(d)).toBe(d.reason);
+    expect(spent.seen.connects).toBe(1);
+    expect(spent.seen.statements.filter((q) => q.startsWith('BEGIN'))).toHaveLength(1);
   });
 
   it('never records a claim whose COMMIT the budget cut: the read throws ambiguous', async () => {
-    const { pool, seen } = slowPool(10, [plotRow, acquireRule], { hangCommit: true });
+    const { pool, seen, stalled } = hangingPool([plotRow, acquireRule], {
+      statement: (q) => q === 'COMMIT',
+    });
     const registry = createFreeholdClaimRegistry();
     const onClaimed = vi.fn();
-    const started = Date.now();
-    const err = await readClaimedLoginDurables(
+    const budget = new AbortController();
+    const read = readClaimedLoginDurables(
       {
         pool,
         registry,
@@ -1548,12 +1871,13 @@ describe('the claimed login read', () => {
         readHearth: async () => ({ kind: 'absent' as const }),
         nowMs: () => 0,
         onClaimed,
-        budgetMs: 150,
+        budgetSignal: () => budget.signal,
       },
       7,
     ).catch((error: unknown) => error);
-    expect(err).toBeInstanceOf(FreeholdCommitAmbiguous);
-    expect(Date.now() - started).toBeLessThan(150 + 150);
+    await stalled;
+    budget.abort(new Error('login budget spent'));
+    expect(await read).toBeInstanceOf(FreeholdCommitAmbiguous);
     expect(seen.statements.at(-1)).toBe('COMMIT');
     expect(seen.statements.some((q) => q.startsWith('WITH t AS'))).toBe(true);
     expect(registry.all()).toEqual([]);
@@ -1568,7 +1892,7 @@ describe('the claimed login read', () => {
 describe('operation recovery', () => {
   it('ships with NO registered kind, so a scheduled pass issues nothing', () => {
     // A TRIPWIRE, not only a pin: registering the first kind makes receipts and
-    // intents reachable, and three stories are owed in that same change.
+    // intents reachable, and four obligations are owed in that same change.
     expect(
       FREEHOLD_OPERATION_RECONCILERS.size,
       'the first registered housing operation kind must land WITH: (1) an automatic, ' +
@@ -1576,7 +1900,10 @@ describe('operation recovery', () => {
         'receipts (account.ts runs it once and only logs a failure); (2) a retention story ' +
         'for freehold_operation_receipts (keep-forever today, observed only by the growth ' +
         'monitor); (3) a deactivation story for the OPEN intents of a deactivated account ' +
-        '(prepare refuses it, but nothing closes the intents it already holds)',
+        '(prepare refuses it, but nothing closes the intents it already holds); (4) a plan ' +
+        'that refuses a request naming a copy the bags do not hold, before any transaction ' +
+        '(the hook never reads the bags; the missing-copy shape is pinned in ' +
+        'tests/server/freehold_mutation.pg.test.ts B)',
     ).toBe(0);
     const discover = vi.fn();
     const recovery = createFreeholdOperationRecovery({
@@ -1674,6 +2001,9 @@ describe('the Hearth trip admission', () => {
       /** Whether the sim roster still holds the owner (default: it does). */
       online?: () => boolean;
       leaseNonce?: string;
+      /** The host's realm drop (draining, or the vault fence) takes every
+       *  re-dispatch before the sim sees it. */
+      drop?: boolean;
     } = {},
   ) => {
     const sessions = new Map<number, Session>([
@@ -1693,6 +2023,9 @@ describe('the Hearth trip admission', () => {
     });
     const merges: number[] = [];
     const redispatched: string[] = [];
+    // The advanced flag each re-dispatch carried, and every warn line.
+    const hosted: boolean[] = [];
+    const warnings: string[] = [];
     let now = 1_000;
     const trips = createFreeholdHearthTrips({
       sessionForPid: (pid) => sessions.get(pid),
@@ -1713,22 +2046,37 @@ describe('the Hearth trip admission', () => {
           } as FreeholdMutationOutcome)
         );
       }),
-      redispatch: (session) => {
+      redispatch: (session, advanced) => {
+        hosted.push(advanced);
+        if (opts.drop) return 'dropped';
         // The sim asks admission exactly as useHearthKey would.
-        redispatched.push(trips.admission('account:7', session.pid));
+        redispatched.push(trips.admission(`account:${session.accountId}`, session.pid));
+        return undefined;
       },
       mergeReadyAt: (_key, ms) => merges.push(ms),
       ownerOnline: () => opts.online?.() ?? true,
-      accountOf: (key) => (key === 'account:7' ? 7 : null),
+      accountOf: (key) => {
+        const match = /^account:([1-9][0-9]*)$/.exec(key);
+        return match ? Number(match[1]) : null;
+      },
       cooldownMs: 3_600_000,
       nowMs: () => now,
-      warn: () => {},
+      warn: (message) => warnings.push(message),
     });
     const settle = async () => {
       release();
       for (let i = 0; i < 10; i++) await Promise.resolve();
     };
-    return { trips, sessions, settle, merges, redispatched, advance: (ms: number) => (now += ms) };
+    return {
+      trips,
+      sessions,
+      settle,
+      merges,
+      redispatched,
+      hosted,
+      warnings,
+      advance: (ms: number) => (now += ms),
+    };
   };
 
   it('answers pending, then re-dispatches with an admit ticket and merges AFTER the trip', async () => {
@@ -1826,6 +2174,7 @@ describe('the Hearth trip admission', () => {
 
   it('counts a committed advance the sim refused to re-dispatch', async () => {
     const sessions = new Map([[1, { pid: 1, characterId: 10, accountId: 7, leaseNonce: 'n1' }]]);
+    const warnings: string[] = [];
     const trips = createFreeholdHearthTrips({
       sessionForPid: (pid) => sessions.get(pid),
       authority: () => ({ loaded: true, blocked: false, plotId: 'plot:a', durableRev: null }),
@@ -1844,11 +2193,66 @@ describe('the Hearth trip admission', () => {
       accountOf: () => 7,
       cooldownMs: 1,
       nowMs: () => 0,
-      warn: () => {},
+      warn: (message) => warnings.push(message),
     });
     trips.admission('account:7', 1);
     for (let i = 0; i < 10; i++) await Promise.resolve();
     expect(trips.counters.refusedAfterCommit).toBe(1);
+    expect(trips.counters.droppedAfterCommit).toBe(0);
+    expect(warnings).toEqual([
+      'freehold hearth trip committed but the sim refused its re-dispatch',
+    ]);
+  });
+
+  it('counts a committed advance a realm drop took on its OWN counter, with no warn line (R-2)', async () => {
+    const r = tripRig({ drop: true });
+    r.trips.admission('account:7', 1);
+    await r.settle();
+    // The host heard the advance had committed, so its vault drop can answer busy.
+    expect(r.hosted).toEqual([true]);
+    expect(r.redispatched).toEqual([]);
+    expect(r.trips.counters).toMatchObject({
+      advanced: 1,
+      droppedAfterCommit: 1,
+      refusedAfterCommit: 0,
+    });
+    expect(r.warnings).toEqual([]);
+    // The advance stays spent: the durable clock still merges.
+    expect(r.merges).toEqual([3_601_000]);
+  });
+
+  it('a realm drop under a deny ticket counts nothing and tells the host no advance committed', async () => {
+    const r = tripRig({ drop: true, outcome: () => ({ kind: 'failed', error: null }) });
+    r.trips.admission('account:7', 1);
+    await r.settle();
+    expect(r.hosted).toEqual([false]);
+    expect(r.trips.counters).toMatchObject({
+      failed: 1,
+      droppedAfterCommit: 0,
+      refusedAfterCommit: 0,
+    });
+    expect(r.warnings).toEqual([]);
+  });
+
+  it('every new refusal prunes the expired ones, so the memo stays bounded without a leave', async () => {
+    for (const [elapsed, kept] of [
+      [5_000, 1],
+      [4_999, 2],
+    ] as const) {
+      const r = tripRig({ outcome: () => ({ kind: 'failed', error: null }) });
+      r.sessions.set(2, { pid: 2, characterId: 11, accountId: 8, leaseNonce: 'n2' });
+      r.trips.admission('account:7', 1);
+      await r.settle();
+      expect(r.trips.refusalMemoSize()).toBe(1);
+      // Nothing touches account 7 while its window runs out (or not); then a
+      // second account's trip is refused.
+      r.advance(elapsed);
+      expect(r.trips.admission('account:8', 2)).toBe('pending');
+      await r.settle();
+      expect(r.trips.counters.failed, `after ${elapsed} ms`).toBe(2);
+      expect(r.trips.refusalMemoSize(), `after ${elapsed} ms`).toBe(kept);
+      expect(r.trips.admission('account:8', 2)).toBe('deny');
+    }
   });
 
   it('denies a session that does not belong to the owner key, and a leaving one', () => {
@@ -2124,6 +2528,91 @@ describe('the housing authority boundary', () => {
     expect(sql.indexOf(fence)).toBe(0);
     expect(sql.indexOf(casGate)).toBeGreaterThan(sql.indexOf(lock));
     expect(sql.indexOf(stamp)).toBeGreaterThan(sql.indexOf(casGate));
+  });
+
+  it('keeps every housing SQL literal in a *_db.ts module, freehold_tx.ts transaction control excepted', () => {
+    // server/CLAUDE.md: SQL lives only in db.ts and *_db.ts. The scope is every
+    // freehold_*.ts under server/ (at any depth) plus character_save_housing.ts.
+    // ONE named exception: server/freehold_tx.ts, the bounded transaction every
+    // housing path rides, may carry transaction control and nothing else
+    // (BEGIN, SET LOCAL <name>_timeout, COMMIT, ROLLBACK), the precedent of
+    // server/db_transaction_deadline.ts, which issues COMMIT and ROLLBACK itself
+    // and is no *_db.ts file either.
+    const literals = /`(?:[^`\\]|\\[\s\S])*`|'(?:[^'\\\n]|\\.)*'|"(?:[^"\\\n]|\\.)*"/g;
+    const sql = [
+      /\bSELECT\b/,
+      /\bINSERT\s+INTO\b/,
+      /\bUPDATE\b[\s\S]*?\bSET\b/,
+      /\bDELETE\s+FROM\b/,
+      /\bFOR\s+SHARE\b/,
+      /\bFOR\s+UPDATE\b/,
+      /\bFOR\s+NO\s+KEY\s+UPDATE\b/,
+      /\bSET\s+LOCAL\b/,
+      // The session forms the receipt growth read used before it moved.
+      /\bRESET\s+[a-z_]+/,
+      /\bSET\s+[a-z_]+\s*(?:=|TO\b)/,
+    ];
+    const sqlLiterals = (code: string): string[] =>
+      (code.match(literals) ?? []).filter((literal) => sql.some((re) => re.test(literal)));
+    const txControl =
+      /^(?:\s|;|BEGIN|COMMIT|ROLLBACK|SET LOCAL [a-z_]+_timeout = (?:\$\{[^}]*\}|[0-9]+))*$/;
+    const txControlOnly = (literal: string): boolean => txControl.test(literal.slice(1, -1));
+    const housing = serverSources().filter((f) => {
+      const base = f.name.split('/').pop() ?? '';
+      return base.startsWith('freehold_') || base === 'character_save_housing.ts';
+    });
+    const logic = housing.filter((f) => !f.name.endsWith('_db.ts'));
+    // Vacuity floor near the real count, so a walker that lost the modules fails.
+    expect(logic.length).toBeGreaterThanOrEqual(33);
+    expect(logic.map((f) => f.name)).toEqual(
+      expect.arrayContaining([
+        'server/character_save_housing.ts',
+        'server/freehold_mutation.ts',
+        'server/freehold_receipt_growth_monitor.ts',
+        'server/freehold_tx.ts',
+      ]),
+    );
+    const offenders: string[] = [];
+    let txControlLiterals = 0;
+    for (const f of logic) {
+      for (const literal of sqlLiterals(f.code)) {
+        if (f.name === 'server/freehold_tx.ts' && txControlOnly(literal)) {
+          txControlLiterals++;
+          continue;
+        }
+        offenders.push(`${f.name}: ${literal.slice(0, 80)}`);
+      }
+    }
+    expect(offenders).toEqual([]);
+    // The exception is reached: the bounds line of freehold_tx.ts is matched
+    // and admitted, so the exemption is load-bearing rather than dead.
+    expect(txControlLiterals).toBeGreaterThanOrEqual(3);
+    // Positive controls: the matcher flags each statement shape and a real
+    // *_db.ts module's text, and the exception admits transaction control only.
+    // A placeholder as SOURCE text, built so no literal here carries one.
+    const hole = (name: string) => `$${'{'}${name}}`;
+    for (const synthetic of [
+      "'SELECT 1'",
+      '`INSERT INTO t (a) VALUES ($1)`',
+      '`UPDATE t\n   SET a = $1`',
+      "'DELETE FROM t WHERE a = $1'",
+      "'x FOR SHARE'",
+      "'x FOR UPDATE'",
+      "'x FOR NO KEY UPDATE'",
+      `\`SET LOCAL statement_timeout = ${hole('ms')}\``,
+      "'RESET statement_timeout'",
+      `\`SET statement_timeout = ${hole('ms')}\``,
+    ]) {
+      expect(sqlLiterals(`const q = ${synthetic};`), synthetic).toEqual([synthetic]);
+    }
+    expect(sqlLiterals("throw new Error('the select was refused');")).toEqual([]);
+    const claimDb = housing.find((f) => f.name === 'server/freehold_claim_db.ts');
+    expect(sqlLiterals(claimDb?.code ?? '').length).toBeGreaterThan(5);
+    expect(txControlOnly(`\`SET LOCAL lock_timeout = ${hole('lock')}; \``)).toBe(true);
+    expect(txControlOnly("'BEGIN; COMMIT'")).toBe(true);
+    expect(txControlOnly("'SELECT 1'")).toBe(false);
+    expect(txControlOnly('`BEGIN; SET LOCAL statement_timeout = 5; SELECT 1`')).toBe(false);
+    expect(txControlOnly(`\`SET LOCAL search_path = ${hole('schema')}\``)).toBe(false);
   });
 
   it('wires the realm admission to the trip, never to the offline default', () => {

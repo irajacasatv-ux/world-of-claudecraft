@@ -30,7 +30,7 @@
 // with no character save around them, and tests/guild_bank_pg_integration.test.ts
 // and tests/server/storage_purchase_db.pg.test.ts prove the legacy halves with
 // no housing participant.
-// Cost: 2.5 s
+// Cost: 4.8 s
 import { randomUUID } from 'node:crypto';
 import type { Pool as PgPool, PoolClient } from 'pg';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
@@ -983,12 +983,20 @@ d('the housing mutation boundary (REAL Postgres)', () => {
       expect(await custody(t)).toEqual({ bags: 0, layout: 1 });
     });
 
-    it('a missing copy is refused with nothing written, and custody is never invented', async () => {
+    it('a kind plan that refuses the missing-copy shape writes nothing, and its commit control moves the chair once', async () => {
+      // What this proves, and what it does not: the refusal below comes from
+      // this TEST kind's own plan, so no production change can fail that half.
       // The hook writes whatever the save hands it and never reads the bags, so
-      // the missing-copy refusal belongs to the KIND's plan. No production kind
-      // exists in 07a: this TEST kind's plan reads the source custody first and
-      // refuses before any transaction (the fixture's bags carry the chair as a
-      // stack, so the named copy is present iff a chair is in the bags).
+      // refusing a copy the bags do not hold belongs to a KIND's plan, and no
+      // production kind exists in 07a. This pins the SHAPE the first kind must
+      // follow (read the source custody, refuse before any transaction) and that
+      // such a refusal leaves every durable fact where it was: the character
+      // blob, the open intent, the receipts, the claim token, the plot's
+      // durable_rev and the custody. The obligation itself is pinned where the
+      // first kind lands: the no-kind tripwire in
+      // tests/server/freehold_mutation.test.ts ('operation recovery'). The
+      // fixture's bags carry the chair as a stack, so the named copy is present
+      // iff a chair is in the bags.
       const plan = async (t: Transfer) => {
         const held = await custody(t);
         return held.bags >= t.intent.copyRefs.length

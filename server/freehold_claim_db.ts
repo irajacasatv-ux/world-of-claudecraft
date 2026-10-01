@@ -472,3 +472,22 @@ export async function freeholdClaimsForExport(
   const res = await db.query(FREEHOLD_CLAIM_EXPORT_SQL, [accountId]);
   return res.rows ?? [];
 }
+
+/** G4 for a claim proved without a write (the housing hook's read fence,
+ *  server/freehold_mutation.ts): lock it under the fence, no row version
+ *  written (a no-op UPDATE would write one per trip). */
+export const FREEHOLD_CLAIM_READ_FENCE_SQL = `SELECT plot_id FROM freehold_plot_claims
+ WHERE plot_id = $1 AND holder = $2 AND generation = $3::bigint
+   FOR NO KEY UPDATE`;
+
+export async function lockFreeholdClaimFenceOnClient(
+  tx: FreeholdQueryable,
+  fence: FreeholdClaimFence,
+): Promise<boolean> {
+  const res = await tx.query(FREEHOLD_CLAIM_READ_FENCE_SQL, [
+    fence.plotId,
+    fence.holder,
+    fence.generation,
+  ]);
+  return (res.rows?.length ?? 0) === 1;
+}

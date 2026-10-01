@@ -154,8 +154,11 @@ export const WOC_FREEHOLD_LOAD_FAILURES_TOTAL = 'woc_freehold_load_failures_tota
 export const WOC_FREEHOLD_RECEIPT_GROWTH = 'woc_freehold_receipt_growth';
 /** 07a: global plot claims this process holds right now. */
 export const WOC_FREEHOLD_CLAIMS_HELD = 'woc_freehold_claims_held';
-/** 07a: the housing authority's cumulative counters (claims and Hearth trips). */
+/** 07a: the housing authority's cumulative COUNTS (claims and Hearth trips). */
 export const WOC_FREEHOLD_AUTHORITY_TOTAL = 'woc_freehold_authority_total';
+/** 07a: the housing authority's cumulative summed MILLISECONDS, a family of its
+ *  own so no sum across measures ever mixes a duration with a count. */
+export const WOC_FREEHOLD_AUTHORITY_MS_TOTAL = 'woc_freehold_authority_ms_total';
 
 /** Achieved sim ticks per wall-clock second (target is 20 Hz). */
 export const WOC_SIM_TICK_HZ = 'woc_sim_tick_hz';
@@ -775,7 +778,7 @@ export function registerGameStateMetrics(
 
   new Counter({
     name: WOC_FREEHOLD_AUTHORITY_TOTAL,
-    help: "Housing authority CUMULATIVE totals by fixed measure (07a). claim_*: global plot claims acquired, taken over from an expired holder, refused busy because another realm holds them, renewed, missed heartbeats (a renewal that threw or skipped a locked row, never a loss), lost to another holder, released, writes fenced, and this realm's own ambiguous writes adopted; the renewer's passes, their summed milliseconds, the triggers skipped because a pass still ran, the chunks its deadline abandoned, the wanted tests that threw, and the stranded pending tokens it retired; the claimed login reads and their summed milliseconds. trip_*: remote Hearth trips started, advanced, refused on the durable cooldown, refused on a corrupt or unsupported clock, refused by a participant, failed, never reaching the hook, left unresolved after a lost commit, committed but refused by the sim on re-dispatch, denied before any queue, metered by the per-account refusal memo, abandoned because the session left, and their summed milliseconds. Counts and summed durations only.",
+    help: "Housing authority CUMULATIVE counts by fixed measure (07a). claim_*: global plot claims acquired, taken over from an expired holder, refused busy because another realm holds them, renewed, missed heartbeats (a renewal that threw or skipped a locked row, never a loss), lost to another holder, released, writes fenced, and this realm's own ambiguous writes adopted; the renewer's passes, the triggers skipped because a pass still ran, the chunks its deadline abandoned, the wanted tests that threw, and the stranded pending tokens it retired; the claimed login reads. trip_*: remote Hearth trips started, advanced, refused on the durable cooldown, refused on a corrupt or unsupported clock, refused by a participant, failed, never reaching the hook, left unresolved after a lost commit, committed but refused by the sim on re-dispatch, committed but dropped on re-dispatch by a draining realm or a fenced vault, denied before any queue, metered by the per-account refusal memo, and abandoned because the session left. Counts only: their durations are woc_freehold_authority_ms_total.",
     labelNames: ['measure'],
     registers: [registry],
     collect() {
@@ -793,13 +796,11 @@ export function registerGameStateMetrics(
       this.inc({ measure: 'claim_fenced_writes' }, c.fencedWrites);
       this.inc({ measure: 'claim_self_adopted' }, c.selfAdopted);
       this.inc({ measure: 'claim_renew_passes' }, c.renewPasses);
-      this.inc({ measure: 'claim_renew_pass_ms_total' }, c.renewPassMsTotal);
       this.inc({ measure: 'claim_renew_passes_skipped' }, c.renewPassesSkipped);
       this.inc({ measure: 'claim_renew_chunks_abandoned' }, c.renewChunksAbandoned);
       this.inc({ measure: 'claim_wanted_threw' }, c.wantedThrew);
       this.inc({ measure: 'claim_pending_swept' }, c.pendingSwept);
       this.inc({ measure: 'claim_login_reads' }, c.loginReads);
-      this.inc({ measure: 'claim_login_read_ms_total' }, c.loginReadMsTotal);
       const t = stats.trips;
       this.inc({ measure: 'trip_started' }, t.started);
       this.inc({ measure: 'trip_advanced' }, t.advanced);
@@ -811,10 +812,25 @@ export function registerGameStateMetrics(
       this.inc({ measure: 'trip_not_run' }, t.notRun);
       this.inc({ measure: 'trip_unresolved' }, t.unresolved);
       this.inc({ measure: 'trip_refused_after_commit' }, t.refusedAfterCommit);
+      this.inc({ measure: 'trip_dropped_after_commit' }, t.droppedAfterCommit);
       this.inc({ measure: 'trip_refused_pre_queue' }, t.refusedPreQueue);
       this.inc({ measure: 'trip_metered' }, t.metered);
       this.inc({ measure: 'trip_abandoned' }, t.abandoned);
-      this.inc({ measure: 'trip_ms_total' }, t.tripMsTotal);
+    },
+  });
+
+  new Counter({
+    name: WOC_FREEHOLD_AUTHORITY_MS_TOTAL,
+    help: 'Housing authority CUMULATIVE summed wall time in milliseconds by fixed measure (07a): claim_renew_pass the claim renewer passes, claim_login_read the claimed login reads, trip the remote Hearth trips from start to outcome. Divided by its count on woc_freehold_authority_total (claim_renew_passes, claim_login_reads, trip_started) it is the mean. Milliseconds only, never summed with a count.',
+    labelNames: ['measure'],
+    registers: [registry],
+    collect() {
+      this.reset();
+      const stats = source.freeholdAuthority?.();
+      if (!stats) return;
+      this.inc({ measure: 'claim_renew_pass' }, stats.claims.renewPassMsTotal);
+      this.inc({ measure: 'claim_login_read' }, stats.claims.loginReadMsTotal);
+      this.inc({ measure: 'trip' }, stats.trips.tripMsTotal);
     },
   });
 

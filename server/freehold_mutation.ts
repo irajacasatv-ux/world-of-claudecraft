@@ -21,9 +21,10 @@
 // each participant's own evidence as separate statements, so a row the hung
 // transaction inserted is visible once it committed.
 //
-// No SQL of its own beyond the hook's bound, the verify's wait and the
-// participants' modules; no GameServer import (the save is injected), so a
-// Vitest drives every arm without a database.
+// No SQL of its own: the hook's bound and the verify's wait live in
+// server/freehold_mutation_db.ts and every participant's statements in its own
+// *_db.ts module; no GameServer import (the save is injected), so a Vitest
+// drives every arm without a database.
 import type {
   CharacterSaveHousingHook,
   CharacterSaveHousingQueryable,
@@ -32,6 +33,7 @@ import type { DbTransactionDeadlineClient } from './db_transaction_deadline';
 import {
   type FreeholdClaimFence,
   fenceFreeholdClaimOnClient,
+  lockFreeholdClaimFenceOnClient,
   mintFreeholdWriteToken,
   readFreeholdClaimOnClient,
 } from './freehold_claim_db';
@@ -41,6 +43,10 @@ import {
   type FreeholdHearthAdvance,
   freeholdHearthAdvanceLandedOnClient,
 } from './freehold_hearth_db';
+import {
+  boundFreeholdHookStatementsOnClient,
+  waitOutCharacterRowOnClient,
+} from './freehold_mutation_db';
 import {
   closeFreeholdOperationOnClient,
   type FreeholdOperationApplyRefusal,
@@ -69,12 +75,6 @@ export const FREEHOLD_VERIFY_BOUNDS = Object.freeze({
   idleMs: 2_000,
   wallMs: 30_000,
 });
-
-/** The wait (P9 step 1): FOR SHARE conflicts with the hung save's FOR NO KEY
- *  UPDATE on the character row, so it returns only once that transaction
- *  resolved, and its own transaction commits at once so it holds the row for
- *  one round trip. */
-export const FREEHOLD_VERIFY_WAIT_SQL = 'SELECT 1 FROM characters WHERE id = $1 FOR SHARE';
 
 /** A plot write: the CAS input (an EXISTING row) and the claim it must hold. */
 export interface FreeholdPlotWrite {
@@ -223,7 +223,7 @@ export function createFreeholdSaveHook(
   const proofs = request.claimProofs.filter((proof) => !writeFences.has(proof.plotId));
   const run = async (tx: CharacterSaveHousingQueryable): Promise<void> => {
     state.ran = true;
-    await tx.query(`SET LOCAL statement_timeout = ${FREEHOLD_HOOK_STATEMENT_TIMEOUT_MS}`);
+    await boundFreeholdHookStatementsOnClient(tx, FREEHOLD_HOOK_STATEMENT_TIMEOUT_MS);
     // G4, ascending plot id across BOTH kinds of fence.
     const fences = byKey(
       [
@@ -305,42 +305,33 @@ export function createFreeholdSaveHook(
   return { hook, state, writeTokens, advanceToken };
 }
 
-/** G4 for a claim proved without a write: lock it under the fence, no row
- *  version written (a no-op UPDATE would write one per trip). */
-export const FREEHOLD_CLAIM_READ_FENCE_SQL = `SELECT plot_id FROM freehold_plot_claims
- WHERE plot_id = $1 AND holder = $2 AND generation = $3::bigint
-   FOR NO KEY UPDATE`;
-
-export async function lockFreeholdClaimFenceOnClient(
-  tx: CharacterSaveHousingQueryable,
-  fence: FreeholdClaimFence,
-): Promise<boolean> {
-  const res = await tx.query(FREEHOLD_CLAIM_READ_FENCE_SQL, [
-    fence.plotId,
-    fence.holder,
-    fence.generation,
-  ]);
-  return (res.rows?.length ?? 0) === 1;
-}
-
 /** The verify's ONE checkout (P9) as a pool for runFreeholdTransaction: both
  *  of its transactions run on the same client, so the reads never re-queue for
  *  a second checkout in the brownout that made the commit ambiguous. A release
- *  between them is a no-op; a release with an error (a transaction left the
- *  client broken) refuses the next checkout, and the real client goes back
- *  exactly once, from `finish`, with that error when there is one. */
+ *  WITHOUT an error between them is a no-op, and `finish` returns the healthy
+ *  client. A release WITH an error goes to the real client AT ONCE: the wall
+ *  deadline's forceRelease relies on that destroying the socket so the pending
+ *  query rejects, which a recorded-only release would leave hanging until the
+ *  driver's query_timeout. The client then goes back exactly once, the next
+ *  checkout is refused, and `finish` is a no-op. */
 function verifyCheckout(client: DbTransactionDeadlineClient): {
   readonly pool: FreeholdTxPool;
   finish(): void;
 } {
-  let broken: Error | true | null = null;
+  let released = false;
+  const releaseOnce = (error?: Error | boolean) => {
+    if (released) return;
+    released = true;
+    if (error) client.release(error);
+    else client.release();
+  };
   const pool: FreeholdTxPool = {
     async connect() {
-      if (broken !== null) throw new Error('freehold mutation verify client was left broken');
+      if (released) throw new Error('freehold mutation verify client was left broken');
       return {
         query: client.query.bind(client),
         release(error?: Error | boolean) {
-          if (error) broken = error;
+          if (error) releaseOnce(error);
         },
         on: (event, listener) => client.on(event, listener),
         removeListener: (event, listener) => client.removeListener(event, listener),
@@ -350,7 +341,7 @@ function verifyCheckout(client: DbTransactionDeadlineClient): {
       };
     },
   };
-  return { pool, finish: () => client.release(broken ?? undefined) };
+  return { pool, finish: () => releaseOnce() };
 }
 
 /**
@@ -376,7 +367,7 @@ export async function verifyFreeholdMutation(
     checkout = verifyCheckout(await pool.connect());
     const one = checkout.pool;
     await runFreeholdTransaction(one, FREEHOLD_VERIFY_BOUNDS, (tx) =>
-      tx.query(FREEHOLD_VERIFY_WAIT_SQL, [characterId]),
+      waitOutCharacterRowOnClient(tx, characterId),
     );
     const readings = await runFreeholdTransaction(one, FREEHOLD_VERIFY_BOUNDS, async (tx) => {
       const seen: boolean[] = [];

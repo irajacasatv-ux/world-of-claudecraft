@@ -1,5 +1,6 @@
 // Guards: the keep-forever housing growth monitor
-// (server/freehold_receipt_growth_monitor.ts): its one O(1) catalog statement
+// (server/freehold_receipt_growth_monitor.ts, with its SQL half
+// server/freehold_receipt_growth_db.ts): its one O(1) catalog statement
 // pinned as a literal (never a COUNT), the -1 never-vacuumed estimate rendered
 // unknown, a missing table read as absent, the admission rules (it yields when
 // the background gate is busy and never queues on a full pool) and the stop
@@ -12,9 +13,6 @@ import { EventEmitter } from 'node:events';
 import type { QueryResult, QueryResultRow } from 'pg';
 import { describe, expect, it, vi } from 'vitest';
 import {
-  createFreeholdReceiptGrowthMonitor,
-  decodeFreeholdReceiptGrowthRows,
-  FREEHOLD_RECEIPT_GROWTH_MONITOR_INTERVAL_MS,
   FREEHOLD_RECEIPT_GROWTH_MONITOR_STATEMENT_TIMEOUT_MS,
   FREEHOLD_RECEIPT_GROWTH_MONITOR_WALL_TIMEOUT_MS,
   FREEHOLD_RECEIPT_GROWTH_SQL,
@@ -24,9 +22,17 @@ import {
   type FreeholdReceiptGrowthMonitorPool,
   FreeholdReceiptGrowthMonitorPoolBusy,
   type FreeholdReceiptGrowthRow,
-  freeholdReceiptGrowthReadout,
-  observeFreeholdReceiptGrowth,
   readFreeholdReceiptGrowth,
+} from '../../server/freehold_receipt_growth_db';
+import {
+  createFreeholdReceiptGrowthMonitor,
+  decodeFreeholdReceiptGrowthRows,
+  FREEHOLD_RECEIPT_GROWTH_MONITOR_INTERVAL_MS,
+  freeholdReceiptGrowthReadout,
+  readFreeholdReceiptGrowth as monitorReexportedRead,
+  FREEHOLD_RECEIPT_GROWTH_SQL as monitorReexportedSql,
+  FREEHOLD_RECEIPT_GROWTH_TABLES as monitorReexportedTables,
+  observeFreeholdReceiptGrowth,
 } from '../../server/freehold_receipt_growth_monitor';
 
 // The exact statement, as a literal: a rewrite that reaches for COUNT(*), drops
@@ -90,6 +96,14 @@ describe('freehold receipt growth monitor: the catalog read', () => {
     expect(FREEHOLD_RECEIPT_GROWTH_SQL).toBe(PINNED_SQL);
     expect(FREEHOLD_RECEIPT_GROWTH_SQL).not.toMatch(/count\s*\(/i);
     expect(FREEHOLD_RECEIPT_GROWTH_SQL.split(';')).toHaveLength(1);
+  });
+
+  it('keeps the statement and its execution in the SQL module, the monitor re-exporting the same bindings', () => {
+    // The gauge and the pg suites still name the monitor; what they reach is
+    // the one statement, list and read the SQL module owns, not a copy.
+    expect(monitorReexportedSql).toBe(FREEHOLD_RECEIPT_GROWTH_SQL);
+    expect(monitorReexportedTables).toBe(FREEHOLD_RECEIPT_GROWTH_TABLES);
+    expect(monitorReexportedRead).toBe(readFreeholdReceiptGrowth);
   });
 
   it('runs that exact text under an owned server timeout and resets the client', async () => {

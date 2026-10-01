@@ -43,7 +43,7 @@ const CORRUPT_ACCOUNT = 12;
 const BOUNDARY_ACCOUNT = 13;
 const TOKEN_ACCOUNT = 14;
 const CLOCK_RACE_ACCOUNT = 15;
-const CACHED_READY_ACCOUNT = 16;
+const SECOND_ADVANCE_ACCOUNT = 16;
 const ACK_LOST_ACCOUNT = 17;
 
 /** A table that predates the advance token, in its own private schema, so the
@@ -1007,39 +1007,40 @@ d('account_freehold_hearth against real PostgreSQL', () => {
     );
   });
 
-  it('a stale cached READY reading never admits: the locked durable read answers cooldown', async () => {
-    // The caller's view, read before another realm advanced the key: ready.
-    const cached = await db.loadFreeholdHearth(pool, CACHED_READY_ACCOUNT);
-    expect(cached).toEqual({ kind: 'absent' });
+  it('a second advance inside the cooldown another realm started answers cooldown and writes nothing', async () => {
+    // The advance takes no caller reading as input (account, cooldown, token):
+    // it decides from the row it locks. So what this proves is the second
+    // advance, not a cached value overridden. The load only shows that a reader
+    // could have seen the key READY (absent) before the other realm advanced.
+    expect(await db.loadFreeholdHearth(pool, SECOND_ADVANCE_ACCOUNT)).toEqual({ kind: 'absent' });
     const other = await pool.connect();
     try {
       await other.query('BEGIN');
       expect(
-        await db.advanceFreeholdHearthOnClient(other, CACHED_READY_ACCOUNT, COOLDOWN_MS, TOKEN),
+        await db.advanceFreeholdHearthOnClient(other, SECOND_ADVANCE_ACCOUNT, COOLDOWN_MS, TOKEN),
       ).toMatchObject({ kind: 'advanced', revision: '1' });
       await other.query('COMMIT');
     } finally {
       other.release();
     }
-    const durable = await readToken(CACHED_READY_ACCOUNT);
-    // The stale caller advances anyway: the participant re-reads under its own
-    // lock and answers from the row, so the cached reading decides nothing.
-    const stale = await pool.connect();
+    const durable = await readToken(SECOND_ADVANCE_ACCOUNT);
+    // The second advance during the cooldown: answered from the locked row.
+    const second = await pool.connect();
     try {
-      await stale.query('BEGIN');
+      await second.query('BEGIN');
       expect(
         await db.advanceFreeholdHearthOnClient(
-          stale,
-          CACHED_READY_ACCOUNT,
+          second,
+          SECOND_ADVANCE_ACCOUNT,
           COOLDOWN_MS,
           OTHER_TOKEN,
         ),
       ).toMatchObject({ kind: 'cooldown', revision: '1' });
-      await stale.query('COMMIT');
+      await second.query('COMMIT');
     } finally {
-      stale.release();
+      second.release();
     }
-    expect(await readToken(CACHED_READY_ACCOUNT)).toEqual(durable);
+    expect(await readToken(SECOND_ADVANCE_ACCOUNT)).toEqual(durable);
     expect(durable).toEqual({ advance_token: TOKEN, revision: '1' });
   });
 

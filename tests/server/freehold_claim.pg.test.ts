@@ -13,7 +13,7 @@
 // release, the G4 before G7 lock order, the login reader, clock_timestamp and the plans); the
 // nearest suites that do not are tests/server/freehold_db.pg.test.ts (the plot table and its
 // unfenced CAS) and tests/server/freehold_hearth_db.pg.test.ts (the Hearth table).
-// Cost: 6.6 s
+// Cost: 7.8 s
 //
 // Two pools stand in for two realm processes, each with its own holder string,
 // and the lease runs on a SHORT TTL passed through the ttlSeconds parameter.
@@ -915,6 +915,49 @@ d('the global plot claim against real PostgreSQL', () => {
     });
   });
 
+  it("never touches another holder's row at shutdown: a takeover of A's lapsed claim, in flight or committed, is B's", async () => {
+    const plotId = plot('all-taken');
+    await acquire(poolA, HOLDER_A, plotId, 20, LONG_TTL_SECONDS);
+    const registry = reg.createFreeholdClaimRegistry();
+    registry.record(held(plotId, 20));
+    await side.query(
+      `UPDATE freehold_plot_claims SET expires_at = clock_timestamp() - interval '5 seconds'
+        WHERE plot_id = $1`,
+      [plotId],
+    );
+    const warn = vi.fn();
+    // IN FLIGHT: B's takeover holds the row, uncommitted, while A releases.
+    const b = await poolB.connect();
+    try {
+      await b.query('BEGIN');
+      expect(await acquire(b, HOLDER_B, plotId, 20, LONG_TTL_SECONDS)).toEqual({
+        kind: 'acquired',
+        generation: '2',
+        takeover: true,
+      });
+      // A release that waited on B's lock would hit its lock bound and warn,
+      // since B commits only after it returns.
+      expect(
+        await reg.releaseAllFreeholdClaims({ pool: poolA, holder: HOLDER_A, registry, warn }),
+      ).toBe(0);
+      await b.query('COMMIT');
+    } finally {
+      await b.query('ROLLBACK').catch(() => undefined);
+      b.release();
+    }
+    const taken = await claimRow(plotId);
+    expect(taken).toMatchObject({ holder: HOLDER_B, generation: '2', live: true });
+    // COMMITTED: a second release by the stale holder writes no row version.
+    registry.record(held(plotId, 20));
+    expect(
+      await reg.releaseAllFreeholdClaims({ pool: poolA, holder: HOLDER_A, registry, warn }),
+    ).toBe(0);
+    expect(await claimRow(plotId)).toEqual(taken);
+    expect(warn).not.toHaveBeenCalled();
+    expect(registry.all()).toEqual([]);
+    expect(registry.counters.released).toBe(0);
+  });
+
   it('abandons the shutdown release inside its 2,000 ms deadline when the pool cannot hand out a client', async () => {
     const plotId = plot('all-starved');
     expect(await acquire(poolA, HOLDER_A, plotId, 19, LONG_TTL_SECONDS)).toMatchObject({
@@ -1169,11 +1212,14 @@ d('the global plot claim against real PostgreSQL', () => {
       } finally {
         hog.release();
       }
-      // The abandoned checkout is handed back, not leaked.
-      await sleep(20);
-      expect(tight.waitingCount).toBe(0);
+      // The abandoned checkout is handed back, not leaked: the pool has ONE
+      // client, which the refused read's checkout received when the hog let
+      // go, so this read can only succeed (inside its own 400 ms budget) once
+      // that checkout released it.
       const answer = await loginMod.readClaimedLoginDurables(starved, 31);
       expect(answer.row).toMatchObject({ kind: 'row', row: { plotId, durableRev: '1' } });
+      expect(tight.totalCount).toBe(1);
+      expect(tight.waitingCount).toBe(0);
       expect(registry.forPlot(plotId)).toMatchObject({ accountId: 31, generation: '1' });
       expect(onClaimed).toHaveBeenCalledWith(31);
       expect(await claimRow(plotId)).toMatchObject({ holder: HOLDER_A, live: true });
@@ -1242,7 +1288,7 @@ d('the global plot claim against real PostgreSQL', () => {
       ]);
 
       // The login's plot-id pre-read, on the plot PK.
-      const preReadPlan = await explain(loginMod.FREEHOLD_PRIMARY_PLOT_ID_SQL, [29]);
+      const preReadPlan = await explain(plotDb.FREEHOLD_PRIMARY_PLOT_ID_SQL, [29]);
       expect(scansReach(preReadPlan, 'account_freeholds', 'account_freeholds_pkey')).toEqual([
         'account_freeholds_pkey',
       ]);

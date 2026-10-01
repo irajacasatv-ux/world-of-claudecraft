@@ -44,6 +44,11 @@ describeDb('bank-ledger growth monitor against real PostgreSQL', () => {
       application_name: applicationName,
       max,
     });
+    // An idle client's error re-emits on its pool. The teardown terminates every
+    // backend of the verify database, so a client still idle there (its pool
+    // ending) reports a 57P01 that, unlistened, surfaces as an unhandled error
+    // and fails the run after every case passed. The server's own pool listens.
+    pool.on('error', () => {});
     openPools.add(pool);
     return pool;
   }

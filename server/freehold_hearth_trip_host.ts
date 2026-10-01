@@ -10,12 +10,14 @@
 // - the re-dispatch, which replays every gate the frame path runs before a
 //   Hearth Key use reaches the sim (hearthKeyUseRefusal: the draining and
 //   vault-lock drops, spectating, jailed, dark) and answers each exactly as
-//   the frame path does, then runs the item use through the sim while the
-//   ticket is set. It takes no heavy-self receipt mark: the use frame that
-//   started the trip already took one, and an admitted entry changes no heavy
-//   self field (it moves the player and claims a room, both outside the heavy
-//   block, and grants or spends nothing), pinned in
-//   tests/server/freehold_wire.test.ts.
+//   the frame path does, save one: after a COMMITTED advance the key is
+//   already spent (R-2), so a vault-lock drop answers busy rather than
+//   nothing (a draining realm stays silent: it is going down). Then it runs
+//   the item use through the sim while the ticket is set. It takes no
+//   heavy-self receipt mark: the use frame that started the trip already took
+//   one, and an admitted entry changes no heavy self field (it moves the
+//   player and claims a room, both outside the heavy block, and grants or
+//   spends nothing), pinned in tests/server/freehold_wire.test.ts.
 import { HEARTH_KEY_COOLDOWN_MS, HEARTH_KEY_ITEM_ID } from '../src/sim/freehold/gate_rules';
 import { mergeFreeholdKeyReadyAt } from '../src/sim/freehold/hearth_key';
 import { freeholdOwnerKeyOfMeta } from '../src/sim/freehold/owner_key';
@@ -83,26 +85,34 @@ export function createGameFreeholdHearthTrips<S extends FreeholdHearthTripSessio
         for (const release of releases) release();
       }
     },
-    redispatch: (session) => {
+    redispatch: (session, advanced) => {
       const live = deps.sessionForPid(session.pid);
-      if (!live) return;
+      if (!live) return undefined;
       const refusal = hearthKeyUseRefusal({
         draining: deps.draining(),
         vaultLocked: deps.vaultLocked(live.characterId),
         spectating: live.spectating,
         jailed: live.jailed,
       });
-      // The frame path's three silent drops answer nothing.
-      if (refusal === 'draining' || refusal === 'vault_locked' || refusal === 'spectating') return;
+      // The frame path's two realm drops answer nothing, unless the advance
+      // already committed: then a fenced vault answers busy (the player can
+      // act on it), and the trip counts either drop apart.
+      if (refusal === 'draining' || refusal === 'vault_locked') {
+        if (advanced && refusal === 'vault_locked') deps.sendDenied(live, 'busy');
+        return 'dropped';
+      }
+      // The spectate drop answers nothing, as the frame path's does.
+      if (refusal === 'spectating') return undefined;
       if (refusal === 'jailed') {
         deps.sendDenied(live, 'busy');
-        return;
+        return undefined;
       }
       if (refusal === 'dark') {
         deps.sendDenied(live, 'no_freehold');
-        return;
+        return undefined;
       }
       deps.sim().useItem(HEARTH_KEY_ITEM_ID, session.pid);
+      return undefined;
     },
     mergeReadyAt: (ownerKey, readyAtMs) =>
       mergeFreeholdKeyReadyAt(deps.sim().ctx, ownerKey, readyAtMs),

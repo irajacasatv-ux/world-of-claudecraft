@@ -38,7 +38,11 @@
 // did land unrecorded is this realm's own and expires after the TTL.
 import { acquireFreeholdClaim } from './freehold_claim_db';
 import type { FreeholdClaimRegistry } from './freehold_claim_registry';
-import type { FreeholdQueryable, FreeholdRowLoad } from './freehold_db';
+import {
+  type FreeholdQueryable,
+  type FreeholdRowLoad,
+  freeholdPrimaryPlotIdOnClient,
+} from './freehold_db';
 import type { FreeholdHearthLoad } from './freehold_hearth_db';
 import type { FreeholdHearthAnswer } from './freehold_persist_types';
 import { type FreeholdTxPool, runFreeholdTransaction } from './freehold_tx';
@@ -53,9 +57,6 @@ export const FREEHOLD_CLAIM_LOGIN_BOUNDS = Object.freeze({
   idleMs: 2_000,
   wallMs: 10_000,
 });
-
-export const FREEHOLD_PRIMARY_PLOT_ID_SQL =
-  'SELECT plot_id FROM account_freeholds WHERE account_id = $1 AND plot_index = 0';
 
 /** Carries the claim-busy answer out of the transaction (so it commits nothing
  *  further and the row is never read). */
@@ -85,6 +86,9 @@ export interface FreeholdClaimLoginDeps {
   /** The whole read's budget; FREEHOLD_CLAIM_LOGIN_BOUNDS.wallMs (the store's
    *  login budget) unless a suite narrows it. */
   readonly budgetMs?: number;
+  /** Mints that budget's signal, once per read: AbortSignal.timeout(budgetMs)
+   *  unless a suite hands one it aborts by hand. */
+  readonly budgetSignal?: () => AbortSignal;
 }
 
 export async function readClaimedLoginDurables(
@@ -107,13 +111,14 @@ async function claimedLoginRead(
 ): Promise<{ row: FreeholdRowLoad; hearth: FreeholdHearthAnswer }> {
   const { registry } = deps;
   const budget = {
-    signal: AbortSignal.timeout(deps.budgetMs ?? FREEHOLD_CLAIM_LOGIN_BOUNDS.wallMs),
+    signal:
+      deps.budgetSignal?.() ??
+      AbortSignal.timeout(deps.budgetMs ?? FREEHOLD_CLAIM_LOGIN_BOUNDS.wallMs),
   };
   let acquired: { plotId: string; generation: string; takeover: boolean } | null = null;
   const plotHalf = async (db: FreeholdQueryable): Promise<FreeholdRowLoad> => {
-    const primary = await db.query(FREEHOLD_PRIMARY_PLOT_ID_SQL, [accountId]);
-    const plotId = (primary.rows?.[0] as { plot_id?: unknown } | undefined)?.plot_id;
-    if (typeof plotId === 'string') {
+    const plotId = await freeholdPrimaryPlotIdOnClient(db, accountId);
+    if (plotId !== null) {
       let claim: Awaited<ReturnType<typeof acquireFreeholdClaim>>;
       try {
         claim = await acquireFreeholdClaim(db, {

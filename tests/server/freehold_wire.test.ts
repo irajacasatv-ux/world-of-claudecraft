@@ -110,6 +110,7 @@ import { COMMAND_FACETS, type CommandName } from '../../src/world_api';
 import { bareClient, broadcast, fakeWs, joinServer, lastSnap } from '../helpers/bare_client';
 import { methodBody } from '../helpers/method_body';
 import { releasedSpyOn } from '../helpers/released_spy';
+import { stripComments } from '../helpers/strip_comments';
 
 type HousingCommand = (typeof FREEHOLD_WIRE_COMMANDS)[number];
 
@@ -165,6 +166,11 @@ function botDetectorOf(server: GameServer): BotDetector {
 const REALM_KEY_DENY = (): FreeholdKeyAdmission => 'deny';
 
 type GameHearthTrips = ReturnType<typeof createGameFreeholdHearthTrips>;
+
+/** The R-2 warn line of a committed advance the SIM refused (death, combat or
+ *  jail in the commit window); a realm drop never logs it. */
+const REFUSED_AFTER_COMMIT_WARN =
+  'freehold hearth trip committed but the sim refused its re-dispatch';
 
 /** The realm's Hearth trips (07a), private on GameServer, reached structurally. */
 function hearthTripsOf(server: GameServer): GameHearthTrips {
@@ -268,6 +274,51 @@ const HEAVY_SELF_KEYS = [
   'tal',
   'hbl',
 ];
+
+/** The modules the heavyDue arm hands an emitter to, by callee as the arm
+ *  spells it: an unlisted helper fails the pin below instead of hiding its keys. */
+const HEAVY_SELF_HELPERS: Record<string, { file: string; opener: string }> = {
+  appendFarmPlotsWire: {
+    file: 'server/farming_commands.ts',
+    opener: 'export function appendFarmPlotsWire(',
+  },
+  'questSnap.emitQuestSelfKeys': {
+    file: 'server/quest_snapshot_wire.ts',
+    opener: 'export function emitQuestSelfKeys(',
+  },
+  appendBookOfDeedsWire: {
+    file: 'server/deeds_wire.ts',
+    opener: 'export function appendBookOfDeedsWire(',
+  },
+};
+
+const EMITTED_SELF_KEY = /\b(?:maybe|maybeSerialized|maybeRaw|emit)\(\s*'([A-Za-z]+)'/g;
+
+/** Every self key the heavyDue arm of server/game.ts emits, read from source
+ *  with comments stripped: the keys the arm emits itself, plus each key of every
+ *  helper it passes an emitter to (the helper's own top-level function body). */
+function heavySelfKeysFromSource(): { keys: string[]; helpers: string[] } {
+  const game = stripComments(repoFile('server/game.ts'));
+  const start = game.indexOf('    if (heavyDue) {');
+  const end = game.indexOf("selfLap?.('self.heavy');", start);
+  if (start === -1 || end === -1) throw new Error('the heavyDue arm is not where the pin reads it');
+  const arm = game.slice(start, end);
+  const keys = [...arm.matchAll(EMITTED_SELF_KEY)].map((m) => m[1]);
+  const helpers = [...arm.matchAll(/([A-Za-z_$][\w$.]*)\(([^()]*)\)/g)]
+    .filter(([, , args]) => /(?:^|,)\s*(?:maybe|maybeSerialized|maybeRaw)\s*(?=,|$)/.test(args))
+    .map(([, callee]) => callee);
+  for (const callee of helpers) {
+    const helper = HEAVY_SELF_HELPERS[callee];
+    if (!helper) throw new Error(`the heavyDue arm hands an emitter to an unlisted ${callee}`);
+    const src = stripComments(repoFile(helper.file));
+    const at = src.indexOf(helper.opener);
+    if (at === -1) throw new Error(`${callee} is not where the pin reads it`);
+    const own = [...src.slice(at, src.indexOf('\n}', at)).matchAll(EMITTED_SELF_KEY)];
+    if (own.length === 0) throw new Error(`${callee} emits no key the pin can read`);
+    keys.push(...own.map((m) => m[1]));
+  }
+  return { keys: [...new Set(keys)], helpers };
+}
 
 /** A joined session on a fresh server; housing needs nothing else to probe. */
 function housingSession() {
@@ -1187,6 +1238,16 @@ describe('freeholds wire: the ops contract and the game.ts shape', () => {
     expect(call).not.toMatch(/sim: this\.sim\b/);
   });
 
+  it('HEAVY_SELF_KEYS is exactly what the heavyDue arm emits, read from source both ways', () => {
+    const { keys, helpers } = heavySelfKeysFromSource();
+    // Anti-vacuity: the arm's own keys and every listed helper were read.
+    expect(keys.length).toBeGreaterThanOrEqual(25);
+    expect(keys).toEqual(expect.arrayContaining(['inv', 'hbl', 'fplot', 'qlog', 'acct']));
+    expect([...helpers].sort()).toEqual(Object.keys(HEAVY_SELF_HELPERS).sort());
+    expect(new Set(HEAVY_SELF_KEYS).size).toBe(HEAVY_SELF_KEYS.length);
+    expect([...keys].sort()).toEqual([...HEAVY_SELF_KEYS].sort());
+  });
+
   it('every housing token has a case label, and the refusal sits above the heavy-self mark', () => {
     const src = codeOnly(repoFile('server/game.ts'));
     const refusal = src.indexOf('refusedFreeholdCommand(msg)');
@@ -1637,6 +1698,7 @@ describe('Freehold Gate and Hearth Key real server dispatch', () => {
 
   it('a re-dispatch on a realm that began draining reaches nothing, as a buffered frame would', async () => {
     const { server, session, pid, fc, trips } = tripSession();
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     let release!: () => void;
     hearthSaveAnswering(
       server,
@@ -1659,8 +1721,112 @@ describe('Freehold Gate and Hearth Key real server dispatch', () => {
     // No answer of any kind (a social push may land on its own clock).
     expect(fc.sent.filter((m) => m.t === 'events' || m.t === 'commandOutcome')).toEqual([]);
     expect(server.sim.entities.get(pid)!.pos).toEqual(before);
-    // The advance stays spent (R-2), counted like any other refused re-dispatch.
-    expect(trips.counters.refusedAfterCommit).toBe(1);
+    // The advance stays spent (R-2), counted as a realm drop: the realm is going
+    // down, so no answer and no per-trip warn line.
+    expect(trips.counters).toMatchObject({ droppedAfterCommit: 1, refusedAfterCommit: 0 });
+    expect(warn).not.toHaveBeenCalledWith(REFUSED_AFTER_COMMIT_WARN);
+  });
+
+  it('a re-dispatch after a committed advance whose vault loot is fenced answers busy, counted as a drop (R-2)', async () => {
+    const { server, session, pid, fc, trips } = tripSession();
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    let release!: () => void;
+    hearthSaveAnswering(
+      server,
+      { readyAtMs: '0', nowMs: '5000' },
+      new Promise<void>((r) => {
+        release = r;
+      }),
+    );
+    server.handleMessage(session, JSON.stringify({ t: 'cmd', cmd: 'use', item: 'hearth_key' }));
+    expect(trips.counters.started).toBe(1);
+    const useItem = releasedSpyOn(server.sim, 'useItem');
+    const before = { ...server.sim.entities.get(pid)!.pos };
+    server.sim.drainEvents();
+    fc.sent.length = 0;
+    // The player claims vault loot while the trip's transaction runs: the
+    // guard now fences the character's frames, and the re-dispatch replays it.
+    const isLocked = releasedSpyOn(vaultGuardOf(server), 'isLocked').mockReturnValue(true);
+    release();
+    await vi.waitFor(() => expect(trips.counters.advanced).toBe(1));
+    expect(isLocked).toHaveBeenCalledWith(session.characterId);
+    expect(useItem).not.toHaveBeenCalled();
+    expect(server.sim.drainEvents()).toEqual([]);
+    expect(server.sim.entities.get(pid)!.pos).toEqual(before);
+    // The key is spent (the durable clock merged), so the player hears busy
+    // rather than nothing, through the jailed answer's own send path.
+    expect(fc.sent.filter((m) => m.t === 'events' || m.t === 'commandOutcome')).toEqual([
+      { t: 'events', list: [{ type: 'freeholdDenied', pid, reason: 'busy' }] },
+    ]);
+    const key = freeholdOwnerKeyForAccount(session.accountId);
+    expect(server.sim.freeholdKeyReadyAtMs.get(key)).toBe(5000 + HEARTH_KEY_COOLDOWN_MS);
+    expect(trips.counters).toMatchObject({ droppedAfterCommit: 1, refusedAfterCommit: 0 });
+    expect(warn).not.toHaveBeenCalledWith(REFUSED_AFTER_COMMIT_WARN);
+  });
+
+  it.each(['draining', 'vault_locked'] as const)(
+    'a %s drop under a deny ticket stays silent and counts nothing, exactly as the frame path drops it',
+    async (drop) => {
+      const { server, session, fc, trips } = tripSession();
+      let release!: () => void;
+      const gate = new Promise<void>((r) => {
+        release = r;
+      });
+      // A save that never runs the hook: the outcome is not_run, a deny ticket.
+      releasedSpyOn(saveSurface(server), 'saveCharacter').mockImplementation(async () => {
+        await gate;
+        return true;
+      });
+      server.handleMessage(session, JSON.stringify({ t: 'cmd', cmd: 'use', item: 'hearth_key' }));
+      expect(trips.counters.started).toBe(1);
+      const useItem = releasedSpyOn(server.sim, 'useItem');
+      server.sim.drainEvents();
+      fc.sent.length = 0;
+      if (drop === 'draining') (server as unknown as { draining: boolean }).draining = true;
+      else releasedSpyOn(vaultGuardOf(server), 'isLocked').mockReturnValue(true);
+      release();
+      await vi.waitFor(() => expect(trips.counters.notRun).toBe(1));
+      expect(useItem).not.toHaveBeenCalled();
+      expect(server.sim.drainEvents()).toEqual([]);
+      expect(fc.sent.filter((m) => m.t === 'events' || m.t === 'commandOutcome')).toEqual([]);
+      expect(trips.counters).toMatchObject({
+        advanced: 0,
+        droppedAfterCommit: 0,
+        refusedAfterCommit: 0,
+      });
+    },
+  );
+
+  it('a session leave prunes the expired Hearth refusals and keeps an unexpired one', async () => {
+    // The trip host reads the wall clock game.ts binds at construction, so the
+    // clock is faked BEFORE the realm is built (Date only: no timer is faked).
+    vi.useFakeTimers({ toFake: ['Date'] });
+    try {
+      vi.setSystemTime(1_000_000);
+      const { server, session, trips } = tripSession();
+      // A save that never runs the hook: every trip is refused (not_run).
+      releasedSpyOn(saveSurface(server), 'saveCharacter').mockResolvedValue(true);
+      const other = joinServer(server, fakeWs(), 7202, 'Hearthless');
+      other.leaseNonce = 'lease-7202';
+      server.sim.addItem('hearth_key', 1, other.pid);
+      const use = JSON.stringify({ t: 'cmd', cmd: 'use', item: 'hearth_key' });
+      server.handleMessage(session, use);
+      await vi.waitFor(() => expect(trips.counters.notRun).toBe(1));
+      vi.setSystemTime(1_003_000);
+      server.handleMessage(other, use);
+      await vi.waitFor(() => expect(trips.counters.notRun).toBe(2));
+      // The first refusal's window has run out by now, the second's has not,
+      // and nothing has pruned either yet.
+      vi.setSystemTime(1_007_000);
+      expect(trips.refusalMemoSize()).toBe(2);
+      await server.leave(session, 'test');
+      expect(trips.refusalMemoSize()).toBe(1);
+      // The one kept is the unexpired refusal: the other account is still metered.
+      server.handleMessage(other, use);
+      expect(trips.counters).toMatchObject({ metered: 1, started: 2 });
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it.each([

@@ -61,6 +61,7 @@ import {
   WOC_FISHING_EMPTY_HOOKS_TOTAL,
   WOC_FISHING_GOT_AWAYS_TOTAL,
   WOC_FISHING_KOI_TOTAL,
+  WOC_FREEHOLD_AUTHORITY_MS_TOTAL,
   WOC_FREEHOLD_AUTHORITY_TOTAL,
   WOC_FREEHOLD_CLAIMS_HELD,
   WOC_FREEHOLD_LOAD_FAILURES_TOTAL,
@@ -2507,6 +2508,7 @@ describe('the housing authority families (07a)', () => {
       metered: 211,
       abandoned: 212,
       tripMsTotal: 214,
+      droppedAfterCommit: 215,
     },
   };
   const measured = (text: string, measure: string): string | undefined =>
@@ -2515,7 +2517,10 @@ describe('the housing authority families (07a)', () => {
       new RegExp(`^${WOC_FREEHOLD_AUTHORITY_TOTAL}\\{measure="${measure}"\\} (\\d+)$`, 'm'),
     );
 
-  it('publishes the held claims and every claim and trip counter by fixed measure', async () => {
+  const authorityLines = (text: string, family: string): string[] =>
+    text.split('\n').filter((line) => line.startsWith(`${family}{`));
+
+  it('publishes the held claims and every claim and trip COUNT by fixed measure', async () => {
     const registry = new Registry();
     registerGameStateMetrics(registry, stubSource({ freeholdAuthority: () => stats }));
     const text = await registry.metrics();
@@ -2531,13 +2536,11 @@ describe('the housing authority families (07a)', () => {
       claim_fenced_writes: '108',
       claim_self_adopted: '109',
       claim_renew_passes: '110',
-      claim_renew_pass_ms_total: '111',
       claim_renew_passes_skipped: '112',
       claim_renew_chunks_abandoned: '113',
       claim_wanted_threw: '114',
       claim_pending_swept: '115',
       claim_login_reads: '116',
-      claim_login_read_ms_total: '117',
       trip_started: '201',
       trip_advanced: '202',
       trip_cooldown: '203',
@@ -2548,21 +2551,48 @@ describe('the housing authority families (07a)', () => {
       trip_not_run: '213',
       trip_unresolved: '208',
       trip_refused_after_commit: '209',
+      trip_dropped_after_commit: '215',
       trip_refused_pre_queue: '210',
       trip_metered: '211',
       trip_abandoned: '212',
-      trip_ms_total: '214',
     };
     for (const [measure, value] of Object.entries(expected)) {
       expect(measured(text, measure), measure).toBe(value);
     }
-    // The label set is exactly that, so a stray identity label cannot ride it.
-    const series = text
-      .split('\n')
-      .filter((line) => line.startsWith(`${WOC_FREEHOLD_AUTHORITY_TOTAL}{`));
+    // The label set is exactly that, so a stray identity label cannot ride it,
+    // and no summed duration hides among the counts.
+    const series = authorityLines(text, WOC_FREEHOLD_AUTHORITY_TOTAL);
     expect(series).toHaveLength(Object.keys(expected).length);
     for (const line of series)
       expect(line).toMatch(/^woc_freehold_authority_total\{measure="[a-z_]+"\} \d+$/);
+    expect(series.filter((line) => line.includes('_ms'))).toEqual([]);
+    const help = text
+      .split('\n')
+      .find((line) => line.startsWith('# HELP woc_freehold_authority_total '));
+    expect(help).toContain('Counts only');
+    expect(help).toContain('woc_freehold_authority_ms_total');
+    expect(help).not.toMatch(/summed/i);
+  });
+
+  it('publishes every summed-milliseconds measure on its OWN family, so no sum mixes units', async () => {
+    expect(WOC_FREEHOLD_AUTHORITY_MS_TOTAL).toBe('woc_freehold_authority_ms_total');
+    const registry = new Registry();
+    registerGameStateMetrics(registry, stubSource({ freeholdAuthority: () => stats }));
+    const text = await registry.metrics();
+    const series = authorityLines(text, WOC_FREEHOLD_AUTHORITY_MS_TOTAL);
+    // The exact label set, each a distinct source value.
+    expect([...series].sort()).toEqual(
+      [
+        'woc_freehold_authority_ms_total{measure="claim_login_read"} 117',
+        'woc_freehold_authority_ms_total{measure="claim_renew_pass"} 111',
+        'woc_freehold_authority_ms_total{measure="trip"} 214',
+      ].sort(),
+    );
+    const help = text
+      .split('\n')
+      .find((line) => line.startsWith('# HELP woc_freehold_authority_ms_total '));
+    expect(help).toContain('milliseconds');
+    expect(text).toContain('# TYPE woc_freehold_authority_ms_total counter');
   });
 
   it('scrapes zeros and no authority series when the host registers no source', async () => {
@@ -2570,8 +2600,7 @@ describe('the housing authority families (07a)', () => {
     registerGameStateMetrics(registry, stubSource({}));
     const text = await registry.metrics();
     expect(sampleValue(text, new RegExp(`^${WOC_FREEHOLD_CLAIMS_HELD} (\\d+)$`, 'm'))).toBe('0');
-    expect(
-      text.split('\n').some((line) => line.startsWith(`${WOC_FREEHOLD_AUTHORITY_TOTAL}{`)),
-    ).toBe(false);
+    expect(authorityLines(text, WOC_FREEHOLD_AUTHORITY_TOTAL)).toEqual([]);
+    expect(authorityLines(text, WOC_FREEHOLD_AUTHORITY_MS_TOTAL)).toEqual([]);
   });
 });

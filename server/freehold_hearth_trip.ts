@@ -59,6 +59,9 @@ export interface FreeholdHearthTripCounters {
   unresolved: number;
   /** A committed advance whose re-dispatch the sim then refused (R-2). */
   refusedAfterCommit: number;
+  /** A committed advance whose re-dispatch a realm drop took before the sim
+   *  saw it (draining, or the vault fence): the same R-2 class, apart. */
+  droppedAfterCommit: number;
   /** Denied before any queue or database work (no loaded entry, no claim). */
   refusedPreQueue: number;
   /** Denied by the per-account refusal memo. */
@@ -69,6 +72,10 @@ export interface FreeholdHearthTripCounters {
    *  the host clock): divided by `started` it is the mean trip latency. */
   tripMsTotal: number;
 }
+
+/** What a re-dispatch met: 'dropped' when the realm's draining or vault-loot
+ *  drop took the use before the sim saw it, undefined otherwise. */
+export type FreeholdHearthRedispatch = 'dropped' | undefined;
 
 export interface FreeholdHearthTripHost {
   /** The live session for a pid, or undefined. */
@@ -88,8 +95,9 @@ export interface FreeholdHearthTripHost {
     request: FreeholdMutationRequest,
     waitSignal: AbortSignal,
   ): Promise<FreeholdMutationOutcome>;
-  /** The server prechecks plus sim.useItem(HEARTH_KEY_ITEM_ID, pid). */
-  redispatch(session: FreeholdHearthTripSession): void;
+  /** The server prechecks plus sim.useItem(HEARTH_KEY_ITEM_ID, pid).
+   *  `advanced`: the durable cooldown advance already committed. */
+  redispatch(session: FreeholdHearthTripSession, advanced: boolean): FreeholdHearthRedispatch;
   /** mergeFreeholdKeyReadyAt: forward only, a durable value may deny, never admit. */
   mergeReadyAt(ownerKey: string, readyAtMs: number): void;
   /** Whether any live player still holds the owner key (the sim roster the
@@ -132,6 +140,7 @@ export function createFreeholdHearthTrips(host: FreeholdHearthTripHost): {
     notRun: 0,
     unresolved: 0,
     refusedAfterCommit: 0,
+    droppedAfterCommit: 0,
     refusedPreQueue: 0,
     metered: 0,
     abandoned: 0,
@@ -167,15 +176,17 @@ export function createFreeholdHearthTrips(host: FreeholdHearthTripHost): {
     ownerKey: string,
     session: FreeholdHearthTripSession,
     verdict: 'admit' | 'deny',
-  ): boolean {
+  ): 'consumed' | 'dropped' | 'refused' {
     const minted: Ticket = { ownerKey, pid: session.pid, verdict, consumed: false };
     ticket = minted;
+    let met: FreeholdHearthRedispatch;
     try {
-      host.redispatch(session);
+      met = host.redispatch(session, verdict === 'admit');
     } finally {
       ticket = null;
     }
-    return minted.consumed;
+    if (minted.consumed) return 'consumed';
+    return met === 'dropped' ? 'dropped' : 'refused';
   }
 
   async function run(
@@ -259,8 +270,13 @@ export function createFreeholdHearthTrips(host: FreeholdHearthTripHost): {
     }
     if (verdict === 'deny' && readyAtMs !== null) host.mergeReadyAt(ownerKey, readyAtMs);
     try {
-      const consumed = redispatchWithTicket(ownerKey, session, verdict);
-      if (verdict === 'admit' && !consumed) {
+      const answer = redispatchWithTicket(ownerKey, session, verdict);
+      // Both are residual R-2 (a committed advance whose trip does not happen):
+      // the key stays spent. A realm drop (the host answered a fenced vault
+      // busy, and a draining realm answers nothing) is counted apart and
+      // logs no line, since a draining realm would log one per trip in flight.
+      if (verdict === 'admit' && answer === 'dropped') counters.droppedAfterCommit++;
+      else if (verdict === 'admit' && answer === 'refused') {
         counters.refusedAfterCommit++;
         host.warn('freehold hearth trip committed but the sim refused its re-dispatch');
       }

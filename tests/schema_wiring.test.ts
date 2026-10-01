@@ -684,7 +684,14 @@ describe('ensureSchema wires every schema module at boot', () => {
         '  IF NEW.account_id IS NULL THEN\n    NEW.plot_id := NULL;\n    NEW.fingerprint := NULL;',
       ),
     ).toBe(1);
-    expect(ddl).not.toContain('OLD.account_id');
+    // Banned in the erase function's BODY only: another function may read OLD.
+    const eraseStart = ddl.indexOf('AS $freehold_operation_receipt_erase$');
+    const eraseEnd = ddl.indexOf('$freehold_operation_receipt_erase$;');
+    expect(eraseStart).toBeGreaterThanOrEqual(0);
+    expect(eraseEnd).toBeGreaterThan(eraseStart);
+    const eraseBody = ddl.slice(eraseStart, eraseEnd);
+    expect(eraseBody).toContain('IF NEW.account_id IS NULL THEN');
+    expect(eraseBody).not.toContain('OLD.account_id');
     expect(ddl).toContain("ERRCODE = '55006'");
     expect(ddl).toContain("MESSAGE = 'freehold_operation_open'");
     expect(ddl).toContain("CONSTRAINT = 'freehold_operations_open_delete_guard'");
