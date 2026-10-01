@@ -13,7 +13,7 @@
 // release, the G4 before G7 lock order, the login reader, clock_timestamp and the plans); the
 // nearest suites that do not are tests/server/freehold_db.pg.test.ts (the plot table and its
 // unfenced CAS) and tests/server/freehold_hearth_db.pg.test.ts (the Hearth table).
-// Cost: 7.8 s
+// Cost: 8.1 s
 //
 // Two pools stand in for two realm processes, each with its own holder string,
 // and the lease runs on a SHORT TTL passed through the ttlSeconds parameter.
@@ -156,6 +156,7 @@ d('the global plot claim against real PostgreSQL', () => {
   let hearthDb: typeof import('../../server/freehold_hearth_db');
   let reg: typeof import('../../server/freehold_claim_registry');
   let loginMod: typeof import('../../server/freehold_claim_login');
+  let txMod: typeof import('../../server/freehold_tx');
 
   const newPool = (app: string, max: number) =>
     new Pool({
@@ -319,6 +320,31 @@ d('the global plot claim against real PostgreSQL', () => {
     };
   };
 
+  /** poolA's checkouts, every statement recorded; `fail` answers a statement
+   *  with an error instead of sending it (a release that THROWS). */
+  const wrappedPool = (fail: (text: string) => Error | null = () => null) => {
+    const texts: string[] = [];
+    const pool: import('../../server/freehold_tx').FreeholdTxPool = {
+      async connect() {
+        const client = await poolA.connect();
+        const wrapped = {
+          processID: (client as unknown as { processID?: number }).processID,
+          query(text: string, values?: unknown[]) {
+            texts.push(text);
+            const error = fail(text);
+            return error ? Promise.reject(error) : client.query(text, values);
+          },
+          release: (error?: Error | boolean) => client.release(error),
+          on: (event: 'error', listener: (error: Error) => void) => client.on(event, listener),
+          removeListener: (event: 'error', listener: (error: Error) => void) =>
+            client.removeListener(event, listener),
+        };
+        return wrapped as import('../../server/db_transaction_deadline').DbTransactionDeadlineClient;
+      },
+    };
+    return { pool, texts };
+  };
+
   beforeAll(async () => {
     ({ Pool } = await import('pg'));
     claimDb = await import('../../server/freehold_claim_db');
@@ -326,6 +352,7 @@ d('the global plot claim against real PostgreSQL', () => {
     hearthDb = await import('../../server/freehold_hearth_db');
     reg = await import('../../server/freehold_claim_registry');
     loginMod = await import('../../server/freehold_claim_login');
+    txMod = await import('../../server/freehold_tx');
     const admin = new Pool({ connectionString: url, max: 1 });
     await admin.query(`DROP SCHEMA IF EXISTS ${SCHEMA} CASCADE`);
     await admin.query(`CREATE SCHEMA ${SCHEMA}`);
@@ -991,6 +1018,138 @@ d('the global plot claim against real PostgreSQL', () => {
     expect(tight.waitingCount).toBe(0);
     expect((await tight.query('SELECT 1 AS one')).rows).toEqual([{ one: 1 }]);
     await tight.end();
+  });
+
+  it("waits out an UNCOMMITTED release in a thrown release's re-read and answers released once it commits, where a lock-free read answers held", async () => {
+    const plotId = plot('reread-wait');
+    expect(await acquire(poolA, HOLDER_A, plotId, 34, LONG_TTL_SECONDS)).toMatchObject({
+      generation: '1',
+    });
+    const x = await side.connect();
+    try {
+      // The release has run and holds the row, but its COMMIT has not landed:
+      // from outside, a stalled WAL flush on COMMIT looks exactly like this.
+      await x.query('BEGIN');
+      expect(await claimDb.releaseFreeholdClaimRows(x, HOLDER_A, [plotId])).toEqual(
+        new Set([plotId]),
+      );
+      const xPid = await backendPid(x);
+      // Control: a lock-free read cannot see the uncommitted release, so it
+      // would keep a claim whose release is about to land.
+      expect(
+        await claimDb.readFreeholdClaimReleasesOnClient(poolB, HOLDER_A, [plotId], { wait: false }),
+      ).toEqual(new Map([[plotId, 'held']]));
+      const reading = txMod.runFreeholdTransaction(poolA, reg.FREEHOLD_CLAIM_RENEW_BOUNDS, (tx) =>
+        claimDb.readFreeholdClaimReleasesOnClient(tx, HOLDER_A, [plotId], { wait: true }),
+      );
+      // It WAITS on the release's row lock (FOR SHARE against its NO KEY UPDATE).
+      const blocked = await waitForBlock(xPid, APP_A);
+      expect(blocked).toEqual({
+        query: claimDb.FREEHOLD_CLAIM_RELEASE_WAIT_SQL,
+        waitEventType: 'Lock',
+      });
+      await x.query('COMMIT');
+      expect(await reading).toEqual(new Map([[plotId, 'released']]));
+    } finally {
+      await x.query('ROLLBACK').catch(() => undefined);
+      x.release();
+    }
+    expect(await claimRow(plotId)).toMatchObject({ holder: `${HOLDER_A}#released`, live: false });
+  });
+
+  it('keeps a thrown release chunk for the next pass when its re-read runs out the lock bound on a row still held', async () => {
+    const plotId = plot('reread-timeout');
+    expect(await acquire(poolA, HOLDER_A, plotId, 35, LONG_TTL_SECONDS)).toMatchObject({
+      generation: '1',
+    });
+    const registry = reg.createFreeholdClaimRegistry();
+    registry.record(held(plotId, 35));
+    const before = await claimRow(plotId);
+    // The release statement THROWS without reaching the database.
+    const thrown = wrappedPool((text) =>
+      text === claimDb.FREEHOLD_CLAIM_RELEASE_SQL
+        ? Object.assign(new Error('could not serialize access'), { code: '40001' })
+        : null,
+    );
+    const { deps, wanted } = renewDeps(registry, LONG_TTL_SECONDS);
+    wanted.mockReturnValue(false);
+    const x = await side.connect();
+    try {
+      // An open transaction holds the row past the read's 1,000 ms lock bound.
+      await x.query('BEGIN');
+      await x.query(
+        'SELECT plot_id FROM freehold_plot_claims WHERE plot_id = $1 FOR NO KEY UPDATE',
+        [plotId],
+      );
+      const started = Date.now();
+      await reg.renewFreeholdClaims({ ...deps, pool: thrown.pool });
+      const elapsed = Date.now() - started;
+      expect(elapsed).toBeGreaterThanOrEqual(950);
+      expect(elapsed).toBeLessThan(3_000);
+    } finally {
+      await x.query('ROLLBACK').catch(() => undefined);
+      x.release();
+    }
+    expect(thrown.texts.filter((t) => t === claimDb.FREEHOLD_CLAIM_RELEASE_WAIT_SQL)).toHaveLength(
+      1,
+    );
+    expect(registry.all()).toEqual([held(plotId, 35)]);
+    expect(registry.counters.released).toBe(0);
+    expect(await claimRow(plotId)).toEqual(before);
+  });
+
+  it('releases through the renewer: a lapsed claim of ours leaves uncounted, a row an open transaction holds stays, then goes next pass', async () => {
+    const live = plot('pass-live');
+    const lapsed = plot('pass-lapsed');
+    const locked = plot('pass-locked');
+    const registry = reg.createFreeholdClaimRegistry();
+    for (const [plotId, accountId] of [
+      [live, 36],
+      [lapsed, 37],
+      [locked, 38],
+    ] as const) {
+      expect(await acquire(poolA, HOLDER_A, plotId, accountId, LONG_TTL_SECONDS)).toMatchObject({
+        generation: '1',
+      });
+      registry.record(held(plotId, accountId));
+    }
+    // Releases that failed past the TTL leave a row of ours that has lapsed.
+    await side.query(
+      `UPDATE freehold_plot_claims SET expires_at = clock_timestamp() - interval '5 seconds'
+        WHERE plot_id = $1`,
+      [lapsed],
+    );
+    const lapsedBefore = await claimRow(lapsed);
+    const recorded = wrappedPool();
+    const { deps, wanted } = renewDeps(registry, LONG_TTL_SECONDS);
+    wanted.mockReturnValue(false);
+    const pass = { ...deps, pool: recorded.pool };
+    const x = await side.connect();
+    try {
+      await x.query('BEGIN');
+      await x.query(
+        'SELECT plot_id FROM freehold_plot_claims WHERE plot_id = $1 FOR NO KEY UPDATE',
+        [locked],
+      );
+      await reg.renewFreeholdClaims(pass);
+    } finally {
+      await x.query('ROLLBACK').catch(() => undefined);
+      x.release();
+    }
+    // The lapsed one left (never asked about again), uncounted; the locked one
+    // was passed over by SKIP LOCKED and is still ours and live: kept.
+    expect(registry.all()).toEqual([held(locked, 38)]);
+    expect(registry.counters.released).toBe(1);
+    expect(await claimRow(live)).toMatchObject({ holder: `${HOLDER_A}#released`, live: false });
+    expect(await claimRow(lapsed)).toEqual(lapsedBefore);
+    expect(
+      recorded.texts.filter((t) => t === claimDb.FREEHOLD_CLAIM_RELEASE_READ_SQL),
+    ).toHaveLength(1);
+    // The next pass, the lock gone, releases it.
+    await reg.renewFreeholdClaims(pass);
+    expect(registry.all()).toEqual([]);
+    expect(registry.counters.released).toBe(2);
+    expect(await claimRow(locked)).toMatchObject({ holder: `${HOLDER_A}#released`, live: false });
   });
 
   it('lets exactly one of two processes win a first acquire of one plot', async () => {

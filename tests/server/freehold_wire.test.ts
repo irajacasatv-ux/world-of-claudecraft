@@ -292,30 +292,80 @@ const HEAVY_SELF_HELPERS: Record<string, { file: string; opener: string }> = {
   },
 };
 
-const EMITTED_SELF_KEY = /\b(?:maybe|maybeSerialized|maybeRaw|emit)\(\s*'([A-Za-z]+)'/g;
+/** The emitter names the derivation recognizes, in the arm and in a helper. */
+const EMITTER_NAMES = ['maybe', 'maybeSerialized', 'maybeRaw', 'emit'];
+const EMITTER = new RegExp(`\\b(?:${EMITTER_NAMES.join('|')})\\b`, 'g');
+const LITERAL_KEY_CALL = /^\s*\(\s*'([A-Za-z]+)'\s*,/;
+
+/** The key of every emitter call in `body`, REFUSING (throwing) on any shape it
+ *  cannot read: a call whose key is not a single-quoted literal (a constant, a
+ *  computed key, a lambda that wraps an emitter), or an emitter named outside a
+ *  call and outside the argument list of a listed helper (an alias, a deeper
+ *  hand-off). A shape the pin does not recognize fails loudly instead of
+ *  narrowing the scan. */
+function emittedKeys(where: string, body: string, handOffs: (at: number) => boolean): string[] {
+  const keys: string[] = [];
+  for (const m of body.matchAll(EMITTER)) {
+    const at = m.index ?? 0;
+    const after = body.slice(at + m[0].length);
+    if (/^\s*\(/.test(after)) {
+      const key = LITERAL_KEY_CALL.exec(after);
+      if (!key) {
+        const shape = after.slice(0, 40).replace(/\s+/g, ' ');
+        throw new Error(
+          `${where}: ${m[0]}${shape} takes a key that is not a single-quoted literal`,
+        );
+      }
+      keys.push(key[1]);
+    } else if (!handOffs(at)) {
+      throw new Error(
+        `${where}: ${m[0]} is named outside a call and outside a listed helper's arguments`,
+      );
+    }
+  }
+  return keys;
+}
 
 /** Every self key the heavyDue arm of server/game.ts emits, read from source
  *  with comments stripped: the keys the arm emits itself, plus each key of every
- *  helper it passes an emitter to (the helper's own top-level function body). */
-function heavySelfKeysFromSource(): { keys: string[]; helpers: string[] } {
-  const game = stripComments(repoFile('server/game.ts'));
+ *  helper it passes an emitter to (the helper's own top-level function body).
+ *  DEPTH LIMIT: helpers are followed ONE level deep. A helper that hands its
+ *  emitter on again, or names one under another parameter name, throws rather
+ *  than being followed, and so does any emitter call whose key is not a
+ *  single-quoted literal (emittedKeys). `read` is the source reader, so the
+ *  refusals can be driven against mutated text. */
+function heavySelfKeysFromSource(read: (rel: string) => string = repoFile): {
+  keys: string[];
+  helpers: string[];
+} {
+  const game = stripComments(read('server/game.ts'));
   const start = game.indexOf('    if (heavyDue) {');
   const end = game.indexOf("selfLap?.('self.heavy');", start);
   if (start === -1 || end === -1) throw new Error('the heavyDue arm is not where the pin reads it');
   const arm = game.slice(start, end);
-  const keys = [...arm.matchAll(EMITTED_SELF_KEY)].map((m) => m[1]);
-  const helpers = [...arm.matchAll(/([A-Za-z_$][\w$.]*)\(([^()]*)\)/g)]
-    .filter(([, , args]) => /(?:^|,)\s*(?:maybe|maybeSerialized|maybeRaw)\s*(?=,|$)/.test(args))
-    .map(([, callee]) => callee);
+  const handOffs = [...arm.matchAll(/([A-Za-z_$][\w$.]*)\(([^()]*)\)/g)].filter(([, , args]) =>
+    new RegExp(`(?:^|,)\\s*(?:${EMITTER_NAMES.join('|')})\\s*(?=,|$)`).test(args),
+  );
+  const helpers = handOffs.map(([, callee]) => callee);
+  const keys = emittedKeys('the heavyDue arm', arm, (at) =>
+    handOffs.some((h) => at >= (h.index ?? 0) && at < (h.index ?? 0) + h[0].length),
+  );
   for (const callee of helpers) {
     const helper = HEAVY_SELF_HELPERS[callee];
     if (!helper) throw new Error(`the heavyDue arm hands an emitter to an unlisted ${callee}`);
-    const src = stripComments(repoFile(helper.file));
+    const src = stripComments(read(helper.file));
     const at = src.indexOf(helper.opener);
     if (at === -1) throw new Error(`${callee} is not where the pin reads it`);
-    const own = [...src.slice(at, src.indexOf('\n}', at)).matchAll(EMITTED_SELF_KEY)];
+    const params = balancedCall(src, at + helper.opener.length - 1);
+    for (const [, name] of params.matchAll(/(\w+)\s*:\s*(?:EmitSelfKey\b|\()/g)) {
+      if (!EMITTER_NAMES.includes(name)) {
+        throw new Error(`${callee} takes an emitter named ${name}, which the pin does not read`);
+      }
+    }
+    const bodyAt = at + helper.opener.length - 1 + params.length;
+    const own = emittedKeys(callee, src.slice(bodyAt, src.indexOf('\n}', at)), () => false);
     if (own.length === 0) throw new Error(`${callee} emits no key the pin can read`);
-    keys.push(...own.map((m) => m[1]));
+    keys.push(...own);
   }
   return { keys: [...new Set(keys)], helpers };
 }
@@ -1248,6 +1298,66 @@ describe('freeholds wire: the ops contract and the game.ts shape', () => {
     expect([...keys].sort()).toEqual([...HEAVY_SELF_KEYS].sort());
   });
 
+  it('the heavy-self key derivation refuses every emit shape it cannot read, never narrowing', () => {
+    // Each row rewrites one real source file the way a future edit might; the
+    // derivation must THROW, since a key it silently skipped would drop out of
+    // HEAVY_SELF_KEYS and out of every pin built on it.
+    const rows: [string, string, string, string, RegExp][] = [
+      [
+        'a constant key',
+        'server/game.ts',
+        "maybe('buyback', meta.vendorBuyback);",
+        'maybe(BUYBACK_KEY, meta.vendorBuyback);',
+        /heavyDue arm: maybe.*not a single-quoted literal/,
+      ],
+      [
+        'a double-quoted key',
+        'server/game.ts',
+        "maybe('buyback', meta.vendorBuyback);",
+        'maybe("buyback", meta.vendorBuyback);',
+        /heavyDue arm: maybe.*not a single-quoted literal/,
+      ],
+      [
+        'a lambda-wrapped emitter handed to a helper',
+        'server/game.ts',
+        'appendBookOfDeedsWire(meta, maybe, maybeRaw);',
+        'appendBookOfDeedsWire(meta, (k, v) => maybe(k, v), maybeRaw);',
+        /heavyDue arm: maybe.*not a single-quoted literal/,
+      ],
+      [
+        'an aliased emitter',
+        'server/game.ts',
+        "maybe('buyback', meta.vendorBuyback);",
+        "const put = maybe;\n      put('buyback', meta.vendorBuyback);",
+        /heavyDue arm: maybe is named outside a call/,
+      ],
+      [
+        'a helper that hands its emitter one level deeper',
+        'server/deeds_wire.ts',
+        "maybeRaw('acct', accountLedgerWireJson(meta.accountLedger));",
+        'appendAccountLedgerWire(meta, maybeRaw);',
+        /appendBookOfDeedsWire: maybeRaw is named outside a call/,
+      ],
+      [
+        'a helper emitter under an unrecognized name',
+        'server/farming_commands.ts',
+        "  maybeSerialized: (key: string, serialized: string) => void,\n): void {\n  const fplotRows = sim.farmPlotsFor(pid);\n  if (fplotRows.length === 0) maybeSerialized('fplot', '[]');",
+        "  put: (key: string, serialized: string) => void,\n): void {\n  const fplotRows = sim.farmPlotsFor(pid);\n  if (fplotRows.length === 0) put('fplot', '[]');",
+        /appendFarmPlotsWire takes an emitter named put/,
+      ],
+    ];
+    for (const [name, file, from, to, refusal] of rows) {
+      const original = stripComments(repoFile(file));
+      expect(original.split(from).length - 1, `${name}: the text to rewrite`).toBe(1);
+      const read = (rel: string) => (rel === file ? original.replace(from, to) : repoFile(rel));
+      expect(() => heavySelfKeysFromSource(read), name).toThrow(refusal);
+    }
+    // Control: the same reader with no rewrite derives the real set.
+    expect(heavySelfKeysFromSource((rel) => repoFile(rel)).keys.sort()).toEqual(
+      [...HEAVY_SELF_KEYS].sort(),
+    );
+  });
+
   it('every housing token has a case label, and the refusal sits above the heavy-self mark', () => {
     const src = codeOnly(repoFile('server/game.ts'));
     const refusal = src.indexOf('refusedFreeholdCommand(msg)');
@@ -1764,6 +1874,58 @@ describe('Freehold Gate and Hearth Key real server dispatch', () => {
     expect(warn).not.toHaveBeenCalledWith(REFUSED_AFTER_COMMIT_WARN);
   });
 
+  it.each([
+    ['jailed', ['busy']],
+    ['dark', ['no_freehold']],
+    ['spectating', []],
+  ] as const)(
+    'a %s precheck after a committed advance answers as the frame path and counts as a drop, never a sim refusal (R-2)',
+    async (gate, reasons) => {
+      const { server, session, pid, fc, trips } = tripSession();
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      let release!: () => void;
+      hearthSaveAnswering(
+        server,
+        { readyAtMs: '0', nowMs: '5000' },
+        new Promise<void>((r) => {
+          release = r;
+        }),
+      );
+      server.handleMessage(session, JSON.stringify({ t: 'cmd', cmd: 'use', item: 'hearth_key' }));
+      expect(trips.counters.started).toBe(1);
+      const useItem = releasedSpyOn(server.sim, 'useItem');
+      const before = { ...server.sim.entities.get(pid)!.pos };
+      server.sim.drainEvents();
+      fc.sent.length = 0;
+      // The state lands while the trip's transaction runs.
+      if (gate === 'jailed') session.jailed = { returnPos: { x: 0, z: 0 }, returnFacing: 0 };
+      else if (gate === 'dark') vi.stubEnv('FREEHOLDS_ENABLED', '0');
+      else
+        session.spectating = {
+          characterId: 1,
+          name: 'Watched',
+          savedPos: { ...before },
+          priorGm: false,
+          stowedPet: null,
+        };
+      release();
+      await vi.waitFor(() => expect(trips.counters.advanced).toBe(1));
+      expect(useItem).not.toHaveBeenCalled();
+      expect(server.sim.drainEvents()).toEqual([]);
+      expect(server.sim.entities.get(pid)!.pos).toEqual(before);
+      expect(fc.sent.filter((m) => m.t === 'events' || m.t === 'commandOutcome')).toEqual(
+        reasons.map((reason) => ({
+          t: 'events',
+          list: [{ type: 'freeholdDenied', pid, reason }],
+        })),
+      );
+      const key = freeholdOwnerKeyForAccount(session.accountId);
+      expect(server.sim.freeholdKeyReadyAtMs.get(key)).toBe(5000 + HEARTH_KEY_COOLDOWN_MS);
+      expect(trips.counters).toMatchObject({ droppedAfterCommit: 1, refusedAfterCommit: 0 });
+      expect(warn).not.toHaveBeenCalledWith(REFUSED_AFTER_COMMIT_WARN);
+    },
+  );
+
   it.each(['draining', 'vault_locked'] as const)(
     'a %s drop under a deny ticket stays silent and counts nothing, exactly as the frame path drops it',
     async (drop) => {
@@ -1797,7 +1959,7 @@ describe('Freehold Gate and Hearth Key real server dispatch', () => {
     },
   );
 
-  it('a session leave prunes the expired Hearth refusals and keeps an unexpired one', async () => {
+  it("a session leave prunes the expired Hearth refusals and keeps an unexpired one, the leaver's own", async () => {
     // The trip host reads the wall clock game.ts binds at construction, so the
     // clock is faked BEFORE the realm is built (Date only: no timer is faked).
     vi.useFakeTimers({ toFake: ['Date'] });
@@ -1815,15 +1977,25 @@ describe('Freehold Gate and Hearth Key real server dispatch', () => {
       vi.setSystemTime(1_003_000);
       server.handleMessage(other, use);
       await vi.waitFor(() => expect(trips.counters.notRun).toBe(2));
-      // The first refusal's window has run out by now, the second's has not,
-      // and nothing has pruned either yet.
+      // The first refusal's window (the account that STAYS) has run out by
+      // now, the second's (the account that leaves) has not, and nothing has
+      // pruned either yet.
       vi.setSystemTime(1_007_000);
       expect(trips.refusalMemoSize()).toBe(2);
-      await server.leave(session, 'test');
+      // The LEAVER holds the unexpired entry, so the leave tells expiry pruning
+      // from dropping the leaver's own entry: the latter would keep the staying
+      // account's expired one and lose the leaver's.
+      await server.leave(other, 'test');
       expect(trips.refusalMemoSize()).toBe(1);
-      // The one kept is the unexpired refusal: the other account is still metered.
-      server.handleMessage(other, use);
+      // The one kept is the leaver's: its relog inside the window is metered.
+      const relog = joinServer(server, fakeWs(), 7202, 'Hearthless');
+      relog.leaseNonce = 'lease-7202-relog';
+      server.sim.addItem('hearth_key', 1, relog.pid);
+      server.handleMessage(relog, use);
       expect(trips.counters).toMatchObject({ metered: 1, started: 2 });
+      // And the staying account's expired entry is gone: its use starts a trip.
+      server.handleMessage(session, use);
+      expect(trips.counters).toMatchObject({ metered: 1, started: 3 });
     } finally {
       vi.useRealTimers();
     }

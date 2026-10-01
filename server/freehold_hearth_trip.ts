@@ -59,8 +59,9 @@ export interface FreeholdHearthTripCounters {
   unresolved: number;
   /** A committed advance whose re-dispatch the sim then refused (R-2). */
   refusedAfterCommit: number;
-  /** A committed advance whose re-dispatch a realm drop took before the sim
-   *  saw it (draining, or the vault fence): the same R-2 class, apart. */
+  /** A committed advance whose re-dispatch a server precheck took before the
+   *  sim saw it (draining, the vault fence, spectating, jailed, dark): the
+   *  same R-2 class, apart. */
   droppedAfterCommit: number;
   /** Denied before any queue or database work (no loaded entry, no claim). */
   refusedPreQueue: number;
@@ -73,8 +74,10 @@ export interface FreeholdHearthTripCounters {
   tripMsTotal: number;
 }
 
-/** What a re-dispatch met: 'dropped' when the realm's draining or vault-loot
- *  drop took the use before the sim saw it, undefined otherwise. */
+/** What a re-dispatch met: 'dropped' when a server precheck took the use
+ *  before the sim saw it (the draining or vault-loot drop always, and after a
+ *  committed advance the spectating, jailed and dark gates too), undefined
+ *  otherwise. */
 export type FreeholdHearthRedispatch = 'dropped' | undefined;
 
 export interface FreeholdHearthTripHost {
@@ -272,9 +275,9 @@ export function createFreeholdHearthTrips(host: FreeholdHearthTripHost): {
     try {
       const answer = redispatchWithTicket(ownerKey, session, verdict);
       // Both are residual R-2 (a committed advance whose trip does not happen):
-      // the key stays spent. A realm drop (the host answered a fenced vault
-      // busy, and a draining realm answers nothing) is counted apart and
-      // logs no line, since a draining realm would log one per trip in flight.
+      // the key stays spent. A precheck drop (the host answered it as the
+      // frame path would, a fenced vault busy) is counted apart and logs no
+      // line, since a draining realm would log one per trip in flight.
       if (verdict === 'admit' && answer === 'dropped') counters.droppedAfterCommit++;
       else if (verdict === 'admit' && answer === 'refused') {
         counters.refusedAfterCommit++;

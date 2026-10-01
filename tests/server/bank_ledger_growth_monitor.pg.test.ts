@@ -27,6 +27,8 @@ import {
 const ADMIN_URL = process.env.TEST_DATABASE_URL;
 const VERIFY_DB = 'wocc_bank_growth_monitor_verify';
 const describeDb = ADMIN_URL ? describe : describe.skip;
+/** pg's admin_shutdown: what pg_terminate_backend leaves an idle client. */
+const ADMIN_SHUTDOWN = '57P01';
 
 function verifyUrl(adminUrl: string): string {
   const url = new URL(adminUrl);
@@ -37,6 +39,9 @@ function verifyUrl(adminUrl: string): string {
 describeDb('bank-ledger growth monitor against real PostgreSQL', () => {
   let admin: Pool;
   const openPools = new Set<Pool>();
+  // Every idle-client error a tracked pool reported, save the teardown's
+  // 57P01: each case fails on any left here (afterEach), so a real one surfaces.
+  const idleClientErrors: unknown[] = [];
 
   function trackedPool(applicationName: string, max = 1): Pool {
     const pool = new Pool({
@@ -48,7 +53,10 @@ describeDb('bank-ledger growth monitor against real PostgreSQL', () => {
     // backend of the verify database, so a client still idle there (its pool
     // ending) reports a 57P01 that, unlistened, surfaces as an unhandled error
     // and fails the run after every case passed. The server's own pool listens.
-    pool.on('error', () => {});
+    // Only that code is swallowed: anything else is recorded and fails the case.
+    pool.on('error', (error) => {
+      if ((error as { code?: unknown }).code !== ADMIN_SHUTDOWN) idleClientErrors.push(error);
+    });
     openPools.add(pool);
     return pool;
   }
@@ -107,6 +115,7 @@ describeDb('bank-ledger growth monitor against real PostgreSQL', () => {
   afterEach(async () => {
     await Promise.all([...openPools].map((pool) => pool.end().catch(() => {})));
     openPools.clear();
+    expect(idleClientErrors.splice(0), 'an idle client error other than 57P01').toEqual([]);
   });
 
   afterAll(async () => {
@@ -119,7 +128,34 @@ describeDb('bank-ledger growth monitor against real PostgreSQL', () => {
     );
     await admin.query(`DROP DATABASE IF EXISTS ${VERIFY_DB}`);
     await admin.end();
+    // The teardown's own terminations land after the last afterEach.
+    expect(idleClientErrors.splice(0), 'an idle client error other than 57P01').toEqual([]);
   }, 30_000);
+
+  it('swallows only the teardown 57P01 from an idle client and records any other error', async () => {
+    const applicationName = 'growth-monitor-idle-error';
+    const pool = trackedPool(applicationName);
+    // A real idle client: checked out, used, released, still connected.
+    const client = await pool.connect();
+    await client.query('SELECT 1');
+    client.release();
+    const reported = new Promise<unknown>((resolve) => pool.once('error', resolve));
+    await admin.query(
+      `SELECT pg_catalog.pg_terminate_backend(pid)
+         FROM pg_catalog.pg_stat_activity
+        WHERE datname = $1 AND application_name = $2`,
+      [VERIFY_DB, applicationName],
+    );
+    // The real termination carries the code the listener swallows: nothing recorded.
+    expect(await reported).toMatchObject({ code: ADMIN_SHUTDOWN });
+    expect(idleClientErrors).toEqual([]);
+    // Any other idle-client error is recorded, for afterEach to fail the case on.
+    const other = Object.assign(new Error('idle client failure'), { code: '08006' });
+    pool.emit('error', other, client);
+    expect(idleClientErrors).toEqual([other]);
+    // This case consumes its own synthetic error, so its afterEach stays green.
+    idleClientErrors.splice(0);
+  });
 
   it('aborts an active socket promptly, replaces it, and leaves no pool waiter', async () => {
     const applicationName = 'growth-monitor-active-abort';

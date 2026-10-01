@@ -219,6 +219,54 @@ describe('the coordinator does not regrow its own calls beside the runner', () =
     );
   });
 
+  it("wires the claim renewer as the autosave runner's renewFreeholdClaims write", () => {
+    // The plot claims are renewed from this one place (the registry header in
+    // server/freehold_claim_registry.ts), so the call counted above must sit
+    // in the AUTOSAVE arm, as the runner's own renewal member: moved above the
+    // cadence gate it would renew every tick, and under another member it
+    // would leave the runner's renewal slot (and its order) to something else.
+    // The count above cannot tell either from the real wiring.
+    const RENEWER =
+      'renewFreeholdClaims: () => renewGameFreeholdClaims(this.sim, this.freeholdPersist, this.freeholdClaims),';
+    const autosaveRenewer = (game: string): string | null => {
+      const body = methodBody(game, '  private flushPeriodicSaves(');
+      const gate = body.indexOf('if (this.saveTimer < AUTOSAVE_SECONDS) return;');
+      const runner = gate === -1 ? -1 : body.indexOf('runPeriodicSaveFlush({', gate);
+      const close = runner === -1 ? -1 : body.indexOf('\n    });', runner);
+      if (close === -1) return null;
+      const writes = body.slice(runner, close).replace(/\s+/g, ' ');
+      return writes.includes(RENEWER) ? RENEWER : null;
+    };
+    const game = stripComments(readFileSync(resolve(process.cwd(), 'server/game.ts'), 'utf8'));
+    expect(autosaveRenewer(game)).toBe(RENEWER);
+    // Negative controls, each a real mutation of the coordinator's text that
+    // keeps the count above green.
+    const member =
+      'renewFreeholdClaims: () =>\n        renewGameFreeholdClaims(this.sim, this.freeholdPersist, this.freeholdClaims),';
+    expect(game).toContain(member);
+    const hoisted = game
+      .replace(member, 'renewFreeholdClaims: async () => {},')
+      .replace(
+        '    this.saveTimer += dt;\n',
+        '    void renewGameFreeholdClaims(this.sim, this.freeholdPersist, this.freeholdClaims);\n    this.saveTimer += dt;\n',
+      );
+    const swapped = game
+      .replace(member, 'renewFreeholdClaims: () => heartbeatCharacterLeases(),')
+      .replace(
+        'heartbeatLeases: () => heartbeatCharacterLeases(),',
+        'heartbeatLeases: () =>\n        renewGameFreeholdClaims(this.sim, this.freeholdPersist, this.freeholdClaims),',
+      );
+    for (const [name, mutated] of [
+      ['the renewer hoisted above the cadence gate', hoisted],
+      ['the renewer wired under another write', swapped],
+    ] as const) {
+      expect(mutated, name).not.toBe(game);
+      const body = methodBody(mutated, '  private flushPeriodicSaves(');
+      expect(body.split('renewGameFreeholdClaims(').length - 1, name).toBe(1);
+      expect(autosaveRenewer(mutated), name).toBeNull();
+    }
+  });
+
   it('still hands the profiler sample to all three shared-blob writers', () => {
     // What tests/server/loop_lateness_instrumentation.test.ts measured through
     // the literal `void this.saveMarket(sample);` text, which the extraction

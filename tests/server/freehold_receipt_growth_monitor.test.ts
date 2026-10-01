@@ -7,7 +7,7 @@
 // drain. The nearest suite, tests/server/bank_ledger_growth_monitor.test.ts,
 // pins the bank singleton read, which watches no housing table.
 //
-// Cost: 310 ms
+// Cost: 0.2 s
 
 import { EventEmitter } from 'node:events';
 import type { QueryResult, QueryResultRow } from 'pg';

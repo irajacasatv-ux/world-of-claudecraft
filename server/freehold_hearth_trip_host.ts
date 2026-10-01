@@ -12,12 +12,13 @@
 //   vault-lock drops, spectating, jailed, dark) and answers each exactly as
 //   the frame path does, save one: after a COMMITTED advance the key is
 //   already spent (R-2), so a vault-lock drop answers busy rather than
-//   nothing (a draining realm stays silent: it is going down). Then it runs
-//   the item use through the sim while the ticket is set. It takes no
-//   heavy-self receipt mark: the use frame that started the trip already took
-//   one, and an admitted entry changes no heavy self field (it moves the
-//   player and claims a room, both outside the heavy block, and grants or
-//   spends nothing), pinned in tests/server/freehold_wire.test.ts.
+//   nothing (a draining realm stays silent: it is going down), and every
+//   precheck is a realm drop the trip counts apart, since the sim never saw
+//   the use. Then it runs the item use through the sim while the ticket is
+//   set. It takes no heavy-self receipt mark: the use frame that started the
+//   trip already took one, and an admitted entry changes no heavy self field
+//   (it moves the player and claims a room, both outside the heavy block, and
+//   grants or spends nothing), pinned in tests/server/freehold_wire.test.ts.
 import { HEARTH_KEY_COOLDOWN_MS, HEARTH_KEY_ITEM_ID } from '../src/sim/freehold/gate_rules';
 import { mergeFreeholdKeyReadyAt } from '../src/sim/freehold/hearth_key';
 import { freeholdOwnerKeyOfMeta } from '../src/sim/freehold/owner_key';
@@ -101,18 +102,16 @@ export function createGameFreeholdHearthTrips<S extends FreeholdHearthTripSessio
         if (advanced && refusal === 'vault_locked') deps.sendDenied(live, 'busy');
         return 'dropped';
       }
-      // The spectate drop answers nothing, as the frame path's does.
-      if (refusal === 'spectating') return undefined;
-      if (refusal === 'jailed') {
-        deps.sendDenied(live, 'busy');
+      if (refusal === null) {
+        deps.sim().useItem(HEARTH_KEY_ITEM_ID, session.pid);
         return undefined;
       }
-      if (refusal === 'dark') {
-        deps.sendDenied(live, 'no_freehold');
-        return undefined;
-      }
-      deps.sim().useItem(HEARTH_KEY_ITEM_ID, session.pid);
-      return undefined;
+      // Spectating answers nothing, jailed busy and dark no_freehold, each as
+      // the frame path does. The sim never saw the use, so after a committed
+      // advance each is a realm drop too, never the sim's refusal.
+      if (refusal === 'jailed') deps.sendDenied(live, 'busy');
+      if (refusal === 'dark') deps.sendDenied(live, 'no_freehold');
+      return advanced ? 'dropped' : undefined;
     },
     mergeReadyAt: (ownerKey, readyAtMs) =>
       mergeFreeholdKeyReadyAt(deps.sim().ctx, ownerKey, readyAtMs),

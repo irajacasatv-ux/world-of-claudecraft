@@ -25,9 +25,15 @@
 // is single-flight per registry (a trigger while one runs is skipped and
 // counted), its chunks run in sequence, and the whole pass carries
 // FREEHOLD_CLAIM_RENEW_PASS_DEADLINE_MS: past it the chunks not yet started are
-// abandoned and counted, and their wanted claims are missed heartbeats. The
-// next pass STARTS where an abandoned one stopped (and otherwise one chunk
-// later than the last), so a brownout never starves the same tail plots.
+// abandoned and counted, and their wanted claims are missed heartbeats, and
+// every checkout of the pass (re-reads included) is bounded by it, so the pass
+// ends by that deadline plus at most one transaction wall. The next pass
+// STARTS where an abandoned one stopped (and otherwise one chunk later than
+// the last), so a brownout never starves the same tail plots.
+//
+// A DROP IS IDENTITY-CHECKED: the pass drops a claim only while the registry
+// still holds the very object it snapshotted, so a login that recorded a newer
+// claim for the plot mid-pass keeps it (and the pass books nothing for it).
 //
 // THE SYNCHRONOUS PART, before the first await, is one copy of the claims held
 // (all() returns a fresh array), one sort, one wanted test per claim and the
@@ -47,7 +53,9 @@
 // and renewed, the safe side), counted, with one fixed warn per pass. No player
 // data reaches a log line here: counts only.
 import {
+  type FreeholdClaimReleaseReading,
   freeholdClaimsStillHeldOnClient,
+  readFreeholdClaimReleasesOnClient,
   releaseAllFreeholdClaimRows,
   releaseFreeholdClaimRows,
   renewFreeholdClaimRows,
@@ -68,14 +76,21 @@ export const FREEHOLD_CLAIM_RENEW_BOUNDS = Object.freeze({
   wallMs: 5_000,
 });
 
-/** The whole renew pass's deadline. Under the 30 s autosave cadence that starts
- *  a pass, so a pass that runs to it has ended before the next trigger, and far
- *  under LEASE_TTL_SECONDS (90 s), so an abandoned tail is renewed first by the
- *  next pass, well inside its TTL. Checked before every chunk, and also handed
- *  to each RENEW chunk's transaction, so a renew checkout or statement still in
- *  flight at the deadline is cut there rather than at its own 5 s wall. A
- *  release chunk is never handed it (only its start is gated): a release cut
- *  at COMMIT may have landed with nothing to say so. */
+/** The whole renew pass's deadline. Checked before every chunk. It bounds
+ *  EVERY checkout of the pass (renew, release, and both release re-reads): a
+ *  checkout past it is refused before it asks the pool, one in flight when it
+ *  fires is abandoned, and a cut checkout sends no SQL, so it can never strand
+ *  a landed release. It is also handed to each RENEW chunk's transaction, so a
+ *  renew statement in flight at the deadline is cut there. A release
+ *  statement, and a re-read that already has its client, is never cut by it,
+ *  only by its own FREEHOLD_CLAIM_RENEW_BOUNDS wall: a release cut at COMMIT
+ *  may have landed with nothing to say so. So a pass ENDS BY THIS DEADLINE PLUS
+ *  AT MOST ONE FREEHOLD_CLAIM_RENEW_BOUNDS.wallMs (the one transaction that had
+ *  its client when the deadline fired; nothing starts after it): 25,000 ms,
+ *  under the 30 s autosave cadence that starts a pass, so a pass that runs to
+ *  its bound has ended before the next trigger, and far under
+ *  LEASE_TTL_SECONDS (90 s), so an abandoned tail is renewed first by the next
+ *  pass, well inside its TTL. */
 export const FREEHOLD_CLAIM_RENEW_PASS_DEADLINE_MS = 20_000;
 
 export interface FreeholdHeldClaim {
@@ -264,9 +279,14 @@ export interface FreeholdClaimRenewerDeps {
   onLost?(claim: FreeholdHeldClaim): void;
   nowMs(): number;
   warn(message: string): void;
-  /** The pass deadline; FREEHOLD_CLAIM_RENEW_PASS_DEADLINE_MS unless a suite
-   *  shortens it to drive the real signal. */
+  /** The pass deadline, a positive finite number of ms (anything else rejects
+   *  the pass with a RangeError before it starts);
+   *  FREEHOLD_CLAIM_RENEW_PASS_DEADLINE_MS unless a suite narrows it. */
   readonly passDeadlineMs?: number;
+  /** Mints the pass deadline's signal, once per pass:
+   *  AbortSignal.timeout(passDeadlineMs) unless a suite hands one it aborts by
+   *  hand. */
+  readonly deadlineSignal?: () => AbortSignal;
 }
 
 /** Per registry: whether a pass is running, and where the next one starts. */
@@ -277,13 +297,69 @@ interface RenewerState {
 
 const renewers = new WeakMap<FreeholdClaimRegistry, RenewerState>();
 
+function passDeadlineOf(deps: FreeholdClaimRenewerDeps): number {
+  const ms = deps.passDeadlineMs ?? FREEHOLD_CLAIM_RENEW_PASS_DEADLINE_MS;
+  if (!Number.isFinite(ms) || ms <= 0) {
+    throw new RangeError(
+      'freehold claim renew pass deadline must be a positive finite number of ms',
+    );
+  }
+  return ms;
+}
+
+/** The pool a pass checks out from: every checkout is bounded by the pass
+ *  deadline, and only the checkout (a transaction that has its client runs to
+ *  its own bounds). One past the deadline is refused BEFORE it asks the pool,
+ *  so it never joins the waiter queue; one in flight when the deadline fires is
+ *  abandoned, and the client it hands over later is released exactly once
+ *  (server/freehold_tx.ts connectWithin's single-release rule). Either way no
+ *  SQL is sent. */
+function deadlineBoundCheckouts(
+  pool: FreeholdTxPool,
+  deadline: AbortSignal,
+  expired: () => boolean,
+): FreeholdTxPool {
+  const refused = () => new Error('freehold claim renew pass deadline passed before a checkout');
+  return {
+    connect() {
+      if (expired()) return Promise.reject(refused());
+      const checkout = pool.connect();
+      return new Promise((resolve, reject) => {
+        const onAbort = () => {
+          checkout.then(
+            (client) => client.release(),
+            () => {},
+          );
+          reject(refused());
+        };
+        deadline.addEventListener('abort', onAbort, { once: true });
+        checkout.then(
+          (client) => {
+            deadline.removeEventListener('abort', onAbort);
+            // An abort that won already scheduled this client's release.
+            if (deadline.aborted) return;
+            resolve(client);
+          },
+          (error: unknown) => {
+            deadline.removeEventListener('abort', onAbort);
+            reject(error);
+          },
+        );
+      });
+    },
+  };
+}
+
 /**
- * One pass of `renewFreeholdClaims`. Never rejects: a thrown chunk is counted
- * and its claims are kept for the next pass. SINGLE-FLIGHT per registry: a
- * call while a pass runs returns at once, counted, so the renewer never holds
- * more than one pool client.
+ * One pass of `renewFreeholdClaims`. Never rejects on a database or host
+ * fault: a thrown chunk is counted and its claims are kept for the next pass.
+ * A passDeadlineMs that is not a positive finite number is a programming error
+ * and rejects with a RangeError before anything runs. SINGLE-FLIGHT per
+ * registry: a call while a pass runs returns at once, counted, so the renewer
+ * never holds more than one pool client.
  */
 export async function renewFreeholdClaims(deps: FreeholdClaimRenewerDeps): Promise<void> {
+  const deadlineMs = passDeadlineOf(deps);
   let state = renewers.get(deps.registry);
   if (!state) {
     state = { running: false, cursor: null };
@@ -297,7 +373,7 @@ export async function renewFreeholdClaims(deps: FreeholdClaimRenewerDeps): Promi
   const { counters } = deps.registry;
   const startMs = deps.nowMs();
   try {
-    await renewPass(deps, state, startMs);
+    await renewPass(deps, state, startMs, deadlineMs);
   } finally {
     state.running = false;
     counters.renewPasses++;
@@ -309,6 +385,7 @@ async function renewPass(
   deps: FreeholdClaimRenewerDeps,
   state: RenewerState,
   nowMs: number,
+  deadlineMs: number,
 ): Promise<void> {
   const { counters } = deps.registry;
   // A throwing log sink must not turn a pass into a rejection.
@@ -349,9 +426,18 @@ async function renewPass(
     counters.wantedThrew += threw;
     warn('freehold claim wanted check threw; those claims are kept and renewed');
   }
-  const deadlineMs = deps.passDeadlineMs ?? FREEHOLD_CLAIM_RENEW_PASS_DEADLINE_MS;
-  const deadline = AbortSignal.timeout(deadlineMs);
+  const deadline = deps.deadlineSignal?.() ?? AbortSignal.timeout(deadlineMs);
   const expired = () => deadline.aborted || deps.nowMs() - nowMs >= deadlineMs;
+  // Every checkout of this pass, renew, release and re-read alike.
+  const pool = deadlineBoundCheckouts(deps.pool, deadline, expired);
+  // Drops the claim only while the registry still holds the very object this
+  // pass snapshotted: a newer claim a login recorded for the plot since stays,
+  // and the pass books nothing for it (the newer claim is its recorder's).
+  const dropHeld = (claim: FreeholdHeldClaim): boolean => {
+    if (deps.registry.forPlot(claim.plotId) !== claim) return false;
+    deps.registry.drop(claim.plotId);
+    return true;
+  };
   const renewChunks = rotated(chunks(wanted, FREEHOLD_CLAIM_RENEW_CHUNK), state.cursor);
   // The next pass starts one chunk later, unless this one stops early.
   state.cursor = renewChunks.length > 1 ? renewChunks[1][0].plotId : null;
@@ -372,7 +458,7 @@ async function renewPass(
     let stillHeld: Set<string>;
     try {
       ({ renewed, stillHeld } = await runFreeholdTransaction(
-        deps.pool,
+        pool,
         FREEHOLD_CLAIM_RENEW_BOUNDS,
         async (tx) => {
           const ids = chunk.map((claim) => claim.plotId);
@@ -403,36 +489,56 @@ async function renewPass(
         counters.missedHeartbeats++;
         continue;
       }
+      if (!dropHeld(claim)) continue;
       lost++;
       counters.lost++;
-      deps.registry.drop(claim.plotId);
       deps.onLost?.(claim);
     }
     if (lost > 0) {
       warn(`freehold claims lost to another holder: ${lost}; their plots stop writing`);
     }
   }
-  // The ids of these that are still live under this holder, by the lock-free
-  // read; null when it throws. Like the releases, never handed the deadline:
+  // What the database says of these release ids, one reading per id; null
+  // when the read throws (a lock bound run out included) or the deadline
+  // refuses its checkout, and then every one of them is kept for the next pass.
+  // Like a release, a read that has its client is never cut by the deadline:
   // a cut read would keep a claim whose row is no longer ours.
-  const stillHeldOf = async (claims: FreeholdHeldClaim[]): Promise<Set<string> | null> => {
+  const releaseReadingsOf = async (
+    claims: FreeholdHeldClaim[],
+    wait: boolean,
+  ): Promise<Map<string, FreeholdClaimReleaseReading> | null> => {
     try {
-      return await runFreeholdTransaction(deps.pool, FREEHOLD_CLAIM_RENEW_BOUNDS, (tx) =>
-        freeholdClaimsStillHeldOnClient(
+      return await runFreeholdTransaction(pool, FREEHOLD_CLAIM_RENEW_BOUNDS, (tx) =>
+        readFreeholdClaimReleasesOnClient(
           tx,
           deps.holder,
           claims.map((claim) => claim.plotId),
+          { wait },
         ),
       );
     } catch {
       return null;
     }
   };
+  // Held stays for the next pass; our release landed leaves, counted; gone
+  // (another holder's, an expired row of ours, no row) leaves uncounted.
+  const settle = (
+    claims: FreeholdHeldClaim[],
+    readings: Map<string, FreeholdClaimReleaseReading> | null,
+  ): void => {
+    if (readings === null) return;
+    for (const claim of claims) {
+      const reading = readings.get(claim.plotId) ?? 'gone';
+      if (reading === 'held') continue;
+      if (dropHeld(claim) && reading === 'released') counters.released++;
+    }
+  };
   const releaseChunks = chunks(unwanted, FREEHOLD_CLAIM_RENEW_CHUNK);
   for (const [index, chunk] of releaseChunks.entries()) {
-    // The deadline gates only STARTING a release, and is never handed to one:
-    // a release cut at COMMIT may have landed with nothing to say so, which
-    // would leave a claim in the registry whose row is already released.
+    // The deadline gates STARTING a release and its checkout, and is never
+    // handed to the transaction: a release cut at COMMIT may have landed with
+    // nothing to say so, which would leave a claim in the registry whose row
+    // is already released.
     if (expired()) {
       // Kept: still unwanted at the next pass, which releases them then.
       counters.renewChunksAbandoned += releaseChunks.length - index;
@@ -440,7 +546,7 @@ async function renewPass(
     }
     let released: Set<string>;
     try {
-      released = await runFreeholdTransaction(deps.pool, FREEHOLD_CLAIM_RENEW_BOUNDS, (tx) =>
+      released = await runFreeholdTransaction(pool, FREEHOLD_CLAIM_RENEW_BOUNDS, (tx) =>
         releaseFreeholdClaimRows(
           tx,
           deps.holder,
@@ -448,39 +554,25 @@ async function renewPass(
         ),
       );
     } catch {
-      // A THROWN release may still have committed (a lost COMMIT answer), so
-      // the read decides it in this pass: a row no longer live under this
-      // holder was released (it leaves, counted), one still held was not (kept
-      // for the next pass). A read that throws too keeps the whole chunk, and
-      // a claim nobody renews expires on its own after the TTL anyway.
-      const stillHeld = await stillHeldOf(chunk);
-      if (stillHeld === null) continue;
-      for (const claim of chunk) {
-        if (stillHeld.has(claim.plotId)) continue;
-        counters.released++;
-        deps.registry.drop(claim.plotId);
-      }
+      // A THROWN release may still be committing (a stalled COMMIT whose
+      // answer was lost), so the read WAITS OUT each row it still locks (FOR
+      // SHARE, under the chunk's lock bound) and decides it in this pass. A
+      // read that throws too keeps the whole chunk, and a claim nobody renews
+      // expires on its own after the TTL anyway.
+      settle(chunk, await releaseReadingsOf(chunk, true));
       continue;
     }
     for (const claim of chunk) {
-      // ONLY what the statement released. A row SKIP LOCKED passed over is
-      // still live under this holder, so it stays in the registry and the next
-      // pass releases it; an already-expired row (not returned either) is no
-      // longer anyone's live claim and simply leaves.
-      if (released.has(claim.plotId)) {
-        counters.released++;
-        deps.registry.drop(claim.plotId);
-      }
+      // What the statement released leaves, counted.
+      if (released.has(claim.plotId) && dropHeld(claim)) counters.released++;
     }
-    // The ids the statement did not return: the read keeps those still live
-    // under this holder and drops the rest.
+    // The ids the statement did not return, read lock-free (nothing of ours
+    // is in flight on them): a row SKIP LOCKED passed over is still live under
+    // this holder and stays for the next pass; an expired row of ours or
+    // another holder's leaves.
     const notReleased = chunk.filter((claim) => !released.has(claim.plotId));
     if (notReleased.length === 0) continue;
-    const stillHeld = await stillHeldOf(notReleased);
-    if (stillHeld === null) continue;
-    for (const claim of notReleased) {
-      if (!stillHeld.has(claim.plotId)) deps.registry.drop(claim.plotId);
-    }
+    settle(notReleased, await releaseReadingsOf(notReleased, false));
   }
 }
 

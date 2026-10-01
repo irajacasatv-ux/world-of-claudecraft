@@ -200,13 +200,15 @@ frame already paid them. Then `sim.useItem(HEARTH_KEY_ITEM_ID, pid)` while the t
 set; the use is instant (no cast), so the ticket is still set when the sim asks, and an
 admitted entry changes no heavy self field, so the re-dispatch needs no heavy-self mark of
 its own (the `use` frame took its receipt mark; pinned in `tests/server/freehold_wire.test.ts`). If the sim then refuses
-(the player died, entered combat or was jailed in the commit window), the advance stays
-spent: named residual R-2, counted `refused_after_commit` and logged with no token or
-holder. A precheck DROP after a committed advance (the realm began draining, or the vault
-guard locked the character in the trip's seconds) is the same residual class: the vault
-drop answers `freeholdDenied busy` so the player is told, the draining drop stays silent
-(the realm is going down), and both count `dropped_after_commit` with no warn line; under
-a deny ticket both drops stay silent and uncounted, exactly as the frame path's.
+(the player died or entered combat in the commit window), the advance stays spent: named
+residual R-2, counted `refused_after_commit` and logged with no token or holder. A
+precheck DROP after a committed advance (the realm began draining, the vault guard locked
+the character, the player began spectating, was jailed, or the realm went dark, in the
+trip's seconds) is the same residual class, decided by the realm before the sim sees the
+use: each answers as the frame path's precheck would (the vault lock and the jail
+`freeholdDenied busy`, dark `no_freehold`, draining and spectating silent), and all five
+count `dropped_after_commit` with no warn line; under a deny ticket every drop stays as
+the frame path's and nothing is counted.
 
 `pending` is cleared when its trip ends, on EVERY exit (commit, rollback, throw, fence miss,
 cancel, verify resolution), by a `finally` that compares the trip identity before it
@@ -387,10 +389,17 @@ built code): the flush starts a pass unawaited, so a pass is single-flight per r
 trigger while one runs is skipped and counted), the whole pass carries
 `FREEHOLD_CLAIM_RENEW_PASS_DEADLINE_MS` (20,000 ms, under the 30 s cadence and far under
 the 90 s TTL; each RENEW chunk's transaction carries the same deadline as its signal,
-while a RELEASE chunk is gated by it only for starting and is never cut, and a release
-chunk that throws re-reads its ids lock-free in the same pass, dropping the ones no longer
-held and keeping the rest, so a release cut at COMMIT never leaves a landed release in the
-registry), the chunks it leaves unstarted are abandoned and counted and their wanted claims
+while a RELEASE chunk and its re-reads are never cut by it; it bounds every CHECKOUT of the
+pass (one past it is refused before any SQL, so a cut can never strand a landed release),
+so a pass ends by the deadline plus at most one 5 s transaction wall, 25 s, under the 30 s
+cadence; a release chunk that THROWS re-reads its ids `FOR SHARE` (the release's UPDATE
+takes FOR NO KEY UPDATE, which FOR SHARE waits out and FOR KEY SHARE would not, P9's
+ruling), waiting out a still-committing release under the chunk's 1 s lock bound (a lock
+timeout keeps the claims for the next pass), and a completed release reads the ids it did
+not return lock-free; both classify each row held (ours and live: kept), released (ours
+with the released suffix: dropped, counted) or gone (another holder, an expired row of
+ours, or no row: dropped, uncounted), and every drop is identity-checked, so a claim a
+login recorded while the pass ran is never dropped), the chunks it leaves unstarted are abandoned and counted and their wanted claims
 are missed heartbeats, and the next pass starts where an abandoned one stopped (otherwise one chunk
 later), so a brownout never starves the same tail plots. Renewal outranks release: an
 abandoned pass skips its release chunks. It stays OFF the background gate by decision (the
@@ -882,10 +891,11 @@ merge in a `finally`; N4 the server default pin; N5 the log pin; N6 the 15 route
 
 - R-1: the first insert of an absent plot racing on two realms is arbitrated by the primary
   key; the loser quiesces with nothing durable lost (07 behavior, unchanged).
-- R-2: a committed Hearth advance whose re-dispatch the Sim then refuses (death, combat or
-  jail inside the commit window, one save round trip) spends the cooldown without a trip.
-  Counted and logged. A precheck drop in that window (draining, the vault lock) is the
-  same class, counted `dropped_after_commit`; the vault drop answers `busy`.
+- R-2: a committed Hearth advance whose re-dispatch the Sim then refuses (death or combat
+  inside the commit window, one save round trip) spends the cooldown without a trip.
+  Counted and logged. A precheck drop in that window (draining, the vault lock,
+  spectating, jailed, dark) is the same class, counted `dropped_after_commit`; each
+  answers as the frame path's precheck would.
 - R-3: a realm that lost its claim keeps showing its live view until relog; every write is
   fenced, so durable truth is never overwritten.
 - R-4: a handshake refused after its first ask holds its own account's claim until the

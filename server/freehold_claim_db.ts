@@ -320,9 +320,12 @@ export const FREEHOLD_CLAIM_RENEW_SQL = `UPDATE freehold_plot_claims
       FOR NO KEY UPDATE SKIP LOCKED)
 RETURNING plot_id`;
 
-/** The renewer's lock-free follow-up for the ids a chunk did NOT return: a row
- *  SKIP LOCKED passed over (a trip or a write holding it) is still this holder's
- *  and only missed one heartbeat; a row another holder now owns was taken. */
+/** The renewer's lock-free follow-up for the ids a RENEW chunk did NOT return: a
+ *  row SKIP LOCKED passed over (a trip or a write holding it) is still this
+ *  holder's and only missed one heartbeat; a row another holder now owns was
+ *  taken. No expiry predicate on purpose: an expired row of this holder's is
+ *  still renewable (expiry governs only a takeover). The release chunks read
+ *  through FREEHOLD_CLAIM_RELEASE_READ_SQL instead. */
 export const FREEHOLD_CLAIM_STILL_HELD_SQL = `SELECT plot_id FROM freehold_plot_claims
  WHERE holder = $1 AND plot_id = ANY($2::text[])`;
 
@@ -432,6 +435,60 @@ export async function releaseAllFreeholdClaimRows(
     requireText('holder', holder, FREEHOLD_LIVE_HOLDER_MAX),
   ]);
   return returnedPlotIds(res).size;
+}
+
+/** The renewer's read of release chunk ids it holds no proved answer for
+ *  (manifest P6): each asked row still under this holder, live or released,
+ *  with its holder and whether it is live. A row another holder already holds
+ *  is filtered out before any lock, so it is never returned or waited for.
+ *  Lock-free: the form for the ids a COMPLETED release did not return, where
+ *  nothing of this holder's is in flight. */
+export const FREEHOLD_CLAIM_RELEASE_READ_SQL = `SELECT plot_id, holder, expires_at > clock_timestamp() AS live
+  FROM freehold_plot_claims
+ WHERE plot_id = ANY($2::text[])
+   AND holder IN ($1::text, $1::text || '${FREEHOLD_CLAIM_RELEASED_SUFFIX}')
+ ORDER BY plot_id`;
+
+/** The same read after a THROWN release, which may still be committing (a
+ *  stalled WAL flush): FOR SHARE waits out a row the release still holds, so
+ *  the answer is that release's outcome, never the version before it. FOR
+ *  SHARE, not FOR KEY SHARE: the release UPDATE holds FOR NO KEY UPDATE, which
+ *  conflicts with FOR SHARE and NOT with FOR KEY SHARE (the P9 verify's ruling).
+ *  Locked in plot id order, the global order, and bounded by the caller's lock
+ *  timeout: a wait that runs it out answers 55P03. */
+export const FREEHOLD_CLAIM_RELEASE_WAIT_SQL = `${FREEHOLD_CLAIM_RELEASE_READ_SQL}
+   FOR SHARE`;
+
+/** What a release read says about one id: still this holder's live claim
+ *  (`held`), this holder's release landed (`released`), or anything else, which
+ *  is no longer this holder's live claim (`gone`: another holder's, an expired
+ *  row of this holder's, or no row). */
+export type FreeholdClaimReleaseReading = 'held' | 'released' | 'gone';
+
+/** Every asked id answered; `wait` picks the FOR SHARE form. An empty list
+ *  issues no statement. */
+export async function readFreeholdClaimReleasesOnClient(
+  tx: FreeholdQueryable,
+  holder: string,
+  plotIds: readonly string[],
+  opts: { readonly wait: boolean },
+): Promise<Map<string, FreeholdClaimReleaseReading>> {
+  const readings = new Map<string, FreeholdClaimReleaseReading>();
+  if (plotIds.length === 0) return readings;
+  const live = requireText('holder', holder, FREEHOLD_LIVE_HOLDER_MAX);
+  const ids = plotIds.map(requirePlotId);
+  for (const plotId of ids) readings.set(plotId, 'gone');
+  const sql = opts.wait ? FREEHOLD_CLAIM_RELEASE_WAIT_SQL : FREEHOLD_CLAIM_RELEASE_READ_SQL;
+  const res = await tx.query(sql, [live, ids]);
+  for (const row of res.rows ?? []) {
+    const read = row as { plot_id?: unknown; holder?: unknown; live?: unknown };
+    if (typeof read.plot_id !== 'string' || !readings.has(read.plot_id)) continue;
+    if (read.holder === live && read.live === true) readings.set(read.plot_id, 'held');
+    else if (read.holder === `${live}${FREEHOLD_CLAIM_RELEASED_SUFFIX}`) {
+      readings.set(read.plot_id, 'released');
+    }
+  }
+  return readings;
 }
 
 /** The verify's claim read (manifest P9), issued only AFTER the verify's lock
