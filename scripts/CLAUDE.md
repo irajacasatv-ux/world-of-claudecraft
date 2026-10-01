@@ -3,8 +3,8 @@
      Not part of the vite/esbuild build. Root CLAUDE.md covers the repo + sim/server
      model; don't repeat it here. Child docs: scripts/assets/ (GLB pipeline),
      scripts/assets/battleground/ (Thornhollow builder), scripts/asset_pipeline/
-     (AI asset generation), scripts/profiler/ (client profiling),
-     scripts/sfx_studio/ (SFX Studio). -->
+     (AI asset generation), scripts/freeholds/ (Freeholds tooling),
+     scripts/profiler/ (client profiling), scripts/sfx_studio/ (SFX Studio). -->
 
 # scripts/
 

@@ -71,8 +71,8 @@ When a presentation module needs new data or an action: add the member to the ow
 FACET under `src/world_api/<domain>.ts` (never the aggregate `src/world_api.ts`; there
 is deliberately no `src/world_api/index.ts`), implement it in **both** the offline
 `Sim` and the online `ClientWorld`, and update the pins (`IWORLD_MEMBERS` in
-`tests/world_api_parity.test.ts`, plus `COMMAND_FACETS` in
-`tests/command_facets.test.ts` when it sends a wire command) in the SAME change; full
+`tests/world_api_parity.test.ts`, plus the `COMMAND_FACETS` tag in `src/world_api.ts`,
+pinned by `tests/command_facets.test.ts`, when it sends a wire command) in the SAME change; full
 recipe in `src/world_api/CLAUDE.md`. Never reach around `IWorld` into a concrete world
 from `render/` or `ui/`. The presentation logic itself lands as a pure-core +
 thin-consumer sibling module with its own test under `tests/` (reference

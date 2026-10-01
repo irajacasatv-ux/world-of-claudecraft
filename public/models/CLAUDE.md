@@ -103,9 +103,9 @@ sizes, and iterate texture size down before accepting an oversized static prop.
   set (`tests/render_asset_preload.test.ts` and `tests/foliage_preload_boot.test.ts`
   pin it). Read the `foliage.ts` header before touching the lists.
 - **tools/**: manifested but consumed by NO runtime code path today. Crafting
-  stations use `models/props/anvil.glb` via `PROP_ASSET_DEFS`, and the only repo
-  reference is `scripts/assets/specs/asset_bits.json`, whose `outDir`
-  (`models/tools_bits`) does not exist. There is no equipped-tool render pipeline: do
+  stations use `models/props/anvil.glb` via `PROP_ASSET_DEFS`; outside the generated
+  manifests, the only repo reference is `scripts/assets/specs/asset_bits.json`, whose
+  `outDir` (`models/tools_bits`) does not exist. There is no equipped-tool render pipeline: do
   not wire a new tool asset to one; adding a tool asset means building its consumer
   first.
 

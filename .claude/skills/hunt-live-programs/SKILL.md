@@ -51,8 +51,8 @@ open the map and the character sheet, watch a boss). Ask for at least ten second
 still at each stop so gates have time to settle or to time out.
 
 Traps the script already handles, do not re-derive them: the vite cache and the blind
-watcher in `.claude/worktrees` (memories `vite-blind-in-claude-worktrees`,
-`purge-vite-cache-before-restart`), puppeteer's own SIGINT handler (disabled so the report
+watcher in `.claude/worktrees` (vite does not see edits there, and a stale optimize
+cache survives a restart), puppeteer's own SIGINT handler (disabled so the report
 is always written), the WebSocket upgrade refused without `changeOrigin`.
 
 ## Step 2: read the report
