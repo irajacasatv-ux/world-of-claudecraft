@@ -18452,13 +18452,13 @@ export const zh_CN: EnTranslations = {
         "name": "先锋之战杖"
       },
       "katana_a": {
-        "name": "Blossom Katana"
+        "name": "樱花武士刀"
       },
       "katana_b": {
-        "name": "Moonsteel Katana"
+        "name": "月钢武士刀"
       },
       "katana_c": {
-        "name": "Crimson Petal Katana"
+        "name": "绯红花瓣武士刀"
       },
       "conjured_water4": {
         "name": "魔法泉水"

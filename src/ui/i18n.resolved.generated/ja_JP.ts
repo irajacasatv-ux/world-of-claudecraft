@@ -18452,13 +18452,13 @@ export const ja_JP: EnTranslations = {
         "name": "ヴァンガードの戦杖"
       },
       "katana_a": {
-        "name": "Blossom Katana"
+        "name": "桜の刀"
       },
       "katana_b": {
-        "name": "Moonsteel Katana"
+        "name": "月鋼の刀"
       },
       "katana_c": {
-        "name": "Crimson Petal Katana"
+        "name": "紅花弁の刀"
       },
       "conjured_water4": {
         "name": "魔法の湧き水"

@@ -40,36 +40,16 @@ export const pending: Record<string, readonly string[]> = {
     "entities.items.katana_b.name",
     "entities.items.katana_c.name"
   ],
-  "zh_CN": [
-    "entities.items.katana_a.name",
-    "entities.items.katana_b.name",
-    "entities.items.katana_c.name"
-  ],
-  "zh_TW": [
-    "entities.items.katana_a.name",
-    "entities.items.katana_b.name",
-    "entities.items.katana_c.name"
-  ],
-  "ko_KR": [
-    "entities.items.katana_a.name",
-    "entities.items.katana_b.name",
-    "entities.items.katana_c.name"
-  ],
-  "ja_JP": [
-    "entities.items.katana_a.name",
-    "entities.items.katana_b.name",
-    "entities.items.katana_c.name"
-  ],
+  "zh_CN": [],
+  "zh_TW": [],
+  "ko_KR": [],
+  "ja_JP": [],
   "pt_BR": [
     "entities.items.katana_a.name",
     "entities.items.katana_b.name",
     "entities.items.katana_c.name"
   ],
-  "ru_RU": [
-    "entities.items.katana_a.name",
-    "entities.items.katana_b.name",
-    "entities.items.katana_c.name"
-  ],
+  "ru_RU": [],
   "cs_CZ": [
     "entities.items.katana_a.name",
     "entities.items.katana_b.name",

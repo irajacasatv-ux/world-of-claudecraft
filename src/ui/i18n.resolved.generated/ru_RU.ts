@@ -18452,13 +18452,13 @@ export const ru_RU: EnTranslations = {
         "name": "Боевой посох Авангарда"
       },
       "katana_a": {
-        "name": "Blossom Katana"
+        "name": "Катана цветения"
       },
       "katana_b": {
-        "name": "Moonsteel Katana"
+        "name": "Катана лунной стали"
       },
       "katana_c": {
-        "name": "Crimson Petal Katana"
+        "name": "Катана алых лепестков"
       },
       "conjured_water4": {
         "name": "Сотворённая родниковая вода"
