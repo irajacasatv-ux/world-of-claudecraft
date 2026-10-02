@@ -13,6 +13,7 @@
 // the /roll `ctx.rng.int(lo, hi)`; the readouts draw nothing. Player emit literals stay
 // at the emit site (the S3 i18n guard scans this file + chat_readouts.ts).
 
+import { handleKatanaCommand } from '../katana_forge';
 import { type AssistCandidate, resolveAssist } from '../assist';
 import { onEmoteForClueHunt } from '../clue_scrolls';
 import { isHeldInCombat } from '../combat/engaged_combat';
@@ -204,6 +205,13 @@ export function chat(ctx: SimContext, text: string, pid?: number): SentChat | nu
   // so it works identically offline and online without server wiring.
   if (/^\/(?:help|commands|\?)(?:\s|$)/i.test(raw)) {
     for (const line of helpLines()) ctx.error(r.meta.entityId, line);
+    return null;
+  }
+
+  // "/katana ...": the Blossom Temple Katana Table (katana_forge.ts).
+  const katanam = /^\/katana(?:\s+([\s\S]*))?$/i.exec(raw);
+  if (katanam) {
+    handleKatanaCommand(ctx, r.meta.entityId, (katanam[1] ?? '').trim().split(/\s+/).filter(Boolean));
     return null;
   }
 

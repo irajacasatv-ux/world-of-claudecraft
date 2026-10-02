@@ -1,3 +1,4 @@
+import { classListAdmits } from '../src/sim/equipment_rules';
 import { describe, expect, it } from 'vitest';
 import { DEV_KIT_ROLE_COUNT, DEV_KIT_ROLES, devKitRole } from '../src/sim/content/dev_kit_roles';
 import { HEROIC_ITEMS, RETIRED_HEROIC_ITEMS } from '../src/sim/content/heroic_loot';
@@ -34,7 +35,7 @@ function everySpec(): { cls: PlayerClass; spec: string }[] {
 }
 
 describe('dev kit role table', () => {
-  it('covers all 27 class-and-spec pairs', () => {
+  it('covers all 30 class-and-spec pairs', () => {
     expect(everySpec()).toHaveLength(DEV_KIT_ROLE_COUNT);
     const missing = everySpec().filter(({ cls, spec }) => devKitRole(cls, spec) === null);
     expect(missing).toEqual([]);
@@ -173,7 +174,7 @@ describe('fresh-20 item pool', () => {
     expect(locked.length).toBeGreaterThan(0);
     for (const item of locked) {
       for (const cls of ALL_CLASSES) {
-        if (!item.requiredClass?.includes(cls)) expect(isFreshTwentyItem(cls, item)).toBe(false);
+        if (!classListAdmits(item.requiredClass ?? [], cls)) expect(isFreshTwentyItem(cls, item)).toBe(false);
       }
     }
   });
@@ -294,6 +295,9 @@ describe('kit construction', () => {
       'rogue/assassination',
       'rogue/combat',
       'rogue/subtlety',
+      'ninja/assassination',
+      'ninja/combat',
+      'ninja/subtlety',
       'shaman/enhancement',
     ];
     const CASTER_SPECS = [

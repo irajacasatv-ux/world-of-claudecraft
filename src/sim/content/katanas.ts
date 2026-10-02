@@ -1,7 +1,8 @@
-import type { ItemDef } from '../types';
+import type { ItemDef, NpcDef } from '../types';
 
 // Katanas: one-handed curved swords sold by Armorer Hode in Highwatch
-// (zone3.ts). Held models are the procedural
+// (zone3.ts) and by Swordsmith Ren in the Blossom Temple grove (below). Held
+// models are the procedural
 // scripts/assets/katana/build_katana.mjs set, mapped in
 // src/ui/weapon_variants.ts. Numbers are copied from existing swords of the
 // same tier rather than invented: the white from Highwatch Warblade, the blue
@@ -46,3 +47,19 @@ export const KATANA_ITEMS: Record<string, ItemDef> = {
   },
 };
 
+// The grove's swordsmith, standing beside the temple steps (east of the path).
+export const KATANA_NPCS: Record<string, NpcDef> = {
+  swordsmith_ren: {
+    id: 'swordsmith_ren',
+    name: 'Swordsmith Ren',
+    title: 'Katana Maker',
+    pos: { x: 313.5, z: 1066 },
+    facing: -Math.PI / 2,
+    color: 0x8a3a2a,
+    questIds: [],
+    // only the plain blade: the rare and epic tiers are earned by evolving it
+    // at the Katana Table (content/katana_forge.ts)
+    vendorItems: ['katana_a'],
+    greeting: 'Folded a thousand times under the blossoms. Each blade remembers the hand that made it.',
+  },
+};
