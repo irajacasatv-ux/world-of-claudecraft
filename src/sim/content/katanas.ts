@@ -60,6 +60,7 @@ export const KATANA_NPCS: Record<string, NpcDef> = {
     // only the plain blade: the rare and epic tiers are earned by evolving it
     // at the Katana Table (content/katana_forge.ts)
     vendorItems: ['katana_a'],
-    greeting: 'Folded a thousand times under the blossoms. Each blade remembers the hand that made it.',
+    greeting:
+      'Folded a thousand times under the blossoms. Each blade remembers the hand that made it.',
   },
 };

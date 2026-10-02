@@ -42,9 +42,7 @@ const ARMOR_RANK: Record<ArmorType, number> = {
 // The Ninja runs on the rogue engine, so it is admitted wherever the rogue is:
 // an authored list naming 'rogue' implies 'ninja' (content predates the class).
 function withNinja(classes: readonly PlayerClass[]): readonly PlayerClass[] {
-  return classes.includes('rogue') && !classes.includes('ninja')
-    ? [...classes, 'ninja']
-    : classes;
+  return classes.includes('rogue') && !classes.includes('ninja') ? [...classes, 'ninja'] : classes;
 }
 
 function sameClassSet(classes: readonly PlayerClass[], allowed: ReadonlySet<PlayerClass>): boolean {
@@ -444,7 +442,11 @@ export function canEquipItem(cls: PlayerClass, item: ItemDef): boolean {
   // Rogues may dual wield one-handed weapons, but can never equip a two-hander.
   // Keep this at the equipment boundary so future items cannot bypass it through
   // a missing or overly broad requiredClass list.
-  if ((cls === 'rogue' || cls === 'ninja') && item.kind === 'weapon' && weaponHand(item) === 'twohand') {
+  if (
+    (cls === 'rogue' || cls === 'ninja') &&
+    item.kind === 'weapon' &&
+    weaponHand(item) === 'twohand'
+  ) {
     return false;
   }
   const weaponArchetype = weaponArchetypeForItem(item);

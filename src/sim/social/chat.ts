@@ -13,7 +13,6 @@
 // the /roll `ctx.rng.int(lo, hi)`; the readouts draw nothing. Player emit literals stay
 // at the emit site (the S3 i18n guard scans this file + chat_readouts.ts).
 
-import { handleKatanaCommand } from '../katana_forge';
 import { type AssistCandidate, resolveAssist } from '../assist';
 import { onEmoteForClueHunt } from '../clue_scrolls';
 import { isHeldInCombat } from '../combat/engaged_combat';
@@ -22,6 +21,7 @@ import { CLASSES, zoneAt } from '../data';
 import * as deedsMod from '../deeds';
 import { handleDevChat } from '../dev_commands';
 import { graveyardReadout } from '../entity_roster';
+import { handleKatanaCommand } from '../katana_forge';
 import { livePlaytimeSeconds } from '../playtime';
 import { hillReadoutLine, setWorldPvpFlag, toggleWorldPvpFlag } from '../pvp';
 import {
@@ -211,7 +211,11 @@ export function chat(ctx: SimContext, text: string, pid?: number): SentChat | nu
   // "/katana ...": the Blossom Temple Katana Table (katana_forge.ts).
   const katanam = /^\/katana(?:\s+([\s\S]*))?$/i.exec(raw);
   if (katanam) {
-    handleKatanaCommand(ctx, r.meta.entityId, (katanam[1] ?? '').trim().split(/\s+/).filter(Boolean));
+    handleKatanaCommand(
+      ctx,
+      r.meta.entityId,
+      (katanam[1] ?? '').trim().split(/\s+/).filter(Boolean),
+    );
     return null;
   }
 

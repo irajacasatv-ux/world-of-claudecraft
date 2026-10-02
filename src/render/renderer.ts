@@ -409,6 +409,7 @@ import { emitGroundPuff } from './ground_puff';
 import { createGroundTilt, type GroundTiltState, stepGroundTilt } from './ground_tilt_core';
 import { buildHauntFeatures, type HauntFeaturesView } from './haunt_features';
 import { usedJsHeapMb } from './heap_sample';
+import { type HeldItemSyncHost, syncHeldItems } from './held_item_sync';
 import { HillRingVisuals } from './hill_ring';
 import { createHitchFrameAligner } from './hitch_frame_align_core';
 import { HOARD_BODY_IDS, hoardEntrance } from './hoard_entrance';
@@ -434,7 +435,6 @@ import {
   InitialSceneTextureAdmission,
   initialSceneTextureResumeUnits,
 } from './initial_scene_texture_admission';
-import { type HeldItemSyncHost, syncHeldItems } from './held_item_sync';
 import * as encounterPrewarm from './interior_encounter_prewarm_pass';
 import {
   applyInteriorLightRig,
@@ -11154,8 +11154,7 @@ export class Renderer {
         mountShown && !v.mountCompilePending && runCharacterPresentation ? this.vfx : null,
       );
 
-      const emoteId =
-        e.kind !== 'mob' && e.overheadEmoteId && !e.dead ? e.overheadEmoteId : null;
+      const emoteId = e.kind !== 'mob' && e.overheadEmoteId && !e.dead ? e.overheadEmoteId : null;
       const emoteKey = emoteId ? `${emoteId}:${e.overheadEmoteSeq}` : null;
       if (emoteKey !== v.lastOverheadEmoteKey) {
         const canPlayEmote =

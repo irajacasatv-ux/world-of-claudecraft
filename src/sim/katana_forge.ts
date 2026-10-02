@@ -14,7 +14,7 @@ import {
   KATANA_TIER_IDS,
   type KatanaPart,
 } from './content/katana_forge';
-import { MAX_KATANA_KILLS, isKatanaColor, isKatanaKanji } from './katana_look';
+import { isKatanaColor, isKatanaKanji, MAX_KATANA_KILLS } from './katana_look';
 import { normalizeLegendaryName } from './professions/legendary_name';
 import type { PlayerMeta } from './sim';
 import type { SimContext } from './sim_context';
@@ -53,7 +53,12 @@ export function katanaEvolutionShortfall(
   kills: number,
   have: (materialId: string) => number,
   copper: number,
-): { next: string; kills: number; materials: { itemId: string; missing: number }[]; copper: number } | null {
+): {
+  next: string;
+  kills: number;
+  materials: { itemId: string; missing: number }[];
+  copper: number;
+} | null {
   const evo = KATANA_EVOLUTIONS[itemId];
   if (!evo) return null;
   return {
@@ -89,7 +94,12 @@ export function handleKatanaCommand(ctx: SimContext, pid: number, args: string[]
 
   if (verb === 'status') {
     const itemId = meta.equipment.mainhand as string;
-    const short = katanaEvolutionShortfall(itemId, kills, (id) => ctx.countItem(id, pid), meta.copper);
+    const short = katanaEvolutionShortfall(
+      itemId,
+      kills,
+      (id) => ctx.countItem(id, pid),
+      meta.copper,
+    );
     ctx.notice(meta.entityId, `Your katana has slain ${kills} enemies.`);
     if (!short) ctx.notice(meta.entityId, 'This katana has reached its final form.');
     else if (short.kills === 0 && short.materials.length === 0 && short.copper === 0) {
@@ -101,7 +111,10 @@ export function handleKatanaCommand(ctx: SimContext, pid: number, args: string[]
   }
 
   // Every change below happens AT the table.
-  if (e.dead || Math.hypot(e.pos.x - KATANA_TABLE.x, e.pos.z - KATANA_TABLE.z) > KATANA_TABLE_RANGE) {
+  if (
+    e.dead ||
+    Math.hypot(e.pos.x - KATANA_TABLE.x, e.pos.z - KATANA_TABLE.z) > KATANA_TABLE_RANGE
+  ) {
     ctx.error(meta.entityId, 'You must stand at the Katana Table.');
     return true;
   }

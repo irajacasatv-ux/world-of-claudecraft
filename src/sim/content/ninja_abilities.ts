@@ -36,7 +36,12 @@ export const NINJA_ABILITIES: Record<string, AbilityDef> = {
     awardsCombo: 1,
     effects: [{ type: 'weaponStrike', bonus: 3, normalized: true }],
     ranks: [
-      { rank: 2, level: 8, cost: 45, effects: [{ type: 'weaponStrike', bonus: 6, normalized: true }] },
+      {
+        rank: 2,
+        level: 8,
+        cost: 45,
+        effects: [{ type: 'weaponStrike', bonus: 6, normalized: true }],
+      },
       {
         rank: 3,
         level: 14,
@@ -75,7 +80,7 @@ export const NINJA_ABILITIES: Record<string, AbilityDef> = {
       },
     ],
     description:
-      'Burst a smoke bomb in the target\'s face for $d Physical damage, incapacitating it for 4 sec. Any damage breaks the effect. Awards 1 combo point.',
+      "Burst a smoke bomb in the target's face for $d Physical damage, incapacitating it for 4 sec. Any damage breaks the effect. Awards 1 combo point.",
   },
 };
 

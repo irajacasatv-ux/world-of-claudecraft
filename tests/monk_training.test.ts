@@ -1,8 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  BLOSSOM_TRAINING_MAT_ITEM,
-  MONK_TRAINEE_IDS,
-} from '../src/sim/content/blossom_temple';
+import { BLOSSOM_TRAINING_MAT_ITEM, MONK_TRAINEE_IDS } from '../src/sim/content/blossom_temple';
 import { NPCS } from '../src/sim/data';
 import {
   advanceMonkDrill,

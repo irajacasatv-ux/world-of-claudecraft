@@ -62,6 +62,8 @@ export const KATANA_KANJI: Readonly<Record<string, string>> = {
 };
 
 // Keep the table off the training mat (both are courtyard furniture).
-if (Math.hypot(KATANA_TABLE.x - BLOSSOM_TRAINING_MAT.x, KATANA_TABLE.z - BLOSSOM_TRAINING_MAT.z) < 4) {
+if (
+  Math.hypot(KATANA_TABLE.x - BLOSSOM_TRAINING_MAT.x, KATANA_TABLE.z - BLOSSOM_TRAINING_MAT.z) < 4
+) {
   throw new Error('katana table overlaps the training mat');
 }

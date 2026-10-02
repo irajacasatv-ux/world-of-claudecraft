@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { CHERRY_GROVE_COLLIDERS } from '../src/sim/content/cherry_grove';
 import { KATANA_EVOLUTIONS, KATANA_TABLE } from '../src/sim/content/katana_forge';
+import { sanitizeItemInstancePayloadOnLoad } from '../src/sim/item_instance_load';
 import { creditKatanaKill, katanaEvolutionShortfall } from '../src/sim/katana_forge';
 import { isValidKatanaLook } from '../src/sim/katana_look';
-import { sanitizeItemInstancePayloadOnLoad } from '../src/sim/item_instance_load';
 import { Sim } from '../src/sim/sim';
 import { terrainHeight } from '../src/sim/world';
 
@@ -92,5 +92,4 @@ describe('Katana Table', () => {
     expect(bad.payload?.katana).toBeUndefined();
     expect(bad.dropped).toContain('katana');
   });
-
 });

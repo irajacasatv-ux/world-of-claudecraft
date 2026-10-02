@@ -1,4 +1,3 @@
-import { classListAdmits } from '../src/sim/equipment_rules';
 import { describe, expect, it } from 'vitest';
 import { DEV_KIT_ROLE_COUNT, DEV_KIT_ROLES, devKitRole } from '../src/sim/content/dev_kit_roles';
 import { HEROIC_ITEMS, RETIRED_HEROIC_ITEMS } from '../src/sim/content/heroic_loot';
@@ -17,7 +16,7 @@ import {
   QUALITY_TIE_RANK,
   QUALITY_TIE_SCALE,
 } from '../src/sim/dev_kit';
-import { canDualWield, isShieldItem } from '../src/sim/equipment_rules';
+import { canDualWield, classListAdmits, isShieldItem } from '../src/sim/equipment_rules';
 import { itemFromRaid } from '../src/sim/item_level';
 import { Sim } from '../src/sim/sim';
 import { ALL_CLASSES, type PlayerClass } from '../src/sim/types';
@@ -174,7 +173,8 @@ describe('fresh-20 item pool', () => {
     expect(locked.length).toBeGreaterThan(0);
     for (const item of locked) {
       for (const cls of ALL_CLASSES) {
-        if (!classListAdmits(item.requiredClass ?? [], cls)) expect(isFreshTwentyItem(cls, item)).toBe(false);
+        if (!classListAdmits(item.requiredClass ?? [], cls))
+          expect(isFreshTwentyItem(cls, item)).toBe(false);
       }
     }
   });
